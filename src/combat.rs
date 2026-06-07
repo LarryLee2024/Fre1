@@ -1,8 +1,8 @@
-// 战斗模块：伤害计算、攻击范围
+// 战斗模块：伤害计算
 
-use bevy::prelude::*;
-use crate::unit::Unit;
 use crate::map::Terrain;
+use crate::unit::Unit;
+use bevy::prelude::*;
 
 /// 计算曼哈顿距离
 pub fn manhattan_distance(a: IVec2, b: IVec2) -> u32 {

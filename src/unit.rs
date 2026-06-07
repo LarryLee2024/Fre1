@@ -1,7 +1,8 @@
 // 单位模块：角色属性、阵营、生成
 
-use bevy::prelude::*;
 use crate::map::GameMap;
+use bevy::prelude::*;
+use bevy::sprite::Anchor;
 
 /// 阵营
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -78,10 +79,8 @@ impl Faction {
 }
 
 /// 生成初始单位
-pub fn spawn_units(
-    mut commands: Commands,
-    map: Res<GameMap>,
-) {
+pub fn spawn_units(mut commands: Commands, map: Res<GameMap>, asset_server: Res<AssetServer>) {
+    let font: Handle<Font> = asset_server.load("fonts/Arial Unicode.ttf");
     let tile_size = map.tile_size;
     let bar_width = tile_size * 0.6;
     let bar_height = 4.0;
@@ -96,8 +95,21 @@ pub fn spawn_units(
     for (coord, name, mov, hp, max_hp, atk, def, attack_range) in player_units {
         let world_pos = map.coord_to_world(coord);
         spawn_unit(
-            &mut commands, world_pos, Faction::Player, name, coord,
-            mov, hp, max_hp, atk, def, attack_range, tile_size, bar_width, bar_height,
+            &mut commands,
+            world_pos,
+            Faction::Player,
+            name,
+            coord,
+            mov,
+            hp,
+            max_hp,
+            atk,
+            def,
+            attack_range,
+            tile_size,
+            bar_width,
+            bar_height,
+            &font,
         );
     }
 
@@ -111,8 +123,21 @@ pub fn spawn_units(
     for (coord, name, mov, hp, max_hp, atk, def, attack_range) in enemy_units {
         let world_pos = map.coord_to_world(coord);
         spawn_unit(
-            &mut commands, world_pos, Faction::Enemy, name, coord,
-            mov, hp, max_hp, atk, def, attack_range, tile_size, bar_width, bar_height,
+            &mut commands,
+            world_pos,
+            Faction::Enemy,
+            name,
+            coord,
+            mov,
+            hp,
+            max_hp,
+            atk,
+            def,
+            attack_range,
+            tile_size,
+            bar_width,
+            bar_height,
+            &font,
         );
     }
 }
@@ -132,7 +157,16 @@ fn spawn_unit(
     tile_size: f32,
     bar_width: f32,
     bar_height: f32,
+    font: &Handle<Font>,
 ) {
+    // 取名称首字作为棋子标注
+    let label: String = name.chars().take(1).collect();
+    let unit_font = TextFont {
+        font: FontSource::Handle(font.clone()),
+        font_size: FontSize::Px(18.0),
+        ..default()
+    };
+
     commands.spawn((
         Sprite::from_color(faction.unit_color(), Vec2::splat(tile_size * 0.6)),
         Transform::from_xyz(world_pos.x, world_pos.y, 1.0),
@@ -149,16 +183,26 @@ fn spawn_unit(
         UnitName(name.to_string()),
         GridPosition { coord },
         children![
-            // HP 条背景（红色）
+            // 棋子名称标注（中央）
+            (
+                Text2d::new(label),
+                unit_font,
+                TextColor(Color::WHITE),
+                TextLayout::no_wrap(),
+                Transform::from_xyz(0.0, 0.0, 0.3),
+            ),
+            // HP 条背景（红色）- 锚点左对齐
             (
                 Sprite::from_color(Color::srgb(0.6, 0.1, 0.1), Vec2::new(bar_width, bar_height)),
-                Transform::from_xyz(0.0, tile_size * 0.4, 0.1),
+                Transform::from_xyz(-bar_width / 2.0, tile_size * 0.4, 0.1),
+                Anchor::CENTER_LEFT,
                 HpBarBg,
             ),
-            // HP 条前景（绿色）
+            // HP 条前景（绿色）- 锚点左对齐，从左端扣血
             (
                 Sprite::from_color(Color::srgb(0.1, 0.8, 0.1), Vec2::new(bar_width, bar_height)),
-                Transform::from_xyz(0.0, tile_size * 0.4, 0.2),
+                Transform::from_xyz(-bar_width / 2.0, tile_size * 0.4, 0.2),
+                Anchor::CENTER_LEFT,
                 HpBarFg,
             ),
         ],

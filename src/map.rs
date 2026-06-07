@@ -16,6 +16,16 @@ pub enum Terrain {
 }
 
 impl Terrain {
+    /// 地形中文名（用于地图标注）
+    pub fn label(&self) -> &'static str {
+        match self {
+            Terrain::Plain => "草",
+            Terrain::Forest => "林",
+            Terrain::Mountain => "山",
+            Terrain::Water => "水",
+        }
+    }
+
     /// 移动消耗
     pub fn move_cost(&self) -> Option<u32> {
         match self {
@@ -104,22 +114,22 @@ impl GameMap {
 }
 
 /// 生成地图
-pub fn spawn_map(
-    mut commands: Commands,
-    map: Res<GameMap>,
-) {
-    // 简单测试地图：外圈山地/水域，内部随机地形
+pub fn spawn_map(mut commands: Commands, map: Res<GameMap>, asset_server: Res<AssetServer>) {
+    let font: Handle<Font> = asset_server.load("fonts/Arial Unicode.ttf");
+    let small_font = TextFont {
+        font: FontSource::Handle(font),
+        font_size: FontSize::Px(10.0),
+        ..default()
+    };
+
     for y in 0..map.height {
         for x in 0..map.width {
             let coord = IVec2::new(x as i32, y as i32);
             let terrain = if x == 0 || y == 0 || x == map.width - 1 || y == map.height - 1 {
-                // 边界：山地
                 Terrain::Mountain
             } else if (x + y) % 7 == 0 {
-                // 水域
                 Terrain::Water
             } else if (x + y) % 5 == 0 {
-                // 森林
                 Terrain::Forest
             } else {
                 Terrain::Plain
@@ -128,10 +138,29 @@ pub fn spawn_map(
             let world_pos = map.coord_to_world(coord);
             let tile_size = map.tile_size;
 
+            // 格子精灵
             commands.spawn((
                 Sprite::from_color(terrain.color(), Vec2::splat(tile_size - 2.0)),
                 Transform::from_xyz(world_pos.x, world_pos.y, 0.0),
                 Tile { coord, terrain },
+                children![
+                    // 坐标标注（左上角）
+                    (
+                        Text2d::new(format!("{},{}", coord.x, coord.y)),
+                        small_font.clone(),
+                        TextColor(Color::srgba(1.0, 1.0, 1.0, 0.6)),
+                        TextLayout::no_wrap(),
+                        Transform::from_xyz(-tile_size * 0.3, tile_size * 0.3, 0.1),
+                    ),
+                    // 地形类别标注（中央偏下）
+                    (
+                        Text2d::new(terrain.label().to_string()),
+                        small_font.clone(),
+                        TextColor(Color::srgba(1.0, 1.0, 1.0, 0.5)),
+                        TextLayout::no_wrap(),
+                        Transform::from_xyz(0.0, -tile_size * 0.25, 0.1),
+                    ),
+                ],
             ));
         }
     }

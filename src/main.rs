@@ -8,7 +8,6 @@ mod ui;
 mod unit;
 
 use bevy::prelude::*;
-use bevy_inspector_egui::{bevy_egui::EguiPlugin, quick::WorldInspectorPlugin};
 use map::GameMap;
 use turn::{AppState, TurnPhase};
 
@@ -28,14 +27,12 @@ fn main() {
             }),
             ..default()
         }))
-        // Inspector 调试面板
-        .add_plugins(EguiPlugin::default())
-        .add_plugins(WorldInspectorPlugin::new())
         // 资源
         .init_resource::<GameMap>()
         .init_resource::<turn::TurnState>()
         .init_resource::<turn::AiTimer>()
         .init_resource::<input::AttackTarget>()
+        .init_resource::<ui::CombatLog>()
         // 状态
         .init_state::<AppState>()
         .add_sub_state::<TurnPhase>()
@@ -64,11 +61,13 @@ fn main() {
                 input::handle_click.run_if(in_state(AppState::InGame)),
                 input::handle_end_turn.run_if(in_state(AppState::InGame)),
                 ai::enemy_ai_system.run_if(in_state(AppState::InGame)),
+                ui::setup_ui_font.run_if(in_state(AppState::InGame)),
                 ui::update_turn_indicator.run_if(in_state(AppState::InGame)),
                 ui::update_unit_info.run_if(in_state(AppState::InGame)),
                 ui::update_action_menu.run_if(in_state(AppState::InGame)),
                 ui::update_hp_bars.run_if(in_state(AppState::InGame)),
                 ui::check_game_over.run_if(in_state(AppState::InGame)),
+                ui::update_combat_log.run_if(in_state(AppState::InGame)),
             ),
         )
         // 直接进入游戏（后续可加主菜单）
