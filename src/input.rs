@@ -310,6 +310,8 @@ pub fn handle_action_menu_interaction(
     mut action_buttons: Query<(&ActionMenuButton, &Interaction), Changed<Interaction>>,
     prev_position: Res<PrevPosition>,
     mut menu_entity: ResMut<ActionMenuEntity>,
+    children_query: Query<&Children>,
+    menu_buttons: Query<Entity, With<ActionMenuButton>>,
     mut attack_target: ResMut<AttackTarget>,
 ) {
     if turn_state.current_faction != Faction::Player {
@@ -324,8 +326,8 @@ pub fn handle_action_menu_interaction(
             continue;
         }
 
-        // 关闭菜单
-        despawn_action_menu(&mut commands, &mut menu_entity);
+        // 关闭菜单（含子实体）
+        despawn_action_menu(&mut commands, &mut menu_entity, &children_query, &menu_buttons);
 
         match button.kind {
             ActionKind::Attack => {
@@ -360,6 +362,8 @@ pub fn handle_action_menu_interaction(
                     &prev_position,
                     &map,
                     &mut menu_entity,
+                    &children_query,
+                    &menu_buttons,
                 );
                 attack_target.coord = None;
                 next_phase.set(TurnPhase::SelectUnit);
@@ -458,9 +462,9 @@ fn despawn_action_menu(
     if let Some(entity) = menu_entity.entity {
         // 先销毁子实体中的按钮文本等
         if let Ok(children) = children_query.get(entity) {
-            for &child in children.iter() {
+            for child in children.iter() {
                 if let Ok(grandchildren) = children_query.get(child) {
-                    for &gc in grandchildren.iter() {
+                    for gc in grandchildren.iter() {
                         commands.entity(gc).despawn();
                     }
                 }
