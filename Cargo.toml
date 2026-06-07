@@ -5,3 +5,4 @@ edition = "2024"
 
 [dependencies]
 bevy = { version = "0.18", features = ["2d", "bevy_picking"] }
+bevy-inspector-egui = "0.36"

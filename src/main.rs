@@ -8,6 +8,7 @@ mod ui;
 mod unit;
 
 use bevy::prelude::*;
+use bevy_inspector_egui::{bevy_egui::EguiPlugin, quick::WorldInspectorPlugin};
 use map::GameMap;
 use turn::{AppState, TurnPhase};
 
@@ -27,6 +28,9 @@ fn main() {
             }),
             ..default()
         }))
+        // Inspector 调试面板
+        .add_plugins(EguiPlugin::default())
+        .add_plugins(WorldInspectorPlugin::new())
         // 资源
         .init_resource::<GameMap>()
         .init_resource::<turn::TurnState>()
