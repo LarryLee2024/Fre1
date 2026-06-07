@@ -4,7 +4,7 @@ use crate::combat::{calculate_damage, manhattan_distance, skill_name, skill_rang
 use crate::map::{GameMap, Terrain, Tile};
 use crate::pathfinding::{build_tile_terrain_map, find_reachable_tiles};
 use crate::turn::{AiTimer, TurnPhase, TurnState};
-use crate::ui::{CombatLog, LogSegment, log_color};
+use crate::ui::{CombatLog, CnFont, LogSegment, log_color};
 use crate::unit::{Faction, GridPosition, Skill, Unit, UnitName};
 use crate::vfx;
 use bevy::prelude::*;
@@ -40,7 +40,7 @@ pub fn enemy_ai_system(
     map: Res<GameMap>,
     mut commands: Commands,
     mut combat_log: ResMut<CombatLog>,
-    asset_server: Res<AssetServer>,
+    cn_font: Res<CnFont>,
 ) {
     if turn_state.current_faction != Faction::Enemy {
         return;
@@ -152,8 +152,6 @@ pub fn enemy_ai_system(
     }
 
     // 应用行动到世界（可变访问）
-    let font: Handle<Font> = asset_server.load("fonts/Arial Unicode.ttf");
-
     for action in actions {
         // 移动
         let world_pos = map.coord_to_world(action.move_to);
@@ -199,7 +197,7 @@ pub fn enemy_ai_system(
                     &mut commands,
                     target_transform.translation.truncate(),
                     damage,
-                    &font,
+                    &cn_font.handle,
                     is_crit,
                 );
 

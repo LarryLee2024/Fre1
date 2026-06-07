@@ -80,8 +80,8 @@ fn main() {
             ),
         )
         // 直接进入游戏（后续可加主菜单）
-        .add_systems(Startup, |mut next: ResMut<NextState<AppState>>| {
+        .add_systems(Startup, (|mut next: ResMut<NextState<AppState>>| {
             next.set(AppState::InGame);
-        })
+        }, ui::init_cn_font))
         .run();
 }

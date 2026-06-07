@@ -1,6 +1,7 @@
 // 单位模块：角色属性、阵营、生成
 
 use crate::map::GameMap;
+use crate::ui::CnFont;
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
 
@@ -94,8 +95,7 @@ impl Faction {
 }
 
 /// 生成初始单位
-pub fn spawn_units(mut commands: Commands, map: Res<GameMap>, asset_server: Res<AssetServer>) {
-    let font: Handle<Font> = asset_server.load("fonts/Arial Unicode.ttf");
+pub fn spawn_units(mut commands: Commands, map: Res<GameMap>, cn_font: Res<CnFont>) {
     let tile_size = map.tile_size;
     let bar_width = tile_size * 0.6;
     let bar_height = 4.0;
@@ -125,7 +125,7 @@ pub fn spawn_units(mut commands: Commands, map: Res<GameMap>, asset_server: Res<
             tile_size,
             bar_width,
             bar_height,
-            &font,
+            &cn_font.handle,
         );
     }
 
@@ -154,7 +154,7 @@ pub fn spawn_units(mut commands: Commands, map: Res<GameMap>, asset_server: Res<
             tile_size,
             bar_width,
             bar_height,
-            &font,
+            &cn_font.handle,
         );
     }
 }

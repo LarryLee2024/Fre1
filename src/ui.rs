@@ -9,6 +9,20 @@ use bevy::prelude::*;
 /// 中文字体路径
 const CN_FONT: &str = "fonts/Arial Unicode.ttf";
 
+/// 中文字体资源（全局预加载，避免重复加载）
+#[derive(Resource)]
+pub struct CnFont {
+    pub handle: Handle<Font>,
+}
+
+impl CnFont {
+    pub fn from(asset_server: &AssetServer) -> Self {
+        Self {
+            handle: asset_server.load(CN_FONT),
+        }
+    }
+}
+
 /// 最大日志条数
 const MAX_LOG_LINES: usize = 8;
 
@@ -160,26 +174,15 @@ pub fn spawn_ui(mut commands: Commands) {
     ));
 }
 
-/// 设置中文字体
-pub fn setup_ui_font(
-    asset_server: Res<AssetServer>,
-    mut query: Query<&mut TextFont, With<TurnIndicator>>,
-    mut info_query: Query<&mut TextFont, (With<UnitInfoPanel>, Without<TurnIndicator>)>,
-    mut action_query: Query<&mut TextFont, (With<ActionMenuText>, Without<TurnIndicator>, Without<UnitInfoPanel>)>,
-    mut log_query: Query<&mut TextFont, (With<CombatLogPanel>, Without<TurnIndicator>, Without<UnitInfoPanel>, Without<ActionMenuText>)>,
-) {
-    let font: Handle<Font> = asset_server.load(CN_FONT);
+/// 初始化中文字体资源
+pub fn init_cn_font(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands.insert_resource(CnFont::from(&asset_server));
+}
+
+/// 设置中文字体（覆盖所有 UI 文本）
+pub fn setup_ui_font(cn_font: Res<CnFont>, mut query: Query<&mut TextFont, With<Node>>) {
     for mut text_font in &mut query {
-        text_font.font = font.clone();
-    }
-    for mut text_font in &mut info_query {
-        text_font.font = font.clone();
-    }
-    for mut text_font in &mut action_query {
-        text_font.font = font.clone();
-    }
-    for mut text_font in &mut log_query {
-        text_font.font = font.clone();
+        text_font.font = cn_font.handle.clone();
     }
 }
 

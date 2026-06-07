@@ -4,7 +4,7 @@ use crate::combat::{calculate_damage, manhattan_distance, skill_name, skill_rang
 use crate::map::{GameMap, Terrain, Tile};
 use crate::pathfinding::{build_tile_terrain_map, find_reachable_tiles};
 use crate::turn::{TurnPhase, TurnState};
-use crate::ui::{CombatLog, LogSegment, log_color};
+use crate::ui::{CombatLog, CnFont, LogSegment, log_color};
 use crate::unit::{
     AttackRange, Faction, GridPosition, MovableRange, Selected, SelectionHighlight, Skill, Unit, UnitName,
 };
@@ -300,7 +300,7 @@ pub fn execute_action_on_enter(
     range_markers: Query<Entity, Or<(With<MovableRange>, With<AttackRange>)>>,
     highlights: Query<Entity, With<SelectionHighlight>>,
     mut combat_log: ResMut<CombatLog>,
-    asset_server: Res<AssetServer>,
+    cn_font: Res<CnFont>,
     map: Res<GameMap>,
 ) {
     // 清除范围标记和高亮
@@ -310,8 +310,6 @@ pub fn execute_action_on_enter(
     for h in &highlights {
         commands.entity(h).despawn();
     }
-
-    let font: Handle<Font> = asset_server.load("fonts/Arial Unicode.ttf");
 
     if let Ok((entity, mut unit, _pos, attacker_name)) = selected_units.single_mut() {
         // 查找攻击目标
@@ -338,7 +336,7 @@ pub fn execute_action_on_enter(
                         &mut commands,
                         target_transform.translation.truncate(),
                         damage,
-                        &font,
+                        &cn_font.handle,
                         is_crit,
                     );
 
