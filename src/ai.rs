@@ -30,13 +30,7 @@ pub fn enemy_ai_system(
     mut ai_timer: ResMut<AiTimer>,
     mut turn_state: ResMut<TurnState>,
     turn_phase: Res<State<TurnPhase>>,
-    mut units: Query<(
-        Entity,
-        &mut Unit,
-        &mut GridPosition,
-        &mut Transform,
-        &UnitName,
-    )>,
+    mut units: Query<(Entity, &mut Unit, &mut GridPosition, &mut Transform, &UnitName)>,
     tiles: Query<&Tile>,
     map: Res<GameMap>,
     mut commands: Commands,
@@ -116,13 +110,8 @@ pub fn enemy_ai_system(
             .map(|s| (s.coord, true))
             .collect();
 
-        let reachable = find_reachable_tiles(
-            snapshot.coord,
-            snapshot.mov,
-            &map,
-            &terrain_map,
-            &occupation_map,
-        );
+        let reachable =
+            find_reachable_tiles(snapshot.coord, snapshot.mov, &map, &terrain_map, &occupation_map);
 
         let best_coord = reachable
             .iter()
@@ -169,13 +158,7 @@ pub fn enemy_ai_system(
             {
                 let terrain = tiles
                     .iter()
-                    .find_map(|t| {
-                        if t.coord == target_gp.coord {
-                            Some(t.terrain)
-                        } else {
-                            None
-                        }
-                    })
+                    .find_map(|t| if t.coord == target_gp.coord { Some(t.terrain) } else { None })
                     .unwrap_or(crate::map::Terrain::Plain);
 
                 let attacker = Unit {

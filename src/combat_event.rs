@@ -39,25 +39,13 @@ pub fn execute_attack(
 
     // 伤害数字弹出
     let is_crit = attacker_unit.skill != Skill::None;
-    vfx::spawn_damage_popup(
-        commands,
-        target_translation,
-        damage,
-        &cn_font.handle,
-        is_crit,
-    );
+    vfx::spawn_damage_popup(commands, target_translation, damage, &cn_font.handle, is_crit);
 
     // 战斗日志
-    let attacker_color = if attacker_unit.faction == Faction::Player {
-        log_color::PLAYER
-    } else {
-        log_color::ENEMY
-    };
-    let defender_color = if target_unit.faction == Faction::Player {
-        log_color::PLAYER
-    } else {
-        log_color::ENEMY
-    };
+    let attacker_color =
+        if attacker_unit.faction == Faction::Player { log_color::PLAYER } else { log_color::ENEMY };
+    let defender_color =
+        if target_unit.faction == Faction::Player { log_color::PLAYER } else { log_color::ENEMY };
     let skill_label = skill_name(&attacker_unit.skill);
 
     combat_log.push(vec![

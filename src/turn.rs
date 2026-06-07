@@ -20,8 +20,10 @@ pub enum TurnPhase {
     SelectUnit,
     /// 移动阶段
     MoveUnit,
-    /// 选择行动（攻击/待机）
-    SelectAction,
+    /// 行动菜单（右键弹出）
+    ActionMenu,
+    /// 选择攻击目标
+    SelectTarget,
     /// 执行攻击
     ExecuteAction,
     /// 待机

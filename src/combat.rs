@@ -12,9 +12,9 @@ pub fn manhattan_distance(a: IVec2, b: IVec2) -> u32 {
 /// 计算攻击伤害（含技能加成）
 pub fn calculate_damage(attacker: &Unit, defender: &Unit, terrain: Terrain) -> i32 {
     let skill_multiplier = match attacker.skill {
-        Skill::Charge => 1.5,    // 冲锋：1.5倍伤害
-        Skill::Pierce => 1.3,    // 穿透箭：1.3倍伤害，无视部分防御
-        Skill::Fireball => 1.8,  // 火球：1.8倍伤害
+        Skill::Charge => 1.5,   // 冲锋：1.5倍伤害
+        Skill::Pierce => 1.3,   // 穿透箭：1.3倍伤害，无视部分防御
+        Skill::Fireball => 1.8, // 火球：1.8倍伤害
         Skill::None => 1.0,
     };
 
@@ -41,9 +41,9 @@ pub fn skill_name(skill: &Skill) -> &'static str {
 /// 获取技能范围（覆盖单位默认攻击范围）
 pub fn skill_range(skill: &Skill, base_range: u32) -> u32 {
     match skill {
-        Skill::Charge => 1,           // 冲锋：近战
+        Skill::Charge => 1,                       // 冲锋：近战
         Skill::Pierce => (base_range + 1).max(4), // 穿透箭：远程+1
-        Skill::Fireball => 3,         // 火球：中程
+        Skill::Fireball => 3,                     // 火球：中程
         Skill::None => base_range,
     }
 }

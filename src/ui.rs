@@ -42,7 +42,7 @@ pub fn spawn_ui(mut commands: Commands) {
 
     // 操作提示
     commands.spawn((
-        Text::new("左键选择/移动 | 右键取消 | E 结束回合"),
+        Text::new("左键选择/移动 | 右键取消/菜单 | E 结束回合"),
         TextFont {
             font_size: 14.0,
             ..default()
@@ -75,7 +75,7 @@ pub fn spawn_ui(mut commands: Commands) {
 
     // 行动菜单提示（默认隐藏）
     commands.spawn((
-        Text::new("点击敌方单位攻击 | 右键/点击空地待机"),
+        Text::new("选择行动：攻击/技能/待机/取消"),
         TextFont {
             font_size: 16.0,
             ..default()
@@ -165,7 +165,7 @@ pub fn update_action_menu(
     mut query: Query<&mut Visibility, With<ActionMenuText>>,
 ) {
     for mut vis in &mut query {
-        *vis = if *turn_phase.get() == TurnPhase::SelectAction
+        *vis = if *turn_phase.get() == TurnPhase::ActionMenu
             && turn_state.current_faction == Faction::Player
         {
             Visibility::Visible

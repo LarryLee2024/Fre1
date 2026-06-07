@@ -102,7 +102,7 @@ pub fn spawn_units(mut commands: Commands, map: Res<GameMap>, cn_font: Res<CnFon
 
     // 玩家单位（名称, 坐标, 技能, 移动力, HP, MaxHP, ATK, DEF, 攻击范围）
     let player_units: [(&str, IVec2, Skill, u32, i32, i32, i32, i32, u32); 3] = [
-        ("战士", IVec2::new(2, 2), Skill::Charge, 5, 30, 30, 10, 5, 1),
+        ("战士", IVec2::new(4, 3), Skill::Charge, 5, 30, 30, 10, 5, 1),
         ("弓手", IVec2::new(3, 4), Skill::Pierce, 4, 20, 20, 8, 3, 3),
         ("法师", IVec2::new(2, 5), Skill::Fireball, 3, 18, 18, 12, 2, 2),
     ];

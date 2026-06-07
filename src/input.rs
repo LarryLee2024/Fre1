@@ -1,4 +1,4 @@
-// 输入处理模块：点击选择、移动、攻击
+// 输入处理模块：点击选择、移动、攻击、行动菜单
 
 use crate::assets::CnFont;
 use crate::combat::{manhattan_distance, skill_range};
@@ -18,6 +18,41 @@ pub struct AttackTarget {
     pub coord: Option<IVec2>,
 }
 
+/// 移动前位置（用于取消时回退）
+#[derive(Resource, Default)]
+pub struct PrevPosition {
+    pub coord: Option<IVec2>,
+}
+
+/// 行动菜单选项
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+pub enum ActionKind {
+    /// 攻击
+    Attack,
+    /// 技能
+    Skill,
+    /// 待机
+    Wait,
+    /// 取消（撤销移动）
+    Cancel,
+}
+
+/// 行动菜单标记组件
+#[derive(Component)]
+pub struct ActionMenuRoot;
+
+/// 行动菜单按钮标记
+#[derive(Component)]
+pub struct ActionMenuButton {
+    pub kind: ActionKind,
+}
+
+/// 行动菜单实体追踪（防止重复 despawn）
+#[derive(Resource, Default)]
+pub struct ActionMenuEntity {
+    pub entity: Option<Entity>,
+}
+
 /// 处理玩家点击
 pub fn handle_click(
     mouse_button: Res<ButtonInput<MouseButton>>,
@@ -35,6 +70,7 @@ pub fn handle_click(
     selected_query: Query<Entity, With<Selected>>,
     highlights: Query<Entity, With<SelectionHighlight>>,
     mut attack_target: ResMut<AttackTarget>,
+    mut menu_entity: ResMut<ActionMenuEntity>,
 ) {
     // 只处理玩家回合
     if turn_state.current_faction != Faction::Player {
@@ -48,25 +84,31 @@ pub fn handle_click(
         return;
     }
 
-    // 右键取消：回到选择单位阶段
+    // 右键取消
     if right_clicked {
         match turn_phase.get() {
-            TurnPhase::MoveUnit | TurnPhase::SelectAction => {
+            TurnPhase::MoveUnit => {
                 clear_selection(&mut commands, &selected_query, &range_markers, &highlights);
                 attack_target.coord = None;
                 next_phase.set(TurnPhase::SelectUnit);
+                return;
+            }
+            TurnPhase::ActionMenu | TurnPhase::SelectTarget => {
+                // 由 handle_right_cancel 处理
                 return;
             }
             _ => return,
         }
     }
 
+    // 获取相机（用于世界坐标→屏幕坐标转换）
+    let Ok((camera, cam_transform)) = camera_query.single() else {
+        return;
+    };
+
     // 获取点击的世界坐标
     let Ok(window) = windows.single() else { return };
     let Some(cursor_pos) = window.cursor_position() else {
-        return;
-    };
-    let Ok((camera, cam_transform)) = camera_query.single() else {
         return;
     };
     let Ok(world_pos) = camera.viewport_to_world_2d(cam_transform, cursor_pos) else {
@@ -97,6 +139,13 @@ pub fn handle_click(
 
             if is_movable {
                 if let Ok(selected_entity) = selected_query.single() {
+                    // 记录移动前位置
+                    if let Ok((_, _, old_gp, _)) = units.get(selected_entity) {
+                        commands.insert_resource(PrevPosition {
+                            coord: Some(old_gp.coord),
+                        });
+                    }
+
                     let world_pos = map.coord_to_world(coord);
                     commands
                         .entity(selected_entity)
@@ -110,20 +159,31 @@ pub fn handle_click(
                 }
             }
 
-            // 清除移动范围，显示攻击范围
+            // 清除移动范围
             for marker in &range_markers {
                 commands.entity(marker).despawn();
             }
 
+            // 弹出行动菜单（用屏幕坐标定位）
             if let Ok(selected_entity) = selected_query.single() {
                 if let Ok((_, unit, gp, _)) = units.get(selected_entity) {
-                    let effective_range = skill_range(&unit.skill, unit.attack_range);
-                    show_attack_range(&mut commands, &map, gp.coord, effective_range);
+                    let unit_world = map.coord_to_world(gp.coord);
+                    if let Ok(screen_pos) =
+                        camera.world_to_viewport(cam_transform, unit_world.extend(1.0))
+                    {
+                        spawn_action_menu(
+                            &mut commands,
+                            screen_pos.x,
+                            screen_pos.y,
+                            unit,
+                            &mut menu_entity,
+                        );
+                    }
                 }
             }
-            next_phase.set(TurnPhase::SelectAction);
+            next_phase.set(TurnPhase::ActionMenu);
         }
-        TurnPhase::SelectAction => {
+        TurnPhase::SelectTarget => {
             // 点击敌方单位：攻击
             for (_, unit, gp, _) in &units {
                 if unit.faction == Faction::Enemy {
@@ -141,11 +201,282 @@ pub fn handle_click(
                 }
             }
 
-            // 点击其他地方：待机
-            next_phase.set(TurnPhase::WaitAction);
+            // 点击其他地方：回到行动菜单
+            clear_markers(&mut commands, &range_markers, &highlights);
+            if let Ok(selected_entity) = selected_query.single() {
+                if let Ok((_, unit, gp, _)) = units.get(selected_entity) {
+                    let unit_world = map.coord_to_world(gp.coord);
+                    if let Ok(screen_pos) =
+                        camera.world_to_viewport(cam_transform, unit_world.extend(1.0))
+                    {
+                        spawn_action_menu(
+                            &mut commands,
+                            screen_pos.x,
+                            screen_pos.y,
+                            unit,
+                            &mut menu_entity,
+                        );
+                    }
+                }
+            }
+            next_phase.set(TurnPhase::ActionMenu);
         }
         _ => {}
     }
+}
+
+/// 处理右键取消（ActionMenu/SelectTarget 阶段）
+pub fn handle_right_cancel(
+    mouse_button: Res<ButtonInput<MouseButton>>,
+    turn_state: Res<TurnState>,
+    turn_phase: Res<State<TurnPhase>>,
+    mut next_phase: ResMut<NextState<TurnPhase>>,
+    mut commands: Commands,
+    map: Res<GameMap>,
+    camera_query: Query<(&Camera, &GlobalTransform)>,
+    units: Query<(Entity, &Unit, &GridPosition, &Transform)>,
+    selected_query: Query<Entity, With<Selected>>,
+    range_markers: Query<Entity, Or<(With<MovableRange>, With<AttackRange>)>>,
+    highlights: Query<Entity, With<SelectionHighlight>>,
+    prev_position: Res<PrevPosition>,
+    mut menu_entity: ResMut<ActionMenuEntity>,
+    mut attack_target: ResMut<AttackTarget>,
+) {
+    if turn_state.current_faction != Faction::Player {
+        return;
+    }
+    if !mouse_button.just_pressed(MouseButton::Right) {
+        return;
+    }
+
+    match turn_phase.get() {
+        TurnPhase::ActionMenu => {
+            cancel_move(
+                &mut commands,
+                &selected_query,
+                &range_markers,
+                &highlights,
+                &prev_position,
+                &map,
+                &mut menu_entity,
+            );
+            attack_target.coord = None;
+            next_phase.set(TurnPhase::SelectUnit);
+        }
+        TurnPhase::SelectTarget => {
+            clear_markers(&mut commands, &range_markers, &highlights);
+            attack_target.coord = None;
+            // 重新显示行动菜单
+            if let Ok(selected_entity) = selected_query.single() {
+                if let Ok((_, unit, gp, _)) = units.get(selected_entity) {
+                    let Ok((camera, cam_transform)) = camera_query.single() else {
+                        return;
+                    };
+                    let unit_world = map.coord_to_world(gp.coord);
+                    if let Ok(screen_pos) =
+                        camera.world_to_viewport(cam_transform, unit_world.extend(1.0))
+                    {
+                        spawn_action_menu(
+                            &mut commands,
+                            screen_pos.x,
+                            screen_pos.y,
+                            unit,
+                            &mut menu_entity,
+                        );
+                    }
+                }
+            }
+            next_phase.set(TurnPhase::ActionMenu);
+        }
+        _ => {}
+    }
+}
+
+/// 处理行动菜单按钮交互
+pub fn handle_action_menu_interaction(
+    turn_state: Res<TurnState>,
+    turn_phase: Res<State<TurnPhase>>,
+    mut next_phase: ResMut<NextState<TurnPhase>>,
+    mut commands: Commands,
+    map: Res<GameMap>,
+    selected_query: Query<Entity, With<Selected>>,
+    units: Query<(Entity, &Unit, &GridPosition, &Transform)>,
+    range_markers: Query<Entity, Or<(With<MovableRange>, With<AttackRange>)>>,
+    highlights: Query<Entity, With<SelectionHighlight>>,
+    mut action_buttons: Query<(&ActionMenuButton, &Interaction), Changed<Interaction>>,
+    prev_position: Res<PrevPosition>,
+    mut menu_entity: ResMut<ActionMenuEntity>,
+    mut attack_target: ResMut<AttackTarget>,
+) {
+    if turn_state.current_faction != Faction::Player {
+        return;
+    }
+    if *turn_phase.get() != TurnPhase::ActionMenu {
+        return;
+    }
+
+    for (button, interaction) in &mut action_buttons {
+        if *interaction != Interaction::Pressed {
+            continue;
+        }
+
+        // 关闭菜单
+        despawn_action_menu(&mut commands, &mut menu_entity);
+
+        match button.kind {
+            ActionKind::Attack => {
+                // 显示攻击范围，进入选择目标阶段
+                if let Ok(selected_entity) = selected_query.single() {
+                    if let Ok((_, unit, gp, _)) = units.get(selected_entity) {
+                        let effective_range = skill_range(&unit.skill, unit.attack_range);
+                        show_attack_range(&mut commands, &map, gp.coord, effective_range);
+                    }
+                }
+                next_phase.set(TurnPhase::SelectTarget);
+            }
+            ActionKind::Skill => {
+                // 当前技能自动触发，等同于攻击
+                if let Ok(selected_entity) = selected_query.single() {
+                    if let Ok((_, unit, gp, _)) = units.get(selected_entity) {
+                        let effective_range = skill_range(&unit.skill, unit.attack_range);
+                        show_attack_range(&mut commands, &map, gp.coord, effective_range);
+                    }
+                }
+                next_phase.set(TurnPhase::SelectTarget);
+            }
+            ActionKind::Wait => {
+                next_phase.set(TurnPhase::WaitAction);
+            }
+            ActionKind::Cancel => {
+                cancel_move(
+                    &mut commands,
+                    &selected_query,
+                    &range_markers,
+                    &highlights,
+                    &prev_position,
+                    &map,
+                    &mut menu_entity,
+                );
+                attack_target.coord = None;
+                next_phase.set(TurnPhase::SelectUnit);
+            }
+        }
+        return;
+    }
+}
+
+/// 生成行动菜单（弹出式，使用屏幕坐标）
+fn spawn_action_menu(
+    commands: &mut Commands,
+    screen_x: f32,
+    screen_y: f32,
+    unit: &Unit,
+    menu_entity_res: &mut ActionMenuEntity,
+) {
+    // 构建菜单选项
+    let mut items: Vec<(ActionKind, &str, Color)> = vec![
+        (ActionKind::Attack, "攻击", Color::srgb(1.0, 0.4, 0.3)),
+        (ActionKind::Wait, "待机", Color::srgb(0.6, 0.8, 1.0)),
+        (ActionKind::Cancel, "取消", Color::srgb(0.7, 0.7, 0.7)),
+    ];
+
+    // 有技能时插入技能选项
+    if unit.skill != crate::unit::Skill::None {
+        let skill_label = crate::combat::skill_name(&unit.skill);
+        items.insert(1, (ActionKind::Skill, skill_label, Color::srgb(1.0, 0.8, 0.3)));
+    }
+
+    let button_height = 28.0;
+    let button_width = 72.0;
+
+    // 菜单位置：单位右侧偏移，确保不超出屏幕
+    let menu_x = screen_x + 30.0;
+    let menu_y = screen_y - 20.0;
+
+    // 菜单容器
+    let menu_id = commands
+        .spawn((
+            Node {
+                position_type: PositionType::Absolute,
+                left: Val::Px(menu_x),
+                top: Val::Px(menu_y),
+                width: Val::Px(button_width + 16.0),
+                height: Val::Auto,
+                row_gap: Val::Px(2.0),
+                padding: UiRect::all(Val::Px(4.0)),
+                flex_direction: FlexDirection::Column,
+                ..default()
+            },
+            BackgroundColor(Color::srgba(0.1, 0.1, 0.15, 0.9)),
+        ))
+        .insert(ActionMenuRoot)
+        .id();
+
+    for (kind, label, color) in items {
+        commands.entity(menu_id).with_children(|parent| {
+            parent
+                .spawn((
+                    Node {
+                        width: Val::Percent(100.0),
+                        height: Val::Px(button_height),
+                        justify_content: JustifyContent::Center,
+                        align_items: AlignItems::Center,
+                        padding: UiRect::all(Val::Px(4.0)),
+                        ..default()
+                    },
+                    Button,
+                    ActionMenuButton { kind },
+                ))
+                .with_children(|btn| {
+                    btn.spawn((
+                        Text::new(label),
+                        TextFont {
+                            font_size: 15.0,
+                            ..default()
+                        },
+                        TextColor(color),
+                    ));
+                });
+        });
+    }
+
+    // 记录菜单实体
+    menu_entity_res.entity = Some(menu_id);
+}
+
+/// 安全销毁行动菜单
+fn despawn_action_menu(commands: &mut Commands, menu_entity: &mut ActionMenuEntity) {
+    if let Some(entity) = menu_entity.entity {
+        commands.entity(entity).despawn();
+        menu_entity.entity = None;
+    }
+}
+
+/// 撤销移动（取消时回退到移动前位置）
+fn cancel_move(
+    commands: &mut Commands,
+    selected_query: &Query<Entity, With<Selected>>,
+    range_markers: &Query<Entity, Or<(With<MovableRange>, With<AttackRange>)>>,
+    highlights: &Query<Entity, With<SelectionHighlight>>,
+    prev_position: &PrevPosition,
+    map: &GameMap,
+    menu_entity: &mut ActionMenuEntity,
+) {
+    // 关闭菜单
+    despawn_action_menu(commands, menu_entity);
+
+    // 回退位置
+    if let Some(prev_coord) = prev_position.coord {
+        if let Ok(selected_entity) = selected_query.single() {
+            let world_pos = map.coord_to_world(prev_coord);
+            commands
+                .entity(selected_entity)
+                .insert(Transform::from_xyz(world_pos.x, world_pos.y, 1.0))
+                .insert(GridPosition { coord: prev_coord });
+        }
+    }
+
+    clear_selection(commands, selected_query, range_markers, highlights);
 }
 
 /// 按 E 键结束回合
@@ -319,16 +650,13 @@ pub fn execute_action_on_enter(
                 targets.iter_mut()
             {
                 if target_pos.coord == target_coord && target.faction != unit.faction {
-                    let terrain = tiles
-                        .iter()
-                        .find_map(|t| {
-                            if t.coord == target_pos.coord {
-                                Some(t.terrain)
-                            } else {
-                                None
-                            }
-                        })
-                        .unwrap_or(crate::map::Terrain::Plain);
+                    let terrain =
+                        tiles
+                            .iter()
+                            .find_map(|t| {
+                                if t.coord == target_pos.coord { Some(t.terrain) } else { None }
+                            })
+                            .unwrap_or(crate::map::Terrain::Plain);
 
                     // 统一攻击处理
                     combat_event::execute_attack(

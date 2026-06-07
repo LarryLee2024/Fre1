@@ -35,17 +35,9 @@ pub fn spawn_damage_popup(
     font: &Handle<Font>,
     is_crit: bool,
 ) {
-    let color = if is_crit {
-        Color::srgb(1.0, 0.2, 0.2)
-    } else {
-        Color::srgb(1.0, 0.9, 0.3)
-    };
+    let color = if is_crit { Color::srgb(1.0, 0.2, 0.2) } else { Color::srgb(1.0, 0.9, 0.3) };
     let font_size = if is_crit { 22.0 } else { 16.0 };
-    let text = if is_crit {
-        format!("{}!", damage)
-    } else {
-        format!("{}", damage)
-    };
+    let text = if is_crit { format!("{}!", damage) } else { format!("{}", damage) };
 
     commands.spawn((
         Text2d::new(text),
@@ -68,7 +60,13 @@ pub fn spawn_damage_popup(
 pub fn update_damage_popups(
     time: Res<Time>,
     mut commands: Commands,
-    mut popups: Query<(Entity, &mut DamagePopup, &mut Transform, &mut TextColor, &DamagePopupConfig)>,
+    mut popups: Query<(
+        Entity,
+        &mut DamagePopup,
+        &mut Transform,
+        &mut TextColor,
+        &DamagePopupConfig,
+    )>,
 ) {
     for (entity, mut popup, mut transform, mut color, config) in &mut popups {
         popup.timer.tick(time.delta());
