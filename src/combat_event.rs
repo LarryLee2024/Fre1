@@ -3,8 +3,10 @@
 use crate::assets::CnFont;
 use crate::combat::{calculate_damage, skill_name};
 use crate::combat_log::{CombatLog, LogSegment, log_color};
-use crate::map::Terrain;
-use crate::unit::{Faction, Skill, Unit, UnitName};
+use crate::map::{Terrain, Tile};
+use crate::unit::{
+    AttackRange, Faction, GridPosition, MovableRange, Selected, Skill, Unit, UnitName,
+};
 use crate::vfx;
 use bevy::prelude::*;
 
@@ -96,8 +98,88 @@ pub fn execute_attack(
                 color: log_color::KILL,
             },
         ]);
-        commands.entity(target_entity).despawn();
+        commands.entity(target_entity).try_despawn();
     }
 
     AttackResult { damage, killed }
+}
+
+/// 执行攻击（OnEnter）
+pub fn execute_action_on_enter(
+    mut selected_units: Query<(Entity, &mut Unit, &GridPosition, &UnitName), With<Selected>>,
+    mut targets: Query<
+        (Entity, &mut Unit, &GridPosition, &UnitName, &Transform),
+        Without<Selected>,
+    >,
+    tiles: Query<&Tile>,
+    mut next_phase: ResMut<NextState<crate::turn::TurnPhase>>,
+    mut commands: Commands,
+    mut attack_target: ResMut<crate::input::AttackTarget>,
+    range_markers: Query<Entity, Or<(With<MovableRange>, With<AttackRange>)>>,
+    highlights: Query<Entity, With<crate::unit::SelectionHighlight>>,
+    mut combat_log: ResMut<CombatLog>,
+    cn_font: Res<CnFont>,
+) {
+    // 清除范围标记和高亮
+    crate::input::clear_markers(&mut commands, &range_markers, &highlights);
+
+    if let Ok((entity, mut unit, _pos, attacker_name)) = selected_units.single_mut() {
+        // 查找攻击目标
+        if let Some(target_coord) = attack_target.coord {
+            for (target_entity, mut target, target_pos, target_name, target_transform) in
+                targets.iter_mut()
+            {
+                if target_pos.coord == target_coord && target.faction != unit.faction {
+                    let terrain =
+                        tiles
+                            .iter()
+                            .find_map(|t| {
+                                if t.coord == target_pos.coord { Some(t.terrain) } else { None }
+                            })
+                            .unwrap_or(Terrain::Plain);
+
+                    // 统一攻击处理
+                    execute_attack(
+                        &mut commands,
+                        &unit,
+                        &attacker_name.0,
+                        target_entity,
+                        &mut target,
+                        target_pos.coord,
+                        target_name,
+                        target_transform.translation.truncate(),
+                        terrain,
+                        &cn_font,
+                        &mut combat_log,
+                    );
+                    break;
+                }
+            }
+        }
+
+        unit.acted = true;
+        commands.entity(entity).remove::<Selected>();
+    }
+
+    attack_target.coord = None;
+    next_phase.set(crate::turn::TurnPhase::TurnEnd);
+}
+
+/// 待机（OnEnter）
+pub fn wait_action_on_enter(
+    mut selected_units: Query<(Entity, &mut Unit), With<Selected>>,
+    mut next_phase: ResMut<NextState<crate::turn::TurnPhase>>,
+    mut commands: Commands,
+    range_markers: Query<Entity, Or<(With<MovableRange>, With<AttackRange>)>>,
+    highlights: Query<Entity, With<crate::unit::SelectionHighlight>>,
+) {
+    // 清除范围标记和高亮
+    crate::input::clear_markers(&mut commands, &range_markers, &highlights);
+
+    if let Ok((entity, mut unit)) = selected_units.single_mut() {
+        unit.acted = true;
+        commands.entity(entity).remove::<Selected>();
+    }
+
+    next_phase.set(crate::turn::TurnPhase::TurnEnd);
 }

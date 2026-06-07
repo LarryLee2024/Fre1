@@ -165,3 +165,121 @@ pub fn spawn_map(mut commands: Commands, map: Res<GameMap>, cn_font: Res<CnFont>
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ---- Terrain 方法 ----
+
+    #[test]
+    fn 地形_移动消耗() {
+        assert_eq!(Terrain::Plain.move_cost(), Some(1));
+        assert_eq!(Terrain::Forest.move_cost(), Some(2));
+        assert_eq!(Terrain::Mountain.move_cost(), None);
+        assert_eq!(Terrain::Water.move_cost(), None);
+    }
+
+    #[test]
+    fn 地形_防御加成() {
+        assert_eq!(Terrain::Plain.defense_bonus(), 0);
+        assert_eq!(Terrain::Forest.defense_bonus(), 2);
+        assert_eq!(Terrain::Mountain.defense_bonus(), 0);
+        assert_eq!(Terrain::Water.defense_bonus(), 0);
+    }
+
+    #[test]
+    fn 地形_中文名() {
+        assert_eq!(Terrain::Plain.label(), "草");
+        assert_eq!(Terrain::Forest.label(), "林");
+        assert_eq!(Terrain::Mountain.label(), "山");
+        assert_eq!(Terrain::Water.label(), "水");
+    }
+
+    // ---- GameMap 坐标转换 ----
+
+    fn make_map() -> GameMap {
+        GameMap {
+            width: 10,
+            height: 8,
+            tile_size: 64.0,
+        }
+    }
+
+    #[test]
+    fn 坐标转世界_左下角原点() {
+        let map = make_map();
+        // (0,0) → (-4.5*64, -3.5*64) = (-288, -224)
+        let pos = map.coord_to_world(IVec2::new(0, 0));
+        assert_eq!(pos.x, -288.0);
+        assert_eq!(pos.y, -224.0);
+    }
+
+    #[test]
+    fn 坐标转世界_地图中心() {
+        let map = make_map();
+        // (5,4) → (0.5*64, 0.5*64) = (32, 32)
+        let pos = map.coord_to_world(IVec2::new(5, 4));
+        assert_eq!(pos.x, 32.0);
+        assert_eq!(pos.y, 32.0);
+    }
+
+    #[test]
+    fn 坐标转世界_右上角() {
+        let map = make_map();
+        // (9,7) → (4.5*64, 3.5*64) = (288, 224)
+        let pos = map.coord_to_world(IVec2::new(9, 7));
+        assert_eq!(pos.x, 288.0);
+        assert_eq!(pos.y, 224.0);
+    }
+
+    #[test]
+    fn 世界转坐标_往返一致() {
+        let map = make_map();
+        for coord in [
+            IVec2::new(0, 0),
+            IVec2::new(5, 4),
+            IVec2::new(9, 7),
+            IVec2::new(3, 6),
+        ] {
+            let world = map.coord_to_world(coord);
+            let back = map.world_to_coord(world);
+            assert_eq!(coord, back, "coord {:?} 往返不一致", coord);
+        }
+    }
+
+    #[test]
+    fn 世界转坐标_格子内任意点映射同一格() {
+        let map = make_map();
+        let center = map.coord_to_world(IVec2::new(3, 3));
+        // 偏移不超过半格，应映射回同一格
+        let offset = Vec2::new(10.0, -10.0);
+        let result = map.world_to_coord(center + offset);
+        assert_eq!(result, IVec2::new(3, 3));
+    }
+
+    // ---- is_in_bounds ----
+
+    #[test]
+    fn 边界_内部坐标合法() {
+        let map = make_map();
+        assert!(map.is_in_bounds(IVec2::new(0, 0)));
+        assert!(map.is_in_bounds(IVec2::new(9, 7)));
+        assert!(map.is_in_bounds(IVec2::new(5, 4)));
+    }
+
+    #[test]
+    fn 边界_负坐标非法() {
+        let map = make_map();
+        assert!(!map.is_in_bounds(IVec2::new(-1, 0)));
+        assert!(!map.is_in_bounds(IVec2::new(0, -1)));
+    }
+
+    #[test]
+    fn 边界_超出宽高非法() {
+        let map = make_map();
+        assert!(!map.is_in_bounds(IVec2::new(10, 0)));
+        assert!(!map.is_in_bounds(IVec2::new(0, 8)));
+        assert!(!map.is_in_bounds(IVec2::new(10, 8)));
+    }
+}

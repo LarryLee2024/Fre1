@@ -83,7 +83,7 @@ pub fn update_damage_popups(
 
         // 超时移除
         if popup.timer.just_finished() {
-            commands.entity(entity).despawn();
+            commands.entity(entity).try_despawn();
         }
     }
 }

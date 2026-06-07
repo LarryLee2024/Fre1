@@ -1,3 +1,4 @@
+mod action_menu;
 mod ai;
 mod assets;
 mod camera;
@@ -7,6 +8,7 @@ mod combat_log;
 mod input;
 mod map;
 mod pathfinding;
+mod tile_info;
 mod turn;
 mod ui;
 mod unit;
@@ -38,7 +40,8 @@ fn main() {
         .init_resource::<turn::AiTimer>()
         .init_resource::<input::AttackTarget>()
         .init_resource::<input::PrevPosition>()
-        .init_resource::<input::ActionMenuEntity>()
+        .init_resource::<action_menu::ActionMenuEntity>()
+        .init_resource::<tile_info::TileInfoEntity>()
         .init_resource::<combat_log::CombatLog>()
         // 状态
         .init_state::<AppState>()
@@ -49,9 +52,9 @@ fn main() {
             (camera::spawn_camera, map::spawn_map, unit::spawn_units, ui::spawn_ui).chain(),
         )
         // 回合阶段 OnEnter 系统
-        .add_systems(OnEnter(TurnPhase::ExecuteAction), input::execute_action_on_enter)
-        .add_systems(OnEnter(TurnPhase::WaitAction), input::wait_action_on_enter)
-        .add_systems(OnEnter(TurnPhase::TurnEnd), input::turn_end_on_enter)
+        .add_systems(OnEnter(TurnPhase::ExecuteAction), combat_event::execute_action_on_enter)
+        .add_systems(OnEnter(TurnPhase::WaitAction), combat_event::wait_action_on_enter)
+        .add_systems(OnEnter(TurnPhase::TurnEnd), turn::turn_end_on_enter)
         // 更新系统
         .add_systems(
             Update,
@@ -59,8 +62,9 @@ fn main() {
                 camera::camera_control,
                 input::handle_click.run_if(in_state(AppState::InGame)),
                 input::handle_right_cancel.run_if(in_state(AppState::InGame)),
+                tile_info::handle_tile_info.run_if(in_state(AppState::InGame)),
                 input::handle_end_turn.run_if(in_state(AppState::InGame)),
-                input::handle_action_menu_interaction.run_if(in_state(AppState::InGame)),
+                action_menu::handle_action_menu_interaction.run_if(in_state(AppState::InGame)),
                 ai::enemy_ai_system.run_if(in_state(AppState::InGame)),
                 ui::setup_ui_font.run_if(in_state(AppState::InGame)),
                 ui::update_turn_indicator.run_if(in_state(AppState::InGame)),
