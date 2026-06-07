@@ -240,6 +240,8 @@ pub fn handle_right_cancel(
     highlights: Query<Entity, With<SelectionHighlight>>,
     prev_position: Res<PrevPosition>,
     mut menu_entity: ResMut<ActionMenuEntity>,
+    children_query: Query<&Children>,
+    menu_buttons: Query<Entity, With<ActionMenuButton>>,
     mut attack_target: ResMut<AttackTarget>,
 ) {
     if turn_state.current_faction != Faction::Player {
@@ -259,6 +261,8 @@ pub fn handle_right_cancel(
                 &prev_position,
                 &map,
                 &mut menu_entity,
+                &children_query,
+                &menu_buttons,
             );
             attack_target.coord = None;
             next_phase.set(TurnPhase::SelectUnit);
@@ -444,11 +448,32 @@ fn spawn_action_menu(
     menu_entity_res.entity = Some(menu_id);
 }
 
-/// 安全销毁行动菜单
-fn despawn_action_menu(commands: &mut Commands, menu_entity: &mut ActionMenuEntity) {
+/// 安全销毁行动菜单（含所有子实体）
+fn despawn_action_menu(
+    commands: &mut Commands,
+    menu_entity: &mut ActionMenuEntity,
+    children_query: &Query<&Children>,
+    menu_buttons: &Query<Entity, With<ActionMenuButton>>,
+) {
     if let Some(entity) = menu_entity.entity {
+        // 先销毁子实体中的按钮文本等
+        if let Ok(children) = children_query.get(entity) {
+            for &child in children.iter() {
+                if let Ok(grandchildren) = children_query.get(child) {
+                    for &gc in grandchildren.iter() {
+                        commands.entity(gc).despawn();
+                    }
+                }
+                commands.entity(child).despawn();
+            }
+        }
+        // 再销毁菜单根
         commands.entity(entity).despawn();
         menu_entity.entity = None;
+    }
+    // 清理可能残留的孤儿按钮
+    for btn in menu_buttons {
+        commands.entity(btn).despawn();
     }
 }
 
@@ -461,9 +486,11 @@ fn cancel_move(
     prev_position: &PrevPosition,
     map: &GameMap,
     menu_entity: &mut ActionMenuEntity,
+    children_query: &Query<&Children>,
+    menu_buttons: &Query<Entity, With<ActionMenuButton>>,
 ) {
     // 关闭菜单
-    despawn_action_menu(commands, menu_entity);
+    despawn_action_menu(commands, menu_entity, children_query, menu_buttons);
 
     // 回退位置
     if let Some(prev_coord) = prev_position.coord {
