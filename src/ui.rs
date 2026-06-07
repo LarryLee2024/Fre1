@@ -3,6 +3,7 @@
 use crate::assets::CnFont;
 use crate::combat::skill_name;
 use crate::combat_log::CombatLogPanel;
+use crate::status::StatusEffects;
 use crate::turn::{AppState, TurnPhase, TurnState};
 use crate::unit::{Faction, HpBarFg, Selected, Unit};
 use bevy::prelude::*;
@@ -135,7 +136,10 @@ pub fn update_turn_indicator(
 
 /// 更新单位信息面板
 pub fn update_unit_info(
-    selected_units: Query<(&Unit, &crate::unit::UnitName), With<Selected>>,
+    selected_units: Query<
+        (&Unit, &crate::unit::UnitName, &StatusEffects),
+        With<Selected>,
+    >,
     mut query: Query<
         &mut Text,
         (
@@ -146,11 +150,20 @@ pub fn update_unit_info(
     >,
 ) {
     for mut text in &mut query {
-        if let Ok((unit, name)) = selected_units.single() {
+        if let Ok((unit, name, status)) = selected_units.single() {
             let skill_label = skill_name(&unit.skill);
+            let status_text = if status.is_empty() {
+                "无".to_string()
+            } else {
+                status
+                    .iter()
+                    .map(|inst| format!("[{}·{}t]", inst.effect.label(), inst.remaining_turns))
+                    .collect::<Vec<_>>()
+                    .join("")
+            };
             **text = format!(
-                "{}  HP: {}/{}  ATK: {}  DEF: {}  MOV: {}  技能: {}",
-                name.0, unit.hp, unit.max_hp, unit.atk, unit.def, unit.mov, skill_label
+                "{}  HP: {}/{}  ATK: {}  DEF: {}  MOV: {}  技能: {}\n状态: {}",
+                name.0, unit.hp, unit.max_hp, unit.atk, unit.def, unit.mov, skill_label, status_text
             );
         } else {
             **text = "选择一个单位".to_string();

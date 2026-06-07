@@ -6,6 +6,7 @@ use crate::combat_event;
 use crate::combat_log::CombatLog;
 use crate::map::{GameMap, Tile};
 use crate::pathfinding::{build_tile_terrain_map, find_reachable_tiles};
+use crate::status::StatusEffects;
 use crate::turn::{AiTimer, TurnPhase, TurnState};
 use crate::unit::{Faction, GridPosition, Skill, Unit, UnitName};
 use bevy::prelude::*;
@@ -32,6 +33,7 @@ pub fn enemy_ai_system(
     turn_phase: Res<State<TurnPhase>>,
     mut next_phase: ResMut<NextState<TurnPhase>>,
     mut units: Query<(Entity, &mut Unit, &mut GridPosition, &mut Transform, &UnitName)>,
+    mut status_effects: Query<&mut StatusEffects>,
     tiles: Query<&Tile>,
     map: Res<GameMap>,
     mut commands: Commands,
@@ -144,7 +146,25 @@ pub fn enemy_ai_system(
 
     // 应用行动到世界（可变访问）
     for action in actions {
-        // 移动
+        let stunned = status_effects
+            .get_mut(action.entity)
+            .map(|mut s| {
+                if s.is_stunned() {
+                    s.consume_stun();
+                    true
+                } else {
+                    false
+                }
+            })
+            .unwrap_or(false);
+
+        if stunned {
+            if let Ok((_, mut unit, _, _, _)) = units.get_mut(action.entity) {
+                unit.acted = true;
+            }
+            continue;
+        }
+
         let world_pos = map.coord_to_world(action.move_to);
         if let Ok((_, _, mut gp, mut transform, _)) = units.get_mut(action.entity) {
             gp.coord = action.move_to;
@@ -162,6 +182,15 @@ pub fn enemy_ai_system(
                     .find_map(|t| if t.coord == target_gp.coord { Some(t.terrain) } else { None })
                     .unwrap_or(crate::map::Terrain::Plain);
 
+                let attacker_atk_mod = status_effects
+                    .get(action.entity)
+                    .map(|s| s.attack_mod())
+                    .unwrap_or(0);
+                let defender_def_mod = status_effects
+                    .get(target_entity)
+                    .map(|s| s.defense_mod())
+                    .unwrap_or(0);
+
                 let attacker = Unit {
                     faction: Faction::Enemy,
                     mov: 0,
@@ -178,9 +207,11 @@ pub fn enemy_ai_system(
                 combat_event::execute_attack(
                     &mut commands,
                     &attacker,
+                    attacker_atk_mod,
                     &action.attacker_name,
                     target_entity,
                     &mut target_unit,
+                    defender_def_mod,
                     target_name,
                     target_transform.translation.truncate(),
                     terrain,

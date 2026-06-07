@@ -8,6 +8,7 @@ mod combat_log;
 mod input;
 mod map;
 mod pathfinding;
+mod status;
 mod tile_info;
 mod turn;
 mod ui;
@@ -25,6 +26,7 @@ use combat_event::CombatEventPlugin;
 use combat_log::CombatLogPlugin;
 use input::InputPlugin;
 use map::MapPlugin;
+use status::StatusPlugin;
 use tile_info::TileInfoPlugin;
 use turn::{AppState, TurnPlugin};
 use ui::UiPlugin;
@@ -44,6 +46,8 @@ fn main() {
         .add_plugins((
             EguiPlugin::default(),
             WorldInspectorPlugin::new(),
+        ))
+        .add_plugins((
             // 游戏插件
             AssetsPlugin,
             TurnPlugin,
@@ -58,6 +62,7 @@ fn main() {
             TileInfoPlugin,
             AiPlugin,
             VfxPlugin,
+            StatusPlugin,
         ))
         // 直接进入游戏（后续可加主菜单）
         .add_systems(Startup, |mut next: ResMut<NextState<AppState>>| {

@@ -4,6 +4,7 @@ use crate::assets::CnFont;
 use crate::combat::{calculate_damage, skill_name};
 use crate::combat_log::{CombatLog, LogSegment, log_color};
 use crate::map::{Terrain, Tile};
+use crate::status::StatusEffects;
 use crate::unit::{
     AttackRange, Faction, GridPosition, MovableRange, Selected, Skill, Unit, UnitName,
 };
@@ -22,12 +23,15 @@ pub struct AttackResult {
 ///
 /// 包含：伤害计算、扣血、伤害弹出、战斗日志、击杀处理
 /// input.rs 和 ai.rs 共用此函数，消除重复逻辑
+#[allow(clippy::too_many_arguments)]
 pub fn execute_attack(
     commands: &mut Commands,
     attacker_unit: &Unit,
+    attacker_atk_mod: i32,
     attacker_name: &str,
     target_entity: Entity,
     target_unit: &mut Unit,
+    defender_def_mod: i32,
     target_name: &UnitName,
     target_translation: Vec2,
     terrain: Terrain,
@@ -35,7 +39,13 @@ pub fn execute_attack(
     combat_log: &mut CombatLog,
 ) -> AttackResult {
     // 伤害计算
-    let damage = calculate_damage(attacker_unit, target_unit, terrain);
+    let damage = calculate_damage(
+        attacker_unit,
+        attacker_atk_mod,
+        target_unit,
+        defender_def_mod,
+        terrain,
+    );
     target_unit.hp -= damage;
 
     // 伤害数字弹出
@@ -105,9 +115,12 @@ pub fn execute_attack(
 
 /// 执行攻击（OnEnter）
 pub fn execute_action_on_enter(
-    mut selected_units: Query<(Entity, &mut Unit, &GridPosition, &UnitName), With<Selected>>,
+    mut selected_units: Query<
+        (Entity, &mut Unit, &GridPosition, &UnitName, &StatusEffects),
+        With<Selected>,
+    >,
     mut targets: Query<
-        (Entity, &mut Unit, &GridPosition, &UnitName, &Transform),
+        (Entity, &mut Unit, &GridPosition, &UnitName, &Transform, &StatusEffects),
         Without<Selected>,
     >,
     tiles: Query<&Tile>,
@@ -122,10 +135,12 @@ pub fn execute_action_on_enter(
     // 清除范围标记和高亮
     crate::input::clear_markers(&mut commands, &range_markers, &highlights);
 
-    if let Ok((entity, mut unit, _pos, attacker_name)) = selected_units.single_mut() {
+    if let Ok((entity, mut unit, _pos, attacker_name, attacker_status)) =
+        selected_units.single_mut()
+    {
         // 查找攻击目标
         if let Some(target_coord) = attack_target.coord {
-            for (target_entity, mut target, target_pos, target_name, target_transform) in
+            for (target_entity, mut target, target_pos, target_name, target_transform, target_status) in
                 targets.iter_mut()
             {
                 if target_pos.coord == target_coord && target.faction != unit.faction {
@@ -141,9 +156,11 @@ pub fn execute_action_on_enter(
                     execute_attack(
                         &mut commands,
                         &unit,
+                        attacker_status.attack_mod(),
                         &attacker_name.0,
                         target_entity,
                         &mut target,
+                        target_status.defense_mod(),
                         target_name,
                         target_transform.translation.truncate(),
                         terrain,

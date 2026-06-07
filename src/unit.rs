@@ -2,6 +2,7 @@
 
 use crate::assets::CnFont;
 use crate::map::GameMap;
+use crate::status::StatusEffects;
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
 
@@ -201,6 +202,7 @@ fn spawn_unit(
         },
         UnitName(name.to_string()),
         GridPosition { coord },
+        StatusEffects::default(),
         children![
             // 棋子名称标注（中央）
             (
