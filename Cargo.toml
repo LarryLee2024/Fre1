@@ -5,6 +5,4 @@ edition = "2024"
 
 [dependencies]
 bevy = { version = "0.18.1", features = ["2d"] }
-bevy_ecs_tilemap = "0.18.1"
-bevy_ecs_tiled = "0.12"
 bevy-inspector-egui = "0.36"

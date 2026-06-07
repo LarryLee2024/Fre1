@@ -1,11 +1,12 @@
 // AI 模块：敌方自动行动
 
-use crate::combat::{calculate_damage, manhattan_distance};
+use crate::combat::{calculate_damage, manhattan_distance, skill_name, skill_range};
 use crate::map::{GameMap, Terrain, Tile};
 use crate::pathfinding::{build_tile_terrain_map, find_reachable_tiles};
 use crate::turn::{AiTimer, TurnPhase, TurnState};
 use crate::ui::{CombatLog, LogSegment, log_color};
-use crate::unit::{Faction, GridPosition, Unit, UnitName};
+use crate::unit::{Faction, GridPosition, Skill, Unit, UnitName};
+use crate::vfx;
 use bevy::prelude::*;
 
 /// 单位快照（避免借用冲突）
@@ -19,6 +20,7 @@ struct UnitSnapshot {
     attack_range: u32,
     acted: bool,
     name: String,
+    skill: Skill,
 }
 
 /// 敌方 AI 系统
@@ -38,6 +40,7 @@ pub fn enemy_ai_system(
     map: Res<GameMap>,
     mut commands: Commands,
     mut combat_log: ResMut<CombatLog>,
+    asset_server: Res<AssetServer>,
 ) {
     if turn_state.current_faction != Faction::Enemy {
         return;
@@ -64,6 +67,7 @@ pub fn enemy_ai_system(
             attack_range: u.attack_range,
             acted: u.acted,
             name: name.0.clone(),
+            skill: u.skill,
         })
         .collect();
 
@@ -90,6 +94,7 @@ pub fn enemy_ai_system(
         def: i32,
         attack_range: u32,
         attacker_name: String,
+        skill: Skill,
     }
 
     let mut actions: Vec<AiAction> = Vec::new();
@@ -124,11 +129,14 @@ pub fn enemy_ai_system(
             .map(|(coord, _)| *coord)
             .unwrap_or(snapshot.coord);
 
+        // 使用技能范围判定攻击距离
+        let effective_range = skill_range(&snapshot.skill, snapshot.attack_range);
+
         // 检查攻击范围内是否有玩家单位
         let attack_target = snapshots
             .iter()
             .filter(|s| s.faction == Faction::Player)
-            .find(|s| manhattan_distance(best_coord, s.coord) <= snapshot.attack_range)
+            .find(|s| manhattan_distance(best_coord, s.coord) <= effective_range)
             .map(|s| s.entity);
 
         actions.push(AiAction {
@@ -139,10 +147,13 @@ pub fn enemy_ai_system(
             def: snapshot.def,
             attack_range: snapshot.attack_range,
             attacker_name: snapshot.name.clone(),
+            skill: snapshot.skill,
         });
     }
 
     // 应用行动到世界（可变访问）
+    let font: Handle<Font> = asset_server.load("fonts/Arial Unicode.ttf");
+
     for action in actions {
         // 移动
         let world_pos = map.coord_to_world(action.move_to);
@@ -154,7 +165,7 @@ pub fn enemy_ai_system(
 
         // 攻击
         if let Some(target_entity) = action.attack_target {
-            if let Ok((_, mut target_unit, target_gp, _, target_name)) =
+            if let Ok((_, mut target_unit, target_gp, target_transform, target_name)) =
                 units.get_mut(target_entity)
             {
                 let terrain = tiles
@@ -177,53 +188,39 @@ pub fn enemy_ai_system(
                     def: action.def,
                     attack_range: action.attack_range,
                     acted: false,
+                    skill: action.skill,
                 };
                 let damage = calculate_damage(&attacker, &target_unit, terrain);
                 target_unit.hp -= damage;
 
-                // 写入战斗日志
+                // 伤害数字弹出
+                let is_crit = action.skill != Skill::None;
+                vfx::spawn_damage_popup(
+                    &mut commands,
+                    target_transform.translation.truncate(),
+                    damage,
+                    &font,
+                    is_crit,
+                );
+
+                // 写入战斗日志（含技能名）
+                let skill_label = skill_name(&action.skill);
                 let killed = target_unit.hp <= 0;
                 combat_log.push(vec![
-                    LogSegment {
-                        text: format!("[{}]", action.attacker_name),
-                        color: log_color::ENEMY,
-                    },
-                    LogSegment {
-                        text: " 攻击 ".to_string(),
-                        color: log_color::NORMAL,
-                    },
-                    LogSegment {
-                        text: format!("[{}]", target_name.0),
-                        color: log_color::PLAYER,
-                    },
-                    LogSegment {
-                        text: " 造成 ".to_string(),
-                        color: log_color::NORMAL,
-                    },
-                    LogSegment {
-                        text: format!("[{}]", damage),
-                        color: log_color::DAMAGE,
-                    },
-                    LogSegment {
-                        text: " 伤害".to_string(),
-                        color: log_color::NORMAL,
-                    },
-                    LogSegment {
-                        text: format!(" ({})", terrain.label()),
-                        color: log_color::TERRAIN,
-                    },
+                    LogSegment { text: format!("[{}]", action.attacker_name), color: log_color::ENEMY },
+                    LogSegment { text: format!(" 使用[{}]", skill_label), color: log_color::TURN },
+                    LogSegment { text: " 攻击 ".to_string(), color: log_color::NORMAL },
+                    LogSegment { text: format!("[{}]", target_name.0), color: log_color::PLAYER },
+                    LogSegment { text: " 造成 ".to_string(), color: log_color::NORMAL },
+                    LogSegment { text: format!("[{}]", damage), color: log_color::DAMAGE },
+                    LogSegment { text: " 伤害".to_string(), color: log_color::NORMAL },
+                    LogSegment { text: format!(" ({})", terrain.label()), color: log_color::TERRAIN },
                 ]);
 
                 if killed {
                     combat_log.push(vec![
-                        LogSegment {
-                            text: format!("[{}]", target_name.0),
-                            color: log_color::PLAYER,
-                        },
-                        LogSegment {
-                            text: " 被击败！".to_string(),
-                            color: log_color::KILL,
-                        },
+                        LogSegment { text: format!("[{}]", target_name.0), color: log_color::PLAYER },
+                        LogSegment { text: " 被击败！".to_string(), color: log_color::KILL },
                     ]);
                     commands.entity(target_entity).despawn();
                 }

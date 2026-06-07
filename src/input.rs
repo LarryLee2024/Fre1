@@ -1,13 +1,14 @@
 // 输入处理模块：点击选择、移动、攻击
 
-use crate::combat::{calculate_damage, manhattan_distance};
+use crate::combat::{calculate_damage, manhattan_distance, skill_name, skill_range};
 use crate::map::{GameMap, Terrain, Tile};
 use crate::pathfinding::{build_tile_terrain_map, find_reachable_tiles};
 use crate::turn::{TurnPhase, TurnState};
 use crate::ui::{CombatLog, LogSegment, log_color};
 use crate::unit::{
-    AttackRange, Faction, GridPosition, MovableRange, Selected, SelectionHighlight, Unit, UnitName,
+    AttackRange, Faction, GridPosition, MovableRange, Selected, SelectionHighlight, Skill, Unit, UnitName,
 };
+use crate::vfx;
 use bevy::prelude::*;
 
 /// 攻击目标坐标
@@ -114,7 +115,8 @@ pub fn handle_click(
 
             if let Ok(selected_entity) = selected_query.single() {
                 if let Ok((_, unit, gp, _)) = units.get(selected_entity) {
-                    show_attack_range(&mut commands, &map, gp.coord, unit.attack_range);
+                    let effective_range = skill_range(&unit.skill, unit.attack_range);
+                    show_attack_range(&mut commands, &map, gp.coord, effective_range);
                 }
             }
             next_phase.set(TurnPhase::SelectAction);
@@ -125,7 +127,8 @@ pub fn handle_click(
                 if unit.faction == Faction::Enemy {
                     if let Ok(selected_entity) = selected_query.single() {
                         if let Ok((_, sel_unit, sel_gp, _)) = units.get(selected_entity) {
-                            if manhattan_distance(sel_gp.coord, gp.coord) <= sel_unit.attack_range {
+                            let effective_range = skill_range(&sel_unit.skill, sel_unit.attack_range);
+                            if manhattan_distance(sel_gp.coord, gp.coord) <= effective_range {
                                 attack_target.coord = Some(gp.coord);
                                 next_phase.set(TurnPhase::ExecuteAction);
                                 return;
@@ -289,7 +292,7 @@ fn spawn_selection_highlight(commands: &mut Commands, map: &GameMap, coord: IVec
 /// 执行攻击（OnEnter）
 pub fn execute_action_on_enter(
     mut selected_units: Query<(Entity, &mut Unit, &GridPosition, &UnitName), With<Selected>>,
-    mut targets: Query<(Entity, &mut Unit, &GridPosition, &UnitName), Without<Selected>>,
+    mut targets: Query<(Entity, &mut Unit, &GridPosition, &UnitName, &Transform), Without<Selected>>,
     tiles: Query<&Tile>,
     mut next_phase: ResMut<NextState<TurnPhase>>,
     mut commands: Commands,
@@ -297,6 +300,8 @@ pub fn execute_action_on_enter(
     range_markers: Query<Entity, Or<(With<MovableRange>, With<AttackRange>)>>,
     highlights: Query<Entity, With<SelectionHighlight>>,
     mut combat_log: ResMut<CombatLog>,
+    asset_server: Res<AssetServer>,
+    map: Res<GameMap>,
 ) {
     // 清除范围标记和高亮
     for marker in &range_markers {
@@ -306,10 +311,12 @@ pub fn execute_action_on_enter(
         commands.entity(h).despawn();
     }
 
+    let font: Handle<Font> = asset_server.load("fonts/Arial Unicode.ttf");
+
     if let Ok((entity, mut unit, _pos, attacker_name)) = selected_units.single_mut() {
         // 查找攻击目标
         if let Some(target_coord) = attack_target.coord {
-            for (target_entity, mut target, target_pos, target_name) in targets.iter_mut() {
+            for (target_entity, mut target, target_pos, target_name, target_transform) in targets.iter_mut() {
                 if target_pos.coord == target_coord && target.faction != unit.faction {
                     let terrain = tiles
                         .iter()
@@ -325,7 +332,17 @@ pub fn execute_action_on_enter(
                     let damage = calculate_damage(&unit, &target, terrain);
                     target.hp -= damage;
 
-                    // 写入战斗日志：[攻击者] 攻击 [防御者] 造成 [伤害] 伤害
+                    // 伤害数字弹出
+                    let is_crit = unit.skill != Skill::None;
+                    vfx::spawn_damage_popup(
+                        &mut commands,
+                        target_transform.translation.truncate(),
+                        damage,
+                        &font,
+                        is_crit,
+                    );
+
+                    // 写入战斗日志（含技能名）
                     let attacker_color = if unit.faction == Faction::Player {
                         log_color::PLAYER
                     } else {
@@ -336,49 +353,24 @@ pub fn execute_action_on_enter(
                     } else {
                         log_color::ENEMY
                     };
+                    let skill_label = skill_name(&unit.skill);
 
                     let killed = target.hp <= 0;
                     combat_log.push(vec![
-                        LogSegment {
-                            text: format!("[{}]", attacker_name.0),
-                            color: attacker_color,
-                        },
-                        LogSegment {
-                            text: " 攻击 ".to_string(),
-                            color: log_color::NORMAL,
-                        },
-                        LogSegment {
-                            text: format!("[{}]", target_name.0),
-                            color: defender_color,
-                        },
-                        LogSegment {
-                            text: " 造成 ".to_string(),
-                            color: log_color::NORMAL,
-                        },
-                        LogSegment {
-                            text: format!("[{}]", damage),
-                            color: log_color::DAMAGE,
-                        },
-                        LogSegment {
-                            text: " 伤害".to_string(),
-                            color: log_color::NORMAL,
-                        },
-                        LogSegment {
-                            text: format!(" ({})", terrain.label()),
-                            color: log_color::TERRAIN,
-                        },
+                        LogSegment { text: format!("[{}]", attacker_name.0), color: attacker_color },
+                        LogSegment { text: format!(" 使用[{}]", skill_label), color: log_color::TURN },
+                        LogSegment { text: " 攻击 ".to_string(), color: log_color::NORMAL },
+                        LogSegment { text: format!("[{}]", target_name.0), color: defender_color },
+                        LogSegment { text: " 造成 ".to_string(), color: log_color::NORMAL },
+                        LogSegment { text: format!("[{}]", damage), color: log_color::DAMAGE },
+                        LogSegment { text: " 伤害".to_string(), color: log_color::NORMAL },
+                        LogSegment { text: format!(" ({})", terrain.label()), color: log_color::TERRAIN },
                     ]);
 
                     if killed {
                         combat_log.push(vec![
-                            LogSegment {
-                                text: format!("[{}]", target_name.0),
-                                color: defender_color,
-                            },
-                            LogSegment {
-                                text: " 被击败！".to_string(),
-                                color: log_color::KILL,
-                            },
+                            LogSegment { text: format!("[{}]", target_name.0), color: defender_color },
+                            LogSegment { text: " 被击败！".to_string(), color: log_color::KILL },
                         ]);
                         commands.entity(target_entity).despawn();
                     }

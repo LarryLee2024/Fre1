@@ -1,4 +1,5 @@
 mod ai;
+mod camera;
 mod combat;
 mod input;
 mod map;
@@ -6,15 +7,13 @@ mod pathfinding;
 mod turn;
 mod ui;
 mod unit;
+mod vfx;
 
 use bevy::prelude::*;
+use bevy_inspector_egui::bevy_egui::EguiPlugin;
+use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use map::GameMap;
 use turn::{AppState, TurnPhase};
-
-/// 生成 2D 相机
-fn spawn_camera(mut commands: Commands) {
-    commands.spawn(Camera2d);
-}
 
 fn main() {
     App::new()
@@ -27,6 +26,9 @@ fn main() {
             }),
             ..default()
         }))
+        // 调试工具
+        .add_plugins(EguiPlugin::default())
+        .add_plugins(WorldInspectorPlugin::new())
         // 资源
         .init_resource::<GameMap>()
         .init_resource::<turn::TurnState>()
@@ -40,7 +42,7 @@ fn main() {
         .add_systems(
             OnEnter(AppState::InGame),
             (
-                spawn_camera,
+                camera::spawn_camera,
                 map::spawn_map,
                 unit::spawn_units,
                 ui::spawn_ui,
@@ -58,16 +60,23 @@ fn main() {
         .add_systems(
             Update,
             (
+                camera::camera_control,
                 input::handle_click.run_if(in_state(AppState::InGame)),
                 input::handle_end_turn.run_if(in_state(AppState::InGame)),
                 ai::enemy_ai_system.run_if(in_state(AppState::InGame)),
                 ui::setup_ui_font.run_if(in_state(AppState::InGame)),
                 ui::update_turn_indicator.run_if(in_state(AppState::InGame)),
                 ui::update_unit_info.run_if(in_state(AppState::InGame)),
+            ),
+        )
+        .add_systems(
+            Update,
+            (
                 ui::update_action_menu.run_if(in_state(AppState::InGame)),
                 ui::update_hp_bars.run_if(in_state(AppState::InGame)),
                 ui::check_game_over.run_if(in_state(AppState::InGame)),
                 ui::update_combat_log.run_if(in_state(AppState::InGame)),
+                vfx::update_damage_popups,
             ),
         )
         // 直接进入游戏（后续可加主菜单）

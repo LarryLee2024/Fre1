@@ -13,6 +13,19 @@ pub enum Faction {
     Enemy,
 }
 
+/// 技能类型
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Default)]
+pub enum Skill {
+    #[default]
+    None,
+    /// 冲锋：1.5倍伤害，近战
+    Charge,
+    /// 穿透箭：1.3倍伤害，无视50%防御，远程+1
+    Pierce,
+    /// 火球：1.8倍伤害，中程
+    Fireball,
+}
+
 /// 战斗单位组件
 #[derive(Component)]
 pub struct Unit {
@@ -32,6 +45,8 @@ pub struct Unit {
     pub attack_range: u32,
     /// 本回合是否已行动
     pub acted: bool,
+    /// 技能
+    pub skill: Skill,
 }
 
 /// 单位名称
@@ -85,14 +100,14 @@ pub fn spawn_units(mut commands: Commands, map: Res<GameMap>, asset_server: Res<
     let bar_width = tile_size * 0.6;
     let bar_height = 4.0;
 
-    // 玩家单位
-    let player_units = [
-        (IVec2::new(2, 2), "战士", 5, 30, 30, 10, 5, 1),
-        (IVec2::new(3, 4), "弓手", 4, 20, 20, 8, 3, 3),
-        (IVec2::new(2, 5), "法师", 3, 18, 18, 12, 2, 2),
+    // 玩家单位（名称, 坐标, 技能, 移动力, HP, MaxHP, ATK, DEF, 攻击范围）
+    let player_units: [(&str, IVec2, Skill, u32, i32, i32, i32, i32, u32); 3] = [
+        ("战士", IVec2::new(2, 2), Skill::Charge, 5, 30, 30, 10, 5, 1),
+        ("弓手", IVec2::new(3, 4), Skill::Pierce, 4, 20, 20, 8, 3, 3),
+        ("法师", IVec2::new(2, 5), Skill::Fireball, 3, 18, 18, 12, 2, 2),
     ];
 
-    for (coord, name, mov, hp, max_hp, atk, def, attack_range) in player_units {
+    for (name, coord, skill, mov, hp, max_hp, atk, def, attack_range) in player_units {
         let world_pos = map.coord_to_world(coord);
         spawn_unit(
             &mut commands,
@@ -100,6 +115,7 @@ pub fn spawn_units(mut commands: Commands, map: Res<GameMap>, asset_server: Res<
             Faction::Player,
             name,
             coord,
+            skill,
             mov,
             hp,
             max_hp,
@@ -114,13 +130,13 @@ pub fn spawn_units(mut commands: Commands, map: Res<GameMap>, asset_server: Res<
     }
 
     // 敌方单位
-    let enemy_units = [
-        (IVec2::new(7, 5), "哥布林", 4, 20, 20, 7, 3, 1),
-        (IVec2::new(8, 3), "哥布林", 4, 20, 20, 7, 3, 1),
-        (IVec2::new(6, 6), "暗骑士", 3, 35, 35, 12, 6, 1),
+    let enemy_units: [(&str, IVec2, Skill, u32, i32, i32, i32, i32, u32); 3] = [
+        ("哥布林", IVec2::new(7, 5), Skill::None, 4, 20, 20, 7, 3, 1),
+        ("哥布林", IVec2::new(8, 3), Skill::None, 4, 20, 20, 7, 3, 1),
+        ("暗骑士", IVec2::new(6, 6), Skill::Charge, 3, 35, 35, 12, 6, 1),
     ];
 
-    for (coord, name, mov, hp, max_hp, atk, def, attack_range) in enemy_units {
+    for (name, coord, skill, mov, hp, max_hp, atk, def, attack_range) in enemy_units {
         let world_pos = map.coord_to_world(coord);
         spawn_unit(
             &mut commands,
@@ -128,6 +144,7 @@ pub fn spawn_units(mut commands: Commands, map: Res<GameMap>, asset_server: Res<
             Faction::Enemy,
             name,
             coord,
+            skill,
             mov,
             hp,
             max_hp,
@@ -148,6 +165,7 @@ fn spawn_unit(
     faction: Faction,
     name: &str,
     coord: IVec2,
+    skill: Skill,
     mov: u32,
     hp: i32,
     max_hp: i32,
@@ -162,8 +180,8 @@ fn spawn_unit(
     // 取名称首字作为棋子标注
     let label: String = name.chars().take(1).collect();
     let unit_font = TextFont {
-        font: FontSource::Handle(font.clone()),
-        font_size: FontSize::Px(18.0),
+        font: font.clone(),
+        font_size: 18.0,
         ..default()
     };
 
@@ -179,6 +197,7 @@ fn spawn_unit(
             def,
             attack_range,
             acted: false,
+            skill,
         },
         UnitName(name.to_string()),
         GridPosition { coord },
@@ -188,7 +207,7 @@ fn spawn_unit(
                 Text2d::new(label),
                 unit_font,
                 TextColor(Color::WHITE),
-                TextLayout::no_wrap(),
+                TextLayout::new_with_no_wrap(),
                 Transform::from_xyz(0.0, 0.0, 0.3),
             ),
             // HP 条背景（红色）- 锚点左对齐

@@ -117,8 +117,8 @@ impl GameMap {
 pub fn spawn_map(mut commands: Commands, map: Res<GameMap>, asset_server: Res<AssetServer>) {
     let font: Handle<Font> = asset_server.load("fonts/Arial Unicode.ttf");
     let small_font = TextFont {
-        font: FontSource::Handle(font),
-        font_size: FontSize::Px(10.0),
+        font,
+        font_size: 10.0,
         ..default()
     };
 
@@ -149,7 +149,7 @@ pub fn spawn_map(mut commands: Commands, map: Res<GameMap>, asset_server: Res<As
                         Text2d::new(format!("{},{}", coord.x, coord.y)),
                         small_font.clone(),
                         TextColor(Color::srgba(1.0, 1.0, 1.0, 0.6)),
-                        TextLayout::no_wrap(),
+                        TextLayout::new_with_no_wrap(),
                         Transform::from_xyz(-tile_size * 0.3, tile_size * 0.3, 0.1),
                     ),
                     // 地形类别标注（中央偏下）
@@ -157,7 +157,7 @@ pub fn spawn_map(mut commands: Commands, map: Res<GameMap>, asset_server: Res<As
                         Text2d::new(terrain.label().to_string()),
                         small_font.clone(),
                         TextColor(Color::srgba(1.0, 1.0, 1.0, 0.5)),
-                        TextLayout::no_wrap(),
+                        TextLayout::new_with_no_wrap(),
                         Transform::from_xyz(0.0, -tile_size * 0.25, 0.1),
                     ),
                 ],
