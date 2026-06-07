@@ -15,19 +15,3 @@ pub fn calculate_damage(attacker: &Unit, defender: &Unit, terrain: Terrain) -> i
     let terrain_bonus = terrain.defense_bonus();
     (base_damage - terrain_bonus).max(1)
 }
-
-/// 获取攻击范围内的目标
-pub fn get_targets_in_range(
-    attacker_pos: IVec2,
-    attacker: &Unit,
-    units: &[(Entity, IVec2, &Unit)],
-) -> Vec<Entity> {
-    units
-        .iter()
-        .filter(|(_, pos, unit)| {
-            unit.faction != attacker.faction
-                && manhattan_distance(attacker_pos, *pos) <= attacker.attack_range
-        })
-        .map(|(entity, _, _)| *entity)
-        .collect()
-}

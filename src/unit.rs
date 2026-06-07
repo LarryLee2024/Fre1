@@ -33,6 +33,10 @@ pub struct Unit {
     pub acted: bool,
 }
 
+/// 单位名称
+#[derive(Component)]
+pub struct UnitName(pub String);
+
 /// 单位所在格子坐标
 #[derive(Component)]
 pub struct GridPosition {
@@ -51,6 +55,18 @@ pub struct MovableRange;
 #[derive(Component)]
 pub struct AttackRange;
 
+/// HP 条背景
+#[derive(Component)]
+pub struct HpBarBg;
+
+/// HP 条前景
+#[derive(Component)]
+pub struct HpBarFg;
+
+/// 选中高亮（独立实体）
+#[derive(Component)]
+pub struct SelectionHighlight;
+
 /// 阵营颜色
 impl Faction {
     pub fn unit_color(&self) -> Color {
@@ -67,6 +83,8 @@ pub fn spawn_units(
     map: Res<GameMap>,
 ) {
     let tile_size = map.tile_size;
+    let bar_width = tile_size * 0.6;
+    let bar_height = 4.0;
 
     // 玩家单位
     let player_units = [
@@ -75,23 +93,12 @@ pub fn spawn_units(
         (IVec2::new(2, 5), "法师", 3, 18, 18, 12, 2, 2),
     ];
 
-    for (coord, _name, mov, hp, max_hp, atk, def, attack_range) in player_units {
+    for (coord, name, mov, hp, max_hp, atk, def, attack_range) in player_units {
         let world_pos = map.coord_to_world(coord);
-        commands.spawn((
-            Sprite::from_color(Faction::Player.unit_color(), Vec2::splat(tile_size * 0.6)),
-            Transform::from_xyz(world_pos.x, world_pos.y, 1.0),
-            Unit {
-                faction: Faction::Player,
-                mov,
-                hp,
-                max_hp,
-                atk,
-                def,
-                attack_range,
-                acted: false,
-            },
-            GridPosition { coord },
-        ));
+        spawn_unit(
+            &mut commands, world_pos, Faction::Player, name, coord,
+            mov, hp, max_hp, atk, def, attack_range, tile_size, bar_width, bar_height,
+        );
     }
 
     // 敌方单位
@@ -101,22 +108,59 @@ pub fn spawn_units(
         (IVec2::new(6, 6), "暗骑士", 3, 35, 35, 12, 6, 1),
     ];
 
-    for (coord, _name, mov, hp, max_hp, atk, def, attack_range) in enemy_units {
+    for (coord, name, mov, hp, max_hp, atk, def, attack_range) in enemy_units {
         let world_pos = map.coord_to_world(coord);
-        commands.spawn((
-            Sprite::from_color(Faction::Enemy.unit_color(), Vec2::splat(tile_size * 0.6)),
-            Transform::from_xyz(world_pos.x, world_pos.y, 1.0),
-            Unit {
-                faction: Faction::Enemy,
-                mov,
-                hp,
-                max_hp,
-                atk,
-                def,
-                attack_range,
-                acted: false,
-            },
-            GridPosition { coord },
-        ));
+        spawn_unit(
+            &mut commands, world_pos, Faction::Enemy, name, coord,
+            mov, hp, max_hp, atk, def, attack_range, tile_size, bar_width, bar_height,
+        );
     }
+}
+
+fn spawn_unit(
+    commands: &mut Commands,
+    world_pos: Vec2,
+    faction: Faction,
+    name: &str,
+    coord: IVec2,
+    mov: u32,
+    hp: i32,
+    max_hp: i32,
+    atk: i32,
+    def: i32,
+    attack_range: u32,
+    tile_size: f32,
+    bar_width: f32,
+    bar_height: f32,
+) {
+    commands.spawn((
+        Sprite::from_color(faction.unit_color(), Vec2::splat(tile_size * 0.6)),
+        Transform::from_xyz(world_pos.x, world_pos.y, 1.0),
+        Unit {
+            faction,
+            mov,
+            hp,
+            max_hp,
+            atk,
+            def,
+            attack_range,
+            acted: false,
+        },
+        UnitName(name.to_string()),
+        GridPosition { coord },
+        children![
+            // HP 条背景（红色）
+            (
+                Sprite::from_color(Color::srgb(0.6, 0.1, 0.1), Vec2::new(bar_width, bar_height)),
+                Transform::from_xyz(0.0, tile_size * 0.4, 0.1),
+                HpBarBg,
+            ),
+            // HP 条前景（绿色）
+            (
+                Sprite::from_color(Color::srgb(0.1, 0.8, 0.1), Vec2::new(bar_width, bar_height)),
+                Transform::from_xyz(0.0, tile_size * 0.4, 0.2),
+                HpBarFg,
+            ),
+        ],
+    ));
 }

@@ -2,12 +2,18 @@
 
 use bevy::prelude::*;
 use crate::map::{GameMap, Tile, Terrain};
-use crate::unit::{Unit, Faction, GridPosition, Selected, MovableRange, AttackRange};
+use crate::unit::{Unit, Faction, GridPosition, Selected, MovableRange, AttackRange, SelectionHighlight};
 use crate::turn::{TurnState, TurnPhase};
 use crate::pathfinding::{find_reachable_tiles, build_tile_terrain_map};
 use crate::combat::{manhattan_distance, calculate_damage};
 
-/// 点击选择单位或移动
+/// 攻击目标坐标
+#[derive(Resource, Default)]
+pub struct AttackTarget {
+    pub coord: Option<IVec2>,
+}
+
+/// 处理玩家点击
 pub fn handle_click(
     mouse_button: Res<ButtonInput<MouseButton>>,
     windows: Query<&Window>,
@@ -21,16 +27,39 @@ pub fn handle_click(
     mut commands: Commands,
     range_markers: Query<(Entity, &GridPosition), Or<(With<MovableRange>, With<AttackRange>)>>,
     selected_query: Query<Entity, With<Selected>>,
+    highlights: Query<Entity, With<SelectionHighlight>>,
+    mut attack_target: ResMut<AttackTarget>,
 ) {
-    if !mouse_button.just_pressed(MouseButton::Left) {
+    // 只处理玩家回合
+    if turn_state.current_faction != Faction::Player {
         return;
     }
 
+    let left_clicked = mouse_button.just_pressed(MouseButton::Left);
+    let right_clicked = mouse_button.just_pressed(MouseButton::Right);
+
+    if !left_clicked && !right_clicked {
+        return;
+    }
+
+    // 右键取消：回到选择单位阶段
+    if right_clicked {
+        match turn_phase.get() {
+            TurnPhase::MoveUnit | TurnPhase::SelectAction => {
+                clear_selection(&mut commands, &selected_query, &range_markers, &highlights);
+                attack_target.coord = None;
+                next_phase.set(TurnPhase::SelectUnit);
+                return;
+            }
+            _ => return,
+        }
+    }
+
+    // 获取点击的世界坐标
     let Ok(window) = windows.single() else { return };
     let Some(cursor_pos) = window.cursor_position() else { return };
     let Ok((camera, cam_transform)) = camera_query.single() else { return };
     let Ok(world_pos) = camera.viewport_to_world_2d(cam_transform, cursor_pos) else { return };
-
     let coord = map.world_to_coord(world_pos);
     if !map.is_in_bounds(coord) {
         return;
@@ -38,66 +67,134 @@ pub fn handle_click(
 
     match turn_phase.get() {
         TurnPhase::SelectUnit => {
-            // 只能选择当前阵营且未行动的单位
+            // 点击选择己方未行动单位
             for (entity, unit, gp, _) in &units {
-                if unit.faction == turn_state.current_faction
-                    && !unit.acted
-                    && gp.coord == coord
-                {
-                    // 取消之前的选中
-                    for prev in &selected_query {
-                        commands.entity(prev).remove::<Selected>();
-                    }
-                    // 清除范围标记
-                    for (marker, _) in &range_markers {
-                        commands.entity(marker).despawn();
-                    }
-
+                if unit.faction == Faction::Player && !unit.acted && gp.coord == coord {
+                    clear_selection(&mut commands, &selected_query, &range_markers, &highlights);
                     commands.entity(entity).insert(Selected);
-                    next_phase.set(TurnPhase::MoveUnit);
-
-                    // 显示可移动范围
                     show_move_range(&mut commands, &map, &tiles, &units, unit, gp.coord);
+                    spawn_selection_highlight(&mut commands, &map, gp.coord);
+                    next_phase.set(TurnPhase::MoveUnit);
                     return;
                 }
             }
         }
         TurnPhase::MoveUnit => {
-            // 检查点击的格子是否在可移动范围内
-            let is_movable = range_markers
-                .iter()
-                .any(|(_, gp)| gp.coord == coord);
+            // 检查是否点击了可移动格子
+            let is_movable = range_markers.iter().any(|(_, gp)| gp.coord == coord);
 
             if is_movable {
-                // 移动选中的单位到目标格子
                 if let Ok(selected_entity) = selected_query.single() {
-                    if let Ok((_, _, _, _)) = units.get(selected_entity) {
-                        let world_pos = map.coord_to_world(coord);
-                        commands.entity(selected_entity)
-                            .insert(Transform::from_xyz(world_pos.x, world_pos.y, 1.0))
-                            .insert(GridPosition { coord });
+                    let world_pos = map.coord_to_world(coord);
+                    commands.entity(selected_entity)
+                        .insert(Transform::from_xyz(world_pos.x, world_pos.y, 1.0))
+                        .insert(GridPosition { coord });
+                    // 更新高亮位置
+                    for h in &highlights {
+                        commands.entity(h).despawn();
                     }
+                    spawn_selection_highlight(&mut commands, &map, coord);
                 }
             }
 
-            // 清除移动范围标记，进入选择行动
+            // 清除移动范围，显示攻击范围
             for (marker, _) in &range_markers {
                 commands.entity(marker).despawn();
+            }
+
+            if let Ok(selected_entity) = selected_query.single() {
+                if let Ok((_, unit, gp, _)) = units.get(selected_entity) {
+                    show_attack_range(&mut commands, &map, gp.coord, unit.attack_range);
+                }
             }
             next_phase.set(TurnPhase::SelectAction);
         }
         TurnPhase::SelectAction => {
-            // 简化处理：点击任意位置执行攻击或结束行动
-            for (marker, _) in &range_markers {
-                commands.entity(marker).despawn();
+            // 点击敌方单位：攻击
+            for (_, unit, gp, _) in &units {
+                if unit.faction == Faction::Enemy {
+                    if let Ok(selected_entity) = selected_query.single() {
+                        if let Ok((_, sel_unit, sel_gp, _)) = units.get(selected_entity) {
+                            if manhattan_distance(sel_gp.coord, gp.coord) <= sel_unit.attack_range {
+                                attack_target.coord = Some(gp.coord);
+                                next_phase.set(TurnPhase::ExecuteAction);
+                                return;
+                            }
+                        }
+                    }
+                }
             }
-            next_phase.set(TurnPhase::ExecuteAction);
+
+            // 点击其他地方：待机
+            next_phase.set(TurnPhase::WaitAction);
         }
         _ => {}
     }
 }
 
-/// 显示可移动范围
+/// 按 E 键结束回合
+pub fn handle_end_turn(
+    keyboard: Res<ButtonInput<KeyCode>>,
+    turn_state: Res<TurnState>,
+    turn_phase: Res<State<TurnPhase>>,
+    mut units: Query<&mut Unit>,
+    mut next_phase: ResMut<NextState<TurnPhase>>,
+    mut commands: Commands,
+    selected_query: Query<Entity, With<Selected>>,
+    range_markers: Query<Entity, Or<(With<MovableRange>, With<AttackRange>)>>,
+    highlights: Query<Entity, With<SelectionHighlight>>,
+) {
+    if turn_state.current_faction != Faction::Player {
+        return;
+    }
+    if !keyboard.just_pressed(KeyCode::KeyE) {
+        return;
+    }
+    // 仅在 SelectUnit 阶段允许结束回合
+    if *turn_phase.get() != TurnPhase::SelectUnit {
+        return;
+    }
+
+    // 清除选中状态
+    for entity in &selected_query {
+        commands.entity(entity).remove::<Selected>();
+    }
+    for marker in &range_markers {
+        commands.entity(marker).despawn();
+    }
+    for h in &highlights {
+        commands.entity(h).despawn();
+    }
+
+    // 标记所有玩家单位为已行动
+    for mut unit in units.iter_mut() {
+        if unit.faction == Faction::Player {
+            unit.acted = true;
+        }
+    }
+
+    next_phase.set(TurnPhase::TurnEnd);
+}
+
+/// 清除选中状态和范围标记
+fn clear_selection(
+    commands: &mut Commands,
+    selected_query: &Query<Entity, With<Selected>>,
+    range_markers: &Query<(Entity, &GridPosition), Or<(With<MovableRange>, With<AttackRange>)>>,
+    highlights: &Query<Entity, With<SelectionHighlight>>,
+) {
+    for entity in selected_query {
+        commands.entity(entity).remove::<Selected>();
+    }
+    for (marker, _) in range_markers {
+        commands.entity(marker).despawn();
+    }
+    for h in highlights {
+        commands.entity(h).despawn();
+    }
+}
+
+/// 显示可移动范围（蓝色半透明）
 fn show_move_range(
     commands: &mut Commands,
     map: &GameMap,
@@ -107,8 +204,6 @@ fn show_move_range(
     start_coord: IVec2,
 ) {
     let terrain_map = build_tile_terrain_map(tiles);
-
-    // 构建占位表需要单独查询
     let occupation_units: Vec<(IVec2, Faction)> = units
         .iter()
         .map(|(_, u, gp, _)| (gp.coord, u.faction))
@@ -119,14 +214,7 @@ fn show_move_range(
         .map(|(coord, _)| (*coord, true))
         .collect();
 
-    let reachable = find_reachable_tiles(
-        start_coord,
-        unit.mov,
-        map,
-        &terrain_map,
-        &occupation_map,
-    );
-
+    let reachable = find_reachable_tiles(start_coord, unit.mov, map, &terrain_map, &occupation_map);
     let tile_size = map.tile_size;
 
     for (coord, _) in reachable {
@@ -144,36 +232,123 @@ fn show_move_range(
     }
 }
 
-/// 执行行动：攻击或待机
-pub fn execute_action(
+/// 显示攻击范围（红色半透明）
+fn show_attack_range(
+    commands: &mut Commands,
+    map: &GameMap,
+    center: IVec2,
+    range: u32,
+) {
+    let tile_size = map.tile_size;
+    let range_i32 = range as i32;
+
+    for dx in -range_i32..=range_i32 {
+        for dy in -range_i32..=range_i32 {
+            if dx.unsigned_abs() + dy.unsigned_abs() > range || (dx == 0 && dy == 0) {
+                continue;
+            }
+            let coord = center + IVec2::new(dx, dy);
+            if !map.is_in_bounds(coord) {
+                continue;
+            }
+            let world_pos = map.coord_to_world(coord);
+            commands.spawn((
+                Sprite {
+                    color: Color::srgba(1.0, 0.3, 0.2, 0.35),
+                    custom_size: Some(Vec2::splat(tile_size - 2.0)),
+                    ..default()
+                },
+                Transform::from_xyz(world_pos.x, world_pos.y, 0.6),
+                AttackRange,
+                GridPosition { coord },
+            ));
+        }
+    }
+}
+
+/// 生成选中高亮（黄色半透明框）
+fn spawn_selection_highlight(
+    commands: &mut Commands,
+    map: &GameMap,
+    coord: IVec2,
+) {
+    let world_pos = map.coord_to_world(coord);
+    let tile_size = map.tile_size;
+    commands.spawn((
+        Sprite {
+            color: Color::srgba(1.0, 1.0, 0.3, 0.5),
+            custom_size: Some(Vec2::splat(tile_size * 0.75)),
+            ..default()
+        },
+        Transform::from_xyz(world_pos.x, world_pos.y, 0.8),
+        SelectionHighlight,
+    ));
+}
+
+/// 执行攻击（OnEnter）
+pub fn execute_action_on_enter(
     mut selected_units: Query<(Entity, &mut Unit, &GridPosition), With<Selected>>,
     mut targets: Query<(Entity, &mut Unit, &GridPosition), Without<Selected>>,
     tiles: Query<&Tile>,
     mut next_phase: ResMut<NextState<TurnPhase>>,
     mut commands: Commands,
+    mut attack_target: ResMut<AttackTarget>,
+    range_markers: Query<Entity, Or<(With<MovableRange>, With<AttackRange>)>>,
+    highlights: Query<Entity, With<SelectionHighlight>>,
 ) {
-    if let Ok((entity, mut unit, pos)) = selected_units.single_mut() {
-        // 尝试攻击范围内的敌人
-        for (target_entity, mut target, target_pos) in targets.iter_mut() {
-            if target.faction != unit.faction
-                && manhattan_distance(pos.coord, target_pos.coord) <= unit.attack_range
-            {
-                // 获取防御方地形
-                let terrain = tiles.iter().find_map(|t| {
-                    if t.coord == target_pos.coord { Some(t.terrain) } else { None }
-                }).unwrap_or(Terrain::Plain);
+    // 清除范围标记和高亮
+    for marker in &range_markers {
+        commands.entity(marker).despawn();
+    }
+    for h in &highlights {
+        commands.entity(h).despawn();
+    }
 
-                let damage = calculate_damage(&unit, &target, terrain);
-                target.hp -= damage;
+    if let Ok((entity, mut unit, _pos)) = selected_units.single_mut() {
+        // 查找攻击目标
+        if let Some(target_coord) = attack_target.coord {
+            for (target_entity, mut target, target_pos) in targets.iter_mut() {
+                if target_pos.coord == target_coord && target.faction != unit.faction {
+                    let terrain = tiles.iter().find_map(|t| {
+                        if t.coord == target_pos.coord { Some(t.terrain) } else { None }
+                    }).unwrap_or(Terrain::Plain);
 
-                if target.hp <= 0 {
-                    commands.entity(target_entity).despawn();
+                    let damage = calculate_damage(&unit, &target, terrain);
+                    target.hp -= damage;
+
+                    if target.hp <= 0 {
+                        commands.entity(target_entity).despawn();
+                    }
+                    break;
                 }
-                break;
             }
         }
 
-        // 标记已行动
+        unit.acted = true;
+        commands.entity(entity).remove::<Selected>();
+    }
+
+    attack_target.coord = None;
+    next_phase.set(TurnPhase::TurnEnd);
+}
+
+/// 待机（OnEnter）
+pub fn wait_action_on_enter(
+    mut selected_units: Query<(Entity, &mut Unit), With<Selected>>,
+    mut next_phase: ResMut<NextState<TurnPhase>>,
+    mut commands: Commands,
+    range_markers: Query<Entity, Or<(With<MovableRange>, With<AttackRange>)>>,
+    highlights: Query<Entity, With<SelectionHighlight>>,
+) {
+    // 清除范围标记和高亮
+    for marker in &range_markers {
+        commands.entity(marker).despawn();
+    }
+    for h in &highlights {
+        commands.entity(h).despawn();
+    }
+
+    if let Ok((entity, mut unit)) = selected_units.single_mut() {
         unit.acted = true;
         commands.entity(entity).remove::<Selected>();
     }
@@ -181,24 +356,24 @@ pub fn execute_action(
     next_phase.set(TurnPhase::TurnEnd);
 }
 
-/// 回合结束处理
-pub fn handle_turn_end(
+/// 回合结束（OnEnter）
+pub fn turn_end_on_enter(
     mut turn_state: ResMut<TurnState>,
     mut units: Query<&mut Unit>,
     mut next_phase: ResMut<NextState<TurnPhase>>,
+    mut ai_timer: ResMut<crate::turn::AiTimer>,
 ) {
+    let current_faction = turn_state.current_faction;
+
     // 检查当前阵营是否所有单位都已行动
-    let all_acted = units
-        .iter()
-        .filter(|u| u.faction == turn_state.current_faction)
+    let all_acted = units.iter_mut()
+        .filter(|u| u.faction == current_faction)
         .all(|u| u.acted);
 
     if all_acted {
-        // 切换阵营
-        let next_faction = match turn_state.current_faction {
+        let next_faction = match current_faction {
             Faction::Player => Faction::Enemy,
             Faction::Enemy => {
-                // 敌方回合结束，新回合开始
                 turn_state.turn_number += 1;
                 Faction::Player
             }
@@ -206,10 +381,15 @@ pub fn handle_turn_end(
         turn_state.current_faction = next_faction;
 
         // 重置新阵营单位的行动状态
-        for mut unit in &mut units {
+        for mut unit in units.iter_mut() {
             if unit.faction == next_faction {
                 unit.acted = false;
             }
+        }
+
+        // 切换到敌方时重置 AI 计时器
+        if next_faction == Faction::Enemy {
+            ai_timer.timer.reset();
         }
     }
 

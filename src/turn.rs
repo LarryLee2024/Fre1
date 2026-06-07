@@ -20,15 +20,17 @@ pub enum TurnPhase {
     SelectUnit,
     /// 移动阶段
     MoveUnit,
-    /// 选择行动
+    /// 选择行动（攻击/待机）
     SelectAction,
-    /// 执行行动
+    /// 执行攻击
     ExecuteAction,
+    /// 待机
+    WaitAction,
     /// 回合结束
     TurnEnd,
 }
 
-/// 当前回合阵营
+/// 当前回合阵营与回合数
 #[derive(Resource)]
 pub struct TurnState {
     pub current_faction: crate::unit::Faction,
@@ -40,6 +42,20 @@ impl Default for TurnState {
         Self {
             current_faction: crate::unit::Faction::Player,
             turn_number: 1,
+        }
+    }
+}
+
+/// AI 行动延迟计时器
+#[derive(Resource)]
+pub struct AiTimer {
+    pub timer: Timer,
+}
+
+impl Default for AiTimer {
+    fn default() -> Self {
+        Self {
+            timer: Timer::from_seconds(0.8, TimerMode::Once),
         }
     }
 }
