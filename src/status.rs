@@ -104,14 +104,12 @@ impl StatusEffects {
         self.0.push(inst);
     }
 
-    /// 每回合结算：减少所有效果的剩余回合，<=0 的移除
+    /// 每回合结算：先移除已过期的效果，再递减剩余效果的持续时间
     pub fn tick(&mut self) {
-        for inst in &mut self.0 {
-            if inst.remaining_turns > 0 {
-                inst.remaining_turns -= 1;
-            }
-        }
         self.0.retain(|inst| inst.remaining_turns > 0);
+        for inst in &mut self.0 {
+            inst.remaining_turns -= 1;
+        }
     }
 
     pub fn attack_mod(&self) -> i32 {
@@ -258,7 +256,23 @@ pub fn resolve_status_effects(
 
         let world_pos = map.coord_to_world(gp.coord);
 
-        // 1. 结算本回合 DoT 伤害
+        // 1. 晕眩结算：被晕眩的单位本回合无法行动，消耗 Stun
+        if effects.is_stunned() {
+            unit.acted = true;
+            effects.consume_stun();
+            combat_log.push(vec![
+                LogSegment {
+                    text: format!("[{}]", name.0),
+                    color: log_color::NORMAL,
+                },
+                LogSegment {
+                    text: " 处于晕眩，无法行动".to_string(),
+                    color: log_color::DAMAGE,
+                },
+            ]);
+        }
+
+        // 2. 结算本回合 DoT 伤害
         let dot = effects.dot_damage();
         if dot > 0 {
             unit.hp = (unit.hp - dot).max(0);
@@ -366,14 +380,21 @@ mod tests {
     // ---- tick ----
 
     #[test]
-    fn tick_递减并移除过期() {
+    fn tick_先移除过期再递减() {
         let mut eff = StatusEffects::default();
         eff.add(inst(StatusEffect::AttackUp(5), 2, None));
         eff.add(inst(StatusEffect::Poison(3), 1, None));
+        // 第一次 tick：Poison(remaining=1) > 0 保留，然后递减到 0
+        //             AttackUp(remaining=2) > 0 保留，然后递减到 1
+        eff.tick();
+        assert_eq!(eff.len(), 2);
+        assert_eq!(eff.0[0].remaining_turns, 1); // AttackUp: 2→1
+        assert_eq!(eff.0[1].remaining_turns, 0); // Poison: 1→0
+        // 第二次 tick：Poison(remaining=0) 被移除，AttackUp(remaining=1) 保留后递减到 0
         eff.tick();
         assert_eq!(eff.len(), 1);
-        assert_eq!(eff.0[0].effect, StatusEffect::AttackUp(5));
-        assert_eq!(eff.0[0].remaining_turns, 1);
+        assert_eq!(eff.0[0].remaining_turns, 0); // AttackUp: 1→0
+        // 第三次 tick：AttackUp(remaining=0) 被移除
         eff.tick();
         assert!(eff.is_empty());
     }

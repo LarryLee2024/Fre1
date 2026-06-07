@@ -33,7 +33,7 @@ pub fn enemy_ai_system(
     turn_phase: Res<State<TurnPhase>>,
     mut next_phase: ResMut<NextState<TurnPhase>>,
     mut units: Query<(Entity, &mut Unit, &mut GridPosition, &mut Transform, &UnitName)>,
-    mut status_effects: Query<&mut StatusEffects>,
+    status_effects: Query<&StatusEffects>,
     tiles: Query<&Tile>,
     map: Res<GameMap>,
     mut commands: Commands,
@@ -146,24 +146,8 @@ pub fn enemy_ai_system(
 
     // 应用行动到世界（可变访问）
     for action in actions {
-        let stunned = status_effects
-            .get_mut(action.entity)
-            .map(|mut s| {
-                if s.is_stunned() {
-                    s.consume_stun();
-                    true
-                } else {
-                    false
-                }
-            })
-            .unwrap_or(false);
-
-        if stunned {
-            if let Ok((_, mut unit, _, _, _)) = units.get_mut(action.entity) {
-                unit.acted = true;
-            }
-            continue;
-        }
+        // 晕眩已由 resolve_status_effects 在回合开始时结算
+        // 被晕眩的单位 acted=true，不会出现在行动列表中
 
         let world_pos = map.coord_to_world(action.move_to);
         if let Ok((_, _, mut gp, mut transform, _)) = units.get_mut(action.entity) {
@@ -227,7 +211,17 @@ pub fn enemy_ai_system(
         }
     }
 
-    next_phase.set(TurnPhase::TurnEnd);
+    // 检查是否所有敌方单位都已行动
+    let all_enemy_acted = units
+        .iter()
+        .filter(|(_, u, _, _, _)| u.faction == Faction::Enemy)
+        .all(|(_, u, _, _, _)| u.acted);
+
+    if all_enemy_acted {
+        next_phase.set(TurnPhase::TurnEnd);
+    } else {
+        next_phase.set(TurnPhase::SelectUnit);
+    }
 }
 
 /// AI 插件

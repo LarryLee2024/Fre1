@@ -138,6 +138,15 @@ pub fn execute_action_on_enter(
     if let Ok((entity, mut unit, _pos, attacker_name, attacker_status)) =
         selected_units.single_mut()
     {
+        // 晕眩检查（防御性：resolve_status_effects 已标记 acted，但此处双重保障）
+        if attacker_status.is_stunned() {
+            unit.acted = true;
+            commands.entity(entity).remove::<Selected>();
+            attack_target.coord = None;
+            next_phase.set(crate::turn::TurnPhase::TurnEnd);
+            return;
+        }
+
         // 查找攻击目标
         if let Some(target_coord) = attack_target.coord {
             for (target_entity, mut target, target_pos, target_name, target_transform, target_status) in
