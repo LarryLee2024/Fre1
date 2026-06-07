@@ -1,12 +1,13 @@
 // AI 模块：敌方自动行动
 
-use crate::combat::{calculate_damage, manhattan_distance, skill_name, skill_range};
-use crate::map::{GameMap, Terrain, Tile};
+use crate::assets::CnFont;
+use crate::combat::{manhattan_distance, skill_range};
+use crate::combat_event;
+use crate::combat_log::CombatLog;
+use crate::map::{GameMap, Tile};
 use crate::pathfinding::{build_tile_terrain_map, find_reachable_tiles};
 use crate::turn::{AiTimer, TurnPhase, TurnState};
-use crate::ui::{CombatLog, CnFont, LogSegment, log_color};
 use crate::unit::{Faction, GridPosition, Skill, Unit, UnitName};
-use crate::vfx;
 use bevy::prelude::*;
 
 /// 单位快照（避免借用冲突）
@@ -175,7 +176,7 @@ pub fn enemy_ai_system(
                             None
                         }
                     })
-                    .unwrap_or(Terrain::Plain);
+                    .unwrap_or(crate::map::Terrain::Plain);
 
                 let attacker = Unit {
                     faction: Faction::Enemy,
@@ -188,40 +189,21 @@ pub fn enemy_ai_system(
                     acted: false,
                     skill: action.skill,
                 };
-                let damage = calculate_damage(&attacker, &target_unit, terrain);
-                target_unit.hp -= damage;
 
-                // 伤害数字弹出
-                let is_crit = action.skill != Skill::None;
-                vfx::spawn_damage_popup(
+                // 统一攻击处理
+                combat_event::execute_attack(
                     &mut commands,
+                    &attacker,
+                    &action.attacker_name,
+                    target_entity,
+                    &mut target_unit,
+                    target_gp.coord,
+                    target_name,
                     target_transform.translation.truncate(),
-                    damage,
-                    &cn_font.handle,
-                    is_crit,
+                    terrain,
+                    &cn_font,
+                    &mut combat_log,
                 );
-
-                // 写入战斗日志（含技能名）
-                let skill_label = skill_name(&action.skill);
-                let killed = target_unit.hp <= 0;
-                combat_log.push(vec![
-                    LogSegment { text: format!("[{}]", action.attacker_name), color: log_color::ENEMY },
-                    LogSegment { text: format!(" 使用[{}]", skill_label), color: log_color::TURN },
-                    LogSegment { text: " 攻击 ".to_string(), color: log_color::NORMAL },
-                    LogSegment { text: format!("[{}]", target_name.0), color: log_color::PLAYER },
-                    LogSegment { text: " 造成 ".to_string(), color: log_color::NORMAL },
-                    LogSegment { text: format!("[{}]", damage), color: log_color::DAMAGE },
-                    LogSegment { text: " 伤害".to_string(), color: log_color::NORMAL },
-                    LogSegment { text: format!(" ({})", terrain.label()), color: log_color::TERRAIN },
-                ]);
-
-                if killed {
-                    combat_log.push(vec![
-                        LogSegment { text: format!("[{}]", target_name.0), color: log_color::PLAYER },
-                        LogSegment { text: " 被击败！".to_string(), color: log_color::KILL },
-                    ]);
-                    commands.entity(target_entity).despawn();
-                }
             }
         }
 

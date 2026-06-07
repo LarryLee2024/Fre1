@@ -1,14 +1,15 @@
 // 输入处理模块：点击选择、移动、攻击
 
-use crate::combat::{calculate_damage, manhattan_distance, skill_name, skill_range};
-use crate::map::{GameMap, Terrain, Tile};
+use crate::assets::CnFont;
+use crate::combat::{manhattan_distance, skill_range};
+use crate::combat_event;
+use crate::combat_log::CombatLog;
+use crate::map::{GameMap, Tile};
 use crate::pathfinding::{build_tile_terrain_map, find_reachable_tiles};
 use crate::turn::{TurnPhase, TurnState};
-use crate::ui::{CombatLog, CnFont, LogSegment, log_color};
 use crate::unit::{
-    AttackRange, Faction, GridPosition, MovableRange, Selected, SelectionHighlight, Skill, Unit, UnitName,
+    AttackRange, Faction, GridPosition, MovableRange, Selected, SelectionHighlight, Unit, UnitName,
 };
-use crate::vfx;
 use bevy::prelude::*;
 
 /// 攻击目标坐标
@@ -29,7 +30,8 @@ pub fn handle_click(
     turn_phase: Res<State<TurnPhase>>,
     mut next_phase: ResMut<NextState<TurnPhase>>,
     mut commands: Commands,
-    range_markers: Query<(Entity, &GridPosition), Or<(With<MovableRange>, With<AttackRange>)>>,
+    range_markers: Query<Entity, Or<(With<MovableRange>, With<AttackRange>)>>,
+    range_positions: Query<&GridPosition, Or<(With<MovableRange>, With<AttackRange>)>>,
     selected_query: Query<Entity, With<Selected>>,
     highlights: Query<Entity, With<SelectionHighlight>>,
     mut attack_target: ResMut<AttackTarget>,
@@ -91,7 +93,7 @@ pub fn handle_click(
         }
         TurnPhase::MoveUnit => {
             // 检查是否点击了可移动格子
-            let is_movable = range_markers.iter().any(|(_, gp)| gp.coord == coord);
+            let is_movable = range_positions.iter().any(|gp| gp.coord == coord);
 
             if is_movable {
                 if let Ok(selected_entity) = selected_query.single() {
@@ -109,7 +111,7 @@ pub fn handle_click(
             }
 
             // 清除移动范围，显示攻击范围
-            for (marker, _) in &range_markers {
+            for marker in &range_markers {
                 commands.entity(marker).despawn();
             }
 
@@ -127,7 +129,8 @@ pub fn handle_click(
                 if unit.faction == Faction::Enemy {
                     if let Ok(selected_entity) = selected_query.single() {
                         if let Ok((_, sel_unit, sel_gp, _)) = units.get(selected_entity) {
-                            let effective_range = skill_range(&sel_unit.skill, sel_unit.attack_range);
+                            let effective_range =
+                                skill_range(&sel_unit.skill, sel_unit.attack_range);
                             if manhattan_distance(sel_gp.coord, gp.coord) <= effective_range {
                                 attack_target.coord = Some(gp.coord);
                                 next_phase.set(TurnPhase::ExecuteAction);
@@ -169,15 +172,7 @@ pub fn handle_end_turn(
     }
 
     // 清除选中状态
-    for entity in &selected_query {
-        commands.entity(entity).remove::<Selected>();
-    }
-    for marker in &range_markers {
-        commands.entity(marker).despawn();
-    }
-    for h in &highlights {
-        commands.entity(h).despawn();
-    }
+    clear_selection(&mut commands, &selected_query, &range_markers, &highlights);
 
     // 标记所有玩家单位为已行动
     for mut unit in units.iter_mut() {
@@ -189,22 +184,31 @@ pub fn handle_end_turn(
     next_phase.set(TurnPhase::TurnEnd);
 }
 
-/// 清除选中状态和范围标记
-fn clear_selection(
+/// 清除范围标记和高亮（不含 Selected 移除，由调用方处理）
+fn clear_markers(
     commands: &mut Commands,
-    selected_query: &Query<Entity, With<Selected>>,
-    range_markers: &Query<(Entity, &GridPosition), Or<(With<MovableRange>, With<AttackRange>)>>,
+    range_markers: &Query<Entity, Or<(With<MovableRange>, With<AttackRange>)>>,
     highlights: &Query<Entity, With<SelectionHighlight>>,
 ) {
-    for entity in selected_query {
-        commands.entity(entity).remove::<Selected>();
-    }
-    for (marker, _) in range_markers {
+    for marker in range_markers {
         commands.entity(marker).despawn();
     }
     for h in highlights {
         commands.entity(h).despawn();
     }
+}
+
+/// 清除选中状态和范围标记
+fn clear_selection(
+    commands: &mut Commands,
+    selected_query: &Query<Entity, With<Selected>>,
+    range_markers: &Query<Entity, Or<(With<MovableRange>, With<AttackRange>)>>,
+    highlights: &Query<Entity, With<SelectionHighlight>>,
+) {
+    for entity in selected_query {
+        commands.entity(entity).remove::<Selected>();
+    }
+    clear_markers(commands, range_markers, highlights);
 }
 
 /// 显示可移动范围（蓝色半透明）
@@ -292,7 +296,10 @@ fn spawn_selection_highlight(commands: &mut Commands, map: &GameMap, coord: IVec
 /// 执行攻击（OnEnter）
 pub fn execute_action_on_enter(
     mut selected_units: Query<(Entity, &mut Unit, &GridPosition, &UnitName), With<Selected>>,
-    mut targets: Query<(Entity, &mut Unit, &GridPosition, &UnitName, &Transform), Without<Selected>>,
+    mut targets: Query<
+        (Entity, &mut Unit, &GridPosition, &UnitName, &Transform),
+        Without<Selected>,
+    >,
     tiles: Query<&Tile>,
     mut next_phase: ResMut<NextState<TurnPhase>>,
     mut commands: Commands,
@@ -301,20 +308,16 @@ pub fn execute_action_on_enter(
     highlights: Query<Entity, With<SelectionHighlight>>,
     mut combat_log: ResMut<CombatLog>,
     cn_font: Res<CnFont>,
-    map: Res<GameMap>,
 ) {
     // 清除范围标记和高亮
-    for marker in &range_markers {
-        commands.entity(marker).despawn();
-    }
-    for h in &highlights {
-        commands.entity(h).despawn();
-    }
+    clear_markers(&mut commands, &range_markers, &highlights);
 
     if let Ok((entity, mut unit, _pos, attacker_name)) = selected_units.single_mut() {
         // 查找攻击目标
         if let Some(target_coord) = attack_target.coord {
-            for (target_entity, mut target, target_pos, target_name, target_transform) in targets.iter_mut() {
+            for (target_entity, mut target, target_pos, target_name, target_transform) in
+                targets.iter_mut()
+            {
                 if target_pos.coord == target_coord && target.faction != unit.faction {
                     let terrain = tiles
                         .iter()
@@ -325,53 +328,22 @@ pub fn execute_action_on_enter(
                                 None
                             }
                         })
-                        .unwrap_or(Terrain::Plain);
+                        .unwrap_or(crate::map::Terrain::Plain);
 
-                    let damage = calculate_damage(&unit, &target, terrain);
-                    target.hp -= damage;
-
-                    // 伤害数字弹出
-                    let is_crit = unit.skill != Skill::None;
-                    vfx::spawn_damage_popup(
+                    // 统一攻击处理
+                    combat_event::execute_attack(
                         &mut commands,
+                        &unit,
+                        &attacker_name.0,
+                        target_entity,
+                        &mut target,
+                        target_pos.coord,
+                        target_name,
                         target_transform.translation.truncate(),
-                        damage,
-                        &cn_font.handle,
-                        is_crit,
+                        terrain,
+                        &cn_font,
+                        &mut combat_log,
                     );
-
-                    // 写入战斗日志（含技能名）
-                    let attacker_color = if unit.faction == Faction::Player {
-                        log_color::PLAYER
-                    } else {
-                        log_color::ENEMY
-                    };
-                    let defender_color = if target.faction == Faction::Player {
-                        log_color::PLAYER
-                    } else {
-                        log_color::ENEMY
-                    };
-                    let skill_label = skill_name(&unit.skill);
-
-                    let killed = target.hp <= 0;
-                    combat_log.push(vec![
-                        LogSegment { text: format!("[{}]", attacker_name.0), color: attacker_color },
-                        LogSegment { text: format!(" 使用[{}]", skill_label), color: log_color::TURN },
-                        LogSegment { text: " 攻击 ".to_string(), color: log_color::NORMAL },
-                        LogSegment { text: format!("[{}]", target_name.0), color: defender_color },
-                        LogSegment { text: " 造成 ".to_string(), color: log_color::NORMAL },
-                        LogSegment { text: format!("[{}]", damage), color: log_color::DAMAGE },
-                        LogSegment { text: " 伤害".to_string(), color: log_color::NORMAL },
-                        LogSegment { text: format!(" ({})", terrain.label()), color: log_color::TERRAIN },
-                    ]);
-
-                    if killed {
-                        combat_log.push(vec![
-                            LogSegment { text: format!("[{}]", target_name.0), color: defender_color },
-                            LogSegment { text: " 被击败！".to_string(), color: log_color::KILL },
-                        ]);
-                        commands.entity(target_entity).despawn();
-                    }
                     break;
                 }
             }
@@ -394,12 +366,7 @@ pub fn wait_action_on_enter(
     highlights: Query<Entity, With<SelectionHighlight>>,
 ) {
     // 清除范围标记和高亮
-    for marker in &range_markers {
-        commands.entity(marker).despawn();
-    }
-    for h in &highlights {
-        commands.entity(h).despawn();
-    }
+    clear_markers(&mut commands, &range_markers, &highlights);
 
     if let Ok((entity, mut unit)) = selected_units.single_mut() {
         unit.acted = true;

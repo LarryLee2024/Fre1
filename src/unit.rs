@@ -1,7 +1,7 @@
 // 单位模块：角色属性、阵营、生成
 
+use crate::assets::CnFont;
 use crate::map::GameMap;
-use crate::ui::CnFont;
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
 

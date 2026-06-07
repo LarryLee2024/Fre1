@@ -1,6 +1,6 @@
 // 地图模块：网格生成、地形数据、寻路
 
-use crate::ui::CnFont;
+use crate::assets::CnFont;
 use bevy::prelude::*;
 
 /// 地形类型

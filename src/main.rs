@@ -1,6 +1,9 @@
 mod ai;
+mod assets;
 mod camera;
 mod combat;
+mod combat_event;
+mod combat_log;
 mod input;
 mod map;
 mod pathfinding;
@@ -34,7 +37,7 @@ fn main() {
         .init_resource::<turn::TurnState>()
         .init_resource::<turn::AiTimer>()
         .init_resource::<input::AttackTarget>()
-        .init_resource::<ui::CombatLog>()
+        .init_resource::<combat_log::CombatLog>()
         // 状态
         .init_state::<AppState>()
         .add_sub_state::<TurnPhase>()
@@ -75,13 +78,19 @@ fn main() {
                 ui::update_action_menu.run_if(in_state(AppState::InGame)),
                 ui::update_hp_bars.run_if(in_state(AppState::InGame)),
                 ui::check_game_over.run_if(in_state(AppState::InGame)),
-                ui::update_combat_log.run_if(in_state(AppState::InGame)),
+                combat_log::update_combat_log.run_if(in_state(AppState::InGame)),
                 vfx::update_damage_popups,
             ),
         )
         // 直接进入游戏（后续可加主菜单）
-        .add_systems(Startup, (|mut next: ResMut<NextState<AppState>>| {
-            next.set(AppState::InGame);
-        }, ui::init_cn_font))
+        .add_systems(
+            Startup,
+            (
+                |mut next: ResMut<NextState<AppState>>| {
+                    next.set(AppState::InGame);
+                },
+                assets::init_cn_font,
+            ),
+        )
         .run();
 }

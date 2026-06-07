@@ -1,75 +1,11 @@
-// UI 模块：信息面板、行动菜单、回合提示、HP 条、战斗日志
-// 使用 Bevy 0.18 API
+// UI 模块：信息面板、行动菜单、回合提示、HP 条
 
+use crate::assets::CnFont;
 use crate::combat::skill_name;
+use crate::combat_log::CombatLogPanel;
 use crate::turn::{AppState, TurnPhase, TurnState};
 use crate::unit::{Faction, HpBarFg, Selected, Unit};
 use bevy::prelude::*;
-
-/// 中文字体路径
-const CN_FONT: &str = "fonts/Arial Unicode.ttf";
-
-/// 中文字体资源（全局预加载，避免重复加载）
-#[derive(Resource)]
-pub struct CnFont {
-    pub handle: Handle<Font>,
-}
-
-impl CnFont {
-    pub fn from(asset_server: &AssetServer) -> Self {
-        Self {
-            handle: asset_server.load(CN_FONT),
-        }
-    }
-}
-
-/// 最大日志条数
-const MAX_LOG_LINES: usize = 8;
-
-// ── 战斗日志系统 ──
-
-/// 日志片段（文字 + 颜色）
-#[derive(Clone)]
-pub struct LogSegment {
-    pub text: String,
-    pub color: Color,
-}
-
-/// 战斗日志资源
-#[derive(Resource, Default)]
-pub struct CombatLog {
-    /// 每条日志由多个片段组成，片段间拼接显示
-    pub entries: Vec<Vec<LogSegment>>,
-}
-
-impl CombatLog {
-    /// 添加一条日志
-    pub fn push(&mut self, segments: Vec<LogSegment>) {
-        self.entries.push(segments);
-        if self.entries.len() > MAX_LOG_LINES {
-            self.entries.remove(0);
-        }
-    }
-}
-
-/// 日志颜色常量
-pub mod log_color {
-    use bevy::prelude::Color;
-    pub const NORMAL: Color = Color::srgb(0.8, 0.8, 0.8);
-    pub const DAMAGE: Color = Color::srgb(1.0, 0.4, 0.3);
-    #[allow(dead_code)]
-    pub const HEAL: Color = Color::srgb(0.3, 1.0, 0.4);
-    pub const KILL: Color = Color::srgb(1.0, 0.2, 0.8);
-    pub const PLAYER: Color = Color::srgb(0.4, 0.7, 1.0);
-    pub const ENEMY: Color = Color::srgb(1.0, 0.6, 0.3);
-    #[allow(dead_code)]
-    pub const TURN: Color = Color::srgb(1.0, 1.0, 0.4);
-    pub const TERRAIN: Color = Color::srgb(0.5, 0.8, 0.5);
-}
-
-/// 战斗日志面板标记
-#[derive(Component)]
-pub struct CombatLogPanel;
 
 // ── UI 组件标记 ──
 
@@ -174,11 +110,6 @@ pub fn spawn_ui(mut commands: Commands) {
     ));
 }
 
-/// 初始化中文字体资源
-pub fn init_cn_font(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.insert_resource(CnFont::from(&asset_server));
-}
-
 /// 设置中文字体（覆盖所有 UI 文本）
 pub fn setup_ui_font(cn_font: Res<CnFont>, mut query: Query<&mut TextFont, With<Node>>) {
     for mut text_font in &mut query {
@@ -280,29 +211,5 @@ pub fn check_game_over(
             **text = "失败...".to_string();
         }
         next_app_state.set(AppState::GameOver);
-    }
-}
-
-/// 更新战斗日志面板显示
-pub fn update_combat_log(
-    combat_log: Res<CombatLog>,
-    mut query: Query<&mut Text, With<CombatLogPanel>>,
-) {
-    if combat_log.is_changed() {
-        for mut text in &mut query {
-            let display: String = combat_log
-                .entries
-                .iter()
-                .map(|segments| {
-                    segments
-                        .iter()
-                        .map(|s| s.text.as_str())
-                        .collect::<Vec<&str>>()
-                        .join("")
-                })
-                .collect::<Vec<String>>()
-                .join("\n");
-            **text = display;
-        }
     }
 }
