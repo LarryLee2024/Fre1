@@ -24,12 +24,13 @@ struct UnitSnapshot {
     skill: Skill,
 }
 
-/// 敌方 AI 系统
+/// 敌方 AI 系统。回合收尾走 `turn::turn_end_on_enter` 统一处理。
 pub fn enemy_ai_system(
     time: Res<Time>,
     mut ai_timer: ResMut<AiTimer>,
-    mut turn_state: ResMut<TurnState>,
+    turn_state: Res<TurnState>,
     turn_phase: Res<State<TurnPhase>>,
+    mut next_phase: ResMut<NextState<TurnPhase>>,
     mut units: Query<(Entity, &mut Unit, &mut GridPosition, &mut Transform, &UnitName)>,
     tiles: Query<&Tile>,
     map: Res<GameMap>,
@@ -180,7 +181,6 @@ pub fn enemy_ai_system(
                     &action.attacker_name,
                     target_entity,
                     &mut target_unit,
-                    target_gp.coord,
                     target_name,
                     target_transform.translation.truncate(),
                     terrain,
@@ -196,16 +196,15 @@ pub fn enemy_ai_system(
         }
     }
 
-    // 切换到玩家回合
-    turn_state.current_faction = Faction::Player;
-    turn_state.turn_number += 1;
+    next_phase.set(TurnPhase::TurnEnd);
+}
 
-    // 重置玩家单位行动状态
-    for (_, mut unit, _, _, _) in units.iter_mut() {
-        if unit.faction == Faction::Player {
-            unit.acted = false;
-        }
+/// AI 插件
+pub struct AiPlugin;
+
+impl Plugin for AiPlugin {
+    fn build(&self, app: &mut App) {
+        use crate::turn::AppState;
+        app.add_systems(Update, enemy_ai_system.run_if(in_state(AppState::InGame)));
     }
-
-    ai_timer.timer.reset();
 }

@@ -28,7 +28,6 @@ pub fn execute_attack(
     attacker_name: &str,
     target_entity: Entity,
     target_unit: &mut Unit,
-    _target_pos: IVec2,
     target_name: &UnitName,
     target_translation: Vec2,
     terrain: Terrain,
@@ -145,7 +144,6 @@ pub fn execute_action_on_enter(
                         &attacker_name.0,
                         target_entity,
                         &mut target,
-                        target_pos.coord,
                         target_name,
                         target_transform.translation.truncate(),
                         terrain,
@@ -182,4 +180,15 @@ pub fn wait_action_on_enter(
     }
 
     next_phase.set(crate::turn::TurnPhase::TurnEnd);
+}
+
+/// 战斗事件插件
+pub struct CombatEventPlugin;
+
+impl Plugin for CombatEventPlugin {
+    fn build(&self, app: &mut App) {
+        use crate::turn::TurnPhase;
+        app.add_systems(OnEnter(TurnPhase::ExecuteAction), execute_action_on_enter)
+            .add_systems(OnEnter(TurnPhase::WaitAction), wait_action_on_enter);
+    }
 }

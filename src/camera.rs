@@ -17,6 +17,17 @@ const CAMERA_ZOOM_MAX: f32 = 3.0;
 #[derive(Component)]
 pub struct CameraController;
 
+/// 相机管理插件
+pub struct CameraPlugin;
+
+impl Plugin for CameraPlugin {
+    fn build(&self, app: &mut App) {
+        use crate::turn::{AppState, GameSet};
+        app.add_systems(OnEnter(AppState::InGame), spawn_camera.in_set(GameSet::Camera))
+            .add_systems(Update, camera_control);
+    }
+}
+
 /// 生成带控制器的相机
 pub fn spawn_camera(mut commands: Commands) {
     commands.spawn((Camera2d, CameraController));

@@ -227,3 +227,13 @@ fn spawn_unit(
         ],
     ));
 }
+
+/// 单位管理插件
+pub struct UnitPlugin;
+
+impl Plugin for UnitPlugin {
+    fn build(&self, app: &mut App) {
+        use crate::turn::{AppState, GameSet};
+        app.add_systems(OnEnter(AppState::InGame), spawn_units.in_set(GameSet::Unit));
+    }
+}

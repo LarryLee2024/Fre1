@@ -166,6 +166,17 @@ pub fn spawn_map(mut commands: Commands, map: Res<GameMap>, cn_font: Res<CnFont>
     }
 }
 
+/// 地图管理插件
+pub struct MapPlugin;
+
+impl Plugin for MapPlugin {
+    fn build(&self, app: &mut App) {
+        use crate::turn::{AppState, GameSet};
+        app.init_resource::<GameMap>()
+            .add_systems(OnEnter(AppState::InGame), spawn_map.in_set(GameSet::Map));
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -1,4 +1,4 @@
-// 回合管理模块：状态机、回合切换
+// 回合管理模块：状态机、回合切换、SystemSet 编排
 
 use crate::unit::{Faction, Unit};
 use bevy::prelude::*;
@@ -60,6 +60,32 @@ impl Default for AiTimer {
         Self {
             timer: Timer::from_seconds(0.8, TimerMode::Once),
         }
+    }
+}
+
+/// 跨插件系统集合：显式控制 OnEnter(InGame) 生成顺序
+#[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
+pub enum GameSet {
+    Camera,
+    Map,
+    Unit,
+    Ui,
+}
+
+/// 回合管理插件
+pub struct TurnPlugin;
+
+impl Plugin for TurnPlugin {
+    fn build(&self, app: &mut App) {
+        app.init_state::<AppState>()
+            .add_sub_state::<TurnPhase>()
+            .init_resource::<TurnState>()
+            .init_resource::<AiTimer>()
+            .configure_sets(
+                OnEnter(AppState::InGame),
+                (GameSet::Camera, GameSet::Map, GameSet::Unit, GameSet::Ui).chain(),
+            )
+            .add_systems(OnEnter(TurnPhase::TurnEnd), turn_end_on_enter);
     }
 }
 

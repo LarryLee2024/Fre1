@@ -71,3 +71,14 @@ pub fn update_combat_log(
         }
     }
 }
+
+/// 战斗日志插件
+pub struct CombatLogPlugin;
+
+impl Plugin for CombatLogPlugin {
+    fn build(&self, app: &mut App) {
+        use crate::turn::AppState;
+        app.init_resource::<CombatLog>()
+            .add_systems(Update, update_combat_log.run_if(in_state(AppState::InGame)));
+    }
+}

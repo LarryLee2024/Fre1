@@ -14,15 +14,25 @@ mod ui;
 mod unit;
 mod vfx;
 
+use action_menu::ActionMenuPlugin;
+use ai::AiPlugin;
+use assets::AssetsPlugin;
 use bevy::prelude::*;
 use bevy_inspector_egui::bevy_egui::EguiPlugin;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
-use map::GameMap;
-use turn::{AppState, TurnPhase};
+use camera::CameraPlugin;
+use combat_event::CombatEventPlugin;
+use combat_log::CombatLogPlugin;
+use input::InputPlugin;
+use map::MapPlugin;
+use tile_info::TileInfoPlugin;
+use turn::{AppState, TurnPlugin};
+use ui::UiPlugin;
+use unit::UnitPlugin;
+use vfx::VfxPlugin;
 
 fn main() {
     App::new()
-        // 基础插件
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: "回合制战棋".to_string(),
@@ -31,65 +41,27 @@ fn main() {
             }),
             ..default()
         }))
-        // 调试工具
-        .add_plugins(EguiPlugin::default())
-        .add_plugins(WorldInspectorPlugin::new())
-        // 资源
-        .init_resource::<GameMap>()
-        .init_resource::<turn::TurnState>()
-        .init_resource::<turn::AiTimer>()
-        .init_resource::<input::AttackTarget>()
-        .init_resource::<input::PrevPosition>()
-        .init_resource::<action_menu::ActionMenuEntity>()
-        .init_resource::<tile_info::TileInfoEntity>()
-        .init_resource::<combat_log::CombatLog>()
-        // 状态
-        .init_state::<AppState>()
-        .add_sub_state::<TurnPhase>()
-        // 入场系统
-        .add_systems(
-            OnEnter(AppState::InGame),
-            (camera::spawn_camera, map::spawn_map, unit::spawn_units, ui::spawn_ui).chain(),
-        )
-        // 回合阶段 OnEnter 系统
-        .add_systems(OnEnter(TurnPhase::ExecuteAction), combat_event::execute_action_on_enter)
-        .add_systems(OnEnter(TurnPhase::WaitAction), combat_event::wait_action_on_enter)
-        .add_systems(OnEnter(TurnPhase::TurnEnd), turn::turn_end_on_enter)
-        // 更新系统
-        .add_systems(
-            Update,
-            (
-                camera::camera_control,
-                input::handle_click.run_if(in_state(AppState::InGame)),
-                input::handle_right_cancel.run_if(in_state(AppState::InGame)),
-                tile_info::handle_tile_info.run_if(in_state(AppState::InGame)),
-                input::handle_end_turn.run_if(in_state(AppState::InGame)),
-                action_menu::handle_action_menu_interaction.run_if(in_state(AppState::InGame)),
-                ai::enemy_ai_system.run_if(in_state(AppState::InGame)),
-                ui::setup_ui_font.run_if(in_state(AppState::InGame)),
-                ui::update_turn_indicator.run_if(in_state(AppState::InGame)),
-                ui::update_unit_info.run_if(in_state(AppState::InGame)),
-            ),
-        )
-        .add_systems(
-            Update,
-            (
-                ui::update_action_menu.run_if(in_state(AppState::InGame)),
-                ui::update_hp_bars.run_if(in_state(AppState::InGame)),
-                ui::check_game_over.run_if(in_state(AppState::InGame)),
-                combat_log::update_combat_log.run_if(in_state(AppState::InGame)),
-                vfx::update_damage_popups,
-            ),
-        )
+        .add_plugins((
+            EguiPlugin::default(),
+            WorldInspectorPlugin::new(),
+            // 游戏插件
+            AssetsPlugin,
+            TurnPlugin,
+            CameraPlugin,
+            MapPlugin,
+            UnitPlugin,
+            UiPlugin,
+            CombatEventPlugin,
+            CombatLogPlugin,
+            InputPlugin,
+            ActionMenuPlugin,
+            TileInfoPlugin,
+            AiPlugin,
+            VfxPlugin,
+        ))
         // 直接进入游戏（后续可加主菜单）
-        .add_systems(
-            Startup,
-            (
-                |mut next: ResMut<NextState<AppState>>| {
-                    next.set(AppState::InGame);
-                },
-                assets::init_cn_font,
-            ),
-        )
+        .add_systems(Startup, |mut next: ResMut<NextState<AppState>>| {
+            next.set(AppState::InGame);
+        })
         .run();
 }

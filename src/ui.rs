@@ -213,3 +213,25 @@ pub fn check_game_over(
         next_app_state.set(AppState::GameOver);
     }
 }
+
+/// UI 插件
+pub struct UiPlugin;
+
+impl Plugin for UiPlugin {
+    fn build(&self, app: &mut App) {
+        use crate::turn::{AppState, GameSet};
+        app.add_systems(OnEnter(AppState::InGame), spawn_ui.in_set(GameSet::Ui))
+            .add_systems(
+                Update,
+                (
+                    setup_ui_font,
+                    update_turn_indicator,
+                    update_unit_info,
+                    update_action_menu,
+                    update_hp_bars,
+                    check_game_over,
+                )
+                    .run_if(in_state(AppState::InGame)),
+            );
+    }
+}

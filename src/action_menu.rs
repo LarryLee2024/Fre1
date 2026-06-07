@@ -262,3 +262,16 @@ pub fn cancel_move(
 
     crate::input::clear_selection(commands, selected_query, range_markers, highlights);
 }
+
+/// 行动菜单插件
+pub struct ActionMenuPlugin;
+
+impl Plugin for ActionMenuPlugin {
+    fn build(&self, app: &mut App) {
+        use crate::turn::AppState;
+        app.init_resource::<ActionMenuEntity>().add_systems(
+            Update,
+            handle_action_menu_interaction.run_if(in_state(AppState::InGame)),
+        );
+    }
+}

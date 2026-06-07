@@ -23,3 +23,12 @@ impl CnFont {
 pub fn init_cn_font(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.insert_resource(CnFont::from(&asset_server));
 }
+
+/// 资源管理插件
+pub struct AssetsPlugin;
+
+impl Plugin for AssetsPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(Startup, init_cn_font);
+    }
+}

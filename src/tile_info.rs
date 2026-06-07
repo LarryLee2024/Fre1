@@ -130,3 +130,16 @@ fn spawn_tile_info(
 
     tile_info_entity.entity = Some(panel_id);
 }
+
+/// 地形信息浮窗插件
+pub struct TileInfoPlugin;
+
+impl Plugin for TileInfoPlugin {
+    fn build(&self, app: &mut App) {
+        use crate::turn::AppState;
+        app.init_resource::<TileInfoEntity>().add_systems(
+            Update,
+            handle_tile_info.run_if(in_state(AppState::InGame)),
+        );
+    }
+}

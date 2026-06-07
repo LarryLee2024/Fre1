@@ -87,3 +87,12 @@ pub fn update_damage_popups(
         }
     }
 }
+
+/// VFX 插件
+pub struct VfxPlugin;
+
+impl Plugin for VfxPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(Update, update_damage_popups);
+    }
+}

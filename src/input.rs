@@ -424,3 +424,23 @@ pub fn spawn_selection_highlight(commands: &mut Commands, map: &GameMap, coord: 
         SelectionHighlight,
     ));
 }
+
+/// 输入处理插件
+pub struct InputPlugin;
+
+impl Plugin for InputPlugin {
+    fn build(&self, app: &mut App) {
+        use crate::turn::AppState;
+        app.init_resource::<AttackTarget>()
+            .init_resource::<PrevPosition>()
+            .add_systems(
+                Update,
+                (
+                    handle_click,
+                    handle_right_cancel,
+                    handle_end_turn,
+                )
+                    .run_if(in_state(AppState::InGame)),
+            );
+    }
+}
