@@ -2,16 +2,16 @@
 // 替代原 StatusEffect 枚举，实现数据驱动的 Buff/Debuff 系统
 
 use crate::assets::CnFont;
-use crate::combat_log::{CombatLog, LogSegment, log_color};
+use crate::battle::{CombatLog, LogSegment, log_color};
 use crate::core::attribute::{AttributeKind, Attributes, BuffInstanceId};
 use crate::core::tag::GameplayTag;
 use crate::core::tag::GameplayTags;
-use crate::data::buff_data::{remove_buff, ActiveBuffs};
-use crate::data::skill_data::SkillCooldowns;
+use crate::buff::{remove_buff, ActiveBuffs};
+use crate::skill::SkillCooldowns;
 use crate::map::GameMap;
 use crate::turn::TurnState;
-use crate::unit::{GridPosition, Unit, UnitName};
-use crate::vfx;
+use crate::character::{GridPosition, TraitGrantedTags, Unit, UnitName};
+use crate::ui::vfx;
 use bevy::prelude::*;
 
 /// 持续效果结算系统：在新阵营回合开始时，对该阵营所有单位结算 DoT/HoT/晕眩，并 tick
@@ -30,9 +30,10 @@ pub fn resolve_status_effects(
         &mut ActiveBuffs,
         &mut GameplayTags,
         &mut SkillCooldowns,
+        &TraitGrantedTags,
     )>,
 ) {
-    for (entity, mut unit, name, gp, mut attrs, mut buffs, mut tags, mut cooldowns) in &mut units {
+    for (entity, mut unit, name, gp, mut attrs, mut buffs, mut tags, mut cooldowns, trait_tags) in &mut units {
         if unit.faction != turn_state.current_faction {
             continue;
         }
@@ -88,7 +89,7 @@ pub fn resolve_status_effects(
         }
 
         // 4. tick 递减持续时间，移除过期的 Buff
-        tick_buffs(&mut buffs, &mut attrs, &mut tags);
+        tick_buffs(&mut buffs, &mut attrs, &mut tags, &trait_tags);
 
         // 5. tick 技能冷却
         cooldowns.tick();
@@ -96,7 +97,7 @@ pub fn resolve_status_effects(
 }
 
 /// tick 所有 Buff：递减持续时间，移除过期的并清理其修饰符和标签
-fn tick_buffs(buffs: &mut ActiveBuffs, attrs: &mut Attributes, tags: &mut GameplayTags) {
+fn tick_buffs(buffs: &mut ActiveBuffs, attrs: &mut Attributes, tags: &mut GameplayTags, trait_tags: &TraitGrantedTags) {
     // 收集需要移除的 Buff ID（remaining_turns 将变为 0 的）
     let expired_ids: Vec<BuffInstanceId> = buffs
         .instances
@@ -117,18 +118,17 @@ fn tick_buffs(buffs: &mut ActiveBuffs, attrs: &mut Attributes, tags: &mut Gamepl
         // 简化处理：重新计算所有活跃 Buff 的标签
     }
 
-    // 重新同步 GameplayTags（基于当前活跃 Buff）
-    rebuild_tags_from_buffs(buffs, tags);
+    // 重新同步 GameplayTags（基于当前活跃 Buff + trait 授予的标签）
+    rebuild_tags_from_buffs(buffs, tags, trait_tags);
 }
 
-/// 从所有活跃 Buff 重新构建 GameplayTags
-fn rebuild_tags_from_buffs(buffs: &ActiveBuffs, tags: &mut GameplayTags) {
-    // 保留非 Buff 来源的标签（如职业标签 WARRIOR/ARCHER/MAGE）
-    let preserved_mask = GameplayTag::WARRIOR.0 | GameplayTag::ARCHER.0 | GameplayTag::MAGE.0;
-    let preserved = tags.0 & preserved_mask;
+/// 从所有活跃 Buff 重新构建 GameplayTags（保留 trait 授予的标签）
+fn rebuild_tags_from_buffs(buffs: &ActiveBuffs, tags: &mut GameplayTags, trait_tags: &TraitGrantedTags) {
+    // 保留 trait 授予的标签（如 MELEE、RANGED、FIRE 等）
+    let preserved_mask = trait_tags.0.0;
 
     // 从活跃 Buff 重建
-    let mut new_tags = GameplayTags(preserved);
+    let mut new_tags = GameplayTags(preserved_mask);
     for buff in &buffs.instances {
         for tag in &buff.tags {
             new_tags.add(*tag);

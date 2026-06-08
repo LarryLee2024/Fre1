@@ -1,15 +1,15 @@
 // 输入处理模块：点击选择、移动、攻击分发
 // 使用 Attributes/SkillSlots 替代原 Unit 上的硬编码属性
 
-use crate::action_menu::{ActionMenuEntity, cancel_move, spawn_action_menu};
-use crate::combat::manhattan_distance;
-use crate::combat_event::{CombatIntent, PrevPosition};
+use crate::ui::{ActionMenuEntity, cancel_move, spawn_action_menu};
+use crate::battle::manhattan_distance;
+use crate::battle::{CombatIntent, PrevPosition};
 use crate::core::attribute::{AttributeKind, Attributes};
-use crate::data::skill_data::{effective_skill_range, SkillRegistry, SkillSlots};
+use crate::skill::{effective_skill_range, BASIC_ATTACK_ID, SkillRegistry, SkillSlots};
 use crate::map::{GameMap, Tile};
-use crate::pathfinding::{build_tile_terrain_map, find_reachable_tiles};
+use crate::map::{build_tile_terrain_map, find_reachable_tiles};
 use crate::turn::{TurnPhase, TurnState};
-use crate::unit::{
+use crate::character::{
     AttackRange, Faction, GridPosition, MovableRange, Selected, SelectionHighlight, Unit,
 };
 use bevy::prelude::*;
@@ -137,7 +137,7 @@ pub fn handle_click(
                         let skill_id = combat_intent
                             .skill_id
                             .as_deref()
-                            .unwrap_or("basic_attack");
+                            .unwrap_or(BASIC_ATTACK_ID);
                         if let Some(skill_data) = skill_registry.get(skill_id) {
                             let base_range = units
                                 .get(selected_entity)

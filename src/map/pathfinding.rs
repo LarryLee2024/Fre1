@@ -1,6 +1,6 @@
 // 寻路模块：BFS 计算可移动范围与路径
 
-use crate::map::{GameMap, Terrain, Tile};
+use super::grid::{GameMap, Terrain, Tile};
 use bevy::prelude::*;
 use std::collections::{HashMap, VecDeque};
 
@@ -9,7 +9,7 @@ pub fn find_reachable_tiles(
     start: IVec2,
     move_points: u32,
     map: &GameMap,
-    tiles: &HashMap<IVec2, Terrain>,
+    tiles: &HashMap<IVec2, (Terrain, Option<u32>)>,  // terrain + move_cost
     occupied: &HashMap<IVec2, bool>,
 ) -> HashMap<IVec2, u32> {
     let mut reachable = HashMap::new();
@@ -33,12 +33,12 @@ pub fn find_reachable_tiles(
                 continue;
             }
 
-            let terrain = match tiles.get(&next) {
+            let terrain_data = match tiles.get(&next) {
                 Some(t) => *t,
                 None => continue,
             };
 
-            let cost = match terrain.move_cost() {
+            let cost = match terrain_data.1 {
                 Some(c) => c,
                 None => continue,
             };
@@ -70,11 +70,11 @@ pub fn find_reachable_tiles(
     reachable
 }
 
-/// 构建地形查找表
-pub fn build_tile_terrain_map(tiles: &Query<&Tile>) -> HashMap<IVec2, Terrain> {
+/// 构建地形查找表（terrain + move_cost）
+pub fn build_tile_terrain_map(tiles: &Query<&Tile>) -> HashMap<IVec2, (Terrain, Option<u32>)> {
     tiles
         .iter()
-        .map(|tile| (tile.coord, tile.terrain))
+        .map(|tile| (tile.coord, (tile.terrain, tile.move_cost)))
         .collect()
 }
 
@@ -91,12 +91,12 @@ mod tests {
         }
     }
 
-    /// 构建全平地地形表
-    fn all_plain_map(map: &GameMap) -> HashMap<IVec2, Terrain> {
+    /// 构建全平地地形表（terrain + move_cost）
+    fn all_plain_map(map: &GameMap) -> HashMap<IVec2, (Terrain, Option<u32>)> {
         let mut tiles = HashMap::new();
         for x in 0..map.width {
             for y in 0..map.height {
-                tiles.insert(IVec2::new(x as i32, y as i32), Terrain::Plain);
+                tiles.insert(IVec2::new(x as i32, y as i32), (Terrain::Plain, Some(1)));
             }
         }
         tiles
@@ -150,9 +150,9 @@ mod tests {
         let map = make_test_map();
         let mut tiles = all_plain_map(&map);
         // 右侧设为山地
-        tiles.insert(IVec2::new(3, 2), Terrain::Mountain);
+        tiles.insert(IVec2::new(3, 2), (Terrain::Mountain, None));
         // 上方设为水域
-        tiles.insert(IVec2::new(2, 3), Terrain::Water);
+        tiles.insert(IVec2::new(2, 3), (Terrain::Water, None));
         let occupied = HashMap::new();
 
         let reachable = find_reachable_tiles(IVec2::new(2, 2), 1, &map, &tiles, &occupied);
@@ -168,7 +168,7 @@ mod tests {
         let map = make_test_map();
         let mut tiles = all_plain_map(&map);
         // 相邻格设为森林
-        tiles.insert(IVec2::new(3, 2), Terrain::Forest);
+        tiles.insert(IVec2::new(3, 2), (Terrain::Forest, Some(2)));
         let occupied = HashMap::new();
 
         let reachable = find_reachable_tiles(IVec2::new(2, 2), 2, &map, &tiles, &occupied);

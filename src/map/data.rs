@@ -3,7 +3,6 @@
 
 use bevy::prelude::*;
 use ron::de::from_bytes;
-use ron::extensions::Extensions;
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs::{read, read_dir};
@@ -31,10 +30,6 @@ pub struct TerrainDefRon {
     pub defense_bonus: i32,
     pub color: (f32, f32, f32),
     pub passable: bool,
-}
-
-fn default_true() -> bool {
-    true
 }
 
 impl From<TerrainDefRon> for TerrainDef {

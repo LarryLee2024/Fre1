@@ -1,80 +1,18 @@
-// 单位模块：角色身份、阵营、生成
-// 属性移至 Attributes 组件，标签移至 GameplayTags 组件，技能移至 SkillSlots 组件
-// 单位定义从 UnitTemplateRegistry 加载，替代硬编码数组
+// 单位生成系统：从模板生成初始单位
 
 use crate::assets::CnFont;
 use crate::core::attribute::Attributes;
 use crate::core::tag::{GameplayTag, GameplayTags};
-use crate::core::trait_def::{TraitCollection, TraitRegistry, apply_passive_traits};
-use crate::data::buff_data::ActiveBuffs;
-use crate::data::map_data::LevelRegistry;
-use crate::data::skill_data::{SkillCooldowns, SkillSlots};
-use crate::data::unit_template::UnitTemplateRegistry;
+use crate::buff::ActiveBuffs;
+use crate::map::LevelRegistry;
+use crate::skill::{SkillCooldowns, SkillSlots};
 use crate::map::GameMap;
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
 
-/// 阵营
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum Faction {
-    Player,
-    Enemy,
-}
-
-/// 战斗单位组件（身份与回合状态）
-#[derive(Component)]
-pub struct Unit {
-    pub faction: Faction,
-    pub acted: bool,
-}
-
-/// 单位名称
-#[derive(Component)]
-pub struct UnitName(pub String);
-
-/// 单位所在格子坐标
-#[derive(Component)]
-pub struct GridPosition {
-    pub coord: IVec2,
-}
-
-/// 选中标记
-#[derive(Component)]
-pub struct Selected;
-
-/// 可移动范围标记
-#[derive(Component)]
-pub struct MovableRange;
-
-/// 可攻击范围标记
-#[derive(Component)]
-pub struct AttackRange;
-
-/// HP 条背景
-#[derive(Component)]
-pub struct HpBarBg;
-
-/// HP 条前景
-#[derive(Component)]
-pub struct HpBarFg;
-
-/// 选中高亮（独立实体）
-#[derive(Component)]
-pub struct SelectionHighlight;
-
-/// 阵营颜色
-impl Faction {
-    pub fn unit_color(&self) -> Color {
-        match self {
-            Faction::Player => Color::srgb(0.2, 0.5, 1.0),
-            Faction::Enemy => Color::srgb(1.0, 0.3, 0.2),
-        }
-    }
-}
-
-/// AI 行为 ID（敌方单位使用）
-#[derive(Component, Default, Debug, Clone)]
-pub struct AiBehaviorId(pub String);
+use super::components::*;
+use super::template::UnitTemplateRegistry;
+use super::traits::*;
 
 /// 生成初始单位（从 LevelConfig 加载单位部署）
 pub fn spawn_units(
@@ -122,7 +60,7 @@ pub fn spawn_units(
 fn spawn_unit_from_template(
     commands: &mut Commands,
     world_pos: Vec2,
-    template: &crate::data::unit_template::UnitTemplate,
+    template: &super::template::UnitTemplate,
     coord: IVec2,
     tile_size: f32,
     bar_width: f32,
@@ -156,6 +94,8 @@ fn spawn_unit_from_template(
             gameplay_tags.add(GameplayTag(bit));
         }
     }
+    // 保存 trait 授予的标签（用于 rebuild_tags_from_buffs 恢复）
+    let trait_granted_tags = TraitGrantedTags(trait_tags);
     // 应用 trait 属性修饰符
     for modifier in trait_modifiers {
         attributes.add_modifier(modifier);
@@ -181,6 +121,7 @@ fn spawn_unit_from_template(
         GridPosition { coord },
         attributes,
         gameplay_tags,
+        trait_granted_tags,
         skill_slots,
         trait_collection,
         ai_behavior_id,

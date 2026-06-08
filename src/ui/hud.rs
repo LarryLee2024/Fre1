@@ -1,13 +1,13 @@
-// UI 模块：信息面板、行动菜单、回合提示、HP 条
+// HUD 模块：信息面板、回合提示、HP 条
 // 使用 Attributes/ActiveBuffs/SkillSlots 替代原 Unit 上的硬编码属性
 
 use crate::assets::CnFont;
-use crate::combat_log::CombatLogPanel;
+use crate::battle::CombatLogPanel;
 use crate::core::attribute::{AttributeKind, Attributes};
-use crate::data::buff_data::ActiveBuffs;
-use crate::data::skill_data::{SkillRegistry, SkillSlots};
+use crate::buff::ActiveBuffs;
+use crate::skill::{SkillRegistry, SkillSlots};
 use crate::turn::{AppState, TurnPhase, TurnState};
-use crate::unit::{Faction, HpBarFg, Selected, Unit};
+use crate::character::{Faction, HpBarFg, Selected, Unit};
 use bevy::prelude::*;
 
 // ── UI 组件标记 ──
@@ -139,7 +139,7 @@ pub fn update_turn_indicator(
 /// 更新单位信息面板
 pub fn update_unit_info(
     selected_units: Query<
-        (&Unit, &crate::unit::UnitName, &Attributes, &SkillSlots, &ActiveBuffs),
+        (&Unit, &crate::character::UnitName, &Attributes, &SkillSlots, &ActiveBuffs),
         With<Selected>,
     >,
     mut query: Query<
@@ -251,12 +251,12 @@ pub fn check_game_over(
     }
 }
 
-/// UI 插件
-pub struct UiPlugin;
+/// HUD 插件
+pub struct HudPlugin;
 
-impl Plugin for UiPlugin {
+impl Plugin for HudPlugin {
     fn build(&self, app: &mut App) {
-        use crate::turn::{AppState, GameSet};
+        use crate::turn::GameSet;
         app.add_systems(OnEnter(AppState::InGame), spawn_ui.in_set(GameSet::Ui))
             .add_systems(
                 Update,

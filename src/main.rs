@@ -1,49 +1,36 @@
-mod action_menu;
 mod ai;
 mod assets;
+mod battle;
+mod buff;
 mod camera;
-mod combat;
-mod combat_event;
-mod combat_log;
+mod character;
 mod core;
-mod data;
 mod input;
 mod map;
-mod pathfinding;
+mod skill;
 mod status;
-mod tile_info;
 mod turn;
 mod ui;
-mod unit;
-mod vfx;
 
-use action_menu::ActionMenuPlugin;
 use ai::AiPlugin;
+use ai::AiBehaviorPlugin;
 use assets::AssetsPlugin;
+use battle::BattlePlugin;
 use bevy::prelude::*;
 use bevy_inspector_egui::bevy_egui::EguiPlugin;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
+use buff::BuffPlugin;
 use camera::CameraPlugin;
-use combat_event::CombatEventPlugin;
-use combat_log::CombatLogPlugin;
+use character::CharacterPlugin;
 use core::attribute_def::AttributeDefPlugin;
 use core::effect::EffectPlugin;
 use core::modifier_rule::ModifierRulePlugin;
 use core::tag_def::TagDefPlugin;
-use core::trait_def::TraitPlugin;
-use data::ai_behavior::AiBehaviorPlugin;
-use data::buff_data::BuffDataPlugin;
-use data::map_data::MapDataPlugin;
-use data::skill_data::SkillDataPlugin;
-use data::unit_template::UnitTemplatePlugin;
 use input::InputPlugin;
-use map::MapPlugin;
+use skill::SkillPlugin;
 use status::StatusPlugin;
-use tile_info::TileInfoPlugin;
 use turn::{AppState, TurnPlugin};
 use ui::UiPlugin;
-use unit::UnitPlugin;
-use vfx::VfxPlugin;
 
 fn main() {
     App::new()
@@ -56,35 +43,33 @@ fn main() {
             ..default()
         }))
         .add_plugins((EguiPlugin::default(), WorldInspectorPlugin::new()))
+        // 数据层插件
         .add_plugins((
-            // 核心架构插件
+            SkillPlugin,
+            BuffPlugin,
+            AiBehaviorPlugin,
+        ))
+        // 核心层插件
+        .add_plugins((
             EffectPlugin,
             ModifierRulePlugin,
             AttributeDefPlugin,
             TagDefPlugin,
-            TraitPlugin,
-            MapDataPlugin,
-            SkillDataPlugin,
-            BuffDataPlugin,
-            AiBehaviorPlugin,
-            UnitTemplatePlugin,
-            // 游戏插件
+        ))
+        // 游戏逻辑插件
+        .add_plugins((
             AssetsPlugin,
             TurnPlugin,
             CameraPlugin,
-            MapPlugin,
-            UnitPlugin,
+            CharacterPlugin,
+            BattlePlugin,
+            AiPlugin,
+            StatusPlugin,
         ))
+        // 表现层插件
         .add_plugins((
             UiPlugin,
-            CombatEventPlugin,
-            CombatLogPlugin,
             InputPlugin,
-            ActionMenuPlugin,
-            TileInfoPlugin,
-            AiPlugin,
-            VfxPlugin,
-            StatusPlugin,
         ))
         .add_systems(Startup, |mut next: ResMut<NextState<AppState>>| {
             next.set(AppState::InGame);

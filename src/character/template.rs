@@ -3,7 +3,8 @@
 
 use crate::core::attribute::AttributeKind;
 use crate::core::tag::{GameplayTag, TagName};
-use crate::unit::Faction;
+use crate::skill::BASIC_ATTACK_ID;
+use super::components::Faction;
 use bevy::prelude::*;
 use ron::de::from_bytes;
 use serde::Deserialize;
@@ -84,6 +85,7 @@ impl UnitTemplateRegistry {
         let mut registry = UnitTemplateRegistry::default();
         let Ok(entries) = read_dir(dir) else {
             bevy::log::warn!("单位模板目录不存在: {}", dir);
+            registry.register_defaults();
             return registry;
         };
 
@@ -107,7 +109,74 @@ impl UnitTemplateRegistry {
                 }
             }
         }
+
+        if registry.templates.is_empty() {
+            bevy::log::warn!("单位模板目录为空，使用默认模板");
+            registry.register_defaults();
+        }
+
         registry
+    }
+
+    /// 注册内置默认单位模板（确保基础功能可用）
+    fn register_defaults(&mut self) {
+        let mut base = HashMap::new();
+
+        // 战士
+        base.insert(AttributeKind::Hp, 30.0);
+        base.insert(AttributeKind::MaxHp, 30.0);
+        base.insert(AttributeKind::Atk, 10.0);
+        base.insert(AttributeKind::Def, 5.0);
+        base.insert(AttributeKind::Mov, 5.0);
+        base.insert(AttributeKind::AttackRange, 1.0);
+        self.templates.insert("player_warrior".into(), UnitTemplate {
+            id: "player_warrior".into(),
+            name: "战士".into(),
+            faction: Faction::Player,
+            class_tag: GameplayTag::WARRIOR,
+            base_attributes: base.clone(),
+            skill_ids: vec![BASIC_ATTACK_ID.into(), "charge".into()],
+            trait_ids: vec!["warrior_mastery".into()],
+            ai_behavior: "default".into(),
+        });
+
+        // 弓箭手
+        base.clear();
+        base.insert(AttributeKind::Hp, 20.0);
+        base.insert(AttributeKind::MaxHp, 20.0);
+        base.insert(AttributeKind::Atk, 8.0);
+        base.insert(AttributeKind::Def, 3.0);
+        base.insert(AttributeKind::Mov, 5.0);
+        base.insert(AttributeKind::AttackRange, 3.0);
+        self.templates.insert("player_archer".into(), UnitTemplate {
+            id: "player_archer".into(),
+            name: "弓箭手".into(),
+            faction: Faction::Player,
+            class_tag: GameplayTag::ARCHER,
+            base_attributes: base.clone(),
+            skill_ids: vec![BASIC_ATTACK_ID.into()],
+            trait_ids: vec![],
+            ai_behavior: "default".into(),
+        });
+
+        // 哥布林
+        base.clear();
+        base.insert(AttributeKind::Hp, 20.0);
+        base.insert(AttributeKind::MaxHp, 20.0);
+        base.insert(AttributeKind::Atk, 7.0);
+        base.insert(AttributeKind::Def, 3.0);
+        base.insert(AttributeKind::Mov, 4.0);
+        base.insert(AttributeKind::AttackRange, 1.0);
+        self.templates.insert("enemy_goblin".into(), UnitTemplate {
+            id: "enemy_goblin".into(),
+            name: "哥布林".into(),
+            faction: Faction::Enemy,
+            class_tag: GameplayTag::WARRIOR,
+            base_attributes: base,
+            skill_ids: vec![BASIC_ATTACK_ID.into()],
+            trait_ids: vec!["warrior_mastery".into()],
+            ai_behavior: "aggressive".into(),
+        });
     }
 }
 
@@ -127,27 +196,27 @@ mod tests {
 
     #[test]
     fn ron_反序列化_单位模板() {
-        let ron_str = r#"
+        let ron_str = format!(r#"
             (
                 id: "player_warrior",
                 name: "战士",
                 faction: Player,
                 class_tag: WARRIOR,
-                base_attributes: {
+                base_attributes: {{
                     Hp: 30.0, MaxHp: 30.0,
                     Atk: 10.0, Def: 5.0,
                     Mov: 5.0, AttackRange: 1.0,
-                },
-                skill_ids: ["basic_attack", "charge"],
+                }},
+                skill_ids: ["{}", "charge"],
                 trait_ids: ["warrior_mastery"],
                 ai_behavior: "default",
             )
-        "#;
+        "#, BASIC_ATTACK_ID);
         let def: UnitTemplateDef = from_bytes(ron_str.as_bytes()).unwrap();
         assert_eq!(def.id, "player_warrior");
         assert_eq!(def.faction, FactionDef::Player);
         assert_eq!(def.class_tag, TagName::Warrior);
-        assert_eq!(def.skill_ids, vec!["basic_attack", "charge"]);
+        assert_eq!(def.skill_ids, vec![BASIC_ATTACK_ID, "charge"]);
         assert_eq!(def.trait_ids, vec!["warrior_mastery"]);
         assert_eq!(def.ai_behavior, "default");
     }
@@ -165,7 +234,7 @@ mod tests {
                 m.insert(AttributeKind::MaxHp, 20.0);
                 m
             },
-            skill_ids: vec!["basic_attack".into()],
+            skill_ids: vec![BASIC_ATTACK_ID.into()],
             trait_ids: vec!["mage_mastery".into(), "fire_affinity".into()],
             ai_behavior: "aggressive".into(),
         };

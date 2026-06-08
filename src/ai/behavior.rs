@@ -197,6 +197,7 @@ impl Plugin for AiBehaviorPlugin {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::skill::BASIC_ATTACK_ID;
 
     #[test]
     fn ron_反序列化_ai行为() {
@@ -224,12 +225,12 @@ mod tests {
             target_strategy: TargetStrategy::MostDangerous,
             move_strategy: MoveStrategy::Cautious,
             skill_strategy: SkillStrategy::ByPriority,
-            skill_priority: vec!["fireball".into(), "basic_attack".into()],
+            skill_priority: vec!["fireball".into(), BASIC_ATTACK_ID.into()],
         };
         let behavior: AiBehavior = def.into();
         assert_eq!(behavior.id, "test");
         assert_eq!(behavior.target_strategy, TargetStrategy::MostDangerous);
-        assert_eq!(behavior.skill_priority, vec!["fireball", "basic_attack"]);
+        assert_eq!(behavior.skill_priority, vec!["fireball", BASIC_ATTACK_ID]);
     }
 
     #[test]
@@ -244,17 +245,17 @@ mod tests {
 
     #[test]
     fn ron_反序列化_带技能优先级() {
-        let ron_str = r#"
+        let ron_str = format!(r#"
             (
                 id: "support",
                 name: "辅助",
                 target_strategy: Nearest,
                 move_strategy: Support,
                 skill_strategy: ByPriority,
-                skill_priority: ["heal", "cleanse_skill", "basic_attack"],
+                skill_priority: ["heal", "cleanse_skill", "{}"],
             )
-        "#;
+        "#, BASIC_ATTACK_ID);
         let def: AiBehaviorDef = from_bytes(ron_str.as_bytes()).unwrap();
-        assert_eq!(def.skill_priority, vec!["heal", "cleanse_skill", "basic_attack"]);
+        assert_eq!(def.skill_priority, vec!["heal", "cleanse_skill", BASIC_ATTACK_ID]);
     }
 }

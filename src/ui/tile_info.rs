@@ -2,7 +2,7 @@
 
 use crate::map::{GameMap, Tile};
 use crate::turn::TurnPhase;
-use crate::unit::Faction;
+use crate::character::Faction;
 use bevy::prelude::*;
 
 /// 地形信息浮窗标记组件
@@ -90,7 +90,7 @@ fn spawn_tile_info(
     tile_info_entity: &mut TileInfoEntity,
 ) {
     let terrain = tile.terrain;
-    let move_cost_str = match terrain.move_cost() {
+    let move_cost_str = match tile.move_cost {
         Some(c) => format!("{}", c),
         None => "不可通行".to_string(),
     };
@@ -100,7 +100,7 @@ fn spawn_tile_info(
         tile.coord.y,
         terrain.label(),
         move_cost_str,
-        terrain.defense_bonus(),
+        tile.defense_bonus,
     );
 
     let panel_id = commands

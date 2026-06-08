@@ -94,12 +94,12 @@ pub fn calculate_damage_from_effect(
     base_def: f32,
     multiplier: f32,
     ignore_def_percent: f32,
-    terrain: Terrain,
+    terrain_defense_bonus: i32,
 ) -> i32 {
     let def_ignored = base_def * (ignore_def_percent / 100.0);
     let final_def = effective_def - def_ignored;
     let base_damage = effective_atk - final_def;
-    let terrain_bonus = terrain.defense_bonus() as f32;
+    let terrain_bonus = terrain_defense_bonus as f32;
     ((base_damage - terrain_bonus) * multiplier).max(1.0) as i32
 }
 
@@ -118,62 +118,62 @@ mod tests {
 
     #[test]
     fn 伤害计算_基础() {
-        // ATK=10, DEF=3, multiplier=1.0, no ignore, Plain
-        let dmg = calculate_damage_from_effect(10.0, 3.0, 3.0, 1.0, 0.0, Terrain::Plain);
+        // ATK=10, DEF=3, multiplier=1.0, no ignore, Plain (defense_bonus=0)
+        let dmg = calculate_damage_from_effect(10.0, 3.0, 3.0, 1.0, 0.0, 0);
         assert_eq!(dmg, 7);
     }
 
     #[test]
     fn 伤害计算_森林地形() {
-        let dmg = calculate_damage_from_effect(10.0, 3.0, 3.0, 1.0, 0.0, Terrain::Forest);
+        let dmg = calculate_damage_from_effect(10.0, 3.0, 3.0, 1.0, 0.0, 2);
         // 10 - 3 - 2 = 5
         assert_eq!(dmg, 5);
     }
 
     #[test]
     fn 伤害计算_最低为1() {
-        let dmg = calculate_damage_from_effect(1.0, 10.0, 10.0, 1.0, 0.0, Terrain::Plain);
+        let dmg = calculate_damage_from_effect(1.0, 10.0, 10.0, 1.0, 0.0, 0);
         assert_eq!(dmg, 1);
     }
 
     #[test]
     fn 伤害计算_技能倍率() {
-        let dmg = calculate_damage_from_effect(10.0, 3.0, 3.0, 1.5, 0.0, Terrain::Plain);
+        let dmg = calculate_damage_from_effect(10.0, 3.0, 3.0, 1.5, 0.0, 0);
         // (10 - 3) * 1.5 = 10.5 → 10
         assert_eq!(dmg, 10);
     }
 
     #[test]
     fn 伤害计算_无视防御() {
-        let dmg = calculate_damage_from_effect(10.0, 10.0, 10.0, 1.3, 50.0, Terrain::Plain);
+        let dmg = calculate_damage_from_effect(10.0, 10.0, 10.0, 1.3, 50.0, 0);
         // final_def = 10 - 10*0.5 = 5, (10 - 5) * 1.3 = 6.5 → 6
         assert_eq!(dmg, 6);
     }
 
     #[test]
     fn 伤害计算_100百分比无视防御() {
-        let dmg = calculate_damage_from_effect(10.0, 10.0, 10.0, 1.0, 100.0, Terrain::Plain);
+        let dmg = calculate_damage_from_effect(10.0, 10.0, 10.0, 1.0, 100.0, 0);
         // final_def = 10 - 10*1.0 = 0, (10 - 0) * 1.0 = 10
         assert_eq!(dmg, 10);
     }
 
     #[test]
     fn 伤害计算_山地地形无防御加成() {
-        let dmg = calculate_damage_from_effect(10.0, 3.0, 3.0, 1.0, 0.0, Terrain::Mountain);
+        let dmg = calculate_damage_from_effect(10.0, 3.0, 3.0, 1.0, 0.0, 0);
         // Mountain defense_bonus = 0, 10 - 3 = 7
         assert_eq!(dmg, 7);
     }
 
     #[test]
     fn 伤害计算_水域地形无防御加成() {
-        let dmg = calculate_damage_from_effect(10.0, 3.0, 3.0, 1.0, 0.0, Terrain::Water);
+        let dmg = calculate_damage_from_effect(10.0, 3.0, 3.0, 1.0, 0.0, 0);
         // Water defense_bonus = 0, 10 - 3 = 7
         assert_eq!(dmg, 7);
     }
 
     #[test]
     fn 伤害计算_高倍率技能() {
-        let dmg = calculate_damage_from_effect(10.0, 3.0, 3.0, 3.0, 0.0, Terrain::Plain);
+        let dmg = calculate_damage_from_effect(10.0, 3.0, 3.0, 3.0, 0.0, 0);
         // (10 - 3) * 3.0 = 21
         assert_eq!(dmg, 21);
     }

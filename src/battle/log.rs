@@ -1,6 +1,7 @@
 // 战斗日志模块：日志数据、颜色常量、日志面板显示
 
 use bevy::prelude::*;
+use std::collections::VecDeque;
 
 /// 最大日志条数
 const MAX_LOG_LINES: usize = 8;
@@ -16,15 +17,15 @@ pub struct LogSegment {
 #[derive(Resource, Default)]
 pub struct CombatLog {
     /// 每条日志由多个片段组成，片段间拼接显示
-    pub entries: Vec<Vec<LogSegment>>,
+    pub entries: VecDeque<Vec<LogSegment>>,
 }
 
 impl CombatLog {
     /// 添加一条日志
     pub fn push(&mut self, segments: Vec<LogSegment>) {
-        self.entries.push(segments);
+        self.entries.push_back(segments);
         if self.entries.len() > MAX_LOG_LINES {
-            self.entries.remove(0);
+            self.entries.pop_front();
         }
     }
 }

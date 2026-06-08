@@ -1,12 +1,12 @@
 // 行动菜单模块：弹出式行动菜单，使用 SkillSlots 动态生成按钮
 
-use crate::combat_event::{CombatIntent, PrevPosition};
-use crate::core::attribute::AttributeKind;
-use crate::data::skill_data::{effective_skill_range, SkillRegistry, SkillSlots};
+use crate::battle::{CombatIntent, PrevPosition};
+use crate::core::attribute::{AttributeKind, Attributes};
+use crate::skill::{effective_skill_range, BASIC_ATTACK_ID, SkillRegistry, SkillSlots};
 use crate::input;
 use crate::map::GameMap;
 use crate::turn::TurnPhase;
-use crate::unit::{
+use crate::character::{
     AttackRange, GridPosition, MovableRange, Selected, SelectionHighlight, Unit,
 };
 use bevy::prelude::*;
@@ -213,10 +213,10 @@ pub fn handle_action_menu_interaction(
 
         match &button.kind {
             ActionKind::Attack => {
-                combat_intent.skill_id = Some("basic_attack".to_string());
+                combat_intent.skill_id = Some(BASIC_ATTACK_ID.to_string());
                 if let Ok((_, _, gp, attrs)) = selected_units.single() {
                     let base_range = attrs.get(AttributeKind::AttackRange) as u32;
-                    if let Some(skill_data) = skill_registry.get("basic_attack") {
+                    if let Some(skill_data) = skill_registry.get(BASIC_ATTACK_ID) {
                         let range = effective_skill_range(skill_data, base_range);
                         input::show_attack_range(&mut commands, &map, gp.coord, range);
                     }
@@ -251,8 +251,6 @@ pub fn handle_action_menu_interaction(
         }
     }
 }
-
-use crate::core::attribute::Attributes;
 
 /// 行动菜单插件
 pub struct ActionMenuPlugin;

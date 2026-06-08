@@ -1,8 +1,7 @@
-// 地图模块：网格生成、地形数据、寻路
-// 地形属性从 TerrainRegistry 加载，地图布局从 LevelConfig 加载
+// 地图网格：GameMap、Tile、Terrain、坐标转换、地图生成
 
 use crate::assets::CnFont;
-use crate::data::map_data::{LevelRegistry, TerrainRegistry};
+use super::data::{LevelRegistry, TerrainRegistry};
 use bevy::prelude::*;
 
 /// 地形类型（Tile 组件存储，用于寻路等运行时逻辑）
@@ -25,6 +24,16 @@ impl Terrain {
         }
     }
 
+    /// 转换为地形 ID 字符串
+    pub fn to_id(&self) -> &'static str {
+        match self {
+            Terrain::Plain => "plain",
+            Terrain::Forest => "forest",
+            Terrain::Mountain => "mountain",
+            Terrain::Water => "water",
+        }
+    }
+
     /// 地形中文名（用于地图标注）
     pub fn label(&self) -> &'static str {
         match self {
@@ -35,8 +44,8 @@ impl Terrain {
         }
     }
 
-    /// 移动消耗
-    pub fn move_cost(&self) -> Option<u32> {
+    /// 移动消耗兜底值（TerrainRegistry 未加载时使用）
+    pub fn move_cost_fallback(&self) -> Option<u32> {
         match self {
             Terrain::Plain => Some(1),
             Terrain::Forest => Some(2),
@@ -45,8 +54,8 @@ impl Terrain {
         }
     }
 
-    /// 地形防御加成
-    pub fn defense_bonus(&self) -> i32 {
+    /// 地形防御加成兜底值（TerrainRegistry 未加载时使用）
+    pub fn defense_bonus_fallback(&self) -> i32 {
         match self {
             Terrain::Plain => 0,
             Terrain::Forest => 2,
@@ -87,6 +96,10 @@ pub struct Tile {
     pub coord: IVec2,
     /// 地形类型
     pub terrain: Terrain,
+    /// 移动消耗（从 TerrainRegistry 加载，None 表示不可通行）
+    pub move_cost: Option<u32>,
+    /// 地形防御加成（从 TerrainRegistry 加载）
+    pub defense_bonus: i32,
 }
 
 /// 地图资源：存储地图尺寸
@@ -112,7 +125,7 @@ impl Default for GameMap {
 
 impl GameMap {
     /// 从关卡配置创建
-    pub fn from_level(level: &crate::data::map_data::LevelConfig) -> Self {
+    pub fn from_level(level: &super::data::LevelConfig) -> Self {
         Self {
             width: level.width,
             height: level.height,
@@ -193,10 +206,17 @@ pub fn spawn_map(
             let tile_size = map.tile_size;
             let terrain_color = terrain.color_from_registry(&terrain_registry);
 
+            // 从 TerrainRegistry 获取地形属性
+            let terrain_id = terrain.to_id();
+            let (move_cost, defense_bonus) = terrain_registry
+                .get(terrain_id)
+                .map(|def| (def.move_cost, def.defense_bonus))
+                .unwrap_or_else(|| (terrain.move_cost_fallback(), terrain.defense_bonus_fallback()));
+
             commands.spawn((
                 Sprite::from_color(terrain_color, Vec2::splat(tile_size - 2.0)),
                 Transform::from_xyz(world_pos.x, world_pos.y, 0.0),
-                Tile { coord, terrain },
+                Tile { coord, terrain, move_cost, defense_bonus },
                 children![
                     (
                         Text2d::new(format!("{},{}", coord.x, coord.y)),
@@ -218,10 +238,10 @@ pub fn spawn_map(
     }
 }
 
-/// 地图管理插件
-pub struct MapPlugin;
+/// 地图网格插件
+pub struct MapGridPlugin;
 
-impl Plugin for MapPlugin {
+impl Plugin for MapGridPlugin {
     fn build(&self, app: &mut App) {
         use crate::turn::{AppState, GameSet};
         app.init_resource::<GameMap>()
@@ -243,17 +263,17 @@ mod tests {
     }
 
     #[test]
-    fn 地形_移动消耗() {
-        assert_eq!(Terrain::Plain.move_cost(), Some(1));
-        assert_eq!(Terrain::Forest.move_cost(), Some(2));
-        assert_eq!(Terrain::Mountain.move_cost(), None);
-        assert_eq!(Terrain::Water.move_cost(), None);
+    fn 地形_移动消耗兜底值() {
+        assert_eq!(Terrain::Plain.move_cost_fallback(), Some(1));
+        assert_eq!(Terrain::Forest.move_cost_fallback(), Some(2));
+        assert_eq!(Terrain::Mountain.move_cost_fallback(), None);
+        assert_eq!(Terrain::Water.move_cost_fallback(), None);
     }
 
     #[test]
-    fn 地形_防御加成() {
-        assert_eq!(Terrain::Plain.defense_bonus(), 0);
-        assert_eq!(Terrain::Forest.defense_bonus(), 2);
+    fn 地形_防御加成兜底值() {
+        assert_eq!(Terrain::Plain.defense_bonus_fallback(), 0);
+        assert_eq!(Terrain::Forest.defense_bonus_fallback(), 2);
     }
 
     #[test]
@@ -264,7 +284,7 @@ mod tests {
 
     #[test]
     fn game_map_从关卡配置创建() {
-        let level = crate::data::map_data::LevelConfig {
+        let level = super::super::data::LevelConfig {
             id: "test".into(),
             name: "测试".into(),
             width: 12,
