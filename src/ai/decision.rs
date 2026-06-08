@@ -1,10 +1,10 @@
 use crate::battle::CombatIntent;
 use crate::battle::manhattan_distance;
 use crate::buff::ActiveBuffs;
-use crate::character::{AiBehaviorId, Faction, GridPosition, Unit, UnitName};
+use crate::character::{AiBehaviorId, Faction, GridPosition, MovingUnit, Unit, UnitName, spawn_path_arrows};
 use crate::gameplay::attribute::{AttributeKind, Attributes};
 use crate::gameplay::tag::GameplayTags;
-use crate::map::{GameMap, TerrainCostRegistry, TerrainMapCache, find_reachable_tiles};
+use crate::map::{GameMap, TerrainCostRegistry, TerrainMapCache, find_reachable_tiles, reconstruct_path};
 use crate::skill::{SkillCooldowns, SkillRegistry, SkillSlots, effective_skill_range};
 use crate::turn::{AiTimer, TurnPhase, TurnState};
 use bevy::prelude::*;
@@ -20,6 +20,7 @@ use super::targeting::{UnitSnapshot, select_target_coord};
 /// 攻击效果不再在此系统内执行，而是通过统一的 Effect Pipeline 处理：
 /// ExecuteAction → generate → modify → execute
 pub fn enemy_ai_system(
+    mut commands: Commands,
     time: Res<Time>,
     mut ai_timer: ResMut<AiTimer>,
     turn_state: Res<TurnState>,
@@ -159,13 +160,23 @@ pub fn enemy_ai_system(
         .find(|s| manhattan_distance(best_coord, s.coord) <= effective_range)
         .map(|s| s.entity);
 
-    // 移动单位
-    let world_pos = map.coord_to_world(best_coord);
-    if let Ok((_, _, mut gp, mut transform, _, _, _, _, _, _, _)) = units.get_mut(snapshot.entity) {
-        gp.coord = best_coord;
-        transform.translation.x = world_pos.x;
-        transform.translation.y = world_pos.y;
-    }
+    // 移动单位（动画移动，不再瞬间传送）
+    let path = if best_coord != snapshot.coord {
+        let path = reconstruct_path(
+            snapshot.coord,
+            best_coord,
+            &reachable,
+            snapshot.mov,
+            &map,
+            terrain_map,
+            calculator,
+        );
+        // 生成导航箭头
+        spawn_path_arrows(&mut commands, &map, &path);
+        path
+    } else {
+        vec![] // 不移动
+    };
 
     // 设置冷却
     if let Some(skill_data) = skill_registry.get(skill_id) {
@@ -194,19 +205,42 @@ pub fn enemy_ai_system(
         combat_intent.target_coord = Some(target_coord);
         combat_intent.skill_id = Some(skill_id.to_string());
 
-        // 切换到 ExecuteAction，走统一的 Effect Pipeline
-        next_phase.set(TurnPhase::ExecuteAction);
-    } else {
-        // 没有攻击目标，检查是否所有敌方已行动
-        let all_enemy_acted = units
-            .iter()
-            .filter(|(_, u, _, _, _, _, _, _, _, _, _)| u.faction == Faction::Enemy)
-            .all(|(_, u, _, _, _, _, _, _, _, _, _)| u.acted);
-
-        if all_enemy_acted {
-            next_phase.set(TurnPhase::TurnEnd);
+        if path.is_empty() {
+            // 不移动，直接执行攻击
+            next_phase.set(TurnPhase::ExecuteAction);
         } else {
-            next_phase.set(TurnPhase::SelectUnit);
+            // 挂载移动动画，移动完后执行攻击
+            commands.entity(snapshot.entity).insert(MovingUnit {
+                path,
+                current_index: 0,
+                speed: 0.15,
+                elapsed: 0.0,
+                next_phase: TurnPhase::ExecuteAction,
+            });
+        }
+    } else {
+        // 没有攻击目标
+        if path.is_empty() {
+            // 不移动，检查是否所有敌方已行动
+            let all_enemy_acted = units
+                .iter()
+                .filter(|(_, u, _, _, _, _, _, _, _, _, _)| u.faction == Faction::Enemy)
+                .all(|(_, u, _, _, _, _, _, _, _, _, _)| u.acted);
+
+            if all_enemy_acted {
+                next_phase.set(TurnPhase::TurnEnd);
+            } else {
+                next_phase.set(TurnPhase::SelectUnit);
+            }
+        } else {
+            // 挂载移动动画，移动完后回到 SelectUnit
+            commands.entity(snapshot.entity).insert(MovingUnit {
+                path,
+                current_index: 0,
+                speed: 0.15,
+                elapsed: 0.0,
+                next_phase: TurnPhase::SelectUnit,
+            });
         }
     }
 }

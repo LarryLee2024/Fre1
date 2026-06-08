@@ -147,6 +147,78 @@ impl TerrainCostRegistry {
 
 // ── 寻路核心 ──
 
+/// 从 BFS 可达结果回溯最短路径
+/// 返回从 start（不含）到 target（含）的坐标序列
+pub fn reconstruct_path(
+    start: IVec2,
+    target: IVec2,
+    reachable: &HashMap<IVec2, u32>,
+    move_points: u32,
+    map: &GameMap,
+    tiles: &HashMap<IVec2, (Terrain, Option<u32>)>,
+    calculator: &dyn TerrainCostCalculator,
+) -> Vec<IVec2> {
+    if start == target || !reachable.contains_key(&target) {
+        return vec![target];
+    }
+
+    let directions = [
+        IVec2::new(1, 0),
+        IVec2::new(-1, 0),
+        IVec2::new(0, 1),
+        IVec2::new(0, -1),
+    ];
+
+    // 从 target 反向回溯到 start
+    let mut path = vec![target];
+    let mut current = target;
+    let mut remaining = reachable[&target];
+
+    while current != start {
+        let mut best_prev = None;
+        let mut best_remaining = remaining; // 寻找 remaining 更大的邻居（更接近起点）
+
+        for dir in &directions {
+            let prev = current - *dir;
+            if prev == start {
+                best_prev = Some(prev);
+                break;
+            }
+            if let Some(&prev_remaining) = reachable.get(&prev) {
+                // prev 的剩余移动力必须大于 current 的剩余移动力 + cost
+                let terrain_data = match tiles.get(&current) {
+                    Some(t) => *t,
+                    None => continue,
+                };
+                let cost = match calculator.cost(terrain_data.0, terrain_data.1) {
+                    Some(c) => c,
+                    None => continue,
+                };
+                if prev_remaining == remaining + cost && prev_remaining > best_remaining {
+                    best_prev = Some(prev);
+                    best_remaining = prev_remaining;
+                }
+            }
+        }
+
+        match best_prev {
+            Some(prev) => {
+                current = prev;
+                remaining = best_remaining;
+                path.push(current);
+            }
+            None => break, // 无法回溯，直接返回
+        }
+    }
+
+    path.reverse();
+    // 去掉起点
+    if path.first() == Some(&start) {
+        path.remove(0);
+    }
+    path
+}
+
 /// 寻路结果：可到达的格子及其剩余移动力
 /// calculator: 地形成本计算器，决定不同单位类型的地形通行能力
 pub fn find_reachable_tiles(

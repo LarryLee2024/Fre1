@@ -2,6 +2,7 @@
 // 合并了原 unit.rs、data/unit_template.rs、core/trait_def.rs
 
 mod components;
+mod movement;
 mod spawn;
 mod template;
 mod traits;
@@ -9,4 +10,5 @@ mod plugin;
 
 // 公共 re-exports
 pub use components::*;
+pub use movement::*;
 pub use plugin::CharacterPlugin;

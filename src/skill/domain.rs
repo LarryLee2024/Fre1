@@ -630,10 +630,16 @@ mod tests {
         let mut target_tags_with = crate::gameplay::tag::GameplayTags::default();
         target_tags_with.add(GameplayTag::BUFF);
         let target_tags_without = crate::gameplay::tag::GameplayTags::default();
-        assert!(skill.can_use(&attrs, &source_tags, Some(&target_tags_with), 0).is_ok());
+        assert!(
+            skill
+                .can_use(&attrs, &source_tags, Some(&target_tags_with), 0)
+                .is_ok()
+        );
         assert_eq!(
             skill.can_use(&attrs, &source_tags, Some(&target_tags_without), 0),
-            Err(SkillUseError::TargetMissingTag { tag: GameplayTag::BUFF })
+            Err(SkillUseError::TargetMissingTag {
+                tag: GameplayTag::BUFF
+            })
         );
     }
 
@@ -693,7 +699,10 @@ mod tests {
         attrs.set_base(AttributeKind::Mp, 2.0);
         assert_eq!(
             skill.can_use(&attrs, &tags, None, 0),
-            Err(SkillUseError::InsufficientMp { required: 5, current: 2 })
+            Err(SkillUseError::InsufficientMp {
+                required: 5,
+                current: 2
+            })
         );
     }
 }

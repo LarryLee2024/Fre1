@@ -1,8 +1,8 @@
 // 地形信息浮窗模块：右键查看地面属性
 
+use crate::character::Faction;
 use crate::map::{GameMap, Tile};
 use crate::turn::TurnPhase;
-use crate::character::Faction;
 use crate::ui::theme::UiTheme;
 use bevy::prelude::*;
 
@@ -47,9 +47,15 @@ pub fn handle_tile_info(
     }
 
     let Ok(window) = windows.single() else { return };
-    let Some(cursor_pos) = window.cursor_position() else { return };
-    let Ok((camera, cam_transform)) = camera_query.single() else { return };
-    let Ok(world_pos) = camera.viewport_to_world_2d(cam_transform, cursor_pos) else { return };
+    let Some(cursor_pos) = window.cursor_position() else {
+        return;
+    };
+    let Ok((camera, cam_transform)) = camera_query.single() else {
+        return;
+    };
+    let Ok(world_pos) = camera.viewport_to_world_2d(cam_transform, cursor_pos) else {
+        return;
+    };
     let coord = map.world_to_coord(world_pos);
     if !map.is_in_bounds(coord) {
         return;
@@ -141,9 +147,7 @@ pub struct TileInfoPlugin;
 impl Plugin for TileInfoPlugin {
     fn build(&self, app: &mut App) {
         use crate::turn::AppState;
-        app.init_resource::<TileInfoEntity>().add_systems(
-            Update,
-            handle_tile_info.run_if(in_state(AppState::InGame)),
-        );
+        app.init_resource::<TileInfoEntity>()
+            .add_systems(Update, handle_tile_info.run_if(in_state(AppState::InGame)));
     }
 }

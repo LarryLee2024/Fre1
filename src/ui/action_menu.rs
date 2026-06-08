@@ -204,15 +204,45 @@ pub fn handle_action_menu_interaction(
     }
 }
 
+/// 进入行动菜单阶段时自动弹出菜单（移动动画完成后触发）
+fn on_enter_action_menu(
+    mut commands: Commands,
+    map: Res<crate::map::GameMap>,
+    camera_query: Query<(&Camera, &GlobalTransform)>,
+    selected_query: Query<(Entity, &crate::character::Unit, &crate::character::GridPosition, &crate::skill::SkillSlots), With<crate::character::Selected>>,
+    mut menu_entity: ResMut<ActionMenuEntity>,
+    skill_registry: Res<SkillRegistry>,
+) {
+    if let Ok((_, unit, gp, skill_slots)) = selected_query.single() {
+        let unit_world = map.coord_to_world(gp.coord);
+        if let Ok((camera, cam_transform)) = camera_query.single() {
+            if let Ok(screen_pos) = camera.world_to_viewport(cam_transform, unit_world.extend(1.0)) {
+                spawn_action_menu(
+                    &mut commands,
+                    screen_pos.x,
+                    screen_pos.y,
+                    unit,
+                    skill_slots,
+                    &mut menu_entity,
+                    &skill_registry,
+                );
+            }
+        }
+    }
+}
+
 /// 行动菜单插件
 pub struct ActionMenuPlugin;
 
 impl Plugin for ActionMenuPlugin {
     fn build(&self, app: &mut App) {
-        use crate::turn::AppState;
-        app.init_resource::<ActionMenuEntity>().add_systems(
-            Update,
-            handle_action_menu_interaction.run_if(in_state(AppState::InGame)),
-        );
+        use crate::turn::{AppState, TurnPhase};
+        app.init_resource::<ActionMenuEntity>()
+            .add_systems(
+                Update,
+                handle_action_menu_interaction.run_if(in_state(AppState::InGame)),
+            )
+            // 进入 ActionMenu 阶段时自动弹出菜单
+            .add_systems(OnEnter(TurnPhase::ActionMenu), on_enter_action_menu);
     }
 }

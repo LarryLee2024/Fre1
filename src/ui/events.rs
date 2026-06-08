@@ -7,23 +7,15 @@ use bevy::prelude::*;
 #[derive(Message, Debug, Clone)]
 pub enum UiCommand {
     /// 选中一个玩家单位
-    SelectUnit {
-        entity: Entity,
-    },
+    SelectUnit { entity: Entity },
     /// 移动选中单位到目标坐标
-    MoveUnit {
-        coord: IVec2,
-    },
+    MoveUnit { coord: IVec2 },
     /// 选择攻击（基础攻击）
     Attack,
     /// 选择技能
-    Skill {
-        skill_id: String,
-    },
+    Skill { skill_id: String },
     /// 选择攻击目标
-    SelectTarget {
-        coord: IVec2,
-    },
+    SelectTarget { coord: IVec2 },
     /// 待机
     Wait,
     /// 取消当前操作

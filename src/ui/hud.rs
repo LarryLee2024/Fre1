@@ -3,11 +3,11 @@
 
 use crate::assets::CnFont;
 use crate::battle::CombatLogPanel;
-use crate::gameplay::attribute::{AttributeKind, Attributes};
 use crate::character::{HpBarFg, Unit};
+use crate::gameplay::attribute::{AttributeKind, Attributes};
 use crate::turn::{AppState, TurnPhase};
-use crate::ui::view_models::{GameOverState, SelectedUnitView, TurnInfoView};
 use crate::ui::theme::UiTheme;
+use crate::ui::view_models::{GameOverState, SelectedUnitView, TurnInfoView};
 use bevy::prelude::*;
 
 // ── UI 组件标记 ──
@@ -127,7 +127,10 @@ pub fn update_turn_indicator(
 ) {
     if turn_view.is_changed() {
         for mut text in &mut query {
-            **text = format!("第 {} 回合 - {}阶段", turn_view.turn_number, turn_view.faction_label);
+            **text = format!(
+                "第 {} 回合 - {}阶段",
+                turn_view.turn_number, turn_view.faction_label
+            );
         }
     }
 }
@@ -142,7 +145,14 @@ pub fn update_unit_info(
             if view.is_selected {
                 **text = format!(
                     "{}  HP: {}/{}  ATK: {}  DEF: {}  MOV: {}  技能: {}\n状态: {}",
-                    view.name, view.hp, view.max_hp, view.atk, view.def, view.mov, view.skills, view.buffs
+                    view.name,
+                    view.hp,
+                    view.max_hp,
+                    view.atk,
+                    view.def,
+                    view.mov,
+                    view.skills,
+                    view.buffs
                 );
             } else {
                 **text = "选择一个单位".to_string();
@@ -158,9 +168,7 @@ pub fn update_action_menu(
     mut query: Query<&mut Visibility, With<ActionMenuText>>,
 ) {
     for mut vis in &mut query {
-        *vis = if *turn_phase.get() == TurnPhase::ActionMenu
-            && turn_view.is_player_turn
-        {
+        *vis = if *turn_phase.get() == TurnPhase::ActionMenu && turn_view.is_player_turn {
             Visibility::Visible
         } else {
             Visibility::Hidden
@@ -178,7 +186,11 @@ pub fn update_hp_bars(
     for (attrs, children) in &units {
         let hp = attrs.get(AttributeKind::Hp);
         let max_hp = attrs.get(AttributeKind::MaxHp);
-        let ratio = if max_hp > 0.0 { (hp / max_hp).max(0.0) } else { 0.0 };
+        let ratio = if max_hp > 0.0 {
+            (hp / max_hp).max(0.0)
+        } else {
+            0.0
+        };
         for child in children.iter() {
             if let Ok(mut sprite) = hp_fgs.get_mut(child) {
                 sprite.custom_size = Some(Vec2::new(bar_width * ratio, 4.0));

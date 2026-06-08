@@ -59,6 +59,37 @@ pub struct SelectionHighlight;
 #[derive(Component, Default, Debug, Clone)]
 pub struct AiBehaviorId(pub String);
 
+/// 导航箭头标记（路径上的小圆点）
+#[derive(Component)]
+pub struct PathArrow;
+
+/// 移动动画组件：挂在正在移动的单位上，系统逐格插值
+#[derive(Component)]
+pub struct MovingUnit {
+    /// 路径坐标序列（含终点）
+    pub path: Vec<IVec2>,
+    /// 当前正在前往的路径索引
+    pub current_index: usize,
+    /// 每格移动耗时（秒）
+    pub speed: f32,
+    /// 当前格内已用时间
+    pub elapsed: f32,
+    /// 移动完成后的回调阶段
+    pub next_phase: crate::turn::TurnPhase,
+}
+
+impl MovingUnit {
+    /// 当前目标坐标
+    pub fn target_coord(&self) -> Option<IVec2> {
+        self.path.get(self.current_index).copied()
+    }
+
+    /// 是否已到达终点
+    pub fn is_finished(&self) -> bool {
+        self.current_index >= self.path.len()
+    }
+}
+
 /// 阵营颜色
 impl Faction {
     pub fn unit_color(&self) -> Color {

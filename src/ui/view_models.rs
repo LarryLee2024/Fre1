@@ -46,7 +46,10 @@ pub enum GameOverState {
 
 /// 从游戏数据构建 SelectedUnitView
 pub fn update_selected_unit_view(
-    selected_units: Query<(&Unit, &UnitName, &Attributes, &SkillSlots, &ActiveBuffs), With<Selected>>,
+    selected_units: Query<
+        (&Unit, &UnitName, &Attributes, &SkillSlots, &ActiveBuffs),
+        With<Selected>,
+    >,
     skill_registry: Res<SkillRegistry>,
     mut view: ResMut<SelectedUnitView>,
 ) {
@@ -89,10 +92,7 @@ pub fn update_selected_unit_view(
 }
 
 /// 从游戏数据构建 TurnInfoView
-pub fn update_turn_info_view(
-    turn_state: Res<TurnState>,
-    mut view: ResMut<TurnInfoView>,
-) {
+pub fn update_turn_info_view(turn_state: Res<TurnState>, mut view: ResMut<TurnInfoView>) {
     if turn_state.is_changed() {
         view.turn_number = turn_state.turn_number;
         view.faction_label = match turn_state.current_faction {
@@ -104,10 +104,7 @@ pub fn update_turn_info_view(
 }
 
 /// 检查胜负条件，更新 GameOverState
-pub fn update_game_over_state(
-    units: Query<&Unit>,
-    mut game_over: ResMut<GameOverState>,
-) {
+pub fn update_game_over_state(units: Query<&Unit>, mut game_over: ResMut<GameOverState>) {
     if *game_over != GameOverState::Playing {
         return;
     }

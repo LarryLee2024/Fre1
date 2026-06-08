@@ -37,9 +37,21 @@ pub fn spawn_damage_popup(
     is_crit: bool,
     theme: &UiTheme,
 ) {
-    let color = if is_crit { theme.crit_color } else { theme.damage_color };
-    let font_size = if is_crit { theme.font_crit } else { theme.font_damage };
-    let text = if is_crit { format!("{}!", damage) } else { format!("{}", damage) };
+    let color = if is_crit {
+        theme.crit_color
+    } else {
+        theme.damage_color
+    };
+    let font_size = if is_crit {
+        theme.font_crit
+    } else {
+        theme.font_damage
+    };
+    let text = if is_crit {
+        format!("{}!", damage)
+    } else {
+        format!("{}", damage)
+    };
 
     commands.spawn((
         Text2d::new(text),

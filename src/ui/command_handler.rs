@@ -3,14 +3,15 @@
 
 use crate::battle::{CombatIntent, PrevPosition, manhattan_distance};
 use crate::character::{
-    AttackRange, Faction, GridPosition, MovableRange, Selected, SelectionHighlight, Unit,
+    AttackRange, Faction, GridPosition, MovableRange, MovingUnit, PathArrow, Selected,
+    SelectionHighlight, Unit, spawn_path_arrows, despawn_path_arrows,
 };
 use crate::gameplay::attribute::{AttributeKind, Attributes};
 use crate::gameplay::tag::GameplayTags;
 use crate::input::{
     clear_markers, clear_selection, show_attack_range, show_move_range, spawn_selection_highlight,
 };
-use crate::map::{GameMap, TerrainCostRegistry, TerrainMapCache};
+use crate::map::{GameMap, TerrainCostRegistry, TerrainMapCache, reconstruct_path, find_reachable_tiles};
 use crate::skill::{BASIC_ATTACK_ID, SkillRegistry, SkillSlots, effective_skill_range};
 use crate::turn::{ForceEndFaction, TurnPhase};
 use crate::ui::action_menu::{ActionMenuEntity, despawn_action_menu, spawn_action_menu};
@@ -80,16 +81,48 @@ pub fn handle_ui_commands(
 
                 if is_movable {
                     if let Ok(selected_entity) = selected_query.single() {
-                        if let Ok((_, _, old_gp, _, _, _, _)) = units.get(selected_entity) {
+                        if let Ok((_, _, old_gp, _, _, _, tags)) = units.get(selected_entity) {
                             commands.insert_resource(PrevPosition {
                                 coord: Some(old_gp.coord),
                             });
+
+                            // 计算路径
+                            let calculator = cost_registry.resolve_from_tags(tags);
+                            let mov = units
+                                .get(selected_entity)
+                                .map(|(_, _, _, _, attrs, _, _)| attrs.get(AttributeKind::Mov) as u32)
+                                .unwrap_or(3);
+                            let occupation_map = std::collections::HashMap::new(); // 移动时不需要阻挡
+                            let reachable = find_reachable_tiles(
+                                old_gp.coord,
+                                mov,
+                                &map,
+                                terrain_map,
+                                &occupation_map,
+                                calculator,
+                            );
+                            let path = reconstruct_path(
+                                old_gp.coord,
+                                *coord,
+                                &reachable,
+                                mov,
+                                &map,
+                                terrain_map,
+                                calculator,
+                            );
+
+                            // 生成导航箭头
+                            spawn_path_arrows(&mut commands, &map, &path);
+
+                            // 挂载移动动画组件
+                            commands.entity(selected_entity).insert(MovingUnit {
+                                path,
+                                current_index: 0,
+                                speed: 0.15,
+                                elapsed: 0.0,
+                                next_phase: TurnPhase::ActionMenu,
+                            });
                         }
-                        let world_pos = map.coord_to_world(*coord);
-                        commands
-                            .entity(selected_entity)
-                            .insert(Transform::from_xyz(world_pos.x, world_pos.y, 1.0))
-                            .insert(GridPosition { coord: *coord });
                         for h in &highlights {
                             commands.entity(h).try_despawn();
                         }
@@ -99,17 +132,7 @@ pub fn handle_ui_commands(
                 for (marker, _) in &range_entities {
                     commands.entity(marker).try_despawn();
                 }
-                // 弹出行动菜单
-                spawn_menu_at_selected(
-                    &mut commands,
-                    &units,
-                    &selected_query,
-                    &map,
-                    &camera_query,
-                    &mut menu_entity,
-                    &skill_registry,
-                );
-                next_phase.set(TurnPhase::ActionMenu);
+                // 不再立即弹出行动菜单，等移动动画完成后由 animate_movement 切换
             }
 
             UiCommand::Attack => {

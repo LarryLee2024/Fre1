@@ -16,12 +16,7 @@ impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<UiTheme>()
             .add_message::<UiCommand>()
-            .add_plugins((
-                HudPlugin,
-                ActionMenuPlugin,
-                TileInfoPlugin,
-                VfxPlugin,
-            ))
+            .add_plugins((HudPlugin, ActionMenuPlugin, TileInfoPlugin, VfxPlugin))
             .add_systems(
                 Update,
                 handle_ui_commands.run_if(in_state(AppState::InGame).and(player_turn)),
