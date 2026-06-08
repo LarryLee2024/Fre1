@@ -1,9 +1,11 @@
 // UI 模块：信息面板、行动菜单、回合提示、HP 条
+// 使用 Attributes/ActiveBuffs/SkillSlots 替代原 Unit 上的硬编码属性
 
 use crate::assets::CnFont;
-use crate::combat::skill_name;
 use crate::combat_log::CombatLogPanel;
-use crate::status::StatusEffects;
+use crate::core::attribute::{AttributeKind, Attributes};
+use crate::data::buff_data::ActiveBuffs;
+use crate::data::skill_data::{SkillRegistry, SkillSlots};
 use crate::turn::{AppState, TurnPhase, TurnState};
 use crate::unit::{Faction, HpBarFg, Selected, Unit};
 use bevy::prelude::*;
@@ -111,7 +113,7 @@ pub fn spawn_ui(mut commands: Commands) {
     ));
 }
 
-/// 设置中文字体（覆盖所有 UI 文本）
+/// 设置中文字体
 pub fn setup_ui_font(cn_font: Res<CnFont>, mut query: Query<&mut TextFont, With<Node>>) {
     for mut text_font in &mut query {
         text_font.font = cn_font.handle.clone();
@@ -137,7 +139,7 @@ pub fn update_turn_indicator(
 /// 更新单位信息面板
 pub fn update_unit_info(
     selected_units: Query<
-        (&Unit, &crate::unit::UnitName, &StatusEffects),
+        (&Unit, &crate::unit::UnitName, &Attributes, &SkillSlots, &ActiveBuffs),
         With<Selected>,
     >,
     mut query: Query<
@@ -148,22 +150,42 @@ pub fn update_unit_info(
             Without<ActionMenuText>,
         ),
     >,
+    skill_registry: Res<SkillRegistry>,
 ) {
     for mut text in &mut query {
-        if let Ok((unit, name, status)) = selected_units.single() {
-            let skill_label = skill_name(&unit.skill);
-            let status_text = if status.is_empty() {
+        if let Ok((_unit, name, attrs, skill_slots, buffs)) = selected_units.single() {
+            let hp = attrs.get(AttributeKind::Hp) as i32;
+            let max_hp = attrs.get(AttributeKind::MaxHp) as i32;
+            let atk = attrs.get(AttributeKind::Atk) as i32;
+            let def = attrs.get(AttributeKind::Def) as i32;
+            let mov = attrs.get(AttributeKind::Mov) as i32;
+
+            // 技能名称列表
+            let skill_names: Vec<String> = skill_slots
+                .skill_ids
+                .iter()
+                .filter_map(|id| skill_registry.get(id).map(|sd| sd.name.clone()))
+                .collect();
+            let skill_label = if skill_names.is_empty() {
                 "无".to_string()
             } else {
-                status
+                skill_names.join("/")
+            };
+
+            // Buff 列表
+            let status_text = if buffs.is_empty() {
+                "无".to_string()
+            } else {
+                buffs
                     .iter()
-                    .map(|inst| format!("[{}·{}t]", inst.effect.label(), inst.remaining_turns))
+                    .map(|inst| format!("[{}·{}t]", inst.name, inst.remaining_turns))
                     .collect::<Vec<_>>()
                     .join("")
             };
+
             **text = format!(
                 "{}  HP: {}/{}  ATK: {}  DEF: {}  MOV: {}  技能: {}\n状态: {}",
-                name.0, unit.hp, unit.max_hp, unit.atk, unit.def, unit.mov, skill_label, status_text
+                name.0, hp, max_hp, atk, def, mov, skill_label, status_text
             );
         } else {
             **text = "选择一个单位".to_string();
@@ -190,13 +212,15 @@ pub fn update_action_menu(
 
 /// 更新 HP 条宽度
 pub fn update_hp_bars(
-    units: Query<(&Unit, &Children), With<Unit>>,
+    units: Query<(&Attributes, &Children), With<Unit>>,
     mut hp_fgs: Query<&mut Sprite, With<HpBarFg>>,
     map: Res<crate::map::GameMap>,
 ) {
     let bar_width = map.tile_size * 0.6;
-    for (unit, children) in &units {
-        let ratio = (unit.hp as f32 / unit.max_hp as f32).max(0.0);
+    for (attrs, children) in &units {
+        let hp = attrs.get(AttributeKind::Hp);
+        let max_hp = attrs.get(AttributeKind::MaxHp);
+        let ratio = if max_hp > 0.0 { (hp / max_hp).max(0.0) } else { 0.0 };
         for child in children.iter() {
             if let Ok(mut sprite) = hp_fgs.get_mut(child) {
                 sprite.custom_size = Some(Vec2::new(bar_width * ratio, 4.0));

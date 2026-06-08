@@ -5,6 +5,8 @@ mod camera;
 mod combat;
 mod combat_event;
 mod combat_log;
+mod core;
+mod data;
 mod input;
 mod map;
 mod pathfinding;
@@ -24,6 +26,9 @@ use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use camera::CameraPlugin;
 use combat_event::CombatEventPlugin;
 use combat_log::CombatLogPlugin;
+use core::effect::EffectPlugin;
+use data::buff_data::BuffDataPlugin;
+use data::skill_data::SkillDataPlugin;
 use input::InputPlugin;
 use map::MapPlugin;
 use status::StatusPlugin;
@@ -43,17 +48,20 @@ fn main() {
             }),
             ..default()
         }))
+        .add_plugins((EguiPlugin::default(), WorldInspectorPlugin::new()))
         .add_plugins((
-            EguiPlugin::default(),
-            WorldInspectorPlugin::new(),
-        ))
-        .add_plugins((
+            // 核心架构插件
+            EffectPlugin,
+            SkillDataPlugin,
+            BuffDataPlugin,
             // 游戏插件
             AssetsPlugin,
             TurnPlugin,
             CameraPlugin,
             MapPlugin,
             UnitPlugin,
+        ))
+        .add_plugins((
             UiPlugin,
             CombatEventPlugin,
             CombatLogPlugin,
@@ -64,7 +72,6 @@ fn main() {
             VfxPlugin,
             StatusPlugin,
         ))
-        // 直接进入游戏（后续可加主菜单）
         .add_systems(Startup, |mut next: ResMut<NextState<AppState>>| {
             next.set(AppState::InGame);
         })

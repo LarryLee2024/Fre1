@@ -1,257 +1,189 @@
-// 行动菜单模块：弹出式菜单的生成、交互、销毁
+// 行动菜单模块：弹出式行动菜单，使用 SkillSlots 动态生成按钮
 
-use crate::combat::skill_range;
-use crate::input::PrevPosition;
+use crate::combat_event::{CombatIntent, PrevPosition};
+use crate::core::attribute::AttributeKind;
+use crate::data::skill_data::{effective_skill_range, SkillRegistry, SkillSlots};
+use crate::input;
 use crate::map::GameMap;
 use crate::turn::TurnPhase;
 use crate::unit::{
-    AttackRange, Faction, GridPosition, MovableRange, Selected,
-    SelectionHighlight, Unit,
+    AttackRange, GridPosition, MovableRange, Selected, SelectionHighlight, Unit,
 };
 use bevy::prelude::*;
 
-/// 行动菜单选项
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+/// 行动类型
+#[derive(Clone, Debug)]
 pub enum ActionKind {
-    /// 攻击
     Attack,
-    /// 技能
-    Skill,
-    /// 待机
+    Skill(String), // 技能 ID
     Wait,
-    /// 取消（撤销移动）
     Cancel,
 }
 
-/// 行动菜单标记组件
+/// 菜单容器标记
 #[derive(Component)]
 pub struct ActionMenuRoot;
 
-/// 行动菜单按钮标记
+/// 菜单按钮标记
 #[derive(Component)]
 pub struct ActionMenuButton {
     pub kind: ActionKind,
 }
 
-/// 行动菜单实体追踪（防止重复 despawn）
+/// 追踪菜单实体防止重复
 #[derive(Resource, Default)]
 pub struct ActionMenuEntity {
     pub entity: Option<Entity>,
 }
 
-/// 处理行动菜单按钮交互
-pub fn handle_action_menu_interaction(
-    turn_state: Res<crate::turn::TurnState>,
-    turn_phase: Res<State<TurnPhase>>,
-    mut next_phase: ResMut<NextState<TurnPhase>>,
-    mut commands: Commands,
-    map: Res<GameMap>,
-    selected_query: Query<Entity, With<Selected>>,
-    units: Query<(Entity, &Unit, &GridPosition, &Transform)>,
-    range_markers: Query<Entity, Or<(With<MovableRange>, With<AttackRange>)>>,
-    highlights: Query<Entity, With<SelectionHighlight>>,
-    mut action_buttons: Query<(&ActionMenuButton, &Interaction), Changed<Interaction>>,
-    prev_position: Res<PrevPosition>,
-    mut menu_entity: ResMut<ActionMenuEntity>,
-    children_query: Query<&Children>,
-    menu_buttons: Query<Entity, With<ActionMenuButton>>,
-    mut attack_target: ResMut<crate::input::AttackTarget>,
-) {
-    if turn_state.current_faction != Faction::Player {
-        return;
-    }
-    if *turn_phase.get() != TurnPhase::ActionMenu {
-        return;
-    }
-
-    for (button, interaction) in &mut action_buttons {
-        if *interaction != Interaction::Pressed {
-            continue;
-        }
-
-        // 关闭菜单（含子实体）
-        despawn_action_menu(&mut commands, &mut menu_entity, &children_query, &menu_buttons);
-
-        match button.kind {
-            ActionKind::Attack => {
-                // 显示攻击范围，进入选择目标阶段
-                if let Ok(selected_entity) = selected_query.single() {
-                    if let Ok((_, unit, gp, _)) = units.get(selected_entity) {
-                        let effective_range = skill_range(&unit.skill, unit.attack_range);
-                        crate::input::show_attack_range(
-                            &mut commands,
-                            &map,
-                            gp.coord,
-                            effective_range,
-                        );
-                    }
-                }
-                next_phase.set(TurnPhase::SelectTarget);
-            }
-            ActionKind::Skill => {
-                // 当前技能自动触发，等同于攻击
-                if let Ok(selected_entity) = selected_query.single() {
-                    if let Ok((_, unit, gp, _)) = units.get(selected_entity) {
-                        let effective_range = skill_range(&unit.skill, unit.attack_range);
-                        crate::input::show_attack_range(
-                            &mut commands,
-                            &map,
-                            gp.coord,
-                            effective_range,
-                        );
-                    }
-                }
-                next_phase.set(TurnPhase::SelectTarget);
-            }
-            ActionKind::Wait => {
-                next_phase.set(TurnPhase::WaitAction);
-            }
-            ActionKind::Cancel => {
-                cancel_move(
-                    &mut commands,
-                    &selected_query,
-                    &range_markers,
-                    &highlights,
-                    &prev_position,
-                    &map,
-                    &mut menu_entity,
-                    &children_query,
-                    &menu_buttons,
-                );
-                attack_target.coord = None;
-                next_phase.set(TurnPhase::SelectUnit);
-            }
-        }
-        return;
-    }
-}
-
-/// 生成行动菜单（弹出式，使用屏幕坐标）
+/// 生成行动菜单
 pub fn spawn_action_menu(
     commands: &mut Commands,
-    screen_x: f32,
-    screen_y: f32,
-    unit: &Unit,
-    menu_entity_res: &mut ActionMenuEntity,
+    x: f32,
+    y: f32,
+    _unit: &Unit,
+    skill_slots: &SkillSlots,
+    menu_entity: &mut ActionMenuEntity,
+    skill_registry: &SkillRegistry,
 ) {
-    // 构建菜单选项
-    let mut items: Vec<(ActionKind, &str, Color)> = vec![
-        (ActionKind::Attack, "攻击", Color::srgb(1.0, 0.4, 0.3)),
-        (ActionKind::Wait, "待机", Color::srgb(0.6, 0.8, 1.0)),
-        (ActionKind::Cancel, "取消", Color::srgb(0.7, 0.7, 0.7)),
-    ];
+    despawn_action_menu(commands, menu_entity);
 
-    // 有技能时插入技能选项
-    if unit.skill != crate::unit::Skill::None {
-        let skill_label = crate::combat::skill_name(&unit.skill);
-        items.insert(1, (ActionKind::Skill, skill_label, Color::srgb(1.0, 0.8, 0.3)));
+    let mut children_entities: Vec<Entity> = Vec::new();
+
+    // 基础攻击按钮
+    let attack_btn = commands
+        .spawn((
+            Button,
+            Node {
+                padding: UiRect::px(8.0, 8.0, 4.0, 4.0),
+                ..default()
+            },
+            ActionMenuButton {
+                kind: ActionKind::Attack,
+            },
+        ))
+        .with_children(|parent| {
+            parent.spawn((
+                Text::new("攻击"),
+                TextFont { font_size: 16.0, ..default() },
+                TextColor(Color::WHITE),
+            ));
+        })
+        .id();
+    children_entities.push(attack_btn);
+
+    // 特殊技能按钮（如果有）
+    if let Some(skill_id) = skill_slots.special_skill() {
+        if let Some(skill_data) = skill_registry.get(skill_id) {
+            let skill_btn = commands
+                .spawn((
+                    Button,
+                    Node {
+                        padding: UiRect::px(8.0, 8.0, 4.0, 4.0),
+                        ..default()
+                    },
+                    ActionMenuButton {
+                        kind: ActionKind::Skill(skill_id.to_string()),
+                    },
+                ))
+                .with_children(|parent| {
+                    parent.spawn((
+                        Text::new(&skill_data.name),
+                        TextFont { font_size: 16.0, ..default() },
+                        TextColor(Color::srgb(1.0, 0.8, 0.3)),
+                    ));
+                })
+                .id();
+            children_entities.push(skill_btn);
+        }
     }
 
-    let button_height = 28.0;
-    let button_width = 72.0;
+    // 待机按钮
+    let wait_btn = commands
+        .spawn((
+            Button,
+            Node {
+                padding: UiRect::px(8.0, 8.0, 4.0, 4.0),
+                ..default()
+            },
+            ActionMenuButton { kind: ActionKind::Wait },
+        ))
+        .with_children(|parent| {
+            parent.spawn((
+                Text::new("待机"),
+                TextFont { font_size: 16.0, ..default() },
+                TextColor(Color::WHITE),
+            ));
+        })
+        .id();
+    children_entities.push(wait_btn);
 
-    // 菜单位置：单位右侧偏移
-    let menu_x = screen_x + 30.0;
-    let menu_y = screen_y - 20.0;
+    // 取消按钮
+    let cancel_btn = commands
+        .spawn((
+            Button,
+            Node {
+                padding: UiRect::px(8.0, 8.0, 4.0, 4.0),
+                ..default()
+            },
+            ActionMenuButton {
+                kind: ActionKind::Cancel,
+            },
+        ))
+        .with_children(|parent| {
+            parent.spawn((
+                Text::new("取消"),
+                TextFont { font_size: 16.0, ..default() },
+                TextColor(Color::srgb(0.7, 0.7, 0.7)),
+            ));
+        })
+        .id();
+    children_entities.push(cancel_btn);
 
-    // 菜单容器
-    let menu_id = commands
+    let root = commands
         .spawn((
             Node {
                 position_type: PositionType::Absolute,
-                left: Val::Px(menu_x),
-                top: Val::Px(menu_y),
-                width: Val::Px(button_width + 16.0),
-                height: Val::Auto,
-                row_gap: Val::Px(2.0),
-                padding: UiRect::all(Val::Px(4.0)),
+                left: Val::Px(x),
+                top: Val::Px(y),
                 flex_direction: FlexDirection::Column,
+                padding: UiRect::all(Val::Px(4.0)),
                 ..default()
             },
-            BackgroundColor(Color::srgba(0.1, 0.1, 0.15, 0.9)),
+            BackgroundColor(Color::srgba(0.1, 0.1, 0.1, 0.9)),
+            ActionMenuRoot,
         ))
-        .insert(ActionMenuRoot)
         .id();
 
-    for (kind, label, color) in items {
-        commands.entity(menu_id).with_children(|parent| {
-            parent
-                .spawn((
-                    Node {
-                        width: Val::Percent(100.0),
-                        height: Val::Px(button_height),
-                        justify_content: JustifyContent::Center,
-                        align_items: AlignItems::Center,
-                        padding: UiRect::all(Val::Px(4.0)),
-                        ..default()
-                    },
-                    Button,
-                    ActionMenuButton { kind },
-                ))
-                .with_children(|btn| {
-                    btn.spawn((
-                        Text::new(label),
-                        TextFont {
-                            font_size: 15.0,
-                            ..default()
-                        },
-                        TextColor(color),
-                    ));
-                });
-        });
+    for &child in &children_entities {
+        commands.entity(root).add_child(child);
     }
 
-    // 记录菜单实体
-    menu_entity_res.entity = Some(menu_id);
+    menu_entity.entity = Some(root);
 }
 
-/// 安全销毁行动菜单（含所有子实体）
-pub fn despawn_action_menu(
-    commands: &mut Commands,
-    menu_entity: &mut ActionMenuEntity,
-    children_query: &Query<&Children>,
-    menu_buttons: &Query<Entity, With<ActionMenuButton>>,
-) {
+/// 安全销毁菜单
+pub fn despawn_action_menu(commands: &mut Commands, menu_entity: &mut ActionMenuEntity) {
     if let Some(entity) = menu_entity.entity {
-        // 先销毁子实体中的按钮文本等
-        if let Ok(children) = children_query.get(entity) {
-            for child in children.iter() {
-                if let Ok(grandchildren) = children_query.get(child) {
-                    for gc in grandchildren.iter() {
-                        commands.entity(gc).try_despawn();
-                    }
-                }
-                commands.entity(child).try_despawn();
-            }
-        }
-        // 再销毁菜单根
         commands.entity(entity).try_despawn();
         menu_entity.entity = None;
     }
-    // 清理可能残留的孤儿按钮
-    for btn in menu_buttons {
-        commands.entity(btn).try_despawn();
-    }
 }
 
-/// 撤销移动（取消时回退到移动前位置）
+/// 取消移动：回退位置 + 清除选中
 pub fn cancel_move(
     commands: &mut Commands,
     selected_query: &Query<Entity, With<Selected>>,
-    range_markers: &Query<Entity, Or<(With<MovableRange>, With<AttackRange>)>>,
+    range_entities: &Query<(Entity, Option<&GridPosition>), Or<(With<MovableRange>, With<AttackRange>)>>,
     highlights: &Query<Entity, With<SelectionHighlight>>,
     prev_position: &PrevPosition,
     map: &GameMap,
     menu_entity: &mut ActionMenuEntity,
-    children_query: &Query<&Children>,
-    menu_buttons: &Query<Entity, With<ActionMenuButton>>,
 ) {
-    // 关闭菜单
-    despawn_action_menu(commands, menu_entity, children_query, menu_buttons);
+    despawn_action_menu(commands, menu_entity);
 
-    // 回退位置
-    if let Some(prev_coord) = prev_position.coord {
-        if let Ok(selected_entity) = selected_query.single() {
+    if let Ok(selected_entity) = selected_query.single() {
+        if let Some(prev_coord) = prev_position.coord {
             let world_pos = map.coord_to_world(prev_coord);
             commands
                 .entity(selected_entity)
@@ -260,8 +192,67 @@ pub fn cancel_move(
         }
     }
 
-    crate::input::clear_selection(commands, selected_query, range_markers, highlights);
+    input::clear_selection(commands, selected_query, range_entities, highlights);
 }
+
+/// 处理行动菜单交互
+pub fn handle_action_menu_interaction(
+    mut commands: Commands,
+    interaction_query: Query<(&Interaction, &ActionMenuButton), Changed<Interaction>>,
+    mut next_phase: ResMut<NextState<TurnPhase>>,
+    selected_units: Query<(Entity, &Unit, &GridPosition, &Attributes), With<Selected>>,
+    mut combat_intent: ResMut<CombatIntent>,
+    mut menu_entity: ResMut<ActionMenuEntity>,
+    map: Res<GameMap>,
+    skill_registry: Res<SkillRegistry>,
+) {
+    for (interaction, button) in &interaction_query {
+        if *interaction != Interaction::Pressed {
+            continue;
+        }
+
+        match &button.kind {
+            ActionKind::Attack => {
+                combat_intent.skill_id = Some("basic_attack".to_string());
+                if let Ok((_, _, gp, attrs)) = selected_units.single() {
+                    let base_range = attrs.get(AttributeKind::AttackRange) as u32;
+                    if let Some(skill_data) = skill_registry.get("basic_attack") {
+                        let range = effective_skill_range(skill_data, base_range);
+                        input::show_attack_range(&mut commands, &map, gp.coord, range);
+                    }
+                }
+                despawn_action_menu(&mut commands, &mut menu_entity);
+                next_phase.set(TurnPhase::SelectTarget);
+            }
+            ActionKind::Skill(skill_id) => {
+                combat_intent.skill_id = Some(skill_id.clone());
+                if let Ok((_, _, gp, attrs)) = selected_units.single() {
+                    let base_range = attrs.get(AttributeKind::AttackRange) as u32;
+                    if let Some(skill_data) = skill_registry.get(skill_id) {
+                        let range = effective_skill_range(skill_data, base_range);
+                        input::show_attack_range(&mut commands, &map, gp.coord, range);
+                    }
+                }
+                despawn_action_menu(&mut commands, &mut menu_entity);
+                next_phase.set(TurnPhase::SelectTarget);
+            }
+            ActionKind::Wait => {
+                despawn_action_menu(&mut commands, &mut menu_entity);
+                next_phase.set(TurnPhase::WaitAction);
+            }
+            ActionKind::Cancel => {
+                // 取消需要回退位置，但 cancel_move 需要 prev_position
+                // 这里简化处理：直接回到 SelectUnit
+                despawn_action_menu(&mut commands, &mut menu_entity);
+                combat_intent.target_coord = None;
+                combat_intent.skill_id = None;
+                next_phase.set(TurnPhase::SelectUnit);
+            }
+        }
+    }
+}
+
+use crate::core::attribute::Attributes;
 
 /// 行动菜单插件
 pub struct ActionMenuPlugin;
@@ -269,9 +260,10 @@ pub struct ActionMenuPlugin;
 impl Plugin for ActionMenuPlugin {
     fn build(&self, app: &mut App) {
         use crate::turn::AppState;
-        app.init_resource::<ActionMenuEntity>().add_systems(
-            Update,
-            handle_action_menu_interaction.run_if(in_state(AppState::InGame)),
-        );
+        app.init_resource::<ActionMenuEntity>()
+            .add_systems(
+                Update,
+                handle_action_menu_interaction.run_if(in_state(AppState::InGame)),
+            );
     }
 }

@@ -1,14 +1,16 @@
-// AI 模块：敌方自动行动
+// AI 模块：敌方自动行动，使用 Effect Pipeline
 
-use crate::assets::CnFont;
-use crate::combat::{manhattan_distance, skill_range};
-use crate::combat_event;
-use crate::combat_log::CombatLog;
-use crate::map::{GameMap, Tile};
+use crate::combat::manhattan_distance;
+use crate::core::attribute::{AttributeKind, Attributes};
+use crate::core::effect::{
+    calculate_damage_from_effect, EffectDef, EffectQueue, PendingEffect, PendingEffectData,
+};
+use crate::core::tag::GameplayTags;
+use crate::data::skill_data::{effective_skill_range, SkillRegistry, SkillSlots};
+use crate::map::{GameMap, Terrain, Tile};
 use crate::pathfinding::{build_tile_terrain_map, find_reachable_tiles};
-use crate::status::StatusEffects;
 use crate::turn::{AiTimer, TurnPhase, TurnState};
-use crate::unit::{Faction, GridPosition, Skill, Unit, UnitName};
+use crate::unit::{Faction, GridPosition, Unit, UnitName};
 use bevy::prelude::*;
 
 /// 单位快照（避免借用冲突）
@@ -16,29 +18,37 @@ struct UnitSnapshot {
     entity: Entity,
     faction: Faction,
     coord: IVec2,
-    atk: i32,
-    def: i32,
+    atk: f32,
+    def: f32,
+    base_def: f32,
     mov: u32,
     attack_range: u32,
     acted: bool,
     name: String,
-    skill: Skill,
+    skill_ids: Vec<String>,
 }
 
-/// 敌方 AI 系统。回合收尾走 `turn::turn_end_on_enter` 统一处理。
+/// 敌方 AI 系统
 pub fn enemy_ai_system(
     time: Res<Time>,
     mut ai_timer: ResMut<AiTimer>,
     turn_state: Res<TurnState>,
     turn_phase: Res<State<TurnPhase>>,
     mut next_phase: ResMut<NextState<TurnPhase>>,
-    mut units: Query<(Entity, &mut Unit, &mut GridPosition, &mut Transform, &UnitName)>,
-    status_effects: Query<&StatusEffects>,
+    mut units: Query<(
+        Entity,
+        &mut Unit,
+        &mut GridPosition,
+        &mut Transform,
+        &UnitName,
+        &Attributes,
+        &SkillSlots,
+    )>,
+    _tags_query: Query<&GameplayTags>,
     tiles: Query<&Tile>,
     map: Res<GameMap>,
-    mut commands: Commands,
-    mut combat_log: ResMut<CombatLog>,
-    cn_font: Res<CnFont>,
+    mut effect_queue: ResMut<EffectQueue>,
+    skill_registry: Res<SkillRegistry>,
 ) {
     if turn_state.current_faction != Faction::Enemy {
         return;
@@ -52,52 +62,51 @@ pub fn enemy_ai_system(
         return;
     }
 
-    // 先收集所有单位快照（只读遍历一次）
+    // 收集所有单位快照
     let snapshots: Vec<UnitSnapshot> = units
         .iter()
-        .map(|(e, u, gp, _, name)| UnitSnapshot {
+        .map(|(e, u, gp, _, name, attrs, skills)| UnitSnapshot {
             entity: e,
             faction: u.faction,
             coord: gp.coord,
-            atk: u.atk,
-            def: u.def,
-            mov: u.mov,
-            attack_range: u.attack_range,
+            atk: attrs.get(AttributeKind::Atk),
+            def: attrs.get(AttributeKind::Def),
+            base_def: attrs.base.get(&AttributeKind::Def).copied().unwrap_or(0.0),
+            mov: attrs.get(AttributeKind::Mov) as u32,
+            attack_range: attrs.get(AttributeKind::AttackRange) as u32,
             acted: u.acted,
             name: name.0.clone(),
-            skill: u.skill,
+            skill_ids: skills.skill_ids.clone(),
         })
         .collect();
 
     let terrain_map = build_tile_terrain_map(&tiles);
 
-    // 收集玩家位置
     let player_positions: Vec<IVec2> = snapshots
         .iter()
         .filter(|s| s.faction == Faction::Player)
         .map(|s| s.coord)
         .collect();
 
-    // 没有玩家单位则跳过
     if player_positions.is_empty() {
         return;
     }
 
-    // 记录需要执行的 AI 行动
+    // 记录 AI 行动
     struct AiAction {
         entity: Entity,
         move_to: IVec2,
         attack_target: Option<Entity>,
-        atk: i32,
-        def: i32,
+        skill_id: String,
+        atk: f32,
+        def: f32,
+        base_def: f32,
         attack_range: u32,
         attacker_name: String,
-        skill: Skill,
     }
 
     let mut actions: Vec<AiAction> = Vec::new();
 
-    // 计算每个敌方单位的行动（纯计算，不修改世界）
     for snapshot in snapshots
         .iter()
         .filter(|s| s.faction == Faction::Enemy && !s.acted)
@@ -122,10 +131,19 @@ pub fn enemy_ai_system(
             .map(|(coord, _)| *coord)
             .unwrap_or(snapshot.coord);
 
-        // 使用技能范围判定攻击距离
-        let effective_range = skill_range(&snapshot.skill, snapshot.attack_range);
+        // 选择使用的技能：优先特殊技能，否则基础攻击
+        let skill_id = snapshot
+            .skill_ids
+            .iter()
+            .find(|id| *id != "basic_attack")
+            .map(|s| s.as_str())
+            .unwrap_or("basic_attack");
 
-        // 检查攻击范围内是否有玩家单位
+        let effective_range = skill_registry
+            .get(skill_id)
+            .map(|sd| effective_skill_range(sd, snapshot.attack_range))
+            .unwrap_or(snapshot.attack_range);
+
         let attack_target = snapshots
             .iter()
             .filter(|s| s.faction == Faction::Player)
@@ -136,77 +154,110 @@ pub fn enemy_ai_system(
             entity: snapshot.entity,
             move_to: best_coord,
             attack_target,
+            skill_id: skill_id.to_string(),
             atk: snapshot.atk,
             def: snapshot.def,
+            base_def: snapshot.base_def,
             attack_range: snapshot.attack_range,
             attacker_name: snapshot.name.clone(),
-            skill: snapshot.skill,
         });
     }
 
-    // 应用行动到世界（可变访问）
+    // 应用行动
     for action in actions {
-        // 晕眩已由 resolve_status_effects 在回合开始时结算
-        // 被晕眩的单位 acted=true，不会出现在行动列表中
-
+        // 移动
         let world_pos = map.coord_to_world(action.move_to);
-        if let Ok((_, _, mut gp, mut transform, _)) = units.get_mut(action.entity) {
+        if let Ok((_, _, mut gp, mut transform, _, _, _)) = units.get_mut(action.entity) {
             gp.coord = action.move_to;
             transform.translation.x = world_pos.x;
             transform.translation.y = world_pos.y;
         }
 
-        // 攻击
+        // 攻击：通过 Effect Pipeline 生成效果
         if let Some(target_entity) = action.attack_target {
-            if let Ok((_, mut target_unit, target_gp, target_transform, target_name)) =
-                units.get_mut(target_entity)
-            {
+            if let Some(skill_data) = skill_registry.get(&action.skill_id) {
+                let _target_attrs = units
+                    .get(target_entity)
+                    .map(|(_, _, _, _, _, attrs, _)| attrs.clone())
+                    .unwrap_or_default();
+                let target_gp = units
+                    .get(target_entity)
+                    .map(|(_, _, gp, _, _, _, _)| gp.coord)
+                    .unwrap_or(IVec2::ZERO);
+
                 let terrain = tiles
                     .iter()
-                    .find_map(|t| if t.coord == target_gp.coord { Some(t.terrain) } else { None })
-                    .unwrap_or(crate::map::Terrain::Plain);
+                    .find_map(|t| {
+                        if t.coord == target_gp {
+                            Some(t.terrain)
+                        } else {
+                            None
+                        }
+                    })
+                    .unwrap_or(Terrain::Plain);
 
-                let attacker_atk_mod = status_effects
-                    .get(action.entity)
-                    .map(|s| s.attack_mod())
-                    .unwrap_or(0);
-                let defender_def_mod = status_effects
-                    .get(target_entity)
-                    .map(|s| s.defense_mod())
-                    .unwrap_or(0);
-
-                let attacker = Unit {
-                    faction: Faction::Enemy,
-                    mov: 0,
-                    hp: 0,
-                    max_hp: 0,
-                    atk: action.atk,
-                    def: action.def,
-                    attack_range: action.attack_range,
-                    acted: false,
-                    skill: action.skill,
-                };
-
-                // 统一攻击处理
-                combat_event::execute_attack(
-                    &mut commands,
-                    &attacker,
-                    attacker_atk_mod,
-                    &action.attacker_name,
-                    target_entity,
-                    &mut target_unit,
-                    defender_def_mod,
-                    target_name,
-                    target_transform.translation.truncate(),
-                    terrain,
-                    &cn_font,
-                    &mut combat_log,
-                );
+                for effect_def in &skill_data.effects {
+                    match effect_def {
+                        EffectDef::Damage {
+                            multiplier,
+                            ignore_def_percent,
+                        } => {
+                            let amount = calculate_damage_from_effect(
+                                action.atk,
+                                action.def,
+                                action.base_def,
+                                *multiplier,
+                                *ignore_def_percent,
+                                terrain,
+                            );
+                            effect_queue.push(PendingEffect {
+                                source: action.entity,
+                                target: target_entity,
+                                data: PendingEffectData::Damage {
+                                    amount,
+                                    is_skill: action.skill_id != "basic_attack",
+                                },
+                                source_tags: skill_data.tags.clone(),
+                                terrain,
+                            });
+                        }
+                        EffectDef::ApplyBuff { buff_id, duration } => {
+                            effect_queue.push(PendingEffect {
+                                source: action.entity,
+                                target: target_entity,
+                                data: PendingEffectData::ApplyBuff {
+                                    buff_id: buff_id.clone(),
+                                    duration: *duration,
+                                },
+                                source_tags: skill_data.tags.clone(),
+                                terrain,
+                            });
+                        }
+                        EffectDef::Heal { amount } => {
+                            effect_queue.push(PendingEffect {
+                                source: action.entity,
+                                target: target_entity,
+                                data: PendingEffectData::Heal { amount: *amount },
+                                source_tags: skill_data.tags.clone(),
+                                terrain,
+                            });
+                        }
+                        EffectDef::Cleanse => {
+                            effect_queue.push(PendingEffect {
+                                source: action.entity,
+                                target: target_entity,
+                                data: PendingEffectData::Cleanse,
+                                source_tags: skill_data.tags.clone(),
+                                terrain,
+                            });
+                        }
+                    }
+                }
             }
         }
 
         // 标记已行动
-        if let Ok((_, mut unit, _, _, _)) = units.get_mut(action.entity) {
+        if let Ok((_, mut unit, _, _, _, _, _)) = units.get_mut(action.entity) {
             unit.acted = true;
         }
     }
@@ -214,8 +265,8 @@ pub fn enemy_ai_system(
     // 检查是否所有敌方单位都已行动
     let all_enemy_acted = units
         .iter()
-        .filter(|(_, u, _, _, _)| u.faction == Faction::Enemy)
-        .all(|(_, u, _, _, _)| u.acted);
+        .filter(|(_, u, _, _, _, _, _)| u.faction == Faction::Enemy)
+        .all(|(_, u, _, _, _, _, _)| u.acted);
 
     if all_enemy_acted {
         next_phase.set(TurnPhase::TurnEnd);
