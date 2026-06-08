@@ -1,0 +1,12 @@
+(
+    id: "regen",
+    name: "愈+4",
+    default_duration: 2,
+    modifiers: [],
+    tags: [BUFF, REGEN],
+    dot_damage: 0,
+    hot_heal: 4,
+    is_stun: false,
+    is_cleanse: false,
+    is_buff: true,
+)

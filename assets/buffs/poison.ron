@@ -1,0 +1,12 @@
+(
+    id: "poison",
+    name: "毒-3",
+    default_duration: 2,
+    modifiers: [],
+    tags: [DEBUFF, POISON],
+    dot_damage: 3,
+    hot_heal: 0,
+    is_stun: false,
+    is_cleanse: false,
+    is_buff: false,
+)

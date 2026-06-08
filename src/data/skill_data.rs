@@ -1,11 +1,16 @@
 // 技能系统：数据驱动 + 目标类型 + 条件 + 冷却 + 预览
 // 完全解耦：技能定义独立于棋子，棋子只持有 skill_ids
+// 支持从 assets/skills/*.ron 外部配置文件加载
 
 use crate::core::effect::EffectDef;
 use crate::core::tag::GameplayTag;
 use crate::core::attribute::AttributeKind;
 use bevy::prelude::*;
+use ron::de::from_bytes;
+use serde::Deserialize;
 use std::collections::HashMap;
+use std::fs::read;
+use std::path::Path;
 
 // ── 技能目标类型 ──
 

@@ -1,0 +1,12 @@
+(
+    id: "stun",
+    name: "晕",
+    default_duration: 1,
+    modifiers: [],
+    tags: [DEBUFF, STUN],
+    dot_damage: 0,
+    hot_heal: 0,
+    is_stun: true,
+    is_cleanse: false,
+    is_buff: false,
+)

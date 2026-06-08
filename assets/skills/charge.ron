@@ -1,0 +1,15 @@
+(
+    id: "charge",
+    name: "冲锋",
+    description: "猛冲敌人，造成1.5倍伤害",
+    cost_mp: 0,
+    range: 1,
+    targeting: SingleEnemy,
+    effects: [
+        Damage(multiplier: 1.5, ignore_def_percent: 0.0),
+    ],
+    tags: [MELEE, SKILL_ACTIVE],
+    conditions: [],
+    cooldown: 0,
+    priority: 10,
+)

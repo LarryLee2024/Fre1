@@ -1,0 +1,14 @@
+(
+    id: "defense_down",
+    name: "防-5",
+    default_duration: 2,
+    modifiers: [
+        (kind: Def, op: Add, value: -5.0),
+    ],
+    tags: [DEBUFF],
+    dot_damage: 0,
+    hot_heal: 0,
+    is_stun: false,
+    is_cleanse: false,
+    is_buff: false,
+)
