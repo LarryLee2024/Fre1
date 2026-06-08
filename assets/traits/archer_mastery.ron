@@ -1,0 +1,10 @@
+(
+    id: "archer_mastery",
+    name: "弓手精通",
+    description: "远程职业，擅长远距离攻击",
+    trigger: Passive,
+    effects: [
+        GrantTag(ARCHER),
+        GrantTag(RANGED),
+    ],
+)

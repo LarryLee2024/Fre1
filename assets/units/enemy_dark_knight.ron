@@ -9,4 +9,6 @@
         Mov: 3.0, AttackRange: 1.0,
     },
     skill_ids: ["basic_attack", "charge"],
+    trait_ids: ["warrior_mastery", "heavy_armor"],
+    ai_behavior: "cautious",
 )

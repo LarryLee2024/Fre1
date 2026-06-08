@@ -7,6 +7,7 @@ use crate::core::attribute::{AttributeKind, Attributes};
 use crate::core::effect::{
     calculate_damage_from_effect, EffectDef, EffectQueue, PendingEffect, PendingEffectData,
 };
+use crate::core::modifier_rule::ModifierRuleRegistry;
 use crate::core::tag::GameplayTags;
 use crate::data::buff_data::{apply_buff, ActiveBuffs, BuffRegistry};
 use crate::data::skill_data::{SkillCooldowns, SkillRegistry};
@@ -158,22 +159,12 @@ pub fn generate_combat_effects(
     }
 }
 
-/// 步骤 2：修饰效果（标签增伤/减伤等被动技能在此插入）
-pub fn modify_effects(mut queue: ResMut<EffectQueue>, tags_query: Query<&GameplayTags>) {
-    modify_effects_inline(&mut queue, &tags_query);
-}
-
-/// 修饰效果的内联实现（供 AI 直接调用）
-pub fn modify_effects_inline(queue: &mut EffectQueue, tags_query: &Query<&GameplayTags>) {
+/// 步骤 2：修饰效果（从 ModifierRuleRegistry 加载规则）
+pub fn modify_effects(mut queue: ResMut<EffectQueue>, tags_query: Query<&GameplayTags>, rules: Res<ModifierRuleRegistry>) {
     for effect in &mut queue.pending {
         if let PendingEffectData::Damage { ref mut amount, .. } = effect.data {
-            // 火焰增伤：攻击方技能带 FIRE 标签，目标也带 FIRE 标签 → 伤害 +50%
-            if effect.source_tags.contains(&crate::core::tag::GameplayTag::FIRE) {
-                if let Ok(target_tags) = tags_query.get(effect.target) {
-                    if target_tags.has(crate::core::tag::GameplayTag::FIRE) {
-                        *amount = (*amount as f32 * 1.5) as i32;
-                    }
-                }
+            if let Ok(target_tags) = tags_query.get(effect.target) {
+                *amount = rules.apply_damage_modifiers(*amount, &effect.source_tags, target_tags);
             }
         }
     }

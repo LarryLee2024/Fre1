@@ -9,4 +9,6 @@
         Mov: 3.0, AttackRange: 2.0,
     },
     skill_ids: ["basic_attack", "fireball","cleanse_skill"],
+    trait_ids: ["mage_mastery", "fire_affinity"],
+    ai_behavior: "default",
 )

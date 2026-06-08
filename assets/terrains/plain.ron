@@ -1,0 +1,8 @@
+(
+    id: "plain",
+    name: "草",
+    move_cost: 1,
+    defense_bonus: 0,
+    color: (0.56, 0.73, 0.35),
+    passable: true,
+)

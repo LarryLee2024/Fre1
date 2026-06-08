@@ -1,0 +1,10 @@
+(
+    id: "warrior_mastery",
+    name: "战士精通",
+    description: "近战职业，擅长正面作战",
+    trigger: Passive,
+    effects: [
+        GrantTag(WARRIOR),
+        GrantTag(MELEE),
+    ],
+)

@@ -1,0 +1,8 @@
+(
+    id: "forest",
+    name: "林",
+    move_cost: 2,
+    defense_bonus: 2,
+    color: (0.20, 0.50, 0.18),
+    passable: true,
+)

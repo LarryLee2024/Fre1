@@ -4,8 +4,10 @@
 
 use crate::assets::CnFont;
 use crate::core::attribute::Attributes;
-use crate::core::tag::GameplayTags;
+use crate::core::tag::{GameplayTag, GameplayTags};
+use crate::core::trait_def::{TraitCollection, TraitRegistry, apply_passive_traits};
 use crate::data::buff_data::ActiveBuffs;
+use crate::data::map_data::LevelRegistry;
 use crate::data::skill_data::{SkillCooldowns, SkillSlots};
 use crate::data::unit_template::UnitTemplateRegistry;
 use crate::map::GameMap;
@@ -70,54 +72,50 @@ impl Faction {
     }
 }
 
-/// 单位初始位置配置（模板 ID → 坐标）
-struct UnitSpawnEntry {
-    template_id: &'static str,
-    coord: IVec2,
-}
+/// AI 行为 ID（敌方单位使用）
+#[derive(Component, Default, Debug, Clone)]
+pub struct AiBehaviorId(pub String);
 
-/// 生成初始单位（从 UnitTemplateRegistry 加载模板）
+/// 生成初始单位（从 LevelConfig 加载单位部署）
 pub fn spawn_units(
     mut commands: Commands,
     map: Res<GameMap>,
     cn_font: Res<CnFont>,
     template_registry: Res<UnitTemplateRegistry>,
+    level_registry: Res<LevelRegistry>,
+    trait_registry: Res<TraitRegistry>,
 ) {
     let tile_size = map.tile_size;
     let bar_width = tile_size * 0.6;
     let bar_height = 4.0;
 
-    // 玩家单位初始位置
-    let player_entries = [
-        UnitSpawnEntry { template_id: "player_warrior", coord: IVec2::new(4, 3) },
-        UnitSpawnEntry { template_id: "player_archer", coord: IVec2::new(3, 4) },
-        UnitSpawnEntry { template_id: "player_mage", coord: IVec2::new(2, 5) },
-    ];
-
-    // 敌方单位初始位置
-    let enemy_entries = [
-        UnitSpawnEntry { template_id: "enemy_goblin", coord: IVec2::new(7, 5) },
-        UnitSpawnEntry { template_id: "enemy_goblin", coord: IVec2::new(8, 3) },
-        UnitSpawnEntry { template_id: "enemy_dark_knight", coord: IVec2::new(6, 6) },
-    ];
-
-    for entry in player_entries.iter().chain(enemy_entries.iter()) {
-        let Some(template) = template_registry.get(entry.template_id) else {
-            bevy::log::error!("单位模板不存在: {}", entry.template_id);
-            continue;
-        };
-
-        let world_pos = map.coord_to_world(entry.coord);
-        spawn_unit_from_template(
-            &mut commands,
-            world_pos,
-            template,
-            entry.coord,
-            tile_size,
-            bar_width,
-            bar_height,
-            &cn_font.handle,
-        );
+    // 从关卡配置获取单位部署
+    let level = level_registry.first();
+    if let Some(level) = level {
+        for deploy in &level.player_units {
+            let coord = IVec2::new(deploy.coord.0, deploy.coord.1);
+            if let Some(template) = template_registry.get(&deploy.template) {
+                let world_pos = map.coord_to_world(coord);
+                spawn_unit_from_template(
+                    &mut commands, world_pos, template, coord,
+                    tile_size, bar_width, bar_height, &cn_font.handle, &trait_registry,
+                );
+            } else {
+                bevy::log::error!("单位模板不存在: {}", deploy.template);
+            }
+        }
+        for deploy in &level.enemy_units {
+            let coord = IVec2::new(deploy.coord.0, deploy.coord.1);
+            if let Some(template) = template_registry.get(&deploy.template) {
+                let world_pos = map.coord_to_world(coord);
+                spawn_unit_from_template(
+                    &mut commands, world_pos, template, coord,
+                    tile_size, bar_width, bar_height, &cn_font.handle, &trait_registry,
+                );
+            } else {
+                bevy::log::error!("单位模板不存在: {}", deploy.template);
+            }
+        }
     }
 }
 
@@ -130,6 +128,7 @@ fn spawn_unit_from_template(
     bar_width: f32,
     bar_height: f32,
     font: &Handle<Font>,
+    trait_registry: &TraitRegistry,
 ) {
     let label: String = template.name.chars().take(1).collect();
     let unit_font = TextFont {
@@ -144,12 +143,32 @@ fn spawn_unit_from_template(
         attributes.set_base(*kind, *value);
     }
 
-    // 构建 GameplayTags
+    // 构建 GameplayTags（class_tag + trait 授予的标签）
     let mut gameplay_tags = GameplayTags::default();
     gameplay_tags.add(template.class_tag);
 
+    // 应用 trait 被动效果
+    let (trait_tags, trait_modifiers) = apply_passive_traits(&template.trait_ids, trait_registry);
+    // 合并 trait 授予的标签
+    for i in 0..64 {
+        let bit = 1u64 << i;
+        if trait_tags.0 & bit != 0 {
+            gameplay_tags.add(GameplayTag(bit));
+        }
+    }
+    // 应用 trait 属性修饰符
+    for modifier in trait_modifiers {
+        attributes.add_modifier(modifier);
+    }
+
     // 构建 SkillSlots
     let skill_slots = SkillSlots::new(template.skill_ids.clone());
+
+    // 构建 TraitCollection
+    let trait_collection = TraitCollection::new(template.trait_ids.clone());
+
+    // 构建 AiBehaviorId
+    let ai_behavior_id = AiBehaviorId(template.ai_behavior.clone());
 
     commands.spawn((
         Sprite::from_color(template.faction.unit_color(), Vec2::splat(tile_size * 0.6)),
@@ -163,6 +182,8 @@ fn spawn_unit_from_template(
         attributes,
         gameplay_tags,
         skill_slots,
+        trait_collection,
+        ai_behavior_id,
         SkillCooldowns::default(),
         ActiveBuffs::default(),
         children![

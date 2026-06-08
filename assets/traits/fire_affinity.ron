@@ -1,0 +1,9 @@
+(
+    id: "fire_affinity",
+    name: "火焰亲和",
+    description: "拥有火焰力量，攻击附带火焰标签",
+    trigger: Passive,
+    effects: [
+        GrantTag(FIRE),
+    ],
+)

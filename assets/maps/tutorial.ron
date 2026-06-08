@@ -1,0 +1,26 @@
+(
+    id: "tutorial",
+    name: "教学关",
+    width: 10,
+    height: 8,
+    terrain_grid: [
+        "MMMMMMMMMM",
+        "MPPFPPPWPM",
+        "MPPPPPPPPM",
+        "MPPWPPPFPM",
+        "MPPPPPPPPM",
+        "MPFPPPPWPM",
+        "MPPPPPFPPM",
+        "MMMMMMMMMM",
+    ],
+    player_units: [
+        (template: "player_warrior", coord: (4, 3)),
+        (template: "player_archer", coord: (3, 4)),
+        (template: "player_mage", coord: (2, 5)),
+    ],
+    enemy_units: [
+        (template: "enemy_goblin", coord: (7, 5)),
+        (template: "enemy_goblin", coord: (8, 3)),
+        (template: "enemy_dark_knight", coord: (6, 6)),
+    ],
+)

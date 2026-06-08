@@ -1,0 +1,8 @@
+[
+    (
+        name: "火焰共鸣",
+        source_tag: FIRE,
+        target_tag: FIRE,
+        effect: DamageMultiplier(1.5),
+    ),
+]

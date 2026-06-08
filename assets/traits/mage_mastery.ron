@@ -1,0 +1,9 @@
+(
+    id: "mage_mastery",
+    name: "法师精通",
+    description: "魔法职业，擅长元素攻击",
+    trigger: Passive,
+    effects: [
+        GrantTag(MAGE),
+    ],
+)

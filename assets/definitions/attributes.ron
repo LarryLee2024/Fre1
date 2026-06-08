@@ -1,0 +1,10 @@
+[
+    (kind: Hp, display_name: "生命值", description: "当前生命值", default_value: 0.0, min_value: 0.0, max_value: 9999.0),
+    (kind: MaxHp, display_name: "最大生命值", description: "生命值上限", default_value: 0.0, min_value: 0.0, max_value: 9999.0),
+    (kind: Mp, display_name: "魔法值", description: "当前魔法值", default_value: 0.0, min_value: 0.0, max_value: 9999.0),
+    (kind: MaxMp, display_name: "最大魔法值", description: "魔法值上限", default_value: 0.0, min_value: 0.0, max_value: 9999.0),
+    (kind: Atk, display_name: "攻击力", description: "物理攻击力", default_value: 0.0, min_value: 0.0, max_value: 9999.0),
+    (kind: Def, display_name: "防御力", description: "物理防御力", default_value: 0.0, min_value: 0.0, max_value: 9999.0),
+    (kind: Mov, display_name: "移动力", description: "每回合可移动格数", default_value: 0.0, min_value: 0.0, max_value: 99.0),
+    (kind: AttackRange, display_name: "攻击范围", description: "攻击距离（格数）", default_value: 1.0, min_value: 1.0, max_value: 99.0),
+]

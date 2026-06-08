@@ -1,0 +1,17 @@
+[
+    (tag: FIRE, display_name: "火焰", description: "火属性", category: Element),
+    (tag: ICE, display_name: "冰霜", description: "冰属性", category: Element),
+    (tag: POISON, display_name: "毒素", description: "毒属性", category: Element),
+    (tag: STUN, display_name: "晕眩", description: "无法行动", category: Status),
+    (tag: BURN, display_name: "燃烧", description: "每回合受到火焰伤害", category: Status),
+    (tag: REGEN, display_name: "恢复", description: "每回合恢复生命值", category: Status),
+    (tag: MELEE, display_name: "近战", description: "近战攻击", category: Weapon),
+    (tag: RANGED, display_name: "远程", description: "远程攻击", category: Weapon),
+    (tag: WARRIOR, display_name: "战士", description: "战士职业", category: Class),
+    (tag: ARCHER, display_name: "弓手", description: "弓手职业", category: Class),
+    (tag: MAGE, display_name: "法师", description: "法师职业", category: Class),
+    (tag: SKILL_ACTIVE, display_name: "主动技能", description: "主动施放的技能", category: SkillType),
+    (tag: SKILL_PASSIVE, display_name: "被动技能", description: "被动触发的技能", category: SkillType),
+    (tag: BUFF, display_name: "增益", description: "正面效果", category: BuffType),
+    (tag: DEBUFF, display_name: "减益", description: "负面效果", category: BuffType),
+]

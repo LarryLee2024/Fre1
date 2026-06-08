@@ -1,0 +1,8 @@
+(
+    id: "aggressive",
+    name: "激进",
+    target_strategy: Weakest,
+    move_strategy: Aggressive,
+    skill_strategy: PreferSpecial,
+    skill_priority: [],
+)

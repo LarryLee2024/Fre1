@@ -19,6 +19,8 @@ pub struct UnitTemplate {
     pub class_tag: GameplayTag,
     pub base_attributes: HashMap<AttributeKind, f32>,
     pub skill_ids: Vec<String>,
+    pub trait_ids: Vec<String>,
+    pub ai_behavior: String,
 }
 
 /// 单位模板（RON 反序列化用）
@@ -30,6 +32,8 @@ pub struct UnitTemplateDef {
     pub class_tag: TagName,
     pub base_attributes: HashMap<AttributeKind, f32>,
     pub skill_ids: Vec<String>,
+    pub trait_ids: Vec<String>,
+    pub ai_behavior: String,
 }
 
 /// 阵营定义（RON 反序列化用）
@@ -58,6 +62,8 @@ impl From<UnitTemplateDef> for UnitTemplate {
             class_tag: def.class_tag.to_tag(),
             base_attributes: def.base_attributes,
             skill_ids: def.skill_ids,
+            trait_ids: def.trait_ids,
+            ai_behavior: def.ai_behavior,
         }
     }
 }
@@ -133,6 +139,8 @@ mod tests {
                     Mov: 5.0, AttackRange: 1.0,
                 },
                 skill_ids: ["basic_attack", "charge"],
+                trait_ids: ["warrior_mastery"],
+                ai_behavior: "default",
             )
         "#;
         let def: UnitTemplateDef = from_bytes(ron_str.as_bytes()).unwrap();
@@ -140,6 +148,8 @@ mod tests {
         assert_eq!(def.faction, FactionDef::Player);
         assert_eq!(def.class_tag, TagName::Warrior);
         assert_eq!(def.skill_ids, vec!["basic_attack", "charge"]);
+        assert_eq!(def.trait_ids, vec!["warrior_mastery"]);
+        assert_eq!(def.ai_behavior, "default");
     }
 
     #[test]
@@ -156,10 +166,14 @@ mod tests {
                 m
             },
             skill_ids: vec!["basic_attack".into()],
+            trait_ids: vec!["mage_mastery".into(), "fire_affinity".into()],
+            ai_behavior: "aggressive".into(),
         };
         let template: UnitTemplate = def.into();
         assert_eq!(template.id, "test");
         assert_eq!(template.faction, Faction::Enemy);
         assert_eq!(template.class_tag, GameplayTag::MAGE);
+        assert_eq!(template.trait_ids, vec!["mage_mastery", "fire_affinity"]);
+        assert_eq!(template.ai_behavior, "aggressive");
     }
 }

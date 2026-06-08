@@ -1,0 +1,9 @@
+(
+    id: "heavy_armor",
+    name: "重甲",
+    description: "装备重甲，防御+3",
+    trigger: Passive,
+    effects: [
+        ModifyAttribute((kind: Def, op: Add, value: 3.0)),
+    ],
+)

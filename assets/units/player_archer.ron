@@ -9,4 +9,6 @@
         Mov: 4.0, AttackRange: 3.0,
     },
     skill_ids: ["basic_attack", "pierce"],
+    trait_ids: ["archer_mastery"],
+    ai_behavior: "default",
 )

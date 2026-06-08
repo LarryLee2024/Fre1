@@ -26,8 +26,14 @@ use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use camera::CameraPlugin;
 use combat_event::CombatEventPlugin;
 use combat_log::CombatLogPlugin;
+use core::attribute_def::AttributeDefPlugin;
 use core::effect::EffectPlugin;
+use core::modifier_rule::ModifierRulePlugin;
+use core::tag_def::TagDefPlugin;
+use core::trait_def::TraitPlugin;
+use data::ai_behavior::AiBehaviorPlugin;
 use data::buff_data::BuffDataPlugin;
+use data::map_data::MapDataPlugin;
 use data::skill_data::SkillDataPlugin;
 use data::unit_template::UnitTemplatePlugin;
 use input::InputPlugin;
@@ -53,8 +59,14 @@ fn main() {
         .add_plugins((
             // 核心架构插件
             EffectPlugin,
+            ModifierRulePlugin,
+            AttributeDefPlugin,
+            TagDefPlugin,
+            TraitPlugin,
+            MapDataPlugin,
             SkillDataPlugin,
             BuffDataPlugin,
+            AiBehaviorPlugin,
             UnitTemplatePlugin,
             // 游戏插件
             AssetsPlugin,

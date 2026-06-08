@@ -406,10 +406,12 @@ impl SkillRegistry {
     pub fn load_from_dir(dir: &str) -> Self {
         let mut registry = SkillRegistry::default();
         let Ok(entries) = read_dir(dir) else {
-            bevy::log::warn!("技能目录不存在: {}", dir);
+            bevy::log::warn!("技能目录不存在，使用默认技能: {}", dir);
+            registry.register_defaults();
             return registry;
         };
 
+        let mut loaded = false;
         for entry in entries.flatten() {
             let path = entry.path();
             if path.extension().map_or(false, |e| e == "ron") {
@@ -419,6 +421,7 @@ impl SkillRegistry {
                             let id = def.id.clone();
                             registry.register(def.into());
                             bevy::log::info!("加载技能: {}", id);
+                            loaded = true;
                         }
                         Err(e) => {
                             bevy::log::error!("解析技能文件 {:?} 失败: {}", path, e);
@@ -430,7 +433,110 @@ impl SkillRegistry {
                 }
             }
         }
+
+        // 目录存在但为空或全部解析失败，加载默认技能
+        if !loaded {
+            bevy::log::warn!("技能目录为空，使用默认技能");
+            registry.register_defaults();
+        }
+
         registry
+    }
+
+    /// 注册内置默认技能（确保基础功能可用）
+    fn register_defaults(&mut self) {
+        // 普通攻击
+        self.register(SkillData {
+            id: "basic_attack".into(),
+            name: "普通攻击".into(),
+            description: "基础物理攻击".into(),
+            cost_mp: 0,
+            range: 0,
+            targeting: SkillTargeting::SingleEnemy,
+            effects: vec![EffectDef::Damage { multiplier: 1.0, ignore_def_percent: 0.0 }],
+            tags: vec![],
+            conditions: vec![],
+            cooldown: 0,
+            priority: 0,
+        });
+
+        // 冲锋
+        self.register(SkillData {
+            id: "charge".into(),
+            name: "冲锋".into(),
+            description: "1.5倍伤害，需要近战".into(),
+            cost_mp: 0,
+            range: 0,
+            targeting: SkillTargeting::SingleEnemy,
+            effects: vec![EffectDef::Damage { multiplier: 1.5, ignore_def_percent: 0.0 }],
+            tags: vec![],
+            conditions: vec![],
+            cooldown: 2,
+            priority: 5,
+        });
+
+        // 穿刺
+        self.register(SkillData {
+            id: "pierce".into(),
+            name: "穿刺".into(),
+            description: "无视50%防御".into(),
+            cost_mp: 0,
+            range: 0,
+            targeting: SkillTargeting::SingleEnemy,
+            effects: vec![EffectDef::Damage { multiplier: 1.2, ignore_def_percent: 50.0 }],
+            tags: vec![],
+            conditions: vec![],
+            cooldown: 3,
+            priority: 8,
+        });
+
+        // 火球
+        self.register(SkillData {
+            id: "fireball".into(),
+            name: "火球".into(),
+            description: "远程火属性攻击".into(),
+            cost_mp: 0,
+            range: 3,
+            targeting: SkillTargeting::SingleEnemy,
+            effects: vec![
+                EffectDef::Damage { multiplier: 1.5, ignore_def_percent: 0.0 },
+                EffectDef::ApplyBuff { buff_id: "burn".into(), duration: 2 },
+            ],
+            tags: vec![],
+            conditions: vec![],
+            cooldown: 2,
+            priority: 10,
+        });
+
+        // 治疗
+        self.register(SkillData {
+            id: "heal".into(),
+            name: "治疗".into(),
+            description: "恢复友方生命值".into(),
+            cost_mp: 0,
+            range: 2,
+            targeting: SkillTargeting::SingleAlly,
+            effects: vec![EffectDef::Heal { amount: 8 }],
+            tags: vec![],
+            conditions: vec![],
+            cooldown: 2,
+            priority: 15,
+        });
+
+        // 净化
+        self.register(SkillData {
+            id: "cleanse_skill".into(),
+            name: "净化".into(),
+            description: "驱散友方所有负面效果".into(),
+            cost_mp: 0,
+            range: 2,
+            targeting: SkillTargeting::SingleAlly,
+            effects: vec![EffectDef::Cleanse],
+            tags: vec![],
+            conditions: vec![],
+            cooldown: 3,
+            priority: 12,
+        });
     }
 }
 
