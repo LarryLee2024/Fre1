@@ -14,6 +14,10 @@ pub enum ModifierEffect {
     DamageMultiplier(f32),
     /// 伤害加成（固定值）
     DamageBonus(i32),
+    /// 治疗倍率修饰
+    HealMultiplier(f32),
+    /// 治疗加成（固定值）
+    HealBonus(i32),
 }
 
 /// 修饰规则（运行时）
@@ -34,6 +38,8 @@ pub struct ModifierRule {
 pub enum ModifierEffectDef {
     DamageMultiplier(f32),
     DamageBonus(i32),
+    HealMultiplier(f32),
+    HealBonus(i32),
 }
 
 /// 修饰规则（RON 反序列化用）
@@ -54,6 +60,8 @@ impl From<ModifierRuleDef> for ModifierRule {
             effect: match def.effect {
                 ModifierEffectDef::DamageMultiplier(v) => ModifierEffect::DamageMultiplier(v),
                 ModifierEffectDef::DamageBonus(v) => ModifierEffect::DamageBonus(v),
+                ModifierEffectDef::HealMultiplier(v) => ModifierEffect::HealMultiplier(v),
+                ModifierEffectDef::HealBonus(v) => ModifierEffect::HealBonus(v),
             },
         }
     }
@@ -133,9 +141,38 @@ impl ModifierRuleRegistry {
                 ModifierEffect::DamageBonus(bonus) => {
                     result += bonus as f32;
                 }
+                _ => {}
             }
         }
         result.max(1.0) as i32
+    }
+
+    /// 应用所有修饰规则到治疗值
+    pub fn apply_heal_modifiers(
+        &self,
+        amount: i32,
+        source_tags: &[GameplayTag],
+        target_tags: &crate::gameplay::tag::GameplayTags,
+    ) -> i32 {
+        let mut result = amount as f32;
+        for rule in &self.rules {
+            if !source_tags.contains(&rule.source_tag) {
+                continue;
+            }
+            if !target_tags.has(rule.target_tag) {
+                continue;
+            }
+            match rule.effect {
+                ModifierEffect::HealMultiplier(mul) => {
+                    result *= mul;
+                }
+                ModifierEffect::HealBonus(bonus) => {
+                    result += bonus as f32;
+                }
+                _ => {}
+            }
+        }
+        result.max(0.0) as i32
     }
 }
 

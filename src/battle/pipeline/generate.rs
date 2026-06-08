@@ -89,7 +89,7 @@ pub fn generate_combat_effects(
         }
 
         let Some(tile) = tiles.iter().find(|t| t.coord == target_gp.coord) else {
-            return;
+            continue;
         };
         let terrain = tile.terrain;
         let defense_bonus = tile.defense_bonus;
