@@ -3,19 +3,19 @@
 // 支持从 assets/skills/*.ron 外部配置文件加载
 
 use crate::core::effect::EffectDef;
-use crate::core::tag::GameplayTag;
+use crate::core::tag::{GameplayTag, TagName};
 use crate::core::attribute::AttributeKind;
 use bevy::prelude::*;
 use ron::de::from_bytes;
 use serde::Deserialize;
 use std::collections::HashMap;
-use std::fs::read;
-use std::path::Path;
+use std::fs::{read, read_dir};
 
 // ── 技能目标类型 ──
 
 /// 技能目标类型：决定技能可以作用于谁
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Deserialize)]
+#[serde(rename_all = "PascalCase")]
 pub enum SkillTargeting {
     /// 对单个敌方单位使用
     SingleEnemy,
@@ -51,7 +51,7 @@ impl SkillTargeting {
 
 // ── 技能使用条件 ──
 
-/// 技能使用条件
+/// 技能使用条件（运行时）
 #[derive(Clone, Debug, PartialEq)]
 pub enum SkillCondition {
     /// 需要足够的 MP
@@ -64,6 +64,29 @@ pub enum SkillCondition {
     HpBelow(f32),
     /// 需要自身 HP 高于指定百分比
     HpAbove(f32),
+}
+
+/// 技能使用条件（RON 反序列化用，TagName 替代 GameplayTag）
+#[derive(Clone, Debug, PartialEq, Deserialize)]
+#[serde(rename_all = "PascalCase")]
+pub enum SkillConditionDef {
+    MpCost(i32),
+    RequireTag(TagName),
+    TargetRequireTag(TagName),
+    HpBelow(f32),
+    HpAbove(f32),
+}
+
+impl From<SkillConditionDef> for SkillCondition {
+    fn from(def: SkillConditionDef) -> Self {
+        match def {
+            SkillConditionDef::MpCost(v) => SkillCondition::MpCost(v),
+            SkillConditionDef::RequireTag(t) => SkillCondition::RequireTag(t.to_tag()),
+            SkillConditionDef::TargetRequireTag(t) => SkillCondition::TargetRequireTag(t.to_tag()),
+            SkillConditionDef::HpBelow(v) => SkillCondition::HpBelow(v),
+            SkillConditionDef::HpAbove(v) => SkillCondition::HpAbove(v),
+        }
+    }
 }
 
 // ── 技能数据定义 ──
@@ -82,6 +105,40 @@ pub struct SkillData {
     pub conditions: Vec<SkillCondition>,
     pub cooldown: u32,
     pub priority: u32,
+}
+
+/// 技能数据定义（RON 反序列化用，TagName 替代 GameplayTag）
+#[derive(Clone, Debug, Deserialize)]
+pub struct SkillDef {
+    pub id: String,
+    pub name: String,
+    pub description: String,
+    pub cost_mp: i32,
+    pub range: u32,
+    pub targeting: SkillTargeting,
+    pub effects: Vec<EffectDef>,
+    pub tags: Vec<TagName>,
+    pub conditions: Vec<SkillConditionDef>,
+    pub cooldown: u32,
+    pub priority: u32,
+}
+
+impl From<SkillDef> for SkillData {
+    fn from(def: SkillDef) -> Self {
+        SkillData {
+            id: def.id,
+            name: def.name,
+            description: def.description,
+            cost_mp: def.cost_mp,
+            range: def.range,
+            targeting: def.targeting,
+            effects: def.effects,
+            tags: def.tags.iter().map(|t| t.to_tag()).collect(),
+            conditions: def.conditions.into_iter().map(Into::into).collect(),
+            cooldown: def.cooldown,
+            priority: def.priority,
+        }
+    }
 }
 
 impl SkillData {
@@ -345,110 +402,35 @@ impl SkillRegistry {
         self.skills.insert(skill.id.clone(), skill);
     }
 
-    /// 初始化所有技能定义
-    pub fn populate(&mut self) {
-        let skills = vec![
-            SkillData {
-                id: "basic_attack".into(),
-                name: "普通攻击".into(),
-                description: "基础物理攻击".into(),
-                cost_mp: 0,
-                range: 0,
-                targeting: SkillTargeting::SingleEnemy,
-                effects: vec![EffectDef::Damage {
-                    multiplier: 1.0,
-                    ignore_def_percent: 0.0,
-                }],
-                tags: vec![],
-                conditions: vec![],
-                cooldown: 0,
-                priority: 0,
-            },
-            SkillData {
-                id: "charge".into(),
-                name: "冲锋".into(),
-                description: "猛冲敌人，造成1.5倍伤害".into(),
-                cost_mp: 0,
-                range: 1,
-                targeting: SkillTargeting::SingleEnemy,
-                effects: vec![EffectDef::Damage {
-                    multiplier: 1.5,
-                    ignore_def_percent: 0.0,
-                }],
-                tags: vec![GameplayTag::MELEE, GameplayTag::SKILL_ACTIVE],
-                conditions: vec![],
-                cooldown: 0,
-                priority: 10,
-            },
-            SkillData {
-                id: "pierce".into(),
-                name: "穿透箭".into(),
-                description: "远程穿透射击，无视50%防御".into(),
-                cost_mp: 0,
-                range: 4,
-                targeting: SkillTargeting::SingleEnemy,
-                effects: vec![EffectDef::Damage {
-                    multiplier: 1.3,
-                    ignore_def_percent: 50.0,
-                }],
-                tags: vec![GameplayTag::RANGED, GameplayTag::SKILL_ACTIVE],
-                conditions: vec![],
-                cooldown: 2,
-                priority: 10,
-            },
-            SkillData {
-                id: "fireball".into(),
-                name: "火球".into(),
-                description: "发射火球，造成1.8倍伤害并附加灼烧".into(),
-                cost_mp: 0,
-                range: 3,
-                targeting: SkillTargeting::SingleEnemy,
-                effects: vec![
-                    EffectDef::Damage {
-                        multiplier: 1.8,
-                        ignore_def_percent: 0.0,
-                    },
-                    EffectDef::ApplyBuff {
-                        buff_id: "burn".into(),
-                        duration: 2,
-                    },
-                ],
-                tags: vec![GameplayTag::FIRE, GameplayTag::SKILL_ACTIVE],
-                conditions: vec![],
-                cooldown: 3,
-                priority: 20,
-            },
-            SkillData {
-                id: "heal".into(),
-                name: "治疗".into(),
-                description: "恢复友方单位8点HP".into(),
-                cost_mp: 0,
-                range: 3,
-                targeting: SkillTargeting::SingleAlly,
-                effects: vec![EffectDef::Heal { amount: 8 }],
-                tags: vec![GameplayTag::SKILL_ACTIVE],
-                conditions: vec![],
-                cooldown: 2,
-                priority: 15,
-            },
-            SkillData {
-                id: "cleanse_skill".into(),
-                name: "净化".into(),
-                description: "移除友方单位所有减益效果".into(),
-                cost_mp: 0,
-                range: 2,
-                targeting: SkillTargeting::SingleAlly,
-                effects: vec![EffectDef::Cleanse],
-                tags: vec![GameplayTag::SKILL_ACTIVE],
-                conditions: vec![],
-                cooldown: 3,
-                priority: 15,
-            },
-        ];
+    /// 从 assets/skills/ 目录加载所有 .ron 文件
+    pub fn load_from_dir(dir: &str) -> Self {
+        let mut registry = SkillRegistry::default();
+        let Ok(entries) = read_dir(dir) else {
+            bevy::log::warn!("技能目录不存在: {}", dir);
+            return registry;
+        };
 
-        for skill in skills {
-            self.register(skill);
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.extension().map_or(false, |e| e == "ron") {
+                match read(&path) {
+                    Ok(bytes) => match from_bytes::<SkillDef>(&bytes) {
+                        Ok(def) => {
+                            let id = def.id.clone();
+                            registry.register(def.into());
+                            bevy::log::info!("加载技能: {}", id);
+                        }
+                        Err(e) => {
+                            bevy::log::error!("解析技能文件 {:?} 失败: {}", path, e);
+                        }
+                    },
+                    Err(e) => {
+                        bevy::log::error!("读取技能文件 {:?} 失败: {}", path, e);
+                    }
+                }
+            }
         }
+        registry
     }
 }
 
@@ -466,8 +448,7 @@ pub struct SkillDataPlugin;
 
 impl Plugin for SkillDataPlugin {
     fn build(&self, app: &mut App) {
-        let mut registry = SkillRegistry::default();
-        registry.populate();
+        let registry = SkillRegistry::load_from_dir("assets/skills");
         app.insert_resource(registry);
     }
 }
@@ -716,90 +697,60 @@ mod tests {
         );
     }
 
-    // ── SkillRegistry ──
+    // ── SkillDef → SkillData 转换 ──
 
     #[test]
-    fn 注册表_初始化包含所有技能() {
-        let mut registry = SkillRegistry::default();
-        registry.populate();
-        assert!(registry.get("basic_attack").is_some());
-        assert!(registry.get("charge").is_some());
-        assert!(registry.get("pierce").is_some());
-        assert!(registry.get("fireball").is_some());
-        assert!(registry.get("heal").is_some());
-        assert!(registry.get("cleanse_skill").is_some());
-    }
-
-    #[test]
-    fn 注册表_不存在的技能返回none() {
-        let mut registry = SkillRegistry::default();
-        registry.populate();
-        assert!(registry.get("nonexistent").is_none());
-    }
-
-    #[test]
-    fn 注册表_普通攻击数据正确() {
-        let mut registry = SkillRegistry::default();
-        registry.populate();
-        let skill = registry.get("basic_attack").unwrap();
-        assert_eq!(skill.id, "basic_attack");
-        assert_eq!(skill.name, "普通攻击");
-        assert_eq!(skill.range, 0);
-        assert_eq!(skill.targeting, SkillTargeting::SingleEnemy);
-        assert!(skill.tags.is_empty());
-        assert_eq!(skill.cooldown, 0);
-    }
-
-    #[test]
-    fn 注册表_火球带火焰标签和两个效果() {
-        let mut registry = SkillRegistry::default();
-        registry.populate();
-        let skill = registry.get("fireball").unwrap();
-        assert!(skill.tags.contains(&GameplayTag::FIRE));
-        assert_eq!(skill.effects.len(), 2);
-        assert_eq!(skill.range, 3);
-        assert_eq!(skill.cooldown, 3);
-    }
-
-    #[test]
-    fn 注册表_穿透箭无视防御() {
-        let mut registry = SkillRegistry::default();
-        registry.populate();
-        let skill = registry.get("pierce").unwrap();
-        assert_eq!(skill.range, 4);
-        if let EffectDef::Damage { ignore_def_percent, .. } = &skill.effects[0] {
-            assert_eq!(*ignore_def_percent, 50.0);
-        } else {
-            panic!("pierce 的第一个效果应该是 Damage");
-        }
-    }
-
-    #[test]
-    fn 注册表_治疗技能目标友方() {
-        let mut registry = SkillRegistry::default();
-        registry.populate();
-        let skill = registry.get("heal").unwrap();
-        assert_eq!(skill.targeting, SkillTargeting::SingleAlly);
-    }
-
-    #[test]
-    fn 注册表_动态注册技能() {
-        let mut registry = SkillRegistry::default();
-        let custom = SkillData {
-            id: "custom".into(),
-            name: "自定义".into(),
-            description: String::new(),
-            cost_mp: 0,
-            range: 1,
-            targeting: SkillTargeting::SelfOnly,
-            effects: vec![],
-            tags: vec![],
-            conditions: vec![],
-            cooldown: 0,
-            priority: 0,
+    fn skill_def_转换为_skill_data() {
+        let def = SkillDef {
+            id: "test".into(),
+            name: "测试".into(),
+            description: "测试技能".into(),
+            cost_mp: 5,
+            range: 3,
+            targeting: SkillTargeting::SingleEnemy,
+            effects: vec![EffectDef::Damage { multiplier: 1.5, ignore_def_percent: 0.0 }],
+            tags: vec![TagName::Fire, TagName::SkillActive],
+            conditions: vec![SkillConditionDef::RequireTag(TagName::Mage)],
+            cooldown: 2,
+            priority: 10,
         };
-        registry.register(custom);
-        assert!(registry.get("custom").is_some());
+        let data: SkillData = def.into();
+        assert_eq!(data.id, "test");
+        assert_eq!(data.tags, vec![GameplayTag::FIRE, GameplayTag::SKILL_ACTIVE]);
+        assert_eq!(data.conditions.len(), 1);
+        assert!(matches!(data.conditions[0], SkillCondition::RequireTag(GameplayTag::MAGE)));
+    }
+
+    // ── RON 反序列化 ──
+
+    #[test]
+    fn ron_反序列化_技能定义() {
+        let ron_str = r#"
+            (
+                id: "test_skill",
+                name: "测试技能",
+                description: "一个测试技能",
+                cost_mp: 10,
+                range: 3,
+                targeting: SingleEnemy,
+                effects: [
+                    Damage(multiplier: 2.0, ignore_def_percent: 50.0),
+                    ApplyBuff(buff_id: "burn", duration: 2),
+                ],
+                tags: [FIRE, SKILL_ACTIVE],
+                conditions: [
+                    MpCost(10),
+                    RequireTag(MAGE),
+                ],
+                cooldown: 3,
+                priority: 20,
+            )
+        "#;
+        let def: SkillDef = from_bytes(ron_str.as_bytes()).unwrap();
+        assert_eq!(def.id, "test_skill");
+        assert_eq!(def.tags, vec![TagName::Fire, TagName::SkillActive]);
+        assert_eq!(def.effects.len(), 2);
+        assert_eq!(def.conditions.len(), 2);
     }
 
     // ── 效果预览 ──
@@ -823,11 +774,22 @@ mod tests {
             terrain: crate::map::Terrain::Plain,
         };
 
-        let mut registry = SkillRegistry::default();
-        registry.populate();
+        // 使用硬编码构建 SkillData 用于测试（不依赖文件系统）
+        let skill = SkillData {
+            id: "basic_attack".into(),
+            name: "普通攻击".into(),
+            description: String::new(),
+            cost_mp: 0,
+            range: 0,
+            targeting: SkillTargeting::SingleEnemy,
+            effects: vec![EffectDef::Damage { multiplier: 1.0, ignore_def_percent: 0.0 }],
+            tags: vec![],
+            conditions: vec![],
+            cooldown: 0,
+            priority: 0,
+        };
         let buff_reg = crate::data::buff_data::BuffRegistry::default();
-        let skill = registry.get("basic_attack").unwrap();
-        let preview = preview_skill_effects(&ctx, skill, &buff_reg);
+        let preview = preview_skill_effects(&ctx, &skill, &buff_reg);
 
         assert_eq!(preview.skill_id, "basic_attack");
         assert_eq!(preview.predictions.len(), 1);
@@ -858,11 +820,21 @@ mod tests {
             terrain: crate::map::Terrain::Plain,
         };
 
-        let mut registry = SkillRegistry::default();
-        registry.populate();
+        let skill = SkillData {
+            id: "basic_attack".into(),
+            name: "普通攻击".into(),
+            description: String::new(),
+            cost_mp: 0,
+            range: 0,
+            targeting: SkillTargeting::SingleEnemy,
+            effects: vec![EffectDef::Damage { multiplier: 1.0, ignore_def_percent: 0.0 }],
+            tags: vec![],
+            conditions: vec![],
+            cooldown: 0,
+            priority: 0,
+        };
         let buff_reg = crate::data::buff_data::BuffRegistry::default();
-        let skill = registry.get("basic_attack").unwrap();
-        let preview = preview_skill_effects(&ctx, skill, &buff_reg);
+        let preview = preview_skill_effects(&ctx, &skill, &buff_reg);
 
         if let EffectPreview::Damage { lethal, .. } = &preview.predictions[0] {
             assert!(lethal);
@@ -887,14 +859,24 @@ mod tests {
             terrain: crate::map::Terrain::Plain,
         };
 
-        let mut registry = SkillRegistry::default();
-        registry.populate();
+        let skill = SkillData {
+            id: "heal".into(),
+            name: "治疗".into(),
+            description: String::new(),
+            cost_mp: 0,
+            range: 3,
+            targeting: SkillTargeting::SingleAlly,
+            effects: vec![EffectDef::Heal { amount: 8 }],
+            tags: vec![],
+            conditions: vec![],
+            cooldown: 2,
+            priority: 15,
+        };
         let buff_reg = crate::data::buff_data::BuffRegistry::default();
-        let skill = registry.get("heal").unwrap();
-        let preview = preview_skill_effects(&ctx, skill, &buff_reg);
+        let preview = preview_skill_effects(&ctx, &skill, &buff_reg);
 
         if let EffectPreview::Heal { amount } = &preview.predictions[0] {
-            assert_eq!(*amount, 8); // heal 8, but max is 20, current is 12, so actual = min(8, 20-12) = 8
+            assert_eq!(*amount, 8);
         }
     }
 
@@ -916,11 +898,21 @@ mod tests {
             terrain: crate::map::Terrain::Plain,
         };
 
-        let mut registry = SkillRegistry::default();
-        registry.populate();
+        let skill = SkillData {
+            id: "heal".into(),
+            name: "治疗".into(),
+            description: String::new(),
+            cost_mp: 0,
+            range: 3,
+            targeting: SkillTargeting::SingleAlly,
+            effects: vec![EffectDef::Heal { amount: 8 }],
+            tags: vec![],
+            conditions: vec![],
+            cooldown: 2,
+            priority: 15,
+        };
         let buff_reg = crate::data::buff_data::BuffRegistry::default();
-        let skill = registry.get("heal").unwrap();
-        let preview = preview_skill_effects(&ctx, skill, &buff_reg);
+        let preview = preview_skill_effects(&ctx, &skill, &buff_reg);
 
         if let EffectPreview::Heal { amount } = &preview.predictions[0] {
             assert_eq!(*amount, 2); // min(8, 20-18) = 2

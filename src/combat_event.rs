@@ -160,6 +160,11 @@ pub fn generate_combat_effects(
 
 /// 步骤 2：修饰效果（标签增伤/减伤等被动技能在此插入）
 pub fn modify_effects(mut queue: ResMut<EffectQueue>, tags_query: Query<&GameplayTags>) {
+    modify_effects_inline(&mut queue, &tags_query);
+}
+
+/// 修饰效果的内联实现（供 AI 直接调用）
+pub fn modify_effects_inline(queue: &mut EffectQueue, tags_query: &Query<&GameplayTags>) {
     for effect in &mut queue.pending {
         if let PendingEffectData::Damage { ref mut amount, .. } = effect.data {
             // 火焰增伤：攻击方技能带 FIRE 标签，目标也带 FIRE 标签 → 伤害 +50%
@@ -170,13 +175,43 @@ pub fn modify_effects(mut queue: ResMut<EffectQueue>, tags_query: Query<&Gamepla
                     }
                 }
             }
-            // 未来可在此添加更多被动修饰逻辑
         }
     }
 }
 
 /// 步骤 3：执行效果（扣血/加 Buff/特效/日志/击杀）
 pub fn execute_effects(
+    commands: Commands,
+    queue: ResMut<EffectQueue>,
+    attrs_query: Query<&mut Attributes>,
+    buffs_query: Query<&mut ActiveBuffs>,
+    tags_query: Query<&mut GameplayTags>,
+    gp_query: Query<&GridPosition>,
+    name_query: Query<&UnitName>,
+    unit_query: Query<&Unit>,
+    combat_log: ResMut<CombatLog>,
+    buff_registry: Res<BuffRegistry>,
+    map: Res<GameMap>,
+    cn_font: Res<CnFont>,
+) {
+    execute_effects_inline(
+        commands,
+        queue,
+        attrs_query,
+        buffs_query,
+        tags_query,
+        gp_query,
+        name_query,
+        unit_query,
+        combat_log,
+        buff_registry,
+        map,
+        cn_font,
+    );
+}
+
+/// 执行效果的内联实现（供 AI 直接调用）
+pub fn execute_effects_inline(
     mut commands: Commands,
     mut queue: ResMut<EffectQueue>,
     mut attrs_query: Query<&mut Attributes>,

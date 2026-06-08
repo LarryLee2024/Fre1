@@ -1,10 +1,12 @@
 // 属性系统：基础值 + 修饰符栈，替代硬编码的 attack_mod/defense_mod
 
 use bevy::prelude::*;
+use serde::Deserialize;
 use std::collections::HashMap;
 
 /// 属性类型
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Deserialize)]
+#[serde(rename_all = "PascalCase")]
 pub enum AttributeKind {
     Hp,
     MaxHp,
@@ -32,7 +34,8 @@ impl AttributeKind {
 }
 
 /// 修饰符操作类型
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Deserialize)]
+#[serde(rename_all = "PascalCase")]
 pub enum ModifierOp {
     /// 加法：base + sum(Add modifiers)
     Add,
@@ -40,8 +43,8 @@ pub enum ModifierOp {
     Multiply,
 }
 
-/// 属性修饰符定义（用于 BuffData 等数据定义）
-#[derive(Clone, Debug)]
+/// 属性修饰符定义（用于 BuffData 等数据定义，支持 RON 反序列化）
+#[derive(Clone, Debug, Deserialize)]
 pub struct AttributeModifierDef {
     pub kind: AttributeKind,
     pub op: ModifierOp,

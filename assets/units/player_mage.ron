@@ -1,0 +1,12 @@
+(
+    id: "player_mage",
+    name: "法师",
+    faction: Player,
+    class_tag: MAGE,
+    base_attributes: {
+        Hp: 18.0, MaxHp: 18.0,
+        Atk: 12.0, Def: 2.0,
+        Mov: 3.0, AttackRange: 2.0,
+    },
+    skill_ids: ["basic_attack", "fireball","cleanse_skill"],
+)

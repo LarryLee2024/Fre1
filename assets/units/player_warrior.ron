@@ -1,0 +1,12 @@
+(
+    id: "player_warrior",
+    name: "战士",
+    faction: Player,
+    class_tag: WARRIOR,
+    base_attributes: {
+        Hp: 30.0, MaxHp: 30.0,
+        Atk: 10.0, Def: 5.0,
+        Mov: 5.0, AttackRange: 1.0,
+    },
+    skill_ids: ["basic_attack", "charge"],
+)

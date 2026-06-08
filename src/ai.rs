@@ -1,10 +1,10 @@
-// AI 模块：敌方自动行动，直接执行效果
+// AI 模块：敌方自动行动，通过 EffectQueue 执行效果
 
 use crate::assets::CnFont;
 use crate::combat::manhattan_distance;
 use crate::combat_log::{CombatLog, LogSegment, log_color};
 use crate::core::attribute::{AttributeKind, Attributes};
-use crate::core::effect::calculate_damage_from_effect;
+use crate::core::effect::{calculate_damage_from_effect, EffectDef, EffectQueue, PendingEffect, PendingEffectData};
 use crate::core::tag::GameplayTags;
 use crate::data::buff_data::{apply_buff, ActiveBuffs, BuffRegistry};
 use crate::data::skill_data::{effective_skill_range, SkillCooldowns, SkillRegistry, SkillSlots};
@@ -15,7 +15,20 @@ use crate::unit::{Faction, GridPosition, Unit, UnitName};
 use crate::vfx;
 use bevy::prelude::*;
 
-/// 敌方 AI 系统
+/// 单位快照（避免借用冲突）
+struct UnitSnapshot {
+    entity: Entity,
+    faction: Faction,
+    coord: IVec2,
+    atk: f32,
+    mov: u32,
+    attack_range: u32,
+    acted: bool,
+    skill_ids: Vec<String>,
+    cooldowns: SkillCooldowns,
+}
+
+/// 敌方 AI 系统：决策 → 移动 → 推入 EffectQueue → 修饰 → 执行
 pub fn enemy_ai_system(
     mut commands: Commands,
     time: Res<Time>,
@@ -27,6 +40,7 @@ pub fn enemy_ai_system(
     map: Res<GameMap>,
     skill_registry: Res<SkillRegistry>,
     buff_registry: Res<BuffRegistry>,
+    mut effect_queue: ResMut<EffectQueue>,
     mut combat_log: ResMut<CombatLog>,
     mut units: Query<(
         Entity,
@@ -55,23 +69,18 @@ pub fn enemy_ai_system(
     }
 
     // 收集所有单位快照
-    let snapshots: Vec<(Entity, Faction, IVec2, f32, f32, f32, u32, u32, bool, String, Vec<String>, SkillCooldowns)> = units
+    let snapshots: Vec<UnitSnapshot> = units
         .iter()
-        .map(|(e, u, gp, _, name, attrs, skills, cooldowns, _, _)| {
-            (
-                e,
-                u.faction,
-                gp.coord,
-                attrs.get(AttributeKind::Atk),
-                attrs.get(AttributeKind::Def),
-                attrs.base.get(&AttributeKind::Def).copied().unwrap_or(0.0),
-                attrs.get(AttributeKind::Mov) as u32,
-                attrs.get(AttributeKind::AttackRange) as u32,
-                u.acted,
-                name.0.clone(),
-                skills.skill_ids.clone(),
-                cooldowns.clone(),
-            )
+        .map(|(e, u, gp, _, _name, attrs, skills, cooldowns, _, _)| UnitSnapshot {
+            entity: e,
+            faction: u.faction,
+            coord: gp.coord,
+            atk: attrs.get(AttributeKind::Atk),
+            mov: attrs.get(AttributeKind::Mov) as u32,
+            attack_range: attrs.get(AttributeKind::AttackRange) as u32,
+            acted: u.acted,
+            skill_ids: skills.skill_ids.clone(),
+            cooldowns: cooldowns.clone(),
         })
         .collect();
 
@@ -79,8 +88,8 @@ pub fn enemy_ai_system(
 
     let player_positions: Vec<IVec2> = snapshots
         .iter()
-        .filter(|s| s.1 == Faction::Player)
-        .map(|s| s.2)
+        .filter(|s| s.faction == Faction::Player)
+        .map(|s| s.coord)
         .collect();
 
     if player_positions.is_empty() {
@@ -94,61 +103,59 @@ pub fn enemy_ai_system(
         attack_target: Option<Entity>,
         skill_id: String,
         atk: f32,
-        base_def: f32,
     }
 
     let mut actions: Vec<AiAction> = Vec::new();
 
     for snapshot in snapshots
         .iter()
-        .filter(|s| s.1 == Faction::Enemy && !s.8) // !acted
+        .filter(|s| s.faction == Faction::Enemy && !s.acted)
     {
         let nearest = *player_positions
             .iter()
-            .min_by_key(|pos| manhattan_distance(snapshot.2, **pos))
+            .min_by_key(|pos| manhattan_distance(snapshot.coord, **pos))
             .unwrap();
 
         let occupation_map: std::collections::HashMap<IVec2, bool> = snapshots
             .iter()
-            .filter(|s| s.1 == Faction::Player)
-            .map(|s| (s.2, true))
+            .filter(|s| s.faction == Faction::Player)
+            .map(|s| (s.coord, true))
             .collect();
 
         let reachable =
-            find_reachable_tiles(snapshot.2, snapshot.6, &map, &terrain_map, &occupation_map);
+            find_reachable_tiles(snapshot.coord, snapshot.mov, &map, &terrain_map, &occupation_map);
 
         let best_coord = reachable
             .iter()
             .min_by_key(|(coord, _)| manhattan_distance(**coord, nearest))
             .map(|(coord, _)| *coord)
-            .unwrap_or(snapshot.2);
+            .unwrap_or(snapshot.coord);
 
         // 选择使用的技能：优先特殊技能（跳过冷却中的），否则基础攻击
         let skill_id = snapshot
-            .10 // skill_ids
+            .skill_ids
             .iter()
-            .find(|id| *id != "basic_attack" && snapshot.11.get(id) == 0) // cooldowns
+            .find(|id| *id != "basic_attack" && snapshot.cooldowns.get(id) == 0)
             .map(|s| s.as_str())
             .unwrap_or("basic_attack");
 
         let effective_range = skill_registry
             .get(skill_id)
-            .map(|sd| effective_skill_range(sd, snapshot.7)) // attack_range
-            .unwrap_or(snapshot.7);
+            .map(|sd| effective_skill_range(sd, snapshot.attack_range))
+            .unwrap_or(snapshot.attack_range);
 
         let attack_target = snapshots
             .iter()
-            .filter(|s| s.1 == Faction::Player)
-            .find(|s| manhattan_distance(best_coord, s.2) <= effective_range)
-            .map(|s| s.0); // entity
+            .filter(|s| s.faction == Faction::Player)
+            .find(|s| manhattan_distance(best_coord, s.coord) <= effective_range)
+            .map(|s| s.entity);
 
         actions.push(AiAction {
-            entity: snapshot.0,
+            entity: snapshot.entity,
             move_to: best_coord,
             attack_target,
             skill_id: skill_id.to_string(),
-            atk: snapshot.3,
-            base_def: snapshot.5,
+            atk: snapshot.atk,
         });
     }
 
@@ -162,22 +169,9 @@ pub fn enemy_ai_system(
             transform.translation.y = world_pos.y;
         }
 
-        // 直接执行攻击效果（不经过 EffectQueue）
+        // 通过 EffectQueue 执行攻击效果
         if let Some(target_entity) = action.attack_target {
             if let Some(skill_data) = skill_registry.get(&action.skill_id) {
-                // 获取目标信息
-                let (target_name, target_attrs_snapshot, target_gp_coord, target_terrain) = units
-                    .get(target_entity)
-                    .map(|(_, _, gp, _, name, attrs, _, _, _, _)| {
-                        let terrain = tiles
-                            .iter()
-                            .find(|t| t.coord == gp.coord)
-                            .map(|t| t.terrain)
-                            .unwrap_or(Terrain::Plain);
-                        (name.0.clone(), attrs.clone(), gp.coord, terrain)
-                    })
-                    .unwrap_or(("???".to_string(), Attributes::default(), IVec2::ZERO, Terrain::Plain));
-
                 // 设置冷却
                 if skill_data.cooldown > 0 {
                     if let Ok((_, _, _, _, _, _, _, mut cooldowns, _, _)) = units.get_mut(action.entity) {
@@ -185,82 +179,58 @@ pub fn enemy_ai_system(
                     }
                 }
 
-                // 计算伤害
-                for effect_def in &skill_data.effects {
-                    match effect_def {
-                        crate::core::effect::EffectDef::Damage { multiplier, ignore_def_percent } => {
-                            let effective_atk = action.atk;
-                            let effective_def = target_attrs_snapshot.get(AttributeKind::Def);
-                            let base_def = action.base_def;
+                // 获取目标信息并推入 EffectQueue
+                let target_info = units.get(target_entity).ok().map(|(_, _, gp, _, _, attrs, _, _, _, _)| {
+                    let terrain = tiles
+                        .iter()
+                        .find(|t| t.coord == gp.coord)
+                        .map(|t| t.terrain)
+                        .unwrap_or(Terrain::Plain);
+                    (attrs.clone(), gp.coord, terrain)
+                });
 
-                            let amount = calculate_damage_from_effect(
-                                effective_atk,
-                                effective_def,
-                                base_def,
-                                *multiplier,
-                                *ignore_def_percent,
-                                target_terrain,
-                            );
+                if let Some((target_attrs, _target_gp, terrain)) = target_info {
+                    for effect_def in &skill_data.effects {
+                        match effect_def {
+                            EffectDef::Damage { multiplier, ignore_def_percent } => {
+                                let effective_def = target_attrs.get(AttributeKind::Def);
+                                let base_def = target_attrs.base.get(&AttributeKind::Def).copied().unwrap_or(0.0);
 
-                            // 扣血
-                            if let Ok((_, _, _, _, _, mut attrs, _, _, _, _)) = units.get_mut(target_entity) {
-                                let hp = attrs.get(AttributeKind::Hp);
-                                let new_hp = (hp - amount as f32).max(0.0);
-                                attrs.set_base(AttributeKind::Hp, new_hp);
-                            }
-
-                            // 伤害数字弹出
-                            let target_world_pos = map.coord_to_world(target_gp_coord);
-                            vfx::spawn_damage_popup(&mut commands, target_world_pos, amount, &cn_font.handle, false);
-
-                            // 战斗日志
-                            let attacker_name = units
-                                .get(action.entity)
-                                .map(|(_, _, _, _, name, _, _, _, _, _)| name.0.clone())
-                                .unwrap_or("???".to_string());
-
-                            combat_log.push(vec![
-                                LogSegment { text: format!("[{}]", attacker_name), color: log_color::ENEMY },
-                                LogSegment { text: " uses ".to_string(), color: log_color::NORMAL },
-                                LogSegment { text: format!("[{}]", skill_data.name), color: log_color::TURN },
-                                LogSegment { text: " attacks ".to_string(), color: log_color::NORMAL },
-                                LogSegment { text: format!("[{}]", target_name), color: log_color::PLAYER },
-                                LogSegment { text: " dealing ".to_string(), color: log_color::NORMAL },
-                                LogSegment { text: format!("[{}]", amount), color: log_color::DAMAGE },
-                                LogSegment { text: " damage".to_string(), color: log_color::NORMAL },
-                            ]);
-
-                            // 击杀检查
-                            if let Ok((_, _, _, _, _, attrs, _, _, _, _)) = units.get(target_entity) {
-                                if attrs.get(AttributeKind::Hp) <= 0.0 {
-                                    combat_log.push(vec![
-                                        LogSegment { text: format!("[{}]", target_name), color: log_color::PLAYER },
-                                        LogSegment { text: " was defeated!".to_string(), color: log_color::KILL },
-                                    ]);
-                                    commands.entity(target_entity).try_despawn();
-                                }
-                            }
-                        }
-                        crate::core::effect::EffectDef::ApplyBuff { buff_id, duration } => {
-                            if let (Ok((_, _, _, _, _, mut attrs, _, _, mut buffs, mut tags)), Some(buff_data)) = (
-                                units.get_mut(target_entity),
-                                buff_registry.get(buff_id),
-                            ) {
-                                apply_buff(
-                                    &mut buffs,
-                                    &mut attrs,
-                                    &mut tags,
-                                    buff_data,
-                                    Some(action.entity),
-                                    *duration,
+                                let amount = calculate_damage_from_effect(
+                                    action.atk,
+                                    effective_def,
+                                    base_def,
+                                    *multiplier,
+                                    *ignore_def_percent,
+                                    terrain,
                                 );
+
+                                effect_queue.push(PendingEffect {
+                                    source: action.entity,
+                                    target: target_entity,
+                                    data: PendingEffectData::Damage {
+                                        amount,
+                                        is_skill: action.skill_id != "basic_attack",
+                                    },
+                                    source_tags: skill_data.tags.clone(),
+                                    terrain,
+                                });
                             }
-                        }
-                        crate::core::effect::EffectDef::Heal { .. } => {
-                            // AI 不会治疗玩家
-                        }
-                        crate::core::effect::EffectDef::Cleanse => {
-                            // AI 不会净化玩家
+                            EffectDef::ApplyBuff { buff_id, duration } => {
+                                effect_queue.push(PendingEffect {
+                                    source: action.entity,
+                                    target: target_entity,
+                                    data: PendingEffectData::ApplyBuff {
+                                        buff_id: buff_id.clone(),
+                                        duration: *duration,
+                                    },
+                                    source_tags: skill_data.tags.clone(),
+                                    terrain,
+                                });
+                            }
+                            EffectDef::Heal { .. } | EffectDef::Cleanse => {
+                                // AI 不会治疗/净化玩家
+                            }
                         }
                     }
                 }
@@ -273,6 +243,34 @@ pub fn enemy_ai_system(
         }
     }
 
+    // 修饰 + 执行 EffectQueue 中的所有效果
+    // AI 不经过 TurnPhase::ExecuteAction，所以在这里直接执行
+    if !effect_queue.pending.is_empty() {
+        // 步骤 2：修饰效果（标签增伤/减伤）
+        for effect in &mut effect_queue.pending {
+            if let PendingEffectData::Damage { ref mut amount, .. } = effect.data {
+                if effect.source_tags.contains(&crate::core::tag::GameplayTag::FIRE) {
+                    if let Ok((_, _, _, _, _, _, _, _, _, tags)) = units.get(effect.target) {
+                        if tags.has(crate::core::tag::GameplayTag::FIRE) {
+                            *amount = (*amount as f32 * 1.5) as i32;
+                        }
+                    }
+                }
+            }
+        }
+
+        // 步骤 3：执行效果（扣血/加 Buff/特效/日志/击杀）
+        execute_ai_effects(
+            &mut commands,
+            &mut effect_queue,
+            &mut units,
+            &mut combat_log,
+            &buff_registry,
+            &map,
+            &cn_font,
+        );
+    }
+
     // 检查是否所有敌方单位都已行动
     let all_enemy_acted = units
         .iter()
@@ -283,6 +281,124 @@ pub fn enemy_ai_system(
         next_phase.set(TurnPhase::TurnEnd);
     } else {
         next_phase.set(TurnPhase::SelectUnit);
+    }
+}
+
+/// AI 执行效果队列（内联版本，使用 AI 的合并 Query）
+fn execute_ai_effects(
+    commands: &mut Commands,
+    queue: &mut EffectQueue,
+    units: &mut Query<(
+        Entity,
+        &mut Unit,
+        &mut GridPosition,
+        &mut Transform,
+        &UnitName,
+        &mut Attributes,
+        &SkillSlots,
+        &mut SkillCooldowns,
+        &mut ActiveBuffs,
+        &mut GameplayTags,
+    )>,
+    combat_log: &mut CombatLog,
+    buff_registry: &BuffRegistry,
+    map: &GameMap,
+    cn_font: &CnFont,
+) {
+    for effect in queue.pending.drain(..) {
+        match effect.data {
+            PendingEffectData::Damage { amount, is_skill } => {
+                // 扣血
+                if let Ok((_, _, _, _, _, mut attrs, _, _, _, _)) = units.get_mut(effect.target) {
+                    let hp = attrs.get(AttributeKind::Hp);
+                    let new_hp = (hp - amount as f32).max(0.0);
+                    attrs.set_base(AttributeKind::Hp, new_hp);
+                }
+
+                // 伤害数字弹出
+                if let Ok((_, _, gp, _, _, _, _, _, _, _)) = units.get(effect.target) {
+                    let world_pos = map.coord_to_world(gp.coord);
+                    vfx::spawn_damage_popup(commands, world_pos, amount, &cn_font.handle, is_skill);
+                }
+
+                // 战斗日志
+                let attacker_color = units
+                    .get(effect.source)
+                    .map(|(_, u, _, _, _, _, _, _, _, _)| {
+                        if u.faction == Faction::Player { log_color::PLAYER } else { log_color::ENEMY }
+                    })
+                    .unwrap_or(log_color::NORMAL);
+                let defender_color = units
+                    .get(effect.target)
+                    .map(|(_, u, _, _, _, _, _, _, _, _)| {
+                        if u.faction == Faction::Player { log_color::PLAYER } else { log_color::ENEMY }
+                    })
+                    .unwrap_or(log_color::NORMAL);
+
+                let attacker_name = units
+                    .get(effect.source)
+                    .map(|(_, _, _, _, name, _, _, _, _, _)| name.0.as_str())
+                    .unwrap_or("???");
+                let target_name = units
+                    .get(effect.target)
+                    .map(|(_, _, _, _, name, _, _, _, _, _)| name.0.as_str())
+                    .unwrap_or("???");
+
+                let skill_label = if is_skill { "技能" } else { "攻击" };
+
+                combat_log.push(vec![
+                    LogSegment { text: format!("[{}]", attacker_name), color: attacker_color },
+                    LogSegment { text: format!(" 使用[{}]", skill_label), color: log_color::TURN },
+                    LogSegment { text: " 攻击 ".to_string(), color: log_color::NORMAL },
+                    LogSegment { text: format!("[{}]", target_name), color: defender_color },
+                    LogSegment { text: " 造成 ".to_string(), color: log_color::NORMAL },
+                    LogSegment { text: format!("[{}]", amount), color: log_color::DAMAGE },
+                    LogSegment { text: " 伤害".to_string(), color: log_color::NORMAL },
+                    LogSegment { text: format!(" ({})", effect.terrain.label()), color: log_color::TERRAIN },
+                ]);
+
+                // 击杀处理
+                if let Ok((_, _, _, _, target_name, attrs, _, _, _, _)) = units.get(effect.target) {
+                    if attrs.get(AttributeKind::Hp) <= 0.0 {
+                        combat_log.push(vec![
+                            LogSegment { text: format!("[{}]", target_name.0), color: defender_color },
+                            LogSegment { text: " 被击败！".to_string(), color: log_color::KILL },
+                        ]);
+                        commands.entity(effect.target).try_despawn();
+                    }
+                }
+            }
+            PendingEffectData::Heal { amount } => {
+                if let Ok((_, _, _, _, _, mut attrs, _, _, _, _)) = units.get_mut(effect.target) {
+                    let hp = attrs.get(AttributeKind::Hp);
+                    let max_hp = attrs.get(AttributeKind::MaxHp);
+                    let new_hp = (hp + amount as f32).min(max_hp);
+                    attrs.set_base(AttributeKind::Hp, new_hp);
+                }
+
+                let target_name = units
+                    .get(effect.target)
+                    .map(|(_, _, _, _, name, _, _, _, _, _)| name.0.as_str())
+                    .unwrap_or("???");
+                combat_log.push(vec![
+                    LogSegment { text: format!("[{}]", target_name), color: log_color::NORMAL },
+                    LogSegment { text: format!(" 恢复 {} HP", amount), color: log_color::HEAL },
+                ]);
+            }
+            PendingEffectData::ApplyBuff { buff_id, duration } => {
+                if let (Ok((_, _, _, _, _, mut attrs, _, _, mut buffs, mut tags)), Some(buff_data)) = (
+                    units.get_mut(effect.target),
+                    buff_registry.get(&buff_id),
+                ) {
+                    apply_buff(&mut buffs, &mut attrs, &mut tags, buff_data, Some(effect.source), duration);
+                }
+            }
+            PendingEffectData::Cleanse => {
+                if let Ok((_, _, _, _, _, mut attrs, _, _, mut buffs, mut tags)) = units.get_mut(effect.target) {
+                    crate::data::buff_data::remove_all_debuffs(&mut buffs, &mut attrs, &mut tags);
+                }
+            }
+        }
     }
 }
 

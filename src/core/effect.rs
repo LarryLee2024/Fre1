@@ -4,9 +4,11 @@
 use crate::core::tag::GameplayTag;
 use crate::map::Terrain;
 use bevy::prelude::*;
+use serde::Deserialize;
 
-/// 效果定义（用于 SkillData 中声明技能效果）
-#[derive(Clone, Debug)]
+/// 效果定义（用于 SkillData 中声明技能效果，支持 RON 反序列化）
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "PascalCase")]
 pub enum EffectDef {
     Damage {
         multiplier: f32,

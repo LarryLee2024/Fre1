@@ -1,6 +1,7 @@
 // 标签系统：位掩码实现，O(1) 查询，替代硬编码枚举匹配
 
 use bevy::prelude::*;
+use serde::Deserialize;
 
 /// 游戏标签（位掩码）
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -93,7 +94,8 @@ impl GameplayTags {
 }
 
 /// 标签名称枚举（用于数据定义中的序列化/反序列化）
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Deserialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum TagName {
     Fire,
     Ice,

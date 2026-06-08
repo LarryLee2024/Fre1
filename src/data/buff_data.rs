@@ -1,12 +1,16 @@
 // Buff 数据：数据驱动的 Buff/Debuff 定义，替代 StatusEffect 枚举
+// 支持从 assets/buffs/*.ron 外部配置文件加载
 
-use crate::core::attribute::{AttributeKind, AttributeModifierDef, BuffInstanceId, ModifierOp};
+use crate::core::attribute::{AttributeModifierDef, BuffInstanceId};
 use crate::core::attribute::Attributes;
-use crate::core::tag::{GameplayTag, GameplayTags};
+use crate::core::tag::{GameplayTag, GameplayTags, TagName};
 use bevy::prelude::*;
+use ron::de::from_bytes;
+use serde::Deserialize;
 use std::collections::HashMap;
+use std::fs::{read, read_dir};
 
-/// Buff 数据定义
+/// Buff 数据定义（运行时）
 #[derive(Clone, Debug)]
 pub struct BuffData {
     pub id: String,
@@ -19,6 +23,38 @@ pub struct BuffData {
     pub is_stun: bool,
     pub is_cleanse: bool,
     pub is_buff: bool,
+}
+
+/// Buff 数据定义（RON 反序列化用，TagName 替代 GameplayTag）
+#[derive(Clone, Debug, Deserialize)]
+pub struct BuffDef {
+    pub id: String,
+    pub name: String,
+    pub default_duration: u32,
+    pub modifiers: Vec<AttributeModifierDef>,
+    pub tags: Vec<TagName>,
+    pub dot_damage: i32,
+    pub hot_heal: i32,
+    pub is_stun: bool,
+    pub is_cleanse: bool,
+    pub is_buff: bool,
+}
+
+impl From<BuffDef> for BuffData {
+    fn from(def: BuffDef) -> Self {
+        BuffData {
+            id: def.id,
+            name: def.name,
+            default_duration: def.default_duration,
+            modifiers: def.modifiers,
+            tags: def.tags.iter().map(|t| t.to_tag()).collect(),
+            dot_damage: def.dot_damage,
+            hot_heal: def.hot_heal,
+            is_stun: def.is_stun,
+            is_cleanse: def.is_cleanse,
+            is_buff: def.is_buff,
+        }
+    }
 }
 
 impl BuffData {
@@ -112,11 +148,7 @@ impl ActiveBuffs {
     }
 
     pub fn dot_damage(&self) -> i32 {
-        self.instances.iter().map(|b| {
-            // 需要从 registry 查 dot_damage，但这里只存了 buff_id
-            // 改为在 BuffInstance 上直接存 dot/hot 值
-            b.dot_damage
-        }).sum()
+        self.instances.iter().map(|b| b.dot_damage).sum()
     }
 
     pub fn hot_heal(&self) -> i32 {
@@ -152,206 +184,35 @@ impl BuffRegistry {
         self.buffs.get(id)
     }
 
-    /// 初始化所有 Buff 定义
-    pub fn populate(&mut self) {
-        let buffs = vec![
-            BuffData {
-                id: "attack_up".into(),
-                name: "攻+5".into(),
-                default_duration: 2,
-                modifiers: vec![AttributeModifierDef {
-                    kind: AttributeKind::Atk,
-                    op: ModifierOp::Add,
-                    value: 5.0,
-                }],
-                tags: vec![GameplayTag::BUFF],
-                dot_damage: 0,
-                hot_heal: 0,
-                is_stun: false,
-                is_cleanse: false,
-                is_buff: true,
-            },
-            BuffData {
-                id: "attack_down".into(),
-                name: "攻-5".into(),
-                default_duration: 2,
-                modifiers: vec![AttributeModifierDef {
-                    kind: AttributeKind::Atk,
-                    op: ModifierOp::Add,
-                    value: -5.0,
-                }],
-                tags: vec![GameplayTag::DEBUFF],
-                dot_damage: 0,
-                hot_heal: 0,
-                is_stun: false,
-                is_cleanse: false,
-                is_buff: false,
-            },
-            BuffData {
-                id: "defense_up".into(),
-                name: "防+5".into(),
-                default_duration: 2,
-                modifiers: vec![AttributeModifierDef {
-                    kind: AttributeKind::Def,
-                    op: ModifierOp::Add,
-                    value: 5.0,
-                }],
-                tags: vec![GameplayTag::BUFF],
-                dot_damage: 0,
-                hot_heal: 0,
-                is_stun: false,
-                is_cleanse: false,
-                is_buff: true,
-            },
-            BuffData {
-                id: "defense_down".into(),
-                name: "防-5".into(),
-                default_duration: 2,
-                modifiers: vec![AttributeModifierDef {
-                    kind: AttributeKind::Def,
-                    op: ModifierOp::Add,
-                    value: -5.0,
-                }],
-                tags: vec![GameplayTag::DEBUFF],
-                dot_damage: 0,
-                hot_heal: 0,
-                is_stun: false,
-                is_cleanse: false,
-                is_buff: false,
-            },
-            BuffData {
-                id: "movement_up".into(),
-                name: "移+2".into(),
-                default_duration: 2,
-                modifiers: vec![AttributeModifierDef {
-                    kind: AttributeKind::Mov,
-                    op: ModifierOp::Add,
-                    value: 2.0,
-                }],
-                tags: vec![GameplayTag::BUFF],
-                dot_damage: 0,
-                hot_heal: 0,
-                is_stun: false,
-                is_cleanse: false,
-                is_buff: true,
-            },
-            BuffData {
-                id: "movement_down".into(),
-                name: "移-2".into(),
-                default_duration: 2,
-                modifiers: vec![AttributeModifierDef {
-                    kind: AttributeKind::Mov,
-                    op: ModifierOp::Add,
-                    value: -2.0,
-                }],
-                tags: vec![GameplayTag::DEBUFF],
-                dot_damage: 0,
-                hot_heal: 0,
-                is_stun: false,
-                is_cleanse: false,
-                is_buff: false,
-            },
-            BuffData {
-                id: "range_up".into(),
-                name: "距+1".into(),
-                default_duration: 2,
-                modifiers: vec![AttributeModifierDef {
-                    kind: AttributeKind::AttackRange,
-                    op: ModifierOp::Add,
-                    value: 1.0,
-                }],
-                tags: vec![GameplayTag::BUFF],
-                dot_damage: 0,
-                hot_heal: 0,
-                is_stun: false,
-                is_cleanse: false,
-                is_buff: true,
-            },
-            BuffData {
-                id: "range_down".into(),
-                name: "距-1".into(),
-                default_duration: 2,
-                modifiers: vec![AttributeModifierDef {
-                    kind: AttributeKind::AttackRange,
-                    op: ModifierOp::Add,
-                    value: -1.0,
-                }],
-                tags: vec![GameplayTag::DEBUFF],
-                dot_damage: 0,
-                hot_heal: 0,
-                is_stun: false,
-                is_cleanse: false,
-                is_buff: false,
-            },
-            BuffData {
-                id: "poison".into(),
-                name: "毒-3".into(),
-                default_duration: 2,
-                modifiers: vec![],
-                tags: vec![GameplayTag::DEBUFF, GameplayTag::POISON],
-                dot_damage: 3,
-                hot_heal: 0,
-                is_stun: false,
-                is_cleanse: false,
-                is_buff: false,
-            },
-            BuffData {
-                id: "burn".into(),
-                name: "灼-2".into(),
-                default_duration: 2,
-                modifiers: vec![AttributeModifierDef {
-                    kind: AttributeKind::Def,
-                    op: ModifierOp::Add,
-                    value: -2.0,
-                }],
-                tags: vec![GameplayTag::DEBUFF, GameplayTag::BURN, GameplayTag::FIRE],
-                dot_damage: 2,
-                hot_heal: 0,
-                is_stun: false,
-                is_cleanse: false,
-                is_buff: false,
-            },
-            BuffData {
-                id: "regen".into(),
-                name: "愈+4".into(),
-                default_duration: 2,
-                modifiers: vec![],
-                tags: vec![GameplayTag::BUFF, GameplayTag::REGEN],
-                dot_damage: 0,
-                hot_heal: 4,
-                is_stun: false,
-                is_cleanse: false,
-                is_buff: true,
-            },
-            BuffData {
-                id: "stun".into(),
-                name: "晕".into(),
-                default_duration: 1,
-                modifiers: vec![],
-                tags: vec![GameplayTag::DEBUFF, GameplayTag::STUN],
-                dot_damage: 0,
-                hot_heal: 0,
-                is_stun: true,
-                is_cleanse: false,
-                is_buff: false,
-            },
-            BuffData {
-                id: "cleanse".into(),
-                name: "驱散".into(),
-                default_duration: 0,
-                modifiers: vec![],
-                tags: vec![GameplayTag::BUFF],
-                dot_damage: 0,
-                hot_heal: 0,
-                is_stun: false,
-                is_cleanse: true,
-                is_buff: true,
-            },
-        ];
+    /// 从 assets/buffs/ 目录加载所有 .ron 文件
+    pub fn load_from_dir(dir: &str) -> Self {
+        let mut registry = BuffRegistry::default();
+        let Ok(entries) = read_dir(dir) else {
+            bevy::log::warn!("Buff 目录不存在: {}", dir);
+            return registry;
+        };
 
-        for buff in buffs {
-            self.buffs.insert(buff.id.clone(), buff);
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.extension().map_or(false, |e| e == "ron") {
+                match read(&path) {
+                    Ok(bytes) => match from_bytes::<BuffDef>(&bytes) {
+                        Ok(def) => {
+                            let id = def.id.clone();
+                            registry.buffs.insert(id.clone(), def.into());
+                            bevy::log::info!("加载 Buff: {}", id);
+                        }
+                        Err(e) => {
+                            bevy::log::error!("解析 Buff 文件 {:?} 失败: {}", path, e);
+                        }
+                    },
+                    Err(e) => {
+                        bevy::log::error!("读取 Buff 文件 {:?} 失败: {}", path, e);
+                    }
+                }
+            }
         }
+        registry
     }
 }
 
@@ -444,8 +305,7 @@ pub struct BuffDataPlugin;
 
 impl Plugin for BuffDataPlugin {
     fn build(&self, app: &mut App) {
-        let mut registry = BuffRegistry::default();
-        registry.populate();
+        let registry = BuffRegistry::load_from_dir("assets/buffs");
         app.insert_resource(registry);
     }
 }
@@ -453,6 +313,7 @@ impl Plugin for BuffDataPlugin {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::attribute::{AttributeKind, ModifierOp};
 
     /// 辅助：创建一个简单的 BuffData
     fn make_buff(id: &str, is_buff: bool, modifiers: Vec<AttributeModifierDef>, tags: Vec<GameplayTag>) -> BuffData {
@@ -553,7 +414,6 @@ mod tests {
             hot_heal: 0,
         });
 
-        // 同源同 buff_id → 刷新持续时间，不新增
         let id2 = buffs.next_instance_id();
         buffs.add(BuffInstance {
             instance_id: id2,
@@ -567,9 +427,9 @@ mod tests {
             hot_heal: 0,
         });
 
-        assert_eq!(buffs.len(), 1); // 没有新增
-        assert_eq!(buffs.instances[0].remaining_turns, 3); // 持续时间被刷新
-        assert_eq!(buffs.instances[0].instance_id, id1); // 保留原 instance_id
+        assert_eq!(buffs.len(), 1);
+        assert_eq!(buffs.instances[0].remaining_turns, 3);
+        assert_eq!(buffs.instances[0].instance_id, id1);
     }
 
     #[test]
@@ -604,7 +464,7 @@ mod tests {
             hot_heal: 0,
         });
 
-        assert_eq!(buffs.len(), 2); // 不同源，两个实例
+        assert_eq!(buffs.len(), 2);
     }
 
     // ── Tick ──
@@ -643,11 +503,9 @@ mod tests {
             dot_damage: 0,
             hot_heal: 0,
         });
-        // tick: retain(>0) 保留，然后递减为 0
         buffs.tick();
         assert_eq!(buffs.len(), 1);
         assert_eq!(buffs.instances[0].remaining_turns, 0);
-        // 下一次 tick: retain(>0) 移除 remaining_turns=0 的
         buffs.tick();
         assert!(buffs.is_empty());
     }
@@ -785,7 +643,7 @@ mod tests {
         apply_buff(&mut buffs, &mut attrs, &mut tags, &buff_data, None, 2);
 
         assert_eq!(buffs.len(), 1);
-        assert_eq!(attrs.get(AttributeKind::Atk), 15.0); // 10 + 5
+        assert_eq!(attrs.get(AttributeKind::Atk), 15.0);
         assert!(tags.has(GameplayTag::BUFF));
     }
 
@@ -811,8 +669,8 @@ mod tests {
         assert_eq!(attrs.get(AttributeKind::Atk), 15.0);
 
         remove_buff(&mut buffs, &mut attrs, &mut tags, instance_id);
-        assert_eq!(attrs.get(AttributeKind::Atk), 10.0); // 修饰符已移除
-        assert!(!tags.has(GameplayTag::BUFF)); // 标签已移除
+        assert_eq!(attrs.get(AttributeKind::Atk), 10.0);
+        assert!(!tags.has(GameplayTag::BUFF));
         assert!(buffs.is_empty());
     }
 
@@ -846,7 +704,6 @@ mod tests {
         let id_a = apply_buff(&mut buffs, &mut attrs, &mut tags, &buff_a, None, 2);
         let _id_b = apply_buff(&mut buffs, &mut attrs, &mut tags, &buff_b, None, 2);
 
-        // 移除 buff_a，BUFF 和 FIRE 标签仍由 buff_b 提供
         remove_buff(&mut buffs, &mut attrs, &mut tags, id_a);
         assert!(tags.has(GameplayTag::BUFF));
         assert!(tags.has(GameplayTag::FIRE));
@@ -859,7 +716,6 @@ mod tests {
         let mut tags = GameplayTags::default();
         attrs.set_base(AttributeKind::Atk, 10.0);
 
-        // 先施加一个 debuff
         let debuff = make_buff(
             "attack_down",
             false,
@@ -873,7 +729,6 @@ mod tests {
         apply_buff(&mut buffs, &mut attrs, &mut tags, &debuff, None, 2);
         assert_eq!(attrs.get(AttributeKind::Atk), 5.0);
 
-        // 施加 cleanse
         let cleanse = BuffData {
             id: "cleanse".into(),
             name: "驱散".into(),
@@ -888,7 +743,6 @@ mod tests {
         };
         apply_buff(&mut buffs, &mut attrs, &mut tags, &cleanse, None, 0);
 
-        // debuff 被驱散，属性恢复
         assert!(buffs.is_empty());
         assert_eq!(attrs.get(AttributeKind::Atk), 10.0);
     }
@@ -930,38 +784,59 @@ mod tests {
         remove_all_debuffs(&mut buffs, &mut attrs, &mut tags);
         assert_eq!(buffs.len(), 1);
         assert_eq!(buffs.instances[0].buff_id, "attack_up");
-        assert_eq!(attrs.get(AttributeKind::Atk), 15.0); // buff 保留
-        assert_eq!(attrs.get(AttributeKind::Def), 5.0); // debuff 修饰符已移除
+        assert_eq!(attrs.get(AttributeKind::Atk), 15.0);
+        assert_eq!(attrs.get(AttributeKind::Def), 5.0);
     }
 
-    // ── BuffRegistry ──
+    // ── BuffDef → BuffData 转换 ──
 
     #[test]
-    fn 注册表_初始化包含所有buff() {
-        let mut registry = BuffRegistry::default();
-        registry.populate();
-        assert!(registry.get("attack_up").is_some());
-        assert!(registry.get("poison").is_some());
-        assert!(registry.get("stun").is_some());
-        assert!(registry.get("cleanse").is_some());
-        assert!(registry.get("regen").is_some());
+    fn buff_def_转换为_buff_data() {
+        let def = BuffDef {
+            id: "test_buff".into(),
+            name: "测试增益".into(),
+            default_duration: 3,
+            modifiers: vec![AttributeModifierDef {
+                kind: AttributeKind::Atk,
+                op: ModifierOp::Add,
+                value: 10.0,
+            }],
+            tags: vec![TagName::Buff, TagName::Fire],
+            dot_damage: 0,
+            hot_heal: 0,
+            is_stun: false,
+            is_cleanse: false,
+            is_buff: true,
+        };
+        let data: BuffData = def.into();
+        assert_eq!(data.id, "test_buff");
+        assert_eq!(data.tags, vec![GameplayTag::BUFF, GameplayTag::FIRE]);
     }
 
-    #[test]
-    fn 注册表_不存在的buff返回none() {
-        let mut registry = BuffRegistry::default();
-        registry.populate();
-        assert!(registry.get("nonexistent").is_none());
-    }
+    // ── RON 反序列化 ──
 
     #[test]
-    fn 注册表_buff数据字段正确() {
-        let mut registry = BuffRegistry::default();
-        registry.populate();
-        let poison = registry.get("poison").unwrap();
-        assert_eq!(poison.dot_damage, 3);
-        assert_eq!(poison.hot_heal, 0);
-        assert!(!poison.is_buff);
-        assert!(poison.tags.contains(&GameplayTag::POISON));
+    fn ron_反序列化_buff定义() {
+        let ron_str = r#"
+            (
+                id: "test_buff",
+                name: "测试增益",
+                default_duration: 2,
+                modifiers: [
+                    (kind: Atk, op: Add, value: 5.0),
+                ],
+                tags: [BUFF, FIRE],
+                dot_damage: 0,
+                hot_heal: 3,
+                is_stun: false,
+                is_cleanse: false,
+                is_buff: true,
+            )
+        "#;
+        let def: BuffDef = from_bytes(ron_str.as_bytes()).unwrap();
+        assert_eq!(def.id, "test_buff");
+        assert_eq!(def.tags, vec![TagName::Buff, TagName::Fire]);
+        assert_eq!(def.hot_heal, 3);
+        assert_eq!(def.modifiers.len(), 1);
     }
 }

@@ -1,11 +1,13 @@
 // 单位模块：角色身份、阵营、生成
 // 属性移至 Attributes 组件，标签移至 GameplayTags 组件，技能移至 SkillSlots 组件
+// 单位定义从 UnitTemplateRegistry 加载，替代硬编码数组
 
 use crate::assets::CnFont;
-use crate::core::attribute::{AttributeKind, Attributes};
-use crate::core::tag::{GameplayTag, GameplayTags};
+use crate::core::attribute::Attributes;
+use crate::core::tag::GameplayTags;
 use crate::data::buff_data::ActiveBuffs;
 use crate::data::skill_data::{SkillCooldowns, SkillSlots};
+use crate::data::unit_template::UnitTemplateRegistry;
 use crate::map::GameMap;
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
@@ -68,65 +70,49 @@ impl Faction {
     }
 }
 
-/// 生成初始单位
-pub fn spawn_units(mut commands: Commands, map: Res<GameMap>, cn_font: Res<CnFont>) {
+/// 单位初始位置配置（模板 ID → 坐标）
+struct UnitSpawnEntry {
+    template_id: &'static str,
+    coord: IVec2,
+}
+
+/// 生成初始单位（从 UnitTemplateRegistry 加载模板）
+pub fn spawn_units(
+    mut commands: Commands,
+    map: Res<GameMap>,
+    cn_font: Res<CnFont>,
+    template_registry: Res<UnitTemplateRegistry>,
+) {
     let tile_size = map.tile_size;
     let bar_width = tile_size * 0.6;
     let bar_height = 4.0;
 
-    // 玩家单位（名称, 坐标, 技能IDs, 阵营标签, HP, MaxHP, ATK, DEF, MOV, 攻击范围）
-    let player_units: [(&str, IVec2, Vec<&str>, GameplayTag, i32, i32, i32, i32, u32, u32); 3] = [
-        ("战士", IVec2::new(4, 3), vec!["basic_attack", "charge"], GameplayTag::WARRIOR, 30, 30, 10, 5, 5, 1),
-        ("弓手", IVec2::new(3, 4), vec!["basic_attack", "pierce"], GameplayTag::ARCHER, 20, 20, 8, 3, 4, 3),
-        ("法师", IVec2::new(2, 5), vec!["basic_attack", "fireball"], GameplayTag::MAGE, 18, 18, 12, 2, 3, 2),
+    // 玩家单位初始位置
+    let player_entries = [
+        UnitSpawnEntry { template_id: "player_warrior", coord: IVec2::new(4, 3) },
+        UnitSpawnEntry { template_id: "player_archer", coord: IVec2::new(3, 4) },
+        UnitSpawnEntry { template_id: "player_mage", coord: IVec2::new(2, 5) },
     ];
 
-    for (name, coord, skill_ids, class_tag, hp, max_hp, atk, def, mov, attack_range) in player_units {
-        let world_pos = map.coord_to_world(coord);
-        spawn_unit(
-            &mut commands,
-            world_pos,
-            Faction::Player,
-            name,
-            coord,
-            skill_ids,
-            class_tag,
-            hp,
-            max_hp,
-            atk,
-            def,
-            mov,
-            attack_range,
-            tile_size,
-            bar_width,
-            bar_height,
-            &cn_font.handle,
-        );
-    }
-
-    // 敌方单位
-    let enemy_units: [(&str, IVec2, Vec<&str>, GameplayTag, i32, i32, i32, i32, u32, u32); 3] = [
-        ("哥布林", IVec2::new(7, 5), vec!["basic_attack"], GameplayTag::WARRIOR, 20, 20, 7, 3, 4, 1),
-        ("哥布林", IVec2::new(8, 3), vec!["basic_attack"], GameplayTag::WARRIOR, 20, 20, 7, 3, 4, 1),
-        ("暗骑士", IVec2::new(6, 6), vec!["basic_attack", "charge"], GameplayTag::WARRIOR, 35, 35, 12, 6, 3, 1),
+    // 敌方单位初始位置
+    let enemy_entries = [
+        UnitSpawnEntry { template_id: "enemy_goblin", coord: IVec2::new(7, 5) },
+        UnitSpawnEntry { template_id: "enemy_goblin", coord: IVec2::new(8, 3) },
+        UnitSpawnEntry { template_id: "enemy_dark_knight", coord: IVec2::new(6, 6) },
     ];
 
-    for (name, coord, skill_ids, class_tag, hp, max_hp, atk, def, mov, attack_range) in enemy_units {
-        let world_pos = map.coord_to_world(coord);
-        spawn_unit(
+    for entry in player_entries.iter().chain(enemy_entries.iter()) {
+        let Some(template) = template_registry.get(entry.template_id) else {
+            bevy::log::error!("单位模板不存在: {}", entry.template_id);
+            continue;
+        };
+
+        let world_pos = map.coord_to_world(entry.coord);
+        spawn_unit_from_template(
             &mut commands,
             world_pos,
-            Faction::Enemy,
-            name,
-            coord,
-            skill_ids,
-            class_tag,
-            hp,
-            max_hp,
-            atk,
-            def,
-            mov,
-            attack_range,
+            template,
+            entry.coord,
             tile_size,
             bar_width,
             bar_height,
@@ -135,27 +121,17 @@ pub fn spawn_units(mut commands: Commands, map: Res<GameMap>, cn_font: Res<CnFon
     }
 }
 
-#[allow(clippy::too_many_arguments)]
-fn spawn_unit(
+fn spawn_unit_from_template(
     commands: &mut Commands,
     world_pos: Vec2,
-    faction: Faction,
-    name: &str,
+    template: &crate::data::unit_template::UnitTemplate,
     coord: IVec2,
-    skill_ids: Vec<&str>,
-    class_tag: GameplayTag,
-    hp: i32,
-    max_hp: i32,
-    atk: i32,
-    def: i32,
-    mov: u32,
-    attack_range: u32,
     tile_size: f32,
     bar_width: f32,
     bar_height: f32,
     font: &Handle<Font>,
 ) {
-    let label: String = name.chars().take(1).collect();
+    let label: String = template.name.chars().take(1).collect();
     let unit_font = TextFont {
         font: font.clone(),
         font_size: 18.0,
@@ -164,28 +140,25 @@ fn spawn_unit(
 
     // 构建 Attributes
     let mut attributes = Attributes::default();
-    attributes.set_base(AttributeKind::Hp, hp as f32);
-    attributes.set_base(AttributeKind::MaxHp, max_hp as f32);
-    attributes.set_base(AttributeKind::Atk, atk as f32);
-    attributes.set_base(AttributeKind::Def, def as f32);
-    attributes.set_base(AttributeKind::Mov, mov as f32);
-    attributes.set_base(AttributeKind::AttackRange, attack_range as f32);
+    for (kind, value) in &template.base_attributes {
+        attributes.set_base(*kind, *value);
+    }
 
     // 构建 GameplayTags
     let mut gameplay_tags = GameplayTags::default();
-    gameplay_tags.add(class_tag);
+    gameplay_tags.add(template.class_tag);
 
     // 构建 SkillSlots
-    let skill_slots = SkillSlots::new(skill_ids.into_iter().map(String::from).collect());
+    let skill_slots = SkillSlots::new(template.skill_ids.clone());
 
     commands.spawn((
-        Sprite::from_color(faction.unit_color(), Vec2::splat(tile_size * 0.6)),
+        Sprite::from_color(template.faction.unit_color(), Vec2::splat(tile_size * 0.6)),
         Transform::from_xyz(world_pos.x, world_pos.y, 1.0),
         Unit {
-            faction,
+            faction: template.faction,
             acted: false,
         },
-        UnitName(name.to_string()),
+        UnitName(template.name.clone()),
         GridPosition { coord },
         attributes,
         gameplay_tags,

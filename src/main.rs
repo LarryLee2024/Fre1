@@ -29,6 +29,7 @@ use combat_log::CombatLogPlugin;
 use core::effect::EffectPlugin;
 use data::buff_data::BuffDataPlugin;
 use data::skill_data::SkillDataPlugin;
+use data::unit_template::UnitTemplatePlugin;
 use input::InputPlugin;
 use map::MapPlugin;
 use status::StatusPlugin;
@@ -54,6 +55,7 @@ fn main() {
             EffectPlugin,
             SkillDataPlugin,
             BuffDataPlugin,
+            UnitTemplatePlugin,
             // 游戏插件
             AssetsPlugin,
             TurnPlugin,

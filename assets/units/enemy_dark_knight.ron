@@ -1,0 +1,12 @@
+(
+    id: "enemy_dark_knight",
+    name: "暗骑士",
+    faction: Enemy,
+    class_tag: WARRIOR,
+    base_attributes: {
+        Hp: 35.0, MaxHp: 35.0,
+        Atk: 12.0, Def: 6.0,
+        Mov: 3.0, AttackRange: 1.0,
+    },
+    skill_ids: ["basic_attack", "charge"],
+)

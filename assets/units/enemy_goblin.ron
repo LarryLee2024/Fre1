@@ -1,0 +1,12 @@
+(
+    id: "enemy_goblin",
+    name: "哥布林",
+    faction: Enemy,
+    class_tag: WARRIOR,
+    base_attributes: {
+        Hp: 20.0, MaxHp: 20.0,
+        Atk: 7.0, Def: 3.0,
+        Mov: 4.0, AttackRange: 1.0,
+    },
+    skill_ids: ["basic_attack"],
+)
