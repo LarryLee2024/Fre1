@@ -1,6 +1,6 @@
 // 角色组件定义：单位身份、阵营、位置、标记等
 
-use crate::core::tag::GameplayTags;
+use crate::gameplay::tag::GameplayTags;
 use bevy::prelude::*;
 
 /// 阵营

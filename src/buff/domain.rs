@@ -1,5 +1,5 @@
-use crate::core::attribute::{AttributeKind, AttributeModifierDef, ModifierOp};
-use crate::core::tag::{GameplayTag, TagName};
+use crate::gameplay::attribute::{AttributeKind, AttributeModifierDef, ModifierOp};
+use crate::gameplay::tag::{GameplayTag, TagName};
 use bevy::prelude::*;
 use ron::de::from_bytes;
 use serde::Deserialize;

@@ -1,7 +1,7 @@
 // 属性定义注册表：属性元数据外部化，支持 UI 自动生成
 // AttributeKind 仍为枚举（运行时类型安全），显示元数据从 RON 加载
 
-use crate::core::attribute::AttributeKind;
+use crate::gameplay::attribute::AttributeKind;
 use bevy::prelude::*;
 use ron::de::from_bytes;
 use serde::Deserialize;

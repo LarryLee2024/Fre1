@@ -4,7 +4,7 @@
 use crate::ui::{ActionMenuEntity, cancel_move, spawn_action_menu};
 use crate::battle::manhattan_distance;
 use crate::battle::{CombatIntent, PrevPosition};
-use crate::core::attribute::{AttributeKind, Attributes};
+use crate::gameplay::attribute::{AttributeKind, Attributes};
 use crate::skill::{effective_skill_range, BASIC_ATTACK_ID, SkillRegistry, SkillSlots};
 use crate::map::{GameMap, Tile};
 use crate::map::{build_tile_terrain_map, find_reachable_tiles};

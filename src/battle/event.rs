@@ -3,12 +3,12 @@
 
 use crate::assets::CnFont;
 use crate::battle::log::{CombatLog, LogSegment, log_color};
-use crate::core::attribute::{AttributeKind, Attributes};
-use crate::core::effect::{
+use crate::gameplay::attribute::{AttributeKind, Attributes};
+use crate::gameplay::effect::{
     EffectDef, EffectQueue, PendingEffect, PendingEffectData, calculate_damage_from_effect,
 };
-use crate::core::modifier_rule::ModifierRuleRegistry;
-use crate::core::tag::GameplayTags;
+use crate::gameplay::modifier_rule::ModifierRuleRegistry;
+use crate::gameplay::tag::GameplayTags;
 use crate::buff::{ActiveBuffs, BuffRegistry, apply_buff};
 use crate::skill::{BASIC_ATTACK_ID, SkillCooldowns, SkillRegistry};
 use crate::map::{GameMap, Tile};
@@ -79,7 +79,7 @@ pub fn generate_combat_effects(
     };
 
     // 晕眩检查
-    if source_tags.has(crate::core::tag::GameplayTag::STUN) {
+    if source_tags.has(crate::gameplay::tag::GameplayTag::STUN) {
         return;
     }
 
@@ -462,7 +462,7 @@ pub fn execute_action_on_enter(
 
     if let Ok((entity, mut unit, _pos, _name, tags, mut cooldowns)) = selected_units.single_mut() {
         // 晕眩检查
-        if tags.has(crate::core::tag::GameplayTag::STUN) {
+        if tags.has(crate::gameplay::tag::GameplayTag::STUN) {
             unit.acted = true;
             commands.entity(entity).remove::<Selected>();
             next_phase.set(crate::turn::TurnPhase::TurnEnd);

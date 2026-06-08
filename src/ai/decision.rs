@@ -1,12 +1,12 @@
 use crate::assets::CnFont;
 use crate::battle::manhattan_distance;
 use crate::battle::CombatLog;
-use crate::core::attribute::{AttributeKind, Attributes};
-use crate::core::effect::{
+use crate::gameplay::attribute::{AttributeKind, Attributes};
+use crate::gameplay::effect::{
     EffectDef, EffectQueue, PendingEffect, PendingEffectData, calculate_damage_from_effect,
 };
-use crate::core::modifier_rule::ModifierRuleRegistry;
-use crate::core::tag::GameplayTags;
+use crate::gameplay::modifier_rule::ModifierRuleRegistry;
+use crate::gameplay::tag::GameplayTags;
 use crate::buff::{ActiveBuffs, BuffRegistry};
 use crate::skill::{
     BASIC_ATTACK_ID, SkillCooldowns, SkillRegistry, SkillSlots, effective_skill_range,

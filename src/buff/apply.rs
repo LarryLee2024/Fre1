@@ -1,5 +1,5 @@
-use crate::core::attribute::{Attributes, BuffInstanceId};
-use crate::core::tag::GameplayTags;
+use crate::gameplay::attribute::{Attributes, BuffInstanceId};
+use crate::gameplay::tag::GameplayTags;
 use super::domain::BuffData;
 use super::instance::{ActiveBuffs, BuffInstance};
 use bevy::prelude::*;
@@ -57,7 +57,7 @@ pub fn remove_buff(
         attributes.remove_modifiers_from(instance_id);
 
         // 移除标签（仅当没有其他 Buff 提供相同标签时）
-        let remaining_tags: Vec<crate::core::tag::GameplayTag> = active_buffs
+        let remaining_tags: Vec<crate::gameplay::tag::GameplayTag> = active_buffs
             .instances
             .iter()
             .flat_map(|b| b.tags.iter())
@@ -91,8 +91,8 @@ pub fn remove_all_debuffs(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::attribute::{AttributeKind, AttributeModifierDef, ModifierOp};
-    use crate::core::tag::GameplayTag;
+    use crate::gameplay::attribute::{AttributeKind, AttributeModifierDef, ModifierOp};
+    use crate::gameplay::tag::GameplayTag;
 
     /// 辅助：创建一个简单的 BuffData
     fn make_buff(id: &str, is_buff: bool, modifiers: Vec<AttributeModifierDef>, tags: Vec<GameplayTag>) -> BuffData {

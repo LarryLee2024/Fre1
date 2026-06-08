@@ -1,7 +1,7 @@
 // 行动菜单模块：弹出式行动菜单，使用 SkillSlots 动态生成按钮
 
 use crate::battle::{CombatIntent, PrevPosition};
-use crate::core::attribute::{AttributeKind, Attributes};
+use crate::gameplay::attribute::{AttributeKind, Attributes};
 use crate::skill::{effective_skill_range, BASIC_ATTACK_ID, SkillRegistry, SkillSlots};
 use crate::input;
 use crate::map::GameMap;

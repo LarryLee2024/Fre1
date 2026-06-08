@@ -1,5 +1,5 @@
-use crate::core::attribute::BuffInstanceId;
-use crate::core::tag::GameplayTag;
+use crate::gameplay::attribute::BuffInstanceId;
+use crate::gameplay::tag::GameplayTag;
 use bevy::prelude::*;
 
 /// 运行时 Buff 实例

@@ -1,7 +1,7 @@
 // 修饰规则：数据驱动的效果修饰系统
 // 替代 modify_effects 中的硬编码 if-else
 
-use crate::core::tag::{GameplayTag, TagName};
+use crate::gameplay::tag::{GameplayTag, TagName};
 use bevy::prelude::*;
 use ron::de::from_bytes;
 use serde::Deserialize;
@@ -116,7 +116,7 @@ impl ModifierRuleRegistry {
         &self,
         amount: i32,
         source_tags: &[GameplayTag],
-        target_tags: &crate::core::tag::GameplayTags,
+        target_tags: &crate::gameplay::tag::GameplayTags,
     ) -> i32 {
         let mut result = amount as f32;
         for rule in &self.rules {
@@ -153,7 +153,7 @@ impl Plugin for ModifierRulePlugin {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::tag::GameplayTags;
+    use crate::gameplay::tag::GameplayTags;
 
     #[test]
     fn ron_反序列化_修饰规则() {

@@ -1,7 +1,7 @@
 // 效果管道：EffectDef → PendingEffect → 修饰 → 执行
 // 替代 combat_event.rs 中的 execute_attack 大函数
 
-use crate::core::tag::GameplayTag;
+use crate::gameplay::tag::GameplayTag;
 use crate::map::Terrain;
 use bevy::prelude::*;
 use serde::Deserialize;

@@ -1,8 +1,8 @@
 // 单位模板：数据驱动的单位定义，替代硬编码数组
 // 支持从 assets/units/*.ron 外部配置文件加载
 
-use crate::core::attribute::AttributeKind;
-use crate::core::tag::{GameplayTag, TagName};
+use crate::gameplay::attribute::AttributeKind;
+use crate::gameplay::tag::{GameplayTag, TagName};
 use crate::skill::BASIC_ATTACK_ID;
 use super::components::Faction;
 use bevy::prelude::*;

@@ -1,8 +1,8 @@
 // 单位生成系统：从模板生成初始单位
 
 use crate::assets::CnFont;
-use crate::core::attribute::Attributes;
-use crate::core::tag::{GameplayTag, GameplayTags};
+use crate::gameplay::attribute::Attributes;
+use crate::gameplay::tag::{GameplayTag, GameplayTags};
 use crate::buff::ActiveBuffs;
 use crate::map::LevelRegistry;
 use crate::skill::{SkillCooldowns, SkillSlots};

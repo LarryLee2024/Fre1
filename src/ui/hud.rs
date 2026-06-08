@@ -3,7 +3,7 @@
 
 use crate::assets::CnFont;
 use crate::battle::CombatLogPanel;
-use crate::core::attribute::{AttributeKind, Attributes};
+use crate::gameplay::attribute::{AttributeKind, Attributes};
 use crate::buff::ActiveBuffs;
 use crate::skill::{SkillRegistry, SkillSlots};
 use crate::turn::{AppState, TurnPhase, TurnState};

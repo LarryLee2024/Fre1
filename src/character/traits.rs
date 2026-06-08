@@ -2,8 +2,8 @@
 // 替代硬编码的 class_tag 单标签，支持多 trait 组合
 // 支持从 assets/traits/*.ron 外部配置文件加载
 
-use crate::core::attribute::{AttributeModifierDef, AttributeModifierInstance, BuffInstanceId};
-use crate::core::tag::{GameplayTag, GameplayTags, TagName};
+use crate::gameplay::attribute::{AttributeModifierDef, AttributeModifierInstance, BuffInstanceId};
+use crate::gameplay::tag::{GameplayTag, GameplayTags, TagName};
 use bevy::prelude::*;
 use ron::de::from_bytes;
 use serde::Deserialize;
@@ -265,8 +265,8 @@ impl TraitRegistry {
                 trigger: TraitTrigger::Passive,
                 effects: vec![
                     TraitEffectDef::ModifyAttribute(AttributeModifierDef {
-                        kind: crate::core::attribute::AttributeKind::Def,
-                        op: crate::core::attribute::ModifierOp::Add,
+                        kind: crate::gameplay::attribute::AttributeKind::Def,
+                        op: crate::gameplay::attribute::ModifierOp::Add,
                         value: 3.0,
                     }),
                 ],
@@ -293,7 +293,7 @@ impl Plugin for TraitPlugin {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::attribute::{AttributeKind, ModifierOp};
+    use crate::gameplay::attribute::{AttributeKind, ModifierOp};
 
     #[test]
     fn ron_反序列化_trait定义() {

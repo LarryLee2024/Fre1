@@ -4,7 +4,7 @@ mod battle;
 mod buff;
 mod camera;
 mod character;
-mod core;
+mod gameplay;
 mod input;
 mod map;
 mod skill;
@@ -12,8 +12,8 @@ mod status;
 mod turn;
 mod ui;
 
-use ai::AiPlugin;
 use ai::AiBehaviorPlugin;
+use ai::AiPlugin;
 use assets::AssetsPlugin;
 use battle::BattlePlugin;
 use bevy::prelude::*;
@@ -22,11 +22,12 @@ use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use buff::BuffPlugin;
 use camera::CameraPlugin;
 use character::CharacterPlugin;
-use core::attribute_def::AttributeDefPlugin;
-use core::effect::EffectPlugin;
-use core::modifier_rule::ModifierRulePlugin;
-use core::tag_def::TagDefPlugin;
+use gameplay::attribute_def::AttributeDefPlugin;
+use gameplay::effect::EffectPlugin;
+use gameplay::modifier_rule::ModifierRulePlugin;
+use gameplay::tag_def::TagDefPlugin;
 use input::InputPlugin;
+use map::MapPlugin;
 use skill::SkillPlugin;
 use status::StatusPlugin;
 use turn::{AppState, TurnPlugin};
@@ -44,11 +45,7 @@ fn main() {
         }))
         .add_plugins((EguiPlugin::default(), WorldInspectorPlugin::new()))
         // 数据层插件
-        .add_plugins((
-            SkillPlugin,
-            BuffPlugin,
-            AiBehaviorPlugin,
-        ))
+        .add_plugins((SkillPlugin, BuffPlugin, AiBehaviorPlugin))
         // 核心层插件
         .add_plugins((
             EffectPlugin,
@@ -61,16 +58,14 @@ fn main() {
             AssetsPlugin,
             TurnPlugin,
             CameraPlugin,
+            MapPlugin,
             CharacterPlugin,
             BattlePlugin,
             AiPlugin,
             StatusPlugin,
         ))
         // 表现层插件
-        .add_plugins((
-            UiPlugin,
-            InputPlugin,
-        ))
+        .add_plugins((UiPlugin, InputPlugin))
         .add_systems(Startup, |mut next: ResMut<NextState<AppState>>| {
             next.set(AppState::InGame);
         })

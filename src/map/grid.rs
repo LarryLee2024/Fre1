@@ -244,7 +244,7 @@ pub struct MapGridPlugin;
 impl Plugin for MapGridPlugin {
     fn build(&self, app: &mut App) {
         use crate::turn::{AppState, GameSet};
-        app.init_resource::<GameMap>()
+        app.insert_resource(GameMap::default())
             .add_systems(OnEnter(AppState::InGame), spawn_map.in_set(GameSet::Map));
     }
 }

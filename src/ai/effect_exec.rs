@@ -3,9 +3,9 @@ use crate::battle::{
     apply_buff_effect, apply_cleanse_effect, apply_damage_effect, apply_heal_effect,
     CombatLog, log_color,
 };
-use crate::core::attribute::Attributes;
-use crate::core::effect::{EffectQueue, PendingEffectData};
-use crate::core::tag::GameplayTags;
+use crate::gameplay::attribute::Attributes;
+use crate::gameplay::effect::{EffectQueue, PendingEffectData};
+use crate::gameplay::tag::GameplayTags;
 use crate::buff::{ActiveBuffs, BuffRegistry};
 use crate::map::GameMap;
 use crate::skill::{SkillCooldowns, SkillSlots};

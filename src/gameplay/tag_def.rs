@@ -1,7 +1,7 @@
 // 标签定义注册表：标签元数据外部化，支持 UI 自动生成和标签查询
 // GameplayTag 仍为位掩码（运行时 O(1) 查询），显示元数据从 RON 加载
 
-use crate::core::tag::{GameplayTag, TagName};
+use crate::gameplay::tag::{GameplayTag, TagName};
 use bevy::prelude::*;
 use ron::de::from_bytes;
 use serde::Deserialize;

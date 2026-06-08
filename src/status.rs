@@ -3,9 +3,9 @@
 
 use crate::assets::CnFont;
 use crate::battle::{CombatLog, LogSegment, log_color};
-use crate::core::attribute::{AttributeKind, Attributes, BuffInstanceId};
-use crate::core::tag::GameplayTag;
-use crate::core::tag::GameplayTags;
+use crate::gameplay::attribute::{AttributeKind, Attributes, BuffInstanceId};
+use crate::gameplay::tag::GameplayTag;
+use crate::gameplay::tag::GameplayTags;
 use crate::buff::{remove_buff, ActiveBuffs};
 use crate::skill::SkillCooldowns;
 use crate::map::GameMap;

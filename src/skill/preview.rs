@@ -1,5 +1,5 @@
-use crate::core::attribute::AttributeKind;
-use crate::core::effect::{EffectDef, calculate_damage_from_effect};
+use crate::gameplay::attribute::AttributeKind;
+use crate::gameplay::effect::{EffectDef, calculate_damage_from_effect};
 use crate::buff::BuffRegistry;
 use bevy::prelude::*;
 
@@ -13,10 +13,10 @@ pub struct SkillExecutionContext {
     pub source: Entity,
     pub target: Entity,
     pub skill_id: String,
-    pub source_attrs: crate::core::attribute::Attributes,
-    pub target_attrs: crate::core::attribute::Attributes,
-    pub source_tags: crate::core::tag::GameplayTags,
-    pub target_tags: crate::core::tag::GameplayTags,
+    pub source_attrs: crate::gameplay::attribute::Attributes,
+    pub target_attrs: crate::gameplay::attribute::Attributes,
+    pub source_tags: crate::gameplay::tag::GameplayTags,
+    pub target_tags: crate::gameplay::tag::GameplayTags,
     pub terrain_defense_bonus: i32,
 }
 
@@ -26,10 +26,10 @@ impl SkillExecutionContext {
         source: Entity,
         target: Entity,
         skill_id: &str,
-        source_attrs: &crate::core::attribute::Attributes,
-        target_attrs: &crate::core::attribute::Attributes,
-        source_tags: &crate::core::tag::GameplayTags,
-        target_tags: &crate::core::tag::GameplayTags,
+        source_attrs: &crate::gameplay::attribute::Attributes,
+        target_attrs: &crate::gameplay::attribute::Attributes,
+        source_tags: &crate::gameplay::tag::GameplayTags,
+        target_tags: &crate::gameplay::tag::GameplayTags,
         terrain_defense_bonus: i32,
     ) -> Self {
         Self {
@@ -132,15 +132,15 @@ pub fn preview_skill_effects(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::attribute::AttributeKind;
-    use crate::core::tag::GameplayTags;
+    use crate::gameplay::attribute::AttributeKind;
+    use crate::gameplay::tag::GameplayTags;
     use super::super::domain::{BASIC_ATTACK_ID, SkillTargeting};
 
     #[test]
     fn 预览_伤害预览() {
-        let mut source_attrs = crate::core::attribute::Attributes::default();
+        let mut source_attrs = crate::gameplay::attribute::Attributes::default();
         source_attrs.set_base(AttributeKind::Atk, 10.0);
-        let mut target_attrs = crate::core::attribute::Attributes::default();
+        let mut target_attrs = crate::gameplay::attribute::Attributes::default();
         target_attrs.set_base(AttributeKind::Def, 3.0);
         target_attrs.set_base(AttributeKind::Hp, 20.0);
 
@@ -150,8 +150,8 @@ mod tests {
             skill_id: BASIC_ATTACK_ID.into(),
             source_attrs,
             target_attrs,
-            source_tags: crate::core::tag::GameplayTags::default(),
-            target_tags: crate::core::tag::GameplayTags::default(),
+            source_tags: crate::gameplay::tag::GameplayTags::default(),
+            target_tags: crate::gameplay::tag::GameplayTags::default(),
             terrain_defense_bonus: 0,
         };
 
@@ -187,9 +187,9 @@ mod tests {
 
     #[test]
     fn 预览_致死伤害标记() {
-        let mut source_attrs = crate::core::attribute::Attributes::default();
+        let mut source_attrs = crate::gameplay::attribute::Attributes::default();
         source_attrs.set_base(AttributeKind::Atk, 50.0);
-        let mut target_attrs = crate::core::attribute::Attributes::default();
+        let mut target_attrs = crate::gameplay::attribute::Attributes::default();
         target_attrs.set_base(AttributeKind::Def, 3.0);
         target_attrs.set_base(AttributeKind::Hp, 5.0);
 
@@ -199,8 +199,8 @@ mod tests {
             skill_id: BASIC_ATTACK_ID.into(),
             source_attrs,
             target_attrs,
-            source_tags: crate::core::tag::GameplayTags::default(),
-            target_tags: crate::core::tag::GameplayTags::default(),
+            source_tags: crate::gameplay::tag::GameplayTags::default(),
+            target_tags: crate::gameplay::tag::GameplayTags::default(),
             terrain_defense_bonus: 0,
         };
 
@@ -230,8 +230,8 @@ mod tests {
 
     #[test]
     fn 预览_治疗预览() {
-        let mut source_attrs = crate::core::attribute::Attributes::default();
-        let mut target_attrs = crate::core::attribute::Attributes::default();
+        let mut source_attrs = crate::gameplay::attribute::Attributes::default();
+        let mut target_attrs = crate::gameplay::attribute::Attributes::default();
         target_attrs.set_base(AttributeKind::Hp, 12.0);
         target_attrs.set_base(AttributeKind::MaxHp, 20.0);
 
@@ -241,8 +241,8 @@ mod tests {
             skill_id: "heal".into(),
             source_attrs,
             target_attrs,
-            source_tags: crate::core::tag::GameplayTags::default(),
-            target_tags: crate::core::tag::GameplayTags::default(),
+            source_tags: crate::gameplay::tag::GameplayTags::default(),
+            target_tags: crate::gameplay::tag::GameplayTags::default(),
             terrain_defense_bonus: 0,
         };
 
@@ -269,8 +269,8 @@ mod tests {
 
     #[test]
     fn 预览_治疗不超过最大hp() {
-        let mut source_attrs = crate::core::attribute::Attributes::default();
-        let mut target_attrs = crate::core::attribute::Attributes::default();
+        let mut source_attrs = crate::gameplay::attribute::Attributes::default();
+        let mut target_attrs = crate::gameplay::attribute::Attributes::default();
         target_attrs.set_base(AttributeKind::Hp, 18.0);
         target_attrs.set_base(AttributeKind::MaxHp, 20.0);
 
@@ -280,8 +280,8 @@ mod tests {
             skill_id: "heal".into(),
             source_attrs,
             target_attrs,
-            source_tags: crate::core::tag::GameplayTags::default(),
-            target_tags: crate::core::tag::GameplayTags::default(),
+            source_tags: crate::gameplay::tag::GameplayTags::default(),
+            target_tags: crate::gameplay::tag::GameplayTags::default(),
             terrain_defense_bonus: 0,
         };
 
