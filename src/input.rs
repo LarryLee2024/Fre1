@@ -1,38 +1,26 @@
 // 输入处理模块：点击选择、移动、攻击分发
-// 使用 Attributes/SkillSlots 替代原 Unit 上的硬编码属性
+// 通过 UiCommand Message 发出用户意图，不直接修改游戏状态
 
-use crate::ui::{ActionMenuEntity, cancel_move, spawn_action_menu};
-use crate::battle::manhattan_distance;
-use crate::battle::{CombatIntent, PrevPosition};
-use crate::gameplay::attribute::{AttributeKind, Attributes};
-use crate::skill::{effective_skill_range, BASIC_ATTACK_ID, SkillRegistry, SkillSlots};
-use crate::map::{GameMap, Tile};
-use crate::map::{build_tile_terrain_map, find_reachable_tiles};
+use crate::map::GameMap;
 use crate::turn::{TurnPhase, TurnState};
-use crate::character::{
-    AttackRange, Faction, GridPosition, MovableRange, Selected, SelectionHighlight, Unit,
-};
+use crate::character::{AttackRange, Faction, GridPosition, MovableRange, Selected, SelectionHighlight, Unit};
+use crate::gameplay::attribute::{AttributeKind, Attributes};
+use crate::gameplay::tag::GameplayTags;
+use crate::skill::SkillSlots;
+use crate::ui::events::UiCommand;
+use bevy::ecs::message::MessageWriter;
 use bevy::prelude::*;
 
-/// 处理玩家点击
+/// 处理玩家点击：发送 UiCommand Message
 pub fn handle_click(
     mouse_button: Res<ButtonInput<MouseButton>>,
     windows: Query<&Window>,
     camera_query: Query<(&Camera, &GlobalTransform)>,
     map: Res<GameMap>,
-    tiles: Query<&Tile>,
-    units: Query<(Entity, &Unit, &GridPosition, &Transform, &Attributes, &SkillSlots)>,
+    units: Query<(Entity, &Unit, &GridPosition)>,
     turn_state: Res<TurnState>,
     turn_phase: Res<State<TurnPhase>>,
-    mut next_phase: ResMut<NextState<TurnPhase>>,
-    mut commands: Commands,
-    // 合并 range_markers + range_positions 为一个查询，减少参数数量
-    range_entities: Query<(Entity, Option<&GridPosition>), Or<(With<MovableRange>, With<AttackRange>)>>,
-    selected_query: Query<Entity, With<Selected>>,
-    highlights: Query<Entity, With<SelectionHighlight>>,
-    mut combat_intent: ResMut<CombatIntent>,
-    mut menu_entity: ResMut<ActionMenuEntity>,
-    skill_registry: Res<SkillRegistry>,
+    mut ui_commands: MessageWriter<UiCommand>,
 ) {
     if turn_state.current_faction != Faction::Player {
         return;
@@ -45,19 +33,16 @@ pub fn handle_click(
         return;
     }
 
-    // 右键处理
+    // 右键在 MoveUnit 阶段发送取消
     if right_clicked {
-        match turn_phase.get() {
-            TurnPhase::MoveUnit => {
-                clear_selection(&mut commands, &selected_query, &range_entities, &highlights);
-                combat_intent.target_coord = None;
-                next_phase.set(TurnPhase::SelectUnit);
-                return;
-            }
-            TurnPhase::ActionMenu | TurnPhase::SelectTarget => {
-                return;
-            }
-            _ => {}
+        if *turn_phase.get() == TurnPhase::MoveUnit {
+            ui_commands.write(UiCommand::Cancel);
+            return;
+        }
+        if *turn_phase.get() == TurnPhase::ActionMenu
+            || *turn_phase.get() == TurnPhase::SelectTarget
+        {
+            return;
         }
     }
 
@@ -72,100 +57,18 @@ pub fn handle_click(
 
     match turn_phase.get() {
         TurnPhase::SelectUnit => {
-            for (entity, unit, gp, _, _, _) in &units {
+            for (entity, unit, gp) in &units {
                 if unit.faction == Faction::Player && !unit.acted && gp.coord == coord {
-                    clear_selection(&mut commands, &selected_query, &range_entities, &highlights);
-                    commands.entity(entity).insert(Selected);
-                    show_move_range(&mut commands, &map, &tiles, &units, unit, gp.coord);
-                    spawn_selection_highlight(&mut commands, &map, gp.coord);
-                    next_phase.set(TurnPhase::MoveUnit);
+                    ui_commands.write(UiCommand::SelectUnit { entity });
                     return;
                 }
             }
         }
         TurnPhase::MoveUnit => {
-            let is_movable = range_entities.iter().any(|(_, gp)| gp.map(|g| g.coord == coord).unwrap_or(false));
-
-            if is_movable {
-                if let Ok(selected_entity) = selected_query.single() {
-                    if let Ok((_, _, old_gp, _, _, _)) = units.get(selected_entity) {
-                        commands.insert_resource(PrevPosition {
-                            coord: Some(old_gp.coord),
-                        });
-                    }
-
-                    let world_pos = map.coord_to_world(coord);
-                    commands
-                        .entity(selected_entity)
-                        .insert(Transform::from_xyz(world_pos.x, world_pos.y, 1.0))
-                        .insert(GridPosition { coord });
-                    for h in &highlights {
-                        commands.entity(h).try_despawn();
-                    }
-                    spawn_selection_highlight(&mut commands, &map, coord);
-                }
-            }
-
-            for (marker, _) in &range_entities {
-                commands.entity(marker).try_despawn();
-            }
-
-            show_action_menu_at_selected(
-                &mut commands,
-                &units,
-                &selected_query,
-                &map,
-                camera,
-                cam_transform,
-                &mut menu_entity,
-                &skill_registry,
-            );
-            next_phase.set(TurnPhase::ActionMenu);
+            ui_commands.write(UiCommand::MoveUnit { coord });
         }
         TurnPhase::SelectTarget => {
-            let mut clicked_enemy: Option<IVec2> = None;
-            for (_, unit, gp, _, _, _) in &units {
-                if unit.faction == Faction::Enemy && gp.coord == coord {
-                    clicked_enemy = Some(gp.coord);
-                    break;
-                }
-            }
-
-            if let Some(enemy_coord) = clicked_enemy {
-                if let Ok(selected_entity) = selected_query.single() {
-                    if let Ok((_, _, sel_gp, _, _, _sel_skills)) = units.get(selected_entity) {
-                        let skill_id = combat_intent
-                            .skill_id
-                            .as_deref()
-                            .unwrap_or(BASIC_ATTACK_ID);
-                        if let Some(skill_data) = skill_registry.get(skill_id) {
-                            let base_range = units
-                                .get(selected_entity)
-                                .map(|(_, _, _, _, attrs, _)| attrs.get(AttributeKind::AttackRange) as u32)
-                                .unwrap_or(1);
-                            let effective_range = effective_skill_range(skill_data, base_range);
-                            if manhattan_distance(sel_gp.coord, enemy_coord) <= effective_range {
-                                combat_intent.target_coord = Some(enemy_coord);
-                                next_phase.set(TurnPhase::ExecuteAction);
-                                return;
-                            }
-                        }
-                    }
-                }
-            }
-
-            clear_markers(&mut commands, &range_entities, &highlights);
-            show_action_menu_at_selected(
-                &mut commands,
-                &units,
-                &selected_query,
-                &map,
-                camera,
-                cam_transform,
-                &mut menu_entity,
-                &skill_registry,
-            );
-            next_phase.set(TurnPhase::ActionMenu);
+            ui_commands.write(UiCommand::SelectTarget { coord });
         }
         _ => {}
     }
@@ -176,18 +79,7 @@ pub fn handle_right_cancel(
     mouse_button: Res<ButtonInput<MouseButton>>,
     turn_state: Res<TurnState>,
     turn_phase: Res<State<TurnPhase>>,
-    mut next_phase: ResMut<NextState<TurnPhase>>,
-    mut commands: Commands,
-    map: Res<GameMap>,
-    camera_query: Query<(&Camera, &GlobalTransform)>,
-    units: Query<(Entity, &Unit, &GridPosition, &Transform, &Attributes, &SkillSlots)>,
-    selected_query: Query<Entity, With<Selected>>,
-    range_entities: Query<(Entity, Option<&GridPosition>), Or<(With<MovableRange>, With<AttackRange>)>>,
-    highlights: Query<Entity, With<SelectionHighlight>>,
-    prev_position: Res<PrevPosition>,
-    mut menu_entity: ResMut<ActionMenuEntity>,
-    mut combat_intent: ResMut<CombatIntent>,
-    skill_registry: Res<SkillRegistry>,
+    mut ui_commands: MessageWriter<UiCommand>,
 ) {
     if turn_state.current_faction != Faction::Player {
         return;
@@ -197,37 +89,8 @@ pub fn handle_right_cancel(
     }
 
     match turn_phase.get() {
-        TurnPhase::ActionMenu => {
-            cancel_move(
-                &mut commands,
-                &selected_query,
-                &range_entities,
-                &highlights,
-                &prev_position,
-                &map,
-                &mut menu_entity,
-            );
-            combat_intent.target_coord = None;
-            combat_intent.skill_id = None;
-            next_phase.set(TurnPhase::SelectUnit);
-        }
-        TurnPhase::SelectTarget => {
-            clear_markers(&mut commands, &range_entities, &highlights);
-            combat_intent.target_coord = None;
-            combat_intent.skill_id = None;
-            if let Ok((camera, cam_transform)) = camera_query.single() {
-                show_action_menu_at_selected(
-                    &mut commands,
-                    &units,
-                    &selected_query,
-                    &map,
-                    camera,
-                    cam_transform,
-                    &mut menu_entity,
-                    &skill_registry,
-                );
-            }
-            next_phase.set(TurnPhase::ActionMenu);
+        TurnPhase::ActionMenu | TurnPhase::SelectTarget => {
+            ui_commands.write(UiCommand::Cancel);
         }
         _ => {}
     }
@@ -238,12 +101,7 @@ pub fn handle_end_turn(
     keyboard: Res<ButtonInput<KeyCode>>,
     turn_state: Res<TurnState>,
     turn_phase: Res<State<TurnPhase>>,
-    mut units: Query<&mut Unit>,
-    mut next_phase: ResMut<NextState<TurnPhase>>,
-    mut commands: Commands,
-    selected_query: Query<Entity, With<Selected>>,
-    range_entities: Query<(Entity, Option<&GridPosition>), Or<(With<MovableRange>, With<AttackRange>)>>,
-    highlights: Query<Entity, With<SelectionHighlight>>,
+    mut ui_commands: MessageWriter<UiCommand>,
 ) {
     if turn_state.current_faction != Faction::Player {
         return;
@@ -255,18 +113,10 @@ pub fn handle_end_turn(
         return;
     }
 
-    clear_selection(&mut commands, &selected_query, &range_entities, &highlights);
-
-    for mut unit in units.iter_mut() {
-        if unit.faction == Faction::Player {
-            unit.acted = true;
-        }
-    }
-
-    next_phase.set(TurnPhase::TurnEnd);
+    ui_commands.write(UiCommand::EndTurn);
 }
 
-// ── 公共辅助函数 ──
+// ── 公共辅助函数（供 command_handler 调用）──
 
 /// 屏幕光标 → 格子坐标
 pub fn cursor_to_coord(
@@ -284,35 +134,6 @@ pub fn cursor_to_coord(
         .ok()?;
     let coord = map.world_to_coord(world_pos);
     map.is_in_bounds(coord).then_some(coord)
-}
-
-/// 在选中单位位置弹出行动菜单
-pub fn show_action_menu_at_selected(
-    commands: &mut Commands,
-    units: &Query<(Entity, &Unit, &GridPosition, &Transform, &Attributes, &SkillSlots)>,
-    selected_query: &Query<Entity, With<Selected>>,
-    map: &GameMap,
-    camera: &Camera,
-    cam_transform: &GlobalTransform,
-    menu_entity: &mut ActionMenuEntity,
-    skill_registry: &SkillRegistry,
-) {
-    if let Ok(selected_entity) = selected_query.single() {
-        if let Ok((_, unit, gp, _, _, skill_slots)) = units.get(selected_entity) {
-            let unit_world = map.coord_to_world(gp.coord);
-            if let Ok(screen_pos) = camera.world_to_viewport(cam_transform, unit_world.extend(1.0)) {
-                spawn_action_menu(
-                    commands,
-                    screen_pos.x,
-                    screen_pos.y,
-                    unit,
-                    skill_slots,
-                    menu_entity,
-                    skill_registry,
-                );
-            }
-        }
-    }
 }
 
 /// 清除范围标记和高亮
@@ -341,15 +162,20 @@ pub fn clear_selection(
 pub fn show_move_range(
     commands: &mut Commands,
     map: &GameMap,
-    tiles: &Query<&Tile>,
-    units: &Query<(Entity, &Unit, &GridPosition, &Transform, &Attributes, &SkillSlots)>,
+    terrain_map: &std::collections::HashMap<IVec2, (crate::map::Terrain, Option<u32>)>,
+    units: &Query<(Entity, &Unit, &GridPosition, &Transform, &Attributes, &SkillSlots, &GameplayTags)>,
     unit: &Unit,
     start_coord: IVec2,
+    calculator: &dyn crate::map::TerrainCostCalculator,
 ) {
-    let terrain_map = build_tile_terrain_map(tiles);
+    use crate::map::find_reachable_tiles;
+    use crate::ui::theme::UiTheme;
+
+    let theme = UiTheme::default();
+
     let occupation_units: Vec<(IVec2, Faction)> = units
         .iter()
-        .map(|(_, u, gp, _, _, _)| (gp.coord, u.faction))
+        .map(|(_, u, gp, _, _, _, _)| (gp.coord, u.faction))
         .collect();
     let occupation_map: std::collections::HashMap<IVec2, bool> = occupation_units
         .iter()
@@ -357,21 +183,20 @@ pub fn show_move_range(
         .map(|(coord, _)| (*coord, true))
         .collect();
 
-    // 从 Attributes 获取移动力
     let move_points = units
         .iter()
-        .find(|(_, u, gp, _, _, _)| u.faction == unit.faction && gp.coord == start_coord)
-        .map(|(_, _, _, _, attrs, _)| attrs.get(AttributeKind::Mov) as u32)
+        .find(|(_, u, gp, _, _, _, _)| u.faction == unit.faction && gp.coord == start_coord)
+        .map(|(_, _, _, _, attrs, _, _)| attrs.get(AttributeKind::Mov) as u32)
         .unwrap_or(3);
 
-    let reachable = find_reachable_tiles(start_coord, move_points, map, &terrain_map, &occupation_map);
+    let reachable = find_reachable_tiles(start_coord, move_points, map, terrain_map, &occupation_map, calculator);
     let tile_size = map.tile_size;
 
     for (coord, _) in reachable {
         let world_pos = map.coord_to_world(coord);
         commands.spawn((
             Sprite {
-                color: Color::srgba(0.3, 0.6, 1.0, 0.4),
+                color: theme.movable_range,
                 custom_size: Some(Vec2::splat(tile_size - 2.0)),
                 ..default()
             },
@@ -384,6 +209,9 @@ pub fn show_move_range(
 
 /// 显示攻击范围
 pub fn show_attack_range(commands: &mut Commands, map: &GameMap, center: IVec2, range: u32) {
+    use crate::ui::theme::UiTheme;
+
+    let theme = UiTheme::default();
     let tile_size = map.tile_size;
     let range_i32 = range as i32;
 
@@ -399,7 +227,7 @@ pub fn show_attack_range(commands: &mut Commands, map: &GameMap, center: IVec2, 
             let world_pos = map.coord_to_world(coord);
             commands.spawn((
                 Sprite {
-                    color: Color::srgba(1.0, 0.3, 0.2, 0.35),
+                    color: theme.attack_range,
                     custom_size: Some(Vec2::splat(tile_size - 2.0)),
                     ..default()
                 },
@@ -413,11 +241,14 @@ pub fn show_attack_range(commands: &mut Commands, map: &GameMap, center: IVec2, 
 
 /// 生成选中高亮
 pub fn spawn_selection_highlight(commands: &mut Commands, map: &GameMap, coord: IVec2) {
+    use crate::ui::theme::UiTheme;
+
+    let theme = UiTheme::default();
     let world_pos = map.coord_to_world(coord);
     let tile_size = map.tile_size;
     commands.spawn((
         Sprite {
-            color: Color::srgba(1.0, 1.0, 0.3, 0.5),
+            color: theme.selection_highlight,
             custom_size: Some(Vec2::splat(tile_size * 0.75)),
             ..default()
         },

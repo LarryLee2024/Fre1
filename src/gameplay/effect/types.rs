@@ -1,5 +1,5 @@
-// 效果管道：EffectDef → PendingEffect → 修饰 → 执行
-// 替代 combat_event.rs 中的 execute_attack 大函数
+// 效果管道数据类型：EffectDef、PendingEffectData、EffectResult、EffectQueue
+// 从原 effect.rs 迁移，保留 RON 反序列化支持
 
 use crate::gameplay::tag::GameplayTag;
 use crate::map::Terrain;
@@ -22,6 +22,19 @@ pub enum EffectDef {
         duration: u32,
     },
     Cleanse,
+}
+
+impl EffectDef {
+    /// 返回效果类型名（与 EffectHandler::type_name 对应）
+    /// 用于 trait 分发查找，新增效果类型需保证 type_name 与注册的 handler 一致
+    pub fn type_name(&self) -> &'static str {
+        match self {
+            Self::Damage { .. } => "Damage",
+            Self::Heal { .. } => "Heal",
+            Self::ApplyBuff { .. } => "ApplyBuff",
+            Self::Cleanse => "Cleanse",
+        }
+    }
 }
 
 /// 待处理效果（运行时，进入 EffectQueue）
@@ -49,6 +62,19 @@ pub enum PendingEffectData {
         duration: u32,
     },
     Cleanse,
+}
+
+impl PendingEffectData {
+    /// 返回效果类型名（与 EffectDef::type_name 对应）
+    /// 为未来 execute 阶段 trait 化做准备
+    pub fn type_name(&self) -> &'static str {
+        match self {
+            Self::Damage { .. } => "Damage",
+            Self::Heal { .. } => "Heal",
+            Self::ApplyBuff { .. } => "ApplyBuff",
+            Self::Cleanse => "Cleanse",
+        }
+    }
 }
 
 /// 效果执行结果
@@ -101,15 +127,6 @@ pub fn calculate_damage_from_effect(
     let base_damage = effective_atk - final_def;
     let terrain_bonus = terrain_defense_bonus as f32;
     ((base_damage - terrain_bonus) * multiplier).max(1.0) as i32
-}
-
-/// 效果管道插件
-pub struct EffectPlugin;
-
-impl Plugin for EffectPlugin {
-    fn build(&self, app: &mut App) {
-        app.init_resource::<EffectQueue>();
-    }
 }
 
 #[cfg(test)]
@@ -209,5 +226,21 @@ mod tests {
         });
         queue.clear();
         assert!(queue.is_empty());
+    }
+
+    #[test]
+    fn effect_def_type_name() {
+        assert_eq!(EffectDef::Damage { multiplier: 1.0, ignore_def_percent: 0.0 }.type_name(), "Damage");
+        assert_eq!(EffectDef::Heal { amount: 5 }.type_name(), "Heal");
+        assert_eq!(EffectDef::ApplyBuff { buff_id: "burn".into(), duration: 2 }.type_name(), "ApplyBuff");
+        assert_eq!(EffectDef::Cleanse.type_name(), "Cleanse");
+    }
+
+    #[test]
+    fn pending_effect_data_type_name() {
+        assert_eq!(PendingEffectData::Damage { amount: 5, is_skill: false }.type_name(), "Damage");
+        assert_eq!(PendingEffectData::Heal { amount: 5 }.type_name(), "Heal");
+        assert_eq!(PendingEffectData::ApplyBuff { buff_id: "burn".into(), duration: 2 }.type_name(), "ApplyBuff");
+        assert_eq!(PendingEffectData::Cleanse.type_name(), "Cleanse");
     }
 }

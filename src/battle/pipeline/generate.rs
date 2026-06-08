@@ -1,14 +1,13 @@
 // 步骤 1：生成战斗效果（从技能定义 + 属性计算）
 // 同时支持玩家（Selected）和 AI（CombatIntent.source_entity）
+// 使用 EffectHandlerRegistry trait 分发，新增效果类型无需修改此文件
 
-use crate::gameplay::attribute::{AttributeKind, Attributes};
-use crate::gameplay::effect::{
-    EffectDef, EffectQueue, PendingEffect, PendingEffectData, calculate_damage_from_effect,
-};
+use crate::character::{GridPosition, Selected, Unit, UnitName};
+use crate::gameplay::attribute::Attributes;
+use crate::gameplay::effect::{EffectHandlerRegistry, EffectQueue, GenerateContext, PendingEffect};
 use crate::gameplay::tag::GameplayTags;
-use crate::skill::{BASIC_ATTACK_ID, SkillCooldowns, SkillRegistry};
 use crate::map::Tile;
-use crate::character::{Faction, GridPosition, Selected, Unit, UnitName};
+use crate::skill::{BASIC_ATTACK_ID, SkillCooldowns, SkillRegistry};
 use bevy::prelude::*;
 
 use super::intent::CombatIntent;
@@ -20,6 +19,7 @@ use super::intent::CombatIntent;
 /// - AI：通过 CombatIntent.source_entity 查找攻击者
 pub fn generate_combat_effects(
     mut queue: ResMut<EffectQueue>,
+    handler_registry: Res<EffectHandlerRegistry>,
     // 玩家攻击者（Selected）
     selected_units: Query<
         (
@@ -34,29 +34,25 @@ pub fn generate_combat_effects(
         With<Selected>,
     >,
     // 所有单位（用于查找 AI 攻击者和目标）
-    all_units: Query<
-        (
-            Entity,
-            &Unit,
-            &GridPosition,
-            &UnitName,
-            &Attributes,
-            &GameplayTags,
-            &SkillCooldowns,
-        ),
-    >,
+    all_units: Query<(
+        Entity,
+        &Unit,
+        &GridPosition,
+        &UnitName,
+        &Attributes,
+        &GameplayTags,
+        &SkillCooldowns,
+    )>,
     // 目标单位（含 Transform，仅用于兼容）
-    targets: Query<
-        (
-            Entity,
-            &Unit,
-            &GridPosition,
-            &UnitName,
-            &Attributes,
-            &GameplayTags,
-            &Transform,
-        ),
-    >,
+    targets: Query<(
+        Entity,
+        &Unit,
+        &GridPosition,
+        &UnitName,
+        &Attributes,
+        &GameplayTags,
+        &Transform,
+    )>,
     tiles: Query<&Tile>,
     combat_intent: Res<CombatIntent>,
     skill_registry: Res<SkillRegistry>,
@@ -126,69 +122,33 @@ pub fn generate_combat_effects(
         let defense_bonus = tile.defense_bonus;
 
         for effect_def in &skill_data.effects {
-            match effect_def {
-                EffectDef::Damage {
-                    multiplier,
-                    ignore_def_percent,
-                } => {
-                    let effective_atk = source_attrs.get(AttributeKind::Atk);
-                    let effective_def = target_attrs.get(AttributeKind::Def);
-                    let base_def = target_attrs
-                        .base
-                        .get(&AttributeKind::Def)
-                        .copied()
-                        .unwrap_or(0.0);
+            // 通过 EffectHandlerRegistry trait 分发，新增效果类型无需修改此处
+            if let Some(handler) = handler_registry.find(effect_def.type_name()) {
+                let ctx = GenerateContext {
+                    source_entity,
+                    target_entity,
+                    source_attrs: source_attrs.clone(),
+                    target_attrs: target_attrs.clone(),
+                    defense_bonus,
+                    skill_id: skill_id.to_string(),
+                    source_tags: skill_data.tags.clone(),
+                    terrain,
+                };
 
-                    let amount = calculate_damage_from_effect(
-                        effective_atk,
-                        effective_def,
-                        base_def,
-                        *multiplier,
-                        *ignore_def_percent,
-                        defense_bonus,
-                    );
-
+                if let Some(data) = handler.generate(effect_def, &ctx) {
                     queue.push(PendingEffect {
                         source: source_entity,
                         target: target_entity,
-                        data: PendingEffectData::Damage {
-                            amount,
-                            is_skill: skill_id != BASIC_ATTACK_ID,
-                        },
+                        data,
                         source_tags: skill_data.tags.clone(),
                         terrain,
                     });
                 }
-                EffectDef::Heal { amount } => {
-                    queue.push(PendingEffect {
-                        source: source_entity,
-                        target: target_entity,
-                        data: PendingEffectData::Heal { amount: *amount },
-                        source_tags: skill_data.tags.clone(),
-                        terrain,
-                    });
-                }
-                EffectDef::ApplyBuff { buff_id, duration } => {
-                    queue.push(PendingEffect {
-                        source: source_entity,
-                        target: target_entity,
-                        data: PendingEffectData::ApplyBuff {
-                            buff_id: buff_id.clone(),
-                            duration: *duration,
-                        },
-                        source_tags: skill_data.tags.clone(),
-                        terrain,
-                    });
-                }
-                EffectDef::Cleanse => {
-                    queue.push(PendingEffect {
-                        source: source_entity,
-                        target: target_entity,
-                        data: PendingEffectData::Cleanse,
-                        source_tags: skill_data.tags.clone(),
-                        terrain,
-                    });
-                }
+            } else {
+                bevy::log::warn!(
+                    "未注册的效果处理器: {}，跳过效果生成",
+                    effect_def.type_name()
+                );
             }
         }
         break;

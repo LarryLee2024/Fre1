@@ -11,5 +11,4 @@ mod plugin;
 pub use domain::*;
 pub use instance::*;
 pub use apply::*;
-pub use resolve::*;
 pub use plugin::BuffPlugin;

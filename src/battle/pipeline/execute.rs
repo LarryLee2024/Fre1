@@ -10,6 +10,7 @@ use crate::buff::{ActiveBuffs, BuffRegistry, apply_buff, remove_all_debuffs};
 use crate::map::GameMap;
 use crate::character::{Faction, GridPosition, Unit, UnitName};
 use crate::ui::vfx;
+use crate::ui::UiTheme;
 use bevy::prelude::*;
 
 /// 执行效果（系统入口，委托给 execute_effects_inline）
@@ -26,10 +27,11 @@ pub fn execute_effects(
     buff_registry: Res<BuffRegistry>,
     map: Res<GameMap>,
     cn_font: Res<CnFont>,
+    theme: Res<UiTheme>,
 ) {
     execute_effects_inline(
         commands, queue, attrs_query, buffs_query, tags_query,
-        gp_query, name_query, unit_query, combat_log, buff_registry, map, cn_font,
+        gp_query, name_query, unit_query, combat_log, buff_registry, map, cn_font, &theme,
     );
 }
 
@@ -47,6 +49,7 @@ pub fn execute_effects_inline(
     buff_registry: Res<BuffRegistry>,
     map: Res<GameMap>,
     cn_font: Res<CnFont>,
+    theme: &UiTheme,
 ) {
     for effect in queue.pending.drain(..) {
         let attacker_color = unit_query
@@ -99,6 +102,7 @@ pub fn execute_effects_inline(
                         &mut combat_log,
                         &map,
                         &cn_font,
+                        theme,
                     );
                 }
             }
@@ -156,13 +160,14 @@ pub fn apply_damage_effect(
     combat_log: &mut CombatLog,
     map: &GameMap,
     cn_font: &CnFont,
+    theme: &UiTheme,
 ) {
     let hp = target_attrs.get(AttributeKind::Hp);
     let new_hp = (hp - amount as f32).max(0.0);
     target_attrs.set_base(AttributeKind::Hp, new_hp);
 
     let world_pos = map.coord_to_world(target_gp.coord);
-    vfx::spawn_damage_popup(commands, world_pos, amount, &cn_font.handle, is_skill);
+    vfx::spawn_damage_popup(commands, world_pos, amount, &cn_font.handle, is_skill, theme);
 
     let skill_label = if is_skill { "技能" } else { "攻击" };
     combat_log.push(vec![

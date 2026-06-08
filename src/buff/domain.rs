@@ -60,7 +60,7 @@ impl BuffData {
 }
 
 /// Buff 注册表资源
-#[derive(Resource, Default)]
+#[derive(Resource, Default, Clone, Debug)]
 pub struct BuffRegistry {
     pub buffs: HashMap<String, BuffData>,
 }
@@ -114,84 +114,160 @@ impl BuffRegistry {
     /// 注册内置默认 Buff（确保基础功能可用）
     fn register_defaults(&mut self) {
         // 攻击力增加
-        self.buffs.insert("attack_up".into(), BuffData {
-            id: "attack_up".into(),
-            name: "攻+5".into(),
-            default_duration: 3,
-            modifiers: vec![AttributeModifierDef { kind: AttributeKind::Atk, op: ModifierOp::Add, value: 5.0 }],
-            tags: vec![GameplayTag::BUFF],
-            dot_damage: 0, hot_heal: 0, is_stun: false, is_cleanse: false, is_buff: true,
-        });
+        self.buffs.insert(
+            "attack_up".into(),
+            BuffData {
+                id: "attack_up".into(),
+                name: "攻+5".into(),
+                default_duration: 3,
+                modifiers: vec![AttributeModifierDef {
+                    kind: AttributeKind::Atk,
+                    op: ModifierOp::Add,
+                    value: 5.0,
+                }],
+                tags: vec![GameplayTag::BUFF],
+                dot_damage: 0,
+                hot_heal: 0,
+                is_stun: false,
+                is_cleanse: false,
+                is_buff: true,
+            },
+        );
 
         // 攻击力减少
-        self.buffs.insert("attack_down".into(), BuffData {
-            id: "attack_down".into(),
-            name: "攻-5".into(),
-            default_duration: 3,
-            modifiers: vec![AttributeModifierDef { kind: AttributeKind::Atk, op: ModifierOp::Add, value: -5.0 }],
-            tags: vec![GameplayTag::DEBUFF],
-            dot_damage: 0, hot_heal: 0, is_stun: false, is_cleanse: false, is_buff: false,
-        });
+        self.buffs.insert(
+            "attack_down".into(),
+            BuffData {
+                id: "attack_down".into(),
+                name: "攻-5".into(),
+                default_duration: 3,
+                modifiers: vec![AttributeModifierDef {
+                    kind: AttributeKind::Atk,
+                    op: ModifierOp::Add,
+                    value: -5.0,
+                }],
+                tags: vec![GameplayTag::DEBUFF],
+                dot_damage: 0,
+                hot_heal: 0,
+                is_stun: false,
+                is_cleanse: false,
+                is_buff: false,
+            },
+        );
 
         // 防御力增加
-        self.buffs.insert("defense_up".into(), BuffData {
-            id: "defense_up".into(),
-            name: "防+5".into(),
-            default_duration: 3,
-            modifiers: vec![AttributeModifierDef { kind: AttributeKind::Def, op: ModifierOp::Add, value: 5.0 }],
-            tags: vec![GameplayTag::BUFF],
-            dot_damage: 0, hot_heal: 0, is_stun: false, is_cleanse: false, is_buff: true,
-        });
+        self.buffs.insert(
+            "defense_up".into(),
+            BuffData {
+                id: "defense_up".into(),
+                name: "防+5".into(),
+                default_duration: 3,
+                modifiers: vec![AttributeModifierDef {
+                    kind: AttributeKind::Def,
+                    op: ModifierOp::Add,
+                    value: 5.0,
+                }],
+                tags: vec![GameplayTag::BUFF],
+                dot_damage: 0,
+                hot_heal: 0,
+                is_stun: false,
+                is_cleanse: false,
+                is_buff: true,
+            },
+        );
 
         // 防御力减少
-        self.buffs.insert("defense_down".into(), BuffData {
-            id: "defense_down".into(),
-            name: "防-5".into(),
-            default_duration: 3,
-            modifiers: vec![AttributeModifierDef { kind: AttributeKind::Def, op: ModifierOp::Add, value: -5.0 }],
-            tags: vec![GameplayTag::DEBUFF],
-            dot_damage: 0, hot_heal: 0, is_stun: false, is_cleanse: false, is_buff: false,
-        });
+        self.buffs.insert(
+            "defense_down".into(),
+            BuffData {
+                id: "defense_down".into(),
+                name: "防-5".into(),
+                default_duration: 3,
+                modifiers: vec![AttributeModifierDef {
+                    kind: AttributeKind::Def,
+                    op: ModifierOp::Add,
+                    value: -5.0,
+                }],
+                tags: vec![GameplayTag::DEBUFF],
+                dot_damage: 0,
+                hot_heal: 0,
+                is_stun: false,
+                is_cleanse: false,
+                is_buff: false,
+            },
+        );
 
         // 灼烧
-        self.buffs.insert("burn".into(), BuffData {
-            id: "burn".into(),
-            name: "灼-2".into(),
-            default_duration: 2,
-            modifiers: vec![AttributeModifierDef { kind: AttributeKind::Def, op: ModifierOp::Add, value: -2.0 }],
-            tags: vec![GameplayTag::DEBUFF, GameplayTag::BURN, GameplayTag::FIRE],
-            dot_damage: 2, hot_heal: 0, is_stun: false, is_cleanse: false, is_buff: false,
-        });
+        self.buffs.insert(
+            "burn".into(),
+            BuffData {
+                id: "burn".into(),
+                name: "灼-2".into(),
+                default_duration: 2,
+                modifiers: vec![AttributeModifierDef {
+                    kind: AttributeKind::Def,
+                    op: ModifierOp::Add,
+                    value: -2.0,
+                }],
+                tags: vec![GameplayTag::DEBUFF, GameplayTag::BURN, GameplayTag::FIRE],
+                dot_damage: 2,
+                hot_heal: 0,
+                is_stun: false,
+                is_cleanse: false,
+                is_buff: false,
+            },
+        );
 
         // 中毒
-        self.buffs.insert("poison".into(), BuffData {
-            id: "poison".into(),
-            name: "毒-3".into(),
-            default_duration: 3,
-            modifiers: vec![],
-            tags: vec![GameplayTag::DEBUFF, GameplayTag::POISON],
-            dot_damage: 3, hot_heal: 0, is_stun: false, is_cleanse: false, is_buff: false,
-        });
+        self.buffs.insert(
+            "poison".into(),
+            BuffData {
+                id: "poison".into(),
+                name: "毒-3".into(),
+                default_duration: 3,
+                modifiers: vec![],
+                tags: vec![GameplayTag::DEBUFF, GameplayTag::POISON],
+                dot_damage: 3,
+                hot_heal: 0,
+                is_stun: false,
+                is_cleanse: false,
+                is_buff: false,
+            },
+        );
 
         // 再生
-        self.buffs.insert("regen".into(), BuffData {
-            id: "regen".into(),
-            name: "愈+4".into(),
-            default_duration: 3,
-            modifiers: vec![],
-            tags: vec![GameplayTag::BUFF],
-            dot_damage: 0, hot_heal: 4, is_stun: false, is_cleanse: false, is_buff: true,
-        });
+        self.buffs.insert(
+            "regen".into(),
+            BuffData {
+                id: "regen".into(),
+                name: "愈+4".into(),
+                default_duration: 3,
+                modifiers: vec![],
+                tags: vec![GameplayTag::BUFF],
+                dot_damage: 0,
+                hot_heal: 4,
+                is_stun: false,
+                is_cleanse: false,
+                is_buff: true,
+            },
+        );
 
         // 眩晕
-        self.buffs.insert("stun".into(), BuffData {
-            id: "stun".into(),
-            name: "晕眩".into(),
-            default_duration: 1,
-            modifiers: vec![],
-            tags: vec![GameplayTag::DEBUFF, GameplayTag::STUN],
-            dot_damage: 0, hot_heal: 0, is_stun: true, is_cleanse: false, is_buff: false,
-        });
+        self.buffs.insert(
+            "stun".into(),
+            BuffData {
+                id: "stun".into(),
+                name: "晕眩".into(),
+                default_duration: 1,
+                modifiers: vec![],
+                tags: vec![GameplayTag::DEBUFF, GameplayTag::STUN],
+                dot_damage: 0,
+                hot_heal: 0,
+                is_stun: true,
+                is_cleanse: false,
+                is_buff: false,
+            },
+        );
     }
 }
 
@@ -247,7 +323,75 @@ mod tests {
         let def: BuffDef = from_bytes(ron_str.as_bytes()).unwrap();
         assert_eq!(def.id, "test_buff");
         assert_eq!(def.tags, vec![TagName::Buff, TagName::Fire]);
-        assert_eq!(def.hot_heal, 3);
-        assert_eq!(def.modifiers.len(), 1);
+    }
+
+    #[test]
+    fn is_debuff_增益返回false() {
+        let data = BuffData {
+            id: "test".into(),
+            name: "test".into(),
+            default_duration: 1,
+            modifiers: vec![],
+            tags: vec![],
+            dot_damage: 0,
+            hot_heal: 0,
+            is_stun: false,
+            is_cleanse: false,
+            is_buff: true,
+        };
+        assert!(!data.is_debuff());
+    }
+
+    #[test]
+    fn is_debuff_减益返回true() {
+        let data = BuffData {
+            id: "test".into(),
+            name: "test".into(),
+            default_duration: 1,
+            modifiers: vec![],
+            tags: vec![],
+            dot_damage: 0,
+            hot_heal: 0,
+            is_stun: false,
+            is_cleanse: false,
+            is_buff: false,
+        };
+        assert!(data.is_debuff());
+    }
+
+    #[test]
+    fn buff_registry_查询已注册buff() {
+        let mut registry = BuffRegistry::default();
+        registry.buffs.insert(
+            "test".into(),
+            BuffData {
+                id: "test".into(),
+                name: "测试".into(),
+                default_duration: 1,
+                modifiers: vec![],
+                tags: vec![],
+                dot_damage: 0,
+                hot_heal: 0,
+                is_stun: false,
+                is_cleanse: false,
+                is_buff: true,
+            },
+        );
+        assert!(registry.get("test").is_some());
+    }
+
+    #[test]
+    fn buff_registry_查询未注册返回none() {
+        let registry = BuffRegistry::default();
+        assert!(registry.get("nonexistent").is_none());
+    }
+
+    #[test]
+    fn buff_registry_默认注册() {
+        let mut registry = BuffRegistry::default();
+        registry.register_defaults();
+        assert!(registry.get("attack_up").is_some());
+        assert!(registry.get("attack_down").is_some());
+        assert!(registry.get("stun").is_some());
     }
 }

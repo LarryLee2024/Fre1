@@ -357,4 +357,86 @@ mod tests {
         assert_eq!(reg.get("plain").unwrap().move_cost, Some(1));
         assert_eq!(reg.get("forest").unwrap().defense_bonus, 2);
     }
+
+    #[test]
+    fn level_registry_查询关卡() {
+        let mut registry = LevelRegistry::default();
+        registry.levels.insert("test".into(), LevelConfig {
+            id: "test".into(),
+            name: "测试".into(),
+            width: 3,
+            height: 3,
+            tile_size: 64.0,
+            terrain_map: HashMap::new(),
+            player_units: vec![],
+            enemy_units: vec![],
+        });
+        assert!(registry.get("test").is_some());
+    }
+
+    #[test]
+    fn level_registry_查询未注册返回none() {
+        let registry = LevelRegistry::default();
+        assert!(registry.get("nonexistent").is_none());
+    }
+
+    #[test]
+    fn level_registry_first() {
+        let mut registry = LevelRegistry::default();
+        registry.levels.insert("a".into(), LevelConfig {
+            id: "a".into(),
+            name: "A".into(),
+            width: 1, height: 1, tile_size: 64.0,
+            terrain_map: HashMap::new(),
+            player_units: vec![], enemy_units: vec![],
+        });
+        registry.levels.insert("b".into(), LevelConfig {
+            id: "b".into(),
+            name: "B".into(),
+            width: 1, height: 1, tile_size: 64.0,
+            terrain_map: HashMap::new(),
+            player_units: vec![], enemy_units: vec![],
+        });
+        assert!(registry.first().is_some());
+    }
+
+    #[test]
+    fn level_registry_first_空返回none() {
+        let registry = LevelRegistry::default();
+        assert!(registry.first().is_none());
+    }
+
+    #[test]
+    fn terrain_def_ron_可通行地形move_cost() {
+        let def = TerrainDefRon {
+            id: "forest".into(),
+            name: "林".into(),
+            move_cost: 2,
+            defense_bonus: 2,
+            color: (0.2, 0.5, 0.2),
+            passable: true,
+        };
+        let terrain: TerrainDef = def.into();
+        assert_eq!(terrain.move_cost, Some(2));
+        assert!(terrain.passable);
+    }
+
+    #[test]
+    fn level_config_地形网格解析() {
+        let def = LevelConfigDef {
+            id: "test".into(),
+            name: "测试".into(),
+            width: 2,
+            height: 2,
+            tile_size: 64.0,
+            terrain_grid: vec!["PF".into(), "MW".into()],
+            player_units: vec![],
+            enemy_units: vec![],
+        };
+        let config: LevelConfig = def.into();
+        assert_eq!(config.terrain_map.get(&(0, 0)), Some(&"plain".to_string()));
+        assert_eq!(config.terrain_map.get(&(1, 0)), Some(&"forest".to_string()));
+        assert_eq!(config.terrain_map.get(&(0, 1)), Some(&"mountain".to_string()));
+        assert_eq!(config.terrain_map.get(&(1, 1)), Some(&"water".to_string()));
+    }
 }

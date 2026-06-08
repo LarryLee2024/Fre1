@@ -4,7 +4,7 @@ use crate::buff::ActiveBuffs;
 use crate::character::{AiBehaviorId, Faction, GridPosition, Unit, UnitName};
 use crate::gameplay::attribute::{AttributeKind, Attributes};
 use crate::gameplay::tag::GameplayTags;
-use crate::map::{GameMap, Tile, build_tile_terrain_map, find_reachable_tiles};
+use crate::map::{GameMap, TerrainCostRegistry, TerrainMapCache, find_reachable_tiles};
 use crate::skill::{SkillCooldowns, SkillRegistry, SkillSlots, effective_skill_range};
 use crate::turn::{AiTimer, TurnPhase, TurnState};
 use bevy::prelude::*;
@@ -12,6 +12,7 @@ use bevy::prelude::*;
 use super::behavior::AiBehaviorRegistry;
 use super::movement::select_move_coord;
 use super::skill_select::select_skill;
+use super::strategy::AiStrategyRegistry;
 use super::targeting::{UnitSnapshot, select_target_coord};
 
 /// 敌方 AI 系统：决策 → 移动 → 设置 CombatIntent → 切换到 ExecuteAction
@@ -27,6 +28,9 @@ pub fn enemy_ai_system(
     map: Res<GameMap>,
     skill_registry: Res<SkillRegistry>,
     ai_behavior_registry: Res<AiBehaviorRegistry>,
+    ai_strategy_registry: Res<AiStrategyRegistry>,
+    cost_registry: Res<TerrainCostRegistry>,
+    terrain_cache: Res<TerrainMapCache>,
     mut combat_intent: ResMut<CombatIntent>,
     mut units: Query<(
         Entity,
@@ -41,7 +45,6 @@ pub fn enemy_ai_system(
         &mut GameplayTags,
         &AiBehaviorId,
     )>,
-    tiles: Query<&Tile>,
 ) {
     if turn_state.current_faction != Faction::Enemy {
         return;
@@ -58,23 +61,26 @@ pub fn enemy_ai_system(
     // 收集所有单位快照
     let snapshots: Vec<UnitSnapshot> = units
         .iter()
-        .map(|(e, u, gp, _, _name, attrs, skills, cooldowns, _, _, ai_id)| UnitSnapshot {
-            entity: e,
-            faction: u.faction,
-            coord: gp.coord,
-            atk: attrs.get(AttributeKind::Atk),
-            hp: attrs.get(AttributeKind::Hp),
-            max_hp: attrs.get(AttributeKind::MaxHp),
-            mov: attrs.get(AttributeKind::Mov) as u32,
-            attack_range: attrs.get(AttributeKind::AttackRange) as u32,
-            acted: u.acted,
-            skill_ids: skills.skill_ids.clone(),
-            cooldowns: cooldowns.clone(),
-            ai_behavior_id: ai_id.0.clone(),
-        })
+        .map(
+            |(e, u, gp, _, _name, attrs, skills, cooldowns, _, tags, ai_id)| UnitSnapshot {
+                entity: e,
+                faction: u.faction,
+                coord: gp.coord,
+                atk: attrs.get(AttributeKind::Atk),
+                hp: attrs.get(AttributeKind::Hp),
+                max_hp: attrs.get(AttributeKind::MaxHp),
+                mov: attrs.get(AttributeKind::Mov) as u32,
+                attack_range: attrs.get(AttributeKind::AttackRange) as u32,
+                acted: u.acted,
+                skill_ids: skills.skill_ids.clone(),
+                cooldowns: cooldowns.clone(),
+                ai_behavior_id: ai_id.0.clone(),
+                tags: tags.clone(),
+            },
+        )
         .collect();
 
-    let terrain_map = build_tile_terrain_map(&tiles);
+    let terrain_map = &terrain_cache.map;
 
     let player_positions: Vec<IVec2> = snapshots
         .iter()
@@ -102,7 +108,11 @@ pub fn enemy_ai_system(
         .unwrap_or_else(|| ai_behavior_registry.default_behavior());
 
     // 根据目标策略选择目标
-    let target_coord = select_target_coord(&snapshots, snapshot.coord, behavior.target_strategy);
+    let target_coord = select_target_coord(
+        &snapshots,
+        snapshot.coord,
+        ai_strategy_registry.target_selector(&behavior.target_strategy),
+    );
 
     let occupation_map: std::collections::HashMap<IVec2, bool> = snapshots
         .iter()
@@ -110,8 +120,16 @@ pub fn enemy_ai_system(
         .map(|s| (s.coord, true))
         .collect();
 
-    let reachable =
-        find_reachable_tiles(snapshot.coord, snapshot.mov, &map, &terrain_map, &occupation_map);
+    // 根据单位标签解析地形成本计算器
+    let calculator = cost_registry.resolve_from_tags(&snapshot.tags);
+    let reachable = find_reachable_tiles(
+        snapshot.coord,
+        snapshot.mov,
+        &map,
+        &terrain_map,
+        &occupation_map,
+        calculator,
+    );
 
     // 根据移动策略选择移动位置
     let best_coord = select_move_coord(
@@ -119,14 +137,14 @@ pub fn enemy_ai_system(
         snapshot.coord,
         target_coord,
         snapshot.attack_range,
-        behavior.move_strategy,
+        ai_strategy_registry.move_selector(&behavior.move_strategy),
     );
 
     // 根据技能策略选择技能
     let skill_id = select_skill(
         &snapshot.skill_ids,
         &snapshot.cooldowns,
-        behavior.skill_strategy,
+        ai_strategy_registry.skill_selector(&behavior.skill_strategy),
         &behavior.skill_priority,
     );
 

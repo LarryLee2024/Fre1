@@ -4,10 +4,11 @@
 
 mod behavior;
 mod decision;
-mod targeting;
 mod movement;
-mod skill_select;
 mod plugin;
+mod skill_select;
+mod strategy;
+mod targeting;
 
 // 公共 re-exports
 pub use behavior::*;

@@ -524,8 +524,6 @@ mod tests {
         );
     }
 
-    // ── SkillDef → SkillData 转换 ──
-
     #[test]
     fn skill_def_转换为_skill_data() {
         let def = SkillDef {
@@ -557,8 +555,6 @@ mod tests {
         ));
     }
 
-    // ── RON 反序列化 ──
-
     #[test]
     fn ron_反序列化_技能定义() {
         let ron_str = r#"
@@ -587,5 +583,117 @@ mod tests {
         assert_eq!(def.tags, vec![TagName::Fire, TagName::SkillActive]);
         assert_eq!(def.effects.len(), 2);
         assert_eq!(def.conditions.len(), 2);
+    }
+
+    #[test]
+    fn 条件_hp高于阈值() {
+        let skill = SkillData {
+            id: "heal_self".into(),
+            name: "自愈".into(),
+            description: String::new(),
+            cost_mp: 0,
+            range: 1,
+            targeting: SkillTargeting::SelfOnly,
+            effects: vec![],
+            tags: vec![],
+            conditions: vec![SkillCondition::HpAbove(0.5)],
+            cooldown: 0,
+            priority: 0,
+        };
+        let attrs_high = make_attrs(15.0, 20.0, 10.0);
+        let attrs_low = make_attrs(5.0, 20.0, 10.0);
+        let tags = crate::gameplay::tag::GameplayTags::default();
+        assert!(skill.can_use(&attrs_high, &tags, None, 0).is_ok());
+        assert_eq!(
+            skill.can_use(&attrs_low, &tags, None, 0),
+            Err(SkillUseError::HpNotAbove { threshold: 0.5 })
+        );
+    }
+
+    #[test]
+    fn 条件_目标缺少标签() {
+        let skill = SkillData {
+            id: "purify".into(),
+            name: "净化".into(),
+            description: String::new(),
+            cost_mp: 0,
+            range: 2,
+            targeting: SkillTargeting::SingleAlly,
+            effects: vec![],
+            tags: vec![],
+            conditions: vec![SkillCondition::TargetRequireTag(GameplayTag::BUFF)],
+            cooldown: 0,
+            priority: 0,
+        };
+        let attrs = make_attrs(20.0, 20.0, 10.0);
+        let source_tags = crate::gameplay::tag::GameplayTags::default();
+        let mut target_tags_with = crate::gameplay::tag::GameplayTags::default();
+        target_tags_with.add(GameplayTag::BUFF);
+        let target_tags_without = crate::gameplay::tag::GameplayTags::default();
+        assert!(skill.can_use(&attrs, &source_tags, Some(&target_tags_with), 0).is_ok());
+        assert_eq!(
+            skill.can_use(&attrs, &source_tags, Some(&target_tags_without), 0),
+            Err(SkillUseError::TargetMissingTag { tag: GameplayTag::BUFF })
+        );
+    }
+
+    #[test]
+    fn 目标类型_label() {
+        assert_eq!(SkillTargeting::SingleEnemy.label(), "单体敌方");
+        assert_eq!(SkillTargeting::SingleAlly.label(), "单体友方");
+        assert_eq!(SkillTargeting::SelfOnly.label(), "自身");
+        assert_eq!(SkillTargeting::AoeEnemies.label(), "范围敌方");
+        assert_eq!(SkillTargeting::AoeAllies.label(), "范围友方");
+        assert_eq!(SkillTargeting::NoTarget.label(), "无目标");
+    }
+
+    #[test]
+    fn 条件_空条件列表可使用() {
+        let skill = SkillData {
+            id: "simple".into(),
+            name: "简单".into(),
+            description: String::new(),
+            cost_mp: 0,
+            range: 1,
+            targeting: SkillTargeting::SelfOnly,
+            effects: vec![],
+            tags: vec![],
+            conditions: vec![],
+            cooldown: 0,
+            priority: 0,
+        };
+        let attrs = make_attrs(10.0, 20.0, 5.0);
+        let tags = crate::gameplay::tag::GameplayTags::default();
+        assert!(skill.can_use(&attrs, &tags, None, 0).is_ok());
+    }
+
+    #[test]
+    fn 条件_多个条件全满足() {
+        let skill = SkillData {
+            id: "elite".into(),
+            name: "精英技能".into(),
+            description: String::new(),
+            cost_mp: 5,
+            range: 1,
+            targeting: SkillTargeting::SingleEnemy,
+            effects: vec![],
+            tags: vec![],
+            conditions: vec![
+                SkillCondition::MpCost(5),
+                SkillCondition::RequireTag(GameplayTag::MAGE),
+            ],
+            cooldown: 0,
+            priority: 0,
+        };
+        let mut attrs = make_attrs(20.0, 20.0, 10.0);
+        let mut tags = crate::gameplay::tag::GameplayTags::default();
+        tags.add(GameplayTag::MAGE);
+        assert!(skill.can_use(&attrs, &tags, None, 0).is_ok());
+
+        attrs.set_base(AttributeKind::Mp, 2.0);
+        assert_eq!(
+            skill.can_use(&attrs, &tags, None, 0),
+            Err(SkillUseError::InsufficientMp { required: 5, current: 2 })
+        );
     }
 }

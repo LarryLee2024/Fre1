@@ -9,6 +9,4 @@ mod plugin;
 
 // 公共 re-exports
 pub use components::*;
-pub use template::*;
-pub use traits::*;
 pub use plugin::CharacterPlugin;

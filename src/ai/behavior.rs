@@ -59,13 +59,17 @@ pub struct AiBehaviorDef {
 }
 
 /// AI 行为数据（运行时）
+/// 策略字段存储策略名称字符串，运行时通过 AiStrategyRegistry 查找 trait 对象分发
 #[derive(Clone, Debug)]
 pub struct AiBehavior {
     pub id: String,
     pub name: String,
-    pub target_strategy: TargetStrategy,
-    pub move_strategy: MoveStrategy,
-    pub skill_strategy: SkillStrategy,
+    /// 目标选择策略名称（对应 TargetSelector trait 实现的 strategy_name）
+    pub target_strategy: String,
+    /// 移动策略名称（对应 MoveSelector trait 实现的 strategy_name）
+    pub move_strategy: String,
+    /// 技能选择策略名称（对应 SkillSelector trait 实现的 strategy_name）
+    pub skill_strategy: String,
     pub skill_priority: Vec<String>,
 }
 
@@ -74,9 +78,26 @@ impl From<AiBehaviorDef> for AiBehavior {
         AiBehavior {
             id: def.id,
             name: def.name,
-            target_strategy: def.target_strategy,
-            move_strategy: def.move_strategy,
-            skill_strategy: def.skill_strategy,
+            // enum variant 名转为字符串，与 trait strategy_name 对应
+            target_strategy: match def.target_strategy {
+                TargetStrategy::Nearest => "Nearest",
+                TargetStrategy::Weakest => "Weakest",
+                TargetStrategy::MostDangerous => "MostDangerous",
+                TargetStrategy::LowestHpPercent => "LowestHpPercent",
+            }
+            .to_string(),
+            move_strategy: match def.move_strategy {
+                MoveStrategy::Aggressive => "Aggressive",
+                MoveStrategy::Cautious => "Cautious",
+                MoveStrategy::Support => "Support",
+            }
+            .to_string(),
+            skill_strategy: match def.skill_strategy {
+                SkillStrategy::PreferSpecial => "PreferSpecial",
+                SkillStrategy::PreferBasic => "PreferBasic",
+                SkillStrategy::ByPriority => "ByPriority",
+            }
+            .to_string(),
             skill_priority: def.skill_priority,
         }
     }
@@ -95,9 +116,12 @@ impl AiBehaviorRegistry {
 
     /// 获取默认行为（找不到指定行为时回退）
     pub fn default_behavior(&self) -> &AiBehavior {
-        self.behaviors
-            .get("default")
-            .unwrap_or_else(|| self.behaviors.values().next().expect("至少需要一个 AI 行为定义"))
+        self.behaviors.get("default").unwrap_or_else(|| {
+            self.behaviors
+                .values()
+                .next()
+                .expect("至少需要一个 AI 行为定义")
+        })
     }
 
     /// 从 assets/ai/ 目录加载所有 .ron 文件
@@ -229,7 +253,9 @@ mod tests {
         };
         let behavior: AiBehavior = def.into();
         assert_eq!(behavior.id, "test");
-        assert_eq!(behavior.target_strategy, TargetStrategy::MostDangerous);
+        assert_eq!(behavior.target_strategy, "MostDangerous");
+        assert_eq!(behavior.move_strategy, "Cautious");
+        assert_eq!(behavior.skill_strategy, "ByPriority");
         assert_eq!(behavior.skill_priority, vec!["fireball", BASIC_ATTACK_ID]);
     }
 
@@ -240,12 +266,13 @@ mod tests {
 
         let default = registry.default_behavior();
         assert_eq!(default.id, "default");
-        assert_eq!(default.target_strategy, TargetStrategy::Nearest);
+        assert_eq!(default.target_strategy, "Nearest");
     }
 
     #[test]
     fn ron_反序列化_带技能优先级() {
-        let ron_str = format!(r#"
+        let ron_str = format!(
+            r#"
             (
                 id: "support",
                 name: "辅助",
@@ -254,8 +281,13 @@ mod tests {
                 skill_strategy: ByPriority,
                 skill_priority: ["heal", "cleanse_skill", "{}"],
             )
-        "#, BASIC_ATTACK_ID);
+        "#,
+            BASIC_ATTACK_ID
+        );
         let def: AiBehaviorDef = from_bytes(ron_str.as_bytes()).unwrap();
-        assert_eq!(def.skill_priority, vec!["heal", "cleanse_skill", BASIC_ATTACK_ID]);
+        assert_eq!(
+            def.skill_priority,
+            vec!["heal", "cleanse_skill", BASIC_ATTACK_ID]
+        );
     }
 }

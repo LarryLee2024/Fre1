@@ -1,5 +1,6 @@
 // 特效模块：伤害数字弹出、上浮淡出动画
 
+use crate::ui::theme::UiTheme;
 use bevy::prelude::*;
 
 /// 伤害数字弹出标记
@@ -34,9 +35,10 @@ pub fn spawn_damage_popup(
     damage: i32,
     font: &Handle<Font>,
     is_crit: bool,
+    theme: &UiTheme,
 ) {
-    let color = if is_crit { Color::srgb(1.0, 0.2, 0.2) } else { Color::srgb(1.0, 0.9, 0.3) };
-    let font_size = if is_crit { 22.0 } else { 16.0 };
+    let color = if is_crit { theme.crit_color } else { theme.damage_color };
+    let font_size = if is_crit { theme.font_crit } else { theme.font_damage };
     let text = if is_crit { format!("{}!", damage) } else { format!("{}", damage) };
 
     commands.spawn((

@@ -1,12 +1,12 @@
 // 单位生成系统：从模板生成初始单位
 
 use crate::assets::CnFont;
+use crate::buff::ActiveBuffs;
 use crate::gameplay::attribute::Attributes;
 use crate::gameplay::tag::{GameplayTag, GameplayTags};
-use crate::buff::ActiveBuffs;
+use crate::map::GameMap;
 use crate::map::LevelRegistry;
 use crate::skill::{SkillCooldowns, SkillSlots};
-use crate::map::GameMap;
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
 
@@ -22,6 +22,7 @@ pub fn spawn_units(
     template_registry: Res<UnitTemplateRegistry>,
     level_registry: Res<LevelRegistry>,
     trait_registry: Res<TraitRegistry>,
+    effect_handlers: Res<TraitEffectHandlerRegistry>,
 ) {
     let tile_size = map.tile_size;
     let bar_width = tile_size * 0.6;
@@ -35,8 +36,16 @@ pub fn spawn_units(
             if let Some(template) = template_registry.get(&deploy.template) {
                 let world_pos = map.coord_to_world(coord);
                 spawn_unit_from_template(
-                    &mut commands, world_pos, template, coord,
-                    tile_size, bar_width, bar_height, &cn_font.handle, &trait_registry,
+                    &mut commands,
+                    world_pos,
+                    template,
+                    coord,
+                    tile_size,
+                    bar_width,
+                    bar_height,
+                    &cn_font.handle,
+                    &trait_registry,
+                    &effect_handlers,
                 );
             } else {
                 bevy::log::error!("单位模板不存在: {}", deploy.template);
@@ -47,8 +56,16 @@ pub fn spawn_units(
             if let Some(template) = template_registry.get(&deploy.template) {
                 let world_pos = map.coord_to_world(coord);
                 spawn_unit_from_template(
-                    &mut commands, world_pos, template, coord,
-                    tile_size, bar_width, bar_height, &cn_font.handle, &trait_registry,
+                    &mut commands,
+                    world_pos,
+                    template,
+                    coord,
+                    tile_size,
+                    bar_width,
+                    bar_height,
+                    &cn_font.handle,
+                    &trait_registry,
+                    &effect_handlers,
                 );
             } else {
                 bevy::log::error!("单位模板不存在: {}", deploy.template);
@@ -67,6 +84,7 @@ fn spawn_unit_from_template(
     bar_height: f32,
     font: &Handle<Font>,
     trait_registry: &TraitRegistry,
+    effect_handlers: &TraitEffectHandlerRegistry,
 ) {
     let label: String = template.name.chars().take(1).collect();
     let unit_font = TextFont {
@@ -86,7 +104,8 @@ fn spawn_unit_from_template(
     gameplay_tags.add(template.class_tag);
 
     // 应用 trait 被动效果
-    let (trait_tags, trait_modifiers) = apply_passive_traits(&template.trait_ids, trait_registry);
+    let (trait_tags, trait_modifiers) =
+        apply_passive_traits(&template.trait_ids, trait_registry, effect_handlers);
     // 合并 trait 授予的标签
     for i in 0..64 {
         let bit = 1u64 << i;

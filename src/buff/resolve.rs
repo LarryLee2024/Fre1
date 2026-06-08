@@ -10,6 +10,7 @@ use crate::map::GameMap;
 use crate::turn::{NeedsResolve, TurnState};
 use crate::character::{GridPosition, TraitGrantedTags, Unit, UnitName};
 use crate::ui::vfx;
+use crate::ui::UiTheme;
 use bevy::prelude::*;
 
 use super::{ActiveBuffs, remove_buff};
@@ -23,6 +24,7 @@ pub fn resolve_status_effects(
     cn_font: Res<CnFont>,
     mut combat_log: ResMut<CombatLog>,
     mut needs_resolve: ResMut<NeedsResolve>,
+    theme: Res<UiTheme>,
     mut units: Query<(
         Entity,
         &mut Unit,
@@ -72,7 +74,7 @@ pub fn resolve_status_effects(
             let hp = attrs.get(AttributeKind::Hp);
             let new_hp = (hp - dot as f32).max(0.0);
             attrs.set_base(AttributeKind::Hp, new_hp);
-            vfx::spawn_damage_popup(&mut commands, world_pos, dot, &cn_font.handle, false);
+            vfx::spawn_damage_popup(&mut commands, world_pos, dot, &cn_font.handle, false, &theme);
             combat_log.push(vec![
                 LogSegment { text: format!("[{}]", name.0), color: log_color::NORMAL },
                 LogSegment { text: format!(" 受到 {} 持续伤害", dot), color: log_color::DAMAGE },

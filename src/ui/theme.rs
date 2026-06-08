@@ -1,0 +1,98 @@
+// 主题系统：统一样式常量，避免颜色/字号/间距散落各文件
+// 换皮肤只需修改 Theme，UI 代码不用动
+
+use bevy::prelude::*;
+
+/// UI 主题
+#[derive(Resource, Debug, Clone)]
+pub struct UiTheme {
+    // ── 颜色 ──
+    /// 面板背景色
+    pub panel_bg: Color,
+    /// 按钮背景色
+    pub button_bg: Color,
+    /// 按钮悬停色
+    pub button_hover: Color,
+    /// 主文本色
+    pub text_primary: Color,
+    /// 次文本色
+    pub text_secondary: Color,
+    /// 技能文本色
+    pub text_skill: Color,
+    /// 取消文本色
+    pub text_cancel: Color,
+    /// 伤害数字色
+    pub damage_color: Color,
+    /// 暴击数字色
+    pub crit_color: Color,
+    /// 治疗数字色
+    pub heal_color: Color,
+    /// 移动范围色
+    pub movable_range: Color,
+    /// 攻击范围色
+    pub attack_range: Color,
+    /// 选中高亮色
+    pub selection_highlight: Color,
+    /// 地形浮窗背景色
+    pub tile_info_bg: Color,
+    /// 地形浮窗文本色
+    pub tile_info_text: Color,
+
+    // ── 字号 ──
+    /// 大标题字号
+    pub font_large: f32,
+    /// 正文字号
+    pub font_medium: f32,
+    /// 小字号
+    pub font_small: f32,
+    /// 菜单按钮字号
+    pub font_menu: f32,
+    /// 日志字号
+    pub font_log: f32,
+    /// 伤害数字字号
+    pub font_damage: f32,
+    /// 暴击数字字号
+    pub font_crit: f32,
+
+    // ── 间距 ──
+    /// 按钮内边距
+    pub button_padding: UiRect,
+    /// 面板内边距
+    pub panel_padding: UiRect,
+}
+
+impl Default for UiTheme {
+    fn default() -> Self {
+        Self {
+            // 颜色
+            panel_bg: Color::srgba(0.1, 0.1, 0.1, 0.9),
+            button_bg: Color::NONE,
+            button_hover: Color::srgba(0.3, 0.3, 0.3, 0.5),
+            text_primary: Color::WHITE,
+            text_secondary: Color::srgb(0.7, 0.7, 0.7),
+            text_skill: Color::srgb(1.0, 0.8, 0.3),
+            text_cancel: Color::srgb(0.7, 0.7, 0.7),
+            damage_color: Color::srgb(1.0, 0.9, 0.3),
+            crit_color: Color::srgb(1.0, 0.2, 0.2),
+            heal_color: Color::srgb(0.3, 1.0, 0.3),
+            movable_range: Color::srgba(0.3, 0.6, 1.0, 0.4),
+            attack_range: Color::srgba(1.0, 0.3, 0.2, 0.35),
+            selection_highlight: Color::srgba(1.0, 1.0, 0.3, 0.5),
+            tile_info_bg: Color::srgba(0.05, 0.05, 0.1, 0.92),
+            tile_info_text: Color::srgb(0.9, 0.9, 0.95),
+
+            // 字号
+            font_large: 24.0,
+            font_medium: 18.0,
+            font_small: 14.0,
+            font_menu: 16.0,
+            font_log: 13.0,
+            font_damage: 16.0,
+            font_crit: 22.0,
+
+            // 间距
+            button_padding: UiRect::px(8.0, 8.0, 4.0, 4.0),
+            panel_padding: UiRect::all(Val::Px(4.0)),
+        }
+    }
+}

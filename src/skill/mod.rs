@@ -9,5 +9,4 @@ mod plugin;
 // 公共 re-exports
 pub use domain::*;
 pub use slots::*;
-pub use preview::*;
 pub use plugin::SkillPlugin;

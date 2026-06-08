@@ -6,10 +6,6 @@ mod execute;
 mod intent;
 
 pub use intent::{CombatIntent, PrevPosition};
-pub use execute::{
-    execute_effects_inline, apply_damage_effect, apply_heal_effect, apply_buff_effect,
-    apply_cleanse_effect,
-};
 
 use bevy::prelude::*;
 

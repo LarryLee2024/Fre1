@@ -1,6 +1,7 @@
-use crate::gameplay::attribute::AttributeKind;
-use crate::gameplay::effect::{EffectDef, calculate_damage_from_effect};
 use crate::buff::BuffRegistry;
+use crate::gameplay::effect::{
+    EffectHandlerRegistry, EffectPreview as HandlerEffectPreview, PreviewContext,
+};
 use bevy::prelude::*;
 
 use super::domain::SkillData;
@@ -64,60 +65,59 @@ pub enum EffectPreview {
     Cleanse,
 }
 
+/// 将 handler 层的 EffectPreview 转换为 preview 模块的 EffectPreview
+/// 两者结构相同但属于不同模块，保持 preview 模块的公共 API 不变
+impl From<HandlerEffectPreview> for EffectPreview {
+    fn from(p: HandlerEffectPreview) -> Self {
+        match p {
+            HandlerEffectPreview::Damage { amount, lethal } => {
+                EffectPreview::Damage { amount, lethal }
+            }
+            HandlerEffectPreview::Heal { amount } => EffectPreview::Heal { amount },
+            HandlerEffectPreview::BuffApplied { buff_name } => {
+                EffectPreview::BuffApplied { buff_name }
+            }
+            HandlerEffectPreview::Cleanse => EffectPreview::Cleanse,
+        }
+    }
+}
+
 /// 预览技能效果（纯函数，不修改任何状态）
+/// 使用 EffectHandlerRegistry trait 分发，新增效果类型无需修改此处
 pub fn preview_skill_effects(
     ctx: &SkillExecutionContext,
     skill_data: &SkillData,
     buff_registry: &BuffRegistry,
 ) -> SkillPreview {
+    preview_skill_effects_with_registry(
+        ctx,
+        skill_data,
+        buff_registry,
+        &EffectHandlerRegistry::default(),
+    )
+}
+
+/// 使用指定 Registry 预览技能效果（供测试和自定义注册表使用）
+pub fn preview_skill_effects_with_registry(
+    ctx: &SkillExecutionContext,
+    skill_data: &SkillData,
+    buff_registry: &BuffRegistry,
+    handler_registry: &EffectHandlerRegistry,
+) -> SkillPreview {
     let mut predictions = Vec::new();
 
-    for effect_def in &skill_data.effects {
-        match effect_def {
-            EffectDef::Damage {
-                multiplier,
-                ignore_def_percent,
-            } => {
-                let effective_atk = ctx.source_attrs.get(AttributeKind::Atk);
-                let effective_def = ctx.target_attrs.get(AttributeKind::Def);
-                let base_def = ctx
-                    .target_attrs
-                    .base
-                    .get(&AttributeKind::Def)
-                    .copied()
-                    .unwrap_or(0.0);
+    let preview_ctx = PreviewContext {
+        source_attrs: ctx.source_attrs.clone(),
+        target_attrs: ctx.target_attrs.clone(),
+        terrain_defense_bonus: ctx.terrain_defense_bonus,
+        buff_registry: buff_registry.clone(),
+    };
 
-                let amount = calculate_damage_from_effect(
-                    effective_atk,
-                    effective_def,
-                    base_def,
-                    *multiplier,
-                    *ignore_def_percent,
-                    ctx.terrain_defense_bonus,
-                );
-                let current_hp = ctx.target_attrs.get(AttributeKind::Hp);
-                predictions.push(EffectPreview::Damage {
-                    amount,
-                    lethal: current_hp - amount as f32 <= 0.0,
-                });
-            }
-            EffectDef::Heal { amount } => {
-                let max_hp = ctx.target_attrs.get(AttributeKind::MaxHp);
-                let current_hp = ctx.target_attrs.get(AttributeKind::Hp);
-                let actual = (*amount as f32).min(max_hp - current_hp).max(0.0) as i32;
-                predictions.push(EffectPreview::Heal { amount: actual });
-            }
-            EffectDef::ApplyBuff { buff_id, .. } => {
-                let buff_name = buff_registry
-                    .get(buff_id)
-                    .map(|b| b.name.as_str())
-                    .unwrap_or(buff_id);
-                predictions.push(EffectPreview::BuffApplied {
-                    buff_name: buff_name.to_string(),
-                });
-            }
-            EffectDef::Cleanse => {
-                predictions.push(EffectPreview::Cleanse);
+    for effect_def in &skill_data.effects {
+        // 通过 EffectHandlerRegistry trait 分发，新增效果类型无需修改此处
+        if let Some(handler) = handler_registry.find(effect_def.type_name()) {
+            if let Some(preview) = handler.preview(effect_def, &preview_ctx) {
+                predictions.push(preview.into());
             }
         }
     }
@@ -131,10 +131,11 @@ pub fn preview_skill_effects(
 
 #[cfg(test)]
 mod tests {
+    use super::super::domain::{BASIC_ATTACK_ID, SkillTargeting};
     use super::*;
     use crate::gameplay::attribute::AttributeKind;
+    use crate::gameplay::effect::EffectDef;
     use crate::gameplay::tag::GameplayTags;
-    use super::super::domain::{BASIC_ATTACK_ID, SkillTargeting};
 
     #[test]
     fn 预览_伤害预览() {

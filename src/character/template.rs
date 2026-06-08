@@ -245,4 +245,41 @@ mod tests {
         assert_eq!(template.trait_ids, vec!["mage_mastery", "fire_affinity"]);
         assert_eq!(template.ai_behavior, "aggressive");
     }
+
+    #[test]
+    fn unit_template_registry_默认模板() {
+        let mut registry = UnitTemplateRegistry::default();
+        registry.register_defaults();
+        assert!(registry.get("player_warrior").is_some());
+        assert!(registry.get("player_archer").is_some());
+        assert!(registry.get("enemy_goblin").is_some());
+    }
+
+    #[test]
+    fn unit_template_registry_查询() {
+        let mut registry = UnitTemplateRegistry::default();
+        registry.register_defaults();
+        let warrior = registry.get("player_warrior").unwrap();
+        assert_eq!(warrior.name, "战士");
+        assert_eq!(warrior.faction, Faction::Player);
+    }
+
+    #[test]
+    fn unit_template_registry_查询未注册返回none() {
+        let mut registry = UnitTemplateRegistry::default();
+        registry.register_defaults();
+        assert!(registry.get("nonexistent").is_none());
+    }
+
+    #[test]
+    fn faction_def_player转换() {
+        let faction: Faction = FactionDef::Player.into();
+        assert_eq!(faction, Faction::Player);
+    }
+
+    #[test]
+    fn faction_def_enemy转换() {
+        let faction: Faction = FactionDef::Enemy.into();
+        assert_eq!(faction, Faction::Enemy);
+    }
 }

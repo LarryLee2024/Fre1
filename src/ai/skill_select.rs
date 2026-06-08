@@ -1,64 +1,33 @@
-use crate::skill::{BASIC_ATTACK_ID, SkillCooldowns};
+use crate::skill::SkillCooldowns;
 
-use super::behavior::SkillStrategy;
+use super::strategy::SkillSelector;
 
 /// 根据技能策略选择技能
+/// 通过 trait 对象分发，替代原来的 enum+match 模式
 pub(crate) fn select_skill<'a>(
     skill_ids: &'a [String],
     cooldowns: &SkillCooldowns,
-    strategy: SkillStrategy,
+    selector: &dyn SkillSelector,
     priority: &'a [String],
 ) -> &'a str {
-    match strategy {
-        SkillStrategy::PreferSpecial => {
-            // 优先特殊技能（跳过冷却中的），否则基础攻击
-            skill_ids
-                .iter()
-                .find(|id| *id != BASIC_ATTACK_ID && cooldowns.get(id) == 0)
-                .map(|s| s.as_str())
-                .unwrap_or(BASIC_ATTACK_ID)
-        }
-        SkillStrategy::PreferBasic => {
-            // 优先基础攻击
-            if cooldowns.get(BASIC_ATTACK_ID) == 0 {
-                BASIC_ATTACK_ID
-            } else {
-                skill_ids
-                    .iter()
-                    .find(|id| cooldowns.get(id) == 0)
-                    .map(|s| s.as_str())
-                    .unwrap_or(BASIC_ATTACK_ID)
-            }
-        }
-        SkillStrategy::ByPriority => {
-            // 按优先级列表选择
-            if !priority.is_empty() {
-                for preferred in priority {
-                    if skill_ids.iter().any(|id| id == preferred) && cooldowns.get(preferred) == 0 {
-                        return preferred.as_str();
-                    }
-                }
-            }
-            // 回退：优先特殊技能
-            skill_ids
-                .iter()
-                .find(|id| *id != BASIC_ATTACK_ID && cooldowns.get(id) == 0)
-                .map(|s| s.as_str())
-                .unwrap_or(BASIC_ATTACK_ID)
-        }
-    }
+    selector.select(skill_ids, cooldowns, priority)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ai::strategy::{
+        AiStrategyRegistry, ByPrioritySkill, PreferBasicSkill, PreferSpecialSkill,
+    };
+    use crate::skill::BASIC_ATTACK_ID;
 
     #[test]
     fn 技能策略_优先特殊_跳过冷却() {
         let skill_ids = vec![BASIC_ATTACK_ID.into(), "charge".into(), "fireball".into()];
         let mut cooldowns = SkillCooldowns::default();
         cooldowns.set("charge", 2); // charge 在冷却
-        let result = select_skill(&skill_ids, &cooldowns, SkillStrategy::PreferSpecial, &[]);
+        let selector = PreferSpecialSkill;
+        let result = select_skill(&skill_ids, &cooldowns, &selector, &[]);
         assert_eq!(result, "fireball");
     }
 
@@ -67,7 +36,8 @@ mod tests {
         let skill_ids = vec![BASIC_ATTACK_ID.into(), "charge".into()];
         let mut cooldowns = SkillCooldowns::default();
         cooldowns.set("charge", 3);
-        let result = select_skill(&skill_ids, &cooldowns, SkillStrategy::PreferSpecial, &[]);
+        let selector = PreferSpecialSkill;
+        let result = select_skill(&skill_ids, &cooldowns, &selector, &[]);
         assert_eq!(result, BASIC_ATTACK_ID);
     }
 
@@ -75,7 +45,8 @@ mod tests {
     fn 技能策略_优先基础() {
         let skill_ids = vec![BASIC_ATTACK_ID.into(), "fireball".into()];
         let cooldowns = SkillCooldowns::default();
-        let result = select_skill(&skill_ids, &cooldowns, SkillStrategy::PreferBasic, &[]);
+        let selector = PreferBasicSkill;
+        let result = select_skill(&skill_ids, &cooldowns, &selector, &[]);
         assert_eq!(result, BASIC_ATTACK_ID);
     }
 
@@ -84,7 +55,8 @@ mod tests {
         let skill_ids = vec![BASIC_ATTACK_ID.into(), "heal".into(), "fireball".into()];
         let cooldowns = SkillCooldowns::default();
         let priority = vec!["fireball".into(), "heal".into()];
-        let result = select_skill(&skill_ids, &cooldowns, SkillStrategy::ByPriority, &priority);
+        let selector = ByPrioritySkill;
+        let result = select_skill(&skill_ids, &cooldowns, &selector, &priority);
         assert_eq!(result, "fireball");
     }
 
@@ -94,7 +66,8 @@ mod tests {
         let mut cooldowns = SkillCooldowns::default();
         cooldowns.set("fireball", 2);
         let priority = vec!["fireball".into(), "heal".into()];
-        let result = select_skill(&skill_ids, &cooldowns, SkillStrategy::ByPriority, &priority);
+        let selector = ByPrioritySkill;
+        let result = select_skill(&skill_ids, &cooldowns, &selector, &priority);
         assert_eq!(result, "heal");
     }
 
@@ -102,7 +75,20 @@ mod tests {
     fn 技能策略_按优先级_空回退特殊() {
         let skill_ids = vec![BASIC_ATTACK_ID.into(), "charge".into()];
         let cooldowns = SkillCooldowns::default();
-        let result = select_skill(&skill_ids, &cooldowns, SkillStrategy::ByPriority, &[]);
+        let selector = ByPrioritySkill;
+        let result = select_skill(&skill_ids, &cooldowns, &selector, &[]);
         assert_eq!(result, "charge");
+    }
+
+    #[test]
+    fn 技能策略_通过注册表分发() {
+        let registry = AiStrategyRegistry::default();
+        let skill_ids = vec![BASIC_ATTACK_ID.into(), "fireball".into()];
+        let cooldowns = SkillCooldowns::default();
+
+        // 通过注册表查找 PreferBasic 策略
+        let selector = registry.skill_selector("PreferBasic");
+        let result = select_skill(&skill_ids, &cooldowns, selector, &[]);
+        assert_eq!(result, BASIC_ATTACK_ID);
     }
 }

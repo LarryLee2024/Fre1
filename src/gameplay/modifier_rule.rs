@@ -20,6 +20,173 @@ pub enum ModifierEffect {
     HealBonus(i32),
 }
 
+impl ModifierEffect {
+    /// 返回效果类型名（与 enum variant 名对应）
+    pub fn type_name(&self) -> &'static str {
+        match self {
+            ModifierEffect::DamageMultiplier(_) => "DamageMultiplier",
+            ModifierEffect::DamageBonus(_) => "DamageBonus",
+            ModifierEffect::HealMultiplier(_) => "HealMultiplier",
+            ModifierEffect::HealBonus(_) => "HealBonus",
+        }
+    }
+}
+
+/// 修饰计算规则 trait：描述如何计算一种修饰效果
+pub trait ModifierCalculator: Send + Sync + 'static {
+    /// 效果类型名（与 ModifierEffect variant 名对应）
+    fn type_name(&self) -> &'static str;
+    /// 是否适用于伤害修饰
+    fn applies_to_damage(&self) -> bool;
+    /// 是否适用于治疗修饰
+    fn applies_to_heal(&self) -> bool;
+    /// 计算修饰后的值
+    fn calculate(&self, effect: &ModifierEffect, current: f32) -> f32;
+}
+
+// ---- 内置 Calculator 实现 ----
+
+/// 伤害倍率计算器
+pub struct DamageMultiplierCalculator;
+
+impl ModifierCalculator for DamageMultiplierCalculator {
+    fn type_name(&self) -> &'static str {
+        "DamageMultiplier"
+    }
+    fn applies_to_damage(&self) -> bool {
+        true
+    }
+    fn applies_to_heal(&self) -> bool {
+        false
+    }
+    fn calculate(&self, effect: &ModifierEffect, current: f32) -> f32 {
+        if let ModifierEffect::DamageMultiplier(mul) = effect {
+            current * mul
+        } else {
+            current
+        }
+    }
+}
+
+/// 伤害加成计算器
+pub struct DamageBonusCalculator;
+
+impl ModifierCalculator for DamageBonusCalculator {
+    fn type_name(&self) -> &'static str {
+        "DamageBonus"
+    }
+    fn applies_to_damage(&self) -> bool {
+        true
+    }
+    fn applies_to_heal(&self) -> bool {
+        false
+    }
+    fn calculate(&self, effect: &ModifierEffect, current: f32) -> f32 {
+        if let ModifierEffect::DamageBonus(bonus) = effect {
+            current + *bonus as f32
+        } else {
+            current
+        }
+    }
+}
+
+/// 治疗倍率计算器
+pub struct HealMultiplierCalculator;
+
+impl ModifierCalculator for HealMultiplierCalculator {
+    fn type_name(&self) -> &'static str {
+        "HealMultiplier"
+    }
+    fn applies_to_damage(&self) -> bool {
+        false
+    }
+    fn applies_to_heal(&self) -> bool {
+        true
+    }
+    fn calculate(&self, effect: &ModifierEffect, current: f32) -> f32 {
+        if let ModifierEffect::HealMultiplier(mul) = effect {
+            current * mul
+        } else {
+            current
+        }
+    }
+}
+
+/// 治疗加成计算器
+pub struct HealBonusCalculator;
+
+impl ModifierCalculator for HealBonusCalculator {
+    fn type_name(&self) -> &'static str {
+        "HealBonus"
+    }
+    fn applies_to_damage(&self) -> bool {
+        false
+    }
+    fn applies_to_heal(&self) -> bool {
+        true
+    }
+    fn calculate(&self, effect: &ModifierEffect, current: f32) -> f32 {
+        if let ModifierEffect::HealBonus(bonus) = effect {
+            current + *bonus as f32
+        } else {
+            current
+        }
+    }
+}
+
+/// 修饰计算器注册表资源
+#[derive(Resource)]
+pub struct ModifierCalculatorRegistry {
+    calculators: Vec<Box<dyn ModifierCalculator>>,
+}
+
+impl Default for ModifierCalculatorRegistry {
+    fn default() -> Self {
+        Self::with_defaults()
+    }
+}
+
+impl ModifierCalculatorRegistry {
+    /// 创建包含所有内置计算器的注册表
+    pub fn with_defaults() -> Self {
+        ModifierCalculatorRegistry {
+            calculators: vec![
+                Box::new(DamageMultiplierCalculator),
+                Box::new(DamageBonusCalculator),
+                Box::new(HealMultiplierCalculator),
+                Box::new(HealBonusCalculator),
+            ],
+        }
+    }
+
+    /// 注册自定义计算器
+    pub fn register(&mut self, calculator: Box<dyn ModifierCalculator>) {
+        self.calculators.push(calculator);
+    }
+
+    /// 查找能处理指定效果类型的伤害计算器
+    pub fn find_damage_calculator(
+        &self,
+        effect: &ModifierEffect,
+    ) -> Option<&dyn ModifierCalculator> {
+        self.calculators
+            .iter()
+            .find(|c| c.type_name() == effect.type_name() && c.applies_to_damage())
+            .map(|c| c.as_ref())
+    }
+
+    /// 查找能处理指定效果类型的治疗计算器
+    pub fn find_heal_calculator(
+        &self,
+        effect: &ModifierEffect,
+    ) -> Option<&dyn ModifierCalculator> {
+        self.calculators
+            .iter()
+            .find(|c| c.type_name() == effect.type_name() && c.applies_to_heal())
+            .map(|c| c.as_ref())
+    }
+}
+
 /// 修饰规则（运行时）
 #[derive(Clone, Debug)]
 pub struct ModifierRule {
@@ -71,12 +238,17 @@ impl From<ModifierRuleDef> for ModifierRule {
 #[derive(Resource, Default)]
 pub struct ModifierRuleRegistry {
     pub rules: Vec<ModifierRule>,
+    /// 计算器注册表，用于 trait 分发替代 match
+    calculators: ModifierCalculatorRegistry,
 }
 
 impl ModifierRuleRegistry {
     /// 从 assets/rules/ 目录加载所有 .ron 文件
     pub fn load_from_dir(dir: &str) -> Self {
-        let mut registry = ModifierRuleRegistry::default();
+        let mut registry = ModifierRuleRegistry {
+            calculators: ModifierCalculatorRegistry::with_defaults(),
+            ..Default::default()
+        };
         let Ok(entries) = read_dir(dir) else {
             bevy::log::warn!("修饰规则目录不存在: {}", dir);
             return registry;
@@ -119,6 +291,11 @@ impl ModifierRuleRegistry {
         }
     }
 
+    /// 注册自定义计算器
+    pub fn register_calculator(&mut self, calculator: Box<dyn ModifierCalculator>) {
+        self.calculators.register(calculator);
+    }
+
     /// 应用所有修饰规则到伤害值
     pub fn apply_damage_modifiers(
         &self,
@@ -134,14 +311,9 @@ impl ModifierRuleRegistry {
             if !target_tags.has(rule.target_tag) {
                 continue;
             }
-            match rule.effect {
-                ModifierEffect::DamageMultiplier(mul) => {
-                    result *= mul;
-                }
-                ModifierEffect::DamageBonus(bonus) => {
-                    result += bonus as f32;
-                }
-                _ => {}
+            // 通过 calculator registry 查找并计算，替代 match 分发
+            if let Some(calc) = self.calculators.find_damage_calculator(&rule.effect) {
+                result = calc.calculate(&rule.effect, result);
             }
         }
         result.max(1.0) as i32
@@ -162,14 +334,9 @@ impl ModifierRuleRegistry {
             if !target_tags.has(rule.target_tag) {
                 continue;
             }
-            match rule.effect {
-                ModifierEffect::HealMultiplier(mul) => {
-                    result *= mul;
-                }
-                ModifierEffect::HealBonus(bonus) => {
-                    result += bonus as f32;
-                }
-                _ => {}
+            // 通过 calculator registry 查找并计算，替代 match 分发
+            if let Some(calc) = self.calculators.find_heal_calculator(&rule.effect) {
+                result = calc.calculate(&rule.effect, result);
             }
         }
         result.max(0.0) as i32
@@ -223,6 +390,7 @@ mod tests {
                 target_tag: GameplayTag::FIRE,
                 effect: ModifierEffect::DamageMultiplier(1.5),
             }],
+            ..Default::default()
         };
 
         let mut target_tags = GameplayTags::default();
@@ -245,6 +413,7 @@ mod tests {
                 target_tag: GameplayTag::FIRE,
                 effect: ModifierEffect::DamageMultiplier(1.5),
             }],
+            ..Default::default()
         };
 
         let target_tags = GameplayTags::default(); // 无 FIRE 标签
@@ -265,6 +434,7 @@ mod tests {
                 target_tag: GameplayTag::POISON,
                 effect: ModifierEffect::DamageBonus(5),
             }],
+            ..Default::default()
         };
 
         let mut target_tags = GameplayTags::default();
@@ -276,5 +446,122 @@ mod tests {
             &target_tags,
         );
         assert_eq!(result, 15); // 10 + 5 = 15
+    }
+
+    #[test]
+    fn 修饰规则_治疗倍率() {
+        let registry = ModifierRuleRegistry {
+            rules: vec![ModifierRule {
+                name: "火焰治愈".into(),
+                source_tag: GameplayTag::FIRE,
+                target_tag: GameplayTag::FIRE,
+                effect: ModifierEffect::HealMultiplier(2.0),
+            }],
+            ..Default::default()
+        };
+        let mut target_tags = GameplayTags::default();
+        target_tags.add(GameplayTag::FIRE);
+        let result = registry.apply_heal_modifiers(10, &[GameplayTag::FIRE], &target_tags);
+        assert_eq!(result, 20);
+    }
+
+    #[test]
+    fn 修饰规则_治疗固定加成() {
+        let registry = ModifierRuleRegistry {
+            rules: vec![ModifierRule {
+                name: "治愈加成".into(),
+                source_tag: GameplayTag::REGEN,
+                target_tag: GameplayTag::BUFF,
+                effect: ModifierEffect::HealBonus(5),
+            }],
+            ..Default::default()
+        };
+        let mut target_tags = GameplayTags::default();
+        target_tags.add(GameplayTag::BUFF);
+        let result = registry.apply_heal_modifiers(10, &[GameplayTag::REGEN], &target_tags);
+        assert_eq!(result, 15);
+    }
+
+    #[test]
+    fn 修饰规则_治疗无匹配不变() {
+        let registry = ModifierRuleRegistry {
+            rules: vec![ModifierRule {
+                name: "火焰治愈".into(),
+                source_tag: GameplayTag::FIRE,
+                target_tag: GameplayTag::FIRE,
+                effect: ModifierEffect::HealMultiplier(2.0),
+            }],
+            ..Default::default()
+        };
+        let target_tags = GameplayTags::default();
+        let result = registry.apply_heal_modifiers(10, &[], &target_tags);
+        assert_eq!(result, 10);
+    }
+
+    #[test]
+    fn 修饰规则_多规则叠加() {
+        let registry = ModifierRuleRegistry {
+            rules: vec![
+                ModifierRule {
+                    name: "倍率".into(),
+                    source_tag: GameplayTag::FIRE,
+                    target_tag: GameplayTag::FIRE,
+                    effect: ModifierEffect::DamageMultiplier(1.5),
+                },
+                ModifierRule {
+                    name: "加成".into(),
+                    source_tag: GameplayTag::FIRE,
+                    target_tag: GameplayTag::FIRE,
+                    effect: ModifierEffect::DamageBonus(3),
+                },
+            ],
+            ..Default::default()
+        };
+        let mut target_tags = GameplayTags::default();
+        target_tags.add(GameplayTag::FIRE);
+        let result = registry.apply_damage_modifiers(10, &[GameplayTag::FIRE], &target_tags);
+        assert_eq!(result, 18);
+    }
+
+    #[test]
+    fn 修饰规则_最低伤害为1() {
+        let registry = ModifierRuleRegistry {
+            rules: vec![ModifierRule {
+                name: "减伤".into(),
+                source_tag: GameplayTag::ICE,
+                target_tag: GameplayTag::ICE,
+                effect: ModifierEffect::DamageMultiplier(0.01),
+            }],
+            ..Default::default()
+        };
+        let mut target_tags = GameplayTags::default();
+        target_tags.add(GameplayTag::ICE);
+        let result = registry.apply_damage_modifiers(10, &[GameplayTag::ICE], &target_tags);
+        assert_eq!(result, 1);
+    }
+
+    #[test]
+    fn 修饰规则_最低治疗为0() {
+        let registry = ModifierRuleRegistry {
+            rules: vec![ModifierRule {
+                name: "减少".into(),
+                source_tag: GameplayTag::POISON,
+                target_tag: GameplayTag::POISON,
+                effect: ModifierEffect::HealMultiplier(0.01),
+            }],
+            ..Default::default()
+        };
+        let mut target_tags = GameplayTags::default();
+        target_tags.add(GameplayTag::POISON);
+        let result = registry.apply_heal_modifiers(10, &[GameplayTag::POISON], &target_tags);
+        assert_eq!(result, 0);
+    }
+
+    #[test]
+    fn 修饰规则_兜底默认值() {
+        let mut registry = ModifierRuleRegistry::default();
+        registry.register_defaults();
+        assert!(!registry.rules.is_empty());
+        assert_eq!(registry.rules[0].name, "火焰共鸣");
     }
 }

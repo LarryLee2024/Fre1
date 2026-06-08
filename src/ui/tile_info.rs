@@ -3,6 +3,7 @@
 use crate::map::{GameMap, Tile};
 use crate::turn::TurnPhase;
 use crate::character::Faction;
+use crate::ui::theme::UiTheme;
 use bevy::prelude::*;
 
 /// 地形信息浮窗标记组件
@@ -26,6 +27,7 @@ pub fn handle_tile_info(
     turn_phase: Res<State<TurnPhase>>,
     mut commands: Commands,
     mut tile_info_entity: ResMut<TileInfoEntity>,
+    theme: Res<UiTheme>,
 ) {
     if turn_state.current_faction != Faction::Player {
         return;
@@ -66,6 +68,7 @@ pub fn handle_tile_info(
                     screen_pos.y,
                     tile,
                     &mut tile_info_entity,
+                    &theme,
                 );
             }
             return;
@@ -88,6 +91,7 @@ fn spawn_tile_info(
     screen_y: f32,
     tile: &Tile,
     tile_info_entity: &mut TileInfoEntity,
+    theme: &UiTheme,
 ) {
     let terrain = tile.terrain;
     let move_cost_str = match tile.move_cost {
@@ -112,17 +116,17 @@ fn spawn_tile_info(
                 padding: UiRect::all(Val::Px(8.0)),
                 ..default()
             },
-            BackgroundColor(Color::srgba(0.05, 0.05, 0.1, 0.92)),
+            BackgroundColor(theme.tile_info_bg),
         ))
         .insert(TileInfoRoot)
         .with_children(|parent| {
             parent.spawn((
                 Text::new(info_text),
                 TextFont {
-                    font_size: 14.0,
+                    font_size: theme.font_small,
                     ..default()
                 },
-                TextColor(Color::srgb(0.9, 0.9, 0.95)),
+                TextColor(theme.tile_info_text),
                 TextLayout::new_with_no_wrap(),
             ));
         })

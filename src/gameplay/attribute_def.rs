@@ -183,4 +183,37 @@ mod tests {
         // 没有注册定义时回退到 kind.label()
         assert_eq!(registry.display_name(AttributeKind::Hp), "HP");
     }
+
+    #[test]
+    fn attribute_registry_defaults_包含所有属性() {
+        let mut registry = AttributeRegistry::default();
+        registry.register_defaults();
+        for kind in [
+            AttributeKind::Hp, AttributeKind::MaxHp,
+            AttributeKind::Mp, AttributeKind::MaxMp,
+            AttributeKind::Atk, AttributeKind::Def,
+            AttributeKind::Mov, AttributeKind::AttackRange,
+        ] {
+            assert!(registry.get(kind).is_some(), "缺少属性: {:?}", kind);
+        }
+    }
+
+    #[test]
+    fn attribute_registry_显示名称_已注册() {
+        let mut registry = AttributeRegistry::default();
+        registry.register_defaults();
+        assert_eq!(registry.display_name(AttributeKind::Atk), "攻击力");
+    }
+
+    #[test]
+    fn attribute_registry_查询所有默认属性() {
+        let mut registry = AttributeRegistry::default();
+        registry.register_defaults();
+        assert_eq!(registry.get(AttributeKind::Hp).unwrap().max_value, 9999.0);
+        assert_eq!(registry.get(AttributeKind::MaxHp).unwrap().max_value, 9999.0);
+        assert_eq!(registry.get(AttributeKind::Mp).unwrap().max_value, 9999.0);
+        assert_eq!(registry.get(AttributeKind::Def).unwrap().max_value, 9999.0);
+        assert_eq!(registry.get(AttributeKind::Mov).unwrap().max_value, 99.0);
+        assert_eq!(registry.get(AttributeKind::AttackRange).unwrap().default_value, 1.0);
+    }
 }

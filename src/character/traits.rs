@@ -48,6 +48,124 @@ pub enum TraitEffect {
     ApplyBuff { buff_id: String, duration: u32 },
 }
 
+impl TraitEffect {
+    /// 返回效果类型名（与 variant 名对应，用于 Handler 查找）
+    pub fn type_name(&self) -> &'static str {
+        match self {
+            TraitEffect::GrantTag(_) => "GrantTag",
+            TraitEffect::ModifyAttribute(_) => "ModifyAttribute",
+            TraitEffect::ApplyBuff { .. } => "ApplyBuff",
+        }
+    }
+}
+
+// ── TraitEffectHandler trait 及内置实现 ──────────────────────────────
+
+/// 特性效果处理规则 trait：描述如何应用一种特性效果
+/// 新增效果类型时只需实现此 trait 并注册到 TraitEffectHandlerRegistry，
+/// 无需修改 TraitData 的 granted_tags/attribute_modifiers 方法
+pub trait TraitEffectHandler: Send + Sync + 'static {
+    /// 效果类型名（与 TraitEffect variant 名对应）
+    fn type_name(&self) -> &'static str;
+    /// 收集此效果授予的标签
+    fn granted_tags(&self, effect: &TraitEffect) -> Vec<GameplayTag>;
+    /// 收集此效果的属性修饰（返回引用的生命周期与 effect 绑定）
+    fn attribute_modifiers<'a>(&self, effect: &'a TraitEffect) -> Vec<&'a AttributeModifierDef>;
+}
+
+/// GrantTag 效果处理器
+pub struct GrantTagHandler;
+
+impl TraitEffectHandler for GrantTagHandler {
+    fn type_name(&self) -> &'static str {
+        "GrantTag"
+    }
+
+    fn granted_tags(&self, effect: &TraitEffect) -> Vec<GameplayTag> {
+        match effect {
+            TraitEffect::GrantTag(tag) => vec![*tag],
+            _ => vec![],
+        }
+    }
+
+    fn attribute_modifiers<'a>(&self, _effect: &'a TraitEffect) -> Vec<&'a AttributeModifierDef> {
+        vec![]
+    }
+}
+
+/// ModifyAttribute 效果处理器
+pub struct ModifyAttributeHandler;
+
+impl TraitEffectHandler for ModifyAttributeHandler {
+    fn type_name(&self) -> &'static str {
+        "ModifyAttribute"
+    }
+
+    fn granted_tags(&self, _effect: &TraitEffect) -> Vec<GameplayTag> {
+        vec![]
+    }
+
+    fn attribute_modifiers<'a>(&self, effect: &'a TraitEffect) -> Vec<&'a AttributeModifierDef> {
+        match effect {
+            TraitEffect::ModifyAttribute(mod_def) => vec![mod_def],
+            _ => vec![],
+        }
+    }
+}
+
+/// ApplyBuff 效果处理器
+pub struct ApplyBuffHandler;
+
+impl TraitEffectHandler for ApplyBuffHandler {
+    fn type_name(&self) -> &'static str {
+        "ApplyBuff"
+    }
+
+    fn granted_tags(&self, _effect: &TraitEffect) -> Vec<GameplayTag> {
+        vec![]
+    }
+
+    fn attribute_modifiers<'a>(&self, _effect: &'a TraitEffect) -> Vec<&'a AttributeModifierDef> {
+        vec![]
+    }
+}
+
+/// 特性效果处理器注册表（Bevy Resource）
+/// 通过 type_name 查找对应的 TraitEffectHandler，实现效果分发的扩展点
+#[derive(Resource)]
+pub struct TraitEffectHandlerRegistry {
+    handlers: HashMap<&'static str, Box<dyn TraitEffectHandler>>,
+}
+
+impl TraitEffectHandlerRegistry {
+    /// 创建包含所有内置处理器的注册表
+    pub fn with_defaults() -> Self {
+        let mut registry = Self {
+            handlers: HashMap::new(),
+        };
+        registry.register(Box::new(GrantTagHandler));
+        registry.register(Box::new(ModifyAttributeHandler));
+        registry.register(Box::new(ApplyBuffHandler));
+        registry
+    }
+
+    /// 注册一个效果处理器
+    pub fn register(&mut self, handler: Box<dyn TraitEffectHandler>) {
+        self.handlers.insert(handler.type_name(), handler);
+    }
+
+    /// 根据类型名查找处理器
+    pub fn get(&self, type_name: &str) -> Option<&dyn TraitEffectHandler> {
+        self.handlers.get(type_name).map(|h| h.as_ref())
+    }
+}
+
+impl Default for TraitEffectHandlerRegistry {
+    fn default() -> Self {
+        Self::with_defaults()
+    }
+}
+
 impl From<TraitEffectDef> for TraitEffect {
     fn from(def: TraitEffectDef) -> Self {
         match def {
@@ -93,24 +211,31 @@ impl From<TraitDefinition> for TraitData {
 }
 
 impl TraitData {
-    /// 收集此 trait 授予的所有标签
-    pub fn granted_tags(&self) -> Vec<GameplayTag> {
+    /// 收集此 trait 授予的所有标签（通过 TraitEffectHandlerRegistry 分发）
+    pub fn granted_tags(&self, handlers: &TraitEffectHandlerRegistry) -> Vec<GameplayTag> {
         self.effects
             .iter()
-            .filter_map(|e| match e {
-                TraitEffect::GrantTag(tag) => Some(*tag),
-                _ => None,
+            .flat_map(|e| {
+                handlers
+                    .get(e.type_name())
+                    .map(|h| h.granted_tags(e))
+                    .unwrap_or_default()
             })
             .collect()
     }
 
-    /// 收集此 trait 的所有属性修饰
-    pub fn attribute_modifiers(&self) -> Vec<&AttributeModifierDef> {
+    /// 收集此 trait 的所有属性修饰（通过 TraitEffectHandlerRegistry 分发）
+    pub fn attribute_modifiers<'a>(
+        &'a self,
+        handlers: &'a TraitEffectHandlerRegistry,
+    ) -> Vec<&'a AttributeModifierDef> {
         self.effects
             .iter()
-            .filter_map(|e| match e {
-                TraitEffect::ModifyAttribute(mod_def) => Some(mod_def),
-                _ => None,
+            .flat_map(|e| {
+                handlers
+                    .get(e.type_name())
+                    .map(|h| h.attribute_modifiers(e))
+                    .unwrap_or_default()
             })
             .collect()
     }
@@ -138,6 +263,7 @@ impl TraitCollection {
 pub fn apply_passive_traits(
     trait_ids: &[String],
     registry: &TraitRegistry,
+    handlers: &TraitEffectHandlerRegistry,
 ) -> (GameplayTags, Vec<AttributeModifierInstance>) {
     let mut tags = GameplayTags::default();
     let mut modifiers = Vec::new();
@@ -149,10 +275,10 @@ pub fn apply_passive_traits(
             if trait_data.trigger != TraitTrigger::Passive {
                 continue;
             }
-            for tag in trait_data.granted_tags() {
+            for tag in trait_data.granted_tags(handlers) {
                 tags.add(tag);
             }
-            for mod_def in trait_data.attribute_modifiers() {
+            for mod_def in trait_data.attribute_modifiers(handlers) {
                 modifiers.push(AttributeModifierInstance {
                     kind: mod_def.kind,
                     op: mod_def.op,
@@ -245,31 +371,25 @@ impl TraitRegistry {
                 name: "法师精通".into(),
                 description: "魔法职业，擅长元素攻击".into(),
                 trigger: TraitTrigger::Passive,
-                effects: vec![
-                    TraitEffectDef::GrantTag(TagName::Mage),
-                ],
+                effects: vec![TraitEffectDef::GrantTag(TagName::Mage)],
             },
             TraitDefinition {
                 id: "fire_affinity".into(),
                 name: "火焰亲和".into(),
                 description: "拥有火焰力量".into(),
                 trigger: TraitTrigger::Passive,
-                effects: vec![
-                    TraitEffectDef::GrantTag(TagName::Fire),
-                ],
+                effects: vec![TraitEffectDef::GrantTag(TagName::Fire)],
             },
             TraitDefinition {
                 id: "heavy_armor".into(),
                 name: "重甲".into(),
                 description: "装备重甲，防御+3".into(),
                 trigger: TraitTrigger::Passive,
-                effects: vec![
-                    TraitEffectDef::ModifyAttribute(AttributeModifierDef {
-                        kind: crate::gameplay::attribute::AttributeKind::Def,
-                        op: crate::gameplay::attribute::ModifierOp::Add,
-                        value: 3.0,
-                    }),
-                ],
+                effects: vec![TraitEffectDef::ModifyAttribute(AttributeModifierDef {
+                    kind: crate::gameplay::attribute::AttributeKind::Def,
+                    op: crate::gameplay::attribute::ModifierOp::Add,
+                    value: 3.0,
+                })],
             },
         ];
 
@@ -287,6 +407,7 @@ impl Plugin for TraitPlugin {
     fn build(&self, app: &mut App) {
         let registry = TraitRegistry::load_from_dir("assets/traits");
         app.insert_resource(registry);
+        app.insert_resource(TraitEffectHandlerRegistry::with_defaults());
     }
 }
 
@@ -336,10 +457,11 @@ mod tests {
         assert_eq!(data.trigger, TraitTrigger::OnAttack);
         assert_eq!(data.effects.len(), 2);
 
-        let tags = data.granted_tags();
+        let handlers = TraitEffectHandlerRegistry::with_defaults();
+        let tags = data.granted_tags(&handlers);
         assert_eq!(tags, vec![GameplayTag::FIRE]);
 
-        let mods = data.attribute_modifiers();
+        let mods = data.attribute_modifiers(&handlers);
         assert_eq!(mods.len(), 1);
         assert_eq!(mods[0].kind, AttributeKind::Atk);
         assert_eq!(mods[0].value, 5.0);
@@ -375,8 +497,9 @@ mod tests {
             },
         );
 
+        let handlers = TraitEffectHandlerRegistry::with_defaults();
         let (tags, modifiers) =
-            apply_passive_traits(&["warrior_mastery".into()], &registry);
+            apply_passive_traits(&["warrior_mastery".into()], &registry, &handlers);
 
         assert!(tags.has(GameplayTag::WARRIOR));
         assert!(tags.has(GameplayTag::MELEE));
@@ -398,8 +521,9 @@ mod tests {
             },
         );
 
+        let handlers = TraitEffectHandlerRegistry::with_defaults();
         let (tags, modifiers) =
-            apply_passive_traits(&["on_attack_trait".into()], &registry);
+            apply_passive_traits(&["on_attack_trait".into()], &registry, &handlers);
 
         assert!(!tags.has(GameplayTag::FIRE));
         assert!(modifiers.is_empty());

@@ -27,6 +27,11 @@ impl GameplayTag {
     pub const ARCHER: Self = Self(1 << 25);
     pub const MAGE: Self = Self(1 << 26);
 
+    // ── 移动类型 ──
+    pub const FLYING: Self = Self(1 << 48);
+    pub const MOUNTED: Self = Self(1 << 49);
+    pub const SWIMMING: Self = Self(1 << 50);
+
     // ── 技能类型 ──
     pub const SKILL_ACTIVE: Self = Self(1 << 32);
     pub const SKILL_PASSIVE: Self = Self(1 << 33);
@@ -49,6 +54,9 @@ impl GameplayTag {
             Self::WARRIOR => "战士",
             Self::ARCHER => "弓手",
             Self::MAGE => "法师",
+            Self::FLYING => "飞行",
+            Self::MOUNTED => "骑兵",
+            Self::SWIMMING => "水生",
             Self::SKILL_ACTIVE => "主动技能",
             Self::SKILL_PASSIVE => "被动技能",
             Self::BUFF => "增益",
@@ -108,6 +116,9 @@ pub enum TagName {
     Warrior,
     Archer,
     Mage,
+    Flying,
+    Mounted,
+    Swimming,
     SkillActive,
     SkillPassive,
     Buff,
@@ -128,6 +139,9 @@ impl TagName {
             Self::Warrior => GameplayTag::WARRIOR,
             Self::Archer => GameplayTag::ARCHER,
             Self::Mage => GameplayTag::MAGE,
+            Self::Flying => GameplayTag::FLYING,
+            Self::Mounted => GameplayTag::MOUNTED,
+            Self::Swimming => GameplayTag::SWIMMING,
             Self::SkillActive => GameplayTag::SKILL_ACTIVE,
             Self::SkillPassive => GameplayTag::SKILL_PASSIVE,
             Self::Buff => GameplayTag::BUFF,
@@ -189,5 +203,60 @@ mod tests {
     fn tag_name_转换() {
         assert_eq!(TagName::Fire.to_tag(), GameplayTag::FIRE);
         assert_eq!(TagName::Stun.to_tag(), GameplayTag::STUN);
+    }
+
+    #[test]
+    fn 标签_from_tags空数组() {
+        let tags = GameplayTags::from_tags(&[]);
+        assert!(!tags.has(GameplayTag::FIRE));
+    }
+
+    #[test]
+    fn 标签_from_tags多个标签() {
+        let tags = GameplayTags::from_tags(&[GameplayTag::FIRE, GameplayTag::STUN]);
+        assert!(tags.has(GameplayTag::FIRE));
+        assert!(tags.has(GameplayTag::STUN));
+        assert!(!tags.has(GameplayTag::ICE));
+    }
+
+    #[test]
+    fn 标签_has_any都不匹配() {
+        let mut tags = GameplayTags::default();
+        tags.add(GameplayTag::FIRE);
+        let check = GameplayTags::from_tags(&[GameplayTag::ICE, GameplayTag::STUN]);
+        assert!(!tags.has_any(&check));
+    }
+
+    #[test]
+    fn 标签_has_all空集() {
+        let mut tags = GameplayTags::default();
+        tags.add(GameplayTag::FIRE);
+        let empty = GameplayTags::default();
+        assert!(tags.has_all(&empty));
+    }
+
+    #[test]
+    fn 标签_label各标签() {
+        assert_eq!(GameplayTag::FIRE.label(), "火焰");
+        assert_eq!(GameplayTag::ICE.label(), "冰霜");
+        assert_eq!(GameplayTag::POISON.label(), "毒素");
+        assert_eq!(GameplayTag::STUN.label(), "晕眩");
+        assert_eq!(GameplayTag::BURN.label(), "燃烧");
+        assert_eq!(GameplayTag::REGEN.label(), "恢复");
+        assert_eq!(GameplayTag::MELEE.label(), "近战");
+        assert_eq!(GameplayTag::RANGED.label(), "远程");
+        assert_eq!(GameplayTag::WARRIOR.label(), "战士");
+        assert_eq!(GameplayTag::ARCHER.label(), "弓手");
+        assert_eq!(GameplayTag::MAGE.label(), "法师");
+        assert_eq!(GameplayTag::BUFF.label(), "增益");
+        assert_eq!(GameplayTag::DEBUFF.label(), "减益");
+    }
+
+    #[test]
+    fn 标签_add重复幂等() {
+        let mut tags = GameplayTags::default();
+        tags.add(GameplayTag::FIRE);
+        tags.add(GameplayTag::FIRE);
+        assert!(tags.has(GameplayTag::FIRE));
     }
 }
