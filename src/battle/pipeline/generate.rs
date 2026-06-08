@@ -1,4 +1,5 @@
 // 步骤 1：生成战斗效果（从技能定义 + 属性计算）
+// 同时支持玩家（Selected）和 AI（CombatIntent.source_entity）
 
 use crate::gameplay::attribute::{AttributeKind, Attributes};
 use crate::gameplay::effect::{
@@ -6,15 +7,20 @@ use crate::gameplay::effect::{
 };
 use crate::gameplay::tag::GameplayTags;
 use crate::skill::{BASIC_ATTACK_ID, SkillCooldowns, SkillRegistry};
-use crate::map::{GameMap, Tile};
+use crate::map::Tile;
 use crate::character::{Faction, GridPosition, Selected, Unit, UnitName};
 use bevy::prelude::*;
 
 use super::intent::CombatIntent;
 
-/// 生成战斗效果：从选中单位的技能定义 + 目标属性计算，推入 EffectQueue
+/// 生成战斗效果：从攻击者的技能定义 + 目标属性计算，推入 EffectQueue
+///
+/// 支持两种来源：
+/// - 玩家：通过 Selected 组件查找攻击者
+/// - AI：通过 CombatIntent.source_entity 查找攻击者
 pub fn generate_combat_effects(
     mut queue: ResMut<EffectQueue>,
+    // 玩家攻击者（Selected）
     selected_units: Query<
         (
             Entity,
@@ -27,6 +33,19 @@ pub fn generate_combat_effects(
         ),
         With<Selected>,
     >,
+    // 所有单位（用于查找 AI 攻击者和目标）
+    all_units: Query<
+        (
+            Entity,
+            &Unit,
+            &GridPosition,
+            &UnitName,
+            &Attributes,
+            &GameplayTags,
+            &SkillCooldowns,
+        ),
+    >,
+    // 目标单位（含 Transform，仅用于兼容）
     targets: Query<
         (
             Entity,
@@ -37,14 +56,23 @@ pub fn generate_combat_effects(
             &GameplayTags,
             &Transform,
         ),
-        Without<Selected>,
     >,
     tiles: Query<&Tile>,
     combat_intent: Res<CombatIntent>,
     skill_registry: Res<SkillRegistry>,
-    _map: Res<GameMap>,
 ) {
-    let Ok((
+    // 确定攻击者来源
+    let source_info = if let Ok(info) = selected_units.single() {
+        // 玩家：通过 Selected 查找
+        Some(info)
+    } else if let Some(source_entity) = combat_intent.source_entity {
+        // AI：通过 CombatIntent.source_entity 查找
+        all_units.get(source_entity).ok()
+    } else {
+        None
+    };
+
+    let Some((
         source_entity,
         source_unit,
         _source_gp,
@@ -52,11 +80,12 @@ pub fn generate_combat_effects(
         source_attrs,
         source_tags,
         source_cooldowns,
-    )) = selected_units.single()
+    )) = source_info
     else {
         return;
     };
 
+    // 晕眩检查
     if source_tags.has(crate::gameplay::tag::GameplayTag::STUN) {
         return;
     }
@@ -70,10 +99,12 @@ pub fn generate_combat_effects(
         return;
     };
 
+    // 冷却检查（玩家需要，AI 已在决策时检查）
     if source_cooldowns.get(skill_id) > 0 {
         return;
     }
 
+    // 查找目标
     for (
         target_entity,
         target_unit,

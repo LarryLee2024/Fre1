@@ -68,3 +68,17 @@ impl Faction {
         }
     }
 }
+
+/// 清除范围标记和高亮（不含 Selected 移除）
+pub fn clear_markers(
+    commands: &mut Commands,
+    range_entities: &Query<(Entity, Option<&GridPosition>), Or<(With<MovableRange>, With<AttackRange>)>>,
+    highlights: &Query<Entity, With<SelectionHighlight>>,
+) {
+    for (marker, _) in range_entities {
+        commands.entity(marker).try_despawn();
+    }
+    for h in highlights {
+        commands.entity(h).try_despawn();
+    }
+}

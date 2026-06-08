@@ -55,6 +55,10 @@ pub struct AiTimer {
     pub timer: Timer,
 }
 
+/// 标记是否需要结算持续效果（防止 SelectUnit 多次进入时重复结算）
+#[derive(Resource, Default)]
+pub struct NeedsResolve(pub bool);
+
 impl Default for AiTimer {
     fn default() -> Self {
         Self {
@@ -81,6 +85,7 @@ impl Plugin for TurnPlugin {
             .add_sub_state::<TurnPhase>()
             .init_resource::<TurnState>()
             .init_resource::<AiTimer>()
+            .init_resource::<NeedsResolve>()
             .configure_sets(
                 OnEnter(AppState::InGame),
                 (GameSet::Camera, GameSet::Map, GameSet::Unit, GameSet::Ui).chain(),
@@ -95,6 +100,7 @@ pub fn turn_end_on_enter(
     mut units: Query<&mut Unit>,
     mut next_phase: ResMut<NextState<TurnPhase>>,
     mut ai_timer: ResMut<AiTimer>,
+    mut needs_resolve: ResMut<NeedsResolve>,
 ) {
     let current_faction = turn_state.current_faction;
 
@@ -114,6 +120,9 @@ pub fn turn_end_on_enter(
         };
         turn_state.current_faction = next_faction;
 
+        // 阵营切换时标记需要结算持续效果
+        needs_resolve.0 = true;
+
         // 重置新阵营单位的行动状态
         for mut unit in units.iter_mut() {
             if unit.faction == next_faction {
@@ -125,6 +134,9 @@ pub fn turn_end_on_enter(
         if next_faction == Faction::Enemy {
             ai_timer.timer.reset();
         }
+    } else if current_faction == Faction::Enemy {
+        // 同阵营未全部行动，重置 AI 计时器让下一个敌方单位行动
+        ai_timer.timer.reset();
     }
 
     next_phase.set(TurnPhase::SelectUnit);

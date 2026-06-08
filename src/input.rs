@@ -321,12 +321,7 @@ pub fn clear_markers(
     range_entities: &Query<(Entity, Option<&GridPosition>), Or<(With<MovableRange>, With<AttackRange>)>>,
     highlights: &Query<Entity, With<SelectionHighlight>>,
 ) {
-    for (marker, _) in range_entities {
-        commands.entity(marker).try_despawn();
-    }
-    for h in highlights {
-        commands.entity(h).try_despawn();
-    }
+    crate::character::clear_markers(commands, range_entities, highlights);
 }
 
 /// 清除选中状态和范围标记

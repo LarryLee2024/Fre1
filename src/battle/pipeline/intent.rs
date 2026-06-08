@@ -1,16 +1,18 @@
 // 战斗意图资源 + OnEnter 系统
 
-use crate::character::{
-    AttackRange, Faction, GridPosition, MovableRange, Selected, SelectionHighlight, Unit, UnitName,
-};
+use crate::character::{AttackRange, GridPosition, MovableRange, Selected, SelectionHighlight, Unit, UnitName};
 use crate::gameplay::tag::{GameplayTag, GameplayTags};
 use crate::skill::{SkillCooldowns, SkillRegistry};
 use bevy::prelude::*;
 
-/// 攻击目标坐标 + 选择的技能（合并为单一资源以减少系统参数数量）
+/// 战斗意图：记录谁攻击谁、用什么技能
 #[derive(Resource, Default)]
 pub struct CombatIntent {
+    /// 攻击者实体（玩家通过 Selected 查找，AI 直接设置）
+    pub source_entity: Option<Entity>,
+    /// 目标坐标
     pub target_coord: Option<IVec2>,
+    /// 选择的技能 ID
     pub skill_id: Option<String>,
 }
 
@@ -43,8 +45,9 @@ pub fn execute_action_on_enter(
     highlights: Query<Entity, With<SelectionHighlight>>,
     skill_registry: Res<SkillRegistry>,
 ) {
-    crate::input::clear_markers(&mut commands, &range_entities, &highlights);
+    crate::character::clear_markers(&mut commands, &range_entities, &highlights);
 
+    // 玩家单位：通过 Selected 查找
     if let Ok((entity, mut unit, _pos, _name, tags, mut cooldowns)) = selected_units.single_mut() {
         if tags.has(GameplayTag::STUN) {
             unit.acted = true;
@@ -64,6 +67,7 @@ pub fn execute_action_on_enter(
         unit.acted = true;
         commands.entity(entity).remove::<Selected>();
     }
+    // AI 单位：acted 和冷却已在 decision.rs 中处理，无需额外操作
 
     next_phase.set(crate::turn::TurnPhase::TurnEnd);
 }
@@ -79,7 +83,7 @@ pub fn wait_action_on_enter(
     >,
     highlights: Query<Entity, With<SelectionHighlight>>,
 ) {
-    crate::input::clear_markers(&mut commands, &range_entities, &highlights);
+    crate::character::clear_markers(&mut commands, &range_entities, &highlights);
 
     if let Ok((entity, mut unit)) = selected_units.single_mut() {
         unit.acted = true;

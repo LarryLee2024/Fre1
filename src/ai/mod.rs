@@ -1,12 +1,12 @@
-// AI 模块：敌方自动行动，通过 EffectQueue 执行效果
-// 执行流程：决策 → 移动 → 推入 EffectQueue → 修饰 → 执行
+// AI 模块：敌方自动行动
+// 执行流程：决策 → 移动 → 设置 CombatIntent → 切换 ExecuteAction
+// 攻击效果由统一的 Effect Pipeline（generate→modify→execute）处理
 
 mod behavior;
 mod decision;
 mod targeting;
 mod movement;
 mod skill_select;
-mod effect_exec;
 mod plugin;
 
 // 公共 re-exports
