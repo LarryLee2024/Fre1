@@ -239,4 +239,84 @@ mod tests {
         // (10 + 5) * 1.0 = 15
         assert_eq!(attrs.get(AttributeKind::Atk), 15.0);
     }
+
+    #[test]
+    fn 属性_未设置默认为0() {
+        let attrs = Attributes::default();
+        assert_eq!(attrs.get(AttributeKind::Atk), 0.0);
+        assert_eq!(attrs.get(AttributeKind::Hp), 0.0);
+    }
+
+    #[test]
+    fn 属性_多个乘法修饰符叠加() {
+        let mut attrs = Attributes::default();
+        attrs.set_base(AttributeKind::Atk, 10.0);
+        attrs.add_modifier(AttributeModifierInstance {
+            kind: AttributeKind::Atk,
+            op: ModifierOp::Multiply,
+            value: 1.5,
+            source: BuffInstanceId(1),
+        });
+        attrs.add_modifier(AttributeModifierInstance {
+            kind: AttributeKind::Atk,
+            op: ModifierOp::Multiply,
+            value: 2.0,
+            source: BuffInstanceId(2),
+        });
+        // (10 + 0) * 1.5 * 2.0 = 30
+        assert_eq!(attrs.get(AttributeKind::Atk), 30.0);
+    }
+
+    #[test]
+    fn 属性_remove_debuff_modifiers_移除减益乘法() {
+        let mut attrs = Attributes::default();
+        attrs.set_base(AttributeKind::Atk, 10.0);
+        attrs.add_modifier(AttributeModifierInstance {
+            kind: AttributeKind::Atk,
+            op: ModifierOp::Multiply,
+            value: 1.5, // 增益：>= 1.0
+            source: BuffInstanceId(1),
+        });
+        attrs.add_modifier(AttributeModifierInstance {
+            kind: AttributeKind::Atk,
+            op: ModifierOp::Multiply,
+            value: 0.5, // 减益：< 1.0
+            source: BuffInstanceId(2),
+        });
+        attrs.remove_debuff_modifiers();
+        // (10 + 0) * 1.5 = 15
+        assert_eq!(attrs.get(AttributeKind::Atk), 15.0);
+    }
+
+    #[test]
+    fn 属性_不同属性类型互不影响() {
+        let mut attrs = Attributes::default();
+        attrs.set_base(AttributeKind::Atk, 10.0);
+        attrs.set_base(AttributeKind::Def, 5.0);
+        attrs.add_modifier(AttributeModifierInstance {
+            kind: AttributeKind::Atk,
+            op: ModifierOp::Add,
+            value: 3.0,
+            source: BuffInstanceId(1),
+        });
+        // Atk 受修饰符影响，Def 不受
+        assert_eq!(attrs.get(AttributeKind::Atk), 13.0);
+        assert_eq!(attrs.get(AttributeKind::Def), 5.0);
+    }
+
+    #[test]
+    fn 属性_add_modifiers_from_def_批量添加() {
+        let mut attrs = Attributes::default();
+        attrs.set_base(AttributeKind::Atk, 10.0);
+        attrs.set_base(AttributeKind::Def, 5.0);
+
+        let defs = vec![
+            AttributeModifierDef { kind: AttributeKind::Atk, op: ModifierOp::Add, value: 5.0 },
+            AttributeModifierDef { kind: AttributeKind::Def, op: ModifierOp::Add, value: -2.0 },
+        ];
+        attrs.add_modifiers_from_def(&defs, BuffInstanceId(1));
+
+        assert_eq!(attrs.get(AttributeKind::Atk), 15.0);
+        assert_eq!(attrs.get(AttributeKind::Def), 3.0);
+    }
 }

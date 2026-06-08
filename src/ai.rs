@@ -6,7 +6,7 @@ use crate::core::effect::{
     calculate_damage_from_effect, EffectDef, EffectQueue, PendingEffect, PendingEffectData,
 };
 use crate::core::tag::GameplayTags;
-use crate::data::skill_data::{effective_skill_range, SkillRegistry, SkillSlots};
+use crate::data::skill_data::{effective_skill_range, SkillCooldowns, SkillRegistry, SkillSlots};
 use crate::map::{GameMap, Terrain, Tile};
 use crate::pathfinding::{build_tile_terrain_map, find_reachable_tiles};
 use crate::turn::{AiTimer, TurnPhase, TurnState};
@@ -26,6 +26,7 @@ struct UnitSnapshot {
     acted: bool,
     name: String,
     skill_ids: Vec<String>,
+    cooldowns: SkillCooldowns,
 }
 
 /// 敌方 AI 系统
@@ -43,6 +44,7 @@ pub fn enemy_ai_system(
         &UnitName,
         &Attributes,
         &SkillSlots,
+        &mut SkillCooldowns,
     )>,
     _tags_query: Query<&GameplayTags>,
     tiles: Query<&Tile>,
@@ -65,7 +67,7 @@ pub fn enemy_ai_system(
     // 收集所有单位快照
     let snapshots: Vec<UnitSnapshot> = units
         .iter()
-        .map(|(e, u, gp, _, name, attrs, skills)| UnitSnapshot {
+        .map(|(e, u, gp, _, name, attrs, skills, cooldowns)| UnitSnapshot {
             entity: e,
             faction: u.faction,
             coord: gp.coord,
@@ -77,6 +79,7 @@ pub fn enemy_ai_system(
             acted: u.acted,
             name: name.0.clone(),
             skill_ids: skills.skill_ids.clone(),
+            cooldowns: cooldowns.clone(),
         })
         .collect();
 
@@ -131,11 +134,11 @@ pub fn enemy_ai_system(
             .map(|(coord, _)| *coord)
             .unwrap_or(snapshot.coord);
 
-        // 选择使用的技能：优先特殊技能，否则基础攻击
+        // 选择使用的技能：优先特殊技能（跳过冷却中的），否则基础攻击
         let skill_id = snapshot
             .skill_ids
             .iter()
-            .find(|id| *id != "basic_attack")
+            .find(|id| *id != "basic_attack" && snapshot.cooldowns.get(id) == 0)
             .map(|s| s.as_str())
             .unwrap_or("basic_attack");
 
@@ -167,7 +170,7 @@ pub fn enemy_ai_system(
     for action in actions {
         // 移动
         let world_pos = map.coord_to_world(action.move_to);
-        if let Ok((_, _, mut gp, mut transform, _, _, _)) = units.get_mut(action.entity) {
+        if let Ok((_, _, mut gp, mut transform, _, _, _, _cooldowns)) = units.get_mut(action.entity) {
             gp.coord = action.move_to;
             transform.translation.x = world_pos.x;
             transform.translation.y = world_pos.y;
@@ -176,13 +179,19 @@ pub fn enemy_ai_system(
         // 攻击：通过 Effect Pipeline 生成效果
         if let Some(target_entity) = action.attack_target {
             if let Some(skill_data) = skill_registry.get(&action.skill_id) {
+                // 设置冷却
+                if skill_data.cooldown > 0 {
+                    if let Ok((_, _, _, _, _, _, _, mut cooldowns)) = units.get_mut(action.entity) {
+                        cooldowns.set(&action.skill_id, skill_data.cooldown);
+                    }
+                }
                 let _target_attrs = units
                     .get(target_entity)
-                    .map(|(_, _, _, _, _, attrs, _)| attrs.clone())
+                    .map(|(_, _, _, _, _, attrs, _, _)| attrs.clone())
                     .unwrap_or_default();
                 let target_gp = units
                     .get(target_entity)
-                    .map(|(_, _, gp, _, _, _, _)| gp.coord)
+                    .map(|(_, _, gp, _, _, _, _, _)| gp.coord)
                     .unwrap_or(IVec2::ZERO);
 
                 let terrain = tiles
@@ -257,7 +266,7 @@ pub fn enemy_ai_system(
         }
 
         // 标记已行动
-        if let Ok((_, mut unit, _, _, _, _, _)) = units.get_mut(action.entity) {
+        if let Ok((_, mut unit, _, _, _, _, _, _)) = units.get_mut(action.entity) {
             unit.acted = true;
         }
     }
@@ -265,8 +274,8 @@ pub fn enemy_ai_system(
     // 检查是否所有敌方单位都已行动
     let all_enemy_acted = units
         .iter()
-        .filter(|(_, u, _, _, _, _, _)| u.faction == Faction::Enemy)
-        .all(|(_, u, _, _, _, _, _)| u.acted);
+        .filter(|(_, u, _, _, _, _, _, _)| u.faction == Faction::Enemy)
+        .all(|(_, u, _, _, _, _, _, _)| u.acted);
 
     if all_enemy_acted {
         next_phase.set(TurnPhase::TurnEnd);

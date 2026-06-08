@@ -9,7 +9,7 @@ use crate::core::effect::{
 };
 use crate::core::tag::GameplayTags;
 use crate::data::buff_data::{apply_buff, ActiveBuffs, BuffRegistry};
-use crate::data::skill_data::SkillRegistry;
+use crate::data::skill_data::{SkillCooldowns, SkillRegistry};
 use crate::map::{GameMap, Terrain, Tile};
 use crate::unit::{
     AttackRange, Faction, GridPosition, MovableRange, Selected, SelectionHighlight, Unit, UnitName,
@@ -36,7 +36,7 @@ pub struct PrevPosition {
 pub fn generate_combat_effects(
     mut queue: ResMut<EffectQueue>,
     selected_units: Query<
-        (Entity, &Unit, &GridPosition, &UnitName, &Attributes, &GameplayTags),
+        (Entity, &Unit, &GridPosition, &UnitName, &Attributes, &GameplayTags, &SkillCooldowns),
         With<Selected>,
     >,
     targets: Query<
@@ -48,7 +48,7 @@ pub fn generate_combat_effects(
     skill_registry: Res<SkillRegistry>,
     _map: Res<GameMap>,
 ) {
-    let Ok((source_entity, source_unit, _source_gp, _source_name, source_attrs, source_tags)) =
+    let Ok((source_entity, source_unit, _source_gp, _source_name, source_attrs, source_tags, _source_cooldowns)) =
         selected_units.single()
     else {
         return;
@@ -317,23 +317,33 @@ pub fn execute_effects(
 
 /// 执行攻击（OnEnter ExecuteAction）
 pub fn execute_action_on_enter(
-    mut selected_units: Query<(Entity, &mut Unit, &GridPosition, &UnitName, &GameplayTags), With<Selected>>,
+    mut selected_units: Query<(Entity, &mut Unit, &GridPosition, &UnitName, &GameplayTags, &mut SkillCooldowns), With<Selected>>,
     mut next_phase: ResMut<NextState<crate::turn::TurnPhase>>,
     mut commands: Commands,
-    _combat_intent: Res<CombatIntent>,
+    combat_intent: Res<CombatIntent>,
     range_entities: Query<(Entity, Option<&GridPosition>), Or<(With<MovableRange>, With<AttackRange>)>>,
     highlights: Query<Entity, With<SelectionHighlight>>,
+    skill_registry: Res<SkillRegistry>,
 ) {
     // 清除范围标记和高亮
     crate::input::clear_markers(&mut commands, &range_entities, &highlights);
 
-    if let Ok((entity, mut unit, _pos, _name, tags)) = selected_units.single_mut() {
+    if let Ok((entity, mut unit, _pos, _name, tags, mut cooldowns)) = selected_units.single_mut() {
         // 晕眩检查
         if tags.has(crate::core::tag::GameplayTag::STUN) {
             unit.acted = true;
             commands.entity(entity).remove::<Selected>();
             next_phase.set(crate::turn::TurnPhase::TurnEnd);
             return;
+        }
+
+        // 设置技能冷却
+        if let Some(skill_id) = combat_intent.skill_id.as_deref() {
+            if let Some(skill_data) = skill_registry.get(skill_id) {
+                if skill_data.cooldown > 0 {
+                    cooldowns.set(skill_id, skill_data.cooldown);
+                }
+            }
         }
 
         unit.acted = true;

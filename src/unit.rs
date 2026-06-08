@@ -5,7 +5,7 @@ use crate::assets::CnFont;
 use crate::core::attribute::{AttributeKind, Attributes};
 use crate::core::tag::{GameplayTag, GameplayTags};
 use crate::data::buff_data::ActiveBuffs;
-use crate::data::skill_data::SkillSlots;
+use crate::data::skill_data::{SkillCooldowns, SkillSlots};
 use crate::map::GameMap;
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
@@ -190,6 +190,7 @@ fn spawn_unit(
         attributes,
         gameplay_tags,
         skill_slots,
+        SkillCooldowns::default(),
         ActiveBuffs::default(),
         children![
             // 棋子名称标注（中央）

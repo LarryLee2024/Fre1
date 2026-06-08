@@ -7,6 +7,7 @@ use crate::core::attribute::{AttributeKind, Attributes, BuffInstanceId};
 use crate::core::tag::GameplayTag;
 use crate::core::tag::GameplayTags;
 use crate::data::buff_data::{remove_buff, ActiveBuffs};
+use crate::data::skill_data::SkillCooldowns;
 use crate::map::GameMap;
 use crate::turn::TurnState;
 use crate::unit::{GridPosition, Unit, UnitName};
@@ -28,9 +29,10 @@ pub fn resolve_status_effects(
         &mut Attributes,
         &mut ActiveBuffs,
         &mut GameplayTags,
+        &mut SkillCooldowns,
     )>,
 ) {
-    for (entity, mut unit, name, gp, mut attrs, mut buffs, mut tags) in &mut units {
+    for (entity, mut unit, name, gp, mut attrs, mut buffs, mut tags, mut cooldowns) in &mut units {
         if unit.faction != turn_state.current_faction {
             continue;
         }
@@ -87,6 +89,9 @@ pub fn resolve_status_effects(
 
         // 4. tick 递减持续时间，移除过期的 Buff
         tick_buffs(&mut buffs, &mut attrs, &mut tags);
+
+        // 5. tick 技能冷却
+        cooldowns.tick();
     }
 }
 

@@ -449,3 +449,519 @@ impl Plugin for BuffDataPlugin {
         app.insert_resource(registry);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// 辅助：创建一个简单的 BuffData
+    fn make_buff(id: &str, is_buff: bool, modifiers: Vec<AttributeModifierDef>, tags: Vec<GameplayTag>) -> BuffData {
+        BuffData {
+            id: id.into(),
+            name: id.into(),
+            default_duration: 2,
+            modifiers,
+            tags,
+            dot_damage: 0,
+            hot_heal: 0,
+            is_stun: false,
+            is_cleanse: false,
+            is_buff,
+        }
+    }
+
+    /// 辅助：创建一个带 DoT/HoT 的 BuffData
+    fn make_dot_buff(id: &str, dot: i32, hot: i32) -> BuffData {
+        BuffData {
+            id: id.into(),
+            name: id.into(),
+            default_duration: 2,
+            modifiers: vec![],
+            tags: vec![GameplayTag::DEBUFF, GameplayTag::POISON],
+            dot_damage: dot,
+            hot_heal: hot,
+            is_stun: false,
+            is_cleanse: false,
+            is_buff: false,
+        }
+    }
+
+    // ── ActiveBuffs 基础操作 ──
+
+    #[test]
+    fn 活跃buff_添加和查询() {
+        let mut buffs = ActiveBuffs::default();
+        let id = buffs.next_instance_id();
+        buffs.add(BuffInstance {
+            instance_id: id,
+            buff_id: "attack_up".into(),
+            name: "攻+5".into(),
+            remaining_turns: 2,
+            source_entity: None,
+            tags: vec![GameplayTag::BUFF],
+            is_buff: true,
+            dot_damage: 0,
+            hot_heal: 0,
+        });
+        assert_eq!(buffs.len(), 1);
+        assert!(!buffs.is_empty());
+    }
+
+    #[test]
+    fn 活跃buff_移除() {
+        let mut buffs = ActiveBuffs::default();
+        let id = buffs.next_instance_id();
+        buffs.add(BuffInstance {
+            instance_id: id,
+            buff_id: "attack_up".into(),
+            name: "攻+5".into(),
+            remaining_turns: 2,
+            source_entity: None,
+            tags: vec![GameplayTag::BUFF],
+            is_buff: true,
+            dot_damage: 0,
+            hot_heal: 0,
+        });
+        let removed = buffs.remove(id);
+        assert!(removed.is_some());
+        assert_eq!(buffs.len(), 0);
+        assert!(buffs.is_empty());
+    }
+
+    #[test]
+    fn 活跃buff_移除不存在的返回none() {
+        let mut buffs = ActiveBuffs::default();
+        let result = buffs.remove(BuffInstanceId(999));
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn 活跃buff_同源同id刷新持续时间() {
+        let mut buffs = ActiveBuffs::default();
+        let source = Entity::from_bits(42);
+
+        let id1 = buffs.next_instance_id();
+        buffs.add(BuffInstance {
+            instance_id: id1,
+            buff_id: "poison".into(),
+            name: "毒".into(),
+            remaining_turns: 1,
+            source_entity: Some(source),
+            tags: vec![GameplayTag::DEBUFF],
+            is_buff: false,
+            dot_damage: 3,
+            hot_heal: 0,
+        });
+
+        // 同源同 buff_id → 刷新持续时间，不新增
+        let id2 = buffs.next_instance_id();
+        buffs.add(BuffInstance {
+            instance_id: id2,
+            buff_id: "poison".into(),
+            name: "毒".into(),
+            remaining_turns: 3,
+            source_entity: Some(source),
+            tags: vec![GameplayTag::DEBUFF],
+            is_buff: false,
+            dot_damage: 3,
+            hot_heal: 0,
+        });
+
+        assert_eq!(buffs.len(), 1); // 没有新增
+        assert_eq!(buffs.instances[0].remaining_turns, 3); // 持续时间被刷新
+        assert_eq!(buffs.instances[0].instance_id, id1); // 保留原 instance_id
+    }
+
+    #[test]
+    fn 活跃buff_不同源同id不刷新() {
+        let mut buffs = ActiveBuffs::default();
+        let source_a = Entity::from_bits(1);
+        let source_b = Entity::from_bits(2);
+
+        let id1 = buffs.next_instance_id();
+        buffs.add(BuffInstance {
+            instance_id: id1,
+            buff_id: "poison".into(),
+            name: "毒".into(),
+            remaining_turns: 1,
+            source_entity: Some(source_a),
+            tags: vec![GameplayTag::DEBUFF],
+            is_buff: false,
+            dot_damage: 3,
+            hot_heal: 0,
+        });
+
+        let id2 = buffs.next_instance_id();
+        buffs.add(BuffInstance {
+            instance_id: id2,
+            buff_id: "poison".into(),
+            name: "毒".into(),
+            remaining_turns: 3,
+            source_entity: Some(source_b),
+            tags: vec![GameplayTag::DEBUFF],
+            is_buff: false,
+            dot_damage: 3,
+            hot_heal: 0,
+        });
+
+        assert_eq!(buffs.len(), 2); // 不同源，两个实例
+    }
+
+    // ── Tick ──
+
+    #[test]
+    fn 活跃buff_tick_递减持续时间() {
+        let mut buffs = ActiveBuffs::default();
+        let id = buffs.next_instance_id();
+        buffs.add(BuffInstance {
+            instance_id: id,
+            buff_id: "attack_up".into(),
+            name: "攻+5".into(),
+            remaining_turns: 2,
+            source_entity: None,
+            tags: vec![GameplayTag::BUFF],
+            is_buff: true,
+            dot_damage: 0,
+            hot_heal: 0,
+        });
+        buffs.tick();
+        assert_eq!(buffs.instances[0].remaining_turns, 1);
+    }
+
+    #[test]
+    fn 活跃buff_tick_递减后过期() {
+        let mut buffs = ActiveBuffs::default();
+        let id = buffs.next_instance_id();
+        buffs.add(BuffInstance {
+            instance_id: id,
+            buff_id: "attack_up".into(),
+            name: "攻+5".into(),
+            remaining_turns: 1,
+            source_entity: None,
+            tags: vec![GameplayTag::BUFF],
+            is_buff: true,
+            dot_damage: 0,
+            hot_heal: 0,
+        });
+        // tick: retain(>0) 保留，然后递减为 0
+        buffs.tick();
+        assert_eq!(buffs.len(), 1);
+        assert_eq!(buffs.instances[0].remaining_turns, 0);
+        // 下一次 tick: retain(>0) 移除 remaining_turns=0 的
+        buffs.tick();
+        assert!(buffs.is_empty());
+    }
+
+    // ── 晕眩 ──
+
+    #[test]
+    fn 活跃buff_晕眩检测() {
+        let mut buffs = ActiveBuffs::default();
+        assert!(!buffs.is_stunned());
+
+        let id = buffs.next_instance_id();
+        buffs.add(BuffInstance {
+            instance_id: id,
+            buff_id: "stun".into(),
+            name: "晕".into(),
+            remaining_turns: 1,
+            source_entity: None,
+            tags: vec![GameplayTag::DEBUFF, GameplayTag::STUN],
+            is_buff: false,
+            dot_damage: 0,
+            hot_heal: 0,
+        });
+        assert!(buffs.is_stunned());
+    }
+
+    #[test]
+    fn 活跃buff_消耗晕眩() {
+        let mut buffs = ActiveBuffs::default();
+        let id = buffs.next_instance_id();
+        buffs.add(BuffInstance {
+            instance_id: id,
+            buff_id: "stun".into(),
+            name: "晕".into(),
+            remaining_turns: 1,
+            source_entity: None,
+            tags: vec![GameplayTag::DEBUFF, GameplayTag::STUN],
+            is_buff: false,
+            dot_damage: 0,
+            hot_heal: 0,
+        });
+        let was_stunned = buffs.consume_stun();
+        assert!(was_stunned);
+        assert!(!buffs.is_stunned());
+        assert!(buffs.is_empty());
+    }
+
+    // ── DoT / HoT ──
+
+    #[test]
+    fn 活跃buff_dot_hot汇总() {
+        let mut buffs = ActiveBuffs::default();
+        let id1 = buffs.next_instance_id();
+        buffs.add(BuffInstance {
+            instance_id: id1,
+            buff_id: "poison".into(),
+            name: "毒".into(),
+            remaining_turns: 2,
+            source_entity: None,
+            tags: vec![GameplayTag::DEBUFF],
+            is_buff: false,
+            dot_damage: 3,
+            hot_heal: 0,
+        });
+        let id2 = buffs.next_instance_id();
+        buffs.add(BuffInstance {
+            instance_id: id2,
+            buff_id: "regen".into(),
+            name: "愈".into(),
+            remaining_turns: 2,
+            source_entity: None,
+            tags: vec![GameplayTag::BUFF],
+            is_buff: true,
+            dot_damage: 0,
+            hot_heal: 4,
+        });
+        assert_eq!(buffs.dot_damage(), 3);
+        assert_eq!(buffs.hot_heal(), 4);
+    }
+
+    // ── 移除所有 Debuff ──
+
+    #[test]
+    fn 活跃buff_移除所有debuff() {
+        let mut buffs = ActiveBuffs::default();
+        let id1 = buffs.next_instance_id();
+        buffs.add(BuffInstance {
+            instance_id: id1,
+            buff_id: "attack_up".into(),
+            name: "攻+5".into(),
+            remaining_turns: 2,
+            source_entity: None,
+            tags: vec![GameplayTag::BUFF],
+            is_buff: true,
+            dot_damage: 0,
+            hot_heal: 0,
+        });
+        let id2 = buffs.next_instance_id();
+        buffs.add(BuffInstance {
+            instance_id: id2,
+            buff_id: "poison".into(),
+            name: "毒".into(),
+            remaining_turns: 2,
+            source_entity: None,
+            tags: vec![GameplayTag::DEBUFF],
+            is_buff: false,
+            dot_damage: 3,
+            hot_heal: 0,
+        });
+        buffs.remove_debuffs();
+        assert_eq!(buffs.len(), 1);
+        assert_eq!(buffs.instances[0].buff_id, "attack_up");
+    }
+
+    // ── apply_buff / remove_buff 集成测试 ──
+
+    #[test]
+    fn apply_buff_添加修饰符和标签() {
+        let mut buffs = ActiveBuffs::default();
+        let mut attrs = Attributes::default();
+        let mut tags = GameplayTags::default();
+        attrs.set_base(AttributeKind::Atk, 10.0);
+
+        let buff_data = make_buff(
+            "attack_up",
+            true,
+            vec![AttributeModifierDef {
+                kind: AttributeKind::Atk,
+                op: ModifierOp::Add,
+                value: 5.0,
+            }],
+            vec![GameplayTag::BUFF],
+        );
+
+        apply_buff(&mut buffs, &mut attrs, &mut tags, &buff_data, None, 2);
+
+        assert_eq!(buffs.len(), 1);
+        assert_eq!(attrs.get(AttributeKind::Atk), 15.0); // 10 + 5
+        assert!(tags.has(GameplayTag::BUFF));
+    }
+
+    #[test]
+    fn remove_buff_清理修饰符和标签() {
+        let mut buffs = ActiveBuffs::default();
+        let mut attrs = Attributes::default();
+        let mut tags = GameplayTags::default();
+        attrs.set_base(AttributeKind::Atk, 10.0);
+
+        let buff_data = make_buff(
+            "attack_up",
+            true,
+            vec![AttributeModifierDef {
+                kind: AttributeKind::Atk,
+                op: ModifierOp::Add,
+                value: 5.0,
+            }],
+            vec![GameplayTag::BUFF],
+        );
+
+        let instance_id = apply_buff(&mut buffs, &mut attrs, &mut tags, &buff_data, None, 2);
+        assert_eq!(attrs.get(AttributeKind::Atk), 15.0);
+
+        remove_buff(&mut buffs, &mut attrs, &mut tags, instance_id);
+        assert_eq!(attrs.get(AttributeKind::Atk), 10.0); // 修饰符已移除
+        assert!(!tags.has(GameplayTag::BUFF)); // 标签已移除
+        assert!(buffs.is_empty());
+    }
+
+    #[test]
+    fn remove_buff_共享标签不被误删() {
+        let mut buffs = ActiveBuffs::default();
+        let mut attrs = Attributes::default();
+        let mut tags = GameplayTags::default();
+
+        let buff_a = make_buff(
+            "buff_a",
+            true,
+            vec![AttributeModifierDef {
+                kind: AttributeKind::Atk,
+                op: ModifierOp::Add,
+                value: 5.0,
+            }],
+            vec![GameplayTag::BUFF, GameplayTag::FIRE],
+        );
+        let buff_b = make_buff(
+            "buff_b",
+            true,
+            vec![AttributeModifierDef {
+                kind: AttributeKind::Def,
+                op: ModifierOp::Add,
+                value: 3.0,
+            }],
+            vec![GameplayTag::BUFF, GameplayTag::FIRE],
+        );
+
+        let id_a = apply_buff(&mut buffs, &mut attrs, &mut tags, &buff_a, None, 2);
+        let _id_b = apply_buff(&mut buffs, &mut attrs, &mut tags, &buff_b, None, 2);
+
+        // 移除 buff_a，BUFF 和 FIRE 标签仍由 buff_b 提供
+        remove_buff(&mut buffs, &mut attrs, &mut tags, id_a);
+        assert!(tags.has(GameplayTag::BUFF));
+        assert!(tags.has(GameplayTag::FIRE));
+    }
+
+    #[test]
+    fn apply_buff_cleanse_驱散所有debuff() {
+        let mut buffs = ActiveBuffs::default();
+        let mut attrs = Attributes::default();
+        let mut tags = GameplayTags::default();
+        attrs.set_base(AttributeKind::Atk, 10.0);
+
+        // 先施加一个 debuff
+        let debuff = make_buff(
+            "attack_down",
+            false,
+            vec![AttributeModifierDef {
+                kind: AttributeKind::Atk,
+                op: ModifierOp::Add,
+                value: -5.0,
+            }],
+            vec![GameplayTag::DEBUFF],
+        );
+        apply_buff(&mut buffs, &mut attrs, &mut tags, &debuff, None, 2);
+        assert_eq!(attrs.get(AttributeKind::Atk), 5.0);
+
+        // 施加 cleanse
+        let cleanse = BuffData {
+            id: "cleanse".into(),
+            name: "驱散".into(),
+            default_duration: 0,
+            modifiers: vec![],
+            tags: vec![GameplayTag::BUFF],
+            dot_damage: 0,
+            hot_heal: 0,
+            is_stun: false,
+            is_cleanse: true,
+            is_buff: true,
+        };
+        apply_buff(&mut buffs, &mut attrs, &mut tags, &cleanse, None, 0);
+
+        // debuff 被驱散，属性恢复
+        assert!(buffs.is_empty());
+        assert_eq!(attrs.get(AttributeKind::Atk), 10.0);
+    }
+
+    #[test]
+    fn remove_all_debuffs_只移除debuff保留buff() {
+        let mut buffs = ActiveBuffs::default();
+        let mut attrs = Attributes::default();
+        let mut tags = GameplayTags::default();
+        attrs.set_base(AttributeKind::Atk, 10.0);
+        attrs.set_base(AttributeKind::Def, 5.0);
+
+        let buff = make_buff(
+            "attack_up",
+            true,
+            vec![AttributeModifierDef {
+                kind: AttributeKind::Atk,
+                op: ModifierOp::Add,
+                value: 5.0,
+            }],
+            vec![GameplayTag::BUFF],
+        );
+        let debuff = make_buff(
+            "defense_down",
+            false,
+            vec![AttributeModifierDef {
+                kind: AttributeKind::Def,
+                op: ModifierOp::Add,
+                value: -3.0,
+            }],
+            vec![GameplayTag::DEBUFF],
+        );
+
+        apply_buff(&mut buffs, &mut attrs, &mut tags, &buff, None, 2);
+        apply_buff(&mut buffs, &mut attrs, &mut tags, &debuff, None, 2);
+        assert_eq!(attrs.get(AttributeKind::Atk), 15.0);
+        assert_eq!(attrs.get(AttributeKind::Def), 2.0);
+
+        remove_all_debuffs(&mut buffs, &mut attrs, &mut tags);
+        assert_eq!(buffs.len(), 1);
+        assert_eq!(buffs.instances[0].buff_id, "attack_up");
+        assert_eq!(attrs.get(AttributeKind::Atk), 15.0); // buff 保留
+        assert_eq!(attrs.get(AttributeKind::Def), 5.0); // debuff 修饰符已移除
+    }
+
+    // ── BuffRegistry ──
+
+    #[test]
+    fn 注册表_初始化包含所有buff() {
+        let mut registry = BuffRegistry::default();
+        registry.populate();
+        assert!(registry.get("attack_up").is_some());
+        assert!(registry.get("poison").is_some());
+        assert!(registry.get("stun").is_some());
+        assert!(registry.get("cleanse").is_some());
+        assert!(registry.get("regen").is_some());
+    }
+
+    #[test]
+    fn 注册表_不存在的buff返回none() {
+        let mut registry = BuffRegistry::default();
+        registry.populate();
+        assert!(registry.get("nonexistent").is_none());
+    }
+
+    #[test]
+    fn 注册表_buff数据字段正确() {
+        let mut registry = BuffRegistry::default();
+        registry.populate();
+        let poison = registry.get("poison").unwrap();
+        assert_eq!(poison.dot_damage, 3);
+        assert_eq!(poison.hot_heal, 0);
+        assert!(!poison.is_buff);
+        assert!(poison.tags.contains(&GameplayTag::POISON));
+    }
+}
