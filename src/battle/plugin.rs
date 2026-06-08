@@ -1,8 +1,8 @@
-use super::event::CombatEventPlugin;
+use super::pipeline::CombatEventPlugin;
 use super::log::CombatLogPlugin;
 use bevy::prelude::*;
 
-/// 战斗插件（组合 CombatEvent + CombatLog 子插件）
+/// 战斗插件（组合 Effect Pipeline + CombatLog 子插件）
 pub struct BattlePlugin;
 
 impl Plugin for BattlePlugin {

@@ -1,18 +1,18 @@
-// 持续效果模块：使用 ActiveBuffs + Attributes + GameplayTags
-// 替代原 StatusEffect 枚举，实现数据驱动的 Buff/Debuff 系统
+// 持续效果结算：DoT/HoT/晕眩/tick，由 BuffPlugin 注册
+// 原 status.rs，移入 buff 模块统一管理
 
 use crate::assets::CnFont;
 use crate::battle::{CombatLog, LogSegment, log_color};
 use crate::gameplay::attribute::{AttributeKind, Attributes, BuffInstanceId};
-use crate::gameplay::tag::GameplayTag;
-use crate::gameplay::tag::GameplayTags;
-use crate::buff::{remove_buff, ActiveBuffs};
+use crate::gameplay::tag::{GameplayTag, GameplayTags};
 use crate::skill::SkillCooldowns;
 use crate::map::GameMap;
 use crate::turn::TurnState;
 use crate::character::{GridPosition, TraitGrantedTags, Unit, UnitName};
 use crate::ui::vfx;
 use bevy::prelude::*;
+
+use super::{ActiveBuffs, remove_buff};
 
 /// 持续效果结算系统：在新阵营回合开始时，对该阵营所有单位结算 DoT/HoT/晕眩，并 tick
 pub fn resolve_status_effects(
@@ -43,7 +43,6 @@ pub fn resolve_status_effects(
         // 1. 晕眩结算：被晕眩的单位本回合无法行动，消耗 Stun
         if buffs.is_stunned() {
             unit.acted = true;
-            // 移除所有带 STUN 标签的 Buff 实例
             let stun_ids: Vec<BuffInstanceId> = buffs
                 .instances
                 .iter()
@@ -98,7 +97,6 @@ pub fn resolve_status_effects(
 
 /// tick 所有 Buff：递减持续时间，移除过期的并清理其修饰符和标签
 fn tick_buffs(buffs: &mut ActiveBuffs, attrs: &mut Attributes, tags: &mut GameplayTags, trait_tags: &TraitGrantedTags) {
-    // 收集需要移除的 Buff ID（remaining_turns 将变为 0 的）
     let expired_ids: Vec<BuffInstanceId> = buffs
         .instances
         .iter()
@@ -106,28 +104,19 @@ fn tick_buffs(buffs: &mut ActiveBuffs, attrs: &mut Attributes, tags: &mut Gamepl
         .map(|inst| inst.instance_id)
         .collect();
 
-    // 先递减
     buffs.tick();
 
-    // 移除过期的 Buff（tick 后 remaining_turns == 0 的已被 retain 移除，但修饰符还在）
-    // 实际上 tick() 已经移除了 remaining_turns == 0 的实例
-    // 但我们还需要清理 Attributes 中的修饰符和 GameplayTags 中的标签
     for id in expired_ids {
         attrs.remove_modifiers_from(id);
-        // 标签清理需要检查是否还有其他 Buff 提供相同标签
-        // 简化处理：重新计算所有活跃 Buff 的标签
     }
 
-    // 重新同步 GameplayTags（基于当前活跃 Buff + trait 授予的标签）
     rebuild_tags_from_buffs(buffs, tags, trait_tags);
 }
 
 /// 从所有活跃 Buff 重新构建 GameplayTags（保留 trait 授予的标签）
 fn rebuild_tags_from_buffs(buffs: &ActiveBuffs, tags: &mut GameplayTags, trait_tags: &TraitGrantedTags) {
-    // 保留 trait 授予的标签（如 MELEE、RANGED、FIRE 等）
     let preserved_mask = trait_tags.0.0;
 
-    // 从活跃 Buff 重建
     let mut new_tags = GameplayTags(preserved_mask);
     for buff in &buffs.instances {
         for tag in &buff.tags {
@@ -136,14 +125,4 @@ fn rebuild_tags_from_buffs(buffs: &ActiveBuffs, tags: &mut GameplayTags, trait_t
     }
 
     tags.0 = new_tags.0;
-}
-
-/// 持续效果插件
-pub struct StatusPlugin;
-
-impl Plugin for StatusPlugin {
-    fn build(&self, app: &mut App) {
-        use crate::turn::TurnPhase;
-        app.add_systems(OnEnter(TurnPhase::SelectUnit), resolve_status_effects);
-    }
 }

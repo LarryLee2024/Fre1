@@ -8,7 +8,6 @@ mod gameplay;
 mod input;
 mod map;
 mod skill;
-mod status;
 mod turn;
 mod ui;
 
@@ -29,7 +28,6 @@ use gameplay::tag_def::TagDefPlugin;
 use input::InputPlugin;
 use map::MapPlugin;
 use skill::SkillPlugin;
-use status::StatusPlugin;
 use turn::{AppState, TurnPlugin};
 use ui::UiPlugin;
 
@@ -62,7 +60,6 @@ fn main() {
             CharacterPlugin,
             BattlePlugin,
             AiPlugin,
-            StatusPlugin,
         ))
         // 表现层插件
         .add_plugins((UiPlugin, InputPlugin))
