@@ -1,6 +1,7 @@
 // 标签定义注册表：标签元数据外部化，支持 UI 自动生成和标签查询
 // GameplayTag 仍为位掩码（运行时 O(1) 查询），显示元数据从 RON 加载
 
+use crate::core::registry_loader::RegistryLoader;
 use crate::core::tag::{GameplayTag, TagName};
 use bevy::prelude::*;
 use serde::Deserialize;
@@ -22,6 +23,9 @@ pub enum TagCategory {
 /// 标签定义（RON 反序列化用）
 #[derive(Clone, Debug, Deserialize)]
 pub struct TagDefinition {
+    /// 配置版本号（预留，用于未来存档兼容性检查）
+    #[serde(default)]
+    pub version: u32,
     pub tag: TagName,
     pub display_name: String,
     pub description: String,
@@ -56,20 +60,6 @@ impl TagRegistry {
             .collect()
     }
 
-    /// 从 RON 文件加载
-    pub fn load_from_file(path: &str) -> Self {
-        let mut registry = TagRegistry::default();
-        let (defs, loaded) =
-            crate::core::loader::load_file_array::<TagDefinition>(path, "标签定义");
-        for def in defs {
-            registry.definitions.insert(def.tag.to_tag(), def);
-        }
-        if !loaded {
-            registry.register_defaults();
-        }
-        registry
-    }
-
     /// 注册内置默认标签定义
     fn register_defaults(&mut self) {
         if !self.definitions.is_empty() {
@@ -78,18 +68,21 @@ impl TagRegistry {
         let defaults = vec![
             // 元素
             TagDefinition {
+                version: 0,
                 tag: TagName::Fire,
                 display_name: "火焰".into(),
                 description: "火属性".into(),
                 category: TagCategory::Element,
             },
             TagDefinition {
+                version: 0,
                 tag: TagName::Ice,
                 display_name: "冰霜".into(),
                 description: "冰属性".into(),
                 category: TagCategory::Element,
             },
             TagDefinition {
+                version: 0,
                 tag: TagName::Poison,
                 display_name: "毒素".into(),
                 description: "毒属性".into(),
@@ -97,18 +90,21 @@ impl TagRegistry {
             },
             // 状态
             TagDefinition {
+                version: 0,
                 tag: TagName::Stun,
                 display_name: "晕眩".into(),
                 description: "无法行动".into(),
                 category: TagCategory::Status,
             },
             TagDefinition {
+                version: 0,
                 tag: TagName::Burn,
                 display_name: "燃烧".into(),
                 description: "每回合受到火焰伤害".into(),
                 category: TagCategory::Status,
             },
             TagDefinition {
+                version: 0,
                 tag: TagName::Regen,
                 display_name: "恢复".into(),
                 description: "每回合恢复生命值".into(),
@@ -116,12 +112,14 @@ impl TagRegistry {
             },
             // 武器
             TagDefinition {
+                version: 0,
                 tag: TagName::Melee,
                 display_name: "近战".into(),
                 description: "近战攻击".into(),
                 category: TagCategory::Weapon,
             },
             TagDefinition {
+                version: 0,
                 tag: TagName::Ranged,
                 display_name: "远程".into(),
                 description: "远程攻击".into(),
@@ -129,18 +127,21 @@ impl TagRegistry {
             },
             // 职业
             TagDefinition {
+                version: 0,
                 tag: TagName::Warrior,
                 display_name: "战士".into(),
                 description: "战士职业".into(),
                 category: TagCategory::Class,
             },
             TagDefinition {
+                version: 0,
                 tag: TagName::Archer,
                 display_name: "弓手".into(),
                 description: "弓手职业".into(),
                 category: TagCategory::Class,
             },
             TagDefinition {
+                version: 0,
                 tag: TagName::Mage,
                 display_name: "法师".into(),
                 description: "法师职业".into(),
@@ -148,18 +149,21 @@ impl TagRegistry {
             },
             // 移动类型
             TagDefinition {
+                version: 0,
                 tag: TagName::Flying,
                 display_name: "飞行".into(),
                 description: "飞行单位，可跨越山地和水域".into(),
                 category: TagCategory::Movement,
             },
             TagDefinition {
+                version: 0,
                 tag: TagName::Mounted,
                 display_name: "骑兵".into(),
                 description: "骑兵单位，平原高速但受限于地形".into(),
                 category: TagCategory::Movement,
             },
             TagDefinition {
+                version: 0,
                 tag: TagName::Swimming,
                 display_name: "水生".into(),
                 description: "水生单位，水域通行无阻".into(),
@@ -167,12 +171,14 @@ impl TagRegistry {
             },
             // 技能类型
             TagDefinition {
+                version: 0,
                 tag: TagName::SkillActive,
                 display_name: "主动技能".into(),
                 description: "主动施放的技能".into(),
                 category: TagCategory::SkillType,
             },
             TagDefinition {
+                version: 0,
                 tag: TagName::SkillPassive,
                 display_name: "被动技能".into(),
                 description: "被动触发的技能".into(),
@@ -180,12 +186,14 @@ impl TagRegistry {
             },
             // Buff 类型
             TagDefinition {
+                version: 0,
                 tag: TagName::Buff,
                 display_name: "增益".into(),
                 description: "正面效果".into(),
                 category: TagCategory::BuffType,
             },
             TagDefinition {
+                version: 0,
                 tag: TagName::Debuff,
                 display_name: "减益".into(),
                 description: "负面效果".into(),
@@ -196,6 +204,26 @@ impl TagRegistry {
         for def in defaults {
             self.definitions.insert(def.tag.to_tag(), def);
         }
+    }
+}
+
+impl RegistryLoader for TagRegistry {
+    type Item = TagDefinition;
+
+    fn register_item(&mut self, item: TagDefinition) {
+        self.definitions.insert(item.tag.to_tag(), item);
+    }
+
+    fn register_defaults(&mut self) {
+        TagRegistry::register_defaults(self);
+    }
+
+    fn is_empty(&self) -> bool {
+        self.definitions.is_empty()
+    }
+
+    fn registry_name() -> &'static str {
+        "标签定义"
     }
 }
 

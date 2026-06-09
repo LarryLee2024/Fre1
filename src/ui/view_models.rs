@@ -122,6 +122,7 @@ pub enum GameOverState {
 // ── ViewModel 更新系统 ──
 
 /// 从游戏数据构建 SelectedUnitView（基于 HoveredEntity，任何单位都可查看）
+/// 仅在 HoveredEntity 变化时刷新，避免每帧重建
 pub fn update_selected_unit_view(
     hovered: Res<HoveredEntity>,
     units: Query<(
@@ -139,6 +140,11 @@ pub fn update_selected_unit_view(
     trait_registry: Res<TraitRegistry>,
     mut view: ResMut<SelectedUnitView>,
 ) {
+    // 仅在 HoveredEntity 变化时刷新
+    if !hovered.is_changed() && !view.is_added() {
+        return;
+    }
+
     if let Some(entity) = hovered.entity {
         if let Ok((
             _unit,
@@ -148,7 +154,7 @@ pub fn update_selected_unit_view(
             buffs,
             race,
             class,
-            cooldowns,
+            _cooldowns,
             trait_collection,
         )) = units.get(entity)
         {

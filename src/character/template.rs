@@ -3,6 +3,7 @@
 
 use super::components::Faction;
 use crate::core::attribute::AttributeKind;
+use crate::core::registry_loader::RegistryLoader;
 use crate::skill::BASIC_ATTACK_ID;
 use bevy::prelude::*;
 use serde::Deserialize;
@@ -94,22 +95,6 @@ impl UnitTemplateRegistry {
     /// 注册一个单位模板
     pub fn register(&mut self, template: UnitTemplate) {
         self.templates.insert(template.id.clone(), template);
-    }
-
-    /// 从 assets/units/ 目录加载所有 .ron 文件
-    pub fn load_from_dir(dir: &str) -> Self {
-        let mut registry = UnitTemplateRegistry::default();
-        let (defs, loaded) =
-            crate::core::loader::load_dir_single::<UnitTemplateDef>(dir, "单位模板");
-        for def in defs {
-            let id = def.id.clone();
-            registry.register(def.into());
-            bevy::log::info!("加载单位模板: {}", id);
-        }
-        if !loaded {
-            registry.register_defaults();
-        }
-        registry
     }
 
     /// 注册内置默认单位模板（确保基础功能可用）
@@ -236,6 +221,28 @@ impl UnitTemplateRegistry {
                 ai_behavior: "aggressive".into(),
             },
         );
+    }
+}
+
+impl RegistryLoader for UnitTemplateRegistry {
+    type Item = UnitTemplateDef;
+
+    fn register_item(&mut self, item: UnitTemplateDef) {
+        let id = item.id.clone();
+        self.register(item.into());
+        bevy::log::info!("加载单位模板: {}", id);
+    }
+
+    fn register_defaults(&mut self) {
+        UnitTemplateRegistry::register_defaults(self);
+    }
+
+    fn is_empty(&self) -> bool {
+        self.templates.is_empty()
+    }
+
+    fn registry_name() -> &'static str {
+        "单位模板"
     }
 }
 

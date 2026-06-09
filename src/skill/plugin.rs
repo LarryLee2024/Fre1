@@ -1,4 +1,5 @@
 use super::domain::SkillRegistry;
+use crate::core::registry_loader::RegistryLoader;
 use bevy::prelude::*;
 
 /// 技能插件

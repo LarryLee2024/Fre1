@@ -1,4 +1,5 @@
 use crate::core::attribute::{AttributeKind, AttributeModifierDef, ModifierOp};
+use crate::core::registry_loader::RegistryLoader;
 use crate::core::tag::{GameplayTag, TagName};
 use bevy::prelude::*;
 use serde::Deserialize;
@@ -73,21 +74,6 @@ impl BuffRegistry {
     /// 注册一个 Buff
     pub fn register(&mut self, buff: BuffData) {
         self.buffs.insert(buff.id.clone(), buff);
-    }
-
-    /// 从 assets/buffs/ 目录加载所有 .ron 文件
-    pub fn load_from_dir(dir: &str) -> Self {
-        let mut registry = BuffRegistry::default();
-        let (defs, loaded) = crate::core::loader::load_dir_single::<BuffDef>(dir, "Buff");
-        for def in defs {
-            let id = def.id.clone();
-            registry.register(def.into());
-            bevy::log::info!("加载Buff: {}", id);
-        }
-        if !loaded {
-            registry.register_defaults();
-        }
-        registry
     }
 
     /// 注册内置默认 Buff（确保基础功能可用）
@@ -250,6 +236,28 @@ impl BuffRegistry {
                 is_buff: false,
             },
         );
+    }
+}
+
+impl RegistryLoader for BuffRegistry {
+    type Item = BuffDef;
+
+    fn register_item(&mut self, item: BuffDef) {
+        let id = item.id.clone();
+        self.register(item.into());
+        bevy::log::info!("加载Buff: {}", id);
+    }
+
+    fn register_defaults(&mut self) {
+        BuffRegistry::register_defaults(self);
+    }
+
+    fn is_empty(&self) -> bool {
+        self.buffs.is_empty()
+    }
+
+    fn registry_name() -> &'static str {
+        "Buff"
     }
 }
 

@@ -2,6 +2,7 @@
 // AttributeKind 仍为枚举（运行时类型安全），显示元数据从 RON 加载
 
 use crate::core::attribute::AttributeKind;
+use crate::core::registry_loader::RegistryLoader;
 use bevy::prelude::*;
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -9,6 +10,9 @@ use std::collections::HashMap;
 /// 属性定义（RON 反序列化用）
 #[derive(Clone, Debug, Deserialize)]
 pub struct AttributeDefinition {
+    /// 配置版本号（预留，用于未来存档兼容性检查）
+    #[serde(default)]
+    pub version: u32,
     pub kind: AttributeKind,
     pub display_name: String,
     pub description: String,
@@ -36,20 +40,6 @@ impl AttributeRegistry {
             .unwrap_or(kind.label())
     }
 
-    /// 从 RON 文件加载
-    pub fn load_from_file(path: &str) -> Self {
-        let mut registry = AttributeRegistry::default();
-        let (defs, loaded) =
-            crate::core::loader::load_file_array::<AttributeDefinition>(path, "属性定义");
-        for def in defs {
-            registry.definitions.insert(def.kind, def);
-        }
-        if !loaded {
-            registry.register_defaults();
-        }
-        registry
-    }
-
     /// 注册内置默认属性定义（8核心 + 3资源 + 13衍生 = 24种）
     fn register_defaults(&mut self) {
         if !self.definitions.is_empty() {
@@ -58,6 +48,7 @@ impl AttributeRegistry {
         let defaults = vec![
             // ── 8 维核心属性 ──
             AttributeDefinition {
+                version: 0,
                 kind: AttributeKind::Might,
                 display_name: "力量".into(),
                 description: "物理攻击力".into(),
@@ -66,6 +57,7 @@ impl AttributeRegistry {
                 max_value: 999.0,
             },
             AttributeDefinition {
+                version: 0,
                 kind: AttributeKind::Dexterity,
                 display_name: "技巧".into(),
                 description: "命中、暴击、远程".into(),
@@ -74,6 +66,7 @@ impl AttributeRegistry {
                 max_value: 999.0,
             },
             AttributeDefinition {
+                version: 0,
                 kind: AttributeKind::Agility,
                 display_name: "敏捷".into(),
                 description: "行动顺序、闪避、移动".into(),
@@ -82,6 +75,7 @@ impl AttributeRegistry {
                 max_value: 999.0,
             },
             AttributeDefinition {
+                version: 0,
                 kind: AttributeKind::Vitality,
                 display_name: "体质".into(),
                 description: "生命、物防".into(),
@@ -90,6 +84,7 @@ impl AttributeRegistry {
                 max_value: 999.0,
             },
             AttributeDefinition {
+                version: 0,
                 kind: AttributeKind::Intelligence,
                 display_name: "智力".into(),
                 description: "法术攻击、法力".into(),
@@ -98,6 +93,7 @@ impl AttributeRegistry {
                 max_value: 999.0,
             },
             AttributeDefinition {
+                version: 0,
                 kind: AttributeKind::Willpower,
                 display_name: "意志".into(),
                 description: "魔防、治疗、异常抵抗".into(),
@@ -106,6 +102,7 @@ impl AttributeRegistry {
                 max_value: 999.0,
             },
             AttributeDefinition {
+                version: 0,
                 kind: AttributeKind::Presence,
                 display_name: "魅力".into(),
                 description: "光环、召唤、指挥".into(),
@@ -114,6 +111,7 @@ impl AttributeRegistry {
                 max_value: 999.0,
             },
             AttributeDefinition {
+                version: 0,
                 kind: AttributeKind::Luck,
                 display_name: "幸运".into(),
                 description: "暴击、掉落、随机事件".into(),
@@ -123,6 +121,7 @@ impl AttributeRegistry {
             },
             // ── 生命资源 ──
             AttributeDefinition {
+                version: 0,
                 kind: AttributeKind::Hp,
                 display_name: "生命值".into(),
                 description: "当前生命值".into(),
@@ -131,6 +130,7 @@ impl AttributeRegistry {
                 max_value: 9999.0,
             },
             AttributeDefinition {
+                version: 0,
                 kind: AttributeKind::Mp,
                 display_name: "魔法值".into(),
                 description: "当前魔法值".into(),
@@ -139,6 +139,7 @@ impl AttributeRegistry {
                 max_value: 9999.0,
             },
             AttributeDefinition {
+                version: 0,
                 kind: AttributeKind::Stamina,
                 display_name: "耐力值".into(),
                 description: "当前耐力值".into(),
@@ -148,6 +149,7 @@ impl AttributeRegistry {
             },
             // ── 衍生属性 ──
             AttributeDefinition {
+                version: 0,
                 kind: AttributeKind::MaxHp,
                 display_name: "最大生命值".into(),
                 description: "生命值上限".into(),
@@ -156,6 +158,7 @@ impl AttributeRegistry {
                 max_value: 9999.0,
             },
             AttributeDefinition {
+                version: 0,
                 kind: AttributeKind::MaxMp,
                 display_name: "最大魔法值".into(),
                 description: "魔法值上限".into(),
@@ -164,6 +167,7 @@ impl AttributeRegistry {
                 max_value: 9999.0,
             },
             AttributeDefinition {
+                version: 0,
                 kind: AttributeKind::MaxStamina,
                 display_name: "最大耐力值".into(),
                 description: "耐力值上限".into(),
@@ -172,6 +176,7 @@ impl AttributeRegistry {
                 max_value: 9999.0,
             },
             AttributeDefinition {
+                version: 0,
                 kind: AttributeKind::Attack,
                 display_name: "物理攻击力".into(),
                 description: "物理伤害基础".into(),
@@ -180,6 +185,7 @@ impl AttributeRegistry {
                 max_value: 9999.0,
             },
             AttributeDefinition {
+                version: 0,
                 kind: AttributeKind::Defense,
                 display_name: "物理防御力".into(),
                 description: "物理伤害减免".into(),
@@ -188,6 +194,7 @@ impl AttributeRegistry {
                 max_value: 9999.0,
             },
             AttributeDefinition {
+                version: 0,
                 kind: AttributeKind::MagicAttack,
                 display_name: "魔法攻击力".into(),
                 description: "魔法伤害基础".into(),
@@ -196,6 +203,7 @@ impl AttributeRegistry {
                 max_value: 9999.0,
             },
             AttributeDefinition {
+                version: 0,
                 kind: AttributeKind::MagicDefense,
                 display_name: "魔法防御力".into(),
                 description: "魔法伤害减免".into(),
@@ -204,6 +212,7 @@ impl AttributeRegistry {
                 max_value: 9999.0,
             },
             AttributeDefinition {
+                version: 0,
                 kind: AttributeKind::Accuracy,
                 display_name: "命中率".into(),
                 description: "攻击命中概率".into(),
@@ -212,6 +221,7 @@ impl AttributeRegistry {
                 max_value: 9999.0,
             },
             AttributeDefinition {
+                version: 0,
                 kind: AttributeKind::Evasion,
                 display_name: "闪避率".into(),
                 description: "躲避攻击概率".into(),
@@ -220,6 +230,7 @@ impl AttributeRegistry {
                 max_value: 9999.0,
             },
             AttributeDefinition {
+                version: 0,
                 kind: AttributeKind::CritRate,
                 display_name: "暴击率".into(),
                 description: "暴击触发概率".into(),
@@ -228,6 +239,7 @@ impl AttributeRegistry {
                 max_value: 100.0,
             },
             AttributeDefinition {
+                version: 0,
                 kind: AttributeKind::MoveRange,
                 display_name: "移动力".into(),
                 description: "每回合可移动格数".into(),
@@ -236,6 +248,7 @@ impl AttributeRegistry {
                 max_value: 99.0,
             },
             AttributeDefinition {
+                version: 0,
                 kind: AttributeKind::Initiative,
                 display_name: "行动速度".into(),
                 description: "决定行动顺序".into(),
@@ -244,6 +257,7 @@ impl AttributeRegistry {
                 max_value: 9999.0,
             },
             AttributeDefinition {
+                version: 0,
                 kind: AttributeKind::AttackRange,
                 display_name: "攻击范围".into(),
                 description: "攻击距离（格数）".into(),
@@ -256,6 +270,26 @@ impl AttributeRegistry {
         for def in defaults {
             self.definitions.insert(def.kind, def);
         }
+    }
+}
+
+impl RegistryLoader for AttributeRegistry {
+    type Item = AttributeDefinition;
+
+    fn register_item(&mut self, item: AttributeDefinition) {
+        self.definitions.insert(item.kind, item);
+    }
+
+    fn register_defaults(&mut self) {
+        AttributeRegistry::register_defaults(self);
+    }
+
+    fn is_empty(&self) -> bool {
+        self.definitions.is_empty()
+    }
+
+    fn registry_name() -> &'static str {
+        "属性定义"
     }
 }
 

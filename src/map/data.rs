@@ -1,6 +1,7 @@
 // 地图数据：数据驱动的地形定义 + 关卡配置
 // 支持从 assets/terrains/*.ron 和 assets/maps/*.ron 外部配置文件加载
 
+use crate::core::registry_loader::RegistryLoader;
 use bevy::prelude::*;
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -75,20 +76,6 @@ impl TerrainRegistry {
             .collect()
     }
 
-    /// 从 assets/terrains/ 目录加载所有 .ron 文件
-    pub fn load_from_dir(dir: &str) -> Self {
-        let mut registry = TerrainRegistry::default();
-        let (defs, _loaded) = crate::core::loader::load_dir_single::<TerrainDefRon>(dir, "地形");
-        for def in defs {
-            let id = def.id.clone();
-            registry.terrains.insert(id.clone(), def.into());
-            bevy::log::info!("加载地形: {}", id);
-        }
-        // TerrainRegistry 不在 load_from_dir 中调用 register_defaults
-        // 由 Plugin 层显式调用
-        registry
-    }
-
     /// 兜底默认值
     pub fn register_defaults(&mut self) {
         if self.terrains.is_empty() {
@@ -112,6 +99,28 @@ impl TerrainRegistry {
                 );
             }
         }
+    }
+}
+
+impl RegistryLoader for TerrainRegistry {
+    type Item = TerrainDefRon;
+
+    fn register_item(&mut self, item: TerrainDefRon) {
+        let id = item.id.clone();
+        self.terrains.insert(id.clone(), item.into());
+        bevy::log::info!("加载地形: {}", id);
+    }
+
+    fn register_defaults(&mut self) {
+        TerrainRegistry::register_defaults(self);
+    }
+
+    fn is_empty(&self) -> bool {
+        self.terrains.is_empty()
+    }
+
+    fn registry_name() -> &'static str {
+        "地形"
     }
 }
 
@@ -223,18 +232,28 @@ impl LevelRegistry {
     pub fn first(&self) -> Option<&LevelConfig> {
         self.levels.values().next()
     }
+}
 
-    /// 从 assets/maps/ 目录加载所有 .ron 文件
-    pub fn load_from_dir(dir: &str) -> Self {
-        let mut registry = LevelRegistry::default();
-        let (defs, _loaded) = crate::core::loader::load_dir_single::<LevelConfigDef>(dir, "关卡");
-        for def in defs {
-            let id = def.id.clone();
-            registry.levels.insert(id.clone(), def.into());
-            bevy::log::info!("加载关卡: {}", id);
-        }
-        // LevelRegistry 无 register_defaults（关卡没有硬编码兜底）
-        registry
+impl RegistryLoader for LevelRegistry {
+    type Item = LevelConfigDef;
+
+    fn register_item(&mut self, item: LevelConfigDef) {
+        let id = item.id.clone();
+        self.levels.insert(id.clone(), item.into());
+        bevy::log::info!("加载关卡: {}", id);
+    }
+
+    /// 关卡没有硬编码兜底，空注册表即为空
+    fn register_defaults(&mut self) {
+        // 关卡没有默认数据
+    }
+
+    fn is_empty(&self) -> bool {
+        self.levels.is_empty()
+    }
+
+    fn registry_name() -> &'static str {
+        "关卡"
     }
 }
 

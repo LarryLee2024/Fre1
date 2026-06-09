@@ -117,3 +117,11 @@ pub fn divider(theme: &UiTheme) -> (Node, BackgroundColor) {
         BackgroundColor(theme.divider_color),
     )
 }
+
+/// 按钮节点（仅布局，不含交互逻辑）
+pub fn button(theme: &UiTheme) -> Node {
+    Node {
+        padding: theme.button_padding,
+        ..default()
+    }
+}

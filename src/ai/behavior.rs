@@ -2,6 +2,7 @@
 // 替代硬编码的 AI 逻辑，支持不同单位使用不同行为模式
 // 支持从 assets/ai/*.ron 外部配置文件加载
 
+use crate::core::registry_loader::RegistryLoader;
 use bevy::prelude::*;
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -129,21 +130,6 @@ impl AiBehaviorRegistry {
         })
     }
 
-    /// 从 assets/ai/ 目录加载所有 .ron 文件
-    pub fn load_from_dir(dir: &str) -> Self {
-        let mut registry = AiBehaviorRegistry::default();
-        let (defs, loaded) = crate::core::loader::load_dir_single::<AiBehaviorDef>(dir, "AI行为");
-        for def in defs {
-            let id = def.id.clone();
-            registry.register(def.into());
-            bevy::log::info!("加载AI行为: {}", id);
-        }
-        if !loaded {
-            registry.register_defaults();
-        }
-        registry
-    }
-
     /// 注册内置默认 AI 行为
     fn register_defaults(&mut self) {
         if !self.behaviors.is_empty() {
@@ -192,6 +178,28 @@ impl AiBehaviorRegistry {
             let id = def.id.clone();
             self.behaviors.insert(id, def.into());
         }
+    }
+}
+
+impl RegistryLoader for AiBehaviorRegistry {
+    type Item = AiBehaviorDef;
+
+    fn register_item(&mut self, item: AiBehaviorDef) {
+        let id = item.id.clone();
+        self.register(item.into());
+        bevy::log::info!("加载AI行为: {}", id);
+    }
+
+    fn register_defaults(&mut self) {
+        AiBehaviorRegistry::register_defaults(self);
+    }
+
+    fn is_empty(&self) -> bool {
+        self.behaviors.is_empty()
+    }
+
+    fn registry_name() -> &'static str {
+        "AI行为"
     }
 }
 

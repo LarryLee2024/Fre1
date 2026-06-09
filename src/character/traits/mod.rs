@@ -2,213 +2,19 @@
 // 替代硬编码的 class_tag 单标签，支持多 trait 组合
 // 支持从 assets/traits/*.ron 外部配置文件加载
 
+mod handlers;
+mod types;
+
+pub use handlers::*;
+pub use types::*;
+
 use crate::core::attribute::{AttributeModifierDef, AttributeModifierInstance, BuffInstanceId};
+use crate::core::registry_loader::RegistryLoader;
 use crate::core::tag::{GameplayTag, GameplayTags, TagName};
 use bevy::prelude::*;
-use serde::Deserialize;
 use std::collections::HashMap;
 
-/// Trait 触发时机
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Deserialize)]
-#[serde(rename_all = "PascalCase")]
-pub enum TraitTrigger {
-    /// 被动：始终生效（授予标签/属性修饰）
-    Passive,
-    /// 回合开始时触发
-    OnTurnStart,
-    /// 回合结束时触发
-    OnTurnEnd,
-    /// 攻击时触发
-    OnAttack,
-    /// 被攻击时触发
-    OnHit,
-    /// 击杀时触发
-    OnKill,
-}
-
-/// Trait 效果定义（RON 反序列化用，TagName 替代 GameplayTag）
-#[derive(Clone, Debug, Deserialize)]
-#[serde(rename_all = "PascalCase")]
-pub enum TraitEffectDef {
-    /// 授予标签
-    GrantTag(TagName),
-    /// 属性修饰（永久，作为基础值的一部分）
-    ModifyAttribute(AttributeModifierDef),
-    /// 触发时施加 Buff
-    ApplyBuff { buff_id: String, duration: u32 },
-}
-
-/// Trait 效果（运行时，GameplayTag 替代 TagName）
-#[derive(Clone, Debug)]
-pub enum TraitEffect {
-    GrantTag(GameplayTag),
-    ModifyAttribute(AttributeModifierDef),
-    ApplyBuff { buff_id: String, duration: u32 },
-}
-
-impl TraitEffect {
-    /// 返回效果类型名（与 variant 名对应，用于 Handler 查找）
-    pub fn type_name(&self) -> &'static str {
-        match self {
-            TraitEffect::GrantTag(_) => "GrantTag",
-            TraitEffect::ModifyAttribute(_) => "ModifyAttribute",
-            TraitEffect::ApplyBuff { .. } => "ApplyBuff",
-        }
-    }
-}
-
-// ── TraitEffectHandler trait 及内置实现 ──────────────────────────────
-
-/// 特性效果处理规则 trait：描述如何应用一种特性效果
-/// 新增效果类型时只需实现此 trait 并注册到 TraitEffectHandlerRegistry，
-/// 无需修改 TraitData 的 granted_tags/attribute_modifiers 方法
-pub trait TraitEffectHandler: Send + Sync + 'static {
-    /// 效果类型名（与 TraitEffect variant 名对应）
-    fn type_name(&self) -> &'static str;
-    /// 收集此效果授予的标签
-    fn granted_tags(&self, effect: &TraitEffect) -> Vec<GameplayTag>;
-    /// 收集此效果的属性修饰（返回引用的生命周期与 effect 绑定）
-    fn attribute_modifiers<'a>(&self, effect: &'a TraitEffect) -> Vec<&'a AttributeModifierDef>;
-}
-
-/// GrantTag 效果处理器
-pub struct GrantTagHandler;
-
-impl TraitEffectHandler for GrantTagHandler {
-    fn type_name(&self) -> &'static str {
-        "GrantTag"
-    }
-
-    fn granted_tags(&self, effect: &TraitEffect) -> Vec<GameplayTag> {
-        match effect {
-            TraitEffect::GrantTag(tag) => vec![*tag],
-            _ => vec![],
-        }
-    }
-
-    fn attribute_modifiers<'a>(&self, _effect: &'a TraitEffect) -> Vec<&'a AttributeModifierDef> {
-        vec![]
-    }
-}
-
-/// ModifyAttribute 效果处理器
-pub struct ModifyAttributeHandler;
-
-impl TraitEffectHandler for ModifyAttributeHandler {
-    fn type_name(&self) -> &'static str {
-        "ModifyAttribute"
-    }
-
-    fn granted_tags(&self, _effect: &TraitEffect) -> Vec<GameplayTag> {
-        vec![]
-    }
-
-    fn attribute_modifiers<'a>(&self, effect: &'a TraitEffect) -> Vec<&'a AttributeModifierDef> {
-        match effect {
-            TraitEffect::ModifyAttribute(mod_def) => vec![mod_def],
-            _ => vec![],
-        }
-    }
-}
-
-/// ApplyBuff 效果处理器
-pub struct ApplyBuffHandler;
-
-impl TraitEffectHandler for ApplyBuffHandler {
-    fn type_name(&self) -> &'static str {
-        "ApplyBuff"
-    }
-
-    fn granted_tags(&self, _effect: &TraitEffect) -> Vec<GameplayTag> {
-        vec![]
-    }
-
-    fn attribute_modifiers<'a>(&self, _effect: &'a TraitEffect) -> Vec<&'a AttributeModifierDef> {
-        vec![]
-    }
-}
-
-/// 特性效果处理器注册表（Bevy Resource）
-/// 通过 type_name 查找对应的 TraitEffectHandler，实现效果分发的扩展点
-#[derive(Resource)]
-pub struct TraitEffectHandlerRegistry {
-    handlers: HashMap<&'static str, Box<dyn TraitEffectHandler>>,
-}
-
-impl TraitEffectHandlerRegistry {
-    /// 创建包含所有内置处理器的注册表
-    pub fn with_defaults() -> Self {
-        let mut registry = Self {
-            handlers: HashMap::new(),
-        };
-        registry.register(Box::new(GrantTagHandler));
-        registry.register(Box::new(ModifyAttributeHandler));
-        registry.register(Box::new(ApplyBuffHandler));
-        registry
-    }
-
-    /// 注册一个效果处理器
-    pub fn register(&mut self, handler: Box<dyn TraitEffectHandler>) {
-        self.handlers.insert(handler.type_name(), handler);
-    }
-
-    /// 根据类型名查找处理器
-    pub fn get(&self, type_name: &str) -> Option<&dyn TraitEffectHandler> {
-        self.handlers.get(type_name).map(|h| h.as_ref())
-    }
-}
-
-impl Default for TraitEffectHandlerRegistry {
-    fn default() -> Self {
-        Self::with_defaults()
-    }
-}
-
-impl From<TraitEffectDef> for TraitEffect {
-    fn from(def: TraitEffectDef) -> Self {
-        match def {
-            TraitEffectDef::GrantTag(tag_name) => TraitEffect::GrantTag(tag_name.to_tag()),
-            TraitEffectDef::ModifyAttribute(mod_def) => TraitEffect::ModifyAttribute(mod_def),
-            TraitEffectDef::ApplyBuff { buff_id, duration } => {
-                TraitEffect::ApplyBuff { buff_id, duration }
-            }
-        }
-    }
-}
-
-/// Trait 定义（RON 反序列化用）
-#[derive(Clone, Debug, Deserialize)]
-pub struct TraitDefinition {
-    #[serde(default)]
-    pub version: u32,
-    pub id: String,
-    pub name: String,
-    pub description: String,
-    pub trigger: TraitTrigger,
-    pub effects: Vec<TraitEffectDef>,
-}
-
-/// Trait 数据（运行时）
-#[derive(Clone, Debug)]
-pub struct TraitData {
-    pub id: String,
-    pub name: String,
-    pub description: String,
-    pub trigger: TraitTrigger,
-    pub effects: Vec<TraitEffect>,
-}
-
-impl From<TraitDefinition> for TraitData {
-    fn from(def: TraitDefinition) -> Self {
-        TraitData {
-            id: def.id,
-            name: def.name,
-            description: def.description,
-            trigger: def.trigger,
-            effects: def.effects.into_iter().map(Into::into).collect(),
-        }
-    }
-}
+// ── TraitData 方法（依赖 TraitEffectHandlerRegistry，放在 mod.rs）──
 
 impl TraitData {
     /// 收集此 trait 授予的所有标签（通过 TraitEffectHandlerRegistry 分发）
@@ -238,23 +44,6 @@ impl TraitData {
                     .unwrap_or_default()
             })
             .collect()
-    }
-}
-
-/// 单位上的 Trait 集合组件
-#[derive(Component, Default, Debug, Clone)]
-pub struct TraitCollection {
-    pub trait_ids: Vec<String>,
-}
-
-impl TraitCollection {
-    pub fn new(trait_ids: Vec<String>) -> Self {
-        Self { trait_ids }
-    }
-
-    /// 是否拥有指定 trait
-    pub fn has(&self, trait_id: &str) -> bool {
-        self.trait_ids.iter().any(|t| t == trait_id)
     }
 }
 
@@ -309,21 +98,6 @@ impl TraitRegistry {
     /// 注册一个 Trait
     pub fn register(&mut self, trait_data: TraitData) {
         self.traits.insert(trait_data.id.clone(), trait_data);
-    }
-
-    /// 从 assets/traits/ 目录加载所有 .ron 文件
-    pub fn load_from_dir(dir: &str) -> Self {
-        let mut registry = TraitRegistry::default();
-        let (defs, loaded) = crate::core::loader::load_dir_single::<TraitDefinition>(dir, "Trait");
-        for def in defs {
-            let id = def.id.clone();
-            registry.register(def.into());
-            bevy::log::info!("加载Trait: {}", id);
-        }
-        if !loaded {
-            registry.register_defaults();
-        }
-        registry
     }
 
     /// 注册内置默认 Traits
@@ -388,6 +162,28 @@ impl TraitRegistry {
             let id = def.id.clone();
             self.traits.insert(id, def.into());
         }
+    }
+}
+
+impl RegistryLoader for TraitRegistry {
+    type Item = TraitDefinition;
+
+    fn register_item(&mut self, item: TraitDefinition) {
+        let id = item.id.clone();
+        self.register(item.into());
+        bevy::log::info!("加载Trait: {}", id);
+    }
+
+    fn register_defaults(&mut self) {
+        TraitRegistry::register_defaults(self);
+    }
+
+    fn is_empty(&self) -> bool {
+        self.traits.is_empty()
+    }
+
+    fn registry_name() -> &'static str {
+        "Trait"
     }
 }
 

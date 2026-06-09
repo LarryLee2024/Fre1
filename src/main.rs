@@ -4,6 +4,7 @@ mod battle;
 mod buff;
 mod character;
 mod core;
+mod debug;
 mod input;
 mod map;
 mod skill;
@@ -23,6 +24,7 @@ use core::attribute_def::AttributeDefPlugin;
 use core::effect::EffectPlugin;
 use core::modifier_rule::ModifierRulePlugin;
 use core::tag_def::TagDefPlugin;
+use debug::DebugPlugin;
 use input::InputPlugin;
 use map::MapPlugin;
 use skill::SkillPlugin;
@@ -59,7 +61,7 @@ fn main() {
             AiPlugin,
         ))
         // 表现层插件
-        .add_plugins((UiPlugin, InputPlugin))
+        .add_plugins((UiPlugin, InputPlugin, DebugPlugin))
         .add_systems(Startup, |mut next: ResMut<NextState<AppState>>| {
             next.set(AppState::InGame);
         })

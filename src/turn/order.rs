@@ -112,6 +112,7 @@ pub fn init_turn_order(
     turn_started_writer.write(TurnStarted {
         turn: turn_state.turn_number,
     });
+    bevy::log::debug!("[Message] TurnStarted: turn {}", turn_state.turn_number);
 
     // 重建行动队列
     let unit_initiatives: Vec<(Entity, f32)> = units
@@ -146,9 +147,11 @@ pub fn turn_end_on_enter(
     mut turn_started_writer: MessageWriter<TurnStarted>,
 ) {
     // 发送回合结束消息
+    let old_turn = turn_state.turn_number;
     turn_ended_writer.write(TurnEnded {
         turn: turn_state.turn_number,
     });
+    bevy::log::debug!("[Message] TurnEnded: turn {}", old_turn);
 
     // 检查是否有强制结束回合的消息（玩家按 E）
     // 消费所有 ForceEndTurn 消息，不需要额外操作，队列自然耗尽
@@ -188,6 +191,7 @@ pub fn turn_end_on_enter(
     turn_started_writer.write(TurnStarted {
         turn: turn_state.turn_number,
     });
+    bevy::log::debug!("[Message] TurnStarted: turn {}", turn_state.turn_number);
 
     next_phase.set(TurnPhase::SelectUnit);
 }

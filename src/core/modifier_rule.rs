@@ -1,6 +1,7 @@
 // 修饰规则：数据驱动的效果修饰系统
 // 替代 modify_effects 中的硬编码 if-else
 
+use crate::core::registry_loader::RegistryLoader;
 use crate::core::tag::{GameplayTag, TagName};
 use bevy::prelude::*;
 use serde::Deserialize;
@@ -207,6 +208,9 @@ pub enum ModifierEffectDef {
 /// 修饰规则（RON 反序列化用）
 #[derive(Clone, Debug, Deserialize)]
 pub struct ModifierRuleDef {
+    /// 配置版本号（预留，用于未来存档兼容性检查）
+    #[serde(default)]
+    pub version: u32,
     pub name: String,
     pub source_tag: TagName,
     pub target_tag: TagName,
@@ -238,20 +242,6 @@ pub struct ModifierRuleRegistry {
 }
 
 impl ModifierRuleRegistry {
-    /// 从 assets/rules/ 目录加载所有 .ron 文件
-    pub fn load_from_dir(dir: &str) -> Self {
-        let mut rules = Vec::new();
-        let (rule_defs, _loaded) =
-            crate::core::loader::load_dir_array::<ModifierRuleDef>(dir, "修饰规则");
-        for def in rule_defs {
-            let name = def.name.clone();
-            rules.push(def.into());
-            bevy::log::info!("加载修饰规则: {}", name);
-        }
-        let calculators = ModifierCalculatorRegistry::with_defaults();
-        Self { rules, calculators }
-    }
-
     /// 兜底默认值
     pub fn register_defaults(&mut self) {
         if self.rules.is_empty() {
@@ -316,12 +306,34 @@ impl ModifierRuleRegistry {
     }
 }
 
+impl RegistryLoader for ModifierRuleRegistry {
+    type Item = ModifierRuleDef;
+
+    fn register_item(&mut self, item: ModifierRuleDef) {
+        let name = item.name.clone();
+        self.rules.push(item.into());
+        bevy::log::info!("加载修饰规则: {}", name);
+    }
+
+    fn register_defaults(&mut self) {
+        ModifierRuleRegistry::register_defaults(self);
+    }
+
+    fn is_empty(&self) -> bool {
+        self.rules.is_empty()
+    }
+
+    fn registry_name() -> &'static str {
+        "修饰规则"
+    }
+}
+
 /// 修饰规则插件
 pub struct ModifierRulePlugin;
 
 impl Plugin for ModifierRulePlugin {
     fn build(&self, app: &mut App) {
-        let mut registry = ModifierRuleRegistry::load_from_dir("assets/rules");
+        let mut registry = ModifierRuleRegistry::load_from_dir_vec("assets/rules");
         registry.register_defaults();
         app.insert_resource(registry);
     }

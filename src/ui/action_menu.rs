@@ -53,10 +53,7 @@ pub fn spawn_action_menu(
     let attack_btn = commands
         .spawn((
             Button,
-            Node {
-                padding: theme.button_padding,
-                ..default()
-            },
+            button(theme),
             ActionMenuButton {
                 kind: ActionKind::Attack,
             },
@@ -73,10 +70,7 @@ pub fn spawn_action_menu(
             let skill_btn = commands
                 .spawn((
                     Button,
-                    Node {
-                        padding: theme.button_padding,
-                        ..default()
-                    },
+                    button(theme),
                     ActionMenuButton {
                         kind: ActionKind::Skill(skill_id.to_string()),
                     },
@@ -93,10 +87,7 @@ pub fn spawn_action_menu(
     let wait_btn = commands
         .spawn((
             Button,
-            Node {
-                padding: theme.button_padding,
-                ..default()
-            },
+            button(theme),
             ActionMenuButton {
                 kind: ActionKind::Wait,
             },
@@ -111,10 +102,7 @@ pub fn spawn_action_menu(
     let cancel_btn = commands
         .spawn((
             Button,
-            Node {
-                padding: theme.button_padding,
-                ..default()
-            },
+            button(theme),
             ActionMenuButton {
                 kind: ActionKind::Cancel,
             },

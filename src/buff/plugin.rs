@@ -1,5 +1,6 @@
 use super::domain::BuffRegistry;
 use super::resolve::resolve_status_effects;
+use crate::core::registry_loader::RegistryLoader;
 use crate::turn::TurnPhase;
 use bevy::prelude::*;
 
