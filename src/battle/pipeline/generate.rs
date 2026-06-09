@@ -140,6 +140,14 @@ pub fn generate_combat_effects(
                 };
 
                 if let Some(data) = handler.generate(effect_def, &ctx) {
+                    bevy::log::debug!(
+                        target: "battle",
+                        source_entity = ?source_entity,
+                        target_entity = ?target_entity,
+                        skill_id = %skill_id,
+                        effect_type = %effect_def.type_name(),
+                        "效果生成"
+                    );
                     queue.push(PendingEffect {
                         source: source_entity,
                         target: target_entity,
@@ -150,8 +158,9 @@ pub fn generate_combat_effects(
                 }
             } else {
                 bevy::log::warn!(
-                    "未注册的效果处理器: {}，跳过效果生成",
-                    effect_def.type_name()
+                    target: "battle",
+                    effect_type = %effect_def.type_name(),
+                    "未注册的效果处理器，跳过效果生成"
                 );
             }
         }

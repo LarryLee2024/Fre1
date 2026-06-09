@@ -239,7 +239,7 @@ impl EffectHandlerRegistry {
         // 避免重复注册
         let name = handler.type_name().to_string();
         if self.handlers.contains_key(&name) {
-            bevy::log::warn!("效果处理器 {} 已注册，跳过重复注册", name);
+            bevy::log::warn!(target: "core", handler = %name, "效果处理器已注册，跳过重复注册");
             return;
         }
         self.handlers.insert(name, handler);

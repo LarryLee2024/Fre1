@@ -60,6 +60,12 @@ pub fn resolve_status_effects(
                 remove_buff(&mut buffs, &mut attrs, &mut tags, id);
             }
             // 发送晕眩消息（表现层响应）
+            bevy::log::trace!(
+                target: "buff",
+                target_entity = ?entity,
+                target_name = %name.0,
+                "StunApplied 消息发送"
+            );
             stun_writer.write(StunApplied {
                 target: entity,
                 target_name: name.0.clone(),
@@ -74,6 +80,13 @@ pub fn resolve_status_effects(
             attrs.set_vital(AttributeKind::Hp, new_hp);
 
             // 发送 DoT 消息（表现层响应）
+            bevy::log::trace!(
+                target: "buff",
+                target_entity = ?entity,
+                target_name = %name.0,
+                damage = dot,
+                "DotApplied 消息发送"
+            );
             dot_writer.write(DotApplied {
                 target: entity,
                 target_name: name.0.clone(),
@@ -84,6 +97,12 @@ pub fn resolve_status_effects(
             // DoT 死亡判定
             if new_hp <= 0.0 {
                 commands.entity(entity).insert(Dead);
+                bevy::log::trace!(
+                    target: "buff",
+                    target_entity = ?entity,
+                    target_name = %name.0,
+                    "CharacterDied 消息发送(DoT致死)"
+                );
                 died_writer.write(CharacterDied {
                     entity,
                     name: name.0.clone(),
@@ -101,6 +120,13 @@ pub fn resolve_status_effects(
             attrs.set_vital(AttributeKind::Hp, new_hp);
 
             // 发送 HoT 消息（表现层响应）
+            bevy::log::trace!(
+                target: "buff",
+                target_entity = ?entity,
+                target_name = %name.0,
+                heal = hot,
+                "HotApplied 消息发送"
+            );
             hot_writer.write(HotApplied {
                 target: entity,
                 target_name: name.0.clone(),

@@ -5,6 +5,7 @@ mod events;
 mod log;
 mod pipeline;
 mod plugin;
+mod record;
 
 // 公共 re-exports
 pub use combat::*;
@@ -12,3 +13,4 @@ pub use events::*;
 pub use log::*;
 pub use pipeline::{CombatIntent, PrevPosition};
 pub use plugin::BattlePlugin;
+pub use record::*;

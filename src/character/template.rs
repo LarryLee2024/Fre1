@@ -230,7 +230,7 @@ impl RegistryLoader for UnitTemplateRegistry {
     fn register_item(&mut self, item: UnitTemplateDef) {
         let id = item.id.clone();
         self.register(item.into());
-        bevy::log::info!("加载单位模板: {}", id);
+        bevy::log::info!(target: "character", id = %id, "单位模板已加载");
     }
 
     fn register_defaults(&mut self) {

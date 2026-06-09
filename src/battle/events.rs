@@ -79,7 +79,7 @@ pub fn on_character_died(
     mut turn_order: ResMut<TurnOrder>,
 ) {
     for msg in died_reader.read() {
-        bevy::log::info!("[Message] CharacterDied: {} ({:?})", msg.name, msg.faction);
+        bevy::log::info!(target: "battle", entity = ?msg.entity, name = %msg.name, faction = ?msg.faction, "角色已死亡，从行动队列移除");
         turn_order.queue.retain(|&e| e != msg.entity);
         commands.entity(msg.entity).try_despawn();
     }

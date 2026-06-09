@@ -187,7 +187,7 @@ impl RegistryLoader for AiBehaviorRegistry {
     fn register_item(&mut self, item: AiBehaviorDef) {
         let id = item.id.clone();
         self.register(item.into());
-        bevy::log::info!("加载AI行为: {}", id);
+        bevy::log::info!(target: "ai", id = %id, "AI行为已加载");
     }
 
     fn register_defaults(&mut self) {

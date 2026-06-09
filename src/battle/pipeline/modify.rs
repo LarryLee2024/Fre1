@@ -15,11 +15,27 @@ pub fn modify_effects(
         if let Ok(target_tags) = tags_query.get(effect.target) {
             match &mut effect.data {
                 PendingEffectData::Damage { amount, .. } => {
+                    let original = *amount;
                     *amount =
                         rules.apply_damage_modifiers(*amount, &effect.source_tags, target_tags);
+                    bevy::log::debug!(
+                        target: "battle",
+                        target_entity = ?effect.target,
+                        original_damage = original,
+                        modified_damage = *amount,
+                        "伤害修饰"
+                    );
                 }
                 PendingEffectData::Heal { amount } => {
+                    let original = *amount;
                     *amount = rules.apply_heal_modifiers(*amount, &effect.source_tags, target_tags);
+                    bevy::log::debug!(
+                        target: "battle",
+                        target_entity = ?effect.target,
+                        original_heal = original,
+                        modified_heal = *amount,
+                        "治疗修饰"
+                    );
                 }
                 PendingEffectData::ApplyBuff { .. } | PendingEffectData::Cleanse => {}
             }

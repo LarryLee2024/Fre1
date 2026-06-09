@@ -29,7 +29,7 @@ pub trait RegistryLoader: Default {
     fn load_from_dir(dir: &str) -> Self {
         let mut registry = Self::default();
         let Ok(entries) = read_dir(dir) else {
-            bevy::log::warn!("{}目录不存在，使用默认数据: {}", Self::registry_name(), dir);
+            bevy::log::warn!(target: "core", registry = %Self::registry_name(), path = %dir, "目录不存在，使用默认数据");
             registry.register_defaults();
             return registry;
         };
@@ -44,23 +44,25 @@ pub trait RegistryLoader: Default {
                             loaded = true;
                         }
                         Err(e) => bevy::log::error!(
-                            "解析{}文件 {:?} 失败: {}",
-                            Self::registry_name(),
-                            path,
-                            e
+                            target: "core",
+                            registry = %Self::registry_name(),
+                            path = %path.display(),
+                            error = %e,
+                            "解析配置文件失败，该条目将被跳过"
                         ),
                     },
                     Err(e) => bevy::log::error!(
-                        "读取{}文件 {:?} 失败: {}",
-                        Self::registry_name(),
-                        path,
-                        e
+                        target: "core",
+                        registry = %Self::registry_name(),
+                        path = %path.display(),
+                        error = %e,
+                        "读取配置文件失败，该条目将被跳过"
                     ),
                 }
             }
         }
         if !loaded {
-            bevy::log::warn!("{}目录为空，使用默认数据", Self::registry_name());
+            bevy::log::warn!(target: "core", registry = %Self::registry_name(), "目录为空，使用默认数据");
             registry.register_defaults();
         }
         registry
@@ -70,7 +72,7 @@ pub trait RegistryLoader: Default {
     fn load_from_dir_vec(dir: &str) -> Self {
         let mut registry = Self::default();
         let Ok(entries) = read_dir(dir) else {
-            bevy::log::warn!("{}目录不存在，使用默认数据: {}", Self::registry_name(), dir);
+            bevy::log::warn!(target: "core", registry = %Self::registry_name(), path = %dir, "目录不存在，使用默认数据");
             registry.register_defaults();
             return registry;
         };
@@ -87,23 +89,25 @@ pub trait RegistryLoader: Default {
                             loaded = true;
                         }
                         Err(e) => bevy::log::error!(
-                            "解析{}文件 {:?} 失败: {}",
-                            Self::registry_name(),
-                            path,
-                            e
+                            target: "core",
+                            registry = %Self::registry_name(),
+                            path = %path.display(),
+                            error = %e,
+                            "解析配置文件失败，该条目将被跳过"
                         ),
                     },
                     Err(e) => bevy::log::error!(
-                        "读取{}文件 {:?} 失败: {}",
-                        Self::registry_name(),
-                        path,
-                        e
+                        target: "core",
+                        registry = %Self::registry_name(),
+                        path = %path.display(),
+                        error = %e,
+                        "读取配置文件失败，该条目将被跳过"
                     ),
                 }
             }
         }
         if !loaded {
-            bevy::log::warn!("{}目录为空，使用默认数据", Self::registry_name());
+            bevy::log::warn!(target: "core", registry = %Self::registry_name(), "目录为空，使用默认数据");
             registry.register_defaults();
         }
         registry
@@ -119,19 +123,26 @@ pub trait RegistryLoader: Default {
                     for item in items {
                         registry.register_item(item);
                     }
-                    bevy::log::info!("加载{}: {} 种", Self::registry_name(), count);
+                    bevy::log::info!(target: "core", registry = %Self::registry_name(), count = count, "配置加载完成");
                 }
                 Err(e) => {
-                    bevy::log::error!("解析{}文件 {} 失败: {}", Self::registry_name(), path, e);
+                    bevy::log::error!(
+                        target: "core",
+                        registry = %Self::registry_name(),
+                        path = path,
+                        error = %e,
+                        "解析配置文件失败，使用默认数据"
+                    );
                     registry.register_defaults();
                 }
             },
             Err(e) => {
                 bevy::log::warn!(
-                    "{}文件 {} 不存在: {}, 使用默认值",
-                    Self::registry_name(),
-                    path,
-                    e
+                    target: "core",
+                    registry = %Self::registry_name(),
+                    path = path,
+                    error = %e,
+                    "配置文件不存在，使用默认数据"
                 );
                 registry.register_defaults();
             }

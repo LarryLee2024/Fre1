@@ -108,7 +108,7 @@ impl RegistryLoader for TerrainRegistry {
     fn register_item(&mut self, item: TerrainDefRon) {
         let id = item.id.clone();
         self.terrains.insert(id.clone(), item.into());
-        bevy::log::info!("加载地形: {}", id);
+        bevy::log::info!(target: "map", id = %id, "地形已加载");
     }
 
     fn register_defaults(&mut self) {
@@ -240,7 +240,7 @@ impl RegistryLoader for LevelRegistry {
     fn register_item(&mut self, item: LevelConfigDef) {
         let id = item.id.clone();
         self.levels.insert(id.clone(), item.into());
-        bevy::log::info!("加载关卡: {}", id);
+        bevy::log::info!(target: "map", id = %id, "关卡已加载");
     }
 
     /// 关卡没有硬编码兜底，空注册表即为空

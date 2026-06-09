@@ -127,6 +127,13 @@ pub fn execute_effects_inline(
                     attrs_query.get_mut(effect.target),
                     tags_query.get_mut(effect.target),
                 ) {
+                    bevy::log::trace!(
+                        target: "battle",
+                        target_entity = ?effect.target,
+                        buff_id = %buff_id,
+                        duration = duration,
+                        "ApplyBuff 效果执行"
+                    );
                     apply_buff_effect(
                         &mut target_buffs,
                         &mut target_attrs,
@@ -144,6 +151,11 @@ pub fn execute_effects_inline(
                     attrs_query.get_mut(effect.target),
                     tags_query.get_mut(effect.target),
                 ) {
+                    bevy::log::trace!(
+                        target: "battle",
+                        target_entity = ?effect.target,
+                        "Cleanse 效果执行"
+                    );
                     apply_cleanse_effect(&mut target_buffs, &mut target_attrs, &mut target_tags);
                 }
             }
@@ -176,6 +188,14 @@ pub fn apply_damage_effect(
     target_attrs.set_vital(AttributeKind::Hp, new_hp);
 
     // 发送伤害消息（VFX/日志/表现层响应）
+    bevy::log::trace!(
+        target: "battle",
+        target_entity = ?target_entity,
+        attacker_name = %attacker_name,
+        damage = amount,
+        is_skill = is_skill,
+        "DamageApplied 消息发送"
+    );
     damage_writer.write(DamageApplied {
         target: target_entity,
         target_name: target_name.to_string(),
@@ -191,6 +211,12 @@ pub fn apply_damage_effect(
     // 死亡判定
     if new_hp <= 0.0 {
         commands.entity(target_entity).insert(Dead);
+        bevy::log::trace!(
+            target: "battle",
+            target_entity = ?target_entity,
+            target_name = %target_name,
+            "CharacterDied 消息发送"
+        );
         died_writer.write(CharacterDied {
             entity: target_entity,
             name: target_name.to_string(),
@@ -212,6 +238,13 @@ pub fn apply_heal_effect(
     let new_hp = (hp + amount as f32).min(max_hp);
     target_attrs.set_vital(AttributeKind::Hp, new_hp);
 
+    bevy::log::trace!(
+        target: "battle",
+        target_entity = ?target_entity,
+        target_name = %target_name,
+        heal = amount,
+        "HealApplied 消息发送"
+    );
     heal_writer.write(HealApplied {
         target: target_entity,
         target_name: target_name.to_string(),
@@ -257,6 +290,20 @@ mod tests {
     use crate::core::effect::{EffectQueue, PendingEffect, PendingEffectData};
     use crate::core::registry_loader::RegistryLoader;
     use crate::core::tag::GameplayTags;
+
+    /// 测试用：创建带默认数据的 BuffRegistry（不依赖文件系统）
+    fn test_buff_registry() -> BuffRegistry {
+        let mut reg = BuffRegistry::default();
+        reg.register_defaults();
+        reg
+    }
+
+    /// 测试用：创建带默认数据的 TerrainRegistry（不依赖文件系统）
+    fn test_terrain_registry() -> TerrainRegistry {
+        let mut reg = TerrainRegistry::default();
+        reg.register_defaults();
+        reg
+    }
     use crate::skill::SkillSlots;
 
     fn make_test_attrs(hp: f32, max_hp: f32) -> Attributes {
@@ -274,8 +321,8 @@ mod tests {
             .add_message::<DamageApplied>()
             .add_message::<CharacterDied>()
             .add_message::<HealApplied>()
-            .insert_resource(BuffRegistry::load_from_dir("assets/buffs"))
-            .insert_resource(TerrainRegistry::load_from_dir("assets/terrains"))
+            .insert_resource(test_buff_registry())
+            .insert_resource(test_terrain_registry())
             .insert_resource(EffectQueue::default())
             .add_systems(Update, execute_effects);
         let target = app
@@ -326,8 +373,8 @@ mod tests {
             .add_message::<DamageApplied>()
             .add_message::<CharacterDied>()
             .add_message::<HealApplied>()
-            .insert_resource(BuffRegistry::load_from_dir("assets/buffs"))
-            .insert_resource(TerrainRegistry::load_from_dir("assets/terrains"))
+            .insert_resource(test_buff_registry())
+            .insert_resource(test_terrain_registry())
             .insert_resource(EffectQueue::default())
             .add_systems(Update, execute_effects);
         let target = app
@@ -377,8 +424,8 @@ mod tests {
             .add_message::<DamageApplied>()
             .add_message::<CharacterDied>()
             .add_message::<HealApplied>()
-            .insert_resource(BuffRegistry::load_from_dir("assets/buffs"))
-            .insert_resource(TerrainRegistry::load_from_dir("assets/terrains"))
+            .insert_resource(test_buff_registry())
+            .insert_resource(test_terrain_registry())
             .insert_resource(EffectQueue::default())
             .add_systems(Update, execute_effects);
         let target = app
@@ -426,8 +473,8 @@ mod tests {
             .add_message::<DamageApplied>()
             .add_message::<CharacterDied>()
             .add_message::<HealApplied>()
-            .insert_resource(BuffRegistry::load_from_dir("assets/buffs"))
-            .insert_resource(TerrainRegistry::load_from_dir("assets/terrains"))
+            .insert_resource(test_buff_registry())
+            .insert_resource(test_terrain_registry())
             .insert_resource(EffectQueue::default())
             .add_systems(Update, execute_effects);
         let target = app
@@ -474,7 +521,7 @@ mod tests {
         let mut attrs = Attributes::default();
         attrs.fill_vital_resources();
         let mut tags = GameplayTags::default();
-        let registry = BuffRegistry::load_from_dir("assets/buffs");
+        let registry = test_buff_registry();
         apply_buff_effect(
             &mut buffs,
             &mut attrs,
@@ -493,7 +540,7 @@ mod tests {
         let mut attrs = Attributes::default();
         attrs.fill_vital_resources();
         let mut tags = GameplayTags::default();
-        let registry = BuffRegistry::load_from_dir("assets/buffs");
+        let registry = test_buff_registry();
         apply_buff_effect(
             &mut buffs,
             &mut attrs,
@@ -512,7 +559,7 @@ mod tests {
         let mut attrs = Attributes::default();
         attrs.fill_vital_resources();
         let mut tags = GameplayTags::default();
-        let registry = BuffRegistry::load_from_dir("assets/buffs");
+        let registry = test_buff_registry();
         apply_buff_effect(
             &mut buffs,
             &mut attrs,

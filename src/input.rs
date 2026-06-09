@@ -38,6 +38,10 @@ pub fn handle_click(
     // 右键在 MoveUnit 阶段发送取消
     if right_clicked {
         if *turn_phase.get() == TurnPhase::MoveUnit {
+            bevy::log::trace!(
+                target: "ui",
+                "UiCommand::Cancel 消息发送(右键MoveUnit阶段)"
+            );
             ui_commands.write(UiCommand::Cancel);
             return;
         }
@@ -66,6 +70,11 @@ pub fn handle_click(
                     // 只有当前轮到的玩家单位可以选中进入移动流程
                     if unit.faction == Faction::Player && turn_order.current_unit() == Some(entity)
                     {
+                        bevy::log::trace!(
+                            target: "ui",
+                            entity = ?entity,
+                            "UiCommand::SelectUnit 消息发送"
+                        );
                         ui_commands.write(UiCommand::SelectUnit { entity });
                     }
                     return;
@@ -75,9 +84,19 @@ pub fn handle_click(
             hovered.entity = None;
         }
         TurnPhase::MoveUnit => {
+            bevy::log::trace!(
+                target: "ui",
+                coord = ?coord,
+                "UiCommand::MoveUnit 消息发送"
+            );
             ui_commands.write(UiCommand::MoveUnit { coord });
         }
         TurnPhase::SelectTarget => {
+            bevy::log::trace!(
+                target: "ui",
+                coord = ?coord,
+                "UiCommand::SelectTarget 消息发送"
+            );
             ui_commands.write(UiCommand::SelectTarget { coord });
         }
         _ => {}
@@ -100,6 +119,10 @@ pub fn handle_right_cancel(
 
     match turn_phase.get() {
         TurnPhase::ActionMenu | TurnPhase::SelectTarget => {
+            bevy::log::trace!(
+                target: "ui",
+                "UiCommand::Cancel 消息发送(右键取消)"
+            );
             ui_commands.write(UiCommand::Cancel);
         }
         _ => {}
@@ -123,6 +146,10 @@ pub fn handle_end_turn(
         return;
     }
 
+    bevy::log::trace!(
+        target: "ui",
+        "UiCommand::EndTurn 消息发送"
+    );
     ui_commands.write(UiCommand::EndTurn);
 }
 

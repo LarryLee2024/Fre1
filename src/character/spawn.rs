@@ -48,7 +48,7 @@ pub fn spawn_units(
                     &effect_handlers,
                 );
             } else {
-                bevy::log::error!("单位模板不存在: {}", deploy.template);
+                bevy::log::error!(target: "character", template = %deploy.template, "单位模板不存在，该单位将被跳过");
             }
         }
         for deploy in &level.enemy_units {
@@ -68,7 +68,7 @@ pub fn spawn_units(
                     &effect_handlers,
                 );
             } else {
-                bevy::log::error!("单位模板不存在: {}", deploy.template);
+                bevy::log::error!(target: "character", template = %deploy.template, "单位模板不存在，该单位将被跳过");
             }
         }
     }

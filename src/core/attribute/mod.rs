@@ -211,7 +211,7 @@ impl Attributes {
                 self.base.insert(kind, value);
             }
             _ => {
-                bevy::log::warn!("不能设置衍生属性的基础值: {:?}", kind);
+                bevy::log::warn!(target: "core", kind = ?kind, "不能设置衍生属性的基础值");
             }
         }
     }
@@ -225,8 +225,9 @@ impl Attributes {
             AttributeKind::Stamina => self.current_stamina = value,
             _ => {
                 bevy::log::warn!(
-                    "set_vital 仅用于生命资源(HP/MP/Stamina)，不适用于 {:?}",
-                    kind
+                    target: "core",
+                    kind = ?kind,
+                    "set_vital 仅用于生命资源(HP/MP/Stamina)"
                 );
             }
         }

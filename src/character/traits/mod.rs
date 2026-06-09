@@ -171,7 +171,7 @@ impl RegistryLoader for TraitRegistry {
     fn register_item(&mut self, item: TraitDefinition) {
         let id = item.id.clone();
         self.register(item.into());
-        bevy::log::info!("加载Trait: {}", id);
+        bevy::log::info!(target: "character", id = %id, "Trait已加载");
     }
 
     fn register_defaults(&mut self) {
