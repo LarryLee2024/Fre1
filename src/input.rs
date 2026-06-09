@@ -186,7 +186,7 @@ pub fn show_move_range(
     let move_points = units
         .iter()
         .find(|(_, u, gp, _, _, _, _)| u.faction == unit.faction && gp.coord == start_coord)
-        .map(|(_, _, _, _, attrs, _, _)| attrs.get(AttributeKind::Mov) as u32)
+        .map(|(_, _, _, _, attrs, _, _)| attrs.get(AttributeKind::MoveRange) as u32)
         .unwrap_or(3);
 
     let reachable = find_reachable_tiles(start_coord, move_points, map, terrain_map, &occupation_map, calculator);

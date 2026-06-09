@@ -90,7 +90,7 @@ pub fn handle_ui_commands(
                             let calculator = cost_registry.resolve_from_tags(tags);
                             let mov = units
                                 .get(selected_entity)
-                                .map(|(_, _, _, _, attrs, _, _)| attrs.get(AttributeKind::Mov) as u32)
+                                .map(|(_, _, _, _, attrs, _, _)| attrs.get(AttributeKind::MoveRange) as u32)
                                 .unwrap_or(3);
                             let occupation_map = std::collections::HashMap::new(); // 移动时不需要阻挡
                             let reachable = find_reachable_tiles(

@@ -1,14 +1,16 @@
 (
     id: "player_archer",
-    name: "弓手",
+    name: "弓箭手",
     faction: Player,
-    class_tag: ARCHER,
+    race: "human",
+    background: "hunter",
+    class: "archer",
     base_attributes: {
-        Hp: 20.0, MaxHp: 20.0,
-        Atk: 8.0, Def: 3.0,
-        Mov: 4.0, AttackRange: 3.0,
+        Might: 4.0, Dexterity: 6.0, Agility: 6.0, Vitality: 3.0,
+        Intelligence: 3.0, Willpower: 2.0, Presence: 2.0, Luck: 3.0,
     },
-    skill_ids: ["basic_attack", "pierce"],
+    base_attack_range: 3,
+    skill_ids: ["basic_attack"],
     trait_ids: ["archer_mastery"],
     ai_behavior: "default",
 )

@@ -3,7 +3,7 @@
     name: "攻+5",
     default_duration: 2,
     modifiers: [
-        (kind: Atk, op: Add, value: 5.0),
+        (kind: Attack, op: Add, value: 5.0),
     ],
     tags: [BUFF],
     dot_damage: 0,

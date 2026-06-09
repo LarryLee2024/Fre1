@@ -137,13 +137,30 @@ mod tests {
     use crate::gameplay::effect::EffectDef;
     use crate::gameplay::tag::GameplayTags;
 
+    fn make_source_attrs(atk: f32) -> crate::gameplay::attribute::Attributes {
+        let mut attrs = crate::gameplay::attribute::Attributes::default();
+        // Attack = Might * 2, 所以 Might = atk / 2
+        attrs.set_base(AttributeKind::Might, atk / 2.0);
+        attrs.set_base_attack_range(1);
+        attrs.fill_vital_resources();
+        attrs
+    }
+
+    fn make_target_attrs(def: f32, hp: f32) -> crate::gameplay::attribute::Attributes {
+        let mut attrs = crate::gameplay::attribute::Attributes::default();
+        // Defense = Vitality, 所以 Vitality = def
+        // MaxHp = 5 + Vitality * 5 = 5 + def * 5
+        attrs.set_base(AttributeKind::Vitality, def);
+        attrs.fill_vital_resources();
+        // 覆盖当前 HP 为指定值
+        attrs.set_base(AttributeKind::Hp, hp);
+        attrs
+    }
+
     #[test]
     fn 预览_伤害预览() {
-        let mut source_attrs = crate::gameplay::attribute::Attributes::default();
-        source_attrs.set_base(AttributeKind::Atk, 10.0);
-        let mut target_attrs = crate::gameplay::attribute::Attributes::default();
-        target_attrs.set_base(AttributeKind::Def, 3.0);
-        target_attrs.set_base(AttributeKind::Hp, 20.0);
+        let source_attrs = make_source_attrs(10.0);
+        let target_attrs = make_target_attrs(3.0, 20.0);
 
         let ctx = SkillExecutionContext {
             source: Entity::from_bits(1),
@@ -188,11 +205,8 @@ mod tests {
 
     #[test]
     fn 预览_致死伤害标记() {
-        let mut source_attrs = crate::gameplay::attribute::Attributes::default();
-        source_attrs.set_base(AttributeKind::Atk, 50.0);
-        let mut target_attrs = crate::gameplay::attribute::Attributes::default();
-        target_attrs.set_base(AttributeKind::Def, 3.0);
-        target_attrs.set_base(AttributeKind::Hp, 5.0);
+        let source_attrs = make_source_attrs(50.0);
+        let target_attrs = make_target_attrs(3.0, 5.0);
 
         let ctx = SkillExecutionContext {
             source: Entity::from_bits(1),
@@ -231,10 +245,9 @@ mod tests {
 
     #[test]
     fn 预览_治疗预览() {
-        let mut source_attrs = crate::gameplay::attribute::Attributes::default();
-        let mut target_attrs = crate::gameplay::attribute::Attributes::default();
-        target_attrs.set_base(AttributeKind::Hp, 12.0);
-        target_attrs.set_base(AttributeKind::MaxHp, 20.0);
+        let source_attrs = crate::gameplay::attribute::Attributes::default();
+        let target_attrs = make_target_attrs(3.0, 12.0);
+        // MaxHp = 5 + 3*5 = 20
 
         let ctx = SkillExecutionContext {
             source: Entity::from_bits(1),
@@ -270,10 +283,9 @@ mod tests {
 
     #[test]
     fn 预览_治疗不超过最大hp() {
-        let mut source_attrs = crate::gameplay::attribute::Attributes::default();
-        let mut target_attrs = crate::gameplay::attribute::Attributes::default();
-        target_attrs.set_base(AttributeKind::Hp, 18.0);
-        target_attrs.set_base(AttributeKind::MaxHp, 20.0);
+        let source_attrs = crate::gameplay::attribute::Attributes::default();
+        let target_attrs = make_target_attrs(3.0, 18.0);
+        // MaxHp = 5 + 3*5 = 20
 
         let ctx = SkillExecutionContext {
             source: Entity::from_bits(1),

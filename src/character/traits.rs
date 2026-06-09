@@ -386,7 +386,7 @@ impl TraitRegistry {
                 description: "装备重甲，防御+3".into(),
                 trigger: TraitTrigger::Passive,
                 effects: vec![TraitEffectDef::ModifyAttribute(AttributeModifierDef {
-                    kind: crate::gameplay::attribute::AttributeKind::Def,
+                    kind: crate::gameplay::attribute::AttributeKind::Defense,
                     op: crate::gameplay::attribute::ModifierOp::Add,
                     value: 3.0,
                 })],
@@ -446,7 +446,7 @@ mod tests {
             effects: vec![
                 TraitEffectDef::GrantTag(TagName::Fire),
                 TraitEffectDef::ModifyAttribute(AttributeModifierDef {
-                    kind: AttributeKind::Atk,
+                    kind: AttributeKind::Attack,
                     op: ModifierOp::Add,
                     value: 5.0,
                 }),
@@ -463,7 +463,7 @@ mod tests {
 
         let mods = data.attribute_modifiers(&handlers);
         assert_eq!(mods.len(), 1);
-        assert_eq!(mods[0].kind, AttributeKind::Atk);
+        assert_eq!(mods[0].kind, AttributeKind::Attack);
         assert_eq!(mods[0].value, 5.0);
     }
 
@@ -489,7 +489,7 @@ mod tests {
                     TraitEffect::GrantTag(GameplayTag::WARRIOR),
                     TraitEffect::GrantTag(GameplayTag::MELEE),
                     TraitEffect::ModifyAttribute(AttributeModifierDef {
-                        kind: AttributeKind::Def,
+                        kind: AttributeKind::Defense,
                         op: ModifierOp::Add,
                         value: 2.0,
                     }),

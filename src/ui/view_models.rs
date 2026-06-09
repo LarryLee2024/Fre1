@@ -20,6 +20,9 @@ pub struct SelectedUnitView {
     pub atk: i32,
     pub def: i32,
     pub mov: i32,
+    pub magic_attack: i32,
+    pub magic_defense: i32,
+    pub core_attrs: String,
     pub skills: String,
     pub buffs: String,
     pub is_selected: bool,
@@ -57,9 +60,22 @@ pub fn update_selected_unit_view(
         view.name = name.0.clone();
         view.hp = attrs.get(AttributeKind::Hp) as i32;
         view.max_hp = attrs.get(AttributeKind::MaxHp) as i32;
-        view.atk = attrs.get(AttributeKind::Atk) as i32;
-        view.def = attrs.get(AttributeKind::Def) as i32;
-        view.mov = attrs.get(AttributeKind::Mov) as i32;
+        view.atk = attrs.get(AttributeKind::Attack) as i32;
+        view.def = attrs.get(AttributeKind::Defense) as i32;
+        view.mov = attrs.get(AttributeKind::MoveRange) as i32;
+        view.magic_attack = attrs.get(AttributeKind::MagicAttack) as i32;
+        view.magic_defense = attrs.get(AttributeKind::MagicDefense) as i32;
+        view.core_attrs = format!(
+            "MIG:{} DEX:{} AGI:{} VIT:{} INT:{} WIL:{} PRE:{} LCK:{}",
+            attrs.get(AttributeKind::Might) as i32,
+            attrs.get(AttributeKind::Dexterity) as i32,
+            attrs.get(AttributeKind::Agility) as i32,
+            attrs.get(AttributeKind::Vitality) as i32,
+            attrs.get(AttributeKind::Intelligence) as i32,
+            attrs.get(AttributeKind::Willpower) as i32,
+            attrs.get(AttributeKind::Presence) as i32,
+            attrs.get(AttributeKind::Luck) as i32,
+        );
 
         // 技能名称列表
         let skill_names: Vec<String> = skill_slots

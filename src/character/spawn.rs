@@ -93,15 +93,16 @@ fn spawn_unit_from_template(
         ..default()
     };
 
-    // 构建 Attributes
+    // 构建 Attributes：从模板设置核心属性基础值
     let mut attributes = Attributes::default();
     for (kind, value) in &template.base_attributes {
         attributes.set_base(*kind, *value);
     }
+    attributes.set_base_attack_range(template.base_attack_range);
+    attributes.fill_vital_resources();
 
-    // 构建 GameplayTags（class_tag + trait 授予的标签）
+    // 构建 GameplayTags（class 标签由 Trait 授予，不再从模板直接添加）
     let mut gameplay_tags = GameplayTags::default();
-    gameplay_tags.add(template.class_tag);
 
     // 应用 trait 被动效果
     let (trait_tags, trait_modifiers) =

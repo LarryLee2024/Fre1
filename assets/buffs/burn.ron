@@ -3,7 +3,7 @@
     name: "灼-2",
     default_duration: 2,
     modifiers: [
-        (kind: Def, op: Add, value: -2.0),
+        (kind: Defense, op: Add, value: -2.0),
     ],
     tags: [DEBUFF, BURN, FIRE],
     dot_damage: 2,

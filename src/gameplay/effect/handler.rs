@@ -79,14 +79,11 @@ impl EffectHandler for DamageHandler {
             return None;
         };
 
-        let effective_atk = ctx.source_attrs.get(AttributeKind::Atk);
-        let effective_def = ctx.target_attrs.get(AttributeKind::Def);
+        let effective_atk = ctx.source_attrs.get(AttributeKind::Attack);
+        let effective_def = ctx.target_attrs.get(AttributeKind::Defense);
         let base_def = ctx
             .target_attrs
-            .base
-            .get(&AttributeKind::Def)
-            .copied()
-            .unwrap_or(0.0);
+            .core_base(AttributeKind::Vitality);
 
         let amount = calculate_damage_from_effect(
             effective_atk,
@@ -112,14 +109,11 @@ impl EffectHandler for DamageHandler {
             return None;
         };
 
-        let effective_atk = ctx.source_attrs.get(AttributeKind::Atk);
-        let effective_def = ctx.target_attrs.get(AttributeKind::Def);
+        let effective_atk = ctx.source_attrs.get(AttributeKind::Attack);
+        let effective_def = ctx.target_attrs.get(AttributeKind::Defense);
         let base_def = ctx
             .target_attrs
-            .base
-            .get(&AttributeKind::Def)
-            .copied()
-            .unwrap_or(0.0);
+            .core_base(AttributeKind::Vitality);
 
         let amount = calculate_damage_from_effect(
             effective_atk,
@@ -276,10 +270,28 @@ mod tests {
     /// 构建测试用 GenerateContext
     fn make_generate_ctx() -> GenerateContext {
         let mut source_attrs = Attributes::default();
-        source_attrs.set_base(AttributeKind::Atk, 10.0);
+        source_attrs.set_base(AttributeKind::Might, 5.0);
+        source_attrs.set_base(AttributeKind::Vitality, 5.0);
+        source_attrs.set_base(AttributeKind::Agility, 6.0);
+        source_attrs.set_base(AttributeKind::Dexterity, 3.0);
+        source_attrs.set_base(AttributeKind::Intelligence, 2.0);
+        source_attrs.set_base(AttributeKind::Willpower, 3.0);
+        source_attrs.set_base(AttributeKind::Presence, 2.0);
+        source_attrs.set_base(AttributeKind::Luck, 2.0);
+        source_attrs.set_base_attack_range(1);
+        source_attrs.fill_vital_resources();
+
         let mut target_attrs = Attributes::default();
-        target_attrs.set_base(AttributeKind::Def, 3.0);
-        target_attrs.set_base(AttributeKind::Hp, 20.0);
+        target_attrs.set_base(AttributeKind::Might, 2.0);
+        target_attrs.set_base(AttributeKind::Vitality, 3.0);
+        target_attrs.set_base(AttributeKind::Agility, 4.0);
+        target_attrs.set_base(AttributeKind::Dexterity, 2.0);
+        target_attrs.set_base(AttributeKind::Intelligence, 1.0);
+        target_attrs.set_base(AttributeKind::Willpower, 2.0);
+        target_attrs.set_base(AttributeKind::Presence, 1.0);
+        target_attrs.set_base(AttributeKind::Luck, 2.0);
+        target_attrs.set_base_attack_range(1);
+        target_attrs.fill_vital_resources();
 
         GenerateContext {
             source_entity: Entity::from_bits(1),
@@ -296,11 +308,30 @@ mod tests {
     /// 构建测试用 PreviewContext
     fn make_preview_ctx() -> PreviewContext {
         let mut source_attrs = Attributes::default();
-        source_attrs.set_base(AttributeKind::Atk, 10.0);
+        source_attrs.set_base(AttributeKind::Might, 5.0);
+        source_attrs.set_base(AttributeKind::Vitality, 5.0);
+        source_attrs.set_base(AttributeKind::Agility, 6.0);
+        source_attrs.set_base(AttributeKind::Dexterity, 3.0);
+        source_attrs.set_base(AttributeKind::Intelligence, 2.0);
+        source_attrs.set_base(AttributeKind::Willpower, 3.0);
+        source_attrs.set_base(AttributeKind::Presence, 2.0);
+        source_attrs.set_base(AttributeKind::Luck, 2.0);
+        source_attrs.set_base_attack_range(1);
+        source_attrs.fill_vital_resources();
+
         let mut target_attrs = Attributes::default();
-        target_attrs.set_base(AttributeKind::Def, 3.0);
-        target_attrs.set_base(AttributeKind::Hp, 12.0);  // HP 有缺口，用于测试治疗预览
-        target_attrs.set_base(AttributeKind::MaxHp, 20.0);
+        target_attrs.set_base(AttributeKind::Might, 2.0);
+        target_attrs.set_base(AttributeKind::Vitality, 3.0);
+        target_attrs.set_base(AttributeKind::Agility, 4.0);
+        target_attrs.set_base(AttributeKind::Dexterity, 2.0);
+        target_attrs.set_base(AttributeKind::Intelligence, 1.0);
+        target_attrs.set_base(AttributeKind::Willpower, 2.0);
+        target_attrs.set_base(AttributeKind::Presence, 1.0);
+        target_attrs.set_base(AttributeKind::Luck, 2.0);
+        target_attrs.set_base_attack_range(1);
+        target_attrs.fill_vital_resources();
+        // HP 有缺口，用于测试治疗预览
+        target_attrs.set_base(AttributeKind::Hp, 12.0);
 
         PreviewContext {
             source_attrs,

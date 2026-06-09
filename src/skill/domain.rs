@@ -399,9 +399,16 @@ mod tests {
 
     fn make_attrs(hp: f32, max_hp: f32, mp: f32) -> crate::gameplay::attribute::Attributes {
         let mut attrs = crate::gameplay::attribute::Attributes::default();
+        // 通过核心属性 Vitality 推导 MaxHp，通过 Intelligence 推导 MaxMp
+        // MaxHp = 5 + Vitality * 5, 所以 Vitality = (max_hp - 5) / 5
+        // MaxMp = Intelligence * 5, 所以 Intelligence = mp / 5
+        let vit = if max_hp > 5.0 { (max_hp - 5.0) / 5.0 } else { 0.0 };
+        let int = if mp > 0.0 { mp / 5.0 } else { 0.0 };
+        attrs.set_base(AttributeKind::Vitality, vit);
+        attrs.set_base(AttributeKind::Intelligence, int);
+        attrs.fill_vital_resources();
+        // 覆盖当前 HP 为指定值
         attrs.set_base(AttributeKind::Hp, hp);
-        attrs.set_base(AttributeKind::MaxHp, max_hp);
-        attrs.set_base(AttributeKind::Mp, mp);
         attrs
     }
 

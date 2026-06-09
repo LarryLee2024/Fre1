@@ -144,13 +144,16 @@ pub fn update_unit_info(
         for mut text in &mut query {
             if view.is_selected {
                 **text = format!(
-                    "{}  HP: {}/{}  ATK: {}  DEF: {}  MOV: {}  技能: {}\n状态: {}",
+                    "{}  HP: {}/{}  ATK: {}  DEF: {}  MAG: {}  MDEF: {}  MOV: {}\n{}  技能: {}\n状态: {}",
                     view.name,
                     view.hp,
                     view.max_hp,
                     view.atk,
                     view.def,
+                    view.magic_attack,
+                    view.magic_defense,
                     view.mov,
+                    view.core_attrs,
                     view.skills,
                     view.buffs
                 );

@@ -121,7 +121,7 @@ impl BuffRegistry {
                 name: "攻+5".into(),
                 default_duration: 3,
                 modifiers: vec![AttributeModifierDef {
-                    kind: AttributeKind::Atk,
+                    kind: AttributeKind::Attack,
                     op: ModifierOp::Add,
                     value: 5.0,
                 }],
@@ -142,7 +142,7 @@ impl BuffRegistry {
                 name: "攻-5".into(),
                 default_duration: 3,
                 modifiers: vec![AttributeModifierDef {
-                    kind: AttributeKind::Atk,
+                    kind: AttributeKind::Attack,
                     op: ModifierOp::Add,
                     value: -5.0,
                 }],
@@ -163,7 +163,7 @@ impl BuffRegistry {
                 name: "防+5".into(),
                 default_duration: 3,
                 modifiers: vec![AttributeModifierDef {
-                    kind: AttributeKind::Def,
+                    kind: AttributeKind::Defense,
                     op: ModifierOp::Add,
                     value: 5.0,
                 }],
@@ -184,7 +184,7 @@ impl BuffRegistry {
                 name: "防-5".into(),
                 default_duration: 3,
                 modifiers: vec![AttributeModifierDef {
-                    kind: AttributeKind::Def,
+                    kind: AttributeKind::Defense,
                     op: ModifierOp::Add,
                     value: -5.0,
                 }],
@@ -205,7 +205,7 @@ impl BuffRegistry {
                 name: "灼-2".into(),
                 default_duration: 2,
                 modifiers: vec![AttributeModifierDef {
-                    kind: AttributeKind::Def,
+                    kind: AttributeKind::Defense,
                     op: ModifierOp::Add,
                     value: -2.0,
                 }],
@@ -284,7 +284,7 @@ mod tests {
             name: "测试增益".into(),
             default_duration: 3,
             modifiers: vec![AttributeModifierDef {
-                kind: AttributeKind::Atk,
+                kind: AttributeKind::Attack,
                 op: ModifierOp::Add,
                 value: 10.0,
             }],
@@ -310,7 +310,7 @@ mod tests {
                 name: "测试增益",
                 default_duration: 2,
                 modifiers: [
-                    (kind: Atk, op: Add, value: 5.0),
+                    (kind: Attack, op: Add, value: 5.0),
                 ],
                 tags: [BUFF, FIRE],
                 dot_damage: 0,

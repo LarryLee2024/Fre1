@@ -1,9 +1,9 @@
 (
     id: "defense_up",
     name: "防+5",
-    default_duration: 2,
+    default_duration: 3,
     modifiers: [
-        (kind: Def, op: Add, value: 5.0),
+        (kind: Defense, op: Add, value: 5.0),
     ],
     tags: [BUFF],
     dot_damage: 0,
