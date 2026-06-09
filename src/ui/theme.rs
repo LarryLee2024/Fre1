@@ -165,3 +165,30 @@ pub fn faction_color(faction: crate::character::Faction) -> Color {
         crate::character::Faction::Enemy => Color::srgb(1.0, 0.3, 0.2),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::character::Faction;
+
+    #[test]
+    fn faction_color_阵营颜色映射() {
+        let player_color = faction_color(Faction::Player);
+        let enemy_color = faction_color(Faction::Enemy);
+        assert_ne!(player_color, enemy_color);
+    }
+
+    #[test]
+    fn faction_color_玩家为蓝色系() {
+        let color = faction_color(Faction::Player);
+        let rgba = Srgba::from(color);
+        assert!(rgba.blue > rgba.red);
+    }
+
+    #[test]
+    fn faction_color_敌方为红色系() {
+        let color = faction_color(Faction::Enemy);
+        let rgba = Srgba::from(color);
+        assert!(rgba.red > rgba.blue);
+    }
+}

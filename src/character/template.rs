@@ -365,4 +365,29 @@ mod tests {
         let faction: Faction = FactionDef::Enemy.into();
         assert_eq!(faction, Faction::Enemy);
     }
+
+    #[test]
+    fn ron_反序列化_旧配置无version字段() {
+        // UnitTemplateDef 的最小 RON（不含 version 字段）
+        let ron_str = format!(
+            r#"
+            (
+                id: "old_unit",
+                name: "旧单位",
+                race: "人类",
+                background: "无",
+                class: "战士",
+                faction: Player,
+                base_attributes: {{}},
+                base_attack_range: 1,
+                skill_ids: [],
+                trait_ids: [],
+                ai_behavior: "default",
+            )
+        "#
+        );
+        let def: UnitTemplateDef = from_bytes(ron_str.as_bytes()).unwrap();
+        assert_eq!(def.id, "old_unit");
+        assert_eq!(def.version, 0);
+    }
 }

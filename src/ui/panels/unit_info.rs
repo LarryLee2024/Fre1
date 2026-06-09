@@ -1,7 +1,8 @@
 // 单位信息面板：显示选中单位的属性、资源条、技能、Buff
 
 use crate::assets::CnFont;
-use crate::character::HpBarFg;
+use crate::character::{HpBarFg, Unit};
+use crate::core::attribute::{AttributeKind, Attributes};
 use crate::turn::AppState;
 use crate::ui::theme::UiTheme;
 use crate::ui::view_models::SelectedUnitView;
@@ -393,23 +394,26 @@ pub fn update_unit_info(
     }
 }
 
-/// 更新 HP 条宽度（地图上单位的 HP 条，从 ViewModel 读取）
+/// 更新 HP 条宽度（地图上单位的 HP 条，每个单位独立计算）
 pub fn update_hp_bars(
-    view: Res<SelectedUnitView>,
+    units: Query<(&Attributes, &Children), With<Unit>>,
     mut hp_fgs: Query<&mut Sprite, With<HpBarFg>>,
     map: Res<crate::map::GameMap>,
 ) {
-    if !view.is_changed() {
-        return;
-    }
     let bar_width = map.tile_size * 0.6;
-    let ratio = if view.max_hp > 0 {
-        (view.hp as f32 / view.max_hp as f32).max(0.0)
-    } else {
-        0.0
-    };
-    for mut sprite in &mut hp_fgs {
-        sprite.custom_size = Some(Vec2::new(bar_width * ratio, 4.0));
+    for (attrs, children) in &units {
+        let hp = attrs.get(AttributeKind::Hp);
+        let max_hp = attrs.get(AttributeKind::MaxHp);
+        let ratio = if max_hp > 0.0 {
+            (hp / max_hp).max(0.0)
+        } else {
+            0.0
+        };
+        for child in children.iter() {
+            if let Ok(mut sprite) = hp_fgs.get_mut(child) {
+                sprite.custom_size = Some(Vec2::new(bar_width * ratio, 4.0));
+            }
+        }
     }
 }
 

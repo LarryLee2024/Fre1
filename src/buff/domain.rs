@@ -386,4 +386,25 @@ mod tests {
         assert!(registry.get("attack_down").is_some());
         assert!(registry.get("stun").is_some());
     }
+
+    #[test]
+    fn ron_反序列化_旧配置无version字段() {
+        let ron_str = r#"
+            (
+                id: "old_buff",
+                name: "旧Buff",
+                is_buff: true,
+                default_duration: 3,
+                modifiers: [],
+                tags: [],
+                dot_damage: 0,
+                hot_heal: 0,
+                is_stun: false,
+                is_cleanse: false,
+            )
+        "#;
+        let def: BuffDef = from_bytes(ron_str.as_bytes()).unwrap();
+        assert_eq!(def.id, "old_buff");
+        assert_eq!(def.version, 0);
+    }
 }

@@ -209,3 +209,31 @@ pub enum SkillUseError {
     HpNotBelow { threshold: f32 },
     HpNotAbove { threshold: f32 },
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ron::de::from_bytes;
+
+    #[test]
+    fn ron_反序列化_旧配置无version字段() {
+        let ron_str = r#"
+            (
+                id: "old_skill",
+                name: "旧技能",
+                description: "没有version字段",
+                cost_mp: 5,
+                range: 1,
+                cooldown: 0,
+                targeting: SingleEnemy,
+                effects: [],
+                tags: [],
+                conditions: [],
+                priority: 0,
+            )
+        "#;
+        let def: SkillDef = from_bytes(ron_str.as_bytes()).unwrap();
+        assert_eq!(def.id, "old_skill");
+        assert_eq!(def.version, 0);
+    }
+}

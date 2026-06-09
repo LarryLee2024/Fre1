@@ -323,4 +323,82 @@ mod tests {
         let phase = app.world().resource::<State<TurnPhase>>();
         assert_eq!(*phase.get(), TurnPhase::SelectUnit);
     }
+
+    // ── 消息字段与消费测试 ──
+
+    #[test]
+    fn turn_started_消息字段() {
+        let msg = TurnStarted { turn: 3 };
+        assert_eq!(msg.turn, 3);
+    }
+
+    #[test]
+    fn turn_ended_消息字段() {
+        let msg = TurnEnded { turn: 5 };
+        assert_eq!(msg.turn, 5);
+    }
+
+    #[test]
+    fn force_end_turn_消息可创建() {
+        let msg = ForceEndTurn;
+        let _ = msg;
+    }
+
+    #[test]
+    fn force_end_turn_消费消息不报错() {
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins)
+            .insert_resource(TurnOrder {
+                queue: vec![],
+                current_index: 0,
+                turn_number: 1,
+            })
+            .insert_resource(TurnState::default())
+            .add_message::<ForceEndTurn>()
+            .add_message::<TurnEnded>()
+            .add_systems(
+                Update,
+                |mut reader: MessageReader<ForceEndTurn>| {
+                    for _ in reader.read() {}
+                },
+            );
+        app.world_mut().write_message(ForceEndTurn);
+        app.update();
+    }
+
+    #[test]
+    fn 回合结束_重置单位行动状态() {
+        let mut app = App::new();
+        app.add_plugins((MinimalPlugins, bevy::state::app::StatesPlugin))
+            .init_state::<TurnPhase>()
+            .insert_resource(TurnOrder {
+                queue: vec![],
+                current_index: 0,
+                turn_number: 1,
+            })
+            .insert_resource(TurnState::default())
+            .init_resource::<AiTimer>()
+            .init_resource::<NeedsResolve>()
+            .add_message::<TurnStarted>()
+            .add_message::<TurnEnded>()
+            .add_message::<ForceEndTurn>()
+            .add_systems(OnEnter(TurnPhase::TurnEnd), turn_end_on_enter);
+        let e = app
+            .world_mut()
+            .spawn(Unit {
+                faction: Faction::Player,
+                acted: true,
+            })
+            .id();
+        {
+            let mut turn_order = app.world_mut().resource_mut::<TurnOrder>();
+            turn_order.queue = vec![e];
+        }
+        app.world_mut()
+            .resource_mut::<NextState<TurnPhase>>()
+            .set(TurnPhase::TurnEnd);
+        app.update();
+        let unit = app.world().get::<Unit>(e).unwrap();
+        assert!(!unit.acted);
+    }
 }

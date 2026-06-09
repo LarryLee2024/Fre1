@@ -249,3 +249,283 @@ pub fn apply_cleanse_effect(
 ) {
     remove_all_debuffs(target_buffs, target_attrs, target_tags);
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::attribute::AttributeKind;
+    use crate::core::effect::{EffectQueue, PendingEffect, PendingEffectData};
+    use crate::core::registry_loader::RegistryLoader;
+    use crate::core::tag::GameplayTags;
+    use crate::skill::SkillSlots;
+
+    fn make_test_attrs(hp: f32, max_hp: f32) -> Attributes {
+        let mut attrs = Attributes::default();
+        attrs.set_base(AttributeKind::Vitality, ((max_hp - 5.0) / 5.0).max(0.0));
+        attrs.fill_vital_resources();
+        attrs.set_vital(AttributeKind::Hp, hp);
+        attrs
+    }
+
+    #[test]
+    fn apply_damage_effect_扣血() {
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins)
+            .add_message::<DamageApplied>()
+            .add_message::<CharacterDied>()
+            .add_message::<HealApplied>()
+            .insert_resource(BuffRegistry::load_from_dir("assets/buffs"))
+            .insert_resource(TerrainRegistry::load_from_dir("assets/terrains"))
+            .insert_resource(EffectQueue::default())
+            .add_systems(Update, execute_effects);
+        let target = app
+            .world_mut()
+            .spawn((
+                Unit {
+                    faction: Faction::Enemy,
+                    acted: false,
+                },
+                make_test_attrs(30.0, 30.0),
+                SkillSlots::default(),
+                ActiveBuffs::default(),
+                GameplayTags::default(),
+                GridPosition { coord: IVec2::ZERO },
+                UnitName("哥布林".into()),
+            ))
+            .id();
+        let source = app
+            .world_mut()
+            .spawn((
+                Unit {
+                    faction: Faction::Player,
+                    acted: false,
+                },
+                UnitName("战士".into()),
+            ))
+            .id();
+        let mut queue = app.world_mut().resource_mut::<EffectQueue>();
+        queue.pending.push(PendingEffect {
+            source,
+            target,
+            data: PendingEffectData::Damage {
+                amount: 10,
+                is_skill: false,
+            },
+            source_tags: vec![],
+            terrain_id: "plain".into(),
+        });
+        app.update();
+        let attrs = app.world().get::<Attributes>(target).unwrap();
+        assert_eq!(attrs.get(AttributeKind::Hp), 20.0);
+    }
+
+    #[test]
+    fn apply_damage_effect_致死添加dead标记() {
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins)
+            .add_message::<DamageApplied>()
+            .add_message::<CharacterDied>()
+            .add_message::<HealApplied>()
+            .insert_resource(BuffRegistry::load_from_dir("assets/buffs"))
+            .insert_resource(TerrainRegistry::load_from_dir("assets/terrains"))
+            .insert_resource(EffectQueue::default())
+            .add_systems(Update, execute_effects);
+        let target = app
+            .world_mut()
+            .spawn((
+                Unit {
+                    faction: Faction::Enemy,
+                    acted: false,
+                },
+                make_test_attrs(5.0, 30.0),
+                SkillSlots::default(),
+                ActiveBuffs::default(),
+                GameplayTags::default(),
+                GridPosition { coord: IVec2::ZERO },
+                UnitName("哥布林".into()),
+            ))
+            .id();
+        let source = app
+            .world_mut()
+            .spawn((
+                Unit {
+                    faction: Faction::Player,
+                    acted: false,
+                },
+                UnitName("战士".into()),
+            ))
+            .id();
+        let mut queue = app.world_mut().resource_mut::<EffectQueue>();
+        queue.pending.push(PendingEffect {
+            source,
+            target,
+            data: PendingEffectData::Damage {
+                amount: 10,
+                is_skill: false,
+            },
+            source_tags: vec![],
+            terrain_id: "plain".into(),
+        });
+        app.update();
+        assert!(app.world().get::<Dead>(target).is_some());
+    }
+
+    #[test]
+    fn apply_heal_effect_回血() {
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins)
+            .add_message::<DamageApplied>()
+            .add_message::<CharacterDied>()
+            .add_message::<HealApplied>()
+            .insert_resource(BuffRegistry::load_from_dir("assets/buffs"))
+            .insert_resource(TerrainRegistry::load_from_dir("assets/terrains"))
+            .insert_resource(EffectQueue::default())
+            .add_systems(Update, execute_effects);
+        let target = app
+            .world_mut()
+            .spawn((
+                Unit {
+                    faction: Faction::Player,
+                    acted: false,
+                },
+                make_test_attrs(10.0, 30.0),
+                SkillSlots::default(),
+                ActiveBuffs::default(),
+                GameplayTags::default(),
+                GridPosition { coord: IVec2::ZERO },
+                UnitName("战士".into()),
+            ))
+            .id();
+        let source = app
+            .world_mut()
+            .spawn((
+                Unit {
+                    faction: Faction::Player,
+                    acted: false,
+                },
+                UnitName("牧师".into()),
+            ))
+            .id();
+        let mut queue = app.world_mut().resource_mut::<EffectQueue>();
+        queue.pending.push(PendingEffect {
+            source,
+            target,
+            data: PendingEffectData::Heal { amount: 15 },
+            source_tags: vec![],
+            terrain_id: "plain".into(),
+        });
+        app.update();
+        let attrs = app.world().get::<Attributes>(target).unwrap();
+        assert_eq!(attrs.get(AttributeKind::Hp), 25.0);
+    }
+
+    #[test]
+    fn apply_heal_effect_不超过maxhp() {
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins)
+            .add_message::<DamageApplied>()
+            .add_message::<CharacterDied>()
+            .add_message::<HealApplied>()
+            .insert_resource(BuffRegistry::load_from_dir("assets/buffs"))
+            .insert_resource(TerrainRegistry::load_from_dir("assets/terrains"))
+            .insert_resource(EffectQueue::default())
+            .add_systems(Update, execute_effects);
+        let target = app
+            .world_mut()
+            .spawn((
+                Unit {
+                    faction: Faction::Player,
+                    acted: false,
+                },
+                make_test_attrs(25.0, 30.0),
+                SkillSlots::default(),
+                ActiveBuffs::default(),
+                GameplayTags::default(),
+                GridPosition { coord: IVec2::ZERO },
+                UnitName("战士".into()),
+            ))
+            .id();
+        let source = app
+            .world_mut()
+            .spawn((
+                Unit {
+                    faction: Faction::Player,
+                    acted: false,
+                },
+                UnitName("牧师".into()),
+            ))
+            .id();
+        let mut queue = app.world_mut().resource_mut::<EffectQueue>();
+        queue.pending.push(PendingEffect {
+            source,
+            target,
+            data: PendingEffectData::Heal { amount: 100 },
+            source_tags: vec![],
+            terrain_id: "plain".into(),
+        });
+        app.update();
+        let attrs = app.world().get::<Attributes>(target).unwrap();
+        assert_eq!(attrs.get(AttributeKind::Hp), 30.0);
+    }
+
+    #[test]
+    fn apply_buff_effect_正常施加() {
+        let mut buffs = ActiveBuffs::default();
+        let mut attrs = Attributes::default();
+        attrs.fill_vital_resources();
+        let mut tags = GameplayTags::default();
+        let registry = BuffRegistry::load_from_dir("assets/buffs");
+        apply_buff_effect(
+            &mut buffs,
+            &mut attrs,
+            &mut tags,
+            "attack_up",
+            Entity::from_bits(1),
+            3,
+            &registry,
+        );
+        assert!(buffs.iter().any(|b| b.name == "攻+5"));
+    }
+
+    #[test]
+    fn apply_buff_effect_未知buff静默跳过() {
+        let mut buffs = ActiveBuffs::default();
+        let mut attrs = Attributes::default();
+        attrs.fill_vital_resources();
+        let mut tags = GameplayTags::default();
+        let registry = BuffRegistry::load_from_dir("assets/buffs");
+        apply_buff_effect(
+            &mut buffs,
+            &mut attrs,
+            &mut tags,
+            "nonexistent_buff",
+            Entity::from_bits(1),
+            3,
+            &registry,
+        );
+        assert_eq!(buffs.iter().count(), 0);
+    }
+
+    #[test]
+    fn apply_cleanse_effect_移除所有debuff() {
+        let mut buffs = ActiveBuffs::default();
+        let mut attrs = Attributes::default();
+        attrs.fill_vital_resources();
+        let mut tags = GameplayTags::default();
+        let registry = BuffRegistry::load_from_dir("assets/buffs");
+        apply_buff_effect(
+            &mut buffs,
+            &mut attrs,
+            &mut tags,
+            "burn",
+            Entity::from_bits(1),
+            3,
+            &registry,
+        );
+        let debuff_count_before = buffs.iter().filter(|b| !b.is_buff).count();
+        assert!(debuff_count_before > 0);
+        apply_cleanse_effect(&mut buffs, &mut attrs, &mut tags);
+        let debuff_count_after = buffs.iter().filter(|b| !b.is_buff).count();
+        assert_eq!(debuff_count_after, 0);
+    }
+}

@@ -1,7 +1,7 @@
 // 技能默认注册数据
 
-use super::types::*;
 use super::SkillRegistry;
+use super::types::*;
 use crate::core::effect::EffectDef;
 
 /// 注册内置默认技能（确保基础功能可用）

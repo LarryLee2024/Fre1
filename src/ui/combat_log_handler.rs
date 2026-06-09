@@ -23,7 +23,12 @@ pub fn on_damage_applied(
     mut combat_log: ResMut<CombatLog>,
 ) {
     for msg in damage_reader.read() {
-        bevy::log::debug!("[Message] DamageApplied: {} → {} ({}dmg)", msg.attacker_name, msg.target_name, msg.amount);
+        bevy::log::debug!(
+            "[Message] DamageApplied: {} → {} ({}dmg)",
+            msg.attacker_name,
+            msg.target_name,
+            msg.amount
+        );
         let skill_label = if msg.is_skill { "技能" } else { "攻击" };
         combat_log.push(vec![
             LogSegment {
@@ -68,7 +73,11 @@ pub fn on_heal_applied(
     mut combat_log: ResMut<CombatLog>,
 ) {
     for msg in heal_reader.read() {
-        bevy::log::debug!("[Message] HealApplied: {} +{}HP", msg.target_name, msg.amount);
+        bevy::log::debug!(
+            "[Message] HealApplied: {} +{}HP",
+            msg.target_name,
+            msg.amount
+        );
         combat_log.push(vec![
             LogSegment {
                 text: format!("[{}]", msg.target_name),
@@ -88,7 +97,11 @@ pub fn on_character_died_log(
     mut combat_log: ResMut<CombatLog>,
 ) {
     for msg in died_reader.read() {
-        bevy::log::debug!("[Message] CharacterDied(log): {} ({:?})", msg.name, msg.faction);
+        bevy::log::debug!(
+            "[Message] CharacterDied(log): {} ({:?})",
+            msg.name,
+            msg.faction
+        );
         combat_log.push(vec![
             LogSegment {
                 text: format!("[{}]", msg.name),
@@ -128,7 +141,11 @@ pub fn on_dot_applied(
     mut combat_log: ResMut<CombatLog>,
 ) {
     for msg in dot_reader.read() {
-        bevy::log::debug!("[Message] DotApplied: {} -{}dmg", msg.target_name, msg.amount);
+        bevy::log::debug!(
+            "[Message] DotApplied: {} -{}dmg",
+            msg.target_name,
+            msg.amount
+        );
         combat_log.push(vec![
             LogSegment {
                 text: format!("[{}]", msg.target_name),
@@ -148,7 +165,11 @@ pub fn on_hot_applied(
     mut combat_log: ResMut<CombatLog>,
 ) {
     for msg in hot_reader.read() {
-        bevy::log::debug!("[Message] HotApplied: {} +{}HP", msg.target_name, msg.amount);
+        bevy::log::debug!(
+            "[Message] HotApplied: {} +{}HP",
+            msg.target_name,
+            msg.amount
+        );
         combat_log.push(vec![
             LogSegment {
                 text: format!("[{}]", msg.target_name),

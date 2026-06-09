@@ -84,3 +84,159 @@ pub fn on_character_died(
         commands.entity(msg.entity).try_despawn();
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::character::Faction;
+    use crate::turn::TurnOrder;
+    use bevy::prelude::*;
+
+    #[test]
+    fn character_died_消息字段() {
+        let msg = CharacterDied {
+            entity: Entity::from_bits(42),
+            name: "哥布林".to_string(),
+            faction: Faction::Enemy,
+        };
+        assert_eq!(msg.entity, Entity::from_bits(42));
+        assert_eq!(msg.name, "哥布林");
+    }
+
+    #[test]
+    fn damage_applied_消息字段() {
+        let msg = DamageApplied {
+            target: Entity::from_bits(1),
+            target_name: "哥布林".to_string(),
+            target_faction: Faction::Enemy,
+            attacker_name: "战士".to_string(),
+            attacker_faction: Faction::Player,
+            amount: 15,
+            is_skill: false,
+            terrain_label: "平原".to_string(),
+            target_coord: IVec2::new(3, 4),
+        };
+        assert_eq!(msg.amount, 15);
+    }
+
+    #[test]
+    fn heal_applied_消息字段() {
+        let msg = HealApplied {
+            target: Entity::from_bits(1),
+            target_name: "战士".to_string(),
+            amount: 10,
+        };
+        assert_eq!(msg.amount, 10);
+    }
+
+    #[test]
+    fn dot_applied_消息字段() {
+        let msg = DotApplied {
+            target: Entity::from_bits(1),
+            target_name: "战士".to_string(),
+            amount: 5,
+            target_coord: IVec2::new(2, 3),
+        };
+        assert_eq!(msg.amount, 5);
+    }
+
+    #[test]
+    fn hot_applied_消息字段() {
+        let msg = HotApplied {
+            target: Entity::from_bits(1),
+            target_name: "战士".to_string(),
+            amount: 8,
+        };
+        assert_eq!(msg.amount, 8);
+    }
+
+    #[test]
+    fn stun_applied_消息字段() {
+        let msg = StunApplied {
+            target: Entity::from_bits(1),
+            target_name: "战士".to_string(),
+        };
+        assert_eq!(msg.target, Entity::from_bits(1));
+    }
+
+    #[test]
+    fn on_character_died_从行动队列移除() {
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins)
+            .insert_resource(TurnOrder {
+                queue: vec![],
+                current_index: 0,
+                turn_number: 1,
+            })
+            .add_message::<CharacterDied>()
+            .add_systems(Update, on_character_died);
+        let e1 = app.world_mut().spawn_empty().id();
+        let e2 = app.world_mut().spawn_empty().id();
+        {
+            let mut turn_order = app.world_mut().resource_mut::<TurnOrder>();
+            turn_order.queue = vec![e1, e2];
+        }
+        app.world_mut().write_message(CharacterDied {
+            entity: e1,
+            name: "战士".to_string(),
+            faction: Faction::Player,
+        });
+        app.update();
+        let turn_order = app.world().resource::<TurnOrder>();
+        assert_eq!(turn_order.queue, vec![e2]);
+    }
+
+    #[test]
+    fn on_character_died_队列中无死亡单位则不变() {
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins)
+            .insert_resource(TurnOrder {
+                queue: vec![],
+                current_index: 0,
+                turn_number: 1,
+            })
+            .add_message::<CharacterDied>()
+            .add_systems(Update, on_character_died);
+        let e1 = app.world_mut().spawn_empty().id();
+        {
+            let mut turn_order = app.world_mut().resource_mut::<TurnOrder>();
+            turn_order.queue = vec![e1];
+        }
+        app.update();
+        let turn_order = app.world().resource::<TurnOrder>();
+        assert_eq!(turn_order.queue, vec![e1]);
+    }
+
+    #[test]
+    fn on_character_died_多次死亡消息按序移除() {
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins)
+            .insert_resource(TurnOrder {
+                queue: vec![],
+                current_index: 0,
+                turn_number: 1,
+            })
+            .add_message::<CharacterDied>()
+            .add_systems(Update, on_character_died);
+        let e1 = app.world_mut().spawn_empty().id();
+        let e2 = app.world_mut().spawn_empty().id();
+        let e3 = app.world_mut().spawn_empty().id();
+        {
+            let mut turn_order = app.world_mut().resource_mut::<TurnOrder>();
+            turn_order.queue = vec![e1, e2, e3];
+        }
+        app.world_mut().write_message(CharacterDied {
+            entity: e1,
+            name: "战士".to_string(),
+            faction: Faction::Player,
+        });
+        app.world_mut().write_message(CharacterDied {
+            entity: e3,
+            name: "法师".to_string(),
+            faction: Faction::Player,
+        });
+        app.update();
+        let turn_order = app.world().resource::<TurnOrder>();
+        assert_eq!(turn_order.queue, vec![e2]);
+    }
+}

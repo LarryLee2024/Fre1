@@ -11,12 +11,12 @@ pub use cost::*;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use bevy::prelude::*;
-    use std::collections::HashMap;
     use crate::core::tag::{GameplayTag, GameplayTags};
     use crate::map::data::TerrainRegistry;
     use crate::map::grid::GameMap;
     use crate::map::runtime::{OccupancyGrid, TerrainGrid};
+    use bevy::prelude::*;
+    use std::collections::HashMap;
 
     /// 构建测试用地图（5x5）
     fn make_test_map() -> GameMap {

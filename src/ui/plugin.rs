@@ -29,6 +29,7 @@ impl Plugin for UiPlugin {
             .init_resource::<HoveredEntity>()
             .init_resource::<CombatLogCollapsed>()
             .add_plugins((
+                CameraPlugin,
                 TurnIndicatorPlugin,
                 UnitInfoPlugin,
                 CombatLogPanelPlugin,

@@ -336,4 +336,44 @@ mod tests {
         assert_eq!(def.trigger, TraitTrigger::OnTurnStart);
         assert_eq!(def.effects.len(), 1);
     }
+
+    #[test]
+    fn apply_passive_traits_独立source_id() {
+        let mut registry = TraitRegistry::default();
+        registry.traits.insert(
+            "trait_a".into(),
+            TraitData {
+                id: "trait_a".into(),
+                name: "A".into(),
+                description: String::new(),
+                trigger: TraitTrigger::Passive,
+                effects: vec![TraitEffect::ModifyAttribute(AttributeModifierDef {
+                    kind: AttributeKind::Attack,
+                    op: ModifierOp::Add,
+                    value: 2.0,
+                })],
+            },
+        );
+        registry.traits.insert(
+            "trait_b".into(),
+            TraitData {
+                id: "trait_b".into(),
+                name: "B".into(),
+                description: String::new(),
+                trigger: TraitTrigger::Passive,
+                effects: vec![TraitEffect::ModifyAttribute(AttributeModifierDef {
+                    kind: AttributeKind::Defense,
+                    op: ModifierOp::Add,
+                    value: 3.0,
+                })],
+            },
+        );
+        let handlers = TraitEffectHandlerRegistry::with_defaults();
+        let (_tags, modifiers) =
+            apply_passive_traits(&["trait_a".into(), "trait_b".into()], &registry, &handlers);
+        assert_eq!(modifiers.len(), 2);
+        assert_ne!(modifiers[0].source, modifiers[1].source);
+        assert_eq!(modifiers[0].source, BuffInstanceId(u64::MAX - 1));
+        assert_eq!(modifiers[1].source, BuffInstanceId(u64::MAX - 2));
+    }
 }

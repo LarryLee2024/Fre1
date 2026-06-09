@@ -525,4 +525,48 @@ mod tests {
         // MaxMp = 5*5 = 25
         assert_eq!(attrs.get(AttributeKind::MaxMp), 25.0);
     }
+
+    // ── set_vital 测试 ──
+
+    #[test]
+    fn set_vital_设置hp当前值() {
+        let mut attrs = Attributes::default();
+        attrs.fill_vital_resources();
+        attrs.set_vital(AttributeKind::Hp, 5.0);
+        assert_eq!(attrs.get(AttributeKind::Hp), 5.0);
+    }
+
+    #[test]
+    fn set_vital_设置mp当前值() {
+        let mut attrs = Attributes::default();
+        attrs.fill_vital_resources();
+        attrs.set_vital(AttributeKind::Mp, 3.0);
+        assert_eq!(attrs.get(AttributeKind::Mp), 3.0);
+    }
+
+    #[test]
+    fn set_vital_设置stamina当前值() {
+        let mut attrs = Attributes::default();
+        attrs.fill_vital_resources();
+        attrs.set_vital(AttributeKind::Stamina, 7.0);
+        assert_eq!(attrs.get(AttributeKind::Stamina), 7.0);
+    }
+
+    #[test]
+    fn set_vital_不影响最大值() {
+        let mut attrs = Attributes::default();
+        attrs.fill_vital_resources();
+        let max_hp = attrs.get(AttributeKind::MaxHp);
+        attrs.set_vital(AttributeKind::Hp, 5.0);
+        assert_eq!(attrs.get(AttributeKind::MaxHp), max_hp);
+    }
+
+    #[test]
+    fn set_vital_非生命资源不生效() {
+        let mut attrs = Attributes::default();
+        attrs.fill_vital_resources();
+        let attack_before = attrs.get(AttributeKind::Attack);
+        attrs.set_vital(AttributeKind::Attack, 999.0);
+        assert_eq!(attrs.get(AttributeKind::Attack), attack_before);
+    }
 }

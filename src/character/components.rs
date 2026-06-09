@@ -130,6 +130,8 @@ impl MovingUnit {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::attribute::Attributes;
+    use crate::skill::SkillSlots;
     use crate::turn::TurnPhase;
 
     fn make_moving_unit(path: Vec<IVec2>, current_index: usize) -> MovingUnit {
@@ -189,5 +191,65 @@ mod tests {
     fn 移动单位_是否完成_刚到达终点() {
         let unit = make_moving_unit(vec![IVec2::new(0, 0), IVec2::new(1, 0)], 2);
         assert!(unit.is_finished());
+    }
+
+    // ── Dead Hook 测试 ──
+
+    #[test]
+    fn dead_hook_标记已行动() {
+        let mut world = World::new();
+        let entity = world
+            .spawn((Unit {
+                faction: Faction::Player,
+                acted: false,
+            },))
+            .id();
+        world.entity_mut(entity).insert(Dead);
+        let unit = world.get::<Unit>(entity).unwrap();
+        assert!(unit.acted);
+    }
+
+    #[test]
+    fn dead_hook_移除selected() {
+        let mut world = World::new();
+        let entity = world
+            .spawn((
+                Unit {
+                    faction: Faction::Player,
+                    acted: false,
+                },
+                Selected,
+            ))
+            .id();
+        world.entity_mut(entity).insert(Dead);
+        assert!(world.get::<Selected>(entity).is_none());
+    }
+
+    #[test]
+    fn dead_hook_无selected时不报错() {
+        let mut world = World::new();
+        let entity = world
+            .spawn((Unit {
+                faction: Faction::Player,
+                acted: false,
+            },))
+            .id();
+        world.entity_mut(entity).insert(Dead);
+        assert!(world.get::<Unit>(entity).unwrap().acted);
+    }
+
+    #[test]
+    fn unit_必需组件_自动生成() {
+        let mut world = World::new();
+        let entity = world
+            .spawn(Unit {
+                faction: Faction::Player,
+                acted: false,
+            })
+            .id();
+        assert!(world.get::<Attributes>(entity).is_some());
+        assert!(world.get::<SkillSlots>(entity).is_some());
+        assert!(world.get::<GridPosition>(entity).is_some());
+        assert!(world.get::<ActiveBuffs>(entity).is_some());
     }
 }

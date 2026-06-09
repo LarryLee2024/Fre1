@@ -116,3 +116,25 @@ impl TraitCollection {
         self.trait_ids.iter().any(|t| t == trait_id)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ron::de::from_bytes;
+
+    #[test]
+    fn ron_反序列化_旧配置无version字段() {
+        let ron_str = r#"
+            (
+                id: "old_trait",
+                name: "旧配置",
+                description: "没有version字段",
+                trigger: Passive,
+                effects: [GrantTag(WARRIOR)],
+            )
+        "#;
+        let def: TraitDefinition = from_bytes(ron_str.as_bytes()).unwrap();
+        assert_eq!(def.id, "old_trait");
+        assert_eq!(def.version, 0);
+    }
+}
