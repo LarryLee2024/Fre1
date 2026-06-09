@@ -1,12 +1,12 @@
 // 战斗模块：效果管线、伤害计算、战斗日志
 
 mod combat;
-pub mod pipeline;
 mod log;
+pub mod pipeline;
 mod plugin;
 
 // 公共 re-exports
 pub use combat::*;
-pub use pipeline::{CombatIntent, PrevPosition};
 pub use log::*;
+pub use pipeline::{CombatIntent, PrevPosition};
 pub use plugin::BattlePlugin;

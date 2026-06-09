@@ -23,8 +23,11 @@ pub struct CameraPlugin;
 impl Plugin for CameraPlugin {
     fn build(&self, app: &mut App) {
         use crate::turn::{AppState, GameSet};
-        app.add_systems(OnEnter(AppState::InGame), spawn_camera.in_set(GameSet::Camera))
-            .add_systems(Update, camera_control);
+        app.add_systems(
+            OnEnter(AppState::InGame),
+            spawn_camera.in_set(GameSet::Camera),
+        )
+        .add_systems(Update, camera_control);
     }
 }
 

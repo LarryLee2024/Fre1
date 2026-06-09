@@ -321,27 +321,36 @@ mod tests {
         registry.register_defaults();
         // 8 核心属性
         for kind in [
-            AttributeKind::Might, AttributeKind::Dexterity,
-            AttributeKind::Agility, AttributeKind::Vitality,
-            AttributeKind::Intelligence, AttributeKind::Willpower,
-            AttributeKind::Presence, AttributeKind::Luck,
+            AttributeKind::Might,
+            AttributeKind::Dexterity,
+            AttributeKind::Agility,
+            AttributeKind::Vitality,
+            AttributeKind::Intelligence,
+            AttributeKind::Willpower,
+            AttributeKind::Presence,
+            AttributeKind::Luck,
         ] {
             assert!(registry.get(kind).is_some(), "缺少核心属性: {:?}", kind);
         }
         // 3 生命资源
-        for kind in [
-            AttributeKind::Hp, AttributeKind::Mp, AttributeKind::Stamina,
-        ] {
+        for kind in [AttributeKind::Hp, AttributeKind::Mp, AttributeKind::Stamina] {
             assert!(registry.get(kind).is_some(), "缺少生命资源: {:?}", kind);
         }
         // 12 衍生属性
         for kind in [
-            AttributeKind::MaxHp, AttributeKind::MaxMp, AttributeKind::MaxStamina,
-            AttributeKind::Attack, AttributeKind::Defense,
-            AttributeKind::MagicAttack, AttributeKind::MagicDefense,
-            AttributeKind::Accuracy, AttributeKind::Evasion,
-            AttributeKind::CritRate, AttributeKind::MoveRange,
-            AttributeKind::Initiative, AttributeKind::AttackRange,
+            AttributeKind::MaxHp,
+            AttributeKind::MaxMp,
+            AttributeKind::MaxStamina,
+            AttributeKind::Attack,
+            AttributeKind::Defense,
+            AttributeKind::MagicAttack,
+            AttributeKind::MagicDefense,
+            AttributeKind::Accuracy,
+            AttributeKind::Evasion,
+            AttributeKind::CritRate,
+            AttributeKind::MoveRange,
+            AttributeKind::Initiative,
+            AttributeKind::AttackRange,
         ] {
             assert!(registry.get(kind).is_some(), "缺少衍生属性: {:?}", kind);
         }
@@ -372,13 +381,37 @@ mod tests {
         // 生命资源
         assert_eq!(registry.get(AttributeKind::Hp).unwrap().max_value, 9999.0);
         assert_eq!(registry.get(AttributeKind::Mp).unwrap().max_value, 9999.0);
-        assert_eq!(registry.get(AttributeKind::Stamina).unwrap().max_value, 9999.0);
+        assert_eq!(
+            registry.get(AttributeKind::Stamina).unwrap().max_value,
+            9999.0
+        );
         // 衍生属性
-        assert_eq!(registry.get(AttributeKind::MaxHp).unwrap().max_value, 9999.0);
-        assert_eq!(registry.get(AttributeKind::Defense).unwrap().max_value, 9999.0);
-        assert_eq!(registry.get(AttributeKind::MoveRange).unwrap().max_value, 99.0);
-        assert_eq!(registry.get(AttributeKind::AttackRange).unwrap().default_value, 1.0);
-        assert_eq!(registry.get(AttributeKind::Accuracy).unwrap().default_value, 80.0);
-        assert_eq!(registry.get(AttributeKind::CritRate).unwrap().max_value, 100.0);
+        assert_eq!(
+            registry.get(AttributeKind::MaxHp).unwrap().max_value,
+            9999.0
+        );
+        assert_eq!(
+            registry.get(AttributeKind::Defense).unwrap().max_value,
+            9999.0
+        );
+        assert_eq!(
+            registry.get(AttributeKind::MoveRange).unwrap().max_value,
+            99.0
+        );
+        assert_eq!(
+            registry
+                .get(AttributeKind::AttackRange)
+                .unwrap()
+                .default_value,
+            1.0
+        );
+        assert_eq!(
+            registry.get(AttributeKind::Accuracy).unwrap().default_value,
+            80.0
+        );
+        assert_eq!(
+            registry.get(AttributeKind::CritRate).unwrap().max_value,
+            100.0
+        );
     }
 }

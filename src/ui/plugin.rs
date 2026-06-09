@@ -1,4 +1,5 @@
 use super::action_menu::ActionMenuPlugin;
+use super::combat_preview::CombatPreviewPlugin;
 use super::command_handler::handle_ui_commands;
 use super::events::UiCommand;
 use super::hud::HudPlugin;
@@ -16,7 +17,13 @@ impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<UiTheme>()
             .add_message::<UiCommand>()
-            .add_plugins((HudPlugin, ActionMenuPlugin, TileInfoPlugin, VfxPlugin))
+            .add_plugins((
+                HudPlugin,
+                ActionMenuPlugin,
+                TileInfoPlugin,
+                VfxPlugin,
+                CombatPreviewPlugin,
+            ))
             .add_systems(
                 Update,
                 handle_ui_commands.run_if(in_state(AppState::InGame).and(player_turn)),

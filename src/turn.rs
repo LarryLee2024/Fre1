@@ -175,9 +175,7 @@ mod tests {
     }
 
     fn spawn_unit(app: &mut App, faction: Faction, acted: bool) -> Entity {
-        app.world_mut()
-            .spawn(Unit { faction, acted })
-            .id()
+        app.world_mut().spawn(Unit { faction, acted }).id()
     }
 
     #[test]

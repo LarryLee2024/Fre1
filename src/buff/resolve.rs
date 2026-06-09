@@ -3,14 +3,14 @@
 
 use crate::assets::CnFont;
 use crate::battle::{CombatLog, LogSegment, log_color};
+use crate::character::{GridPosition, TraitGrantedTags, Unit, UnitName};
 use crate::gameplay::attribute::{AttributeKind, Attributes, BuffInstanceId};
 use crate::gameplay::tag::{GameplayTag, GameplayTags};
-use crate::skill::SkillCooldowns;
 use crate::map::GameMap;
+use crate::skill::SkillCooldowns;
 use crate::turn::{NeedsResolve, TurnState};
-use crate::character::{GridPosition, TraitGrantedTags, Unit, UnitName};
-use crate::ui::vfx;
 use crate::ui::UiTheme;
+use crate::ui::vfx;
 use bevy::prelude::*;
 
 use super::{ActiveBuffs, remove_buff};
@@ -43,7 +43,9 @@ pub fn resolve_status_effects(
     }
     needs_resolve.0 = false;
 
-    for (entity, mut unit, name, gp, mut attrs, mut buffs, mut tags, mut cooldowns, trait_tags) in &mut units {
+    for (entity, mut unit, name, gp, mut attrs, mut buffs, mut tags, mut cooldowns, trait_tags) in
+        &mut units
+    {
         if unit.faction != turn_state.current_faction {
             continue;
         }
@@ -63,8 +65,14 @@ pub fn resolve_status_effects(
                 remove_buff(&mut buffs, &mut attrs, &mut tags, id);
             }
             combat_log.push(vec![
-                LogSegment { text: format!("[{}]", name.0), color: log_color::NORMAL },
-                LogSegment { text: " 处于晕眩，无法行动".to_string(), color: log_color::DAMAGE },
+                LogSegment {
+                    text: format!("[{}]", name.0),
+                    color: log_color::NORMAL,
+                },
+                LogSegment {
+                    text: " 处于晕眩，无法行动".to_string(),
+                    color: log_color::DAMAGE,
+                },
             ]);
         }
 
@@ -74,10 +82,23 @@ pub fn resolve_status_effects(
             let hp = attrs.get(AttributeKind::Hp);
             let new_hp = (hp - dot as f32).max(0.0);
             attrs.set_base(AttributeKind::Hp, new_hp);
-            vfx::spawn_damage_popup(&mut commands, world_pos, dot, &cn_font.handle, false, &theme);
+            vfx::spawn_damage_popup(
+                &mut commands,
+                world_pos,
+                dot,
+                &cn_font.handle,
+                false,
+                &theme,
+            );
             combat_log.push(vec![
-                LogSegment { text: format!("[{}]", name.0), color: log_color::NORMAL },
-                LogSegment { text: format!(" 受到 {} 持续伤害", dot), color: log_color::DAMAGE },
+                LogSegment {
+                    text: format!("[{}]", name.0),
+                    color: log_color::NORMAL,
+                },
+                LogSegment {
+                    text: format!(" 受到 {} 持续伤害", dot),
+                    color: log_color::DAMAGE,
+                },
             ]);
             if new_hp <= 0.0 {
                 commands.entity(entity).try_despawn();
@@ -92,8 +113,14 @@ pub fn resolve_status_effects(
             let new_hp = (hp + hot as f32).min(max_hp);
             attrs.set_base(AttributeKind::Hp, new_hp);
             combat_log.push(vec![
-                LogSegment { text: format!("[{}]", name.0), color: log_color::NORMAL },
-                LogSegment { text: format!(" 恢复 {} HP", hot), color: log_color::HEAL },
+                LogSegment {
+                    text: format!("[{}]", name.0),
+                    color: log_color::NORMAL,
+                },
+                LogSegment {
+                    text: format!(" 恢复 {} HP", hot),
+                    color: log_color::HEAL,
+                },
             ]);
         }
 
@@ -106,7 +133,12 @@ pub fn resolve_status_effects(
 }
 
 /// tick 所有 Buff：递减持续时间，移除过期的并清理其修饰符和标签
-pub(crate) fn tick_buffs(buffs: &mut ActiveBuffs, attrs: &mut Attributes, tags: &mut GameplayTags, trait_tags: &TraitGrantedTags) {
+pub(crate) fn tick_buffs(
+    buffs: &mut ActiveBuffs,
+    attrs: &mut Attributes,
+    tags: &mut GameplayTags,
+    trait_tags: &TraitGrantedTags,
+) {
     let expired_ids: Vec<BuffInstanceId> = buffs
         .instances
         .iter()
@@ -124,7 +156,11 @@ pub(crate) fn tick_buffs(buffs: &mut ActiveBuffs, attrs: &mut Attributes, tags: 
 }
 
 /// 从所有活跃 Buff 重新构建 GameplayTags（保留 trait 授予的标签）
-pub(crate) fn rebuild_tags_from_buffs(buffs: &ActiveBuffs, tags: &mut GameplayTags, trait_tags: &TraitGrantedTags) {
+pub(crate) fn rebuild_tags_from_buffs(
+    buffs: &ActiveBuffs,
+    tags: &mut GameplayTags,
+    trait_tags: &TraitGrantedTags,
+) {
     let preserved_mask = trait_tags.0.0;
 
     let mut new_tags = GameplayTags(preserved_mask);
@@ -143,7 +179,13 @@ mod tests {
     use crate::buff::BuffInstance;
     use crate::gameplay::attribute::{AttributeKind, AttributeModifierInstance, ModifierOp};
 
-    fn make_test_buff(id: u64, buff_id: &str, remaining: u32, tags: Vec<GameplayTag>, is_buff: bool) -> BuffInstance {
+    fn make_test_buff(
+        id: u64,
+        buff_id: &str,
+        remaining: u32,
+        tags: Vec<GameplayTag>,
+        is_buff: bool,
+    ) -> BuffInstance {
         BuffInstance {
             instance_id: BuffInstanceId(id),
             buff_id: buff_id.into(),
@@ -162,7 +204,13 @@ mod tests {
     #[test]
     fn tick_buffs_过期buff清理修饰符() {
         let mut buffs = ActiveBuffs::default();
-        buffs.add(make_test_buff(1, "shield", 1, vec![GameplayTag::BUFF], true));
+        buffs.add(make_test_buff(
+            1,
+            "shield",
+            1,
+            vec![GameplayTag::BUFF],
+            true,
+        ));
 
         let mut attrs = Attributes::default();
         attrs.fill_vital_resources();
@@ -190,7 +238,13 @@ mod tests {
     #[test]
     fn tick_buffs_未过期buff持续时间递减() {
         let mut buffs = ActiveBuffs::default();
-        buffs.add(make_test_buff(1, "shield", 3, vec![GameplayTag::BUFF], true));
+        buffs.add(make_test_buff(
+            1,
+            "shield",
+            3,
+            vec![GameplayTag::BUFF],
+            true,
+        ));
 
         let mut attrs = Attributes::default();
         attrs.fill_vital_resources();
@@ -206,7 +260,13 @@ mod tests {
     #[test]
     fn tick_buffs_清理过期buff的修饰符() {
         let mut buffs = ActiveBuffs::default();
-        buffs.add(make_test_buff(1, "attack_up", 1, vec![GameplayTag::BUFF], true));
+        buffs.add(make_test_buff(
+            1,
+            "attack_up",
+            1,
+            vec![GameplayTag::BUFF],
+            true,
+        ));
 
         let mut attrs = Attributes::default();
         attrs.fill_vital_resources();
@@ -231,7 +291,13 @@ mod tests {
     #[test]
     fn tick_buffs_保留多个buff中未过期的() {
         let mut buffs = ActiveBuffs::default();
-        buffs.add(make_test_buff(1, "expired", 1, vec![GameplayTag::BUFF], true));
+        buffs.add(make_test_buff(
+            1,
+            "expired",
+            1,
+            vec![GameplayTag::BUFF],
+            true,
+        ));
         buffs.add(make_test_buff(2, "alive", 3, vec![GameplayTag::BUFF], true));
 
         let mut attrs = Attributes::default();
@@ -244,10 +310,18 @@ mod tests {
         // 两个 buff 都在（过期的 remaining_turns=0，下次 tick 才移除）
         assert_eq!(buffs.len(), 2);
         // "expired" remaining_turns=1 → tick 后变为 0
-        let expired = buffs.instances.iter().find(|b| b.buff_id == "expired").unwrap();
+        let expired = buffs
+            .instances
+            .iter()
+            .find(|b| b.buff_id == "expired")
+            .unwrap();
         assert_eq!(expired.remaining_turns, 0);
         // "alive" remaining_turns=3 → tick 后变为 2
-        let alive = buffs.instances.iter().find(|b| b.buff_id == "alive").unwrap();
+        let alive = buffs
+            .instances
+            .iter()
+            .find(|b| b.buff_id == "alive")
+            .unwrap();
         assert_eq!(alive.remaining_turns, 2);
     }
 
@@ -269,7 +343,13 @@ mod tests {
     #[test]
     fn rebuild_tags_from_buffs_从活跃buff重建标签() {
         let mut buffs = ActiveBuffs::default();
-        buffs.add(make_test_buff(1, "fire_shield", 3, vec![GameplayTag::BUFF, GameplayTag::FIRE], true));
+        buffs.add(make_test_buff(
+            1,
+            "fire_shield",
+            3,
+            vec![GameplayTag::BUFF, GameplayTag::FIRE],
+            true,
+        ));
 
         let mut tags = GameplayTags::default();
         let trait_tags = TraitGrantedTags::default();
@@ -308,7 +388,13 @@ mod tests {
     fn rebuild_tags_from_buffs_多buff多标签合并() {
         let mut buffs = ActiveBuffs::default();
         buffs.add(make_test_buff(1, "fire", 3, vec![GameplayTag::FIRE], true));
-        buffs.add(make_test_buff(2, "stun", 3, vec![GameplayTag::STUN, GameplayTag::DEBUFF], false));
+        buffs.add(make_test_buff(
+            2,
+            "stun",
+            3,
+            vec![GameplayTag::STUN, GameplayTag::DEBUFF],
+            false,
+        ));
 
         let mut tags = GameplayTags::default();
         let trait_tags = TraitGrantedTags::default();

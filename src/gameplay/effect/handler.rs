@@ -81,9 +81,7 @@ impl EffectHandler for DamageHandler {
 
         let effective_atk = ctx.source_attrs.get(AttributeKind::Attack);
         let effective_def = ctx.target_attrs.get(AttributeKind::Defense);
-        let base_def = ctx
-            .target_attrs
-            .core_base(AttributeKind::Vitality);
+        let base_def = ctx.target_attrs.core_base(AttributeKind::Vitality);
 
         let amount = calculate_damage_from_effect(
             effective_atk,
@@ -111,9 +109,7 @@ impl EffectHandler for DamageHandler {
 
         let effective_atk = ctx.source_attrs.get(AttributeKind::Attack);
         let effective_def = ctx.target_attrs.get(AttributeKind::Defense);
-        let base_def = ctx
-            .target_attrs
-            .core_base(AttributeKind::Vitality);
+        let base_def = ctx.target_attrs.core_base(AttributeKind::Vitality);
 
         let amount = calculate_damage_from_effect(
             effective_atk,

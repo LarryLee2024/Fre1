@@ -4,14 +4,16 @@
 use crate::battle::{CombatIntent, PrevPosition, manhattan_distance};
 use crate::character::{
     AttackRange, Faction, GridPosition, MovableRange, MovingUnit, PathArrow, Selected,
-    SelectionHighlight, Unit, spawn_path_arrows, despawn_path_arrows,
+    SelectionHighlight, Unit, despawn_path_arrows, spawn_path_arrows,
 };
 use crate::gameplay::attribute::{AttributeKind, Attributes};
 use crate::gameplay::tag::GameplayTags;
 use crate::input::{
     clear_markers, clear_selection, show_attack_range, show_move_range, spawn_selection_highlight,
 };
-use crate::map::{GameMap, TerrainCostRegistry, TerrainMapCache, reconstruct_path, find_reachable_tiles};
+use crate::map::{
+    GameMap, TerrainCostRegistry, TerrainMapCache, find_reachable_tiles, reconstruct_path,
+};
 use crate::skill::{BASIC_ATTACK_ID, SkillRegistry, SkillSlots, effective_skill_range};
 use crate::turn::{ForceEndFaction, TurnPhase};
 use crate::ui::action_menu::{ActionMenuEntity, despawn_action_menu, spawn_action_menu};
@@ -90,7 +92,9 @@ pub fn handle_ui_commands(
                             let calculator = cost_registry.resolve_from_tags(tags);
                             let mov = units
                                 .get(selected_entity)
-                                .map(|(_, _, _, _, attrs, _, _)| attrs.get(AttributeKind::MoveRange) as u32)
+                                .map(|(_, _, _, _, attrs, _, _)| {
+                                    attrs.get(AttributeKind::MoveRange) as u32
+                                })
                                 .unwrap_or(3);
                             let occupation_map = std::collections::HashMap::new(); // 移动时不需要阻挡
                             let reachable = find_reachable_tiles(

@@ -3,29 +3,78 @@
 
 use bevy::prelude::*;
 
+use crate::battle::CombatIntent;
 use crate::buff::ActiveBuffs;
-use crate::character::{Faction, Selected, Unit, UnitName};
+use crate::character::{Faction, GridPosition, Selected, Unit, UnitName};
 use crate::gameplay::attribute::{AttributeKind, Attributes};
 use crate::skill::{SkillRegistry, SkillSlots};
-use crate::turn::TurnState;
+use crate::turn::{TurnPhase, TurnState};
 
 // ── ViewModel 定义 ──
+
+/// 核心属性条目
+#[derive(Clone, Debug)]
+pub struct CoreAttrEntry {
+    pub label: String,
+    pub value: i32,
+}
+
+/// 衍生属性条目（分组显示）
+#[derive(Clone, Debug)]
+pub struct DerivedAttrEntry {
+    pub label: String,
+    pub value: i32,
+}
+
+/// Buff 条目（带颜色分类）
+#[derive(Clone, Debug)]
+pub struct BuffEntry {
+    pub name: String,
+    pub remaining_turns: u32,
+    pub is_buff: bool,
+}
+
+/// 技能条目
+#[derive(Clone, Debug)]
+pub struct SkillEntry {
+    pub name: String,
+    pub id: String,
+}
 
 /// 选中单位的视图模型
 #[derive(Resource, Default, Debug)]
 pub struct SelectedUnitView {
     pub name: String,
+    pub race: String,
+    pub class: String,
+    // 生命资源
     pub hp: i32,
     pub max_hp: i32,
-    pub atk: i32,
-    pub def: i32,
-    pub mov: i32,
-    pub magic_attack: i32,
-    pub magic_defense: i32,
-    pub core_attrs: String,
-    pub skills: String,
-    pub buffs: String,
+    pub mp: i32,
+    pub max_mp: i32,
+    pub stamina: i32,
+    pub max_stamina: i32,
+    // 核心属性（8维）
+    pub core_attrs: Vec<CoreAttrEntry>,
+    // 衍生属性（战斗组）
+    pub combat_attrs: Vec<DerivedAttrEntry>,
+    // 衍生属性（辅助组）
+    pub support_attrs: Vec<DerivedAttrEntry>,
+    // 技能
+    pub skills: Vec<SkillEntry>,
+    // Buff
+    pub buffs: Vec<BuffEntry>,
     pub is_selected: bool,
+}
+
+/// 战斗预览视图模型
+#[derive(Resource, Default, Debug)]
+pub struct CombatPreviewView {
+    pub is_visible: bool,
+    pub estimated_damage: i32,
+    pub hit_rate: i32,
+    pub crit_rate: i32,
+    pub is_lethal: bool,
 }
 
 /// 回合信息的视图模型
@@ -58,53 +107,125 @@ pub fn update_selected_unit_view(
 ) {
     if let Ok((_unit, name, attrs, skill_slots, buffs)) = selected_units.single() {
         view.name = name.0.clone();
+        // race/class 暂不显示，保持空字符串
+        view.race.clear();
+        view.class.clear();
+
+        // 生命资源
         view.hp = attrs.get(AttributeKind::Hp) as i32;
         view.max_hp = attrs.get(AttributeKind::MaxHp) as i32;
-        view.atk = attrs.get(AttributeKind::Attack) as i32;
-        view.def = attrs.get(AttributeKind::Defense) as i32;
-        view.mov = attrs.get(AttributeKind::MoveRange) as i32;
-        view.magic_attack = attrs.get(AttributeKind::MagicAttack) as i32;
-        view.magic_defense = attrs.get(AttributeKind::MagicDefense) as i32;
-        view.core_attrs = format!(
-            "MIG:{} DEX:{} AGI:{} VIT:{} INT:{} WIL:{} PRE:{} LCK:{}",
-            attrs.get(AttributeKind::Might) as i32,
-            attrs.get(AttributeKind::Dexterity) as i32,
-            attrs.get(AttributeKind::Agility) as i32,
-            attrs.get(AttributeKind::Vitality) as i32,
-            attrs.get(AttributeKind::Intelligence) as i32,
-            attrs.get(AttributeKind::Willpower) as i32,
-            attrs.get(AttributeKind::Presence) as i32,
-            attrs.get(AttributeKind::Luck) as i32,
-        );
+        view.mp = attrs.get(AttributeKind::Mp) as i32;
+        view.max_mp = attrs.get(AttributeKind::MaxMp) as i32;
+        view.stamina = attrs.get(AttributeKind::Stamina) as i32;
+        view.max_stamina = attrs.get(AttributeKind::MaxStamina) as i32;
 
-        // 技能名称列表
-        let skill_names: Vec<String> = skill_slots
+        // 核心属性（8维）
+        view.core_attrs = [
+            AttributeKind::Might,
+            AttributeKind::Dexterity,
+            AttributeKind::Agility,
+            AttributeKind::Vitality,
+            AttributeKind::Intelligence,
+            AttributeKind::Willpower,
+            AttributeKind::Presence,
+            AttributeKind::Luck,
+        ]
+        .iter()
+        .map(|kind| CoreAttrEntry {
+            label: kind.short_label().to_string(),
+            value: attrs.get(*kind) as i32,
+        })
+        .collect();
+
+        // 衍生属性（战斗组）
+        view.combat_attrs = [
+            AttributeKind::Attack,
+            AttributeKind::Defense,
+            AttributeKind::MagicAttack,
+            AttributeKind::MagicDefense,
+        ]
+        .iter()
+        .map(|kind| DerivedAttrEntry {
+            label: kind.label().to_string(),
+            value: attrs.get(*kind) as i32,
+        })
+        .collect();
+
+        // 衍生属性（辅助组）
+        view.support_attrs = [
+            AttributeKind::Accuracy,
+            AttributeKind::Evasion,
+            AttributeKind::CritRate,
+            AttributeKind::MoveRange,
+            AttributeKind::Initiative,
+            AttributeKind::AttackRange,
+        ]
+        .iter()
+        .map(|kind| DerivedAttrEntry {
+            label: kind.label().to_string(),
+            value: attrs.get(*kind) as i32,
+        })
+        .collect();
+
+        // 技能
+        view.skills = skill_slots
             .skill_ids
             .iter()
-            .filter_map(|id| skill_registry.get(id).map(|sd| sd.name.clone()))
+            .filter_map(|id| {
+                skill_registry.get(id).map(|sd| SkillEntry {
+                    name: sd.name.clone(),
+                    id: id.clone(),
+                })
+            })
             .collect();
-        view.skills = if skill_names.is_empty() {
-            "无".to_string()
-        } else {
-            skill_names.join("/")
-        };
 
-        // Buff 列表
-        view.buffs = if buffs.is_empty() {
-            "无".to_string()
-        } else {
-            buffs
-                .iter()
-                .map(|inst| format!("[{}·{}t]", inst.name, inst.remaining_turns))
-                .collect::<Vec<_>>()
-                .join("")
-        };
+        // Buff
+        view.buffs = buffs
+            .iter()
+            .map(|inst| BuffEntry {
+                name: inst.name.clone(),
+                remaining_turns: inst.remaining_turns,
+                is_buff: inst.is_buff,
+            })
+            .collect();
 
         view.is_selected = true;
     } else {
         view.is_selected = false;
         view.name.clear();
+        view.race.clear();
+        view.class.clear();
+        view.core_attrs.clear();
+        view.combat_attrs.clear();
+        view.support_attrs.clear();
+        view.skills.clear();
+        view.buffs.clear();
     }
+}
+
+/// 更新战斗预览（SelectTarget 阶段，鼠标悬停敌方时触发）
+pub fn update_combat_preview_view(
+    turn_phase: Res<State<TurnPhase>>,
+    selected_units: Query<&Attributes, With<Selected>>,
+    _enemy_units: Query<(&Attributes, &GridPosition), (With<Unit>, Without<Selected>)>,
+    _combat_intent: Res<CombatIntent>,
+    mut preview_view: ResMut<CombatPreviewView>,
+) {
+    // 只在 SelectTarget 阶段显示
+    if *turn_phase.get() != TurnPhase::SelectTarget {
+        preview_view.is_visible = false;
+        return;
+    }
+
+    // 获取攻击者属性
+    let Ok(_source_attrs) = selected_units.single() else {
+        preview_view.is_visible = false;
+        return;
+    };
+
+    // 获取目标属性（通过 combat_intent.target_coord 或鼠标位置）
+    // 简化：暂时不实现鼠标悬停检测，只隐藏预览
+    preview_view.is_visible = false;
 }
 
 /// 从游戏数据构建 TurnInfoView

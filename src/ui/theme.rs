@@ -37,6 +37,16 @@ pub struct UiTheme {
     pub tile_info_bg: Color,
     /// 地形浮窗文本色
     pub tile_info_text: Color,
+    /// HP 进度条颜色
+    pub hp_bar_color: Color,
+    /// MP 进度条颜色
+    pub mp_bar_color: Color,
+    /// 耐力进度条颜色
+    pub stamina_bar_color: Color,
+    /// 增益 Buff 颜色
+    pub buff_color: Color,
+    /// 减益 Debuff 颜色
+    pub debuff_color: Color,
 
     // ── 字号 ──
     /// 大标题字号
@@ -80,6 +90,11 @@ impl Default for UiTheme {
             selection_highlight: Color::srgba(1.0, 1.0, 0.3, 0.5),
             tile_info_bg: Color::srgba(0.05, 0.05, 0.1, 0.92),
             tile_info_text: Color::srgb(0.9, 0.9, 0.95),
+            hp_bar_color: Color::srgb(0.9, 0.2, 0.2),
+            mp_bar_color: Color::srgb(0.2, 0.4, 0.9),
+            stamina_bar_color: Color::srgb(0.2, 0.8, 0.3),
+            buff_color: Color::srgb(0.3, 1.0, 0.3),
+            debuff_color: Color::srgb(1.0, 0.3, 0.3),
 
             // 字号
             font_large: 24.0,

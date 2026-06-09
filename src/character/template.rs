@@ -1,9 +1,9 @@
 // 单位模板：数据驱动的单位定义，替代硬编码数组
 // 支持从 assets/units/*.ron 外部配置文件加载
 
+use super::components::Faction;
 use crate::gameplay::attribute::AttributeKind;
 use crate::skill::BASIC_ATTACK_ID;
-use super::components::Faction;
 use bevy::prelude::*;
 use ron::de::from_bytes;
 use serde::Deserialize;
@@ -144,19 +144,22 @@ impl UnitTemplateRegistry {
             m.insert(AttributeKind::Luck, 2.0);
             m
         };
-        self.templates.insert("player_warrior".into(), UnitTemplate {
-            id: "player_warrior".into(),
-            name: "战士".into(),
-            faction: Faction::Player,
-            race: "人类".into(),
-            background: "士兵".into(),
-            class: "战士".into(),
-            base_attributes: warrior_attrs,
-            base_attack_range: 1,
-            skill_ids: vec![BASIC_ATTACK_ID.into(), "charge".into()],
-            trait_ids: vec!["warrior_mastery".into()],
-            ai_behavior: "default".into(),
-        });
+        self.templates.insert(
+            "player_warrior".into(),
+            UnitTemplate {
+                id: "player_warrior".into(),
+                name: "战士".into(),
+                faction: Faction::Player,
+                race: "人类".into(),
+                background: "士兵".into(),
+                class: "战士".into(),
+                base_attributes: warrior_attrs,
+                base_attack_range: 1,
+                skill_ids: vec![BASIC_ATTACK_ID.into(), "charge".into()],
+                trait_ids: vec!["warrior_mastery".into()],
+                ai_behavior: "default".into(),
+            },
+        );
 
         // 弓手
         let archer_attrs: HashMap<AttributeKind, f32> = {
@@ -171,19 +174,22 @@ impl UnitTemplateRegistry {
             m.insert(AttributeKind::Luck, 3.0);
             m
         };
-        self.templates.insert("player_archer".into(), UnitTemplate {
-            id: "player_archer".into(),
-            name: "弓手".into(),
-            faction: Faction::Player,
-            race: "人类".into(),
-            background: "猎人".into(),
-            class: "弓手".into(),
-            base_attributes: archer_attrs,
-            base_attack_range: 3,
-            skill_ids: vec![BASIC_ATTACK_ID.into()],
-            trait_ids: vec!["archer_mastery".into()],
-            ai_behavior: "default".into(),
-        });
+        self.templates.insert(
+            "player_archer".into(),
+            UnitTemplate {
+                id: "player_archer".into(),
+                name: "弓手".into(),
+                faction: Faction::Player,
+                race: "人类".into(),
+                background: "猎人".into(),
+                class: "弓手".into(),
+                base_attributes: archer_attrs,
+                base_attack_range: 3,
+                skill_ids: vec![BASIC_ATTACK_ID.into()],
+                trait_ids: vec!["archer_mastery".into()],
+                ai_behavior: "default".into(),
+            },
+        );
 
         // 哥布林
         let goblin_attrs: HashMap<AttributeKind, f32> = {
@@ -198,19 +204,22 @@ impl UnitTemplateRegistry {
             m.insert(AttributeKind::Luck, 2.0);
             m
         };
-        self.templates.insert("enemy_goblin".into(), UnitTemplate {
-            id: "enemy_goblin".into(),
-            name: "哥布林".into(),
-            faction: Faction::Enemy,
-            race: "哥布林".into(),
-            background: "部落".into(),
-            class: "战士".into(),
-            base_attributes: goblin_attrs,
-            base_attack_range: 1,
-            skill_ids: vec![BASIC_ATTACK_ID.into()],
-            trait_ids: vec!["warrior_mastery".into()],
-            ai_behavior: "aggressive".into(),
-        });
+        self.templates.insert(
+            "enemy_goblin".into(),
+            UnitTemplate {
+                id: "enemy_goblin".into(),
+                name: "哥布林".into(),
+                faction: Faction::Enemy,
+                race: "哥布林".into(),
+                background: "部落".into(),
+                class: "战士".into(),
+                base_attributes: goblin_attrs,
+                base_attack_range: 1,
+                skill_ids: vec![BASIC_ATTACK_ID.into()],
+                trait_ids: vec!["warrior_mastery".into()],
+                ai_behavior: "aggressive".into(),
+            },
+        );
 
         // 暗黑骑士
         let dark_knight_attrs: HashMap<AttributeKind, f32> = {
@@ -225,19 +234,22 @@ impl UnitTemplateRegistry {
             m.insert(AttributeKind::Luck, 2.0);
             m
         };
-        self.templates.insert("enemy_dark_knight".into(), UnitTemplate {
-            id: "enemy_dark_knight".into(),
-            name: "暗黑骑士".into(),
-            faction: Faction::Enemy,
-            race: "亡灵".into(),
-            background: "堕落骑士".into(),
-            class: "战士".into(),
-            base_attributes: dark_knight_attrs,
-            base_attack_range: 1,
-            skill_ids: vec![BASIC_ATTACK_ID.into()],
-            trait_ids: vec!["warrior_mastery".into(), "heavy_armor".into()],
-            ai_behavior: "aggressive".into(),
-        });
+        self.templates.insert(
+            "enemy_dark_knight".into(),
+            UnitTemplate {
+                id: "enemy_dark_knight".into(),
+                name: "暗黑骑士".into(),
+                faction: Faction::Enemy,
+                race: "亡灵".into(),
+                background: "堕落骑士".into(),
+                class: "战士".into(),
+                base_attributes: dark_knight_attrs,
+                base_attack_range: 1,
+                skill_ids: vec![BASIC_ATTACK_ID.into()],
+                trait_ids: vec!["warrior_mastery".into(), "heavy_armor".into()],
+                ai_behavior: "aggressive".into(),
+            },
+        );
     }
 }
 
@@ -257,7 +269,8 @@ mod tests {
 
     #[test]
     fn ron_反序列化_单位模板() {
-        let ron_str = format!(r#"
+        let ron_str = format!(
+            r#"
             (
                 id: "player_warrior",
                 name: "战士",
@@ -275,7 +288,9 @@ mod tests {
                 trait_ids: ["warrior_mastery"],
                 ai_behavior: "default",
             )
-        "#, BASIC_ATTACK_ID);
+        "#,
+            BASIC_ATTACK_ID
+        );
         let def: UnitTemplateDef = from_bytes(ron_str.as_bytes()).unwrap();
         assert_eq!(def.id, "player_warrior");
         assert_eq!(def.faction, FactionDef::Player);

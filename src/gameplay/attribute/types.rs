@@ -179,3 +179,202 @@ pub struct AttributeModifierInstance {
     pub value: f32,
     pub source: BuffInstanceId,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ── is_core ──
+
+    #[test]
+    fn 属性分类_核心属性返回true() {
+        let core_attrs = [
+            AttributeKind::Might,
+            AttributeKind::Dexterity,
+            AttributeKind::Agility,
+            AttributeKind::Vitality,
+            AttributeKind::Intelligence,
+            AttributeKind::Willpower,
+            AttributeKind::Presence,
+            AttributeKind::Luck,
+        ];
+        for attr in &core_attrs {
+            assert!(attr.is_core(), "{:?} should be core", attr);
+        }
+    }
+
+    #[test]
+    fn 属性分类_资源属性返回false() {
+        assert!(!AttributeKind::Hp.is_core());
+        assert!(!AttributeKind::Mp.is_core());
+        assert!(!AttributeKind::Stamina.is_core());
+    }
+
+    #[test]
+    fn 属性分类_衍生属性返回false() {
+        let derived_attrs = [
+            AttributeKind::MaxHp,
+            AttributeKind::MaxMp,
+            AttributeKind::MaxStamina,
+            AttributeKind::Attack,
+            AttributeKind::Defense,
+            AttributeKind::MagicAttack,
+            AttributeKind::MagicDefense,
+            AttributeKind::Accuracy,
+            AttributeKind::Evasion,
+            AttributeKind::CritRate,
+            AttributeKind::MoveRange,
+            AttributeKind::Initiative,
+            AttributeKind::AttackRange,
+        ];
+        for attr in &derived_attrs {
+            assert!(!attr.is_core(), "{:?} should not be core", attr);
+        }
+    }
+
+    // ── is_vital ──
+
+    #[test]
+    fn 属性分类_资源属性返回true() {
+        let vital_attrs = [AttributeKind::Hp, AttributeKind::Mp, AttributeKind::Stamina];
+        for attr in &vital_attrs {
+            assert!(attr.is_vital(), "{:?} should be vital", attr);
+        }
+    }
+
+    #[test]
+    fn 属性分类_非资源属性返回false() {
+        assert!(!AttributeKind::Might.is_vital());
+        assert!(!AttributeKind::Attack.is_vital());
+        assert!(!AttributeKind::MaxHp.is_vital());
+    }
+
+    // ── is_derived ──
+
+    #[test]
+    fn 属性分类_衍生属性返回true() {
+        let derived_attrs = [
+            AttributeKind::MaxHp,
+            AttributeKind::MaxMp,
+            AttributeKind::MaxStamina,
+            AttributeKind::Attack,
+            AttributeKind::Defense,
+            AttributeKind::MagicAttack,
+            AttributeKind::MagicDefense,
+            AttributeKind::Accuracy,
+            AttributeKind::Evasion,
+            AttributeKind::CritRate,
+            AttributeKind::MoveRange,
+            AttributeKind::Initiative,
+            AttributeKind::AttackRange,
+        ];
+        for attr in &derived_attrs {
+            assert!(attr.is_derived(), "{:?} should be derived", attr);
+        }
+    }
+
+    #[test]
+    fn 属性分类_非衍生属性返回false() {
+        assert!(!AttributeKind::Might.is_derived());
+        assert!(!AttributeKind::Hp.is_derived());
+    }
+
+    // ── 互斥性 ──
+
+    #[test]
+    fn 属性分类_三类互斥() {
+        let all_attrs = [
+            AttributeKind::Might,
+            AttributeKind::Dexterity,
+            AttributeKind::Agility,
+            AttributeKind::Vitality,
+            AttributeKind::Intelligence,
+            AttributeKind::Willpower,
+            AttributeKind::Presence,
+            AttributeKind::Luck,
+            AttributeKind::Hp,
+            AttributeKind::Mp,
+            AttributeKind::Stamina,
+            AttributeKind::MaxHp,
+            AttributeKind::MaxMp,
+            AttributeKind::MaxStamina,
+            AttributeKind::Attack,
+            AttributeKind::Defense,
+            AttributeKind::MagicAttack,
+            AttributeKind::MagicDefense,
+            AttributeKind::Accuracy,
+            AttributeKind::Evasion,
+            AttributeKind::CritRate,
+            AttributeKind::MoveRange,
+            AttributeKind::Initiative,
+            AttributeKind::AttackRange,
+        ];
+        for attr in &all_attrs {
+            let categories = attr.is_core() as u8 + attr.is_vital() as u8 + attr.is_derived() as u8;
+            assert_eq!(
+                categories, 1,
+                "{:?} should belong to exactly one category",
+                attr
+            );
+        }
+    }
+
+    // ── label ──
+
+    #[test]
+    fn 属性中文名_核心属性() {
+        assert_eq!(AttributeKind::Might.label(), "力量");
+        assert_eq!(AttributeKind::Dexterity.label(), "技巧");
+        assert_eq!(AttributeKind::Agility.label(), "敏捷");
+        assert_eq!(AttributeKind::Vitality.label(), "体质");
+        assert_eq!(AttributeKind::Intelligence.label(), "智力");
+        assert_eq!(AttributeKind::Willpower.label(), "意志");
+        assert_eq!(AttributeKind::Presence.label(), "魅力");
+        assert_eq!(AttributeKind::Luck.label(), "幸运");
+    }
+
+    #[test]
+    fn 属性中文名_资源属性() {
+        assert_eq!(AttributeKind::Hp.label(), "HP");
+        assert_eq!(AttributeKind::Mp.label(), "MP");
+        assert_eq!(AttributeKind::Stamina.label(), "耐力");
+    }
+
+    #[test]
+    fn 属性中文名_衍生属性() {
+        assert_eq!(AttributeKind::MaxHp.label(), "MaxHP");
+        assert_eq!(AttributeKind::MaxMp.label(), "MaxMP");
+        assert_eq!(AttributeKind::MaxStamina.label(), "MaxSTA");
+        assert_eq!(AttributeKind::Attack.label(), "物攻");
+        assert_eq!(AttributeKind::Defense.label(), "物防");
+        assert_eq!(AttributeKind::MagicAttack.label(), "魔攻");
+        assert_eq!(AttributeKind::MagicDefense.label(), "魔防");
+        assert_eq!(AttributeKind::Accuracy.label(), "命中");
+        assert_eq!(AttributeKind::Evasion.label(), "闪避");
+        assert_eq!(AttributeKind::CritRate.label(), "暴击");
+        assert_eq!(AttributeKind::MoveRange.label(), "移动");
+        assert_eq!(AttributeKind::Initiative.label(), "速度");
+        assert_eq!(AttributeKind::AttackRange.label(), "射程");
+    }
+
+    // ── short_label ──
+
+    #[test]
+    fn 属性缩写_核心属性返回三字母缩写() {
+        assert_eq!(AttributeKind::Might.short_label(), "MIG");
+        assert_eq!(AttributeKind::Dexterity.short_label(), "DEX");
+        assert_eq!(AttributeKind::Agility.short_label(), "AGI");
+        assert_eq!(AttributeKind::Vitality.short_label(), "VIT");
+        assert_eq!(AttributeKind::Intelligence.short_label(), "INT");
+        assert_eq!(AttributeKind::Willpower.short_label(), "WIL");
+        assert_eq!(AttributeKind::Presence.short_label(), "PRE");
+        assert_eq!(AttributeKind::Luck.short_label(), "LCK");
+    }
+
+    #[test]
+    fn 属性缩写_非核心属性回退到label() {
+        assert_eq!(AttributeKind::Hp.short_label(), "HP");
+        assert_eq!(AttributeKind::Attack.short_label(), "物攻");
+        assert_eq!(AttributeKind::MoveRange.short_label(), "移动");
+    }
+}

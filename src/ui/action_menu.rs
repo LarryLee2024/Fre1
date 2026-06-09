@@ -209,14 +209,23 @@ fn on_enter_action_menu(
     mut commands: Commands,
     map: Res<crate::map::GameMap>,
     camera_query: Query<(&Camera, &GlobalTransform)>,
-    selected_query: Query<(Entity, &crate::character::Unit, &crate::character::GridPosition, &crate::skill::SkillSlots), With<crate::character::Selected>>,
+    selected_query: Query<
+        (
+            Entity,
+            &crate::character::Unit,
+            &crate::character::GridPosition,
+            &crate::skill::SkillSlots,
+        ),
+        With<crate::character::Selected>,
+    >,
     mut menu_entity: ResMut<ActionMenuEntity>,
     skill_registry: Res<SkillRegistry>,
 ) {
     if let Ok((_, unit, gp, skill_slots)) = selected_query.single() {
         let unit_world = map.coord_to_world(gp.coord);
         if let Ok((camera, cam_transform)) = camera_query.single() {
-            if let Ok(screen_pos) = camera.world_to_viewport(cam_transform, unit_world.extend(1.0)) {
+            if let Ok(screen_pos) = camera.world_to_viewport(cam_transform, unit_world.extend(1.0))
+            {
                 spawn_action_menu(
                     &mut commands,
                     screen_pos.x,

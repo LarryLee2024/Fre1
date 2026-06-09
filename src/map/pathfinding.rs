@@ -114,7 +114,8 @@ impl TerrainCostRegistry {
 
     /// 注册一个计算器
     pub fn register(&mut self, calculator: Box<dyn TerrainCostCalculator>) {
-        self.calculators.insert(calculator.name().to_string(), calculator);
+        self.calculators
+            .insert(calculator.name().to_string(), calculator);
     }
 
     /// 按名称获取计算器
@@ -225,7 +226,7 @@ pub fn find_reachable_tiles(
     start: IVec2,
     move_points: u32,
     map: &GameMap,
-    tiles: &HashMap<IVec2, (Terrain, Option<u32>)>,  // terrain + base_cost
+    tiles: &HashMap<IVec2, (Terrain, Option<u32>)>, // terrain + base_cost
     occupied: &HashMap<IVec2, bool>,
     calculator: &dyn TerrainCostCalculator,
 ) -> HashMap<IVec2, u32> {
@@ -303,10 +304,7 @@ pub struct TerrainMapCache {
 }
 
 /// 在地图生成后缓存地形查找表
-pub fn cache_terrain_map(
-    mut cache: ResMut<TerrainMapCache>,
-    tiles: Query<&Tile>,
-) {
+pub fn cache_terrain_map(mut cache: ResMut<TerrainMapCache>, tiles: Query<&Tile>) {
     cache.map = build_tile_terrain_map(&tiles);
 }
 
@@ -343,7 +341,8 @@ mod tests {
         let occupied = HashMap::new();
         let calculator = GroundCostCalculator;
 
-        let reachable = find_reachable_tiles(IVec2::new(2, 2), 3, &map, &tiles, &occupied, &calculator);
+        let reachable =
+            find_reachable_tiles(IVec2::new(2, 2), 3, &map, &tiles, &occupied, &calculator);
 
         // 3x3 菱形 + 延伸，中心(2,2)移动力3，曼哈顿距离<=3的格子
         // 共 1+4+8+12 = 24 减去超出边界的 = 应该有若干格
@@ -362,7 +361,8 @@ mod tests {
         let occupied = HashMap::new();
         let calculator = GroundCostCalculator;
 
-        let reachable = find_reachable_tiles(IVec2::new(2, 2), 0, &map, &tiles, &occupied, &calculator);
+        let reachable =
+            find_reachable_tiles(IVec2::new(2, 2), 0, &map, &tiles, &occupied, &calculator);
         assert!(reachable.is_empty());
     }
 
@@ -373,7 +373,8 @@ mod tests {
         let occupied = HashMap::new();
         let calculator = GroundCostCalculator;
 
-        let reachable = find_reachable_tiles(IVec2::new(2, 2), 1, &map, &tiles, &occupied, &calculator);
+        let reachable =
+            find_reachable_tiles(IVec2::new(2, 2), 1, &map, &tiles, &occupied, &calculator);
 
         assert_eq!(reachable.len(), 4);
         assert!(reachable.contains_key(&IVec2::new(3, 2)));
@@ -393,7 +394,8 @@ mod tests {
         let occupied = HashMap::new();
         let calculator = GroundCostCalculator;
 
-        let reachable = find_reachable_tiles(IVec2::new(2, 2), 1, &map, &tiles, &occupied, &calculator);
+        let reachable =
+            find_reachable_tiles(IVec2::new(2, 2), 1, &map, &tiles, &occupied, &calculator);
 
         // 只有左和下可达
         assert_eq!(reachable.len(), 2);
@@ -410,7 +412,8 @@ mod tests {
         let occupied = HashMap::new();
         let calculator = GroundCostCalculator;
 
-        let reachable = find_reachable_tiles(IVec2::new(2, 2), 2, &map, &tiles, &occupied, &calculator);
+        let reachable =
+            find_reachable_tiles(IVec2::new(2, 2), 2, &map, &tiles, &occupied, &calculator);
 
         // 森林格消耗2，移动力2刚好到达，剩余0
         assert!(reachable.contains_key(&IVec2::new(3, 2)));
@@ -427,7 +430,8 @@ mod tests {
         occupied.insert(IVec2::new(3, 2), true);
         let calculator = GroundCostCalculator;
 
-        let reachable = find_reachable_tiles(IVec2::new(2, 2), 3, &map, &tiles, &occupied, &calculator);
+        let reachable =
+            find_reachable_tiles(IVec2::new(2, 2), 3, &map, &tiles, &occupied, &calculator);
 
         assert!(!reachable.contains_key(&IVec2::new(3, 2)));
         // 被占据格子不可穿越，(4,2)需经过(3,2)所以也不可达
@@ -443,7 +447,8 @@ mod tests {
         let occupied = HashMap::new();
         let calculator = GroundCostCalculator;
 
-        let reachable = find_reachable_tiles(IVec2::new(0, 0), 2, &map, &tiles, &occupied, &calculator);
+        let reachable =
+            find_reachable_tiles(IVec2::new(0, 0), 2, &map, &tiles, &occupied, &calculator);
 
         // 左上角，只有右、下、右下可达
         assert!(reachable.contains_key(&IVec2::new(1, 0)));
@@ -467,7 +472,8 @@ mod tests {
         let occupied = HashMap::new();
         let calculator = FlyingCostCalculator;
 
-        let reachable = find_reachable_tiles(IVec2::new(2, 2), 1, &map, &tiles, &occupied, &calculator);
+        let reachable =
+            find_reachable_tiles(IVec2::new(2, 2), 1, &map, &tiles, &occupied, &calculator);
 
         // 飞行单位山地和水域成本为1，移动力1可达全部4个相邻格
         assert_eq!(reachable.len(), 4);
@@ -483,7 +489,8 @@ mod tests {
         let occupied = HashMap::new();
         let calculator = FlyingCostCalculator;
 
-        let reachable = find_reachable_tiles(IVec2::new(2, 2), 2, &map, &tiles, &occupied, &calculator);
+        let reachable =
+            find_reachable_tiles(IVec2::new(2, 2), 2, &map, &tiles, &occupied, &calculator);
 
         // 飞行单位森林成本为1，移动力2可达森林后继续前进
         assert!(reachable.contains_key(&IVec2::new(3, 2)));
@@ -501,7 +508,8 @@ mod tests {
         let occupied = HashMap::new();
         let calculator = MountedCostCalculator;
 
-        let reachable = find_reachable_tiles(IVec2::new(2, 2), 3, &map, &tiles, &occupied, &calculator);
+        let reachable =
+            find_reachable_tiles(IVec2::new(2, 2), 3, &map, &tiles, &occupied, &calculator);
 
         // 骑兵森林成本3，移动力3刚好到达森林，剩余0
         assert!(reachable.contains_key(&IVec2::new(3, 2)));
@@ -519,7 +527,8 @@ mod tests {
         let occupied = HashMap::new();
         let calculator = MountedCostCalculator;
 
-        let reachable = find_reachable_tiles(IVec2::new(2, 2), 3, &map, &tiles, &occupied, &calculator);
+        let reachable =
+            find_reachable_tiles(IVec2::new(2, 2), 3, &map, &tiles, &occupied, &calculator);
 
         assert!(!reachable.contains_key(&IVec2::new(3, 2))); // 山地不可通行
         assert!(!reachable.contains_key(&IVec2::new(2, 3))); // 水域不可通行
@@ -535,7 +544,8 @@ mod tests {
         let occupied = HashMap::new();
         let calculator = SwimmingCostCalculator;
 
-        let reachable = find_reachable_tiles(IVec2::new(2, 2), 3, &map, &tiles, &occupied, &calculator);
+        let reachable =
+            find_reachable_tiles(IVec2::new(2, 2), 3, &map, &tiles, &occupied, &calculator);
 
         // 水生单位水域成本1，平原成本2
         assert!(reachable.contains_key(&IVec2::new(3, 2))); // 水域可达
@@ -551,7 +561,8 @@ mod tests {
         let occupied = HashMap::new();
         let calculator = SwimmingCostCalculator;
 
-        let reachable = find_reachable_tiles(IVec2::new(2, 2), 3, &map, &tiles, &occupied, &calculator);
+        let reachable =
+            find_reachable_tiles(IVec2::new(2, 2), 3, &map, &tiles, &occupied, &calculator);
 
         assert!(!reachable.contains_key(&IVec2::new(3, 2))); // 山地不可通行
     }

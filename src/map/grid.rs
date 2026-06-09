@@ -1,7 +1,7 @@
 // 地图网格：GameMap、Tile、Terrain、坐标转换、地图生成
 
-use crate::assets::CnFont;
 use super::data::{LevelRegistry, TerrainRegistry};
+use crate::assets::CnFont;
 use bevy::prelude::*;
 
 /// 地形类型（Tile 组件存储，用于寻路等运行时逻辑）
@@ -211,12 +211,22 @@ pub fn spawn_map(
             let (move_cost, defense_bonus) = terrain_registry
                 .get(terrain_id)
                 .map(|def| (def.move_cost, def.defense_bonus))
-                .unwrap_or_else(|| (terrain.move_cost_fallback(), terrain.defense_bonus_fallback()));
+                .unwrap_or_else(|| {
+                    (
+                        terrain.move_cost_fallback(),
+                        terrain.defense_bonus_fallback(),
+                    )
+                });
 
             commands.spawn((
                 Sprite::from_color(terrain_color, Vec2::splat(tile_size - 2.0)),
                 Transform::from_xyz(world_pos.x, world_pos.y, 0.0),
-                Tile { coord, terrain, move_cost, defense_bonus },
+                Tile {
+                    coord,
+                    terrain,
+                    move_cost,
+                    defense_bonus,
+                },
                 children![
                     (
                         Text2d::new(format!("{},{}", coord.x, coord.y)),
@@ -327,11 +337,7 @@ mod tests {
     #[test]
     fn 世界转坐标_往返一致() {
         let map = make_map();
-        for coord in [
-            IVec2::new(0, 0),
-            IVec2::new(5, 4),
-            IVec2::new(9, 7),
-        ] {
+        for coord in [IVec2::new(0, 0), IVec2::new(5, 4), IVec2::new(9, 7)] {
             let world = map.coord_to_world(coord);
             let back = map.world_to_coord(world);
             assert_eq!(coord, back);

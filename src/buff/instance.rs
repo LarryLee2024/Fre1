@@ -39,9 +39,11 @@ impl ActiveBuffs {
         let id = buff.instance_id;
         // 同源同 buff_id 刷新持续时间
         if let Some(source) = buff.source_entity {
-            if let Some(existing) = self.instances.iter_mut().find(|b| {
-                b.source_entity == Some(source) && b.buff_id == buff.buff_id
-            }) {
+            if let Some(existing) = self
+                .instances
+                .iter_mut()
+                .find(|b| b.source_entity == Some(source) && b.buff_id == buff.buff_id)
+            {
                 existing.remaining_turns = buff.remaining_turns;
                 return existing.instance_id;
             }
@@ -58,7 +60,11 @@ impl ActiveBuffs {
 
     /// 移除指定实例 ID 的 Buff
     pub fn remove(&mut self, instance_id: BuffInstanceId) -> Option<BuffInstance> {
-        if let Some(idx) = self.instances.iter().position(|b| b.instance_id == instance_id) {
+        if let Some(idx) = self
+            .instances
+            .iter()
+            .position(|b| b.instance_id == instance_id)
+        {
             Some(self.instances.remove(idx))
         } else {
             None
@@ -82,7 +88,8 @@ impl ActiveBuffs {
     /// 消耗晕眩：移除所有带 STUN 标签的 Buff，返回是否原本处于晕眩
     pub fn consume_stun(&mut self) -> bool {
         let was = self.is_stunned();
-        self.instances.retain(|b| !b.tags.contains(&GameplayTag::STUN));
+        self.instances
+            .retain(|b| !b.tags.contains(&GameplayTag::STUN));
         was
     }
 

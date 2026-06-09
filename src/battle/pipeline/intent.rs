@@ -1,6 +1,8 @@
 // 战斗意图资源 + OnEnter 系统
 
-use crate::character::{AttackRange, Faction, GridPosition, MovableRange, Selected, SelectionHighlight, Unit, UnitName};
+use crate::character::{
+    AttackRange, Faction, GridPosition, MovableRange, Selected, SelectionHighlight, Unit, UnitName,
+};
 use crate::gameplay::tag::{GameplayTag, GameplayTags};
 use crate::skill::{SkillCooldowns, SkillRegistry};
 use crate::turn::{AiTimer, TurnPhase, TurnState};

@@ -88,30 +88,120 @@ impl TagRegistry {
     fn register_defaults(&mut self) {
         let defaults = vec![
             // 元素
-            TagDefinition { tag: TagName::Fire, display_name: "火焰".into(), description: "火属性".into(), category: TagCategory::Element },
-            TagDefinition { tag: TagName::Ice, display_name: "冰霜".into(), description: "冰属性".into(), category: TagCategory::Element },
-            TagDefinition { tag: TagName::Poison, display_name: "毒素".into(), description: "毒属性".into(), category: TagCategory::Element },
+            TagDefinition {
+                tag: TagName::Fire,
+                display_name: "火焰".into(),
+                description: "火属性".into(),
+                category: TagCategory::Element,
+            },
+            TagDefinition {
+                tag: TagName::Ice,
+                display_name: "冰霜".into(),
+                description: "冰属性".into(),
+                category: TagCategory::Element,
+            },
+            TagDefinition {
+                tag: TagName::Poison,
+                display_name: "毒素".into(),
+                description: "毒属性".into(),
+                category: TagCategory::Element,
+            },
             // 状态
-            TagDefinition { tag: TagName::Stun, display_name: "晕眩".into(), description: "无法行动".into(), category: TagCategory::Status },
-            TagDefinition { tag: TagName::Burn, display_name: "燃烧".into(), description: "每回合受到火焰伤害".into(), category: TagCategory::Status },
-            TagDefinition { tag: TagName::Regen, display_name: "恢复".into(), description: "每回合恢复生命值".into(), category: TagCategory::Status },
+            TagDefinition {
+                tag: TagName::Stun,
+                display_name: "晕眩".into(),
+                description: "无法行动".into(),
+                category: TagCategory::Status,
+            },
+            TagDefinition {
+                tag: TagName::Burn,
+                display_name: "燃烧".into(),
+                description: "每回合受到火焰伤害".into(),
+                category: TagCategory::Status,
+            },
+            TagDefinition {
+                tag: TagName::Regen,
+                display_name: "恢复".into(),
+                description: "每回合恢复生命值".into(),
+                category: TagCategory::Status,
+            },
             // 武器
-            TagDefinition { tag: TagName::Melee, display_name: "近战".into(), description: "近战攻击".into(), category: TagCategory::Weapon },
-            TagDefinition { tag: TagName::Ranged, display_name: "远程".into(), description: "远程攻击".into(), category: TagCategory::Weapon },
+            TagDefinition {
+                tag: TagName::Melee,
+                display_name: "近战".into(),
+                description: "近战攻击".into(),
+                category: TagCategory::Weapon,
+            },
+            TagDefinition {
+                tag: TagName::Ranged,
+                display_name: "远程".into(),
+                description: "远程攻击".into(),
+                category: TagCategory::Weapon,
+            },
             // 职业
-            TagDefinition { tag: TagName::Warrior, display_name: "战士".into(), description: "战士职业".into(), category: TagCategory::Class },
-            TagDefinition { tag: TagName::Archer, display_name: "弓手".into(), description: "弓手职业".into(), category: TagCategory::Class },
-            TagDefinition { tag: TagName::Mage, display_name: "法师".into(), description: "法师职业".into(), category: TagCategory::Class },
+            TagDefinition {
+                tag: TagName::Warrior,
+                display_name: "战士".into(),
+                description: "战士职业".into(),
+                category: TagCategory::Class,
+            },
+            TagDefinition {
+                tag: TagName::Archer,
+                display_name: "弓手".into(),
+                description: "弓手职业".into(),
+                category: TagCategory::Class,
+            },
+            TagDefinition {
+                tag: TagName::Mage,
+                display_name: "法师".into(),
+                description: "法师职业".into(),
+                category: TagCategory::Class,
+            },
             // 移动类型
-            TagDefinition { tag: TagName::Flying, display_name: "飞行".into(), description: "飞行单位，可跨越山地和水域".into(), category: TagCategory::Movement },
-            TagDefinition { tag: TagName::Mounted, display_name: "骑兵".into(), description: "骑兵单位，平原高速但受限于地形".into(), category: TagCategory::Movement },
-            TagDefinition { tag: TagName::Swimming, display_name: "水生".into(), description: "水生单位，水域通行无阻".into(), category: TagCategory::Movement },
+            TagDefinition {
+                tag: TagName::Flying,
+                display_name: "飞行".into(),
+                description: "飞行单位，可跨越山地和水域".into(),
+                category: TagCategory::Movement,
+            },
+            TagDefinition {
+                tag: TagName::Mounted,
+                display_name: "骑兵".into(),
+                description: "骑兵单位，平原高速但受限于地形".into(),
+                category: TagCategory::Movement,
+            },
+            TagDefinition {
+                tag: TagName::Swimming,
+                display_name: "水生".into(),
+                description: "水生单位，水域通行无阻".into(),
+                category: TagCategory::Movement,
+            },
             // 技能类型
-            TagDefinition { tag: TagName::SkillActive, display_name: "主动技能".into(), description: "主动施放的技能".into(), category: TagCategory::SkillType },
-            TagDefinition { tag: TagName::SkillPassive, display_name: "被动技能".into(), description: "被动触发的技能".into(), category: TagCategory::SkillType },
+            TagDefinition {
+                tag: TagName::SkillActive,
+                display_name: "主动技能".into(),
+                description: "主动施放的技能".into(),
+                category: TagCategory::SkillType,
+            },
+            TagDefinition {
+                tag: TagName::SkillPassive,
+                display_name: "被动技能".into(),
+                description: "被动触发的技能".into(),
+                category: TagCategory::SkillType,
+            },
             // Buff 类型
-            TagDefinition { tag: TagName::Buff, display_name: "增益".into(), description: "正面效果".into(), category: TagCategory::BuffType },
-            TagDefinition { tag: TagName::Debuff, display_name: "减益".into(), description: "负面效果".into(), category: TagCategory::BuffType },
+            TagDefinition {
+                tag: TagName::Buff,
+                display_name: "增益".into(),
+                description: "正面效果".into(),
+                category: TagCategory::BuffType,
+            },
+            TagDefinition {
+                tag: TagName::Debuff,
+                display_name: "减益".into(),
+                description: "负面效果".into(),
+                category: TagCategory::BuffType,
+            },
         ];
 
         for def in defaults {

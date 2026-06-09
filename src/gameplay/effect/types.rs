@@ -50,17 +50,9 @@ pub struct PendingEffect {
 /// 待处理效果数据
 #[derive(Clone, Debug)]
 pub enum PendingEffectData {
-    Damage {
-        amount: i32,
-        is_skill: bool,
-    },
-    Heal {
-        amount: i32,
-    },
-    ApplyBuff {
-        buff_id: String,
-        duration: u32,
-    },
+    Damage { amount: i32, is_skill: bool },
+    Heal { amount: i32 },
+    ApplyBuff { buff_id: String, duration: u32 },
     Cleanse,
 }
 
@@ -203,7 +195,10 @@ mod tests {
         queue.push(PendingEffect {
             source: Entity::from_bits(1),
             target: Entity::from_bits(2),
-            data: PendingEffectData::Damage { amount: 5, is_skill: false },
+            data: PendingEffectData::Damage {
+                amount: 5,
+                is_skill: false,
+            },
             source_tags: vec![],
             terrain: Terrain::Plain,
         });
@@ -220,7 +215,10 @@ mod tests {
         queue.push(PendingEffect {
             source: Entity::from_bits(1),
             target: Entity::from_bits(2),
-            data: PendingEffectData::Damage { amount: 5, is_skill: false },
+            data: PendingEffectData::Damage {
+                amount: 5,
+                is_skill: false,
+            },
             source_tags: vec![],
             terrain: Terrain::Plain,
         });
@@ -230,17 +228,45 @@ mod tests {
 
     #[test]
     fn effect_def_type_name() {
-        assert_eq!(EffectDef::Damage { multiplier: 1.0, ignore_def_percent: 0.0 }.type_name(), "Damage");
+        assert_eq!(
+            EffectDef::Damage {
+                multiplier: 1.0,
+                ignore_def_percent: 0.0
+            }
+            .type_name(),
+            "Damage"
+        );
         assert_eq!(EffectDef::Heal { amount: 5 }.type_name(), "Heal");
-        assert_eq!(EffectDef::ApplyBuff { buff_id: "burn".into(), duration: 2 }.type_name(), "ApplyBuff");
+        assert_eq!(
+            EffectDef::ApplyBuff {
+                buff_id: "burn".into(),
+                duration: 2
+            }
+            .type_name(),
+            "ApplyBuff"
+        );
         assert_eq!(EffectDef::Cleanse.type_name(), "Cleanse");
     }
 
     #[test]
     fn pending_effect_data_type_name() {
-        assert_eq!(PendingEffectData::Damage { amount: 5, is_skill: false }.type_name(), "Damage");
+        assert_eq!(
+            PendingEffectData::Damage {
+                amount: 5,
+                is_skill: false
+            }
+            .type_name(),
+            "Damage"
+        );
         assert_eq!(PendingEffectData::Heal { amount: 5 }.type_name(), "Heal");
-        assert_eq!(PendingEffectData::ApplyBuff { buff_id: "burn".into(), duration: 2 }.type_name(), "ApplyBuff");
+        assert_eq!(
+            PendingEffectData::ApplyBuff {
+                buff_id: "burn".into(),
+                duration: 2
+            }
+            .type_name(),
+            "ApplyBuff"
+        );
         assert_eq!(PendingEffectData::Cleanse.type_name(), "Cleanse");
     }
 }

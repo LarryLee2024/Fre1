@@ -3,14 +3,14 @@
 
 use crate::assets::CnFont;
 use crate::battle::log::{CombatLog, LogSegment, log_color};
+use crate::buff::{ActiveBuffs, BuffRegistry, apply_buff, remove_all_debuffs};
+use crate::character::{Faction, GridPosition, Unit, UnitName};
 use crate::gameplay::attribute::{AttributeKind, Attributes};
 use crate::gameplay::effect::{EffectQueue, PendingEffectData};
 use crate::gameplay::tag::GameplayTags;
-use crate::buff::{ActiveBuffs, BuffRegistry, apply_buff, remove_all_debuffs};
 use crate::map::GameMap;
-use crate::character::{Faction, GridPosition, Unit, UnitName};
-use crate::ui::vfx;
 use crate::ui::UiTheme;
+use crate::ui::vfx;
 use bevy::prelude::*;
 
 /// 执行效果（系统入口，委托给 execute_effects_inline）
@@ -30,8 +30,19 @@ pub fn execute_effects(
     theme: Res<UiTheme>,
 ) {
     execute_effects_inline(
-        commands, queue, attrs_query, buffs_query, tags_query,
-        gp_query, name_query, unit_query, combat_log, buff_registry, map, cn_font, &theme,
+        commands,
+        queue,
+        attrs_query,
+        buffs_query,
+        tags_query,
+        gp_query,
+        name_query,
+        unit_query,
+        combat_log,
+        buff_registry,
+        map,
+        cn_font,
+        &theme,
     );
 }
 
@@ -167,24 +178,61 @@ pub fn apply_damage_effect(
     target_attrs.set_base(AttributeKind::Hp, new_hp);
 
     let world_pos = map.coord_to_world(target_gp.coord);
-    vfx::spawn_damage_popup(commands, world_pos, amount, &cn_font.handle, is_skill, theme);
+    vfx::spawn_damage_popup(
+        commands,
+        world_pos,
+        amount,
+        &cn_font.handle,
+        is_skill,
+        theme,
+    );
 
     let skill_label = if is_skill { "技能" } else { "攻击" };
     combat_log.push(vec![
-        LogSegment { text: format!("[{}]", attacker_name), color: attacker_color },
-        LogSegment { text: format!(" 使用[{}]", skill_label), color: log_color::TURN },
-        LogSegment { text: " 攻击 ".to_string(), color: log_color::NORMAL },
-        LogSegment { text: format!("[{}]", target_name), color: target_color },
-        LogSegment { text: " 造成 ".to_string(), color: log_color::NORMAL },
-        LogSegment { text: format!("[{}]", amount), color: log_color::DAMAGE },
-        LogSegment { text: " 伤害".to_string(), color: log_color::NORMAL },
-        LogSegment { text: format!(" ({})", terrain_label), color: log_color::TERRAIN },
+        LogSegment {
+            text: format!("[{}]", attacker_name),
+            color: attacker_color,
+        },
+        LogSegment {
+            text: format!(" 使用[{}]", skill_label),
+            color: log_color::TURN,
+        },
+        LogSegment {
+            text: " 攻击 ".to_string(),
+            color: log_color::NORMAL,
+        },
+        LogSegment {
+            text: format!("[{}]", target_name),
+            color: target_color,
+        },
+        LogSegment {
+            text: " 造成 ".to_string(),
+            color: log_color::NORMAL,
+        },
+        LogSegment {
+            text: format!("[{}]", amount),
+            color: log_color::DAMAGE,
+        },
+        LogSegment {
+            text: " 伤害".to_string(),
+            color: log_color::NORMAL,
+        },
+        LogSegment {
+            text: format!(" ({})", terrain_label),
+            color: log_color::TERRAIN,
+        },
     ]);
 
     if new_hp <= 0.0 {
         combat_log.push(vec![
-            LogSegment { text: format!("[{}]", target_name), color: target_color },
-            LogSegment { text: " 被击败！".to_string(), color: log_color::KILL },
+            LogSegment {
+                text: format!("[{}]", target_name),
+                color: target_color,
+            },
+            LogSegment {
+                text: " 被击败！".to_string(),
+                color: log_color::KILL,
+            },
         ]);
         commands.entity(target_entity).try_despawn();
     }
@@ -203,8 +251,14 @@ pub fn apply_heal_effect(
     target_attrs.set_base(AttributeKind::Hp, new_hp);
 
     combat_log.push(vec![
-        LogSegment { text: format!("[{}]", target_name), color: log_color::NORMAL },
-        LogSegment { text: format!(" 恢复 {} HP", amount), color: log_color::HEAL },
+        LogSegment {
+            text: format!("[{}]", target_name),
+            color: log_color::NORMAL,
+        },
+        LogSegment {
+            text: format!(" 恢复 {} HP", amount),
+            color: log_color::HEAL,
+        },
     ]);
 }
 
@@ -219,7 +273,14 @@ pub fn apply_buff_effect(
     buff_registry: &BuffRegistry,
 ) {
     if let Some(buff_data) = buff_registry.get(buff_id) {
-        apply_buff(target_buffs, target_attrs, target_tags, buff_data, Some(source), duration);
+        apply_buff(
+            target_buffs,
+            target_attrs,
+            target_tags,
+            buff_data,
+            Some(source),
+            duration,
+        );
     }
 }
 

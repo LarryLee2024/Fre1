@@ -103,7 +103,10 @@ impl Faction {
 /// 清除范围标记和高亮（不含 Selected 移除）
 pub fn clear_markers(
     commands: &mut Commands,
-    range_entities: &Query<(Entity, Option<&GridPosition>), Or<(With<MovableRange>, With<AttackRange>)>>,
+    range_entities: &Query<
+        (Entity, Option<&GridPosition>),
+        Or<(With<MovableRange>, With<AttackRange>)>,
+    >,
     highlights: &Query<Entity, With<SelectionHighlight>>,
 ) {
     for (marker, _) in range_entities {
@@ -133,7 +136,10 @@ mod tests {
 
     #[test]
     fn 移动单位_目标坐标_在路径中() {
-        let unit = make_moving_unit(vec![IVec2::new(0, 0), IVec2::new(1, 0), IVec2::new(2, 0)], 1);
+        let unit = make_moving_unit(
+            vec![IVec2::new(0, 0), IVec2::new(1, 0), IVec2::new(2, 0)],
+            1,
+        );
         assert_eq!(unit.target_coord(), Some(IVec2::new(1, 0)));
     }
 

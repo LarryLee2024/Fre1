@@ -176,10 +176,7 @@ impl ModifierCalculatorRegistry {
     }
 
     /// 查找能处理指定效果类型的治疗计算器
-    pub fn find_heal_calculator(
-        &self,
-        effect: &ModifierEffect,
-    ) -> Option<&dyn ModifierCalculator> {
+    pub fn find_heal_calculator(&self, effect: &ModifierEffect) -> Option<&dyn ModifierCalculator> {
         self.calculators
             .iter()
             .find(|c| c.type_name() == effect.type_name() && c.applies_to_heal())
@@ -396,11 +393,7 @@ mod tests {
         let mut target_tags = GameplayTags::default();
         target_tags.add(GameplayTag::FIRE);
 
-        let result = registry.apply_damage_modifiers(
-            10,
-            &[GameplayTag::FIRE],
-            &target_tags,
-        );
+        let result = registry.apply_damage_modifiers(10, &[GameplayTag::FIRE], &target_tags);
         assert_eq!(result, 15); // 10 * 1.5 = 15
     }
 
@@ -417,11 +410,7 @@ mod tests {
         };
 
         let target_tags = GameplayTags::default(); // 无 FIRE 标签
-        let result = registry.apply_damage_modifiers(
-            10,
-            &[GameplayTag::FIRE],
-            &target_tags,
-        );
+        let result = registry.apply_damage_modifiers(10, &[GameplayTag::FIRE], &target_tags);
         assert_eq!(result, 10); // 无匹配，不变
     }
 
@@ -440,11 +429,7 @@ mod tests {
         let mut target_tags = GameplayTags::default();
         target_tags.add(GameplayTag::POISON);
 
-        let result = registry.apply_damage_modifiers(
-            10,
-            &[GameplayTag::POISON],
-            &target_tags,
-        );
+        let result = registry.apply_damage_modifiers(10, &[GameplayTag::POISON], &target_tags);
         assert_eq!(result, 15); // 10 + 5 = 15
     }
 

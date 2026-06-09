@@ -361,16 +361,19 @@ mod tests {
     #[test]
     fn level_registry_查询关卡() {
         let mut registry = LevelRegistry::default();
-        registry.levels.insert("test".into(), LevelConfig {
-            id: "test".into(),
-            name: "测试".into(),
-            width: 3,
-            height: 3,
-            tile_size: 64.0,
-            terrain_map: HashMap::new(),
-            player_units: vec![],
-            enemy_units: vec![],
-        });
+        registry.levels.insert(
+            "test".into(),
+            LevelConfig {
+                id: "test".into(),
+                name: "测试".into(),
+                width: 3,
+                height: 3,
+                tile_size: 64.0,
+                terrain_map: HashMap::new(),
+                player_units: vec![],
+                enemy_units: vec![],
+            },
+        );
         assert!(registry.get("test").is_some());
     }
 
@@ -383,20 +386,32 @@ mod tests {
     #[test]
     fn level_registry_first() {
         let mut registry = LevelRegistry::default();
-        registry.levels.insert("a".into(), LevelConfig {
-            id: "a".into(),
-            name: "A".into(),
-            width: 1, height: 1, tile_size: 64.0,
-            terrain_map: HashMap::new(),
-            player_units: vec![], enemy_units: vec![],
-        });
-        registry.levels.insert("b".into(), LevelConfig {
-            id: "b".into(),
-            name: "B".into(),
-            width: 1, height: 1, tile_size: 64.0,
-            terrain_map: HashMap::new(),
-            player_units: vec![], enemy_units: vec![],
-        });
+        registry.levels.insert(
+            "a".into(),
+            LevelConfig {
+                id: "a".into(),
+                name: "A".into(),
+                width: 1,
+                height: 1,
+                tile_size: 64.0,
+                terrain_map: HashMap::new(),
+                player_units: vec![],
+                enemy_units: vec![],
+            },
+        );
+        registry.levels.insert(
+            "b".into(),
+            LevelConfig {
+                id: "b".into(),
+                name: "B".into(),
+                width: 1,
+                height: 1,
+                tile_size: 64.0,
+                terrain_map: HashMap::new(),
+                player_units: vec![],
+                enemy_units: vec![],
+            },
+        );
         assert!(registry.first().is_some());
     }
 
@@ -436,7 +451,10 @@ mod tests {
         let config: LevelConfig = def.into();
         assert_eq!(config.terrain_map.get(&(0, 0)), Some(&"plain".to_string()));
         assert_eq!(config.terrain_map.get(&(1, 0)), Some(&"forest".to_string()));
-        assert_eq!(config.terrain_map.get(&(0, 1)), Some(&"mountain".to_string()));
+        assert_eq!(
+            config.terrain_map.get(&(0, 1)),
+            Some(&"mountain".to_string())
+        );
         assert_eq!(config.terrain_map.get(&(1, 1)), Some(&"water".to_string()));
     }
 }

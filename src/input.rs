@@ -1,12 +1,14 @@
 // 输入处理模块：点击选择、移动、攻击分发
 // 通过 UiCommand Message 发出用户意图，不直接修改游戏状态
 
-use crate::map::GameMap;
-use crate::turn::{TurnPhase, TurnState};
-use crate::character::{AttackRange, Faction, GridPosition, MovableRange, Selected, SelectionHighlight, Unit};
+use crate::character::{
+    AttackRange, Faction, GridPosition, MovableRange, Selected, SelectionHighlight, Unit,
+};
 use crate::gameplay::attribute::{AttributeKind, Attributes};
 use crate::gameplay::tag::GameplayTags;
+use crate::map::GameMap;
 use crate::skill::SkillSlots;
+use crate::turn::{TurnPhase, TurnState};
 use crate::ui::events::UiCommand;
 use bevy::ecs::message::MessageWriter;
 use bevy::prelude::*;
@@ -139,7 +141,10 @@ pub fn cursor_to_coord(
 /// 清除范围标记和高亮
 pub fn clear_markers(
     commands: &mut Commands,
-    range_entities: &Query<(Entity, Option<&GridPosition>), Or<(With<MovableRange>, With<AttackRange>)>>,
+    range_entities: &Query<
+        (Entity, Option<&GridPosition>),
+        Or<(With<MovableRange>, With<AttackRange>)>,
+    >,
     highlights: &Query<Entity, With<SelectionHighlight>>,
 ) {
     crate::character::clear_markers(commands, range_entities, highlights);
@@ -149,7 +154,10 @@ pub fn clear_markers(
 pub fn clear_selection(
     commands: &mut Commands,
     selected_query: &Query<Entity, With<Selected>>,
-    range_entities: &Query<(Entity, Option<&GridPosition>), Or<(With<MovableRange>, With<AttackRange>)>>,
+    range_entities: &Query<
+        (Entity, Option<&GridPosition>),
+        Or<(With<MovableRange>, With<AttackRange>)>,
+    >,
     highlights: &Query<Entity, With<SelectionHighlight>>,
 ) {
     for entity in selected_query {
@@ -163,7 +171,15 @@ pub fn show_move_range(
     commands: &mut Commands,
     map: &GameMap,
     terrain_map: &std::collections::HashMap<IVec2, (crate::map::Terrain, Option<u32>)>,
-    units: &Query<(Entity, &Unit, &GridPosition, &Transform, &Attributes, &SkillSlots, &GameplayTags)>,
+    units: &Query<(
+        Entity,
+        &Unit,
+        &GridPosition,
+        &Transform,
+        &Attributes,
+        &SkillSlots,
+        &GameplayTags,
+    )>,
     unit: &Unit,
     start_coord: IVec2,
     calculator: &dyn crate::map::TerrainCostCalculator,
@@ -189,7 +205,14 @@ pub fn show_move_range(
         .map(|(_, _, _, _, attrs, _, _)| attrs.get(AttributeKind::MoveRange) as u32)
         .unwrap_or(3);
 
-    let reachable = find_reachable_tiles(start_coord, move_points, map, terrain_map, &occupation_map, calculator);
+    let reachable = find_reachable_tiles(
+        start_coord,
+        move_points,
+        map,
+        terrain_map,
+        &occupation_map,
+        calculator,
+    );
     let tile_size = map.tile_size;
 
     for (coord, _) in reachable {
@@ -263,17 +286,11 @@ pub struct InputPlugin;
 impl Plugin for InputPlugin {
     fn build(&self, app: &mut App) {
         use crate::turn::AppState;
-        app.add_systems(
-            Update,
-            handle_click.run_if(in_state(AppState::InGame)),
-        )
-        .add_systems(
-            Update,
-            handle_right_cancel.run_if(in_state(AppState::InGame)),
-        )
-        .add_systems(
-            Update,
-            handle_end_turn.run_if(in_state(AppState::InGame)),
-        );
+        app.add_systems(Update, handle_click.run_if(in_state(AppState::InGame)))
+            .add_systems(
+                Update,
+                handle_right_cancel.run_if(in_state(AppState::InGame)),
+            )
+            .add_systems(Update, handle_end_turn.run_if(in_state(AppState::InGame)));
     }
 }

@@ -2,11 +2,11 @@
 // 支持从 assets/skills/*.ron 外部配置文件加载
 
 mod domain;
-mod slots;
-mod preview;
 mod plugin;
+mod preview;
+mod slots;
 
 // 公共 re-exports
 pub use domain::*;
-pub use slots::*;
 pub use plugin::SkillPlugin;
+pub use slots::*;

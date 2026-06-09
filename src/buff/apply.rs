@@ -1,7 +1,7 @@
-use crate::gameplay::attribute::{Attributes, BuffInstanceId};
-use crate::gameplay::tag::GameplayTags;
 use super::domain::BuffData;
 use super::instance::{ActiveBuffs, BuffInstance};
+use crate::gameplay::attribute::{Attributes, BuffInstanceId};
+use crate::gameplay::tag::GameplayTags;
 use bevy::prelude::*;
 
 /// 给目标施加 Buff（修改 ActiveBuffs + Attributes + GameplayTags）
@@ -95,7 +95,12 @@ mod tests {
     use crate::gameplay::tag::GameplayTag;
 
     /// 辅助：创建一个简单的 BuffData
-    fn make_buff(id: &str, is_buff: bool, modifiers: Vec<AttributeModifierDef>, tags: Vec<GameplayTag>) -> BuffData {
+    fn make_buff(
+        id: &str,
+        is_buff: bool,
+        modifiers: Vec<AttributeModifierDef>,
+        tags: Vec<GameplayTag>,
+    ) -> BuffData {
         BuffData {
             id: id.into(),
             name: id.into(),

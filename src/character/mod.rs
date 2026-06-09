@@ -3,10 +3,10 @@
 
 mod components;
 mod movement;
+mod plugin;
 mod spawn;
 mod template;
 mod traits;
-mod plugin;
 
 // 公共 re-exports
 pub use components::*;

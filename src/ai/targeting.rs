@@ -42,7 +42,8 @@ pub(crate) fn select_target_coord(
 mod tests {
     use super::*;
     use crate::ai::strategy::{
-        AiStrategyRegistry, LowestHpPercentTarget, MostDangerousTarget, NearestTarget, WeakestTarget,
+        AiStrategyRegistry, LowestHpPercentTarget, MostDangerousTarget, NearestTarget,
+        WeakestTarget,
     };
     use crate::skill::SkillCooldowns;
 

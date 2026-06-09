@@ -1,5 +1,5 @@
-use super::grid::MapGridPlugin;
 use super::data::MapDataPlugin;
+use super::grid::MapGridPlugin;
 use super::pathfinding::{TerrainCostRegistry, TerrainMapCache, cache_terrain_map};
 use bevy::prelude::*;
 
@@ -13,15 +13,12 @@ pub struct MapPlugin;
 
 impl Plugin for MapPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins((
-            MapDataPlugin,
-            MapGridPlugin,
-        ))
-        .insert_resource(TerrainCostRegistry::default())
-        .insert_resource(TerrainMapCache::default())
-        .add_systems(
-            Update,
-            cache_terrain_map.run_if(terrain_cache_needs_refresh),
-        );
+        app.add_plugins((MapDataPlugin, MapGridPlugin))
+            .insert_resource(TerrainCostRegistry::default())
+            .insert_resource(TerrainMapCache::default())
+            .add_systems(
+                Update,
+                cache_terrain_map.run_if(terrain_cache_needs_refresh),
+            );
     }
 }

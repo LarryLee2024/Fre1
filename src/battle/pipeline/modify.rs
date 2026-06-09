@@ -15,7 +15,8 @@ pub fn modify_effects(
         if let Ok(target_tags) = tags_query.get(effect.target) {
             match &mut effect.data {
                 PendingEffectData::Damage { amount, .. } => {
-                    *amount = rules.apply_damage_modifiers(*amount, &effect.source_tags, target_tags);
+                    *amount =
+                        rules.apply_damage_modifiers(*amount, &effect.source_tags, target_tags);
                 }
                 PendingEffectData::Heal { amount } => {
                     *amount = rules.apply_heal_modifiers(*amount, &effect.source_tags, target_tags);

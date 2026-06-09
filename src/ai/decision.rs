@@ -1,10 +1,14 @@
 use crate::battle::CombatIntent;
 use crate::battle::manhattan_distance;
 use crate::buff::ActiveBuffs;
-use crate::character::{AiBehaviorId, Faction, GridPosition, MovingUnit, Unit, UnitName, spawn_path_arrows};
+use crate::character::{
+    AiBehaviorId, Faction, GridPosition, MovingUnit, Unit, UnitName, spawn_path_arrows,
+};
 use crate::gameplay::attribute::{AttributeKind, Attributes};
 use crate::gameplay::tag::GameplayTags;
-use crate::map::{GameMap, TerrainCostRegistry, TerrainMapCache, find_reachable_tiles, reconstruct_path};
+use crate::map::{
+    GameMap, TerrainCostRegistry, TerrainMapCache, find_reachable_tiles, reconstruct_path,
+};
 use crate::skill::{SkillCooldowns, SkillRegistry, SkillSlots, effective_skill_range};
 use crate::turn::{AiTimer, TurnPhase, TurnState};
 use bevy::prelude::*;

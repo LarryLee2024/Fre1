@@ -83,3 +83,79 @@ impl Plugin for CombatLogPlugin {
             .add_systems(Update, update_combat_log.run_if(in_state(AppState::InGame)));
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn make_segment(text: &str) -> LogSegment {
+        LogSegment {
+            text: text.into(),
+            color: log_color::NORMAL,
+        }
+    }
+
+    #[test]
+    fn 战斗日志_添加一条() {
+        let mut log = CombatLog::default();
+        log.push(vec![make_segment("测试")]);
+        assert_eq!(log.entries.len(), 1);
+    }
+
+    #[test]
+    fn 战斗日志_多条日志() {
+        let mut log = CombatLog::default();
+        for i in 0..5 {
+            log.push(vec![make_segment(&format!("日志{}", i))]);
+        }
+        assert_eq!(log.entries.len(), 5);
+    }
+
+    #[test]
+    fn 战斗日志_超过最大条数截断最旧() {
+        let mut log = CombatLog::default();
+        for i in 0..10 {
+            log.push(vec![make_segment(&format!("日志{}", i))]);
+        }
+        // 超过 MAX_LOG_LINES(8)，应该只保留最新 8 条
+        assert_eq!(log.entries.len(), 8);
+        // 最旧的两条（0, 1）被移除，最新的是 2..9
+        assert_eq!(log.entries[0][0].text, "日志2");
+        assert_eq!(log.entries[7][0].text, "日志9");
+    }
+
+    #[test]
+    fn 战斗日志_刚好等于最大条数不截断() {
+        let mut log = CombatLog::default();
+        for i in 0..8 {
+            log.push(vec![make_segment(&format!("日志{}", i))]);
+        }
+        assert_eq!(log.entries.len(), 8);
+        assert_eq!(log.entries[0][0].text, "日志0");
+    }
+
+    #[test]
+    fn 战斗日志_多片段拼接() {
+        let mut log = CombatLog::default();
+        log.push(vec![
+            LogSegment {
+                text: "[".into(),
+                color: log_color::NORMAL,
+            },
+            LogSegment {
+                text: "战士".into(),
+                color: log_color::PLAYER,
+            },
+            LogSegment {
+                text: "] 攻击 ".into(),
+                color: log_color::NORMAL,
+            },
+            LogSegment {
+                text: "哥布林".into(),
+                color: log_color::ENEMY,
+            },
+        ]);
+        assert_eq!(log.entries.len(), 1);
+        assert_eq!(log.entries[0].len(), 4);
+    }
+}

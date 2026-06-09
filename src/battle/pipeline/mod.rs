@@ -1,9 +1,9 @@
 // Effect Pipeline：生成→修饰→执行 三步管道
 
-mod generate;
-mod modify;
 mod execute;
+mod generate;
 mod intent;
+mod modify;
 
 pub use intent::{CombatIntent, PrevPosition};
 
