@@ -19,7 +19,9 @@ impl Plugin for TurnPlugin {
             .init_resource::<TurnOrder>()
             .init_resource::<AiTimer>()
             .init_resource::<NeedsResolve>()
-            .init_resource::<ForceEndFaction>()
+            .add_message::<TurnStarted>()
+            .add_message::<TurnEnded>()
+            .add_message::<ForceEndTurn>()
             .configure_sets(
                 OnEnter(AppState::InGame),
                 (GameSet::Camera, GameSet::Map, GameSet::Unit, GameSet::Ui).chain(),

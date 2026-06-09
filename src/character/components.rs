@@ -1,6 +1,12 @@
 // 角色组件定义：单位身份、阵营、位置、标记等
 
+use super::traits::TraitCollection;
+use crate::buff::ActiveBuffs;
+use crate::core::attribute::Attributes;
 use crate::core::tag::GameplayTags;
+use crate::skill::{SkillCooldowns, SkillSlots};
+use bevy::ecs::lifecycle::HookContext;
+use bevy::ecs::world::DeferredWorld;
 use bevy::prelude::*;
 
 /// 阵营
@@ -11,7 +17,18 @@ pub enum Faction {
 }
 
 /// 战斗单位组件（身份与回合状态）
+/// Required Components：生成 Unit 时自动插入默认组件，防止遗漏
 #[derive(Component)]
+#[require(
+    Attributes,
+    SkillSlots,
+    SkillCooldowns,
+    ActiveBuffs,
+    GameplayTags,
+    TraitGrantedTags,
+    TraitCollection,
+    GridPosition
+)]
 pub struct Unit {
     pub faction: Faction,
     pub acted: bool,
@@ -35,9 +52,33 @@ pub struct GridPosition {
     pub coord: IVec2,
 }
 
+impl Default for GridPosition {
+    fn default() -> Self {
+        Self { coord: IVec2::ZERO }
+    }
+}
+
 /// 选中标记
 #[derive(Component)]
 pub struct Selected;
+
+/// 死亡标记：HP 降为 0 时添加，Hook 自动清理固有状态
+#[derive(Component)]
+#[component(on_add = Dead::on_add_dead)]
+pub struct Dead;
+
+impl Dead {
+    /// 死亡 Hook：标记已行动，移除选中状态
+    fn on_add_dead(mut world: DeferredWorld, context: HookContext) {
+        let entity = context.entity;
+        // 标记已行动，防止死亡单位继续行动
+        if let Some(mut unit) = world.get_mut::<Unit>(entity) {
+            unit.acted = true;
+        }
+        // 移除选中标记
+        world.commands().entity(entity).remove::<Selected>();
+    }
+}
 
 /// Trait 授予的标签（独立存储，不会被 rebuild_tags_from_buffs 丢失）
 #[derive(Component, Default, Debug, Clone)]

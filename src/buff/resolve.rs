@@ -1,30 +1,25 @@
 // 持续效果结算：DoT/HoT/晕眩/tick，由 BuffPlugin 注册
+// 纯逻辑：只做数值计算和状态变更，通过 Message 通知表现层
 // 原 status.rs，移入 buff 模块统一管理
 
-use crate::assets::CnFont;
-use crate::battle::{CombatLog, LogSegment, log_color};
-use crate::character::{GridPosition, TraitGrantedTags, Unit, UnitName};
+use crate::battle::{CharacterDied, DotApplied, HotApplied, StunApplied};
+use crate::character::{Dead, GridPosition, TraitGrantedTags, Unit, UnitName};
 use crate::core::attribute::{AttributeKind, Attributes, BuffInstanceId};
 use crate::core::tag::{GameplayTag, GameplayTags};
-use crate::map::GameMap;
 use crate::skill::SkillCooldowns;
 use crate::turn::NeedsResolve;
-use crate::ui::UiTheme;
-use crate::ui::vfx;
+use bevy::ecs::message::MessageWriter;
 use bevy::prelude::*;
 
 use super::{ActiveBuffs, remove_buff};
 
 /// 持续效果结算系统：每回合开始时，对所有单位结算 DoT/HoT/晕眩，并 tick
+/// 纯逻辑：只修改数值和状态，通过 Message 通知表现层
 /// 通过 NeedsResolve 标记确保每回合只结算一次
 /// 新逻辑：队列驱动模式下，每回合所有单位都行动，因此对所有单位结算
 pub fn resolve_status_effects(
     mut commands: Commands,
-    map: Res<GameMap>,
-    cn_font: Res<CnFont>,
-    mut combat_log: ResMut<CombatLog>,
     mut needs_resolve: ResMut<NeedsResolve>,
-    theme: Res<UiTheme>,
     mut units: Query<(
         Entity,
         &mut Unit,
@@ -36,6 +31,10 @@ pub fn resolve_status_effects(
         &mut SkillCooldowns,
         &TraitGrantedTags,
     )>,
+    mut died_writer: MessageWriter<CharacterDied>,
+    mut dot_writer: MessageWriter<DotApplied>,
+    mut hot_writer: MessageWriter<HotApplied>,
+    mut stun_writer: MessageWriter<StunApplied>,
 ) {
     // 只有回合切换后的首次 SelectUnit 才结算
     if !needs_resolve.0 {
@@ -47,8 +46,6 @@ pub fn resolve_status_effects(
         &mut units
     {
         // 队列驱动模式：所有单位都结算（不再按阵营过滤）
-
-        let world_pos = map.coord_to_world(gp.coord);
 
         // 1. 晕眩结算：被晕眩的单位本回合无法行动，消耗 Stun
         if buffs.is_stunned() {
@@ -62,16 +59,11 @@ pub fn resolve_status_effects(
             for id in stun_ids {
                 remove_buff(&mut buffs, &mut attrs, &mut tags, id);
             }
-            combat_log.push(vec![
-                LogSegment {
-                    text: format!("[{}]", name.0),
-                    color: log_color::NORMAL,
-                },
-                LogSegment {
-                    text: " 处于晕眩，无法行动".to_string(),
-                    color: log_color::DAMAGE,
-                },
-            ]);
+            // 发送晕眩消息（表现层响应）
+            stun_writer.write(StunApplied {
+                target: entity,
+                target_name: name.0.clone(),
+            });
         }
 
         // 2. 结算本回合 DoT 伤害
@@ -80,26 +72,23 @@ pub fn resolve_status_effects(
             let hp = attrs.get(AttributeKind::Hp);
             let new_hp = (hp - dot as f32).max(0.0);
             attrs.set_base(AttributeKind::Hp, new_hp);
-            vfx::spawn_damage_popup(
-                &mut commands,
-                world_pos,
-                dot,
-                &cn_font.handle,
-                false,
-                &theme,
-            );
-            combat_log.push(vec![
-                LogSegment {
-                    text: format!("[{}]", name.0),
-                    color: log_color::NORMAL,
-                },
-                LogSegment {
-                    text: format!(" 受到 {} 持续伤害", dot),
-                    color: log_color::DAMAGE,
-                },
-            ]);
+
+            // 发送 DoT 消息（表现层响应）
+            dot_writer.write(DotApplied {
+                target: entity,
+                target_name: name.0.clone(),
+                amount: dot,
+                target_coord: gp.coord,
+            });
+
+            // DoT 死亡判定
             if new_hp <= 0.0 {
-                commands.entity(entity).try_despawn();
+                commands.entity(entity).insert(Dead);
+                died_writer.write(CharacterDied {
+                    entity,
+                    name: name.0.clone(),
+                    faction: unit.faction,
+                });
             }
         }
 
@@ -110,16 +99,13 @@ pub fn resolve_status_effects(
             let max_hp = attrs.get(AttributeKind::MaxHp);
             let new_hp = (hp + hot as f32).min(max_hp);
             attrs.set_base(AttributeKind::Hp, new_hp);
-            combat_log.push(vec![
-                LogSegment {
-                    text: format!("[{}]", name.0),
-                    color: log_color::NORMAL,
-                },
-                LogSegment {
-                    text: format!(" 恢复 {} HP", hot),
-                    color: log_color::HEAL,
-                },
-            ]);
+
+            // 发送 HoT 消息（表现层响应）
+            hot_writer.write(HotApplied {
+                target: entity,
+                target_name: name.0.clone(),
+                amount: hot,
+            });
         }
 
         // 4. tick 递减持续时间，移除过期的 Buff

@@ -8,8 +8,9 @@ mod modify;
 pub use intent::{CombatIntent, PrevPosition};
 
 use bevy::prelude::*;
+use super::events::on_character_died;
 
-/// 战斗事件插件：注册 Effect Pipeline 系统
+/// 战斗事件插件：注册 Effect Pipeline 系统 + 死亡消息响应
 pub struct CombatEventPlugin;
 
 impl Plugin for CombatEventPlugin {
@@ -27,6 +28,8 @@ impl Plugin for CombatEventPlugin {
                 )
                     .chain(),
             )
-            .add_systems(OnEnter(TurnPhase::WaitAction), intent::wait_action_on_enter);
+            .add_systems(OnEnter(TurnPhase::WaitAction), intent::wait_action_on_enter)
+            // 死亡消息响应：每帧检测 CharacterDied 消息
+            .add_systems(Update, on_character_died);
     }
 }

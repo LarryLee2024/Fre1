@@ -2,9 +2,24 @@
 
 use crate::character::{Faction, Unit};
 use crate::core::attribute::{AttributeKind, Attributes};
+use bevy::ecs::message::{MessageReader, MessageWriter};
 use bevy::prelude::*;
 
 use super::state::TurnPhase;
+
+// ── 回合消息 ──
+
+/// 回合开始消息：新回合开始时发送
+#[derive(Message, Debug, Clone)]
+pub struct TurnStarted {
+    pub turn: u32,
+}
+
+/// 回合结束消息：当前回合结束时发送
+#[derive(Message, Debug, Clone)]
+pub struct TurnEnded {
+    pub turn: u32,
+}
 
 /// 回合行动队列：所有单位按 Initiative 降序排列
 #[derive(Resource, Default, Debug)]
@@ -78,9 +93,9 @@ impl Default for AiTimer {
 #[derive(Resource, Default)]
 pub struct NeedsResolve(pub bool);
 
-/// 强制结束当前阵营回合（玩家按 E 结束回合时设置）
-#[derive(Resource, Default)]
-pub struct ForceEndFaction(pub bool);
+/// 强制结束当前阵营回合（玩家按 E 结束回合时发送）
+#[derive(Message, Debug, Clone)]
+pub struct ForceEndTurn;
 
 /// 游戏开始时初始化行动队列（第一回合）
 pub fn init_turn_order(
@@ -88,9 +103,15 @@ pub fn init_turn_order(
     mut turn_order: ResMut<TurnOrder>,
     units: Query<(Entity, &Unit, &Attributes)>,
     mut ai_timer: ResMut<AiTimer>,
+    mut turn_started_writer: MessageWriter<TurnStarted>,
 ) {
     // 第一回合，不增加回合数
     turn_order.turn_number = turn_state.turn_number;
+
+    // 发送回合开始消息
+    turn_started_writer.write(TurnStarted {
+        turn: turn_state.turn_number,
+    });
 
     // 重建行动队列
     let unit_initiatives: Vec<(Entity, f32)> = units
@@ -120,13 +141,18 @@ pub fn turn_end_on_enter(
     mut next_phase: ResMut<NextState<TurnPhase>>,
     mut ai_timer: ResMut<AiTimer>,
     mut needs_resolve: ResMut<NeedsResolve>,
-    mut force_end: ResMut<ForceEndFaction>,
+    mut force_end_reader: MessageReader<ForceEndTurn>,
+    mut turn_ended_writer: MessageWriter<TurnEnded>,
+    mut turn_started_writer: MessageWriter<TurnStarted>,
 ) {
-    // 强制结束：跳过当前阵营剩余单位（标记已行动）
-    if force_end.0 {
-        // 不需要额外操作，队列自然耗尽
-        force_end.0 = false;
-    }
+    // 发送回合结束消息
+    turn_ended_writer.write(TurnEnded {
+        turn: turn_state.turn_number,
+    });
+
+    // 检查是否有强制结束回合的消息（玩家按 E）
+    // 消费所有 ForceEndTurn 消息，不需要额外操作，队列自然耗尽
+    for _ in force_end_reader.read() {}
 
     // 回合数+1
     turn_state.turn_number += 1;
@@ -157,6 +183,11 @@ pub fn turn_end_on_enter(
 
     // 重置 AI 计时器
     ai_timer.timer.reset();
+
+    // 发送新回合开始消息
+    turn_started_writer.write(TurnStarted {
+        turn: turn_state.turn_number,
+    });
 
     next_phase.set(TurnPhase::SelectUnit);
 }
@@ -215,7 +246,9 @@ mod tests {
             .init_resource::<TurnOrder>()
             .init_resource::<AiTimer>()
             .init_resource::<NeedsResolve>()
-            .init_resource::<ForceEndFaction>()
+            .add_message::<TurnStarted>()
+            .add_message::<TurnEnded>()
+            .add_message::<ForceEndTurn>()
             .add_systems(OnEnter(TurnPhase::TurnEnd), turn_end_on_enter);
         app
     }

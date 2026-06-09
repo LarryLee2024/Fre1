@@ -1,6 +1,8 @@
 use super::action_menu::ActionMenuPlugin;
 use super::camera::CameraPlugin;
+use super::combat_log_handler;
 use super::combat_preview::CombatPreviewPlugin;
+use super::combat_vfx_handler;
 use super::command_handler::handle_ui_commands;
 use super::events::UiCommand;
 use super::panels::{ActionHintPlugin, CombatLogPanelPlugin, TurnIndicatorPlugin, UnitInfoPlugin};
@@ -44,6 +46,16 @@ impl Plugin for UiPlugin {
                     update_game_over_state,
                     update_combat_preview_view,
                     update_acted_unit_color,
+                    // 战斗日志表现层：监听 Message 写入 CombatLog
+                    combat_log_handler::on_damage_applied,
+                    combat_log_handler::on_heal_applied,
+                    combat_log_handler::on_character_died_log,
+                    combat_log_handler::on_stun_applied,
+                    combat_log_handler::on_dot_applied,
+                    combat_log_handler::on_hot_applied,
+                    // 战斗 VFX 表现层：监听 Message 生成飘字
+                    combat_vfx_handler::on_damage_vfx,
+                    combat_vfx_handler::on_dot_vfx,
                 )
                     .run_if(in_state(AppState::InGame)),
             )

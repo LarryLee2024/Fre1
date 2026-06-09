@@ -13,7 +13,7 @@ use crate::ui::highlight::{
 };
 use crate::map::{GameMap, OccupancyGrid, TerrainCostRegistry, TerrainGrid, TerrainRegistry, find_reachable_tiles, reconstruct_path};
 use crate::skill::{BASIC_ATTACK_ID, SkillRegistry, SkillSlots, effective_skill_range};
-use crate::turn::{ForceEndFaction, TurnPhase};
+use crate::turn::{ForceEndTurn, TurnPhase};
 use crate::ui::action_menu::{ActionMenuEntity, despawn_action_menu};
 use crate::ui::events::UiCommand;
 use bevy::ecs::message::MessageReader;
@@ -268,7 +268,8 @@ pub fn handle_ui_commands(
 
             UiCommand::EndTurn => {
                 clear_selection(&mut commands, &selected_query, &range_entities, &highlights);
-                commands.insert_resource(ForceEndFaction(true));
+                // 发送强制结束回合消息，替代 ForceEndFaction Resource
+                commands.write_message(ForceEndTurn);
                 next_phase.set(TurnPhase::TurnEnd);
             }
         }

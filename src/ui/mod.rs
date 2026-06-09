@@ -3,7 +3,9 @@
 
 mod action_menu;
 mod camera;
+mod combat_log_handler;
 mod combat_preview;
+mod combat_vfx_handler;
 mod command_handler;
 pub mod events;
 mod highlight;
