@@ -3,8 +3,8 @@
 // 遵循"Trait 描述规则，不描述内容"原则
 
 use crate::buff::BuffRegistry;
-use crate::gameplay::attribute::{AttributeKind, Attributes};
-use crate::gameplay::tag::GameplayTag;
+use crate::core::attribute::{AttributeKind, Attributes};
+use crate::core::tag::GameplayTag;
 use bevy::prelude::*;
 
 use super::types::{EffectDef, PendingEffectData, calculate_damage_from_effect};
@@ -259,7 +259,7 @@ impl EffectHandlerRegistry {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::gameplay::attribute::Attributes;
+    use crate::core::attribute::Attributes;
 
     /// 构建测试用 GenerateContext
     fn make_generate_ctx() -> GenerateContext {

@@ -2,7 +2,7 @@
 
 use crate::assets::CnFont;
 use crate::character::{HpBarFg, Unit};
-use crate::gameplay::attribute::{AttributeKind, Attributes};
+use crate::core::attribute::{AttributeKind, Attributes};
 use crate::turn::AppState;
 use crate::ui::theme::UiTheme;
 use crate::ui::view_models::SelectedUnitView;

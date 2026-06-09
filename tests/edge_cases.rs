@@ -3,13 +3,13 @@
 //! 测试各种边界情况：HP 满时治疗、修饰符叠加、空操作等。
 
 use tactical_rpg::buff::{ActiveBuffs, BuffData, apply_buff, remove_buff};
-use tactical_rpg::gameplay::attribute::{
+use tactical_rpg::core::attribute::{
     AttributeKind, AttributeModifierDef, Attributes, BuffInstanceId, ModifierOp,
 };
-use tactical_rpg::gameplay::effect::{
+use tactical_rpg::core::effect::{
     EffectDef, EffectHandlerRegistry, EffectPreview, GenerateContext, PreviewContext,
 };
-use tactical_rpg::gameplay::tag::{GameplayTag, GameplayTags};
+use tactical_rpg::core::tag::{GameplayTag, GameplayTags};
 
 // ── 测试辅助 ──
 
@@ -156,7 +156,7 @@ fn 注册表_不重复注册() {
     let mut registry = EffectHandlerRegistry::default();
     // DamageHandler 已注册，再次注册不应增加处理器数量
     // 验证方式：find 仍能返回 Damage 处理器
-    registry.register(Box::new(tactical_rpg::gameplay::effect::DamageHandler));
+    registry.register(Box::new(tactical_rpg::core::effect::DamageHandler));
     assert!(registry.find("Damage").is_some());
 }
 
@@ -172,7 +172,7 @@ fn 伤害处理器_收到heal定义返回none() {
     let source = warrior_attrs();
     let target = warrior_attrs();
 
-    let ctx = tactical_rpg::gameplay::effect::GenerateContext {
+    let ctx = tactical_rpg::core::effect::GenerateContext {
         source_entity: bevy::prelude::Entity::from_bits(1),
         target_entity: bevy::prelude::Entity::from_bits(2),
         source_attrs: source,

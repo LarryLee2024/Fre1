@@ -1,4 +1,5 @@
 use super::action_menu::ActionMenuPlugin;
+use super::camera::CameraPlugin;
 use super::combat_preview::CombatPreviewPlugin;
 use super::command_handler::handle_ui_commands;
 use super::events::UiCommand;
@@ -42,6 +43,7 @@ impl Plugin for UiPlugin {
                     update_turn_info_view,
                     update_game_over_state,
                     update_combat_preview_view,
+                    update_acted_unit_color,
                 )
                     .run_if(in_state(AppState::InGame)),
             )
@@ -55,4 +57,22 @@ impl Plugin for UiPlugin {
 /// 只在玩家回合运行
 fn player_turn(turn_state: Res<TurnState>) -> bool {
     turn_state.current_faction == Faction::Player
+}
+
+/// 已行动单位颜色变灰
+fn update_acted_unit_color(
+    mut units: Query<(&crate::character::Unit, &mut Sprite), Without<crate::character::MovingUnit>>,
+) {
+    use crate::ui::theme::faction_color;
+    for (unit, mut sprite) in &mut units {
+        let base_color = faction_color(unit.faction);
+        if unit.acted {
+            let mut hsla = Hsla::from(base_color);
+            hsla.saturation *= 0.2;
+            hsla.lightness = hsla.lightness * 0.5 + 0.25;
+            sprite.color = Color::from(hsla);
+        } else {
+            sprite.color = base_color;
+        }
+    }
 }

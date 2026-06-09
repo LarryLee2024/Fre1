@@ -4,7 +4,7 @@
 
 use bevy::prelude::*;
 use tactical_rpg::character::{Faction, Unit};
-use tactical_rpg::gameplay::attribute::{AttributeKind, Attributes};
+use tactical_rpg::core::attribute::{AttributeKind, Attributes};
 use tactical_rpg::turn::{
     ForceEndFaction, NeedsResolve, TurnOrder, TurnPhase, TurnState, turn_end_on_enter,
 };

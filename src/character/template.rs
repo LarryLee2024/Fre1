@@ -2,7 +2,7 @@
 // 支持从 assets/units/*.ron 外部配置文件加载
 
 use super::components::Faction;
-use crate::gameplay::attribute::AttributeKind;
+use crate::core::attribute::AttributeKind;
 use crate::skill::BASIC_ATTACK_ID;
 use bevy::prelude::*;
 use ron::de::from_bytes;

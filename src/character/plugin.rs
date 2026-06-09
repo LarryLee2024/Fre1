@@ -1,26 +1,10 @@
-use super::components::{Faction, MovingUnit, Unit};
+use super::components::{MovingUnit, Unit};
 use super::movement::animate_movement;
 use super::spawn::{TurnOrderLabel, UnitPlugin};
 use super::template::UnitTemplatePlugin;
 use super::traits::TraitPlugin;
 use crate::turn::{AppState, TurnOrder};
 use bevy::prelude::*;
-
-/// 已行动单位颜色变灰
-fn update_acted_unit_color(mut units: Query<(&Unit, &mut Sprite), Without<MovingUnit>>) {
-    for (unit, mut sprite) in &mut units {
-        let base_color = unit.faction.unit_color();
-        if unit.acted {
-            // 变灰：降低饱和度和亮度
-            let mut hsla = Hsla::from(base_color);
-            hsla.saturation *= 0.2;
-            hsla.lightness = hsla.lightness * 0.5 + 0.25;
-            sprite.color = Color::from(hsla);
-        } else {
-            sprite.color = base_color;
-        }
-    }
-}
 
 /// 更新棋子行动顺序数字：行动完后重新编号，剩余单位从1开始
 fn update_turn_order_label(
@@ -68,10 +52,6 @@ impl Plugin for CharacterPlugin {
         app.add_plugins((UnitTemplatePlugin, TraitPlugin, UnitPlugin))
             // 移动动画系统：只在游戏中运行
             .add_systems(Update, animate_movement.run_if(in_state(AppState::InGame)))
-            .add_systems(
-                Update,
-                update_acted_unit_color.run_if(in_state(AppState::InGame)),
-            )
             .add_systems(
                 Update,
                 update_turn_order_label.run_if(in_state(AppState::InGame)),

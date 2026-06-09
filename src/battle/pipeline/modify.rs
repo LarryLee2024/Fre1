@@ -1,8 +1,8 @@
 // 步骤 2：修饰效果（从 ModifierRuleRegistry 加载规则）
 
-use crate::gameplay::effect::{EffectQueue, PendingEffectData};
-use crate::gameplay::modifier_rule::ModifierRuleRegistry;
-use crate::gameplay::tag::GameplayTags;
+use crate::core::effect::{EffectQueue, PendingEffectData};
+use crate::core::modifier_rule::ModifierRuleRegistry;
+use crate::core::tag::GameplayTags;
 use bevy::prelude::*;
 
 /// 修饰效果：对所有效果应用 ModifierRule 规则

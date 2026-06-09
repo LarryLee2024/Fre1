@@ -3,12 +3,12 @@
 //! 测试 calculate_damage_from_effect 在各种属性组合下的行为，
 //! 跨 attribute + effect/types 模块验证完整的伤害计算链路。
 
-use tactical_rpg::gameplay::attribute::{AttributeKind, Attributes};
-use tactical_rpg::gameplay::effect::{
+use tactical_rpg::core::attribute::{AttributeKind, Attributes};
+use tactical_rpg::core::effect::{
     EffectDef, EffectHandlerRegistry, EffectPreview, EffectQueue, GenerateContext, PendingEffect,
     PendingEffectData, PreviewContext, calculate_damage_from_effect,
 };
-use tactical_rpg::gameplay::tag::{GameplayTag, GameplayTags};
+use tactical_rpg::core::tag::{GameplayTag, GameplayTags};
 
 // ── 测试辅助 ──
 

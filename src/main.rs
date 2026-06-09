@@ -2,9 +2,8 @@ mod ai;
 mod assets;
 mod battle;
 mod buff;
-mod camera;
 mod character;
-mod gameplay;
+mod core;
 mod input;
 mod map;
 mod skill;
@@ -19,12 +18,11 @@ use bevy::prelude::*;
 use bevy_inspector_egui::bevy_egui::EguiPlugin;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use buff::BuffPlugin;
-use camera::CameraPlugin;
 use character::CharacterPlugin;
-use gameplay::attribute_def::AttributeDefPlugin;
-use gameplay::effect::EffectPlugin;
-use gameplay::modifier_rule::ModifierRulePlugin;
-use gameplay::tag_def::TagDefPlugin;
+use core::attribute_def::AttributeDefPlugin;
+use core::effect::EffectPlugin;
+use core::modifier_rule::ModifierRulePlugin;
+use core::tag_def::TagDefPlugin;
 use input::InputPlugin;
 use map::MapPlugin;
 use skill::SkillPlugin;
@@ -55,7 +53,6 @@ fn main() {
         .add_plugins((
             AssetsPlugin,
             TurnPlugin,
-            CameraPlugin,
             MapPlugin,
             CharacterPlugin,
             BattlePlugin,

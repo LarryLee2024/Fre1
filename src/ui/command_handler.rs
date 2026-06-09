@@ -6,9 +6,9 @@ use crate::character::{
     AttackRange, Faction, GridPosition, MovableRange, MovingUnit, Selected,
     SelectionHighlight, Unit, spawn_path_arrows,
 };
-use crate::gameplay::attribute::{AttributeKind, Attributes};
-use crate::gameplay::tag::GameplayTags;
-use crate::input::{
+use crate::core::attribute::{AttributeKind, Attributes};
+use crate::core::tag::GameplayTags;
+use crate::ui::highlight::{
     clear_markers, clear_selection, show_attack_range, show_move_range, spawn_selection_highlight,
 };
 use crate::map::{GameMap, OccupancyGrid, TerrainCostRegistry, TerrainGrid, TerrainRegistry, find_reachable_tiles, reconstruct_path};

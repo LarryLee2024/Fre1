@@ -157,3 +157,11 @@ impl Default for UiTheme {
         }
     }
 }
+
+/// 阵营对应的单位颜色（表现层映射）
+pub fn faction_color(faction: crate::character::Faction) -> Color {
+    match faction {
+        crate::character::Faction::Player => Color::srgb(0.2, 0.5, 1.0),
+        crate::character::Faction::Enemy => Color::srgb(1.0, 0.3, 0.2),
+    }
+}

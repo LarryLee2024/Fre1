@@ -4,8 +4,8 @@
 use crate::assets::CnFont;
 use crate::battle::{CombatLog, LogSegment, log_color};
 use crate::character::{GridPosition, TraitGrantedTags, Unit, UnitName};
-use crate::gameplay::attribute::{AttributeKind, Attributes, BuffInstanceId};
-use crate::gameplay::tag::{GameplayTag, GameplayTags};
+use crate::core::attribute::{AttributeKind, Attributes, BuffInstanceId};
+use crate::core::tag::{GameplayTag, GameplayTags};
 use crate::map::GameMap;
 use crate::skill::SkillCooldowns;
 use crate::turn::NeedsResolve;
@@ -175,7 +175,7 @@ pub(crate) fn rebuild_tags_from_buffs(
 mod tests {
     use super::*;
     use crate::buff::BuffInstance;
-    use crate::gameplay::attribute::{AttributeKind, AttributeModifierInstance, ModifierOp};
+    use crate::core::attribute::{AttributeKind, AttributeModifierInstance, ModifierOp};
 
     fn make_test_buff(
         id: u64,

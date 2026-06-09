@@ -1,16 +1,16 @@
 //! P1 集成测试：Buff 完整生命周期
 //!
-//! 跨 buff/apply + buff/instance + buff/resolve + gameplay/attribute + gameplay/tag
+//! 跨 buff/apply + buff/instance + buff/resolve + core/attribute + core/tag
 //! 测试 Buff 从施加 → tick → 过期的完整生命周期。
 
 use tactical_rpg::buff::{
     ActiveBuffs, BuffData, BuffInstance, apply_buff, remove_all_debuffs, remove_buff,
 };
-use tactical_rpg::gameplay::attribute::{
+use tactical_rpg::core::attribute::{
     AttributeKind, AttributeModifierDef, AttributeModifierInstance, Attributes, BuffInstanceId,
     ModifierOp,
 };
-use tactical_rpg::gameplay::tag::{GameplayTag, GameplayTags};
+use tactical_rpg::core::tag::{GameplayTag, GameplayTags};
 
 // ── 测试辅助 ──
 

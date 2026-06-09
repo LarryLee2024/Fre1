@@ -9,7 +9,7 @@ use crate::character::{
     Faction, GridPosition, Selected, TraitCollection, TraitRegistry, Unit, UnitClass, UnitName,
     UnitRace,
 };
-use crate::gameplay::attribute::{AttributeKind, Attributes};
+use crate::core::attribute::{AttributeKind, Attributes};
 use crate::skill::{SkillCooldowns, SkillRegistry, SkillSlots};
 use crate::turn::{TurnOrder, TurnPhase, TurnState};
 

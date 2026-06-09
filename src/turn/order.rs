@@ -1,38 +1,10 @@
-// 回合管理模块：状态机、敏捷驱动行动队列、SystemSet 编排
+// 回合行动队列与资源：行动顺序、回合状态、辅助资源、阶段系统
 
 use crate::character::{Faction, Unit};
-use crate::gameplay::attribute::{AttributeKind, Attributes};
+use crate::core::attribute::{AttributeKind, Attributes};
 use bevy::prelude::*;
 
-/// 游戏主状态
-#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug, Default, States)]
-pub enum AppState {
-    #[default]
-    MainMenu,
-    InGame,
-    GameOver,
-}
-
-/// 回合阶段（SubState，仅在 InGame 时激活）
-#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug, Default, SubStates)]
-#[source(AppState = AppState::InGame)]
-pub enum TurnPhase {
-    #[default]
-    /// 选择单位
-    SelectUnit,
-    /// 移动阶段
-    MoveUnit,
-    /// 行动菜单（右键弹出）
-    ActionMenu,
-    /// 选择攻击目标
-    SelectTarget,
-    /// 执行攻击
-    ExecuteAction,
-    /// 待机
-    WaitAction,
-    /// 回合结束
-    TurnEnd,
-}
+use super::state::TurnPhase;
 
 /// 回合行动队列：所有单位按 Initiative 降序排列
 #[derive(Resource, Default, Debug)]
@@ -94,10 +66,6 @@ pub struct AiTimer {
     pub timer: Timer,
 }
 
-/// 标记是否需要结算持续效果（防止 SelectUnit 多次进入时重复结算）
-#[derive(Resource, Default)]
-pub struct NeedsResolve(pub bool);
-
 impl Default for AiTimer {
     fn default() -> Self {
         Self {
@@ -106,42 +74,13 @@ impl Default for AiTimer {
     }
 }
 
-/// 跨插件系统集合：显式控制 OnEnter(InGame) 生成顺序
-#[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
-pub enum GameSet {
-    Camera,
-    Map,
-    Unit,
-    Ui,
-}
+/// 标记是否需要结算持续效果（防止 SelectUnit 多次进入时重复结算）
+#[derive(Resource, Default)]
+pub struct NeedsResolve(pub bool);
 
 /// 强制结束当前阵营回合（玩家按 E 结束回合时设置）
 #[derive(Resource, Default)]
 pub struct ForceEndFaction(pub bool);
-
-/// 回合管理插件
-pub struct TurnPlugin;
-
-impl Plugin for TurnPlugin {
-    fn build(&self, app: &mut App) {
-        app.init_state::<AppState>()
-            .add_sub_state::<TurnPhase>()
-            .init_resource::<TurnState>()
-            .init_resource::<TurnOrder>()
-            .init_resource::<AiTimer>()
-            .init_resource::<NeedsResolve>()
-            .init_resource::<ForceEndFaction>()
-            .configure_sets(
-                OnEnter(AppState::InGame),
-                (GameSet::Camera, GameSet::Map, GameSet::Unit, GameSet::Ui).chain(),
-            )
-            .add_systems(OnEnter(TurnPhase::TurnEnd), turn_end_on_enter)
-            .add_systems(
-                OnEnter(AppState::InGame),
-                init_turn_order.after(GameSet::Unit),
-            );
-    }
-}
 
 /// 游戏开始时初始化行动队列（第一回合）
 pub fn init_turn_order(
@@ -285,7 +224,6 @@ mod tests {
     fn 回合结束_重建队列并增加回合数() {
         let mut app = setup_turn_test_app();
 
-        // 需要注册 Attributes 组件
         app.world_mut().spawn((
             Unit {
                 faction: Faction::Player,

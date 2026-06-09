@@ -5,7 +5,7 @@
 use super::data::TerrainRegistry;
 use super::grid::GameMap;
 use super::runtime::{OccupancyGrid, TerrainGrid};
-use crate::gameplay::tag::{GameplayTag, GameplayTags};
+use crate::core::tag::{GameplayTag, GameplayTags};
 use bevy::prelude::*;
 use std::collections::{HashMap, VecDeque};
 

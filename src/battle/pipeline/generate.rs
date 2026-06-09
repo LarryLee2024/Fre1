@@ -3,9 +3,9 @@
 // 使用 EffectHandlerRegistry trait 分发，新增效果类型无需修改此文件
 
 use crate::character::{GridPosition, Selected, Unit, UnitName};
-use crate::gameplay::attribute::Attributes;
-use crate::gameplay::effect::{EffectHandlerRegistry, EffectQueue, GenerateContext, PendingEffect};
-use crate::gameplay::tag::GameplayTags;
+use crate::core::attribute::Attributes;
+use crate::core::effect::{EffectHandlerRegistry, EffectQueue, GenerateContext, PendingEffect};
+use crate::core::tag::GameplayTags;
 use crate::map::{TerrainGrid, TerrainRegistry};
 use crate::skill::{BASIC_ATTACK_ID, SkillCooldowns, SkillRegistry};
 use bevy::prelude::*;
@@ -83,7 +83,7 @@ pub fn generate_combat_effects(
     };
 
     // 晕眩检查
-    if source_tags.has(crate::gameplay::tag::GameplayTag::STUN) {
+    if source_tags.has(crate::core::tag::GameplayTag::STUN) {
         return;
     }
 

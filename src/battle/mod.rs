@@ -2,7 +2,7 @@
 
 mod combat;
 mod log;
-pub mod pipeline;
+mod pipeline;
 mod plugin;
 
 // 公共 re-exports

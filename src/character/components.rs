@@ -1,6 +1,6 @@
 // 角色组件定义：单位身份、阵营、位置、标记等
 
-use crate::gameplay::tag::GameplayTags;
+use crate::core::tag::GameplayTags;
 use bevy::prelude::*;
 
 /// 阵营
@@ -43,14 +43,6 @@ pub struct Selected;
 #[derive(Component, Default, Debug, Clone)]
 pub struct TraitGrantedTags(pub GameplayTags);
 
-/// 可移动范围标记
-#[derive(Component)]
-pub struct MovableRange;
-
-/// 可攻击范围标记
-#[derive(Component)]
-pub struct AttackRange;
-
 /// HP 条背景
 #[derive(Component)]
 pub struct HpBarBg;
@@ -58,10 +50,6 @@ pub struct HpBarBg;
 /// HP 条前景
 #[derive(Component)]
 pub struct HpBarFg;
-
-/// 选中高亮（独立实体）
-#[derive(Component)]
-pub struct SelectionHighlight;
 
 /// AI 行为 ID（敌方单位使用）
 #[derive(Component, Default, Debug, Clone)]
@@ -95,33 +83,6 @@ impl MovingUnit {
     /// 是否已到达终点
     pub fn is_finished(&self) -> bool {
         self.current_index >= self.path.len()
-    }
-}
-
-/// 阵营颜色
-impl Faction {
-    pub fn unit_color(&self) -> Color {
-        match self {
-            Faction::Player => Color::srgb(0.2, 0.5, 1.0),
-            Faction::Enemy => Color::srgb(1.0, 0.3, 0.2),
-        }
-    }
-}
-
-/// 清除范围标记和高亮（不含 Selected 移除）
-pub fn clear_markers(
-    commands: &mut Commands,
-    range_entities: &Query<
-        (Entity, Option<&GridPosition>),
-        Or<(With<MovableRange>, With<AttackRange>)>,
-    >,
-    highlights: &Query<Entity, With<SelectionHighlight>>,
-) {
-    for (marker, _) in range_entities {
-        commands.entity(marker).try_despawn();
-    }
-    for h in highlights {
-        commands.entity(h).try_despawn();
     }
 }
 

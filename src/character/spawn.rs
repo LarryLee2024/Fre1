@@ -2,8 +2,8 @@
 
 use crate::assets::CnFont;
 use crate::buff::ActiveBuffs;
-use crate::gameplay::attribute::Attributes;
-use crate::gameplay::tag::{GameplayTag, GameplayTags};
+use crate::core::attribute::Attributes;
+use crate::core::tag::{GameplayTag, GameplayTags};
 use crate::map::GameMap;
 use crate::map::LevelRegistry;
 use crate::skill::{SkillCooldowns, SkillSlots};
@@ -136,7 +136,7 @@ fn spawn_unit_from_template(
 
     commands
         .spawn((
-            Sprite::from_color(template.faction.unit_color(), Vec2::splat(tile_size * 0.6)),
+            Sprite::from_color(crate::ui::theme::faction_color(template.faction), Vec2::splat(tile_size * 0.6)),
             Transform::from_xyz(world_pos.x, world_pos.y, 1.0),
             Unit {
                 faction: template.faction,

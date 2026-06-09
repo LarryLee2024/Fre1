@@ -4,8 +4,8 @@ use crate::buff::ActiveBuffs;
 use crate::character::{
     AiBehaviorId, Faction, GridPosition, MovingUnit, Unit, UnitName, spawn_path_arrows,
 };
-use crate::gameplay::attribute::{AttributeKind, Attributes};
-use crate::gameplay::tag::GameplayTags;
+use crate::core::attribute::{AttributeKind, Attributes};
+use crate::core::tag::GameplayTags;
 use crate::map::TerrainRegistry;
 use crate::map::runtime::{OccupancyGrid, TerrainGrid};
 use crate::map::{GameMap, TerrainCostRegistry, find_reachable_tiles, reconstruct_path};

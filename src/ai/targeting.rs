@@ -19,7 +19,7 @@ pub(crate) struct UnitSnapshot {
     pub cooldowns: crate::skill::SkillCooldowns,
     pub ai_behavior_id: String,
     /// 单位标签（用于解析地形成本计算器）
-    pub tags: crate::gameplay::tag::GameplayTags,
+    pub tags: crate::core::tag::GameplayTags,
 }
 
 /// 根据目标策略选择目标坐标
@@ -68,7 +68,7 @@ mod tests {
             skill_ids: vec![],
             cooldowns: SkillCooldowns::default(),
             ai_behavior_id: "default".into(),
-            tags: crate::gameplay::tag::GameplayTags::default(),
+            tags: crate::core::tag::GameplayTags::default(),
         }
     }
 

@@ -1,15 +1,8 @@
 // 输入处理模块：点击选择、移动、攻击分发
 // 通过 UiCommand Message 发出用户意图，不直接修改游戏状态
 
-use crate::character::{
-    AttackRange, Faction, GridPosition, MovableRange, Selected, SelectionHighlight, Unit,
-};
-use crate::gameplay::attribute::{AttributeKind, Attributes};
-use crate::gameplay::tag::GameplayTags;
-use crate::map::TerrainRegistry;
-use crate::map::runtime::{OccupancyGrid, TerrainGrid};
+use crate::character::{Faction, GridPosition, Unit};
 use crate::map::GameMap;
-use crate::skill::SkillSlots;
 use crate::turn::{TurnOrder, TurnPhase, TurnState};
 use crate::ui::events::UiCommand;
 use crate::ui::view_models::HoveredEntity;
@@ -133,8 +126,6 @@ pub fn handle_end_turn(
     ui_commands.write(UiCommand::EndTurn);
 }
 
-// ── 公共辅助函数（供 command_handler 调用）──
-
 /// 屏幕光标 → 格子坐标
 pub fn cursor_to_coord(
     windows: &Query<&Window>,
@@ -151,142 +142,6 @@ pub fn cursor_to_coord(
         .ok()?;
     let coord = map.world_to_coord(world_pos);
     map.is_in_bounds(coord).then_some(coord)
-}
-
-/// 清除范围标记和高亮
-pub fn clear_markers(
-    commands: &mut Commands,
-    range_entities: &Query<
-        (Entity, Option<&GridPosition>),
-        Or<(With<MovableRange>, With<AttackRange>)>,
-    >,
-    highlights: &Query<Entity, With<SelectionHighlight>>,
-) {
-    crate::character::clear_markers(commands, range_entities, highlights);
-}
-
-/// 清除选中状态和范围标记
-pub fn clear_selection(
-    commands: &mut Commands,
-    selected_query: &Query<Entity, With<Selected>>,
-    range_entities: &Query<
-        (Entity, Option<&GridPosition>),
-        Or<(With<MovableRange>, With<AttackRange>)>,
-    >,
-    highlights: &Query<Entity, With<SelectionHighlight>>,
-) {
-    for entity in selected_query {
-        commands.entity(entity).remove::<Selected>();
-    }
-    clear_markers(commands, range_entities, highlights);
-}
-
-/// 显示可移动范围
-pub fn show_move_range(
-    commands: &mut Commands,
-    map: &GameMap,
-    terrain_grid: &TerrainGrid,
-    terrain_registry: &TerrainRegistry,
-    occupancy: &OccupancyGrid,
-    units: &Query<(
-        Entity,
-        &Unit,
-        &GridPosition,
-        &Transform,
-        &Attributes,
-        &SkillSlots,
-        &GameplayTags,
-    )>,
-    unit: &Unit,
-    start_coord: IVec2,
-    calculator: &dyn crate::map::TerrainCostCalculator,
-) {
-    use crate::map::find_reachable_tiles;
-    use crate::ui::theme::UiTheme;
-
-    let theme = UiTheme::default();
-
-    let move_points = units
-        .iter()
-        .find(|(_, u, gp, _, _, _, _)| u.faction == unit.faction && gp.coord == start_coord)
-        .map(|(_, _, _, _, attrs, _, _)| attrs.get(AttributeKind::MoveRange) as u32)
-        .unwrap_or(3);
-
-    let reachable = find_reachable_tiles(
-        start_coord,
-        move_points,
-        map,
-        terrain_grid,
-        terrain_registry,
-        occupancy,
-        None,
-        calculator,
-    );
-    let tile_size = map.tile_size;
-
-    for (coord, _) in reachable {
-        let world_pos = map.coord_to_world(coord);
-        commands.spawn((
-            Sprite {
-                color: theme.movable_range,
-                custom_size: Some(Vec2::splat(tile_size - 2.0)),
-                ..default()
-            },
-            Transform::from_xyz(world_pos.x, world_pos.y, 0.5),
-            MovableRange,
-            GridPosition { coord },
-        ));
-    }
-}
-
-/// 显示攻击范围
-pub fn show_attack_range(commands: &mut Commands, map: &GameMap, center: IVec2, range: u32) {
-    use crate::ui::theme::UiTheme;
-
-    let theme = UiTheme::default();
-    let tile_size = map.tile_size;
-    let range_i32 = range as i32;
-
-    for dx in -range_i32..=range_i32 {
-        for dy in -range_i32..=range_i32 {
-            if dx.unsigned_abs() + dy.unsigned_abs() > range || (dx == 0 && dy == 0) {
-                continue;
-            }
-            let coord = center + IVec2::new(dx, dy);
-            if !map.is_in_bounds(coord) {
-                continue;
-            }
-            let world_pos = map.coord_to_world(coord);
-            commands.spawn((
-                Sprite {
-                    color: theme.attack_range,
-                    custom_size: Some(Vec2::splat(tile_size - 2.0)),
-                    ..default()
-                },
-                Transform::from_xyz(world_pos.x, world_pos.y, 0.6),
-                AttackRange,
-                GridPosition { coord },
-            ));
-        }
-    }
-}
-
-/// 生成选中高亮
-pub fn spawn_selection_highlight(commands: &mut Commands, map: &GameMap, coord: IVec2) {
-    use crate::ui::theme::UiTheme;
-
-    let theme = UiTheme::default();
-    let world_pos = map.coord_to_world(coord);
-    let tile_size = map.tile_size;
-    commands.spawn((
-        Sprite {
-            color: theme.selection_highlight,
-            custom_size: Some(Vec2::splat(tile_size * 0.75)),
-            ..default()
-        },
-        Transform::from_xyz(world_pos.x, world_pos.y, 0.8),
-        SelectionHighlight,
-    ));
 }
 
 /// 输入处理插件

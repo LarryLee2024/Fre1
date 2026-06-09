@@ -1,6 +1,6 @@
-use crate::gameplay::attribute::AttributeKind;
-use crate::gameplay::effect::EffectDef;
-use crate::gameplay::tag::{GameplayTag, TagName};
+use crate::core::attribute::AttributeKind;
+use crate::core::effect::EffectDef;
+use crate::core::tag::{GameplayTag, TagName};
 use bevy::prelude::*;
 use ron::de::from_bytes;
 use serde::Deserialize;
@@ -144,9 +144,9 @@ impl SkillData {
     /// 检查单位是否满足使用条件（纯函数，不修改状态）
     pub fn can_use(
         &self,
-        source_attrs: &crate::gameplay::attribute::Attributes,
-        source_tags: &crate::gameplay::tag::GameplayTags,
-        target_tags: Option<&crate::gameplay::tag::GameplayTags>,
+        source_attrs: &crate::core::attribute::Attributes,
+        source_tags: &crate::core::tag::GameplayTags,
+        target_tags: Option<&crate::core::tag::GameplayTags>,
         current_cooldown: u32,
     ) -> Result<(), SkillUseError> {
         // 冷却检查
@@ -397,8 +397,8 @@ mod tests {
 
     // ── SkillData::can_use ──
 
-    fn make_attrs(hp: f32, max_hp: f32, mp: f32) -> crate::gameplay::attribute::Attributes {
-        let mut attrs = crate::gameplay::attribute::Attributes::default();
+    fn make_attrs(hp: f32, max_hp: f32, mp: f32) -> crate::core::attribute::Attributes {
+        let mut attrs = crate::core::attribute::Attributes::default();
         // 通过核心属性 Vitality 推导 MaxHp，通过 Intelligence 推导 MaxMp
         // MaxHp = 5 + Vitality * 5, 所以 Vitality = (max_hp - 5) / 5
         // MaxMp = Intelligence * 5, 所以 Intelligence = mp / 5
@@ -432,7 +432,7 @@ mod tests {
             priority: 0,
         };
         let attrs = make_attrs(20.0, 20.0, 10.0);
-        let tags = crate::gameplay::tag::GameplayTags::default();
+        let tags = crate::core::tag::GameplayTags::default();
         let result = skill.can_use(&attrs, &tags, None, 2);
         assert_eq!(result, Err(SkillUseError::OnCooldown { remaining: 2 }));
     }
@@ -453,7 +453,7 @@ mod tests {
             priority: 0,
         };
         let attrs = make_attrs(20.0, 20.0, 5.0);
-        let tags = crate::gameplay::tag::GameplayTags::default();
+        let tags = crate::core::tag::GameplayTags::default();
         let result = skill.can_use(&attrs, &tags, None, 0);
         assert_eq!(
             result,
@@ -480,7 +480,7 @@ mod tests {
             priority: 0,
         };
         let attrs = make_attrs(20.0, 20.0, 10.0);
-        let tags = crate::gameplay::tag::GameplayTags::default();
+        let tags = crate::core::tag::GameplayTags::default();
         let result = skill.can_use(&attrs, &tags, None, 0);
         assert_eq!(
             result,
@@ -506,7 +506,7 @@ mod tests {
             priority: 0,
         };
         let attrs = make_attrs(20.0, 20.0, 10.0);
-        let tags = crate::gameplay::tag::GameplayTags::default();
+        let tags = crate::core::tag::GameplayTags::default();
         assert!(skill.can_use(&attrs, &tags, None, 0).is_ok());
     }
 
@@ -527,7 +527,7 @@ mod tests {
         };
         let attrs_low = make_attrs(5.0, 20.0, 10.0);
         let attrs_ok = make_attrs(15.0, 20.0, 10.0);
-        let tags = crate::gameplay::tag::GameplayTags::default();
+        let tags = crate::core::tag::GameplayTags::default();
         assert!(skill.can_use(&attrs_low, &tags, None, 0).is_ok());
         assert_eq!(
             skill.can_use(&attrs_ok, &tags, None, 0),
@@ -613,7 +613,7 @@ mod tests {
         };
         let attrs_high = make_attrs(15.0, 20.0, 10.0);
         let attrs_low = make_attrs(5.0, 20.0, 10.0);
-        let tags = crate::gameplay::tag::GameplayTags::default();
+        let tags = crate::core::tag::GameplayTags::default();
         assert!(skill.can_use(&attrs_high, &tags, None, 0).is_ok());
         assert_eq!(
             skill.can_use(&attrs_low, &tags, None, 0),
@@ -637,10 +637,10 @@ mod tests {
             priority: 0,
         };
         let attrs = make_attrs(20.0, 20.0, 10.0);
-        let source_tags = crate::gameplay::tag::GameplayTags::default();
-        let mut target_tags_with = crate::gameplay::tag::GameplayTags::default();
+        let source_tags = crate::core::tag::GameplayTags::default();
+        let mut target_tags_with = crate::core::tag::GameplayTags::default();
         target_tags_with.add(GameplayTag::BUFF);
-        let target_tags_without = crate::gameplay::tag::GameplayTags::default();
+        let target_tags_without = crate::core::tag::GameplayTags::default();
         assert!(
             skill
                 .can_use(&attrs, &source_tags, Some(&target_tags_with), 0)
@@ -680,7 +680,7 @@ mod tests {
             priority: 0,
         };
         let attrs = make_attrs(10.0, 20.0, 5.0);
-        let tags = crate::gameplay::tag::GameplayTags::default();
+        let tags = crate::core::tag::GameplayTags::default();
         assert!(skill.can_use(&attrs, &tags, None, 0).is_ok());
     }
 
@@ -703,7 +703,7 @@ mod tests {
             priority: 0,
         };
         let mut attrs = make_attrs(20.0, 20.0, 10.0);
-        let mut tags = crate::gameplay::tag::GameplayTags::default();
+        let mut tags = crate::core::tag::GameplayTags::default();
         tags.add(GameplayTag::MAGE);
         assert!(skill.can_use(&attrs, &tags, None, 0).is_ok());
 

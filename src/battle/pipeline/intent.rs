@@ -3,7 +3,7 @@
 use crate::character::{
     AttackRange, Faction, GridPosition, MovableRange, Selected, SelectionHighlight, Unit, UnitName,
 };
-use crate::gameplay::tag::{GameplayTag, GameplayTags};
+use crate::core::tag::{GameplayTag, GameplayTags};
 use crate::skill::{SkillCooldowns, SkillRegistry};
 use crate::turn::{AiTimer, TurnOrder, TurnPhase, TurnState};
 use bevy::prelude::*;
