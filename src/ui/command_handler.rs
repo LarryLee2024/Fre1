@@ -18,6 +18,7 @@ use crate::skill::{BASIC_ATTACK_ID, SkillRegistry, SkillSlots, effective_skill_r
 use crate::turn::{ForceEndFaction, TurnPhase};
 use crate::ui::action_menu::{ActionMenuEntity, despawn_action_menu, spawn_action_menu};
 use crate::ui::events::UiCommand;
+use crate::ui::theme::UiTheme;
 use bevy::ecs::message::MessageReader;
 use bevy::prelude::*;
 
@@ -77,6 +78,27 @@ pub fn handle_ui_commands(
             }
 
             UiCommand::MoveUnit { coord } => {
+                // 检查是否点击了选中单位的当前位置（原地不动）
+                if let Ok(selected_entity) = selected_query.single() {
+                    if let Ok((_, _, sel_gp, _, _, _, _)) = units.get(selected_entity) {
+                        if sel_gp.coord == *coord {
+                            // 原地不动，直接进入行动菜单
+                            commands.insert_resource(PrevPosition {
+                                coord: Some(sel_gp.coord),
+                            });
+                            for (marker, _) in &range_entities {
+                                commands.entity(marker).try_despawn();
+                            }
+                            for h in &highlights {
+                                commands.entity(h).try_despawn();
+                            }
+                            spawn_selection_highlight(&mut commands, &map, sel_gp.coord);
+                            next_phase.set(TurnPhase::ActionMenu);
+                            return;
+                        }
+                    }
+                }
+
                 let is_movable = range_entities
                     .iter()
                     .any(|(_, gp)| gp.map(|g| g.coord == *coord).unwrap_or(false));
@@ -296,6 +318,7 @@ fn spawn_menu_at_selected(
     menu_entity: &mut ActionMenuEntity,
     skill_registry: &SkillRegistry,
 ) {
+    let theme = UiTheme::default();
     if let (Ok(selected_entity), Ok((camera, cam_transform))) =
         (selected_query.single(), camera_query.single())
     {
@@ -311,6 +334,7 @@ fn spawn_menu_at_selected(
                     skill_slots,
                     menu_entity,
                     skill_registry,
+                    &theme,
                 );
             }
         }

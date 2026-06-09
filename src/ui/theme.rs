@@ -47,6 +47,10 @@ pub struct UiTheme {
     pub buff_color: Color,
     /// 减益 Debuff 颜色
     pub debuff_color: Color,
+    /// 进度条背景色
+    pub bar_bg: Color,
+    /// 分隔线颜色
+    pub divider_color: Color,
 
     // ── 字号 ──
     /// 大标题字号
@@ -63,12 +67,38 @@ pub struct UiTheme {
     pub font_damage: f32,
     /// 暴击数字字号
     pub font_crit: f32,
+    /// 行动顺序标签字号
+    pub font_turn_order: f32,
 
     // ── 间距 ──
     /// 按钮内边距
     pub button_padding: UiRect,
     /// 面板内边距
     pub panel_padding: UiRect,
+    /// 小间距
+    pub gap_small: f32,
+    /// 中间距
+    pub gap_medium: f32,
+    /// 大间距
+    pub gap_large: f32,
+
+    // ── 布局常量 ──
+    /// 单位信息面板宽度
+    pub unit_panel_width: f32,
+    /// 战斗日志面板宽度
+    pub log_panel_width: f32,
+    /// 战斗日志面板高度
+    pub log_panel_height: f32,
+    /// 资源条宽度
+    pub bar_width: f32,
+    /// 资源条高度
+    pub bar_height: f32,
+    /// 资源标签宽度
+    pub bar_label_width: f32,
+    /// 浮窗偏移量 (x, y)
+    pub popup_offset: (f32, f32),
+    /// 浮窗内边距
+    pub popup_padding: UiRect,
 }
 
 impl Default for UiTheme {
@@ -95,6 +125,8 @@ impl Default for UiTheme {
             stamina_bar_color: Color::srgb(0.2, 0.8, 0.3),
             buff_color: Color::srgb(0.3, 1.0, 0.3),
             debuff_color: Color::srgb(1.0, 0.3, 0.3),
+            bar_bg: Color::srgba(0.2, 0.2, 0.2, 0.8),
+            divider_color: Color::srgb(0.4, 0.4, 0.4),
 
             // 字号
             font_large: 24.0,
@@ -104,10 +136,24 @@ impl Default for UiTheme {
             font_log: 13.0,
             font_damage: 16.0,
             font_crit: 22.0,
+            font_turn_order: 10.0,
 
             // 间距
             button_padding: UiRect::px(8.0, 8.0, 4.0, 4.0),
             panel_padding: UiRect::all(Val::Px(4.0)),
+            gap_small: 4.0,
+            gap_medium: 6.0,
+            gap_large: 10.0,
+
+            // 布局常量
+            unit_panel_width: 380.0,
+            log_panel_width: 420.0,
+            log_panel_height: 280.0,
+            bar_width: 150.0,
+            bar_height: 10.0,
+            bar_label_width: 28.0,
+            popup_offset: (20.0, -40.0),
+            popup_padding: UiRect::all(Val::Px(8.0)),
         }
     }
 }

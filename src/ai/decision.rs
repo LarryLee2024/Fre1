@@ -10,7 +10,7 @@ use crate::map::{
     GameMap, TerrainCostRegistry, TerrainMapCache, find_reachable_tiles, reconstruct_path,
 };
 use crate::skill::{SkillCooldowns, SkillRegistry, SkillSlots, effective_skill_range};
-use crate::turn::{AiTimer, TurnPhase, TurnState};
+use crate::turn::{AiTimer, TurnOrder, TurnPhase};
 use bevy::prelude::*;
 
 use super::behavior::AiBehaviorRegistry;
@@ -19,15 +19,15 @@ use super::skill_select::select_skill;
 use super::strategy::AiStrategyRegistry;
 use super::targeting::{UnitSnapshot, select_target_coord};
 
-/// 敌方 AI 系统：决策 → 移动 → 设置 CombatIntent → 切换到 ExecuteAction
+/// 敌方 AI 系统：基于 TurnOrder 队列驱动
 ///
-/// 攻击效果不再在此系统内执行，而是通过统一的 Effect Pipeline 处理：
-/// ExecuteAction → generate → modify → execute
+/// 当 TurnOrder 当前单位是敌方时，AI 计时器到期后自动决策
+/// 攻击效果通过统一的 Effect Pipeline 处理
 pub fn enemy_ai_system(
     mut commands: Commands,
     time: Res<Time>,
     mut ai_timer: ResMut<AiTimer>,
-    turn_state: Res<TurnState>,
+    turn_order: Res<TurnOrder>,
     turn_phase: Res<State<TurnPhase>>,
     mut next_phase: ResMut<NextState<TurnPhase>>,
     map: Res<GameMap>,
@@ -51,13 +51,27 @@ pub fn enemy_ai_system(
         &AiBehaviorId,
     )>,
 ) {
-    if turn_state.current_faction != Faction::Enemy {
-        return;
-    }
+    // 只在 SelectUnit 阶段执行
     if *turn_phase.get() != TurnPhase::SelectUnit {
         return;
     }
 
+    // 从 TurnOrder 获取当前应该行动的单位
+    let current_entity = match turn_order.current_unit() {
+        Some(e) => e,
+        None => return,
+    };
+
+    // 检查当前单位是否是敌方
+    let current_faction = units
+        .get(current_entity)
+        .map(|(_, u, _, _, _, _, _, _, _, _, _)| u.faction)
+        .ok();
+    if current_faction != Some(Faction::Enemy) {
+        return;
+    }
+
+    // AI 计时器
     ai_timer.timer.tick(time.delta());
     if !ai_timer.timer.just_finished() {
         return;
@@ -97,13 +111,8 @@ pub fn enemy_ai_system(
         return;
     }
 
-    // 找到第一个未行动的敌方单位
-    let Some(snapshot) = snapshots
-        .iter()
-        .find(|s| s.faction == Faction::Enemy && !s.acted)
-    else {
-        // 所有敌方单位已行动，切换回合
-        next_phase.set(TurnPhase::TurnEnd);
+    // 获取当前行动的敌方单位快照
+    let Some(snapshot) = snapshots.iter().find(|s| s.entity == current_entity) else {
         return;
     };
 
@@ -119,9 +128,10 @@ pub fn enemy_ai_system(
         ai_strategy_registry.target_selector(&behavior.target_strategy),
     );
 
+    // 所有单位占据的格子都不可通行（自身除外）
     let occupation_map: std::collections::HashMap<IVec2, bool> = snapshots
         .iter()
-        .filter(|s| s.faction == Faction::Player)
+        .filter(|s| s.entity != snapshot.entity)
         .map(|s| (s.coord, true))
         .collect();
 
@@ -164,7 +174,7 @@ pub fn enemy_ai_system(
         .find(|s| manhattan_distance(best_coord, s.coord) <= effective_range)
         .map(|s| s.entity);
 
-    // 移动单位（动画移动，不再瞬间传送）
+    // 移动单位（动画移动）
     let path = if best_coord != snapshot.coord {
         let path = reconstruct_path(
             snapshot.coord,
@@ -175,11 +185,10 @@ pub fn enemy_ai_system(
             terrain_map,
             calculator,
         );
-        // 生成导航箭头
         spawn_path_arrows(&mut commands, &map, &path);
         path
     } else {
-        vec![] // 不移动
+        vec![]
     };
 
     // 设置冷却
@@ -210,10 +219,8 @@ pub fn enemy_ai_system(
         combat_intent.skill_id = Some(skill_id.to_string());
 
         if path.is_empty() {
-            // 不移动，直接执行攻击
             next_phase.set(TurnPhase::ExecuteAction);
         } else {
-            // 挂载移动动画，移动完后执行攻击
             commands.entity(snapshot.entity).insert(MovingUnit {
                 path,
                 current_index: 0,
@@ -223,27 +230,18 @@ pub fn enemy_ai_system(
             });
         }
     } else {
-        // 没有攻击目标
+        // 没有攻击目标，待机
         if path.is_empty() {
-            // 不移动，检查是否所有敌方已行动
-            let all_enemy_acted = units
-                .iter()
-                .filter(|(_, u, _, _, _, _, _, _, _, _, _)| u.faction == Faction::Enemy)
-                .all(|(_, u, _, _, _, _, _, _, _, _, _)| u.acted);
-
-            if all_enemy_acted {
-                next_phase.set(TurnPhase::TurnEnd);
-            } else {
-                next_phase.set(TurnPhase::SelectUnit);
-            }
+            // 不移动，路由到下一个单位
+            // 由 route_after_action 处理
+            next_phase.set(TurnPhase::WaitAction);
         } else {
-            // 挂载移动动画，移动完后回到 SelectUnit
             commands.entity(snapshot.entity).insert(MovingUnit {
                 path,
                 current_index: 0,
                 speed: 0.15,
                 elapsed: 0.0,
-                next_phase: TurnPhase::SelectUnit,
+                next_phase: TurnPhase::WaitAction,
             });
         }
     }

@@ -6,7 +6,7 @@
     background: "raider",
     class: "warrior",
     base_attributes: {
-        Might: 4.0, Dexterity: 2.0, Agility: 4.0, Vitality: 3.0,
+        Might: 4.0, Dexterity: 2.0, Agility: 7.0, Vitality: 3.0,
         Intelligence: 1.0, Willpower: 2.0, Presence: 1.0, Luck: 2.0,
     },
     base_attack_range: 1,

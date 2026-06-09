@@ -1,10 +1,11 @@
 // 行动菜单模块：弹出式行动菜单，使用 SkillSlots 动态生成按钮
-// 按钮交互通过 UiCommand Event 发出，不直接修改游戏状态
+// 使用 Widget 库构建，按钮交互通过 UiCommand Message 发出
 
 use crate::character::Unit;
 use crate::skill::{SkillRegistry, SkillSlots};
 use crate::ui::events::UiCommand;
 use crate::ui::theme::UiTheme;
+use crate::ui::widgets::layout::*;
 use bevy::ecs::message::MessageWriter;
 use bevy::prelude::*;
 
@@ -42,13 +43,13 @@ pub fn spawn_action_menu(
     skill_slots: &SkillSlots,
     menu_entity: &mut ActionMenuEntity,
     skill_registry: &SkillRegistry,
+    theme: &UiTheme,
 ) {
-    let theme = UiTheme::default();
     despawn_action_menu(commands, menu_entity);
 
     let mut children_entities: Vec<Entity> = Vec::new();
 
-    // 基础攻击按钮
+    // 攻击按钮
     let attack_btn = commands
         .spawn((
             Button,
@@ -61,19 +62,12 @@ pub fn spawn_action_menu(
             },
         ))
         .with_children(|parent| {
-            parent.spawn((
-                Text::new("攻击"),
-                TextFont {
-                    font_size: theme.font_menu,
-                    ..default()
-                },
-                TextColor(theme.text_primary),
-            ));
+            parent.spawn(label("攻击", theme.font_menu, theme.text_primary));
         })
         .id();
     children_entities.push(attack_btn);
 
-    // 特殊技能按钮（如果有）
+    // 特殊技能按钮
     if let Some(skill_id) = skill_slots.special_skill() {
         if let Some(skill_data) = skill_registry.get(skill_id) {
             let skill_btn = commands
@@ -88,14 +82,7 @@ pub fn spawn_action_menu(
                     },
                 ))
                 .with_children(|parent| {
-                    parent.spawn((
-                        Text::new(&skill_data.name),
-                        TextFont {
-                            font_size: theme.font_menu,
-                            ..default()
-                        },
-                        TextColor(theme.text_skill),
-                    ));
+                    parent.spawn(label(&skill_data.name, theme.font_menu, theme.text_skill));
                 })
                 .id();
             children_entities.push(skill_btn);
@@ -115,14 +102,7 @@ pub fn spawn_action_menu(
             },
         ))
         .with_children(|parent| {
-            parent.spawn((
-                Text::new("待机"),
-                TextFont {
-                    font_size: theme.font_menu,
-                    ..default()
-                },
-                TextColor(theme.text_primary),
-            ));
+            parent.spawn(label("待机", theme.font_menu, theme.text_primary));
         })
         .id();
     children_entities.push(wait_btn);
@@ -140,18 +120,12 @@ pub fn spawn_action_menu(
             },
         ))
         .with_children(|parent| {
-            parent.spawn((
-                Text::new("取消"),
-                TextFont {
-                    font_size: theme.font_menu,
-                    ..default()
-                },
-                TextColor(theme.text_cancel),
-            ));
+            parent.spawn(label("取消", theme.font_menu, theme.text_cancel));
         })
         .id();
     children_entities.push(cancel_btn);
 
+    // 根节点（使用 panel 样式）
     let root = commands
         .spawn((
             Node {
@@ -182,7 +156,7 @@ pub fn despawn_action_menu(commands: &mut Commands, menu_entity: &mut ActionMenu
     }
 }
 
-/// 处理行动菜单交互：发送 UiCommand Event，不直接修改游戏状态
+/// 处理行动菜单交互
 pub fn handle_action_menu_interaction(
     interaction_query: Query<(&Interaction, &ActionMenuButton), Changed<Interaction>>,
     mut ui_commands: MessageWriter<UiCommand>,
@@ -204,7 +178,7 @@ pub fn handle_action_menu_interaction(
     }
 }
 
-/// 进入行动菜单阶段时自动弹出菜单（移动动画完成后触发）
+/// 进入行动菜单阶段时自动弹出菜单
 fn on_enter_action_menu(
     mut commands: Commands,
     map: Res<crate::map::GameMap>,
@@ -220,6 +194,7 @@ fn on_enter_action_menu(
     >,
     mut menu_entity: ResMut<ActionMenuEntity>,
     skill_registry: Res<SkillRegistry>,
+    theme: Res<UiTheme>,
 ) {
     if let Ok((_, unit, gp, skill_slots)) = selected_query.single() {
         let unit_world = map.coord_to_world(gp.coord);
@@ -234,6 +209,7 @@ fn on_enter_action_menu(
                     skill_slots,
                     &mut menu_entity,
                     &skill_registry,
+                    &theme,
                 );
             }
         }
@@ -251,7 +227,6 @@ impl Plugin for ActionMenuPlugin {
                 Update,
                 handle_action_menu_interaction.run_if(in_state(AppState::InGame)),
             )
-            // 进入 ActionMenu 阶段时自动弹出菜单
             .add_systems(OnEnter(TurnPhase::ActionMenu), on_enter_action_menu);
     }
 }

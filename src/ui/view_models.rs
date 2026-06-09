@@ -8,7 +8,7 @@ use crate::buff::ActiveBuffs;
 use crate::character::{Faction, GridPosition, Selected, Unit, UnitName};
 use crate::gameplay::attribute::{AttributeKind, Attributes};
 use crate::skill::{SkillRegistry, SkillSlots};
-use crate::turn::{TurnPhase, TurnState};
+use crate::turn::{TurnOrder, TurnPhase, TurnState};
 
 // ── ViewModel 定义 ──
 
@@ -39,6 +39,12 @@ pub struct BuffEntry {
 pub struct SkillEntry {
     pub name: String,
     pub id: String,
+}
+
+/// 最后点击查看的单位实体（不限于 Selected，任何单位都可查看信息）
+#[derive(Resource, Default, Debug, Clone, Copy)]
+pub struct HoveredEntity {
+    pub entity: Option<Entity>,
 }
 
 /// 选中单位的视图模型
@@ -77,12 +83,15 @@ pub struct CombatPreviewView {
     pub is_lethal: bool,
 }
 
-/// 回合信息的视图模型
+/// 回合信息视图模型（AGI驱动，不再分阵营阶段）
 #[derive(Resource, Default, Debug)]
 pub struct TurnInfoView {
     pub turn_number: u32,
-    pub faction_label: String,
     pub is_player_turn: bool,
+    /// 行动顺序列表（当前单位名称 + 阵营标识）
+    pub turn_order: Vec<(String, bool)>, // (name, is_player)
+    /// 当前行动索引
+    pub current_index: usize,
 }
 
 /// 胜负状态
@@ -96,100 +105,109 @@ pub enum GameOverState {
 
 // ── ViewModel 更新系统 ──
 
-/// 从游戏数据构建 SelectedUnitView
+/// 从游戏数据构建 SelectedUnitView（基于 HoveredEntity，任何单位都可查看）
 pub fn update_selected_unit_view(
-    selected_units: Query<
-        (&Unit, &UnitName, &Attributes, &SkillSlots, &ActiveBuffs),
-        With<Selected>,
-    >,
+    hovered: Res<HoveredEntity>,
+    units: Query<(&Unit, &UnitName, &Attributes, &SkillSlots, &ActiveBuffs)>,
     skill_registry: Res<SkillRegistry>,
     mut view: ResMut<SelectedUnitView>,
 ) {
-    if let Ok((_unit, name, attrs, skill_slots, buffs)) = selected_units.single() {
-        view.name = name.0.clone();
-        // race/class 暂不显示，保持空字符串
-        view.race.clear();
-        view.class.clear();
+    if let Some(entity) = hovered.entity {
+        if let Ok((_unit, name, attrs, skill_slots, buffs)) = units.get(entity) {
+            view.name = name.0.clone();
+            // race/class 暂不显示，保持空字符串
+            view.race.clear();
+            view.class.clear();
 
-        // 生命资源
-        view.hp = attrs.get(AttributeKind::Hp) as i32;
-        view.max_hp = attrs.get(AttributeKind::MaxHp) as i32;
-        view.mp = attrs.get(AttributeKind::Mp) as i32;
-        view.max_mp = attrs.get(AttributeKind::MaxMp) as i32;
-        view.stamina = attrs.get(AttributeKind::Stamina) as i32;
-        view.max_stamina = attrs.get(AttributeKind::MaxStamina) as i32;
+            // 生命资源
+            view.hp = attrs.get(AttributeKind::Hp) as i32;
+            view.max_hp = attrs.get(AttributeKind::MaxHp) as i32;
+            view.mp = attrs.get(AttributeKind::Mp) as i32;
+            view.max_mp = attrs.get(AttributeKind::MaxMp) as i32;
+            view.stamina = attrs.get(AttributeKind::Stamina) as i32;
+            view.max_stamina = attrs.get(AttributeKind::MaxStamina) as i32;
 
-        // 核心属性（8维）
-        view.core_attrs = [
-            AttributeKind::Might,
-            AttributeKind::Dexterity,
-            AttributeKind::Agility,
-            AttributeKind::Vitality,
-            AttributeKind::Intelligence,
-            AttributeKind::Willpower,
-            AttributeKind::Presence,
-            AttributeKind::Luck,
-        ]
-        .iter()
-        .map(|kind| CoreAttrEntry {
-            label: kind.short_label().to_string(),
-            value: attrs.get(*kind) as i32,
-        })
-        .collect();
-
-        // 衍生属性（战斗组）
-        view.combat_attrs = [
-            AttributeKind::Attack,
-            AttributeKind::Defense,
-            AttributeKind::MagicAttack,
-            AttributeKind::MagicDefense,
-        ]
-        .iter()
-        .map(|kind| DerivedAttrEntry {
-            label: kind.label().to_string(),
-            value: attrs.get(*kind) as i32,
-        })
-        .collect();
-
-        // 衍生属性（辅助组）
-        view.support_attrs = [
-            AttributeKind::Accuracy,
-            AttributeKind::Evasion,
-            AttributeKind::CritRate,
-            AttributeKind::MoveRange,
-            AttributeKind::Initiative,
-            AttributeKind::AttackRange,
-        ]
-        .iter()
-        .map(|kind| DerivedAttrEntry {
-            label: kind.label().to_string(),
-            value: attrs.get(*kind) as i32,
-        })
-        .collect();
-
-        // 技能
-        view.skills = skill_slots
-            .skill_ids
+            // 核心属性（8维）
+            view.core_attrs = [
+                AttributeKind::Might,
+                AttributeKind::Dexterity,
+                AttributeKind::Agility,
+                AttributeKind::Vitality,
+                AttributeKind::Intelligence,
+                AttributeKind::Willpower,
+                AttributeKind::Presence,
+                AttributeKind::Luck,
+            ]
             .iter()
-            .filter_map(|id| {
-                skill_registry.get(id).map(|sd| SkillEntry {
-                    name: sd.name.clone(),
-                    id: id.clone(),
+            .map(|kind| CoreAttrEntry {
+                label: kind.short_label().to_string(),
+                value: attrs.get(*kind) as i32,
+            })
+            .collect();
+
+            // 衍生属性（战斗组）
+            view.combat_attrs = [
+                AttributeKind::Attack,
+                AttributeKind::Defense,
+                AttributeKind::MagicAttack,
+                AttributeKind::MagicDefense,
+            ]
+            .iter()
+            .map(|kind| DerivedAttrEntry {
+                label: kind.label().to_string(),
+                value: attrs.get(*kind) as i32,
+            })
+            .collect();
+
+            // 衍生属性（辅助组）
+            view.support_attrs = [
+                AttributeKind::Accuracy,
+                AttributeKind::Evasion,
+                AttributeKind::CritRate,
+                AttributeKind::MoveRange,
+                AttributeKind::Initiative,
+                AttributeKind::AttackRange,
+            ]
+            .iter()
+            .map(|kind| DerivedAttrEntry {
+                label: kind.label().to_string(),
+                value: attrs.get(*kind) as i32,
+            })
+            .collect();
+
+            // 技能
+            view.skills = skill_slots
+                .skill_ids
+                .iter()
+                .filter_map(|id| {
+                    skill_registry.get(id).map(|sd| SkillEntry {
+                        name: sd.name.clone(),
+                        id: id.clone(),
+                    })
                 })
-            })
-            .collect();
+                .collect();
 
-        // Buff
-        view.buffs = buffs
-            .iter()
-            .map(|inst| BuffEntry {
-                name: inst.name.clone(),
-                remaining_turns: inst.remaining_turns,
-                is_buff: inst.is_buff,
-            })
-            .collect();
+            // Buff
+            view.buffs = buffs
+                .iter()
+                .map(|inst| BuffEntry {
+                    name: inst.name.clone(),
+                    remaining_turns: inst.remaining_turns,
+                    is_buff: inst.is_buff,
+                })
+                .collect();
 
-        view.is_selected = true;
+            view.is_selected = true;
+        } else {
+            // 实体已销毁
+            view.is_selected = false;
+            view.name.clear();
+            view.core_attrs.clear();
+            view.combat_attrs.clear();
+            view.support_attrs.clear();
+            view.skills.clear();
+            view.buffs.clear();
+        }
     } else {
         view.is_selected = false;
         view.name.clear();
@@ -228,15 +246,29 @@ pub fn update_combat_preview_view(
     preview_view.is_visible = false;
 }
 
-/// 从游戏数据构建 TurnInfoView
-pub fn update_turn_info_view(turn_state: Res<TurnState>, mut view: ResMut<TurnInfoView>) {
-    if turn_state.is_changed() {
+/// 从游戏数据构建 TurnInfoView（AGI驱动，包含行动顺序）
+pub fn update_turn_info_view(
+    turn_state: Res<TurnState>,
+    turn_order: Res<TurnOrder>,
+    units: Query<(&Unit, &UnitName)>,
+    mut view: ResMut<TurnInfoView>,
+) {
+    if turn_state.is_changed() || turn_order.is_changed() {
         view.turn_number = turn_state.turn_number;
-        view.faction_label = match turn_state.current_faction {
-            Faction::Player => "玩家".to_string(),
-            Faction::Enemy => "敌方".to_string(),
-        };
         view.is_player_turn = turn_state.current_faction == Faction::Player;
+        view.current_index = turn_order.current_index;
+
+        // 构建行动顺序列表
+        view.turn_order = turn_order
+            .queue
+            .iter()
+            .filter_map(|&entity| {
+                units
+                    .get(entity)
+                    .ok()
+                    .map(|(unit, name)| (name.0.clone(), unit.faction == Faction::Player))
+            })
+            .collect();
     }
 }
 

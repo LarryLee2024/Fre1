@@ -8,19 +8,19 @@ use crate::gameplay::attribute::{AttributeKind, Attributes, BuffInstanceId};
 use crate::gameplay::tag::{GameplayTag, GameplayTags};
 use crate::map::GameMap;
 use crate::skill::SkillCooldowns;
-use crate::turn::{NeedsResolve, TurnState};
+use crate::turn::NeedsResolve;
 use crate::ui::UiTheme;
 use crate::ui::vfx;
 use bevy::prelude::*;
 
 use super::{ActiveBuffs, remove_buff};
 
-/// 持续效果结算系统：在新阵营回合开始时，对该阵营所有单位结算 DoT/HoT/晕眩，并 tick
-/// 通过 NeedsResolve 标记确保每回合只结算一次（防止 SelectUnit 多次进入时重复结算）
+/// 持续效果结算系统：每回合开始时，对所有单位结算 DoT/HoT/晕眩，并 tick
+/// 通过 NeedsResolve 标记确保每回合只结算一次
+/// 新逻辑：队列驱动模式下，每回合所有单位都行动，因此对所有单位结算
 pub fn resolve_status_effects(
     mut commands: Commands,
     map: Res<GameMap>,
-    turn_state: Res<TurnState>,
     cn_font: Res<CnFont>,
     mut combat_log: ResMut<CombatLog>,
     mut needs_resolve: ResMut<NeedsResolve>,
@@ -37,7 +37,7 @@ pub fn resolve_status_effects(
         &TraitGrantedTags,
     )>,
 ) {
-    // 只有阵营切换后的首次 SelectUnit 才结算
+    // 只有回合切换后的首次 SelectUnit 才结算
     if !needs_resolve.0 {
         return;
     }
@@ -46,9 +46,7 @@ pub fn resolve_status_effects(
     for (entity, mut unit, name, gp, mut attrs, mut buffs, mut tags, mut cooldowns, trait_tags) in
         &mut units
     {
-        if unit.faction != turn_state.current_faction {
-            continue;
-        }
+        // 队列驱动模式：所有单位都结算（不再按阵营过滤）
 
         let world_pos = map.coord_to_world(gp.coord);
 

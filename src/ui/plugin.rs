@@ -2,12 +2,14 @@ use super::action_menu::ActionMenuPlugin;
 use super::combat_preview::CombatPreviewPlugin;
 use super::command_handler::handle_ui_commands;
 use super::events::UiCommand;
-use super::hud::HudPlugin;
+use super::panels::{ActionHintPlugin, CombatLogPanelPlugin, TurnIndicatorPlugin, UnitInfoPlugin};
 use super::theme::UiTheme;
 use super::tile_info::TileInfoPlugin;
 use super::vfx::VfxPlugin;
 use crate::character::Faction;
 use crate::turn::{AppState, TurnState};
+use crate::ui::view_models::*;
+use crate::battle::CombatLogCollapsed;
 use bevy::prelude::*;
 
 /// UI 插件（组合所有 UI 子插件）
@@ -17,13 +19,32 @@ impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<UiTheme>()
             .add_message::<UiCommand>()
+            .init_resource::<SelectedUnitView>()
+            .init_resource::<TurnInfoView>()
+            .init_resource::<GameOverState>()
+            .init_resource::<CombatPreviewView>()
+            .init_resource::<HoveredEntity>()
+            .init_resource::<CombatLogCollapsed>()
             .add_plugins((
-                HudPlugin,
+                TurnIndicatorPlugin,
+                UnitInfoPlugin,
+                CombatLogPanelPlugin,
+                ActionHintPlugin,
                 ActionMenuPlugin,
                 TileInfoPlugin,
                 VfxPlugin,
                 CombatPreviewPlugin,
             ))
+            .add_systems(
+                Update,
+                (
+                    update_selected_unit_view,
+                    update_turn_info_view,
+                    update_game_over_state,
+                    update_combat_preview_view,
+                )
+                    .run_if(in_state(AppState::InGame)),
+            )
             .add_systems(
                 Update,
                 handle_ui_commands.run_if(in_state(AppState::InGame).and(player_turn)),

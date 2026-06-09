@@ -74,6 +74,10 @@ pub fn spawn_units(
     }
 }
 
+/// 行动顺序数字标记
+#[derive(Component)]
+pub struct TurnOrderLabel;
+
 fn spawn_unit_from_template(
     commands: &mut Commands,
     world_pos: Vec2,
@@ -155,6 +159,19 @@ fn spawn_unit_from_template(
                 TextColor(Color::WHITE),
                 TextLayout::new_with_no_wrap(),
                 Transform::from_xyz(0.0, 0.0, 0.3),
+            ),
+            // 行动顺序数字（左上角，稍向右下偏移避免与地形坐标重叠）
+            (
+                Text2d::new("1"),
+                TextFont {
+                    font: font.clone(),
+                    font_size: 10.0,
+                    ..default()
+                },
+                TextColor(Color::srgb(1.0, 1.0, 0.4)),
+                TextLayout::new_with_no_wrap(),
+                Transform::from_xyz(-tile_size * 0.2, tile_size * 0.2, 0.3),
+                TurnOrderLabel,
             ),
             // HP 条背景（红色）
             (

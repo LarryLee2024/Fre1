@@ -8,12 +8,14 @@ use crate::gameplay::attribute::{AttributeKind, Attributes};
 use crate::gameplay::tag::GameplayTags;
 use crate::map::GameMap;
 use crate::skill::SkillSlots;
-use crate::turn::{TurnPhase, TurnState};
+use crate::turn::{TurnOrder, TurnPhase, TurnState};
 use crate::ui::events::UiCommand;
+use crate::ui::view_models::HoveredEntity;
 use bevy::ecs::message::MessageWriter;
 use bevy::prelude::*;
 
 /// 处理玩家点击：发送 UiCommand Message
+/// 新逻辑：基于 TurnOrder 队列，只有当前单位是玩家阵营时才允许操作
 pub fn handle_click(
     mouse_button: Res<ButtonInput<MouseButton>>,
     windows: Query<&Window>,
@@ -21,9 +23,12 @@ pub fn handle_click(
     map: Res<GameMap>,
     units: Query<(Entity, &Unit, &GridPosition)>,
     turn_state: Res<TurnState>,
+    turn_order: Res<TurnOrder>,
     turn_phase: Res<State<TurnPhase>>,
     mut ui_commands: MessageWriter<UiCommand>,
+    mut hovered: ResMut<HoveredEntity>,
 ) {
+    // 只有当前行动单位是玩家阵营时才处理输入
     if turn_state.current_faction != Faction::Player {
         return;
     }
@@ -59,12 +64,20 @@ pub fn handle_click(
 
     match turn_phase.get() {
         TurnPhase::SelectUnit => {
+            // 点击任何单位都更新信息面板
             for (entity, unit, gp) in &units {
-                if unit.faction == Faction::Player && !unit.acted && gp.coord == coord {
-                    ui_commands.write(UiCommand::SelectUnit { entity });
+                if gp.coord == coord {
+                    hovered.entity = Some(entity);
+                    // 只有当前轮到的玩家单位可以选中进入移动流程
+                    if unit.faction == Faction::Player && turn_order.current_unit() == Some(entity)
+                    {
+                        ui_commands.write(UiCommand::SelectUnit { entity });
+                    }
                     return;
                 }
             }
+            // 点击空格子清除信息面板
+            hovered.entity = None;
         }
         TurnPhase::MoveUnit => {
             ui_commands.write(UiCommand::MoveUnit { coord });
@@ -98,7 +111,7 @@ pub fn handle_right_cancel(
     }
 }
 
-/// 按 E 键结束回合
+/// 按 E 键结束回合（跳过当前玩家单位及后续所有玩家单位的行动）
 pub fn handle_end_turn(
     keyboard: Res<ButtonInput<KeyCode>>,
     turn_state: Res<TurnState>,
@@ -193,9 +206,10 @@ pub fn show_move_range(
         .iter()
         .map(|(_, u, gp, _, _, _, _)| (gp.coord, u.faction))
         .collect();
+    // 所有单位占据的格子都不可通行（起点单位除外）
     let occupation_map: std::collections::HashMap<IVec2, bool> = occupation_units
         .iter()
-        .filter(|(_, f)| *f != unit.faction)
+        .filter(|(coord, _)| *coord != start_coord)
         .map(|(coord, _)| (*coord, true))
         .collect();
 

@@ -1,6 +1,7 @@
-// 回合管理模块：状态机、回合切换、SystemSet 编排
+// 回合管理模块：状态机、敏捷驱动行动队列、SystemSet 编排
 
 use crate::character::{Faction, Unit};
+use crate::gameplay::attribute::{AttributeKind, Attributes};
 use bevy::prelude::*;
 
 /// 游戏主状态
@@ -33,7 +34,45 @@ pub enum TurnPhase {
     TurnEnd,
 }
 
-/// 当前回合阵营与回合数
+/// 回合行动队列：所有单位按 Initiative 降序排列
+#[derive(Resource, Default, Debug)]
+pub struct TurnOrder {
+    /// 本回合行动顺序（按 Initiative 降序）
+    pub queue: Vec<Entity>,
+    /// 当前行动索引
+    pub current_index: usize,
+    /// 当前回合号
+    pub turn_number: u32,
+}
+
+impl TurnOrder {
+    /// 根据所有单位的 Initiative 降序排列，生成行动队列
+    pub fn build(units: &[(Entity, f32)]) -> Vec<Entity> {
+        let mut sorted: Vec<_> = units.to_vec();
+        sorted.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+        sorted.into_iter().map(|(e, _)| e).collect()
+    }
+
+    /// 获取当前应该行动的单位
+    pub fn current_unit(&self) -> Option<Entity> {
+        self.queue.get(self.current_index).copied()
+    }
+
+    /// 前进到下一个单位，返回 None 表示回合结束
+    pub fn advance(&mut self) -> Option<Entity> {
+        self.current_index += 1;
+        self.current_unit()
+    }
+
+    /// 当前行动单位的阵营
+    pub fn current_faction(&self, units: &Query<&Unit>) -> Option<Faction> {
+        self.current_unit()
+            .and_then(|e| units.get(e).ok())
+            .map(|u| u.faction)
+    }
+}
+
+/// 回合状态（保留兼容，供 UI 和日志使用）
 #[derive(Resource)]
 pub struct TurnState {
     pub current_faction: Faction,
@@ -88,6 +127,7 @@ impl Plugin for TurnPlugin {
         app.init_state::<AppState>()
             .add_sub_state::<TurnPhase>()
             .init_resource::<TurnState>()
+            .init_resource::<TurnOrder>()
             .init_resource::<AiTimer>()
             .init_resource::<NeedsResolve>()
             .init_resource::<ForceEndFaction>()
@@ -95,65 +135,86 @@ impl Plugin for TurnPlugin {
                 OnEnter(AppState::InGame),
                 (GameSet::Camera, GameSet::Map, GameSet::Unit, GameSet::Ui).chain(),
             )
-            .add_systems(OnEnter(TurnPhase::TurnEnd), turn_end_on_enter);
+            .add_systems(OnEnter(TurnPhase::TurnEnd), turn_end_on_enter)
+            .add_systems(OnEnter(AppState::InGame), init_turn_order.after(GameSet::Unit));
     }
 }
 
+/// 游戏开始时初始化行动队列（第一回合）
+pub fn init_turn_order(
+    mut turn_state: ResMut<TurnState>,
+    mut turn_order: ResMut<TurnOrder>,
+    units: Query<(Entity, &Unit, &Attributes)>,
+    mut ai_timer: ResMut<AiTimer>,
+) {
+    // 第一回合，不增加回合数
+    turn_order.turn_number = turn_state.turn_number;
+
+    // 重建行动队列
+    let unit_initiatives: Vec<(Entity, f32)> = units
+        .iter()
+        .map(|(entity, _, attrs)| (entity, attrs.get(AttributeKind::Initiative)))
+        .collect();
+    turn_order.queue = TurnOrder::build(&unit_initiatives);
+    turn_order.current_index = 0;
+
+    // 更新当前阵营为队列第一个单位的阵营
+    if let Some(first_entity) = turn_order.current_unit() {
+        if let Ok((_, unit, _)) = units.get(first_entity) {
+            turn_state.current_faction = unit.faction;
+        }
+    }
+
+    // 重置 AI 计时器
+    ai_timer.timer.reset();
+}
+
 /// 回合结束（OnEnter）
+/// 新逻辑：队列耗尽时触发，重建行动队列，回合数+1
 pub fn turn_end_on_enter(
     mut turn_state: ResMut<TurnState>,
-    mut units: Query<&mut Unit>,
+    mut turn_order: ResMut<TurnOrder>,
+    mut units: Query<(Entity, &mut Unit, &Attributes)>,
     mut next_phase: ResMut<NextState<TurnPhase>>,
     mut ai_timer: ResMut<AiTimer>,
     mut needs_resolve: ResMut<NeedsResolve>,
     mut force_end: ResMut<ForceEndFaction>,
 ) {
-    let current_faction = turn_state.current_faction;
-
-    // 玩家按 E 强制结束回合时，标记所有当前阵营单位已行动
+    // 强制结束：跳过当前阵营剩余单位（标记已行动）
     if force_end.0 {
-        for mut unit in units.iter_mut() {
-            if unit.faction == current_faction {
-                unit.acted = true;
-            }
-        }
+        // 不需要额外操作，队列自然耗尽
         force_end.0 = false;
     }
 
-    // 检查当前阵营是否所有单位都已行动
-    let all_acted = units
-        .iter_mut()
-        .filter(|u| u.faction == current_faction)
-        .all(|u| u.acted);
+    // 回合数+1
+    turn_state.turn_number += 1;
+    turn_order.turn_number = turn_state.turn_number;
 
-    if all_acted {
-        let next_faction = match current_faction {
-            Faction::Player => Faction::Enemy,
-            Faction::Enemy => {
-                turn_state.turn_number += 1;
-                Faction::Player
-            }
-        };
-        turn_state.current_faction = next_faction;
-
-        // 阵营切换时标记需要结算持续效果
-        needs_resolve.0 = true;
-
-        // 重置新阵营单位的行动状态
-        for mut unit in units.iter_mut() {
-            if unit.faction == next_faction {
-                unit.acted = false;
-            }
-        }
-
-        // 切换到敌方时重置 AI 计时器
-        if next_faction == Faction::Enemy {
-            ai_timer.timer.reset();
-        }
-    } else if current_faction == Faction::Enemy {
-        // 同阵营未全部行动，重置 AI 计时器让下一个敌方单位行动
-        ai_timer.timer.reset();
+    // 重置所有单位的行动状态
+    for (_, mut unit, _) in &mut units {
+        unit.acted = false;
     }
+
+    // 结算持续效果
+    needs_resolve.0 = true;
+
+    // 重建行动队列：所有存活单位按 Initiative 降序
+    let unit_initiatives: Vec<(Entity, f32)> = units
+        .iter()
+        .map(|(entity, _, attrs)| (entity, attrs.get(AttributeKind::Initiative)))
+        .collect();
+    turn_order.queue = TurnOrder::build(&unit_initiatives);
+    turn_order.current_index = 0;
+
+    // 更新当前阵营为队列第一个单位的阵营
+    if let Some(first_entity) = turn_order.current_unit() {
+        if let Ok((_, unit, _)) = units.get(first_entity) {
+            turn_state.current_faction = unit.faction;
+        }
+    }
+
+    // 重置 AI 计时器
+    ai_timer.timer.reset();
 
     next_phase.set(TurnPhase::SelectUnit);
 }
@@ -162,11 +223,54 @@ pub fn turn_end_on_enter(
 mod tests {
     use super::*;
 
+    #[test]
+    fn 行动队列_按initiative降序排列() {
+        let e1 = Entity::from_bits(1);
+        let e2 = Entity::from_bits(2);
+        let e3 = Entity::from_bits(3);
+        let units = vec![(e1, 10.0), (e2, 20.0), (e3, 15.0)];
+        let queue = TurnOrder::build(&units);
+        assert_eq!(queue, vec![e2, e3, e1]);
+    }
+
+    #[test]
+    fn 行动队列_相同initiative稳定排序() {
+        let e1 = Entity::from_bits(1);
+        let e2 = Entity::from_bits(2);
+        let units = vec![(e1, 10.0), (e2, 10.0)];
+        let queue = TurnOrder::build(&units);
+        assert_eq!(queue, vec![e1, e2]); // 保持原始顺序
+    }
+
+    #[test]
+    fn 行动队列_空队列() {
+        let queue = TurnOrder::build(&[]);
+        assert!(queue.is_empty());
+    }
+
+    #[test]
+    fn 行动队列_current_unit和advance() {
+        let e1 = Entity::from_bits(1);
+        let e2 = Entity::from_bits(2);
+        let e3 = Entity::from_bits(3);
+        let mut order = TurnOrder {
+            queue: vec![e1, e2, e3],
+            current_index: 0,
+            turn_number: 1,
+        };
+        assert_eq!(order.current_unit(), Some(e1));
+        assert_eq!(order.advance(), Some(e2));
+        assert_eq!(order.current_unit(), Some(e2));
+        assert_eq!(order.advance(), Some(e3));
+        assert_eq!(order.advance(), None); // 队列耗尽
+    }
+
     fn setup_turn_test_app() -> App {
         let mut app = App::new();
         app.add_plugins((MinimalPlugins, bevy::state::app::StatesPlugin))
             .init_state::<TurnPhase>()
             .init_resource::<TurnState>()
+            .init_resource::<TurnOrder>()
             .init_resource::<AiTimer>()
             .init_resource::<NeedsResolve>()
             .init_resource::<ForceEndFaction>()
@@ -174,18 +278,18 @@ mod tests {
         app
     }
 
-    fn spawn_unit(app: &mut App, faction: Faction, acted: bool) -> Entity {
-        app.world_mut().spawn(Unit { faction, acted }).id()
-    }
-
     #[test]
-    fn 回合结束_玩家全部行动后切换到敌方() {
+    fn 回合结束_重建队列并增加回合数() {
         let mut app = setup_turn_test_app();
 
-        spawn_unit(&mut app, Faction::Player, true);
-        spawn_unit(&mut app, Faction::Player, true);
-
-        app.world_mut().resource_mut::<TurnState>().current_faction = Faction::Player;
+        // 需要注册 Attributes 组件
+        app.world_mut().spawn((
+            Unit {
+                faction: Faction::Player,
+                acted: false,
+            },
+            Attributes::default(),
+        ));
 
         app.world_mut()
             .resource_mut::<NextState<TurnPhase>>()
@@ -193,110 +297,24 @@ mod tests {
         app.update();
 
         let turn_state = app.world().resource::<TurnState>();
-        assert_eq!(turn_state.current_faction, Faction::Enemy);
-        assert_eq!(turn_state.turn_number, 1);
-    }
-
-    #[test]
-    fn 回合结束_敌方全部行动后切换到玩家并增加回合数() {
-        let mut app = setup_turn_test_app();
-
-        spawn_unit(&mut app, Faction::Enemy, true);
-        spawn_unit(&mut app, Faction::Enemy, true);
-
-        app.world_mut().resource_mut::<TurnState>().current_faction = Faction::Enemy;
-
-        app.world_mut()
-            .resource_mut::<NextState<TurnPhase>>()
-            .set(TurnPhase::TurnEnd);
-        app.update();
-
-        let turn_state = app.world().resource::<TurnState>();
-        assert_eq!(turn_state.current_faction, Faction::Player);
         assert_eq!(turn_state.turn_number, 2);
+
+        let turn_order = app.world().resource::<TurnOrder>();
+        assert!(!turn_order.queue.is_empty());
+        assert_eq!(turn_order.current_index, 0);
     }
 
     #[test]
-    fn 回合结束_未全部行动时不切换阵营() {
+    fn 回合结束_needs_resolve标记设置() {
         let mut app = setup_turn_test_app();
 
-        spawn_unit(&mut app, Faction::Player, true);
-        spawn_unit(&mut app, Faction::Player, false);
-
-        app.world_mut().resource_mut::<TurnState>().current_faction = Faction::Player;
-
-        app.world_mut()
-            .resource_mut::<NextState<TurnPhase>>()
-            .set(TurnPhase::TurnEnd);
-        app.update();
-
-        let turn_state = app.world().resource::<TurnState>();
-        assert_eq!(turn_state.current_faction, Faction::Player);
-    }
-
-    #[test]
-    fn 回合结束_阵营切换时重置新阵营单位行动状态() {
-        let mut app = setup_turn_test_app();
-
-        spawn_unit(&mut app, Faction::Player, true);
-        let enemy = spawn_unit(&mut app, Faction::Enemy, true);
-
-        app.world_mut().resource_mut::<TurnState>().current_faction = Faction::Player;
-
-        app.world_mut()
-            .resource_mut::<NextState<TurnPhase>>()
-            .set(TurnPhase::TurnEnd);
-        app.update();
-
-        let unit = app.world().get::<Unit>(enemy).unwrap();
-        assert!(!unit.acted);
-    }
-
-    #[test]
-    fn 回合结束_强制结束回合时标记所有单位已行动() {
-        let mut app = setup_turn_test_app();
-
-        spawn_unit(&mut app, Faction::Player, false);
-        spawn_unit(&mut app, Faction::Player, false);
-
-        app.world_mut().resource_mut::<ForceEndFaction>().0 = true;
-
-        app.world_mut().resource_mut::<TurnState>().current_faction = Faction::Player;
-
-        app.world_mut()
-            .resource_mut::<NextState<TurnPhase>>()
-            .set(TurnPhase::TurnEnd);
-        app.update();
-
-        let turn_state = app.world().resource::<TurnState>();
-        assert_eq!(turn_state.current_faction, Faction::Enemy);
-    }
-
-    #[test]
-    fn 回合结束_进入后总是切换到_select_unit() {
-        let mut app = setup_turn_test_app();
-
-        spawn_unit(&mut app, Faction::Player, true);
-
-        app.world_mut().resource_mut::<TurnState>().current_faction = Faction::Player;
-
-        app.world_mut()
-            .resource_mut::<NextState<TurnPhase>>()
-            .set(TurnPhase::TurnEnd);
-        app.update();
-
-        let phase = app.world().resource::<State<TurnPhase>>();
-        assert_eq!(*phase.get(), TurnPhase::SelectUnit);
-    }
-
-    #[test]
-    fn 回合结束_needs_resolve标记在阵营切换时设置() {
-        let mut app = setup_turn_test_app();
-
-        spawn_unit(&mut app, Faction::Player, true);
-        spawn_unit(&mut app, Faction::Player, true);
-
-        app.world_mut().resource_mut::<TurnState>().current_faction = Faction::Player;
+        app.world_mut().spawn((
+            Unit {
+                faction: Faction::Player,
+                acted: true,
+            },
+            Attributes::default(),
+        ));
 
         app.world_mut()
             .resource_mut::<NextState<TurnPhase>>()
@@ -305,5 +323,26 @@ mod tests {
 
         let needs_resolve = app.world().resource::<NeedsResolve>();
         assert!(needs_resolve.0);
+    }
+
+    #[test]
+    fn 回合结束_进入后总是切换到_select_unit() {
+        let mut app = setup_turn_test_app();
+
+        app.world_mut().spawn((
+            Unit {
+                faction: Faction::Player,
+                acted: true,
+            },
+            Attributes::default(),
+        ));
+
+        app.world_mut()
+            .resource_mut::<NextState<TurnPhase>>()
+            .set(TurnPhase::TurnEnd);
+        app.update();
+
+        let phase = app.world().resource::<State<TurnPhase>>();
+        assert_eq!(*phase.get(), TurnPhase::SelectUnit);
     }
 }

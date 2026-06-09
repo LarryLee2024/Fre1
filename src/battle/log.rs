@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use std::collections::VecDeque;
 
 /// 最大日志条数
-const MAX_LOG_LINES: usize = 8;
+const MAX_LOG_LINES: usize = 50;
 
 /// 日志片段（文字 + 颜色）
 #[derive(Clone)]
@@ -40,7 +40,6 @@ pub mod log_color {
     pub const KILL: Color = Color::srgb(1.0, 0.2, 0.8);
     pub const PLAYER: Color = Color::srgb(0.4, 0.7, 1.0);
     pub const ENEMY: Color = Color::srgb(1.0, 0.6, 0.3);
-    #[allow(dead_code)]
     pub const TURN: Color = Color::srgb(1.0, 1.0, 0.4);
     pub const TERRAIN: Color = Color::srgb(0.5, 0.8, 0.5);
 }
@@ -49,26 +48,166 @@ pub mod log_color {
 #[derive(Component)]
 pub struct CombatLogPanel;
 
-/// 更新战斗日志面板显示
+/// 战斗日志折叠按钮
+#[derive(Component)]
+pub struct CombatLogToggle;
+
+/// 战斗日志内容容器（可滚动）
+#[derive(Component)]
+pub struct CombatLogContent;
+
+/// 战斗日志折叠状态
+#[derive(Resource, Default)]
+pub struct CombatLogCollapsed(pub bool);
+
+/// 战斗日志面板尺寸（可拖动调整）
+#[derive(Resource)]
+pub struct CombatLogSize {
+    pub width: f32,
+    pub height: f32,
+    pub is_dragging: bool,
+    pub drag_start: Option<(f32, f32, f32, f32)>, // (mouse_x, mouse_y, orig_w, orig_h)
+}
+
+impl Default for CombatLogSize {
+    fn default() -> Self {
+        Self {
+            width: 420.0,
+            height: 280.0,
+            is_dragging: false,
+            drag_start: None,
+        }
+    }
+}
+
+/// 日志面板右下角拖拽手柄
+#[derive(Component)]
+pub struct CombatLogResizeHandle;
+
+/// 更新战斗日志面板显示（多色文本 + 折叠支持）
 pub fn update_combat_log(
     combat_log: Res<CombatLog>,
-    mut query: Query<&mut Text, With<CombatLogPanel>>,
+    collapsed: Res<CombatLogCollapsed>,
+    content_query: Query<Entity, With<CombatLogContent>>,
+    mut commands: Commands,
+    theme: Res<crate::ui::theme::UiTheme>,
 ) {
-    if combat_log.is_changed() {
-        for mut text in &mut query {
-            let display: String = combat_log
-                .entries
-                .iter()
-                .map(|segments| {
-                    segments
-                        .iter()
-                        .map(|s| s.text.as_str())
-                        .collect::<Vec<&str>>()
-                        .join("")
-                })
-                .collect::<Vec<String>>()
-                .join("\n");
-            **text = display;
+    if !combat_log.is_changed() && !collapsed.is_changed() {
+        return;
+    }
+
+    for content_entity in &content_query {
+        // 清除旧内容
+        commands.entity(content_entity).despawn_children();
+
+        if collapsed.0 {
+            // 折叠状态：只显示最新一条
+            if let Some(segments) = combat_log.entries.back() {
+                spawn_log_line(&mut commands, content_entity, segments, &theme);
+            }
+        } else {
+            // 展开状态：显示所有日志
+            for segments in &combat_log.entries {
+                spawn_log_line(&mut commands, content_entity, segments, &theme);
+            }
+        }
+    }
+}
+
+/// 生成一条日志行（多色文本，横向排列）
+fn spawn_log_line(
+    commands: &mut Commands,
+    parent_entity: Entity,
+    segments: &[LogSegment],
+    theme: &crate::ui::theme::UiTheme,
+) {
+    commands.entity(parent_entity).with_children(|parent| {
+        // 每条日志用一个横向 Node 包裹，确保内容横向排列
+        parent
+            .spawn((Node {
+                flex_direction: FlexDirection::Row,
+                flex_wrap: FlexWrap::Wrap,
+                ..default()
+            },))
+            .with_children(|line| {
+                for segment in segments {
+                    line.spawn((
+                        Text::new(&segment.text),
+                        TextFont {
+                            font_size: theme.font_log,
+                            ..default()
+                        },
+                        TextColor(segment.color),
+                    ));
+                }
+            });
+    });
+}
+
+/// 回合切换时添加回合日志（AGI驱动，不再分阵营阶段）
+/// 只在回合数变化时才添加日志（即整个队列行动完一轮后）
+pub fn log_turn_change(
+    turn_state: Res<crate::turn::TurnState>,
+    mut combat_log: ResMut<CombatLog>,
+    mut last_turn: Local<u32>,
+) {
+    if turn_state.turn_number != *last_turn {
+        *last_turn = turn_state.turn_number;
+        combat_log.push(vec![LogSegment {
+            text: format!("── 第{}回合 ──", turn_state.turn_number),
+            color: log_color::TURN,
+        }]);
+    }
+}
+
+/// 拖拽调整日志面板大小
+pub fn drag_resize_log_panel(
+    mouse_button: Res<bevy::input::ButtonInput<bevy::input::mouse::MouseButton>>,
+    windows: Query<&Window>,
+    mut log_size: ResMut<CombatLogSize>,
+    handle_query: Query<&Interaction, With<CombatLogResizeHandle>>,
+    mut panel_query: Query<&mut Node, With<CombatLogPanel>>,
+) {
+    // 检测拖拽手柄按下
+    for interaction in &handle_query {
+        if *interaction == Interaction::Pressed
+            && mouse_button.pressed(bevy::input::mouse::MouseButton::Left)
+        {
+            if !log_size.is_dragging {
+                if let Ok(window) = windows.single() {
+                    if let Some(cursor) = window.cursor_position() {
+                        log_size.is_dragging = true;
+                        log_size.drag_start =
+                            Some((cursor.x, cursor.y, log_size.width, log_size.height));
+                    }
+                }
+            }
+        }
+    }
+
+    // 拖拽中
+    if log_size.is_dragging {
+        if let Some(start) = log_size.drag_start {
+            if let Ok(window) = windows.single() {
+                if let Some(cursor) = window.cursor_position() {
+                    let dx = start.0 - cursor.x; // 面板在右侧，向左拖增大宽度
+                    let dy = cursor.y - start.1; // 向下拖增大高度
+                    log_size.width = (start.2 + dx).clamp(200.0, 800.0);
+                    log_size.height = (start.3 + dy).clamp(100.0, 600.0);
+
+                    // 实时更新面板尺寸
+                    for mut node in &mut panel_query {
+                        node.width = Val::Px(log_size.width);
+                        node.height = Val::Px(log_size.height);
+                    }
+                }
+            }
+        }
+
+        // 松开鼠标结束拖拽
+        if !mouse_button.pressed(bevy::input::mouse::MouseButton::Left) {
+            log_size.is_dragging = false;
+            log_size.drag_start = None;
         }
     }
 }
@@ -80,7 +219,13 @@ impl Plugin for CombatLogPlugin {
     fn build(&self, app: &mut App) {
         use crate::turn::AppState;
         app.init_resource::<CombatLog>()
-            .add_systems(Update, update_combat_log.run_if(in_state(AppState::InGame)));
+            .init_resource::<CombatLogSize>()
+            .add_systems(Update, update_combat_log.run_if(in_state(AppState::InGame)))
+            .add_systems(Update, log_turn_change.run_if(in_state(AppState::InGame)))
+            .add_systems(
+                Update,
+                drag_resize_log_panel.run_if(in_state(AppState::InGame)),
+            );
     }
 }
 
@@ -114,23 +259,19 @@ mod tests {
     #[test]
     fn 战斗日志_超过最大条数截断最旧() {
         let mut log = CombatLog::default();
-        for i in 0..10 {
+        for i in 0..60 {
             log.push(vec![make_segment(&format!("日志{}", i))]);
         }
-        // 超过 MAX_LOG_LINES(8)，应该只保留最新 8 条
-        assert_eq!(log.entries.len(), 8);
-        // 最旧的两条（0, 1）被移除，最新的是 2..9
-        assert_eq!(log.entries[0][0].text, "日志2");
-        assert_eq!(log.entries[7][0].text, "日志9");
+        assert_eq!(log.entries.len(), MAX_LOG_LINES);
     }
 
     #[test]
     fn 战斗日志_刚好等于最大条数不截断() {
         let mut log = CombatLog::default();
-        for i in 0..8 {
+        for i in 0..MAX_LOG_LINES {
             log.push(vec![make_segment(&format!("日志{}", i))]);
         }
-        assert_eq!(log.entries.len(), 8);
+        assert_eq!(log.entries.len(), MAX_LOG_LINES);
         assert_eq!(log.entries[0][0].text, "日志0");
     }
 

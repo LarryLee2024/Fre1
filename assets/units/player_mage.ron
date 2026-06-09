@@ -6,7 +6,7 @@
     background: "scholar",
     class: "mage",
     base_attributes: {
-        Might: 2.0, Dexterity: 3.0, Agility: 6.0, Vitality: 3.0,
+        Might: 2.0, Dexterity: 3.0, Agility: 3.0, Vitality: 3.0,
         Intelligence: 5.0, Willpower: 4.0, Presence: 3.0, Luck: 2.0,
     },
     base_attack_range: 2,

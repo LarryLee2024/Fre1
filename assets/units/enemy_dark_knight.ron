@@ -6,7 +6,7 @@
     background: "fallen_knight",
     class: "warrior",
     base_attributes: {
-        Might: 6.0, Dexterity: 3.0, Agility: 4.0, Vitality: 6.0,
+        Might: 6.0, Dexterity: 3.0, Agility: 5.0, Vitality: 6.0,
         Intelligence: 2.0, Willpower: 4.0, Presence: 3.0, Luck: 2.0,
     },
     base_attack_range: 1,
