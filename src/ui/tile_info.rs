@@ -2,9 +2,9 @@
 // 使用通用 Popup Widget
 
 use crate::character::Faction;
+use crate::map::GameMap;
 use crate::map::TerrainRegistry;
 use crate::map::runtime::TerrainGrid;
-use crate::map::GameMap;
 use crate::turn::TurnPhase;
 use crate::ui::theme::UiTheme;
 use crate::ui::widgets::popup::{add_popup_text, despawn_popup, spawn_popup};
@@ -68,7 +68,9 @@ pub fn handle_tile_info(
     if let Some(terrain_id) = terrain_grid.get(coord) {
         if let Ok(screen_pos) = camera.world_to_viewport(cam_transform, world_pos.extend(0.0)) {
             let terrain_def = terrain_registry.get(terrain_id);
-            let terrain_name = terrain_def.map(|def| def.name.as_str()).unwrap_or(terrain_id);
+            let terrain_name = terrain_def
+                .map(|def| def.name.as_str())
+                .unwrap_or(terrain_id);
             let move_cost_str = terrain_def
                 .and_then(|def| def.move_cost)
                 .map(|c| format!("{}", c))

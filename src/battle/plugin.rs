@@ -1,4 +1,6 @@
-use super::events::{CharacterDied, DamageApplied, DotApplied, HealApplied, HotApplied, StunApplied};
+use super::events::{
+    CharacterDied, DamageApplied, DotApplied, HealApplied, HotApplied, StunApplied,
+};
 use super::log::CombatLogPlugin;
 use super::pipeline::CombatEventPlugin;
 use bevy::prelude::*;

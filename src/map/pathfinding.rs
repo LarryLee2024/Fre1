@@ -329,7 +329,14 @@ mod tests {
         let calculator = GroundCostCalculator;
 
         let reachable = find_reachable_tiles(
-            IVec2::new(2, 2), 3, &map, &grid, &registry, &occupancy, None, &calculator,
+            IVec2::new(2, 2),
+            3,
+            &map,
+            &grid,
+            &registry,
+            &occupancy,
+            None,
+            &calculator,
         );
 
         assert!(!reachable.is_empty());
@@ -347,7 +354,14 @@ mod tests {
         let calculator = GroundCostCalculator;
 
         let reachable = find_reachable_tiles(
-            IVec2::new(2, 2), 0, &map, &grid, &registry, &occupancy, None, &calculator,
+            IVec2::new(2, 2),
+            0,
+            &map,
+            &grid,
+            &registry,
+            &occupancy,
+            None,
+            &calculator,
         );
         assert!(reachable.is_empty());
     }
@@ -361,7 +375,14 @@ mod tests {
         let calculator = GroundCostCalculator;
 
         let reachable = find_reachable_tiles(
-            IVec2::new(2, 2), 1, &map, &grid, &registry, &occupancy, None, &calculator,
+            IVec2::new(2, 2),
+            1,
+            &map,
+            &grid,
+            &registry,
+            &occupancy,
+            None,
+            &calculator,
         );
 
         assert_eq!(reachable.len(), 4);
@@ -382,7 +403,14 @@ mod tests {
         let calculator = GroundCostCalculator;
 
         let reachable = find_reachable_tiles(
-            IVec2::new(2, 2), 1, &map, &grid, &registry, &occupancy, None, &calculator,
+            IVec2::new(2, 2),
+            1,
+            &map,
+            &grid,
+            &registry,
+            &occupancy,
+            None,
+            &calculator,
         );
 
         assert_eq!(reachable.len(), 2);
@@ -400,7 +428,14 @@ mod tests {
         let calculator = GroundCostCalculator;
 
         let reachable = find_reachable_tiles(
-            IVec2::new(2, 2), 2, &map, &grid, &registry, &occupancy, None, &calculator,
+            IVec2::new(2, 2),
+            2,
+            &map,
+            &grid,
+            &registry,
+            &occupancy,
+            None,
+            &calculator,
         );
 
         assert!(reachable.contains_key(&IVec2::new(3, 2)));
@@ -419,7 +454,14 @@ mod tests {
         let calculator = GroundCostCalculator;
 
         let reachable = find_reachable_tiles(
-            IVec2::new(2, 2), 3, &map, &grid, &registry, &occupancy, None, &calculator,
+            IVec2::new(2, 2),
+            3,
+            &map,
+            &grid,
+            &registry,
+            &occupancy,
+            None,
+            &calculator,
         );
 
         assert!(!reachable.contains_key(&IVec2::new(3, 2)));
@@ -438,7 +480,14 @@ mod tests {
         let calculator = GroundCostCalculator;
 
         let reachable = find_reachable_tiles(
-            IVec2::new(2, 2), 1, &map, &grid, &registry, &occupancy, Some(self_entity), &calculator,
+            IVec2::new(2, 2),
+            1,
+            &map,
+            &grid,
+            &registry,
+            &occupancy,
+            Some(self_entity),
+            &calculator,
         );
 
         assert_eq!(reachable.len(), 4);
@@ -453,7 +502,14 @@ mod tests {
         let calculator = GroundCostCalculator;
 
         let reachable = find_reachable_tiles(
-            IVec2::new(0, 0), 2, &map, &grid, &registry, &occupancy, None, &calculator,
+            IVec2::new(0, 0),
+            2,
+            &map,
+            &grid,
+            &registry,
+            &occupancy,
+            None,
+            &calculator,
         );
 
         assert!(reachable.contains_key(&IVec2::new(1, 0)));
@@ -475,7 +531,14 @@ mod tests {
         let calculator = FlyingCostCalculator;
 
         let reachable = find_reachable_tiles(
-            IVec2::new(2, 2), 1, &map, &grid, &registry, &occupancy, None, &calculator,
+            IVec2::new(2, 2),
+            1,
+            &map,
+            &grid,
+            &registry,
+            &occupancy,
+            None,
+            &calculator,
         );
 
         assert_eq!(reachable.len(), 4);
@@ -495,7 +558,14 @@ mod tests {
         let calculator = MountedCostCalculator;
 
         let reachable = find_reachable_tiles(
-            IVec2::new(2, 2), 3, &map, &grid, &registry, &occupancy, None, &calculator,
+            IVec2::new(2, 2),
+            3,
+            &map,
+            &grid,
+            &registry,
+            &occupancy,
+            None,
+            &calculator,
         );
 
         assert!(reachable.contains_key(&IVec2::new(3, 2)));
@@ -514,7 +584,14 @@ mod tests {
         let calculator = MountedCostCalculator;
 
         let reachable = find_reachable_tiles(
-            IVec2::new(2, 2), 3, &map, &grid, &registry, &occupancy, None, &calculator,
+            IVec2::new(2, 2),
+            3,
+            &map,
+            &grid,
+            &registry,
+            &occupancy,
+            None,
+            &calculator,
         );
 
         assert!(!reachable.contains_key(&IVec2::new(3, 2)));
@@ -533,7 +610,14 @@ mod tests {
         let calculator = SwimmingCostCalculator;
 
         let reachable = find_reachable_tiles(
-            IVec2::new(2, 2), 3, &map, &grid, &registry, &occupancy, None, &calculator,
+            IVec2::new(2, 2),
+            3,
+            &map,
+            &grid,
+            &registry,
+            &occupancy,
+            None,
+            &calculator,
         );
 
         assert!(reachable.contains_key(&IVec2::new(3, 2)));
@@ -549,7 +633,14 @@ mod tests {
         let calculator = SwimmingCostCalculator;
 
         let reachable = find_reachable_tiles(
-            IVec2::new(2, 2), 3, &map, &grid, &registry, &occupancy, None, &calculator,
+            IVec2::new(2, 2),
+            3,
+            &map,
+            &grid,
+            &registry,
+            &occupancy,
+            None,
+            &calculator,
         );
 
         assert!(!reachable.contains_key(&IVec2::new(3, 2)));
@@ -611,7 +702,14 @@ mod tests {
         let calculator = GroundCostCalculator;
 
         let path = reconstruct_path(
-            IVec2::new(2, 2), IVec2::new(2, 2), &reachable, 3, &map, &grid, &registry, &calculator,
+            IVec2::new(2, 2),
+            IVec2::new(2, 2),
+            &reachable,
+            3,
+            &map,
+            &grid,
+            &registry,
+            &calculator,
         );
 
         assert_eq!(path, vec![IVec2::new(2, 2)]);
@@ -628,7 +726,14 @@ mod tests {
         reachable.insert(IVec2::new(3, 2), 2);
 
         let path = reconstruct_path(
-            IVec2::new(2, 2), IVec2::new(3, 2), &reachable, 3, &map, &grid, &registry, &calculator,
+            IVec2::new(2, 2),
+            IVec2::new(3, 2),
+            &reachable,
+            3,
+            &map,
+            &grid,
+            &registry,
+            &calculator,
         );
 
         assert_eq!(path, vec![IVec2::new(3, 2)]);
@@ -646,7 +751,14 @@ mod tests {
         reachable.insert(IVec2::new(4, 2), 1);
 
         let path = reconstruct_path(
-            IVec2::new(2, 2), IVec2::new(4, 2), &reachable, 3, &map, &grid, &registry, &calculator,
+            IVec2::new(2, 2),
+            IVec2::new(4, 2),
+            &reachable,
+            3,
+            &map,
+            &grid,
+            &registry,
+            &calculator,
         );
 
         assert_eq!(path, vec![IVec2::new(3, 2), IVec2::new(4, 2)]);
@@ -661,7 +773,14 @@ mod tests {
         let calculator = GroundCostCalculator;
 
         let path = reconstruct_path(
-            IVec2::new(2, 2), IVec2::new(4, 4), &reachable, 3, &map, &grid, &registry, &calculator,
+            IVec2::new(2, 2),
+            IVec2::new(4, 4),
+            &reachable,
+            3,
+            &map,
+            &grid,
+            &registry,
+            &calculator,
         );
 
         assert_eq!(path, vec![IVec2::new(4, 4)]);
@@ -679,7 +798,14 @@ mod tests {
         reachable.insert(IVec2::new(2, 2), 1);
 
         let path = reconstruct_path(
-            IVec2::new(1, 1), IVec2::new(2, 2), &reachable, 3, &map, &grid, &registry, &calculator,
+            IVec2::new(1, 1),
+            IVec2::new(2, 2),
+            &reachable,
+            3,
+            &map,
+            &grid,
+            &registry,
+            &calculator,
         );
 
         assert_eq!(path, vec![IVec2::new(2, 1), IVec2::new(2, 2)]);

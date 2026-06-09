@@ -7,8 +7,8 @@ mod modify;
 
 pub use intent::{CombatIntent, PrevPosition};
 
-use bevy::prelude::*;
 use super::events::on_character_died;
+use bevy::prelude::*;
 
 /// 战斗事件插件：注册 Effect Pipeline 系统 + 死亡消息响应
 pub struct CombatEventPlugin;

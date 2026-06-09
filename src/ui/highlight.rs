@@ -6,9 +6,9 @@ use crate::character::{
 };
 use crate::core::attribute::{AttributeKind, Attributes};
 use crate::core::tag::GameplayTags;
+use crate::map::GameMap;
 use crate::map::TerrainRegistry;
 use crate::map::runtime::{OccupancyGrid, TerrainGrid};
-use crate::map::GameMap;
 use crate::skill::SkillSlots;
 use crate::ui::theme::UiTheme;
 use bevy::prelude::*;

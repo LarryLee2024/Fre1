@@ -173,7 +173,7 @@ pub fn apply_damage_effect(
     // 扣血
     let hp = target_attrs.get(AttributeKind::Hp);
     let new_hp = (hp - amount as f32).max(0.0);
-    target_attrs.set_base(AttributeKind::Hp, new_hp);
+    target_attrs.set_vital(AttributeKind::Hp, new_hp);
 
     // 发送伤害消息（VFX/日志/表现层响应）
     damage_writer.write(DamageApplied {
@@ -210,7 +210,7 @@ pub fn apply_heal_effect(
     let hp = target_attrs.get(AttributeKind::Hp);
     let max_hp = target_attrs.get(AttributeKind::MaxHp);
     let new_hp = (hp + amount as f32).min(max_hp);
-    target_attrs.set_base(AttributeKind::Hp, new_hp);
+    target_attrs.set_vital(AttributeKind::Hp, new_hp);
 
     heal_writer.write(HealApplied {
         target: target_entity,

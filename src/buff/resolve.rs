@@ -71,7 +71,7 @@ pub fn resolve_status_effects(
         if dot > 0 {
             let hp = attrs.get(AttributeKind::Hp);
             let new_hp = (hp - dot as f32).max(0.0);
-            attrs.set_base(AttributeKind::Hp, new_hp);
+            attrs.set_vital(AttributeKind::Hp, new_hp);
 
             // 发送 DoT 消息（表现层响应）
             dot_writer.write(DotApplied {
@@ -98,7 +98,7 @@ pub fn resolve_status_effects(
             let hp = attrs.get(AttributeKind::Hp);
             let max_hp = attrs.get(AttributeKind::MaxHp);
             let new_hp = (hp + hot as f32).min(max_hp);
-            attrs.set_base(AttributeKind::Hp, new_hp);
+            attrs.set_vital(AttributeKind::Hp, new_hp);
 
             // 发送 HoT 消息（表现层响应）
             hot_writer.write(HotApplied {
@@ -149,6 +149,10 @@ pub(crate) fn rebuild_tags_from_buffs(
 
     let mut new_tags = GameplayTags(preserved_mask);
     for buff in &buffs.instances {
+        // 跳过已过期的 buff（remaining_turns == 0，修饰符已清理但实例仍在列表中）
+        if buff.remaining_turns == 0 {
+            continue;
+        }
         for tag in &buff.tags {
             new_tags.add(*tag);
         }
@@ -307,6 +311,29 @@ mod tests {
             .find(|b| b.buff_id == "alive")
             .unwrap();
         assert_eq!(alive.remaining_turns, 2);
+    }
+
+    #[test]
+    fn tick_buffs_过期buff标签被清理() {
+        let mut buffs = ActiveBuffs::default();
+        buffs.add(make_test_buff(
+            1,
+            "fire_shield",
+            1,
+            vec![GameplayTag::BUFF, GameplayTag::FIRE],
+            true,
+        ));
+
+        let mut attrs = Attributes::default();
+        attrs.fill_vital_resources();
+        let mut tags = GameplayTags::default();
+        let trait_tags = TraitGrantedTags::default();
+
+        tick_buffs(&mut buffs, &mut attrs, &mut tags, &trait_tags);
+
+        // 过期 buff（remaining_turns=0）的标签不应出现
+        assert!(!tags.has(GameplayTag::FIRE));
+        assert!(!tags.has(GameplayTag::BUFF));
     }
 
     #[test]

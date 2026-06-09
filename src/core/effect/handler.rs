@@ -6,6 +6,7 @@ use crate::buff::BuffRegistry;
 use crate::core::attribute::{AttributeKind, Attributes};
 use crate::core::tag::GameplayTag;
 use bevy::prelude::*;
+use std::collections::HashMap;
 
 use super::types::{EffectDef, PendingEffectData, calculate_damage_from_effect};
 
@@ -211,16 +212,16 @@ impl EffectHandler for CleanseHandler {
 // ── 处理器注册表 ──
 
 /// 效果处理器注册表资源
-/// 通过 type_name 查找对应的 EffectHandler，实现 trait 分发
+/// 通过 type_name 查找对应的 EffectHandler，实现 trait 分发（O(1) 查找）
 #[derive(Resource)]
 pub struct EffectHandlerRegistry {
-    handlers: Vec<Box<dyn EffectHandler>>,
+    handlers: HashMap<String, Box<dyn EffectHandler>>,
 }
 
 impl Default for EffectHandlerRegistry {
     fn default() -> Self {
         let mut registry = Self {
-            handlers: Vec::new(),
+            handlers: HashMap::new(),
         };
         registry.register_defaults();
         registry
@@ -228,23 +229,20 @@ impl Default for EffectHandlerRegistry {
 }
 
 impl EffectHandlerRegistry {
-    /// 根据类型名查找处理器
+    /// 根据类型名查找处理器（O(1) HashMap 查找）
     pub fn find(&self, type_name: &str) -> Option<&dyn EffectHandler> {
-        self.handlers
-            .iter()
-            .find(|h| h.type_name() == type_name)
-            .map(|h| h.as_ref())
+        self.handlers.get(type_name).map(|h| h.as_ref())
     }
 
     /// 注册一个处理器
     pub fn register(&mut self, handler: Box<dyn EffectHandler>) {
         // 避免重复注册
-        let name = handler.type_name();
-        if self.find(name).is_some() {
+        let name = handler.type_name().to_string();
+        if self.handlers.contains_key(&name) {
             bevy::log::warn!("效果处理器 {} 已注册，跳过重复注册", name);
             return;
         }
-        self.handlers.push(handler);
+        self.handlers.insert(name, handler);
     }
 
     /// 注册4个内置处理器

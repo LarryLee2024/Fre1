@@ -3,19 +3,22 @@
 
 use crate::battle::{CombatIntent, PrevPosition, manhattan_distance};
 use crate::character::{
-    AttackRange, Faction, GridPosition, MovableRange, MovingUnit, Selected,
-    SelectionHighlight, Unit, spawn_path_arrows,
+    AttackRange, Faction, GridPosition, MovableRange, MovingUnit, Selected, SelectionHighlight,
+    Unit, spawn_path_arrows,
 };
 use crate::core::attribute::{AttributeKind, Attributes};
 use crate::core::tag::GameplayTags;
-use crate::ui::highlight::{
-    clear_markers, clear_selection, show_attack_range, show_move_range, spawn_selection_highlight,
+use crate::map::{
+    GameMap, OccupancyGrid, TerrainCostRegistry, TerrainGrid, TerrainRegistry,
+    find_reachable_tiles, reconstruct_path,
 };
-use crate::map::{GameMap, OccupancyGrid, TerrainCostRegistry, TerrainGrid, TerrainRegistry, find_reachable_tiles, reconstruct_path};
 use crate::skill::{BASIC_ATTACK_ID, SkillRegistry, SkillSlots, effective_skill_range};
 use crate::turn::{ForceEndTurn, TurnPhase};
 use crate::ui::action_menu::{ActionMenuEntity, despawn_action_menu};
 use crate::ui::events::UiCommand;
+use crate::ui::highlight::{
+    clear_markers, clear_selection, show_attack_range, show_move_range, spawn_selection_highlight,
+};
 use bevy::ecs::message::MessageReader;
 use bevy::prelude::*;
 
@@ -244,23 +247,13 @@ pub fn handle_ui_commands(
                                 .insert(GridPosition { coord: prev_coord });
                         }
                     }
-                    clear_selection(
-                        &mut commands,
-                        &selected_query,
-                        &range_entities,
-                        &highlights,
-                    );
+                    clear_selection(&mut commands, &selected_query, &range_entities, &highlights);
                     combat_intent.target_coord = None;
                     combat_intent.skill_id = None;
                     next_phase.set(TurnPhase::SelectUnit);
                 } else {
                     // MoveUnit 取消 → 回到 SelectUnit
-                    clear_selection(
-                        &mut commands,
-                        &selected_query,
-                        &range_entities,
-                        &highlights,
-                    );
+                    clear_selection(&mut commands, &selected_query, &range_entities, &highlights);
                     combat_intent.target_coord = None;
                     next_phase.set(TurnPhase::SelectUnit);
                 }

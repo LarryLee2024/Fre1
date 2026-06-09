@@ -267,8 +267,9 @@ pub fn apply_passive_traits(
 ) -> (GameplayTags, Vec<AttributeModifierInstance>) {
     let mut tags = GameplayTags::default();
     let mut modifiers = Vec::new();
-    // 使用固定的 source id 标识 trait 来源的修饰符
-    let trait_source = BuffInstanceId(u64::MAX);
+    // 每个 trait 分配独立的 source id，从 u64::MAX - 1 递减
+    // 避免与 buff instance id（从 1 递增）冲突
+    let mut trait_source_id = u64::MAX - 1;
 
     for trait_id in trait_ids {
         if let Some(trait_data) = registry.get(trait_id) {
@@ -278,14 +279,16 @@ pub fn apply_passive_traits(
             for tag in trait_data.granted_tags(handlers) {
                 tags.add(tag);
             }
+            let source = BuffInstanceId(trait_source_id);
             for mod_def in trait_data.attribute_modifiers(handlers) {
                 modifiers.push(AttributeModifierInstance {
                     kind: mod_def.kind,
                     op: mod_def.op,
                     value: mod_def.value,
-                    source: trait_source,
+                    source,
                 });
             }
+            trait_source_id -= 1;
         }
     }
 

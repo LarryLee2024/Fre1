@@ -216,6 +216,22 @@ impl Attributes {
         }
     }
 
+    /// 设置生命资源当前值（HP/MP/Stamina）
+    /// 语义更清晰：set_vital 修改的是"当前值"而非"基础值"
+    pub fn set_vital(&mut self, kind: AttributeKind, value: f32) {
+        match kind {
+            AttributeKind::Hp => self.current_hp = value,
+            AttributeKind::Mp => self.current_mp = value,
+            AttributeKind::Stamina => self.current_stamina = value,
+            _ => {
+                bevy::log::warn!(
+                    "set_vital 仅用于生命资源(HP/MP/Stamina)，不适用于 {:?}",
+                    kind
+                );
+            }
+        }
+    }
+
     /// 设置基础攻击范围（由职业/装备决定）
     pub fn set_base_attack_range(&mut self, range: u32) {
         self.base_attack_range = range;

@@ -39,10 +39,7 @@ impl OccupancyGrid {
     }
 
     /// 从所有单位的位置重建占用表
-    pub fn rebuild(
-        &mut self,
-        units: impl Iterator<Item = (Entity, IVec2)>,
-    ) {
+    pub fn rebuild(&mut self, units: impl Iterator<Item = (Entity, IVec2)>) {
         self.occupied.clear();
         for (entity, coord) in units {
             self.occupied.insert(coord, entity);

@@ -116,8 +116,14 @@ pub fn generate_combat_effects(
             continue;
         }
 
-        let terrain_id = terrain_grid.get(target_gp.coord).unwrap_or("plain").to_string();
-        let defense_bonus = terrain_registry.get(&terrain_id).map(|def| def.defense_bonus).unwrap_or(0);
+        let terrain_id = terrain_grid
+            .get(target_gp.coord)
+            .unwrap_or("plain")
+            .to_string();
+        let defense_bonus = terrain_registry
+            .get(&terrain_id)
+            .map(|def| def.defense_bonus)
+            .unwrap_or(0);
 
         for effect_def in &skill_data.effects {
             // 通过 EffectHandlerRegistry trait 分发，新增效果类型无需修改此处

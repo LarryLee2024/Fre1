@@ -2,8 +2,8 @@
 // 遵循「Logic 发消息，Presentation 响应」原则
 
 use crate::battle::{
-    CharacterDied, DamageApplied, DotApplied, HealApplied, HotApplied, StunApplied,
-    CombatLog, LogSegment, log_color,
+    CharacterDied, CombatLog, DamageApplied, DotApplied, HealApplied, HotApplied, LogSegment,
+    StunApplied, log_color,
 };
 use crate::character::Faction;
 use bevy::ecs::message::MessageReader;
