@@ -7,7 +7,9 @@ use bevy::prelude::*;
 use crate::character::Faction;
 use crate::turn::{TurnEnded, TurnStarted};
 
-use super::events::{CharacterDied, DamageApplied, DotApplied, HealApplied, HotApplied, StunApplied};
+use super::events::{
+    CharacterDied, DamageApplied, DotApplied, HealApplied, HotApplied, StunApplied,
+};
 
 // ── 战斗记录条目 ──
 
@@ -15,13 +17,9 @@ use super::events::{CharacterDied, DamageApplied, DotApplied, HealApplied, HotAp
 #[derive(Debug, Clone)]
 pub enum BattleEntry {
     /// 回合开始
-    TurnStarted {
-        turn: u32,
-    },
+    TurnStarted { turn: u32 },
     /// 回合结束
-    TurnEnded {
-        turn: u32,
-    },
+    TurnEnded { turn: u32 },
     /// 伤害应用
     DamageApplied {
         target: Entity,
@@ -54,10 +52,7 @@ pub enum BattleEntry {
         amount: i32,
     },
     /// 晕眩
-    StunApplied {
-        target: Entity,
-        target_name: String,
-    },
+    StunApplied { target: Entity, target_name: String },
     /// 角色死亡
     CharacterDied {
         entity: Entity,
@@ -79,24 +74,16 @@ impl BattleRecord {
     /// 记录一条战斗事件，同时写 trace 日志
     pub fn record(&mut self, entry: BattleEntry) {
         match &entry {
-            BattleEntry::DamageApplied {
-                target, amount, ..
-            } => {
+            BattleEntry::DamageApplied { target, amount, .. } => {
                 bevy::log::trace!(target: "battle_record", entity = ?target, damage = amount, "DamageApplied");
             }
-            BattleEntry::HealApplied {
-                target, amount, ..
-            } => {
+            BattleEntry::HealApplied { target, amount, .. } => {
                 bevy::log::trace!(target: "battle_record", entity = ?target, heal = amount, "HealApplied");
             }
-            BattleEntry::DotApplied {
-                target, amount, ..
-            } => {
+            BattleEntry::DotApplied { target, amount, .. } => {
                 bevy::log::trace!(target: "battle_record", entity = ?target, dot = amount, "DotApplied");
             }
-            BattleEntry::HotApplied {
-                target, amount, ..
-            } => {
+            BattleEntry::HotApplied { target, amount, .. } => {
                 bevy::log::trace!(target: "battle_record", entity = ?target, hot = amount, "HotApplied");
             }
             BattleEntry::StunApplied { target, .. } => {
@@ -158,20 +145,14 @@ pub fn record_turn_started(
 }
 
 /// 记录回合结束
-pub fn record_turn_ended(
-    mut reader: MessageReader<TurnEnded>,
-    mut record: ResMut<BattleRecord>,
-) {
+pub fn record_turn_ended(mut reader: MessageReader<TurnEnded>, mut record: ResMut<BattleRecord>) {
     for msg in reader.read() {
         record.record(BattleEntry::TurnEnded { turn: msg.turn });
     }
 }
 
 /// 记录伤害事件
-pub fn record_damage(
-    mut reader: MessageReader<DamageApplied>,
-    mut record: ResMut<BattleRecord>,
-) {
+pub fn record_damage(mut reader: MessageReader<DamageApplied>, mut record: ResMut<BattleRecord>) {
     for msg in reader.read() {
         record.record(BattleEntry::DamageApplied {
             target: msg.target,
@@ -188,10 +169,7 @@ pub fn record_damage(
 }
 
 /// 记录治疗事件
-pub fn record_heal(
-    mut reader: MessageReader<HealApplied>,
-    mut record: ResMut<BattleRecord>,
-) {
+pub fn record_heal(mut reader: MessageReader<HealApplied>, mut record: ResMut<BattleRecord>) {
     for msg in reader.read() {
         record.record(BattleEntry::HealApplied {
             target: msg.target,
@@ -202,10 +180,7 @@ pub fn record_heal(
 }
 
 /// 记录 DoT 伤害
-pub fn record_dot(
-    mut reader: MessageReader<DotApplied>,
-    mut record: ResMut<BattleRecord>,
-) {
+pub fn record_dot(mut reader: MessageReader<DotApplied>, mut record: ResMut<BattleRecord>) {
     for msg in reader.read() {
         record.record(BattleEntry::DotApplied {
             target: msg.target,
@@ -217,10 +192,7 @@ pub fn record_dot(
 }
 
 /// 记录 HoT 治疗
-pub fn record_hot(
-    mut reader: MessageReader<HotApplied>,
-    mut record: ResMut<BattleRecord>,
-) {
+pub fn record_hot(mut reader: MessageReader<HotApplied>, mut record: ResMut<BattleRecord>) {
     for msg in reader.read() {
         record.record(BattleEntry::HotApplied {
             target: msg.target,
@@ -231,10 +203,7 @@ pub fn record_hot(
 }
 
 /// 记录晕眩
-pub fn record_stun(
-    mut reader: MessageReader<StunApplied>,
-    mut record: ResMut<BattleRecord>,
-) {
+pub fn record_stun(mut reader: MessageReader<StunApplied>, mut record: ResMut<BattleRecord>) {
     for msg in reader.read() {
         record.record(BattleEntry::StunApplied {
             target: msg.target,

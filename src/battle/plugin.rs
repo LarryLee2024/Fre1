@@ -4,8 +4,8 @@ use super::events::{
 use super::log::CombatLogPlugin;
 use super::pipeline::CombatEventPlugin;
 use super::record::{
-    record_character_died, record_damage, record_dot, record_heal, record_hot, record_stun,
-    record_turn_ended, record_turn_started, BattleRecord,
+    BattleRecord, record_character_died, record_damage, record_dot, record_heal, record_hot,
+    record_stun, record_turn_ended, record_turn_started,
 };
 use bevy::prelude::*;
 
