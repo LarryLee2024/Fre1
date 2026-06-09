@@ -71,10 +71,13 @@ pub struct TurnIndicatorPlugin;
 impl Plugin for TurnIndicatorPlugin {
     fn build(&self, app: &mut App) {
         use crate::turn::GameSet;
-        app.add_systems(OnEnter(AppState::InGame), spawn_turn_indicator.in_set(GameSet::Ui))
-            .add_systems(
-                Update,
-                (update_turn_indicator, check_game_over).run_if(in_state(AppState::InGame)),
-            );
+        app.add_systems(
+            OnEnter(AppState::InGame),
+            spawn_turn_indicator.in_set(GameSet::Ui),
+        )
+        .add_systems(
+            Update,
+            (update_turn_indicator, check_game_over).run_if(in_state(AppState::InGame)),
+        );
     }
 }

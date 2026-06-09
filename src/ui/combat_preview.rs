@@ -67,7 +67,13 @@ pub fn update_combat_preview_popup(
     );
 
     let panel_id = spawn_popup(&mut commands, &theme, screen_pos.x, screen_pos.y, None);
-    add_popup_text(&mut commands, panel_id, &info_text, theme.font_small, damage_color);
+    add_popup_text(
+        &mut commands,
+        panel_id,
+        &info_text,
+        theme.font_small,
+        damage_color,
+    );
     preview_entity.entity = Some(panel_id);
 }
 

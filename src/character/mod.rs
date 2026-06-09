@@ -6,9 +6,10 @@ mod movement;
 mod plugin;
 mod spawn;
 mod template;
-mod traits;
+pub mod traits;
 
 // 公共 re-exports
 pub use components::*;
 pub use movement::*;
 pub use plugin::CharacterPlugin;
+pub use traits::{TraitCollection, TraitRegistry};

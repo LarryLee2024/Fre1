@@ -5,9 +5,12 @@ use bevy::prelude::*;
 
 use crate::battle::CombatIntent;
 use crate::buff::ActiveBuffs;
-use crate::character::{Faction, GridPosition, Selected, Unit, UnitName};
+use crate::character::{
+    Faction, GridPosition, Selected, TraitCollection, TraitRegistry, Unit, UnitClass, UnitName,
+    UnitRace,
+};
 use crate::gameplay::attribute::{AttributeKind, Attributes};
-use crate::skill::{SkillRegistry, SkillSlots};
+use crate::skill::{SkillCooldowns, SkillRegistry, SkillSlots};
 use crate::turn::{TurnOrder, TurnPhase, TurnState};
 
 // ── ViewModel 定义 ──
@@ -34,11 +37,22 @@ pub struct BuffEntry {
     pub is_buff: bool,
 }
 
-/// 技能条目
+/// 技能条目（带详细信息）
 #[derive(Clone, Debug)]
 pub struct SkillEntry {
     pub name: String,
     pub id: String,
+    pub cost_mp: i32,
+    pub range: u32,
+    pub cooldown: u32,
+    pub description: String,
+}
+
+/// Trait 条目
+#[derive(Clone, Debug)]
+pub struct TraitEntry {
+    pub name: String,
+    pub description: String,
 }
 
 /// 最后点击查看的单位实体（不限于 Selected，任何单位都可查看信息）
@@ -68,6 +82,8 @@ pub struct SelectedUnitView {
     pub support_attrs: Vec<DerivedAttrEntry>,
     // 技能
     pub skills: Vec<SkillEntry>,
+    // Traits
+    pub traits: Vec<TraitEntry>,
     // Buff
     pub buffs: Vec<BuffEntry>,
     pub is_selected: bool,
@@ -108,16 +124,37 @@ pub enum GameOverState {
 /// 从游戏数据构建 SelectedUnitView（基于 HoveredEntity，任何单位都可查看）
 pub fn update_selected_unit_view(
     hovered: Res<HoveredEntity>,
-    units: Query<(&Unit, &UnitName, &Attributes, &SkillSlots, &ActiveBuffs)>,
+    units: Query<(
+        &Unit,
+        &UnitName,
+        &Attributes,
+        &SkillSlots,
+        &ActiveBuffs,
+        Option<&UnitRace>,
+        Option<&UnitClass>,
+        Option<&SkillCooldowns>,
+        Option<&TraitCollection>,
+    )>,
     skill_registry: Res<SkillRegistry>,
+    trait_registry: Res<TraitRegistry>,
     mut view: ResMut<SelectedUnitView>,
 ) {
     if let Some(entity) = hovered.entity {
-        if let Ok((_unit, name, attrs, skill_slots, buffs)) = units.get(entity) {
+        if let Ok((
+            _unit,
+            name,
+            attrs,
+            skill_slots,
+            buffs,
+            race,
+            class,
+            cooldowns,
+            trait_collection,
+        )) = units.get(entity)
+        {
             view.name = name.0.clone();
-            // race/class 暂不显示，保持空字符串
-            view.race.clear();
-            view.class.clear();
+            view.race = race.map(|r| r.0.clone()).unwrap_or_default();
+            view.class = class.map(|c| c.0.clone()).unwrap_or_default();
 
             // 生命资源
             view.hp = attrs.get(AttributeKind::Hp) as i32;
@@ -175,17 +212,37 @@ pub fn update_selected_unit_view(
             })
             .collect();
 
-            // 技能
+            // 技能（带详细信息）
             view.skills = skill_slots
                 .skill_ids
                 .iter()
                 .filter_map(|id| {
                     skill_registry.get(id).map(|sd| SkillEntry {
                         name: sd.name.clone(),
-                        id: id.clone(),
+                        id: id.to_string(),
+                        cost_mp: sd.cost_mp,
+                        range: sd.range,
+                        cooldown: sd.cooldown,
+                        description: sd.description.clone(),
                     })
                 })
                 .collect();
+
+            // Traits
+            view.traits = trait_collection
+                .as_ref()
+                .map(|tc| {
+                    tc.trait_ids
+                        .iter()
+                        .filter_map(|tid| {
+                            trait_registry.get(tid).map(|td| TraitEntry {
+                                name: td.name.clone(),
+                                description: td.description.clone(),
+                            })
+                        })
+                        .collect()
+                })
+                .unwrap_or_default();
 
             // Buff
             view.buffs = buffs
@@ -206,6 +263,7 @@ pub fn update_selected_unit_view(
             view.combat_attrs.clear();
             view.support_attrs.clear();
             view.skills.clear();
+            view.traits.clear();
             view.buffs.clear();
         }
     } else {
@@ -217,6 +275,7 @@ pub fn update_selected_unit_view(
         view.combat_attrs.clear();
         view.support_attrs.clear();
         view.skills.clear();
+        view.traits.clear();
         view.buffs.clear();
     }
 }

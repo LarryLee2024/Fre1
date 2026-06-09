@@ -14,6 +14,7 @@ use bevy::prelude::*;
 #[derive(Component)]
 pub enum PanelLabel {
     UnitName,
+    UnitInfo,
     Hp,
     Mp,
     Stamina,
@@ -21,6 +22,7 @@ pub enum PanelLabel {
     CombatAttrs,
     SupportAttrs,
     Skills,
+    Traits,
 }
 
 /// 单位信息面板根节点
@@ -47,7 +49,12 @@ pub struct BuffsContainer;
 pub fn spawn_unit_info_panel(mut commands: Commands, theme: Res<UiTheme>) {
     commands
         .spawn((
-            panel_bottom(&theme, theme.gap_large, theme.gap_large, theme.unit_panel_width),
+            panel_bottom(
+                &theme,
+                theme.gap_large,
+                theme.gap_large,
+                theme.unit_panel_width,
+            ),
             BackgroundColor(theme.panel_bg),
             UnitInfoPanel,
         ))
@@ -62,9 +69,33 @@ pub fn spawn_unit_info_panel(mut commands: Commands, theme: Res<UiTheme>) {
                 TextColor(Color::WHITE),
                 PanelLabel::UnitName,
             ));
+            // 种族/职业信息
+            parent.spawn((
+                Text::new(""),
+                TextFont {
+                    font_size: theme.font_small,
+                    ..default()
+                },
+                TextColor(theme.text_secondary),
+                PanelLabel::UnitInfo,
+            ));
             // HP/MP/STA 资源条
-            spawn_resource_bar(parent, &theme, "HP", theme.hp_bar_color, HpBarFill, PanelLabel::Hp);
-            spawn_resource_bar(parent, &theme, "MP", theme.mp_bar_color, MpBarFill, PanelLabel::Mp);
+            spawn_resource_bar(
+                parent,
+                &theme,
+                "HP",
+                theme.hp_bar_color,
+                HpBarFill,
+                PanelLabel::Hp,
+            );
+            spawn_resource_bar(
+                parent,
+                &theme,
+                "MP",
+                theme.mp_bar_color,
+                MpBarFill,
+                PanelLabel::Mp,
+            );
             spawn_resource_bar(
                 parent,
                 &theme,
@@ -110,6 +141,16 @@ pub fn spawn_unit_info_panel(mut commands: Commands, theme: Res<UiTheme>) {
                 TextColor(theme.text_skill),
                 PanelLabel::Skills,
             ));
+            // Trait 文本
+            parent.spawn((
+                Text::new(""),
+                TextFont {
+                    font_size: theme.font_small,
+                    ..default()
+                },
+                TextColor(theme.text_secondary),
+                PanelLabel::Traits,
+            ));
             // Buff 容器
             parent.spawn((
                 Node {
@@ -154,9 +195,7 @@ pub fn update_unit_info(
         for (label, mut text) in &mut panel_texts {
             match label {
                 PanelLabel::UnitName => **text = "选择一个单位".to_string(),
-                PanelLabel::Hp | PanelLabel::Mp | PanelLabel::Stamina => {
-                    **text = "0/0".to_string()
-                }
+                PanelLabel::Hp | PanelLabel::Mp | PanelLabel::Stamina => **text = "0/0".to_string(),
                 _ => **text = String::new(),
             }
         }
@@ -242,14 +281,50 @@ pub fn update_unit_info(
         .collect();
     let support_text = format!("── 辅助属性 ──\n{}", support_line.join("  "));
 
-    // 技能
-    let skill_names: Vec<String> = view.skills.iter().map(|s| s.name.clone()).collect();
+    // 技能（带详细信息）
+    let skill_lines: Vec<String> = view
+        .skills
+        .iter()
+        .map(|s| {
+            let cd = if s.cooldown > 0 {
+                format!(" CD{}", s.cooldown)
+            } else {
+                String::new()
+            };
+            let mp = if s.cost_mp > 0 {
+                format!(" MP{}", s.cost_mp)
+            } else {
+                String::new()
+            };
+            let range = if s.range > 0 {
+                format!(" 射程{}", s.range)
+            } else {
+                String::new()
+            };
+            format!("  {}{}{}{} {}", s.name, mp, cd, range, s.description)
+        })
+        .collect();
     let skills_text = format!(
         "── 技能 ──\n{}",
-        if skill_names.is_empty() {
+        if skill_lines.is_empty() {
             "无".to_string()
         } else {
-            skill_names.join(" / ")
+            skill_lines.join("\n")
+        }
+    );
+
+    // Traits
+    let trait_lines: Vec<String> = view
+        .traits
+        .iter()
+        .map(|t| format!("  {} - {}", t.name, t.description))
+        .collect();
+    let traits_text = format!(
+        "── 特性 ──\n{}",
+        if trait_lines.is_empty() {
+            "无".to_string()
+        } else {
+            trait_lines.join("\n")
         }
     );
 
@@ -257,6 +332,20 @@ pub fn update_unit_info(
     for (label, mut text) in &mut panel_texts {
         match label {
             PanelLabel::UnitName => **text = view.name.clone(),
+            PanelLabel::UnitInfo => {
+                let mut parts: Vec<String> = Vec::new();
+                if !view.race.is_empty() {
+                    parts.push(view.race.clone());
+                }
+                if !view.class.is_empty() {
+                    parts.push(view.class.clone());
+                }
+                **text = if parts.is_empty() {
+                    String::new()
+                } else {
+                    parts.join(" · ")
+                };
+            }
             PanelLabel::Hp => **text = format!("{}/{}", view.hp, view.max_hp),
             PanelLabel::Mp => **text = format!("{}/{}", view.mp, view.max_mp),
             PanelLabel::Stamina => **text = format!("{}/{}", view.stamina, view.max_stamina),
@@ -264,6 +353,7 @@ pub fn update_unit_info(
             PanelLabel::CombatAttrs => **text = combat_text.clone(),
             PanelLabel::SupportAttrs => **text = support_text.clone(),
             PanelLabel::Skills => **text = skills_text.clone(),
+            PanelLabel::Traits => **text = traits_text.clone(),
         }
     }
 

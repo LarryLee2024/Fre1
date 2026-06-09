@@ -119,9 +119,6 @@ impl Plugin for CombatLogPanelPlugin {
             OnEnter(AppState::InGame),
             spawn_combat_log_panel.in_set(GameSet::Ui),
         )
-        .add_systems(
-            Update,
-            toggle_combat_log.run_if(in_state(AppState::InGame)),
-        );
+        .add_systems(Update, toggle_combat_log.run_if(in_state(AppState::InGame)));
     }
 }

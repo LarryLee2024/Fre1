@@ -136,7 +136,10 @@ impl Plugin for TurnPlugin {
                 (GameSet::Camera, GameSet::Map, GameSet::Unit, GameSet::Ui).chain(),
             )
             .add_systems(OnEnter(TurnPhase::TurnEnd), turn_end_on_enter)
-            .add_systems(OnEnter(AppState::InGame), init_turn_order.after(GameSet::Unit));
+            .add_systems(
+                OnEnter(AppState::InGame),
+                init_turn_order.after(GameSet::Unit),
+            );
     }
 }
 

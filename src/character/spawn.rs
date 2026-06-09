@@ -134,34 +134,38 @@ fn spawn_unit_from_template(
     // 构建 AiBehaviorId
     let ai_behavior_id = AiBehaviorId(template.ai_behavior.clone());
 
-    commands.spawn((
-        Sprite::from_color(template.faction.unit_color(), Vec2::splat(tile_size * 0.6)),
-        Transform::from_xyz(world_pos.x, world_pos.y, 1.0),
-        Unit {
-            faction: template.faction,
-            acted: false,
-        },
-        UnitName(template.name.clone()),
-        GridPosition { coord },
-        attributes,
-        gameplay_tags,
-        trait_granted_tags,
-        skill_slots,
-        trait_collection,
-        ai_behavior_id,
-        SkillCooldowns::default(),
-        ActiveBuffs::default(),
-        children![
+    commands
+        .spawn((
+            Sprite::from_color(template.faction.unit_color(), Vec2::splat(tile_size * 0.6)),
+            Transform::from_xyz(world_pos.x, world_pos.y, 1.0),
+            Unit {
+                faction: template.faction,
+                acted: false,
+            },
+            UnitName(template.name.clone()),
+            UnitRace(template.race.clone()),
+            UnitClass(template.class.clone()),
+            GridPosition { coord },
+            attributes,
+            gameplay_tags,
+            trait_granted_tags,
+            skill_slots,
+            trait_collection,
+            ai_behavior_id,
+            SkillCooldowns::default(),
+            ActiveBuffs::default(),
+        ))
+        .with_children(|parent| {
             // 棋子名称标注（中央）
-            (
+            parent.spawn((
                 Text2d::new(label),
                 unit_font,
                 TextColor(Color::WHITE),
                 TextLayout::new_with_no_wrap(),
                 Transform::from_xyz(0.0, 0.0, 0.3),
-            ),
+            ));
             // 行动顺序数字（左上角，稍向右下偏移避免与地形坐标重叠）
-            (
+            parent.spawn((
                 Text2d::new("1"),
                 TextFont {
                     font: font.clone(),
@@ -172,23 +176,22 @@ fn spawn_unit_from_template(
                 TextLayout::new_with_no_wrap(),
                 Transform::from_xyz(-tile_size * 0.2, tile_size * 0.2, 0.3),
                 TurnOrderLabel,
-            ),
+            ));
             // HP 条背景（红色）
-            (
+            parent.spawn((
                 Sprite::from_color(Color::srgb(0.6, 0.1, 0.1), Vec2::new(bar_width, bar_height)),
                 Transform::from_xyz(-bar_width / 2.0, tile_size * 0.4, 0.1),
                 Anchor::CENTER_LEFT,
                 HpBarBg,
-            ),
+            ));
             // HP 条前景（绿色）
-            (
+            parent.spawn((
                 Sprite::from_color(Color::srgb(0.1, 0.8, 0.1), Vec2::new(bar_width, bar_height)),
                 Transform::from_xyz(-bar_width / 2.0, tile_size * 0.4, 0.2),
                 Anchor::CENTER_LEFT,
                 HpBarFg,
-            ),
-        ],
-    ));
+            ));
+        });
 }
 
 /// 单位管理插件

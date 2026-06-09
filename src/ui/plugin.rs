@@ -6,10 +6,10 @@ use super::panels::{ActionHintPlugin, CombatLogPanelPlugin, TurnIndicatorPlugin,
 use super::theme::UiTheme;
 use super::tile_info::TileInfoPlugin;
 use super::vfx::VfxPlugin;
+use crate::battle::CombatLogCollapsed;
 use crate::character::Faction;
 use crate::turn::{AppState, TurnState};
 use crate::ui::view_models::*;
-use crate::battle::CombatLogCollapsed;
 use bevy::prelude::*;
 
 /// UI 插件（组合所有 UI 子插件）

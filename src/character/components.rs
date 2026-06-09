@@ -21,6 +21,14 @@ pub struct Unit {
 #[derive(Component)]
 pub struct UnitName(pub String);
 
+/// 单位种族
+#[derive(Component)]
+pub struct UnitRace(pub String);
+
+/// 单位职业
+#[derive(Component)]
+pub struct UnitClass(pub String);
+
 /// 单位所在格子坐标
 #[derive(Component)]
 pub struct GridPosition {

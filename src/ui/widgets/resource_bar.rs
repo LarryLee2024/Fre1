@@ -15,14 +15,12 @@ pub fn spawn_resource_bar(
     text_label: impl Component,
 ) {
     parent
-        .spawn((
-            Node {
-                flex_direction: FlexDirection::Row,
-                align_items: AlignItems::Center,
-                column_gap: Val::Px(theme.gap_medium),
-                ..default()
-            },
-        ))
+        .spawn((Node {
+            flex_direction: FlexDirection::Row,
+            align_items: AlignItems::Center,
+            column_gap: Val::Px(theme.gap_medium),
+            ..default()
+        },))
         .with_children(|row| {
             // 标签
             row.spawn((

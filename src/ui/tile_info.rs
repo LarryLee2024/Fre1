@@ -64,9 +64,7 @@ pub fn handle_tile_info(
 
     for tile in &tiles {
         if tile.coord == coord {
-            if let Ok(screen_pos) =
-                camera.world_to_viewport(cam_transform, world_pos.extend(0.0))
-            {
+            if let Ok(screen_pos) = camera.world_to_viewport(cam_transform, world_pos.extend(0.0)) {
                 let terrain = tile.terrain;
                 let move_cost_str = match tile.move_cost {
                     Some(c) => format!("{}", c),
@@ -81,8 +79,7 @@ pub fn handle_tile_info(
                     tile.defense_bonus,
                 );
 
-                let panel_id =
-                    spawn_popup(&mut commands, &theme, screen_pos.x, screen_pos.y, None);
+                let panel_id = spawn_popup(&mut commands, &theme, screen_pos.x, screen_pos.y, None);
                 add_popup_text(
                     &mut commands,
                     panel_id,
