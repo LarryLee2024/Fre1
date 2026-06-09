@@ -3,10 +3,8 @@
 
 use crate::core::tag::{GameplayTag, TagName};
 use bevy::prelude::*;
-use ron::de::from_bytes;
 use serde::Deserialize;
 use std::collections::HashMap;
-use std::fs::read;
 
 /// 标签分类
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Deserialize)]
@@ -61,31 +59,22 @@ impl TagRegistry {
     /// 从 RON 文件加载
     pub fn load_from_file(path: &str) -> Self {
         let mut registry = TagRegistry::default();
-
-        match read(path) {
-            Ok(bytes) => match from_bytes::<Vec<TagDefinition>>(&bytes) {
-                Ok(defs) => {
-                    for def in defs {
-                        registry.definitions.insert(def.tag.to_tag(), def);
-                    }
-                    bevy::log::info!("加载标签定义: {} 种", registry.definitions.len());
-                }
-                Err(e) => {
-                    bevy::log::error!("解析标签定义文件 {} 失败: {}", path, e);
-                    registry.register_defaults();
-                }
-            },
-            Err(e) => {
-                bevy::log::warn!("标签定义文件 {} 不存在: {}, 使用默认值", path, e);
-                registry.register_defaults();
-            }
+        let (defs, loaded) =
+            crate::core::loader::load_file_array::<TagDefinition>(path, "标签定义");
+        for def in defs {
+            registry.definitions.insert(def.tag.to_tag(), def);
         }
-
+        if !loaded {
+            registry.register_defaults();
+        }
         registry
     }
 
     /// 注册内置默认标签定义
     fn register_defaults(&mut self) {
+        if !self.definitions.is_empty() {
+            return;
+        }
         let defaults = vec![
             // 元素
             TagDefinition {
@@ -223,6 +212,7 @@ impl Plugin for TagDefPlugin {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ron::de::from_bytes;
 
     #[test]
     fn ron_反序列化_标签定义() {

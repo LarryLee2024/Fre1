@@ -5,10 +5,8 @@
 use crate::core::attribute::{AttributeModifierDef, AttributeModifierInstance, BuffInstanceId};
 use crate::core::tag::{GameplayTag, GameplayTags, TagName};
 use bevy::prelude::*;
-use ron::de::from_bytes;
 use serde::Deserialize;
 use std::collections::HashMap;
-use std::fs::{read, read_dir};
 
 /// Trait 触发时机
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Deserialize)]
@@ -181,6 +179,8 @@ impl From<TraitEffectDef> for TraitEffect {
 /// Trait 定义（RON 反序列化用）
 #[derive(Clone, Debug, Deserialize)]
 pub struct TraitDefinition {
+    #[serde(default)]
+    pub version: u32,
     pub id: String,
     pub name: String,
     pub description: String,
@@ -306,50 +306,34 @@ impl TraitRegistry {
         self.traits.get(id)
     }
 
+    /// 注册一个 Trait
+    pub fn register(&mut self, trait_data: TraitData) {
+        self.traits.insert(trait_data.id.clone(), trait_data);
+    }
+
     /// 从 assets/traits/ 目录加载所有 .ron 文件
     pub fn load_from_dir(dir: &str) -> Self {
         let mut registry = TraitRegistry::default();
-        let Ok(entries) = read_dir(dir) else {
-            bevy::log::warn!("Trait 目录不存在: {}", dir);
-            registry.register_defaults();
-            return registry;
-        };
-
-        let mut loaded = false;
-        for entry in entries.flatten() {
-            let path = entry.path();
-            if path.extension().map_or(false, |e| e == "ron") {
-                match read(&path) {
-                    Ok(bytes) => match from_bytes::<TraitDefinition>(&bytes) {
-                        Ok(def) => {
-                            let id = def.id.clone();
-                            registry.traits.insert(id.clone(), def.into());
-                            bevy::log::info!("加载 Trait: {}", id);
-                            loaded = true;
-                        }
-                        Err(e) => {
-                            bevy::log::error!("解析 Trait 文件 {:?} 失败: {}", path, e);
-                        }
-                    },
-                    Err(e) => {
-                        bevy::log::error!("读取 Trait 文件 {:?} 失败: {}", path, e);
-                    }
-                }
-            }
+        let (defs, loaded) = crate::core::loader::load_dir_single::<TraitDefinition>(dir, "Trait");
+        for def in defs {
+            let id = def.id.clone();
+            registry.register(def.into());
+            bevy::log::info!("加载Trait: {}", id);
         }
-
         if !loaded {
-            bevy::log::warn!("Trait 目录为空，使用默认 Traits");
             registry.register_defaults();
         }
-
         registry
     }
 
     /// 注册内置默认 Traits
     fn register_defaults(&mut self) {
+        if !self.traits.is_empty() {
+            return;
+        }
         let defaults = vec![
             TraitDefinition {
+                version: 0,
                 id: "warrior_mastery".into(),
                 name: "战士精通".into(),
                 description: "近战职业，擅长正面作战".into(),
@@ -360,6 +344,7 @@ impl TraitRegistry {
                 ],
             },
             TraitDefinition {
+                version: 0,
                 id: "archer_mastery".into(),
                 name: "弓手精通".into(),
                 description: "远程职业，擅长远距离攻击".into(),
@@ -370,6 +355,7 @@ impl TraitRegistry {
                 ],
             },
             TraitDefinition {
+                version: 0,
                 id: "mage_mastery".into(),
                 name: "法师精通".into(),
                 description: "魔法职业，擅长元素攻击".into(),
@@ -377,6 +363,7 @@ impl TraitRegistry {
                 effects: vec![TraitEffectDef::GrantTag(TagName::Mage)],
             },
             TraitDefinition {
+                version: 0,
                 id: "fire_affinity".into(),
                 name: "火焰亲和".into(),
                 description: "拥有火焰力量".into(),
@@ -384,6 +371,7 @@ impl TraitRegistry {
                 effects: vec![TraitEffectDef::GrantTag(TagName::Fire)],
             },
             TraitDefinition {
+                version: 0,
                 id: "heavy_armor".into(),
                 name: "重甲".into(),
                 description: "装备重甲，防御+3".into(),
@@ -418,6 +406,7 @@ impl Plugin for TraitPlugin {
 mod tests {
     use super::*;
     use crate::core::attribute::{AttributeKind, ModifierOp};
+    use ron::de::from_bytes;
 
     #[test]
     fn ron_反序列化_trait定义() {
@@ -442,6 +431,7 @@ mod tests {
     #[test]
     fn trait_def_转换为_trait_data() {
         let def = TraitDefinition {
+            version: 0,
             id: "test".into(),
             name: "测试".into(),
             description: "测试trait".into(),

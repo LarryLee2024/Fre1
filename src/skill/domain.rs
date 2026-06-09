@@ -2,10 +2,8 @@ use crate::core::attribute::AttributeKind;
 use crate::core::effect::EffectDef;
 use crate::core::tag::{GameplayTag, TagName};
 use bevy::prelude::*;
-use ron::de::from_bytes;
 use serde::Deserialize;
 use std::collections::HashMap;
-use std::fs::{read, read_dir};
 
 /// 基础攻击技能 ID 常量
 pub const BASIC_ATTACK_ID: &str = "basic_attack";
@@ -109,6 +107,8 @@ pub struct SkillData {
 /// 技能数据定义（RON 反序列化用，TagName 替代 GameplayTag）
 #[derive(Clone, Debug, Deserialize)]
 pub struct SkillDef {
+    #[serde(default)]
+    pub version: u32,
     pub id: String,
     pub name: String,
     pub description: String,
@@ -231,46 +231,23 @@ impl SkillRegistry {
     /// 从 assets/skills/ 目录加载所有 .ron 文件
     pub fn load_from_dir(dir: &str) -> Self {
         let mut registry = SkillRegistry::default();
-        let Ok(entries) = read_dir(dir) else {
-            bevy::log::warn!("技能目录不存在，使用默认技能: {}", dir);
-            registry.register_defaults();
-            return registry;
-        };
-
-        let mut loaded = false;
-        for entry in entries.flatten() {
-            let path = entry.path();
-            if path.extension().map_or(false, |e| e == "ron") {
-                match read(&path) {
-                    Ok(bytes) => match from_bytes::<SkillDef>(&bytes) {
-                        Ok(def) => {
-                            let id = def.id.clone();
-                            registry.register(def.into());
-                            bevy::log::info!("加载技能: {}", id);
-                            loaded = true;
-                        }
-                        Err(e) => {
-                            bevy::log::error!("解析技能文件 {:?} 失败: {}", path, e);
-                        }
-                    },
-                    Err(e) => {
-                        bevy::log::error!("读取技能文件 {:?} 失败: {}", path, e);
-                    }
-                }
-            }
+        let (defs, loaded) = crate::core::loader::load_dir_single::<SkillDef>(dir, "技能");
+        for def in defs {
+            let id = def.id.clone();
+            registry.register(def.into());
+            bevy::log::info!("加载技能: {}", id);
         }
-
-        // 目录存在但为空或全部解析失败，加载默认技能
         if !loaded {
-            bevy::log::warn!("技能目录为空，使用默认技能");
             registry.register_defaults();
         }
-
         registry
     }
 
     /// 注册内置默认技能（确保基础功能可用）
     fn register_defaults(&mut self) {
+        if !self.skills.is_empty() {
+            return;
+        }
         // 普通攻击
         self.register(SkillData {
             id: BASIC_ATTACK_ID.into(),
@@ -384,6 +361,7 @@ impl SkillRegistry {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ron::de::from_bytes;
 
     // ── SkillTargeting ──
 
@@ -538,6 +516,7 @@ mod tests {
     #[test]
     fn skill_def_转换为_skill_data() {
         let def = SkillDef {
+            version: 0,
             id: "test".into(),
             name: "测试".into(),
             description: "测试技能".into(),

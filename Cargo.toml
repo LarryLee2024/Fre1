@@ -7,4 +7,4 @@ edition = "2024"
 bevy = { version = "0.18.1", features = ["2d"] }
 bevy-inspector-egui = "0.36"
 serde = { version = "1.0", features = ["derive"] }
-ron = "0.8"
+ron = "0.12.1"

@@ -4,6 +4,7 @@
 pub mod attribute;
 pub(crate) mod attribute_def;
 pub mod effect;
+pub(crate) mod loader;
 pub mod modifier_rule;
 pub mod tag;
 pub(crate) mod tag_def;

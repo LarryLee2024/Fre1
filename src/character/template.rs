@@ -5,10 +5,8 @@ use super::components::Faction;
 use crate::core::attribute::AttributeKind;
 use crate::skill::BASIC_ATTACK_ID;
 use bevy::prelude::*;
-use ron::de::from_bytes;
 use serde::Deserialize;
 use std::collections::HashMap;
-use std::fs::{read, read_dir};
 
 /// 单位模板（运行时）
 #[derive(Clone, Debug)]
@@ -31,6 +29,8 @@ pub struct UnitTemplate {
 /// 单位模板（RON 反序列化用）
 #[derive(Clone, Debug, Deserialize)]
 pub struct UnitTemplateDef {
+    #[serde(default)]
+    pub version: u32,
     pub id: String,
     pub name: String,
     pub faction: FactionDef,
@@ -91,46 +91,32 @@ impl UnitTemplateRegistry {
         self.templates.get(id)
     }
 
+    /// 注册一个单位模板
+    pub fn register(&mut self, template: UnitTemplate) {
+        self.templates.insert(template.id.clone(), template);
+    }
+
     /// 从 assets/units/ 目录加载所有 .ron 文件
     pub fn load_from_dir(dir: &str) -> Self {
         let mut registry = UnitTemplateRegistry::default();
-        let Ok(entries) = read_dir(dir) else {
-            bevy::log::warn!("单位模板目录不存在: {}", dir);
-            registry.register_defaults();
-            return registry;
-        };
-
-        for entry in entries.flatten() {
-            let path = entry.path();
-            if path.extension().map_or(false, |e| e == "ron") {
-                match read(&path) {
-                    Ok(bytes) => match from_bytes::<UnitTemplateDef>(&bytes) {
-                        Ok(def) => {
-                            let id = def.id.clone();
-                            registry.templates.insert(id.clone(), def.into());
-                            bevy::log::info!("加载单位模板: {}", id);
-                        }
-                        Err(e) => {
-                            bevy::log::error!("解析单位模板文件 {:?} 失败: {}", path, e);
-                        }
-                    },
-                    Err(e) => {
-                        bevy::log::error!("读取单位模板文件 {:?} 失败: {}", path, e);
-                    }
-                }
-            }
+        let (defs, loaded) =
+            crate::core::loader::load_dir_single::<UnitTemplateDef>(dir, "单位模板");
+        for def in defs {
+            let id = def.id.clone();
+            registry.register(def.into());
+            bevy::log::info!("加载单位模板: {}", id);
         }
-
-        if registry.templates.is_empty() {
-            bevy::log::warn!("单位模板目录为空，使用默认模板");
+        if !loaded {
             registry.register_defaults();
         }
-
         registry
     }
 
     /// 注册内置默认单位模板（确保基础功能可用）
     fn register_defaults(&mut self) {
+        if !self.templates.is_empty() {
+            return;
+        }
         // 战士
         let warrior_attrs: HashMap<AttributeKind, f32> = {
             let mut m = HashMap::new();
@@ -266,6 +252,7 @@ impl Plugin for UnitTemplatePlugin {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ron::de::from_bytes;
 
     #[test]
     fn ron_反序列化_单位模板() {
@@ -305,6 +292,7 @@ mod tests {
     #[test]
     fn unit_template_def_转换为_unit_template() {
         let def = UnitTemplateDef {
+            version: 0,
             id: "test".into(),
             name: "测试".into(),
             faction: FactionDef::Enemy,

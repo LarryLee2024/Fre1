@@ -1,10 +1,8 @@
 use crate::core::attribute::{AttributeKind, AttributeModifierDef, ModifierOp};
 use crate::core::tag::{GameplayTag, TagName};
 use bevy::prelude::*;
-use ron::de::from_bytes;
 use serde::Deserialize;
 use std::collections::HashMap;
-use std::fs::{read, read_dir};
 
 /// Buff 数据定义（运行时）
 #[derive(Clone, Debug)]
@@ -24,6 +22,8 @@ pub struct BuffData {
 /// Buff 数据定义（RON 反序列化用，TagName 替代 GameplayTag）
 #[derive(Clone, Debug, Deserialize)]
 pub struct BuffDef {
+    #[serde(default)]
+    pub version: u32,
     pub id: String,
     pub name: String,
     pub default_duration: u32,
@@ -70,49 +70,31 @@ impl BuffRegistry {
         self.buffs.get(id)
     }
 
+    /// 注册一个 Buff
+    pub fn register(&mut self, buff: BuffData) {
+        self.buffs.insert(buff.id.clone(), buff);
+    }
+
     /// 从 assets/buffs/ 目录加载所有 .ron 文件
     pub fn load_from_dir(dir: &str) -> Self {
         let mut registry = BuffRegistry::default();
-        let Ok(entries) = read_dir(dir) else {
-            bevy::log::warn!("Buff 目录不存在，使用默认 Buff: {}", dir);
-            registry.register_defaults();
-            return registry;
-        };
-
-        let mut loaded = false;
-        for entry in entries.flatten() {
-            let path = entry.path();
-            if path.extension().map_or(false, |e| e == "ron") {
-                match read(&path) {
-                    Ok(bytes) => match from_bytes::<BuffDef>(&bytes) {
-                        Ok(def) => {
-                            let id = def.id.clone();
-                            registry.buffs.insert(id.clone(), def.into());
-                            bevy::log::info!("加载 Buff: {}", id);
-                            loaded = true;
-                        }
-                        Err(e) => {
-                            bevy::log::error!("解析 Buff 文件 {:?} 失败: {}", path, e);
-                        }
-                    },
-                    Err(e) => {
-                        bevy::log::error!("读取 Buff 文件 {:?} 失败: {}", path, e);
-                    }
-                }
-            }
+        let (defs, loaded) = crate::core::loader::load_dir_single::<BuffDef>(dir, "Buff");
+        for def in defs {
+            let id = def.id.clone();
+            registry.register(def.into());
+            bevy::log::info!("加载Buff: {}", id);
         }
-
-        // 目录存在但为空或全部解析失败，加载默认 Buff
         if !loaded {
-            bevy::log::warn!("Buff 目录为空，使用默认 Buff");
             registry.register_defaults();
         }
-
         registry
     }
 
     /// 注册内置默认 Buff（确保基础功能可用）
     fn register_defaults(&mut self) {
+        if !self.buffs.is_empty() {
+            return;
+        }
         // 攻击力增加
         self.buffs.insert(
             "attack_up".into(),
@@ -274,12 +256,14 @@ impl BuffRegistry {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ron::de::from_bytes;
 
     // ── BuffDef → BuffData 转换 ──
 
     #[test]
     fn buff_def_转换为_buff_data() {
         let def = BuffDef {
+            version: 0,
             id: "test_buff".into(),
             name: "测试增益".into(),
             default_duration: 3,

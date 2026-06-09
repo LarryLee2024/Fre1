@@ -3,10 +3,8 @@
 // 支持从 assets/ai/*.ron 外部配置文件加载
 
 use bevy::prelude::*;
-use ron::de::from_bytes;
 use serde::Deserialize;
 use std::collections::HashMap;
-use std::fs::{read, read_dir};
 
 /// 目标选择策略
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Deserialize)]
@@ -49,6 +47,8 @@ pub enum SkillStrategy {
 /// AI 行为定义（RON 反序列化用）
 #[derive(Clone, Debug, Deserialize)]
 pub struct AiBehaviorDef {
+    #[serde(default)]
+    pub version: u32,
     pub id: String,
     pub name: String,
     pub target_strategy: TargetStrategy,
@@ -114,6 +114,11 @@ impl AiBehaviorRegistry {
         self.behaviors.get(id)
     }
 
+    /// 注册一个 AI 行为
+    pub fn register(&mut self, behavior: AiBehavior) {
+        self.behaviors.insert(behavior.id.clone(), behavior);
+    }
+
     /// 获取默认行为（找不到指定行为时回退）
     pub fn default_behavior(&self) -> &AiBehavior {
         self.behaviors.get("default").unwrap_or_else(|| {
@@ -127,47 +132,26 @@ impl AiBehaviorRegistry {
     /// 从 assets/ai/ 目录加载所有 .ron 文件
     pub fn load_from_dir(dir: &str) -> Self {
         let mut registry = AiBehaviorRegistry::default();
-        let Ok(entries) = read_dir(dir) else {
-            bevy::log::warn!("AI 行为目录不存在: {}", dir);
-            registry.register_defaults();
-            return registry;
-        };
-
-        let mut loaded = false;
-        for entry in entries.flatten() {
-            let path = entry.path();
-            if path.extension().map_or(false, |e| e == "ron") {
-                match read(&path) {
-                    Ok(bytes) => match from_bytes::<AiBehaviorDef>(&bytes) {
-                        Ok(def) => {
-                            let id = def.id.clone();
-                            registry.behaviors.insert(id.clone(), def.into());
-                            bevy::log::info!("加载 AI 行为: {}", id);
-                            loaded = true;
-                        }
-                        Err(e) => {
-                            bevy::log::error!("解析 AI 行为文件 {:?} 失败: {}", path, e);
-                        }
-                    },
-                    Err(e) => {
-                        bevy::log::error!("读取 AI 行为文件 {:?} 失败: {}", path, e);
-                    }
-                }
-            }
+        let (defs, loaded) = crate::core::loader::load_dir_single::<AiBehaviorDef>(dir, "AI行为");
+        for def in defs {
+            let id = def.id.clone();
+            registry.register(def.into());
+            bevy::log::info!("加载AI行为: {}", id);
         }
-
         if !loaded {
-            bevy::log::warn!("AI 行为目录为空，使用默认行为");
             registry.register_defaults();
         }
-
         registry
     }
 
     /// 注册内置默认 AI 行为
     fn register_defaults(&mut self) {
+        if !self.behaviors.is_empty() {
+            return;
+        }
         let defaults = vec![
             AiBehaviorDef {
+                version: 0,
                 id: "default".into(),
                 name: "默认".into(),
                 target_strategy: TargetStrategy::Nearest,
@@ -176,6 +160,7 @@ impl AiBehaviorRegistry {
                 skill_priority: vec![],
             },
             AiBehaviorDef {
+                version: 0,
                 id: "aggressive".into(),
                 name: "激进".into(),
                 target_strategy: TargetStrategy::Weakest,
@@ -184,6 +169,7 @@ impl AiBehaviorRegistry {
                 skill_priority: vec![],
             },
             AiBehaviorDef {
+                version: 0,
                 id: "cautious".into(),
                 name: "谨慎".into(),
                 target_strategy: TargetStrategy::Nearest,
@@ -192,6 +178,7 @@ impl AiBehaviorRegistry {
                 skill_priority: vec![],
             },
             AiBehaviorDef {
+                version: 0,
                 id: "support".into(),
                 name: "辅助".into(),
                 target_strategy: TargetStrategy::Nearest,
@@ -222,6 +209,7 @@ impl Plugin for AiBehaviorPlugin {
 mod tests {
     use super::*;
     use crate::skill::BASIC_ATTACK_ID;
+    use ron::de::from_bytes;
 
     #[test]
     fn ron_反序列化_ai行为() {
@@ -244,6 +232,7 @@ mod tests {
     #[test]
     fn ai_behavior_def_转换为_ai_behavior() {
         let def = AiBehaviorDef {
+            version: 0,
             id: "test".into(),
             name: "测试".into(),
             target_strategy: TargetStrategy::MostDangerous,

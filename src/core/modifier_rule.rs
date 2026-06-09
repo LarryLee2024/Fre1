@@ -3,9 +3,7 @@
 
 use crate::core::tag::{GameplayTag, TagName};
 use bevy::prelude::*;
-use ron::de::from_bytes;
 use serde::Deserialize;
-use std::fs::{read, read_dir};
 
 /// 修饰效果类型
 #[derive(Clone, Debug)]
@@ -242,38 +240,16 @@ pub struct ModifierRuleRegistry {
 impl ModifierRuleRegistry {
     /// 从 assets/rules/ 目录加载所有 .ron 文件
     pub fn load_from_dir(dir: &str) -> Self {
-        let mut registry = ModifierRuleRegistry {
-            calculators: ModifierCalculatorRegistry::with_defaults(),
-            ..Default::default()
-        };
-        let Ok(entries) = read_dir(dir) else {
-            bevy::log::warn!("修饰规则目录不存在: {}", dir);
-            return registry;
-        };
-
-        for entry in entries.flatten() {
-            let path = entry.path();
-            if path.extension().map_or(false, |e| e == "ron") {
-                match read(&path) {
-                    Ok(bytes) => match from_bytes::<Vec<ModifierRuleDef>>(&bytes) {
-                        Ok(defs) => {
-                            for def in defs {
-                                let name = def.name.clone();
-                                registry.rules.push(def.into());
-                                bevy::log::info!("加载修饰规则: {}", name);
-                            }
-                        }
-                        Err(e) => {
-                            bevy::log::error!("解析修饰规则文件 {:?} 失败: {}", path, e);
-                        }
-                    },
-                    Err(e) => {
-                        bevy::log::error!("读取修饰规则文件 {:?} 失败: {}", path, e);
-                    }
-                }
-            }
+        let mut rules = Vec::new();
+        let (rule_defs, _loaded) =
+            crate::core::loader::load_dir_array::<ModifierRuleDef>(dir, "修饰规则");
+        for def in rule_defs {
+            let name = def.name.clone();
+            rules.push(def.into());
+            bevy::log::info!("加载修饰规则: {}", name);
         }
-        registry
+        let calculators = ModifierCalculatorRegistry::with_defaults();
+        Self { rules, calculators }
     }
 
     /// 兜底默认值
@@ -355,6 +331,7 @@ impl Plugin for ModifierRulePlugin {
 mod tests {
     use super::*;
     use crate::core::tag::GameplayTags;
+    use ron::de::from_bytes;
 
     #[test]
     fn ron_反序列化_修饰规则() {

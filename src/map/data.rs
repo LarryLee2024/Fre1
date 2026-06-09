@@ -2,10 +2,8 @@
 // 支持从 assets/terrains/*.ron 和 assets/maps/*.ron 外部配置文件加载
 
 use bevy::prelude::*;
-use ron::de::from_bytes;
 use serde::Deserialize;
 use std::collections::HashMap;
-use std::fs::{read, read_dir};
 
 // ── 地形定义 ──
 
@@ -25,6 +23,8 @@ pub struct TerrainDef {
 /// 地形定义（RON 反序列化用）
 #[derive(Clone, Debug, Deserialize)]
 pub struct TerrainDefRon {
+    #[serde(default)]
+    pub version: u32,
     pub id: String,
     pub name: String,
     /// 移动消耗，0 表示不可通行
@@ -78,31 +78,14 @@ impl TerrainRegistry {
     /// 从 assets/terrains/ 目录加载所有 .ron 文件
     pub fn load_from_dir(dir: &str) -> Self {
         let mut registry = TerrainRegistry::default();
-        let Ok(entries) = read_dir(dir) else {
-            bevy::log::warn!("地形目录不存在: {}", dir);
-            return registry;
-        };
-
-        for entry in entries.flatten() {
-            let path = entry.path();
-            if path.extension().map_or(false, |e| e == "ron") {
-                match read(&path) {
-                    Ok(bytes) => match from_bytes::<TerrainDefRon>(&bytes) {
-                        Ok(def) => {
-                            let id = def.id.clone();
-                            registry.terrains.insert(id.clone(), def.into());
-                            bevy::log::info!("加载地形: {}", id);
-                        }
-                        Err(e) => {
-                            bevy::log::error!("解析地形文件 {:?} 失败: {}", path, e);
-                        }
-                    },
-                    Err(e) => {
-                        bevy::log::error!("读取地形文件 {:?} 失败: {}", path, e);
-                    }
-                }
-            }
+        let (defs, _loaded) = crate::core::loader::load_dir_single::<TerrainDefRon>(dir, "地形");
+        for def in defs {
+            let id = def.id.clone();
+            registry.terrains.insert(id.clone(), def.into());
+            bevy::log::info!("加载地形: {}", id);
         }
+        // TerrainRegistry 不在 load_from_dir 中调用 register_defaults
+        // 由 Plugin 层显式调用
         registry
     }
 
@@ -144,6 +127,8 @@ pub struct UnitDeployDef {
 /// 关卡配置（RON 反序列化用）
 #[derive(Clone, Debug, Deserialize)]
 pub struct LevelConfigDef {
+    #[serde(default)]
+    pub version: u32,
     pub id: String,
     pub name: String,
     pub width: u32,
@@ -242,31 +227,13 @@ impl LevelRegistry {
     /// 从 assets/maps/ 目录加载所有 .ron 文件
     pub fn load_from_dir(dir: &str) -> Self {
         let mut registry = LevelRegistry::default();
-        let Ok(entries) = read_dir(dir) else {
-            bevy::log::warn!("关卡目录不存在: {}", dir);
-            return registry;
-        };
-
-        for entry in entries.flatten() {
-            let path = entry.path();
-            if path.extension().map_or(false, |e| e == "ron") {
-                match read(&path) {
-                    Ok(bytes) => match from_bytes::<LevelConfigDef>(&bytes) {
-                        Ok(def) => {
-                            let id = def.id.clone();
-                            registry.levels.insert(id.clone(), def.into());
-                            bevy::log::info!("加载关卡: {}", id);
-                        }
-                        Err(e) => {
-                            bevy::log::error!("解析关卡文件 {:?} 失败: {}", path, e);
-                        }
-                    },
-                    Err(e) => {
-                        bevy::log::error!("读取关卡文件 {:?} 失败: {}", path, e);
-                    }
-                }
-            }
+        let (defs, _loaded) = crate::core::loader::load_dir_single::<LevelConfigDef>(dir, "关卡");
+        for def in defs {
+            let id = def.id.clone();
+            registry.levels.insert(id.clone(), def.into());
+            bevy::log::info!("加载关卡: {}", id);
         }
+        // LevelRegistry 无 register_defaults（关卡没有硬编码兜底）
         registry
     }
 }
@@ -289,6 +256,7 @@ impl Plugin for MapDataPlugin {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ron::de::from_bytes;
 
     #[test]
     fn ron_反序列化_地形定义() {
@@ -359,6 +327,7 @@ mod tests {
     #[test]
     fn level_config_def_转换为_level_config() {
         let def = LevelConfigDef {
+            version: 0,
             id: "test".into(),
             name: "测试".into(),
             width: 3,
@@ -456,6 +425,7 @@ mod tests {
     #[test]
     fn terrain_def_ron_可通行地形move_cost() {
         let def = TerrainDefRon {
+            version: 0,
             id: "forest".into(),
             name: "林".into(),
             move_cost: 2,
@@ -472,6 +442,7 @@ mod tests {
     #[test]
     fn level_config_地形网格解析() {
         let def = LevelConfigDef {
+            version: 0,
             id: "test".into(),
             name: "测试".into(),
             width: 2,
@@ -497,6 +468,7 @@ mod tests {
         let mut custom_map = HashMap::new();
         custom_map.insert('D', "desert".to_string());
         let def = LevelConfigDef {
+            version: 0,
             id: "test".into(),
             name: "测试".into(),
             width: 2,

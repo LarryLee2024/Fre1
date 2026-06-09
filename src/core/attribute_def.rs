@@ -3,10 +3,8 @@
 
 use crate::core::attribute::AttributeKind;
 use bevy::prelude::*;
-use ron::de::from_bytes;
 use serde::Deserialize;
 use std::collections::HashMap;
-use std::fs::read;
 
 /// 属性定义（RON 反序列化用）
 #[derive(Clone, Debug, Deserialize)]
@@ -41,31 +39,22 @@ impl AttributeRegistry {
     /// 从 RON 文件加载
     pub fn load_from_file(path: &str) -> Self {
         let mut registry = AttributeRegistry::default();
-
-        match read(path) {
-            Ok(bytes) => match from_bytes::<Vec<AttributeDefinition>>(&bytes) {
-                Ok(defs) => {
-                    for def in defs {
-                        registry.definitions.insert(def.kind, def);
-                    }
-                    bevy::log::info!("加载属性定义: {} 种", registry.definitions.len());
-                }
-                Err(e) => {
-                    bevy::log::error!("解析属性定义文件 {} 失败: {}", path, e);
-                    registry.register_defaults();
-                }
-            },
-            Err(e) => {
-                bevy::log::warn!("属性定义文件 {} 不存在: {}, 使用默认值", path, e);
-                registry.register_defaults();
-            }
+        let (defs, loaded) =
+            crate::core::loader::load_file_array::<AttributeDefinition>(path, "属性定义");
+        for def in defs {
+            registry.definitions.insert(def.kind, def);
         }
-
+        if !loaded {
+            registry.register_defaults();
+        }
         registry
     }
 
     /// 注册内置默认属性定义（8核心 + 3资源 + 13衍生 = 24种）
     fn register_defaults(&mut self) {
+        if !self.definitions.is_empty() {
+            return;
+        }
         let defaults = vec![
             // ── 8 维核心属性 ──
             AttributeDefinition {
@@ -283,6 +272,7 @@ impl Plugin for AttributeDefPlugin {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ron::de::from_bytes;
 
     #[test]
     fn ron_反序列化_属性定义() {
