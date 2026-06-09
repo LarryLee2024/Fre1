@@ -2,7 +2,9 @@
 // 使用通用 Popup Widget
 
 use crate::character::Faction;
-use crate::map::{GameMap, Tile};
+use crate::map::TerrainRegistry;
+use crate::map::runtime::TerrainGrid;
+use crate::map::GameMap;
 use crate::turn::TurnPhase;
 use crate::ui::theme::UiTheme;
 use crate::ui::widgets::popup::{add_popup_text, despawn_popup, spawn_popup};
@@ -20,7 +22,8 @@ pub fn handle_tile_info(
     windows: Query<&Window>,
     camera_query: Query<(&Camera, &GlobalTransform)>,
     map: Res<GameMap>,
-    tiles: Query<&Tile>,
+    terrain_grid: Res<TerrainGrid>,
+    terrain_registry: Res<TerrainRegistry>,
     turn_state: Res<crate::turn::TurnState>,
     turn_phase: Res<State<TurnPhase>>,
     mut commands: Commands,
@@ -62,34 +65,29 @@ pub fn handle_tile_info(
 
     tile_info_entity.entity = despawn_popup(&mut commands, tile_info_entity.entity);
 
-    for tile in &tiles {
-        if tile.coord == coord {
-            if let Ok(screen_pos) = camera.world_to_viewport(cam_transform, world_pos.extend(0.0)) {
-                let terrain = tile.terrain;
-                let move_cost_str = match tile.move_cost {
-                    Some(c) => format!("{}", c),
-                    None => "不可通行".to_string(),
-                };
-                let info_text = format!(
-                    "坐标: ({}, {})\n地形: {}\n移动消耗: {}\n防御加成: {}",
-                    tile.coord.x,
-                    tile.coord.y,
-                    terrain.label(),
-                    move_cost_str,
-                    tile.defense_bonus,
-                );
+    if let Some(terrain_id) = terrain_grid.get(coord) {
+        if let Ok(screen_pos) = camera.world_to_viewport(cam_transform, world_pos.extend(0.0)) {
+            let terrain_def = terrain_registry.get(terrain_id);
+            let terrain_name = terrain_def.map(|def| def.name.as_str()).unwrap_or(terrain_id);
+            let move_cost_str = terrain_def
+                .and_then(|def| def.move_cost)
+                .map(|c| format!("{}", c))
+                .unwrap_or_else(|| "不可通行".to_string());
+            let defense_bonus = terrain_def.map(|def| def.defense_bonus).unwrap_or(0);
+            let info_text = format!(
+                "坐标: ({}, {})\n地形: {}\n移动消耗: {}\n防御加成: {}",
+                coord.x, coord.y, terrain_name, move_cost_str, defense_bonus,
+            );
 
-                let panel_id = spawn_popup(&mut commands, &theme, screen_pos.x, screen_pos.y, None);
-                add_popup_text(
-                    &mut commands,
-                    panel_id,
-                    &info_text,
-                    theme.font_small,
-                    theme.tile_info_text,
-                );
-                tile_info_entity.entity = Some(panel_id);
-            }
-            return;
+            let panel_id = spawn_popup(&mut commands, &theme, screen_pos.x, screen_pos.y, None);
+            add_popup_text(
+                &mut commands,
+                panel_id,
+                &info_text,
+                theme.font_small,
+                theme.tile_info_text,
+            );
+            tile_info_entity.entity = Some(panel_id);
         }
     }
 }

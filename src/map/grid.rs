@@ -1,106 +1,11 @@
-// 地图网格：GameMap、Tile、Terrain、坐标转换、地图生成
+// 地图网格：GameMap、坐标转换、地图渲染
+// Terrain 枚举和 Tile 组件已删除，地形数据由 TerrainGrid 纯数据存储
+// 渲染层与数据层分离：spawn_map 只负责画格子
 
 use super::data::{LevelRegistry, TerrainRegistry};
+use super::runtime::TerrainGrid;
 use crate::assets::CnFont;
 use bevy::prelude::*;
-
-/// 地形类型（Tile 组件存储，用于寻路等运行时逻辑）
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum Terrain {
-    Plain,
-    Forest,
-    Mountain,
-    Water,
-}
-
-impl Terrain {
-    /// 从地形 ID 字符串解析
-    pub fn from_id(id: &str) -> Self {
-        match id {
-            "forest" => Terrain::Forest,
-            "mountain" => Terrain::Mountain,
-            "water" => Terrain::Water,
-            _ => Terrain::Plain,
-        }
-    }
-
-    /// 转换为地形 ID 字符串
-    pub fn to_id(&self) -> &'static str {
-        match self {
-            Terrain::Plain => "plain",
-            Terrain::Forest => "forest",
-            Terrain::Mountain => "mountain",
-            Terrain::Water => "water",
-        }
-    }
-
-    /// 地形中文名（用于地图标注）
-    pub fn label(&self) -> &'static str {
-        match self {
-            Terrain::Plain => "草",
-            Terrain::Forest => "林",
-            Terrain::Mountain => "山",
-            Terrain::Water => "水",
-        }
-    }
-
-    /// 移动消耗兜底值（TerrainRegistry 未加载时使用）
-    pub fn move_cost_fallback(&self) -> Option<u32> {
-        match self {
-            Terrain::Plain => Some(1),
-            Terrain::Forest => Some(2),
-            Terrain::Mountain => None,
-            Terrain::Water => None,
-        }
-    }
-
-    /// 地形防御加成兜底值（TerrainRegistry 未加载时使用）
-    pub fn defense_bonus_fallback(&self) -> i32 {
-        match self {
-            Terrain::Plain => 0,
-            Terrain::Forest => 2,
-            Terrain::Mountain => 0,
-            Terrain::Water => 0,
-        }
-    }
-
-    /// 地形颜色（从 TerrainRegistry 优先获取，此为兜底）
-    pub fn color(&self) -> Color {
-        match self {
-            Terrain::Plain => Color::srgb(0.56, 0.73, 0.35),
-            Terrain::Forest => Color::srgb(0.20, 0.50, 0.18),
-            Terrain::Mountain => Color::srgb(0.55, 0.50, 0.45),
-            Terrain::Water => Color::srgb(0.25, 0.47, 0.85),
-        }
-    }
-
-    /// 从 TerrainRegistry 获取颜色
-    pub fn color_from_registry(&self, registry: &TerrainRegistry) -> Color {
-        let id = match self {
-            Terrain::Plain => "plain",
-            Terrain::Forest => "forest",
-            Terrain::Mountain => "mountain",
-            Terrain::Water => "water",
-        };
-        registry
-            .get(id)
-            .map(|def| Color::srgb(def.color.0, def.color.1, def.color.2))
-            .unwrap_or_else(|| self.color())
-    }
-}
-
-/// 地图格子组件
-#[derive(Component)]
-pub struct Tile {
-    /// 网格坐标
-    pub coord: IVec2,
-    /// 地形类型
-    pub terrain: Terrain,
-    /// 移动消耗（从 TerrainRegistry 加载，None 表示不可通行）
-    pub move_cost: Option<u32>,
-    /// 地形防御加成（从 TerrainRegistry 加载）
-    pub defense_bonus: i32,
-}
 
 /// 地图资源：存储地图尺寸
 #[derive(Resource)]
@@ -158,7 +63,12 @@ impl GameMap {
     }
 }
 
-/// 生成地图（从 LevelConfig 加载地形布局）
+/// 地图渲染标记组件
+#[derive(Component)]
+pub struct TileSprite;
+
+/// 生成地图：从 TerrainGrid 读取地形 ID，用 TerrainRegistry 查找颜色/属性进行渲染
+/// 不再生成 Tile Entity，只生成纯渲染 Sprite
 pub fn spawn_map(
     mut commands: Commands,
     mut map: ResMut<GameMap>,
@@ -172,79 +82,101 @@ pub fn spawn_map(
         *map = GameMap::from_level(level);
     }
 
+    // 构建 TerrainGrid
+    let terrain_grid = if let Some(ref level) = level {
+        TerrainGrid::from_terrain_map(map.width, map.height, &level.terrain_map)
+    } else {
+        // 兜底：算法生成
+        let mut terrain_map = std::collections::HashMap::new();
+        for y in 0..map.height {
+            for x in 0..map.width {
+                let id = if x == 0 || y == 0 || x == map.width - 1 || y == map.height - 1 {
+                    "mountain"
+                } else if (x + y) % 7 == 0 {
+                    "water"
+                } else if (x + y) % 5 == 0 {
+                    "forest"
+                } else {
+                    "plain"
+                };
+                terrain_map.insert((x as i32, y as i32), id.to_string());
+            }
+        }
+        TerrainGrid::from_terrain_map(map.width, map.height, &terrain_map)
+    };
+
+    // 插入 TerrainGrid 资源
+    commands.insert_resource(terrain_grid.clone());
+
     let small_font = TextFont {
         font: cn_font.handle.clone(),
         font_size: 10.0,
         ..default()
     };
 
-    for y in 0..map.height {
-        for x in 0..map.width {
-            let coord = IVec2::new(x as i32, y as i32);
+    // 渲染层：从 TerrainGrid 读取数据画格子
+    for (coord, terrain_id) in terrain_grid.iter() {
+        let world_pos = map.coord_to_world(coord);
+        let tile_size = map.tile_size;
 
-            // 从关卡配置获取地形，兜底用算法生成
-            let terrain = if let Some(ref level) = level {
-                level
-                    .terrain_map
-                    .get(&(x as i32, y as i32))
-                    .map(|id| Terrain::from_id(id.as_str()))
-                    .unwrap_or(Terrain::Plain)
-            } else {
-                // 兜底：算法生成
-                if x == 0 || y == 0 || x == map.width - 1 || y == map.height - 1 {
-                    Terrain::Mountain
-                } else if (x + y) % 7 == 0 {
-                    Terrain::Water
-                } else if (x + y) % 5 == 0 {
-                    Terrain::Forest
-                } else {
-                    Terrain::Plain
-                }
-            };
+        // 从 TerrainRegistry 获取地形属性
+        let (terrain_color, terrain_name, move_cost) = terrain_registry
+            .get(terrain_id)
+            .map(|def| {
+                (
+                    Color::srgb(def.color.0, def.color.1, def.color.2),
+                    def.name.as_str(),
+                    def.move_cost,
+                )
+            })
+            .unwrap_or_else(|| {
+                // 兜底颜色
+                let color = match terrain_id {
+                    "forest" => Color::srgb(0.20, 0.50, 0.18),
+                    "mountain" => Color::srgb(0.55, 0.50, 0.45),
+                    "water" => Color::srgb(0.25, 0.47, 0.85),
+                    _ => Color::srgb(0.56, 0.73, 0.35),
+                };
+                let name = match terrain_id {
+                    "forest" => "林",
+                    "mountain" => "山",
+                    "water" => "水",
+                    _ => "草",
+                };
+                let mc = match terrain_id {
+                    "plain" => Some(1u32),
+                    "forest" => Some(2u32),
+                    _ => None,
+                };
+                (color, name, mc)
+            });
 
-            let world_pos = map.coord_to_world(coord);
-            let tile_size = map.tile_size;
-            let terrain_color = terrain.color_from_registry(&terrain_registry);
+        let move_cost_str = match move_cost {
+            Some(c) => format!("{}", c),
+            None => "×".to_string(),
+        };
 
-            // 从 TerrainRegistry 获取地形属性
-            let terrain_id = terrain.to_id();
-            let (move_cost, defense_bonus) = terrain_registry
-                .get(terrain_id)
-                .map(|def| (def.move_cost, def.defense_bonus))
-                .unwrap_or_else(|| {
-                    (
-                        terrain.move_cost_fallback(),
-                        terrain.defense_bonus_fallback(),
-                    )
-                });
-
-            commands.spawn((
-                Sprite::from_color(terrain_color, Vec2::splat(tile_size - 2.0)),
-                Transform::from_xyz(world_pos.x, world_pos.y, 0.0),
-                Tile {
-                    coord,
-                    terrain,
-                    move_cost,
-                    defense_bonus,
-                },
-                children![
-                    (
-                        Text2d::new(format!("{},{}", coord.x, coord.y)),
-                        small_font.clone(),
-                        TextColor(Color::srgba(1.0, 1.0, 1.0, 0.6)),
-                        TextLayout::new_with_no_wrap(),
-                        Transform::from_xyz(-tile_size * 0.3, tile_size * 0.3, 0.1),
-                    ),
-                    (
-                        Text2d::new(terrain.label().to_string()),
-                        small_font.clone(),
-                        TextColor(Color::srgba(1.0, 1.0, 1.0, 0.5)),
-                        TextLayout::new_with_no_wrap(),
-                        Transform::from_xyz(0.0, -tile_size * 0.25, 0.1),
-                    ),
-                ],
-            ));
-        }
+        commands.spawn((
+            Sprite::from_color(terrain_color, Vec2::splat(tile_size - 2.0)),
+            Transform::from_xyz(world_pos.x, world_pos.y, 0.0),
+            TileSprite,
+            children![
+                (
+                    Text2d::new(format!("{},{}", coord.x, coord.y)),
+                    small_font.clone(),
+                    TextColor(Color::srgba(1.0, 1.0, 1.0, 0.6)),
+                    TextLayout::new_with_no_wrap(),
+                    Transform::from_xyz(-tile_size * 0.3, tile_size * 0.3, 0.1),
+                ),
+                (
+                    Text2d::new(format!("{}{}", terrain_name, move_cost_str)),
+                    small_font.clone(),
+                    TextColor(Color::srgba(1.0, 1.0, 1.0, 0.5)),
+                    TextLayout::new_with_no_wrap(),
+                    Transform::from_xyz(0.0, -tile_size * 0.25, 0.1),
+                ),
+            ],
+        ));
     }
 }
 
@@ -262,35 +194,6 @@ impl Plugin for MapGridPlugin {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn 地形_从id解析() {
-        assert_eq!(Terrain::from_id("plain"), Terrain::Plain);
-        assert_eq!(Terrain::from_id("forest"), Terrain::Forest);
-        assert_eq!(Terrain::from_id("mountain"), Terrain::Mountain);
-        assert_eq!(Terrain::from_id("water"), Terrain::Water);
-        assert_eq!(Terrain::from_id("unknown"), Terrain::Plain);
-    }
-
-    #[test]
-    fn 地形_移动消耗兜底值() {
-        assert_eq!(Terrain::Plain.move_cost_fallback(), Some(1));
-        assert_eq!(Terrain::Forest.move_cost_fallback(), Some(2));
-        assert_eq!(Terrain::Mountain.move_cost_fallback(), None);
-        assert_eq!(Terrain::Water.move_cost_fallback(), None);
-    }
-
-    #[test]
-    fn 地形_防御加成兜底值() {
-        assert_eq!(Terrain::Plain.defense_bonus_fallback(), 0);
-        assert_eq!(Terrain::Forest.defense_bonus_fallback(), 2);
-    }
-
-    #[test]
-    fn 地形_中文名() {
-        assert_eq!(Terrain::Plain.label(), "草");
-        assert_eq!(Terrain::Forest.label(), "林");
-    }
 
     #[test]
     fn game_map_从关卡配置创建() {

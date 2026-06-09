@@ -5,7 +5,6 @@
 use crate::buff::BuffRegistry;
 use crate::gameplay::attribute::{AttributeKind, Attributes};
 use crate::gameplay::tag::GameplayTag;
-use crate::map::Terrain;
 use bevy::prelude::*;
 
 use super::types::{EffectDef, PendingEffectData, calculate_damage_from_effect};
@@ -22,7 +21,7 @@ pub struct GenerateContext {
     pub defense_bonus: i32,
     pub skill_id: String,
     pub source_tags: Vec<GameplayTag>,
-    pub terrain: Terrain,
+    pub terrain_id: String,
 }
 
 /// 预览效果的上下文
@@ -261,7 +260,6 @@ impl EffectHandlerRegistry {
 mod tests {
     use super::*;
     use crate::gameplay::attribute::Attributes;
-    use crate::map::Terrain;
 
     /// 构建测试用 GenerateContext
     fn make_generate_ctx() -> GenerateContext {
@@ -297,7 +295,7 @@ mod tests {
             defense_bonus: 0,
             skill_id: "basic_attack".into(),
             source_tags: vec![],
-            terrain: Terrain::Plain,
+            terrain_id: "plain".to_string(),
         }
     }
 

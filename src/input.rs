@@ -6,6 +6,8 @@ use crate::character::{
 };
 use crate::gameplay::attribute::{AttributeKind, Attributes};
 use crate::gameplay::tag::GameplayTags;
+use crate::map::TerrainRegistry;
+use crate::map::runtime::{OccupancyGrid, TerrainGrid};
 use crate::map::GameMap;
 use crate::skill::SkillSlots;
 use crate::turn::{TurnOrder, TurnPhase, TurnState};
@@ -183,7 +185,9 @@ pub fn clear_selection(
 pub fn show_move_range(
     commands: &mut Commands,
     map: &GameMap,
-    terrain_map: &std::collections::HashMap<IVec2, (crate::map::Terrain, Option<u32>)>,
+    terrain_grid: &TerrainGrid,
+    terrain_registry: &TerrainRegistry,
+    occupancy: &OccupancyGrid,
     units: &Query<(
         Entity,
         &Unit,
@@ -202,17 +206,6 @@ pub fn show_move_range(
 
     let theme = UiTheme::default();
 
-    let occupation_units: Vec<(IVec2, Faction)> = units
-        .iter()
-        .map(|(_, u, gp, _, _, _, _)| (gp.coord, u.faction))
-        .collect();
-    // 所有单位占据的格子都不可通行（起点单位除外）
-    let occupation_map: std::collections::HashMap<IVec2, bool> = occupation_units
-        .iter()
-        .filter(|(coord, _)| *coord != start_coord)
-        .map(|(coord, _)| (*coord, true))
-        .collect();
-
     let move_points = units
         .iter()
         .find(|(_, u, gp, _, _, _, _)| u.faction == unit.faction && gp.coord == start_coord)
@@ -223,8 +216,10 @@ pub fn show_move_range(
         start_coord,
         move_points,
         map,
-        terrain_map,
-        &occupation_map,
+        terrain_grid,
+        terrain_registry,
+        occupancy,
+        None,
         calculator,
     );
     let tile_size = map.tile_size;

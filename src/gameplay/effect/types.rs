@@ -2,7 +2,6 @@
 // 从原 effect.rs 迁移，保留 RON 反序列化支持
 
 use crate::gameplay::tag::GameplayTag;
-use crate::map::Terrain;
 use bevy::prelude::*;
 use serde::Deserialize;
 
@@ -44,7 +43,7 @@ pub struct PendingEffect {
     pub target: Entity,
     pub data: PendingEffectData,
     pub source_tags: Vec<GameplayTag>,
-    pub terrain: Terrain,
+    pub terrain_id: String,
 }
 
 /// 待处理效果数据
@@ -200,7 +199,7 @@ mod tests {
                 is_skill: false,
             },
             source_tags: vec![],
-            terrain: Terrain::Plain,
+            terrain_id: "plain".to_string(),
         });
         assert!(!queue.is_empty());
 
@@ -220,7 +219,7 @@ mod tests {
                 is_skill: false,
             },
             source_tags: vec![],
-            terrain: Terrain::Plain,
+            terrain_id: "plain".to_string(),
         });
         queue.clear();
         assert!(queue.is_empty());

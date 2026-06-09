@@ -6,7 +6,7 @@ use crate::character::{GridPosition, Selected, Unit, UnitName};
 use crate::gameplay::attribute::Attributes;
 use crate::gameplay::effect::{EffectHandlerRegistry, EffectQueue, GenerateContext, PendingEffect};
 use crate::gameplay::tag::GameplayTags;
-use crate::map::Tile;
+use crate::map::{TerrainGrid, TerrainRegistry};
 use crate::skill::{BASIC_ATTACK_ID, SkillCooldowns, SkillRegistry};
 use bevy::prelude::*;
 
@@ -53,7 +53,8 @@ pub fn generate_combat_effects(
         &GameplayTags,
         &Transform,
     )>,
-    tiles: Query<&Tile>,
+    terrain_grid: Res<TerrainGrid>,
+    terrain_registry: Res<TerrainRegistry>,
     combat_intent: Res<CombatIntent>,
     skill_registry: Res<SkillRegistry>,
 ) {
@@ -115,11 +116,8 @@ pub fn generate_combat_effects(
             continue;
         }
 
-        let Some(tile) = tiles.iter().find(|t| t.coord == target_gp.coord) else {
-            continue;
-        };
-        let terrain = tile.terrain;
-        let defense_bonus = tile.defense_bonus;
+        let terrain_id = terrain_grid.get(target_gp.coord).unwrap_or("plain").to_string();
+        let defense_bonus = terrain_registry.get(&terrain_id).map(|def| def.defense_bonus).unwrap_or(0);
 
         for effect_def in &skill_data.effects {
             // 通过 EffectHandlerRegistry trait 分发，新增效果类型无需修改此处
@@ -132,7 +130,7 @@ pub fn generate_combat_effects(
                     defense_bonus,
                     skill_id: skill_id.to_string(),
                     source_tags: skill_data.tags.clone(),
-                    terrain,
+                    terrain_id: terrain_id.clone(),
                 };
 
                 if let Some(data) = handler.generate(effect_def, &ctx) {
@@ -141,7 +139,7 @@ pub fn generate_combat_effects(
                         target: target_entity,
                         data,
                         source_tags: skill_data.tags.clone(),
-                        terrain,
+                        terrain_id: terrain_id.clone(),
                     });
                 }
             } else {

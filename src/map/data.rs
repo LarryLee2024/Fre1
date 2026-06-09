@@ -18,6 +18,8 @@ pub struct TerrainDef {
     pub defense_bonus: i32,
     pub color: (f32, f32, f32),
     pub passable: bool,
+    /// 地形在关卡网格中的字符代码（如 'P' → "plain"）
+    pub char_code: Option<char>,
 }
 
 /// 地形定义（RON 反序列化用）
@@ -30,6 +32,9 @@ pub struct TerrainDefRon {
     pub defense_bonus: i32,
     pub color: (f32, f32, f32),
     pub passable: bool,
+    /// 地形在关卡网格中的字符代码
+    #[serde(default)]
+    pub char_code: Option<char>,
 }
 
 impl From<TerrainDefRon> for TerrainDef {
@@ -46,6 +51,7 @@ impl From<TerrainDefRon> for TerrainDef {
             defense_bonus: def.defense_bonus,
             color: def.color,
             passable: def.passable,
+            char_code: def.char_code,
         }
     }
 }
@@ -59,6 +65,14 @@ pub struct TerrainRegistry {
 impl TerrainRegistry {
     pub fn get(&self, id: &str) -> Option<&TerrainDef> {
         self.terrains.get(id)
+    }
+
+    /// 从已注册地形构建字符→地形ID映射
+    pub fn char_map(&self) -> HashMap<char, String> {
+        self.terrains
+            .values()
+            .filter_map(|def| def.char_code.map(|ch| (ch, def.id.clone())))
+            .collect()
     }
 
     /// 从 assets/terrains/ 目录加载所有 .ron 文件
@@ -95,11 +109,11 @@ impl TerrainRegistry {
     /// 兜底默认值
     pub fn register_defaults(&mut self) {
         if self.terrains.is_empty() {
-            for (id, name, mc, db, color) in [
-                ("plain", "草", Some(1), 0, (0.56, 0.73, 0.35)),
-                ("forest", "林", Some(2), 2, (0.20, 0.50, 0.18)),
-                ("mountain", "山", None, 0, (0.55, 0.50, 0.45)),
-                ("water", "水", None, 0, (0.25, 0.47, 0.85)),
+            for (id, name, mc, db, color, ch) in [
+                ("plain", "草", Some(1), 0, (0.56, 0.73, 0.35), Some('P')),
+                ("forest", "林", Some(2), 2, (0.20, 0.50, 0.18), Some('F')),
+                ("mountain", "山", None, 0, (0.55, 0.50, 0.45), Some('M')),
+                ("water", "水", None, 0, (0.25, 0.47, 0.85), Some('W')),
             ] {
                 self.terrains.insert(
                     id.to_string(),
@@ -110,6 +124,7 @@ impl TerrainRegistry {
                         defense_bonus: db,
                         color,
                         passable: mc.is_some(),
+                        char_code: ch,
                     },
                 );
             }
@@ -137,6 +152,9 @@ pub struct LevelConfigDef {
     pub tile_size: f32,
     /// 地形网格：每行一个字符串，每个字符映射到地形 ID
     pub terrain_grid: Vec<String>,
+    /// 自定义字符→地形ID映射（可选，覆盖 TerrainRegistry 的 char_code）
+    #[serde(default)]
+    pub char_map: HashMap<char, String>,
     /// 玩家单位部署
     #[serde(default)]
     pub player_units: Vec<UnitDeployDef>,
@@ -165,17 +183,30 @@ pub struct LevelConfig {
 
 impl From<LevelConfigDef> for LevelConfig {
     fn from(def: LevelConfigDef) -> Self {
+        // 构建字符→地形ID映射：LevelConfigDef 自带的 char_map 覆盖默认映射
+        let default_map: HashMap<char, String> = [
+            ('P', "plain".to_string()),
+            ('F', "forest".to_string()),
+            ('M', "mountain".to_string()),
+            ('W', "water".to_string()),
+        ]
+        .into_iter()
+        .collect();
+
+        // 自定义 char_map 覆盖默认值
+        let mut char_map = default_map;
+        for (ch, terrain_id) in def.char_map {
+            char_map.insert(ch, terrain_id);
+        }
+
         let mut terrain_map = HashMap::new();
         for (y, row) in def.terrain_grid.iter().enumerate() {
             for (x, ch) in row.chars().enumerate() {
-                let terrain_id = match ch {
-                    'P' => "plain",
-                    'F' => "forest",
-                    'M' => "mountain",
-                    'W' => "water",
-                    _ => "plain",
-                };
-                terrain_map.insert((x as i32, y as i32), terrain_id.to_string());
+                let terrain_id = char_map
+                    .get(&ch)
+                    .cloned()
+                    .unwrap_or_else(|| "plain".to_string());
+                terrain_map.insert((x as i32, y as i32), terrain_id);
             }
         }
 
@@ -334,6 +365,7 @@ mod tests {
             height: 2,
             tile_size: 64.0,
             terrain_grid: vec!["PPF".into(), "PMM".into()],
+            char_map: HashMap::new(),
             player_units: vec![],
             enemy_units: vec![],
         };
@@ -430,6 +462,7 @@ mod tests {
             defense_bonus: 2,
             color: (0.2, 0.5, 0.2),
             passable: true,
+            char_code: Some('F'),
         };
         let terrain: TerrainDef = def.into();
         assert_eq!(terrain.move_cost, Some(2));
@@ -445,6 +478,7 @@ mod tests {
             height: 2,
             tile_size: 64.0,
             terrain_grid: vec!["PF".into(), "MW".into()],
+            char_map: HashMap::new(),
             player_units: vec![],
             enemy_units: vec![],
         };
@@ -456,5 +490,36 @@ mod tests {
             Some(&"mountain".to_string())
         );
         assert_eq!(config.terrain_map.get(&(1, 1)), Some(&"water".to_string()));
+    }
+
+    #[test]
+    fn level_config_自定义char_map覆盖默认() {
+        let mut custom_map = HashMap::new();
+        custom_map.insert('D', "desert".to_string());
+        let def = LevelConfigDef {
+            id: "test".into(),
+            name: "测试".into(),
+            width: 2,
+            height: 1,
+            tile_size: 64.0,
+            terrain_grid: vec!["PD".into()],
+            char_map: custom_map,
+            player_units: vec![],
+            enemy_units: vec![],
+        };
+        let config: LevelConfig = def.into();
+        assert_eq!(config.terrain_map.get(&(0, 0)), Some(&"plain".to_string()));
+        assert_eq!(config.terrain_map.get(&(1, 0)), Some(&"desert".to_string()));
+    }
+
+    #[test]
+    fn terrain_registry_char_map() {
+        let mut reg = TerrainRegistry::default();
+        reg.register_defaults();
+        let map = reg.char_map();
+        assert_eq!(map.get(&'P'), Some(&"plain".to_string()));
+        assert_eq!(map.get(&'F'), Some(&"forest".to_string()));
+        assert_eq!(map.get(&'M'), Some(&"mountain".to_string()));
+        assert_eq!(map.get(&'W'), Some(&"water".to_string()));
     }
 }

@@ -9,7 +9,6 @@ use tactical_rpg::gameplay::effect::{
     PendingEffectData, PreviewContext, calculate_damage_from_effect,
 };
 use tactical_rpg::gameplay::tag::{GameplayTag, GameplayTags};
-use tactical_rpg::map::Terrain;
 
 // ── 测试辅助 ──
 
@@ -128,7 +127,7 @@ fn 伤害处理器_generate_基础攻击() {
         defense_bonus: 0,
         skill_id: "basic_attack".into(),
         source_tags: vec![],
-        terrain: Terrain::Plain,
+        terrain_id: "plain".to_string(),
     };
 
     let def = EffectDef::Damage {
@@ -158,7 +157,7 @@ fn 伤害处理器_generate_技能攻击() {
         defense_bonus: 0,
         skill_id: "power_strike".into(),
         source_tags: vec![],
-        terrain: Terrain::Plain,
+        terrain_id: "plain".to_string(),
     };
 
     let def = EffectDef::Damage {
@@ -190,7 +189,7 @@ fn 治疗处理器_generate() {
         defense_bonus: 0,
         skill_id: "heal".into(),
         source_tags: vec![],
-        terrain: Terrain::Plain,
+        terrain_id: "plain".to_string(),
     };
 
     let def = EffectDef::Heal { amount: 8 };
@@ -215,7 +214,7 @@ fn buff处理器_generate() {
         defense_bonus: 0,
         skill_id: "fireball".into(),
         source_tags: vec![],
-        terrain: Terrain::Plain,
+        terrain_id: "plain".to_string(),
     };
 
     let def = EffectDef::ApplyBuff {
@@ -244,7 +243,7 @@ fn 净化处理器_generate() {
         defense_bonus: 0,
         skill_id: "cleanse".into(),
         source_tags: vec![],
-        terrain: Terrain::Plain,
+        terrain_id: "plain".to_string(),
     };
 
     let def = EffectDef::Cleanse;
@@ -272,7 +271,7 @@ fn 伤害预览与generate一致() {
         defense_bonus: 0,
         skill_id: "basic_attack".into(),
         source_tags: vec![],
-        terrain: Terrain::Plain,
+        terrain_id: "plain".to_string(),
     };
 
     let preview_ctx = PreviewContext {
@@ -372,7 +371,7 @@ fn effect_queue_push_then_drain() {
             is_skill: false,
         },
         source_tags: vec![],
-        terrain: Terrain::Plain,
+        terrain_id: "plain".to_string(),
     });
 
     queue.push(PendingEffect {
@@ -380,7 +379,7 @@ fn effect_queue_push_then_drain() {
         target: bevy::prelude::Entity::from_bits(4),
         data: PendingEffectData::Heal { amount: 5 },
         source_tags: vec![],
-        terrain: Terrain::Plain,
+        terrain_id: "plain".to_string(),
     });
 
     assert_eq!(queue.pending.len(), 2);
@@ -441,7 +440,7 @@ fn 多效果技能_伤害加buff() {
         defense_bonus: 0,
         skill_id: "fire_strike".into(),
         source_tags: vec![],
-        terrain: Terrain::Plain,
+        terrain_id: "plain".to_string(),
     };
 
     let effects = vec![
@@ -465,7 +464,7 @@ fn 多效果技能_伤害加buff() {
                     target: gen_ctx.target_entity,
                     data,
                     source_tags: vec![],
-                    terrain: Terrain::Plain,
+                    terrain_id: "plain".to_string(),
                 });
             }
         }

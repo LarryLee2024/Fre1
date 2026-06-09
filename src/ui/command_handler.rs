@@ -3,22 +3,19 @@
 
 use crate::battle::{CombatIntent, PrevPosition, manhattan_distance};
 use crate::character::{
-    AttackRange, Faction, GridPosition, MovableRange, MovingUnit, PathArrow, Selected,
-    SelectionHighlight, Unit, despawn_path_arrows, spawn_path_arrows,
+    AttackRange, Faction, GridPosition, MovableRange, MovingUnit, Selected,
+    SelectionHighlight, Unit, spawn_path_arrows,
 };
 use crate::gameplay::attribute::{AttributeKind, Attributes};
 use crate::gameplay::tag::GameplayTags;
 use crate::input::{
     clear_markers, clear_selection, show_attack_range, show_move_range, spawn_selection_highlight,
 };
-use crate::map::{
-    GameMap, TerrainCostRegistry, TerrainMapCache, find_reachable_tiles, reconstruct_path,
-};
+use crate::map::{GameMap, OccupancyGrid, TerrainCostRegistry, TerrainGrid, TerrainRegistry, find_reachable_tiles, reconstruct_path};
 use crate::skill::{BASIC_ATTACK_ID, SkillRegistry, SkillSlots, effective_skill_range};
 use crate::turn::{ForceEndFaction, TurnPhase};
-use crate::ui::action_menu::{ActionMenuEntity, despawn_action_menu, spawn_action_menu};
+use crate::ui::action_menu::{ActionMenuEntity, despawn_action_menu};
 use crate::ui::events::UiCommand;
-use crate::ui::theme::UiTheme;
 use bevy::ecs::message::MessageReader;
 use bevy::prelude::*;
 
@@ -30,7 +27,9 @@ pub fn handle_ui_commands(
     mut combat_intent: ResMut<CombatIntent>,
     mut menu_entity: ResMut<ActionMenuEntity>,
     map: Res<GameMap>,
-    terrain_cache: Res<TerrainMapCache>,
+    terrain_grid: Res<TerrainGrid>,
+    terrain_registry: Res<TerrainRegistry>,
+    occupancy: Res<OccupancyGrid>,
     cost_registry: Res<TerrainCostRegistry>,
     units: Query<(
         Entity,
@@ -49,24 +48,20 @@ pub fn handle_ui_commands(
     highlights: Query<Entity, With<SelectionHighlight>>,
     prev_position: Res<PrevPosition>,
     skill_registry: Res<SkillRegistry>,
-    turn_phase: Res<State<TurnPhase>>,
-    camera_query: Query<(&Camera, &GlobalTransform)>,
 ) {
-    // 使用缓存的地形图
-    let terrain_map = &terrain_cache.map;
-
     for cmd in events.read() {
         match cmd {
             UiCommand::SelectUnit { entity } => {
                 clear_selection(&mut commands, &selected_query, &range_entities, &highlights);
                 commands.entity(*entity).insert(Selected);
                 if let Ok((_, unit, gp, _, _, _, tags)) = units.get(*entity) {
-                    // 根据单位标签解析地形成本计算器
                     let calculator = cost_registry.resolve_from_tags(tags);
                     show_move_range(
                         &mut commands,
                         &map,
-                        terrain_map,
+                        &terrain_grid,
+                        &terrain_registry,
+                        &occupancy,
                         &units,
                         unit,
                         gp.coord,
@@ -82,7 +77,6 @@ pub fn handle_ui_commands(
                 if let Ok(selected_entity) = selected_query.single() {
                     if let Ok((_, _, sel_gp, _, _, _, _)) = units.get(selected_entity) {
                         if sel_gp.coord == *coord {
-                            // 原地不动，直接进入行动菜单
                             commands.insert_resource(PrevPosition {
                                 coord: Some(sel_gp.coord),
                             });
@@ -93,6 +87,7 @@ pub fn handle_ui_commands(
                                 commands.entity(h).try_despawn();
                             }
                             spawn_selection_highlight(&mut commands, &map, sel_gp.coord);
+                            // 进入 ActionMenu，由 on_enter_action_menu 系统自动弹出菜单
                             next_phase.set(TurnPhase::ActionMenu);
                             return;
                         }
@@ -110,7 +105,6 @@ pub fn handle_ui_commands(
                                 coord: Some(old_gp.coord),
                             });
 
-                            // 计算路径
                             let calculator = cost_registry.resolve_from_tags(tags);
                             let mov = units
                                 .get(selected_entity)
@@ -118,13 +112,14 @@ pub fn handle_ui_commands(
                                     attrs.get(AttributeKind::MoveRange) as u32
                                 })
                                 .unwrap_or(3);
-                            let occupation_map = std::collections::HashMap::new(); // 移动时不需要阻挡
                             let reachable = find_reachable_tiles(
                                 old_gp.coord,
                                 mov,
                                 &map,
-                                terrain_map,
-                                &occupation_map,
+                                &terrain_grid,
+                                &terrain_registry,
+                                &occupancy,
+                                Some(selected_entity),
                                 calculator,
                             );
                             let path = reconstruct_path(
@@ -133,14 +128,13 @@ pub fn handle_ui_commands(
                                 &reachable,
                                 mov,
                                 &map,
-                                terrain_map,
+                                &terrain_grid,
+                                &terrain_registry,
                                 calculator,
                             );
 
-                            // 生成导航箭头
                             spawn_path_arrows(&mut commands, &map, &path);
 
-                            // 挂载移动动画组件
                             commands.entity(selected_entity).insert(MovingUnit {
                                 path,
                                 current_index: 0,
@@ -158,7 +152,6 @@ pub fn handle_ui_commands(
                 for (marker, _) in &range_entities {
                     commands.entity(marker).try_despawn();
                 }
-                // 不再立即弹出行动菜单，等移动动画完成后由 animate_movement 切换
             }
 
             UiCommand::Attack => {
@@ -190,7 +183,6 @@ pub fn handle_ui_commands(
             }
 
             UiCommand::SelectTarget { coord } => {
-                // 检查点击坐标是否有敌方单位
                 let clicked_enemy = units
                     .iter()
                     .find(|(_, u, gp, _, _, _, _)| {
@@ -216,17 +208,9 @@ pub fn handle_ui_commands(
                         }
                     }
                 }
-                // 未选中有效目标，回到行动菜单
+                // 未选中有效目标，回到行动菜单（on_enter_action_menu 自动弹出）
                 clear_markers(&mut commands, &range_entities, &highlights);
-                spawn_menu_at_selected(
-                    &mut commands,
-                    &units,
-                    &selected_query,
-                    &map,
-                    &camera_query,
-                    &mut menu_entity,
-                    &skill_registry,
-                );
+                despawn_action_menu(&mut commands, &mut menu_entity);
                 next_phase.set(TurnPhase::ActionMenu);
             }
 
@@ -236,106 +220,56 @@ pub fn handle_ui_commands(
             }
 
             UiCommand::Cancel => {
-                match turn_phase.get() {
-                    TurnPhase::ActionMenu => {
-                        despawn_action_menu(&mut commands, &mut menu_entity);
-                        // 回退位置
-                        if let Ok(selected_entity) = selected_query.single() {
-                            if let Some(prev_coord) = prev_position.coord {
-                                let world_pos = map.coord_to_world(prev_coord);
-                                commands
-                                    .entity(selected_entity)
-                                    .insert(Transform::from_xyz(world_pos.x, world_pos.y, 1.0))
-                                    .insert(GridPosition { coord: prev_coord });
-                            }
+                // 从上下文推断当前阶段：
+                // - 有 skill_id → SelectTarget 阶段（取消回到 ActionMenu）
+                // - 有菜单实体 → ActionMenu 阶段（取消回到 SelectUnit）
+                // - 否则 → MoveUnit 阶段（取消回到 SelectUnit）
+                if combat_intent.skill_id.is_some() {
+                    // SelectTarget 取消 → 回到 ActionMenu
+                    clear_markers(&mut commands, &range_entities, &highlights);
+                    combat_intent.target_coord = None;
+                    combat_intent.skill_id = None;
+                    despawn_action_menu(&mut commands, &mut menu_entity);
+                    // on_enter_action_menu 会自动弹出菜单
+                    next_phase.set(TurnPhase::ActionMenu);
+                } else if menu_entity.entity.is_some() {
+                    // ActionMenu 取消 → 回退位置，回到 SelectUnit
+                    despawn_action_menu(&mut commands, &mut menu_entity);
+                    if let Ok(selected_entity) = selected_query.single() {
+                        if let Some(prev_coord) = prev_position.coord {
+                            let world_pos = map.coord_to_world(prev_coord);
+                            commands
+                                .entity(selected_entity)
+                                .insert(Transform::from_xyz(world_pos.x, world_pos.y, 1.0))
+                                .insert(GridPosition { coord: prev_coord });
                         }
-                        clear_selection(
-                            &mut commands,
-                            &selected_query,
-                            &range_entities,
-                            &highlights,
-                        );
-                        combat_intent.target_coord = None;
-                        combat_intent.skill_id = None;
-                        next_phase.set(TurnPhase::SelectUnit);
                     }
-                    TurnPhase::SelectTarget => {
-                        clear_markers(&mut commands, &range_entities, &highlights);
-                        combat_intent.target_coord = None;
-                        combat_intent.skill_id = None;
-                        spawn_menu_at_selected(
-                            &mut commands,
-                            &units,
-                            &selected_query,
-                            &map,
-                            &camera_query,
-                            &mut menu_entity,
-                            &skill_registry,
-                        );
-                        next_phase.set(TurnPhase::ActionMenu);
-                    }
-                    TurnPhase::MoveUnit => {
-                        clear_selection(
-                            &mut commands,
-                            &selected_query,
-                            &range_entities,
-                            &highlights,
-                        );
-                        combat_intent.target_coord = None;
-                        next_phase.set(TurnPhase::SelectUnit);
-                    }
-                    _ => {}
+                    clear_selection(
+                        &mut commands,
+                        &selected_query,
+                        &range_entities,
+                        &highlights,
+                    );
+                    combat_intent.target_coord = None;
+                    combat_intent.skill_id = None;
+                    next_phase.set(TurnPhase::SelectUnit);
+                } else {
+                    // MoveUnit 取消 → 回到 SelectUnit
+                    clear_selection(
+                        &mut commands,
+                        &selected_query,
+                        &range_entities,
+                        &highlights,
+                    );
+                    combat_intent.target_coord = None;
+                    next_phase.set(TurnPhase::SelectUnit);
                 }
             }
 
             UiCommand::EndTurn => {
                 clear_selection(&mut commands, &selected_query, &range_entities, &highlights);
-                // 插入 ForceEndFaction 标记，由 turn_end_on_enter 消费
                 commands.insert_resource(ForceEndFaction(true));
                 next_phase.set(TurnPhase::TurnEnd);
-            }
-        }
-    }
-}
-
-// ── 辅助函数 ──
-
-/// 在选中单位位置弹出行动菜单
-fn spawn_menu_at_selected(
-    commands: &mut Commands,
-    units: &Query<(
-        Entity,
-        &Unit,
-        &GridPosition,
-        &Transform,
-        &Attributes,
-        &SkillSlots,
-        &GameplayTags,
-    )>,
-    selected_query: &Query<Entity, With<Selected>>,
-    map: &GameMap,
-    camera_query: &Query<(&Camera, &GlobalTransform)>,
-    menu_entity: &mut ActionMenuEntity,
-    skill_registry: &SkillRegistry,
-) {
-    let theme = UiTheme::default();
-    if let (Ok(selected_entity), Ok((camera, cam_transform))) =
-        (selected_query.single(), camera_query.single())
-    {
-        if let Ok((_, unit, gp, _, _, skill_slots, _)) = units.get(selected_entity) {
-            let unit_world = map.coord_to_world(gp.coord);
-            if let Ok(screen_pos) = camera.world_to_viewport(cam_transform, unit_world.extend(1.0))
-            {
-                spawn_action_menu(
-                    commands,
-                    screen_pos.x,
-                    screen_pos.y,
-                    unit,
-                    skill_slots,
-                    menu_entity,
-                    skill_registry,
-                    &theme,
-                );
             }
         }
     }

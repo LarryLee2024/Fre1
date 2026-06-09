@@ -6,9 +6,9 @@ use crate::character::{
 };
 use crate::gameplay::attribute::{AttributeKind, Attributes};
 use crate::gameplay::tag::GameplayTags;
-use crate::map::{
-    GameMap, TerrainCostRegistry, TerrainMapCache, find_reachable_tiles, reconstruct_path,
-};
+use crate::map::TerrainRegistry;
+use crate::map::runtime::{OccupancyGrid, TerrainGrid};
+use crate::map::{GameMap, TerrainCostRegistry, find_reachable_tiles, reconstruct_path};
 use crate::skill::{SkillCooldowns, SkillRegistry, SkillSlots, effective_skill_range};
 use crate::turn::{AiTimer, TurnOrder, TurnPhase};
 use bevy::prelude::*;
@@ -35,7 +35,9 @@ pub fn enemy_ai_system(
     ai_behavior_registry: Res<AiBehaviorRegistry>,
     ai_strategy_registry: Res<AiStrategyRegistry>,
     cost_registry: Res<TerrainCostRegistry>,
-    terrain_cache: Res<TerrainMapCache>,
+    terrain_grid: Res<TerrainGrid>,
+    terrain_registry: Res<TerrainRegistry>,
+    occupancy: Res<OccupancyGrid>,
     mut combat_intent: ResMut<CombatIntent>,
     mut units: Query<(
         Entity,
@@ -99,8 +101,6 @@ pub fn enemy_ai_system(
         )
         .collect();
 
-    let terrain_map = &terrain_cache.map;
-
     let player_positions: Vec<IVec2> = snapshots
         .iter()
         .filter(|s| s.faction == Faction::Player)
@@ -128,21 +128,16 @@ pub fn enemy_ai_system(
         ai_strategy_registry.target_selector(&behavior.target_strategy),
     );
 
-    // 所有单位占据的格子都不可通行（自身除外）
-    let occupation_map: std::collections::HashMap<IVec2, bool> = snapshots
-        .iter()
-        .filter(|s| s.entity != snapshot.entity)
-        .map(|s| (s.coord, true))
-        .collect();
-
     // 根据单位标签解析地形成本计算器
     let calculator = cost_registry.resolve_from_tags(&snapshot.tags);
     let reachable = find_reachable_tiles(
         snapshot.coord,
         snapshot.mov,
         &map,
-        &terrain_map,
-        &occupation_map,
+        &terrain_grid,
+        &terrain_registry,
+        &occupancy,
+        Some(snapshot.entity),
         calculator,
     );
 
@@ -182,7 +177,8 @@ pub fn enemy_ai_system(
             &reachable,
             snapshot.mov,
             &map,
-            terrain_map,
+            &terrain_grid,
+            &terrain_registry,
             calculator,
         );
         spawn_path_arrows(&mut commands, &map, &path);

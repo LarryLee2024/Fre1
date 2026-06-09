@@ -8,7 +8,7 @@ use crate::character::{Faction, GridPosition, Unit, UnitName};
 use crate::gameplay::attribute::{AttributeKind, Attributes};
 use crate::gameplay::effect::{EffectQueue, PendingEffectData};
 use crate::gameplay::tag::GameplayTags;
-use crate::map::GameMap;
+use crate::map::{GameMap, TerrainRegistry};
 use crate::ui::UiTheme;
 use crate::ui::vfx;
 use bevy::prelude::*;
@@ -25,6 +25,7 @@ pub fn execute_effects(
     unit_query: Query<&Unit>,
     combat_log: ResMut<CombatLog>,
     buff_registry: Res<BuffRegistry>,
+    terrain_registry: Res<TerrainRegistry>,
     map: Res<GameMap>,
     cn_font: Res<CnFont>,
     theme: Res<UiTheme>,
@@ -40,6 +41,7 @@ pub fn execute_effects(
         unit_query,
         combat_log,
         buff_registry,
+        &terrain_registry,
         map,
         cn_font,
         &theme,
@@ -58,6 +60,7 @@ pub fn execute_effects_inline(
     unit_query: Query<&Unit>,
     mut combat_log: ResMut<CombatLog>,
     buff_registry: Res<BuffRegistry>,
+    terrain_registry: &TerrainRegistry,
     map: Res<GameMap>,
     cn_font: Res<CnFont>,
     theme: &UiTheme,
@@ -108,7 +111,7 @@ pub fn execute_effects_inline(
                         attacker_color,
                         amount,
                         is_skill,
-                        effect.terrain.label(),
+                        terrain_registry.get(&effect.terrain_id).map(|def| def.name.as_str()).unwrap_or("???"),
                         &mut commands,
                         &mut combat_log,
                         &map,
