@@ -604,4 +604,144 @@ mod tests {
         let calc = registry.resolve_from_tags(&tags);
         assert_eq!(calc.name(), "swimming");
     }
+
+    // ── reconstruct_path 测试 ──
+
+    #[test]
+    fn 回溯路径_同坐标返回目标() {
+        let map = make_test_map();
+        let tiles = all_plain_map(&map);
+        let reachable = HashMap::new();
+        let calculator = GroundCostCalculator;
+
+        let path = reconstruct_path(
+            IVec2::new(2, 2),
+            IVec2::new(2, 2),
+            &reachable,
+            3,
+            &map,
+            &tiles,
+            &calculator,
+        );
+
+        assert_eq!(path, vec![IVec2::new(2, 2)]);
+    }
+
+    #[test]
+    fn 回溯路径_相邻格子() {
+        let map = make_test_map();
+        let tiles = all_plain_map(&map);
+        let calculator = GroundCostCalculator;
+
+        // 模拟 BFS 结果：从 (2,2) 出发，剩余移动力 3
+        // 到达 (3,2) 消耗 1，剩余 2
+        let mut reachable = HashMap::new();
+        reachable.insert(IVec2::new(3, 2), 2);
+
+        let path = reconstruct_path(
+            IVec2::new(2, 2),
+            IVec2::new(3, 2),
+            &reachable,
+            3,
+            &map,
+            &tiles,
+            &calculator,
+        );
+
+        assert_eq!(path, vec![IVec2::new(3, 2)]);
+    }
+
+    #[test]
+    fn 回溯路径_直线两格() {
+        let map = make_test_map();
+        let tiles = all_plain_map(&map);
+        let calculator = GroundCostCalculator;
+
+        // 从 (2,2) 到 (4,2)，经过 (3,2)
+        let mut reachable = HashMap::new();
+        reachable.insert(IVec2::new(3, 2), 2); // 从 (2,2) 到 (3,2) 消耗 1，剩余 2
+        reachable.insert(IVec2::new(4, 2), 1); // 从 (3,2) 到 (4,2) 消耗 1，剩余 1
+
+        let path = reconstruct_path(
+            IVec2::new(2, 2),
+            IVec2::new(4, 2),
+            &reachable,
+            3,
+            &map,
+            &tiles,
+            &calculator,
+        );
+
+        assert_eq!(path, vec![IVec2::new(3, 2), IVec2::new(4, 2)]);
+    }
+
+    #[test]
+    fn 回溯路径_不存在的目标() {
+        let map = make_test_map();
+        let tiles = all_plain_map(&map);
+        let reachable = HashMap::new();
+        let calculator = GroundCostCalculator;
+
+        let path = reconstruct_path(
+            IVec2::new(2, 2),
+            IVec2::new(4, 4),
+            &reachable,
+            3,
+            &map,
+            &tiles,
+            &calculator,
+        );
+
+        assert_eq!(path, vec![IVec2::new(4, 4)]);
+    }
+
+    #[test]
+    fn 回溯路径_L形路径() {
+        let map = make_test_map();
+        let tiles = all_plain_map(&map);
+        let calculator = GroundCostCalculator;
+
+        // 从 (1,1) 到 (2,2)，路径 (1,1) → (2,1) → (2,2)
+        let mut reachable = HashMap::new();
+        reachable.insert(IVec2::new(2, 1), 2); // (1,1) → (2,1) 消耗 1，剩余 2
+        reachable.insert(IVec2::new(2, 2), 1); // (2,1) → (2,2) 消耗 1，剩余 1
+
+        let path = reconstruct_path(
+            IVec2::new(1, 1),
+            IVec2::new(2, 2),
+            &reachable,
+            3,
+            &map,
+            &tiles,
+            &calculator,
+        );
+
+        assert_eq!(path, vec![IVec2::new(2, 1), IVec2::new(2, 2)]);
+    }
+
+    #[test]
+    fn 回溯路径_有森林地形() {
+        let map = make_test_map();
+        let mut tiles = all_plain_map(&map);
+        // (3,2) 是森林，移动成本 2
+        tiles.insert(IVec2::new(3, 2), (Terrain::Forest, Some(2)));
+        let calculator = GroundCostCalculator;
+
+        // 从 (2,2) 到 (4,2)，经过 (3,2) 森林
+        let mut reachable = HashMap::new();
+        reachable.insert(IVec2::new(3, 2), 1); // (2,2) → (3,2) 森林消耗 2，剩余 1
+        reachable.insert(IVec2::new(4, 2), 0); // (3,2) → (4,2) 消耗 1，剩余 0
+
+        let path = reconstruct_path(
+            IVec2::new(2, 2),
+            IVec2::new(4, 2),
+            &reachable,
+            3,
+            &map,
+            &tiles,
+            &calculator,
+        );
+
+        assert_eq!(path, vec![IVec2::new(3, 2), IVec2::new(4, 2)]);
+    }
 }

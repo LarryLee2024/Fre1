@@ -106,7 +106,7 @@ pub fn resolve_status_effects(
 }
 
 /// tick 所有 Buff：递减持续时间，移除过期的并清理其修饰符和标签
-fn tick_buffs(buffs: &mut ActiveBuffs, attrs: &mut Attributes, tags: &mut GameplayTags, trait_tags: &TraitGrantedTags) {
+pub(crate) fn tick_buffs(buffs: &mut ActiveBuffs, attrs: &mut Attributes, tags: &mut GameplayTags, trait_tags: &TraitGrantedTags) {
     let expired_ids: Vec<BuffInstanceId> = buffs
         .instances
         .iter()
@@ -124,7 +124,7 @@ fn tick_buffs(buffs: &mut ActiveBuffs, attrs: &mut Attributes, tags: &mut Gamepl
 }
 
 /// 从所有活跃 Buff 重新构建 GameplayTags（保留 trait 授予的标签）
-fn rebuild_tags_from_buffs(buffs: &ActiveBuffs, tags: &mut GameplayTags, trait_tags: &TraitGrantedTags) {
+pub(crate) fn rebuild_tags_from_buffs(buffs: &ActiveBuffs, tags: &mut GameplayTags, trait_tags: &TraitGrantedTags) {
     let preserved_mask = trait_tags.0.0;
 
     let mut new_tags = GameplayTags(preserved_mask);
@@ -135,4 +135,199 @@ fn rebuild_tags_from_buffs(buffs: &ActiveBuffs, tags: &mut GameplayTags, trait_t
     }
 
     tags.0 = new_tags.0;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::buff::BuffInstance;
+    use crate::gameplay::attribute::{AttributeKind, AttributeModifierInstance, ModifierOp};
+
+    fn make_test_buff(id: u64, buff_id: &str, remaining: u32, tags: Vec<GameplayTag>, is_buff: bool) -> BuffInstance {
+        BuffInstance {
+            instance_id: BuffInstanceId(id),
+            buff_id: buff_id.into(),
+            name: buff_id.into(),
+            remaining_turns: remaining,
+            source_entity: None,
+            tags,
+            is_buff,
+            dot_damage: 0,
+            hot_heal: 0,
+        }
+    }
+
+    // ── tick_buffs 测试 ──
+
+    #[test]
+    fn tick_buffs_过期buff清理修饰符() {
+        let mut buffs = ActiveBuffs::default();
+        buffs.add(make_test_buff(1, "shield", 1, vec![GameplayTag::BUFF], true));
+
+        let mut attrs = Attributes::default();
+        attrs.fill_vital_resources();
+        attrs.add_modifier(AttributeModifierInstance {
+            kind: AttributeKind::Attack,
+            op: ModifierOp::Add,
+            value: 5.0,
+            source: BuffInstanceId(1),
+        });
+        let attack_before = attrs.get(AttributeKind::Attack);
+
+        let mut tags = GameplayTags::default();
+        let trait_tags = TraitGrantedTags::default();
+
+        tick_buffs(&mut buffs, &mut attrs, &mut tags, &trait_tags);
+
+        // 修饰符被清理，攻击力恢复
+        assert!(attrs.modifiers.is_empty());
+        assert!(attrs.get(AttributeKind::Attack) < attack_before);
+        // buff 实例仍在列表中（remaining_turns=0），下次 tick 才移除
+        assert_eq!(buffs.len(), 1);
+        assert_eq!(buffs.instances[0].remaining_turns, 0);
+    }
+
+    #[test]
+    fn tick_buffs_未过期buff持续时间递减() {
+        let mut buffs = ActiveBuffs::default();
+        buffs.add(make_test_buff(1, "shield", 3, vec![GameplayTag::BUFF], true));
+
+        let mut attrs = Attributes::default();
+        attrs.fill_vital_resources();
+        let mut tags = GameplayTags::default();
+        let trait_tags = TraitGrantedTags::default();
+
+        tick_buffs(&mut buffs, &mut attrs, &mut tags, &trait_tags);
+
+        assert_eq!(buffs.len(), 1);
+        assert_eq!(buffs.instances[0].remaining_turns, 2);
+    }
+
+    #[test]
+    fn tick_buffs_清理过期buff的修饰符() {
+        let mut buffs = ActiveBuffs::default();
+        buffs.add(make_test_buff(1, "attack_up", 1, vec![GameplayTag::BUFF], true));
+
+        let mut attrs = Attributes::default();
+        attrs.fill_vital_resources();
+        attrs.add_modifier(AttributeModifierInstance {
+            kind: AttributeKind::Attack,
+            op: ModifierOp::Add,
+            value: 5.0,
+            source: BuffInstanceId(1),
+        });
+        let attack_before = attrs.get(AttributeKind::Attack);
+
+        let mut tags = GameplayTags::default();
+        let trait_tags = TraitGrantedTags::default();
+
+        tick_buffs(&mut buffs, &mut attrs, &mut tags, &trait_tags);
+
+        // 修饰符被清理，攻击力恢复
+        assert!(attrs.modifiers.is_empty());
+        assert!(attrs.get(AttributeKind::Attack) < attack_before);
+    }
+
+    #[test]
+    fn tick_buffs_保留多个buff中未过期的() {
+        let mut buffs = ActiveBuffs::default();
+        buffs.add(make_test_buff(1, "expired", 1, vec![GameplayTag::BUFF], true));
+        buffs.add(make_test_buff(2, "alive", 3, vec![GameplayTag::BUFF], true));
+
+        let mut attrs = Attributes::default();
+        attrs.fill_vital_resources();
+        let mut tags = GameplayTags::default();
+        let trait_tags = TraitGrantedTags::default();
+
+        tick_buffs(&mut buffs, &mut attrs, &mut tags, &trait_tags);
+
+        // 两个 buff 都在（过期的 remaining_turns=0，下次 tick 才移除）
+        assert_eq!(buffs.len(), 2);
+        // "expired" remaining_turns=1 → tick 后变为 0
+        let expired = buffs.instances.iter().find(|b| b.buff_id == "expired").unwrap();
+        assert_eq!(expired.remaining_turns, 0);
+        // "alive" remaining_turns=3 → tick 后变为 2
+        let alive = buffs.instances.iter().find(|b| b.buff_id == "alive").unwrap();
+        assert_eq!(alive.remaining_turns, 2);
+    }
+
+    #[test]
+    fn tick_buffs_空buff列表() {
+        let mut buffs = ActiveBuffs::default();
+        let mut attrs = Attributes::default();
+        attrs.fill_vital_resources();
+        let mut tags = GameplayTags::default();
+        let trait_tags = TraitGrantedTags::default();
+
+        tick_buffs(&mut buffs, &mut attrs, &mut tags, &trait_tags);
+
+        assert!(buffs.is_empty());
+    }
+
+    // ── rebuild_tags_from_buffs 测试 ──
+
+    #[test]
+    fn rebuild_tags_from_buffs_从活跃buff重建标签() {
+        let mut buffs = ActiveBuffs::default();
+        buffs.add(make_test_buff(1, "fire_shield", 3, vec![GameplayTag::BUFF, GameplayTag::FIRE], true));
+
+        let mut tags = GameplayTags::default();
+        let trait_tags = TraitGrantedTags::default();
+
+        rebuild_tags_from_buffs(&buffs, &mut tags, &trait_tags);
+
+        assert!(tags.has(GameplayTag::FIRE));
+        assert!(tags.has(GameplayTag::BUFF));
+    }
+
+    #[test]
+    fn rebuild_tags_from_buffs_保留trait授予的标签() {
+        let buffs = ActiveBuffs::default();
+        let mut tags = GameplayTags::default();
+        let trait_tags = TraitGrantedTags(GameplayTags::from_tags(&[GameplayTag::WARRIOR]));
+
+        rebuild_tags_from_buffs(&buffs, &mut tags, &trait_tags);
+
+        assert!(tags.has(GameplayTag::WARRIOR));
+    }
+
+    #[test]
+    fn rebuild_tags_from_buffs_清除非trait非buff标签() {
+        let buffs = ActiveBuffs::default();
+        let mut tags = GameplayTags::from_tags(&[GameplayTag::FIRE, GameplayTag::WARRIOR]);
+        let trait_tags = TraitGrantedTags::default();
+
+        rebuild_tags_from_buffs(&buffs, &mut tags, &trait_tags);
+
+        // FIRE 来自旧 buff，trait_tags 为空 → 应该被清除
+        assert!(!tags.has(GameplayTag::FIRE));
+        assert!(!tags.has(GameplayTag::WARRIOR));
+    }
+
+    #[test]
+    fn rebuild_tags_from_buffs_多buff多标签合并() {
+        let mut buffs = ActiveBuffs::default();
+        buffs.add(make_test_buff(1, "fire", 3, vec![GameplayTag::FIRE], true));
+        buffs.add(make_test_buff(2, "stun", 3, vec![GameplayTag::STUN, GameplayTag::DEBUFF], false));
+
+        let mut tags = GameplayTags::default();
+        let trait_tags = TraitGrantedTags::default();
+
+        rebuild_tags_from_buffs(&buffs, &mut tags, &trait_tags);
+
+        assert!(tags.has(GameplayTag::FIRE));
+        assert!(tags.has(GameplayTag::STUN));
+        assert!(tags.has(GameplayTag::DEBUFF));
+    }
+
+    #[test]
+    fn rebuild_tags_from_buffs_空buff空trait() {
+        let buffs = ActiveBuffs::default();
+        let mut tags = GameplayTags::from_tags(&[GameplayTag::FIRE]);
+        let trait_tags = TraitGrantedTags::default();
+
+        rebuild_tags_from_buffs(&buffs, &mut tags, &trait_tags);
+
+        assert!(!tags.has(GameplayTag::FIRE));
+    }
 }

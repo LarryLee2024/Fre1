@@ -113,3 +113,65 @@ pub fn clear_markers(
         commands.entity(h).try_despawn();
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::turn::TurnPhase;
+
+    fn make_moving_unit(path: Vec<IVec2>, current_index: usize) -> MovingUnit {
+        MovingUnit {
+            path,
+            current_index,
+            speed: 0.1,
+            elapsed: 0.0,
+            next_phase: TurnPhase::SelectUnit,
+        }
+    }
+
+    // ── target_coord 测试 ──
+
+    #[test]
+    fn 移动单位_目标坐标_在路径中() {
+        let unit = make_moving_unit(vec![IVec2::new(0, 0), IVec2::new(1, 0), IVec2::new(2, 0)], 1);
+        assert_eq!(unit.target_coord(), Some(IVec2::new(1, 0)));
+    }
+
+    #[test]
+    fn 移动单位_目标坐标_空路径() {
+        let unit = make_moving_unit(vec![], 0);
+        assert_eq!(unit.target_coord(), None);
+    }
+
+    #[test]
+    fn 移动单位_目标坐标_索引越界() {
+        let unit = make_moving_unit(vec![IVec2::new(0, 0)], 5);
+        assert_eq!(unit.target_coord(), None);
+    }
+
+    // ── is_finished 测试 ──
+
+    #[test]
+    fn 移动单位_是否完成_未完成() {
+        let unit = make_moving_unit(vec![IVec2::new(0, 0), IVec2::new(1, 0)], 0);
+        assert!(!unit.is_finished());
+    }
+
+    #[test]
+    fn 移动单位_是否完成_已完成() {
+        let unit = make_moving_unit(vec![IVec2::new(0, 0)], 1);
+        assert!(unit.is_finished());
+    }
+
+    #[test]
+    fn 移动单位_是否完成_空路径() {
+        let unit = make_moving_unit(vec![], 0);
+        assert!(unit.is_finished());
+    }
+
+    #[test]
+    fn 移动单位_是否完成_刚到达终点() {
+        let unit = make_moving_unit(vec![IVec2::new(0, 0), IVec2::new(1, 0)], 2);
+        assert!(unit.is_finished());
+    }
+}
