@@ -3,31 +3,20 @@
 //! 跨 skill + core/attribute + core/tag 测试技能条件检查、
 //! 技能槽管理、冷却追踪在真实属性数据下的行为。
 
+mod common;
+
 use tactical_rpg::core::attribute::{AttributeKind, Attributes};
 use tactical_rpg::core::tag::{GameplayTag, GameplayTags};
 use tactical_rpg::skill::{
     BASIC_ATTACK_ID, SkillCooldowns, SkillData, SkillSlots, SkillTargeting, effective_skill_range,
 };
 
+use common::fixtures::warrior_attrs;
+
 // ── 测试辅助 ──
 
-/// 战士模板：Might=5, Vitality=5 → Attack=10, Defense=5, MaxHp=30, MaxMp=10
-fn warrior_attrs() -> Attributes {
-    let mut a = Attributes::default();
-    a.set_base(AttributeKind::Might, 5.0);
-    a.set_base(AttributeKind::Vitality, 5.0);
-    a.set_base(AttributeKind::Agility, 6.0);
-    a.set_base(AttributeKind::Dexterity, 3.0);
-    a.set_base(AttributeKind::Intelligence, 2.0);
-    a.set_base(AttributeKind::Willpower, 3.0);
-    a.set_base(AttributeKind::Presence, 2.0);
-    a.set_base(AttributeKind::Luck, 2.0);
-    a.set_base_attack_range(1);
-    a.fill_vital_resources();
-    a
-}
-
 /// 法师模板：Intelligence=5 → MaxMp=25, MagicAttack=10
+/// 注意：与 common::fixtures::mage_attrs() 属性值不同，保留本地版本
 fn mage_attrs() -> Attributes {
     let mut a = Attributes::default();
     a.set_base(AttributeKind::Might, 2.0);
@@ -69,7 +58,7 @@ fn fireball() -> SkillData {
         targeting: SkillTargeting::SingleEnemy,
         effects: vec![],
         tags: vec![],
-        conditions: vec![],
+        conditions: vec![tactical_rpg::skill::SkillCondition::MpCost(8)],
         cooldown: 2,
         priority: 10,
     }
@@ -101,9 +90,10 @@ fn mage_only_skill() -> SkillData {
         targeting: SkillTargeting::SingleEnemy,
         effects: vec![],
         tags: vec![],
-        conditions: vec![tactical_rpg::skill::SkillCondition::RequireTag(
-            GameplayTag::MAGE,
-        )],
+        conditions: vec![
+            tactical_rpg::skill::SkillCondition::RequireTag(GameplayTag::MAGE),
+            tactical_rpg::skill::SkillCondition::MpCost(10),
+        ],
         cooldown: 0,
         priority: 20,
     }

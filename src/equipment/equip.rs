@@ -486,7 +486,7 @@ mod tests {
                 modifiers: def.modifiers.clone(),
                 traits: def.traits.clone(),
                 requirements: def.requirements.clone(),
-                slot: def.slot,
+                slot: Some(def.slot),
                 use_effects: vec![],
                 container_capacity: None,
                 container_max_weight: None,

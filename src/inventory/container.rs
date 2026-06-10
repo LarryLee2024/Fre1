@@ -93,6 +93,14 @@ impl Container {
             return false;
         };
 
+        // 重量检查：添加前验证是否超重
+        if self.max_weight > 0.0 {
+            let added_weight = def.weight * stack.count as f32;
+            if self.current_weight(registry) + added_weight > self.max_weight {
+                return false;
+            }
+        }
+
         let original_count = stack.count;
 
         // 尝试合并到已有堆叠
@@ -377,14 +385,47 @@ mod tests {
         bag.add_stack(stack, &registry);
         // 铁剑 3.0 < 5.0，不超重
         assert!(!bag.is_overweight(&registry));
-        // 再加一把
+        // 再加一把 3.0+3.0=6.0 > 5.0，add_stack 应拒绝
         let stack2 = ItemStack::new(
             ItemInstance::from_def(2, registry.get("iron_sword").unwrap()),
             1,
         );
-        bag.add_stack(stack2, &registry);
-        // 6.0 > 5.0，超重
-        assert!(bag.is_overweight(&registry));
+        assert!(!bag.add_stack(stack2, &registry));
+        // 容量仍为 1，超重检测仍为 false
+        assert_eq!(bag.len(), 1);
+        assert!(!bag.is_overweight(&registry));
+    }
+
+    #[test]
+    fn 容器_添加物品_超重拒绝() {
+        let mut bag = Container::new(ContainerKind::Backpack, 0, 5.0);
+        let registry = test_registry();
+        // 铁剑 3.0，添加一把不超重
+        let s1 = ItemStack::new(
+            ItemInstance::from_def(1, registry.get("iron_sword").unwrap()),
+            1,
+        );
+        assert!(bag.add_stack(s1, &registry));
+        // 再加一把 3.0+3.0=6.0 > 5.0，应被拒绝
+        let s2 = ItemStack::new(
+            ItemInstance::from_def(2, registry.get("iron_sword").unwrap()),
+            1,
+        );
+        assert!(!bag.add_stack(s2, &registry));
+        assert_eq!(bag.len(), 1);
+    }
+
+    #[test]
+    fn 容器_添加物品_堆叠超重也拒绝() {
+        let mut bag = Container::new(ContainerKind::Backpack, 0, 2.0);
+        let registry = test_registry();
+        // 药水 0.5，添加 5 个 = 2.5 > 2.0，应被拒绝
+        let stack = ItemStack::new(
+            ItemInstance::from_def(1, registry.get("potion_healing").unwrap()),
+            5,
+        );
+        assert!(!bag.add_stack(stack, &registry));
+        assert!(bag.is_empty());
     }
 
     #[test]

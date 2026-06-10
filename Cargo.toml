@@ -12,3 +12,7 @@ ron = "0.12.1"
 [features]
 default = []
 dev = ["bevy/file_watcher"]
+
+[dev-dependencies]
+proptest = "1.5"
+insta = { version = "1.41", features = ["yaml"] }

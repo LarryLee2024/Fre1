@@ -3,6 +3,8 @@
 //! 跨 buff/apply + buff/instance + buff/resolve + core/attribute + core/tag
 //! 测试 Buff 从施加 → tick → 过期的完整生命周期。
 
+mod common;
+
 use tactical_rpg::buff::{
     ActiveBuffs, BuffData, BuffInstance, apply_buff, remove_all_debuffs, remove_buff,
 };
@@ -12,23 +14,9 @@ use tactical_rpg::core::attribute::{
 };
 use tactical_rpg::core::tag::{GameplayTag, GameplayTags};
 
-// ── 测试辅助 ──
+use common::fixtures::*;
 
-/// 战士模板：Attack=10, Defense=5, MaxHp=30
-fn warrior_attrs() -> Attributes {
-    let mut a = Attributes::default();
-    a.set_base(AttributeKind::Might, 5.0);
-    a.set_base(AttributeKind::Vitality, 5.0);
-    a.set_base(AttributeKind::Agility, 6.0);
-    a.set_base(AttributeKind::Dexterity, 3.0);
-    a.set_base(AttributeKind::Intelligence, 2.0);
-    a.set_base(AttributeKind::Willpower, 3.0);
-    a.set_base(AttributeKind::Presence, 2.0);
-    a.set_base(AttributeKind::Luck, 2.0);
-    a.set_base_attack_range(1);
-    a.fill_vital_resources();
-    a
-}
+// ── 测试辅助 ──
 
 fn make_buff_data(
     id: &str,

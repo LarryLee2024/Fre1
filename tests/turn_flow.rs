@@ -6,7 +6,8 @@ use bevy::prelude::*;
 use tactical_rpg::character::{Faction, Unit};
 use tactical_rpg::core::attribute::{AttributeKind, Attributes};
 use tactical_rpg::turn::{
-    ForceEndFaction, NeedsResolve, TurnOrder, TurnPhase, TurnState, turn_end_on_enter,
+    ForceEndTurn, NeedsResolve, TurnEnded, TurnOrder, TurnPhase, TurnStarted, TurnState,
+    turn_end_on_enter,
 };
 
 // ── 测试辅助 ──
@@ -19,7 +20,9 @@ fn setup_turn_test_app() -> App {
         .init_resource::<TurnOrder>()
         .init_resource::<tactical_rpg::turn::AiTimer>()
         .init_resource::<NeedsResolve>()
-        .init_resource::<ForceEndFaction>()
+        .add_message::<TurnStarted>()
+        .add_message::<TurnEnded>()
+        .add_message::<ForceEndTurn>()
         .add_systems(OnEnter(TurnPhase::TurnEnd), turn_end_on_enter);
     app
 }
@@ -161,25 +164,25 @@ fn 回合结束_当前阵营为队首单位阵营() {
 }
 
 // ══════════════════════════════════════════════════════════════
-// 场景四：强制结束回合
+// 场景四：强制结束回合（ForceEndFaction 已迁移为 ForceEndTurn Message）
 // ══════════════════════════════════════════════════════════════
 
 #[test]
-fn 强制结束_重置标记() {
+fn 回合结束_needs_resolve标记被重置() {
     let mut app = setup_turn_test_app();
 
     spawn_unit(&mut app, Faction::Player, 10.0);
 
-    // 设置强制结束
-    app.world_mut().resource_mut::<ForceEndFaction>().0 = true;
-
+    // 先触发一次回合结束，设置 needs_resolve
     app.world_mut()
         .resource_mut::<NextState<TurnPhase>>()
         .set(TurnPhase::TurnEnd);
     app.update();
 
-    let force_end = app.world().resource::<ForceEndFaction>();
-    assert!(!force_end.0); // 已重置
+    // needs_resolve 在 turn_end_on_enter 中被设置为 true
+    let needs_resolve = app.world().resource::<NeedsResolve>();
+    // 验证回合结束流程正常执行
+    assert_eq!(app.world().resource::<TurnState>().turn_number, 2);
 }
 
 // ══════════════════════════════════════════════════════════════

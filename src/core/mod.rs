@@ -2,9 +2,9 @@
 // 这些是跨业务模块的共享基础设施，被 character/battle/buff/skill 等模块依赖
 
 pub mod attribute;
-pub(crate) mod attribute_def;
+pub mod attribute_def;
 pub mod effect;
 pub mod modifier_rule;
-pub(crate) mod registry_loader;
+pub mod registry_loader;
 pub mod tag;
-pub(crate) mod tag_def;
+pub mod tag_def;

@@ -4,29 +4,17 @@
 //! apply_buff / remove_buff 状态修改、calculate_damage_from_effect 伤害计算
 //! 在真实属性数据下的联合行为。
 
+mod common;
+
 use bevy::prelude::*;
 use tactical_rpg::buff::{ActiveBuffs, BuffData, apply_buff, remove_all_debuffs, remove_buff};
 use tactical_rpg::core::attribute::{AttributeKind, AttributeModifierDef, Attributes, ModifierOp};
 use tactical_rpg::core::effect::calculate_damage_from_effect;
 use tactical_rpg::core::tag::GameplayTags;
 
-// ── 测试辅助 ──
+use common::fixtures::*;
 
-/// 战士模板：Might=5, Vitality=5 → Attack=10, Defense=5, MaxHp=30, MaxMp=10
-fn warrior_attrs() -> Attributes {
-    let mut a = Attributes::default();
-    a.set_base(AttributeKind::Might, 5.0);
-    a.set_base(AttributeKind::Vitality, 5.0);
-    a.set_base(AttributeKind::Agility, 6.0);
-    a.set_base(AttributeKind::Dexterity, 3.0);
-    a.set_base(AttributeKind::Intelligence, 2.0);
-    a.set_base(AttributeKind::Willpower, 3.0);
-    a.set_base(AttributeKind::Presence, 2.0);
-    a.set_base(AttributeKind::Luck, 2.0);
-    a.set_base_attack_range(1);
-    a.fill_vital_resources();
-    a
-}
+// ── 测试辅助 ──
 
 /// 增攻 Buff：+5 攻击力
 fn attack_up_buff() -> BuffData {

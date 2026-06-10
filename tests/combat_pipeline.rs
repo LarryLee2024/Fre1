@@ -3,6 +3,8 @@
 //! 测试 calculate_damage_from_effect 在各种属性组合下的行为，
 //! 跨 attribute + effect/types 模块验证完整的伤害计算链路。
 
+mod common;
+
 use tactical_rpg::core::attribute::{AttributeKind, Attributes};
 use tactical_rpg::core::effect::{
     EffectDef, EffectHandlerRegistry, EffectPreview, EffectQueue, GenerateContext, PendingEffect,
@@ -10,25 +12,12 @@ use tactical_rpg::core::effect::{
 };
 use tactical_rpg::core::tag::{GameplayTag, GameplayTags};
 
+use common::fixtures::warrior_attrs;
+
 // ── 测试辅助 ──
 
-/// 战士模板：Might=5, Vitality=5 → Attack=10, Defense=5, MaxHp=30
-fn warrior_attrs() -> Attributes {
-    let mut a = Attributes::default();
-    a.set_base(AttributeKind::Might, 5.0);
-    a.set_base(AttributeKind::Vitality, 5.0);
-    a.set_base(AttributeKind::Agility, 6.0);
-    a.set_base(AttributeKind::Dexterity, 3.0);
-    a.set_base(AttributeKind::Intelligence, 2.0);
-    a.set_base(AttributeKind::Willpower, 3.0);
-    a.set_base(AttributeKind::Presence, 2.0);
-    a.set_base(AttributeKind::Luck, 2.0);
-    a.set_base_attack_range(1);
-    a.fill_vital_resources();
-    a
-}
-
 /// 哥布林模板：Might=4, Vitality=3 → Attack=8, Defense=3, MaxHp=20
+/// 注意：与 common::fixtures::goblin_attrs() 属性值不同，保留本地版本
 fn goblin_attrs() -> Attributes {
     let mut a = Attributes::default();
     a.set_base(AttributeKind::Might, 4.0);
