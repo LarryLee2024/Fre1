@@ -4,7 +4,8 @@ use super::traits::TraitCollection;
 use crate::buff::ActiveBuffs;
 use crate::core::attribute::Attributes;
 use crate::core::tag::GameplayTags;
-use crate::equipment::{EquipmentSlots, Inventory};
+use crate::equipment::EquipmentSlots;
+use crate::inventory::container::Container;
 use crate::skill::{SkillCooldowns, SkillSlots};
 use bevy::ecs::lifecycle::HookContext;
 use bevy::ecs::world::DeferredWorld;
@@ -29,7 +30,7 @@ pub enum Faction {
     PersistentTags,
     TraitCollection,
     EquipmentSlots,
-    Inventory,
+    Container,
     GridPosition
 )]
 pub struct Unit {

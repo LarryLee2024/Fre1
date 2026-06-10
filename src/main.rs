@@ -7,6 +7,7 @@ mod core;
 mod debug;
 mod equipment;
 mod input;
+mod inventory;
 mod map;
 mod skill;
 mod turn;
@@ -28,6 +29,7 @@ use core::tag_def::TagDefPlugin;
 use debug::DebugPlugin;
 use equipment::EquipmentPlugin;
 use input::InputPlugin;
+use inventory::InventoryPlugin;
 use map::MapPlugin;
 use skill::SkillPlugin;
 use turn::{AppState, TurnPlugin};
@@ -45,7 +47,13 @@ fn main() {
         }))
         .add_plugins((EguiPlugin::default(), WorldInspectorPlugin::new()))
         // 数据层插件
-        .add_plugins((SkillPlugin, BuffPlugin, AiBehaviorPlugin, EquipmentPlugin))
+        .add_plugins((
+            SkillPlugin,
+            BuffPlugin,
+            AiBehaviorPlugin,
+            EquipmentPlugin,
+            InventoryPlugin,
+        ))
         // 核心层插件
         .add_plugins((
             EffectPlugin,

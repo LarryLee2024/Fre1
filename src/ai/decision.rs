@@ -39,19 +39,22 @@ pub fn enemy_ai_system(
     terrain_registry: Res<TerrainRegistry>,
     occupancy: Res<OccupancyGrid>,
     mut combat_intent: ResMut<CombatIntent>,
-    mut units: Query<(
-        Entity,
-        &mut Unit,
-        &mut GridPosition,
-        &mut Transform,
-        &UnitName,
-        &Attributes,
-        &SkillSlots,
-        &mut SkillCooldowns,
-        &mut ActiveBuffs,
-        &mut GameplayTags,
-        &AiBehaviorId,
-    ), Without<Dead>>,
+    mut units: Query<
+        (
+            Entity,
+            &mut Unit,
+            &mut GridPosition,
+            &mut Transform,
+            &UnitName,
+            &Attributes,
+            &SkillSlots,
+            &mut SkillCooldowns,
+            &mut ActiveBuffs,
+            &mut GameplayTags,
+            &AiBehaviorId,
+        ),
+        Without<Dead>,
+    >,
 ) {
     // 只在 SelectUnit 阶段执行
     if *turn_phase.get() != TurnPhase::SelectUnit {

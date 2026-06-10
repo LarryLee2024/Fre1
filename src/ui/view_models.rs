@@ -68,6 +68,7 @@ pub struct EquipmentSlotEntry {
 pub struct InventoryEntry {
     pub item_name: String,
     pub rarity: String,
+    pub count: u32,
     pub instance_id: u64,
 }
 
@@ -156,11 +157,12 @@ pub fn update_selected_unit_view(
         Option<&SkillCooldowns>,
         Option<&TraitCollection>,
         Option<&crate::equipment::EquipmentSlots>,
-        Option<&crate::equipment::Inventory>,
+        Option<&crate::inventory::container::Container>,
     )>,
     skill_registry: Res<SkillRegistry>,
     trait_registry: Res<TraitRegistry>,
     equipment_registry: Res<crate::equipment::EquipmentRegistry>,
+    item_registry: Res<crate::inventory::definition::ItemRegistry>,
     mut view: ResMut<SelectedUnitView>,
 ) {
     // 仅在 HoveredEntity 变化时刷新
@@ -180,7 +182,7 @@ pub fn update_selected_unit_view(
             _cooldowns,
             trait_collection,
             equipment_slots,
-            inventory,
+            container,
         )) = units.get(entity)
         {
             view.name = name.0.clone();
@@ -346,18 +348,19 @@ pub fn update_selected_unit_view(
                     .collect()
                 });
 
-            // 背包
-            view.inventory = inventory
-                .map(|inv| {
-                    inv.items
+            // 背包（从 Container 读取）
+            view.inventory = container
+                .map(|c| {
+                    c.stacks
                         .iter()
-                        .filter_map(|instance| {
-                            equipment_registry
-                                .get(&instance.def_id)
+                        .filter_map(|stack| {
+                            item_registry
+                                .get(&stack.instance.def_id)
                                 .map(|def| InventoryEntry {
                                     item_name: def.name.clone(),
                                     rarity: def.rarity.label().to_string(),
-                                    instance_id: instance.instance_id,
+                                    count: stack.count,
+                                    instance_id: stack.instance.instance_id,
                                 })
                         })
                         .collect()

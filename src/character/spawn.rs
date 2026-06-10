@@ -5,8 +5,9 @@ use crate::buff::ActiveBuffs;
 use crate::core::attribute::Attributes;
 use crate::core::tag::{GameplayTag, GameplayTags};
 use crate::equipment::{
-    EquipmentInstance, EquipmentRegistry, EquipmentSlots, Inventory, apply_equipment_effects,
+    EquipmentInstance, EquipmentRegistry, EquipmentSlots, apply_equipment_effects,
 };
+use crate::inventory::container::Container;
 use crate::map::GameMap;
 use crate::map::LevelRegistry;
 use crate::skill::{SkillCooldowns, SkillSlots};
@@ -146,7 +147,7 @@ fn spawn_unit_from_template(
 
     // 穿戴初始装备
     let mut equipment_slots = EquipmentSlots::default();
-    let mut inventory = Inventory::default();
+    let mut inventory = Container::backpack();
     let mut trait_collection = trait_collection;
     for (slot, def_id) in &template.initial_equipment {
         if let Some(def) = equipment_registry.get(def_id) {

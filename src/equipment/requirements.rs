@@ -75,6 +75,7 @@ mod tests {
             modifiers: vec![],
             traits: vec![],
             requirements: vec![],
+            weight: 0.0,
         };
         let attrs = make_test_attrs();
         let tags = GameplayTags::default();
@@ -94,6 +95,7 @@ mod tests {
             modifiers: vec![],
             traits: vec![],
             requirements: vec![EquipmentRequirement::RequireTag(TagName::Martial)],
+            weight: 0.0,
         };
         let attrs = make_test_attrs();
         let mut tags = GameplayTags::default();

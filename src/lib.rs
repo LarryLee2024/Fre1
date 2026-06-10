@@ -6,6 +6,7 @@ pub mod character;
 pub mod core;
 pub mod equipment;
 pub mod input;
+pub mod inventory;
 pub mod map;
 pub mod skill;
 pub mod turn;

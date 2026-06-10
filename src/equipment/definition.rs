@@ -93,6 +93,9 @@ pub struct EquipmentDef {
     /// 需求条件
     #[serde(default)]
     pub requirements: Vec<EquipmentRequirement>,
+    /// 重量
+    #[serde(default)]
+    pub weight: f32,
 }
 
 /// 装备注册表资源
@@ -132,6 +135,7 @@ impl EquipmentRegistry {
                 }],
                 traits: vec![],
                 requirements: vec![],
+                weight: 3.0,
             },
             EquipmentDef {
                 version: 1,
@@ -148,6 +152,7 @@ impl EquipmentRegistry {
                 }],
                 traits: vec![],
                 requirements: vec![],
+                weight: 4.0,
             },
             EquipmentDef {
                 version: 1,
@@ -176,6 +181,7 @@ impl EquipmentRegistry {
                 ],
                 traits: vec!["flaming_weapon".into(), "dragon_bane".into()],
                 requirements: vec![EquipmentRequirement::RequireTag(TagName::Martial)],
+                weight: 5.0,
             },
             EquipmentDef {
                 version: 1,
@@ -192,6 +198,7 @@ impl EquipmentRegistry {
                 }],
                 traits: vec![],
                 requirements: vec![],
+                weight: 6.0,
             },
             EquipmentDef {
                 version: 1,
@@ -208,6 +215,7 @@ impl EquipmentRegistry {
                 }],
                 traits: vec![],
                 requirements: vec![],
+                weight: 2.0,
             },
         ];
 

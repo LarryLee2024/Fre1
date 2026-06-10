@@ -64,7 +64,13 @@ pub fn update_inventory_panel(
                     let lines: Vec<String> = view
                         .inventory
                         .iter()
-                        .map(|i| format!("  {} [{}]", i.item_name, i.rarity))
+                        .map(|i| {
+                            if i.count > 1 {
+                                format!("  {} x{} [{}]", i.item_name, i.count, i.rarity)
+                            } else {
+                                format!("  {} [{}]", i.item_name, i.rarity)
+                            }
+                        })
                         .collect();
                     **text = lines.join("\n");
                 }

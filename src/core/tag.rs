@@ -32,6 +32,19 @@ impl GameplayTag {
     pub const MOUNTED: Self = Self(1 << 49);
     pub const SWIMMING: Self = Self(1 << 50);
 
+    // ── 物品类型 ──
+    pub const CONSUMABLE: Self = Self(1 << 51);
+    pub const AMMO: Self = Self(1 << 52);
+    pub const MATERIAL: Self = Self(1 << 53);
+    pub const CURRENCY: Self = Self(1 << 54);
+    pub const QUEST_ITEM: Self = Self(1 << 55);
+
+    // ── 消耗品子类 ──
+    pub const HEALING: Self = Self(1 << 56);
+    pub const POTION: Self = Self(1 << 57);
+    pub const SCROLL: Self = Self(1 << 58);
+    pub const FOOD: Self = Self(1 << 59);
+
     // ── 技能类型 ──
     pub const SKILL_ACTIVE: Self = Self(1 << 32);
     pub const SKILL_PASSIVE: Self = Self(1 << 33);
@@ -71,6 +84,15 @@ impl GameplayTag {
             Self::FLYING => "飞行",
             Self::MOUNTED => "骑兵",
             Self::SWIMMING => "水生",
+            Self::CONSUMABLE => "消耗品",
+            Self::AMMO => "弹药",
+            Self::MATERIAL => "材料",
+            Self::CURRENCY => "货币",
+            Self::QUEST_ITEM => "任务物品",
+            Self::HEALING => "治疗",
+            Self::POTION => "药水",
+            Self::SCROLL => "卷轴",
+            Self::FOOD => "食物",
             Self::SKILL_ACTIVE => "主动技能",
             Self::SKILL_PASSIVE => "被动技能",
             Self::BUFF => "增益",
@@ -145,6 +167,15 @@ impl GameplayTags {
             GameplayTag::FLYING,
             GameplayTag::MOUNTED,
             GameplayTag::SWIMMING,
+            GameplayTag::CONSUMABLE,
+            GameplayTag::AMMO,
+            GameplayTag::MATERIAL,
+            GameplayTag::CURRENCY,
+            GameplayTag::QUEST_ITEM,
+            GameplayTag::HEALING,
+            GameplayTag::POTION,
+            GameplayTag::SCROLL,
+            GameplayTag::FOOD,
             GameplayTag::SKILL_ACTIVE,
             GameplayTag::SKILL_PASSIVE,
             GameplayTag::BUFF,
@@ -182,6 +213,15 @@ pub enum TagName {
     Flying,
     Mounted,
     Swimming,
+    Consumable,
+    Ammo,
+    Material,
+    Currency,
+    QuestItem,
+    Healing,
+    Potion,
+    Scroll,
+    Food,
     SkillActive,
     SkillPassive,
     Buff,
@@ -215,6 +255,15 @@ impl TagName {
             Self::Flying => GameplayTag::FLYING,
             Self::Mounted => GameplayTag::MOUNTED,
             Self::Swimming => GameplayTag::SWIMMING,
+            Self::Consumable => GameplayTag::CONSUMABLE,
+            Self::Ammo => GameplayTag::AMMO,
+            Self::Material => GameplayTag::MATERIAL,
+            Self::Currency => GameplayTag::CURRENCY,
+            Self::QuestItem => GameplayTag::QUEST_ITEM,
+            Self::Healing => GameplayTag::HEALING,
+            Self::Potion => GameplayTag::POTION,
+            Self::Scroll => GameplayTag::SCROLL,
+            Self::Food => GameplayTag::FOOD,
             Self::SkillActive => GameplayTag::SKILL_ACTIVE,
             Self::SkillPassive => GameplayTag::SKILL_PASSIVE,
             Self::Buff => GameplayTag::BUFF,

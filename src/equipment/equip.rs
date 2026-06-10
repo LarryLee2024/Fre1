@@ -1,7 +1,7 @@
 // 装备穿脱逻辑：EquipItem/UnequipItem Message + 穿脱系统
 
 use super::definition::{EquipmentDef, EquipmentRegistry, EquipmentSlot};
-use super::instance::{EquipmentInstance, Inventory};
+use super::instance::EquipmentInstance;
 use super::requirements::check_equipment_requirements;
 use super::slots::EquipmentSlots;
 use crate::character::PersistentTags;
@@ -10,6 +10,9 @@ use crate::character::{
 };
 use crate::core::attribute::{AttributeModifierInstance, Attributes, ModifierSource};
 use crate::core::tag::{GameplayTag, GameplayTags};
+use crate::inventory::container::Container;
+use crate::inventory::definition::ItemRegistry;
+use crate::inventory::instance::{ItemInstance, ItemStack};
 use bevy::ecs::message::MessageReader;
 use bevy::prelude::*;
 
@@ -58,6 +61,7 @@ pub fn equip_item_system(
     mut equipped_writer: MessageWriter<ItemEquipped>,
     mut failed_writer: MessageWriter<EquipFailed>,
     equipment_registry: Res<EquipmentRegistry>,
+    item_registry: Res<ItemRegistry>,
     trait_registry: Res<TraitRegistry>,
     effect_handlers: Res<TraitEffectHandlerRegistry>,
     mut units: Query<(
@@ -66,7 +70,7 @@ pub fn equip_item_system(
         &mut GameplayTags,
         &mut PersistentTags,
         &mut EquipmentSlots,
-        &mut Inventory,
+        &mut Container,
         &mut TraitCollection,
     )>,
 ) {
@@ -77,13 +81,13 @@ pub fn equip_item_system(
             mut tags,
             mut persistent,
             mut slots,
-            mut inventory,
+            mut container,
             mut trait_collection,
         )) = units.get_mut(msg.target_entity)
         {
-            // 从背包查找装备实例
-            let instance = match inventory.get(msg.instance_id) {
-                Some(inst) => inst.clone(),
+            // 从背包查找装备堆叠
+            let stack = match container.get(msg.instance_id) {
+                Some(s) => s.clone(),
                 None => {
                     bevy::log::warn!(
                         target: "equipment",
@@ -96,12 +100,12 @@ pub fn equip_item_system(
             };
 
             // 从注册表查找装备定义
-            let def = match equipment_registry.get(&instance.def_id) {
+            let def = match equipment_registry.get(&stack.instance.def_id) {
                 Some(d) => d,
                 None => {
                     bevy::log::warn!(
                         target: "equipment",
-                        def_id = %instance.def_id,
+                        def_id = %stack.instance.def_id,
                         "装备定义不存在"
                     );
                     continue;
@@ -139,27 +143,33 @@ pub fn equip_item_system(
                     slot,
                     old_instance_id,
                     &equipment_registry,
+                    &item_registry,
                     &trait_registry,
                     &effect_handlers,
                     &mut attrs,
                     &mut tags,
                     &mut persistent,
                     &mut slots,
-                    &mut inventory,
+                    &mut container,
                     &mut trait_collection,
                 );
             }
 
             // 从背包移除
-            inventory.remove(msg.instance_id);
+            container.remove(msg.instance_id);
 
             // 装备到槽位
             slots.equip(slot, msg.instance_id, def.id.clone());
 
-            // 应用装备效果
+            // 应用装备效果（构造 EquipmentInstance 用于兼容）
+            let eq_instance = EquipmentInstance::new(
+                msg.instance_id,
+                stack.instance.def_id.clone(),
+                stack.instance.durability,
+            );
             apply_equipment_effects(
                 def,
-                &instance,
+                &eq_instance,
                 slot,
                 &mut attrs,
                 &mut persistent,
@@ -211,6 +221,7 @@ pub fn unequip_item_system(
     mut unequip_reader: MessageReader<UnequipItem>,
     mut unequipped_writer: MessageWriter<ItemUnequipped>,
     equipment_registry: Res<EquipmentRegistry>,
+    item_registry: Res<ItemRegistry>,
     trait_registry: Res<TraitRegistry>,
     effect_handlers: Res<TraitEffectHandlerRegistry>,
     mut units: Query<(
@@ -219,7 +230,7 @@ pub fn unequip_item_system(
         &mut GameplayTags,
         &mut PersistentTags,
         &mut EquipmentSlots,
-        &mut Inventory,
+        &mut Container,
         &mut TraitCollection,
     )>,
 ) {
@@ -230,7 +241,7 @@ pub fn unequip_item_system(
             mut tags,
             mut persistent,
             mut slots,
-            mut inventory,
+            mut container,
             mut trait_collection,
         )) = units.get_mut(msg.target_entity)
         {
@@ -250,13 +261,14 @@ pub fn unequip_item_system(
                 msg.slot,
                 instance_id,
                 &equipment_registry,
+                &item_registry,
                 &trait_registry,
                 &effect_handlers,
                 &mut attrs,
                 &mut tags,
                 &mut persistent,
                 &mut slots,
-                &mut inventory,
+                &mut container,
                 &mut trait_collection,
             );
 
@@ -301,13 +313,14 @@ fn unequip_internal(
     slot: EquipmentSlot,
     instance_id: u64,
     equipment_registry: &EquipmentRegistry,
+    item_registry: &ItemRegistry,
     _trait_registry: &TraitRegistry,
     _effect_handlers: &TraitEffectHandlerRegistry,
     attrs: &mut Attributes,
     _tags: &mut GameplayTags,
     persistent: &mut PersistentTags,
     slots: &mut EquipmentSlots,
-    inventory: &mut Inventory,
+    container: &mut Container,
     trait_collection: &mut TraitCollection,
 ) {
     // 从槽位获取 def_id（装备穿戴时已不在背包中）
@@ -336,9 +349,16 @@ fn unequip_internal(
     // 清除槽位
     slots.unequip(slot);
 
-    // 创建实例放回背包
-    let instance = EquipmentInstance::new(instance_id, def_id, 100);
-    inventory.add(instance);
+    // 创建 ItemStack 放回背包
+    let item_instance = ItemInstance::from_def(
+        instance_id,
+        item_registry.get(&def_id).unwrap_or_else(|| {
+            // fallback：如果没有 ItemDef，构造一个最小化的
+            unreachable!("装备定义应在 ItemRegistry 中存在")
+        }),
+    );
+    let stack = ItemStack::new(item_instance, 1);
+    container.add_stack(stack, item_registry);
 }
 
 /// 应用装备效果：修饰符 + 标签 + Trait
@@ -432,8 +452,8 @@ mod tests {
     use crate::core::attribute::AttributeKind;
     use crate::core::registry_loader::RegistryLoader;
     use crate::core::tag::TagName;
+    use crate::inventory::definition::{ItemDef, ItemType};
 
-    /// 辅助：创建测试用属性
     fn make_test_attrs() -> Attributes {
         let mut attrs = Attributes::default();
         attrs.set_base(AttributeKind::Might, 5.0);
@@ -449,6 +469,33 @@ mod tests {
         attrs
     }
 
+    /// 辅助：创建包含装备定义的 ItemRegistry
+    fn make_item_registry(equipment_registry: &EquipmentRegistry) -> ItemRegistry {
+        let mut item_registry = ItemRegistry::default();
+        for def in equipment_registry.iter() {
+            let item_def = ItemDef {
+                version: 1,
+                id: def.id.clone(),
+                name: def.name.clone(),
+                description: def.description.clone(),
+                item_type: ItemType::Equipment,
+                rarity: def.rarity,
+                tags: def.tags.clone(),
+                stack_size: 1,
+                weight: def.weight,
+                modifiers: def.modifiers.clone(),
+                traits: def.traits.clone(),
+                requirements: def.requirements.clone(),
+                slot: def.slot,
+                use_effects: vec![],
+                container_capacity: None,
+                container_max_weight: None,
+            };
+            item_registry.register(item_def);
+        }
+        item_registry
+    }
+
     #[test]
     fn 穿戴装备_属性修饰符生效() {
         let mut registry = EquipmentRegistry::default();
@@ -458,21 +505,17 @@ mod tests {
         let mut tags = GameplayTags::default();
         let mut persistent = PersistentTags::default();
         let mut slots = EquipmentSlots::default();
-        let mut inventory = Inventory::new(10);
         let mut trait_collection = TraitCollection::default();
 
-        // 创建装备实例放入背包
         let instance_id = slots.next_instance_id();
         let instance = EquipmentInstance::new(instance_id, "iron_sword".into(), 100);
-        inventory.add(instance);
 
         let def = registry.get("iron_sword").unwrap();
         let slot = def.slot;
 
-        // 穿戴
         apply_equipment_effects(
             def,
-            inventory.get(instance_id).unwrap(),
+            &instance,
             slot,
             &mut attrs,
             &mut persistent,
@@ -482,10 +525,8 @@ mod tests {
             &TraitEffectHandlerRegistry::with_defaults(),
         );
 
-        // Attack 应该增加 3
-        let base_attack = 10.0; // Might*2
+        let base_attack = 10.0;
         assert_eq!(attrs.get(AttributeKind::Attack), base_attack + 3.0);
-        // 应该有 SWORD 标签
         assert!(persistent.from_equipment.has(GameplayTag::SWORD));
         assert!(persistent.from_equipment.has(GameplayTag::MARTIAL));
     }
@@ -494,25 +535,24 @@ mod tests {
     fn 脱卸装备_属性恢复() {
         let mut registry = EquipmentRegistry::default();
         registry.register_defaults();
+        let item_registry = make_item_registry(&registry);
 
         let mut attrs = make_test_attrs();
         let mut tags = GameplayTags::default();
         let mut persistent = PersistentTags::default();
         let mut slots = EquipmentSlots::default();
-        let mut inventory = Inventory::new(10);
+        let mut container = Container::backpack();
         let mut trait_collection = TraitCollection::default();
 
         let instance_id = slots.next_instance_id();
         let instance = EquipmentInstance::new(instance_id, "iron_sword".into(), 100);
-        inventory.add(instance);
 
         let def = registry.get("iron_sword").unwrap();
         let slot = def.slot;
 
-        // 穿戴
         apply_equipment_effects(
             def,
-            inventory.get(instance_id).unwrap(),
+            &instance,
             slot,
             &mut attrs,
             &mut persistent,
@@ -524,28 +564,25 @@ mod tests {
 
         slots.equip(slot, instance_id, "iron_sword".into());
 
-        // 脱卸
         unequip_internal(
-            Entity::from_bits(1),
+            Entity::PLACEHOLDER,
             slot,
             instance_id,
             &registry,
+            &item_registry,
             &TraitRegistry::default(),
             &TraitEffectHandlerRegistry::with_defaults(),
             &mut attrs,
             &mut tags,
             &mut persistent,
             &mut slots,
-            &mut inventory,
+            &mut container,
             &mut trait_collection,
         );
 
-        // Attack 恢复
         assert_eq!(attrs.get(AttributeKind::Attack), 10.0);
-        // 标签清除
         assert!(!persistent.from_equipment.has(GameplayTag::SWORD));
-        // 实例回到背包
-        assert!(inventory.get(instance_id).is_some());
+        assert!(container.get(instance_id).is_some());
     }
 
     #[test]
@@ -557,18 +594,16 @@ mod tests {
         let mut tags = GameplayTags::default();
         let mut persistent = PersistentTags::default();
         let mut slots = EquipmentSlots::default();
-        let mut inventory = Inventory::new(10);
         let mut trait_collection = TraitCollection::default();
 
         let instance_id = slots.next_instance_id();
         let instance = EquipmentInstance::new(instance_id, "flame_dragon_sword".into(), 100);
-        inventory.add(instance);
 
         let def = registry.get("flame_dragon_sword").unwrap();
 
         apply_equipment_effects(
             def,
-            inventory.get(instance_id).unwrap(),
+            &instance,
             def.slot,
             &mut attrs,
             &mut persistent,
@@ -593,18 +628,16 @@ mod tests {
         let mut tags = GameplayTags::default();
         let mut persistent = PersistentTags::default();
         let mut slots = EquipmentSlots::default();
-        let mut inventory = Inventory::new(10);
         let mut trait_collection = TraitCollection::default();
 
         let instance_id = slots.next_instance_id();
         let instance = EquipmentInstance::new(instance_id, "flame_dragon_sword".into(), 100);
-        inventory.add(instance);
 
         let def = registry.get("flame_dragon_sword").unwrap();
 
         apply_equipment_effects(
             def,
-            inventory.get(instance_id).unwrap(),
+            &instance,
             def.slot,
             &mut attrs,
             &mut persistent,
@@ -614,7 +647,6 @@ mod tests {
             &TraitEffectHandlerRegistry::with_defaults(),
         );
 
-        // 应该有 2 个 trait
         assert!(trait_collection.has("flaming_weapon"));
         assert!(trait_collection.has("dragon_bane"));
     }
