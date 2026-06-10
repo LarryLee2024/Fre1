@@ -10,7 +10,7 @@ use serde::Deserialize;
 use std::collections::HashMap;
 
 /// 物品类型
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Reflect, Deserialize)]
 pub enum ItemType {
     Equipment,
     Consumable,
@@ -36,7 +36,7 @@ impl ItemType {
 }
 
 /// 消耗品使用效果
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Reflect, Deserialize)]
 pub enum UseEffect {
     /// 恢复 HP/MP/Stamina
     RestoreVital { kind: AttributeKind, value: f32 },

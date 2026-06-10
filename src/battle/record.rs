@@ -15,7 +15,8 @@ use super::events::{
 // ── 战斗记录条目 ──
 
 /// 单条战斗记录条目
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Reflect, Serialize, Deserialize)]
+#[reflect(Serialize, Deserialize)]
 pub enum BattleEntry {
     /// 回合开始
     TurnStarted { turn: u32 },
@@ -66,7 +67,8 @@ pub enum BattleEntry {
 // ── 战斗统计 ──
 
 /// 单个实体的战斗统计
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Reflect, Serialize, Deserialize)]
+#[reflect(Serialize, Deserialize)]
 pub struct EntityBattleStats {
     /// 造成总伤害
     pub damage_dealt: i32,
@@ -81,7 +83,8 @@ pub struct EntityBattleStats {
 // ── 战斗记录资源 ──
 
 /// 战斗记录资源：持久化存储，支持回放、查询、调试
-#[derive(Resource, Default, Debug, Serialize, Deserialize)]
+#[derive(Resource, Reflect, Default, Debug, Serialize, Deserialize)]
+#[reflect(Resource, Serialize, Deserialize)]
 pub struct BattleRecord {
     pub entries: Vec<BattleEntry>,
     pub turn_number: u32,

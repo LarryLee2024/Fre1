@@ -4,6 +4,7 @@
 use crate::character::Unit;
 use crate::skill::{SkillRegistry, SkillSlots};
 use crate::ui::events::UiCommand;
+use crate::ui::focus::BlocksGameInput;
 use crate::ui::theme::UiTheme;
 use crate::ui::widgets::layout::*;
 use bevy::ecs::message::MessageWriter;
@@ -113,7 +114,7 @@ pub fn spawn_action_menu(
         .id();
     children_entities.push(cancel_btn);
 
-    // 根节点（使用 panel 样式）
+    // 根节点（使用 panel 样式，BlocksGameInput 阻止游戏输入）
     let root = commands
         .spawn((
             Node {
@@ -126,6 +127,7 @@ pub fn spawn_action_menu(
             },
             BackgroundColor(theme.panel_bg),
             ActionMenuRoot,
+            BlocksGameInput,
         ))
         .id();
 

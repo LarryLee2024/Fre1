@@ -19,6 +19,12 @@ impl Plugin for TurnPlugin {
             .init_resource::<TurnOrder>()
             .init_resource::<AiTimer>()
             .init_resource::<NeedsResolve>()
+            // 注册 Reflect 类型
+            .register_type::<TurnPhase>()
+            .register_type::<TurnOrder>()
+            .register_type::<TurnState>()
+            .register_type::<AiTimer>()
+            .register_type::<NeedsResolve>()
             .add_message::<TurnStarted>()
             .add_message::<TurnEnded>()
             .add_message::<ForceEndTurn>()

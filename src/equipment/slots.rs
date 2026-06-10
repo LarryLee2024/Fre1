@@ -5,7 +5,8 @@ use bevy::prelude::*;
 use std::collections::HashMap;
 
 /// 装备槽组件：记录每个槽位装备了哪个实例
-#[derive(Component, Default, Debug, Clone)]
+#[derive(Component, Reflect, Default, Debug, Clone)]
+#[reflect(Component)]
 pub struct EquipmentSlots {
     /// 槽位 → (装备实例 ID, 定义 ID)
     pub slots: HashMap<EquipmentSlot, (u64, String)>,

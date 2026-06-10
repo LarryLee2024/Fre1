@@ -3,7 +3,7 @@ use crate::core::tag::GameplayTag;
 use bevy::prelude::*;
 
 /// 运行时 Buff 实例
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Reflect)]
 pub struct BuffInstance {
     pub instance_id: BuffInstanceId,
     pub buff_id: String,
@@ -27,7 +27,8 @@ impl BuffInstance {
 }
 
 /// 活跃 Buff 列表组件（替代原 StatusEffects）
-#[derive(Component, Default, Debug, Clone)]
+#[derive(Component, Reflect, Default, Debug, Clone)]
+#[reflect(Component)]
 pub struct ActiveBuffs {
     pub instances: Vec<BuffInstance>,
     next_id: u64,

@@ -1,8 +1,13 @@
-use super::components::{MovingUnit, Unit};
+use super::components::*;
 use super::movement::animate_movement;
 use super::spawn::{TurnOrderLabel, UnitPlugin};
 use super::template::UnitTemplatePlugin;
 use super::traits::TraitPlugin;
+use crate::core::attribute::{
+    AttributeKind, AttributeModifierDef, AttributeModifierInstance, Attributes, BuffInstanceId,
+    ModifierOp, ModifierSource,
+};
+use crate::core::tag::{GameplayTag, GameplayTags, TagName};
 use crate::turn::{AppState, TurnOrder};
 use bevy::prelude::*;
 
@@ -50,6 +55,33 @@ pub struct CharacterPlugin;
 impl Plugin for CharacterPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((UnitTemplatePlugin, TraitPlugin, UnitPlugin))
+            // 注册 Reflect 类型
+            .register_type::<Faction>()
+            .register_type::<Unit>()
+            .register_type::<UnitName>()
+            .register_type::<UnitRace>()
+            .register_type::<UnitClass>()
+            .register_type::<GridPosition>()
+            .register_type::<Selected>()
+            .register_type::<Dead>()
+            .register_type::<PersistentTags>()
+            .register_type::<HpBarBg>()
+            .register_type::<HpBarFg>()
+            .register_type::<AiBehaviorId>()
+            .register_type::<PathArrow>()
+            .register_type::<MovingUnit>()
+            // 核心 attribute 类型
+            .register_type::<AttributeKind>()
+            .register_type::<ModifierOp>()
+            .register_type::<AttributeModifierDef>()
+            .register_type::<ModifierSource>()
+            .register_type::<BuffInstanceId>()
+            .register_type::<AttributeModifierInstance>()
+            .register_type::<Attributes>()
+            // 核心 tag 类型
+            .register_type::<GameplayTag>()
+            .register_type::<GameplayTags>()
+            .register_type::<TagName>()
             // 移动动画系统：只在游戏中运行
             .add_systems(Update, animate_movement.run_if(in_state(AppState::InGame)))
             .add_systems(

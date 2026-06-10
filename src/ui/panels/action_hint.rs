@@ -7,7 +7,7 @@ use bevy::prelude::*;
 /// 生成操作提示
 pub fn spawn_action_hint(mut commands: Commands, theme: Res<UiTheme>) {
     commands.spawn((
-        Text::new("左键选择/移动 | 右键取消/菜单 | E 结束回合"),
+        Text::new("左键选择/移动 | 右键取消 | ESC 关闭面板/取消 | E 结束回合"),
         TextFont {
             font_size: theme.font_small,
             ..default()

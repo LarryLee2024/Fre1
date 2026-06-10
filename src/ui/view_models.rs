@@ -16,21 +16,21 @@ use crate::turn::{TurnOrder, TurnPhase, TurnState};
 // ── ViewModel 定义 ──
 
 /// 核心属性条目
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Reflect)]
 pub struct CoreAttrEntry {
     pub label: String,
     pub value: i32,
 }
 
 /// 衍生属性条目（分组显示）
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Reflect)]
 pub struct DerivedAttrEntry {
     pub label: String,
     pub value: i32,
 }
 
 /// Buff 条目（带颜色分类）
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Reflect)]
 pub struct BuffEntry {
     pub name: String,
     pub remaining_turns: u32,
@@ -38,7 +38,7 @@ pub struct BuffEntry {
 }
 
 /// 技能条目（带详细信息）
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Reflect)]
 pub struct SkillEntry {
     pub name: String,
     pub id: String,
@@ -49,14 +49,14 @@ pub struct SkillEntry {
 }
 
 /// Trait 条目
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Reflect)]
 pub struct TraitEntry {
     pub name: String,
     pub description: String,
 }
 
 /// 装备槽条目（含空槽位）
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Reflect)]
 pub struct EquipmentSlotEntry {
     pub slot_label: String,
     pub item_name: Option<String>,
@@ -64,7 +64,7 @@ pub struct EquipmentSlotEntry {
 }
 
 /// 背包条目
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Reflect)]
 pub struct InventoryEntry {
     pub item_name: String,
     pub rarity: String,
@@ -73,13 +73,15 @@ pub struct InventoryEntry {
 }
 
 /// 最后点击查看的单位实体（不限于 Selected，任何单位都可查看信息）
-#[derive(Resource, Default, Debug, Clone, Copy)]
+#[derive(Resource, Reflect, Default, Debug, Clone, Copy)]
+#[reflect(Resource)]
 pub struct HoveredEntity {
     pub entity: Option<Entity>,
 }
 
 /// 选中单位的视图模型
-#[derive(Resource, Default, Debug)]
+#[derive(Resource, Reflect, Default, Debug)]
+#[reflect(Resource)]
 pub struct SelectedUnitView {
     pub name: String,
     pub race: String,
@@ -111,7 +113,8 @@ pub struct SelectedUnitView {
 }
 
 /// 战斗预览视图模型
-#[derive(Resource, Default, Debug)]
+#[derive(Resource, Reflect, Default, Debug)]
+#[reflect(Resource)]
 pub struct CombatPreviewView {
     pub is_visible: bool,
     pub estimated_damage: i32,
@@ -121,7 +124,8 @@ pub struct CombatPreviewView {
 }
 
 /// 回合信息视图模型（AGI驱动，不再分阵营阶段）
-#[derive(Resource, Default, Debug)]
+#[derive(Resource, Reflect, Default, Debug)]
+#[reflect(Resource)]
 pub struct TurnInfoView {
     pub turn_number: u32,
     pub is_player_turn: bool,
@@ -132,7 +136,8 @@ pub struct TurnInfoView {
 }
 
 /// 胜负状态
-#[derive(Resource, Default, Debug, PartialEq, Eq)]
+#[derive(Resource, Reflect, Default, Debug, PartialEq, Eq)]
+#[reflect(Resource)]
 pub enum GameOverState {
     #[default]
     Playing,

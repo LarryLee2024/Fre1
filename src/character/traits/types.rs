@@ -7,7 +7,7 @@ use bevy::prelude::*;
 use serde::Deserialize;
 
 /// Trait 触发时机
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Reflect, Deserialize)]
 #[serde(rename_all = "PascalCase")]
 pub enum TraitTrigger {
     /// 被动：始终生效（授予标签/属性修饰）
@@ -37,7 +37,7 @@ pub enum TraitEffectDef {
 }
 
 /// Trait 效果（运行时，GameplayTag 替代 TagName）
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Reflect)]
 pub enum TraitEffect {
     GrantTag(GameplayTag),
     ModifyAttribute(AttributeModifierDef),
@@ -102,7 +102,7 @@ impl From<TraitDefinition> for TraitData {
 }
 
 /// Trait 来源：追踪 trait 是从哪里获得的，用于穿脱时精确增减
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Reflect)]
 pub enum TraitSource {
     /// 内在来源（种族/职业/天赋）
     Intrinsic,
@@ -111,14 +111,15 @@ pub enum TraitSource {
 }
 
 /// Trait 条目：记录 trait_id + 来源，支持按来源精确移除
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Reflect)]
 pub struct TraitEntry {
     pub trait_id: String,
     pub source: TraitSource,
 }
 
 /// 单位上的 Trait 集合组件
-#[derive(Component, Default, Debug, Clone)]
+#[derive(Component, Reflect, Default, Debug, Clone)]
+#[reflect(Component)]
 pub struct TraitCollection {
     pub entries: Vec<TraitEntry>,
 }

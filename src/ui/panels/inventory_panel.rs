@@ -1,6 +1,5 @@
 // 背包面板：独立显示选中单位的背包内容
 
-use crate::assets::CnFont;
 use crate::turn::AppState;
 use crate::ui::theme::UiTheme;
 use crate::ui::view_models::SelectedUnitView;

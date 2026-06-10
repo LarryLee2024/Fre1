@@ -11,6 +11,7 @@ use crate::inventory::container::Container;
 use crate::map::GameMap;
 use crate::map::LevelRegistry;
 use crate::skill::{SkillCooldowns, SkillSlots};
+use bevy::picking::prelude::Pickable;
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
 
@@ -48,7 +49,7 @@ pub fn spawn_units(
                     tile_size,
                     bar_width,
                     bar_height,
-                    &cn_font.handle,
+                    cn_font.as_handle(),
                     &trait_registry,
                     &effect_handlers,
                     &equipment_registry,
@@ -69,7 +70,7 @@ pub fn spawn_units(
                     tile_size,
                     bar_width,
                     bar_height,
-                    &cn_font.handle,
+                    cn_font.as_handle(),
                     &trait_registry,
                     &effect_handlers,
                     &equipment_registry,
@@ -216,6 +217,8 @@ fn spawn_unit_from_template(
             inventory,
             ai_behavior_id,
         ))
+        // 启用 bevy_picking：单位 sprite 可被鼠标拾取
+        .insert(Pickable::default())
         .insert((SkillCooldowns::default(), ActiveBuffs::default()))
         .with_children(|parent| {
             // 棋子名称标注（中央）
@@ -225,6 +228,8 @@ fn spawn_unit_from_template(
                 TextColor(Color::WHITE),
                 TextLayout::new_with_no_wrap(),
                 Transform::from_xyz(0.0, 0.0, 0.3),
+                // 子实体不拦截鼠标事件，穿透到父级 Unit sprite
+                Pickable::IGNORE,
             ));
             // 行动顺序数字（左上角，稍向右下偏移避免与地形坐标重叠）
             parent.spawn((
@@ -238,6 +243,7 @@ fn spawn_unit_from_template(
                 TextLayout::new_with_no_wrap(),
                 Transform::from_xyz(-tile_size * 0.2, tile_size * 0.2, 0.3),
                 TurnOrderLabel,
+                Pickable::IGNORE,
             ));
             // HP 条背景（红色）
             parent.spawn((
@@ -245,6 +251,7 @@ fn spawn_unit_from_template(
                 Transform::from_xyz(-bar_width / 2.0, tile_size * 0.4, 0.1),
                 Anchor::CENTER_LEFT,
                 HpBarBg,
+                Pickable::IGNORE,
             ));
             // HP 条前景（绿色）
             parent.spawn((
@@ -252,6 +259,7 @@ fn spawn_unit_from_template(
                 Transform::from_xyz(-bar_width / 2.0, tile_size * 0.4, 0.2),
                 Anchor::CENTER_LEFT,
                 HpBarFg,
+                Pickable::IGNORE,
             ));
         });
 }

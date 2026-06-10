@@ -19,10 +19,14 @@ use crate::ui::events::UiCommand;
 use crate::ui::highlight::{
     clear_markers, clear_selection, show_attack_range, show_move_range, spawn_selection_highlight,
 };
+use crate::ui::theme::UiTheme;
 use bevy::ecs::message::MessageReader;
 use bevy::prelude::*;
 
 /// 处理 UI 命令：将用户意图转化为游戏状态变更
+///
+/// 使用 Local<Option<IVec2>> 替代 Res<PrevPosition>，
+/// 避免系统参数超过 Bevy 16 个上限
 pub fn handle_ui_commands(
     mut commands: Commands,
     mut events: MessageReader<UiCommand>,
@@ -30,10 +34,11 @@ pub fn handle_ui_commands(
     mut combat_intent: ResMut<CombatIntent>,
     mut menu_entity: ResMut<ActionMenuEntity>,
     map: Res<GameMap>,
-    terrain_grid: Res<TerrainGrid>,
-    terrain_registry: Res<TerrainRegistry>,
+    // 合并地形相关 Res 为元组参数，避免系统参数超过 Bevy 16 个上限
+    terrain: (Res<TerrainGrid>, Res<TerrainRegistry>),
     occupancy: Res<OccupancyGrid>,
     cost_registry: Res<TerrainCostRegistry>,
+    theme: Res<UiTheme>,
     units: Query<(
         Entity,
         &Unit,
@@ -49,7 +54,8 @@ pub fn handle_ui_commands(
         Or<(With<MovableRange>, With<AttackRange>)>,
     >,
     highlights: Query<Entity, With<SelectionHighlight>>,
-    prev_position: Res<PrevPosition>,
+    // 使用 Local 替代 Res<PrevPosition>，减少系统参数数量
+    mut prev_coord: Local<Option<IVec2>>,
     skill_registry: Res<SkillRegistry>,
 ) {
     for cmd in events.read() {
@@ -62,15 +68,16 @@ pub fn handle_ui_commands(
                     show_move_range(
                         &mut commands,
                         &map,
-                        &terrain_grid,
-                        &terrain_registry,
+                        &terrain.0,
+                        &terrain.1,
                         &occupancy,
                         &units,
                         unit,
                         gp.coord,
                         calculator,
+                        &theme,
                     );
-                    spawn_selection_highlight(&mut commands, &map, gp.coord);
+                    spawn_selection_highlight(&mut commands, &map, gp.coord, &theme);
                 }
                 next_phase.set(TurnPhase::MoveUnit);
             }
@@ -80,6 +87,8 @@ pub fn handle_ui_commands(
                 if let Ok(selected_entity) = selected_query.single() {
                     if let Ok((_, _, sel_gp, _, _, _, _)) = units.get(selected_entity) {
                         if sel_gp.coord == *coord {
+                            *prev_coord = Some(sel_gp.coord);
+                            // 同步写入 PrevPosition 资源，保持其他系统兼容
                             commands.insert_resource(PrevPosition {
                                 coord: Some(sel_gp.coord),
                             });
@@ -89,7 +98,7 @@ pub fn handle_ui_commands(
                             for h in &highlights {
                                 commands.entity(h).try_despawn();
                             }
-                            spawn_selection_highlight(&mut commands, &map, sel_gp.coord);
+                            spawn_selection_highlight(&mut commands, &map, sel_gp.coord, &theme);
                             // 进入 ActionMenu，由 on_enter_action_menu 系统自动弹出菜单
                             next_phase.set(TurnPhase::ActionMenu);
                             return;
@@ -104,6 +113,8 @@ pub fn handle_ui_commands(
                 if is_movable {
                     if let Ok(selected_entity) = selected_query.single() {
                         if let Ok((_, _, old_gp, _, _, _, tags)) = units.get(selected_entity) {
+                            *prev_coord = Some(old_gp.coord);
+                            // 同步写入 PrevPosition 资源，保持其他系统兼容
                             commands.insert_resource(PrevPosition {
                                 coord: Some(old_gp.coord),
                             });
@@ -119,8 +130,8 @@ pub fn handle_ui_commands(
                                 old_gp.coord,
                                 mov,
                                 &map,
-                                &terrain_grid,
-                                &terrain_registry,
+                                &terrain.0,
+                                &terrain.1,
                                 &occupancy,
                                 Some(selected_entity),
                                 calculator,
@@ -131,8 +142,8 @@ pub fn handle_ui_commands(
                                 &reachable,
                                 mov,
                                 &map,
-                                &terrain_grid,
-                                &terrain_registry,
+                                &terrain.0,
+                                &terrain.1,
                                 calculator,
                             );
 
@@ -149,7 +160,7 @@ pub fn handle_ui_commands(
                         for h in &highlights {
                             commands.entity(h).try_despawn();
                         }
-                        spawn_selection_highlight(&mut commands, &map, *coord);
+                        spawn_selection_highlight(&mut commands, &map, *coord, &theme);
                     }
                 }
                 for (marker, _) in &range_entities {
@@ -165,6 +176,7 @@ pub fn handle_ui_commands(
                     &mut commands,
                     &map,
                     &skill_registry,
+                    &theme,
                     BASIC_ATTACK_ID,
                 );
                 despawn_action_menu(&mut commands, &mut menu_entity);
@@ -179,6 +191,7 @@ pub fn handle_ui_commands(
                     &mut commands,
                     &map,
                     &skill_registry,
+                    &theme,
                     skill_id,
                 );
                 despawn_action_menu(&mut commands, &mut menu_entity);
@@ -239,12 +252,13 @@ pub fn handle_ui_commands(
                     // ActionMenu 取消 → 回退位置，回到 SelectUnit
                     despawn_action_menu(&mut commands, &mut menu_entity);
                     if let Ok(selected_entity) = selected_query.single() {
-                        if let Some(prev_coord) = prev_position.coord {
-                            let world_pos = map.coord_to_world(prev_coord);
+                        // 从 Local 读取前一步位置
+                        if let Some(prev) = *prev_coord {
+                            let world_pos = map.coord_to_world(prev);
                             commands
                                 .entity(selected_entity)
                                 .insert(Transform::from_xyz(world_pos.x, world_pos.y, 1.0))
-                                .insert(GridPosition { coord: prev_coord });
+                                .insert(GridPosition { coord: prev });
                         }
                     }
                     clear_selection(&mut commands, &selected_query, &range_entities, &highlights);
@@ -288,6 +302,7 @@ fn show_range_for_selected(
     commands: &mut Commands,
     map: &GameMap,
     skill_registry: &SkillRegistry,
+    theme: &UiTheme,
     skill_id: &str,
 ) {
     if let Ok(selected_entity) = selected_query.single() {
@@ -295,7 +310,7 @@ fn show_range_for_selected(
             let base_range = attrs.get(AttributeKind::AttackRange) as u32;
             if let Some(skill_data) = skill_registry.get(skill_id) {
                 let range = effective_skill_range(skill_data, base_range);
-                show_attack_range(commands, map, gp.coord, range);
+                show_attack_range(commands, map, gp.coord, range, theme);
             }
         }
     }

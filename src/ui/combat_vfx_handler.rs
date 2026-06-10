@@ -23,7 +23,7 @@ pub fn on_damage_vfx(
             &mut commands,
             world_pos,
             msg.amount,
-            &cn_font.handle,
+            cn_font.as_handle(),
             msg.is_skill,
             &theme,
         );
@@ -44,7 +44,7 @@ pub fn on_dot_vfx(
             &mut commands,
             world_pos,
             msg.amount,
-            &cn_font.handle,
+            cn_font.as_handle(),
             false,
             &theme,
         );

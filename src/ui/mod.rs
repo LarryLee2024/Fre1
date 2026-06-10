@@ -8,9 +8,11 @@ mod combat_preview;
 mod combat_vfx_handler;
 mod command_handler;
 pub mod events;
+mod focus;
 mod highlight;
 mod panels;
 mod plugin;
+pub mod settings;
 pub mod theme;
 mod tile_info;
 pub mod vfx;
@@ -18,5 +20,7 @@ pub mod view_models;
 mod widgets;
 
 // 公共 re-exports
+pub use focus::{BlocksGameInput, UiFocusState};
 pub use plugin::UiPlugin;
+pub use settings::GameSettings;
 pub use theme::UiTheme;

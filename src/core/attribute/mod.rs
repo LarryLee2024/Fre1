@@ -9,7 +9,8 @@ use bevy::prelude::*;
 use std::collections::HashMap;
 
 /// 属性组件：核心属性基础值 + 生命资源当前值 + 修饰符栈
-#[derive(Component, Default, Debug, Clone)]
+#[derive(Component, Reflect, Default, Debug, Clone)]
+#[reflect(Component)]
 pub struct Attributes {
     /// 核心属性基础值（8维：Might/Dexterity/Agility/Vitality/Intelligence/Willpower/Presence/Luck）
     pub base: HashMap<AttributeKind, f32>,

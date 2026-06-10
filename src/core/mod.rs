@@ -6,5 +6,6 @@ pub mod attribute_def;
 pub mod effect;
 pub mod modifier_rule;
 pub mod registry_loader;
+pub mod snapshot;
 pub mod tag;
 pub mod tag_def;

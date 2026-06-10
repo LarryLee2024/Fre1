@@ -8,7 +8,8 @@ use crate::assets::CnFont;
 use bevy::prelude::*;
 
 /// 地图资源：存储地图尺寸
-#[derive(Resource)]
+#[derive(Resource, Reflect)]
+#[reflect(Resource)]
 pub struct GameMap {
     /// 地图宽度（格子数）
     pub width: u32,
@@ -108,11 +109,7 @@ pub fn spawn_map(
     // 插入 TerrainGrid 资源
     commands.insert_resource(terrain_grid.clone());
 
-    let small_font = TextFont {
-        font: cn_font.handle.clone(),
-        font_size: 10.0,
-        ..default()
-    };
+    let small_font = cn_font.text_font(10.0);
 
     // 渲染层：从 TerrainGrid 读取数据画格子
     for (coord, terrain_id) in terrain_grid.iter() {

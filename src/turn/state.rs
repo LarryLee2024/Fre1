@@ -12,7 +12,7 @@ pub enum AppState {
 }
 
 /// 回合阶段（SubState，仅在 InGame 时激活）
-#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug, Default, SubStates)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug, Default, Reflect, SubStates)]
 #[source(AppState = AppState::InGame)]
 pub enum TurnPhase {
     #[default]

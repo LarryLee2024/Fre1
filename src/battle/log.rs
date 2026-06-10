@@ -7,16 +7,19 @@ use std::collections::VecDeque;
 const MAX_LOG_LINES: usize = 50;
 
 /// 日志片段（文字 + 颜色）
-#[derive(Clone)]
+#[derive(Clone, Reflect)]
 pub struct LogSegment {
     pub text: String,
     pub color: Color,
 }
 
 /// 战斗日志资源
-#[derive(Resource, Default)]
+#[derive(Resource, Reflect, Default)]
+#[reflect(Resource)]
 pub struct CombatLog {
     /// 每条日志由多个片段组成，片段间拼接显示
+    /// VecDeque 未实现 Reflect，用 #[reflect(ignore)] 跳过
+    #[reflect(ignore)]
     pub entries: VecDeque<Vec<LogSegment>>,
 }
 
@@ -57,11 +60,13 @@ pub struct CombatLogToggle;
 pub struct CombatLogContent;
 
 /// 战斗日志折叠状态
-#[derive(Resource, Default)]
+#[derive(Resource, Reflect, Default)]
+#[reflect(Resource)]
 pub struct CombatLogCollapsed(pub bool);
 
 /// 战斗日志面板尺寸（可拖动调整）
-#[derive(Resource)]
+#[derive(Resource, Reflect)]
+#[reflect(Resource)]
 pub struct CombatLogSize {
     pub width: f32,
     pub height: f32,
@@ -220,6 +225,11 @@ impl Plugin for CombatLogPlugin {
         use crate::turn::AppState;
         app.init_resource::<CombatLog>()
             .init_resource::<CombatLogSize>()
+            // 注册 Reflect 类型
+            .register_type::<LogSegment>()
+            .register_type::<CombatLog>()
+            .register_type::<CombatLogCollapsed>()
+            .register_type::<CombatLogSize>()
             .add_systems(Update, update_combat_log.run_if(in_state(AppState::InGame)))
             .add_systems(Update, log_turn_change.run_if(in_state(AppState::InGame)))
             .add_systems(

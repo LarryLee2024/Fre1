@@ -8,8 +8,10 @@ pub mod use_item;
 
 use crate::core::registry_loader::RegistryLoader;
 use bevy::prelude::*;
-use definition::ItemRegistry;
-use instance::InstanceIdCounter;
+use container::{Container, ContainerKind};
+use definition::{ItemRegistry, ItemType, UseEffect};
+use instance::{InstanceIdCounter, ItemBind, ItemInstance, ItemStack};
+use resources::{ResourceStack, Resources};
 use transfer::{ItemTransferred, TransferItem};
 use use_item::{ItemUsed, UseItem};
 
@@ -20,6 +22,17 @@ impl Plugin for InventoryPlugin {
         let registry = ItemRegistry::load_from_dir("assets/items");
         app.insert_resource(registry);
         app.insert_resource(InstanceIdCounter::default());
+        // 注册 Reflect 类型
+        app.register_type::<ItemType>()
+            .register_type::<UseEffect>()
+            .register_type::<ItemBind>()
+            .register_type::<ItemInstance>()
+            .register_type::<ItemStack>()
+            .register_type::<InstanceIdCounter>()
+            .register_type::<ContainerKind>()
+            .register_type::<Container>()
+            .register_type::<ResourceStack>()
+            .register_type::<Resources>();
         // 注册 Message（Bevy 0.18 要求）
         app.add_message::<UseItem>();
         app.add_message::<ItemUsed>();

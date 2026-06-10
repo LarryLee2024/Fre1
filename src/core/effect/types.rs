@@ -6,7 +6,7 @@ use bevy::prelude::*;
 use serde::Deserialize;
 
 /// 效果定义（用于 SkillData 中声明技能效果，支持 RON 反序列化）
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Reflect, Deserialize)]
 #[serde(rename_all = "PascalCase")]
 pub enum EffectDef {
     Damage {
@@ -37,7 +37,7 @@ impl EffectDef {
 }
 
 /// 待处理效果（运行时，进入 EffectQueue）
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Reflect)]
 pub struct PendingEffect {
     pub source: Entity,
     pub target: Entity,
@@ -47,7 +47,7 @@ pub struct PendingEffect {
 }
 
 /// 待处理效果数据
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Reflect)]
 pub enum PendingEffectData {
     Damage { amount: i32, is_skill: bool },
     Heal { amount: i32 },
@@ -69,14 +69,14 @@ impl PendingEffectData {
 }
 
 /// 效果执行结果
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Reflect)]
 pub struct EffectResult {
     pub source: Entity,
     pub target: Entity,
     pub data: EffectResultData,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Reflect)]
 pub enum EffectResultData {
     Damage { amount: i32, killed: bool },
     Heal { amount: i32 },
@@ -85,7 +85,8 @@ pub enum EffectResultData {
 }
 
 /// 效果队列资源
-#[derive(Resource, Default, Debug)]
+#[derive(Resource, Reflect, Default, Debug)]
+#[reflect(Resource)]
 pub struct EffectQueue {
     pub pending: Vec<PendingEffect>,
 }

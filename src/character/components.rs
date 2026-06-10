@@ -12,7 +12,10 @@ use bevy::ecs::world::DeferredWorld;
 use bevy::prelude::*;
 
 /// 阵营
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, Hash, Reflect, serde::Serialize, serde::Deserialize,
+)]
+#[reflect(Serialize, Deserialize)]
 pub enum Faction {
     Player,
     Enemy,
@@ -20,7 +23,8 @@ pub enum Faction {
 
 /// 战斗单位组件（身份与回合状态）
 /// Required Components：生成 Unit 时自动插入默认组件，防止遗漏
-#[derive(Component)]
+#[derive(Component, Reflect)]
+#[reflect(Component)]
 #[require(
     Attributes,
     SkillSlots,
@@ -39,19 +43,23 @@ pub struct Unit {
 }
 
 /// 单位名称
-#[derive(Component)]
+#[derive(Component, Reflect)]
+#[reflect(Component)]
 pub struct UnitName(pub String);
 
 /// 单位种族
-#[derive(Component)]
+#[derive(Component, Reflect)]
+#[reflect(Component)]
 pub struct UnitRace(pub String);
 
 /// 单位职业
-#[derive(Component)]
+#[derive(Component, Reflect)]
+#[reflect(Component)]
 pub struct UnitClass(pub String);
 
 /// 单位所在格子坐标
-#[derive(Component)]
+#[derive(Component, Reflect)]
+#[reflect(Component)]
 pub struct GridPosition {
     pub coord: IVec2,
 }
@@ -63,11 +71,13 @@ impl Default for GridPosition {
 }
 
 /// 选中标记
-#[derive(Component)]
+#[derive(Component, Reflect)]
+#[reflect(Component)]
 pub struct Selected;
 
 /// 死亡标记：HP 降为 0 时添加，Hook 自动清理固有状态
-#[derive(Component)]
+#[derive(Component, Reflect)]
+#[reflect(Component)]
 #[component(on_add = Dead::on_add_dead)]
 pub struct Dead;
 
@@ -86,7 +96,8 @@ impl Dead {
 }
 
 /// 持久化标签（不被 rebuild 丢失，支持 Trait + Equipment 两层）
-#[derive(Component, Default, Debug, Clone)]
+#[derive(Component, Reflect, Default, Debug, Clone)]
+#[reflect(Component)]
 pub struct PersistentTags {
     /// Trait 授予的标签（种族/职业/天赋，最持久）
     pub from_traits: GameplayTags,
@@ -95,23 +106,28 @@ pub struct PersistentTags {
 }
 
 /// HP 条背景
-#[derive(Component)]
+#[derive(Component, Reflect)]
+#[reflect(Component)]
 pub struct HpBarBg;
 
 /// HP 条前景
-#[derive(Component)]
+#[derive(Component, Reflect)]
+#[reflect(Component)]
 pub struct HpBarFg;
 
 /// AI 行为 ID（敌方单位使用）
-#[derive(Component, Default, Debug, Clone)]
+#[derive(Component, Reflect, Default, Debug, Clone)]
+#[reflect(Component)]
 pub struct AiBehaviorId(pub String);
 
 /// 导航箭头标记（路径上的小圆点）
-#[derive(Component)]
+#[derive(Component, Reflect)]
+#[reflect(Component)]
 pub struct PathArrow;
 
 /// 移动动画组件：挂在正在移动的单位上，系统逐格插值
-#[derive(Component)]
+#[derive(Component, Reflect)]
+#[reflect(Component)]
 pub struct MovingUnit {
     /// 路径坐标序列（含终点）
     pub path: Vec<IVec2>,

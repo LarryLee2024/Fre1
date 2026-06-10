@@ -5,7 +5,8 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
 /// 绑定状态
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Reflect, Serialize, Deserialize)]
+#[reflect(Serialize, Deserialize)]
 pub enum ItemBind {
     #[default]
     None,
@@ -15,7 +16,8 @@ pub enum ItemBind {
 }
 
 /// 物品实例（运行时，可变）
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Reflect, Serialize, Deserialize)]
+#[reflect(Serialize, Deserialize)]
 pub struct ItemInstance {
     /// 唯一实例 ID
     pub instance_id: u64,
@@ -68,7 +70,8 @@ impl ItemInstance {
 }
 
 /// 全局实例 ID 生成器
-#[derive(Resource, Default)]
+#[derive(Resource, Reflect, Default)]
+#[reflect(Resource)]
 pub struct InstanceIdCounter(pub u64);
 
 impl InstanceIdCounter {
@@ -79,7 +82,7 @@ impl InstanceIdCounter {
 }
 
 /// 物品堆叠：一个实例 × 数量
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Reflect)]
 pub struct ItemStack {
     pub instance: ItemInstance,
     pub count: u32,

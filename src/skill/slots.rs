@@ -6,7 +6,8 @@ use super::domain::{BASIC_ATTACK_ID, SkillData};
 // ── 技能槽组件 ──
 
 /// 单位的技能槽组件
-#[derive(Component, Default, Debug, Clone)]
+#[derive(Component, Reflect, Default, Debug, Clone)]
+#[reflect(Component)]
 pub struct SkillSlots {
     pub skill_ids: Vec<String>,
 }
@@ -38,7 +39,8 @@ impl SkillSlots {
 // ── 运行时冷却追踪 ──
 
 /// 运行时技能冷却追踪组件
-#[derive(Component, Default, Debug, Clone)]
+#[derive(Component, Reflect, Default, Debug, Clone)]
+#[reflect(Component)]
 pub struct SkillCooldowns {
     /// skill_id → 剩余冷却回合数
     cooldowns: HashMap<String, u32>,

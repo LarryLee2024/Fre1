@@ -4,14 +4,36 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-bevy = { version = "0.18.1", features = ["2d"] }
+bevy = { version = "0.18.1", features = [
+    "2d",  # 元 Feature，已隐式包含: bevy_state/bevy_ui/bevy_text/bevy_sprite/bevy_gizmos/bevy_log/bevy_picking/sprite_picking/ui_picking/bevy_input_focus/reflect_auto_register/png/multi_threaded
+
+    # 序列化
+    "serialize",                  # serde 支持
+    "bevy_scene",                 # DynamicScene / World 快照
+
+    # 开发工具
+    "bevy_dev_tools",             # 官方开发工具集
+    "bevy_debug_stepping",        # System 单步调试
+    "bevy_remote",                # 运行时远程控制台
+    "track_location",             # 错误追踪 System 来源
+    "file_watcher",               # 资产热重载
+
+    # Reflect 增强
+    "reflect_documentation",      # 反射文档注释（编辑器基础）
+
+    # 相机
+    "bevy_camera_controller",     # 官方相机控制器
+
+    # 测试
+    "bevy_ci_testing",            # CI 测试支持
+] }
 bevy-inspector-egui = "0.36"
 serde = { version = "1.0", features = ["derive"] }
 ron = "0.12.1"
 
 [features]
 default = []
-dev = ["bevy/file_watcher"]
+dev = ["bevy/file_watcher", "bevy/bevy_dev_tools", "bevy/bevy_debug_stepping"]
 
 [dev-dependencies]
 proptest = "1.5"

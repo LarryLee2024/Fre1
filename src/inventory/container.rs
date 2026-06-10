@@ -7,7 +7,7 @@ use bevy::prelude::*;
 use serde::Deserialize;
 
 /// 容器类型
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Reflect, Deserialize)]
 pub enum ContainerKind {
     #[default]
     Backpack,
@@ -22,7 +22,8 @@ pub enum ContainerKind {
 }
 
 /// 容器组件
-#[derive(Component, Default, Debug, Clone)]
+#[derive(Component, Reflect, Default, Debug, Clone)]
+#[reflect(Component)]
 pub struct Container {
     /// 容器类型
     pub kind: ContainerKind,

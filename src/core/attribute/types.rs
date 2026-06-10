@@ -1,10 +1,11 @@
 // 属性类型定义：8维核心属性 + 生命资源 + 衍生属性
 // 设计理念：核心属性由种族/职业/等级决定，衍生属性实时计算，生命资源存储当前值
 
+use bevy::prelude::*;
 use serde::Deserialize;
 
 /// 属性类型（统一枚举，涵盖核心/资源/衍生三大类）
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Reflect, Deserialize)]
 #[serde(rename_all = "PascalCase")]
 pub enum AttributeKind {
     // ── 8 维核心属性（玩家可见、可成长、有 base 值）──
@@ -150,7 +151,7 @@ impl AttributeKind {
 }
 
 /// 修饰符操作类型
-#[derive(Clone, Copy, Debug, PartialEq, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Reflect, Deserialize)]
 #[serde(rename_all = "PascalCase")]
 pub enum ModifierOp {
     /// 加法：base + sum(Add modifiers)
@@ -160,7 +161,7 @@ pub enum ModifierOp {
 }
 
 /// 属性修饰符定义（用于 BuffData 等数据定义，支持 RON 反序列化）
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Reflect, Deserialize)]
 pub struct AttributeModifierDef {
     pub kind: AttributeKind,
     pub op: ModifierOp,
@@ -169,7 +170,7 @@ pub struct AttributeModifierDef {
 
 /// 修饰符来源：统一标识 Trait / Equipment / Buff
 /// 替代原 BuffInstanceId，解决"装备修饰符不是 Buff"的语义问题
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Reflect)]
 pub struct ModifierSource(pub u64);
 
 impl ModifierSource {
@@ -202,7 +203,7 @@ impl ModifierSource {
 }
 
 /// Buff 实例的唯一标识（保留向后兼容，Buff 系统内部使用）
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Reflect)]
 pub struct BuffInstanceId(pub u64);
 
 impl BuffInstanceId {
@@ -213,7 +214,7 @@ impl BuffInstanceId {
 }
 
 /// 属性修饰符实例（运行时，关联到具体来源）
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Reflect)]
 pub struct AttributeModifierInstance {
     pub kind: AttributeKind,
     pub op: ModifierOp,

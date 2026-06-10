@@ -179,7 +179,7 @@ pub fn spawn_unit_info_panel(mut commands: Commands, theme: Res<UiTheme>) {
 /// 设置中文字体
 pub fn setup_ui_font(cn_font: Res<CnFont>, mut query: Query<&mut TextFont, With<Node>>) {
     for mut text_font in &mut query {
-        text_font.font = cn_font.handle.clone();
+        text_font.font = cn_font.font_handle();
     }
 }
 

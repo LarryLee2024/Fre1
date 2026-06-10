@@ -6,7 +6,8 @@ use std::collections::HashMap;
 
 /// 占用网格资源：记录每个坐标被哪个 Entity 占据
 /// 替代寻路/移动时临时构建的 occupation_map HashMap
-#[derive(Resource, Debug, Default)]
+#[derive(Resource, Reflect, Debug, Default)]
+#[reflect(Resource)]
 pub struct OccupancyGrid {
     /// (x, y) → Entity
     occupied: HashMap<IVec2, Entity>,

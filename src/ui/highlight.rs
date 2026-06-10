@@ -1,8 +1,9 @@
 // 高亮与标记表现层：范围显示、选中高亮、标记清除
 // 逻辑层通过 Message 通知，表现层自行决定如何高亮
+// 修复：所有函数接收 &UiTheme 参数，响应运行时主题变更
 
 use crate::character::{
-    AttackRange, Faction, GridPosition, MovableRange, Selected, SelectionHighlight, Unit,
+    AttackRange, GridPosition, MovableRange, Selected, SelectionHighlight, Unit,
 };
 use crate::core::attribute::{AttributeKind, Attributes};
 use crate::core::tag::GameplayTags;
@@ -51,10 +52,9 @@ pub fn show_move_range(
     unit: &Unit,
     start_coord: IVec2,
     calculator: &dyn crate::map::TerrainCostCalculator,
+    theme: &UiTheme,
 ) {
     use crate::map::find_reachable_tiles;
-
-    let theme = UiTheme::default();
 
     let move_points = units
         .iter()
@@ -90,8 +90,13 @@ pub fn show_move_range(
 }
 
 /// 显示攻击范围
-pub fn show_attack_range(commands: &mut Commands, map: &GameMap, center: IVec2, range: u32) {
-    let theme = UiTheme::default();
+pub fn show_attack_range(
+    commands: &mut Commands,
+    map: &GameMap,
+    center: IVec2,
+    range: u32,
+    theme: &UiTheme,
+) {
     let tile_size = map.tile_size;
     let range_i32 = range as i32;
 
@@ -120,8 +125,12 @@ pub fn show_attack_range(commands: &mut Commands, map: &GameMap, center: IVec2, 
 }
 
 /// 生成选中高亮
-pub fn spawn_selection_highlight(commands: &mut Commands, map: &GameMap, coord: IVec2) {
-    let theme = UiTheme::default();
+pub fn spawn_selection_highlight(
+    commands: &mut Commands,
+    map: &GameMap,
+    coord: IVec2,
+    theme: &UiTheme,
+) {
     let world_pos = map.coord_to_world(coord);
     let tile_size = map.tile_size;
     commands.spawn((

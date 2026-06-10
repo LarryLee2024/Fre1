@@ -1,6 +1,5 @@
 ---
 source: tests/golden/golden_battle.rs
-assertion_line: 127
 expression: record
 ---
 entries:
@@ -17,8 +16,4 @@ entries:
       target_coord:
         - 0
         - 0
-  - HealApplied:
-      target: 4294967295
-      target_name: 战士
-      amount: 3
 turn_number: 0

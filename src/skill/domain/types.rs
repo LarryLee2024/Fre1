@@ -3,6 +3,7 @@
 use crate::core::attribute::AttributeKind;
 use crate::core::effect::EffectDef;
 use crate::core::tag::{GameplayTag, TagName};
+use bevy::prelude::*;
 use serde::Deserialize;
 
 /// 基础攻击技能 ID 常量
@@ -11,7 +12,7 @@ pub const BASIC_ATTACK_ID: &str = "basic_attack";
 // ── 技能目标类型 ──
 
 /// 技能目标类型：决定技能可以作用于谁
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Reflect, Deserialize)]
 #[serde(rename_all = "PascalCase")]
 pub enum SkillTargeting {
     /// 对单个敌方单位使用
@@ -49,7 +50,7 @@ impl SkillTargeting {
 // ── 技能使用条件 ──
 
 /// 技能使用条件（运行时）
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Reflect)]
 pub enum SkillCondition {
     /// 需要足够的 MP
     MpCost(i32),
@@ -89,7 +90,7 @@ impl From<SkillConditionDef> for SkillCondition {
 // ── 技能数据定义 ──
 
 /// 技能数据定义（注册表中的静态数据）
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Reflect)]
 pub struct SkillData {
     pub id: String,
     pub name: String,
@@ -200,7 +201,7 @@ impl SkillData {
 }
 
 /// 技能使用失败原因
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Reflect)]
 pub enum SkillUseError {
     OnCooldown { remaining: u32 },
     InsufficientMp { required: i32, current: i32 },

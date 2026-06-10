@@ -728,8 +728,10 @@ info!(
 
 ### 10.2 Gizmos 调试可视化
 
+> **注意**：`rect_2d()` 只绘制线框轮廓，**不会**绘制填充矩形。如需半透明填充叠加层，请使用 Sprite 实体。
+
 ```rust
-// 寻路调试
+// 寻路调试（仅线框轮廓）
 fn draw_path(gizmos: &mut Gizmos, path: &[IVec2]) {
     for coord in path {
         gizmos.rect_2d(
@@ -740,7 +742,7 @@ fn draw_path(gizmos: &mut Gizmos, path: &[IVec2]) {
     }
 }
 
-// 攻击范围调试
+// 攻击范围调试（仅线框轮廓）
 fn draw_attack_range(gizmos: &mut Gizmos, range: &AttackRange) {
     for coord in range.coords() {
         gizmos.rect_2d(
@@ -749,6 +751,22 @@ fn draw_attack_range(gizmos: &mut Gizmos, range: &AttackRange) {
             Color::srgba(1.0, 0.0, 0.0, 0.3),
         );
     }
+}
+
+// 如需半透明填充叠加层，使用 Sprite 实体
+fn spawn_filled_overlay(
+    commands: &mut Commands,
+    coord: IVec2,
+    color: Color,
+) {
+    commands.spawn((
+        Sprite {
+            color,
+            custom_size: Some(Vec2::splat(TILE_SIZE * 0.9)),
+            ..default()
+        },
+        Transform::from_translation(coord.as_vec2().extend(1.0)),
+    ));
 }
 ```
 
@@ -826,14 +844,12 @@ default = []
 
 ### 12.1 必开 Feature
 
+> **注意**：`2d` 元 Feature 已包含以下子 Feature，无需重复列出：
+> `bevy_state`、`bevy_ui`、`bevy_text`、`bevy_sprite`、`bevy_gizmos`、`bevy_log`、`bevy_picking`、`sprite_picking`、`ui_picking`、`bevy_input_focus`、`reflect_auto_register`、`png`、`multi_threaded`。
+
 ```toml
 bevy = { version = "0.18", features = [
-    "bevy_state",        # 状态机
-    "bevy_ui",           # UI 系统
-    "bevy_text",         # 文本
-    "bevy_sprite",       # 2D 精灵
-    "bevy_gizmos",       # 调试绘制
-    "bevy_picking",      # 点击检测
+    "2d",                # 2D 元 Feature（已包含上述子 Feature）
     "file_watcher",      # 热重载
     "serialize",         # 序列化
 ] }
@@ -842,7 +858,7 @@ bevy = { version = "0.18", features = [
 ### 12.2 强烈推荐 Feature
 
 ```toml
-"bevy_world_serialization",  # 存档/Replay
+"bevy_scene",                 # 存档/Replay（0.19 中更名为 bevy_world_serialization）
 "reflect_auto_register",     # Inspector 支持
 "bevy_debug_stepping",       # 单步调试
 "bevy_dev_tools",            # 开发工具
@@ -883,19 +899,17 @@ app.add_systems(OnEnter(AppState::Battle), setup_battle);
 app.add_systems(OnExit(AppState::Battle), cleanup_battle);
 ```
 
-### 12.5 bevy_world_serialization 用于存档
+### 12.5 bevy_scene 用于存档
 
 ```rust
-// 存档
-fn save_game(world: &mut World) {
-    let snapshot = world.serialize().unwrap();
-    std::fs::write("save.bin", snapshot).unwrap();
-}
+use bevy::scene::DynamicSceneBuilder;
 
-// 读档
-fn load_game(world: &mut World) {
-    let bytes = std::fs::read("save.bin").unwrap();
-    world = World::deserialize(&bytes).unwrap();
+// 存档：使用 DynamicSceneBuilder 提取实体并序列化为 RON
+fn save_game(world: &mut World) -> Option<String> {
+    let scene = DynamicSceneBuilder::from_world(world)
+        .extract_entities(world.iter_entities().map(|e| e.id()))
+        .build();
+    scene.serialize_ron().ok()
 }
 ```
 

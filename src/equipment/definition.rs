@@ -8,7 +8,7 @@ use serde::Deserialize;
 use std::collections::HashMap;
 
 /// 装备槽位
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Reflect, Deserialize)]
 pub enum EquipmentSlot {
     MainHand,
     OffHand,
@@ -37,7 +37,7 @@ impl EquipmentSlot {
 }
 
 /// 装备稀有度
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Reflect, Deserialize)]
 pub enum Rarity {
     Common,
     Uncommon,
@@ -59,7 +59,7 @@ impl Rarity {
 }
 
 /// 装备需求条件
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Reflect, Deserialize)]
 pub enum EquipmentRequirement {
     /// 需要指定标签（如 MARTIAL 表示军用武器熟练度）
     RequireTag(TagName),

@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use serde::Deserialize;
 
 /// 游戏标签（位掩码）
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Reflect)]
 pub struct GameplayTag(pub u64);
 
 impl GameplayTag {
@@ -113,7 +113,8 @@ impl GameplayTag {
 }
 
 /// 实体上的标签集合组件
-#[derive(Component, Default, Debug, Clone)]
+#[derive(Component, Reflect, Default, Debug, Clone)]
+#[reflect(Component)]
 pub struct GameplayTags(pub u64);
 
 impl GameplayTags {
@@ -192,7 +193,7 @@ impl GameplayTags {
 }
 
 /// 标签名称枚举（用于数据定义中的序列化/反序列化）
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Reflect, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum TagName {
     Fire,

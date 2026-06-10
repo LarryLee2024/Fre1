@@ -4,14 +4,15 @@
 use bevy::prelude::*;
 
 /// 资源堆叠（金币/银币/木材/铁矿/声望/贡献点）
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Reflect)]
 pub struct ResourceStack {
     pub resource_id: String,
     pub amount: u32,
 }
 
 /// 资源容器（挂在角色 Entity 上）
-#[derive(Component, Default, Debug, Clone)]
+#[derive(Component, Reflect, Default, Debug, Clone)]
+#[reflect(Component)]
 pub struct Resources {
     pub stacks: Vec<ResourceStack>,
 }

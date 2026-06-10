@@ -194,7 +194,13 @@ impl Plugin for TraitPlugin {
     fn build(&self, app: &mut App) {
         let registry = TraitRegistry::load_from_dir("assets/traits");
         app.insert_resource(registry);
-        app.insert_resource(TraitEffectHandlerRegistry::with_defaults());
+        app.insert_resource(TraitEffectHandlerRegistry::with_defaults())
+            // 注册 Reflect 类型
+            .register_type::<TraitTrigger>()
+            .register_type::<TraitEffect>()
+            .register_type::<TraitSource>()
+            .register_type::<TraitEntry>()
+            .register_type::<TraitCollection>();
     }
 }
 

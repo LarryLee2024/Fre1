@@ -5,9 +5,14 @@ use super::combat_preview::CombatPreviewPlugin;
 use super::combat_vfx_handler;
 use super::command_handler::handle_ui_commands;
 use super::events::UiCommand;
+use super::focus::{UiFocusState, update_ui_focus_state};
 use super::panels::{
     ActionHintPlugin, CombatLogPanelPlugin, InventoryPanelPlugin, TurnIndicatorPlugin,
     UnitInfoPlugin,
+};
+use super::settings::{
+    AccessibilitySettings, ColorBlindMode, ColorScheme, GameSettings, GameplaySettings, UiSettings,
+    save_settings_on_change,
 };
 use super::theme::UiTheme;
 use super::tile_info::TileInfoPlugin;
@@ -24,6 +29,7 @@ pub struct UiPlugin;
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<UiTheme>()
+            .insert_resource(GameSettings::load())
             .add_message::<UiCommand>()
             .init_resource::<SelectedUnitView>()
             .init_resource::<TurnInfoView>()
@@ -31,6 +37,28 @@ impl Plugin for UiPlugin {
             .init_resource::<CombatPreviewView>()
             .init_resource::<HoveredEntity>()
             .init_resource::<CombatLogCollapsed>()
+            .init_resource::<UiFocusState>()
+            // 注册 Reflect 类型
+            .register_type::<CoreAttrEntry>()
+            .register_type::<DerivedAttrEntry>()
+            .register_type::<BuffEntry>()
+            .register_type::<SkillEntry>()
+            .register_type::<TraitEntry>()
+            .register_type::<EquipmentSlotEntry>()
+            .register_type::<InventoryEntry>()
+            .register_type::<HoveredEntity>()
+            .register_type::<SelectedUnitView>()
+            .register_type::<CombatPreviewView>()
+            .register_type::<TurnInfoView>()
+            .register_type::<GameOverState>()
+            .register_type::<UiFocusState>()
+            // GameSettings Reflect 注册
+            .register_type::<GameSettings>()
+            .register_type::<UiSettings>()
+            .register_type::<ColorScheme>()
+            .register_type::<AccessibilitySettings>()
+            .register_type::<ColorBlindMode>()
+            .register_type::<GameplaySettings>()
             .add_plugins((
                 CameraPlugin,
                 TurnIndicatorPlugin,
@@ -51,6 +79,10 @@ impl Plugin for UiPlugin {
                     update_game_over_state,
                     update_combat_preview_view,
                     update_acted_unit_color,
+                    // UI 焦点状态更新
+                    update_ui_focus_state,
+                    // 设置变更自动保存
+                    save_settings_on_change,
                     // 战斗日志表现层：监听 Message 写入 CombatLog
                     combat_log_handler::on_damage_applied,
                     combat_log_handler::on_heal_applied,

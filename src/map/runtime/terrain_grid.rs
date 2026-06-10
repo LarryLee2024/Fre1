@@ -7,7 +7,8 @@ use std::collections::HashMap;
 /// 地形网格资源：存储每个坐标的地形 ID
 /// 替代原来的 Tile Entity + Terrain 枚举
 /// 地形 ID（如 "plain", "forest"）由 TerrainRegistry 定义
-#[derive(Resource, Debug, Clone)]
+#[derive(Resource, Reflect, Debug, Clone)]
+#[reflect(Resource)]
 pub struct TerrainGrid {
     /// 地图宽度
     pub width: u32,

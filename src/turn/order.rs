@@ -22,7 +22,8 @@ pub struct TurnEnded {
 }
 
 /// 回合行动队列：所有单位按 Initiative 降序排列
-#[derive(Resource, Default, Debug)]
+#[derive(Resource, Reflect, Default, Debug)]
+#[reflect(Resource)]
 pub struct TurnOrder {
     /// 本回合行动顺序（按 Initiative 降序）
     pub queue: Vec<Entity>,
@@ -60,7 +61,8 @@ impl TurnOrder {
 }
 
 /// 回合状态（保留兼容，供 UI 和日志使用）
-#[derive(Resource)]
+#[derive(Resource, Reflect)]
+#[reflect(Resource)]
 pub struct TurnState {
     pub current_faction: Faction,
     pub turn_number: u32,
@@ -76,7 +78,8 @@ impl Default for TurnState {
 }
 
 /// AI 行动延迟计时器
-#[derive(Resource)]
+#[derive(Resource, Reflect, Debug)]
+#[reflect(Resource)]
 pub struct AiTimer {
     pub timer: Timer,
 }
@@ -90,7 +93,8 @@ impl Default for AiTimer {
 }
 
 /// 标记是否需要结算持续效果（防止 SelectUnit 多次进入时重复结算）
-#[derive(Resource, Default)]
+#[derive(Resource, Reflect, Default)]
+#[reflect(Resource)]
 pub struct NeedsResolve(pub bool);
 
 /// 强制结束当前阵营回合（玩家按 E 结束回合时发送）
