@@ -12,3 +12,4 @@ pub use apply::*;
 pub use domain::*;
 pub use instance::*;
 pub use plugin::BuffPlugin;
+pub use resolve::resolve_status_effects;

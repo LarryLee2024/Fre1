@@ -3,8 +3,6 @@
 //! 跨 buff/apply + buff/instance + buff/resolve + core/attribute + core/tag
 //! 测试 Buff 从施加 → tick → 过期的完整生命周期。
 
-mod common;
-
 use tactical_rpg::buff::{
     ActiveBuffs, BuffData, BuffInstance, apply_buff, remove_all_debuffs, remove_buff,
 };
@@ -14,7 +12,7 @@ use tactical_rpg::core::attribute::{
 };
 use tactical_rpg::core::tag::{GameplayTag, GameplayTags};
 
-use common::fixtures::*;
+use crate::common::fixtures::*;
 
 // ── 测试辅助 ──
 

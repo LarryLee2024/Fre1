@@ -31,7 +31,9 @@ pub fn create_battle_inventory(
         let mut battle_bag = BattleInventory::new(entity);
         // 复制源背包物品到战场背包
         for stack in &backpack.stacks {
-            battle_bag.container.add_stack(stack.clone(), &item_registry);
+            battle_bag
+                .container
+                .add_stack(stack.clone(), &item_registry);
         }
         commands.spawn(battle_bag);
     }

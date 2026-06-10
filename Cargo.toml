@@ -15,4 +15,4 @@ dev = ["bevy/file_watcher"]
 
 [dev-dependencies]
 proptest = "1.5"
-insta = { version = "1.41", features = ["yaml"] }
+insta = { version = "1.41", features = ["yaml", "redactions"] }

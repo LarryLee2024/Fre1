@@ -1,4 +1,4 @@
-// App 构建器：最小/战斗/完整 App
+// App 构建器：最小/战斗/装备/完整 App
 
 use bevy::prelude::*;
 use tactical_rpg::buff::BuffPlugin;
@@ -28,5 +28,36 @@ pub fn combat_app() -> App {
         EquipmentPlugin,
         InventoryPlugin,
     ));
+    app
+}
+
+/// 装备测试 App：combat_app + TraitPlugin + EquipItem/UnequipItem Message + 穿脱系统
+pub fn equipment_app() -> App {
+    let mut app = combat_app();
+    // 装备系统需要 TraitRegistry 和 TraitEffectHandlerRegistry
+    app.add_plugins(tactical_rpg::character::TraitPlugin);
+    app.add_message::<tactical_rpg::equipment::EquipItem>()
+        .add_message::<tactical_rpg::equipment::UnequipItem>()
+        .add_message::<tactical_rpg::equipment::ItemEquipped>()
+        .add_message::<tactical_rpg::equipment::ItemUnequipped>()
+        .add_message::<tactical_rpg::equipment::EquipFailed>();
+    app.add_systems(Update, tactical_rpg::equipment::equip_item_system);
+    app.add_systems(Update, tactical_rpg::equipment::unequip_item_system);
+    app
+}
+
+/// 完整战斗 App：combat_app + Effect Pipeline + BattleRecord + 战斗记录系统
+pub fn full_battle_app() -> App {
+    let mut app = combat_app();
+    app.add_message::<tactical_rpg::battle::DamageApplied>()
+        .add_message::<tactical_rpg::battle::HealApplied>()
+        .add_message::<tactical_rpg::battle::CharacterDied>()
+        .add_message::<tactical_rpg::battle::DotApplied>()
+        .add_message::<tactical_rpg::battle::HotApplied>()
+        .add_message::<tactical_rpg::battle::StunApplied>();
+    app.init_resource::<tactical_rpg::battle::BattleRecord>();
+    app.add_systems(Update, tactical_rpg::battle::record_damage);
+    app.add_systems(Update, tactical_rpg::battle::record_heal);
+    app.add_systems(Update, tactical_rpg::battle::record_character_died);
     app
 }

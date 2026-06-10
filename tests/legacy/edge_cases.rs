@@ -2,8 +2,6 @@
 //!
 //! 测试各种边界情况：HP 满时治疗、修饰符叠加、空操作等。
 
-mod common;
-
 use tactical_rpg::buff::{ActiveBuffs, BuffData, apply_buff, remove_buff};
 use tactical_rpg::core::attribute::{
     AttributeKind, AttributeModifierDef, Attributes, BuffInstanceId, ModifierOp,
@@ -13,7 +11,7 @@ use tactical_rpg::core::effect::{
 };
 use tactical_rpg::core::tag::{GameplayTag, GameplayTags};
 
-use common::fixtures::*;
+use crate::common::fixtures::*;
 
 // ── 测试辅助 ──
 

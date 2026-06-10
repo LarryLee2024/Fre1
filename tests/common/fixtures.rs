@@ -1,13 +1,13 @@
 // 角色模板：消除 warrior_attrs() 等重复代码
 
 use bevy::prelude::*;
-use tactical_rpg::character::{Faction, Unit, PersistentTags};
+use tactical_rpg::buff::ActiveBuffs;
 use tactical_rpg::character::TraitCollection;
+use tactical_rpg::character::{Faction, PersistentTags, Unit};
 use tactical_rpg::core::attribute::{AttributeKind, Attributes};
 use tactical_rpg::core::tag::GameplayTags;
 use tactical_rpg::equipment::EquipmentSlots;
 use tactical_rpg::inventory::container::Container;
-use tactical_rpg::buff::ActiveBuffs;
 
 /// 角色构建器：流式 API 构建测试角色
 pub struct UnitBuilder {

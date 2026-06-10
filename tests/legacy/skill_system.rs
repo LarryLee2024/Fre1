@@ -3,20 +3,18 @@
 //! 跨 skill + core/attribute + core/tag 测试技能条件检查、
 //! 技能槽管理、冷却追踪在真实属性数据下的行为。
 
-mod common;
-
 use tactical_rpg::core::attribute::{AttributeKind, Attributes};
 use tactical_rpg::core::tag::{GameplayTag, GameplayTags};
 use tactical_rpg::skill::{
     BASIC_ATTACK_ID, SkillCooldowns, SkillData, SkillSlots, SkillTargeting, effective_skill_range,
 };
 
-use common::fixtures::warrior_attrs;
+use crate::common::fixtures::warrior_attrs;
 
 // ── 测试辅助 ──
 
 /// 法师模板：Intelligence=5 → MaxMp=25, MagicAttack=10
-/// 注意：与 common::fixtures::mage_attrs() 属性值不同，保留本地版本
+/// 注意：与 crate::common::fixtures::mage_attrs() 属性值不同，保留本地版本
 fn mage_attrs() -> Attributes {
     let mut a = Attributes::default();
     a.set_base(AttributeKind::Might, 2.0);

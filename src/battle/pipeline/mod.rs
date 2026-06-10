@@ -6,6 +6,7 @@ mod intent;
 mod modify;
 mod trait_trigger;
 
+pub use execute::execute_effects;
 pub use intent::{CombatIntent, PrevPosition};
 pub use trait_trigger::{trigger_on_attack_traits, trigger_on_hit_traits, trigger_on_kill_traits};
 

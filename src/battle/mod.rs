@@ -11,6 +11,9 @@ mod record;
 pub use combat::*;
 pub use events::*;
 pub use log::*;
-pub use pipeline::{CombatIntent, PrevPosition};
+pub use pipeline::{
+    CombatIntent, PrevPosition, execute_effects, trigger_on_attack_traits, trigger_on_hit_traits,
+    trigger_on_kill_traits,
+};
 pub use plugin::BattlePlugin;
 pub use record::*;

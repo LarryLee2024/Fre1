@@ -4,15 +4,13 @@
 //! apply_buff / remove_buff 状态修改、calculate_damage_from_effect 伤害计算
 //! 在真实属性数据下的联合行为。
 
-mod common;
-
 use bevy::prelude::*;
 use tactical_rpg::buff::{ActiveBuffs, BuffData, apply_buff, remove_all_debuffs, remove_buff};
 use tactical_rpg::core::attribute::{AttributeKind, AttributeModifierDef, Attributes, ModifierOp};
 use tactical_rpg::core::effect::calculate_damage_from_effect;
 use tactical_rpg::core::tag::GameplayTags;
 
-use common::fixtures::*;
+use crate::common::fixtures::*;
 
 // ── 测试辅助 ──
 

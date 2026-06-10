@@ -82,7 +82,7 @@ impl ActiveBuffs {
     pub fn is_stunned(&self) -> bool {
         self.instances
             .iter()
-            .any(|b| b.tags.contains(&GameplayTag::STUN))
+            .any(|b| b.remaining_turns > 0 && b.tags.contains(&GameplayTag::STUN))
     }
 
     /// 消耗晕眩：移除所有带 STUN 标签的 Buff，返回是否原本处于晕眩
@@ -94,11 +94,19 @@ impl ActiveBuffs {
     }
 
     pub fn dot_damage(&self) -> i32 {
-        self.instances.iter().map(|b| b.dot_damage).sum()
+        self.instances
+            .iter()
+            .filter(|b| b.remaining_turns > 0)
+            .map(|b| b.dot_damage)
+            .sum()
     }
 
     pub fn hot_heal(&self) -> i32 {
-        self.instances.iter().map(|b| b.hot_heal).sum()
+        self.instances
+            .iter()
+            .filter(|b| b.remaining_turns > 0)
+            .map(|b| b.hot_heal)
+            .sum()
     }
 
     /// 移除所有 Debuff

@@ -93,16 +93,6 @@ impl Container {
             return false;
         };
 
-        // 重量检查：添加前验证是否超重
-        if self.max_weight > 0.0 {
-            let added_weight = def.weight * stack.count as f32;
-            if self.current_weight(registry) + added_weight > self.max_weight {
-                return false;
-            }
-        }
-
-        let original_count = stack.count;
-
         // 尝试合并到已有堆叠
         if def.stack_size > 1 {
             for existing in &mut self.stacks {
@@ -118,8 +108,14 @@ impl Container {
             }
         }
 
-        // 剩余部分作为新堆叠
+        // 剩余部分作为新堆叠（合并后检查重量，确保准确）
         if stack.count > 0 && !self.is_full() {
+            if self.max_weight > 0.0 {
+                let added_weight = def.weight * stack.count as f32;
+                if self.current_weight(registry) + added_weight > self.max_weight {
+                    return false;
+                }
+            }
             self.stacks.push(stack);
             return true;
         }

@@ -15,6 +15,6 @@ pub use marker::*;
 pub use movement::*;
 pub use plugin::CharacterPlugin;
 pub use traits::{
-    TraitCollection, TraitData, TraitEffect, TraitEffectHandlerRegistry, TraitRegistry,
-    TraitSource, TraitTrigger,
+    TraitCollection, TraitData, TraitEffect, TraitEffectHandlerRegistry, TraitPlugin,
+    TraitRegistry, TraitSource, TraitTrigger,
 };
