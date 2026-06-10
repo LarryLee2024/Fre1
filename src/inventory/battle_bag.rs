@@ -147,7 +147,7 @@ mod tests {
                 1,
             );
             assert!(
-                bag.container.add_stack(stack, &registry),
+                bag.container.add_stack(stack, &registry) > 0,
                 "第 {} 个应成功",
                 i
             );
@@ -157,7 +157,7 @@ mod tests {
             ItemInstance::from_def(100, registry.get("item_8").unwrap()),
             1,
         );
-        assert!(!bag.container.add_stack(stack, &registry));
+        assert_eq!(bag.container.add_stack(stack, &registry), 0);
     }
 
     #[test]

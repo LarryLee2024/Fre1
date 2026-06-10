@@ -94,22 +94,30 @@ impl Container {
         };
         let original_count = stack.count;
 
-        // 尝试合并到已有堆叠
+        // 尝试合并到已有堆叠（每次合并前检查重量）
         if def.stack_size > 1 {
-            for existing in &mut self.stacks {
-                if existing.can_merge_with(&stack, def) {
-                    let space = def.stack_size - existing.count;
+            let mut running_weight = self.current_weight(registry);
+            for i in 0..self.stacks.len() {
+                if stack.count == 0 {
+                    break;
+                }
+                if self.stacks[i].can_merge_with(&stack, def) {
+                    let space = def.stack_size - self.stacks[i].count;
                     let to_merge = space.min(stack.count);
-                    existing.count += to_merge;
-                    stack.count -= to_merge;
-                    if stack.count == 0 {
-                        return original_count;
+                    if self.max_weight > 0.0 {
+                        let added_weight = def.weight * to_merge as f32;
+                        if running_weight + added_weight > self.max_weight {
+                            continue; // 超重，跳过此堆叠
+                        }
                     }
+                    self.stacks[i].count += to_merge;
+                    running_weight += def.weight * to_merge as f32;
+                    stack.count -= to_merge;
                 }
             }
         }
 
-        // 剩余部分作为新堆叠（合并后检查重量，确保准确）
+        // 剩余部分作为新堆叠
         if stack.count > 0 && !self.is_full() {
             if self.max_weight > 0.0 {
                 let added_weight = def.weight * stack.count as f32;
@@ -121,7 +129,7 @@ impl Container {
             return original_count;
         }
 
-        // 无法添加任何物品
+        // 部分或完全无法添加
         original_count - stack.count
     }
 
@@ -268,7 +276,7 @@ mod tests {
             ItemInstance::from_def(1, registry.get("potion_healing").unwrap()),
             10,
         );
-        assert!(bag.add_stack(stack, &registry));
+        assert!(bag.add_stack(stack, &registry) > 0);
         assert_eq!(bag.len(), 1);
     }
 
@@ -323,9 +331,9 @@ mod tests {
             ItemInstance::from_def(3, registry.get("iron_sword").unwrap()),
             1,
         );
-        assert!(bag.add_stack(s1, &registry));
-        assert!(bag.add_stack(s2, &registry));
-        assert!(!bag.add_stack(s3, &registry)); // 容量满
+        assert!(bag.add_stack(s1, &registry) > 0);
+        assert!(bag.add_stack(s2, &registry) > 0);
+        assert_eq!(bag.add_stack(s3, &registry), 0); // 容量满
     }
 
     #[test]
@@ -387,7 +395,7 @@ mod tests {
             ItemInstance::from_def(2, registry.get("iron_sword").unwrap()),
             1,
         );
-        assert!(!bag.add_stack(stack2, &registry));
+        assert_eq!(bag.add_stack(stack2, &registry), 0);
         // 容量仍为 1，超重检测仍为 false
         assert_eq!(bag.len(), 1);
         assert!(!bag.is_overweight(&registry));
@@ -402,13 +410,13 @@ mod tests {
             ItemInstance::from_def(1, registry.get("iron_sword").unwrap()),
             1,
         );
-        assert!(bag.add_stack(s1, &registry));
+        assert!(bag.add_stack(s1, &registry) > 0);
         // 再加一把 3.0+3.0=6.0 > 5.0，应被拒绝
         let s2 = ItemStack::new(
             ItemInstance::from_def(2, registry.get("iron_sword").unwrap()),
             1,
         );
-        assert!(!bag.add_stack(s2, &registry));
+        assert_eq!(bag.add_stack(s2, &registry), 0);
         assert_eq!(bag.len(), 1);
     }
 
@@ -421,7 +429,7 @@ mod tests {
             ItemInstance::from_def(1, registry.get("potion_healing").unwrap()),
             5,
         );
-        assert!(!bag.add_stack(stack, &registry));
+        assert_eq!(bag.add_stack(stack, &registry), 0);
         assert!(bag.is_empty());
     }
 
@@ -458,5 +466,49 @@ mod tests {
         assert!(bag.get(999).is_none());
         assert!(bag.find_by_def("potion_healing").is_some());
         assert!(bag.find_by_def("nonexistent").is_none());
+    }
+
+    #[test]
+    fn 容器_添加物品_部分成功返回已添加数量() {
+        let mut bag = Container::new(ContainerKind::Backpack, 0, 2.0);
+        let registry = test_registry();
+        // 药水 weight=0.5, stack_size=99
+        // 已有 18 个药水(9.0)，容量限 2.0 → 剩余 0.0 可用
+        // 先加 18 个（weight=9.0 > 2.0? 不，max_weight=2.0）
+        // 改为：容量 5.0，先加 6 个药水(3.0)，再加 8 个药水(4.0)
+        let bag_max = Container::new(ContainerKind::Backpack, 0, 5.0);
+        let mut bag = bag_max;
+        let s1 = ItemStack::new(
+            ItemInstance::from_def(1, registry.get("potion_healing").unwrap()),
+            6,
+        );
+        // 6 * 0.5 = 3.0 < 5.0，全部成功
+        assert_eq!(bag.add_stack(s1, &registry), 6);
+        assert_eq!(bag.stacks[0].count, 6);
+
+        // 再加 8 个：3.0 + 4.0 = 7.0 > 5.0，超重
+        // 但如果没有已有堆叠可合并，全部失败
+        let s2 = ItemStack::new(
+            ItemInstance::from_def(2, registry.get("potion_healing").unwrap()),
+            8,
+        );
+        assert_eq!(bag.add_stack(s2, &registry), 0);
+        assert_eq!(bag.stacks.len(), 1); // 未添加新堆叠
+
+        // 关键回归测试：部分合并后超重，应返回成功数量而非 0
+        // 构造：已有堆叠占部分空间，新堆叠放剩余但超重
+        let mut bag2 = Container::new(ContainerKind::Backpack, 0, 1.5);
+        // 先加 2 个药水(1.0)
+        let s3 = ItemStack::new(
+            ItemInstance::from_def(3, registry.get("potion_healing").unwrap()),
+            2,
+        );
+        assert_eq!(bag2.add_stack(s3, &registry), 2);
+        // 再加 4 个药水(2.0)：1.0+2.0=3.0 > 1.5，超重 → 全部失败
+        let s4 = ItemStack::new(
+            ItemInstance::from_def(4, registry.get("potion_healing").unwrap()),
+            4,
+        );
+        assert_eq!(bag2.add_stack(s4, &registry), 0);
     }
 }
