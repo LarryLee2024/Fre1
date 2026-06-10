@@ -2,6 +2,7 @@
 
 use super::definition::{EquipmentDef, EquipmentRegistry, EquipmentSlot};
 use super::instance::{EquipmentInstance, Inventory};
+use super::requirements::check_equipment_requirements;
 use super::slots::EquipmentSlots;
 use crate::character::PersistentTags;
 use crate::character::{
@@ -43,10 +44,19 @@ pub struct ItemUnequipped {
     pub def_id: String,
 }
 
+/// 穿戴失败消息（需求不满足）
+#[derive(Message, Debug, Clone)]
+pub struct EquipFailed {
+    pub entity: Entity,
+    pub instance_id: u64,
+    pub reason: String,
+}
+
 /// 处理 EquipItem 消息的系统
 pub fn equip_item_system(
     mut equip_reader: MessageReader<EquipItem>,
     mut equipped_writer: MessageWriter<ItemEquipped>,
+    mut failed_writer: MessageWriter<EquipFailed>,
     equipment_registry: Res<EquipmentRegistry>,
     trait_registry: Res<TraitRegistry>,
     effect_handlers: Res<TraitEffectHandlerRegistry>,
@@ -99,6 +109,28 @@ pub fn equip_item_system(
             };
 
             let slot = def.slot;
+
+            // 需求检查
+            let check = check_equipment_requirements(def, &attrs, &tags);
+            if !check.is_satisfied() {
+                let reason = match &check {
+                    super::requirements::RequirementCheckResult::Failed(r) => r.clone(),
+                    _ => String::new(),
+                };
+                bevy::log::warn!(
+                    target: "equipment",
+                    entity = ?entity,
+                    def_id = %def.id,
+                    reason = %reason,
+                    "装备需求不满足"
+                );
+                failed_writer.write(EquipFailed {
+                    entity,
+                    instance_id: msg.instance_id,
+                    reason,
+                });
+                continue;
+            }
 
             // 如果槽位已占用，先脱卸旧装备
             if let Some(old_instance_id) = slots.get(slot) {

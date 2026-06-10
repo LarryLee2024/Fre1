@@ -4,8 +4,10 @@ mod execute;
 mod generate;
 mod intent;
 mod modify;
+mod trait_trigger;
 
 pub use intent::{CombatIntent, PrevPosition};
+pub use trait_trigger::{trigger_on_attack_traits, trigger_on_hit_traits, trigger_on_kill_traits};
 
 use super::events::on_character_died;
 use bevy::prelude::*;

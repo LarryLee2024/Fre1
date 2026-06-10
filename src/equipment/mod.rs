@@ -6,6 +6,7 @@ mod definition;
 mod equip;
 mod instance;
 mod plugin;
+mod requirements;
 mod slots;
 
 // 公共 re-exports
@@ -13,4 +14,5 @@ pub use definition::*;
 pub use equip::*;
 pub use instance::*;
 pub use plugin::EquipmentPlugin;
+pub use requirements::*;
 pub use slots::*;

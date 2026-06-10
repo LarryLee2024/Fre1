@@ -2,7 +2,7 @@
 // 同时支持玩家（Selected）和 AI（CombatIntent.source_entity）
 // 使用 EffectHandlerRegistry trait 分发，新增效果类型无需修改此文件
 
-use crate::character::{GridPosition, Selected, Unit, UnitName};
+use crate::character::{GridPosition, Selected, TraitCollection, TraitEffectHandlerRegistry, TraitRegistry, Unit, UnitName};
 use crate::core::attribute::Attributes;
 use crate::core::effect::{EffectHandlerRegistry, EffectQueue, GenerateContext, PendingEffect};
 use crate::core::tag::GameplayTags;
@@ -11,6 +11,7 @@ use crate::skill::{BASIC_ATTACK_ID, SkillCooldowns, SkillRegistry};
 use bevy::prelude::*;
 
 use super::intent::CombatIntent;
+use super::trait_trigger::trigger_on_attack_traits;
 
 /// 生成战斗效果：从攻击者的技能定义 + 目标属性计算，推入 EffectQueue
 ///
@@ -20,6 +21,8 @@ use super::intent::CombatIntent;
 pub fn generate_combat_effects(
     mut queue: ResMut<EffectQueue>,
     handler_registry: Res<EffectHandlerRegistry>,
+    trait_registry: Res<TraitRegistry>,
+    effect_handlers: Res<TraitEffectHandlerRegistry>,
     // 玩家攻击者（Selected）
     selected_units: Query<
         (
@@ -53,6 +56,8 @@ pub fn generate_combat_effects(
         &GameplayTags,
         &Transform,
     )>,
+    // Trait 集合（用于触发 OnAttack）
+    trait_collections: Query<&TraitCollection>,
     terrain_grid: Res<TerrainGrid>,
     terrain_registry: Res<TerrainRegistry>,
     combat_intent: Res<CombatIntent>,
@@ -173,5 +178,19 @@ pub fn generate_combat_effects(
             }
         }
         break;
+    }
+
+    // 触发攻击者的 OnAttack Trait 效果
+    if let Ok(trait_collection) = trait_collections.get(source_entity) {
+        if let Some(target_entity) = queue.pending.last().map(|e| e.target) {
+            trigger_on_attack_traits(
+                source_entity,
+                target_entity,
+                trait_collection,
+                &trait_registry,
+                &effect_handlers,
+                &mut queue,
+            );
+        }
     }
 }
