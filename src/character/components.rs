@@ -4,6 +4,7 @@ use super::traits::TraitCollection;
 use crate::buff::ActiveBuffs;
 use crate::core::attribute::Attributes;
 use crate::core::tag::GameplayTags;
+use crate::equipment::{EquipmentSlots, Inventory};
 use crate::skill::{SkillCooldowns, SkillSlots};
 use bevy::ecs::lifecycle::HookContext;
 use bevy::ecs::world::DeferredWorld;
@@ -25,8 +26,10 @@ pub enum Faction {
     SkillCooldowns,
     ActiveBuffs,
     GameplayTags,
-    TraitGrantedTags,
+    PersistentTags,
     TraitCollection,
+    EquipmentSlots,
+    Inventory,
     GridPosition
 )]
 pub struct Unit {
@@ -81,9 +84,14 @@ impl Dead {
     }
 }
 
-/// Trait 授予的标签（独立存储，不会被 rebuild_tags_from_buffs 丢失）
+/// 持久化标签（不被 rebuild 丢失，支持 Trait + Equipment 两层）
 #[derive(Component, Default, Debug, Clone)]
-pub struct TraitGrantedTags(pub GameplayTags);
+pub struct PersistentTags {
+    /// Trait 授予的标签（种族/职业/天赋，最持久）
+    pub from_traits: GameplayTags,
+    /// 装备授予的标签（穿脱变化）
+    pub from_equipment: GameplayTags,
+}
 
 /// HP 条背景
 #[derive(Component)]

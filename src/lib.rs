@@ -4,6 +4,7 @@ pub mod battle;
 pub mod buff;
 pub mod character;
 pub mod core;
+pub mod equipment;
 pub mod input;
 pub mod map;
 pub mod skill;

@@ -8,7 +8,7 @@ use tactical_rpg::buff::{
 };
 use tactical_rpg::core::attribute::{
     AttributeKind, AttributeModifierDef, AttributeModifierInstance, Attributes, BuffInstanceId,
-    ModifierOp,
+    ModifierOp, ModifierSource,
 };
 use tactical_rpg::core::tag::{GameplayTag, GameplayTags};
 
@@ -102,7 +102,7 @@ fn 攻击buff_施加_递减_过期_修饰符清理() {
         .instances
         .iter()
         .filter(|i| i.remaining_turns <= 1)
-        .map(|i| i.instance_id)
+        .map(|i| i.instance_id.to_modifier_source())
         .collect();
     buffs.tick();
     for id in &expired {
@@ -117,7 +117,7 @@ fn 攻击buff_施加_递减_过期_修饰符清理() {
         .instances
         .iter()
         .filter(|i| i.remaining_turns <= 1)
-        .map(|i| i.instance_id)
+        .map(|i| i.instance_id.to_modifier_source())
         .collect();
     buffs.tick();
     for id in &expired {
@@ -131,7 +131,7 @@ fn 攻击buff_施加_递减_过期_修饰符清理() {
         .instances
         .iter()
         .filter(|i| i.remaining_turns <= 1)
-        .map(|i| i.instance_id)
+        .map(|i| i.instance_id.to_modifier_source())
         .collect();
     buffs.tick();
     for id in &expired {
@@ -200,7 +200,7 @@ fn dot_buff_每轮扣血() {
         .instances
         .iter()
         .filter(|i| i.remaining_turns <= 1)
-        .map(|i| i.instance_id)
+        .map(|i| i.instance_id.to_modifier_source())
         .collect();
     buffs.tick();
     for id in &expired {

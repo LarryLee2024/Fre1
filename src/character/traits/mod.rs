@@ -8,7 +8,7 @@ mod types;
 pub use handlers::*;
 pub use types::*;
 
-use crate::core::attribute::{AttributeModifierDef, AttributeModifierInstance, BuffInstanceId};
+use crate::core::attribute::{AttributeModifierDef, AttributeModifierInstance, ModifierSource};
 use crate::core::registry_loader::RegistryLoader;
 use crate::core::tag::{GameplayTag, GameplayTags, TagName};
 use bevy::prelude::*;
@@ -56,9 +56,9 @@ pub fn apply_passive_traits(
 ) -> (GameplayTags, Vec<AttributeModifierInstance>) {
     let mut tags = GameplayTags::default();
     let mut modifiers = Vec::new();
-    // 每个 trait 分配独立的 source id，从 u64::MAX - 1 递减
-    // 避免与 buff instance id（从 1 递增）冲突
-    let mut trait_source_id = u64::MAX - 1;
+    // 每个 trait 分配独立的 source id，从 ModifierSource::trait_source(0) 递增
+    // Trait 区间：u64::MAX ~ u64::MAX - 999，避免与 buff/equipment 区间冲突
+    let mut trait_source_index = 0u64;
 
     for trait_id in trait_ids {
         if let Some(trait_data) = registry.get(trait_id) {
@@ -68,7 +68,7 @@ pub fn apply_passive_traits(
             for tag in trait_data.granted_tags(handlers) {
                 tags.add(tag);
             }
-            let source = BuffInstanceId(trait_source_id);
+            let source = ModifierSource::trait_source(trait_source_index);
             for mod_def in trait_data.attribute_modifiers(handlers) {
                 modifiers.push(AttributeModifierInstance {
                     kind: mod_def.kind,
@@ -77,7 +77,7 @@ pub fn apply_passive_traits(
                     source,
                 });
             }
-            trait_source_id -= 1;
+            trait_source_index += 1;
         }
     }
 
@@ -373,7 +373,7 @@ mod tests {
             apply_passive_traits(&["trait_a".into(), "trait_b".into()], &registry, &handlers);
         assert_eq!(modifiers.len(), 2);
         assert_ne!(modifiers[0].source, modifiers[1].source);
-        assert_eq!(modifiers[0].source, BuffInstanceId(u64::MAX - 1));
-        assert_eq!(modifiers[1].source, BuffInstanceId(u64::MAX - 2));
+        assert_eq!(modifiers[0].source, ModifierSource::trait_source(0));
+        assert_eq!(modifiers[1].source, ModifierSource::trait_source(1));
     }
 }

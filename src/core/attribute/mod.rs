@@ -243,9 +243,19 @@ impl Attributes {
         self.modifiers.push(modifier);
     }
 
-    /// 移除来自指定 Buff 的所有修饰符
-    pub fn remove_modifiers_from(&mut self, source: BuffInstanceId) {
+    /// 移除来自指定来源的所有修饰符
+    pub fn remove_modifiers_from(&mut self, source: ModifierSource) {
         self.modifiers.retain(|m| m.source != source);
+    }
+
+    /// 移除所有 Trait 来源的修饰符
+    pub fn remove_trait_modifiers(&mut self) {
+        self.modifiers.retain(|m| !m.source.is_trait());
+    }
+
+    /// 移除所有 Equipment 来源的修饰符
+    pub fn remove_equipment_modifiers(&mut self) {
+        self.modifiers.retain(|m| !m.source.is_equipment());
     }
 
     /// 移除所有减益修饰符（值为负的 Add 修饰符 + 值 < 1.0 的 Multiply 修饰符）
@@ -256,11 +266,11 @@ impl Attributes {
         });
     }
 
-    /// 从定义列表和 BuffInstanceId 批量添加修饰符
+    /// 从定义列表和 ModifierSource 批量添加修饰符
     pub fn add_modifiers_from_def(
         &mut self,
         defs: &[AttributeModifierDef],
-        source: BuffInstanceId,
+        source: ModifierSource,
     ) {
         for def in defs {
             self.add_modifier(AttributeModifierInstance {
@@ -373,7 +383,7 @@ mod tests {
             kind: AttributeKind::Might,
             op: ModifierOp::Add,
             value: 3.0,
-            source: BuffInstanceId(1),
+            source: ModifierSource::buff_source(1),
         });
         // Might: 5 + 3 = 8
         assert_eq!(attrs.core(AttributeKind::Might), 8.0);
@@ -388,7 +398,7 @@ mod tests {
             kind: AttributeKind::Attack,
             op: ModifierOp::Add,
             value: 5.0,
-            source: BuffInstanceId(1),
+            source: ModifierSource::buff_source(1),
         });
         // Attack: (5*2) + 5 = 15
         assert_eq!(attrs.get(AttributeKind::Attack), 15.0);
@@ -401,7 +411,7 @@ mod tests {
             kind: AttributeKind::Attack,
             op: ModifierOp::Multiply,
             value: 1.5,
-            source: BuffInstanceId(1),
+            source: ModifierSource::buff_source(1),
         });
         // Attack: 10 * 1.5 = 15
         assert_eq!(attrs.get(AttributeKind::Attack), 15.0);
@@ -414,15 +424,15 @@ mod tests {
             kind: AttributeKind::Attack,
             op: ModifierOp::Add,
             value: 5.0,
-            source: BuffInstanceId(1),
+            source: ModifierSource::buff_source(1),
         });
         attrs.add_modifier(AttributeModifierInstance {
             kind: AttributeKind::Attack,
             op: ModifierOp::Add,
             value: 3.0,
-            source: BuffInstanceId(2),
+            source: ModifierSource::buff_source(2),
         });
-        attrs.remove_modifiers_from(BuffInstanceId(1));
+        attrs.remove_modifiers_from(ModifierSource::buff_source(1));
         // Attack: 10 + 3 = 13
         assert_eq!(attrs.get(AttributeKind::Attack), 13.0);
     }
@@ -434,13 +444,13 @@ mod tests {
             kind: AttributeKind::Attack,
             op: ModifierOp::Add,
             value: 5.0,
-            source: BuffInstanceId(1),
+            source: ModifierSource::buff_source(1),
         });
         attrs.add_modifier(AttributeModifierInstance {
             kind: AttributeKind::Attack,
             op: ModifierOp::Add,
             value: -3.0,
-            source: BuffInstanceId(2),
+            source: ModifierSource::buff_source(2),
         });
         attrs.remove_debuff_modifiers();
         // Attack: 10 + 5 = 15
@@ -470,7 +480,7 @@ mod tests {
                 value: -2.0,
             },
         ];
-        attrs.add_modifiers_from_def(&defs, BuffInstanceId(1));
+        attrs.add_modifiers_from_def(&defs, ModifierSource::buff_source(1));
         // Attack: 10 + 5 = 15
         assert_eq!(attrs.get(AttributeKind::Attack), 15.0);
         // Defense: 5 - 2 = 3

@@ -5,6 +5,7 @@ mod buff;
 mod character;
 mod core;
 mod debug;
+mod equipment;
 mod input;
 mod map;
 mod skill;
@@ -25,6 +26,7 @@ use core::effect::EffectPlugin;
 use core::modifier_rule::ModifierRulePlugin;
 use core::tag_def::TagDefPlugin;
 use debug::DebugPlugin;
+use equipment::EquipmentPlugin;
 use input::InputPlugin;
 use map::MapPlugin;
 use skill::SkillPlugin;
@@ -43,7 +45,7 @@ fn main() {
         }))
         .add_plugins((EguiPlugin::default(), WorldInspectorPlugin::new()))
         // 数据层插件
-        .add_plugins((SkillPlugin, BuffPlugin, AiBehaviorPlugin))
+        .add_plugins((SkillPlugin, BuffPlugin, AiBehaviorPlugin, EquipmentPlugin))
         // 核心层插件
         .add_plugins((
             EffectPlugin,

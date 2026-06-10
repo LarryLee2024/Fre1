@@ -118,8 +118,11 @@ fn spawn_unit_from_template(
             gameplay_tags.add(GameplayTag(bit));
         }
     }
-    // 保存 trait 授予的标签（用于 rebuild_tags_from_buffs 恢复）
-    let trait_granted_tags = TraitGrantedTags(trait_tags);
+    // 保存 trait 授予的标签（用于 rebuild_tags 恢复）
+    let persistent_tags = PersistentTags {
+        from_traits: trait_tags,
+        from_equipment: GameplayTags::default(),
+    };
     // 应用 trait 属性修饰符
     for modifier in trait_modifiers {
         attributes.add_modifier(modifier);
@@ -151,7 +154,7 @@ fn spawn_unit_from_template(
             GridPosition { coord },
             attributes,
             gameplay_tags,
-            trait_granted_tags,
+            persistent_tags,
             skill_slots,
             trait_collection,
             ai_behavior_id,

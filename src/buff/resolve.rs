@@ -3,8 +3,8 @@
 // 原 status.rs，移入 buff 模块统一管理
 
 use crate::battle::{CharacterDied, DotApplied, HotApplied, StunApplied};
-use crate::character::{Dead, GridPosition, TraitGrantedTags, Unit, UnitName};
-use crate::core::attribute::{AttributeKind, Attributes, BuffInstanceId};
+use crate::character::{Dead, GridPosition, PersistentTags, Unit, UnitName};
+use crate::core::attribute::{AttributeKind, Attributes, BuffInstanceId, ModifierSource};
 use crate::core::tag::{GameplayTag, GameplayTags};
 use crate::skill::SkillCooldowns;
 use crate::turn::NeedsResolve;
@@ -29,7 +29,7 @@ pub fn resolve_status_effects(
         &mut ActiveBuffs,
         &mut GameplayTags,
         &mut SkillCooldowns,
-        &TraitGrantedTags,
+        &PersistentTags,
     )>,
     mut died_writer: MessageWriter<CharacterDied>,
     mut dot_writer: MessageWriter<DotApplied>,
@@ -42,7 +42,7 @@ pub fn resolve_status_effects(
     }
     needs_resolve.0 = false;
 
-    for (entity, mut unit, name, gp, mut attrs, mut buffs, mut tags, mut cooldowns, trait_tags) in
+    for (entity, mut unit, name, gp, mut attrs, mut buffs, mut tags, mut cooldowns, persistent_tags) in
         &mut units
     {
         // 队列驱动模式：所有单位都结算（不再按阵营过滤）
@@ -135,7 +135,7 @@ pub fn resolve_status_effects(
         }
 
         // 4. tick 递减持续时间，移除过期的 Buff
-        tick_buffs(&mut buffs, &mut attrs, &mut tags, &trait_tags);
+        tick_buffs(&mut buffs, &mut attrs, &mut tags, &persistent_tags);
 
         // 5. tick 技能冷却
         cooldowns.tick();
@@ -147,13 +147,13 @@ pub(crate) fn tick_buffs(
     buffs: &mut ActiveBuffs,
     attrs: &mut Attributes,
     tags: &mut GameplayTags,
-    trait_tags: &TraitGrantedTags,
+    persistent: &PersistentTags,
 ) {
-    let expired_ids: Vec<BuffInstanceId> = buffs
+    let expired_ids: Vec<ModifierSource> = buffs
         .instances
         .iter()
         .filter(|inst| inst.remaining_turns <= 1)
-        .map(|inst| inst.instance_id)
+        .map(|inst| inst.instance_id.to_modifier_source())
         .collect();
 
     buffs.tick();
@@ -162,18 +162,21 @@ pub(crate) fn tick_buffs(
         attrs.remove_modifiers_from(id);
     }
 
-    rebuild_tags_from_buffs(buffs, tags, trait_tags);
+    rebuild_tags(buffs, tags, persistent);
 }
 
-/// 从所有活跃 Buff 重新构建 GameplayTags（保留 trait 授予的标签）
-pub(crate) fn rebuild_tags_from_buffs(
+/// 从所有活跃 Buff 重新构建 GameplayTags（保留 Trait + Equipment 授予的标签）
+pub(crate) fn rebuild_tags(
     buffs: &ActiveBuffs,
     tags: &mut GameplayTags,
-    trait_tags: &TraitGrantedTags,
+    persistent: &PersistentTags,
 ) {
-    let preserved_mask = trait_tags.0.0;
-
-    let mut new_tags = GameplayTags(preserved_mask);
+    let mut new_tags = GameplayTags::default();
+    // 第一层：Trait 授予（最持久）
+    new_tags.0 |= persistent.from_traits.0;
+    // 第二层：装备授予（穿脱变化）
+    new_tags.0 |= persistent.from_equipment.0;
+    // 第三层：Buff 授予（临时）
     for buff in &buffs.instances {
         // 跳过已过期的 buff（remaining_turns == 0，修饰符已清理但实例仍在列表中）
         if buff.remaining_turns == 0 {
@@ -191,7 +194,7 @@ pub(crate) fn rebuild_tags_from_buffs(
 mod tests {
     use super::*;
     use crate::buff::BuffInstance;
-    use crate::core::attribute::{AttributeKind, AttributeModifierInstance, ModifierOp};
+    use crate::core::attribute::{AttributeKind, AttributeModifierInstance, BuffInstanceId, ModifierOp, ModifierSource};
 
     fn make_test_buff(
         id: u64,
@@ -232,12 +235,12 @@ mod tests {
             kind: AttributeKind::Attack,
             op: ModifierOp::Add,
             value: 5.0,
-            source: BuffInstanceId(1),
+            source: ModifierSource::buff_source(1),
         });
         let attack_before = attrs.get(AttributeKind::Attack);
 
         let mut tags = GameplayTags::default();
-        let trait_tags = TraitGrantedTags::default();
+        let trait_tags = PersistentTags::default();
 
         tick_buffs(&mut buffs, &mut attrs, &mut tags, &trait_tags);
 
@@ -263,7 +266,7 @@ mod tests {
         let mut attrs = Attributes::default();
         attrs.fill_vital_resources();
         let mut tags = GameplayTags::default();
-        let trait_tags = TraitGrantedTags::default();
+        let trait_tags = PersistentTags::default();
 
         tick_buffs(&mut buffs, &mut attrs, &mut tags, &trait_tags);
 
@@ -288,12 +291,12 @@ mod tests {
             kind: AttributeKind::Attack,
             op: ModifierOp::Add,
             value: 5.0,
-            source: BuffInstanceId(1),
+            source: ModifierSource::buff_source(1),
         });
         let attack_before = attrs.get(AttributeKind::Attack);
 
         let mut tags = GameplayTags::default();
-        let trait_tags = TraitGrantedTags::default();
+        let trait_tags = PersistentTags::default();
 
         tick_buffs(&mut buffs, &mut attrs, &mut tags, &trait_tags);
 
@@ -317,7 +320,7 @@ mod tests {
         let mut attrs = Attributes::default();
         attrs.fill_vital_resources();
         let mut tags = GameplayTags::default();
-        let trait_tags = TraitGrantedTags::default();
+        let trait_tags = PersistentTags::default();
 
         tick_buffs(&mut buffs, &mut attrs, &mut tags, &trait_tags);
 
@@ -353,7 +356,7 @@ mod tests {
         let mut attrs = Attributes::default();
         attrs.fill_vital_resources();
         let mut tags = GameplayTags::default();
-        let trait_tags = TraitGrantedTags::default();
+        let trait_tags = PersistentTags::default();
 
         tick_buffs(&mut buffs, &mut attrs, &mut tags, &trait_tags);
 
@@ -368,17 +371,17 @@ mod tests {
         let mut attrs = Attributes::default();
         attrs.fill_vital_resources();
         let mut tags = GameplayTags::default();
-        let trait_tags = TraitGrantedTags::default();
+        let trait_tags = PersistentTags::default();
 
         tick_buffs(&mut buffs, &mut attrs, &mut tags, &trait_tags);
 
         assert!(buffs.is_empty());
     }
 
-    // ── rebuild_tags_from_buffs 测试 ──
+    // ── rebuild_tags 测试 ──
 
     #[test]
-    fn rebuild_tags_from_buffs_从活跃buff重建标签() {
+    fn rebuild_tags_从活跃buff重建标签() {
         let mut buffs = ActiveBuffs::default();
         buffs.add(make_test_buff(
             1,
@@ -389,32 +392,35 @@ mod tests {
         ));
 
         let mut tags = GameplayTags::default();
-        let trait_tags = TraitGrantedTags::default();
+        let trait_tags = PersistentTags::default();
 
-        rebuild_tags_from_buffs(&buffs, &mut tags, &trait_tags);
+        rebuild_tags(&buffs, &mut tags, &trait_tags);
 
         assert!(tags.has(GameplayTag::FIRE));
         assert!(tags.has(GameplayTag::BUFF));
     }
 
     #[test]
-    fn rebuild_tags_from_buffs_保留trait授予的标签() {
+    fn rebuild_tags_保留trait授予的标签() {
         let buffs = ActiveBuffs::default();
         let mut tags = GameplayTags::default();
-        let trait_tags = TraitGrantedTags(GameplayTags::from_tags(&[GameplayTag::WARRIOR]));
+        let trait_tags = PersistentTags {
+            from_traits: GameplayTags::from_tags(&[GameplayTag::WARRIOR]),
+            from_equipment: GameplayTags::default(),
+        };
 
-        rebuild_tags_from_buffs(&buffs, &mut tags, &trait_tags);
+        rebuild_tags(&buffs, &mut tags, &trait_tags);
 
         assert!(tags.has(GameplayTag::WARRIOR));
     }
 
     #[test]
-    fn rebuild_tags_from_buffs_清除非trait非buff标签() {
+    fn rebuild_tags_清除非trait非buff标签() {
         let buffs = ActiveBuffs::default();
         let mut tags = GameplayTags::from_tags(&[GameplayTag::FIRE, GameplayTag::WARRIOR]);
-        let trait_tags = TraitGrantedTags::default();
+        let trait_tags = PersistentTags::default();
 
-        rebuild_tags_from_buffs(&buffs, &mut tags, &trait_tags);
+        rebuild_tags(&buffs, &mut tags, &trait_tags);
 
         // FIRE 来自旧 buff，trait_tags 为空 → 应该被清除
         assert!(!tags.has(GameplayTag::FIRE));
@@ -422,7 +428,7 @@ mod tests {
     }
 
     #[test]
-    fn rebuild_tags_from_buffs_多buff多标签合并() {
+    fn rebuild_tags_多buff多标签合并() {
         let mut buffs = ActiveBuffs::default();
         buffs.add(make_test_buff(1, "fire", 3, vec![GameplayTag::FIRE], true));
         buffs.add(make_test_buff(
@@ -434,9 +440,9 @@ mod tests {
         ));
 
         let mut tags = GameplayTags::default();
-        let trait_tags = TraitGrantedTags::default();
+        let trait_tags = PersistentTags::default();
 
-        rebuild_tags_from_buffs(&buffs, &mut tags, &trait_tags);
+        rebuild_tags(&buffs, &mut tags, &trait_tags);
 
         assert!(tags.has(GameplayTag::FIRE));
         assert!(tags.has(GameplayTag::STUN));
@@ -444,12 +450,12 @@ mod tests {
     }
 
     #[test]
-    fn rebuild_tags_from_buffs_空buff空trait() {
+    fn rebuild_tags_空buff空trait() {
         let buffs = ActiveBuffs::default();
         let mut tags = GameplayTags::from_tags(&[GameplayTag::FIRE]);
-        let trait_tags = TraitGrantedTags::default();
+        let trait_tags = PersistentTags::default();
 
-        rebuild_tags_from_buffs(&buffs, &mut tags, &trait_tags);
+        rebuild_tags(&buffs, &mut tags, &trait_tags);
 
         assert!(!tags.has(GameplayTag::FIRE));
     }

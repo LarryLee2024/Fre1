@@ -167,17 +167,58 @@ pub struct AttributeModifierDef {
     pub value: f32,
 }
 
-/// Buff 实例的唯一标识
+/// 修饰符来源：统一标识 Trait / Equipment / Buff
+/// 替代原 BuffInstanceId，解决"装备修饰符不是 Buff"的语义问题
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub struct ModifierSource(pub u64);
+
+impl ModifierSource {
+    // ── Trait 区间：u64::MAX ~ u64::MAX - 999 ──
+    pub fn trait_source(index: u64) -> Self {
+        Self(u64::MAX - index)
+    }
+
+    // ── Equipment 区间：u64::MAX - 1000 ~ u64::MAX - 1999 ──
+    pub fn equipment_source(index: u64) -> Self {
+        Self(u64::MAX - 1000 - index)
+    }
+
+    // ── Buff 区间：1 ~ 999999 ──
+    pub fn buff_source(id: u64) -> Self {
+        Self(id)
+    }
+
+    pub fn is_trait(&self) -> bool {
+        self.0 > u64::MAX - 1000
+    }
+
+    pub fn is_equipment(&self) -> bool {
+        self.0 > u64::MAX - 2000 && self.0 <= u64::MAX - 1000
+    }
+
+    pub fn is_buff(&self) -> bool {
+        self.0 < u64::MAX - 2000
+    }
+}
+
+/// Buff 实例的唯一标识（保留向后兼容，Buff 系统内部使用）
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct BuffInstanceId(pub u64);
 
-/// 属性修饰符实例（运行时，关联到具体 BuffInstance）
+impl BuffInstanceId {
+    /// 转换为 ModifierSource（Buff 区间）
+    pub fn to_modifier_source(self) -> ModifierSource {
+        ModifierSource::buff_source(self.0)
+    }
+}
+
+/// 属性修饰符实例（运行时，关联到具体来源）
 #[derive(Clone, Debug)]
 pub struct AttributeModifierInstance {
     pub kind: AttributeKind,
     pub op: ModifierOp,
     pub value: f32,
-    pub source: BuffInstanceId,
+    pub source: ModifierSource,
 }
 
 #[cfg(test)]

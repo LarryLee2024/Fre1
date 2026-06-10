@@ -40,6 +40,20 @@ impl GameplayTag {
     pub const BUFF: Self = Self(1 << 40);
     pub const DEBUFF: Self = Self(1 << 41);
 
+    // ── 装备属性 ──
+    pub const HEAVY_ARMOR: Self = Self(1 << 42);
+    pub const LIGHT_ARMOR: Self = Self(1 << 43);
+    pub const SHIELD: Self = Self(1 << 44);
+    pub const TWO_HANDED: Self = Self(1 << 45);
+    pub const MARTIAL: Self = Self(1 << 46);
+    pub const SIMPLE: Self = Self(1 << 47);
+
+    // ── 武器类型 ──
+    pub const SWORD: Self = Self(1 << 20);
+    pub const AXE: Self = Self(1 << 21);
+    pub const BOW: Self = Self(1 << 22);
+    pub const STAFF: Self = Self(1 << 23);
+
     /// 标签中文名
     pub fn label(&self) -> &'static str {
         match *self {
@@ -61,6 +75,16 @@ impl GameplayTag {
             Self::SKILL_PASSIVE => "被动技能",
             Self::BUFF => "增益",
             Self::DEBUFF => "减益",
+            Self::HEAVY_ARMOR => "重甲",
+            Self::LIGHT_ARMOR => "轻甲",
+            Self::SHIELD => "盾牌",
+            Self::TWO_HANDED => "双手",
+            Self::MARTIAL => "军用",
+            Self::SIMPLE => "简易",
+            Self::SWORD => "剑",
+            Self::AXE => "斧",
+            Self::BOW => "弓",
+            Self::STAFF => "法杖",
             _ => "未知",
         }
     }
@@ -111,6 +135,10 @@ impl GameplayTags {
             GameplayTag::REGEN,
             GameplayTag::MELEE,
             GameplayTag::RANGED,
+            GameplayTag::SWORD,
+            GameplayTag::AXE,
+            GameplayTag::BOW,
+            GameplayTag::STAFF,
             GameplayTag::WARRIOR,
             GameplayTag::ARCHER,
             GameplayTag::MAGE,
@@ -121,6 +149,12 @@ impl GameplayTags {
             GameplayTag::SKILL_PASSIVE,
             GameplayTag::BUFF,
             GameplayTag::DEBUFF,
+            GameplayTag::HEAVY_ARMOR,
+            GameplayTag::LIGHT_ARMOR,
+            GameplayTag::SHIELD,
+            GameplayTag::TWO_HANDED,
+            GameplayTag::MARTIAL,
+            GameplayTag::SIMPLE,
         ];
         ALL_TAGS.iter().copied().filter(|t| self.has(*t)).collect()
     }
@@ -138,6 +172,10 @@ pub enum TagName {
     Regen,
     Melee,
     Ranged,
+    Sword,
+    Axe,
+    Bow,
+    Staff,
     Warrior,
     Archer,
     Mage,
@@ -148,6 +186,12 @@ pub enum TagName {
     SkillPassive,
     Buff,
     Debuff,
+    HeavyArmor,
+    LightArmor,
+    Shield,
+    TwoHanded,
+    Martial,
+    Simple,
 }
 
 impl TagName {
@@ -161,6 +205,10 @@ impl TagName {
             Self::Regen => GameplayTag::REGEN,
             Self::Melee => GameplayTag::MELEE,
             Self::Ranged => GameplayTag::RANGED,
+            Self::Sword => GameplayTag::SWORD,
+            Self::Axe => GameplayTag::AXE,
+            Self::Bow => GameplayTag::BOW,
+            Self::Staff => GameplayTag::STAFF,
             Self::Warrior => GameplayTag::WARRIOR,
             Self::Archer => GameplayTag::ARCHER,
             Self::Mage => GameplayTag::MAGE,
@@ -171,6 +219,12 @@ impl TagName {
             Self::SkillPassive => GameplayTag::SKILL_PASSIVE,
             Self::Buff => GameplayTag::BUFF,
             Self::Debuff => GameplayTag::DEBUFF,
+            Self::HeavyArmor => GameplayTag::HEAVY_ARMOR,
+            Self::LightArmor => GameplayTag::LIGHT_ARMOR,
+            Self::Shield => GameplayTag::SHIELD,
+            Self::TwoHanded => GameplayTag::TWO_HANDED,
+            Self::Martial => GameplayTag::MARTIAL,
+            Self::Simple => GameplayTag::SIMPLE,
         }
     }
 }

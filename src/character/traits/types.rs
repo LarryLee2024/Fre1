@@ -1,6 +1,6 @@
 // Trait 类型定义：TraitTrigger, TraitEffect, TraitDefinition, TraitData, TraitCollection
 
-use crate::core::attribute::{AttributeModifierDef, BuffInstanceId};
+use crate::core::attribute::AttributeModifierDef;
 use crate::core::tag::{GameplayTag, TagName};
 use bevy::prelude::*;
 use serde::Deserialize;

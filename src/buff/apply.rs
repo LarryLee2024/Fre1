@@ -33,8 +33,8 @@ pub fn apply_buff(
         hot_heal: buff_data.hot_heal,
     };
 
-    // 添加修饰符到 Attributes
-    attributes.add_modifiers_from_def(&buff_data.modifiers, instance_id);
+    // 添加修饰符到 Attributes（使用 ModifierSource::buff_source）
+    attributes.add_modifiers_from_def(&buff_data.modifiers, instance_id.to_modifier_source());
 
     // 添加标签到 GameplayTags
     for tag in &buff_data.tags {
@@ -53,8 +53,8 @@ pub fn remove_buff(
     instance_id: BuffInstanceId,
 ) {
     if let Some(removed) = active_buffs.remove(instance_id) {
-        // 移除修饰符
-        attributes.remove_modifiers_from(instance_id);
+        // 移除修饰符（转换为 ModifierSource）
+        attributes.remove_modifiers_from(instance_id.to_modifier_source());
 
         // 移除标签（仅当没有其他 Buff 提供相同标签时）
         let remaining_tags: Vec<crate::core::tag::GameplayTag> = active_buffs
