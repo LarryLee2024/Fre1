@@ -87,11 +87,12 @@ impl Container {
     }
 
     /// 添加物品堆叠（自动合并同类型）
-    /// 返回 true 表示全部添加成功，false 表示部分或全部失败
-    pub fn add_stack(&mut self, mut stack: ItemStack, registry: &ItemRegistry) -> bool {
+    /// 返回成功添加的数量（0 = 完全失败，< stack.count = 部分失败）
+    pub fn add_stack(&mut self, mut stack: ItemStack, registry: &ItemRegistry) -> u32 {
         let Some(def) = registry.get(&stack.instance.def_id) else {
-            return false;
+            return 0;
         };
+        let original_count = stack.count;
 
         // 尝试合并到已有堆叠
         if def.stack_size > 1 {
@@ -102,7 +103,7 @@ impl Container {
                     existing.count += to_merge;
                     stack.count -= to_merge;
                     if stack.count == 0 {
-                        return true;
+                        return original_count;
                     }
                 }
             }
@@ -113,15 +114,15 @@ impl Container {
             if self.max_weight > 0.0 {
                 let added_weight = def.weight * stack.count as f32;
                 if self.current_weight(registry) + added_weight > self.max_weight {
-                    return false;
+                    return original_count - stack.count;
                 }
             }
             self.stacks.push(stack);
-            return true;
+            return original_count;
         }
 
-        // 全部或部分无法添加
-        stack.count == 0
+        // 无法添加任何物品
+        original_count - stack.count
     }
 
     /// 移除指定实例 ID 的物品
