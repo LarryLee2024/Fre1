@@ -99,6 +99,31 @@ impl GameplayTags {
         }
         result
     }
+
+    /// 返回所有已激活的标签列表
+    pub fn active_tags(&self) -> Vec<GameplayTag> {
+        const ALL_TAGS: &[GameplayTag] = &[
+            GameplayTag::FIRE,
+            GameplayTag::ICE,
+            GameplayTag::POISON,
+            GameplayTag::STUN,
+            GameplayTag::BURN,
+            GameplayTag::REGEN,
+            GameplayTag::MELEE,
+            GameplayTag::RANGED,
+            GameplayTag::WARRIOR,
+            GameplayTag::ARCHER,
+            GameplayTag::MAGE,
+            GameplayTag::FLYING,
+            GameplayTag::MOUNTED,
+            GameplayTag::SWIMMING,
+            GameplayTag::SKILL_ACTIVE,
+            GameplayTag::SKILL_PASSIVE,
+            GameplayTag::BUFF,
+            GameplayTag::DEBUFF,
+        ];
+        ALL_TAGS.iter().copied().filter(|t| self.has(*t)).collect()
+    }
 }
 
 /// 标签名称枚举（用于数据定义中的序列化/反序列化）

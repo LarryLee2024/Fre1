@@ -263,7 +263,7 @@ pub fn handle_ui_commands(
                 clear_selection(&mut commands, &selected_query, &range_entities, &highlights);
                 // 发送强制结束回合消息，替代 ForceEndFaction Resource
                 bevy::log::trace!(
-                    target: "ui",
+                    target: "input",
                     "ForceEndTurn 消息发送"
                 );
                 commands.write_message(ForceEndTurn);

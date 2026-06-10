@@ -24,6 +24,8 @@ pub struct DamageApplied {
     pub target_name: String,
     /// 目标阵营
     pub target_faction: Faction,
+    /// 攻击者实体
+    pub attacker: Entity,
     /// 攻击者名称
     pub attacker_name: String,
     /// 攻击者阵营
@@ -109,6 +111,7 @@ mod tests {
             target: Entity::from_bits(1),
             target_name: "哥布林".to_string(),
             target_faction: Faction::Enemy,
+            attacker: Entity::from_bits(2),
             attacker_name: "战士".to_string(),
             attacker_faction: Faction::Player,
             amount: 15,
@@ -117,6 +120,7 @@ mod tests {
             target_coord: IVec2::new(3, 4),
         };
         assert_eq!(msg.amount, 15);
+        assert_eq!(msg.attacker, Entity::from_bits(2));
     }
 
     #[test]

@@ -96,6 +96,14 @@ pub fn generate_combat_effects(
         return;
     };
 
+    // 创建战斗行动 Span，让 generate → modify → execute 链路可追踪
+    let _combat_span = bevy::log::info_span!(
+        "combat_action",
+        skill = %skill_id,
+        attacker = ?source_entity,
+    )
+    .entered();
+
     // 冷却检查（玩家需要，AI 已在决策时检查）
     if source_cooldowns.get(skill_id) > 0 {
         return;

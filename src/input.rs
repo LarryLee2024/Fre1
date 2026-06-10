@@ -39,7 +39,7 @@ pub fn handle_click(
     if right_clicked {
         if *turn_phase.get() == TurnPhase::MoveUnit {
             bevy::log::trace!(
-                target: "ui",
+                target: "input",
                 "UiCommand::Cancel 消息发送(右键MoveUnit阶段)"
             );
             ui_commands.write(UiCommand::Cancel);
@@ -71,7 +71,7 @@ pub fn handle_click(
                     if unit.faction == Faction::Player && turn_order.current_unit() == Some(entity)
                     {
                         bevy::log::trace!(
-                            target: "ui",
+                            target: "input",
                             entity = ?entity,
                             "UiCommand::SelectUnit 消息发送"
                         );
@@ -85,7 +85,7 @@ pub fn handle_click(
         }
         TurnPhase::MoveUnit => {
             bevy::log::trace!(
-                target: "ui",
+                target: "input",
                 coord = ?coord,
                 "UiCommand::MoveUnit 消息发送"
             );
@@ -93,7 +93,7 @@ pub fn handle_click(
         }
         TurnPhase::SelectTarget => {
             bevy::log::trace!(
-                target: "ui",
+                target: "input",
                 coord = ?coord,
                 "UiCommand::SelectTarget 消息发送"
             );
@@ -120,7 +120,7 @@ pub fn handle_right_cancel(
     match turn_phase.get() {
         TurnPhase::ActionMenu | TurnPhase::SelectTarget => {
             bevy::log::trace!(
-                target: "ui",
+                target: "input",
                 "UiCommand::Cancel 消息发送(右键取消)"
             );
             ui_commands.write(UiCommand::Cancel);
@@ -147,7 +147,7 @@ pub fn handle_end_turn(
     }
 
     bevy::log::trace!(
-        target: "ui",
+        target: "input",
         "UiCommand::EndTurn 消息发送"
     );
     ui_commands.write(UiCommand::EndTurn);

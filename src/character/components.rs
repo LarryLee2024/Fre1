@@ -10,7 +10,7 @@ use bevy::ecs::world::DeferredWorld;
 use bevy::prelude::*;
 
 /// 阵营
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum Faction {
     Player,
     Enemy,
@@ -71,6 +71,7 @@ impl Dead {
     /// 死亡 Hook：标记已行动，移除选中状态
     fn on_add_dead(mut world: DeferredWorld, context: HookContext) {
         let entity = context.entity;
+        bevy::log::trace!(target: "character", entity=?entity, "Dead hook triggered");
         // 标记已行动，防止死亡单位继续行动
         if let Some(mut unit) = world.get_mut::<Unit>(entity) {
             unit.acted = true;

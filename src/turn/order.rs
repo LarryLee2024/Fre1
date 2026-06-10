@@ -112,6 +112,7 @@ pub fn init_turn_order(
     turn_started_writer.write(TurnStarted {
         turn: turn_state.turn_number,
     });
+    bevy::log::trace!(target: "turn", turn = turn_state.turn_number, "TurnStarted 消息发送");
     bevy::log::debug!(target: "turn", turn = turn_state.turn_number, "回合已开始");
 
     // 重建行动队列
@@ -151,6 +152,7 @@ pub fn turn_end_on_enter(
     turn_ended_writer.write(TurnEnded {
         turn: turn_state.turn_number,
     });
+    bevy::log::trace!(target: "turn", turn = old_turn, "TurnEnded 消息发送");
     bevy::log::debug!(target: "turn", turn = old_turn, "回合已结束");
 
     // 检查是否有强制结束回合的消息（玩家按 E）
@@ -191,6 +193,7 @@ pub fn turn_end_on_enter(
     turn_started_writer.write(TurnStarted {
         turn: turn_state.turn_number,
     });
+    bevy::log::trace!(target: "turn", turn = turn_state.turn_number, "TurnStarted 消息发送(新回合)");
     bevy::log::debug!(target: "turn", turn = turn_state.turn_number, "新回合已开始");
 
     next_phase.set(TurnPhase::SelectUnit);

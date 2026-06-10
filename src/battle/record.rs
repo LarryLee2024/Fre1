@@ -3,6 +3,7 @@
 
 use bevy::ecs::message::MessageReader;
 use bevy::prelude::*;
+use serde::{Deserialize, Serialize};
 
 use crate::character::Faction;
 use crate::turn::{TurnEnded, TurnStarted};
@@ -14,7 +15,7 @@ use super::events::{
 // ── 战斗记录条目 ──
 
 /// 单条战斗记录条目
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum BattleEntry {
     /// 回合开始
     TurnStarted { turn: u32 },
@@ -25,6 +26,7 @@ pub enum BattleEntry {
         target: Entity,
         target_name: String,
         target_faction: Faction,
+        attacker: Entity,
         attacker_name: String,
         attacker_faction: Faction,
         amount: i32,
@@ -61,10 +63,25 @@ pub enum BattleEntry {
     },
 }
 
+// ── 战斗统计 ──
+
+/// 单个实体的战斗统计
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct EntityBattleStats {
+    /// 造成总伤害
+    pub damage_dealt: i32,
+    /// 承受总伤害
+    pub damage_taken: i32,
+    /// 总治疗量
+    pub heal_received: i32,
+    /// 击杀数
+    pub kills: i32,
+}
+
 // ── 战斗记录资源 ──
 
 /// 战斗记录资源：持久化存储，支持回放、查询、调试
-#[derive(Resource, Default, Debug)]
+#[derive(Resource, Default, Debug, Serialize, Deserialize)]
 pub struct BattleRecord {
     pub entries: Vec<BattleEntry>,
     pub turn_number: u32,
@@ -118,10 +135,96 @@ impl BattleRecord {
             .collect()
     }
 
+    /// 获取指定回合的全部记录
+    pub fn entries_for_turn(&self, turn: u32) -> Vec<&BattleEntry> {
+        let mut result = Vec::new();
+        let mut in_turn = false;
+        for entry in &self.entries {
+            match entry {
+                BattleEntry::TurnStarted { turn: t } if *t == turn => in_turn = true,
+                BattleEntry::TurnEnded { turn: t } if *t == turn => {
+                    result.push(entry);
+                    in_turn = false;
+                    continue;
+                }
+                BattleEntry::TurnStarted { .. } | BattleEntry::TurnEnded { .. } => {
+                    if !in_turn {
+                        continue;
+                    }
+                }
+                _ => {}
+            }
+            if in_turn {
+                result.push(entry);
+            }
+        }
+        result
+    }
+
     /// 获取最近 N 条记录
     pub fn recent(&self, n: usize) -> &[BattleEntry] {
         let start = self.entries.len().saturating_sub(n);
         &self.entries[start..]
+    }
+
+    /// 计算指定实体的战斗统计
+    pub fn stats_for(&self, entity: Entity) -> EntityBattleStats {
+        let mut stats = EntityBattleStats::default();
+        for entry in &self.entries {
+            match entry {
+                BattleEntry::DamageApplied {
+                    attacker,
+                    target,
+                    amount,
+                    ..
+                } => {
+                    if *attacker == entity {
+                        stats.damage_dealt += amount;
+                    }
+                    if *target == entity {
+                        stats.damage_taken += amount;
+                    }
+                }
+                BattleEntry::DotApplied { target, amount, .. } => {
+                    if *target == entity {
+                        stats.damage_taken += amount;
+                    }
+                }
+                BattleEntry::HealApplied { target, amount, .. } => {
+                    if *target == entity {
+                        stats.heal_received += amount;
+                    }
+                }
+                BattleEntry::HotApplied { target, amount, .. } => {
+                    if *target == entity {
+                        stats.heal_received += amount;
+                    }
+                }
+                BattleEntry::CharacterDied { .. } => {
+                    // 击杀数需要从 DamageApplied 中推断（致死攻击的攻击者）
+                }
+                _ => {}
+            }
+        }
+        // 统计击杀数：找到致死伤害的攻击者
+        for entry in &self.entries {
+            if let BattleEntry::CharacterDied { entity: dead_entity, .. } = entry {
+                // 查找该实体最后受到的伤害记录
+                let last_damage = self.entries.iter().rev().find(|e| {
+                    if let BattleEntry::DamageApplied { target, .. } = e {
+                        *target == *dead_entity
+                    } else {
+                        false
+                    }
+                });
+                if let Some(BattleEntry::DamageApplied { attacker, .. }) = last_damage {
+                    if *attacker == entity {
+                        stats.kills += 1;
+                    }
+                }
+            }
+        }
+        stats
     }
 
     /// 清空记录（新战斗开始时）
@@ -158,6 +261,7 @@ pub fn record_damage(mut reader: MessageReader<DamageApplied>, mut record: ResMu
             target: msg.target,
             target_name: msg.target_name.clone(),
             target_faction: msg.target_faction,
+            attacker: msg.attacker,
             attacker_name: msg.attacker_name.clone(),
             attacker_faction: msg.attacker_faction,
             amount: msg.amount,
@@ -237,6 +341,7 @@ mod tests {
             target: Entity::from_bits(1),
             target_name: "哥布林".to_string(),
             target_faction: Faction::Enemy,
+            attacker: Entity::from_bits(2),
             attacker_name: "战士".to_string(),
             attacker_faction: Faction::Player,
             amount: 15,
@@ -251,11 +356,13 @@ mod tests {
     fn 战斗记录_按实体查询() {
         let e1 = Entity::from_bits(1);
         let e2 = Entity::from_bits(2);
+        let attacker = Entity::from_bits(3);
         let mut record = BattleRecord::default();
         record.record(BattleEntry::DamageApplied {
             target: e1,
             target_name: "哥布林".to_string(),
             target_faction: Faction::Enemy,
+            attacker,
             attacker_name: "战士".to_string(),
             attacker_faction: Faction::Player,
             amount: 10,
@@ -272,6 +379,7 @@ mod tests {
             target: e1,
             target_name: "哥布林".to_string(),
             target_faction: Faction::Enemy,
+            attacker,
             attacker_name: "战士".to_string(),
             attacker_faction: Faction::Player,
             amount: 8,
@@ -314,5 +422,103 @@ mod tests {
         record.turn_number = 5;
         record.record(BattleEntry::TurnStarted { turn: 5 });
         assert_eq!(record.turn_number, 5);
+    }
+
+    #[test]
+    fn 战斗记录_按回合查询() {
+        let mut record = BattleRecord::default();
+        record.record(BattleEntry::TurnStarted { turn: 1 });
+        record.record(BattleEntry::DamageApplied {
+            target: Entity::from_bits(1),
+            target_name: "哥布林".to_string(),
+            target_faction: Faction::Enemy,
+            attacker: Entity::from_bits(2),
+            attacker_name: "战士".to_string(),
+            attacker_faction: Faction::Player,
+            amount: 10,
+            is_skill: false,
+            terrain_label: "平原".to_string(),
+            target_coord: IVec2::ZERO,
+        });
+        record.record(BattleEntry::TurnEnded { turn: 1 });
+        record.record(BattleEntry::TurnStarted { turn: 2 });
+        record.record(BattleEntry::HealApplied {
+            target: Entity::from_bits(2),
+            target_name: "战士".to_string(),
+            amount: 5,
+        });
+        record.record(BattleEntry::TurnEnded { turn: 2 });
+
+        let turn1 = record.entries_for_turn(1);
+        assert_eq!(turn1.len(), 3); // TurnStarted + DamageApplied + TurnEnded
+        let turn2 = record.entries_for_turn(2);
+        assert_eq!(turn2.len(), 3); // TurnStarted + HealApplied + TurnEnded
+    }
+
+    #[test]
+    fn 战斗记录_实体统计() {
+        let attacker = Entity::from_bits(1);
+        let target = Entity::from_bits(2);
+        let mut record = BattleRecord::default();
+        record.record(BattleEntry::DamageApplied {
+            target,
+            target_name: "哥布林".to_string(),
+            target_faction: Faction::Enemy,
+            attacker,
+            attacker_name: "战士".to_string(),
+            attacker_faction: Faction::Player,
+            amount: 10,
+            is_skill: false,
+            terrain_label: "平原".to_string(),
+            target_coord: IVec2::ZERO,
+        });
+        record.record(BattleEntry::DamageApplied {
+            target,
+            target_name: "哥布林".to_string(),
+            target_faction: Faction::Enemy,
+            attacker,
+            attacker_name: "战士".to_string(),
+            attacker_faction: Faction::Player,
+            amount: 5,
+            is_skill: true,
+            terrain_label: "平原".to_string(),
+            target_coord: IVec2::ZERO,
+        });
+        record.record(BattleEntry::CharacterDied {
+            entity: target,
+            name: "哥布林".to_string(),
+            faction: Faction::Enemy,
+        });
+
+        let attacker_stats = record.stats_for(attacker);
+        assert_eq!(attacker_stats.damage_dealt, 15);
+        assert_eq!(attacker_stats.kills, 1);
+
+        let target_stats = record.stats_for(target);
+        assert_eq!(target_stats.damage_taken, 15);
+    }
+
+    #[test]
+    fn 战斗记录_序列化反序列化() {
+        let mut record = BattleRecord::default();
+        record.record(BattleEntry::TurnStarted { turn: 1 });
+        record.record(BattleEntry::DamageApplied {
+            target: Entity::from_bits(1),
+            target_name: "哥布林".to_string(),
+            target_faction: Faction::Enemy,
+            attacker: Entity::from_bits(2),
+            attacker_name: "战士".to_string(),
+            attacker_faction: Faction::Player,
+            amount: 10,
+            is_skill: false,
+            terrain_label: "平原".to_string(),
+            target_coord: IVec2::new(3, 4),
+        });
+        record.turn_number = 1;
+
+        let ron = ron::to_string(&record).unwrap();
+        let deserialized: BattleRecord = ron::from_str(&ron).unwrap();
+        assert_eq!(deserialized.entries.len(), 2);
+        assert_eq!(deserialized.turn_number, 1);
     }
 }

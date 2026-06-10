@@ -213,6 +213,8 @@ pub enum SkillUseError {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::attribute::{AttributeKind, Attributes};
+    use crate::core::tag::{GameplayTag, GameplayTags};
     use ron::de::from_bytes;
 
     #[test]
@@ -235,5 +237,263 @@ mod tests {
         let def: SkillDef = from_bytes(ron_str.as_bytes()).unwrap();
         assert_eq!(def.id, "old_skill");
         assert_eq!(def.version, 0);
+    }
+
+    // ── SkillData::can_use 测试 ──
+
+    fn make_skill(conditions: Vec<SkillCondition>) -> SkillData {
+        SkillData {
+            id: "test_skill".into(),
+            name: "测试技能".into(),
+            description: String::new(),
+            cost_mp: 0,
+            range: 1,
+            targeting: SkillTargeting::SingleEnemy,
+            effects: vec![],
+            tags: vec![],
+            conditions,
+            cooldown: 0,
+            priority: 0,
+        }
+    }
+
+    fn make_attrs(mp: f32, hp: f32, vitality: f32) -> Attributes {
+        let mut attrs = Attributes::default();
+        // 先设置 Vitality，这样 MaxHp 才能正确计算
+        attrs.set_base(AttributeKind::Vitality, vitality);
+        attrs.fill_vital_resources();
+        // 覆盖当前 HP 和 MP 为指定值
+        attrs.set_base(AttributeKind::Hp, hp);
+        attrs.set_base(AttributeKind::Mp, mp);
+        attrs
+    }
+
+    // ── 冷却检查 ──
+
+    #[test]
+    fn can_use_冷却中返回错误() {
+        let skill = make_skill(vec![]);
+        let attrs = make_attrs(10.0, 30.0, 5.0); // MP=10, HP=30, Vitality=5 → MaxHp=30
+        let tags = GameplayTags::default();
+
+        let result = skill.can_use(&attrs, &tags, None, 3);
+        assert_eq!(
+            result,
+            Err(SkillUseError::OnCooldown { remaining: 3 })
+        );
+    }
+
+    #[test]
+    fn can_use_冷却为0成功() {
+        let skill = make_skill(vec![]);
+        let attrs = make_attrs(10.0, 30.0, 5.0); // MP=10, HP=30, Vitality=5 → MaxHp=30
+        let tags = GameplayTags::default();
+
+        let result = skill.can_use(&attrs, &tags, None, 0);
+        assert!(result.is_ok());
+    }
+
+    // ── MpCost 条件 ──
+
+    #[test]
+    fn can_use_mp不足返回错误() {
+        let skill = make_skill(vec![SkillCondition::MpCost(10)]);
+        let attrs = make_attrs(5.0, 30.0, 5.0); // MP=5 < 10
+        let tags = GameplayTags::default();
+
+        let result = skill.can_use(&attrs, &tags, None, 0);
+        assert_eq!(
+            result,
+            Err(SkillUseError::InsufficientMp {
+                required: 10,
+                current: 5
+            })
+        );
+    }
+
+    #[test]
+    fn can_use_mp足够成功() {
+        let skill = make_skill(vec![SkillCondition::MpCost(10)]);
+        let attrs = make_attrs(15.0, 30.0, 5.0); // MP=15 >= 10
+        let tags = GameplayTags::default();
+
+        let result = skill.can_use(&attrs, &tags, None, 0);
+        assert!(result.is_ok());
+    }
+
+    // ── RequireTag 条件 ──
+
+    #[test]
+    fn can_use_缺少标签返回错误() {
+        let skill = make_skill(vec![SkillCondition::RequireTag(GameplayTag::FIRE)]);
+        let attrs = make_attrs(10.0, 30.0, 5.0);
+        let tags = GameplayTags::default(); // 没有FIRE标签
+
+        let result = skill.can_use(&attrs, &tags, None, 0);
+        assert_eq!(
+            result,
+            Err(SkillUseError::MissingTag {
+                tag: GameplayTag::FIRE
+            })
+        );
+    }
+
+    #[test]
+    fn can_use_拥有标签成功() {
+        let skill = make_skill(vec![SkillCondition::RequireTag(GameplayTag::FIRE)]);
+        let attrs = make_attrs(10.0, 30.0, 5.0);
+        let mut tags = GameplayTags::default();
+        tags.add(GameplayTag::FIRE);
+
+        let result = skill.can_use(&attrs, &tags, None, 0);
+        assert!(result.is_ok());
+    }
+
+    // ── TargetRequireTag 条件 ──
+
+    #[test]
+    fn can_use_目标缺少标签返回错误() {
+        let skill = make_skill(vec![SkillCondition::TargetRequireTag(GameplayTag::STUN)]);
+        let attrs = make_attrs(10.0, 30.0, 5.0);
+        let tags = GameplayTags::default();
+        let target_tags = GameplayTags::default(); // 没有STUN标签
+
+        let result = skill.can_use(&attrs, &tags, Some(&target_tags), 0);
+        assert_eq!(
+            result,
+            Err(SkillUseError::TargetMissingTag {
+                tag: GameplayTag::STUN
+            })
+        );
+    }
+
+    #[test]
+    fn can_use_目标拥有标签成功() {
+        let skill = make_skill(vec![SkillCondition::TargetRequireTag(GameplayTag::STUN)]);
+        let attrs = make_attrs(10.0, 30.0, 5.0);
+        let tags = GameplayTags::default();
+        let mut target_tags = GameplayTags::default();
+        target_tags.add(GameplayTag::STUN);
+
+        let result = skill.can_use(&attrs, &tags, Some(&target_tags), 0);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn can_use_无目标标签检查跳过() {
+        let skill = make_skill(vec![SkillCondition::TargetRequireTag(GameplayTag::STUN)]);
+        let attrs = make_attrs(10.0, 30.0, 5.0);
+        let tags = GameplayTags::default();
+
+        // 不提供目标标签，应该跳过检查
+        let result = skill.can_use(&attrs, &tags, None, 0);
+        assert!(result.is_ok());
+    }
+
+    // ── HpBelow 条件 ──
+    // MaxHp = 5 + Vitality * 5
+
+    #[test]
+    fn can_use_hp不低于阈值返回错误() {
+        let skill = make_skill(vec![SkillCondition::HpBelow(0.5)]); // 需要HP低于50%
+        // Vitality=5 → MaxHp=30, HP=20 → HP%=20/30=66.7% >= 50%
+        let attrs = make_attrs(10.0, 20.0, 5.0);
+        let tags = GameplayTags::default();
+
+        let result = skill.can_use(&attrs, &tags, None, 0);
+        assert_eq!(
+            result,
+            Err(SkillUseError::HpNotBelow { threshold: 0.5 })
+        );
+    }
+
+    #[test]
+    fn can_use_hp低于阈值成功() {
+        let skill = make_skill(vec![SkillCondition::HpBelow(0.5)]); // 需要HP低于50%
+        // Vitality=5 → MaxHp=30, HP=10 → HP%=10/30=33.3% < 50%
+        let attrs = make_attrs(10.0, 10.0, 5.0);
+        let tags = GameplayTags::default();
+
+        let result = skill.can_use(&attrs, &tags, None, 0);
+        assert!(result.is_ok());
+    }
+
+    // ── HpAbove 条件 ──
+
+    #[test]
+    fn can_use_hp不高于阈值返回错误() {
+        let skill = make_skill(vec![SkillCondition::HpAbove(0.5)]); // 需要HP高于50%
+        // Vitality=5 → MaxHp=30, HP=10 → HP%=10/30=33.3% < 50%
+        let attrs = make_attrs(10.0, 10.0, 5.0);
+        let tags = GameplayTags::default();
+
+        let result = skill.can_use(&attrs, &tags, None, 0);
+        assert_eq!(
+            result,
+            Err(SkillUseError::HpNotAbove { threshold: 0.5 })
+        );
+    }
+
+    #[test]
+    fn can_use_hp高于阈值成功() {
+        let skill = make_skill(vec![SkillCondition::HpAbove(0.5)]); // 需要HP高于50%
+        // Vitality=5 → MaxHp=30, HP=20 → HP%=20/30=66.7% > 50%
+        let attrs = make_attrs(10.0, 20.0, 5.0);
+        let tags = GameplayTags::default();
+
+        let result = skill.can_use(&attrs, &tags, None, 0);
+        assert!(result.is_ok());
+    }
+
+    // ── 多条件组合 ──
+
+    #[test]
+    fn can_use_多条件全部满足() {
+        let skill = make_skill(vec![
+            SkillCondition::MpCost(5),
+            SkillCondition::RequireTag(GameplayTag::FIRE),
+        ]);
+        let attrs = make_attrs(10.0, 30.0, 5.0); // MP=10 >= 5
+        let mut tags = GameplayTags::default();
+        tags.add(GameplayTag::FIRE);
+
+        let result = skill.can_use(&attrs, &tags, None, 0);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn can_use_多条件之一不满足() {
+        let skill = make_skill(vec![
+            SkillCondition::MpCost(5),
+            SkillCondition::RequireTag(GameplayTag::FIRE),
+        ]);
+        let attrs = make_attrs(3.0, 30.0, 5.0); // MP=3 < 5
+        let mut tags = GameplayTags::default();
+        tags.add(GameplayTag::FIRE);
+
+        let result = skill.can_use(&attrs, &tags, None, 0);
+        assert!(result.is_err());
+    }
+
+    // ── SkillTargeting 测试 ──
+
+    #[test]
+    fn targeting_label() {
+        assert_eq!(SkillTargeting::SingleEnemy.label(), "单体敌方");
+        assert_eq!(SkillTargeting::SingleAlly.label(), "单体友方");
+        assert_eq!(SkillTargeting::SelfOnly.label(), "自身");
+        assert_eq!(SkillTargeting::AoeEnemies.label(), "范围敌方");
+        assert_eq!(SkillTargeting::AoeAllies.label(), "范围友方");
+        assert_eq!(SkillTargeting::NoTarget.label(), "无目标");
+    }
+
+    #[test]
+    fn targeting_requires_target_selection() {
+        assert!(SkillTargeting::SingleEnemy.requires_target_selection());
+        assert!(SkillTargeting::SingleAlly.requires_target_selection());
+        assert!(!SkillTargeting::SelfOnly.requires_target_selection());
+        assert!(!SkillTargeting::AoeEnemies.requires_target_selection());
+        assert!(!SkillTargeting::AoeAllies.requires_target_selection());
+        assert!(!SkillTargeting::NoTarget.requires_target_selection());
     }
 }
