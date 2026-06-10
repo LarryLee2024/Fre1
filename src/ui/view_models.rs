@@ -55,6 +55,22 @@ pub struct TraitEntry {
     pub description: String,
 }
 
+/// 装备槽条目
+#[derive(Clone, Debug)]
+pub struct EquipmentSlotEntry {
+    pub slot_label: String,
+    pub item_name: String,
+    pub rarity: String,
+}
+
+/// 背包条目
+#[derive(Clone, Debug)]
+pub struct InventoryEntry {
+    pub item_name: String,
+    pub rarity: String,
+    pub instance_id: u64,
+}
+
 /// 最后点击查看的单位实体（不限于 Selected，任何单位都可查看信息）
 #[derive(Resource, Default, Debug, Clone, Copy)]
 pub struct HoveredEntity {
@@ -86,6 +102,10 @@ pub struct SelectedUnitView {
     pub traits: Vec<TraitEntry>,
     // Buff
     pub buffs: Vec<BuffEntry>,
+    // 装备
+    pub equipment: Vec<EquipmentSlotEntry>,
+    // 背包
+    pub inventory: Vec<InventoryEntry>,
     pub is_selected: bool,
 }
 
@@ -135,9 +155,12 @@ pub fn update_selected_unit_view(
         Option<&UnitClass>,
         Option<&SkillCooldowns>,
         Option<&TraitCollection>,
+        Option<&crate::equipment::EquipmentSlots>,
+        Option<&crate::equipment::Inventory>,
     )>,
     skill_registry: Res<SkillRegistry>,
     trait_registry: Res<TraitRegistry>,
+    equipment_registry: Res<crate::equipment::EquipmentRegistry>,
     mut view: ResMut<SelectedUnitView>,
 ) {
     // 仅在 HoveredEntity 变化时刷新
@@ -156,6 +179,8 @@ pub fn update_selected_unit_view(
             class,
             _cooldowns,
             trait_collection,
+            equipment_slots,
+            inventory,
         )) = units.get(entity)
         {
             view.name = name.0.clone();
@@ -260,6 +285,39 @@ pub fn update_selected_unit_view(
                 })
                 .collect();
 
+            // 装备
+            view.equipment = equipment_slots
+                .map(|slots| {
+                    let mut entries: Vec<_> = slots.equipped_slots()
+                        .into_iter()
+                        .filter_map(|(slot, _, def_id)| {
+                            equipment_registry.get(&def_id).map(|def| EquipmentSlotEntry {
+                                slot_label: slot.label().to_string(),
+                                item_name: def.name.clone(),
+                                rarity: def.rarity.label().to_string(),
+                            })
+                        })
+                        .collect();
+                    entries.sort_by(|a, b| a.slot_label.cmp(&b.slot_label));
+                    entries
+                })
+                .unwrap_or_default();
+
+            // 背包
+            view.inventory = inventory
+                .map(|inv| {
+                    inv.items.iter()
+                        .filter_map(|instance| {
+                            equipment_registry.get(&instance.def_id).map(|def| InventoryEntry {
+                                item_name: def.name.clone(),
+                                rarity: def.rarity.label().to_string(),
+                                instance_id: instance.instance_id,
+                            })
+                        })
+                        .collect()
+                })
+                .unwrap_or_default();
+
             view.is_selected = true;
         } else {
             // 实体已销毁
@@ -271,6 +329,8 @@ pub fn update_selected_unit_view(
             view.skills.clear();
             view.traits.clear();
             view.buffs.clear();
+            view.equipment.clear();
+            view.inventory.clear();
         }
     } else {
         view.is_selected = false;
@@ -283,6 +343,8 @@ pub fn update_selected_unit_view(
         view.skills.clear();
         view.traits.clear();
         view.buffs.clear();
+        view.equipment.clear();
+        view.inventory.clear();
     }
 }
 

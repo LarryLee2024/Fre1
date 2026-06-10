@@ -54,6 +54,8 @@ impl Plugin for UiPlugin {
                     combat_log_handler::on_stun_applied,
                     combat_log_handler::on_dot_applied,
                     combat_log_handler::on_hot_applied,
+                    combat_log_handler::on_item_equipped,
+                    combat_log_handler::on_item_unequipped,
                     // 战斗 VFX 表现层：监听 Message 生成飘字
                     combat_vfx_handler::on_damage_vfx,
                     combat_vfx_handler::on_dot_vfx,

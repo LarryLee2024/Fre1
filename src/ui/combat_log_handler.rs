@@ -6,6 +6,7 @@ use crate::battle::{
     StunApplied, log_color,
 };
 use crate::character::Faction;
+use crate::equipment::{ItemEquipped, ItemUnequipped};
 use bevy::ecs::message::MessageReader;
 use bevy::prelude::*;
 
@@ -188,6 +189,44 @@ pub fn on_hot_applied(
             LogSegment {
                 text: format!(" 恢复 {} HP", msg.amount),
                 color: log_color::HEAL,
+            },
+        ]);
+    }
+}
+
+/// 响应装备穿戴消息：写入战斗日志
+pub fn on_item_equipped(
+    mut reader: MessageReader<ItemEquipped>,
+    mut combat_log: ResMut<CombatLog>,
+) {
+    for msg in reader.read() {
+        combat_log.push(vec![
+            LogSegment {
+                text: format!("装备 [{}]", msg.def_id),
+                color: log_color::HEAL,
+            },
+            LogSegment {
+                text: format!(" 已装备到 {}", msg.slot.label()),
+                color: log_color::NORMAL,
+            },
+        ]);
+    }
+}
+
+/// 响应装备脱卸消息：写入战斗日志
+pub fn on_item_unequipped(
+    mut reader: MessageReader<ItemUnequipped>,
+    mut combat_log: ResMut<CombatLog>,
+) {
+    for msg in reader.read() {
+        combat_log.push(vec![
+            LogSegment {
+                text: format!("卸下 [{}]", msg.def_id),
+                color: log_color::NORMAL,
+            },
+            LogSegment {
+                text: format!(" 从 {}", msg.slot.label()),
+                color: log_color::NORMAL,
             },
         ]);
     }
