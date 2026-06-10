@@ -238,7 +238,7 @@ pub fn update_selected_unit_view(
             view.traits = trait_collection
                 .as_ref()
                 .map(|tc| {
-                    tc.trait_ids
+                    tc.trait_ids()
                         .iter()
                         .filter_map(|tid| {
                             trait_registry.get(tid).map(|td| TraitEntry {

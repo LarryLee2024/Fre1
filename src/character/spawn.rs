@@ -108,9 +108,12 @@ fn spawn_unit_from_template(
     // 构建 GameplayTags（class 标签由 Trait 授予，不再从模板直接添加）
     let mut gameplay_tags = GameplayTags::default();
 
+    // 构建 TraitCollection（先创建，再应用被动效果）
+    let trait_collection = TraitCollection::new(template.trait_ids.clone());
+
     // 应用 trait 被动效果
     let (trait_tags, trait_modifiers) =
-        apply_passive_traits(&template.trait_ids, trait_registry, effect_handlers);
+        apply_passive_traits(&trait_collection, trait_registry, effect_handlers);
     // 合并 trait 授予的标签
     for i in 0..64 {
         let bit = 1u64 << i;
@@ -130,9 +133,6 @@ fn spawn_unit_from_template(
 
     // 构建 SkillSlots
     let skill_slots = SkillSlots::new(template.skill_ids.clone());
-
-    // 构建 TraitCollection
-    let trait_collection = TraitCollection::new(template.trait_ids.clone());
 
     // 构建 AiBehaviorId
     let ai_behavior_id = AiBehaviorId(template.ai_behavior.clone());

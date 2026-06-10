@@ -47,10 +47,10 @@ impl TraitData {
     }
 }
 
-/// 将一组 trait 的被动效果应用到单位的标签和属性上
+/// 将 TraitCollection 中的被动效果应用到单位的标签和属性上
 /// 返回 (granted_tags, attribute_modifiers)
 pub fn apply_passive_traits(
-    trait_ids: &[String],
+    trait_collection: &TraitCollection,
     registry: &TraitRegistry,
     handlers: &TraitEffectHandlerRegistry,
 ) -> (GameplayTags, Vec<AttributeModifierInstance>) {
@@ -60,8 +60,8 @@ pub fn apply_passive_traits(
     // Trait 区间：u64::MAX ~ u64::MAX - 999，避免与 buff/equipment 区间冲突
     let mut trait_source_index = 0u64;
 
-    for trait_id in trait_ids {
-        if let Some(trait_data) = registry.get(trait_id) {
+    for entry in &trait_collection.entries {
+        if let Some(trait_data) = registry.get(&entry.trait_id) {
             if trait_data.trigger != TraitTrigger::Passive {
                 continue;
             }
@@ -287,8 +287,9 @@ mod tests {
         );
 
         let handlers = TraitEffectHandlerRegistry::with_defaults();
+        let collection = TraitCollection::new(vec!["warrior_mastery".into()]);
         let (tags, modifiers) =
-            apply_passive_traits(&["warrior_mastery".into()], &registry, &handlers);
+            apply_passive_traits(&collection, &registry, &handlers);
 
         assert!(tags.has(GameplayTag::WARRIOR));
         assert!(tags.has(GameplayTag::MELEE));
@@ -311,8 +312,9 @@ mod tests {
         );
 
         let handlers = TraitEffectHandlerRegistry::with_defaults();
+        let collection = TraitCollection::new(vec!["on_attack_trait".into()]);
         let (tags, modifiers) =
-            apply_passive_traits(&["on_attack_trait".into()], &registry, &handlers);
+            apply_passive_traits(&collection, &registry, &handlers);
 
         assert!(!tags.has(GameplayTag::FIRE));
         assert!(modifiers.is_empty());
@@ -369,8 +371,9 @@ mod tests {
             },
         );
         let handlers = TraitEffectHandlerRegistry::with_defaults();
+        let collection = TraitCollection::new(vec!["trait_a".into(), "trait_b".into()]);
         let (_tags, modifiers) =
-            apply_passive_traits(&["trait_a".into(), "trait_b".into()], &registry, &handlers);
+            apply_passive_traits(&collection, &registry, &handlers);
         assert_eq!(modifiers.len(), 2);
         assert_ne!(modifiers[0].source, modifiers[1].source);
         assert_eq!(modifiers[0].source, ModifierSource::trait_source(0));
