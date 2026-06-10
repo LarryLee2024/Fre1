@@ -2,7 +2,7 @@ use crate::battle::CombatIntent;
 use crate::battle::manhattan_distance;
 use crate::buff::ActiveBuffs;
 use crate::character::{
-    AiBehaviorId, Faction, GridPosition, MovingUnit, Unit, UnitName, spawn_path_arrows,
+    AiBehaviorId, Dead, Faction, GridPosition, MovingUnit, Unit, UnitName, spawn_path_arrows,
 };
 use crate::core::attribute::{AttributeKind, Attributes};
 use crate::core::tag::GameplayTags;
@@ -51,7 +51,7 @@ pub fn enemy_ai_system(
         &mut ActiveBuffs,
         &mut GameplayTags,
         &AiBehaviorId,
-    )>,
+    ), Without<Dead>>,
 ) {
     // 只在 SelectUnit 阶段执行
     if *turn_phase.get() != TurnPhase::SelectUnit {

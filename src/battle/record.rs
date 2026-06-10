@@ -208,7 +208,11 @@ impl BattleRecord {
         }
         // 统计击杀数：找到致死伤害的攻击者
         for entry in &self.entries {
-            if let BattleEntry::CharacterDied { entity: dead_entity, .. } = entry {
+            if let BattleEntry::CharacterDied {
+                entity: dead_entity,
+                ..
+            } = entry
+            {
                 // 查找该实体最后受到的伤害记录
                 let last_damage = self.entries.iter().rev().find(|e| {
                     if let BattleEntry::DamageApplied { target, .. } = e {

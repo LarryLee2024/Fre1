@@ -277,10 +277,7 @@ mod tests {
         let tags = GameplayTags::default();
 
         let result = skill.can_use(&attrs, &tags, None, 3);
-        assert_eq!(
-            result,
-            Err(SkillUseError::OnCooldown { remaining: 3 })
-        );
+        assert_eq!(result, Err(SkillUseError::OnCooldown { remaining: 3 }));
     }
 
     #[test]
@@ -401,10 +398,7 @@ mod tests {
         let tags = GameplayTags::default();
 
         let result = skill.can_use(&attrs, &tags, None, 0);
-        assert_eq!(
-            result,
-            Err(SkillUseError::HpNotBelow { threshold: 0.5 })
-        );
+        assert_eq!(result, Err(SkillUseError::HpNotBelow { threshold: 0.5 }));
     }
 
     #[test]
@@ -428,10 +422,7 @@ mod tests {
         let tags = GameplayTags::default();
 
         let result = skill.can_use(&attrs, &tags, None, 0);
-        assert_eq!(
-            result,
-            Err(SkillUseError::HpNotAbove { threshold: 0.5 })
-        );
+        assert_eq!(result, Err(SkillUseError::HpNotAbove { threshold: 0.5 }));
     }
 
     #[test]

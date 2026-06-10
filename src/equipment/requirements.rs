@@ -30,10 +30,7 @@ pub fn check_equipment_requirements(
             EquipmentRequirement::RequireTag(tag_name) => {
                 let tag = tag_name.to_tag();
                 if !tags.has(tag) {
-                    return RequirementCheckResult::Failed(format!(
-                        "缺少标签: {:?}",
-                        tag_name
-                    ));
+                    return RequirementCheckResult::Failed(format!("缺少标签: {:?}", tag_name));
                 }
             }
             EquipmentRequirement::AttributeMin { kind, value } => {

@@ -24,7 +24,6 @@ pub enum PanelLabel {
     Skills,
     Traits,
     Equipment,
-    Inventory,
 }
 
 /// 单位信息面板根节点
@@ -162,16 +161,6 @@ pub fn spawn_unit_info_panel(mut commands: Commands, theme: Res<UiTheme>) {
                 },
                 TextColor(theme.text_primary),
                 PanelLabel::Equipment,
-            ));
-            // 背包文本
-            parent.spawn((
-                Text::new(""),
-                TextFont {
-                    font_size: theme.font_small,
-                    ..default()
-                },
-                TextColor(theme.text_secondary),
-                PanelLabel::Inventory,
             ));
             // Buff 容器
             parent.spawn((
@@ -377,26 +366,18 @@ pub fn update_unit_info(
             PanelLabel::Skills => **text = skills_text.clone(),
             PanelLabel::Traits => **text = traits_text.clone(),
             PanelLabel::Equipment => {
-                let equip_lines: Vec<String> = view
+                let lines: Vec<String> = view
                     .equipment
                     .iter()
-                    .map(|e| format!("  {}: {} [{}]", e.slot_label, e.item_name, e.rarity))
+                    .map(|e| {
+                        if let (Some(name), Some(rarity)) = (&e.item_name, &e.rarity) {
+                            format!("  {}: {} [{}]", e.slot_label, name, rarity)
+                        } else {
+                            format!("  {}: ──", e.slot_label)
+                        }
+                    })
                     .collect();
-                **text = format!(
-                    "── 装备 ──\n{}",
-                    if equip_lines.is_empty() { "无".to_string() } else { equip_lines.join("\n") }
-                );
-            }
-            PanelLabel::Inventory => {
-                let inv_lines: Vec<String> = view
-                    .inventory
-                    .iter()
-                    .map(|i| format!("  {} [{}]", i.item_name, i.rarity))
-                    .collect();
-                **text = format!(
-                    "── 背包 ──\n{}",
-                    if inv_lines.is_empty() { "空".to_string() } else { inv_lines.join("\n") }
-                );
+                **text = format!("── 装备 ──\n{}", lines.join("\n"));
             }
         }
     }

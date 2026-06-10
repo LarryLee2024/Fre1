@@ -288,8 +288,7 @@ mod tests {
 
         let handlers = TraitEffectHandlerRegistry::with_defaults();
         let collection = TraitCollection::new(vec!["warrior_mastery".into()]);
-        let (tags, modifiers) =
-            apply_passive_traits(&collection, &registry, &handlers);
+        let (tags, modifiers) = apply_passive_traits(&collection, &registry, &handlers);
 
         assert!(tags.has(GameplayTag::WARRIOR));
         assert!(tags.has(GameplayTag::MELEE));
@@ -313,8 +312,7 @@ mod tests {
 
         let handlers = TraitEffectHandlerRegistry::with_defaults();
         let collection = TraitCollection::new(vec!["on_attack_trait".into()]);
-        let (tags, modifiers) =
-            apply_passive_traits(&collection, &registry, &handlers);
+        let (tags, modifiers) = apply_passive_traits(&collection, &registry, &handlers);
 
         assert!(!tags.has(GameplayTag::FIRE));
         assert!(modifiers.is_empty());
@@ -372,8 +370,7 @@ mod tests {
         );
         let handlers = TraitEffectHandlerRegistry::with_defaults();
         let collection = TraitCollection::new(vec!["trait_a".into(), "trait_b".into()]);
-        let (_tags, modifiers) =
-            apply_passive_traits(&collection, &registry, &handlers);
+        let (_tags, modifiers) = apply_passive_traits(&collection, &registry, &handlers);
         assert_eq!(modifiers.len(), 2);
         assert_ne!(modifiers[0].source, modifiers[1].source);
         assert_eq!(modifiers[0].source, ModifierSource::trait_source(0));

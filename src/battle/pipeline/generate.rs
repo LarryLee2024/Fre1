@@ -2,7 +2,10 @@
 // 同时支持玩家（Selected）和 AI（CombatIntent.source_entity）
 // 使用 EffectHandlerRegistry trait 分发，新增效果类型无需修改此文件
 
-use crate::character::{GridPosition, Selected, TraitCollection, TraitEffectHandlerRegistry, TraitRegistry, Unit, UnitName};
+use crate::character::{
+    GridPosition, Selected, TraitCollection, TraitEffectHandlerRegistry, TraitRegistry, Unit,
+    UnitName,
+};
 use crate::core::attribute::Attributes;
 use crate::core::effect::{EffectHandlerRegistry, EffectQueue, GenerateContext, PendingEffect};
 use crate::core::tag::GameplayTags;

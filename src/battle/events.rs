@@ -82,7 +82,17 @@ pub fn on_character_died(
 ) {
     for msg in died_reader.read() {
         bevy::log::info!(target: "battle", entity = ?msg.entity, name = %msg.name, faction = ?msg.faction, "角色已死亡，从行动队列移除");
-        turn_order.queue.retain(|&e| e != msg.entity);
+        // 找到被移除实体的位置，修正 current_index
+        if let Some(pos) = turn_order.queue.iter().position(|&e| e == msg.entity) {
+            turn_order.queue.remove(pos);
+            // 如果被移除的实体在 current_index 之前，current_index 需要减 1
+            // 因为 remove 会导致后面的元素前移
+            if pos < turn_order.current_index {
+                turn_order.current_index -= 1;
+            }
+            // 防御性：确保 current_index 不越界
+            turn_order.current_index = turn_order.current_index.min(turn_order.queue.len());
+        }
         commands.entity(msg.entity).try_despawn();
     }
 }

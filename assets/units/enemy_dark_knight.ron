@@ -13,4 +13,5 @@
     skill_ids: ["basic_attack", "charge"],
     trait_ids: ["warrior_mastery", "heavy_armor"],
     ai_behavior: "cautious",
+    initial_equipment: [(MainHand, "iron_sword"), (Body, "leather_armor"), (OffHand, "iron_shield")],
 )

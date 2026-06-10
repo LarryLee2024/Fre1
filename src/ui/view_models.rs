@@ -55,12 +55,12 @@ pub struct TraitEntry {
     pub description: String,
 }
 
-/// 装备槽条目
+/// 装备槽条目（含空槽位）
 #[derive(Clone, Debug)]
 pub struct EquipmentSlotEntry {
     pub slot_label: String,
-    pub item_name: String,
-    pub rarity: String,
+    pub item_name: Option<String>,
+    pub rarity: Option<String>,
 }
 
 /// 背包条目
@@ -285,34 +285,80 @@ pub fn update_selected_unit_view(
                 })
                 .collect();
 
-            // 装备
+            // 装备（遍历所有槽位，空位也显示）
             view.equipment = equipment_slots
                 .map(|slots| {
-                    let mut entries: Vec<_> = slots.equipped_slots()
-                        .into_iter()
-                        .filter_map(|(slot, _, def_id)| {
-                            equipment_registry.get(&def_id).map(|def| EquipmentSlotEntry {
-                                slot_label: slot.label().to_string(),
-                                item_name: def.name.clone(),
-                                rarity: def.rarity.label().to_string(),
-                            })
+                    use crate::equipment::EquipmentSlot;
+                    let all_slots = [
+                        EquipmentSlot::MainHand,
+                        EquipmentSlot::OffHand,
+                        EquipmentSlot::Head,
+                        EquipmentSlot::Body,
+                        EquipmentSlot::Feet,
+                        EquipmentSlot::Accessory1,
+                        EquipmentSlot::Accessory2,
+                    ];
+                    all_slots
+                        .iter()
+                        .map(|slot| {
+                            let slot_label = slot.label().to_string();
+                            if let Some(def_id) = slots.get_def_id(*slot) {
+                                if let Some(def) = equipment_registry.get(def_id) {
+                                    EquipmentSlotEntry {
+                                        slot_label,
+                                        item_name: Some(def.name.clone()),
+                                        rarity: Some(def.rarity.label().to_string()),
+                                    }
+                                } else {
+                                    EquipmentSlotEntry {
+                                        slot_label,
+                                        item_name: None,
+                                        rarity: None,
+                                    }
+                                }
+                            } else {
+                                EquipmentSlotEntry {
+                                    slot_label,
+                                    item_name: None,
+                                    rarity: None,
+                                }
+                            }
                         })
-                        .collect();
-                    entries.sort_by(|a, b| a.slot_label.cmp(&b.slot_label));
-                    entries
+                        .collect()
                 })
-                .unwrap_or_default();
+                .unwrap_or_else(|| {
+                    use crate::equipment::EquipmentSlot;
+                    [
+                        EquipmentSlot::MainHand,
+                        EquipmentSlot::OffHand,
+                        EquipmentSlot::Head,
+                        EquipmentSlot::Body,
+                        EquipmentSlot::Feet,
+                        EquipmentSlot::Accessory1,
+                        EquipmentSlot::Accessory2,
+                    ]
+                    .iter()
+                    .map(|slot| EquipmentSlotEntry {
+                        slot_label: slot.label().to_string(),
+                        item_name: None,
+                        rarity: None,
+                    })
+                    .collect()
+                });
 
             // 背包
             view.inventory = inventory
                 .map(|inv| {
-                    inv.items.iter()
+                    inv.items
+                        .iter()
                         .filter_map(|instance| {
-                            equipment_registry.get(&instance.def_id).map(|def| InventoryEntry {
-                                item_name: def.name.clone(),
-                                rarity: def.rarity.label().to_string(),
-                                instance_id: instance.instance_id,
-                            })
+                            equipment_registry
+                                .get(&instance.def_id)
+                                .map(|def| InventoryEntry {
+                                    item_name: def.name.clone(),
+                                    rarity: def.rarity.label().to_string(),
+                                    instance_id: instance.instance_id,
+                                })
                         })
                         .collect()
                 })

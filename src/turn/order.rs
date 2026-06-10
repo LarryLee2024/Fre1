@@ -1,6 +1,6 @@
 // 回合行动队列与资源：行动顺序、回合状态、辅助资源、阶段系统
 
-use crate::character::{Faction, Unit};
+use crate::character::{Dead, Faction, Unit};
 use crate::core::attribute::{AttributeKind, Attributes};
 use bevy::ecs::message::{MessageReader, MessageWriter};
 use bevy::prelude::*;
@@ -101,7 +101,7 @@ pub struct ForceEndTurn;
 pub fn init_turn_order(
     mut turn_state: ResMut<TurnState>,
     mut turn_order: ResMut<TurnOrder>,
-    units: Query<(Entity, &Unit, &Attributes)>,
+    units: Query<(Entity, &Unit, &Attributes), Without<Dead>>,
     mut ai_timer: ResMut<AiTimer>,
     mut turn_started_writer: MessageWriter<TurnStarted>,
 ) {
@@ -139,7 +139,7 @@ pub fn init_turn_order(
 pub fn turn_end_on_enter(
     mut turn_state: ResMut<TurnState>,
     mut turn_order: ResMut<TurnOrder>,
-    mut units: Query<(Entity, &mut Unit, &Attributes)>,
+    mut units: Query<(Entity, &mut Unit, &Attributes), Without<Dead>>,
     mut next_phase: ResMut<NextState<TurnPhase>>,
     mut ai_timer: ResMut<AiTimer>,
     mut needs_resolve: ResMut<NeedsResolve>,

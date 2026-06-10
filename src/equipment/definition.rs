@@ -156,7 +156,12 @@ impl EquipmentRegistry {
                 description: "蕴含龙焰的古老长剑".into(),
                 slot: EquipmentSlot::MainHand,
                 rarity: Rarity::Epic,
-                tags: vec![TagName::Sword, TagName::Fire, TagName::Martial, TagName::TwoHanded],
+                tags: vec![
+                    TagName::Sword,
+                    TagName::Fire,
+                    TagName::Martial,
+                    TagName::TwoHanded,
+                ],
                 modifiers: vec![
                     AttributeModifierDef {
                         kind: crate::core::attribute::AttributeKind::Attack,
@@ -196,13 +201,11 @@ impl EquipmentRegistry {
                 slot: EquipmentSlot::MainHand,
                 rarity: Rarity::Uncommon,
                 tags: vec![TagName::Staff, TagName::Simple],
-                modifiers: vec![
-                    AttributeModifierDef {
-                        kind: crate::core::attribute::AttributeKind::MagicAttack,
-                        op: crate::core::attribute::ModifierOp::Add,
-                        value: 5.0,
-                    },
-                ],
+                modifiers: vec![AttributeModifierDef {
+                    kind: crate::core::attribute::AttributeKind::MagicAttack,
+                    op: crate::core::attribute::ModifierOp::Add,
+                    value: 5.0,
+                }],
                 traits: vec![],
                 requirements: vec![],
             },

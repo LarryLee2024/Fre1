@@ -4,6 +4,7 @@
 use super::components::Faction;
 use crate::core::attribute::AttributeKind;
 use crate::core::registry_loader::RegistryLoader;
+use crate::equipment::EquipmentSlot;
 use crate::skill::BASIC_ATTACK_ID;
 use bevy::prelude::*;
 use serde::Deserialize;
@@ -25,6 +26,8 @@ pub struct UnitTemplate {
     pub skill_ids: Vec<String>,
     pub trait_ids: Vec<String>,
     pub ai_behavior: String,
+    /// 初始装备：槽位 → 装备定义 ID
+    pub initial_equipment: Vec<(EquipmentSlot, String)>,
 }
 
 /// 单位模板（RON 反序列化用）
@@ -44,6 +47,9 @@ pub struct UnitTemplateDef {
     pub skill_ids: Vec<String>,
     pub trait_ids: Vec<String>,
     pub ai_behavior: String,
+    /// 初始装备：槽位 → 装备定义 ID
+    #[serde(default)]
+    pub initial_equipment: Vec<(EquipmentSlot, String)>,
 }
 
 /// 阵营定义（RON 反序列化用）
@@ -77,6 +83,7 @@ impl From<UnitTemplateDef> for UnitTemplate {
             skill_ids: def.skill_ids,
             trait_ids: def.trait_ids,
             ai_behavior: def.ai_behavior,
+            initial_equipment: def.initial_equipment,
         }
     }
 }
@@ -129,6 +136,10 @@ impl UnitTemplateRegistry {
                 skill_ids: vec![BASIC_ATTACK_ID.into(), "charge".into()],
                 trait_ids: vec!["warrior_mastery".into()],
                 ai_behavior: "default".into(),
+                initial_equipment: vec![
+                    (EquipmentSlot::MainHand, "iron_sword".into()),
+                    (EquipmentSlot::Body, "leather_armor".into()),
+                ],
             },
         );
 
@@ -159,6 +170,7 @@ impl UnitTemplateRegistry {
                 skill_ids: vec![BASIC_ATTACK_ID.into()],
                 trait_ids: vec!["archer_mastery".into()],
                 ai_behavior: "default".into(),
+                initial_equipment: vec![(EquipmentSlot::MainHand, "iron_sword".into())],
             },
         );
 
@@ -189,6 +201,7 @@ impl UnitTemplateRegistry {
                 skill_ids: vec![BASIC_ATTACK_ID.into()],
                 trait_ids: vec!["warrior_mastery".into()],
                 ai_behavior: "aggressive".into(),
+                initial_equipment: vec![],
             },
         );
 
@@ -219,6 +232,11 @@ impl UnitTemplateRegistry {
                 skill_ids: vec![BASIC_ATTACK_ID.into()],
                 trait_ids: vec!["warrior_mastery".into(), "heavy_armor".into()],
                 ai_behavior: "aggressive".into(),
+                initial_equipment: vec![
+                    (EquipmentSlot::MainHand, "iron_sword".into()),
+                    (EquipmentSlot::Body, "leather_armor".into()),
+                    (EquipmentSlot::OffHand, "iron_shield".into()),
+                ],
             },
         );
     }
@@ -316,6 +334,7 @@ mod tests {
             skill_ids: vec![BASIC_ATTACK_ID.into()],
             trait_ids: vec!["warrior_mastery".into()],
             ai_behavior: "aggressive".into(),
+            initial_equipment: vec![],
         };
         let template: UnitTemplate = def.into();
         assert_eq!(template.id, "test");

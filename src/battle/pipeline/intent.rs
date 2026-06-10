@@ -1,8 +1,11 @@
 // 战斗意图模块：行动后路由、行动执行
 
 use crate::character::{
-    AttackRange, Faction, GridPosition, MovableRange, Selected, SelectionHighlight, Unit, UnitName,
+    AttackRange, Dead, Faction, GridPosition, MovableRange, Selected, SelectionHighlight, Unit,
+    UnitName,
 };
+use crate::core::attribute::AttributeKind;
+use crate::core::attribute::Attributes;
 use crate::core::tag::{GameplayTag, GameplayTags};
 use crate::skill::{SkillCooldowns, SkillRegistry};
 use crate::turn::{AiTimer, TurnOrder, TurnPhase, TurnState};
@@ -25,11 +28,18 @@ pub struct PrevPosition {
     pub coord: Option<IVec2>,
 }
 
+/// 判断单位是否存活（HP > 0）
+fn is_alive(attrs: &Attributes) -> bool {
+    attrs.get(AttributeKind::Hp) > 0.0
+}
+
 /// 行动完成后统一路由
 /// 新逻辑：从 TurnOrder 队列前进到下一个存活的单位
+/// 注意：通过检查 HP 判断存活，不依赖 Dead 组件（Dead 是 deferred command，
+/// 在 OnEnter 阶段尚未应用）
 fn route_after_action(
     turn_order: &mut TurnOrder,
-    units: &Query<&Unit, Without<Selected>>,
+    units: &Query<(&Unit, &Attributes), Without<Selected>>,
     next_phase: &mut ResMut<NextState<TurnPhase>>,
     ai_timer: &mut AiTimer,
     turn_state: &mut TurnState,
@@ -38,8 +48,12 @@ fn route_after_action(
     loop {
         match turn_order.advance() {
             Some(next_entity) => {
-                // 检查单位是否存活
-                if let Ok(unit) = units.get(next_entity) {
+                // 检查单位是否存活（通过 HP 判断，不依赖 Dead 组件）
+                if let Ok((unit, attrs)) = units.get(next_entity) {
+                    if !is_alive(attrs) {
+                        // 单位已死亡（HP=0），继续前进到下一个
+                        continue;
+                    }
                     // 更新当前阵营
                     turn_state.current_faction = unit.faction;
                     // 如果下一个是 AI，重置计时器
@@ -49,7 +63,7 @@ fn route_after_action(
                     next_phase.set(TurnPhase::SelectUnit);
                     return;
                 }
-                // 单位已死亡，继续前进到下一个
+                // 单位不存在，继续前进到下一个
             }
             None => {
                 // 队列耗尽，回合结束
@@ -75,7 +89,7 @@ pub fn execute_action_on_enter(
         ),
         With<Selected>,
     >,
-    all_units: Query<&Unit, Without<Selected>>,
+    all_units: Query<(&Unit, &Attributes), Without<Selected>>,
     mut turn_order: ResMut<TurnOrder>,
     mut turn_state: ResMut<TurnState>,
     mut next_phase: ResMut<NextState<TurnPhase>>,
@@ -142,7 +156,7 @@ pub fn execute_action_on_enter(
 /// 待机（OnEnter WaitAction）
 pub fn wait_action_on_enter(
     mut selected_units: Query<(Entity, &mut Unit), With<Selected>>,
-    all_units: Query<&Unit, Without<Selected>>,
+    all_units: Query<(&Unit, &Attributes), Without<Selected>>,
     mut turn_order: ResMut<TurnOrder>,
     mut turn_state: ResMut<TurnState>,
     mut next_phase: ResMut<NextState<TurnPhase>>,

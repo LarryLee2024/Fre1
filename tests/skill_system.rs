@@ -439,11 +439,25 @@ fn 冷却clear后所有技能立即可用() {
     let attrs = warrior_attrs();
     let tags = GameplayTags::default();
 
-    assert!(fireball.can_use(&attrs, &tags, None, cooldowns.get("fireball")).is_err());
-    assert!(heal.can_use(&attrs, &tags, None, cooldowns.get("heal")).is_err());
+    assert!(
+        fireball
+            .can_use(&attrs, &tags, None, cooldowns.get("fireball"))
+            .is_err()
+    );
+    assert!(
+        heal.can_use(&attrs, &tags, None, cooldowns.get("heal"))
+            .is_err()
+    );
 
     cooldowns.clear();
 
-    assert!(fireball.can_use(&attrs, &tags, None, cooldowns.get("fireball")).is_ok());
-    assert!(heal.can_use(&attrs, &tags, None, cooldowns.get("heal")).is_ok());
+    assert!(
+        fireball
+            .can_use(&attrs, &tags, None, cooldowns.get("fireball"))
+            .is_ok()
+    );
+    assert!(
+        heal.can_use(&attrs, &tags, None, cooldowns.get("heal"))
+            .is_ok()
+    );
 }

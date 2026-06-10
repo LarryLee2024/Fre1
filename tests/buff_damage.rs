@@ -4,11 +4,11 @@
 //! apply_buff / remove_buff 状态修改、calculate_damage_from_effect 伤害计算
 //! 在真实属性数据下的联合行为。
 
+use bevy::prelude::*;
 use tactical_rpg::buff::{ActiveBuffs, BuffData, apply_buff, remove_all_debuffs, remove_buff};
 use tactical_rpg::core::attribute::{AttributeKind, AttributeModifierDef, Attributes, ModifierOp};
 use tactical_rpg::core::effect::calculate_damage_from_effect;
 use tactical_rpg::core::tag::GameplayTags;
-use bevy::prelude::*;
 
 // ── 测试辅助 ──
 
@@ -75,7 +75,10 @@ fn burning_dot() -> BuffData {
         name: "灼烧".into(),
         default_duration: 3,
         modifiers: vec![],
-        tags: vec![tactical_rpg::core::tag::GameplayTag::DEBUFF, tactical_rpg::core::tag::GameplayTag::FIRE],
+        tags: vec![
+            tactical_rpg::core::tag::GameplayTag::DEBUFF,
+            tactical_rpg::core::tag::GameplayTag::FIRE,
+        ],
         dot_damage: 3,
         hot_heal: 0,
         is_stun: false,
@@ -110,7 +113,14 @@ fn 增攻Buff_应用后攻击力增加() {
     let mut buffs = ActiveBuffs::default();
     let mut tags = GameplayTags::default();
 
-    apply_buff(&mut buffs, &mut attrs, &mut tags, &attack_up_buff(), None, 3);
+    apply_buff(
+        &mut buffs,
+        &mut attrs,
+        &mut tags,
+        &attack_up_buff(),
+        None,
+        3,
+    );
 
     // 原 Attack=10, 加5 → 15
     assert_eq!(attrs.get(AttributeKind::Attack), 15.0);
@@ -124,7 +134,14 @@ fn 减防Debuff_应用后防御力降低() {
     let mut buffs = ActiveBuffs::default();
     let mut tags = GameplayTags::default();
 
-    apply_buff(&mut buffs, &mut attrs, &mut tags, &defense_down_debuff(), None, 3);
+    apply_buff(
+        &mut buffs,
+        &mut attrs,
+        &mut tags,
+        &defense_down_debuff(),
+        None,
+        3,
+    );
 
     // 原 Defense=5, 减5 → 0
     assert_eq!(attrs.get(AttributeKind::Defense), 0.0);
@@ -136,8 +153,22 @@ fn 多个Buff_叠加应用() {
     let mut buffs = ActiveBuffs::default();
     let mut tags = GameplayTags::default();
 
-    apply_buff(&mut buffs, &mut attrs, &mut tags, &attack_up_buff(), None, 3);
-    apply_buff(&mut buffs, &mut attrs, &mut tags, &defense_down_debuff(), None, 3);
+    apply_buff(
+        &mut buffs,
+        &mut attrs,
+        &mut tags,
+        &attack_up_buff(),
+        None,
+        3,
+    );
+    apply_buff(
+        &mut buffs,
+        &mut attrs,
+        &mut tags,
+        &defense_down_debuff(),
+        None,
+        3,
+    );
 
     // Attack=10+5=15, Defense=5-5=0
     assert_eq!(attrs.get(AttributeKind::Attack), 15.0);
@@ -154,7 +185,14 @@ fn 移除增攻Buff_攻击力恢复() {
     let mut buffs = ActiveBuffs::default();
     let mut tags = GameplayTags::default();
 
-    let instance_id = apply_buff(&mut buffs, &mut attrs, &mut tags, &attack_up_buff(), None, 3);
+    let instance_id = apply_buff(
+        &mut buffs,
+        &mut attrs,
+        &mut tags,
+        &attack_up_buff(),
+        None,
+        3,
+    );
     assert_eq!(attrs.get(AttributeKind::Attack), 15.0);
 
     remove_buff(&mut buffs, &mut attrs, &mut tags, instance_id);
@@ -167,8 +205,22 @@ fn 移除多个Buff_属性全部恢复() {
     let mut buffs = ActiveBuffs::default();
     let mut tags = GameplayTags::default();
 
-    let id1 = apply_buff(&mut buffs, &mut attrs, &mut tags, &attack_up_buff(), None, 3);
-    let id2 = apply_buff(&mut buffs, &mut attrs, &mut tags, &defense_down_debuff(), None, 3);
+    let id1 = apply_buff(
+        &mut buffs,
+        &mut attrs,
+        &mut tags,
+        &attack_up_buff(),
+        None,
+        3,
+    );
+    let id2 = apply_buff(
+        &mut buffs,
+        &mut attrs,
+        &mut tags,
+        &defense_down_debuff(),
+        None,
+        3,
+    );
     assert_eq!(attrs.get(AttributeKind::Attack), 15.0);
     assert_eq!(attrs.get(AttributeKind::Defense), 0.0);
 
@@ -186,7 +238,12 @@ fn 移除不存在的Buff_属性不变() {
     let mut tags = GameplayTags::default();
 
     let original_attack = attrs.get(AttributeKind::Attack);
-    remove_buff(&mut buffs, &mut attrs, &mut tags, tactical_rpg::core::attribute::BuffInstanceId(999));
+    remove_buff(
+        &mut buffs,
+        &mut attrs,
+        &mut tags,
+        tactical_rpg::core::attribute::BuffInstanceId(999),
+    );
     assert_eq!(attrs.get(AttributeKind::Attack), original_attack);
 }
 
@@ -200,8 +257,22 @@ fn 移除所有Debuff_增益保留() {
     let mut buffs = ActiveBuffs::default();
     let mut tags = GameplayTags::default();
 
-    apply_buff(&mut buffs, &mut attrs, &mut tags, &attack_up_buff(), None, 3);
-    apply_buff(&mut buffs, &mut attrs, &mut tags, &defense_down_debuff(), None, 3);
+    apply_buff(
+        &mut buffs,
+        &mut attrs,
+        &mut tags,
+        &attack_up_buff(),
+        None,
+        3,
+    );
+    apply_buff(
+        &mut buffs,
+        &mut attrs,
+        &mut tags,
+        &defense_down_debuff(),
+        None,
+        3,
+    );
     apply_buff(&mut buffs, &mut attrs, &mut tags, &burning_dot(), None, 3);
 
     assert_eq!(attrs.get(AttributeKind::Attack), 15.0); // +5
@@ -244,7 +315,14 @@ fn 生命回复HoT_每回合回复() {
 
     attrs.set_base(AttributeKind::Hp, 20.0);
 
-    apply_buff(&mut buffs, &mut attrs, &mut tags, &regeneration_hot(), None, 3);
+    apply_buff(
+        &mut buffs,
+        &mut attrs,
+        &mut tags,
+        &regeneration_hot(),
+        None,
+        3,
+    );
 
     // hot_heal 汇总
     assert_eq!(buffs.hot_heal(), 4);
@@ -288,7 +366,14 @@ fn 增攻Buff_提高物理伤害() {
     let mut tags = GameplayTags::default();
 
     // 应用增攻 buff → Attack=15
-    apply_buff(&mut buffs, &mut attrs, &mut tags, &attack_up_buff(), None, 3);
+    apply_buff(
+        &mut buffs,
+        &mut attrs,
+        &mut tags,
+        &attack_up_buff(),
+        None,
+        3,
+    );
 
     // calculate_damage_from_effect(atk, def, base_def, multiplier, ignore_def%, terrain_bonus)
     let dmg = calculate_damage_from_effect(
@@ -310,12 +395,19 @@ fn 减防Debuff_提高受到伤害() {
     let mut tags = GameplayTags::default();
 
     // 应用减防 debuff → Defense=0
-    apply_buff(&mut buffs, &mut attrs, &mut tags, &defense_down_debuff(), None, 3);
+    apply_buff(
+        &mut buffs,
+        &mut attrs,
+        &mut tags,
+        &defense_down_debuff(),
+        None,
+        3,
+    );
 
     let dmg = calculate_damage_from_effect(
-        10.0,                             // attacker atk
+        10.0,                              // attacker atk
         attrs.get(AttributeKind::Defense), // 0
-        5.0,                              // base def
+        5.0,                               // base def
         1.0,
         0.0,
         0,
@@ -334,9 +426,23 @@ fn 同时增攻和减防_伤害大幅提升() {
     let mut defender_tags = GameplayTags::default();
 
     // 攻击方增攻
-    apply_buff(&mut attacker_buffs, &mut attacker_attrs, &mut attacker_tags, &attack_up_buff(), None, 3);
+    apply_buff(
+        &mut attacker_buffs,
+        &mut attacker_attrs,
+        &mut attacker_tags,
+        &attack_up_buff(),
+        None,
+        3,
+    );
     // 防御方减防
-    apply_buff(&mut defender_buffs, &mut defender_attrs, &mut defender_tags, &defense_down_debuff(), None, 3);
+    apply_buff(
+        &mut defender_buffs,
+        &mut defender_attrs,
+        &mut defender_tags,
+        &defense_down_debuff(),
+        None,
+        3,
+    );
 
     let dmg = calculate_damage_from_effect(
         attacker_attrs.get(AttributeKind::Attack),  // 15

@@ -42,8 +42,17 @@ pub fn resolve_status_effects(
     }
     needs_resolve.0 = false;
 
-    for (entity, mut unit, name, gp, mut attrs, mut buffs, mut tags, mut cooldowns, persistent_tags) in
-        &mut units
+    for (
+        entity,
+        mut unit,
+        name,
+        gp,
+        mut attrs,
+        mut buffs,
+        mut tags,
+        mut cooldowns,
+        persistent_tags,
+    ) in &mut units
     {
         // 队列驱动模式：所有单位都结算（不再按阵营过滤）
 
@@ -194,7 +203,9 @@ pub(crate) fn rebuild_tags(
 mod tests {
     use super::*;
     use crate::buff::BuffInstance;
-    use crate::core::attribute::{AttributeKind, AttributeModifierInstance, BuffInstanceId, ModifierOp, ModifierSource};
+    use crate::core::attribute::{
+        AttributeKind, AttributeModifierInstance, BuffInstanceId, ModifierOp, ModifierSource,
+    };
 
     fn make_test_buff(
         id: u64,

@@ -4,6 +4,9 @@ use crate::assets::CnFont;
 use crate::buff::ActiveBuffs;
 use crate::core::attribute::Attributes;
 use crate::core::tag::{GameplayTag, GameplayTags};
+use crate::equipment::{
+    EquipmentInstance, EquipmentRegistry, EquipmentSlots, Inventory, apply_equipment_effects,
+};
 use crate::map::GameMap;
 use crate::map::LevelRegistry;
 use crate::skill::{SkillCooldowns, SkillSlots};
@@ -23,6 +26,7 @@ pub fn spawn_units(
     level_registry: Res<LevelRegistry>,
     trait_registry: Res<TraitRegistry>,
     effect_handlers: Res<TraitEffectHandlerRegistry>,
+    equipment_registry: Res<EquipmentRegistry>,
 ) {
     let tile_size = map.tile_size;
     let bar_width = tile_size * 0.6;
@@ -46,6 +50,7 @@ pub fn spawn_units(
                     &cn_font.handle,
                     &trait_registry,
                     &effect_handlers,
+                    &equipment_registry,
                 );
             } else {
                 bevy::log::error!(target: "character", template = %deploy.template, "单位模板不存在，该单位将被跳过");
@@ -66,6 +71,7 @@ pub fn spawn_units(
                     &cn_font.handle,
                     &trait_registry,
                     &effect_handlers,
+                    &equipment_registry,
                 );
             } else {
                 bevy::log::error!(target: "character", template = %deploy.template, "单位模板不存在，该单位将被跳过");
@@ -89,6 +95,7 @@ fn spawn_unit_from_template(
     font: &Handle<Font>,
     trait_registry: &TraitRegistry,
     effect_handlers: &TraitEffectHandlerRegistry,
+    equipment_registry: &EquipmentRegistry,
 ) {
     let label: String = template.name.chars().take(1).collect();
     let unit_font = TextFont {
@@ -122,7 +129,7 @@ fn spawn_unit_from_template(
         }
     }
     // 保存 trait 授予的标签（用于 rebuild_tags 恢复）
-    let persistent_tags = PersistentTags {
+    let mut persistent_tags = PersistentTags {
         from_traits: trait_tags,
         from_equipment: GameplayTags::default(),
     };
@@ -136,6 +143,53 @@ fn spawn_unit_from_template(
 
     // 构建 AiBehaviorId
     let ai_behavior_id = AiBehaviorId(template.ai_behavior.clone());
+
+    // 穿戴初始装备
+    let mut equipment_slots = EquipmentSlots::default();
+    let mut inventory = Inventory::default();
+    let mut trait_collection = trait_collection;
+    for (slot, def_id) in &template.initial_equipment {
+        if let Some(def) = equipment_registry.get(def_id) {
+            let instance_id = equipment_slots.next_instance_id();
+            let instance = EquipmentInstance::new(instance_id, def_id.clone(), 100);
+            // 直接装备到槽位（跳过背包和需求检查）
+            equipment_slots.equip(*slot, instance_id, def_id.clone());
+            // 应用装备效果
+            apply_equipment_effects(
+                def,
+                &instance,
+                *slot,
+                &mut attributes,
+                &mut persistent_tags,
+                &mut trait_collection,
+                equipment_registry,
+                trait_registry,
+                effect_handlers,
+            );
+        } else {
+            bevy::log::warn!(
+                target: "character",
+                unit_id = %template.id,
+                def_id = %def_id,
+                slot = ?slot,
+                "初始装备定义未找到，跳过"
+            );
+        }
+    }
+    // 重建 Trait 效果（装备可能添加了新 Trait）
+    crate::equipment::rebuild_trait_effects(
+        &trait_collection,
+        trait_registry,
+        effect_handlers,
+        &mut attributes,
+        &mut persistent_tags,
+    );
+    // 重建 GameplayTags
+    let mut gameplay_tags = gameplay_tags;
+    let mut new_tags = GameplayTags::default();
+    new_tags.0 |= persistent_tags.from_traits.0;
+    new_tags.0 |= persistent_tags.from_equipment.0;
+    gameplay_tags.0 = new_tags.0;
 
     commands
         .spawn((
@@ -157,10 +211,11 @@ fn spawn_unit_from_template(
             persistent_tags,
             skill_slots,
             trait_collection,
+            equipment_slots,
+            inventory,
             ai_behavior_id,
-            SkillCooldowns::default(),
-            ActiveBuffs::default(),
         ))
+        .insert((SkillCooldowns::default(), ActiveBuffs::default()))
         .with_children(|parent| {
             // 棋子名称标注（中央）
             parent.spawn((

@@ -110,3 +110,169 @@ impl Default for TraitEffectHandlerRegistry {
         Self::with_defaults()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::attribute::{AttributeKind, ModifierOp};
+
+    // ── GrantTagHandler ──
+
+    #[test]
+    fn grant_tag_handler_类型名() {
+        let handler = GrantTagHandler;
+        assert_eq!(handler.type_name(), "GrantTag");
+    }
+
+    #[test]
+    fn grant_tag_handler_授予标签() {
+        let handler = GrantTagHandler;
+        let effect = TraitEffect::GrantTag(GameplayTag::WARRIOR);
+        let tags = handler.granted_tags(&effect);
+        assert_eq!(tags.len(), 1);
+        assert!(tags.contains(&GameplayTag::WARRIOR));
+    }
+
+    #[test]
+    fn grant_tag_handler_非grant_tag返回空() {
+        let handler = GrantTagHandler;
+        let effect = TraitEffect::ModifyAttribute(AttributeModifierDef {
+            kind: AttributeKind::Attack,
+            op: ModifierOp::Add,
+            value: 5.0,
+        });
+        let tags = handler.granted_tags(&effect);
+        assert!(tags.is_empty());
+    }
+
+    #[test]
+    fn grant_tag_handler_无属性修饰() {
+        let handler = GrantTagHandler;
+        let effect = TraitEffect::GrantTag(GameplayTag::FIRE);
+        let mods = handler.attribute_modifiers(&effect);
+        assert!(mods.is_empty());
+    }
+
+    // ── ModifyAttributeHandler ──
+
+    #[test]
+    fn modify_attribute_handler_类型名() {
+        let handler = ModifyAttributeHandler;
+        assert_eq!(handler.type_name(), "ModifyAttribute");
+    }
+
+    #[test]
+    fn modify_attribute_handler_返回属性修饰() {
+        let handler = ModifyAttributeHandler;
+        let mod_def = AttributeModifierDef {
+            kind: AttributeKind::Attack,
+            op: ModifierOp::Add,
+            value: 10.0,
+        };
+        let effect = TraitEffect::ModifyAttribute(mod_def);
+        let mods = handler.attribute_modifiers(&effect);
+        assert_eq!(mods.len(), 1);
+        assert_eq!(mods[0].kind, AttributeKind::Attack);
+        assert_eq!(mods[0].value, 10.0);
+    }
+
+    #[test]
+    fn modify_attribute_handler_非modify返回空() {
+        let handler = ModifyAttributeHandler;
+        let effect = TraitEffect::GrantTag(GameplayTag::MAGE);
+        let mods = handler.attribute_modifiers(&effect);
+        assert!(mods.is_empty());
+    }
+
+    #[test]
+    fn modify_attribute_handler_无标签授予() {
+        let handler = ModifyAttributeHandler;
+        let effect = TraitEffect::ModifyAttribute(AttributeModifierDef {
+            kind: AttributeKind::Defense,
+            op: ModifierOp::Multiply,
+            value: 1.5,
+        });
+        let tags = handler.granted_tags(&effect);
+        assert!(tags.is_empty());
+    }
+
+    // ── ApplyBuffHandler ──
+
+    #[test]
+    fn apply_buff_handler_类型名() {
+        let handler = ApplyBuffHandler;
+        assert_eq!(handler.type_name(), "ApplyBuff");
+    }
+
+    #[test]
+    fn apply_buff_handler_无标签授予() {
+        let handler = ApplyBuffHandler;
+        let effect = TraitEffect::ApplyBuff {
+            buff_id: "burn".into(),
+            duration: 3,
+        };
+        let tags = handler.granted_tags(&effect);
+        assert!(tags.is_empty());
+    }
+
+    #[test]
+    fn apply_buff_handler_无属性修饰() {
+        let handler = ApplyBuffHandler;
+        let effect = TraitEffect::ApplyBuff {
+            buff_id: "poison".into(),
+            duration: 2,
+        };
+        let mods = handler.attribute_modifiers(&effect);
+        assert!(mods.is_empty());
+    }
+
+    // ── TraitEffectHandlerRegistry ──
+
+    #[test]
+    fn registry_默认包含三个处理器() {
+        let registry = TraitEffectHandlerRegistry::with_defaults();
+        assert!(registry.get("GrantTag").is_some());
+        assert!(registry.get("ModifyAttribute").is_some());
+        assert!(registry.get("ApplyBuff").is_some());
+    }
+
+    #[test]
+    fn registry_查询不存在返回none() {
+        let registry = TraitEffectHandlerRegistry::with_defaults();
+        assert!(registry.get("NonExistent").is_none());
+    }
+
+    #[test]
+    fn registry_注册自定义处理器() {
+        let mut registry = TraitEffectHandlerRegistry::with_defaults();
+        struct CustomHandler;
+        impl TraitEffectHandler for CustomHandler {
+            fn type_name(&self) -> &'static str {
+                "Custom"
+            }
+            fn granted_tags(&self, _effect: &TraitEffect) -> Vec<GameplayTag> {
+                vec![GameplayTag::BUFF]
+            }
+            fn attribute_modifiers<'a>(
+                &self,
+                _effect: &'a TraitEffect,
+            ) -> Vec<&'a AttributeModifierDef> {
+                vec![]
+            }
+        }
+        registry.register(Box::new(CustomHandler));
+        assert!(registry.get("Custom").is_some());
+        let handler = registry.get("Custom").unwrap();
+        let effect = TraitEffect::GrantTag(GameplayTag::FIRE);
+        let tags = handler.granted_tags(&effect);
+        assert!(tags.contains(&GameplayTag::BUFF));
+    }
+
+    #[test]
+    fn registry_default等于with_defaults() {
+        let r1 = TraitEffectHandlerRegistry::default();
+        let r2 = TraitEffectHandlerRegistry::with_defaults();
+        assert!(r1.get("GrantTag").is_some());
+        assert!(r2.get("GrantTag").is_some());
+    }
+}

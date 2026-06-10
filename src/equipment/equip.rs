@@ -342,7 +342,7 @@ fn unequip_internal(
 }
 
 /// 应用装备效果：修饰符 + 标签 + Trait
-fn apply_equipment_effects(
+pub fn apply_equipment_effects(
     def: &EquipmentDef,
     instance: &EquipmentInstance,
     slot: EquipmentSlot,

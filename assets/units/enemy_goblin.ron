@@ -13,4 +13,5 @@
     skill_ids: ["basic_attack"],
     trait_ids: ["warrior_mastery"],
     ai_behavior: "aggressive",
+    initial_equipment: [],
 )

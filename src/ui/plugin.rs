@@ -5,7 +5,10 @@ use super::combat_preview::CombatPreviewPlugin;
 use super::combat_vfx_handler;
 use super::command_handler::handle_ui_commands;
 use super::events::UiCommand;
-use super::panels::{ActionHintPlugin, CombatLogPanelPlugin, TurnIndicatorPlugin, UnitInfoPlugin};
+use super::panels::{
+    ActionHintPlugin, CombatLogPanelPlugin, InventoryPanelPlugin, TurnIndicatorPlugin,
+    UnitInfoPlugin,
+};
 use super::theme::UiTheme;
 use super::tile_info::TileInfoPlugin;
 use super::vfx::VfxPlugin;
@@ -33,6 +36,7 @@ impl Plugin for UiPlugin {
                 TurnIndicatorPlugin,
                 UnitInfoPlugin,
                 CombatLogPanelPlugin,
+                InventoryPanelPlugin,
                 ActionHintPlugin,
                 ActionMenuPlugin,
                 TileInfoPlugin,

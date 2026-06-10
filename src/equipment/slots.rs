@@ -36,7 +36,12 @@ impl EquipmentSlots {
     }
 
     /// 装备到指定槽位，返回被替换的旧 (实例 ID, 定义 ID)（如果有）
-    pub fn equip(&mut self, slot: EquipmentSlot, instance_id: u64, def_id: String) -> Option<(u64, String)> {
+    pub fn equip(
+        &mut self,
+        slot: EquipmentSlot,
+        instance_id: u64,
+        def_id: String,
+    ) -> Option<(u64, String)> {
         self.slots.insert(slot, (instance_id, def_id))
     }
 
@@ -47,7 +52,10 @@ impl EquipmentSlots {
 
     /// 获取所有已装备的槽位
     pub fn equipped_slots(&self) -> Vec<(EquipmentSlot, u64, String)> {
-        self.slots.iter().map(|(s, (id, def_id))| (*s, *id, def_id.clone())).collect()
+        self.slots
+            .iter()
+            .map(|(s, (id, def_id))| (*s, *id, def_id.clone()))
+            .collect()
     }
 }
 
@@ -63,7 +71,10 @@ mod tests {
         slots.equip(EquipmentSlot::MainHand, 1, "iron_sword".into());
         assert!(slots.is_equipped(EquipmentSlot::MainHand));
         assert_eq!(slots.get(EquipmentSlot::MainHand), Some(1));
-        assert_eq!(slots.get_def_id(EquipmentSlot::MainHand), Some("iron_sword"));
+        assert_eq!(
+            slots.get_def_id(EquipmentSlot::MainHand),
+            Some("iron_sword")
+        );
 
         let removed = slots.unequip(EquipmentSlot::MainHand);
         assert_eq!(removed, Some((1, "iron_sword".into())));
