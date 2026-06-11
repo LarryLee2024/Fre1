@@ -95,6 +95,7 @@ impl EffectHandler for DamageHandler {
         Some(PendingEffectData::Damage {
             amount,
             is_skill: ctx.skill_id != crate::skill::BASIC_ATTACK_ID,
+            base_amount: Some(amount),
         })
     }
 
@@ -139,7 +140,10 @@ impl EffectHandler for HealHandler {
         let EffectDef::Heal { amount } = def else {
             return None;
         };
-        Some(PendingEffectData::Heal { amount: *amount })
+        Some(PendingEffectData::Heal {
+            amount: *amount,
+            base_amount: Some(*amount),
+        })
     }
 
     fn preview(&self, def: &EffectDef, ctx: &PreviewContext) -> Option<EffectPreview> {
@@ -362,7 +366,10 @@ mod tests {
         };
         let result = handler.generate(&def, &ctx);
         assert!(result.is_some());
-        if let PendingEffectData::Damage { amount, is_skill } = result.unwrap() {
+        if let PendingEffectData::Damage {
+            amount, is_skill, ..
+        } = result.unwrap()
+        {
             assert_eq!(amount, 7); // 10 - 3 = 7
             assert!(!is_skill);
         } else {
@@ -397,7 +404,7 @@ mod tests {
         let def = EffectDef::Heal { amount: 8 };
         let result = handler.generate(&def, &ctx);
         assert!(result.is_some());
-        if let PendingEffectData::Heal { amount } = result.unwrap() {
+        if let PendingEffectData::Heal { amount, .. } = result.unwrap() {
             assert_eq!(amount, 8);
         } else {
             panic!("应该是治疗数据");

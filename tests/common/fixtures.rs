@@ -3,7 +3,7 @@
 use bevy::prelude::*;
 use tactical_rpg::buff::ActiveBuffs;
 use tactical_rpg::character::TraitCollection;
-use tactical_rpg::character::{Faction, PersistentTags, Unit};
+use tactical_rpg::character::{Faction, PersistentTags, Unit, UnitId, UnitName};
 use tactical_rpg::core::attribute::{AttributeKind, Attributes};
 use tactical_rpg::core::tag::GameplayTags;
 use tactical_rpg::equipment::EquipmentSlots;
@@ -13,6 +13,7 @@ use tactical_rpg::inventory::container::Container;
 pub struct UnitBuilder {
     faction: Faction,
     attrs: Attributes,
+    name: &'static str,
 }
 
 impl UnitBuilder {
@@ -32,6 +33,7 @@ impl UnitBuilder {
         Self {
             faction: Faction::Player,
             attrs,
+            name: "warrior",
         }
     }
 
@@ -51,6 +53,7 @@ impl UnitBuilder {
         Self {
             faction: Faction::Player,
             attrs,
+            name: "mage",
         }
     }
 
@@ -70,6 +73,7 @@ impl UnitBuilder {
         Self {
             faction: Faction::Enemy,
             attrs,
+            name: "goblin",
         }
     }
 
@@ -112,6 +116,11 @@ impl UnitBuilder {
                 GameplayTags::default(),
                 PersistentTags::default(),
             ))
+            .insert((
+                Name::new(self.name),
+                UnitId(self.name.to_string()),
+                UnitName(self.name.to_string()),
+            ))
             .id()
     }
 }
@@ -134,6 +143,7 @@ impl Clone for UnitBuilder {
         Self {
             faction: self.faction,
             attrs: self.attrs.clone(),
+            name: self.name,
         }
     }
 }

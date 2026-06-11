@@ -59,6 +59,7 @@ impl Plugin for CharacterPlugin {
             .register_type::<Faction>()
             .register_type::<Unit>()
             .register_type::<UnitName>()
+            .register_type::<UnitId>()
             .register_type::<UnitRace>()
             .register_type::<UnitClass>()
             .register_type::<GridPosition>()

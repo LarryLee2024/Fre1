@@ -14,8 +14,16 @@ pub fn modify_effects(
     for effect in &mut queue.pending {
         if let Ok(target_tags) = tags_query.get(effect.target) {
             match &mut effect.data {
-                PendingEffectData::Damage { amount, .. } => {
+                PendingEffectData::Damage {
+                    amount,
+                    base_amount,
+                    ..
+                } => {
                     let original = *amount;
+                    // 首次 modify 时记录 base_amount
+                    if base_amount.is_none() {
+                        *base_amount = Some(original);
+                    }
                     *amount =
                         rules.apply_damage_modifiers(*amount, &effect.source_tags, target_tags);
                     bevy::log::debug!(
@@ -26,8 +34,14 @@ pub fn modify_effects(
                         "伤害修饰"
                     );
                 }
-                PendingEffectData::Heal { amount } => {
+                PendingEffectData::Heal {
+                    amount,
+                    base_amount,
+                } => {
                     let original = *amount;
+                    if base_amount.is_none() {
+                        *base_amount = Some(original);
+                    }
                     *amount = rules.apply_heal_modifiers(*amount, &effect.source_tags, target_tags);
                     bevy::log::debug!(
                         target: "battle",

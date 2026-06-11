@@ -217,6 +217,8 @@ fn spawn_unit_from_template(
             inventory,
             ai_behavior_id,
         ))
+        // Name 用于 Inspector 调试，UnitId 用于业务逻辑
+        .insert((Name::new(template.id.clone()), UnitId(template.id.clone())))
         // 启用 bevy_picking：单位 sprite 可被鼠标拾取
         .insert(Pickable::default())
         .insert((SkillCooldowns::default(), ActiveBuffs::default()))

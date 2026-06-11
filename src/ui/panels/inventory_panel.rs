@@ -24,6 +24,7 @@ pub fn spawn_inventory_panel(mut commands: Commands, theme: Res<UiTheme>) {
             BackgroundColor(theme.panel_bg),
             InventoryPanel,
         ))
+        .insert(Name::new("InventoryPanel"))
         .with_children(|parent| {
             parent.spawn((
                 Text::new("── 背包 ──"),

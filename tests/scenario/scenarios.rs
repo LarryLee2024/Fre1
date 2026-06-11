@@ -78,6 +78,7 @@ fn enqueue_skill_damage(app: &mut App, source: Entity, target: Entity, amount: i
         data: PendingEffectData::Damage {
             amount,
             is_skill: true,
+            base_amount: None,
         },
         source_tags: vec![],
         terrain_id: "plain".into(),
@@ -298,6 +299,7 @@ fn 地形优势_森林地形减少伤害() {
         data: PendingEffectData::Damage {
             amount: dmg_forest,
             is_skill: false,
+            base_amount: None,
         },
         source_tags: vec![],
         terrain_id: "forest".into(),
@@ -308,6 +310,7 @@ fn 地形优势_森林地形减少伤害() {
         data: PendingEffectData::Damage {
             amount: dmg_plain,
             is_skill: false,
+            base_amount: None,
         },
         source_tags: vec![],
         terrain_id: "plain".into(),

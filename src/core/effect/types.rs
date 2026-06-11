@@ -49,9 +49,21 @@ pub struct PendingEffect {
 /// 待处理效果数据
 #[derive(Clone, Debug, Reflect)]
 pub enum PendingEffectData {
-    Damage { amount: i32, is_skill: bool },
-    Heal { amount: i32 },
-    ApplyBuff { buff_id: String, duration: u32 },
+    Damage {
+        amount: i32,
+        is_skill: bool,
+        /// generate 阶段的原始伤害值（modify 前设置）
+        base_amount: Option<i32>,
+    },
+    Heal {
+        amount: i32,
+        /// generate 阶段的原始治疗值（modify 前设置）
+        base_amount: Option<i32>,
+    },
+    ApplyBuff {
+        buff_id: String,
+        duration: u32,
+    },
     Cleanse,
 }
 
@@ -198,6 +210,7 @@ mod tests {
             data: PendingEffectData::Damage {
                 amount: 5,
                 is_skill: false,
+                base_amount: None,
             },
             source_tags: vec![],
             terrain_id: "plain".to_string(),
@@ -218,6 +231,7 @@ mod tests {
             data: PendingEffectData::Damage {
                 amount: 5,
                 is_skill: false,
+                base_amount: None,
             },
             source_tags: vec![],
             terrain_id: "plain".to_string(),
@@ -253,12 +267,20 @@ mod tests {
         assert_eq!(
             PendingEffectData::Damage {
                 amount: 5,
-                is_skill: false
+                is_skill: false,
+                base_amount: None,
             }
             .type_name(),
             "Damage"
         );
-        assert_eq!(PendingEffectData::Heal { amount: 5 }.type_name(), "Heal");
+        assert_eq!(
+            PendingEffectData::Heal {
+                amount: 5,
+                base_amount: None
+            }
+            .type_name(),
+            "Heal"
+        );
         assert_eq!(
             PendingEffectData::ApplyBuff {
                 buff_id: "burn".into(),

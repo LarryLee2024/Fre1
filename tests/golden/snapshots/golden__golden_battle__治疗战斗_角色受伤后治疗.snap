@@ -16,4 +16,5 @@ entries:
       target_coord:
         - 0
         - 0
+      breakdown: ~
 turn_number: 0

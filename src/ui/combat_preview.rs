@@ -67,6 +67,7 @@ pub fn update_combat_preview_popup(
     );
 
     let panel_id = spawn_popup(&mut commands, &theme, screen_pos.x, screen_pos.y, None);
+    commands.entity(panel_id).insert(Name::new("CombatPreview"));
     add_popup_text(
         &mut commands,
         panel_id,

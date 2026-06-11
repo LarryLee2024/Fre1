@@ -1,6 +1,5 @@
 ---
 source: tests/golden/golden_battle.rs
-assertion_line: 102
 expression: record
 ---
 entries:
@@ -17,4 +16,5 @@ entries:
       target_coord:
         - 0
         - 0
+      breakdown: ~
 turn_number: 0

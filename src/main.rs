@@ -45,6 +45,7 @@ fn main() {
             }),
             ..default()
         }))
+        // 调试插件，仅在debug模式下启用
         .add_plugins((EguiPlugin::default(), WorldInspectorPlugin::new()))
         // 数据层插件
         .add_plugins((

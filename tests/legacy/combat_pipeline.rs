@@ -123,7 +123,9 @@ fn 伤害处理器_generate_基础攻击() {
     };
     let result = handler.generate(&def, &ctx).unwrap();
     match result {
-        PendingEffectData::Damage { amount, is_skill } => {
+        PendingEffectData::Damage {
+            amount, is_skill, ..
+        } => {
             assert_eq!(amount, 7);
             assert!(!is_skill);
         }
@@ -152,7 +154,10 @@ fn 伤害处理器_generate_技能攻击() {
         ignore_def_percent: 0.0,
     };
     let result = handler.generate(&def, &ctx).unwrap();
-    if let PendingEffectData::Damage { amount, is_skill } = result {
+    if let PendingEffectData::Damage {
+        amount, is_skill, ..
+    } = result
+    {
         assert_eq!(amount, 10); // (10-3)*1.5=10.5→10
         assert!(is_skill);
     } else {
@@ -181,7 +186,7 @@ fn 治疗处理器_generate() {
 
     let def = EffectDef::Heal { amount: 8 };
     let result = handler.generate(&def, &ctx).unwrap();
-    if let PendingEffectData::Heal { amount } = result {
+    if let PendingEffectData::Heal { amount, .. } = result {
         assert_eq!(amount, 8);
     } else {
         panic!("应该是 Heal");
@@ -356,6 +361,7 @@ fn effect_queue_push_then_drain() {
         data: PendingEffectData::Damage {
             amount: 7,
             is_skill: false,
+            base_amount: None,
         },
         source_tags: vec![],
         terrain_id: "plain".to_string(),
@@ -364,7 +370,10 @@ fn effect_queue_push_then_drain() {
     queue.push(PendingEffect {
         source: bevy::prelude::Entity::from_bits(3),
         target: bevy::prelude::Entity::from_bits(4),
-        data: PendingEffectData::Heal { amount: 5 },
+        data: PendingEffectData::Heal {
+            amount: 5,
+            base_amount: None,
+        },
         source_tags: vec![],
         terrain_id: "plain".to_string(),
     });
@@ -378,7 +387,7 @@ fn effect_queue_push_then_drain() {
     ));
     assert!(matches!(
         effects[1].data,
-        PendingEffectData::Heal { amount: 5 }
+        PendingEffectData::Heal { amount: 5, .. }
     ));
     assert!(queue.is_empty());
 }
@@ -462,7 +471,8 @@ fn 多效果技能_伤害加buff() {
         queue.pending[0].data,
         PendingEffectData::Damage {
             amount: 8,
-            is_skill: true
+            is_skill: true,
+            ..
         }
     ));
     assert!(matches!(

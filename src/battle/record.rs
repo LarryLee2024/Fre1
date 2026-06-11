@@ -12,6 +12,34 @@ use super::events::{
     CharacterDied, DamageApplied, DotApplied, HealApplied, HotApplied, StunApplied,
 };
 
+// ── 伤害分解 ──
+
+/// 伤害修饰符条目
+#[derive(Debug, Clone, Reflect, Serialize, Deserialize)]
+#[reflect(Serialize, Deserialize)]
+pub struct ModifierEntry {
+    /// 修饰前值
+    pub before: i32,
+    /// 修饰后值
+    pub after: i32,
+    /// 修饰规则名称（如"火焰共鸣"）
+    pub rule_name: String,
+}
+
+/// 伤害分解记录（匹配实际效果管线：generate → modify → execute）
+#[derive(Debug, Clone, Reflect, Serialize, Deserialize)]
+#[reflect(Serialize, Deserialize)]
+pub struct DamageBreakdown {
+    /// 原始效果值（generate 阶段产出）
+    pub base_amount: i32,
+    /// 修饰后效果值（modify 阶段产出）
+    pub modified_amount: i32,
+    /// 修饰符列表
+    pub modifiers: Vec<ModifierEntry>,
+    /// 实际扣血（execute 后）
+    pub actual_damage: i32,
+}
+
 // ── 战斗记录条目 ──
 
 /// 单条战斗记录条目
@@ -34,6 +62,8 @@ pub enum BattleEntry {
         is_skill: bool,
         terrain_label: String,
         target_coord: IVec2,
+        /// 伤害分解（可选，modify 阶段有修饰时存在）
+        breakdown: Option<DamageBreakdown>,
     },
     /// 治疗应用
     HealApplied {
@@ -275,6 +305,7 @@ pub fn record_damage(mut reader: MessageReader<DamageApplied>, mut record: ResMu
             is_skill: msg.is_skill,
             terrain_label: msg.terrain_label.clone(),
             target_coord: msg.target_coord,
+            breakdown: msg.breakdown.clone(),
         });
     }
 }
@@ -355,6 +386,7 @@ mod tests {
             is_skill: false,
             terrain_label: "平原".to_string(),
             target_coord: IVec2::new(3, 4),
+            breakdown: None,
         });
         assert_eq!(record.entries.len(), 1);
     }
@@ -376,6 +408,7 @@ mod tests {
             is_skill: false,
             terrain_label: "平原".to_string(),
             target_coord: IVec2::ZERO,
+            breakdown: None,
         });
         record.record(BattleEntry::HealApplied {
             target: e2,
@@ -393,6 +426,7 @@ mod tests {
             is_skill: true,
             terrain_label: "森林".to_string(),
             target_coord: IVec2::ZERO,
+            breakdown: None,
         });
         let e1_entries = record.entries_for(e1);
         assert_eq!(e1_entries.len(), 2);
@@ -446,6 +480,7 @@ mod tests {
             is_skill: false,
             terrain_label: "平原".to_string(),
             target_coord: IVec2::ZERO,
+            breakdown: None,
         });
         record.record(BattleEntry::TurnEnded { turn: 1 });
         record.record(BattleEntry::TurnStarted { turn: 2 });
@@ -478,6 +513,7 @@ mod tests {
             is_skill: false,
             terrain_label: "平原".to_string(),
             target_coord: IVec2::ZERO,
+            breakdown: None,
         });
         record.record(BattleEntry::DamageApplied {
             target,
@@ -490,6 +526,7 @@ mod tests {
             is_skill: true,
             terrain_label: "平原".to_string(),
             target_coord: IVec2::ZERO,
+            breakdown: None,
         });
         record.record(BattleEntry::CharacterDied {
             entity: target,
@@ -520,6 +557,7 @@ mod tests {
             is_skill: false,
             terrain_label: "平原".to_string(),
             target_coord: IVec2::new(3, 4),
+            breakdown: None,
         });
         record.turn_number = 1;
 
@@ -527,5 +565,129 @@ mod tests {
         let deserialized: BattleRecord = ron::from_str(&ron).unwrap();
         assert_eq!(deserialized.entries.len(), 2);
         assert_eq!(deserialized.turn_number, 1);
+    }
+
+    #[test]
+    fn 伤害分解_基础构建() {
+        let breakdown = DamageBreakdown {
+            base_amount: 10,
+            modified_amount: 15,
+            modifiers: vec![ModifierEntry {
+                before: 10,
+                after: 15,
+                rule_name: "火焰共鸣".to_string(),
+            }],
+            actual_damage: 15,
+        };
+        assert_eq!(breakdown.base_amount, 10);
+        assert_eq!(breakdown.modified_amount, 15);
+        assert_eq!(breakdown.actual_damage, 15);
+        assert_eq!(breakdown.modifiers.len(), 1);
+        assert_eq!(breakdown.modifiers[0].rule_name, "火焰共鸣");
+    }
+
+    #[test]
+    fn 伤害分解_无修饰符() {
+        let breakdown = DamageBreakdown {
+            base_amount: 8,
+            modified_amount: 8,
+            modifiers: vec![],
+            actual_damage: 8,
+        };
+        assert_eq!(breakdown.base_amount, breakdown.modified_amount);
+        assert!(breakdown.modifiers.is_empty());
+    }
+
+    #[test]
+    fn 伤害分解_多修饰符叠加() {
+        let breakdown = DamageBreakdown {
+            base_amount: 10,
+            modified_amount: 18,
+            modifiers: vec![
+                ModifierEntry {
+                    before: 10,
+                    after: 13,
+                    rule_name: "火焰共鸣".to_string(),
+                },
+                ModifierEntry {
+                    before: 13,
+                    after: 18,
+                    rule_name: "弱点打击".to_string(),
+                },
+            ],
+            actual_damage: 18,
+        };
+        assert_eq!(breakdown.modifiers.len(), 2);
+        // 第二个修饰符的 before 应等于第一个的 after
+        assert_eq!(breakdown.modifiers[1].before, breakdown.modifiers[0].after);
+    }
+
+    #[test]
+    fn 伤害分解_实际伤害低于修饰值() {
+        // 角色剩余 HP 不足时，actual_damage < modified_amount
+        let breakdown = DamageBreakdown {
+            base_amount: 20,
+            modified_amount: 25,
+            modifiers: vec![ModifierEntry {
+                before: 20,
+                after: 25,
+                rule_name: "暴击".to_string(),
+            }],
+            actual_damage: 5, // 角色只剩 5 HP
+        };
+        assert!(breakdown.actual_damage < breakdown.modified_amount);
+    }
+
+    #[test]
+    fn 伤害分解_序列化反序列化() {
+        let breakdown = DamageBreakdown {
+            base_amount: 10,
+            modified_amount: 15,
+            modifiers: vec![ModifierEntry {
+                before: 10,
+                after: 15,
+                rule_name: "火焰共鸣".to_string(),
+            }],
+            actual_damage: 15,
+        };
+        let ron = ron::to_string(&breakdown).unwrap();
+        let deserialized: DamageBreakdown = ron::from_str(&ron).unwrap();
+        assert_eq!(deserialized.base_amount, 10);
+        assert_eq!(deserialized.modifiers.len(), 1);
+        assert_eq!(deserialized.modifiers[0].rule_name, "火焰共鸣");
+    }
+
+    #[test]
+    fn 战斗记录_伤害携带分解() {
+        let mut record = BattleRecord::default();
+        record.record(BattleEntry::DamageApplied {
+            target: Entity::from_bits(1),
+            target_name: "哥布林".to_string(),
+            target_faction: Faction::Enemy,
+            attacker: Entity::from_bits(2),
+            attacker_name: "战士".to_string(),
+            attacker_faction: Faction::Player,
+            amount: 15,
+            is_skill: true,
+            terrain_label: "森林".to_string(),
+            target_coord: IVec2::ZERO,
+            breakdown: Some(DamageBreakdown {
+                base_amount: 10,
+                modified_amount: 15,
+                modifiers: vec![ModifierEntry {
+                    before: 10,
+                    after: 15,
+                    rule_name: "森林伏击".to_string(),
+                }],
+                actual_damage: 15,
+            }),
+        });
+        if let BattleEntry::DamageApplied { breakdown, .. } = &record.entries[0] {
+            let bd = breakdown.as_ref().unwrap();
+            assert_eq!(bd.base_amount, 10);
+            assert_eq!(bd.modifiers[0].rule_name, "森林伏击");
+        } else {
+            panic!("期望 DamageApplied");
+        }
     }
 }

@@ -6,6 +6,8 @@ use crate::turn::TurnOrder;
 use bevy::ecs::message::MessageReader;
 use bevy::prelude::*;
 
+use super::record::DamageBreakdown;
+
 /// 角色死亡消息
 #[derive(Message, Debug, Clone)]
 pub struct CharacterDied {
@@ -38,6 +40,8 @@ pub struct DamageApplied {
     pub terrain_label: String,
     /// 目标格子坐标
     pub target_coord: IVec2,
+    /// 伤害分解（可选）
+    pub breakdown: Option<DamageBreakdown>,
 }
 
 /// 治疗应用消息
@@ -128,6 +132,7 @@ mod tests {
             is_skill: false,
             terrain_label: "平原".to_string(),
             target_coord: IVec2::new(3, 4),
+            breakdown: None,
         };
         assert_eq!(msg.amount, 15);
         assert_eq!(msg.attacker, Entity::from_bits(2));

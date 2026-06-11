@@ -59,6 +59,7 @@ pub fn spawn_unit_info_panel(mut commands: Commands, theme: Res<UiTheme>) {
             BackgroundColor(theme.panel_bg),
             UnitInfoPanel,
         ))
+        .insert(Name::new("UnitInfoPanel"))
         .with_children(|parent| {
             // 单位名称
             parent.spawn((

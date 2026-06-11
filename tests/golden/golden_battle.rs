@@ -51,7 +51,11 @@ fn enqueue_damage(app: &mut App, source: Entity, target: Entity, amount: i32, is
     queue.pending.push(PendingEffect {
         source,
         target,
-        data: PendingEffectData::Damage { amount, is_skill },
+        data: PendingEffectData::Damage {
+            amount,
+            is_skill,
+            base_amount: None,
+        },
         source_tags: vec![],
         terrain_id: "plain".into(),
     });
@@ -62,7 +66,10 @@ fn enqueue_heal(app: &mut App, source: Entity, target: Entity, amount: i32) {
     queue.pending.push(PendingEffect {
         source,
         target,
-        data: PendingEffectData::Heal { amount },
+        data: PendingEffectData::Heal {
+            amount,
+            base_amount: None,
+        },
         source_tags: vec![],
         terrain_id: "plain".into(),
     });

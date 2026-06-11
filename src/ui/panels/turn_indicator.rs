@@ -11,21 +11,23 @@ pub struct TurnIndicator;
 
 /// 生成回合提示
 pub fn spawn_turn_indicator(mut commands: Commands, theme: Res<UiTheme>) {
-    commands.spawn((
-        Text::new("第 1 回合"),
-        TextFont {
-            font_size: theme.font_large,
-            ..default()
-        },
-        TextColor(Color::WHITE),
-        Node {
-            position_type: PositionType::Absolute,
-            top: Val::Px(theme.gap_large),
-            left: Val::Px(theme.gap_large),
-            ..default()
-        },
-        TurnIndicator,
-    ));
+    commands
+        .spawn((
+            Text::new("第 1 回合"),
+            TextFont {
+                font_size: theme.font_large,
+                ..default()
+            },
+            TextColor(Color::WHITE),
+            Node {
+                position_type: PositionType::Absolute,
+                top: Val::Px(theme.gap_large),
+                left: Val::Px(theme.gap_large),
+                ..default()
+            },
+            TurnIndicator,
+        ))
+        .insert(Name::new("TurnIndicator"));
 }
 
 /// 更新回合提示（读取 TurnInfoView，AGI驱动不再分阵营阶段）

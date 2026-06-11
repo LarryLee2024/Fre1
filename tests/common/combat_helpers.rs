@@ -13,6 +13,7 @@ pub fn deal_damage(app: &mut App, source: Entity, target: Entity, amount: i32) {
         data: PendingEffectData::Damage {
             amount,
             is_skill: false,
+            base_amount: None,
         },
         source_tags: vec![],
         terrain_id: String::new(),
@@ -28,6 +29,7 @@ pub fn deal_skill_damage(app: &mut App, source: Entity, target: Entity, amount: 
         data: PendingEffectData::Damage {
             amount,
             is_skill: true,
+            base_amount: None,
         },
         source_tags: vec![],
         terrain_id: String::new(),
@@ -40,7 +42,10 @@ pub fn deal_heal(app: &mut App, target: Entity, amount: i32) {
     queue.pending.push(PendingEffect {
         source: Entity::PLACEHOLDER,
         target,
-        data: PendingEffectData::Heal { amount },
+        data: PendingEffectData::Heal {
+            amount,
+            base_amount: None,
+        },
         source_tags: vec![],
         terrain_id: String::new(),
     });

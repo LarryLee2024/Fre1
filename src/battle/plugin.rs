@@ -4,8 +4,9 @@ use super::events::{
 use super::log::CombatLogPlugin;
 use super::pipeline::CombatEventPlugin;
 use super::record::{
-    BattleEntry, BattleRecord, EntityBattleStats, record_character_died, record_damage, record_dot,
-    record_heal, record_hot, record_stun, record_turn_ended, record_turn_started,
+    BattleEntry, BattleRecord, DamageBreakdown, EntityBattleStats, ModifierEntry,
+    record_character_died, record_damage, record_dot, record_heal, record_hot, record_stun,
+    record_turn_ended, record_turn_started,
 };
 use crate::core::effect::{
     EffectDef, EffectQueue, EffectResult, EffectResultData, PendingEffect, PendingEffectData,
@@ -26,6 +27,8 @@ impl Plugin for BattlePlugin {
             .register_type::<EffectResult>()
             .register_type::<EffectQueue>()
             .register_type::<BattleEntry>()
+            .register_type::<DamageBreakdown>()
+            .register_type::<ModifierEntry>()
             .register_type::<EntityBattleStats>()
             .register_type::<BattleRecord>()
             .add_message::<CharacterDied>()

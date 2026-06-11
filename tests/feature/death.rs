@@ -73,6 +73,7 @@ fn enqueue_damage(app: &mut App, source: Entity, target: Entity, amount: i32) {
         data: PendingEffectData::Damage {
             amount,
             is_skill: false,
+            base_amount: None,
         },
         source_tags: vec![],
         terrain_id: "plain".into(),

@@ -42,10 +42,18 @@ pub struct Unit {
     pub acted: bool,
 }
 
-/// 单位名称
+/// 单位名称（UI 显示用）
 #[derive(Component, Reflect)]
 #[reflect(Component)]
 pub struct UnitName(pub String);
+
+/// 单位业务 ID（逻辑标识，如 "knight_001"）
+/// Name 用于 Inspector 调试，UnitId 用于业务逻辑，UnitName 用于 UI 显示
+#[derive(
+    Component, Reflect, Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize,
+)]
+#[reflect(Component, Serialize, Deserialize)]
+pub struct UnitId(pub String);
 
 /// 单位种族
 #[derive(Component, Reflect)]
@@ -277,5 +285,40 @@ mod tests {
         assert!(world.get::<SkillSlots>(entity).is_some());
         assert!(world.get::<GridPosition>(entity).is_some());
         assert!(world.get::<ActiveBuffs>(entity).is_some());
+    }
+
+    #[test]
+    fn unit_id_组件_基本属性() {
+        let id = UnitId("knight_001".into());
+        assert_eq!(id.0, "knight_001");
+    }
+
+    #[test]
+    fn unit_id_组件_相等与哈希() {
+        let a = UnitId("knight_001".into());
+        let b = UnitId("knight_001".into());
+        let c = UnitId("mage_001".into());
+        assert_eq!(a, b);
+        assert_ne!(a, c);
+        let mut set = std::collections::HashSet::new();
+        set.insert(a.clone());
+        assert!(set.contains(&b));
+        assert!(!set.contains(&c));
+    }
+
+    #[test]
+    fn unit_id_组件_挂载与读取() {
+        let mut world = World::new();
+        let entity = world
+            .spawn((
+                Unit {
+                    faction: Faction::Player,
+                    acted: false,
+                },
+                UnitId("warrior_001".into()),
+            ))
+            .id();
+        let unit_id = world.get::<UnitId>(entity).unwrap();
+        assert_eq!(unit_id.0, "warrior_001");
     }
 }

@@ -55,7 +55,9 @@ impl Plugin for CameraPlugin {
 
 /// 生成带控制器的相机
 pub fn spawn_camera(mut commands: Commands) {
-    commands.spawn((Camera2d, CameraController, CameraTarget::default()));
+    commands
+        .spawn((Camera2d, CameraController, CameraTarget::default()))
+        .insert(Name::new("GameCamera"));
 }
 
 /// 相机平移、缩放、边缘滚动

@@ -129,6 +129,7 @@ pub fn spawn_action_menu(
             ActionMenuRoot,
             BlocksGameInput,
         ))
+        .insert(Name::new("ActionMenu"))
         .id();
 
     for &child in &children_entities {

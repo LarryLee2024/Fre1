@@ -22,6 +22,7 @@ pub fn spawn_combat_log_panel(mut commands: Commands, theme: Res<UiTheme>) {
             BackgroundColor(theme.panel_bg),
             CombatLogPanel,
         ))
+        .insert(Name::new("CombatLogPanel"))
         .with_children(|parent| {
             // 标题行
             parent.spawn(hbox(&theme)).with_children(|row| {

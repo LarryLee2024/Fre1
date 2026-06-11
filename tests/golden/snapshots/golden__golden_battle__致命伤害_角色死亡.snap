@@ -1,6 +1,5 @@
 ---
 source: tests/golden/golden_battle.rs
-assertion_line: 147
 expression: record
 ---
 entries:
@@ -17,6 +16,7 @@ entries:
       target_coord:
         - 0
         - 0
+      breakdown: ~
   - CharacterDied:
       entity: 4294967294
       name: 哥布林

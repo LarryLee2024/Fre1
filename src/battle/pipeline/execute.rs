@@ -1,6 +1,7 @@
 // 步骤 3：执行效果（纯逻辑：扣血/加 Buff/击杀判定）
 // 表现层（VFX/日志）通过 Message 响应，不在此处调用
 
+use crate::battle::record::DamageBreakdown;
 use crate::battle::{CharacterDied, DamageApplied, HealApplied};
 use crate::buff::{ActiveBuffs, BuffRegistry, apply_buff, remove_all_debuffs};
 use crate::character::{Dead, Faction, GridPosition, Unit, UnitName};
@@ -91,7 +92,11 @@ pub fn execute_effects_inline(
             .to_string();
 
         match effect.data {
-            PendingEffectData::Damage { amount, is_skill } => {
+            PendingEffectData::Damage {
+                amount,
+                is_skill,
+                base_amount,
+            } => {
                 if let Ok(mut target_attrs) = attrs_query.get_mut(effect.target) {
                     apply_damage_effect(
                         &mut target_attrs,
@@ -103,6 +108,7 @@ pub fn execute_effects_inline(
                         attacker_faction,
                         amount,
                         is_skill,
+                        base_amount,
                         &terrain_label,
                         target_coord,
                         commands,
@@ -111,7 +117,7 @@ pub fn execute_effects_inline(
                     );
                 }
             }
-            PendingEffectData::Heal { amount } => {
+            PendingEffectData::Heal { amount, .. } => {
                 if let Ok(mut target_attrs) = attrs_query.get_mut(effect.target) {
                     apply_heal_effect(
                         &mut target_attrs,
@@ -178,12 +184,24 @@ pub fn apply_damage_effect(
     attacker_faction: Faction,
     amount: i32,
     is_skill: bool,
+    base_amount: Option<i32>,
     terrain_label: &str,
     target_coord: IVec2,
     commands: &mut Commands,
     died_writer: &mut MessageWriter<CharacterDied>,
     damage_writer: &mut MessageWriter<DamageApplied>,
 ) {
+    // 构建伤害分解
+    let breakdown = base_amount.map(|base| {
+        let modified = amount;
+        DamageBreakdown {
+            base_amount: base,
+            modified_amount: modified,
+            modifiers: Vec::new(), // 修饰规则详情由 modify 阶段填充
+            actual_damage: amount,
+        }
+    });
+
     // 扣血
     let hp = target_attrs.get(AttributeKind::Hp);
     let new_hp = (hp - amount as f32).max(0.0);
@@ -210,6 +228,7 @@ pub fn apply_damage_effect(
         is_skill,
         terrain_label: terrain_label.to_string(),
         target_coord,
+        breakdown,
     });
 
     // 死亡判定
@@ -361,6 +380,7 @@ mod tests {
             data: PendingEffectData::Damage {
                 amount: 10,
                 is_skill: false,
+                base_amount: Some(10),
             },
             source_tags: vec![],
             terrain_id: "plain".into(),
@@ -413,6 +433,7 @@ mod tests {
             data: PendingEffectData::Damage {
                 amount: 10,
                 is_skill: false,
+                base_amount: Some(10),
             },
             source_tags: vec![],
             terrain_id: "plain".into(),
@@ -461,7 +482,10 @@ mod tests {
         queue.pending.push(PendingEffect {
             source,
             target,
-            data: PendingEffectData::Heal { amount: 15 },
+            data: PendingEffectData::Heal {
+                amount: 15,
+                base_amount: Some(15),
+            },
             source_tags: vec![],
             terrain_id: "plain".into(),
         });
@@ -510,7 +534,10 @@ mod tests {
         queue.pending.push(PendingEffect {
             source,
             target,
-            data: PendingEffectData::Heal { amount: 100 },
+            data: PendingEffectData::Heal {
+                amount: 100,
+                base_amount: Some(100),
+            },
             source_tags: vec![],
             terrain_id: "plain".into(),
         });
