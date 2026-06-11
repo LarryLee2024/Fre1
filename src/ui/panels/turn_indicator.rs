@@ -18,7 +18,7 @@ pub fn spawn_turn_indicator(mut commands: Commands, theme: Res<UiTheme>) {
                 font_size: theme.font_large,
                 ..default()
             },
-            TextColor(Color::WHITE),
+            TextColor(theme.text_primary),
             Node {
                 position_type: PositionType::Absolute,
                 top: Val::Px(theme.gap_large),

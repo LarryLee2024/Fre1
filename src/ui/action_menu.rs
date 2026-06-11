@@ -1,11 +1,11 @@
 // 行动菜单模块：弹出式行动菜单，使用 SkillSlots 动态生成按钮
 // 使用 Widget 库构建，按钮交互通过 UiCommand Message 发出
 
-use crate::character::Unit;
-use crate::skill::{SkillRegistry, SkillSlots};
+use crate::skill::SkillRegistry;
 use crate::ui::events::UiCommand;
 use crate::ui::focus::BlocksGameInput;
 use crate::ui::theme::UiTheme;
+use crate::ui::view_models::SelectedUnitView;
 use crate::ui::widgets::layout::*;
 use bevy::ecs::message::MessageWriter;
 use bevy::prelude::*;
@@ -40,8 +40,7 @@ pub fn spawn_action_menu(
     commands: &mut Commands,
     x: f32,
     y: f32,
-    _unit: &Unit,
-    skill_slots: &SkillSlots,
+    view: &SelectedUnitView,
     menu_entity: &mut ActionMenuEntity,
     skill_registry: &SkillRegistry,
     theme: &UiTheme,
@@ -65,15 +64,15 @@ pub fn spawn_action_menu(
         .id();
     children_entities.push(attack_btn);
 
-    // 特殊技能按钮
-    if let Some(skill_id) = skill_slots.special_skill() {
-        if let Some(skill_data) = skill_registry.get(skill_id) {
+    // 技能按钮（从 ViewModel 读取）
+    for skill_entry in &view.skills {
+        if let Some(skill_data) = skill_registry.get(&skill_entry.id) {
             let skill_btn = commands
                 .spawn((
                     Button,
                     button(theme),
                     ActionMenuButton {
-                        kind: ActionKind::Skill(skill_id.to_string()),
+                        kind: ActionKind::Skill(skill_entry.id.clone()),
                     },
                 ))
                 .with_children(|parent| {
@@ -174,35 +173,26 @@ fn on_enter_action_menu(
     mut commands: Commands,
     map: Res<crate::map::GameMap>,
     camera_query: Query<(&Camera, &GlobalTransform)>,
-    selected_query: Query<
-        (
-            Entity,
-            &crate::character::Unit,
-            &crate::character::GridPosition,
-            &crate::skill::SkillSlots,
-        ),
-        With<crate::character::Selected>,
-    >,
+    view: Res<SelectedUnitView>,
     mut menu_entity: ResMut<ActionMenuEntity>,
     skill_registry: Res<SkillRegistry>,
     theme: Res<UiTheme>,
 ) {
-    if let Ok((_, unit, gp, skill_slots)) = selected_query.single() {
-        let unit_world = map.coord_to_world(gp.coord);
-        if let Ok((camera, cam_transform)) = camera_query.single() {
-            if let Ok(screen_pos) = camera.world_to_viewport(cam_transform, unit_world.extend(1.0))
-            {
-                spawn_action_menu(
-                    &mut commands,
-                    screen_pos.x,
-                    screen_pos.y,
-                    unit,
-                    skill_slots,
-                    &mut menu_entity,
-                    &skill_registry,
-                    &theme,
-                );
-            }
+    if view.name.is_empty() {
+        return;
+    }
+    let unit_world = map.coord_to_world(view.grid_coord);
+    if let Ok((camera, cam_transform)) = camera_query.single() {
+        if let Ok(screen_pos) = camera.world_to_viewport(cam_transform, unit_world.extend(1.0)) {
+            spawn_action_menu(
+                &mut commands,
+                screen_pos.x,
+                screen_pos.y,
+                &view,
+                &mut menu_entity,
+                &skill_registry,
+                &theme,
+            );
         }
     }
 }

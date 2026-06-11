@@ -51,6 +51,10 @@ pub struct UiTheme {
     pub bar_bg: Color,
     /// 分隔线颜色
     pub divider_color: Color,
+    /// 玩家阵营颜色
+    pub faction_player_color: Color,
+    /// 敌方阵营颜色
+    pub faction_enemy_color: Color,
 
     // ── 字号 ──
     /// 大标题字号
@@ -127,6 +131,8 @@ impl Default for UiTheme {
             debuff_color: Color::srgb(1.0, 0.3, 0.3),
             bar_bg: Color::srgba(0.2, 0.2, 0.2, 0.8),
             divider_color: Color::srgb(0.4, 0.4, 0.4),
+            faction_player_color: Color::srgb(0.2, 0.5, 1.0),
+            faction_enemy_color: Color::srgb(1.0, 0.3, 0.2),
 
             // 字号
             font_large: 24.0,
@@ -159,10 +165,10 @@ impl Default for UiTheme {
 }
 
 /// 阵营对应的单位颜色（表现层映射）
-pub fn faction_color(faction: crate::character::Faction) -> Color {
+pub fn faction_color(faction: crate::character::Faction, theme: &UiTheme) -> Color {
     match faction {
-        crate::character::Faction::Player => Color::srgb(0.2, 0.5, 1.0),
-        crate::character::Faction::Enemy => Color::srgb(1.0, 0.3, 0.2),
+        crate::character::Faction::Player => theme.faction_player_color,
+        crate::character::Faction::Enemy => theme.faction_enemy_color,
     }
 }
 
@@ -173,21 +179,24 @@ mod tests {
 
     #[test]
     fn faction_color_阵营颜色映射() {
-        let player_color = faction_color(Faction::Player);
-        let enemy_color = faction_color(Faction::Enemy);
+        let theme = UiTheme::default();
+        let player_color = faction_color(Faction::Player, &theme);
+        let enemy_color = faction_color(Faction::Enemy, &theme);
         assert_ne!(player_color, enemy_color);
     }
 
     #[test]
     fn faction_color_玩家为蓝色系() {
-        let color = faction_color(Faction::Player);
+        let theme = UiTheme::default();
+        let color = faction_color(Faction::Player, &theme);
         let rgba = Srgba::from(color);
         assert!(rgba.blue > rgba.red);
     }
 
     #[test]
     fn faction_color_敌方为红色系() {
-        let color = faction_color(Faction::Enemy);
+        let theme = UiTheme::default();
+        let color = faction_color(Faction::Enemy, &theme);
         let rgba = Srgba::from(color);
         assert!(rgba.red > rgba.blue);
     }

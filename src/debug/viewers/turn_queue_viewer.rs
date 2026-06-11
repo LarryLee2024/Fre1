@@ -45,15 +45,15 @@ pub fn turn_queue_viewer_system_inner(
                     Faction::Player => "[友]",
                     Faction::Enemy => "[敌]",
                 };
-                let agi = attrs.get(AttributeKind::Agility);
+                let initiative = attrs.get(AttributeKind::Initiative);
                 let marker = if is_current { "▶" } else { " " };
 
                 let text = format!(
-                    "{} {} {} AGI={:.0} e:{}",
+                    "{} {} {} SPD={:.0} e:{}",
                     marker,
                     faction_label,
                     name.0,
-                    agi,
+                    initiative,
                     entity.index()
                 );
                 if is_current {

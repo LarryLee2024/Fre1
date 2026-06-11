@@ -196,7 +196,7 @@ fn spawn_unit_from_template(
     commands
         .spawn((
             Sprite::from_color(
-                crate::ui::theme::faction_color(template.faction),
+                crate::ui::theme::faction_color(template.faction, &crate::ui::theme::UiTheme::default()),
                 Vec2::splat(tile_size * 0.6),
             ),
             Transform::from_xyz(world_pos.x, world_pos.y, 1.0),

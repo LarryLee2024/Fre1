@@ -29,7 +29,7 @@ pub fn spawn_resource_bar(
                     font_size: theme.font_small,
                     ..default()
                 },
-                TextColor(Color::WHITE),
+                TextColor(theme.text_primary),
                 Node {
                     width: Val::Px(theme.bar_label_width),
                     ..default()
@@ -63,7 +63,7 @@ pub fn spawn_resource_bar(
                     font_size: theme.font_small,
                     ..default()
                 },
-                TextColor(Color::WHITE),
+                TextColor(theme.text_primary),
                 text_label,
             ));
         });

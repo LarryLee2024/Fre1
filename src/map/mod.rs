@@ -3,6 +3,7 @@
 
 mod data;
 mod grid;
+mod hp_bar;
 mod pathfinding;
 pub mod runtime;
 
@@ -26,6 +27,6 @@ impl Plugin for MapPlugin {
             .register_type::<grid::GameMap>()
             .register_type::<runtime::OccupancyGrid>()
             .register_type::<runtime::TerrainGrid>()
-            .add_systems(Update, runtime::update_occupancy_grid);
+            .add_systems(Update, (runtime::update_occupancy_grid, hp_bar::update_hp_bars));
     }
 }

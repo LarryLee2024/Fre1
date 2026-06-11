@@ -1,8 +1,6 @@
 // 单位信息面板：显示选中单位的属性、资源条、技能、Buff
 
 use crate::assets::CnFont;
-use crate::character::{HpBarFg, Unit};
-use crate::core::attribute::{AttributeKind, Attributes};
 use crate::turn::AppState;
 use crate::ui::theme::UiTheme;
 use crate::ui::view_models::SelectedUnitView;
@@ -68,7 +66,7 @@ pub fn spawn_unit_info_panel(mut commands: Commands, theme: Res<UiTheme>) {
                     font_size: theme.font_medium,
                     ..default()
                 },
-                TextColor(Color::WHITE),
+                TextColor(theme.text_primary),
                 PanelLabel::UnitName,
             ));
             // 种族/职业信息
@@ -420,29 +418,6 @@ pub fn update_unit_info(
     }
 }
 
-/// 更新 HP 条宽度（地图上单位的 HP 条，每个单位独立计算）
-pub fn update_hp_bars(
-    units: Query<(&Attributes, &Children), With<Unit>>,
-    mut hp_fgs: Query<&mut Sprite, With<HpBarFg>>,
-    map: Res<crate::map::GameMap>,
-) {
-    let bar_width = map.tile_size * 0.6;
-    for (attrs, children) in &units {
-        let hp = attrs.get(AttributeKind::Hp);
-        let max_hp = attrs.get(AttributeKind::MaxHp);
-        let ratio = if max_hp > 0.0 {
-            (hp / max_hp).max(0.0)
-        } else {
-            0.0
-        };
-        for child in children.iter() {
-            if let Ok(mut sprite) = hp_fgs.get_mut(child) {
-                sprite.custom_size = Some(Vec2::new(bar_width * ratio, 4.0));
-            }
-        }
-    }
-}
-
 /// 单位信息面板插件
 pub struct UnitInfoPlugin;
 
@@ -455,7 +430,7 @@ impl Plugin for UnitInfoPlugin {
         )
         .add_systems(
             Update,
-            (setup_ui_font, update_unit_info, update_hp_bars).run_if(in_state(AppState::InGame)),
+            (setup_ui_font, update_unit_info).run_if(in_state(AppState::InGame)),
         );
     }
 }

@@ -86,6 +86,8 @@ pub struct SelectedUnitView {
     pub name: String,
     pub race: String,
     pub class: String,
+    /// 单位格子坐标（用于 UI 定位，如行动菜单）
+    pub grid_coord: IVec2,
     // 生命资源
     pub hp: i32,
     pub max_hp: i32,
@@ -163,6 +165,7 @@ pub fn update_selected_unit_view(
         Option<&TraitCollection>,
         Option<&crate::equipment::EquipmentSlots>,
         Option<&crate::inventory::container::Container>,
+        &GridPosition,
     )>,
     skill_registry: Res<SkillRegistry>,
     trait_registry: Res<TraitRegistry>,
@@ -188,11 +191,13 @@ pub fn update_selected_unit_view(
             trait_collection,
             equipment_slots,
             container,
+            grid_pos,
         )) = units.get(entity)
         {
             view.name = name.0.clone();
             view.race = race.map(|r| r.0.clone()).unwrap_or_default();
             view.class = class.map(|c| c.0.clone()).unwrap_or_default();
+            view.grid_coord = grid_pos.coord;
 
             // 生命资源
             view.hp = attrs.get(AttributeKind::Hp) as i32;
@@ -377,6 +382,7 @@ pub fn update_selected_unit_view(
             // 实体已销毁
             view.is_selected = false;
             view.name.clear();
+            view.grid_coord = IVec2::ZERO;
             view.core_attrs.clear();
             view.combat_attrs.clear();
             view.support_attrs.clear();

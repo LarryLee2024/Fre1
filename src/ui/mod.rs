@@ -118,11 +118,12 @@ fn player_turn(turn_state: Res<TurnState>) -> bool {
 
 /// 已行动单位颜色变灰
 fn update_acted_unit_color(
+    theme: Res<UiTheme>,
     mut units: Query<(&crate::character::Unit, &mut Sprite), Without<crate::character::MovingUnit>>,
 ) {
     use crate::ui::theme::faction_color;
     for (unit, mut sprite) in &mut units {
-        let base_color = faction_color(unit.faction);
+        let base_color = faction_color(unit.faction, &theme);
         if unit.acted {
             let mut hsla = Hsla::from(base_color);
             hsla.saturation *= 0.2;
