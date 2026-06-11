@@ -95,7 +95,10 @@ impl Dead {
     /// Hook = 固有行为（宪法 5.0），只处理 Dead 组件自身的固有逻辑
     fn on_add_dead(mut world: DeferredWorld, context: HookContext) {
         let entity = context.entity;
-        let unit_id = world.get::<UnitId>(entity).map(|id| id.0.as_str()).unwrap_or("?");
+        let unit_id = world
+            .get::<UnitId>(entity)
+            .map(|id| id.0.as_str())
+            .unwrap_or("?");
         bevy::log::trace!(target: "character", entity=?entity, unit_id=%unit_id, "Dead hook triggered");
         // 标记已行动，防止死亡单位继续行动
         if let Some(mut unit) = world.get_mut::<Unit>(entity) {

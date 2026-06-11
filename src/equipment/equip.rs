@@ -4,12 +4,12 @@ use super::definition::{EquipmentDef, EquipmentRegistry, EquipmentSlot};
 use super::instance::EquipmentInstance;
 use super::requirements::check_equipment_requirements;
 use super::slots::EquipmentSlots;
+use crate::buff::ActiveBuffs;
+use crate::buff::resolve::rebuild_tags as rebuild_tags_with_buffs;
 use crate::character::PersistentTags;
 use crate::character::{
     TraitCollection, TraitEffectHandlerRegistry, TraitRegistry, TraitSource, TraitTrigger,
 };
-use crate::buff::ActiveBuffs;
-use crate::buff::resolve::rebuild_tags as rebuild_tags_with_buffs;
 use crate::core::attribute::{AttributeModifierInstance, Attributes, ModifierSource};
 use crate::core::tag::GameplayTags;
 use crate::inventory::container::Container;

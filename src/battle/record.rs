@@ -115,19 +115,42 @@ impl BattleRecord {
     /// 记录一条战斗事件，同时写 trace 日志
     pub fn record(&mut self, entry: BattleEntry) {
         match &entry {
-            BattleEntry::DamageApplied { target, target_name, amount, .. } => {
+            BattleEntry::DamageApplied {
+                target,
+                target_name,
+                amount,
+                ..
+            } => {
                 bevy::log::trace!(target: "battle_record", entity = ?target, unit = %target_name, damage = amount, "DamageApplied");
             }
-            BattleEntry::HealApplied { target, target_name, amount, .. } => {
+            BattleEntry::HealApplied {
+                target,
+                target_name,
+                amount,
+                ..
+            } => {
                 bevy::log::trace!(target: "battle_record", entity = ?target, unit = %target_name, heal = amount, "HealApplied");
             }
-            BattleEntry::DotApplied { target, target_name, amount, .. } => {
+            BattleEntry::DotApplied {
+                target,
+                target_name,
+                amount,
+                ..
+            } => {
                 bevy::log::trace!(target: "battle_record", entity = ?target, unit = %target_name, dot = amount, "DotApplied");
             }
-            BattleEntry::HotApplied { target, target_name, amount, .. } => {
+            BattleEntry::HotApplied {
+                target,
+                target_name,
+                amount,
+                ..
+            } => {
                 bevy::log::trace!(target: "battle_record", entity = ?target, unit = %target_name, hot = amount, "HotApplied");
             }
-            BattleEntry::StunApplied { target, target_name } => {
+            BattleEntry::StunApplied {
+                target,
+                target_name,
+            } => {
                 bevy::log::trace!(target: "battle_record", entity = ?target, unit = %target_name, "StunApplied");
             }
             BattleEntry::CharacterDied { entity, name, .. } => {

@@ -27,6 +27,9 @@ impl Plugin for MapPlugin {
             .register_type::<grid::GameMap>()
             .register_type::<runtime::OccupancyGrid>()
             .register_type::<runtime::TerrainGrid>()
-            .add_systems(Update, (runtime::update_occupancy_grid, hp_bar::update_hp_bars));
+            .add_systems(
+                Update,
+                (runtime::update_occupancy_grid, hp_bar::update_hp_bars),
+            );
     }
 }

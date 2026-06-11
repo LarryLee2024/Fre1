@@ -1,8 +1,7 @@
 // 战斗意图模块：行动后路由、行动执行
 
 use crate::character::{
-    AttackRange, Faction, GridPosition, MovableRange, Selected, SelectionHighlight, Unit,
-    UnitName,
+    AttackRange, Faction, GridPosition, MovableRange, Selected, SelectionHighlight, Unit, UnitName,
 };
 use crate::core::attribute::AttributeKind;
 use crate::core::attribute::Attributes;
@@ -162,7 +161,9 @@ pub fn execute_action_on_enter(
 
     // AI 单位：通过 CombatIntent.source_entity 查找，与玩家共享 Effect Pipeline
     if let Some(source_entity) = combat_intent.source_entity {
-        if let Ok((mut unit, _attrs, mut cooldowns, tags)) = non_selected_units.get_mut(source_entity) {
+        if let Ok((mut unit, _attrs, mut cooldowns, tags)) =
+            non_selected_units.get_mut(source_entity)
+        {
             // 晕眩检查
             if tags.has(GameplayTag::STUN) {
                 unit.acted = true;
@@ -208,7 +209,10 @@ pub fn execute_action_on_enter(
 /// AI 和玩家共用，AI 通过 CombatIntent.source_entity 标识
 pub fn wait_action_on_enter(
     mut selected_units: Query<(Entity, &mut Unit), With<Selected>>,
-    mut non_selected_units: Query<(&mut Unit, &Attributes, &mut SkillCooldowns, &GameplayTags), Without<Selected>>,
+    mut non_selected_units: Query<
+        (&mut Unit, &Attributes, &mut SkillCooldowns, &GameplayTags),
+        Without<Selected>,
+    >,
     read_units: Query<(&Unit, &Attributes), Without<Selected>>,
     mut turn_order: ResMut<TurnOrder>,
     mut turn_state: ResMut<TurnState>,
@@ -232,7 +236,8 @@ pub fn wait_action_on_enter(
 
     // AI 单位：通过 CombatIntent.source_entity 标识
     if let Some(source_entity) = combat_intent.source_entity {
-        if let Ok((mut unit, _attrs, _cooldowns, _tags)) = non_selected_units.get_mut(source_entity) {
+        if let Ok((mut unit, _attrs, _cooldowns, _tags)) = non_selected_units.get_mut(source_entity)
+        {
             unit.acted = true;
         }
     }

@@ -14,7 +14,10 @@ pub fn modify_effects(
 ) {
     for effect in &mut queue.pending {
         if let Ok(target_tags) = tags_query.get(effect.target) {
-            let target_name = names_query.get(effect.target).map(|n| n.as_str()).unwrap_or("?");
+            let target_name = names_query
+                .get(effect.target)
+                .map(|n| n.as_str())
+                .unwrap_or("?");
             match &mut effect.data {
                 PendingEffectData::Damage {
                     amount,
@@ -27,8 +30,11 @@ pub fn modify_effects(
                     if base_amount.is_none() {
                         *base_amount = Some(original);
                     }
-                    let (new_amount, entries) =
-                        rules.apply_damage_modifiers_with_breakdown(*amount, &effect.source_tags, target_tags);
+                    let (new_amount, entries) = rules.apply_damage_modifiers_with_breakdown(
+                        *amount,
+                        &effect.source_tags,
+                        target_tags,
+                    );
                     // 不变量3：伤害下限保护，Modify 完成后伤害值 ≥ 1
                     *amount = new_amount.max(1);
                     *modifiers = entries;
@@ -51,8 +57,11 @@ pub fn modify_effects(
                         *base_amount = Some(original);
                     }
                     // 规则4：每步修饰必须记录，使用 with_breakdown 保留修饰步骤
-                    let (new_amount, entries) =
-                        rules.apply_heal_modifiers_with_breakdown(*amount, &effect.source_tags, target_tags);
+                    let (new_amount, entries) = rules.apply_heal_modifiers_with_breakdown(
+                        *amount,
+                        &effect.source_tags,
+                        target_tags,
+                    );
                     *amount = new_amount;
                     *modifiers = entries;
                     bevy::log::debug!(

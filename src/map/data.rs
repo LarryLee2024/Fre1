@@ -302,7 +302,8 @@ impl Plugin for MapDataPlugin {
         let mut terrain_registry = TerrainRegistry::load_from_dir("assets/terrains");
         terrain_registry.register_defaults();
 
-        let level_registry = LevelRegistry::load_from_dir_with_terrain("assets/maps", &terrain_registry);
+        let level_registry =
+            LevelRegistry::load_from_dir_with_terrain("assets/maps", &terrain_registry);
 
         app.insert_resource(terrain_registry)
             .insert_resource(level_registry);

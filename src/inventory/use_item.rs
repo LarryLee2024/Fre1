@@ -3,7 +3,9 @@
 use super::container::Container;
 use super::definition::{ItemDef, ItemRegistry, ItemType, UseEffect};
 use crate::buff::{ActiveBuffs, BuffRegistry, apply_buff};
-use crate::core::attribute::{AttributeKind, AttributeModifierInstance, Attributes, ModifierOp, ModifierSource};
+use crate::core::attribute::{
+    AttributeKind, AttributeModifierInstance, Attributes, ModifierOp, ModifierSource,
+};
 use crate::core::tag::GameplayTags;
 use bevy::prelude::*;
 
@@ -65,7 +67,14 @@ pub fn use_item_system(
 
         // 应用使用效果（通过统一查询获取 Attributes + ActiveBuffs + GameplayTags）
         if let Ok((mut attrs, mut buffs, mut tags)) = units.get_mut(msg.user_entity) {
-            let pending = apply_use_effects(&def, &mut attrs, &mut buffs, &mut tags, msg.user_entity, &buff_registry);
+            let pending = apply_use_effects(
+                &def,
+                &mut attrs,
+                &mut buffs,
+                &mut tags,
+                msg.user_entity,
+                &buff_registry,
+            );
             // 发送跨 Feature Message
             for effect in pending {
                 match effect {
@@ -240,7 +249,14 @@ mod tests {
         let buff_registry = BuffRegistry::default();
         let user = Entity::from_bits(1);
 
-        apply_use_effects(&def, &mut attrs, &mut buffs, &mut tags, user, &buff_registry);
+        apply_use_effects(
+            &def,
+            &mut attrs,
+            &mut buffs,
+            &mut tags,
+            user,
+            &buff_registry,
+        );
 
         // HP 应恢复 50，但不超过 MaxHp
         let hp = attrs.get(AttributeKind::Hp);
@@ -263,7 +279,14 @@ mod tests {
         let buff_registry = test_buff_registry();
         let user = Entity::from_bits(1);
 
-        apply_use_effects(&def, &mut attrs, &mut buffs, &mut tags, user, &buff_registry);
+        apply_use_effects(
+            &def,
+            &mut attrs,
+            &mut buffs,
+            &mut tags,
+            user,
+            &buff_registry,
+        );
 
         // Buff 实例应被添加
         assert_eq!(buffs.len(), 1);
@@ -299,7 +322,14 @@ mod tests {
         let buff_registry = BuffRegistry::default();
         let user = Entity::from_bits(1);
 
-        let pending = apply_use_effects(&def, &mut attrs, &mut buffs, &mut tags, user, &buff_registry);
+        let pending = apply_use_effects(
+            &def,
+            &mut attrs,
+            &mut buffs,
+            &mut tags,
+            user,
+            &buff_registry,
+        );
 
         // 装备没有 use_effects，不应修改任何状态
         assert!(buffs.is_empty());
@@ -321,7 +351,14 @@ mod tests {
         let buff_registry = BuffRegistry::default();
         let user = Entity::from_bits(1);
 
-        let pending = apply_use_effects(&def, &mut attrs, &mut buffs, &mut tags, user, &buff_registry);
+        let pending = apply_use_effects(
+            &def,
+            &mut attrs,
+            &mut buffs,
+            &mut tags,
+            user,
+            &buff_registry,
+        );
 
         assert_eq!(pending.len(), 1);
         match &pending[0] {
@@ -347,7 +384,14 @@ mod tests {
         let buff_registry = BuffRegistry::default();
         let user = Entity::from_bits(1);
 
-        let pending = apply_use_effects(&def, &mut attrs, &mut buffs, &mut tags, user, &buff_registry);
+        let pending = apply_use_effects(
+            &def,
+            &mut attrs,
+            &mut buffs,
+            &mut tags,
+            user,
+            &buff_registry,
+        );
 
         assert_eq!(pending.len(), 1);
         match &pending[0] {

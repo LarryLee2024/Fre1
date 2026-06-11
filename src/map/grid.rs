@@ -122,11 +122,7 @@ pub fn spawn_map(
                     terrain_id = %terrain_id,
                     "地形定义未找到，使用默认渲染"
                 );
-                (
-                    Color::srgb(0.5, 0.5, 0.5),
-                    "?",
-                    None,
-                )
+                (Color::srgb(0.5, 0.5, 0.5), "?", None)
             });
 
         let move_cost_str = match move_cost {

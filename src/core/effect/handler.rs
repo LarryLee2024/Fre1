@@ -118,19 +118,20 @@ impl<'w> ExecuteContext<'w> {
             target_attrs.set_vital(AttributeKind::Hp, new_hp);
 
             // 收集伤害消息
-            self.pending_messages.push(PendingMessage::Damage(DamageApplied {
-                target: target_entity,
-                target_name: target_name.to_string(),
-                target_faction,
-                attacker: attacker_entity,
-                attacker_name: attacker_name.to_string(),
-                attacker_faction,
-                amount,
-                is_skill,
-                terrain_label: terrain_label.to_string(),
-                target_coord,
-                breakdown,
-            }));
+            self.pending_messages
+                .push(PendingMessage::Damage(DamageApplied {
+                    target: target_entity,
+                    target_name: target_name.to_string(),
+                    target_faction,
+                    attacker: attacker_entity,
+                    attacker_name: attacker_name.to_string(),
+                    attacker_faction,
+                    amount,
+                    is_skill,
+                    terrain_label: terrain_label.to_string(),
+                    target_coord,
+                    breakdown,
+                }));
 
             // 死亡判定：记录需要插入 Dead Tag 的实体（延迟插入避免借用冲突）
             if new_hp <= 0.0 {
@@ -142,12 +143,7 @@ impl<'w> ExecuteContext<'w> {
     }
 
     /// 对目标回血（不超过 MaxHp）+ 收集消息
-    pub fn apply_heal(
-        &mut self,
-        target_entity: Entity,
-        target_name: &str,
-        amount: i32,
-    ) {
+    pub fn apply_heal(&mut self, target_entity: Entity, target_name: &str, amount: i32) {
         if let Some(mut target_attrs) = self.world.get_mut::<Attributes>(target_entity) {
             let hp = target_attrs.get(AttributeKind::Hp);
             let max_hp = target_attrs.get(AttributeKind::MaxHp);
@@ -155,11 +151,12 @@ impl<'w> ExecuteContext<'w> {
             let new_hp = hp + actual_heal;
             target_attrs.set_vital(AttributeKind::Hp, new_hp);
 
-            self.pending_messages.push(PendingMessage::Heal(HealApplied {
-                target: target_entity,
-                target_name: target_name.to_string(),
-                amount: actual_heal as i32,
-            }));
+            self.pending_messages
+                .push(PendingMessage::Heal(HealApplied {
+                    target: target_entity,
+                    target_name: target_name.to_string(),
+                    amount: actual_heal as i32,
+                }));
         }
     }
 
@@ -174,9 +171,14 @@ impl<'w> ExecuteContext<'w> {
         let buff_data = self.world.resource::<BuffRegistry>().get(buff_id).cloned();
         if let Some(buff_data) = buff_data {
             // 使用 QueryState 获取多个可变组件引用
-            let mut query_state: QueryState<(&mut ActiveBuffs, &mut Attributes, &mut GameplayTags)> =
-                QueryState::new(self.world);
-            if let Ok((mut buffs, mut attrs, mut tags)) = query_state.get_mut(self.world, target_entity) {
+            let mut query_state: QueryState<(
+                &mut ActiveBuffs,
+                &mut Attributes,
+                &mut GameplayTags,
+            )> = QueryState::new(self.world);
+            if let Ok((mut buffs, mut attrs, mut tags)) =
+                query_state.get_mut(self.world, target_entity)
+            {
                 crate::buff::apply_buff(
                     &mut buffs,
                     &mut attrs,
@@ -193,7 +195,8 @@ impl<'w> ExecuteContext<'w> {
     pub fn apply_cleanse(&mut self, target_entity: Entity) {
         let mut query_state: QueryState<(&mut ActiveBuffs, &mut Attributes, &mut GameplayTags)> =
             QueryState::new(self.world);
-        if let Ok((mut buffs, mut attrs, mut tags)) = query_state.get_mut(self.world, target_entity) {
+        if let Ok((mut buffs, mut attrs, mut tags)) = query_state.get_mut(self.world, target_entity)
+        {
             remove_all_debuffs(&mut buffs, &mut attrs, &mut tags);
         }
     }

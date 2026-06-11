@@ -21,6 +21,9 @@ pub struct AiPlugin;
 impl Plugin for AiPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(strategy::AiStrategyRegistry::default());
-        app.add_systems(Update, decision::enemy_ai_system.run_if(in_state(AppState::InGame)));
+        app.add_systems(
+            Update,
+            decision::enemy_ai_system.run_if(in_state(AppState::InGame)),
+        );
     }
 }

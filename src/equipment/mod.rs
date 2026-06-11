@@ -37,6 +37,9 @@ impl Plugin for EquipmentPlugin {
         app.add_message::<equip::ItemUnequipped>();
         app.add_message::<equip::EquipFailed>();
         // 注册穿脱系统：响应 EquipItem/UnequipItem Message
-        app.add_systems(Update, (equip::equip_item_system, equip::unequip_item_system));
+        app.add_systems(
+            Update,
+            (equip::equip_item_system, equip::unequip_item_system),
+        );
     }
 }

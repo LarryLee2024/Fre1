@@ -24,20 +24,13 @@ impl Plugin for CombatEventPlugin {
             // 生成→修饰 使用 chain 确保顺序
             .add_systems(
                 OnEnter(TurnPhase::ExecuteAction),
-                (
-                    generate::generate_combat_effects,
-                    modify::modify_effects,
-                )
-                    .chain(),
+                (generate::generate_combat_effects, modify::modify_effects).chain(),
             )
             // 执行效果：使用 world: &mut World 参数，不能与 chain 一起使用
             // 必须在 generate + modify 之后运行，通过 .after 保证顺序
             .add_systems(
                 OnEnter(TurnPhase::ExecuteAction),
-                (
-                    execute::execute_effects,
-                    intent::execute_action_on_enter,
-                )
+                (execute::execute_effects, intent::execute_action_on_enter)
                     .chain()
                     .after(modify::modify_effects),
             )

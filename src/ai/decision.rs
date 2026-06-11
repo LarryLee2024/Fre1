@@ -1,6 +1,8 @@
 use crate::battle::CombatIntent;
 use crate::battle::manhattan_distance;
-use crate::character::{AiBehaviorId, Dead, Faction, GridPosition, MovingUnit, Unit, UnitName, spawn_path_arrows};
+use crate::character::{
+    AiBehaviorId, Dead, Faction, GridPosition, MovingUnit, Unit, UnitName, spawn_path_arrows,
+};
 use crate::core::attribute::{AttributeKind, Attributes};
 use crate::core::tag::GameplayTags;
 use crate::map::TerrainRegistry;

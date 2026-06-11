@@ -86,7 +86,10 @@ pub fn on_character_died(
     unit_ids: Query<&crate::character::UnitId>,
 ) {
     for msg in died_reader.read() {
-        let unit_id = unit_ids.get(msg.entity).map(|id| id.0.as_str()).unwrap_or("?");
+        let unit_id = unit_ids
+            .get(msg.entity)
+            .map(|id| id.0.as_str())
+            .unwrap_or("?");
         bevy::log::info!(target: "battle", entity = ?msg.entity, unit_id = %unit_id, name = %msg.name, faction = ?msg.faction, "角色已死亡，从行动队列移除");
         // 找到被移除实体的位置，修正 current_index
         if let Some(pos) = turn_order.queue.iter().position(|&e| e == msg.entity) {

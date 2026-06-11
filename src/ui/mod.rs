@@ -106,7 +106,8 @@ impl Plugin for UiPlugin {
             )
             .add_systems(
                 Update,
-                command_handler::handle_ui_commands.run_if(in_state(AppState::InGame).and(player_turn)),
+                command_handler::handle_ui_commands
+                    .run_if(in_state(AppState::InGame).and(player_turn)),
             );
     }
 }

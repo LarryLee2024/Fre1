@@ -333,12 +333,26 @@ mod tests {
         );
 
         // 首次施加：Attack = 10 + 5 = 15
-        let id1 = apply_buff(&mut buffs, &mut attrs, &mut tags, &buff_data, Some(source), 2);
+        let id1 = apply_buff(
+            &mut buffs,
+            &mut attrs,
+            &mut tags,
+            &buff_data,
+            Some(source),
+            2,
+        );
         assert_eq!(attrs.get(AttributeKind::Attack), 15.0);
         assert_eq!(buffs.len(), 1);
 
         // 同源刷新：持续时间刷新，修饰符不重复添加
-        let id2 = apply_buff(&mut buffs, &mut attrs, &mut tags, &buff_data, Some(source), 3);
+        let id2 = apply_buff(
+            &mut buffs,
+            &mut attrs,
+            &mut tags,
+            &buff_data,
+            Some(source),
+            3,
+        );
         assert_eq!(id2, id1); // 返回同一 instance_id
         assert_eq!(buffs.len(), 1); // 不新增实例
         assert_eq!(buffs.instances[0].remaining_turns, 3); // 持续时间刷新
@@ -364,8 +378,22 @@ mod tests {
             vec![GameplayTag::BUFF],
         );
 
-        apply_buff(&mut buffs, &mut attrs, &mut tags, &buff_data, Some(source_a), 2);
-        apply_buff(&mut buffs, &mut attrs, &mut tags, &buff_data, Some(source_b), 2);
+        apply_buff(
+            &mut buffs,
+            &mut attrs,
+            &mut tags,
+            &buff_data,
+            Some(source_a),
+            2,
+        );
+        apply_buff(
+            &mut buffs,
+            &mut attrs,
+            &mut tags,
+            &buff_data,
+            Some(source_b),
+            2,
+        );
 
         // 不同源：两个实例共存，修饰符叠加
         assert_eq!(buffs.len(), 2);

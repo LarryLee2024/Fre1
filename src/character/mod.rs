@@ -70,45 +70,49 @@ pub struct CharacterPlugin;
 
 impl Plugin for CharacterPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins((template::UnitTemplatePlugin, traits::TraitPlugin, spawn::UnitPlugin))
-            // 注册 Message
-            .add_message::<CharacterDied>()
-            // 注册 Dead Observer：响应 Dead Tag 添加，发送 CharacterDied Message
-            // 规则3：HP ≤ 0 时只添加 Dead Tag，死亡通知由 Observer 统一发送
-            .add_observer(on_dead_added)
-            // 注册 Reflect 类型
-            .register_type::<Faction>()
-            .register_type::<Unit>()
-            .register_type::<UnitName>()
-            .register_type::<UnitId>()
-            .register_type::<UnitRace>()
-            .register_type::<UnitClass>()
-            .register_type::<GridPosition>()
-            .register_type::<Selected>()
-            .register_type::<Dead>()
-            .register_type::<PersistentTags>()
-            .register_type::<HpBarBg>()
-            .register_type::<HpBarFg>()
-            .register_type::<AiBehaviorId>()
-            .register_type::<PathArrow>()
-            .register_type::<MovingUnit>()
-            // 核心 attribute 类型
-            .register_type::<AttributeKind>()
-            .register_type::<ModifierOp>()
-            .register_type::<AttributeModifierDef>()
-            .register_type::<ModifierSource>()
-            .register_type::<BuffInstanceId>()
-            .register_type::<AttributeModifierInstance>()
-            .register_type::<Attributes>()
-            // 核心 tag 类型
-            .register_type::<GameplayTag>()
-            .register_type::<GameplayTags>()
-            .register_type::<TagName>()
-            // 移动动画系统：只在游戏中运行
-            .add_systems(Update, animate_movement.run_if(in_state(AppState::InGame)))
-            .add_systems(
-                Update,
-                update_turn_order_label.run_if(in_state(AppState::InGame)),
-            );
+        app.add_plugins((
+            template::UnitTemplatePlugin,
+            traits::TraitPlugin,
+            spawn::UnitPlugin,
+        ))
+        // 注册 Message
+        .add_message::<CharacterDied>()
+        // 注册 Dead Observer：响应 Dead Tag 添加，发送 CharacterDied Message
+        // 规则3：HP ≤ 0 时只添加 Dead Tag，死亡通知由 Observer 统一发送
+        .add_observer(on_dead_added)
+        // 注册 Reflect 类型
+        .register_type::<Faction>()
+        .register_type::<Unit>()
+        .register_type::<UnitName>()
+        .register_type::<UnitId>()
+        .register_type::<UnitRace>()
+        .register_type::<UnitClass>()
+        .register_type::<GridPosition>()
+        .register_type::<Selected>()
+        .register_type::<Dead>()
+        .register_type::<PersistentTags>()
+        .register_type::<HpBarBg>()
+        .register_type::<HpBarFg>()
+        .register_type::<AiBehaviorId>()
+        .register_type::<PathArrow>()
+        .register_type::<MovingUnit>()
+        // 核心 attribute 类型
+        .register_type::<AttributeKind>()
+        .register_type::<ModifierOp>()
+        .register_type::<AttributeModifierDef>()
+        .register_type::<ModifierSource>()
+        .register_type::<BuffInstanceId>()
+        .register_type::<AttributeModifierInstance>()
+        .register_type::<Attributes>()
+        // 核心 tag 类型
+        .register_type::<GameplayTag>()
+        .register_type::<GameplayTags>()
+        .register_type::<TagName>()
+        // 移动动画系统：只在游戏中运行
+        .add_systems(Update, animate_movement.run_if(in_state(AppState::InGame)))
+        .add_systems(
+            Update,
+            update_turn_order_label.run_if(in_state(AppState::InGame)),
+        );
     }
 }

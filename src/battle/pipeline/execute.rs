@@ -72,39 +72,41 @@ pub fn execute_effects(world: &mut World) {
     // 3. 规则4：OnHit/OnKill 在 Execute 阶段触发
     // 使用 resource_scope 获取 TraitRegistry，避免与 resource_mut 借用冲突
     world.resource_scope(|world, trait_registry: Mut<TraitRegistry>| {
-        world.resource_scope(|world, trait_effect_handlers: Mut<TraitEffectHandlerRegistry>| {
-            for output in &results {
-                // OnHit：目标触发
-                let target_traits = world.get::<TraitCollection>(output.target).cloned();
-                if let Some(target_traits) = target_traits {
-                    let mut queue = world.resource_mut::<EffectQueue>();
-                    trigger_on_hit_traits(
-                        output.target,
-                        output.source,
-                        &target_traits,
-                        &trait_registry,
-                        &trait_effect_handlers,
-                        &mut queue,
-                    );
-                }
-
-                // OnKill：攻击者击杀时触发
-                if output.target_died {
-                    let killer_traits = world.get::<TraitCollection>(output.source).cloned();
-                    if let Some(killer_traits) = killer_traits {
+        world.resource_scope(
+            |world, trait_effect_handlers: Mut<TraitEffectHandlerRegistry>| {
+                for output in &results {
+                    // OnHit：目标触发
+                    let target_traits = world.get::<TraitCollection>(output.target).cloned();
+                    if let Some(target_traits) = target_traits {
                         let mut queue = world.resource_mut::<EffectQueue>();
-                        trigger_on_kill_traits(
-                            output.source,
+                        trigger_on_hit_traits(
                             output.target,
-                            &killer_traits,
+                            output.source,
+                            &target_traits,
                             &trait_registry,
                             &trait_effect_handlers,
                             &mut queue,
                         );
                     }
+
+                    // OnKill：攻击者击杀时触发
+                    if output.target_died {
+                        let killer_traits = world.get::<TraitCollection>(output.source).cloned();
+                        if let Some(killer_traits) = killer_traits {
+                            let mut queue = world.resource_mut::<EffectQueue>();
+                            trigger_on_kill_traits(
+                                output.source,
+                                output.target,
+                                &killer_traits,
+                                &trait_registry,
+                                &trait_effect_handlers,
+                                &mut queue,
+                            );
+                        }
+                    }
                 }
-            }
-        });
+            },
+        );
     });
 
     // 4. 不变量1：OnHit/OnKill 产生的效果也必须经过 Modify → Execute
@@ -129,8 +131,11 @@ pub fn execute_effects(world: &mut World) {
                         if base_amount.is_none() {
                             *base_amount = Some(*amount);
                         }
-                        let (new_amount, entries) =
-                            rules.apply_damage_modifiers_with_breakdown(*amount, &effect.source_tags, target_tags);
+                        let (new_amount, entries) = rules.apply_damage_modifiers_with_breakdown(
+                            *amount,
+                            &effect.source_tags,
+                            target_tags,
+                        );
                         *amount = new_amount.max(1);
                         *modifiers = entries;
                     }
@@ -143,8 +148,11 @@ pub fn execute_effects(world: &mut World) {
                             *base_amount = Some(*amount);
                         }
                         // 规则4：每步修饰必须记录
-                        let (new_amount, entries) =
-                            rules.apply_heal_modifiers_with_breakdown(*amount, &effect.source_tags, target_tags);
+                        let (new_amount, entries) = rules.apply_heal_modifiers_with_breakdown(
+                            *amount,
+                            &effect.source_tags,
+                            target_tags,
+                        );
                         *amount = new_amount;
                         *modifiers = entries;
                     }
@@ -177,10 +185,14 @@ pub fn execute_effects(world: &mut World) {
     for msg in all_pending_messages {
         match msg {
             PendingMessage::Damage(d) => {
-                world.resource_mut::<bevy::ecs::message::Messages<DamageApplied>>().write(d);
+                world
+                    .resource_mut::<bevy::ecs::message::Messages<DamageApplied>>()
+                    .write(d);
             }
             PendingMessage::Heal(h) => {
-                world.resource_mut::<bevy::ecs::message::Messages<HealApplied>>().write(h);
+                world
+                    .resource_mut::<bevy::ecs::message::Messages<HealApplied>>()
+                    .write(h);
             }
         }
     }
@@ -233,7 +245,10 @@ mod tests {
         let target = app
             .world_mut()
             .spawn((
-                Unit { faction: Faction::Enemy, acted: false },
+                Unit {
+                    faction: Faction::Enemy,
+                    acted: false,
+                },
                 make_test_attrs(30.0, 30.0),
                 SkillSlots::default(),
                 ActiveBuffs::default(),
@@ -245,17 +260,25 @@ mod tests {
         let source = app
             .world_mut()
             .spawn((
-                Unit { faction: Faction::Player, acted: false },
+                Unit {
+                    faction: Faction::Player,
+                    acted: false,
+                },
                 UnitName("战士".into()),
             ))
             .id();
         let mut queue = app.world_mut().resource_mut::<EffectQueue>();
         queue.pending.push(PendingEffect {
-            source, target,
+            source,
+            target,
             data: PendingEffectData::Damage {
-                amount: 10, is_skill: false, base_amount: Some(10), modifiers: Vec::new(),
+                amount: 10,
+                is_skill: false,
+                base_amount: Some(10),
+                modifiers: Vec::new(),
             },
-            source_tags: vec![], terrain_id: "plain".into(),
+            source_tags: vec![],
+            terrain_id: "plain".into(),
         });
         app.update();
         let attrs = app.world().get::<Attributes>(target).unwrap();
@@ -278,7 +301,10 @@ mod tests {
         let target = app
             .world_mut()
             .spawn((
-                Unit { faction: Faction::Enemy, acted: false },
+                Unit {
+                    faction: Faction::Enemy,
+                    acted: false,
+                },
                 make_test_attrs(5.0, 30.0),
                 SkillSlots::default(),
                 ActiveBuffs::default(),
@@ -290,17 +316,25 @@ mod tests {
         let source = app
             .world_mut()
             .spawn((
-                Unit { faction: Faction::Player, acted: false },
+                Unit {
+                    faction: Faction::Player,
+                    acted: false,
+                },
                 UnitName("战士".into()),
             ))
             .id();
         let mut queue = app.world_mut().resource_mut::<EffectQueue>();
         queue.pending.push(PendingEffect {
-            source, target,
+            source,
+            target,
             data: PendingEffectData::Damage {
-                amount: 10, is_skill: false, base_amount: Some(10), modifiers: Vec::new(),
+                amount: 10,
+                is_skill: false,
+                base_amount: Some(10),
+                modifiers: Vec::new(),
             },
-            source_tags: vec![], terrain_id: "plain".into(),
+            source_tags: vec![],
+            terrain_id: "plain".into(),
         });
         app.update();
         assert!(app.world().get::<Dead>(target).is_some());
@@ -322,7 +356,10 @@ mod tests {
         let target = app
             .world_mut()
             .spawn((
-                Unit { faction: Faction::Player, acted: false },
+                Unit {
+                    faction: Faction::Player,
+                    acted: false,
+                },
                 make_test_attrs(10.0, 30.0),
                 SkillSlots::default(),
                 ActiveBuffs::default(),
@@ -334,15 +371,24 @@ mod tests {
         let source = app
             .world_mut()
             .spawn((
-                Unit { faction: Faction::Player, acted: false },
+                Unit {
+                    faction: Faction::Player,
+                    acted: false,
+                },
                 UnitName("牧师".into()),
             ))
             .id();
         let mut queue = app.world_mut().resource_mut::<EffectQueue>();
         queue.pending.push(PendingEffect {
-            source, target,
-            data: PendingEffectData::Heal { amount: 15, base_amount: Some(15), modifiers: Vec::new() },
-            source_tags: vec![], terrain_id: "plain".into(),
+            source,
+            target,
+            data: PendingEffectData::Heal {
+                amount: 15,
+                base_amount: Some(15),
+                modifiers: Vec::new(),
+            },
+            source_tags: vec![],
+            terrain_id: "plain".into(),
         });
         app.update();
         let attrs = app.world().get::<Attributes>(target).unwrap();
@@ -365,7 +411,10 @@ mod tests {
         let target = app
             .world_mut()
             .spawn((
-                Unit { faction: Faction::Player, acted: false },
+                Unit {
+                    faction: Faction::Player,
+                    acted: false,
+                },
                 make_test_attrs(25.0, 30.0),
                 SkillSlots::default(),
                 ActiveBuffs::default(),
@@ -377,15 +426,24 @@ mod tests {
         let source = app
             .world_mut()
             .spawn((
-                Unit { faction: Faction::Player, acted: false },
+                Unit {
+                    faction: Faction::Player,
+                    acted: false,
+                },
                 UnitName("牧师".into()),
             ))
             .id();
         let mut queue = app.world_mut().resource_mut::<EffectQueue>();
         queue.pending.push(PendingEffect {
-            source, target,
-            data: PendingEffectData::Heal { amount: 100, base_amount: Some(100), modifiers: Vec::new() },
-            source_tags: vec![], terrain_id: "plain".into(),
+            source,
+            target,
+            data: PendingEffectData::Heal {
+                amount: 100,
+                base_amount: Some(100),
+                modifiers: Vec::new(),
+            },
+            source_tags: vec![],
+            terrain_id: "plain".into(),
         });
         app.update();
         let attrs = app.world().get::<Attributes>(target).unwrap();
@@ -400,7 +458,14 @@ mod tests {
         let mut tags = GameplayTags::default();
         let registry = test_buff_registry();
         if let Some(buff_data) = registry.get("attack_up") {
-            crate::buff::apply_buff(&mut buffs, &mut attrs, &mut tags, buff_data, Some(Entity::from_bits(1)), 3);
+            crate::buff::apply_buff(
+                &mut buffs,
+                &mut attrs,
+                &mut tags,
+                buff_data,
+                Some(Entity::from_bits(1)),
+                3,
+            );
         }
         assert!(buffs.iter().any(|b| b.name == "攻+5"));
     }
@@ -413,7 +478,14 @@ mod tests {
         let mut tags = GameplayTags::default();
         let registry = test_buff_registry();
         if let Some(buff_data) = registry.get("nonexistent_buff") {
-            crate::buff::apply_buff(&mut buffs, &mut attrs, &mut tags, buff_data, Some(Entity::from_bits(1)), 3);
+            crate::buff::apply_buff(
+                &mut buffs,
+                &mut attrs,
+                &mut tags,
+                buff_data,
+                Some(Entity::from_bits(1)),
+                3,
+            );
         }
         assert_eq!(buffs.iter().count(), 0);
     }
