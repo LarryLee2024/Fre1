@@ -114,6 +114,31 @@ pub struct SelectedUnitView {
     pub is_selected: bool,
 }
 
+impl SelectedUnitView {
+    /// 清空所有视图数据
+    fn clear(&mut self) {
+        self.is_selected = false;
+        self.name.clear();
+        self.race.clear();
+        self.class.clear();
+        self.grid_coord = IVec2::ZERO;
+        self.hp = 0;
+        self.max_hp = 0;
+        self.mp = 0;
+        self.max_mp = 0;
+        self.stamina = 0;
+        self.max_stamina = 0;
+        self.core_attrs.clear();
+        self.combat_attrs.clear();
+        self.support_attrs.clear();
+        self.skills.clear();
+        self.traits.clear();
+        self.buffs.clear();
+        self.equipment.clear();
+        self.inventory.clear();
+    }
+}
+
 /// 战斗预览视图模型
 #[derive(Resource, Reflect, Default, Debug)]
 #[reflect(Resource)]
@@ -173,239 +198,233 @@ pub fn update_selected_unit_view(
     item_registry: Res<crate::inventory::definition::ItemRegistry>,
     mut view: ResMut<SelectedUnitView>,
 ) {
-    // 仅在 HoveredEntity 变化时刷新
     if !hovered.is_changed() && !view.is_added() {
         return;
     }
 
-    if let Some(entity) = hovered.entity {
-        if let Ok((
-            _unit,
-            name,
-            attrs,
-            skill_slots,
-            buffs,
-            race,
-            class,
-            _cooldowns,
-            trait_collection,
-            equipment_slots,
-            container,
-            grid_pos,
-        )) = units.get(entity)
-        {
-            view.name = name.0.clone();
-            view.race = race.map(|r| r.0.clone()).unwrap_or_default();
-            view.class = class.map(|c| c.0.clone()).unwrap_or_default();
-            view.grid_coord = grid_pos.coord;
+    let Some(entity) = hovered.entity else {
+        view.clear();
+        return;
+    };
 
-            // 生命资源
-            view.hp = attrs.get(AttributeKind::Hp) as i32;
-            view.max_hp = attrs.get(AttributeKind::MaxHp) as i32;
-            view.mp = attrs.get(AttributeKind::Mp) as i32;
-            view.max_mp = attrs.get(AttributeKind::MaxMp) as i32;
-            view.stamina = attrs.get(AttributeKind::Stamina) as i32;
-            view.max_stamina = attrs.get(AttributeKind::MaxStamina) as i32;
+    let Ok((
+        _unit,
+        name,
+        attrs,
+        skill_slots,
+        buffs,
+        race,
+        class,
+        _cooldowns,
+        trait_collection,
+        equipment_slots,
+        container,
+        grid_pos,
+    )) = units.get(entity)
+    else {
+        view.clear();
+        return;
+    };
 
-            // 核心属性（8维）
-            view.core_attrs = [
-                AttributeKind::Might,
-                AttributeKind::Dexterity,
-                AttributeKind::Agility,
-                AttributeKind::Vitality,
-                AttributeKind::Intelligence,
-                AttributeKind::Willpower,
-                AttributeKind::Presence,
-                AttributeKind::Luck,
-            ]
-            .iter()
-            .map(|kind| CoreAttrEntry {
-                label: kind.short_label().to_string(),
-                value: attrs.get(*kind) as i32,
+    view.name = name.0.clone();
+    view.race = race.map(|r| r.0.clone()).unwrap_or_default();
+    view.class = class.map(|c| c.0.clone()).unwrap_or_default();
+    view.grid_coord = grid_pos.coord;
+    view.is_selected = true;
+
+    fill_vital_attrs(&mut view, attrs);
+    fill_core_attrs(&mut view, attrs);
+    fill_combat_attrs(&mut view, attrs);
+    fill_support_attrs(&mut view, attrs);
+    fill_skills(&mut view, skill_slots, &skill_registry);
+    fill_traits(&mut view, trait_collection, &trait_registry);
+    fill_buffs(&mut view, buffs);
+    fill_equipment(&mut view, equipment_slots, &equipment_registry);
+    fill_inventory(&mut view, container, &item_registry);
+}
+
+fn fill_vital_attrs(view: &mut SelectedUnitView, attrs: &Attributes) {
+    view.hp = attrs.get(AttributeKind::Hp) as i32;
+    view.max_hp = attrs.get(AttributeKind::MaxHp) as i32;
+    view.mp = attrs.get(AttributeKind::Mp) as i32;
+    view.max_mp = attrs.get(AttributeKind::MaxMp) as i32;
+    view.stamina = attrs.get(AttributeKind::Stamina) as i32;
+    view.max_stamina = attrs.get(AttributeKind::MaxStamina) as i32;
+}
+
+fn fill_core_attrs(view: &mut SelectedUnitView, attrs: &Attributes) {
+    view.core_attrs = [
+        AttributeKind::Might,
+        AttributeKind::Dexterity,
+        AttributeKind::Agility,
+        AttributeKind::Vitality,
+        AttributeKind::Intelligence,
+        AttributeKind::Willpower,
+        AttributeKind::Presence,
+        AttributeKind::Luck,
+    ]
+    .iter()
+    .map(|kind| CoreAttrEntry {
+        label: kind.short_label().to_string(),
+        value: attrs.get(*kind) as i32,
+    })
+    .collect();
+}
+
+fn fill_combat_attrs(view: &mut SelectedUnitView, attrs: &Attributes) {
+    view.combat_attrs = [
+        AttributeKind::Attack,
+        AttributeKind::Defense,
+        AttributeKind::MagicAttack,
+        AttributeKind::MagicDefense,
+    ]
+    .iter()
+    .map(|kind| DerivedAttrEntry {
+        label: kind.label().to_string(),
+        value: attrs.get(*kind) as i32,
+    })
+    .collect();
+}
+
+fn fill_support_attrs(view: &mut SelectedUnitView, attrs: &Attributes) {
+    view.support_attrs = [
+        AttributeKind::Accuracy,
+        AttributeKind::Evasion,
+        AttributeKind::CritRate,
+        AttributeKind::MoveRange,
+        AttributeKind::Initiative,
+        AttributeKind::AttackRange,
+    ]
+    .iter()
+    .map(|kind| DerivedAttrEntry {
+        label: kind.label().to_string(),
+        value: attrs.get(*kind) as i32,
+    })
+    .collect();
+}
+
+fn fill_skills(
+    view: &mut SelectedUnitView,
+    skill_slots: &SkillSlots,
+    skill_registry: &SkillRegistry,
+) {
+    view.skills = skill_slots
+        .skill_ids
+        .iter()
+        .filter_map(|id| {
+            skill_registry.get(id).map(|sd| SkillEntry {
+                name: sd.name.clone(),
+                id: id.to_string(),
+                cost_mp: sd.cost_mp,
+                range: sd.range,
+                cooldown: sd.cooldown,
+                description: sd.description.clone(),
             })
-            .collect();
+        })
+        .collect();
+}
 
-            // 衍生属性（战斗组）
-            view.combat_attrs = [
-                AttributeKind::Attack,
-                AttributeKind::Defense,
-                AttributeKind::MagicAttack,
-                AttributeKind::MagicDefense,
-            ]
-            .iter()
-            .map(|kind| DerivedAttrEntry {
-                label: kind.label().to_string(),
-                value: attrs.get(*kind) as i32,
-            })
-            .collect();
-
-            // 衍生属性（辅助组）
-            view.support_attrs = [
-                AttributeKind::Accuracy,
-                AttributeKind::Evasion,
-                AttributeKind::CritRate,
-                AttributeKind::MoveRange,
-                AttributeKind::Initiative,
-                AttributeKind::AttackRange,
-            ]
-            .iter()
-            .map(|kind| DerivedAttrEntry {
-                label: kind.label().to_string(),
-                value: attrs.get(*kind) as i32,
-            })
-            .collect();
-
-            // 技能（带详细信息）
-            view.skills = skill_slots
-                .skill_ids
+fn fill_traits(
+    view: &mut SelectedUnitView,
+    trait_collection: Option<&TraitCollection>,
+    trait_registry: &TraitRegistry,
+) {
+    view.traits = trait_collection
+        .map(|tc| {
+            tc.trait_ids()
                 .iter()
-                .filter_map(|id| {
-                    skill_registry.get(id).map(|sd| SkillEntry {
-                        name: sd.name.clone(),
-                        id: id.to_string(),
-                        cost_mp: sd.cost_mp,
-                        range: sd.range,
-                        cooldown: sd.cooldown,
-                        description: sd.description.clone(),
+                .filter_map(|tid| {
+                    trait_registry.get(tid).map(|td| TraitEntry {
+                        name: td.name.clone(),
+                        description: td.description.clone(),
                     })
                 })
-                .collect();
+                .collect()
+        })
+        .unwrap_or_default();
+}
 
-            // Traits
-            view.traits = trait_collection
-                .as_ref()
-                .map(|tc| {
-                    tc.trait_ids()
-                        .iter()
-                        .filter_map(|tid| {
-                            trait_registry.get(tid).map(|td| TraitEntry {
-                                name: td.name.clone(),
-                                description: td.description.clone(),
-                            })
-                        })
-                        .collect()
-                })
-                .unwrap_or_default();
+fn fill_buffs(view: &mut SelectedUnitView, buffs: &ActiveBuffs) {
+    view.buffs = buffs
+        .iter()
+        .map(|inst| BuffEntry {
+            name: inst.name.clone(),
+            remaining_turns: inst.remaining_turns,
+            is_buff: inst.is_buff,
+        })
+        .collect();
+}
 
-            // Buff
-            view.buffs = buffs
+fn fill_equipment(
+    view: &mut SelectedUnitView,
+    equipment_slots: Option<&crate::equipment::EquipmentSlots>,
+    equipment_registry: &crate::equipment::EquipmentRegistry,
+) {
+    use crate::equipment::EquipmentSlot;
+
+    let all_slots = [
+        EquipmentSlot::MainHand,
+        EquipmentSlot::OffHand,
+        EquipmentSlot::Head,
+        EquipmentSlot::Body,
+        EquipmentSlot::Feet,
+        EquipmentSlot::Accessory1,
+        EquipmentSlot::Accessory2,
+    ];
+
+    view.equipment = equipment_slots
+        .map(|slots| {
+            all_slots
                 .iter()
-                .map(|inst| BuffEntry {
-                    name: inst.name.clone(),
-                    remaining_turns: inst.remaining_turns,
-                    is_buff: inst.is_buff,
+                .map(|slot| {
+                    let slot_label = slot.label().to_string();
+                    let (item_name, rarity) = slots
+                        .get_def_id(*slot)
+                        .and_then(|def_id| equipment_registry.get(def_id))
+                        .map(|def| (Some(def.name.clone()), Some(def.rarity.label().to_string())))
+                        .unwrap_or((None, None));
+                    EquipmentSlotEntry {
+                        slot_label,
+                        item_name,
+                        rarity,
+                    }
                 })
-                .collect();
+                .collect()
+        })
+        .unwrap_or_else(|| {
+            all_slots
+                .iter()
+                .map(|slot| EquipmentSlotEntry {
+                    slot_label: slot.label().to_string(),
+                    item_name: None,
+                    rarity: None,
+                })
+                .collect()
+        });
+}
 
-            // 装备（遍历所有槽位，空位也显示）
-            view.equipment = equipment_slots
-                .map(|slots| {
-                    use crate::equipment::EquipmentSlot;
-                    let all_slots = [
-                        EquipmentSlot::MainHand,
-                        EquipmentSlot::OffHand,
-                        EquipmentSlot::Head,
-                        EquipmentSlot::Body,
-                        EquipmentSlot::Feet,
-                        EquipmentSlot::Accessory1,
-                        EquipmentSlot::Accessory2,
-                    ];
-                    all_slots
-                        .iter()
-                        .map(|slot| {
-                            let slot_label = slot.label().to_string();
-                            if let Some(def_id) = slots.get_def_id(*slot) {
-                                if let Some(def) = equipment_registry.get(def_id) {
-                                    EquipmentSlotEntry {
-                                        slot_label,
-                                        item_name: Some(def.name.clone()),
-                                        rarity: Some(def.rarity.label().to_string()),
-                                    }
-                                } else {
-                                    EquipmentSlotEntry {
-                                        slot_label,
-                                        item_name: None,
-                                        rarity: None,
-                                    }
-                                }
-                            } else {
-                                EquipmentSlotEntry {
-                                    slot_label,
-                                    item_name: None,
-                                    rarity: None,
-                                }
-                            }
+fn fill_inventory(
+    view: &mut SelectedUnitView,
+    container: Option<&crate::inventory::container::Container>,
+    item_registry: &crate::inventory::definition::ItemRegistry,
+) {
+    view.inventory = container
+        .map(|c| {
+            c.stacks
+                .iter()
+                .filter_map(|stack| {
+                    item_registry
+                        .get(&stack.instance.def_id)
+                        .map(|def| InventoryEntry {
+                            item_name: def.name.clone(),
+                            rarity: def.rarity.label().to_string(),
+                            count: stack.count,
+                            instance_id: stack.instance.instance_id,
                         })
-                        .collect()
                 })
-                .unwrap_or_else(|| {
-                    use crate::equipment::EquipmentSlot;
-                    [
-                        EquipmentSlot::MainHand,
-                        EquipmentSlot::OffHand,
-                        EquipmentSlot::Head,
-                        EquipmentSlot::Body,
-                        EquipmentSlot::Feet,
-                        EquipmentSlot::Accessory1,
-                        EquipmentSlot::Accessory2,
-                    ]
-                    .iter()
-                    .map(|slot| EquipmentSlotEntry {
-                        slot_label: slot.label().to_string(),
-                        item_name: None,
-                        rarity: None,
-                    })
-                    .collect()
-                });
-
-            // 背包（从 Container 读取）
-            view.inventory = container
-                .map(|c| {
-                    c.stacks
-                        .iter()
-                        .filter_map(|stack| {
-                            item_registry
-                                .get(&stack.instance.def_id)
-                                .map(|def| InventoryEntry {
-                                    item_name: def.name.clone(),
-                                    rarity: def.rarity.label().to_string(),
-                                    count: stack.count,
-                                    instance_id: stack.instance.instance_id,
-                                })
-                        })
-                        .collect()
-                })
-                .unwrap_or_default();
-
-            view.is_selected = true;
-        } else {
-            // 实体已销毁
-            view.is_selected = false;
-            view.name.clear();
-            view.grid_coord = IVec2::ZERO;
-            view.core_attrs.clear();
-            view.combat_attrs.clear();
-            view.support_attrs.clear();
-            view.skills.clear();
-            view.traits.clear();
-            view.buffs.clear();
-            view.equipment.clear();
-            view.inventory.clear();
-        }
-    } else {
-        view.is_selected = false;
-        view.name.clear();
-        view.race.clear();
-        view.class.clear();
-        view.core_attrs.clear();
-        view.combat_attrs.clear();
-        view.support_attrs.clear();
-        view.skills.clear();
-        view.traits.clear();
-        view.buffs.clear();
-        view.equipment.clear();
-        view.inventory.clear();
-    }
+                .collect()
+        })
+        .unwrap_or_default();
 }
 
 /// 更新战斗预览（SelectTarget 阶段，鼠标悬停敌方时触发）
@@ -472,5 +491,183 @@ pub fn update_game_over_state(units: Query<&Unit>, mut game_over: ResMut<GameOve
         *game_over = GameOverState::Victory;
     } else if !has_player {
         *game_over = GameOverState::Defeat;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    // ================================================
+    // Bevy SRPG AI宪法 v1.1 自检结果（测试专用）
+    // ================================================
+    // ✅ 测行为不测实现：是 — 断言验证 ViewModel 默认值和枚举行为
+    // ✅ 符合领域规则：是 — 覆盖 ViewModel 不变量
+    // ✅ 确定性：是 — 硬编码默认值
+    // ✅ 使用标准数据：是 — 使用标准 Default 实现
+    // ✅ 无越界测试：是 — 仅测试公共 API
+    // ✅ 未测试私有实现：是 — 仅通过 ViewModel 接口测试
+    // ================================================
+
+    use super::*;
+
+    /// Test ID: UI-INV-002
+    /// Title: SelectedUnitView 默认值为空
+    ///
+    /// Given: SelectedUnitView::default()
+    /// When: 检查所有字段
+    /// Then: 所有字段为空/零/false
+    ///
+    /// Assertions: name 为空, is_selected 为 false
+    #[test]
+    fn selected_unit_view_default_is_empty() {
+        // Given
+        let view = SelectedUnitView::default();
+
+        // When - 无需操作
+
+        // Then
+        assert!(view.name.is_empty());
+        assert!(view.race.is_empty());
+        assert!(view.class.is_empty());
+        assert_eq!(view.hp, 0);
+        assert_eq!(view.max_hp, 0);
+        assert_eq!(view.mp, 0);
+        assert_eq!(view.max_mp, 0);
+        assert_eq!(view.stamina, 0);
+        assert_eq!(view.max_stamina, 0);
+        assert!(!view.is_selected);
+        assert!(view.core_attrs.is_empty());
+        assert!(view.combat_attrs.is_empty());
+        assert!(view.support_attrs.is_empty());
+        assert!(view.skills.is_empty());
+        assert!(view.traits.is_empty());
+        assert!(view.buffs.is_empty());
+        assert!(view.equipment.is_empty());
+        assert!(view.inventory.is_empty());
+    }
+
+    /// Test ID: UI-INV-002b
+    /// Title: CombatPreviewView 默认值为不可见
+    ///
+    /// Given: CombatPreviewView::default()
+    /// When: 检查所有字段
+    /// Then: is_visible 为 false，其他数值为 0
+    ///
+    /// Assertions: is_visible == false, estimated_damage == 0
+    #[test]
+    fn combat_preview_view_default_is_hidden() {
+        // Given
+        let view = CombatPreviewView::default();
+
+        // When - 无需操作
+
+        // Then
+        assert!(!view.is_visible);
+        assert_eq!(view.estimated_damage, 0);
+        assert_eq!(view.hit_rate, 0);
+        assert_eq!(view.crit_rate, 0);
+        assert!(!view.is_lethal);
+    }
+
+    /// Test ID: UI-INV-002c
+    /// Title: TurnInfoView 默认值为回合 0
+    ///
+    /// Given: TurnInfoView::default()
+    /// When: 检查所有字段
+    /// Then: turn_number 为 0，is_player_turn 为 false
+    ///
+    /// Assertions: turn_number == 0, is_player_turn == false
+    #[test]
+    fn turn_info_view_default_is_zero() {
+        // Given
+        let view = TurnInfoView::default();
+
+        // When - 无需操作
+
+        // Then
+        assert_eq!(view.turn_number, 0);
+        assert!(!view.is_player_turn);
+        assert!(view.turn_order.is_empty());
+        assert_eq!(view.current_index, 0);
+    }
+
+    /// Test ID: UI-GAME-001
+    /// Title: GameOverState 默认值为 Playing
+    ///
+    /// Given: GameOverState::default()
+    /// When: 检查枚举值
+    /// Then: 等于 Playing
+    ///
+    /// Assertions: game_over == Playing
+    #[test]
+    fn game_over_state_default_is_playing() {
+        // Given
+        let state = GameOverState::default();
+
+        // When - 无需操作
+
+        // Then
+        assert_eq!(state, GameOverState::Playing);
+    }
+
+    /// Test ID: UI-GAME-002
+    /// Title: GameOverState 枚举值可比较
+    ///
+    /// Given: GameOverState::Victory 和 GameOverState::Defeat
+    /// When: 比较两个不同状态
+    /// Then: 两者不相等
+    ///
+    /// Assertions: Victory != Defeat
+    #[test]
+    fn game_over_state_variants_are_distinct() {
+        // Given
+        let victory = GameOverState::Victory;
+        let defeat = GameOverState::Defeat;
+
+        // When - 无需操作
+
+        // Then
+        assert_ne!(victory, defeat);
+        assert_ne!(victory, GameOverState::Playing);
+        assert_ne!(defeat, GameOverState::Playing);
+    }
+
+    /// Test ID: UI-INV-004
+    /// Title: HoveredEntity 默认值为 None
+    ///
+    /// Given: HoveredEntity::default()
+    /// When: 检查 entity 字段
+    /// Then: entity 为 None
+    ///
+    /// Assertions: entity == None
+    #[test]
+    fn hovered_entity_default_is_none() {
+        // Given
+        let hovered = HoveredEntity::default();
+
+        // When - 无需操作
+
+        // Then
+        assert!(hovered.entity.is_none());
+    }
+
+    /// Test ID: UI-INV-004b
+    /// Title: HoveredEntity 可设置 Entity
+    ///
+    /// Given: HoveredEntity::default()
+    /// When: 设置 entity = Some(Entity::from_bits(42))
+    /// Then: entity 等于设置的值
+    ///
+    /// Assertions: entity == Some(Entity::from_bits(42))
+    #[test]
+    fn hovered_entity_can_set_entity() {
+        // Given
+        let mut hovered = HoveredEntity::default();
+        let expected = Entity::from_bits(42);
+
+        // When
+        hovered.entity = Some(expected);
+
+        // Then
+        assert_eq!(hovered.entity, Some(expected));
     }
 }

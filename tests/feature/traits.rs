@@ -6,14 +6,14 @@
 //! 3. Trait 修改属性
 
 // ================================================
-// Bevy SRPG AI宪法 v1.1 自检结果（测试专用）
+// AI Self-Check (test_spec.md §13.1)
 // ================================================
-// ✅ 测行为不测实现：是 — 断言验证 Trait 添加/移除后状态
-// ✅ 符合领域规则：是 — 覆盖 Trait 完整生命周期
-// ✅ 确定性：是 — 硬编码 Trait 定义和属性值
-// ✅ 使用标准数据：是 — 使用 UnitBuilder::warrior()
-// ✅ 无越界测试：是 — 仅测试公共 API
-// ✅ 未测试私有实现：是 — 仅通过 Trait Pipeline 接口测试
+// ✅ 测试行为，不是实现
+// ✅ 符合领域规则
+// ✅ 测试是确定性的
+// ✅ 使用标准测试数据
+// ✅ 没有测试私有实现
+// ✅ 没有生成不在范围内的测试
 // ================================================
 
 use bevy::prelude::*;
@@ -153,6 +153,11 @@ fn rebuild_gameplay_tags(app: &mut App, entity: Entity) {
 // 场景一：被动 Trait 授予标签
 // ══════════════════════════════════════════════════════════════
 
+/// FT-TRT-001: 被动 Trait 授予标签
+///
+/// Given: 战士角色，注册 Passive + GrantTag(FIRE) Trait
+/// When:  添加 Trait 并应用效果
+/// Then:  GameplayTags 包含 FIRE 标签
 #[test]
 fn 被动trait授予标签_添加passive_grant_tag后标签出现在gameplay_tags() {
     let mut app = equipment_app();
@@ -186,6 +191,11 @@ fn 被动trait授予标签_添加passive_grant_tag后标签出现在gameplay_tag
     assert!(persistent.from_traits.has(GameplayTag::FIRE));
 }
 
+/// FT-TRT-002: 多个 Trait 授予多个标签
+///
+/// Given: 战士角色，注册两个 Passive Trait（WARRIOR + FIRE）
+/// When:  添加两个 Trait 并应用效果
+/// Then:  GameplayTags 同时包含 WARRIOR 和 FIRE 标签
 #[test]
 fn 被动trait授予标签_多个trait授予多个标签() {
     let mut app = equipment_app();
@@ -210,6 +220,11 @@ fn 被动trait授予标签_多个trait授予多个标签() {
     assert_has_tag!(tags, GameplayTag::FIRE);
 }
 
+/// FT-TRT-003: 非 Passive 触发不授予标签
+///
+/// Given: 战士角色，注册 OnAttack + GrantTag(FIRE) Trait
+/// When:  添加 Trait 并应用效果
+/// Then:  GameplayTags 不包含 FIRE 标签（非 Passive 不在被动阶段授予）
 #[test]
 fn 被动trait授予标签_非passive触发不授予标签() {
     let mut app = equipment_app();
@@ -245,6 +260,11 @@ fn 被动trait授予标签_非passive触发不授予标签() {
 // 场景二：装备 Trait 完整生命周期
 // ══════════════════════════════════════════════════════════════
 
+/// FT-TRT-004: 装备 Trait 完整生命周期 — 添加后 entry 存在，移除后 entry 消失
+///
+/// Given: 战士角色，注册 Passive + GrantTag(HEAVY_ARMOR) Trait
+/// When:  通过 Equipment source 添加 Trait → 应用效果 → 移除 Trait → 重新应用
+/// Then:  TraitCollection 有/无对应 entry，GameplayTags 有/无 HEAVY_ARMOR 标签
 #[test]
 fn 装备trait完整生命周期_添加后entry存在_移除后entry消失() {
     let mut app = equipment_app();
@@ -306,6 +326,11 @@ fn 装备trait完整生命周期_添加后entry存在_移除后entry消失() {
     assert_not_has_tag!(tags, GameplayTag::HEAVY_ARMOR);
 }
 
+/// FT-TRT-005: 不同 Equipment 来源的 Trait 独立管理
+///
+/// Given: 战士角色，两个 Equipment 槽位（MainHand + Body）提供同一 Trait
+/// When:  添加两个来源的 Trait → 移除 MainHand 来源
+/// Then:  Body 来源的 Trait 仍存在（count=1）
 #[test]
 fn 装备trait_不同来源的trait独立管理() {
     let mut app = equipment_app();
@@ -354,6 +379,11 @@ fn 装备trait_不同来源的trait独立管理() {
     assert_eq!(count, 1);
 }
 
+/// FT-TRT-006: Intrinsic 来源不受 Equipment 移除影响
+///
+/// Given: 战士角色，Intrinsic + Equipment 来源的同一 Trait
+/// When:  移除 Equipment 来源
+/// Then:  Intrinsic 来源的 Trait 仍存在
 #[test]
 fn 装备trait_intrinsic来源不受equipment移除影响() {
     let mut app = equipment_app();
@@ -393,6 +423,11 @@ fn 装备trait_intrinsic来源不受equipment移除影响() {
 // 场景三：Trait 修改属性
 // ══════════════════════════════════════════════════════════════
 
+/// FT-TRT-007: Trait 修改属性 — 添加后属性值变化
+///
+/// Given: 战士角色，注册 Passive + ModifyAttribute(Defense, Add, 5.0) Trait
+/// When:  添加 Trait 并应用效果
+/// Then:  Defense 值增加 5
 #[test]
 fn trait修改属性_添加passive_modify_attribute后属性值变化() {
     let mut app = equipment_app();
@@ -428,6 +463,11 @@ fn trait修改属性_添加passive_modify_attribute后属性值变化() {
     assert_attr_eq!(attrs, AttributeKind::Defense, base_defense as i32 + 5);
 }
 
+/// FT-TRT-008: Trait 修改属性 — 移除后属性恢复
+///
+/// Given: 战士角色，已添加 ModifyAttribute(Defense, Add, 5.0) Trait
+/// When:  移除 Trait 并重新应用效果
+/// Then:  Defense 恢复到基础值
 #[test]
 fn trait修改属性_移除trait后属性恢复() {
     let mut app = equipment_app();
@@ -471,6 +511,11 @@ fn trait修改属性_移除trait后属性恢复() {
     assert_attr_eq!(attrs, AttributeKind::Defense, base_defense as i32);
 }
 
+/// FT-TRT-009: Trait 乘法修饰符
+///
+/// Given: 战士角色，注册 Passive + ModifyAttribute(Attack, Multiply, 1.5) Trait
+/// When:  添加 Trait 并应用效果
+/// Then:  Attack 值乘以 1.5
 #[test]
 fn trait修改属性_乘法修饰符() {
     let mut app = equipment_app();
@@ -504,6 +549,11 @@ fn trait修改属性_乘法修饰符() {
     assert_attr_eq!(attrs, AttributeKind::Attack, expected);
 }
 
+/// FT-TRT-010: 多个 Trait 同时修改不同属性
+///
+/// Given: 战士角色，注册两个 Trait（Defense+3, Accuracy+10）
+/// When:  添加两个 Trait 并应用效果
+/// Then:  Defense 和 Accuracy 都增加
 #[test]
 fn trait修改属性_多个trait同时修改属性() {
     let mut app = equipment_app();
@@ -549,6 +599,11 @@ fn trait修改属性_多个trait同时修改属性() {
     assert_attr_eq!(attrs, AttributeKind::Accuracy, base_accuracy as i32 + 10);
 }
 
+/// FT-TRT-011: 同时授予标签和修改属性
+///
+/// Given: 战士角色，注册 Trait 同时 GrantTag(WARRIOR+MELEE) + ModifyAttribute(Defense+2)
+/// When:  添加 Trait 并应用效果
+/// Then:  GameplayTags 包含 WARRIOR 和 MELEE，Defense 增加 2
 #[test]
 fn trait修改属性_同时授予标签和修改属性() {
     let mut app = equipment_app();

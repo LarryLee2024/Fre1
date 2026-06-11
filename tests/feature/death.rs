@@ -3,19 +3,19 @@
 //! 测试角色死亡完整流程：
 //! 1. Dead 标记添加后 Hook 触发：acted=true + Selected 移除
 //! 2. 致命伤害触发死亡：Effect Pipeline → Dead 标记 + CharacterDied Message
+//! 3. 死亡角色不再受 Buff tick 影响
+//! 4. 存活角色正常受 Buff tick 影响
 
 // ================================================
-// Bevy SRPG AI宪法 v1.1 自检结果（测试专用）
+// AI Self-Check (test_spec.md §13.1)
 // ================================================
-// ✅ 测行为不测实现：是 — 断言验证死亡标记和消息
-// ✅ 符合领域规则：是 — 覆盖死亡处理流程
-// ✅ 确定性：是 — 硬编码属性值和伤害数据
-// ✅ 使用标准数据：是 — 使用 UnitBuilder::warrior()
-// ✅ 无越界测试：是 — 仅测试公共 API
-// ✅ 未测试私有实现：是 — 仅通过 Effect Pipeline 接口测试
+// ✅ 测试行为，不是实现
+// ✅ 符合领域规则
+// ✅ 测试是确定性的
+// ✅ 使用标准测试数据
+// ✅ 没有测试私有实现
+// ✅ 没有生成不在范围内的测试
 // ================================================
-//! 3. 死亡角色不再受 Buff tick 影响（来自 buff_death_feature 合并）
-//! 4. 存活角色正常受 Buff tick 影响（来自 buff_death_feature 合并）
 
 use bevy::prelude::*;
 use tactical_rpg::battle::{BattleEntry, BattleRecord, execute_effects};
@@ -150,6 +150,14 @@ fn warrior_attrs() -> Attributes {
 // 场景一：死亡标记添加后 Hook 触发
 // ══════════════════════════════════════════════════════════════
 
+/// Test ID: DEATH-001
+/// Title: 死亡标记添加后 Hook 触发 - acted=true 且 Selected 被移除
+///
+/// Given: 一个未行动、被选中的单位
+/// When: 添加 Dead 组件
+/// Then: Hook 自动将 acted 设为 true，移除 Selected
+///
+/// Assertions: acted=true, Selected=None, Dead=Some
 #[test]
 fn 死亡标记添加后hook触发_acted为true且selected被移除() {
     let mut world = World::new();
@@ -191,6 +199,14 @@ fn 死亡标记添加后hook触发_acted为true且selected被移除() {
 // 场景二：致命伤害触发死亡
 // ══════════════════════════════════════════════════════════════
 
+/// Test ID: DEATH-002
+/// Title: 致命伤害触发死亡 - Dead 标记和 CharacterDied 消息
+///
+/// Given: 哥布林 HP=5，战士造成 10 点伤害
+/// When: 通过 Effect Pipeline 造成致命伤害
+/// Then: Dead 标记添加，acted=true，HP=0，BattleRecord 记录 CharacterDied
+///
+/// Assertions: Dead=Some, acted=true, HP=0, BattleRecord 包含 CharacterDied
 #[test]
 fn 致命伤害触发死亡_dead标记和character_died消息() {
     let mut app = death_test_app();
@@ -245,6 +261,14 @@ fn 致命伤害触发死亡_dead标记和character_died消息() {
 // 合并场景：死亡角色不再受 Buff tick 影响（来自 buff_death_feature）
 // ══════════════════════════════════════════════════════════════
 
+/// Test ID: DEATH-003
+/// Title: 死亡角色 resolve_status_effects 不处理
+///
+/// Given: 已死亡单位带 Poison Buff（HP=0）
+/// When: 触发 resolve_status_effects
+/// Then: HP 不被 DoT 进一步降低
+///
+/// Assertions: HP 保持 0.0
 #[test]
 fn 死亡角色_resolve_status_effects不处理() {
     let mut app = resolve_test_app();
@@ -309,6 +333,14 @@ fn 死亡角色_resolve_status_effects不处理() {
     assert_eq!(hp_after, hp_before, "死亡角色不应再受 DoT 影响");
 }
 
+/// Test ID: DEATH-004
+/// Title: 存活角色 resolve_status_effects 正常处理 DoT
+///
+/// Given: 存活单位带 Poison Buff（HP=30）
+/// When: 触发 resolve_status_effects
+/// Then: 受到 Poison DoT 伤害 -3 HP
+///
+/// Assertions: HP 从 30→27
 #[test]
 fn 存活角色_resolve_status_effects正常处理dot() {
     let mut app = resolve_test_app();

@@ -348,6 +348,14 @@ fn poison完整生命周期_施加_dot_过期移除() {
 // 场景二：增攻 Buff 修改属性
 // ══════════════════════════════════════════════════════════════
 
+/// Test ID: BUFF-002
+/// Title: 增攻 Buff 修改属性 - 施加后增加过期后恢复
+///
+/// Given: 战士 Attack=10，法师施加增攻 Buff（duration=3, +5 Attack）
+/// When: 通过 Effect Pipeline 施加增攻 Buff 并推进 4 回合
+/// Then: Attack 从 10→15，3 回合后恢复为 10，Buff 过期移除
+///
+/// Assertions: Attack 15→15→15→10→10，Buff 过期后 ActiveBuffs 为空
 #[test]
 fn 增攻buff修改属性_施加后增加_过期后恢复() {
     let mut app = buff_test_app();
@@ -417,6 +425,14 @@ fn 增攻buff修改属性_施加后增加_过期后恢复() {
 // 场景三：Cleanse 移除 Debuff
 // ══════════════════════════════════════════════════════════════
 
+/// Test ID: BUFF-003
+/// Title: Cleanse 移除 Debuff - 两个 Debuff 全部移除
+///
+/// Given: 战士被施加 Poison + Stun 两个 Debuff
+/// When: 通过 Effect Pipeline 施加 Cleanse
+/// Then: 所有 Debuff 被移除，晕眩解除，DoT 清零
+///
+/// Assertions: ActiveBuffs 为空，is_stunned=false，dot_damage=0
 #[test]
 fn cleanse移除debuff_两个debuff全部移除() {
     let mut app = buff_test_app();
@@ -452,6 +468,14 @@ fn cleanse移除debuff_两个debuff全部移除() {
 // 合并场景：Cleanse 只移除 Debuff 保留 Buff（来自 buff_death_feature）
 // ══════════════════════════════════════════════════════════════
 
+/// Test ID: BUFF-004
+/// Title: Cleanse 只移除 Debuff 保留 Buff
+///
+/// Given: 战士被施加 AttackUp(Buff) + Poison(Debuff)
+/// When: 通过 apply_buff 施加 Cleanse
+/// Then: Poison 被移除，AttackUp 保留，Attack 保持 15
+///
+/// Assertions: ActiveBuffs 只剩 attack_up，dot_damage=0，Attack=15
 #[test]
 fn cleanse_只移除debuff保留buff() {
     let attack_up = make_attack_up();

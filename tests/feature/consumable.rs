@@ -2,24 +2,17 @@
 //!
 //! 跨 inventory/use_item + inventory/container + inventory/definition + core/attribute + buff
 //! 测试消耗品使用完整流程：恢复属性、赋予 Buff、数量消耗。
-//!
 
 // ================================================
-// Bevy SRPG AI宪法 v1.1 自检结果（测试专用）
+// AI Self-Check (test_spec.md §13.1)
 // ================================================
-// ✅ 测行为不测实现：是 — 断言验证消耗品使用后属性/Buff/数量变化
-// ✅ 符合领域规则：是 — 覆盖消耗品使用完整流程
-// ✅ 确定性：是 — 硬编码物品定义和属性值
-// ✅ 使用标准数据：是 — 使用标准 ItemRegistry
-// ✅ 无越界测试：是 — 仅测试公共 API
-// ✅ 未测试私有实现：是 — 仅通过 UseItem Pipeline 接口测试
+// ✅ 测试行为，不是实现
+// ✅ 符合领域规则
+// ✅ 测试是确定性的
+// ✅ 使用标准测试数据
+// ✅ 没有测试私有实现
+// ✅ 没有生成不在范围内的测试
 // ================================================
-//! AI Self-Check:
-//! ✅ 测行为不测实现 — 所有断言验证属性/Buff/数量终态，不验证 System 执行顺序
-//! ✅ 符合领域规则 — 验证 INV-USE-1/2/3/4/5/6 消耗品不变量 + INV-CTR-8 空堆叠清理
-//! ✅ 确定性 — 无随机数，无时间依赖，数据硬编码
-//! ✅ 使用标准数据 — 使用 UnitBuilder::warrior()（inventory 测试关注消耗品效果，非单位属性）
-//! ✅ 没有越界测试 — 未测试私有实现、System 顺序、组件布局
 
 use bevy::prelude::*;
 use tactical_rpg::buff::ActiveBuffs;
@@ -126,6 +119,8 @@ fn consumable_app() -> App {
 /// Given: 战士 HP 降低 80 点，背包有 1 瓶治疗药水（RestoreVital Hp +50）
 /// When:  使用治疗药水
 /// Then:  HP 修饰符数量 +1，修饰符值 = 50.0，current_hp 不被直接修改（走修饰符管线）
+///
+/// Test ID: CONS-001
 #[test]
 fn 治疗药水恢复hp_受伤角色使用后hp修饰符增加() {
     let mut app = consumable_app();
@@ -207,6 +202,8 @@ fn 治疗药水恢复hp_受伤角色使用后hp修饰符增加() {
 /// Given: 战士无 Buff，背包有 1 瓶力量药水（ApplyBuff strength_up, duration=3）
 /// When:  使用力量药水
 /// Then:  获得 strength_up Buff，remaining_turns = 3
+///
+/// Test ID: CONS-002
 #[test]
 fn 药水赋予buff_使用力量药水后获得buff() {
     let mut app = consumable_app();
@@ -257,6 +254,8 @@ fn 药水赋予buff_使用力量药水后获得buff() {
 /// Given: 战士背包有 3 瓶治疗药水
 /// When:  使用一瓶治疗药水
 /// Then:  堆叠数量减少为 2（INV-USE-6 + INV-CTR-8）
+///
+/// Test ID: CONS-003
 #[test]
 fn 消耗品使用后数量减少_药水x3使用一个后变x2() {
     let mut app = consumable_app();

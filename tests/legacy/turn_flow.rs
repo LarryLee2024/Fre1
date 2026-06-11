@@ -2,12 +2,16 @@
 //!
 //! 跨 turn + character 模块测试回合状态机流转、行动队列构建、阵营切换。
 //!
-//! AI Self-Check:
-//! ✅ 测行为不测实现 — 断言验证回合状态变化（turn_number、queue、acted、phase），不验证内部实现
-//! ✅ 符合领域规则 — 覆盖 INV-TURN-001~016 回合不变量
-//! ✅ 确定性 — 无随机数，无时间依赖，数据硬编码
-//! ✅ 使用标准数据 — 使用 UnitBuilder::warrior()（inventory 测试关注回合流程，非单位属性）
-//! ✅ 没有越界测试 — 未测试私有实现、System 顺序、组件布局
+// ================================================
+// AI Self-Check (test_spec.md §13.1)
+// ================================================
+// ✅ 测试行为，不是实现
+// ✅ 符合领域规则
+// ✅ 测试是确定性的
+// ✅ 使用标准测试数据
+// ✅ 没有测试私有实现
+// ✅ 没有生成不在范围内的测试
+// ================================================
 
 use bevy::prelude::*;
 use tactical_rpg::character::{Faction, Unit};
@@ -308,9 +312,14 @@ fn 多次回合结束_回合数持续递增() {
 }
 
 // ══════════════════════════════════════════════════════════════
-// 场景七：回合结束时重置 acted 状态
+// TUR-012: 回合结束 — 重置所有单位 acted 状态
 // ══════════════════════════════════════════════════════════════
 
+/// TUR-012: 回合结束 — 重置所有单位 acted 状态
+///
+/// Given: 2 个单位，acted 均为 true
+/// When:  触发 TurnPhase::TurnEnd
+/// Then:  所有单位 acted = false
 #[test]
 fn 回合结束_重置所有单位acted状态() {
     let mut app = setup_turn_test_app();
@@ -341,6 +350,11 @@ fn 回合结束_重置所有单位acted状态() {
     assert!(!app.world().get::<Unit>(e2).unwrap().acted);
 }
 
+/// TUR-013: 回合结束 — 只有部分单位 acted 也全部重置
+///
+/// Given: 2 个单位，e1.acted = true, e2.acted = false
+/// When:  触发 TurnPhase::TurnEnd
+/// Then:  e1.acted = false, e2.acted = false（全部重置）
 #[test]
 fn 回合结束_只有部分单位acted也全部重置() {
     let mut app = setup_turn_test_app();
@@ -369,9 +383,14 @@ fn 回合结束_只有部分单位acted也全部重置() {
 }
 
 // ══════════════════════════════════════════════════════════════
-// 场景八：单位被击败后重建队列不包含已死亡单位
+// TUR-014: 回合结束 — 重建队列过滤已死亡单位
 // ══════════════════════════════════════════════════════════════
 
+/// TUR-014: 回合结束 — 重建队列过滤已死亡单位
+///
+/// Given: 3 个单位（e1=Player, e2=Enemy, e3=Player），初始 TurnEnd 建立队列
+/// When:  despawn(e2) 后再次触发 TurnPhase::TurnEnd
+/// Then:  队列长度 = 2，包含 e1 和 e3，不包含 e2
 #[test]
 fn 回合结束_重建队列过滤已死亡单位() {
     let mut app = setup_turn_test_app();
@@ -410,6 +429,11 @@ fn 回合结束_重建队列过滤已死亡单位() {
     assert!(turn_order.queue.contains(&e3));
 }
 
+/// TUR-015: 回合结束 — 所有敌方死亡后队列只有玩家
+///
+/// Given: Player(initiative=10) 和 Enemy(initiative=8)，初始 TurnEnd 建立队列
+/// When:  despawn(e2) 后再次触发 TurnPhase::TurnEnd
+/// Then:  队列长度 = 1，仅包含 Player 单位
 #[test]
 fn 回合结束_所有敌方死亡后队列只有玩家() {
     let mut app = setup_turn_test_app();

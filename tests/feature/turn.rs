@@ -4,14 +4,14 @@
 //! 回合数递增、重置单位行动状态、ForceEndTurn 消息触发回合结束。
 
 // ================================================
-// Bevy SRPG AI宪法 v1.1 自检结果（测试专用）
+// AI Self-Check (test_spec.md §13.1)
 // ================================================
-// ✅ 测行为不测实现：是 — 断言验证回合状态变化
-// ✅ 符合领域规则：是 — 覆盖回合结束流程
-// ✅ 确定性：是 — 硬编码回合数据
-// ✅ 使用标准数据：是 — 使用 UnitBuilder::warrior()
-// ✅ 无越界测试：是 — 仅测试公共 API
-// ✅ 未测试私有实现：是 — 仅通过 Turn Pipeline 接口测试
+// ✅ 测试行为，不是实现
+// ✅ 符合领域规则
+// ✅ 测试是确定性的
+// ✅ 使用标准测试数据
+// ✅ 没有测试私有实现
+// ✅ 没有生成不在范围内的测试
 // ================================================
 
 use bevy::prelude::*;
@@ -63,6 +63,11 @@ fn spawn_unit(app: &mut App, faction: Faction, initiative: f32) -> Entity {
 // 场景一：回合结束 → 回合数递增
 // ══════════════════════════════════════════════════════════════
 
+/// FT-TUR-001: 回合结束 → 回合数递增
+///
+/// Given: 1 个 Player 单位，TurnPhase 初始状态
+/// When:  触发 TurnPhase::TurnEnd
+/// Then:  turn_number 从 1 变为 2
 #[test]
 fn 回合结束_回合数递增() {
     let mut app = setup_turn_test_app();
@@ -86,6 +91,11 @@ fn 回合结束_回合数递增() {
 // 场景二：回合结束 → 重置单位行动状态
 // ══════════════════════════════════════════════════════════════
 
+/// FT-TUR-002: 回合结束 → 重置所有单位 acted 状态
+///
+/// Given: 2 个单位（Player + Enemy），acted 均为 true
+/// When:  触发 TurnPhase::TurnEnd
+/// Then:  所有单位 acted = false
 #[test]
 fn 回合结束_重置单位行动状态() {
     let mut app = setup_turn_test_app();
@@ -120,6 +130,11 @@ fn 回合结束_重置单位行动状态() {
 // 场景三：ForceEndTurn 消息触发回合结束
 // ══════════════════════════════════════════════════════════════
 
+/// FT-TUR-003: ForceEndTurn 消息触发回合结束
+///
+/// Given: 1 个 Player 单位，TurnPhase 初始状态
+/// When:  发送 ForceEndTurn 消息并触发 TurnEnd
+/// Then:  turn_number 递增为 2，phase 变为 SelectUnit
 #[test]
 fn 强制结束回合_force_end_turn消息() {
     let mut app = setup_turn_test_app();
