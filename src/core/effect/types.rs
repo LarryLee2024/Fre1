@@ -1,6 +1,7 @@
 // 效果管道数据类型：EffectDef、PendingEffectData、EffectResult、EffectQueue
 // 从原 effect.rs 迁移，保留 RON 反序列化支持
 
+use crate::core::modifier_rule::ModifierEntry;
 use crate::core::tag::GameplayTag;
 use bevy::prelude::*;
 use serde::Deserialize;
@@ -54,6 +55,8 @@ pub enum PendingEffectData {
         is_skill: bool,
         /// generate 阶段的原始伤害值（modify 前设置）
         base_amount: Option<i32>,
+        /// modify 阶段记录的修饰步骤详情
+        modifiers: Vec<ModifierEntry>,
     },
     Heal {
         amount: i32,
@@ -211,6 +214,7 @@ mod tests {
                 amount: 5,
                 is_skill: false,
                 base_amount: None,
+                modifiers: Vec::new(),
             },
             source_tags: vec![],
             terrain_id: "plain".to_string(),
@@ -232,6 +236,7 @@ mod tests {
                 amount: 5,
                 is_skill: false,
                 base_amount: None,
+                modifiers: Vec::new(),
             },
             source_tags: vec![],
             terrain_id: "plain".to_string(),
@@ -269,6 +274,7 @@ mod tests {
                 amount: 5,
                 is_skill: false,
                 base_amount: None,
+                modifiers: Vec::new(),
             }
             .type_name(),
             "Damage"

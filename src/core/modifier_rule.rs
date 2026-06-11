@@ -4,7 +4,19 @@
 use crate::core::registry_loader::RegistryLoader;
 use crate::core::tag::{GameplayTag, TagName};
 use bevy::prelude::*;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
+
+/// 伤害/治疗修饰符条目（记录每一步修饰的 before/after 和规则名）
+#[derive(Debug, Clone, Reflect, Serialize, Deserialize)]
+#[reflect(Serialize, Deserialize)]
+pub struct ModifierEntry {
+    /// 修饰前值
+    pub before: i32,
+    /// 修饰后值
+    pub after: i32,
+    /// 修饰规则名称（如"火焰共鸣"）
+    pub rule_name: String,
+}
 
 /// 修饰效果类型
 #[derive(Clone, Debug)]
@@ -303,6 +315,64 @@ impl ModifierRuleRegistry {
             }
         }
         result.max(0.0) as i32
+    }
+
+    /// 应用所有修饰规则到伤害值，同时记录每步修饰详情
+    pub fn apply_damage_modifiers_with_breakdown(
+        &self,
+        amount: i32,
+        source_tags: &[GameplayTag],
+        target_tags: &crate::core::tag::GameplayTags,
+    ) -> (i32, Vec<ModifierEntry>) {
+        let mut result = amount as f32;
+        let mut entries = Vec::new();
+        for rule in &self.rules {
+            if !source_tags.contains(&rule.source_tag) {
+                continue;
+            }
+            if !target_tags.has(rule.target_tag) {
+                continue;
+            }
+            if let Some(calc) = self.calculators.find_damage_calculator(&rule.effect) {
+                let before = result;
+                result = calc.calculate(&rule.effect, result);
+                entries.push(ModifierEntry {
+                    before: before as i32,
+                    after: result as i32,
+                    rule_name: rule.name.clone(),
+                });
+            }
+        }
+        (result.max(1.0) as i32, entries)
+    }
+
+    /// 应用所有修饰规则到治疗值，同时记录每步修饰详情
+    pub fn apply_heal_modifiers_with_breakdown(
+        &self,
+        amount: i32,
+        source_tags: &[GameplayTag],
+        target_tags: &crate::core::tag::GameplayTags,
+    ) -> (i32, Vec<ModifierEntry>) {
+        let mut result = amount as f32;
+        let mut entries = Vec::new();
+        for rule in &self.rules {
+            if !source_tags.contains(&rule.source_tag) {
+                continue;
+            }
+            if !target_tags.has(rule.target_tag) {
+                continue;
+            }
+            if let Some(calc) = self.calculators.find_heal_calculator(&rule.effect) {
+                let before = result;
+                result = calc.calculate(&rule.effect, result);
+                entries.push(ModifierEntry {
+                    before: before as i32,
+                    after: result as i32,
+                    rule_name: rule.name.clone(),
+                });
+            }
+        }
+        (result.max(0.0) as i32, entries)
     }
 }
 

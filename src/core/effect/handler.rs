@@ -96,6 +96,7 @@ impl EffectHandler for DamageHandler {
             amount,
             is_skill: ctx.skill_id != crate::skill::BASIC_ATTACK_ID,
             base_amount: Some(amount),
+            modifiers: Vec::new(),
         })
     }
 

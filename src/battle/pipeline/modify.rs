@@ -17,6 +17,7 @@ pub fn modify_effects(
                 PendingEffectData::Damage {
                     amount,
                     base_amount,
+                    modifiers,
                     ..
                 } => {
                     let original = *amount;
@@ -24,8 +25,10 @@ pub fn modify_effects(
                     if base_amount.is_none() {
                         *base_amount = Some(original);
                     }
-                    *amount =
-                        rules.apply_damage_modifiers(*amount, &effect.source_tags, target_tags);
+                    let (new_amount, entries) =
+                        rules.apply_damage_modifiers_with_breakdown(*amount, &effect.source_tags, target_tags);
+                    *amount = new_amount;
+                    *modifiers = entries;
                     bevy::log::debug!(
                         target: "battle",
                         target_entity = ?effect.target,

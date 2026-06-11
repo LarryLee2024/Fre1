@@ -32,7 +32,12 @@ fn golden_battle_app() -> App {
     let mut app = crate::common::app_builder::full_battle_app();
     app.insert_resource(test_buff_registry());
     app.insert_resource(test_terrain_registry());
-    app.add_systems(Update, execute_effects);
+    app.add_systems(
+        Update,
+        execute_effects
+            .before(tactical_rpg::battle::record_damage)
+            .before(tactical_rpg::battle::record_character_died),
+    );
     app
 }
 
@@ -55,6 +60,7 @@ fn enqueue_damage(app: &mut App, source: Entity, target: Entity, amount: i32, is
             amount,
             is_skill,
             base_amount: None,
+            modifiers: Vec::new(),
         },
         source_tags: vec![],
         terrain_id: "plain".into(),

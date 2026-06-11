@@ -7,6 +7,7 @@ use crate::buff::{ActiveBuffs, BuffRegistry, apply_buff, remove_all_debuffs};
 use crate::character::{Dead, Faction, GridPosition, Unit, UnitName};
 use crate::core::attribute::{AttributeKind, Attributes};
 use crate::core::effect::{EffectQueue, PendingEffectData};
+use crate::core::modifier_rule::ModifierEntry;
 use crate::core::tag::GameplayTags;
 use crate::map::TerrainRegistry;
 use bevy::ecs::message::MessageWriter;
@@ -96,6 +97,7 @@ pub fn execute_effects_inline(
                 amount,
                 is_skill,
                 base_amount,
+                modifiers,
             } => {
                 if let Ok(mut target_attrs) = attrs_query.get_mut(effect.target) {
                     apply_damage_effect(
@@ -109,6 +111,7 @@ pub fn execute_effects_inline(
                         amount,
                         is_skill,
                         base_amount,
+                        &modifiers,
                         &terrain_label,
                         target_coord,
                         commands,
@@ -185,6 +188,7 @@ pub fn apply_damage_effect(
     amount: i32,
     is_skill: bool,
     base_amount: Option<i32>,
+    modifier_entries: &[ModifierEntry],
     terrain_label: &str,
     target_coord: IVec2,
     commands: &mut Commands,
@@ -197,7 +201,7 @@ pub fn apply_damage_effect(
         DamageBreakdown {
             base_amount: base,
             modified_amount: modified,
-            modifiers: Vec::new(), // 修饰规则详情由 modify 阶段填充
+            modifiers: modifier_entries.to_vec(),
             actual_damage: amount,
         }
     });
@@ -381,6 +385,7 @@ mod tests {
                 amount: 10,
                 is_skill: false,
                 base_amount: Some(10),
+                modifiers: Vec::new(),
             },
             source_tags: vec![],
             terrain_id: "plain".into(),
@@ -434,6 +439,7 @@ mod tests {
                 amount: 10,
                 is_skill: false,
                 base_amount: Some(10),
+                modifiers: Vec::new(),
             },
             source_tags: vec![],
             terrain_id: "plain".into(),

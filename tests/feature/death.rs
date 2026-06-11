@@ -74,6 +74,7 @@ fn enqueue_damage(app: &mut App, source: Entity, target: Entity, amount: i32) {
             amount,
             is_skill: false,
             base_amount: None,
+            modifiers: Vec::new(),
         },
         source_tags: vec![],
         terrain_id: "plain".into(),

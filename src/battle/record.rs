@@ -14,17 +14,8 @@ use super::events::{
 
 // ── 伤害分解 ──
 
-/// 伤害修饰符条目
-#[derive(Debug, Clone, Reflect, Serialize, Deserialize)]
-#[reflect(Serialize, Deserialize)]
-pub struct ModifierEntry {
-    /// 修饰前值
-    pub before: i32,
-    /// 修饰后值
-    pub after: i32,
-    /// 修饰规则名称（如"火焰共鸣"）
-    pub rule_name: String,
-}
+/// 伤害修饰符条目（re-export from core::modifier_rule）
+pub use crate::core::modifier_rule::ModifierEntry;
 
 /// 伤害分解记录（匹配实际效果管线：generate → modify → execute）
 #[derive(Debug, Clone, Reflect, Serialize, Deserialize)]
