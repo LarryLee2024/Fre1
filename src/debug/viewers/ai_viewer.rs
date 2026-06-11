@@ -34,7 +34,7 @@ pub fn ai_viewer_system(
     let ctx = ctx.get_mut();
 
     egui::Window::new("AI Viewer")
-        .default_pos([370.0, 200.0])
+        .default_pos([740.0, 320.0])
         .default_size([350.0, 400.0])
         .show(ctx, |ui| {
             // 当前行动单位

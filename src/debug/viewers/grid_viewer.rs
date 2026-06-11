@@ -58,7 +58,7 @@ pub fn grid_viewer_system(
     let total_cols = terrain_grid.width as i32;
 
     egui::Window::new("Grid Viewer")
-        .default_pos([10.0, 400.0])
+        .default_pos([10.0, 640.0])
         .default_size([400.0, 300.0])
         .show(ctx, |ui| {
             ui.label(format!(

@@ -3,15 +3,20 @@
 
 use crate::buff::ActiveBuffs;
 use crate::character::{Faction, Unit, UnitName};
+use crate::debug::DebugPanelState;
 use bevy::prelude::*;
 use bevy_inspector_egui::bevy_egui::EguiContext;
 use bevy_inspector_egui::egui;
 
-/// Buff Viewer 调试面板
+/// Buff Viewer 调试面板（F2 控制显隐）
 pub fn buff_viewer_system(
+    state: Res<DebugPanelState>,
     mut egui_ctx: Query<&mut EguiContext, With<bevy::window::PrimaryWindow>>,
     units: Query<(Entity, &Unit, &UnitName, &ActiveBuffs)>,
 ) {
+    if !state.show_buff_viewer {
+        return;
+    }
     let Ok(mut ctx) = egui_ctx.single_mut() else {
         return;
     };

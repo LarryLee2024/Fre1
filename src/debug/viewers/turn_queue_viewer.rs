@@ -19,7 +19,7 @@ pub fn turn_queue_viewer_system_inner(
     let ctx = ctx.get_mut();
 
     bevy_inspector_egui::egui::Window::new("Turn Queue")
-        .default_pos([10.0, 600.0])
+        .default_pos([10.0, 960.0])
         .default_size([280.0, 300.0])
         .show(ctx, |ui| {
             ui.label(format!("Round {}", turn_order.turn_number));

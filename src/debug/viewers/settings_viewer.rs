@@ -17,7 +17,7 @@ pub fn settings_viewer_system(
     let ctx = ctx.get_mut();
 
     egui::Window::new("Game Settings")
-        .default_pos([10.0, 400.0])
+        .default_pos([420.0, 980.0])
         .default_size([280.0, 320.0])
         .show(ctx, |ui| {
             // ── UI 设置 ──

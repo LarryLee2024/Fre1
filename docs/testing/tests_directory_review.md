@@ -397,10 +397,10 @@ The old snapshots may be stale and should be cleaned up.
 | Priority | Count | Description |
 |----------|-------|-------------|
 | P0 | 2 | No YAML replay tests (§5/§8); No standard Unit_001/Unit_002/Unit_003 (§7.1) |
-| P1 | 2 | Severely inverted test pyramid (88.5% integration vs 7.5% unit); 3 stale snapshot files |
-| P2 | 4 | ~35% test duplication (44 duplicate definitions); inconsistent helpers; missing skill/turn/golden tests; inconsistent test approaches |
-| P3 | 4 | Missing E2E tests; missing error test file; proptest regression review; missing scenario tests |
-| **Total** | **12** | |
+| P1 | 4 | Severely inverted test pyramid; 3 stale snapshot files; Zero AI Self-Check annotations (§13.1); Zero Given/When/Then schema compliance (§7) |
+| P2 | 6 | ~35% test duplication (44 duplicate definitions); inconsistent helpers; missing skill/turn/golden tests; inconsistent test approaches; Zero Test IDs; No CI configuration (§14) |
+| P3 | 5 | Missing E2E tests; missing error test file; proptest regression review; missing scenario tests; No battle_replays/ directory (§8); No exemption documents (§15) |
+| **Total** | **17** | |
 
 ---
 
@@ -425,28 +425,41 @@ The old snapshots may be stale and should be cleaned up.
 ### Short-term (P1)
 
 3. **Delete stale snapshot files**: Remove 3 old-format `.snap` files from `tests/golden/snapshots/`
-4. **Refactor integration tests to pure unit tests** where possible:
-   - `calculate_damage_from_effect` tests → remove App wrapper
-   - `apply_buff` / `remove_buff` tests → remove App wrapper
-   - `SkillData::can_use` tests → remove App wrapper
-   - Target: unit test ratio ≥ 50%
+4. **Add AI Self-Check annotations** to all 24 test files per §13.1:
+   ```
+   // AI Self-Check:
+   // ✅ 测试行为，不是实现
+   // ✅ 符合领域规则
+   // ✅ 测试是确定性的
+   // ✅ 使用标准测试数据
+   // ✅ 没有测试私有实现
+   // ✅ 没有生成不在范围内的测试
+   ```
+5. **Add Given/When/Then schema** to all tests per §7:
+   - Add Test ID (e.g., DMG-001, BUFF-001)
+   - Add Given/When/Then comments
+   - Start with scenario/ tests (4 already have this), then migrate feature/ and legacy/
 
 ### Medium-term (P2)
 
-5. **Consolidate duplicated helpers**: Move common helpers to `tests/common/`:
+6. **Consolidate duplicated helpers**: Move common helpers to `tests/common/`:
    - `spawn_unit` → `common/fixtures.rs`
    - `test_buff_registry` / `test_terrain_registry` → `common/app_builder.rs`
    - `enqueue_damage` / `enqueue_apply_buff` → `common/combat_helpers.rs`
    - `make_buff_data` / `make_poison` → `common/fixtures.rs`
-6. **Standardize helper signatures**: Unify `spawn_unit`, `put_item_in_backpack`, `enqueue_damage`
-7. **Add missing golden scenarios**: buff, equipment, terrain, full turn flow
+7. **Standardize helper signatures**: Unify `spawn_unit`, `put_item_in_backpack`, `enqueue_damage`
+8. **Add missing golden scenarios**: buff, equipment, terrain, full turn flow
+9. **Add CI configuration** per §14:
+   - Create `.github/workflows/test.yml` or equivalent
+   - Ensure Unit, Integration, Replay, Regression tests all run on every commit
 
 ### Long-term (P3)
 
-8. **Create dedicated error test file**: `tests/error/` with systematic boundary testing
-9. **Review proptest regressions**: Ensure all are fixed
-10. **Add AI Self-Check annotations** per §13.1
-11. **Migrate entry points**: Remove `#[path]` attributes, use standard directory-based module resolution
+10. **Create dedicated error test file**: `tests/error/` with systematic boundary testing
+11. **Review proptest regressions**: Ensure all are fixed
+12. **Create `battle_replays/` directory** with YAML replay files per §8 schema
+13. **Create exemption documents** if any tests need exemptions per §15
+14. **Migrate entry points**: Remove `#[path]` attributes, use standard directory-based module resolution
 
 ---
 
@@ -466,8 +479,13 @@ The old snapshots may be stale and should be cleaned up.
 | Test Duplication | ~35% (44 defs) | 0% | ❌ High |
 | Stale Snapshots | 3 files | 0 | ⚠️ Should delete |
 | Helper Inconsistencies | 13 patterns | 0 | ⚠️ Should consolidate |
+| Given/When/Then Schema | 4/174 (2.3%) | 100% | ❌ Critical |
+| Test IDs | 0/174 (0%) | 100% | ❌ Critical |
+| AI Self-Check | 0/24 files (0%) | 100% | ❌ Critical |
+| CI Configuration | None | Required | ❌ Missing |
+| Battle Replays Dir | None | Required | ❌ Missing |
 
-### Overall Score: **3.0 / 5.0** (downgraded from 3.2 due to additional findings)
+### Overall Score: **2.5 / 5.0** (downgraded from 3.0 due to test spec compliance gaps)
 
 **Strengths**:
 - Excellent domain rule coverage (all 11 core domains tested)
@@ -477,6 +495,7 @@ The old snapshots may be stale and should be cleaned up.
 - Property-based testing (proptest) for formulas
 - Golden snapshot regression tracking
 - 3 pure function tests in inventory.rs demonstrate correct unit test pattern
+- All test files have module-level doc comments (`//!`)
 
 **Weaknesses**:
 - **Severely inverted test pyramid** (88.5% integration vs 7.5% unit)
@@ -487,6 +506,12 @@ The old snapshots may be stale and should be cleaned up.
 - **Inconsistent test helpers** (7 different `spawn_unit` implementations, inconsistent signatures)
 - **3 stale snapshot files** that should be deleted
 - **Inconsistent test approaches** (mixed pure function + App in same test)
+- **Zero AI Self-Check annotations** (§13.1 mandatory)
+- **Zero Test IDs** (§7 mandatory)
+- **Only 2.3% tests follow Given/When/Then schema** (§7 mandatory, 100% required)
+- **No CI configuration** (§14 mandatory)
+- **No `battle_replays/` directory** (§8 mandatory)
+- **No exemption documents** (§15 mandatory)
 
 ---
 
@@ -586,6 +611,64 @@ source tests/rule/rules.rs:63: test rule_tests::terrain_defense_reduces_damage f
 
 This indicates a past regression was caught and fixed. The regression tracking is working correctly.
 
+### §14.9 Test Spec §7 Schema Compliance (Given/When/Then)
+
+**Only 4 out of 174 tests follow the mandatory Given/When/Then schema** (all in `scenario/scenarios.rs`).
+
+| Test Category | Given/When/Then | Test ID | Status |
+|---------------|-----------------|---------|--------|
+| scenario/ (4 tests) | ✅ All 4 | ❌ None | Partial |
+| feature/ (40 tests) | ❌ None | ❌ None | Non-compliant |
+| legacy/ (104 tests) | ❌ None | ❌ None | Non-compliant |
+| system/ (10 tests) | ❌ None | ❌ None | Non-compliant |
+| golden/ (3 tests) | ❌ None | ❌ None | Non-compliant |
+| rule/ (13 tests) | N/A (proptest) | ❌ None | Non-compliant |
+
+**§7 mandates**: All tests must have Test ID, Title, Given, When, Then, Assertions.
+
+### §14.10 AI Self-Check Annotations (§13.1)
+
+**Zero test files have the required AI Self-Check annotations.**
+
+§13.1 requires every test file to start with:
+```
+// AI Self-Check:
+// ✅ 测试行为，不是实现
+// ✅ 符合领域规则
+// ✅ 测试是确定性的
+// ✅ 使用标准测试数据
+// ✅ 没有测试私有实现
+// ✅ 没有生成不在范围内的测试
+```
+
+**Found**: 0 out of 24 test files have this annotation.
+
+### §14.11 CI Configuration (§14)
+
+**No CI configuration found.**
+
+§14 requires: "每次提交必须执行 Unit Test, Integration Test, Replay Test, Regression Test. 任何失败：禁止合并。"
+
+Checked locations:
+- `.github/` — Not found
+- `.gitlab-ci.yml` — Not found
+- `Jenkinsfile` — Not found
+- Any `*.yml` / `*.yaml` in root — Not found
+
+### §14.12 Battle Replay Directory (§8)
+
+**No `battle_replays/` directory found.**
+
+§8 mandates: "Replay文件格式：`battle_replays/*.yaml`"
+
+### §14.13 Exemption Documents (§15)
+
+**No exemption documents found.**
+
+§15 requires: "必须记录：Reason, Owner, Created Date, Expire Date"
+
+Checked: No files matching `*exemption*` or `*exception*` in `docs/`.
+
 ---
 
 ## §15 Self-Check
@@ -605,3 +688,8 @@ This indicates a past regression was caught and fixed. The regression tracking i
 - [x] Helper signature inconsistencies documented
 - [x] Pure function test candidates identified
 - [x] Missing test coverage mapped
+- [x] Test spec §7 schema compliance checked (2.3% Given/When/Then, 0% Test IDs)
+- [x] AI Self-Check annotations checked (0% compliance)
+- [x] CI configuration checked (none found)
+- [x] Battle replay directory checked (none found)
+- [x] Exemption documents checked (none found)

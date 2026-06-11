@@ -26,7 +26,7 @@ pub fn equipment_viewer_system(
     let ctx = ctx.get_mut();
 
     egui::Window::new("Equipment Viewer")
-        .default_pos([10.0, 400.0])
+        .default_pos([420.0, 520.0])
         .default_size([400.0, 450.0])
         .show(ctx, |ui| {
             for (entity, unit, name, slots, inventory, trait_collection) in &units {
