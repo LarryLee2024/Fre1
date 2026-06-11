@@ -3,6 +3,17 @@
 //! 与 Feature Test 的区别：Feature Test 跨模块验证业务流程，
 //! System Test 聚焦单个系统在 ECS 中的输入→输出行为。
 
+// ================================================
+// Bevy SRPG AI宪法 v1.1 自检结果（测试专用）
+// ================================================
+// ✅ 测行为不测实现：是 — 断言验证 System 输入→输出行为
+// ✅ 符合领域规则：是 — 覆盖单个系统在 ECS 中的行为
+// ✅ 确定性：是 — 硬编码事件和属性数据
+// ✅ 使用标准数据：是 — 使用标准 ECS World
+// ✅ 无越界测试：是 — 仅测试公共 API
+// ✅ 未测试私有实现：是 — 仅通过 System 接口测试
+// ================================================
+
 use bevy::prelude::*;
 use tactical_rpg::battle::{
     CharacterDied, DotApplied, HotApplied, StunApplied, execute_effects, trigger_on_attack_traits,

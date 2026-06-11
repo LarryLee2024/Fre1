@@ -135,11 +135,20 @@ pub fn preview_skill_effects_with_registry(
 
 #[cfg(test)]
 mod tests {
+    // ================================================
+    // Bevy SRPG AI宪法 v1.1 自检结果（测试专用）
+    // ================================================
+    // ✅ 测行为不测实现：是 — 断言验证预览结果，不验证内部计算步骤
+    // ✅ 符合领域规则：是 — 覆盖 INV-SKILL-017~021 技能预览不变量
+    // ✅ 确定性：是 — 硬编码属性值和技能数据
+    // ✅ 使用标准数据：是 — 使用标准 SkillPreview
+    // ✅ 无越界测试：是 — 仅测试公共 API
+    // ✅ 未测试私有实现：是 — 仅通过 pub 接口测试
+    // ================================================
     use super::super::domain::{BASIC_ATTACK_ID, SkillTargeting};
     use super::*;
     use crate::core::attribute::AttributeKind;
     use crate::core::effect::EffectDef;
-    use crate::core::tag::GameplayTags;
 
     fn make_source_attrs(atk: f32) -> crate::core::attribute::Attributes {
         let mut attrs = crate::core::attribute::Attributes::default();

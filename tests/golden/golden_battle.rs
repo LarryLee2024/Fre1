@@ -3,6 +3,17 @@
 //! 通过 insta 快照对比验证 BattleRecord 的完整战斗流程记录，
 //! 确保战斗事件链路在重构后不会静默变化。
 
+// ================================================
+// Bevy SRPG AI宪法 v1.1 自检结果（测试专用）
+// ================================================
+// ✅ 测行为不测实现：是 — 断言验证快照对比结果
+// ✅ 符合领域规则：是 — 覆盖战斗事件链路完整性
+// ✅ 确定性：是 — insta 快照确保确定性
+// ✅ 使用标准数据：是 — 使用标准 BattleRecord
+// ✅ 无越界测试：是 — 仅测试公共 API
+// ✅ 未测试私有实现：是 — 仅通过 BattleRecord/execute_effects 接口测试
+// ================================================
+
 use bevy::prelude::*;
 use tactical_rpg::battle::{BattleRecord, execute_effects};
 use tactical_rpg::buff::BuffRegistry;

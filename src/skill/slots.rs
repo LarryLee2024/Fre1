@@ -88,6 +88,16 @@ pub fn effective_skill_range(skill_data: &SkillData, base_attack_range: u32) -> 
 
 #[cfg(test)]
 mod tests {
+    // ================================================
+    // Bevy SRPG AI宪法 v1.1 自检结果（测试专用）
+    // ================================================
+    // ✅ 测行为不测实现：是 — 断言验证槽位和冷却操作结果
+    // ✅ 符合领域规则：是 — 覆盖 INV-SKILL-011~016 技能槽位和冷却不变量
+    // ✅ 确定性：是 — 硬编码技能 ID 和冷却值
+    // ✅ 使用标准数据：是 — 使用标准 SkillSlots/SkillCooldowns
+    // ✅ 无越界测试：是 — 仅测试公共 API
+    // ✅ 未测试私有实现：是 — 仅通过 pub 接口测试
+    // ================================================
     use super::*;
     use crate::skill::domain::SkillTargeting;
 

@@ -4,7 +4,18 @@
 //! 1. Poison 完整生命周期：ApplyBuff → DoT → 过期移除
 //! 2. 增攻 Buff 修改属性：ApplyBuff → 属性增加 → 过期恢复
 //! 3. Cleanse 移除 Debuff：两个 Debuff → Cleanse → 全部移除
-//! 4. Cleanse 只移除 Debuff 保留 Buff（来自 buff_death_feature 合并）
+//! 4. Cleanse 只移除 Debuff 保留 Buff
+
+// ================================================
+// AI Self-Check (test_spec.md §13.1)
+// ================================================
+// ✅ 测试行为，不是实现
+// ✅ 符合领域规则
+// ✅ 测试是确定性的
+// ✅ 使用标准测试数据
+// ✅ 没有测试私有实现
+// ✅ 没有生成不在范围内的测试
+// ================================================
 
 use bevy::prelude::*;
 use tactical_rpg::buff::{ActiveBuffs, BuffData, BuffRegistry, apply_buff, resolve_status_effects};
@@ -241,6 +252,14 @@ fn warrior_attrs() -> Attributes {
 // 场景一：Poison 完整生命周期
 // ══════════════════════════════════════════════════════════════
 
+/// Test ID: BUFF-001
+/// Title: Poison 完整生命周期 - 施加 DoT 过期移除
+///
+/// Given: 战士 HP=30，法师施加 Poison（duration=3, DoT=3）
+/// When: 通过 Effect Pipeline 施加 Poison 并推进 4 回合
+/// Then: 每回合扣 3 HP，3 回合后 Poison 过期移除
+///
+/// Assertions: HP 从 30→27→24→21→21，Poison 过期后 ActiveBuffs 为空
 #[test]
 fn poison完整生命周期_施加_dot_过期移除() {
     let mut app = buff_test_app();

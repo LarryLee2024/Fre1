@@ -3,6 +3,17 @@
 //! 跨 skill + core/attribute + core/tag 测试技能条件检查、
 //! 技能槽管理、冷却追踪在真实属性数据下的行为。
 
+// ================================================
+// Bevy SRPG AI宪法 v1.1 自检结果（测试专用）
+// ================================================
+// ✅ 测行为不测实现：是 — 断言验证技能条件检查和冷却状态
+// ✅ 符合领域规则：是 — 覆盖技能条件检查、槽管理、冷却追踪
+// ✅ 确定性：是 — 硬编码属性值和技能数据
+// ✅ 使用标准数据：是 — 使用标准 SkillRegistry
+// ✅ 无越界测试：是 — 仅测试公共 API
+// ✅ 未测试私有实现：是 — 仅通过 Skill Pipeline 接口测试
+// ================================================
+
 use tactical_rpg::core::attribute::{AttributeKind, Attributes};
 use tactical_rpg::core::tag::{GameplayTag, GameplayTags};
 use tactical_rpg::skill::{

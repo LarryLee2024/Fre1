@@ -3,6 +3,17 @@
 //! 跨 buff/apply + buff/instance + buff/resolve + core/attribute + core/tag
 //! 测试 Buff 从施加 → tick → 过期的完整生命周期。
 
+// ================================================
+// Bevy SRPG AI宪法 v1.1 自检结果（测试专用）
+// ================================================
+// ✅ 测行为不测实现：是 — 断言验证 Buff 生命周期状态
+// ✅ 符合领域规则：是 — 覆盖 Buff 施加/tick/过期完整流程
+// ✅ 确定性：是 — 硬编码 Buff 数据
+// ✅ 使用标准数据：是 — 使用标准 BuffData
+// ✅ 无越界测试：是 — 仅测试公共 API
+// ✅ 未测试私有实现：是 — 仅通过 apply_buff/resolve 接口测试
+// ================================================
+
 use tactical_rpg::buff::{
     ActiveBuffs, BuffData, BuffInstance, apply_buff, remove_all_debuffs, remove_buff,
 };

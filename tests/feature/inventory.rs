@@ -3,6 +3,17 @@
 //! 跨 inventory/container + inventory/transfer + inventory/definition + inventory/instance
 //! 测试容器间物品转移、容量限制、纯函数调用。
 //!
+
+// ================================================
+// Bevy SRPG AI宪法 v1.1 自检结果（测试专用）
+// ================================================
+// ✅ 测行为不测实现：是 — 断言验证容器转移后状态
+// ✅ 符合领域规则：是 — 覆盖物品转移、容量限制
+// ✅ 确定性：是 — 硬编码物品定义和容器数据
+// ✅ 使用标准数据：是 — 使用标准 Container
+// ✅ 无越界测试：是 — 仅测试公共 API
+// ✅ 未测试私有实现：是 — 仅通过 Container 接口测试
+// ================================================
 //! AI Self-Check:
 //! ✅ 测行为不测实现 — 所有断言验证容器状态（数量、容量、结果码），不验证内部数据结构
 //! ✅ 符合领域规则 — 验证 INV-TRF-1/2/3/4/5 转移不变量
@@ -187,9 +198,14 @@ fn 目标容器满时转移失败_物品留在源容器() {
 }
 
 // ══════════════════════════════════════════════════════════════
-// 场景三：纯函数 transfer_item 测试
+// INV-IT-003: 纯函数 transfer_item — 成功转移
 // ══════════════════════════════════════════════════════════════
 
+/// INV-IT-003: 纯函数 transfer_item — 成功转移
+///
+/// Given: from 容器有 10 瓶药水，to 容器为空
+/// When:  调用 transfer_item 转移 5 个
+/// Then:  返回 Ok，from 剩 5，to 有 5
 #[test]
 fn 纯函数transfer_item_成功转移() {
     let mut registry = ItemRegistry::default();
@@ -230,6 +246,11 @@ fn 纯函数transfer_item_成功转移() {
     assert_eq!(to.stacks[0].count, 5, "目标容器应有 5");
 }
 
+/// INV-IT-004: 纯函数 transfer_item — 目标满返回 Full
+///
+/// Given: from 容器有 10 瓶药水，to 容器容量=1 已满
+/// When:  调用 transfer_item 转移 5 个
+/// Then:  返回 Full，from 仍为 10
 #[test]
 fn 纯函数transfer_item_目标满返回full() {
     let mut registry = ItemRegistry::default();
@@ -274,6 +295,11 @@ fn 纯函数transfer_item_目标满返回full() {
     assert_eq!(from.stacks[0].count, 10);
 }
 
+/// INV-IT-005: 纯函数 transfer_item — 物品不存在返回 NotFound
+///
+/// Given: from/to 容器均为空
+/// When:  调用 transfer_item 传入不存在的 instance_id
+/// Then:  返回 NotFound
 #[test]
 fn 纯函数transfer_item_不存在返回not_found() {
     let registry = ItemRegistry::default();

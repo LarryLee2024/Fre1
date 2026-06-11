@@ -9,6 +9,14 @@ use crate::core::attribute::{
 use crate::equipment::EquipmentSlots;
 use bevy::prelude::*;
 
+/// 提取有修饰符的属性类型（纯函数，可单元测试）
+pub fn group_modifiers_by_kind(attrs: &Attributes) -> Vec<AttributeKind> {
+    let mut kinds: Vec<AttributeKind> = attrs.modifiers.iter().map(|m| m.kind).collect();
+    kinds.sort_by_key(|k| format!("{:?}", k));
+    kinds.dedup();
+    kinds
+}
+
 /// 渲染属性修饰符面板内容（由 mod.rs 的条件渲染系统调用）
 pub fn render_attribute_panel(
     ui: &mut bevy_inspector_egui::egui::Ui,
@@ -42,10 +50,7 @@ fn render_attributes(
     slots: &EquipmentSlots,
     trait_collection: &TraitCollection,
 ) {
-    // 收集所有有修饰符的属性类型
-    let mut kinds_with_mods: Vec<AttributeKind> = attrs.modifiers.iter().map(|m| m.kind).collect();
-    kinds_with_mods.sort_by_key(|k| format!("{:?}", k));
-    kinds_with_mods.dedup();
+    let kinds_with_mods = group_modifiers_by_kind(attrs);
 
     // 生命资源（通过 get() 统一接口访问，不直接访问字段）
     ui.label(format!(

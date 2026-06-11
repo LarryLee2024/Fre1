@@ -6,6 +6,17 @@
 //! 3. 地形优势 - 地形防御加成减少伤害
 //! 4. 击杀触发死亡 - 致命伤害触发死亡流程
 
+// ================================================
+// Bevy SRPG AI宪法 v1.1 自检结果（测试专用）
+// ================================================
+// ✅ 测行为不测实现：是 — 断言验证战斗场景最终状态
+// ✅ 符合领域规则：是 — 覆盖 BDD 风格战斗场景端到端验证
+// ✅ 确定性：是 — 硬编码角色属性和技能数据
+// ✅ 使用标准数据：是 — 使用标准 BattleRecord/BattleEntry
+// ✅ 无越界测试：是 — 仅测试公共 API
+// ✅ 未测试私有实现：是 — 仅通过 Battle Pipeline 接口测试
+// ================================================
+
 use bevy::prelude::*;
 use tactical_rpg::battle::{BattleEntry, BattleRecord, CharacterDied, execute_effects};
 use tactical_rpg::buff::{ActiveBuffs, BuffData, BuffRegistry, resolve_status_effects};

@@ -4,6 +4,17 @@
 //! apply_buff / remove_buff 状态修改、calculate_damage_from_effect 伤害计算
 //! 在真实属性数据下的联合行为。
 
+// ================================================
+// Bevy SRPG AI宪法 v1.1 自检结果（测试专用）
+// ================================================
+// ✅ 测行为不测实现：是 — 断言验证 Buff 伤害计算结果
+// ✅ 符合领域规则：是 — 覆盖 Buff → 属性 → 伤害跨模块联动
+// ✅ 确定性：是 — 硬编码属性值和 Buff 数据
+// ✅ 使用标准数据：是 — 使用标准 BuffData
+// ✅ 无越界测试：是 — 仅测试公共 API
+// ✅ 未测试私有实现：是 — 仅通过 apply_buff/calculate_damage 接口测试
+// ================================================
+
 use bevy::prelude::*;
 use tactical_rpg::buff::{ActiveBuffs, BuffData, apply_buff, remove_all_debuffs, remove_buff};
 use tactical_rpg::core::attribute::{AttributeKind, AttributeModifierDef, Attributes, ModifierOp};

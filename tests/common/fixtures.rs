@@ -1,4 +1,16 @@
+// ================================================
+// AI Self-Check (test_spec.md §13.1)
+// ================================================
+// ✅ 测试行为，不是实现
+// ✅ 符合领域规则
+// ✅ 测试是确定性的
+// ✅ 使用标准测试数据
+// ✅ 没有测试私有实现
+// ✅ 没有生成不在范围内的测试
+// ================================================
+
 // 角色模板：消除 warrior_attrs() 等重复代码
+// 标准测试单位（§7.1）：Unit_001/Unit_002/Unit_003
 
 use bevy::prelude::*;
 use tactical_rpg::buff::ActiveBuffs;
@@ -74,6 +86,72 @@ impl UnitBuilder {
             faction: Faction::Enemy,
             attrs,
             name: "goblin",
+        }
+    }
+
+    /// Test ID: FIX-001
+    /// Unit_001 标准战士（§7.1）：HP=100, ATK=30, DEF=10, SPD=10
+    /// 用于所有战斗相关测试的标准战士单位
+    pub fn unit_001() -> Self {
+        let mut attrs = Attributes::default();
+        attrs.set_base(AttributeKind::Might, 15.0);
+        attrs.set_base(AttributeKind::Vitality, 20.0);
+        attrs.set_base(AttributeKind::Agility, 10.0);
+        attrs.set_base(AttributeKind::Dexterity, 5.0);
+        attrs.set_base(AttributeKind::Intelligence, 3.0);
+        attrs.set_base(AttributeKind::Willpower, 5.0);
+        attrs.set_base(AttributeKind::Presence, 3.0);
+        attrs.set_base(AttributeKind::Luck, 3.0);
+        attrs.set_base_attack_range(1);
+        attrs.fill_vital_resources();
+        Self {
+            faction: Faction::Player,
+            attrs,
+            name: "Unit_001",
+        }
+    }
+
+    /// Test ID: FIX-002
+    /// Unit_002 标准法师（§7.1）：HP=80, ATK=40, DEF=5, SPD=12
+    /// 用于所有战斗相关测试的标准法师单位
+    pub fn unit_002() -> Self {
+        let mut attrs = Attributes::default();
+        attrs.set_base(AttributeKind::Might, 3.0);
+        attrs.set_base(AttributeKind::Vitality, 10.0);
+        attrs.set_base(AttributeKind::Agility, 12.0);
+        attrs.set_base(AttributeKind::Dexterity, 5.0);
+        attrs.set_base(AttributeKind::Intelligence, 20.0);
+        attrs.set_base(AttributeKind::Willpower, 10.0);
+        attrs.set_base(AttributeKind::Presence, 5.0);
+        attrs.set_base(AttributeKind::Luck, 3.0);
+        attrs.set_base_attack_range(3);
+        attrs.fill_vital_resources();
+        Self {
+            faction: Faction::Player,
+            attrs,
+            name: "Unit_002",
+        }
+    }
+
+    /// Test ID: FIX-003
+    /// Unit_003 标准坦克（§7.1）：HP=150, ATK=20, DEF=20, SPD=5
+    /// 用于所有战斗相关测试的标准坦克单位
+    pub fn unit_003() -> Self {
+        let mut attrs = Attributes::default();
+        attrs.set_base(AttributeKind::Might, 10.0);
+        attrs.set_base(AttributeKind::Vitality, 30.0);
+        attrs.set_base(AttributeKind::Agility, 5.0);
+        attrs.set_base(AttributeKind::Dexterity, 3.0);
+        attrs.set_base(AttributeKind::Intelligence, 2.0);
+        attrs.set_base(AttributeKind::Willpower, 8.0);
+        attrs.set_base(AttributeKind::Presence, 5.0);
+        attrs.set_base(AttributeKind::Luck, 2.0);
+        attrs.set_base_attack_range(1);
+        attrs.fill_vital_resources();
+        Self {
+            faction: Faction::Player,
+            attrs,
+            name: "Unit_003",
         }
     }
 

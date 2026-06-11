@@ -229,7 +229,7 @@ impl Container {
 #[cfg(test)]
 mod tests {
     use super::super::definition::{ItemDef, ItemType};
-    use super::super::instance::{InstanceIdCounter, ItemInstance};
+    use super::super::instance::ItemInstance;
     use super::*;
     use crate::equipment::Rarity;
 

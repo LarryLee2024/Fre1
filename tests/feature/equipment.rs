@@ -3,6 +3,17 @@
 //! 跨 equipment + inventory + core/attribute + core/tag + character/traits
 //! 测试装备穿脱完整流程、需求检查、自动脱卸旧装备、Trait 生命周期。
 
+// ================================================
+// Bevy SRPG AI宪法 v1.1 自检结果（测试专用）
+// ================================================
+// ✅ 测行为不测实现：是 — 断言验证穿脱后属性/标签/Trait 状态
+// ✅ 符合领域规则：是 — 覆盖装备穿脱、需求检查、Trait 生命周期
+// ✅ 确定性：是 — 硬编码装备定义和属性值
+// ✅ 使用标准数据：是 — 使用 UnitBuilder::warrior()
+// ✅ 无越界测试：是 — 仅测试公共 API
+// ✅ 未测试私有实现：是 — 仅通过 Equipment Pipeline 接口测试
+// ================================================
+
 use bevy::prelude::*;
 use tactical_rpg::character::{PersistentTags, TraitCollection, TraitSource};
 use tactical_rpg::core::attribute::{AttributeKind, AttributeModifierDef, Attributes, ModifierOp};

@@ -58,6 +58,16 @@ impl RegistryLoader for SkillRegistry {
 
 #[cfg(test)]
 mod tests {
+    // ================================================
+    // Bevy SRPG AI宪法 v1.1 自检结果（测试专用）
+    // ================================================
+    // ✅ 测行为不测实现：是 — 断言验证 Registry 查询和条件检查结果
+    // ✅ 符合领域规则：是 — 覆盖 INV-SKILL-007~010 技能注册和条件不变量
+    // ✅ 确定性：是 — 硬编码技能定义和属性数据
+    // ✅ 使用标准数据：是 — 使用标准 SkillRegistry
+    // ✅ 无越界测试：是 — 仅测试公共 API
+    // ✅ 未测试私有实现：是 — 仅通过 pub 接口测试
+    // ================================================
     use super::*;
     use crate::core::attribute::AttributeKind;
     use crate::core::effect::EffectDef;
@@ -395,5 +405,31 @@ mod tests {
                 current: 2
             })
         );
+    }
+
+    // ── INV-SKILL-022: register_defaults 幂等性 ──
+
+    #[test]
+    fn 内置技能_重复注册幂等() {
+        let mut reg = SkillRegistry::default();
+        reg.register_defaults();
+        let count_before = reg.skills.len();
+        reg.register_defaults();
+        assert_eq!(reg.skills.len(), count_before);
+    }
+
+    // ── INV-SKILL-023: 内置技能数量验证 ──
+
+    #[test]
+    fn 内置技能_注册表包含6个技能() {
+        let mut reg = SkillRegistry::default();
+        reg.register_defaults();
+        assert_eq!(reg.skills.len(), 6);
+        assert!(reg.get("basic_attack").is_some());
+        assert!(reg.get("charge").is_some());
+        assert!(reg.get("pierce").is_some());
+        assert!(reg.get("fireball").is_some());
+        assert!(reg.get("heal").is_some());
+        assert!(reg.get("cleanse_skill").is_some());
     }
 }

@@ -170,6 +170,7 @@ mod tests {
     #[derive(Debug, Clone, Deserialize)]
     struct TestItem {
         id: String,
+        #[allow(dead_code)]
         value: i32,
     }
 

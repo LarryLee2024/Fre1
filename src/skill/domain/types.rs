@@ -213,6 +213,16 @@ pub enum SkillUseError {
 
 #[cfg(test)]
 mod tests {
+    // ================================================
+    // Bevy SRPG AI宪法 v1.1 自检结果（测试专用）
+    // ================================================
+    // ✅ 测行为不测实现：是 — 断言验证 can_use 返回值，不验证内部条件匹配逻辑
+    // ✅ 符合领域规则：是 — 覆盖 INV-SKILL-001~010 技能条件和目标不变量
+    // ✅ 确定性：是 — 硬编码属性值和标签数据
+    // ✅ 使用标准数据：是 — 使用标准 SkillCondition/SkillTargeting
+    // ✅ 无越界测试：是 — 仅测试公共 API
+    // ✅ 未测试私有实现：是 — 仅通过 pub 接口测试
+    // ================================================
     use super::*;
     use crate::core::attribute::{AttributeKind, Attributes};
     use crate::core::tag::{GameplayTag, GameplayTags};

@@ -273,7 +273,6 @@ mod tests {
     // ✅ 未测试私有实现：是 — 仅通过 pub 接口测试
     // ================================================
     use super::*;
-    use crate::core::attribute::{AttributeKind, ModifierOp};
     use ron::de::from_bytes;
 
     #[test]

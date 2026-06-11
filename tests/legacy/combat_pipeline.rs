@@ -3,6 +3,17 @@
 //! 测试 calculate_damage_from_effect 在各种属性组合下的行为，
 //! 跨 attribute + effect/types 模块验证完整的伤害计算链路。
 
+// ================================================
+// Bevy SRPG AI宪法 v1.1 自检结果（测试专用）
+// ================================================
+// ✅ 测行为不测实现：是 — 断言验证伤害计算结果
+// ✅ 符合领域规则：是 — 覆盖伤害计算链路
+// ✅ 确定性：是 — 硬编码属性值和效果数据
+// ✅ 使用标准数据：是 — 使用标准 Attributes
+// ✅ 无越界测试：是 — 仅测试公共 API
+// ✅ 未测试私有实现：是 — 仅通过 calculate_damage_from_effect 接口测试
+// ================================================
+
 use tactical_rpg::core::attribute::{AttributeKind, Attributes};
 use tactical_rpg::core::effect::{
     EffectDef, EffectHandlerRegistry, EffectPreview, EffectQueue, GenerateContext, PendingEffect,

@@ -190,7 +190,6 @@ mod tests {
     use crate::core::attribute::ModifierOp;
     use crate::core::tag::GameplayTag;
     use crate::equipment::Rarity;
-    use crate::inventory::instance::ItemInstance;
 
     fn test_consumable_def() -> ItemDef {
         ItemDef {
@@ -238,7 +237,7 @@ mod tests {
     }
 
     #[test]
-    fn 消耗品_应用恢复效果() {
+    fn consumable_apply_restore_effect() {
         let def = test_consumable_def();
         let mut attrs = Attributes::default();
         attrs.fill_vital_resources();
@@ -265,7 +264,7 @@ mod tests {
     }
 
     #[test]
-    fn 消耗品_应用buff效果() {
+    fn consumable_apply_buff_effect() {
         let mut def = test_consumable_def();
         def.use_effects = vec![UseEffect::ApplyBuff {
             buff_id: "attack_up".into(),
@@ -296,7 +295,7 @@ mod tests {
     }
 
     #[test]
-    fn 消耗品_非消耗品不处理() {
+    fn consumable_non_consumable_skipped() {
         let def = ItemDef {
             version: 1,
             id: "iron_sword".into(),
@@ -337,7 +336,7 @@ mod tests {
     }
 
     #[test]
-    fn 消耗品_GrantTempTrait返回PendingEffect() {
+    fn consumable_grant_temp_trait_returns_pending_effect() {
         let mut def = test_consumable_def();
         def.use_effects = vec![UseEffect::GrantTempTrait {
             trait_id: "fire_resist".into(),
@@ -371,7 +370,7 @@ mod tests {
     }
 
     #[test]
-    fn 消耗品_CastSkill返回PendingEffect() {
+    fn consumable_cast_skill_returns_pending_effect() {
         let mut def = test_consumable_def();
         def.use_effects = vec![UseEffect::CastSkill {
             skill_id: "fireball".into(),

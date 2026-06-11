@@ -381,11 +381,11 @@ mod tests {
 
         // When
         let def: TerrainDefRon = from_bytes(ron_str.as_bytes()).unwrap();
+        assert_eq!(def.move_cost, 0);
+        assert!(!def.passable);
         let terrain_def: TerrainDef = def.into();
 
         // Then
-        assert_eq!(def.move_cost, 0);
-        assert!(!def.passable);
         assert_eq!(terrain_def.move_cost, None);
     }
 

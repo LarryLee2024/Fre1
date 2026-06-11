@@ -26,3 +26,78 @@ pub fn update_ui_focus_state(
         focus_state.blocks_input = should_block;
     }
 }
+
+#[cfg(test)]
+mod tests {
+    // ================================================
+    // Bevy SRPG AI宪法 v1.1 自检结果（测试专用）
+    // ================================================
+    // ✅ 测行为不测实现：是 — 断言验证 UiFocusState 默认值和行为
+    // ✅ 符合领域规则：是 — 覆盖焦点管理不变量
+    // ✅ 确定性：是 — 硬编码状态值
+    // ✅ 使用标准数据：是 — 使用 UiFocusState::default()
+    // ✅ 无越界测试：是 — 仅测试公共 API
+    // ✅ 未测试私有实现：是 — 仅通过 UiFocusState 接口测试
+    // ================================================
+
+    use super::*;
+
+    /// Test ID: UI-INV-001
+    /// Title: UiFocusState 默认值不阻止输入
+    ///
+    /// Given: UiFocusState::default()
+    /// When: 检查 blocks_input 字段
+    /// Then: blocks_input 为 false
+    ///
+    /// Assertions: blocks_input == false
+    #[test]
+    fn ui_focus_state_default_does_not_block_input() {
+        // Given
+        let focus_state = UiFocusState::default();
+
+        // When - 无需操作
+
+        // Then
+        assert!(!focus_state.blocks_input);
+    }
+
+    /// Test ID: UI-INV-001b
+    /// Title: UiFocusState 可设置为阻止输入
+    ///
+    /// Given: UiFocusState::default()
+    /// When: 设置 blocks_input = true
+    /// Then: blocks_input 变为 true
+    ///
+    /// Assertions: blocks_input == true
+    #[test]
+    fn ui_focus_state_can_block_input() {
+        // Given
+        let mut focus_state = UiFocusState::default();
+
+        // When
+        focus_state.blocks_input = true;
+
+        // Then
+        assert!(focus_state.blocks_input);
+    }
+
+    /// Test ID: UI-INV-001c
+    /// Title: UiFocusState 可恢复为不阻止输入
+    ///
+    /// Given: UiFocusState { blocks_input: true }
+    /// When: 设置 blocks_input = false
+    /// Then: blocks_input 变为 false
+    ///
+    /// Assertions: blocks_input == false
+    #[test]
+    fn ui_focus_state_can_unblock_input() {
+        // Given
+        let mut focus_state = UiFocusState { blocks_input: true };
+
+        // When
+        focus_state.blocks_input = false;
+
+        // Then
+        assert!(!focus_state.blocks_input);
+    }
+}

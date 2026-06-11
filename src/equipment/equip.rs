@@ -436,7 +436,7 @@ mod tests {
     use super::*;
     use crate::core::attribute::AttributeKind;
     use crate::core::registry_loader::RegistryLoader;
-    use crate::core::tag::{GameplayTag, TagName};
+    use crate::core::tag::GameplayTag;
     use crate::inventory::definition::{ItemDef, ItemType};
 
     fn make_test_attrs() -> Attributes {

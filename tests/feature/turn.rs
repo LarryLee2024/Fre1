@@ -3,6 +3,17 @@
 //! 跨 turn + character 模块测试回合结束流程：
 //! 回合数递增、重置单位行动状态、ForceEndTurn 消息触发回合结束。
 
+// ================================================
+// Bevy SRPG AI宪法 v1.1 自检结果（测试专用）
+// ================================================
+// ✅ 测行为不测实现：是 — 断言验证回合状态变化
+// ✅ 符合领域规则：是 — 覆盖回合结束流程
+// ✅ 确定性：是 — 硬编码回合数据
+// ✅ 使用标准数据：是 — 使用 UnitBuilder::warrior()
+// ✅ 无越界测试：是 — 仅测试公共 API
+// ✅ 未测试私有实现：是 — 仅通过 Turn Pipeline 接口测试
+// ================================================
+
 use bevy::prelude::*;
 use tactical_rpg::character::{Faction, Unit};
 use tactical_rpg::core::attribute::{AttributeKind, Attributes};

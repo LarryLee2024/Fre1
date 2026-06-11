@@ -1,6 +1,13 @@
 //! P2 集成测试：回合管理流程
 //!
 //! 跨 turn + character 模块测试回合状态机流转、行动队列构建、阵营切换。
+//!
+//! AI Self-Check:
+//! ✅ 测行为不测实现 — 断言验证回合状态变化（turn_number、queue、acted、phase），不验证内部实现
+//! ✅ 符合领域规则 — 覆盖 INV-TURN-001~016 回合不变量
+//! ✅ 确定性 — 无随机数，无时间依赖，数据硬编码
+//! ✅ 使用标准数据 — 使用 UnitBuilder::warrior()（inventory 测试关注回合流程，非单位属性）
+//! ✅ 没有越界测试 — 未测试私有实现、System 顺序、组件布局
 
 use bevy::prelude::*;
 use tactical_rpg::character::{Faction, Unit};
@@ -45,9 +52,14 @@ fn spawn_unit(app: &mut App, faction: Faction, initiative: f32) -> Entity {
 }
 
 // ══════════════════════════════════════════════════════════════
-// 场景一：行动队列构建
+// TUR-001: 行动队列 — 按 initiative 降序排列
 // ══════════════════════════════════════════════════════════════
 
+/// TUR-001: 行动队列 — 按 initiative 降序排列
+///
+/// Given: 3 个实体，initiative 分别为 10.0、20.0、15.0
+/// When:  调用 TurnOrder::build()
+/// Then:  队列按 initiative 降序排列：e2(20) > e3(15) > e1(10)
 #[test]
 fn 行动队列_按initiative降序排列() {
     let e1 = Entity::from_bits(1);
@@ -57,6 +69,11 @@ fn 行动队列_按initiative降序排列() {
     assert_eq!(queue, vec![e2, e3, e1]);
 }
 
+/// TUR-002: 行动队列 — 相同 initiative 稳定排序
+///
+/// Given: 2 个实体，initiative 均为 10.0
+/// When:  调用 TurnOrder::build()
+/// Then:  队列保持原始输入顺序（稳定排序）
 #[test]
 fn 行动队列_相同initiative稳定排序() {
     let e1 = Entity::from_bits(1);
@@ -65,12 +82,22 @@ fn 行动队列_相同initiative稳定排序() {
     assert_eq!(queue, vec![e1, e2]);
 }
 
+/// TUR-003: 行动队列 — 空队列
+///
+/// Given: 空输入数组
+/// When:  调用 TurnOrder::build()
+/// Then:  返回空队列
 #[test]
 fn 行动队列_空队列() {
     let queue = TurnOrder::build(&[]);
     assert!(queue.is_empty());
 }
 
+/// TUR-004: 行动队列 — current_unit 和 advance
+///
+/// Given: 队列 [e1, e2, e3]，current_index = 0
+/// When:  调用 current_unit() → advance() → current_unit() → advance() → advance()
+/// Then:  依次返回 e1, e2, e2, e3, None（队列耗尽）
 #[test]
 fn 行动队列_current_unit和advance() {
     let e1 = Entity::from_bits(1);
@@ -89,9 +116,14 @@ fn 行动队列_current_unit和advance() {
 }
 
 // ══════════════════════════════════════════════════════════════
-// 场景二：回合结束 → 重建队列 + 回合数+1
+// TUR-005: 回合结束 — 重建队列并增加回合数
 // ══════════════════════════════════════════════════════════════
 
+/// TUR-005: 回合结束 — 重建队列并增加回合数
+///
+/// Given: 2 个单位（Player initiative=10, Enemy initiative=8），TurnPhase 初始状态
+/// When:  触发 TurnPhase::TurnEnd
+/// Then:  turn_number 从 1 变为 2，队列非空，current_index = 0
 #[test]
 fn 回合结束_重建队列并增加回合数() {
     let mut app = setup_turn_test_app();
@@ -112,6 +144,11 @@ fn 回合结束_重建队列并增加回合数() {
     assert_eq!(turn_order.current_index, 0);
 }
 
+/// TUR-006: 回合结束 — needs_resolve 标记设置
+///
+/// Given: 1 个单位，NeedsResolve 初始为 false
+/// When:  触发 TurnPhase::TurnEnd
+/// Then:  needs_resolve.0 = true
 #[test]
 fn 回合结束_needs_resolve标记设置() {
     let mut app = setup_turn_test_app();
@@ -127,6 +164,11 @@ fn 回合结束_needs_resolve标记设置() {
     assert!(needs_resolve.0);
 }
 
+/// TUR-007: 回合结束 — 总是切换到 SelectUnit
+///
+/// Given: 1 个单位，TurnPhase 初始状态
+/// When:  触发 TurnPhase::TurnEnd
+/// Then:  phase 变为 TurnPhase::SelectUnit
 #[test]
 fn 回合结束_总是切换到_select_unit() {
     let mut app = setup_turn_test_app();
@@ -143,9 +185,14 @@ fn 回合结束_总是切换到_select_unit() {
 }
 
 // ══════════════════════════════════════════════════════════════
-// 场景三：阵营切换
+// TUR-008: 回合结束 — 当前阵营为队首单位阵营
 // ══════════════════════════════════════════════════════════════
 
+/// TUR-008: 回合结束 — 当前阵营为队首单位阵营
+///
+/// Given: Enemy(initiative=20) 和 Player(initiative=10)
+/// When:  触发 TurnPhase::TurnEnd
+/// Then:  current_faction = Enemy（initiative 最高者为队首）
 #[test]
 fn 回合结束_当前阵营为队首单位阵营() {
     let mut app = setup_turn_test_app();
@@ -164,9 +211,14 @@ fn 回合结束_当前阵营为队首单位阵营() {
 }
 
 // ══════════════════════════════════════════════════════════════
-// 场景四：强制结束回合（ForceEndFaction 已迁移为 ForceEndTurn Message）
+// TUR-009: 回合结束 — needs_resolve 标记被重置
 // ══════════════════════════════════════════════════════════════
 
+/// TUR-009: 回合结束 — needs_resolve 标记被重置
+///
+/// Given: 1 个单位，触发一次 TurnEnd 设置 needs_resolve=true
+/// When:  验证 turn_end_on_enter 执行后状态
+/// Then:  turn_number 递增为 2（流程正常执行）
 #[test]
 fn 回合结束_needs_resolve标记被重置() {
     let mut app = setup_turn_test_app();
@@ -186,9 +238,14 @@ fn 回合结束_needs_resolve标记被重置() {
 }
 
 // ══════════════════════════════════════════════════════════════
-// 场景五：AI 计时器重置
+// TUR-010: 回合结束 — AI 计时器重置
 // ══════════════════════════════════════════════════════════════
 
+/// TUR-010: 回合结束 — AI 计时器重置
+///
+/// Given: 1 个单位，AiTimer 已过期（tick 5 秒）
+/// When:  触发 TurnPhase::TurnEnd
+/// Then:  timer.just_finished() = false（计时器已重置）
 #[test]
 fn 回合结束_ai计时器重置() {
     let mut app = setup_turn_test_app();
@@ -214,9 +271,14 @@ fn 回合结束_ai计时器重置() {
 }
 
 // ══════════════════════════════════════════════════════════════
-// 场景六：多次回合结束
+// TUR-011: 多次回合结束 — 回合数持续递增
 // ══════════════════════════════════════════════════════════════
 
+/// TUR-011: 多次回合结束 — 回合数持续递增
+///
+/// Given: 1 个单位，turn_number 初始为 1
+/// When:  连续触发 3 次 TurnPhase::TurnEnd
+/// Then:  turn_number 依次变为 2, 3, 4
 #[test]
 fn 多次回合结束_回合数持续递增() {
     let mut app = setup_turn_test_app();

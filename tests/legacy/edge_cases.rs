@@ -2,6 +2,17 @@
 //!
 //! 测试各种边界情况：HP 满时治疗、修饰符叠加、空操作等。
 
+// ================================================
+// Bevy SRPG AI宪法 v1.1 自检结果（测试专用）
+// ================================================
+// ✅ 测行为不测实现：是 — 断言验证边界条件处理结果
+// ✅ 符合领域规则：是 — 覆盖边界条件场景
+// ✅ 确定性：是 — 硬编码属性值和 Buff 数据
+// ✅ 使用标准数据：是 — 使用标准 Attributes
+// ✅ 无越界测试：是 — 仅测试公共 API
+// ✅ 未测试私有实现：是 — 仅通过 apply_buff/remove_buff 接口测试
+// ================================================
+
 use tactical_rpg::buff::{ActiveBuffs, BuffData, apply_buff, remove_buff};
 use tactical_rpg::core::attribute::{
     AttributeKind, AttributeModifierDef, Attributes, BuffInstanceId, ModifierOp,

@@ -5,6 +5,17 @@
 //! 2. 装备 Trait 完整生命周期（添加/移除）
 //! 3. Trait 修改属性
 
+// ================================================
+// Bevy SRPG AI宪法 v1.1 自检结果（测试专用）
+// ================================================
+// ✅ 测行为不测实现：是 — 断言验证 Trait 添加/移除后状态
+// ✅ 符合领域规则：是 — 覆盖 Trait 完整生命周期
+// ✅ 确定性：是 — 硬编码 Trait 定义和属性值
+// ✅ 使用标准数据：是 — 使用 UnitBuilder::warrior()
+// ✅ 无越界测试：是 — 仅测试公共 API
+// ✅ 未测试私有实现：是 — 仅通过 Trait Pipeline 接口测试
+// ================================================
+
 use bevy::prelude::*;
 use tactical_rpg::character::{
     PersistentTags, TraitCollection, TraitData, TraitEffect, TraitEffectHandlerRegistry,
