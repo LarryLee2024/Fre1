@@ -8,6 +8,8 @@ use crate::character::PersistentTags;
 use crate::character::{
     TraitCollection, TraitEffectHandlerRegistry, TraitRegistry, TraitSource, TraitTrigger,
 };
+use crate::buff::ActiveBuffs;
+use crate::buff::resolve::rebuild_tags as rebuild_tags_with_buffs;
 use crate::core::attribute::{AttributeModifierInstance, Attributes, ModifierSource};
 use crate::core::tag::GameplayTags;
 use crate::inventory::container::Container;
@@ -72,6 +74,7 @@ pub fn equip_item_system(
         &mut EquipmentSlots,
         &mut Container,
         &mut TraitCollection,
+        &ActiveBuffs,
     )>,
 ) {
     for msg in equip_reader.read() {
@@ -83,6 +86,7 @@ pub fn equip_item_system(
             mut slots,
             mut container,
             mut trait_collection,
+            buffs,
         )) = units.get_mut(msg.target_entity)
         {
             // 从背包查找装备堆叠
@@ -188,15 +192,8 @@ pub fn equip_item_system(
                 &mut persistent,
             );
 
-            // 重建 GameplayTags
-            rebuild_tags_from_components(
-                &persistent,
-                &attrs,
-                &trait_collection,
-                &trait_registry,
-                &effect_handlers,
-                &mut tags,
-            );
+            // 重建 GameplayTags（三层：Trait + Equipment + Buff）
+            rebuild_tags_with_buffs(&buffs, &mut tags, &persistent);
 
             bevy::log::trace!(
                 target: "equipment",
@@ -232,6 +229,7 @@ pub fn unequip_item_system(
         &mut EquipmentSlots,
         &mut Container,
         &mut TraitCollection,
+        &ActiveBuffs,
     )>,
 ) {
     for msg in unequip_reader.read() {
@@ -243,6 +241,7 @@ pub fn unequip_item_system(
             mut slots,
             mut container,
             mut trait_collection,
+            buffs,
         )) = units.get_mut(msg.target_entity)
         {
             // 检查槽位是否有装备
@@ -281,15 +280,8 @@ pub fn unequip_item_system(
                 &mut persistent,
             );
 
-            // 重建 GameplayTags
-            rebuild_tags_from_components(
-                &persistent,
-                &attrs,
-                &trait_collection,
-                &trait_registry,
-                &effect_handlers,
-                &mut tags,
-            );
+            // 重建 GameplayTags（三层：Trait + Equipment + Buff）
+            rebuild_tags_with_buffs(&buffs, &mut tags, &persistent);
 
             bevy::log::trace!(
                 target: "equipment",
@@ -357,8 +349,8 @@ fn unequip_internal(
             unreachable!("装备定义应在 ItemRegistry 中存在")
         }),
     );
-    let stack = ItemStack::new(item_instance, 1);
-    container.add_stack(stack, item_registry);
+    let mut stack = ItemStack::new(item_instance, 1);
+    container.add_stack(&mut stack, item_registry);
 }
 
 /// 应用装备效果：修饰符 + 标签 + Trait
@@ -427,23 +419,6 @@ pub fn rebuild_trait_effects(
             trait_source_index += 1;
         }
     }
-}
-
-/// 从组件重建 GameplayTags（三层：Trait + Equipment + Buff）
-fn rebuild_tags_from_components(
-    persistent: &PersistentTags,
-    _attrs: &Attributes,
-    _trait_collection: &TraitCollection,
-    _trait_registry: &TraitRegistry,
-    _effect_handlers: &TraitEffectHandlerRegistry,
-    tags: &mut GameplayTags,
-) {
-    // 直接从 persistent 重建（不含 buff 层，buff 层由 resolve 系统管理）
-    let mut new_tags = GameplayTags::default();
-    new_tags.0 |= persistent.from_traits.0;
-    new_tags.0 |= persistent.from_equipment.0;
-    // Buff 层由 resolve_status_effects 中的 rebuild_tags 管理
-    tags.0 = new_tags.0;
 }
 
 #[cfg(test)]

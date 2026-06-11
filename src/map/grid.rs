@@ -87,23 +87,12 @@ pub fn spawn_map(
     let terrain_grid = if let Some(ref level) = level {
         TerrainGrid::from_terrain_map(map.width, map.height, &level.terrain_map)
     } else {
-        // 兜底：算法生成
-        let mut terrain_map = std::collections::HashMap::new();
-        for y in 0..map.height {
-            for x in 0..map.width {
-                let id = if x == 0 || y == 0 || x == map.width - 1 || y == map.height - 1 {
-                    "mountain"
-                } else if (x + y) % 7 == 0 {
-                    "water"
-                } else if (x + y) % 5 == 0 {
-                    "forest"
-                } else {
-                    "plain"
-                };
-                terrain_map.insert((x as i32, y as i32), id.to_string());
-            }
-        }
-        TerrainGrid::from_terrain_map(map.width, map.height, &terrain_map)
+        // LevelRegistry 为空时不创建假数据，使用全平地并输出警告
+        bevy::log::warn!(
+            target: "map",
+            "LevelRegistry 为空，使用全平地地图"
+        );
+        TerrainGrid::default_plain(map.width, map.height)
     };
 
     // 插入 TerrainGrid 资源
@@ -127,25 +116,17 @@ pub fn spawn_map(
                 )
             })
             .unwrap_or_else(|| {
-                // 兜底颜色
-                let color = match terrain_id {
-                    "forest" => Color::srgb(0.20, 0.50, 0.18),
-                    "mountain" => Color::srgb(0.55, 0.50, 0.45),
-                    "water" => Color::srgb(0.25, 0.47, 0.85),
-                    _ => Color::srgb(0.56, 0.73, 0.35),
-                };
-                let name = match terrain_id {
-                    "forest" => "林",
-                    "mountain" => "山",
-                    "water" => "水",
-                    _ => "草",
-                };
-                let mc = match terrain_id {
-                    "plain" => Some(1u32),
-                    "forest" => Some(2u32),
-                    _ => None,
-                };
-                (color, name, mc)
+                // TerrainRegistry 中未找到定义时使用统一默认值
+                bevy::log::warn!(
+                    target: "map",
+                    terrain_id = %terrain_id,
+                    "地形定义未找到，使用默认渲染"
+                );
+                (
+                    Color::srgb(0.5, 0.5, 0.5),
+                    "?",
+                    None,
+                )
             });
 
         let move_cost_str = match move_cost {

@@ -116,13 +116,14 @@ impl ItemStack {
 
     /// 拆分出指定数量，返回新的 ItemStack
     /// 如果数量不足或等于当前数量，返回 None
-    pub fn split(&mut self, count: u32) -> Option<Self> {
+    /// new_instance_id: 拆分出新实例的唯一 ID（不变量1：InstanceId 全局唯一）
+    pub fn split(&mut self, count: u32, new_instance_id: u64) -> Option<Self> {
         if count == 0 || count >= self.count {
             return None;
         }
         self.count -= count;
         let mut split_instance = self.instance.clone();
-        split_instance.instance_id = 0; // 拆分出的需要新 ID，由调用方分配
+        split_instance.instance_id = new_instance_id;
         Some(Self {
             instance: split_instance,
             count,
@@ -251,18 +252,19 @@ mod tests {
     fn 堆叠_拆分() {
         let def = test_consumable_def();
         let mut stack = ItemStack::new(ItemInstance::from_def(1, &def), 20);
-        let split = stack.split(5).unwrap();
+        let split = stack.split(5, 100).unwrap();
         assert_eq!(stack.count, 15);
         assert_eq!(split.count, 5);
+        assert_eq!(split.instance.instance_id, 100);
     }
 
     #[test]
     fn 堆叠_拆分_数量不足返回none() {
         let def = test_consumable_def();
         let mut stack = ItemStack::new(ItemInstance::from_def(1, &def), 10);
-        assert!(stack.split(10).is_none());
-        assert!(stack.split(15).is_none());
-        assert!(stack.split(0).is_none());
+        assert!(stack.split(10, 100).is_none());
+        assert!(stack.split(15, 100).is_none());
+        assert!(stack.split(0, 100).is_none());
     }
 
     #[test]

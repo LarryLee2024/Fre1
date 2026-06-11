@@ -62,6 +62,8 @@ pub enum PendingEffectData {
         amount: i32,
         /// generate 阶段的原始治疗值（modify 前设置）
         base_amount: Option<i32>,
+        /// modify 阶段记录的修饰步骤详情（规则4：每步修饰必须记录）
+        modifiers: Vec<ModifierEntry>,
     },
     ApplyBuff {
         buff_id: String,
@@ -282,7 +284,8 @@ mod tests {
         assert_eq!(
             PendingEffectData::Heal {
                 amount: 5,
-                base_amount: None
+                base_amount: None,
+                modifiers: Vec::new(),
             }
             .type_name(),
             "Heal"

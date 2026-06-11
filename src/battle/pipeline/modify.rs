@@ -44,12 +44,17 @@ pub fn modify_effects(
                 PendingEffectData::Heal {
                     amount,
                     base_amount,
+                    modifiers,
                 } => {
                     let original = *amount;
                     if base_amount.is_none() {
                         *base_amount = Some(original);
                     }
-                    *amount = rules.apply_heal_modifiers(*amount, &effect.source_tags, target_tags);
+                    // 规则4：每步修饰必须记录，使用 with_breakdown 保留修饰步骤
+                    let (new_amount, entries) =
+                        rules.apply_heal_modifiers_with_breakdown(*amount, &effect.source_tags, target_tags);
+                    *amount = new_amount;
+                    *modifiers = entries;
                     bevy::log::debug!(
                         target: "battle",
                         target_entity = ?effect.target,

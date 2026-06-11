@@ -5,8 +5,11 @@
 use crate::battle::{DamageApplied, HealApplied};
 use crate::character::{TraitCollection, TraitEffectHandlerRegistry, TraitRegistry};
 use crate::core::effect::{
-    EffectHandlerRegistry, EffectQueue, ExecuteContext, ExecuteOutput, PendingMessage,
+    EffectHandlerRegistry, EffectQueue, ExecuteContext, ExecuteOutput, PendingEffectData,
+    PendingMessage,
 };
+use crate::core::modifier_rule::ModifierRuleRegistry;
+use crate::core::tag::GameplayTags;
 use bevy::prelude::*;
 
 use super::trait_trigger::{trigger_on_hit_traits, trigger_on_kill_traits};
@@ -104,12 +107,54 @@ pub fn execute_effects(world: &mut World) {
         });
     });
 
-    // 4. 执行 OnHit/OnKill 产生的额外效果（仅 ApplyBuff，不参与 Modify）
-    let trait_effects: Vec<_> = {
+    // 4. 不变量1：OnHit/OnKill 产生的效果也必须经过 Modify → Execute
+    // 先 drain，再 Modify，再 Execute，保证管线严格顺序
+    let mut trait_effects: Vec<_> = {
         let mut queue = world.resource_mut::<EffectQueue>();
         queue.pending.drain(..).collect()
     };
 
+    // 对 Trait 效果应用 Modify（与 modify_effects 相同逻辑）
+    {
+        let rules = world.resource::<ModifierRuleRegistry>();
+        for effect in &mut trait_effects {
+            if let Some(target_tags) = world.get::<GameplayTags>(effect.target) {
+                match &mut effect.data {
+                    PendingEffectData::Damage {
+                        amount,
+                        base_amount,
+                        modifiers,
+                        ..
+                    } => {
+                        if base_amount.is_none() {
+                            *base_amount = Some(*amount);
+                        }
+                        let (new_amount, entries) =
+                            rules.apply_damage_modifiers_with_breakdown(*amount, &effect.source_tags, target_tags);
+                        *amount = new_amount.max(1);
+                        *modifiers = entries;
+                    }
+                    PendingEffectData::Heal {
+                        amount,
+                        base_amount,
+                        modifiers,
+                    } => {
+                        if base_amount.is_none() {
+                            *base_amount = Some(*amount);
+                        }
+                        // 规则4：每步修饰必须记录
+                        let (new_amount, entries) =
+                            rules.apply_heal_modifiers_with_breakdown(*amount, &effect.source_tags, target_tags);
+                        *amount = new_amount;
+                        *modifiers = entries;
+                    }
+                    PendingEffectData::ApplyBuff { .. } | PendingEffectData::Cleanse => {}
+                }
+            }
+        }
+    }
+
+    // 执行 Modify 后的 Trait 效果
     world.resource_scope(|world, registry: Mut<EffectHandlerRegistry>| {
         for effect in trait_effects {
             let type_name = effect.data.type_name();
@@ -296,7 +341,7 @@ mod tests {
         let mut queue = app.world_mut().resource_mut::<EffectQueue>();
         queue.pending.push(PendingEffect {
             source, target,
-            data: PendingEffectData::Heal { amount: 15, base_amount: Some(15) },
+            data: PendingEffectData::Heal { amount: 15, base_amount: Some(15), modifiers: Vec::new() },
             source_tags: vec![], terrain_id: "plain".into(),
         });
         app.update();
@@ -339,7 +384,7 @@ mod tests {
         let mut queue = app.world_mut().resource_mut::<EffectQueue>();
         queue.pending.push(PendingEffect {
             source, target,
-            data: PendingEffectData::Heal { amount: 100, base_amount: Some(100) },
+            data: PendingEffectData::Heal { amount: 100, base_amount: Some(100), modifiers: Vec::new() },
             source_tags: vec![], terrain_id: "plain".into(),
         });
         app.update();

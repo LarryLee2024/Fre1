@@ -5,11 +5,22 @@
 mod behavior;
 mod decision;
 mod movement;
-mod plugin;
 mod skill_select;
 mod strategy;
 mod targeting;
 
+use crate::turn::AppState;
+use bevy::prelude::*;
+
 // 公共 re-exports
 pub use behavior::*;
-pub use plugin::AiPlugin;
+
+/// AI 插件
+pub struct AiPlugin;
+
+impl Plugin for AiPlugin {
+    fn build(&self, app: &mut App) {
+        app.insert_resource(strategy::AiStrategyRegistry::default());
+        app.add_systems(Update, decision::enemy_ai_system.run_if(in_state(AppState::InGame)));
+    }
+}

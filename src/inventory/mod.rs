@@ -13,7 +13,7 @@ use definition::{ItemRegistry, ItemType, UseEffect};
 use instance::{InstanceIdCounter, ItemBind, ItemInstance, ItemStack};
 use resources::{ResourceStack, Resources};
 use transfer::{ItemTransferred, TransferItem};
-use use_item::{ItemUsed, UseItem};
+use use_item::{CastSkillEffect, GrantTempTraitEffect, ItemUsed, UseItem};
 
 pub struct InventoryPlugin;
 
@@ -36,6 +36,8 @@ impl Plugin for InventoryPlugin {
         // 注册 Message（Bevy 0.18 要求）
         app.add_message::<UseItem>();
         app.add_message::<ItemUsed>();
+        app.add_message::<GrantTempTraitEffect>();
+        app.add_message::<CastSkillEffect>();
         app.add_message::<TransferItem>();
         app.add_message::<ItemTransferred>();
         // 系统

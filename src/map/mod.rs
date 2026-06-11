@@ -4,12 +4,28 @@
 mod data;
 mod grid;
 mod pathfinding;
-mod plugin;
 pub mod runtime;
+
+use bevy::prelude::*;
 
 // 公共 re-exports（data 和 runtime 的类型通过 * 导出，外部用 crate::map::TerrainRegistry 即可）
 pub use data::*;
 pub use grid::*;
 pub use pathfinding::*;
-pub use plugin::MapPlugin;
 pub use runtime::*;
+
+/// 地图插件（组合 MapGrid + MapData + Runtime 子插件）
+pub struct MapPlugin;
+
+impl Plugin for MapPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_plugins((data::MapDataPlugin, grid::MapGridPlugin))
+            .insert_resource(pathfinding::TerrainCostRegistry::default())
+            .insert_resource(runtime::OccupancyGrid::default())
+            // 注册 Reflect 类型
+            .register_type::<grid::GameMap>()
+            .register_type::<runtime::OccupancyGrid>()
+            .register_type::<runtime::TerrainGrid>()
+            .add_systems(Update, runtime::update_occupancy_grid);
+    }
+}

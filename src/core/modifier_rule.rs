@@ -255,14 +255,14 @@ pub struct ModifierRuleRegistry {
 
 impl ModifierRuleRegistry {
     /// 兜底默认值
+    /// 🟥 不硬编码规则内容（宪法 1.1.3 Rule/Content 分离，1.1.5 数据驱动）
+    /// 规则必须从 RON 配置加载，此处仅记录警告
     pub fn register_defaults(&mut self) {
         if self.rules.is_empty() {
-            self.rules.push(ModifierRule {
-                name: "火焰共鸣".into(),
-                source_tag: GameplayTag::FIRE,
-                target_tag: GameplayTag::FIRE,
-                effect: ModifierEffect::DamageMultiplier(1.5),
-            });
+            bevy::log::warn!(
+                target: "core",
+                "修饰规则注册表为空，请检查 assets/rules/ 目录下的 RON 配置文件"
+            );
         }
     }
 
@@ -605,7 +605,7 @@ mod tests {
     fn 修饰规则_兜底默认值() {
         let mut registry = ModifierRuleRegistry::default();
         registry.register_defaults();
-        assert!(!registry.rules.is_empty());
-        assert_eq!(registry.rules[0].name, "火焰共鸣");
+        // 🟥 不硬编码规则内容（Rule/Content 分离），空注册表应保持空
+        assert!(registry.rules.is_empty());
     }
 }

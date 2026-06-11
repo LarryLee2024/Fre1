@@ -175,20 +175,12 @@ pub struct LevelConfig {
     pub enemy_units: Vec<UnitDeployDef>,
 }
 
-impl From<LevelConfigDef> for LevelConfig {
-    fn from(def: LevelConfigDef) -> Self {
-        // 构建字符→地形ID映射：LevelConfigDef 自带的 char_map 覆盖默认映射
-        let default_map: HashMap<char, String> = [
-            ('P', "plain".to_string()),
-            ('F', "forest".to_string()),
-            ('M', "mountain".to_string()),
-            ('W', "water".to_string()),
-        ]
-        .into_iter()
-        .collect();
-
+impl LevelConfig {
+    /// 从 LevelConfigDef 构建 LevelConfig，使用 TerrainRegistry 的 char_code 作为默认映射
+    pub fn from_def(def: LevelConfigDef, terrain_registry: &TerrainRegistry) -> Self {
+        // 从 TerrainRegistry 构建 char→terrain_id 映射（数据驱动）
+        let mut char_map = terrain_registry.char_map();
         // 自定义 char_map 覆盖默认值
-        let mut char_map = default_map;
         for (ch, terrain_id) in def.char_map {
             char_map.insert(ch, terrain_id);
         }
@@ -232,15 +224,60 @@ impl LevelRegistry {
     pub fn first(&self) -> Option<&LevelConfig> {
         self.levels.values().next()
     }
+
+    /// 从目录加载关卡配置，使用 TerrainRegistry 的 char_code 作为默认字符映射
+    pub fn load_from_dir_with_terrain(dir: &str, terrain_registry: &TerrainRegistry) -> Self {
+        let mut registry = Self::default();
+        let Ok(entries) = std::fs::read_dir(dir) else {
+            bevy::log::warn!(target: "map", path = %dir, "关卡目录不存在");
+            return registry;
+        };
+        let mut loaded = false;
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.extension().map_or(false, |e| e == "ron") {
+                match std::fs::read(&path) {
+                    Ok(bytes) => match ron::de::from_bytes::<LevelConfigDef>(&bytes) {
+                        Ok(item) => {
+                            let id = item.id.clone();
+                            let config = LevelConfig::from_def(item, terrain_registry);
+                            registry.levels.insert(id.clone(), config);
+                            bevy::log::info!(target: "map", id = %id, "关卡已加载");
+                            loaded = true;
+                        }
+                        Err(e) => bevy::log::error!(
+                            target: "map",
+                            path = %path.display(),
+                            error = %e,
+                            "解析关卡配置失败"
+                        ),
+                    },
+                    Err(e) => bevy::log::error!(
+                        target: "map",
+                        path = %path.display(),
+                        error = %e,
+                        "读取关卡配置失败"
+                    ),
+                }
+            }
+        }
+        if !loaded {
+            bevy::log::warn!(target: "map", "关卡目录为空");
+        }
+        registry
+    }
 }
 
 impl RegistryLoader for LevelRegistry {
     type Item = LevelConfigDef;
 
     fn register_item(&mut self, item: LevelConfigDef) {
+        // 注意：此方法不使用 TerrainRegistry 的 char_code 映射
+        // 生产环境应使用 load_from_dir_with_terrain
         let id = item.id.clone();
-        self.levels.insert(id.clone(), item.into());
-        bevy::log::info!(target: "map", id = %id, "关卡已加载");
+        let config = LevelConfig::from_def(item, &TerrainRegistry::default());
+        self.levels.insert(id.clone(), config);
+        bevy::log::info!(target: "map", id = %id, "关卡已加载（无 TerrainRegistry）");
     }
 
     /// 关卡没有硬编码兜底，空注册表即为空
@@ -265,7 +302,7 @@ impl Plugin for MapDataPlugin {
         let mut terrain_registry = TerrainRegistry::load_from_dir("assets/terrains");
         terrain_registry.register_defaults();
 
-        let level_registry = LevelRegistry::load_from_dir("assets/maps");
+        let level_registry = LevelRegistry::load_from_dir_with_terrain("assets/maps", &terrain_registry);
 
         app.insert_resource(terrain_registry)
             .insert_resource(level_registry);
@@ -345,6 +382,11 @@ mod tests {
 
     #[test]
     fn level_config_def_转换为_level_config() {
+        let terrain_reg = {
+            let mut reg = TerrainRegistry::default();
+            reg.register_defaults();
+            reg
+        };
         let def = LevelConfigDef {
             version: 0,
             id: "test".into(),
@@ -357,7 +399,7 @@ mod tests {
             player_units: vec![],
             enemy_units: vec![],
         };
-        let config: LevelConfig = def.into();
+        let config = LevelConfig::from_def(def, &terrain_reg);
         assert_eq!(config.terrain_map.get(&(0, 0)), Some(&"plain".to_string()));
         assert_eq!(config.terrain_map.get(&(2, 0)), Some(&"forest".to_string()));
         assert_eq!(
@@ -460,6 +502,11 @@ mod tests {
 
     #[test]
     fn level_config_地形网格解析() {
+        let terrain_reg = {
+            let mut reg = TerrainRegistry::default();
+            reg.register_defaults();
+            reg
+        };
         let def = LevelConfigDef {
             version: 0,
             id: "test".into(),
@@ -472,7 +519,7 @@ mod tests {
             player_units: vec![],
             enemy_units: vec![],
         };
-        let config: LevelConfig = def.into();
+        let config = LevelConfig::from_def(def, &terrain_reg);
         assert_eq!(config.terrain_map.get(&(0, 0)), Some(&"plain".to_string()));
         assert_eq!(config.terrain_map.get(&(1, 0)), Some(&"forest".to_string()));
         assert_eq!(
@@ -484,6 +531,11 @@ mod tests {
 
     #[test]
     fn level_config_自定义char_map覆盖默认() {
+        let terrain_reg = {
+            let mut reg = TerrainRegistry::default();
+            reg.register_defaults();
+            reg
+        };
         let mut custom_map = HashMap::new();
         custom_map.insert('D', "desert".to_string());
         let def = LevelConfigDef {
@@ -498,7 +550,7 @@ mod tests {
             player_units: vec![],
             enemy_units: vec![],
         };
-        let config: LevelConfig = def.into();
+        let config = LevelConfig::from_def(def, &terrain_reg);
         assert_eq!(config.terrain_map.get(&(0, 0)), Some(&"plain".to_string()));
         assert_eq!(config.terrain_map.get(&(1, 0)), Some(&"desert".to_string()));
     }

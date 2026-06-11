@@ -53,9 +53,13 @@ impl SkillCooldowns {
     }
 
     /// 设置技能冷却
+    /// 不变量3：set(0) 调用后不存在该 skill_id 的条目
     pub fn set(&mut self, skill_id: &str, turns: u32) {
         if turns > 0 {
             self.cooldowns.insert(skill_id.to_string(), turns);
+        } else {
+            // set(0) 等价于清除该技能冷却
+            self.cooldowns.remove(skill_id);
         }
     }
 

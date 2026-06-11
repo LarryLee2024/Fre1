@@ -189,6 +189,12 @@ impl ModifierSource {
         Self(id)
     }
 
+    // ── Consumable 区间：u64::MAX - 2001 ~ u64::MAX - 2999 ──
+    /// 消耗品一次性效果的 ModifierSource（Entity bits 作为标识）
+    pub fn consumable_source(entity: Entity) -> Self {
+        Self(u64::MAX - 2001 - entity.to_bits())
+    }
+
     pub fn is_trait(&self) -> bool {
         self.0 > u64::MAX - 1000
     }

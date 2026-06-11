@@ -4,12 +4,28 @@
 mod apply;
 mod domain;
 mod instance;
-mod plugin;
-mod resolve;
+pub(crate) mod resolve;
+
+use crate::core::registry_loader::RegistryLoader;
+use crate::turn::TurnPhase;
+use bevy::prelude::*;
 
 // 公共 re-exports
 pub use apply::*;
 pub use domain::*;
 pub use instance::*;
-pub use plugin::BuffPlugin;
 pub use resolve::resolve_status_effects;
+
+/// Buff 插件（注册 BuffRegistry 资源 + 持续效果结算系统）
+pub struct BuffPlugin;
+
+impl Plugin for BuffPlugin {
+    fn build(&self, app: &mut App) {
+        let registry = domain::BuffRegistry::load_from_dir("assets/buffs");
+        app.insert_resource(registry)
+            // 注册 Reflect 类型
+            .register_type::<instance::BuffInstance>()
+            .register_type::<instance::ActiveBuffs>()
+            .add_systems(OnEnter(TurnPhase::SelectUnit), resolve_status_effects);
+    }
+}

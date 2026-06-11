@@ -60,14 +60,9 @@ pub fn transfer_item_system(
         let Ok(to_container) = containers.get(msg.to_entity) else {
             continue;
         };
-        if to_container.is_full() {
-            bevy::log::warn!(
-                target: "inventory",
-                to = ?msg.to_entity,
-                "目标容器已满"
-            );
-            continue;
-        }
+        // 规则4：检查目标容器容量和重量
+        // 注意：不使用 is_full() 预检查，因为合并到已有堆叠不需要额外容量
+        // add_stack 内部会正确处理合并/容量/重量逻辑
         if to_container.max_weight > 0.0 {
             if let Some(def) = item_registry.get(&def_id) {
                 let added_weight = def.weight * to_remove as f32;
@@ -96,9 +91,9 @@ pub fn transfer_item_system(
         };
 
         // 添加到目标容器
-        if let Some(removed_stack) = removed {
+        if let Some(mut removed_stack) = removed {
             if let Ok(mut to) = containers.get_mut(msg.to_entity) {
-                to.add_stack(removed_stack, &item_registry);
+                to.add_stack(&mut removed_stack, &item_registry);
             }
 
             writer.write(ItemTransferred {
@@ -134,15 +129,14 @@ pub fn transfer_item(
     };
 
     let to_remove = count.min(stack.count);
-    let new_stack = ItemStack {
+    let mut new_stack = ItemStack {
         instance: stack.instance.clone(),
         count: to_remove,
     };
 
     // 检查目标容器
-    if to.is_full() {
-        return ContainerResult::Full;
-    }
+    // 注意：不使用 is_full() 预检查，因为合并到已有堆叠不需要额外容量
+    // add_stack 内部会正确处理合并/容量/重量逻辑
     if to.max_weight > 0.0 {
         if let Some(def) = registry.get(&new_stack.instance.def_id) {
             let added_weight = new_stack.total_weight(def);
@@ -156,7 +150,7 @@ pub fn transfer_item(
     from.reduce_stack(instance_id, to_remove);
 
     // 添加到目标容器
-    to.add_stack(new_stack, registry);
+    to.add_stack(&mut new_stack, registry);
 
     ContainerResult::Ok
 }
@@ -197,11 +191,11 @@ mod tests {
         let registry = test_registry();
         let mut from = Container::backpack();
         let mut to = Container::backpack();
-        let stack = ItemStack::new(
+        let mut stack = ItemStack::new(
             ItemInstance::from_def(1, registry.get("potion_healing").unwrap()),
             10,
         );
-        from.add_stack(stack, &registry);
+        from.add_stack(&mut stack, &registry);
 
         let result = transfer_item(&mut from, &mut to, 1, 5, &registry);
         assert_eq!(result, ContainerResult::Ok);
@@ -224,11 +218,11 @@ mod tests {
         let mut from = Container::backpack();
         let mut to = Container::new(ContainerKind::Chest, 0, 0.0); // 0 容量 = 无限制
         // 容量为 0 表示无限制，所以不会满
-        let stack = ItemStack::new(
+        let mut stack = ItemStack::new(
             ItemInstance::from_def(1, registry.get("potion_healing").unwrap()),
             10,
         );
-        from.add_stack(stack, &registry);
+        from.add_stack(&mut stack, &registry);
         let result = transfer_item(&mut from, &mut to, 1, 5, &registry);
         assert_eq!(result, ContainerResult::Ok);
     }
@@ -238,11 +232,11 @@ mod tests {
         let registry = test_registry();
         let mut from = Container::backpack();
         let mut to = Container::backpack();
-        let stack = ItemStack::new(
+        let mut stack = ItemStack::new(
             ItemInstance::from_def(1, registry.get("potion_healing").unwrap()),
             10,
         );
-        from.add_stack(stack, &registry);
+        from.add_stack(&mut stack, &registry);
 
         let result = transfer_item(&mut from, &mut to, 1, 10, &registry);
         assert_eq!(result, ContainerResult::Ok);

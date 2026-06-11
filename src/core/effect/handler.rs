@@ -388,6 +388,7 @@ impl EffectHandler for HealHandler {
         Some(PendingEffectData::Heal {
             amount: *amount,
             base_amount: None,
+            modifiers: Vec::new(),
         })
     }
 

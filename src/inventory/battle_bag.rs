@@ -31,9 +31,10 @@ pub fn create_battle_inventory(
         let mut battle_bag = BattleInventory::new(entity);
         // 复制源背包物品到战场背包
         for stack in &backpack.stacks {
+            let mut stack_copy = stack.clone();
             battle_bag
                 .container
-                .add_stack(stack.clone(), &item_registry);
+                .add_stack(&mut stack_copy, &item_registry);
         }
         commands.spawn(battle_bag);
     }
@@ -50,8 +51,8 @@ pub fn merge_battle_inventory(
         if let Ok(mut backpack) = backpacks.get_mut(battle_bag.source_backpack) {
             // 将战场背包中所有物品转移回角色背包
             let stacks: Vec<_> = battle_bag.container.stacks.drain(..).collect();
-            for stack in stacks {
-                backpack.add_stack(stack, &item_registry);
+            for mut stack in stacks {
+                backpack.add_stack(&mut stack, &item_registry);
             }
         }
     }
@@ -142,22 +143,22 @@ mod tests {
 
         // 战场背包容量 8，添加 8 个不同物品应成功
         for i in 0..8 {
-            let stack = ItemStack::new(
+            let mut stack = ItemStack::new(
                 ItemInstance::from_def(i, registry.get(&format!("item_{}", i)).unwrap()),
                 1,
             );
             assert!(
-                bag.container.add_stack(stack, &registry) > 0,
+                bag.container.add_stack(&mut stack, &registry) > 0,
                 "第 {} 个应成功",
                 i
             );
         }
         // 第 9 个应失败
-        let stack = ItemStack::new(
+        let mut stack = ItemStack::new(
             ItemInstance::from_def(100, registry.get("item_8").unwrap()),
             1,
         );
-        assert_eq!(bag.container.add_stack(stack, &registry), 0);
+        assert_eq!(bag.container.add_stack(&mut stack, &registry), 0);
     }
 
     #[test]
@@ -169,16 +170,16 @@ mod tests {
         // 创建源背包并添加物品
         let mut source = Container::backpack();
         let registry = app.world().resource::<ItemRegistry>();
-        let potion = ItemStack::new(
+        let mut potion = ItemStack::new(
             ItemInstance::from_def(1, registry.get("potion_healing").unwrap()),
             5,
         );
-        let sword = ItemStack::new(
+        let mut sword = ItemStack::new(
             ItemInstance::from_def(2, registry.get("iron_sword").unwrap()),
             1,
         );
-        source.add_stack(potion, &registry);
-        source.add_stack(sword, &registry);
+        source.add_stack(&mut potion, &registry);
+        source.add_stack(&mut sword, &registry);
         let source_entity = app.world_mut().spawn(source).id();
 
         // 运行 create_battle_inventory
