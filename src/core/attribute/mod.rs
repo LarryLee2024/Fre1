@@ -202,18 +202,17 @@ impl Attributes {
         }
     }
 
-    /// 设置基础值（仅核心属性和生命资源有效）
+    /// 设置基础值（仅 Core Stat 有效）
+    /// 🟥 不变量7合规：Vital Resource 必须通过 set_vital() 设置当前值
     pub fn set_base(&mut self, kind: AttributeKind, value: f32) {
-        match kind {
-            AttributeKind::Hp => self.current_hp = value,
-            AttributeKind::Mp => self.current_mp = value,
-            AttributeKind::Stamina => self.current_stamina = value,
-            _ if kind.is_core() => {
-                self.base.insert(kind, value);
-            }
-            _ => {
-                bevy::log::warn!(target: "core", kind = ?kind, "不能设置衍生属性的基础值");
-            }
+        if kind.is_core() {
+            self.base.insert(kind, value);
+        } else {
+            bevy::log::warn!(
+                target: "core",
+                kind = ?kind,
+                "set_base() 仅用于 Core Stat，Vital Resource 请用 set_vital()，Derived Stat 无 base"
+            );
         }
     }
 
@@ -372,7 +371,7 @@ mod tests {
     #[test]
     fn 生命资源_战斗中变化() {
         let mut attrs = make_warrior_attrs();
-        attrs.set_base(AttributeKind::Hp, 20.0);
+        attrs.set_vital(AttributeKind::Hp, 20.0);
         assert_eq!(attrs.get(AttributeKind::Hp), 20.0);
         assert_eq!(attrs.get(AttributeKind::MaxHp), 30.0); // MaxHp 不变
     }

@@ -47,15 +47,15 @@ fn render_attributes(
     kinds_with_mods.sort_by_key(|k| format!("{:?}", k));
     kinds_with_mods.dedup();
 
-    // 生命资源
+    // 生命资源（通过 get() 统一接口访问，不直接访问字段）
     ui.label(format!(
         "HP: {:.0} / {:.0}",
-        attrs.current_hp,
+        attrs.get(AttributeKind::Hp),
         attrs.get(AttributeKind::MaxHp)
     ));
     ui.label(format!(
         "MP: {:.0} / {:.0}",
-        attrs.current_mp,
+        attrs.get(AttributeKind::Mp),
         attrs.get(AttributeKind::MaxMp)
     ));
 
