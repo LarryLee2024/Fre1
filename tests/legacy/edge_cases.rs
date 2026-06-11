@@ -50,6 +50,11 @@ fn make_buff_data(
 // 场景一：HP 满时治疗
 // ══════════════════════════════════════════════════════════════
 
+/// LEC-001: 治疗 — 满血时不增加 HP
+///
+/// Given: 战士 HP=MaxHp=30
+/// When: Heal handler.preview(amount=10)
+/// Then: 预览治疗量=0
 #[test]
 fn 治疗_满血时不增加() {
     let registry = EffectHandlerRegistry::default();
@@ -78,6 +83,11 @@ fn 治疗_满血时不增加() {
 // 场景二：修饰符 Add + Multiply 叠加
 // ══════════════════════════════════════════════════════════════
 
+/// LEC-002: 修饰符 Add + Multiply 叠加顺序
+///
+/// Given: 战士 Attack=10
+/// When: apply_buff(Add +5) → apply_buff(Multiply 1.5) → remove_buff(Multiply)
+/// Then: Attack 10→15→22.5→15
 #[test]
 fn 修饰符_add_then_multiply() {
     let buff_add = make_buff_data(
@@ -122,6 +132,11 @@ fn 修饰符_add_then_multiply() {
 // 场景三：空 Buff 列表操作
 // ══════════════════════════════════════════════════════════════
 
+/// LEC-003: 空 Buff 列表 tick 无崩溃
+///
+/// Given: 空 ActiveBuffs
+/// When: tick() + dot_damage() + hot_heal() + is_stunned()
+/// Then: 无崩溃，返回默认值
 #[test]
 fn 空buff列表_tick无崩溃() {
     let mut buffs = ActiveBuffs::default();
@@ -132,6 +147,11 @@ fn 空buff列表_tick无崩溃() {
     assert!(!buffs.is_stunned());
 }
 
+/// LEC-004: 空 Buff 列表移除不存在的 ID
+///
+/// Given: 空 ActiveBuffs
+/// When: remove(BuffInstanceId(999))
+/// Then: 返回 None
 #[test]
 fn 空buff列表_移除不存在的id() {
     let mut buffs = ActiveBuffs::default();
@@ -143,12 +163,22 @@ fn 空buff列表_移除不存在的id() {
 // 场景四：EffectHandlerRegistry 边界
 // ══════════════════════════════════════════════════════════════
 
+/// LEC-005: 注册表查找不存在的处理器
+///
+/// Given: 默认 EffectHandlerRegistry
+/// When: find("NonExistent")
+/// Then: 返回 None
 #[test]
 fn 注册表_查找不存在的处理器() {
     let registry = EffectHandlerRegistry::default();
     assert!(registry.find("NonExistent").is_none());
 }
 
+/// LEC-006: 注册表不重复注册
+///
+/// Given: 默认 EffectHandlerRegistry（已注册 DamageHandler）
+/// When: 再次 register(DamageHandler)
+/// Then: find("Damage") 仍返回 Some
 #[test]
 fn 注册表_不重复注册() {
     let mut registry = EffectHandlerRegistry::default();
@@ -162,6 +192,11 @@ fn 注册表_不重复注册() {
 // 场景五：类型不匹配
 // ══════════════════════════════════════════════════════════════
 
+/// LEC-007: 伤害处理器收到 Heal 定义返回 None
+///
+/// Given: Damage handler, source/target 均为战士属性
+/// When: generate(EffectDef::Heal { amount: 5 })
+/// Then: 返回 None（类型不匹配）
 #[test]
 fn 伤害处理器_收到heal定义返回none() {
     let registry = EffectHandlerRegistry::default();
@@ -189,6 +224,11 @@ fn 伤害处理器_收到heal定义返回none() {
 // 场景六：HP 降至 0 边界
 // ══════════════════════════════════════════════════════════════
 
+/// LEC-008: 伤害精确致死 — HP 恰好等于伤害值
+///
+/// Given: 战士 HP=7，受到 7 点伤害
+/// When: hp - 7.0
+/// Then: HP=0
 #[test]
 fn 伤害_精确致死() {
     let mut attrs = warrior_attrs();
@@ -202,6 +242,11 @@ fn 伤害_精确致死() {
     assert_eq!(attrs.get(AttributeKind::Hp), 0.0);
 }
 
+/// LEC-009: 伤害超过 HP — HP 下限为 0
+///
+/// Given: 战士 HP=5，受到 50 点伤害
+/// When: hp - 50.0
+/// Then: HP=0（不为负数）
 #[test]
 fn 伤害_超过hp() {
     let mut attrs = warrior_attrs();
@@ -218,6 +263,11 @@ fn 伤害_超过hp() {
 // 场景七：标签幂等性
 // ══════════════════════════════════════════════════════════════
 
+/// LEC-010: 标签 add 重复 — 幂等性
+///
+/// Given: 空 GameplayTags
+/// When: add(FIRE) ×3
+/// Then: has(FIRE)==true，count=1
 #[test]
 fn 标签_add重复_idempotent() {
     let mut tags = GameplayTags::default();
@@ -232,6 +282,11 @@ fn 标签_add重复_idempotent() {
     assert_eq!(count, 1); // 只有一个 FIRE
 }
 
+/// LEC-011: 标签 remove 不存在 — 幂等性
+///
+/// Given: 空 GameplayTags
+/// When: remove(FIRE)
+/// Then: 不崩溃，has(FIRE)==false
 #[test]
 fn 标签_remove不存在的idempotent() {
     let mut tags = GameplayTags::default();
@@ -243,6 +298,11 @@ fn 标签_remove不存在的idempotent() {
 // 场景八：EffectDef::type_name 一致性
 // ══════════════════════════════════════════════════════════════
 
+/// LEC-012: EffectDef::type_name 覆盖所有变体
+///
+/// Given: 各 EffectDef 变体
+/// When: 调用 type_name()
+/// Then: 返回 "Damage"/"Heal"/"ApplyBuff"/"Cleanse"
 #[test]
 fn effect_def_type_name_覆盖所有变体() {
     assert_eq!(

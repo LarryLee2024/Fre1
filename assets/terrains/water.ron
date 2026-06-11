@@ -1,6 +1,7 @@
 (
     id: "water",
     name: "水",
+    char_code: Some('W'),
     move_cost: 0,
     defense_bonus: 0,
     color: (0.25, 0.47, 0.85),

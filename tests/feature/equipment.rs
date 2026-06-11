@@ -130,6 +130,11 @@ fn add_gameplay_tag(app: &mut App, entity: Entity, tag: GameplayTag) {
 // 场景一：装备穿脱完整流程
 // ══════════════════════════════════════════════════════════════
 
+/// EQT-001: 装备穿脱完整流程 — 穿戴后属性/标签变化，脱卸后恢复
+///
+/// Given: 战士(Attack=10)，背包有铁剑(Attack+3, SWORD/MARTIAL)
+/// When: 穿戴铁剑 → 验证 → 脱卸铁剑
+/// Then: 穿戴后 Attack=13、有 SWORD/MARTIAL 标签；脱卸后 Attack=10、标签移除、物品回背包
 #[test]
 fn 装备穿脱完整流程_穿戴后属性标签变化_脱卸后恢复() {
     let mut app = equipment_app();
@@ -222,6 +227,11 @@ fn 装备穿脱完整流程_穿戴后属性标签变化_脱卸后恢复() {
 // 场景二：穿戴需求不满足 → EquipFailed
 // ══════════════════════════════════════════════════════════════
 
+/// EQT-002: 穿戴需求不满足 — 属性不足时发送 EquipFailed
+///
+/// Given: 哥布林(Might=3)，背包有巨力之剑(需要 Might>=20)
+/// When: 尝试穿戴巨力之剑
+/// Then: Attack 不变(6)，MainHand 未占用，物品仍在背包
 #[test]
 fn 穿戴需求不满足_属性不足_发送equip_failed() {
     let mut app = equipment_app();
@@ -277,6 +287,11 @@ fn 穿戴需求不满足_属性不足_发送equip_failed() {
     assert!(container.get(sword_id).is_some());
 }
 
+/// EQT-003: 穿戴需求不满足 — 缺少标签时发送 EquipFailed
+///
+/// Given: 法师(无 MARTIAL 标签)，背包有炎龙长剑(需要 MARTIAL)
+/// When: 尝试穿戴炎龙长剑
+/// Then: MainHand 未占用，物品仍在背包
 #[test]
 fn 穿戴需求不满足_缺少标签_发送equip_failed() {
     let mut app = equipment_app();
@@ -309,6 +324,11 @@ fn 穿戴需求不满足_缺少标签_发送equip_failed() {
 // 场景三：穿戴新装备时自动脱卸旧装备
 // ══════════════════════════════════════════════════════════════
 
+/// EQT-004: 穿戴新装备时自动脱卸旧装备
+///
+/// Given: 战士已穿戴铁剑(Attack+3)，背包有钢剑(Attack+6)
+/// When: 穿戴钢剑到同槽位 MainHand
+/// Then: 钢剑穿戴(Attack=16)，铁剑自动脱�回背包
 #[test]
 fn 穿戴新装备_同槽位自动脱卸旧装备_旧装备回背包() {
     let mut app = equipment_app();
@@ -391,6 +411,11 @@ fn 穿戴新装备_同槽位自动脱卸旧装备_旧装备回背包() {
 // 场景四：装备 Trait 完整生命周期
 // ══════════════════════════════════════════════════════════════
 
+/// EQT-005: 装备 Trait 生命周期 — 穿戴时添加，脱卸时移除
+///
+/// Given: 战士(MARTIAL)，背包有炎龙长剑(flaming_weapon, dragon_bane)
+/// When: 穿戴炎龙长剑 → 验证 → 脱卸
+/// Then: 穿戴后 TraitCollection 有 flaming_weapon/dragon_bane(Equipment Source)；脱卸后消失
 #[test]
 fn 装备trait生命周期_穿戴时添加trait_脱卸时移除trait() {
     let mut app = equipment_app();
@@ -448,6 +473,11 @@ fn 装备trait生命周期_穿戴时添加trait_脱卸时移除trait() {
     assert!(!traits.has("dragon_bane"));
 }
 
+/// EQT-006: 多件装备 Trait 共存 — 脱卸一件不影响另一件
+///
+/// Given: 战士(MARTIAL)，穿戴炎龙长剑+龙盔（共享 dragon_bane）
+/// When: 脱卸炎龙长剑
+/// Then: dragon_bane 仍由龙盔提供(count=1)，flaming_weapon 消失
 #[test]
 fn 装备trait_多件装备trait共存_脱卸一件不影响另一件() {
     let mut app = equipment_app();
@@ -532,6 +562,11 @@ fn 装备trait_多件装备trait共存_脱卸一件不影响另一件() {
 // 补充场景：多槽位装备同时穿戴
 // ══════════════════════════════════════════════════════════════
 
+/// EQT-007: 多槽位装备同时穿戴 — 属性叠加
+///
+/// Given: 战士(Attack=10, Defense=?)，背包有铁剑(MainHand, Attack+3)和皮甲(Body, Defense+2)
+/// When: 依次穿戴铁剑和皮甲
+/// Then: Attack=13, Defense=Def+2，两个槽位都已占用
 #[test]
 fn 多槽位装备_同时穿戴不同槽位_属性叠加() {
     let mut app = equipment_app();
@@ -583,6 +618,11 @@ fn 多槽位装备_同时穿戴不同槽位_属性叠加() {
 // 补充场景：PersistentTags 分层验证
 // ══════════════════════════════════════════════════════════════
 
+/// EQT-008: PersistentTags 分层验证 — 装备标签写入 from_equipment 层
+///
+/// Given: 战士，PersistentTags.from_equipment 为空
+/// When: 穿戴铁剑 → 验证 → 脱卸
+/// Then: 穿戴后 from_equipment 有 SWORD/MARTIAL；脱卸后清除
 #[test]
 fn persistent_tags_装备标签写入from_equipment层() {
     let mut app = equipment_app();

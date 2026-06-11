@@ -134,6 +134,7 @@ pub fn spawn_map(
             Sprite::from_color(terrain_color, Vec2::splat(tile_size - 2.0)),
             Transform::from_xyz(world_pos.x, world_pos.y, 0.0),
             TileSprite,
+            Pickable::IGNORE, // 地形格子不拦截鼠标事件
             children![
                 (
                     Text2d::new(format!("{},{}", coord.x, coord.y)),

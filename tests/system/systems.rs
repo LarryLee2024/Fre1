@@ -194,6 +194,11 @@ fn put_item_in_container(app: &mut App, container_entity: Entity, def_id: &str, 
 // 场景一：效果执行 System Test — execute_effects 系统
 // ══════════════════════════════════════════════════════════════
 
+/// SYS-001: 伤害效果减少目标 HP
+///
+/// Given: 目标哥布林(Vitality=5, HP=30)和攻击者战士
+/// When: 入队 10 点伤害效果并 tick
+/// Then: 目标 HP < 30
 #[test]
 fn 伤害效果减少目标hp() {
     let mut app = full_battle_app();
@@ -245,6 +250,11 @@ fn 伤害效果减少目标hp() {
     assert!(hp < 30.0, "伤害效果应减少目标 HP，实际 HP = {}", hp);
 }
 
+/// SYS-002: 治疗效果恢复目标 HP
+///
+/// Given: 目标战士(Vitality=5, HP=10/30)在场
+/// When: 入队 15 点治疗效果并 tick
+/// Then: HP 恢复到 10 < HP <= 30
 #[test]
 fn 治疗效果恢复目标hp() {
     let mut app = full_battle_app();
@@ -291,6 +301,11 @@ fn 治疗效果恢复目标hp() {
 // 场景二：Buff tick System Test — resolve_status_effects 系统
 // ══════════════════════════════════════════════════════════════
 
+/// SYS-003: Buff tick 减少剩余回合数
+///
+/// Given: 战士拥有一个 remaining_turns=3 的 Buff
+/// When: 设置 NeedsResolve(true) 并 tick（resolve_status_effects）
+/// Then: remaining_turns 从 3 减为 2
 #[test]
 fn buff_tick减少剩余回合数() {
     let mut app = full_battle_app();
@@ -357,6 +372,11 @@ fn buff_tick减少剩余回合数() {
     );
 }
 
+/// SYS-004: Buff 过期后自动移除
+///
+/// Given: 战士拥有一个 remaining_turns=1 的 Buff
+/// When: 连续 tick 两次（第一次 1→0，第二次移除）
+/// Then: 第一次 tick 后 remaining_turns=0，第二次 tick 后 Buff 被移除
 #[test]
 fn buff过期后自动移除() {
     let mut app = full_battle_app();
@@ -435,6 +455,11 @@ fn buff过期后自动移除() {
 // 场景三：装备穿脱 System Test — equip_item_system / unequip_item_system
 // ══════════════════════════════════════════════════════════════
 
+/// SYS-005: 穿戴装备后槽位被占用
+///
+/// Given: 战士在铁剑在背包
+/// When: 发送 EquipItem 消息并 tick
+/// Then: MainHand 槽位已占用，铁剑从背包移除
 #[test]
 fn 穿戴装备后槽位被占用() {
     let mut app = equipment_app();
@@ -467,6 +492,11 @@ fn 穿戴装备后槽位被占用() {
     );
 }
 
+/// SYS-006: 脱卸装备后槽位清空
+///
+/// Given: 战士已穿戴铁剑
+/// When: 发送 UnequipItem 消息并 tick
+/// Then: MainHand 槽位清空，铁剑回到背包
 #[test]
 fn 脱卸装备后槽位清空() {
     let mut app = equipment_app();
@@ -512,6 +542,11 @@ fn 脱卸装备后槽位清空() {
 // 场景四：消耗品使用 System Test — use_item_system
 // ══════════════════════════════════════════════════════════════
 
+/// SYS-007: 使用消耗品后数量减少
+///
+/// Given: 战士背包有 3 瓶治疗药水
+/// When: 发送 UseItem 消息并 tick
+/// Then: 药水数量从 3 减为 2
 #[test]
 fn 使用消耗品后数量减少() {
     let mut app = combat_app();
@@ -543,6 +578,11 @@ fn 使用消耗品后数量减少() {
     assert_eq!(stack.count, 2, "使用一瓶后应剩余 2 瓶");
 }
 
+/// SYS-008: 非消耗品不可使用
+///
+/// Given: 战士背包有铁剑（Equipment 类型）
+/// When: 发送 UseItem 消息并 tick
+/// Then: 铁剑仍在背包中（未被消耗）
 #[test]
 fn 非消耗品不可使用() {
     let mut app = equipment_app();
@@ -573,6 +613,11 @@ fn 非消耗品不可使用() {
 // 场景五：容器转移 System Test — transfer_item_system
 // ══════════════════════════════════════════════════════════════
 
+/// SYS-009: 转移成功后源减少目标增加
+///
+/// Given: 容器 A 有 10 瓶药水，容器 B 为空
+/// When: 从 A 转移 5 瓶到 B
+/// Then: A 剩余 5 瓶，B 有 5 瓶
 #[test]
 fn 转移成功后源减少目标增加() {
     let mut app = combat_app();
@@ -603,6 +648,11 @@ fn 转移成功后源减少目标增加() {
     assert_eq!(container_b.stacks[0].count, 5, "目标容器应有 5 瓶");
 }
 
+/// SYS-010: 目标满时转移失败
+///
+/// Given: 容器 A 有 10 瓶药水，容器 B 已满（capacity=1）
+/// When: 从 A 转移 5 瓶到 B
+/// Then: A 仍有 10 瓶，B 仍只有 1 瓶（转移失败）
 #[test]
 fn 目标满时转移失败() {
     let mut app = combat_app();
@@ -650,6 +700,11 @@ fn 目标满时转移失败() {
 // 场景六：Trait 触发 System Test — trigger_on_attack_traits 等
 // ══════════════════════════════════════════════════════════════
 
+/// SYS-011: OnAttack Trait 触发后效果入队
+///
+/// Given: TraitCollection 包含 on_attack_buff Trait（ApplyBuff attack_up duration=2）
+/// When: 调用 trigger_on_attack_traits
+/// Then: EffectQueue 中产生 1 个 ApplyBuff 效果，source=attacker, target=target
 #[test]
 fn on_attack_trait触发后效果入队() {
     let mut trait_registry = TraitRegistry::default();
@@ -695,6 +750,11 @@ fn on_attack_trait触发后效果入队() {
     }
 }
 
+/// SYS-012: OnKill Trait 触发后效果入队
+///
+/// Given: TraitCollection 包含 on_kill_heal Trait（ApplyBuff regen duration=3）
+/// When: 调用 trigger_on_kill_traits
+/// Then: EffectQueue 中产生 1 个 ApplyBuff 效果，source=killer, target=victim
 #[test]
 fn on_kill_trait触发后效果入队() {
     let mut trait_registry = TraitRegistry::default();

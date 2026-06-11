@@ -104,6 +104,11 @@ fn regeneration_hot() -> BuffData {
 // 场景一：Buff 应用 → 属性修改 → 验证
 // ══════════════════════════════════════════════════════════════
 
+/// LBD-001: 增攻 Buff — 应用后攻击力增加
+///
+/// Given: 战士(Attack=10)，attack_up_buff(Attack+5)
+/// When: apply_buff
+/// Then: Attack=15，MaxHp 不变
 #[test]
 fn 增攻Buff_应用后攻击力增加() {
     let mut attrs = warrior_attrs();
@@ -125,6 +130,11 @@ fn 增攻Buff_应用后攻击力增加() {
     assert_eq!(attrs.get(AttributeKind::MaxHp), 30.0);
 }
 
+/// LBD-002: 减防 Debuff — 应用后防御力降低
+///
+/// Given: 战士(Defense=5)，defense_down_debuff(Defense-5)
+/// When: apply_buff
+/// Then: Defense=0
 #[test]
 fn 减防Debuff_应用后防御力降低() {
     let mut attrs = warrior_attrs();
@@ -144,6 +154,11 @@ fn 减防Debuff_应用后防御力降低() {
     assert_eq!(attrs.get(AttributeKind::Defense), 0.0);
 }
 
+/// LBD-003: 多个 Buff 叠加应用
+///
+/// Given: 战士(Attack=10, Defense=5)，attack_up + defense_down
+/// When: 依次 apply_buff
+/// Then: Attack=15, Defense=0
 #[test]
 fn 多个Buff_叠加应用() {
     let mut attrs = warrior_attrs();
@@ -176,6 +191,11 @@ fn 多个Buff_叠加应用() {
 // 场景二：Buff 移除 → 属性恢复
 // ══════════════════════════════════════════════════════════════
 
+/// LBD-004: 移除增攻 Buff — 攻击力恢复
+///
+/// Given: 战士 + attack_up(Attack=15)
+/// When: remove_buff
+/// Then: Attack=10
 #[test]
 fn 移除增攻Buff_攻击力恢复() {
     let mut attrs = warrior_attrs();
@@ -196,6 +216,11 @@ fn 移除增攻Buff_攻击力恢复() {
     assert_eq!(attrs.get(AttributeKind::Attack), 10.0);
 }
 
+/// LBD-005: 移除多个 Buff — 属性全部恢复
+///
+/// Given: 战士 + attack_up(Attack=15) + defense_down(Defense=0)
+/// When: 依次 remove_buff
+/// Then: Attack=10, Defense=5
 #[test]
 fn 移除多个Buff_属性全部恢复() {
     let mut attrs = warrior_attrs();
@@ -228,6 +253,11 @@ fn 移除多个Buff_属性全部恢复() {
     assert_eq!(attrs.get(AttributeKind::Defense), 5.0);
 }
 
+/// LBD-006: 移除不存在的 Buff — 属性不变
+///
+/// Given: 空 ActiveBuffs，战士(Attack=10)
+/// When: remove_buff(BuffInstanceId(999))
+/// Then: Attack=10 不变
 #[test]
 fn 移除不存在的Buff_属性不变() {
     let mut attrs = warrior_attrs();
@@ -248,6 +278,11 @@ fn 移除不存在的Buff_属性不变() {
 // 场景三：移除所有 Debuff
 // ══════════════════════════════════════════════════════════════
 
+/// LBD-007: 移除所有 Debuff — 增益保留
+///
+/// Given: 战士 + attack_up(BUFF) + defense_down(DEBUFF) + burning_dot(DEBUFF)
+/// When: remove_all_debuffs
+/// Then: Defense=5 恢复，Attack=15 保留，DoT=0
 #[test]
 fn 移除所有Debuff_增益保留() {
     let mut attrs = warrior_attrs();
@@ -287,6 +322,11 @@ fn 移除所有Debuff_增益保留() {
 // 场景四：Buff Tick + DoT/HoT
 // ══════════════════════════════════════════════════════════════
 
+/// LBD-008: 灼烧 DoT — 每回合造成伤害
+///
+/// Given: 战士 + burning_dot(dot_damage=3)
+/// When: apply_buff + tick
+/// Then: dot_damage()=3
 #[test]
 fn 灼烧DoT_每回合造成伤害() {
     let mut attrs = warrior_attrs();

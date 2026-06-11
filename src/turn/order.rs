@@ -87,7 +87,7 @@ pub struct AiTimer {
 impl Default for AiTimer {
     fn default() -> Self {
         Self {
-            timer: Timer::from_seconds(0.8, TimerMode::Once),
+            timer: Timer::from_seconds(0.4, TimerMode::Once),
         }
     }
 }

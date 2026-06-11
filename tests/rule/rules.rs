@@ -26,7 +26,11 @@ use proptest::prelude::*;
 use tactical_rpg::core::effect::calculate_damage_from_effect;
 
 proptest! {
-    /// 伤害值始终 ≥ 1
+    /// RUL-001: 伤害值始终 ≥ 1（伤害公式下界）
+    ///
+    /// Given: 任意 ATK/DEF/BaseDef/Multiplier/IgnoreDef/TerrainBonus
+    /// When: 调用 calculate_damage_from_effect
+    /// Then: 返回值 >= 1
     #[test]
     fn damage_always_at_least_1(
         atk in 0.0_f32..1000.0,
@@ -42,7 +46,11 @@ proptest! {
         prop_assert!(damage >= 1, "damage {} < 1", damage);
     }
 
-    /// 忽视防御比例越高，伤害越高
+    /// RUL-002: 忽视防御比例越高，伤害越高
+    ///
+    /// Given: 相同 ATK/DEF/BaseDef/Multiplier
+    /// When: ignore_def=0.5 vs ignore_def=0.0
+    /// Then: 高忽略防御的伤害 >= 低忽略防御的伤害
     #[test]
     fn ignore_def_increases_damage(
         atk in 100.0_f32..500.0,
@@ -56,7 +64,11 @@ proptest! {
             "ignore_def=0.5 damage {} should >= ignore_def=0.0 damage {}", high, low);
     }
 
-    /// 倍率越高，伤害越高
+    /// RUL-003: 倍率越高，伤害越高
+    ///
+    /// Given: 相同 ATK/DEF/BaseDef
+    /// When: multiplier=2.0 vs multiplier=1.0
+    /// Then: 高倍率的伤害 >= 低倍率的伤害
     #[test]
     fn higher_multiplier_more_damage(
         atk in 100.0_f32..500.0,
@@ -69,7 +81,11 @@ proptest! {
             "multiplier=2.0 damage {} should >= multiplier=1.0 damage {}", high, low);
     }
 
-    /// 地形防御加成越高，伤害越低
+    /// RUL-004: 地形防御加成越高，伤害越低
+    ///
+    /// Given: 相同 ATK/DEF/BaseDef/Multiplier/IgnoreDef
+    /// When: terrain_bonus=20 vs terrain_bonus=0
+    /// Then: 有地形加成的伤害 <= 无地形加成的伤害
     #[test]
     fn terrain_defense_reduces_damage(
         atk in 100.0_f32..500.0,
@@ -91,7 +107,11 @@ proptest! {
 use tactical_rpg::core::attribute::{AttributeKind, Attributes};
 
 proptest! {
-    /// 基础属性设置后可以正确读取
+    /// RUL-005: 基础属性设置后可以正确读取
+    ///
+    /// Given: 任意 value (1.0..100.0)
+    /// When: set_base(Might, value) 然后 get(Might)
+    /// Then: 读取值与设置值偏差 < 0.01
     #[test]
     fn set_base_then_get(value in 1.0_f32..100.0) {
         let mut attrs = Attributes::default();
@@ -101,7 +121,11 @@ proptest! {
             "set Might={} but got {}", value, got);
     }
 
-    /// fill_vital_resources 后 HP = MaxHp, MP = MaxMp
+    /// RUL-006: fill_vital_resources 后 HP = MaxHp, MP = MaxMp
+    ///
+    /// Given: 任意 Vitality/Intelligence (1.0..20.0)
+    /// When: set_base(Vitality/Intelligence) + fill_vital_resources()
+    /// Then: HP==MaxHp 且 MP==MaxMp
     #[test]
     fn fill_vital_resources_full(
         vitality in 1.0_f32..20.0,
@@ -143,7 +167,11 @@ fn arb_tag() -> impl Strategy<Value = GameplayTag> {
 }
 
 proptest! {
-    /// 添加标签后 has 返回 true
+    /// RUL-007: 添加标签后 has 返回 true
+    ///
+    /// Given: 空 GameplayTags 和任意 tag
+    /// When: tags.add(tag)
+    /// Then: tags.has(tag) == true
     #[test]
     fn add_then_has(tag in arb_tag()) {
         let mut tags = GameplayTags::default();
@@ -151,7 +179,11 @@ proptest! {
         prop_assert!(tags.has(tag), "tag {:?} added but has() returns false", tag);
     }
 
-    /// 添加再移除后 has 返回 false
+    /// RUL-008: 添加再移除后 has 返回 false
+    ///
+    /// Given: 空 GameplayTags 和任意 tag
+    /// When: tags.add(tag) 然后 tags.remove(tag)
+    /// Then: tags.has(tag) == false
     #[test]
     fn add_remove_then_not_has(tag in arb_tag()) {
         let mut tags = GameplayTags::default();
@@ -160,7 +192,11 @@ proptest! {
         prop_assert!(!tags.has(tag), "tag {:?} removed but has() still true", tag);
     }
 
-    /// 重复添加同一标签幂等
+    /// RUL-009: 重复添加同一标签幂等
+    ///
+    /// Given: 空 GameplayTags 和任意 tag
+    /// When: tags.add(tag) ×3 然后 tags.remove(tag) ×1
+    /// Then: tags.has(tag) == false（幂等：多次添加等于一次）
     #[test]
     fn add_idempotent(tag in arb_tag()) {
         let mut tags = GameplayTags::default();
@@ -171,7 +207,11 @@ proptest! {
         prop_assert!(!tags.has(tag), "tag {:?} added 3x removed 1x still has()", tag);
     }
 
-    /// 不同标签互不干扰
+    /// RUL-010: 不同标签互不干扰
+    ///
+    /// Given: 空 GameplayTags 和两个不同 tag1, tag2
+    /// When: add(tag1) + add(tag2) 然后 remove(tag1)
+    /// Then: has(tag1)==false 但 has(tag2)==true
     #[test]
     fn different_tags_independent(tag1 in arb_tag(), tag2 in arb_tag()) {
         prop_assume!(tag1 != tag2);
@@ -215,9 +255,11 @@ fn make_item_def(id: &str, stack_size: u32) -> ItemDef {
 }
 
 proptest! {
-    /// add_stack 不会拆分超量堆叠：单次 add_stack 后，新堆叠的 count 可能超过 stack_size
-    /// 这是当前实现的行为：add_stack 只合并已有堆叠的空位，不拆分新堆叠
-    /// 因此我们验证：当 add_count <= stack_size 时，每个堆叠的 count <= stack_size
+    /// RUL-011: 单次 add_stack 在 stack_size 限制内
+    ///
+    /// Given: stack_size (2..99) 和 add_count (<= stack_size)
+    /// When: ItemStack::from_def + container.add_stack
+    /// Then: 每个堆叠的 count <= stack_size
     #[test]
     fn single_add_within_stack_size(
         stack_size in 2_u32..99,
@@ -239,7 +281,11 @@ proptest! {
         }
     }
 
-    /// 多次添加后，合并逻辑正确：已有堆叠有空位时合并
+    /// RUL-012: 多次添加后合并逻辑正确
+    ///
+    /// Given: stack_size (5..20) 和两次小数量添加
+    /// When: 两次 add_stack 到同一容器
+    /// Then: 总数量守恒（first_add + second_add），堆叠数 <= 2
     #[test]
     fn merge_into_existing_stack(stack_size in 5_u32..20, first_add in 1_u32..3, second_add in 1_u32..3) {
         let def = make_item_def("potion", stack_size);
@@ -263,7 +309,11 @@ proptest! {
         prop_assert!(container.stacks.len() <= 2);
     }
 
-    /// 容量满时无法添加更多堆叠
+    /// RUL-013: 容量满时无法添加更多堆叠
+    ///
+    /// Given: container capacity (1..5) 和 num_items (1..10)
+    /// When: 循环 add_stack 超过容量
+    /// Then: stacks.len() <= capacity
     #[test]
     fn capacity_limit_respected(capacity in 1_u32..5, num_items in 1_u32..10) {
         let def = make_item_def("weapon", 1);

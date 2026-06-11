@@ -41,8 +41,11 @@ pub fn reconstruct_path(
         for dir in &directions {
             let prev = current - *dir;
             if prev == start {
-                best_prev = Some(prev);
-                break;
+                // 确认 start 在可达集合中
+                if reachable.contains_key(&start) {
+                    best_prev = Some(prev);
+                    break;
+                }
             }
             if let Some(&prev_remaining) = reachable.get(&prev) {
                 let terrain_id = terrain_grid.get(current).unwrap_or("plain");
@@ -53,7 +56,10 @@ pub fn reconstruct_path(
                     Some(c) => c,
                     None => continue,
                 };
-                if prev_remaining == remaining + cost && prev_remaining > best_remaining {
+                // 使用容差匹配：允许浮点精度误差
+                let expected = remaining + cost;
+                let tolerance = if expected > 0 { 1 } else { 0 };
+                if prev_remaining + tolerance >= expected && prev_remaining >= best_remaining {
                     best_prev = Some(prev);
                     best_remaining = prev_remaining;
                 }

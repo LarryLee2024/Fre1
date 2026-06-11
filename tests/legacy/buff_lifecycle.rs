@@ -68,6 +68,11 @@ fn make_stun_buff() -> BuffData {
 // 场景一：攻击 Buff 完整生命周期
 // ══════════════════════════════════════════════════════════════
 
+/// LBL-001: 攻击 Buff 完整生命周期 — 施加 → 递减 → 过期 → 修饰符清理
+///
+/// Given: 攻击 Buff(Attack+5, duration=3)
+/// When: apply_buff → tick ×3 → tick
+/// Then: Attack 15→15→15→10(过期清理)，最后 Buff 移除
 #[test]
 fn 攻击buff_施加_递减_过期_修饰符清理() {
     let buff_data = make_buff_data(
@@ -146,6 +151,11 @@ fn 攻击buff_施加_递减_过期_修饰符清理() {
 // 场景二：晕眩 Buff 生命周期
 // ══════════════════════════════════════════════════════════════
 
+/// LBL-002: 晕眩 Buff — 施加后被 consume_stun 消耗
+///
+/// Given: 晕眩 Buff(is_stun=true, duration=1)
+/// When: apply_buff → consume_stun
+/// Then: is_stunned 从 true 变 false，DEBUFF 标签保留
 #[test]
 fn 晕眩buff_施加后被消耗() {
     let stun = make_stun_buff();
@@ -166,6 +176,11 @@ fn 晕眩buff_施加后被消耗() {
 // 场景三：DoT Buff 生命周期
 // ══════════════════════════════════════════════════════════════
 
+/// LBL-003: DoT Buff — 每轮扣血
+///
+/// Given: 毒 Buff(dot_damage=3, duration=3)，HP=20
+/// When: apply_buff → 手动 DoT 结算 → tick → DoT 结算
+/// Then: HP 20→17→14
 #[test]
 fn dot_buff_每轮扣血() {
     let poison = make_buff_data(
@@ -216,6 +231,11 @@ fn dot_buff_每轮扣血() {
 // 场景四：HoT Buff 生命周期
 // ══════════════════════════════════════════════════════════════
 
+/// LBL-004: HoT Buff — 每轮回血，不超过最大 HP
+///
+/// Given: 回复 Buff(hot_heal=4, duration=3)，HP=18/30
+/// When: apply_buff → 手动 HoT 结算 ×3
+/// Then: HP 18→22→26→30（cap at MaxHp）
 #[test]
 fn hot_buff_每轮回血_不超过最大hp() {
     let regen = make_buff_data(
@@ -259,6 +279,11 @@ fn hot_buff_每轮回血_不超过最大hp() {
 // 场景五：驱散 Cleanse
 // ══════════════════════════════════════════════════════════════
 
+/// LBL-005: 驱散 Cleanse — 移除所有 debuff，保留 buff
+///
+/// Given: attack_up(BUFF) + defense_down(DEBUFF) + poison(DEBUFF)
+/// When: remove_all_debuffs
+/// Then: 仅剩 attack_up，Defense 恢复，DoT 清零
 #[test]
 fn cleanse_移除所有debuff保留buff() {
     let atk_up = make_buff_data(
@@ -321,6 +346,11 @@ fn cleanse_移除所有debuff保留buff() {
 // 场景六：共享标签引用计数
 // ══════════════════════════════════════════════════════════════
 
+/// LBL-006: 共享标签引用计数 — 两个 Buff 共享 FIRE，移除一个后标签保留
+///
+/// Given: fire_a(BUFF+FIRE) + fire_b(BUFF+FIRE)
+/// When: remove_buff(fire_a)
+/// Then: FIRE 仍由 fire_b 提供，Attack 恢复，Defense 保留
 #[test]
 fn 共享标签_两个buff共享FIRE_移除一个_标签保留() {
     let fire_a = make_buff_data(
@@ -374,6 +404,11 @@ fn 共享标签_两个buff共享FIRE_移除一个_标签保留() {
 // 场景七：同源 Buff 刷新
 // ══════════════════════════════════════════════════════════════
 
+/// LBL-007: 同源 Buff 刷新 — 同一 source 再次施加时刷新持续时间
+///
+/// Given: poison(source=Entity(42), duration=1)
+/// When: 同源再次施加 poison(duration=3)
+/// Then: Buff 数量仍为 1，remaining_turns 刷新为 3
 #[test]
 fn 同源buff_刷新持续时间_不重复添加修饰符() {
     let poison = make_buff_data("poison", false, vec![], vec![GameplayTag::DEBUFF], 3, 0);
@@ -398,6 +433,11 @@ fn 同源buff_刷新持续时间_不重复添加修饰符() {
 // 场景八：多 Buff 叠加
 // ══════════════════════════════════════════════════════════════
 
+/// LBL-008: 多 Buff 属性修饰符正确叠加
+///
+/// Given: attack_up(Attack+5) + attack_up2(Attack+3)
+/// When: 依次 apply_buff → remove_buff(attack_up)
+/// Then: Attack 10→15→18→13
 #[test]
 fn 多buff_属性修饰符正确叠加() {
     let atk_up = make_buff_data(
@@ -444,6 +484,11 @@ fn 多buff_属性修饰符正确叠加() {
 // 场景九：Buff + 标签联合
 // ══════════════════════════════════════════════════════════════
 
+/// LBL-009: Buff 施加/移除后标签同步更新
+///
+/// Given: burn Buff(Defense-2, DEBUFF+BURN+FIRE)
+/// When: apply_buff → remove_buff
+/// Then: 施加后有 DEBUFF/BURN/FIRE 标签，移除后 BURN/FIRE 清除，Defense 恢复
 #[test]
 fn buff施加_标签同步更新() {
     let burn = make_buff_data(

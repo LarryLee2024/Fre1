@@ -111,6 +111,11 @@ fn battle_snapshot_settings() -> insta::Settings {
 // 场景一：基础战斗 — 战士攻击哥布林
 // ══════════════════════════════════════════════════════════════
 
+/// GBT-001: 基础战斗 — 战士攻击哥布林，验证 BattleRecord 快照
+///
+/// Given: 战士(Warrior)和哥布林(Goblin)在场
+/// When: 战士对哥布林造成 8 点物理伤害
+/// Then: BattleRecord 记录 DamageApplied 事件，快照匹配
 #[test]
 fn 基础战斗_战士攻击哥布林() {
     let mut app = golden_battle_app();
@@ -131,6 +136,11 @@ fn 基础战斗_战士攻击哥布林() {
 // 场景二：治疗战斗 — 角色受伤后治疗
 // ══════════════════════════════════════════════════════════════
 
+/// GBT-002: 治疗战斗 — 角色受伤后治疗，验证 BattleRecord 快照
+///
+/// Given: 战士 HP=10，哥布林和牧师(Mage/Player)在场
+/// When: 哥布林对战士造成 5 点伤害，牧师治疗 3 点
+/// Then: BattleRecord 记录 DamageApplied + HealApplied，快照匹配
 #[test]
 fn 治疗战斗_角色受伤后治疗() {
     let mut app = golden_battle_app();
@@ -156,6 +166,11 @@ fn 治疗战斗_角色受伤后治疗() {
 // 场景三：致命伤害 — 角色死亡
 // ══════════════════════════════════════════════════════════════
 
+/// GBT-003: 致命伤害 — 角色死亡，验证 BattleRecord 快照
+///
+/// Given: 战士在场，哥布林 HP=3
+/// When: 战士对哥布林造成 10 点伤害（致死）
+/// Then: BattleRecord 记录 DamageApplied + CharacterDied，快照匹配
 #[test]
 fn 致命伤害_角色死亡() {
     let mut app = golden_battle_app();

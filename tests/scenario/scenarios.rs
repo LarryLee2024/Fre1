@@ -128,6 +128,11 @@ fn trigger_resolve(app: &mut App) {
 // 法师对骑士造成技能伤害 + Burning Buff
 // ══════════════════════════════════════════════════════════════
 
+/// SCN-001: 火球vs骑士 — 法师对骑士造成技能伤害 + Burning Buff
+///
+/// Given: 法师(Mage)和骑士(Warrior/Enemy)在场
+/// When: 法师释放火球（Damage 12 + ApplyBuff "burn" duration=2）
+/// Then: 骑士 HP 减少 12，获得 burn Buff（DoT=2, remaining=2）
 #[test]
 fn 火球vs骑士_技能伤害加burning_buff() {
     let mut app = scenario_test_app();
@@ -186,6 +191,11 @@ fn 火球vs骑士_技能伤害加burning_buff() {
 // 战士中毒后每回合受到 DoT
 // ══════════════════════════════════════════════════════════════
 
+/// SCN-002: 毒伤战斗 — 战士中毒后每回合受到 DoT 伤害
+///
+/// Given: 战士(Warrior)获得 Poison Buff（duration=3, dot_damage=3）
+/// When: 连续推进 4 回合（resolve_status_effects）
+/// Then: 前 3 回合每回合扣 3 HP（30→27→24→21），第 4 回合 Poison 过期不再扣血
 #[test]
 fn 毒伤战斗_每回合受到dot伤害() {
     let mut app = scenario_test_app();
@@ -265,6 +275,11 @@ fn 毒伤战斗_每回合受到dot伤害() {
 // 地形防御加成在 generate 阶段减少伤害量
 // ══════════════════════════════════════════════════════════════
 
+/// SCN-003: 地形优势 — 森林地形防御加成减少伤害
+///
+/// Given: 攻击者 ATK=10，目标 DEF=3，森林 defense_bonus=2
+/// When: 分别在平原(bonus=0)和森林(bonus=2)计算伤害
+/// Then: 平原伤害=7，森林伤害=5，森林目标 HP 高于平原目标
 #[test]
 fn 地形优势_森林地形减少伤害() {
     // ── Given：攻击者 ATK=10，目标 DEF=3 ──
@@ -352,6 +367,11 @@ fn 地形优势_森林地形减少伤害() {
 // 致命伤害触发死亡流程
 // ══════════════════════════════════════════════════════════════
 
+/// SCN-004: 击杀触发死亡 — 致命伤害触发 Dead 标记和 CharacterDied 消息
+///
+/// Given: 目标哥布林 HP=5，攻击者战士 ATK 足够
+/// When: 造成 10 点致命伤害
+/// Then: 目标获得 Dead 标记，HP=0，BattleRecord 记录 CharacterDied 事件
 #[test]
 fn 击杀触发死亡_dead标记和character_died消息() {
     let mut app = scenario_test_app();

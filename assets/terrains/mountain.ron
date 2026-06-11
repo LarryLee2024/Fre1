@@ -1,6 +1,7 @@
 (
     id: "mountain",
     name: "山",
+    char_code: Some('M'),
     move_cost: 0,
     defense_bonus: 0,
     color: (0.55, 0.50, 0.45),
