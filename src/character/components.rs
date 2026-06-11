@@ -93,7 +93,8 @@ impl Dead {
     /// 死亡 Hook：标记已行动，移除选中状态
     fn on_add_dead(mut world: DeferredWorld, context: HookContext) {
         let entity = context.entity;
-        bevy::log::trace!(target: "character", entity=?entity, "Dead hook triggered");
+        let unit_id = world.get::<UnitId>(entity).map(|id| id.0.as_str()).unwrap_or("?");
+        bevy::log::trace!(target: "character", entity=?entity, unit_id=%unit_id, "Dead hook triggered");
         // 标记已行动，防止死亡单位继续行动
         if let Some(mut unit) = world.get_mut::<Unit>(entity) {
             unit.acted = true;

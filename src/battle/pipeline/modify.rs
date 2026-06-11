@@ -9,10 +9,12 @@ use bevy::prelude::*;
 pub fn modify_effects(
     mut queue: ResMut<EffectQueue>,
     tags_query: Query<&GameplayTags>,
+    names_query: Query<&Name>,
     rules: Res<ModifierRuleRegistry>,
 ) {
     for effect in &mut queue.pending {
         if let Ok(target_tags) = tags_query.get(effect.target) {
+            let target_name = names_query.get(effect.target).map(|n| n.as_str()).unwrap_or("?");
             match &mut effect.data {
                 PendingEffectData::Damage {
                     amount,
@@ -32,6 +34,7 @@ pub fn modify_effects(
                     bevy::log::debug!(
                         target: "battle",
                         target_entity = ?effect.target,
+                        target_name = %target_name,
                         original_damage = original,
                         modified_damage = *amount,
                         "伤害修饰"
@@ -49,6 +52,7 @@ pub fn modify_effects(
                     bevy::log::debug!(
                         target: "battle",
                         target_entity = ?effect.target,
+                        target_name = %target_name,
                         original_heal = original,
                         modified_heal = *amount,
                         "治疗修饰"

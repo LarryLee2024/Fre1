@@ -21,18 +21,10 @@
 // 编译时 feature，自动在 System 错误信息中标注来源文件和行号
 // 无需代码，Cargo.toml 中已启用
 
-mod ai_viewer;
-mod attribute_viewer;
-mod battle_debugger;
-mod buff_viewer;
-mod damage_viewer;
-mod equipment_viewer;
 mod gizmos_viz;
-mod grid_viewer;
 pub mod overlay;
-mod settings_viewer;
 mod stepping_control;
-mod turn_queue_viewer;
+mod viewers;
 
 use bevy::prelude::*;
 use bevy::remote::RemotePlugin;
@@ -82,7 +74,7 @@ pub struct DebugPlugin;
 
 impl Plugin for DebugPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(grid_viewer::GridViewerState::default())
+        app.insert_resource(viewers::GridViewerState::default())
             .insert_resource(overlay::DebugOverlay::default())
             .insert_resource(DebugPanelState::default())
             .register_type::<overlay::DebugOverlay>()
@@ -97,11 +89,11 @@ impl Plugin for DebugPlugin {
                     conditional_battle_debugger,
                     conditional_damage_attribute_viewer,
                     conditional_turn_queue_viewer,
-                    grid_viewer::grid_viewer_system,
-                    ai_viewer::ai_viewer_system,
-                    equipment_viewer::equipment_viewer_system,
+                    viewers::grid_viewer::grid_viewer_system,
+                    viewers::ai_viewer::ai_viewer_system,
+                    viewers::equipment_viewer::equipment_viewer_system,
                     overlay::debug_overlay_panel,
-                    settings_viewer::settings_viewer_system,
+                    viewers::settings_viewer::settings_viewer_system,
                     stepping_control::stepping_control_panel,
                 ),
             )
@@ -211,7 +203,7 @@ fn conditional_battle_debugger(
     if !state.show_battle_debugger {
         return;
     }
-    battle_debugger::battle_debugger_system_inner(
+    viewers::battle_debugger::battle_debugger_system_inner(
         egui_ctx,
         battle_record,
         turn_order,
@@ -264,9 +256,9 @@ fn conditional_damage_attribute_viewer(
             ui.separator();
 
             if state.damage_attribute_tab == 0 {
-                damage_viewer::render_damage_panel(ui, &battle_record, &unit_names);
+                viewers::damage_viewer::render_damage_panel(ui, &battle_record, &unit_names);
             } else {
-                attribute_viewer::render_attribute_panel(ui, &units);
+                viewers::attribute_viewer::render_attribute_panel(ui, &units);
             }
         });
 }
@@ -285,5 +277,5 @@ fn conditional_turn_queue_viewer(
     if !state.show_turn_queue {
         return;
     }
-    turn_queue_viewer::turn_queue_viewer_system_inner(egui_ctx, turn_order, units);
+    viewers::turn_queue_viewer::turn_queue_viewer_system_inner(egui_ctx, turn_order, units);
 }

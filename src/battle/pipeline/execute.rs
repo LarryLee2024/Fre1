@@ -140,6 +140,7 @@ pub fn execute_effects_inline(
                     bevy::log::trace!(
                         target: "battle",
                         target_entity = ?effect.target,
+                        target_name = %target_name,
                         buff_id = %buff_id,
                         duration = duration,
                         "ApplyBuff 效果执行"
@@ -164,6 +165,7 @@ pub fn execute_effects_inline(
                     bevy::log::trace!(
                         target: "battle",
                         target_entity = ?effect.target,
+                        target_name = %target_name,
                         "Cleanse 效果执行"
                     );
                     apply_cleanse_effect(&mut target_buffs, &mut target_attrs, &mut target_tags);
@@ -215,6 +217,7 @@ pub fn apply_damage_effect(
     bevy::log::trace!(
         target: "battle",
         target_entity = ?target_entity,
+        target_name = %target_name,
         attacker_entity = ?attacker_entity,
         attacker_name = %attacker_name,
         damage = amount,
