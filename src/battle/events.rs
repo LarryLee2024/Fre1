@@ -1,7 +1,7 @@
 // 战斗事件 Message：逻辑层通知，表现层响应
 // 遵循「Logic 发消息，Presentation 响应」原则
 
-use crate::character::{Faction, GridPosition, Unit, UnitName};
+use crate::character::Faction;
 use crate::turn::TurnOrder;
 use bevy::ecs::message::MessageReader;
 use bevy::prelude::*;

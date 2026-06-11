@@ -85,7 +85,7 @@ pub fn apply_passive_traits(
 }
 
 /// Trait 注册表资源
-#[derive(Resource, Default)]
+#[derive(Resource, Default, Clone)]
 pub struct TraitRegistry {
     pub traits: HashMap<String, TraitData>,
 }

@@ -1,6 +1,6 @@
 // 战场背包：BattleInventory 组件 + 战斗开始/结束时的创建与合并
 
-use super::container::{Container, ContainerKind};
+use super::container::Container;
 use super::definition::ItemRegistry;
 use bevy::prelude::*;
 
@@ -44,7 +44,7 @@ pub fn merge_battle_inventory(
     mut battle_bags: Query<&mut BattleInventory>,
     mut backpacks: Query<&mut Container>,
     item_registry: Res<ItemRegistry>,
-    mut commands: Commands,
+    _commands: Commands,
 ) {
     for mut battle_bag in &mut battle_bags {
         if let Ok(mut backpack) = backpacks.get_mut(battle_bag.source_backpack) {

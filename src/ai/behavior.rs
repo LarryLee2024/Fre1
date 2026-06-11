@@ -1,60 +1,28 @@
 // AI 行为配置：数据驱动的 AI 决策策略
 // 替代硬编码的 AI 逻辑，支持不同单位使用不同行为模式
 // 支持从 assets/ai/*.ron 外部配置文件加载
+// 策略字段使用字符串名称，运行时通过 AiStrategyRegistry 查找 trait 对象分发
+// 新增策略只需实现 trait 并注册，无需修改本文件（规则1/规则5合规）
 
 use crate::core::registry_loader::RegistryLoader;
 use bevy::prelude::*;
 use serde::Deserialize;
 use std::collections::HashMap;
 
-/// 目标选择策略
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Deserialize)]
-#[serde(rename_all = "PascalCase")]
-pub enum TargetStrategy {
-    /// 选择最近的敌人
-    Nearest,
-    /// 选择血量最低的敌人
-    Weakest,
-    /// 选择攻击力最高的敌人
-    MostDangerous,
-    /// 选择血量百分比最低的敌人
-    LowestHpPercent,
-}
-
-/// 移动策略
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Deserialize)]
-#[serde(rename_all = "PascalCase")]
-pub enum MoveStrategy {
-    /// 冲向目标（贪心最近）
-    Aggressive,
-    /// 保持攻击距离（不靠近超过攻击范围）
-    Cautious,
-    /// 优先靠近友军（辅助型）
-    Support,
-}
-
-/// 技能选择策略
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Deserialize)]
-#[serde(rename_all = "PascalCase")]
-pub enum SkillStrategy {
-    /// 优先使用特殊技能
-    PreferSpecial,
-    /// 优先使用基础攻击
-    PreferBasic,
-    /// 按技能优先级排序
-    ByPriority,
-}
-
 /// AI 行为定义（RON 反序列化用）
+/// 策略字段为字符串，与 trait 的 strategy_name() 对应
 #[derive(Clone, Debug, Deserialize)]
 pub struct AiBehaviorDef {
     #[serde(default)]
     pub version: u32,
     pub id: String,
     pub name: String,
-    pub target_strategy: TargetStrategy,
-    pub move_strategy: MoveStrategy,
-    pub skill_strategy: SkillStrategy,
+    /// 目标选择策略名称（对应 TargetSelector trait 实现的 strategy_name）
+    pub target_strategy: String,
+    /// 移动策略名称（对应 MoveSelector trait 实现的 strategy_name）
+    pub move_strategy: String,
+    /// 技能选择策略名称（对应 SkillSelector trait 实现的 strategy_name）
+    pub skill_strategy: String,
     /// 技能使用优先级（从高到低），空则使用 skill_strategy 默认逻辑
     pub skill_priority: Vec<String>,
 }
@@ -79,26 +47,9 @@ impl From<AiBehaviorDef> for AiBehavior {
         AiBehavior {
             id: def.id,
             name: def.name,
-            // enum variant 名转为字符串，与 trait strategy_name 对应
-            target_strategy: match def.target_strategy {
-                TargetStrategy::Nearest => "Nearest",
-                TargetStrategy::Weakest => "Weakest",
-                TargetStrategy::MostDangerous => "MostDangerous",
-                TargetStrategy::LowestHpPercent => "LowestHpPercent",
-            }
-            .to_string(),
-            move_strategy: match def.move_strategy {
-                MoveStrategy::Aggressive => "Aggressive",
-                MoveStrategy::Cautious => "Cautious",
-                MoveStrategy::Support => "Support",
-            }
-            .to_string(),
-            skill_strategy: match def.skill_strategy {
-                SkillStrategy::PreferSpecial => "PreferSpecial",
-                SkillStrategy::PreferBasic => "PreferBasic",
-                SkillStrategy::ByPriority => "ByPriority",
-            }
-            .to_string(),
+            target_strategy: def.target_strategy,
+            move_strategy: def.move_strategy,
+            skill_strategy: def.skill_strategy,
             skill_priority: def.skill_priority,
         }
     }
@@ -140,36 +91,36 @@ impl AiBehaviorRegistry {
                 version: 0,
                 id: "default".into(),
                 name: "默认".into(),
-                target_strategy: TargetStrategy::Nearest,
-                move_strategy: MoveStrategy::Aggressive,
-                skill_strategy: SkillStrategy::PreferSpecial,
+                target_strategy: "Nearest".into(),
+                move_strategy: "Aggressive".into(),
+                skill_strategy: "PreferSpecial".into(),
                 skill_priority: vec![],
             },
             AiBehaviorDef {
                 version: 0,
                 id: "aggressive".into(),
                 name: "激进".into(),
-                target_strategy: TargetStrategy::Weakest,
-                move_strategy: MoveStrategy::Aggressive,
-                skill_strategy: SkillStrategy::PreferSpecial,
+                target_strategy: "Weakest".into(),
+                move_strategy: "Aggressive".into(),
+                skill_strategy: "PreferSpecial".into(),
                 skill_priority: vec![],
             },
             AiBehaviorDef {
                 version: 0,
                 id: "cautious".into(),
                 name: "谨慎".into(),
-                target_strategy: TargetStrategy::Nearest,
-                move_strategy: MoveStrategy::Cautious,
-                skill_strategy: SkillStrategy::PreferSpecial,
+                target_strategy: "Nearest".into(),
+                move_strategy: "Cautious".into(),
+                skill_strategy: "PreferSpecial".into(),
                 skill_priority: vec![],
             },
             AiBehaviorDef {
                 version: 0,
                 id: "support".into(),
                 name: "辅助".into(),
-                target_strategy: TargetStrategy::Nearest,
-                move_strategy: MoveStrategy::Support,
-                skill_strategy: SkillStrategy::ByPriority,
+                target_strategy: "Nearest".into(),
+                move_strategy: "Support".into(),
+                skill_strategy: "ByPriority".into(),
                 skill_priority: vec!["heal".into(), "cleanse_skill".into()],
             },
         ];
@@ -225,16 +176,16 @@ mod tests {
             (
                 id: "aggressive",
                 name: "激进",
-                target_strategy: Weakest,
-                move_strategy: Aggressive,
-                skill_strategy: PreferSpecial,
+                target_strategy: "Weakest",
+                move_strategy: "Aggressive",
+                skill_strategy: "PreferSpecial",
                 skill_priority: [],
             )
         "#;
         let def: AiBehaviorDef = from_bytes(ron_str.as_bytes()).unwrap();
         assert_eq!(def.id, "aggressive");
-        assert_eq!(def.target_strategy, TargetStrategy::Weakest);
-        assert_eq!(def.move_strategy, MoveStrategy::Aggressive);
+        assert_eq!(def.target_strategy, "Weakest");
+        assert_eq!(def.move_strategy, "Aggressive");
     }
 
     #[test]
@@ -243,9 +194,9 @@ mod tests {
             version: 0,
             id: "test".into(),
             name: "测试".into(),
-            target_strategy: TargetStrategy::MostDangerous,
-            move_strategy: MoveStrategy::Cautious,
-            skill_strategy: SkillStrategy::ByPriority,
+            target_strategy: "MostDangerous".into(),
+            move_strategy: "Cautious".into(),
+            skill_strategy: "ByPriority".into(),
             skill_priority: vec!["fireball".into(), BASIC_ATTACK_ID.into()],
         };
         let behavior: AiBehavior = def.into();
@@ -273,9 +224,9 @@ mod tests {
             (
                 id: "support",
                 name: "辅助",
-                target_strategy: Nearest,
-                move_strategy: Support,
-                skill_strategy: ByPriority,
+                target_strategy: "Nearest",
+                move_strategy: "Support",
+                skill_strategy: "ByPriority",
                 skill_priority: ["heal", "cleanse_skill", "{}"],
             )
         "#,

@@ -5,7 +5,6 @@ use crate::character::{
     TraitCollection, TraitEffect, TraitEffectHandlerRegistry, TraitRegistry, TraitTrigger,
 };
 use crate::core::effect::{EffectQueue, PendingEffect, PendingEffectData};
-use crate::core::tag::GameplayTags;
 use bevy::prelude::*;
 
 /// 在攻击生成阶段触发攻击者的 OnAttack Trait 效果

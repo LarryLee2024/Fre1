@@ -2,7 +2,7 @@
 // 纯逻辑：只做数值计算和状态变更，通过 Message 通知表现层
 // 原 status.rs，移入 buff 模块统一管理
 
-use crate::battle::{CharacterDied, DotApplied, HotApplied, StunApplied};
+use crate::battle::{DotApplied, HotApplied, StunApplied};
 use crate::character::{Dead, GridPosition, PersistentTags, Unit, UnitName};
 use crate::core::attribute::{AttributeKind, Attributes, BuffInstanceId, ModifierSource};
 use crate::core::tag::{GameplayTag, GameplayTags};
@@ -31,7 +31,6 @@ pub fn resolve_status_effects(
         &mut SkillCooldowns,
         &PersistentTags,
     )>,
-    mut died_writer: MessageWriter<CharacterDied>,
     mut dot_writer: MessageWriter<DotApplied>,
     mut hot_writer: MessageWriter<HotApplied>,
     mut stun_writer: MessageWriter<StunApplied>,
@@ -103,20 +102,10 @@ pub fn resolve_status_effects(
                 target_coord: gp.coord,
             });
 
-            // DoT 死亡判定
+            // DoT 死亡判定：只添加 Dead Tag，CharacterDied 由 Dead Observer 统一发送
+            // 规则3：禁止在 HP 变化时内联死亡处理（宪法 5.0 分层：Hook+Observer+Message）
             if new_hp <= 0.0 {
                 commands.entity(entity).insert(Dead);
-                bevy::log::trace!(
-                    target: "buff",
-                    target_entity = ?entity,
-                    target_name = %name.0,
-                    "CharacterDied 消息发送(DoT致死)"
-                );
-                died_writer.write(CharacterDied {
-                    entity,
-                    name: name.0.clone(),
-                    faction: unit.faction,
-                });
             }
         }
 

@@ -3,6 +3,7 @@ use super::movement::animate_movement;
 use super::spawn::{TurnOrderLabel, UnitPlugin};
 use super::template::UnitTemplatePlugin;
 use super::traits::TraitPlugin;
+use crate::battle::CharacterDied;
 use crate::core::attribute::{
     AttributeKind, AttributeModifierDef, AttributeModifierInstance, Attributes, BuffInstanceId,
     ModifierOp, ModifierSource,
@@ -55,6 +56,11 @@ pub struct CharacterPlugin;
 impl Plugin for CharacterPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((UnitTemplatePlugin, TraitPlugin, UnitPlugin))
+            // 注册 Message
+            .add_message::<CharacterDied>()
+            // 注册 Dead Observer：响应 Dead Tag 添加，发送 CharacterDied Message
+            // 规则3：HP ≤ 0 时只添加 Dead Tag，死亡通知由 Observer 统一发送
+            .add_observer(on_dead_added)
             // 注册 Reflect 类型
             .register_type::<Faction>()
             .register_type::<Unit>()

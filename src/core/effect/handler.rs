@@ -1,14 +1,20 @@
-// 效果处理器 trait：描述如何生成/预览一种效果
+// 效果处理器 trait：描述如何生成/预览/执行一种效果
 // 新增效果类型只需实现此 trait 并注册，无需修改核心代码
 // 遵循"Trait 描述规则，不描述内容"原则
 
-use crate::buff::BuffRegistry;
+use crate::battle::DamageBreakdown;
+use crate::battle::{DamageApplied, HealApplied};
+use crate::buff::{ActiveBuffs, BuffRegistry, remove_all_debuffs};
+use crate::character::{Faction, GridPosition, Unit, UnitName};
 use crate::core::attribute::{AttributeKind, Attributes};
-use crate::core::tag::GameplayTag;
+use crate::core::modifier_rule::ModifierEntry;
+use crate::core::tag::{GameplayTag, GameplayTags};
+use crate::map::TerrainRegistry;
+use bevy::ecs::query::QueryState;
 use bevy::prelude::*;
 use std::collections::HashMap;
 
-use super::types::{EffectDef, PendingEffectData, calculate_damage_from_effect};
+use super::types::{EffectDef, PendingEffect, PendingEffectData, calculate_damage_from_effect};
 
 // ── 上下文结构体（纯数据，避免 ECS 借用问题）──
 
@@ -45,9 +51,202 @@ pub enum EffectPreview {
     Cleanse,
 }
 
+// ── 执行上下文 ──
+
+/// 待发送的战斗消息（从 ExecuteContext 收集，由系统层发送）
+/// CharacterDied 已移至 Dead Observer 统一发送（规则3：禁止内联死亡处理）
+#[derive(Clone, Debug)]
+pub enum PendingMessage {
+    Damage(DamageApplied),
+    Heal(HealApplied),
+}
+
+/// 效果执行上下文：封装 Execute 阶段所需的 ECS 访问
+/// 使用 &mut World 提供完整的 ECS 访问能力
+/// 通过方法封装保证访问安全
+pub struct ExecuteContext<'w> {
+    world: &'w mut World,
+    /// 收集待发送的消息（由系统层统一发送）
+    pub pending_messages: Vec<PendingMessage>,
+    /// 需要插入 Dead Tag 的实体列表（延迟插入，避免借用冲突）
+    pub dead_entities: Vec<Entity>,
+}
+
+impl<'w> ExecuteContext<'w> {
+    /// 从 World 创建执行上下文
+    pub fn new(world: &'w mut World) -> Self {
+        Self {
+            world,
+            pending_messages: Vec::new(),
+            dead_entities: Vec::new(),
+        }
+    }
+
+    /// 对目标扣血 + 死亡判定 + 收集消息
+    #[allow(clippy::too_many_arguments)]
+    pub fn apply_damage(
+        &mut self,
+        target_entity: Entity,
+        target_name: &str,
+        target_faction: Faction,
+        attacker_entity: Entity,
+        attacker_name: &str,
+        attacker_faction: Faction,
+        amount: i32,
+        is_skill: bool,
+        base_amount: Option<i32>,
+        modifier_entries: &[ModifierEntry],
+        terrain_label: &str,
+        target_coord: IVec2,
+    ) -> bool {
+        // 构建伤害分解
+        let breakdown = base_amount.map(|base| {
+            let modified = amount;
+            DamageBreakdown {
+                base_amount: base,
+                modified_amount: modified,
+                modifiers: modifier_entries.to_vec(),
+                actual_damage: amount,
+            }
+        });
+
+        // 扣血
+        let mut target_died = false;
+        if let Some(mut target_attrs) = self.world.get_mut::<Attributes>(target_entity) {
+            let hp = target_attrs.get(AttributeKind::Hp);
+            let new_hp = (hp - amount as f32).max(0.0);
+            target_attrs.set_vital(AttributeKind::Hp, new_hp);
+
+            // 收集伤害消息
+            self.pending_messages.push(PendingMessage::Damage(DamageApplied {
+                target: target_entity,
+                target_name: target_name.to_string(),
+                target_faction,
+                attacker: attacker_entity,
+                attacker_name: attacker_name.to_string(),
+                attacker_faction,
+                amount,
+                is_skill,
+                terrain_label: terrain_label.to_string(),
+                target_coord,
+                breakdown,
+            }));
+
+            // 死亡判定：记录需要插入 Dead Tag 的实体（延迟插入避免借用冲突）
+            if new_hp <= 0.0 {
+                self.dead_entities.push(target_entity);
+                target_died = true;
+            }
+        }
+        target_died
+    }
+
+    /// 对目标回血（不超过 MaxHp）+ 收集消息
+    pub fn apply_heal(
+        &mut self,
+        target_entity: Entity,
+        target_name: &str,
+        amount: i32,
+    ) {
+        if let Some(mut target_attrs) = self.world.get_mut::<Attributes>(target_entity) {
+            let hp = target_attrs.get(AttributeKind::Hp);
+            let max_hp = target_attrs.get(AttributeKind::MaxHp);
+            let new_hp = (hp + amount as f32).min(max_hp);
+            target_attrs.set_vital(AttributeKind::Hp, new_hp);
+
+            self.pending_messages.push(PendingMessage::Heal(HealApplied {
+                target: target_entity,
+                target_name: target_name.to_string(),
+                amount,
+            }));
+        }
+    }
+
+    /// 对目标施加 Buff
+    pub fn apply_buff(
+        &mut self,
+        target_entity: Entity,
+        buff_id: &str,
+        source: Entity,
+        duration: u32,
+    ) {
+        let buff_data = self.world.resource::<BuffRegistry>().get(buff_id).cloned();
+        if let Some(buff_data) = buff_data {
+            // 使用 QueryState 获取多个可变组件引用
+            let mut query_state: QueryState<(&mut ActiveBuffs, &mut Attributes, &mut GameplayTags)> =
+                QueryState::new(self.world);
+            if let Ok((mut buffs, mut attrs, mut tags)) = query_state.get_mut(self.world, target_entity) {
+                crate::buff::apply_buff(
+                    &mut buffs,
+                    &mut attrs,
+                    &mut tags,
+                    &buff_data,
+                    Some(source),
+                    duration,
+                );
+            }
+        }
+    }
+
+    /// 对目标驱散所有 Debuff
+    pub fn apply_cleanse(&mut self, target_entity: Entity) {
+        let mut query_state: QueryState<(&mut ActiveBuffs, &mut Attributes, &mut GameplayTags)> =
+            QueryState::new(self.world);
+        if let Ok((mut buffs, mut attrs, mut tags)) = query_state.get_mut(self.world, target_entity) {
+            remove_all_debuffs(&mut buffs, &mut attrs, &mut tags);
+        }
+    }
+
+    /// 获取目标名称
+    pub fn get_name(&self, entity: Entity) -> String {
+        self.world
+            .get::<UnitName>(entity)
+            .map(|n| n.0.as_str())
+            .unwrap_or("???")
+            .to_string()
+    }
+
+    /// 获取目标阵营
+    pub fn get_faction(&self, entity: Entity) -> Faction {
+        self.world
+            .get::<Unit>(entity)
+            .map(|u| u.faction)
+            .unwrap_or(Faction::Enemy)
+    }
+
+    /// 获取目标坐标
+    pub fn get_coord(&self, entity: Entity) -> IVec2 {
+        self.world
+            .get::<GridPosition>(entity)
+            .map(|gp| gp.coord)
+            .unwrap_or(IVec2::ZERO)
+    }
+
+    /// 获取地形标签
+    pub fn get_terrain_label(&self, terrain_id: &str) -> String {
+        self.world
+            .resource::<TerrainRegistry>()
+            .get(terrain_id)
+            .map(|def| def.name.as_str())
+            .unwrap_or("???")
+            .to_string()
+    }
+}
+
 // ── EffectHandler trait ──
 
-/// 效果处理规则 trait：描述如何生成/预览一种效果
+/// 效果执行结果
+#[derive(Clone, Debug)]
+pub struct ExecuteOutput {
+    /// 目标是否死亡（用于 OnKill 触发判断）
+    pub target_died: bool,
+    /// 目标实体
+    pub target: Entity,
+    /// 攻击者实体
+    pub source: Entity,
+}
+
+/// 效果处理规则 trait：描述如何生成/预览/执行一种效果
 /// 新增效果类型只需实现此 trait 并注册到 EffectHandlerRegistry，无需修改核心代码
 pub trait EffectHandler: Send + Sync + 'static {
     /// 此处理器负责的效果类型名（与 EffectDef::type_name 对应）
@@ -58,6 +257,10 @@ pub trait EffectHandler: Send + Sync + 'static {
 
     /// 预览效果
     fn preview(&self, def: &EffectDef, ctx: &PreviewContext) -> Option<EffectPreview>;
+
+    /// 执行效果（规则7：通过 trait 分发，禁止 match 分发）
+    /// 返回 None 表示类型不匹配，返回 Some 表示执行成功
+    fn execute(&self, effect: &PendingEffect, ctx: &mut ExecuteContext) -> Option<ExecuteOutput>;
 }
 
 // ── 内置处理器 ──
@@ -127,6 +330,46 @@ impl EffectHandler for DamageHandler {
             lethal: current_hp - amount as f32 <= 0.0,
         })
     }
+
+    fn execute(&self, effect: &PendingEffect, ctx: &mut ExecuteContext) -> Option<ExecuteOutput> {
+        let PendingEffectData::Damage {
+            amount,
+            is_skill,
+            base_amount,
+            modifiers,
+        } = &effect.data
+        else {
+            return None;
+        };
+
+        let target_name = ctx.get_name(effect.target);
+        let target_faction = ctx.get_faction(effect.target);
+        let attacker_name = ctx.get_name(effect.source);
+        let attacker_faction = ctx.get_faction(effect.source);
+        let target_coord = ctx.get_coord(effect.target);
+        let terrain_label = ctx.get_terrain_label(&effect.terrain_id);
+
+        let target_died = ctx.apply_damage(
+            effect.target,
+            &target_name,
+            target_faction,
+            effect.source,
+            &attacker_name,
+            attacker_faction,
+            *amount,
+            *is_skill,
+            *base_amount,
+            modifiers,
+            &terrain_label,
+            target_coord,
+        );
+
+        Some(ExecuteOutput {
+            target_died,
+            target: effect.target,
+            source: effect.source,
+        })
+    }
 }
 
 /// 治疗处理器
@@ -155,6 +398,21 @@ impl EffectHandler for HealHandler {
         let current_hp = ctx.target_attrs.get(AttributeKind::Hp);
         let actual = (*amount as f32).min(max_hp - current_hp).max(0.0) as i32;
         Some(EffectPreview::Heal { amount: actual })
+    }
+
+    fn execute(&self, effect: &PendingEffect, ctx: &mut ExecuteContext) -> Option<ExecuteOutput> {
+        let PendingEffectData::Heal { amount, .. } = &effect.data else {
+            return None;
+        };
+
+        let target_name = ctx.get_name(effect.target);
+        ctx.apply_heal(effect.target, &target_name, *amount);
+
+        Some(ExecuteOutput {
+            target_died: false,
+            target: effect.target,
+            source: effect.source,
+        })
     }
 }
 
@@ -189,6 +447,20 @@ impl EffectHandler for BuffHandler {
             buff_name: buff_name.to_string(),
         })
     }
+
+    fn execute(&self, effect: &PendingEffect, ctx: &mut ExecuteContext) -> Option<ExecuteOutput> {
+        let PendingEffectData::ApplyBuff { buff_id, duration } = &effect.data else {
+            return None;
+        };
+
+        ctx.apply_buff(effect.target, buff_id, effect.source, *duration);
+
+        Some(ExecuteOutput {
+            target_died: false,
+            target: effect.target,
+            source: effect.source,
+        })
+    }
 }
 
 /// 净化处理器
@@ -211,6 +483,20 @@ impl EffectHandler for CleanseHandler {
             return None;
         };
         Some(EffectPreview::Cleanse)
+    }
+
+    fn execute(&self, effect: &PendingEffect, ctx: &mut ExecuteContext) -> Option<ExecuteOutput> {
+        let PendingEffectData::Cleanse = &effect.data else {
+            return None;
+        };
+
+        ctx.apply_cleanse(effect.target);
+
+        Some(ExecuteOutput {
+            target_died: false,
+            target: effect.target,
+            source: effect.source,
+        })
     }
 }
 

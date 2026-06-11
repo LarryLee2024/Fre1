@@ -2,12 +2,9 @@
 
 use super::container::Container;
 use super::definition::{ItemDef, ItemRegistry, ItemType, UseEffect};
-use super::instance::ItemStack;
-use crate::buff::{ActiveBuffs, BuffInstance};
-use crate::core::attribute::{
-    AttributeKind, AttributeModifierInstance, Attributes, BuffInstanceId, ModifierOp,
-    ModifierSource,
-};
+use crate::buff::{ActiveBuffs, BuffRegistry, apply_buff};
+use crate::core::attribute::{AttributeKind, Attributes};
+use crate::core::tag::GameplayTags;
 use bevy::prelude::*;
 
 /// 使用消耗品 Message
@@ -29,9 +26,9 @@ pub struct ItemUsed {
 pub fn use_item_system(
     mut messages: MessageReader<UseItem>,
     mut containers: Query<&mut Container>,
-    mut units: Query<&mut Attributes>,
-    mut buffs: Query<&mut ActiveBuffs>,
+    mut units: Query<(&mut Attributes, &mut ActiveBuffs, &mut GameplayTags)>,
     item_registry: Res<ItemRegistry>,
+    buff_registry: Res<BuffRegistry>,
     mut used_writer: MessageWriter<ItemUsed>,
 ) {
     for msg in messages.read() {
@@ -49,30 +46,9 @@ pub fn use_item_system(
             continue;
         }
 
-        // 应用使用效果
-        if let Ok(mut attrs) = units.get_mut(msg.user_entity) {
-            apply_use_effects(&def, &stack, &mut attrs, msg.user_entity);
-        }
-
-        // 如果有 Buff 效果，通过 Buff 系统处理
-        if let Ok(mut active_buffs) = buffs.get_mut(msg.user_entity) {
-            for effect in &def.use_effects {
-                if let UseEffect::ApplyBuff { buff_id, duration } = effect {
-                    let instance_id = active_buffs.next_instance_id();
-                    let buff_instance = BuffInstance {
-                        instance_id,
-                        buff_id: buff_id.clone(),
-                        name: buff_id.clone(),
-                        remaining_turns: *duration,
-                        source_entity: Some(msg.user_entity),
-                        tags: vec![],
-                        is_buff: true,
-                        dot_damage: 0,
-                        hot_heal: 0,
-                    };
-                    active_buffs.add(buff_instance);
-                }
-            }
+        // 应用使用效果（通过统一查询获取 Attributes + ActiveBuffs + GameplayTags）
+        if let Ok((mut attrs, mut buffs, mut tags)) = units.get_mut(msg.user_entity) {
+            apply_use_effects(&def, &mut attrs, &mut buffs, &mut tags, msg.user_entity, &buff_registry);
         }
 
         // 消耗一个
@@ -92,26 +68,49 @@ pub fn use_item_system(
     }
 }
 
-/// 应用消耗品效果到属性
-fn apply_use_effects(def: &ItemDef, stack: &ItemStack, attrs: &mut Attributes, _user: Entity) {
+/// 应用消耗品效果
+/// RestoreVital：直接修改生命资源当前值（set_vital）
+/// ApplyBuff：通过 apply_buff() 统一管线处理（不变量6合规）
+fn apply_use_effects(
+    def: &ItemDef,
+    attrs: &mut Attributes,
+    buffs: &mut ActiveBuffs,
+    tags: &mut GameplayTags,
+    user_entity: Entity,
+    buff_registry: &BuffRegistry,
+) {
     for effect in &def.use_effects {
-        if let UseEffect::RestoreVital { kind, value } = effect {
-            let source = ModifierSource::buff_source(stack.instance.instance_id);
-            attrs.add_modifier(AttributeModifierInstance {
-                kind: *kind,
-                op: ModifierOp::Add,
-                value: *value,
-                source,
-            });
+        match effect {
+            UseEffect::RestoreVital { kind, value } => {
+                // 直接修改生命资源当前值，不通过修饰符管线
+                // 生命资源恢复是即时效果，不是属性修饰
+                let current = attrs.get(*kind);
+                let max = attrs.get(match kind {
+                    AttributeKind::Hp => AttributeKind::MaxHp,
+                    AttributeKind::Mp => AttributeKind::MaxMp,
+                    AttributeKind::Stamina => AttributeKind::MaxStamina,
+                    _ => *kind,
+                });
+                attrs.set_vital(*kind, (current + value).min(max));
+            }
+            UseEffect::ApplyBuff { buff_id, duration } => {
+                // 通过 apply_buff() 统一管线处理（修饰符+标签+同源刷新）
+                if let Some(buff_data) = buff_registry.get(buff_id) {
+                    apply_buff(buffs, attrs, tags, buff_data, Some(user_entity), *duration);
+                }
+            }
+            // GrantTempTrait 和 CastSkill 由其他系统处理
+            _ => {}
         }
-        // ApplyBuff 和 GrantTempTrait 由 Buff 系统处理
-        // CastSkill 由技能系统处理
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::buff::BuffData;
+    use crate::core::attribute::ModifierOp;
+    use crate::core::tag::GameplayTag;
     use crate::equipment::Rarity;
     use crate::inventory::instance::ItemInstance;
 
@@ -139,20 +138,69 @@ mod tests {
         }
     }
 
+    fn test_buff_registry() -> BuffRegistry {
+        let mut registry = BuffRegistry::default();
+        registry.register(BuffData {
+            id: "attack_up".into(),
+            name: "攻+5".into(),
+            default_duration: 3,
+            modifiers: vec![crate::core::attribute::AttributeModifierDef {
+                kind: AttributeKind::Attack,
+                op: ModifierOp::Add,
+                value: 5.0,
+            }],
+            tags: vec![GameplayTag::BUFF],
+            dot_damage: 0,
+            hot_heal: 0,
+            is_stun: false,
+            is_cleanse: false,
+            is_buff: true,
+        });
+        registry
+    }
+
     #[test]
     fn 消耗品_应用恢复效果() {
         let def = test_consumable_def();
-        let stack = ItemStack::new(ItemInstance::from_def(1, &def), 10);
         let mut attrs = Attributes::default();
-        apply_use_effects(&def, &stack, &mut attrs, Entity::PLACEHOLDER);
-        // 验证修饰符已添加
-        let hp_mods: Vec<_> = attrs
-            .modifiers
-            .iter()
-            .filter(|m| m.kind == AttributeKind::Hp)
-            .collect();
-        assert_eq!(hp_mods.len(), 1);
-        assert_eq!(hp_mods[0].value, 50.0);
+        attrs.fill_vital_resources();
+        // 先扣血，验证恢复
+        attrs.set_vital(AttributeKind::Hp, 10.0);
+        let mut buffs = ActiveBuffs::default();
+        let mut tags = GameplayTags::default();
+        let buff_registry = BuffRegistry::default();
+        let user = Entity::from_bits(1);
+
+        apply_use_effects(&def, &mut attrs, &mut buffs, &mut tags, user, &buff_registry);
+
+        // HP 应恢复 50，但不超过 MaxHp
+        let hp = attrs.get(AttributeKind::Hp);
+        let max_hp = attrs.get(AttributeKind::MaxHp);
+        assert_eq!(hp, (10.0 + 50.0).min(max_hp));
+    }
+
+    #[test]
+    fn 消耗品_应用buff效果() {
+        let mut def = test_consumable_def();
+        def.use_effects = vec![UseEffect::ApplyBuff {
+            buff_id: "attack_up".into(),
+            duration: 2,
+        }];
+
+        let mut attrs = Attributes::default();
+        attrs.fill_vital_resources();
+        let mut buffs = ActiveBuffs::default();
+        let mut tags = GameplayTags::default();
+        let buff_registry = test_buff_registry();
+        let user = Entity::from_bits(1);
+
+        apply_use_effects(&def, &mut attrs, &mut buffs, &mut tags, user, &buff_registry);
+
+        // Buff 实例应被添加
+        assert_eq!(buffs.len(), 1);
+        assert_eq!(buffs.instances[0].buff_id, "attack_up");
+        // 标签应被添加
+        assert!(tags.has(GameplayTag::BUFF));
     }
 
     #[test]
@@ -175,10 +223,16 @@ mod tests {
             container_capacity: None,
             container_max_weight: None,
         };
-        let stack = ItemStack::new(ItemInstance::from_def(1, &def), 1);
+
         let mut attrs = Attributes::default();
-        apply_use_effects(&def, &stack, &mut attrs, Entity::PLACEHOLDER);
-        // 装备没有 use_effects，不应添加修饰符
-        assert!(attrs.modifiers.is_empty());
+        let mut buffs = ActiveBuffs::default();
+        let mut tags = GameplayTags::default();
+        let buff_registry = BuffRegistry::default();
+        let user = Entity::from_bits(1);
+
+        apply_use_effects(&def, &mut attrs, &mut buffs, &mut tags, user, &buff_registry);
+
+        // 装备没有 use_effects，不应修改任何状态
+        assert!(buffs.is_empty());
     }
 }

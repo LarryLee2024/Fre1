@@ -9,7 +9,7 @@ use crate::character::{
     TraitCollection, TraitEffectHandlerRegistry, TraitRegistry, TraitSource, TraitTrigger,
 };
 use crate::core::attribute::{AttributeModifierInstance, Attributes, ModifierSource};
-use crate::core::tag::{GameplayTag, GameplayTags};
+use crate::core::tag::GameplayTags;
 use crate::inventory::container::Container;
 use crate::inventory::definition::ItemRegistry;
 use crate::inventory::instance::{ItemInstance, ItemStack};

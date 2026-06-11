@@ -1,8 +1,8 @@
 (
     id: "cautious",
     name: "谨慎",
-    target_strategy: Nearest,
-    move_strategy: Cautious,
-    skill_strategy: PreferSpecial,
+    target_strategy: "Nearest",
+    move_strategy: "Cautious",
+    skill_strategy: "PreferSpecial",
     skill_priority: [],
 )

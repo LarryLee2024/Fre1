@@ -5,6 +5,8 @@ use crate::core::tag::GameplayTags;
 use bevy::prelude::*;
 
 /// 给目标施加 Buff（修改 ActiveBuffs + Attributes + GameplayTags）
+///
+/// 施加管线：查找定义 → Cleanse 检查 → 同源刷新检查 → 生成实例 → 添加修饰符 → 添加标签
 pub fn apply_buff(
     active_buffs: &mut ActiveBuffs,
     attributes: &mut Attributes,
@@ -13,12 +15,25 @@ pub fn apply_buff(
     source_entity: Option<Entity>,
     duration: u32,
 ) -> BuffInstanceId {
-    // Cleanse 特殊处理：立即驱散所有 debuff
+    // Step2: Cleanse 特殊处理：立即驱散所有 debuff
     if buff_data.is_cleanse {
         remove_all_debuffs(active_buffs, attributes, gameplay_tags);
         return BuffInstanceId(0);
     }
 
+    // Step3: 同源同 buff_id 刷新持续时间（不新增实例、不重复添加修饰符/标签）
+    if let Some(source) = source_entity {
+        if let Some(existing) = active_buffs
+            .instances
+            .iter_mut()
+            .find(|b| b.source_entity == Some(source) && b.buff_id == buff_data.id)
+        {
+            existing.remaining_turns = duration;
+            return existing.instance_id;
+        }
+    }
+
+    // Step3: 生成实例
     let instance_id = active_buffs.next_instance_id();
 
     let instance = BuffInstance {
@@ -33,10 +48,10 @@ pub fn apply_buff(
         hot_heal: buff_data.hot_heal,
     };
 
-    // 添加修饰符到 Attributes（使用 ModifierSource::buff_source）
+    // Step4: 添加修饰符到 Attributes（使用 ModifierSource::buff_source）
     attributes.add_modifiers_from_def(&buff_data.modifiers, instance_id.to_modifier_source());
 
-    // 添加标签到 GameplayTags
+    // Step5: 添加标签到 GameplayTags
     for tag in &buff_data.tags {
         gameplay_tags.add(*tag);
     }
@@ -297,5 +312,64 @@ mod tests {
         // Attack 仍为 15，Defense 恢复为 5
         assert_eq!(attrs.get(AttributeKind::Attack), 15.0);
         assert_eq!(attrs.get(AttributeKind::Defense), 5.0);
+    }
+
+    #[test]
+    fn apply_buff_同源刷新不重复添加修饰符() {
+        let mut buffs = ActiveBuffs::default();
+        let mut attrs = make_test_attrs();
+        let mut tags = GameplayTags::default();
+        let source = Entity::from_bits(42);
+
+        let buff_data = make_buff(
+            "attack_up",
+            true,
+            vec![AttributeModifierDef {
+                kind: AttributeKind::Attack,
+                op: ModifierOp::Add,
+                value: 5.0,
+            }],
+            vec![GameplayTag::BUFF],
+        );
+
+        // 首次施加：Attack = 10 + 5 = 15
+        let id1 = apply_buff(&mut buffs, &mut attrs, &mut tags, &buff_data, Some(source), 2);
+        assert_eq!(attrs.get(AttributeKind::Attack), 15.0);
+        assert_eq!(buffs.len(), 1);
+
+        // 同源刷新：持续时间刷新，修饰符不重复添加
+        let id2 = apply_buff(&mut buffs, &mut attrs, &mut tags, &buff_data, Some(source), 3);
+        assert_eq!(id2, id1); // 返回同一 instance_id
+        assert_eq!(buffs.len(), 1); // 不新增实例
+        assert_eq!(buffs.instances[0].remaining_turns, 3); // 持续时间刷新
+        assert_eq!(attrs.get(AttributeKind::Attack), 15.0); // 修饰符不重复
+    }
+
+    #[test]
+    fn apply_buff_不同源同id可共存() {
+        let mut buffs = ActiveBuffs::default();
+        let mut attrs = make_test_attrs();
+        let mut tags = GameplayTags::default();
+        let source_a = Entity::from_bits(1);
+        let source_b = Entity::from_bits(2);
+
+        let buff_data = make_buff(
+            "attack_up",
+            true,
+            vec![AttributeModifierDef {
+                kind: AttributeKind::Attack,
+                op: ModifierOp::Add,
+                value: 5.0,
+            }],
+            vec![GameplayTag::BUFF],
+        );
+
+        apply_buff(&mut buffs, &mut attrs, &mut tags, &buff_data, Some(source_a), 2);
+        apply_buff(&mut buffs, &mut attrs, &mut tags, &buff_data, Some(source_b), 2);
+
+        // 不同源：两个实例共存，修饰符叠加
+        assert_eq!(buffs.len(), 2);
+        // Attack = 10 + 5 + 5 = 20
+        assert_eq!(attrs.get(AttributeKind::Attack), 20.0);
     }
 }

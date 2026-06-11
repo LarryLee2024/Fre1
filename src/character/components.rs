@@ -7,7 +7,8 @@ use crate::core::tag::GameplayTags;
 use crate::equipment::EquipmentSlots;
 use crate::inventory::container::Container;
 use crate::skill::{SkillCooldowns, SkillSlots};
-use bevy::ecs::lifecycle::HookContext;
+use bevy::ecs::lifecycle::{Add, HookContext};
+use bevy::ecs::observer::On;
 use bevy::ecs::world::DeferredWorld;
 use bevy::prelude::*;
 
@@ -91,6 +92,7 @@ pub struct Dead;
 
 impl Dead {
     /// 死亡 Hook：标记已行动，移除选中状态
+    /// Hook = 固有行为（宪法 5.0），只处理 Dead 组件自身的固有逻辑
     fn on_add_dead(mut world: DeferredWorld, context: HookContext) {
         let entity = context.entity;
         let unit_id = world.get::<UnitId>(entity).map(|id| id.0.as_str()).unwrap_or("?");
@@ -101,6 +103,29 @@ impl Dead {
         }
         // 移除选中标记
         world.commands().entity(entity).remove::<Selected>();
+    }
+}
+
+/// Dead Observer：响应 Dead Tag 添加，发送 CharacterDied Message
+/// Observer = 局部响应（宪法 5.0），负责死亡事件的跨 Feature 广播
+/// 规则3：HP ≤ 0 时只添加 Dead Tag，死亡通知由 Observer 统一发送
+pub fn on_dead_added(
+    trigger: On<Add, Dead>,
+    mut died_writer: bevy::ecs::message::MessageWriter<crate::battle::CharacterDied>,
+    units: Query<(&Unit, &UnitName), With<Dead>>,
+) {
+    if let Ok((unit, name)) = units.get(trigger.entity) {
+        bevy::log::trace!(
+            target: "character",
+            entity = ?trigger.entity,
+            name = %name.0,
+            "CharacterDied 消息发送(Dead Observer)"
+        );
+        died_writer.write(crate::battle::CharacterDied {
+            entity: trigger.entity,
+            name: name.0.clone(),
+            faction: unit.faction,
+        });
     }
 }
 

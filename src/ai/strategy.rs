@@ -15,7 +15,7 @@ use super::targeting::UnitSnapshot;
 
 /// 目标选择规则 trait：描述如何选择攻击目标
 pub(crate) trait TargetSelector: Send + Sync + 'static {
-    /// 策略标识（与 RON 中的 TargetStrategy variant 名对应）
+    /// 策略标识（与 RON 中的策略名称字符串对应）
     fn strategy_name(&self) -> &'static str;
     /// 从候选单位中选择目标坐标
     fn select(&self, candidates: &[UnitSnapshot], my_coord: IVec2) -> Option<IVec2>;

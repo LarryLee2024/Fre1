@@ -1,9 +1,6 @@
 use crate::battle::CombatIntent;
 use crate::battle::manhattan_distance;
-use crate::buff::ActiveBuffs;
-use crate::character::{
-    AiBehaviorId, Dead, Faction, GridPosition, MovingUnit, Unit, UnitName, spawn_path_arrows,
-};
+use crate::character::{AiBehaviorId, Dead, Faction, GridPosition, MovingUnit, Unit, UnitName, spawn_path_arrows};
 use crate::core::attribute::{AttributeKind, Attributes};
 use crate::core::tag::GameplayTags;
 use crate::map::TerrainRegistry;
@@ -23,6 +20,7 @@ use super::targeting::{UnitSnapshot, select_target_coord};
 ///
 /// 当 TurnOrder 当前单位是敌方时，AI 计时器到期后自动决策
 /// 攻击效果通过统一的 Effect Pipeline 处理
+/// AI 仅设置 CombatIntent / MovingUnit，不直接执行效果（不变量1/2合规）
 pub fn enemy_ai_system(
     mut commands: Commands,
     time: Res<Time>,
@@ -39,18 +37,16 @@ pub fn enemy_ai_system(
     terrain_registry: Res<TerrainRegistry>,
     occupancy: Res<OccupancyGrid>,
     mut combat_intent: ResMut<CombatIntent>,
-    mut units: Query<
+    units: Query<
         (
             Entity,
-            &mut Unit,
-            &mut GridPosition,
-            &mut Transform,
+            &Unit,
+            &GridPosition,
             &UnitName,
             &Attributes,
             &SkillSlots,
-            &mut SkillCooldowns,
-            &mut ActiveBuffs,
-            &mut GameplayTags,
+            &SkillCooldowns,
+            &GameplayTags,
             &AiBehaviorId,
         ),
         Without<Dead>,
@@ -70,7 +66,7 @@ pub fn enemy_ai_system(
     // 检查当前单位是否是敌方
     let current_faction = units
         .get(current_entity)
-        .map(|(_, u, _, _, _, _, _, _, _, _, _)| u.faction)
+        .map(|(_, u, _, _, _, _, _, _, _)| u.faction)
         .ok();
     if current_faction != Some(Faction::Enemy) {
         return;
@@ -82,11 +78,11 @@ pub fn enemy_ai_system(
         return;
     }
 
-    // 收集所有单位快照
+    // 收集所有单位快照（不变量3：通过 UnitSnapshot 避免借用冲突）
     let snapshots: Vec<UnitSnapshot> = units
         .iter()
         .map(
-            |(e, u, gp, _, _name, attrs, skills, cooldowns, _, tags, ai_id)| UnitSnapshot {
+            |(e, u, gp, _name, attrs, skills, cooldowns, tags, ai_id)| UnitSnapshot {
                 entity: e,
                 faction: u.faction,
                 coord: gp.coord,
@@ -190,27 +186,13 @@ pub fn enemy_ai_system(
         vec![]
     };
 
-    // 设置冷却
-    if let Some(skill_data) = skill_registry.get(skill_id) {
-        if skill_data.cooldown > 0 {
-            if let Ok((_, _, _, _, _, _, _, mut cooldowns, _, _, _)) =
-                units.get_mut(snapshot.entity)
-            {
-                cooldowns.set(skill_id, skill_data.cooldown);
-            }
-        }
-    }
-
-    // 标记已行动
-    if let Ok((_, mut unit, _, _, _, _, _, _, _, _, _)) = units.get_mut(snapshot.entity) {
-        unit.acted = true;
-    }
-
-    // 设置 CombatIntent，让 Effect Pipeline 处理攻击
+    // 设置 CombatIntent，让 Effect Pipeline 处理攻击（不变量1/2合规）
+    // 冷却设置和 acted 标记由 Effect Pipeline 统一处理，AI 不直接执行效果
     if let Some(target_entity) = attack_target {
-        let target_coord = units
-            .get(target_entity)
-            .map(|(_, _, gp, _, _, _, _, _, _, _, _)| gp.coord)
+        let target_coord = snapshots
+            .iter()
+            .find(|s| s.entity == target_entity)
+            .map(|s| s.coord)
             .unwrap_or_default();
 
         combat_intent.source_entity = Some(snapshot.entity);
@@ -230,6 +212,11 @@ pub fn enemy_ai_system(
         }
     } else {
         // 没有攻击目标，待机
+        // 设置 source_entity 以便 Effect Pipeline 统一标记 acted
+        combat_intent.source_entity = Some(snapshot.entity);
+        combat_intent.target_coord = None;
+        combat_intent.skill_id = None;
+
         if path.is_empty() {
             // 不移动，路由到下一个单位
             // 由 route_after_action 处理

@@ -1,340 +1,168 @@
 // 步骤 3：执行效果（纯逻辑：扣血/加 Buff/击杀判定）
 // 表现层（VFX/日志）通过 Message 响应，不在此处调用
+// 规则7：通过 EffectHandler trait 分发，禁止 match 分发
 
-use crate::battle::record::DamageBreakdown;
-use crate::battle::{CharacterDied, DamageApplied, HealApplied};
-use crate::buff::{ActiveBuffs, BuffRegistry, apply_buff, remove_all_debuffs};
-use crate::character::{Dead, Faction, GridPosition, Unit, UnitName};
-use crate::core::attribute::{AttributeKind, Attributes};
-use crate::core::effect::{EffectQueue, PendingEffectData};
-use crate::core::modifier_rule::ModifierEntry;
-use crate::core::tag::GameplayTags;
-use crate::map::TerrainRegistry;
-use bevy::ecs::message::MessageWriter;
+use crate::battle::{DamageApplied, HealApplied};
+use crate::character::{TraitCollection, TraitEffectHandlerRegistry, TraitRegistry};
+use crate::core::effect::{
+    EffectHandlerRegistry, EffectQueue, ExecuteContext, ExecuteOutput, PendingMessage,
+};
 use bevy::prelude::*;
 
-/// 执行效果（系统入口，委托给 execute_effects_inline）
-pub fn execute_effects(
-    mut commands: Commands,
-    mut queue: ResMut<EffectQueue>,
-    mut attrs_query: Query<&mut Attributes>,
-    mut buffs_query: Query<&mut ActiveBuffs>,
-    mut tags_query: Query<&mut GameplayTags>,
-    gp_query: Query<&GridPosition>,
-    name_query: Query<&UnitName>,
-    unit_query: Query<&Unit>,
-    buff_registry: Res<BuffRegistry>,
-    terrain_registry: Res<TerrainRegistry>,
-    mut died_writer: MessageWriter<CharacterDied>,
-    mut damage_writer: MessageWriter<DamageApplied>,
-    mut heal_writer: MessageWriter<HealApplied>,
-) {
-    execute_effects_inline(
-        &mut commands,
-        &mut queue,
-        &mut attrs_query,
-        &mut buffs_query,
-        &mut tags_query,
-        &gp_query,
-        &name_query,
-        &unit_query,
-        &buff_registry,
-        &terrain_registry,
-        &mut died_writer,
-        &mut damage_writer,
-        &mut heal_writer,
-    );
-}
+use super::trait_trigger::{trigger_on_hit_traits, trigger_on_kill_traits};
 
-/// 执行效果的内联实现
-#[allow(clippy::too_many_arguments)]
-pub fn execute_effects_inline(
-    commands: &mut Commands,
-    queue: &mut ResMut<EffectQueue>,
-    attrs_query: &mut Query<&mut Attributes>,
-    buffs_query: &mut Query<&mut ActiveBuffs>,
-    tags_query: &mut Query<&mut GameplayTags>,
-    gp_query: &Query<&GridPosition>,
-    name_query: &Query<&UnitName>,
-    unit_query: &Query<&Unit>,
-    buff_registry: &BuffRegistry,
-    terrain_registry: &TerrainRegistry,
-    died_writer: &mut MessageWriter<CharacterDied>,
-    damage_writer: &mut MessageWriter<DamageApplied>,
-    heal_writer: &mut MessageWriter<HealApplied>,
-) {
-    for effect in queue.pending.drain(..) {
-        let attacker_name = name_query
-            .get(effect.source)
-            .map(|n| n.0.as_str())
-            .unwrap_or("???")
-            .to_string();
-        let attacker_faction = unit_query
-            .get(effect.source)
-            .map(|u| u.faction)
-            .unwrap_or(Faction::Enemy);
-        let target_name = name_query
-            .get(effect.target)
-            .map(|n| n.0.as_str())
-            .unwrap_or("???")
-            .to_string();
-        let target_faction = unit_query
-            .get(effect.target)
-            .map(|u| u.faction)
-            .unwrap_or(Faction::Enemy);
-        let target_coord = gp_query
-            .get(effect.target)
-            .map(|gp| gp.coord)
-            .unwrap_or(IVec2::ZERO);
-        let terrain_label = terrain_registry
-            .get(&effect.terrain_id)
-            .map(|def| def.name.as_str())
-            .unwrap_or("???")
-            .to_string();
+/// 执行效果（系统入口，通过 EffectHandlerRegistry trait 分发）
+/// 规则4：OnHit/OnKill 在 Execute 阶段触发
+///
+/// 使用 &mut World 模式，因为 EffectHandler trait 的 execute 方法需要 ExecuteContext
+/// （持有 &mut World），而 handler 引用来自 EffectHandlerRegistry（也存储在 World 中）。
+/// 通过 resource_scope 临时取出 Registry，避免同时可变/不可变借用 World 的冲突。
+pub fn execute_effects(world: &mut World) {
+    // 1. 收集效果数据
+    let effects: Vec<_> = {
+        let mut queue = world.resource_mut::<EffectQueue>();
+        queue.pending.drain(..).collect()
+    };
 
-        match effect.data {
-            PendingEffectData::Damage {
-                amount,
-                is_skill,
-                base_amount,
-                modifiers,
-            } => {
-                if let Ok(mut target_attrs) = attrs_query.get_mut(effect.target) {
-                    apply_damage_effect(
-                        &mut target_attrs,
-                        effect.target,
-                        &target_name,
-                        target_faction,
-                        effect.source,
-                        &attacker_name,
-                        attacker_faction,
-                        amount,
-                        is_skill,
-                        base_amount,
-                        &modifiers,
-                        &terrain_label,
-                        target_coord,
-                        commands,
-                        died_writer,
-                        damage_writer,
-                    );
-                }
-            }
-            PendingEffectData::Heal { amount, .. } => {
-                if let Ok(mut target_attrs) = attrs_query.get_mut(effect.target) {
-                    apply_heal_effect(
-                        &mut target_attrs,
-                        effect.target,
-                        &target_name,
-                        amount,
-                        heal_writer,
-                    );
-                }
-            }
-            PendingEffectData::ApplyBuff { buff_id, duration } => {
-                if let (Ok(mut target_buffs), Ok(mut target_attrs), Ok(mut target_tags)) = (
-                    buffs_query.get_mut(effect.target),
-                    attrs_query.get_mut(effect.target),
-                    tags_query.get_mut(effect.target),
-                ) {
-                    bevy::log::trace!(
-                        target: "battle",
-                        target_entity = ?effect.target,
-                        target_name = %target_name,
-                        buff_id = %buff_id,
-                        duration = duration,
-                        "ApplyBuff 效果执行"
-                    );
-                    apply_buff_effect(
-                        &mut target_buffs,
-                        &mut target_attrs,
-                        &mut target_tags,
-                        &buff_id,
-                        effect.source,
-                        duration,
-                        buff_registry,
-                    );
-                }
-            }
-            PendingEffectData::Cleanse => {
-                if let (Ok(mut target_buffs), Ok(mut target_attrs), Ok(mut target_tags)) = (
-                    buffs_query.get_mut(effect.target),
-                    attrs_query.get_mut(effect.target),
-                    tags_query.get_mut(effect.target),
-                ) {
-                    bevy::log::trace!(
-                        target: "battle",
-                        target_entity = ?effect.target,
-                        target_name = %target_name,
-                        "Cleanse 效果执行"
-                    );
-                    apply_cleanse_effect(&mut target_buffs, &mut target_attrs, &mut target_tags);
-                }
-            }
-        }
-    }
-}
+    // 收集执行结果（用于 OnHit/OnKill 触发）
+    let mut results: Vec<ExecuteOutput> = Vec::new();
+    // 收集所有待发送的消息
+    let mut all_pending_messages: Vec<PendingMessage> = Vec::new();
+    // 收集需要插入 Dead Tag 的实体
+    let mut all_dead_entities: Vec<Entity> = Vec::new();
 
-// ── 纯逻辑效果执行函数 ──
+    // 2. 执行每个效果
+    // 使用 resource_scope 临时取出 EffectHandlerRegistry，
+    // 避免同时 &World（handler 查找）和 &mut World（ExecuteContext）的借用冲突
+    world.resource_scope(|world, registry: Mut<EffectHandlerRegistry>| {
+        for effect in effects {
+            let type_name = effect.data.type_name();
 
-/// 应用伤害效果：扣血 + 死亡判定，通过 Message 通知表现层
-#[allow(clippy::too_many_arguments)]
-pub fn apply_damage_effect(
-    target_attrs: &mut Attributes,
-    target_entity: Entity,
-    target_name: &str,
-    target_faction: Faction,
-    attacker_entity: Entity,
-    attacker_name: &str,
-    attacker_faction: Faction,
-    amount: i32,
-    is_skill: bool,
-    base_amount: Option<i32>,
-    modifier_entries: &[ModifierEntry],
-    terrain_label: &str,
-    target_coord: IVec2,
-    commands: &mut Commands,
-    died_writer: &mut MessageWriter<CharacterDied>,
-    damage_writer: &mut MessageWriter<DamageApplied>,
-) {
-    // 构建伤害分解
-    let breakdown = base_amount.map(|base| {
-        let modified = amount;
-        DamageBreakdown {
-            base_amount: base,
-            modified_amount: modified,
-            modifiers: modifier_entries.to_vec(),
-            actual_damage: amount,
+            // 规则7：通过 EffectHandlerRegistry 查找 trait 对象分发，禁止 match 分发
+            let Some(handler) = registry.find(type_name) else {
+                bevy::log::warn!(
+                    target: "battle",
+                    effect_type = %type_name,
+                    "未注册的效果处理器，跳过效果执行"
+                );
+                continue;
+            };
+
+            // 创建 ExecuteContext 并执行
+            let mut ctx = ExecuteContext::new(world);
+            if let Some(output) = handler.execute(&effect, &mut ctx) {
+                bevy::log::trace!(
+                    target: "battle",
+                    effect_type = %type_name,
+                    source = ?effect.source,
+                    target = ?effect.target,
+                    target_died = output.target_died,
+                    "效果执行完成"
+                );
+                results.push(output);
+            }
+            all_pending_messages.extend(ctx.pending_messages);
+            all_dead_entities.extend(ctx.dead_entities);
         }
     });
 
-    // 扣血
-    let hp = target_attrs.get(AttributeKind::Hp);
-    let new_hp = (hp - amount as f32).max(0.0);
-    target_attrs.set_vital(AttributeKind::Hp, new_hp);
+    // 3. 规则4：OnHit/OnKill 在 Execute 阶段触发
+    // 使用 resource_scope 获取 TraitRegistry，避免与 resource_mut 借用冲突
+    world.resource_scope(|world, trait_registry: Mut<TraitRegistry>| {
+        world.resource_scope(|world, trait_effect_handlers: Mut<TraitEffectHandlerRegistry>| {
+            for output in &results {
+                // OnHit：目标触发
+                let target_traits = world.get::<TraitCollection>(output.target).cloned();
+                if let Some(target_traits) = target_traits {
+                    let mut queue = world.resource_mut::<EffectQueue>();
+                    trigger_on_hit_traits(
+                        output.target,
+                        output.source,
+                        &target_traits,
+                        &trait_registry,
+                        &trait_effect_handlers,
+                        &mut queue,
+                    );
+                }
 
-    // 发送伤害消息（VFX/日志/表现层响应）
-    bevy::log::trace!(
-        target: "battle",
-        target_entity = ?target_entity,
-        target_name = %target_name,
-        attacker_entity = ?attacker_entity,
-        attacker_name = %attacker_name,
-        damage = amount,
-        is_skill = is_skill,
-        "DamageApplied 消息发送"
-    );
-    damage_writer.write(DamageApplied {
-        target: target_entity,
-        target_name: target_name.to_string(),
-        target_faction,
-        attacker: attacker_entity,
-        attacker_name: attacker_name.to_string(),
-        attacker_faction,
-        amount,
-        is_skill,
-        terrain_label: terrain_label.to_string(),
-        target_coord,
-        breakdown,
-    });
-
-    // 死亡判定
-    if new_hp <= 0.0 {
-        commands.entity(target_entity).insert(Dead);
-        bevy::log::trace!(
-            target: "battle",
-            target_entity = ?target_entity,
-            target_name = %target_name,
-            "CharacterDied 消息发送"
-        );
-        died_writer.write(CharacterDied {
-            entity: target_entity,
-            name: target_name.to_string(),
-            faction: target_faction,
+                // OnKill：攻击者击杀时触发
+                if output.target_died {
+                    let killer_traits = world.get::<TraitCollection>(output.source).cloned();
+                    if let Some(killer_traits) = killer_traits {
+                        let mut queue = world.resource_mut::<EffectQueue>();
+                        trigger_on_kill_traits(
+                            output.source,
+                            output.target,
+                            &killer_traits,
+                            &trait_registry,
+                            &trait_effect_handlers,
+                            &mut queue,
+                        );
+                    }
+                }
+            }
         });
-    }
-}
-
-/// 应用治疗效果：回血，通过 Message 通知表现层
-pub fn apply_heal_effect(
-    target_attrs: &mut Attributes,
-    target_entity: Entity,
-    target_name: &str,
-    amount: i32,
-    heal_writer: &mut MessageWriter<HealApplied>,
-) {
-    let hp = target_attrs.get(AttributeKind::Hp);
-    let max_hp = target_attrs.get(AttributeKind::MaxHp);
-    let new_hp = (hp + amount as f32).min(max_hp);
-    target_attrs.set_vital(AttributeKind::Hp, new_hp);
-
-    bevy::log::trace!(
-        target: "battle",
-        target_entity = ?target_entity,
-        target_name = %target_name,
-        heal = amount,
-        "HealApplied 消息发送"
-    );
-    heal_writer.write(HealApplied {
-        target: target_entity,
-        target_name: target_name.to_string(),
-        amount,
     });
-}
 
-/// 应用 Buff 效果（纯逻辑，无表现层调用）
-pub fn apply_buff_effect(
-    target_buffs: &mut ActiveBuffs,
-    target_attrs: &mut Attributes,
-    target_tags: &mut GameplayTags,
-    buff_id: &str,
-    source: Entity,
-    duration: u32,
-    buff_registry: &BuffRegistry,
-) {
-    if let Some(buff_data) = buff_registry.get(buff_id) {
-        apply_buff(
-            target_buffs,
-            target_attrs,
-            target_tags,
-            buff_data,
-            Some(source),
-            duration,
-        );
+    // 4. 执行 OnHit/OnKill 产生的额外效果（仅 ApplyBuff，不参与 Modify）
+    let trait_effects: Vec<_> = {
+        let mut queue = world.resource_mut::<EffectQueue>();
+        queue.pending.drain(..).collect()
+    };
+
+    world.resource_scope(|world, registry: Mut<EffectHandlerRegistry>| {
+        for effect in trait_effects {
+            let type_name = effect.data.type_name();
+            let Some(handler) = registry.find(type_name) else {
+                continue;
+            };
+            let mut ctx = ExecuteContext::new(world);
+            handler.execute(&effect, &mut ctx);
+            all_pending_messages.extend(ctx.pending_messages);
+            all_dead_entities.extend(ctx.dead_entities);
+        }
+    });
+
+    // 5. 延迟插入 Dead Tag（避免在 Query 借用期间插入组件）
+    for entity in all_dead_entities {
+        world.entity_mut(entity).insert(crate::character::Dead);
     }
-}
 
-/// 应用净化效果（纯逻辑，无表现层调用）
-pub fn apply_cleanse_effect(
-    target_buffs: &mut ActiveBuffs,
-    target_attrs: &mut Attributes,
-    target_tags: &mut GameplayTags,
-) {
-    remove_all_debuffs(target_buffs, target_attrs, target_tags);
+    // 6. 发送所有收集的消息
+    for msg in all_pending_messages {
+        match msg {
+            PendingMessage::Damage(d) => {
+                world.resource_mut::<bevy::ecs::message::Messages<DamageApplied>>().write(d);
+            }
+            PendingMessage::Heal(h) => {
+                world.resource_mut::<bevy::ecs::message::Messages<HealApplied>>().write(h);
+            }
+        }
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::attribute::AttributeKind;
+    use crate::buff::{ActiveBuffs, BuffRegistry};
+    use crate::character::{Dead, Faction, GridPosition, Unit, UnitName};
+    use crate::core::attribute::{AttributeKind, Attributes};
     use crate::core::effect::{EffectQueue, PendingEffect, PendingEffectData};
-    use crate::core::registry_loader::RegistryLoader;
     use crate::core::tag::GameplayTags;
+    use crate::map::TerrainRegistry;
+    use crate::skill::SkillSlots;
 
-    /// 测试用：创建带默认数据的 BuffRegistry（不依赖文件系统）
     fn test_buff_registry() -> BuffRegistry {
         let mut reg = BuffRegistry::default();
         reg.register_defaults();
         reg
     }
 
-    /// 测试用：创建带默认数据的 TerrainRegistry（不依赖文件系统）
     fn test_terrain_registry() -> TerrainRegistry {
         let mut reg = TerrainRegistry::default();
         reg.register_defaults();
         reg
     }
-    use crate::skill::SkillSlots;
 
     fn make_test_attrs(hp: f32, max_hp: f32) -> Attributes {
         let mut attrs = Attributes::default();
@@ -349,19 +177,18 @@ mod tests {
         let mut app = App::new();
         app.add_plugins(MinimalPlugins)
             .add_message::<DamageApplied>()
-            .add_message::<CharacterDied>()
             .add_message::<HealApplied>()
             .insert_resource(test_buff_registry())
             .insert_resource(test_terrain_registry())
             .insert_resource(EffectQueue::default())
+            .insert_resource(EffectHandlerRegistry::default())
+            .insert_resource(TraitRegistry::default())
+            .insert_resource(TraitEffectHandlerRegistry::with_defaults())
             .add_systems(Update, execute_effects);
         let target = app
             .world_mut()
             .spawn((
-                Unit {
-                    faction: Faction::Enemy,
-                    acted: false,
-                },
+                Unit { faction: Faction::Enemy, acted: false },
                 make_test_attrs(30.0, 30.0),
                 SkillSlots::default(),
                 ActiveBuffs::default(),
@@ -373,25 +200,17 @@ mod tests {
         let source = app
             .world_mut()
             .spawn((
-                Unit {
-                    faction: Faction::Player,
-                    acted: false,
-                },
+                Unit { faction: Faction::Player, acted: false },
                 UnitName("战士".into()),
             ))
             .id();
         let mut queue = app.world_mut().resource_mut::<EffectQueue>();
         queue.pending.push(PendingEffect {
-            source,
-            target,
+            source, target,
             data: PendingEffectData::Damage {
-                amount: 10,
-                is_skill: false,
-                base_amount: Some(10),
-                modifiers: Vec::new(),
+                amount: 10, is_skill: false, base_amount: Some(10), modifiers: Vec::new(),
             },
-            source_tags: vec![],
-            terrain_id: "plain".into(),
+            source_tags: vec![], terrain_id: "plain".into(),
         });
         app.update();
         let attrs = app.world().get::<Attributes>(target).unwrap();
@@ -403,19 +222,18 @@ mod tests {
         let mut app = App::new();
         app.add_plugins(MinimalPlugins)
             .add_message::<DamageApplied>()
-            .add_message::<CharacterDied>()
             .add_message::<HealApplied>()
             .insert_resource(test_buff_registry())
             .insert_resource(test_terrain_registry())
             .insert_resource(EffectQueue::default())
+            .insert_resource(EffectHandlerRegistry::default())
+            .insert_resource(TraitRegistry::default())
+            .insert_resource(TraitEffectHandlerRegistry::with_defaults())
             .add_systems(Update, execute_effects);
         let target = app
             .world_mut()
             .spawn((
-                Unit {
-                    faction: Faction::Enemy,
-                    acted: false,
-                },
+                Unit { faction: Faction::Enemy, acted: false },
                 make_test_attrs(5.0, 30.0),
                 SkillSlots::default(),
                 ActiveBuffs::default(),
@@ -427,25 +245,17 @@ mod tests {
         let source = app
             .world_mut()
             .spawn((
-                Unit {
-                    faction: Faction::Player,
-                    acted: false,
-                },
+                Unit { faction: Faction::Player, acted: false },
                 UnitName("战士".into()),
             ))
             .id();
         let mut queue = app.world_mut().resource_mut::<EffectQueue>();
         queue.pending.push(PendingEffect {
-            source,
-            target,
+            source, target,
             data: PendingEffectData::Damage {
-                amount: 10,
-                is_skill: false,
-                base_amount: Some(10),
-                modifiers: Vec::new(),
+                amount: 10, is_skill: false, base_amount: Some(10), modifiers: Vec::new(),
             },
-            source_tags: vec![],
-            terrain_id: "plain".into(),
+            source_tags: vec![], terrain_id: "plain".into(),
         });
         app.update();
         assert!(app.world().get::<Dead>(target).is_some());
@@ -456,19 +266,18 @@ mod tests {
         let mut app = App::new();
         app.add_plugins(MinimalPlugins)
             .add_message::<DamageApplied>()
-            .add_message::<CharacterDied>()
             .add_message::<HealApplied>()
             .insert_resource(test_buff_registry())
             .insert_resource(test_terrain_registry())
             .insert_resource(EffectQueue::default())
+            .insert_resource(EffectHandlerRegistry::default())
+            .insert_resource(TraitRegistry::default())
+            .insert_resource(TraitEffectHandlerRegistry::with_defaults())
             .add_systems(Update, execute_effects);
         let target = app
             .world_mut()
             .spawn((
-                Unit {
-                    faction: Faction::Player,
-                    acted: false,
-                },
+                Unit { faction: Faction::Player, acted: false },
                 make_test_attrs(10.0, 30.0),
                 SkillSlots::default(),
                 ActiveBuffs::default(),
@@ -480,23 +289,15 @@ mod tests {
         let source = app
             .world_mut()
             .spawn((
-                Unit {
-                    faction: Faction::Player,
-                    acted: false,
-                },
+                Unit { faction: Faction::Player, acted: false },
                 UnitName("牧师".into()),
             ))
             .id();
         let mut queue = app.world_mut().resource_mut::<EffectQueue>();
         queue.pending.push(PendingEffect {
-            source,
-            target,
-            data: PendingEffectData::Heal {
-                amount: 15,
-                base_amount: Some(15),
-            },
-            source_tags: vec![],
-            terrain_id: "plain".into(),
+            source, target,
+            data: PendingEffectData::Heal { amount: 15, base_amount: Some(15) },
+            source_tags: vec![], terrain_id: "plain".into(),
         });
         app.update();
         let attrs = app.world().get::<Attributes>(target).unwrap();
@@ -508,19 +309,18 @@ mod tests {
         let mut app = App::new();
         app.add_plugins(MinimalPlugins)
             .add_message::<DamageApplied>()
-            .add_message::<CharacterDied>()
             .add_message::<HealApplied>()
             .insert_resource(test_buff_registry())
             .insert_resource(test_terrain_registry())
             .insert_resource(EffectQueue::default())
+            .insert_resource(EffectHandlerRegistry::default())
+            .insert_resource(TraitRegistry::default())
+            .insert_resource(TraitEffectHandlerRegistry::with_defaults())
             .add_systems(Update, execute_effects);
         let target = app
             .world_mut()
             .spawn((
-                Unit {
-                    faction: Faction::Player,
-                    acted: false,
-                },
+                Unit { faction: Faction::Player, acted: false },
                 make_test_attrs(25.0, 30.0),
                 SkillSlots::default(),
                 ActiveBuffs::default(),
@@ -532,23 +332,15 @@ mod tests {
         let source = app
             .world_mut()
             .spawn((
-                Unit {
-                    faction: Faction::Player,
-                    acted: false,
-                },
+                Unit { faction: Faction::Player, acted: false },
                 UnitName("牧师".into()),
             ))
             .id();
         let mut queue = app.world_mut().resource_mut::<EffectQueue>();
         queue.pending.push(PendingEffect {
-            source,
-            target,
-            data: PendingEffectData::Heal {
-                amount: 100,
-                base_amount: Some(100),
-            },
-            source_tags: vec![],
-            terrain_id: "plain".into(),
+            source, target,
+            data: PendingEffectData::Heal { amount: 100, base_amount: Some(100) },
+            source_tags: vec![], terrain_id: "plain".into(),
         });
         app.update();
         let attrs = app.world().get::<Attributes>(target).unwrap();
@@ -562,15 +354,9 @@ mod tests {
         attrs.fill_vital_resources();
         let mut tags = GameplayTags::default();
         let registry = test_buff_registry();
-        apply_buff_effect(
-            &mut buffs,
-            &mut attrs,
-            &mut tags,
-            "attack_up",
-            Entity::from_bits(1),
-            3,
-            &registry,
-        );
+        if let Some(buff_data) = registry.get("attack_up") {
+            crate::buff::apply_buff(&mut buffs, &mut attrs, &mut tags, buff_data, Some(Entity::from_bits(1)), 3);
+        }
         assert!(buffs.iter().any(|b| b.name == "攻+5"));
     }
 
@@ -581,38 +367,9 @@ mod tests {
         attrs.fill_vital_resources();
         let mut tags = GameplayTags::default();
         let registry = test_buff_registry();
-        apply_buff_effect(
-            &mut buffs,
-            &mut attrs,
-            &mut tags,
-            "nonexistent_buff",
-            Entity::from_bits(1),
-            3,
-            &registry,
-        );
+        if let Some(buff_data) = registry.get("nonexistent_buff") {
+            crate::buff::apply_buff(&mut buffs, &mut attrs, &mut tags, buff_data, Some(Entity::from_bits(1)), 3);
+        }
         assert_eq!(buffs.iter().count(), 0);
-    }
-
-    #[test]
-    fn apply_cleanse_effect_移除所有debuff() {
-        let mut buffs = ActiveBuffs::default();
-        let mut attrs = Attributes::default();
-        attrs.fill_vital_resources();
-        let mut tags = GameplayTags::default();
-        let registry = test_buff_registry();
-        apply_buff_effect(
-            &mut buffs,
-            &mut attrs,
-            &mut tags,
-            "burn",
-            Entity::from_bits(1),
-            3,
-            &registry,
-        );
-        let debuff_count_before = buffs.iter().filter(|b| !b.is_buff).count();
-        assert!(debuff_count_before > 0);
-        apply_cleanse_effect(&mut buffs, &mut attrs, &mut tags);
-        let debuff_count_after = buffs.iter().filter(|b| !b.is_buff).count();
-        assert_eq!(debuff_count_after, 0);
     }
 }

@@ -7,7 +7,8 @@ mod types;
 // 重新导出所有公共类型，保持外部导入路径兼容
 pub use handler::{
     BuffHandler, CleanseHandler, DamageHandler, EffectHandler, EffectHandlerRegistry,
-    EffectPreview, GenerateContext, HealHandler, PreviewContext,
+    EffectPreview, ExecuteContext, ExecuteOutput, GenerateContext, HealHandler, PendingMessage,
+    PreviewContext,
 };
 pub use types::*;
 

@@ -148,7 +148,7 @@ fn spawn_unit_from_template(
 
     // 穿戴初始装备
     let mut equipment_slots = EquipmentSlots::default();
-    let mut inventory = Container::backpack();
+    let inventory = Container::backpack();
     let mut trait_collection = trait_collection;
     for (slot, def_id) in &template.initial_equipment {
         if let Some(def) = equipment_registry.get(def_id) {
