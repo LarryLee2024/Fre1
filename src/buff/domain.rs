@@ -77,7 +77,7 @@ impl BuffRegistry {
     }
 
     /// 注册内置默认 Buff（确保基础功能可用）
-    fn register_defaults(&mut self) {
+    pub fn register_defaults(&mut self) {
         if !self.buffs.is_empty() {
             return;
         }

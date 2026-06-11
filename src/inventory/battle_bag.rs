@@ -1,6 +1,6 @@
 // 战场背包：BattleInventory 组件 + 战斗开始/结束时的创建与合并
 
-use super::container::Container;
+use super::container::{Container, ContainerKind};
 use super::definition::ItemRegistry;
 use bevy::prelude::*;
 

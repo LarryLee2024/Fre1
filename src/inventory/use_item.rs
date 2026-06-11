@@ -261,7 +261,7 @@ mod tests {
         // HP 应恢复 50，但不超过 MaxHp
         let hp = attrs.get(AttributeKind::Hp);
         let max_hp = attrs.get(AttributeKind::MaxHp);
-        assert_eq!(hp, (10.0 + 50.0).min(max_hp));
+        assert_eq!(hp, (10.0_f32 + 50.0).min(max_hp));
     }
 
     #[test]

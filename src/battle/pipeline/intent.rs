@@ -43,9 +43,13 @@ fn clear_combat_intent(intent: &mut CombatIntent) {
 /// 新逻辑：从 TurnOrder 队列前进到下一个存活的单位
 /// 注意：通过检查 HP 判断存活，不依赖 Dead 组件（Dead 是 deferred command，
 /// 在 OnEnter 阶段尚未应用）
+/// B0001 fix: 接受 &non_selected_units 完整 query 类型以避免查询冲突
 fn route_after_action(
     turn_order: &mut TurnOrder,
-    units: &Query<(&Unit, &Attributes), Without<Selected>>,
+    non_selected_units: &Query<
+        (&mut Unit, &Attributes, &mut SkillCooldowns, &GameplayTags),
+        Without<Selected>,
+    >,
     next_phase: &mut ResMut<NextState<TurnPhase>>,
     ai_timer: &mut AiTimer,
     turn_state: &mut TurnState,
@@ -55,7 +59,7 @@ fn route_after_action(
         match turn_order.advance() {
             Some(next_entity) => {
                 // 检查单位是否存活（通过 HP 判断，不依赖 Dead 组件）
-                if let Ok((unit, attrs)) = units.get(next_entity) {
+                if let Ok((unit, attrs, _, _)) = non_selected_units.get(next_entity) {
                     if !is_alive(attrs) {
                         // 单位已死亡（HP=0），继续前进到下一个
                         continue;
@@ -100,7 +104,6 @@ pub fn execute_action_on_enter(
         (&mut Unit, &Attributes, &mut SkillCooldowns, &GameplayTags),
         Without<Selected>,
     >,
-    read_units: Query<(&Unit, &Attributes), Without<Selected>>,
     mut turn_order: ResMut<TurnOrder>,
     mut turn_state: ResMut<TurnState>,
     mut next_phase: ResMut<NextState<TurnPhase>>,
@@ -126,7 +129,7 @@ pub fn execute_action_on_enter(
             // 晕眩也走统一路由
             route_after_action(
                 &mut turn_order,
-                &read_units,
+                &non_selected_units,
                 &mut next_phase,
                 &mut ai_timer,
                 &mut turn_state,
@@ -151,7 +154,7 @@ pub fn execute_action_on_enter(
         // 统一路由：从队列前进到下一个单位
         route_after_action(
             &mut turn_order,
-            &read_units,
+            &non_selected_units,
             &mut next_phase,
             &mut ai_timer,
             &mut turn_state,
@@ -171,7 +174,7 @@ pub fn execute_action_on_enter(
                 clear_combat_intent(&mut combat_intent);
                 route_after_action(
                     &mut turn_order,
-                    &read_units,
+                    &non_selected_units,
                     &mut next_phase,
                     &mut ai_timer,
                     &mut turn_state,
@@ -198,7 +201,7 @@ pub fn execute_action_on_enter(
     // 统一路由
     route_after_action(
         &mut turn_order,
-        &read_units,
+        &non_selected_units,
         &mut next_phase,
         &mut ai_timer,
         &mut turn_state,
@@ -213,7 +216,6 @@ pub fn wait_action_on_enter(
         (&mut Unit, &Attributes, &mut SkillCooldowns, &GameplayTags),
         Without<Selected>,
     >,
-    read_units: Query<(&Unit, &Attributes), Without<Selected>>,
     mut turn_order: ResMut<TurnOrder>,
     mut turn_state: ResMut<TurnState>,
     mut next_phase: ResMut<NextState<TurnPhase>>,
@@ -248,7 +250,7 @@ pub fn wait_action_on_enter(
     // 统一路由：从队列前进到下一个单位
     route_after_action(
         &mut turn_order,
-        &read_units,
+        &non_selected_units,
         &mut next_phase,
         &mut ai_timer,
         &mut turn_state,
