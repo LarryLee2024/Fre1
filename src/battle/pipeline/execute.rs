@@ -241,6 +241,7 @@ mod tests {
             .insert_resource(EffectHandlerRegistry::default())
             .insert_resource(TraitRegistry::default())
             .insert_resource(TraitEffectHandlerRegistry::with_defaults())
+            .insert_resource(ModifierRuleRegistry::default())
             .add_systems(Update, execute_effects);
         let target = app
             .world_mut()
@@ -297,6 +298,7 @@ mod tests {
             .insert_resource(EffectHandlerRegistry::default())
             .insert_resource(TraitRegistry::default())
             .insert_resource(TraitEffectHandlerRegistry::with_defaults())
+            .insert_resource(ModifierRuleRegistry::default())
             .add_systems(Update, execute_effects);
         let target = app
             .world_mut()
@@ -352,6 +354,7 @@ mod tests {
             .insert_resource(EffectHandlerRegistry::default())
             .insert_resource(TraitRegistry::default())
             .insert_resource(TraitEffectHandlerRegistry::with_defaults())
+            .insert_resource(ModifierRuleRegistry::default())
             .add_systems(Update, execute_effects);
         let target = app
             .world_mut()
@@ -407,6 +410,7 @@ mod tests {
             .insert_resource(EffectHandlerRegistry::default())
             .insert_resource(TraitRegistry::default())
             .insert_resource(TraitEffectHandlerRegistry::with_defaults())
+            .insert_resource(ModifierRuleRegistry::default())
             .add_systems(Update, execute_effects);
         let target = app
             .world_mut()
