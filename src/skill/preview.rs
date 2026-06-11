@@ -153,7 +153,7 @@ mod tests {
         attrs.set_base(AttributeKind::Vitality, def);
         attrs.fill_vital_resources();
         // 覆盖当前 HP 为指定值
-        attrs.set_base(AttributeKind::Hp, hp);
+        attrs.set_vital(AttributeKind::Hp, hp);
         attrs
     }
 

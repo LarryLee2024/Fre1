@@ -91,7 +91,7 @@ mod tests {
         attrs.set_base(AttributeKind::Intelligence, int);
         attrs.fill_vital_resources();
         // 覆盖当前 HP 为指定值
-        attrs.set_base(AttributeKind::Hp, hp);
+        attrs.set_vital(AttributeKind::Hp, hp);
         attrs
     }
 
@@ -387,7 +387,7 @@ mod tests {
         tags.add(GameplayTag::MAGE);
         assert!(skill.can_use(&attrs, &tags, None, 0).is_ok());
 
-        attrs.set_base(AttributeKind::Mp, 2.0);
+        attrs.set_vital(AttributeKind::Mp, 2.0);
         assert_eq!(
             skill.can_use(&attrs, &tags, None, 0),
             Err(SkillUseError::InsufficientMp {

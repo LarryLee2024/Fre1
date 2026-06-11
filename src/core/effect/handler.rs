@@ -616,7 +616,7 @@ mod tests {
         target_attrs.set_base_attack_range(1);
         target_attrs.fill_vital_resources();
         // HP 有缺口，用于测试治疗预览
-        target_attrs.set_base(AttributeKind::Hp, 12.0);
+        target_attrs.set_vital(AttributeKind::Hp, 12.0);
 
         PreviewContext {
             source_attrs,

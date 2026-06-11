@@ -264,8 +264,8 @@ mod tests {
         attrs.set_base(AttributeKind::Vitality, vitality);
         attrs.fill_vital_resources();
         // 覆盖当前 HP 和 MP 为指定值
-        attrs.set_base(AttributeKind::Hp, hp);
-        attrs.set_base(AttributeKind::Mp, mp);
+        attrs.set_vital(AttributeKind::Hp, hp);
+        attrs.set_vital(AttributeKind::Mp, mp);
         attrs
     }
 
