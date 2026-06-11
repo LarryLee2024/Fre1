@@ -146,6 +146,11 @@ fn purify_skill() -> SkillData {
 // 场景一：SkillSlots + SkillCooldowns 联动
 // ══════════════════════════════════════════════════════════════
 
+/// LSS-001: 技能槽默认攻击始终可用
+///
+/// Given: SkillSlots 含 basic_attack + fireball + heal，冷却默认
+/// When: 检查 basic_attack.can_use
+/// Then: 返回 Ok（无 MP 消耗，无冷却）
 #[test]
 fn 技能槽_默认攻击始终可用() {
     let slots = SkillSlots::new(vec![
@@ -165,6 +170,11 @@ fn 技能槽_默认攻击始终可用() {
     assert_eq!(slots.default_attack(), BASIC_ATTACK_ID);
 }
 
+/// LSS-002: 冷却递减后技能恢复可用
+///
+/// Given: fireball cooldown=2
+/// When: tick ×2
+/// Then: cd 2→1→0，can_use 从 Err 变 Ok
 #[test]
 fn 技能槽_冷却递减后技能恢复可用() {
     let mut cooldowns = SkillCooldowns::default();
@@ -186,6 +196,11 @@ fn 技能槽_冷却递减后技能恢复可用() {
     assert!(skill.can_use(&attrs, &tags, None, 0).is_ok());
 }
 
+/// LSS-003: 技能槽迭代器与特殊技能
+///
+/// Given: SkillSlots 含 basic_attack + fireball + heal
+/// When: iter() 和 special_skill()
+/// Then: len=3，首元素=BASIC_ATTACK_ID，special_skill=Some("fireball")
 #[test]
 fn 技能槽_迭代器与特殊技能() {
     let slots = SkillSlots::new(vec![
@@ -204,6 +219,11 @@ fn 技能槽_迭代器与特殊技能() {
 // 场景二：属性 → 技能条件 联动
 // ══════════════════════════════════════════════════════════════
 
+/// LSS-004: 战士 MP 不足无法释放火球
+///
+/// Given: fireball(cost_mp=8)，战士 MP=3
+/// When: can_use
+/// Then: Err(InsufficientMp { required: 8, current: 3 })
 #[test]
 fn 战士_MP不足无法释放火球() {
     let skill = fireball();
@@ -221,6 +241,11 @@ fn 战士_MP不足无法释放火球() {
     );
 }
 
+/// LSS-005: 法师 MP 足够可以释放火球
+///
+/// Given: fireball(cost_mp=8)，法师 MP=25
+/// When: can_use
+/// Then: Ok
 #[test]
 fn 法师_MP足够可以释放火球() {
     let skill = fireball();
@@ -231,6 +256,11 @@ fn 法师_MP足够可以释放火球() {
     assert!(skill.can_use(&attrs, &tags, None, 0).is_ok());
 }
 
+/// LSS-006: 战士缺少 MAGE 标签无法释放奥术冲击
+///
+/// Given: arcane_blast(RequireTag(MAGE))，战士无 MAGE 标签
+/// When: can_use
+/// Then: Err(MissingTag { tag: MAGE })
 #[test]
 fn 战士_缺少MAGE标签无法释放奥术冲击() {
     let skill = mage_only_skill();
@@ -246,6 +276,11 @@ fn 战士_缺少MAGE标签无法释放奥术冲击() {
     );
 }
 
+/// LSS-007: 法师拥有 MAGE 标签可以释放奥术冲击
+///
+/// Given: arcane_blast(RequireTag(MAGE) + MpCost(10))，法师有 MAGE 标签，MP=25
+/// When: can_use
+/// Then: Ok
 #[test]
 fn 法师_拥有MAGE标签可以释放奥术冲击() {
     let skill = mage_only_skill();
@@ -260,6 +295,11 @@ fn 法师_拥有MAGE标签可以释放奥术冲击() {
 // 场景三：HP 阈值条件 + 属性联动
 // ══════════════════════════════════════════════════════════════
 
+/// LSS-008: 狂暴 HP 充足时不可用
+///
+/// Given: berserk(HpBelow(0.3))，战士 HP=30/30 (100%)
+/// When: can_use
+/// Then: Err(HpNotBelow { threshold: 0.3 })
 #[test]
 fn 狂暴_HP充足时不可用() {
     let skill = berserker_skill();
@@ -273,6 +313,11 @@ fn 狂暴_HP充足时不可用() {
     );
 }
 
+/// LSS-009: 狂暴 HP 低于 30% 时可用
+///
+/// Given: berserk(HpBelow(0.3))，战士 HP=8/30 (26.7%)
+/// When: can_use
+/// Then: Ok
 #[test]
 fn 狂暴_HP低于30百分比时可用() {
     let skill = berserker_skill();
@@ -287,6 +332,11 @@ fn 狂暴_HP低于30百分比时可用() {
 // 场景四：目标标签条件 + 属性联动
 // ══════════════════════════════════════════════════════════════
 
+/// LSS-010: 净化目标无 DEBUFF 标签时不可用
+///
+/// Given: purify(TargetRequireTag(DEBUFF))，目标无 DEBUFF 标签
+/// When: can_use
+/// Then: Err(TargetMissingTag { tag: DEBUFF })
 #[test]
 fn 净化_目标无DEBUFF标签时不可用() {
     let skill = purify_skill();
@@ -303,6 +353,11 @@ fn 净化_目标无DEBUFF标签时不可用() {
     );
 }
 
+/// LSS-011: 净化目标有 DEBUFF 标签时可用
+///
+/// Given: purify(TargetRequireTag(DEBUFF))，目标有 DEBUFF 标签
+/// When: can_use
+/// Then: Ok
 #[test]
 fn 净化_目标有DEBUFF标签时可用() {
     let skill = purify_skill();
@@ -314,6 +369,11 @@ fn 净化_目标有DEBUFF标签时可用() {
     assert!(skill.can_use(&attrs, &tags, Some(&target_tags), 0).is_ok());
 }
 
+/// LSS-012: 净化无目标时跳过目标标签检查
+///
+/// Given: purify(TargetRequireTag(DEBUFF))，不提供目标
+/// When: can_use(target_tags=None)
+/// Then: Ok（跳过目标检查）
 #[test]
 fn 净化_无目标时跳过目标标签检查() {
     let skill = purify_skill();
@@ -328,18 +388,33 @@ fn 净化_无目标时跳过目标标签检查() {
 // 场景五：effective_skill_range 跨模块
 // ══════════════════════════════════════════════════════════════
 
+/// LSS-013: 火球自带射程 3，忽略单位基础射程
+///
+/// Given: fireball(range=3)，单位 base_attack_range=1
+/// When: effective_skill_range
+/// Then: 返回 3
 #[test]
 fn 火球自带射程3_忽略单位基础射程() {
     let skill = fireball();
     assert_eq!(effective_skill_range(&skill, 1), 3);
 }
 
+/// LSS-014: 基础攻击无射程，使用单位基础射程
+///
+/// Given: basic_attack(range=0)，单位 base_attack_range=3
+/// When: effective_skill_range
+/// Then: 返回 3
 #[test]
 fn 基础攻击无射程_使用单位基础射程() {
     let skill = basic_attack();
     assert_eq!(effective_skill_range(&skill, 3), 3);
 }
 
+/// LSS-015: 治疗自带射程 2
+///
+/// Given: heal(range=2)，单位 base_attack_range=1
+/// When: effective_skill_range
+/// Then: 返回 2
 #[test]
 fn 治疗自带射程2() {
     let skill = heal();
@@ -350,6 +425,11 @@ fn 治疗自带射程2() {
 // 场景六：多条件组合 + 属性联合验证
 // ══════════════════════════════════════════════════════════════
 
+/// LSS-016: 法师奥术冲击满足所有条件
+///
+/// Given: arcane_blast(RequireTag(MAGE) + MpCost(10))，法师 MP=25，有 MAGE 标签
+/// When: can_use
+/// Then: Ok
 #[test]
 fn 法师_奥术冲击_满足所有条件() {
     let skill = mage_only_skill();
@@ -361,6 +441,11 @@ fn 法师_奥术冲击_满足所有条件() {
     assert!(skill.can_use(&attrs, &tags, None, 0).is_ok());
 }
 
+/// LSS-017: 法师奥术冲击 MP 不足时失败
+///
+/// Given: arcane_blast(MpCost(10))，法师 MP=5，有 MAGE 标签
+/// When: can_use
+/// Then: Err（MP 不足）
 #[test]
 fn 法师_奥术冲击_MP不足时失败() {
     let skill = mage_only_skill();
@@ -373,6 +458,11 @@ fn 法师_奥术冲击_MP不足时失败() {
     assert!(result.is_err());
 }
 
+/// LSS-018: 战士缺少标签且 MP 不足，第一个条件失败
+///
+/// Given: arcane_blast(RequireTag(MAGE) + MpCost(10))，战士无 MAGE 标签
+/// When: can_use
+/// Then: Err(MissingTag)（第一个失败条件）
 #[test]
 fn 战士_缺少标签且MP不足_第一个条件失败() {
     let skill = mage_only_skill();
@@ -393,6 +483,11 @@ fn 战士_缺少标签且MP不足_第一个条件失败() {
 // 场景七：冷却管理跨回合联动
 // ══════════════════════════════════════════════════════════════
 
+/// LSS-019: 多技能冷却独立递减
+///
+/// Given: fireball(cd=2) + heal(cd=3)
+/// When: tick ×3
+/// Then: fireball 在第 2 轮恢复，heal 在第 3 轮恢复
 #[test]
 fn 多技能冷却独立递减() {
     let mut cooldowns = SkillCooldowns::default();
@@ -427,6 +522,11 @@ fn 多技能冷却独立递减() {
     assert!(hl_cd.is_ok()); // heal: cd 0 → 可用
 }
 
+/// LSS-020: 冷却 clear 后所有技能立即可用
+///
+/// Given: fireball(cd=5) + heal(cd=5)，均不可用
+/// When: cooldowns.clear()
+/// Then: 两个技能均变为可用
 #[test]
 fn 冷却clear后所有技能立即可用() {
     let mut cooldowns = SkillCooldowns::default();

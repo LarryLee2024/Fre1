@@ -46,6 +46,11 @@ fn goblin_attrs() -> Attributes {
 // 场景一：基础伤害计算（calculate_damage_from_effect）
 // ══════════════════════════════════════════════════════════════
 
+/// LCP-001: 战士攻击哥布林基础伤害
+///
+/// Given: ATK=10, DEF=3
+/// When: calculate_damage_from_effect(10, 3, 3, 1.0, 0.0, 0)
+/// Then: 伤害=7
 #[test]
 fn 战士攻击哥布林_基础伤害() {
     // ATK=10, DEF=3, 无地形加成 → 10-3=7
@@ -53,6 +58,11 @@ fn 战士攻击哥布林_基础伤害() {
     assert_eq!(dmg, 7);
 }
 
+/// LCP-002: 森林地形防御加成
+///
+/// Given: ATK=10, DEF=3, terrain_bonus=2
+/// When: calculate_damage_from_effect
+/// Then: 伤害=5
 #[test]
 fn 森林地形_防御加成() {
     // ATK=10, DEF=3, terrain_bonus=2 → 10-3-2=5
@@ -60,18 +70,33 @@ fn 森林地形_防御加成() {
     assert_eq!(dmg, 5);
 }
 
+/// LCP-003: 山地地形无防御加成
+///
+/// Given: ATK=10, DEF=3, terrain_bonus=0
+/// When: calculate_damage_from_effect
+/// Then: 伤害=7
 #[test]
 fn 山地地形_无防御加成() {
     let dmg = calculate_damage_from_effect(10.0, 3.0, 3.0, 1.0, 0.0, 0);
     assert_eq!(dmg, 7);
 }
 
+/// LCP-004: 伤害下限为 1
+///
+/// Given: ATK=5, DEF=10（攻击低于防御）
+/// When: calculate_damage_from_effect
+/// Then: 伤害=1（下限）
 #[test]
 fn 伤害下限为1() {
     let dmg = calculate_damage_from_effect(5.0, 10.0, 10.0, 1.0, 0.0, 0);
     assert_eq!(dmg, 1);
 }
 
+/// LCP-005: 技能倍率 1.5 倍
+///
+/// Given: ATK=10, DEF=3, multiplier=1.5
+/// When: calculate_damage_from_effect
+/// Then: (10-3)*1.5=10.5→10
 #[test]
 fn 技能倍率_1_5倍() {
     // (10-3)*1.5=10.5 → 10
@@ -79,12 +104,22 @@ fn 技能倍率_1_5倍() {
     assert_eq!(dmg, 10);
 }
 
+/// LCP-006: 技能倍率 3 倍
+///
+/// Given: ATK=10, DEF=3, multiplier=3.0
+/// When: calculate_damage_from_effect
+/// Then: (10-3)*3=21
 #[test]
 fn 技能倍率_3倍() {
     let dmg = calculate_damage_from_effect(10.0, 3.0, 3.0, 3.0, 0.0, 0);
     assert_eq!(dmg, 21);
 }
 
+/// LCP-007: 无视防御 50%
+///
+/// Given: ATK=10, DEF=10, multiplier=1.3, ignore_def=50%
+/// When: calculate_damage_from_effect
+/// Then: final_def=10*0.5=5, (10-5)*1.3=6.5→6
 #[test]
 fn 无视防御_50百分比() {
     // final_def=10-5=5, (10-5)*1.3=6.5→6
@@ -92,12 +127,22 @@ fn 无视防御_50百分比() {
     assert_eq!(dmg, 6);
 }
 
+/// LCP-008: 无视防御 100%
+///
+/// Given: ATK=10, DEF=10, ignore_def=100%
+/// When: calculate_damage_from_effect
+/// Then: final_def=0, 伤害=10
 #[test]
 fn 无视防御_100百分比() {
     let dmg = calculate_damage_from_effect(10.0, 10.0, 10.0, 1.0, 100.0, 0);
     assert_eq!(dmg, 10);
 }
 
+/// LCP-009: 地形加成与无视防御叠加
+///
+/// Given: ATK=10, DEF=10, ignore_def=50%, terrain_bonus=2
+/// When: calculate_damage_from_effect
+/// Then: final_def=10*0.5=5, 5-2=3
 #[test]
 fn 地形加成与无视防御叠加() {
     // final_def=10-5=5, base=10-5=5, 5-2=3
@@ -109,6 +154,11 @@ fn 地形加成与无视防御叠加() {
 // 场景二：EffectHandlerRegistry → generate → PendingEffect
 // ══════════════════════════════════════════════════════════════
 
+/// LCP-010: 伤害处理器 generate 基础攻击
+///
+/// Given: DamageHandler, 战士 ATK=10, 哥布林 DEF=3
+/// When: generate(Damage { multiplier=1.0 })
+/// Then: PendingEffectData::Damage { amount=7, is_skill=false }
 #[test]
 fn 伤害处理器_generate_基础攻击() {
     let registry = EffectHandlerRegistry::default();
@@ -144,6 +194,11 @@ fn 伤害处理器_generate_基础攻击() {
     }
 }
 
+/// LCP-011: 伤害处理器 generate 技能攻击
+///
+/// Given: DamageHandler, 战士 ATK=10, 哥布林 DEF=3, skill_id="power_strike"
+/// When: generate(Damage { multiplier=1.5 })
+/// Then: PendingEffectData::Damage { amount=10, is_skill=true }
 #[test]
 fn 伤害处理器_generate_技能攻击() {
     let registry = EffectHandlerRegistry::default();
@@ -176,6 +231,11 @@ fn 伤害处理器_generate_技能攻击() {
     }
 }
 
+/// LCP-012: 治疗处理器 generate
+///
+/// Given: HealHandler, 目标 HP=15/30
+/// When: generate(Heal { amount=8 })
+/// Then: PendingEffectData::Heal { amount=8 }
 #[test]
 fn 治疗处理器_generate() {
     let registry = EffectHandlerRegistry::default();
@@ -204,6 +264,11 @@ fn 治疗处理器_generate() {
     }
 }
 
+/// LCP-013: Buff 处理器 generate
+///
+/// Given: ApplyBuffHandler
+/// When: generate(ApplyBuff { buff_id="burn", duration=2 })
+/// Then: PendingEffectData::ApplyBuff { buff_id="burn", duration=2 }
 #[test]
 fn buff处理器_generate() {
     let registry = EffectHandlerRegistry::default();
@@ -233,6 +298,11 @@ fn buff处理器_generate() {
     }
 }
 
+/// LCP-014: 净化处理器 generate
+///
+/// Given: CleanseHandler
+/// When: generate(Cleanse)
+/// Then: PendingEffectData::Cleanse
 #[test]
 fn 净化处理器_generate() {
     let registry = EffectHandlerRegistry::default();
@@ -258,6 +328,11 @@ fn 净化处理器_generate() {
 // 场景三：预览 → 执行一致性
 // ══════════════════════════════════════════════════════════════
 
+/// LCP-015: 伤害预览与 generate 一致
+///
+/// Given: DamageHandler, 战士 vs 哥布林
+/// When: generate 和 preview 各调用一次
+/// Then: 两者返回的伤害量一致
 #[test]
 fn 伤害预览与generate一致() {
     let registry = EffectHandlerRegistry::default();
@@ -304,6 +379,11 @@ fn 伤害预览与generate一致() {
     assert_eq!(gen_amount, preview_amount);
 }
 
+/// LCP-016: 治疗预览不超过最大 HP
+///
+/// Given: 目标 HP=28/30
+/// When: preview(Heal { amount=8 })
+/// Then: 预览治疗量=min(8, 30-28)=2
 #[test]
 fn 治疗预览不超过最大hp() {
     let registry = EffectHandlerRegistry::default();
@@ -328,6 +408,11 @@ fn 治疗预览不超过最大hp() {
     }
 }
 
+/// LCP-017: 伤害预览致死标记
+///
+/// Given: 攻击者 Might=25(ATK=50)，目标 HP=5
+/// When: preview(Damage)
+/// Then: lethal=true
 #[test]
 fn 伤害预览致死标记() {
     let registry = EffectHandlerRegistry::default();
@@ -361,6 +446,11 @@ fn 伤害预览致死标记() {
 // 场景四：EffectQueue 管道串联
 // ══════════════════════════════════════════════════════════════
 
+/// LCP-018: EffectQueue push then drain
+///
+/// Given: 空 EffectQueue
+/// When: push(Damage) + push(Heal) → drain
+/// Then: 取出 2 个效果，队列变空
 #[test]
 fn effect_queue_push_then_drain() {
     let mut queue = EffectQueue::default();
@@ -409,24 +499,44 @@ fn effect_queue_push_then_drain() {
 // 场景五：伤害计算 × 属性修饰符联合
 // ══════════════════════════════════════════════════════════════
 
+/// LCP-019: 攻击力 buff 后伤害增加
+///
+/// Given: ATK=15（buff 后），DEF=3
+/// When: calculate_damage_from_effect
+/// Then: 伤害=12
 #[test]
 fn 攻击力buff后伤害增加() {
     let dmg = calculate_damage_from_effect(15.0, 3.0, 3.0, 1.0, 0.0, 0);
     assert_eq!(dmg, 12);
 }
 
+/// LCP-020: 防御力 buff 后伤害降低
+///
+/// Given: ATK=10, DEF=8（buff 后）
+/// When: calculate_damage_from_effect
+/// Then: 伤害=2
 #[test]
 fn 防御力buff后伤害降低() {
     let dmg = calculate_damage_from_effect(10.0, 8.0, 3.0, 1.0, 0.0, 0);
     assert_eq!(dmg, 2);
 }
 
+/// LCP-021: 减防 debuff 增加伤害
+///
+/// Given: ATK=10, DEF=0（debuff 后）
+/// When: calculate_damage_from_effect
+/// Then: 伤害=10
 #[test]
 fn 减防debuff增加伤害() {
     let dmg = calculate_damage_from_effect(10.0, 0.0, 3.0, 1.0, 0.0, 0);
     assert_eq!(dmg, 10);
 }
 
+/// LCP-022: 减攻 debuff 降低伤害
+///
+/// Given: ATK=5（debuff 后）, DEF=3
+/// When: calculate_damage_from_effect
+/// Then: 伤害=2
 #[test]
 fn 减攻debuff降低伤害() {
     let dmg = calculate_damage_from_effect(5.0, 3.0, 3.0, 1.0, 0.0, 0);
@@ -437,6 +547,11 @@ fn 减攻debuff降低伤害() {
 // 场景六：多效果技能 generate 全流程
 // ══════════════════════════════════════════════════════════════
 
+/// LCP-023: 多效果技能 — 伤害 + buff
+///
+/// Given: fire_strike 含 Damage(1.2x) + ApplyBuff(burn, 2)
+/// When: 遍历 effects generate → queue
+/// Then: queue 有 2 个效果，Damage(amount=8, is_skill=true) + ApplyBuff(burn, 2)
 #[test]
 fn 多效果技能_伤害加buff() {
     let registry = EffectHandlerRegistry::default();
@@ -498,6 +613,11 @@ fn 多效果技能_伤害加buff() {
 // 场景七：标签系统基础
 // ══════════════════════════════════════════════════════════════
 
+/// LCP-024: 标签 add/has/remove 链路
+///
+/// Given: 空 GameplayTags
+/// When: add(FIRE) → has(FIRE) → remove(FIRE) → has(FIRE)
+/// Then: true → false
 #[test]
 fn 标签_add_has_remove_链路() {
     let mut tags = GameplayTags::default();
@@ -511,6 +631,11 @@ fn 标签_add_has_remove_链路() {
     assert!(!tags.has(GameplayTag::FIRE));
 }
 
+/// LCP-025: 标签 has_any / has_all
+///
+/// Given: tags 含 FIRE + BUFF
+/// When: has_any(FIRE|ICE) / has_all(FIRE|ICE) → add(ICE) → has_all(FIRE|ICE)
+/// Then: has_any=true, has_all=false → has_all=true
 #[test]
 fn 标签_has_any_has_all() {
     let mut tags = GameplayTags::default();

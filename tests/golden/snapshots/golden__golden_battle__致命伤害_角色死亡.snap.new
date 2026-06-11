@@ -1,0 +1,21 @@
+---
+source: tests/golden/golden_battle.rs
+assertion_line: 187
+expression: record
+---
+entries:
+  - DamageApplied:
+      target: 4294967294
+      target_name: 哥布林
+      target_faction: Enemy
+      attacker: 4294967295
+      attacker_name: 战士
+      attacker_faction: Player
+      amount: 10
+      is_skill: false
+      terrain_label: 草
+      target_coord:
+        - 0
+        - 0
+      breakdown: ~
+turn_number: 0

@@ -344,6 +344,11 @@ fn 灼烧DoT_每回合造成伤害() {
     assert_eq!(buffs.dot_damage(), 3);
 }
 
+/// LBD-009: 生命回复 HoT — 每回合回复
+///
+/// Given: 战士(HP=20) + regeneration_hot(hot_heal=4)
+/// When: apply_buff
+/// Then: hot_heal()=4
 #[test]
 fn 生命回复HoT_每回合回复() {
     let mut attrs = warrior_attrs();
@@ -365,6 +370,11 @@ fn 生命回复HoT_每回合回复() {
     assert_eq!(buffs.hot_heal(), 4);
 }
 
+/// LBD-010: Buff 过期 — 从 ActiveBuffs 移除但属性修饰符仍保留
+///
+/// Given: 战士 + attack_up(duration=1)
+/// When: apply_buff → tick ×2（过期移除）
+/// Then: buffs.is_empty()，但 Attack=15 仍保留（需手动 remove_buff 才恢复）
 #[test]
 fn Buff过期_从ActiveBuffs移除但属性仍保留() {
     let mut attrs = warrior_attrs();
@@ -396,6 +406,11 @@ fn Buff过期_从ActiveBuffs移除但属性仍保留() {
 // 场景五：属性修改 + 伤害计算联合验证
 // ══════════════════════════════════════════════════════════════
 
+/// LBD-011: 增攻 Buff — 提高物理伤害
+///
+/// Given: 战士 + attack_up(Attack=15)，目标 DEF=5
+/// When: calculate_damage_from_effect(15, 5, 5, 1.0, 0.0, 0)
+/// Then: 伤害=10
 #[test]
 fn 增攻Buff_提高物理伤害() {
     let mut attrs = warrior_attrs();
@@ -425,6 +440,11 @@ fn 增攻Buff_提高物理伤害() {
     assert_eq!(dmg, 10);
 }
 
+/// LBD-012: 减防 Debuff — 提高受到伤害
+///
+/// Given: 战士 + defense_down(Defense=0)，攻击者 ATK=10
+/// When: calculate_damage_from_effect(10, 0, 5, 1.0, 0.0, 0)
+/// Then: 伤害=10
 #[test]
 fn 减防Debuff_提高受到伤害() {
     let mut attrs = warrior_attrs();
@@ -453,6 +473,11 @@ fn 减防Debuff_提高受到伤害() {
     assert_eq!(dmg, 10);
 }
 
+/// LBD-013: 同时增攻和减防 — 伤害大幅提升
+///
+/// Given: 攻击方 attack_up(Attack=15)，防御方 defense_down(Defense=0)
+/// When: calculate_damage_from_effect(15, 0, 5, 1.0, 0.0, 0)
+/// Then: 伤害=15
 #[test]
 fn 同时增攻和减防_伤害大幅提升() {
     let mut attacker_attrs = warrior_attrs();
@@ -497,6 +522,11 @@ fn 同时增攻和减防_伤害大幅提升() {
 // 场景六：Buff 完整生命周期
 // ══════════════════════════════════════════════════════════════
 
+/// LBD-014: 增攻 Buff 完整生命周期 — 应用 → tick → 手动移除
+///
+/// Given: 战士 + attack_up(duration=3)
+/// When: apply_buff → tick ×2 → remove_buff
+/// Then: Attack 15→15→15→10
 #[test]
 fn 增攻Buff_完整生命周期_应用_手动移除() {
     let mut attrs = warrior_attrs();
