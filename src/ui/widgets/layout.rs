@@ -5,6 +5,7 @@ use crate::ui::theme::UiTheme;
 use bevy::prelude::*;
 
 /// 纵向布局（相当于 Godot VBoxContainer）
+#[allow(dead_code)]
 pub fn vbox(theme: &UiTheme) -> Node {
     Node {
         flex_direction: FlexDirection::Column,
@@ -14,6 +15,7 @@ pub fn vbox(theme: &UiTheme) -> Node {
 }
 
 /// 纵向布局（自定义间距）
+#[allow(dead_code)]
 pub fn vbox_with_gap(gap: f32) -> Node {
     Node {
         flex_direction: FlexDirection::Column,
@@ -33,6 +35,7 @@ pub fn hbox(theme: &UiTheme) -> Node {
 }
 
 /// 横向布局（自定义间距）
+#[allow(dead_code)]
 pub fn hbox_with_gap(gap: f32) -> Node {
     Node {
         flex_direction: FlexDirection::Row,
@@ -43,6 +46,7 @@ pub fn hbox_with_gap(gap: f32) -> Node {
 }
 
 /// 面板（相当于 Godot PanelContainer）
+#[allow(dead_code)]
 pub fn panel(theme: &UiTheme) -> Node {
     Node {
         padding: theme.panel_padding,
@@ -53,6 +57,7 @@ pub fn panel(theme: &UiTheme) -> Node {
 }
 
 /// 绝对定位面板
+#[allow(dead_code)]
 pub fn panel_absolute(theme: &UiTheme, left: f32, top: f32, width: f32) -> Node {
     Node {
         position_type: PositionType::Absolute,
@@ -107,6 +112,7 @@ pub fn label(text: &str, font_size: f32, color: Color) -> (Text, TextFont, TextC
 }
 
 /// 分隔线
+#[allow(dead_code)]
 pub fn divider(theme: &UiTheme) -> (Node, BackgroundColor) {
     (
         Node {

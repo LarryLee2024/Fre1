@@ -10,6 +10,7 @@ use super::domain::SkillData;
 
 /// 技能执行上下文：封装一次技能释放的所有信息
 #[derive(Clone, Debug)]
+#[allow(dead_code)]
 pub struct SkillExecutionContext {
     pub source: Entity,
     pub target: Entity,
@@ -23,6 +24,7 @@ pub struct SkillExecutionContext {
 
 impl SkillExecutionContext {
     /// 从 ECS 查询构建上下文（纯数据快照，避免借用冲突）
+    #[allow(dead_code)]
     pub fn from_query(
         source: Entity,
         target: Entity,
@@ -50,6 +52,7 @@ impl SkillExecutionContext {
 
 /// 技能效果预览结果
 #[derive(Clone, Debug)]
+#[allow(dead_code)]
 pub struct SkillPreview {
     pub skill_id: String,
     pub skill_name: String,
@@ -58,6 +61,7 @@ pub struct SkillPreview {
 
 /// 单个效果的预览
 #[derive(Clone, Debug)]
+#[allow(dead_code)]
 pub enum EffectPreview {
     Damage { amount: i32, lethal: bool },
     Heal { amount: i32 },

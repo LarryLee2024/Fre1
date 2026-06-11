@@ -477,7 +477,6 @@ mod tests {
         registry.register_defaults();
 
         let mut attrs = make_test_attrs();
-        let mut tags = GameplayTags::default();
         let mut persistent = PersistentTags::default();
         let mut slots = EquipmentSlots::default();
         let mut trait_collection = TraitCollection::default();
@@ -566,7 +565,6 @@ mod tests {
         registry.register_defaults();
 
         let mut attrs = make_test_attrs();
-        let mut tags = GameplayTags::default();
         let mut persistent = PersistentTags::default();
         let mut slots = EquipmentSlots::default();
         let mut trait_collection = TraitCollection::default();
@@ -600,7 +598,6 @@ mod tests {
         registry.register_defaults();
 
         let mut attrs = make_test_attrs();
-        let mut tags = GameplayTags::default();
         let mut persistent = PersistentTags::default();
         let mut slots = EquipmentSlots::default();
         let mut trait_collection = TraitCollection::default();

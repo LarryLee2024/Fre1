@@ -12,6 +12,7 @@ use std::collections::HashMap;
 
 /// 单位模板（运行时）
 #[derive(Clone, Debug)]
+#[allow(dead_code)]
 pub struct UnitTemplate {
     pub id: String,
     pub name: String,
@@ -276,11 +277,30 @@ impl Plugin for UnitTemplatePlugin {
 
 #[cfg(test)]
 mod tests {
+    // ================================================
+    // AI Self-Check (test_spec.md §13.1)
+    // ================================================
+    // ✅ 测试行为，不是实现
+    // ✅ 符合领域规则
+    // ✅ 测试是确定性的
+    // ✅ 使用标准测试数据
+    // ✅ 没有测试私有实现
+    // ✅ 没有生成不在范围内的测试
+    // ================================================
+
     use super::*;
     use ron::de::from_bytes;
 
+    /// Test ID: CHR-TPL-001
+    /// Title: RON 反序列化单位模板
+    ///
+    /// Given: 有效的 RON 字符串
+    /// When: 反序列化为 UnitTemplateDef
+    /// Then: 所有字段正确解析
+    ///
+    /// Assertions: id, faction, race, class, skill_ids, trait_ids 正确
     #[test]
-    fn ron_反序列化_单位模板() {
+    fn ron_deserialize_unit_template() {
         let ron_str = format!(
             r#"
             (
@@ -314,8 +334,17 @@ mod tests {
         assert_eq!(def.ai_behavior, "default");
     }
 
+    /// Test ID: CHR-TPL-002
+    /// Title: UnitTemplateDef 转换为 UnitTemplate
+    ///
+    /// Given: 一个 UnitTemplateDef 实例
+    /// When: 调用 .into() 转换为 UnitTemplate
+    /// Then: 所有字段正确转换
+    ///
+    /// Assertions: id, faction, race, class, trait_ids, ai_behavior 正确
     #[test]
-    fn unit_template_def_转换为_unit_template() {
+    fn unit_template_def_converts_to_unit_template() {
+        // Given
         let def = UnitTemplateDef {
             version: 0,
             id: "test".into(),

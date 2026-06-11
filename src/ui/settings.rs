@@ -103,11 +103,35 @@ pub fn save_settings_on_change(settings: Res<GameSettings>, mut last_saved: Loca
 
 #[cfg(test)]
 mod tests {
+    // ================================================
+    // AI Self-Check (test_spec.md §13.1)
+    // ================================================
+    // ✅ 测试行为，不是实现
+    // ✅ 符合领域规则
+    // ✅ 测试是确定性的
+    // ✅ 使用标准测试数据
+    // ✅ 没有测试私有实现
+    // ✅ 没有生成不在范围内的测试
+    // ================================================
+
     use super::*;
 
+    /// Test ID: UI-SET-001
+    /// Title: GameSettings 默认值合理
+    ///
+    /// Given: GameSettings::default()
+    /// When: 检查所有字段
+    /// Then: 所有字段值符合预期默认值
+    ///
+    /// Assertions: font_scale=1.0, color_scheme=Normal, color_blind_mode=None, auto_battle_speed=1.0, animation_speed=1.0, show_damage_numbers=true
     #[test]
-    fn game_settings_default_合理默认值() {
+    fn game_settings_default_has_reasonable_values() {
+        // Given
         let s = GameSettings::default();
+
+        // When - 无需操作
+
+        // Then
         assert!((s.ui.font_scale - 1.0).abs() < f32::EPSILON);
         assert_eq!(s.ui.color_scheme, ColorScheme::Normal);
         assert_eq!(s.accessibility.color_blind_mode, ColorBlindMode::None);
@@ -116,27 +140,66 @@ mod tests {
         assert!(s.gameplay.show_damage_numbers);
     }
 
+    /// Test ID: UI-SET-002
+    /// Title: GameSettings RON 序列化往返保持一致
+    ///
+    /// Given: 默认 GameSettings 实例
+    /// When: 序列化为 RON 字符串再反序列化
+    /// Then: 所有字段值保持不变
+    ///
+    /// Assertions: 所有字段相等
     #[test]
-    fn game_settings_ron_roundtrip() {
+    fn game_settings_ron_roundtrip_preserves_all_fields() {
+        // Given
         let original = GameSettings::default();
+
+        // When
         let ron_str = ron::ser::to_string_pretty(&original, ron::ser::PrettyConfig::default())
             .expect("序列化失败");
         let restored: GameSettings = ron::from_str(&ron_str).expect("反序列化失败");
+
+        // Then
         assert_eq!(original.ui.font_scale, restored.ui.font_scale);
+        assert_eq!(original.ui.color_scheme, restored.ui.color_scheme);
+        assert_eq!(
+            original.accessibility.color_blind_mode,
+            restored.accessibility.color_blind_mode
+        );
+        assert!(
+            (original.accessibility.auto_battle_speed
+                - restored.accessibility.auto_battle_speed)
+                .abs()
+                < f32::EPSILON
+        );
+        assert!(
+            (original.gameplay.animation_speed - restored.gameplay.animation_speed).abs()
+                < f32::EPSILON
+        );
         assert_eq!(
             original.gameplay.show_damage_numbers,
             restored.gameplay.show_damage_numbers
         );
     }
 
+    /// Test ID: UI-SET-003
+    /// Title: ColorBlindMode 枚举值序列化反序列化完整
+    ///
+    /// Given: 所有 ColorBlindMode 枚举值
+    /// When: 每个值序列化为 RON 再反序列化
+    /// Then: 所有值保持不变
+    ///
+    /// Assertions: 每个枚举值序列化往返后相等
     #[test]
-    fn color_blind_mode_枚举值完整() {
+    fn color_blind_mode_all_variants_roundtrip() {
+        // Given
         let modes = [
             ColorBlindMode::None,
             ColorBlindMode::Protanopia,
             ColorBlindMode::Deuteranopia,
             ColorBlindMode::Tritanopia,
         ];
+
+        // When & Then
         for mode in &modes {
             let ron_str = ron::ser::to_string(mode).expect("序列化失败");
             let restored: ColorBlindMode = ron::from_str(&ron_str).expect("反序列化失败");

@@ -47,6 +47,7 @@ pub fn deal_heal(app: &mut App, target: Entity, amount: i32) {
         data: PendingEffectData::Heal {
             amount,
             base_amount: None,
+            modifiers: Vec::new(),
         },
         source_tags: vec![],
         terrain_id: String::new(),

@@ -219,8 +219,8 @@ proptest! {
         let mut counter = InstanceIdCounter::default();
 
         let mut container = Container::new(ContainerKind::Backpack, 20, 0.0);
-        let stack = ItemStack::from_def(&mut counter, &def, add_count);
-        container.add_stack(stack, &registry);
+        let mut stack = ItemStack::from_def(&mut counter, &def, add_count);
+        container.add_stack(&mut stack, &registry);
 
         for stack in &container.stacks {
             prop_assert!(stack.count <= stack_size,
@@ -238,11 +238,11 @@ proptest! {
 
         let mut container = Container::new(ContainerKind::Backpack, 20, 0.0);
         // 第一次添加
-        let stack1 = ItemStack::from_def(&mut counter, &def, first_add);
-        container.add_stack(stack1, &registry);
+        let mut stack1 = ItemStack::from_def(&mut counter, &def, first_add);
+        container.add_stack(&mut stack1, &registry);
         // 第二次添加（应该合并到已有堆叠）
-        let stack2 = ItemStack::from_def(&mut counter, &def, second_add);
-        container.add_stack(stack2, &registry);
+        let mut stack2 = ItemStack::from_def(&mut counter, &def, second_add);
+        container.add_stack(&mut stack2, &registry);
 
         // 总数量守恒
         let total: u32 = container.stacks.iter().map(|s| s.count).sum();
@@ -262,8 +262,8 @@ proptest! {
 
         let mut container = Container::new(ContainerKind::Backpack, capacity, 0.0);
         for _ in 0..num_items {
-            let stack = ItemStack::from_def(&mut counter, &def, 1);
-            container.add_stack(stack, &registry);
+            let mut stack = ItemStack::from_def(&mut counter, &def, 1);
+            container.add_stack(&mut stack, &registry);
         }
 
         prop_assert!(container.stacks.len() <= capacity as usize,

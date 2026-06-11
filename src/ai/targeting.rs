@@ -5,6 +5,7 @@ use super::strategy::TargetSelector;
 
 /// 单位快照（避免借用冲突）
 #[derive(Clone)]
+#[allow(dead_code)]
 pub(crate) struct UnitSnapshot {
     pub entity: Entity,
     pub faction: Faction,

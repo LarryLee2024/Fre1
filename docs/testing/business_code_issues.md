@@ -1,0 +1,337 @@
+# 业务代码修改建议
+
+**Version**: 1.0
+**Date**: 2026-06-11
+**Reviewer**: Test Guardian
+**Source**: UI 模块测试执行过程中的编译警告
+**Standard**: `docs/test_spec.md`, `code_style.md`, `ai_constitution.md`
+
+---
+
+# 1. 问题来源
+
+在执行 `cargo test --lib ui::*` 过程中，编译器输出以下警告，表明业务代码存在潜在问题。
+
+---
+
+# 2. 问题清单
+
+## 2.1 `src/inventory/transfer.rs` - 无效的 drop 调用
+
+**严重性**: P2
+**位置**: `src/inventory/transfer.rs:83-84`
+**问题**: 对引用类型调用 `drop()` 无实际效果
+
+```rust
+// 当前代码
+drop(from_container);  // from_container 是 &Container
+drop(to_container);    // to_container 是 &Container
+```
+
+**原因分析**: `drop()` 函数接收所有权值，对引用调用 `drop()` 不会销毁资源。这是代码逻辑错误，可能意图是提前释放借用。
+
+**修改建议**:
+```rust
+// 方案 1: 使用 let _ = 忽略（如果只是想提前结束借用）
+let _ = from_container;
+let _ = to_container;
+
+// 方案 2: 如果需要提前释放，应该 drop 通过 .borrow_mut() 获取的值
+```
+
+**影响范围**: 背包物品转移逻辑
+**风险**: 低 - 当前代码无实际效果，但可能导致借用检查器行为不一致
+
+---
+
+## 2.2 `src/equipment/equip.rs` - 未使用的变量
+
+**严重性**: P3
+**位置**: `src/equipment/equip.rs:480, 569, 603`
+**问题**: 声明了 `mut tags` 但从未使用
+
+```rust
+// 当前代码
+let mut tags = GameplayTags::default();  // 警告: unused variable
+```
+
+**原因分析**: 变量声明后未被使用，可能是重构后遗留的代码。
+
+**修改建议**:
+```rust
+// 方案 1: 添加下划线前缀表示有意忽略
+let _tags = GameplayTags::default();
+
+// 方案 2: 如果完全不需要，删除该行
+```
+
+**影响范围**: 装备穿戴逻辑
+**风险**: 无 - 仅代码整洁问题
+
+---
+
+## 2.3 `src/skill/preview.rs` - 未使用的字段和函数
+
+**严重性**: P3
+**位置**: `src/skill/preview.rs:14-20, 26, 55, 64`
+**问题**: 多个字段和函数未被使用
+
+```rust
+// 未使用的字段
+pub struct SkillExecutionContext {
+    pub source: Entity,      // never read
+    pub target: Entity,      // never read
+    pub skill_id: String,    // never read
+    pub source_tags: GameplayTags,  // never read
+    pub target_tags: GameplayTags,  // never read
+}
+
+// 未使用的函数
+pub fn from_query(...) { ... }  // never used
+
+// 未使用的字段
+pub struct SkillPreview {
+    pub skill_name: String,  // never read
+}
+
+// 未使用的枚举变体字段
+BuffApplied { buff_name: String },  // never read
+```
+
+**原因分析**: 这些字段/函数可能是为未来功能预留的，或者是重构后遗留的代码。
+
+**修改建议**:
+```rust
+// 方案 1: 如果确认不再需要，删除未使用的字段/函数
+// 方案 2: 如果将来会使用，添加 #[allow(dead_code)] 注释说明意图
+#[allow(dead_code)]  // 预留给技能预览功能
+pub struct SkillExecutionContext { ... }
+```
+
+**影响范围**: 技能预览系统
+**风险**: 低 - 仅代码整洁问题
+
+---
+
+## 2.4 `src/ai/targeting.rs` - 未使用的字段
+
+**严重性**: P3
+**位置**: `src/ai/targeting.rs:17`
+**问题**: `acted` 字段未被读取
+
+```rust
+pub(crate) struct UnitSnapshot {
+    // ...
+    pub acted: bool,  // never read
+}
+```
+
+**原因分析**: `UnitSnapshot` 的 `acted` 字段在 AI 目标选择逻辑中未被使用，可能是重构后遗留。
+
+**修改建议**:
+```rust
+// 方案 1: 如果 AI 需要考虑单位是否已行动，应使用该字段
+// 方案 2: 如果不需要，删除该字段
+```
+
+**影响范围**: AI 目标选择
+**风险**: 低 - 可能影响 AI 决策质量（如果本应使用但未使用）
+
+---
+
+## 2.5 `src/character/movement.rs` - 未使用的常量
+
+**严重性**: P3
+**位置**: `src/character/movement.rs:18`
+**问题**: `MOVE_SPEED` 常量未被使用
+
+```rust
+const MOVE_SPEED: f32 = 0.15;  // never used
+```
+
+**原因分析**: 常量声明后未被使用，可能在其他地方硬编码了相同值。
+
+**修改建议**:
+```rust
+// 方案 1: 在移动系统中使用该常量
+// 方案 2: 如果不再需要，删除该常量
+```
+
+**影响范围**: 单位移动系统
+**风险**: 低 - 仅代码整洁问题
+
+---
+
+## 2.6 `src/character/template.rs` - 未使用的字段
+
+**严重性**: P3
+**位置**: `src/character/template.rs:20`
+**问题**: `background` 字段未被读取
+
+```rust
+pub struct UnitTemplate {
+    // ...
+    pub background: String,  // never read
+}
+```
+
+**原因分析**: 角色模板的背景故事字段未被使用，可能是为未来功能预留。
+
+**修改建议**:
+```rust
+// 方案 1: 如果角色背景功能已废弃，删除该字段
+// 方案 2: 如果将来会使用，保留并添加注释
+```
+
+**影响范围**: 角色模板系统
+**风险**: 低 - 仅代码整洁问题
+
+---
+
+## 2.7 `src/core/registry_loader.rs` - 未使用的测试结构体字段
+
+**严重性**: P3
+**位置**: `src/core/registry_loader.rs:163`
+**问题**: 测试结构体的 `value` 字段未被读取
+
+```rust
+struct TestItem {
+    id: String,
+    value: i32,  // never read
+}
+```
+
+**原因分析**: 测试辅助结构体的字段未被使用，仅用于验证反序列化。
+
+**修改建议**:
+```rust
+// 无需修改 - 测试代码中的 unused 警告可忽略
+// 或添加 #[allow(dead_code)]
+```
+
+**影响范围**: 无 - 仅测试代码
+**风险**: 无
+
+---
+
+## 2.8 `src/battle/record.rs` - 非 snake_case 函数名
+
+**严重性**: P3
+**位置**: `src/battle/record.rs:450`
+**问题**: 测试函数名不符合 snake_case 规范
+
+```rust
+fn 战斗记录_最近N条() { ... }  // 警告: should have a snake case name
+```
+
+**原因分析**: 使用中文函数名，不符合 Rust 命名规范。
+
+**修改建议**:
+```rust
+// 重命名为 snake_case 英文
+fn battle_record_recent_n_entries() { ... }
+```
+
+**影响范围**: 仅测试代码
+**风险**: 无
+
+---
+
+## 2.9 `src/inventory/use_item.rs` - 非 snake_case 函数名
+
+**严重性**: P3
+**位置**: `src/inventory/use_item.rs:340, 374`
+**问题**: 测试函数名不符合 snake_case 规范
+
+```rust
+fn 消耗品_GrantTempTrait返回PendingEffect() { ... }
+fn 消耗品_CastSkill返回PendingEffect() { ... }
+```
+
+**修改建议**:
+```rust
+fn consumable_grant_temp_trait_returns_pending_effect() { ... }
+fn consumable_cast_skill_returns_pending_effect() { ... }
+```
+
+**影响范围**: 仅测试代码
+**风险**: 无
+
+---
+
+## 2.10 `src/map/pathfinding/mod.rs` - 非 snake_case 函数名
+
+**严重性**: P3
+**位置**: `src/map/pathfinding/mod.rs:516`
+**问题**: 测试函数名不符合 snake_case 规范
+
+```rust
+fn 回溯路径_L形路径() { ... }
+```
+
+**修改建议**:
+```rust
+fn backtrack_path_l_shaped() { ... }
+```
+
+**影响范围**: 仅测试代码
+**风险**: 无
+
+---
+
+# 3. 未使用的 UI Widget 函数
+
+**严重性**: P2
+**位置**: `src/ui/widgets/layout.rs`
+**问题**: 多个 Widget 函数未被使用
+
+```rust
+pub fn vbox(theme: &UiTheme) -> Node { ... }           // never used
+pub fn vbox_with_gap(gap: f32) -> Node { ... }         // never used
+pub fn hbox_with_gap(gap: f32) -> Node { ... }         // never used
+pub fn panel(theme: &UiTheme) -> Node { ... }          // never used
+pub fn panel_absolute(...) -> Node { ... }             // never used
+pub fn divider(theme: &UiTheme) -> (Node, BackgroundColor) { ... }  // never used
+```
+
+**原因分析**: 这些 Widget 函数是为 UI 组件库预留的，但当前未被使用。
+
+**修改建议**:
+```rust
+// 方案 1: 如果 UI 组件库计划使用，保留并添加 #[allow(dead_code)]
+// 方案 2: 如果不再需要，删除未使用的函数
+```
+
+**影响范围**: UI 组件库
+**风险**: 低 - 可能影响未来 UI 开发
+
+---
+
+# 4. 优先级总结
+
+| 优先级 | 问题 | 位置 | 说明 |
+|--------|------|------|------|
+| **P2** | 无效 drop 调用 | transfer.rs:83-84 | 逻辑错误，需确认意图 |
+| **P2** | 未使用的 Widget 函数 | layout.rs | 可能影响未来 UI 开发 |
+| **P3** | 未使用的变量/字段 | equip.rs, targeting.rs, template.rs | 代码整洁问题 |
+| **P3** | 未使用的常量 | movement.rs:18 | 代码整洁问题 |
+| **P3** | 非 snake_case 函数名 | record.rs, use_item.rs, pathfinding | 命名规范问题 |
+
+---
+
+# 5. 建议执行顺序
+
+1. **立即修复**: `transfer.rs` 的 drop 调用问题（P2）
+2. **本周内**: 清理 `equip.rs` 的未使用变量（P3）
+3. **计划中**: 评估 `preview.rs` 和 `targeting.rs` 的未使用字段是否需要保留
+4. **低优先级**: 重命名非 snake_case 的测试函数
+
+---
+
+# 6. 结论
+
+测试执行过程中发现 **10 个业务代码问题**，其中：
+- **2 个 P2 问题**：需要确认意图并修复
+- **8 个 P3 问题**：代码整洁和命名规范问题
+
+这些问题不影响测试通过，但建议在后续开发中逐步清理，以保持代码质量。

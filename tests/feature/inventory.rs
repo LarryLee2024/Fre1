@@ -61,7 +61,7 @@ fn put_item_in_container(app: &mut App, container_entity: Entity, def_id: &str, 
         .cloned()
         .unwrap();
     // 再获取可变借用生成 instance_id
-    let (instance_id, stack) = {
+    let (instance_id, mut stack) = {
         let mut counter = app.world_mut().resource_mut::<InstanceIdCounter>();
         let stack = ItemStack::from_def(&mut counter, &item_def, count);
         (stack.instance.instance_id, stack)
@@ -70,7 +70,7 @@ fn put_item_in_container(app: &mut App, container_entity: Entity, def_id: &str, 
     app.world_mut()
         .resource_scope(|world, item_reg: Mut<ItemRegistry>| {
             let mut container = world.get_mut::<Container>(container_entity).unwrap();
-            container.add_stack(stack, &item_reg);
+            container.add_stack(&mut stack, &item_reg);
         });
     instance_id
 }
@@ -201,8 +201,8 @@ fn 纯函数transfer_item_成功转移() {
     let mut from = Container::new(ContainerKind::Backpack, 20, 100.0);
     let mut to = Container::new(ContainerKind::Backpack, 20, 100.0);
 
-    let stack = ItemStack::from_def(&mut counter, &def, 10);
-    from.add_stack(stack, &registry);
+    let mut stack = ItemStack::from_def(&mut counter, &def, 10);
+    from.add_stack(&mut stack, &registry);
 
     let instance_id = from.stacks[0].instance.instance_id;
 
@@ -242,11 +242,11 @@ fn 纯函数transfer_item_目标满返回full() {
     // 目标容量为 1，已有一个堆叠
     let mut to = Container::new(ContainerKind::Chest, 1, 100.0);
 
-    let stack_from = ItemStack::from_def(&mut counter, &def, 10);
-    from.add_stack(stack_from, &registry);
+    let mut stack_from = ItemStack::from_def(&mut counter, &def, 10);
+    from.add_stack(&mut stack_from, &registry);
 
-    let stack_to = ItemStack::from_def(&mut counter, &def, 1);
-    to.add_stack(stack_to, &registry);
+    let mut stack_to = ItemStack::from_def(&mut counter, &def, 1);
+    to.add_stack(&mut stack_to, &registry);
 
     assert!(to.is_full());
 

@@ -14,8 +14,6 @@ const ARROW_HEAD_COLOR: Color = Color::srgba(1.0, 1.0, 0.4, 0.85);
 const LINE_WIDTH: f32 = 4.0;
 /// 箭头大小
 const ARROW_HEAD_SIZE: f32 = 14.0;
-/// 每格移动耗时（秒）
-const MOVE_SPEED: f32 = 0.15;
 
 /// 生成导航路径（连续线段 + 末端箭头）
 pub fn spawn_path_arrows(commands: &mut Commands, map: &GameMap, path: &[IVec2]) {

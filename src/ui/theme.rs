@@ -174,30 +174,118 @@ pub fn faction_color(faction: crate::character::Faction, theme: &UiTheme) -> Col
 
 #[cfg(test)]
 mod tests {
+    // ================================================
+    // AI Self-Check (test_spec.md §13.1)
+    // ================================================
+    // ✅ 测试行为，不是实现
+    // ✅ 符合领域规则 (ui_rules_v1.md 规则 4)
+    // ✅ 测试是确定性的
+    // ✅ 使用标准测试数据
+    // ✅ 没有测试私有实现
+    // ✅ 没有生成不在范围内的测试
+    // ================================================
+
     use super::*;
     use crate::character::Faction;
 
+    /// Test ID: UI-THM-001
+    /// Title: 阵营颜色映射正确区分玩家和敌方
+    ///
+    /// Given: 默认 UiTheme
+    /// When: 查询玩家和敌方的阵营颜色
+    /// Then: 两种颜色不同
+    ///
+    /// Assertions: player_color != enemy_color
     #[test]
-    fn faction_color_阵营颜色映射() {
+    fn faction_color_distinguishes_player_and_enemy() {
+        // Given
         let theme = UiTheme::default();
+
+        // When
         let player_color = faction_color(Faction::Player, &theme);
         let enemy_color = faction_color(Faction::Enemy, &theme);
+
+        // Then
         assert_ne!(player_color, enemy_color);
     }
 
+    /// Test ID: UI-THM-002
+    /// Title: 玩家阵营颜色为蓝色系
+    ///
+    /// Given: 默认 UiTheme
+    /// When: 查询玩家阵营颜色
+    /// Then: 蓝色分量大于红色分量
+    ///
+    /// Assertions: blue > red
     #[test]
-    fn faction_color_玩家为蓝色系() {
+    fn faction_color_player_is_blue_tinted() {
+        // Given
         let theme = UiTheme::default();
+
+        // When
         let color = faction_color(Faction::Player, &theme);
         let rgba = Srgba::from(color);
+
+        // Then
         assert!(rgba.blue > rgba.red);
     }
 
+    /// Test ID: UI-THM-003
+    /// Title: 敌方阵营颜色为红色系
+    ///
+    /// Given: 默认 UiTheme
+    /// When: 查询敌方阵营颜色
+    /// Then: 红色分量大于蓝色分量
+    ///
+    /// Assertions: red > blue
     #[test]
-    fn faction_color_敌方为红色系() {
+    fn faction_color_enemy_is_red_tinted() {
+        // Given
         let theme = UiTheme::default();
+
+        // When
         let color = faction_color(Faction::Enemy, &theme);
         let rgba = Srgba::from(color);
+
+        // Then
         assert!(rgba.red > rgba.blue);
+    }
+
+    /// Test ID: UI-THM-004
+    /// Title: UiTheme 默认值完整性
+    ///
+    /// Given: UiTheme::default()
+    /// When: 检查所有字段
+    /// Then: 所有字段值符合预期
+    ///
+    /// Assertions: 颜色/字号/间距值正确
+    #[test]
+    fn ui_theme_default_values_complete() {
+        // Given
+        let theme = UiTheme::default();
+
+        // When - 无需操作
+
+        // Then - 颜色
+        assert_eq!(theme.panel_bg, Color::srgba(0.1, 0.1, 0.1, 0.9));
+        assert_eq!(theme.text_primary, Color::WHITE);
+        assert_eq!(
+            theme.faction_player_color,
+            Color::srgb(0.2, 0.5, 1.0)
+        );
+        assert_eq!(
+            theme.faction_enemy_color,
+            Color::srgb(1.0, 0.3, 0.2)
+        );
+
+        // Then - 字号
+        assert!((theme.font_large - 24.0).abs() < f32::EPSILON);
+        assert!((theme.font_medium - 18.0).abs() < f32::EPSILON);
+        assert!((theme.font_small - 14.0).abs() < f32::EPSILON);
+
+        // Then - 间距
+        assert!((theme.gap_small - 4.0).abs() < f32::EPSILON);
+        assert!((theme.gap_medium - 6.0).abs() < f32::EPSILON);
+        assert!((theme.gap_large - 10.0).abs() < f32::EPSILON);
     }
 }

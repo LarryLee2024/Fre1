@@ -80,7 +80,7 @@ fn put_consumable_in_backpack(app: &mut App, entity: Entity, def_id: &str, count
         .cloned()
         .unwrap();
     // 再获取可变借用生成 instance_id
-    let (instance_id, stack) = {
+    let (instance_id, mut stack) = {
         let mut counter = app.world_mut().resource_mut::<InstanceIdCounter>();
         let stack = ItemStack::from_def(&mut counter, &item_def, count);
         (stack.instance.instance_id, stack)
@@ -89,7 +89,7 @@ fn put_consumable_in_backpack(app: &mut App, entity: Entity, def_id: &str, count
     app.world_mut()
         .resource_scope(|world, item_reg: Mut<ItemRegistry>| {
             let mut container = world.get_mut::<Container>(entity).unwrap();
-            container.add_stack(stack, &item_reg);
+            container.add_stack(&mut stack, &item_reg);
         });
     instance_id
 }

@@ -80,8 +80,8 @@ pub fn transfer_item_system(
         }
 
         // 释放不可变借用
-        drop(from_container);
-        drop(to_container);
+        let _ = from_container;
+        let _ = to_container;
 
         // 从源容器移除
         let removed = if let Ok(mut from) = containers.get_mut(msg.from_entity) {
