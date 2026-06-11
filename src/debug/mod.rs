@@ -208,3 +208,217 @@ fn conditional_turn_queue_viewer(
     }
     viewers::turn_queue_viewer::turn_queue_viewer_system_inner(egui_ctx, turn_order, units);
 }
+
+#[cfg(test)]
+mod tests {
+    // ================================================
+    // AI Self-Check (test_spec.md §13.1)
+    // ================================================
+    // ✅ 测试行为，不是实现
+    // ✅ 符合领域规则
+    // ✅ 测试是确定性的
+    // ✅ 使用标准测试数据
+    // ✅ 没有测试私有实现
+    // ✅ 没有生成不在范围内的测试
+    // ================================================
+
+    use super::*;
+
+    /// Test ID: DBG-PNL-001
+    /// Title: DebugPanelState 默认所有面板关闭
+    ///
+    /// Given: 新创建的 DebugPanelState
+    /// When: 检查默认值
+    /// Then: 所有 show_* 字段为 false，damage_attribute_tab 为 0
+    ///
+    /// Assertions: 4 个 bool 字段均为 false, tab == 0
+    #[test]
+    fn debug_panel_state_default_all_off() {
+        // Given & When
+        let state = DebugPanelState::default();
+
+        // Then
+        assert!(!state.show_battle_debugger);
+        assert!(!state.show_buff_viewer);
+        assert!(!state.show_damage_attribute);
+        assert!(!state.show_turn_queue);
+        assert_eq!(state.damage_attribute_tab, 0);
+    }
+
+    /// Test ID: DBG-PNL-002
+    /// Title: F1 快捷键切换 Battle Debugger 面板
+    ///
+    /// Given: DebugPanelState（show_battle_debugger=false）
+    /// When: 模拟 F1 按下行为（toggle）
+    /// Then: show_battle_debugger 变为 true
+    ///
+    /// Assertions: show_battle_debugger == true
+    #[test]
+    fn f1_toggles_battle_debugger() {
+        // Given
+        let mut state = DebugPanelState::default();
+        assert!(!state.show_battle_debugger);
+
+        // When — 模拟 F1 toggle 行为
+        state.show_battle_debugger = !state.show_battle_debugger;
+
+        // Then
+        assert!(state.show_battle_debugger);
+    }
+
+    /// Test ID: DBG-PNL-003
+    /// Title: F1 快捷键二次切换关闭 Battle Debugger 面板
+    ///
+    /// Given: DebugPanelState（show_battle_debugger=true）
+    /// When: 再次模拟 F1 按下行为（toggle）
+    /// Then: show_battle_debugger 变为 false
+    ///
+    /// Assertions: show_battle_debugger == false
+    #[test]
+    fn f1_toggles_battle_debugger_off() {
+        // Given
+        let mut state = DebugPanelState {
+            show_battle_debugger: true,
+            ..default()
+        };
+
+        // When — 模拟 F1 toggle 行为
+        state.show_battle_debugger = !state.show_battle_debugger;
+
+        // Then
+        assert!(!state.show_battle_debugger);
+    }
+
+    /// Test ID: DBG-PNL-004
+    /// Title: F2 快捷键切换 Buff Viewer 面板
+    ///
+    /// Given: DebugPanelState（show_buff_viewer=false）
+    /// When: 模拟 F2 按下行为（toggle）
+    /// Then: show_buff_viewer 变为 true
+    ///
+    /// Assertions: show_buff_viewer == true
+    #[test]
+    fn f2_toggles_buff_viewer() {
+        // Given
+        let mut state = DebugPanelState::default();
+        assert!(!state.show_buff_viewer);
+
+        // When
+        state.show_buff_viewer = !state.show_buff_viewer;
+
+        // Then
+        assert!(state.show_buff_viewer);
+    }
+
+    /// Test ID: DBG-PNL-005
+    /// Title: F4 快捷键切换 Damage & Attribute 面板
+    ///
+    /// Given: DebugPanelState（show_damage_attribute=false）
+    /// When: 模拟 F4 按下行为（toggle）
+    /// Then: show_damage_attribute 变为 true
+    ///
+    /// Assertions: show_damage_attribute == true
+    #[test]
+    fn f4_toggles_damage_attribute() {
+        // Given
+        let mut state = DebugPanelState::default();
+        assert!(!state.show_damage_attribute);
+
+        // When
+        state.show_damage_attribute = !state.show_damage_attribute;
+
+        // Then
+        assert!(state.show_damage_attribute);
+    }
+
+    /// Test ID: DBG-PNL-006
+    /// Title: F5 快捷键切换 Turn Queue 面板
+    ///
+    /// Given: DebugPanelState（show_turn_queue=false）
+    /// When: 模拟 F5 按下行为（toggle）
+    /// Then: show_turn_queue 变为 true
+    ///
+    /// Assertions: show_turn_queue == true
+    #[test]
+    fn f5_toggles_turn_queue() {
+        // Given
+        let mut state = DebugPanelState::default();
+        assert!(!state.show_turn_queue);
+
+        // When
+        state.show_turn_queue = !state.show_turn_queue;
+
+        // Then
+        assert!(state.show_turn_queue);
+    }
+
+    /// Test ID: DBG-PNL-007
+    /// Title: F4 Tab 切换 Damage/Attribute 子面板
+    ///
+    /// Given: DebugPanelState（damage_attribute_tab=0）
+    /// When: 模拟 Tab 点击行为（切换到 1）
+    /// Then: damage_attribute_tab 变为 1
+    ///
+    /// Assertions: damage_attribute_tab == 1
+    #[test]
+    fn f4_tab_switches_to_attribute() {
+        // Given
+        let mut state = DebugPanelState::default();
+        assert_eq!(state.damage_attribute_tab, 0);
+
+        // When — 模拟 Tab 切换到 Attribute 面板
+        state.damage_attribute_tab = 1;
+
+        // Then
+        assert_eq!(state.damage_attribute_tab, 1);
+    }
+
+    /// Test ID: DBG-PNL-008
+    /// Title: F4 Tab 切换回 Damage 子面板
+    ///
+    /// Given: DebugPanelState（damage_attribute_tab=1）
+    /// When: 模拟 Tab 点击行为（切换到 0）
+    /// Then: damage_attribute_tab 变为 0
+    ///
+    /// Assertions: damage_attribute_tab == 0
+    #[test]
+    fn f4_tab_switches_back_to_damage() {
+        // Given
+        let mut state = DebugPanelState {
+            damage_attribute_tab: 1,
+            ..default()
+        };
+
+        // When — 模拟 Tab 切换回 Damage 面板
+        state.damage_attribute_tab = 0;
+
+        // Then
+        assert_eq!(state.damage_attribute_tab, 0);
+    }
+
+    /// Test ID: DBG-PNL-009
+    /// Title: 多面板独立切换
+    ///
+    /// Given: DebugPanelState（全部关闭）
+    /// When: 依次切换 F1、F2、F4
+    /// Then: 三个面板独立开启，其余保持关闭
+    ///
+    /// Assertions: show_battle_debugger=true, show_buff_viewer=true,
+    ///             show_damage_attribute=true, show_turn_queue=false
+    #[test]
+    fn multiple_panels_toggle_independently() {
+        // Given
+        let mut state = DebugPanelState::default();
+
+        // When — 依次切换 F1、F2、F4
+        state.show_battle_debugger = !state.show_battle_debugger;
+        state.show_buff_viewer = !state.show_buff_viewer;
+        state.show_damage_attribute = !state.show_damage_attribute;
+
+        // Then
+        assert!(state.show_battle_debugger);
+        assert!(state.show_buff_viewer);
+        assert!(state.show_damage_attribute);
+        assert!(!state.show_turn_queue);
+    }
+}

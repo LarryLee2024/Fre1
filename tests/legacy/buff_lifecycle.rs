@@ -170,7 +170,7 @@ fn dot_buff_每轮扣血() {
     let mut attrs = warrior_attrs();
     let mut tags = GameplayTags::default();
 
-    attrs.set_base(AttributeKind::Hp, 20.0);
+    attrs.set_vital(AttributeKind::Hp, 20.0);
     apply_buff(&mut buffs, &mut attrs, &mut tags, &poison, None, 3);
 
     // 模拟 resolve_status_effects 中的 DoT 结算
@@ -178,7 +178,7 @@ fn dot_buff_每轮扣血() {
     assert_eq!(dot, 3);
     let hp = attrs.get(AttributeKind::Hp);
     let new_hp = (hp - dot as f32).max(0.0);
-    attrs.set_base(AttributeKind::Hp, new_hp);
+    attrs.set_vital(AttributeKind::Hp, new_hp);
     assert_eq!(attrs.get(AttributeKind::Hp), 17.0);
 
     // tick
@@ -197,7 +197,7 @@ fn dot_buff_每轮扣血() {
     let dot = buffs.dot_damage();
     assert_eq!(dot, 3);
     let hp = attrs.get(AttributeKind::Hp);
-    attrs.set_base(AttributeKind::Hp, (hp - dot as f32).max(0.0));
+    attrs.set_vital(AttributeKind::Hp, (hp - dot as f32).max(0.0));
     assert_eq!(attrs.get(AttributeKind::Hp), 14.0);
 }
 
@@ -220,7 +220,7 @@ fn hot_buff_每轮回血_不超过最大hp() {
     let mut attrs = warrior_attrs();
     let mut tags = GameplayTags::default();
 
-    attrs.set_base(AttributeKind::Hp, 18.0); // MaxHp=30
+    attrs.set_vital(AttributeKind::Hp, 18.0); // MaxHp=30
     apply_buff(&mut buffs, &mut attrs, &mut tags, &regen, None, 3);
 
     // 第1轮 HoT
@@ -228,19 +228,19 @@ fn hot_buff_每轮回血_不超过最大hp() {
     assert_eq!(hot, 4);
     let hp = attrs.get(AttributeKind::Hp);
     let max_hp = attrs.get(AttributeKind::MaxHp);
-    attrs.set_base(AttributeKind::Hp, (hp + hot as f32).min(max_hp));
+    attrs.set_vital(AttributeKind::Hp, (hp + hot as f32).min(max_hp));
     assert_eq!(attrs.get(AttributeKind::Hp), 22.0);
 
     // 第2轮 HoT
     let hot = buffs.hot_heal();
     let hp = attrs.get(AttributeKind::Hp);
-    attrs.set_base(AttributeKind::Hp, (hp + hot as f32).min(max_hp));
+    attrs.set_vital(AttributeKind::Hp, (hp + hot as f32).min(max_hp));
     assert_eq!(attrs.get(AttributeKind::Hp), 26.0);
 
     // 第3轮 HoT
     let hot = buffs.hot_heal();
     let hp = attrs.get(AttributeKind::Hp);
-    attrs.set_base(AttributeKind::Hp, (hp + hot as f32).min(max_hp));
+    attrs.set_vital(AttributeKind::Hp, (hp + hot as f32).min(max_hp));
     assert_eq!(attrs.get(AttributeKind::Hp), 30.0); // cap at MaxHp
 }
 

@@ -423,6 +423,16 @@ pub fn rebuild_trait_effects(
 
 #[cfg(test)]
 mod tests {
+    // ================================================
+    // Bevy SRPG AI宪法 v1.1 自检结果（测试专用）
+    // ================================================
+    // ✅ 测行为不测实现：是 — 断言验证穿脱后属性/标签/Trait 状态
+    // ✅ 符合领域规则：是 — 覆盖 INV-EQ-1~5 穿脱流程不变量
+    // ✅ 确定性：是 — 硬编码装备定义和属性值
+    // ✅ 使用标准数据：是 — 使用标准 EquipmentRegistry
+    // ✅ 无越界测试：是 — 仅测试公共 API
+    // ✅ 未测试私有实现：是 — 仅通过 pub 接口测试
+    // ================================================
     use super::*;
     use crate::core::attribute::AttributeKind;
     use crate::core::registry_loader::RegistryLoader;

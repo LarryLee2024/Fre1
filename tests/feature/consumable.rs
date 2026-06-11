@@ -115,7 +115,7 @@ fn 治疗药水恢复hp_受伤角色使用后hp修饰符增加() {
     {
         let mut attrs = app.world_mut().get_mut::<Attributes>(entity).unwrap();
         let max_hp = attrs.get(AttributeKind::MaxHp);
-        attrs.set_base(AttributeKind::Hp, max_hp - 80.0);
+        attrs.set_vital(AttributeKind::Hp, max_hp - 80.0);
     }
 
     // 记录使用前 HP 和修饰符数量

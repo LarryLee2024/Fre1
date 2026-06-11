@@ -61,8 +61,19 @@ pub fn transfer_item_system(
             continue;
         };
         // 规则4：检查目标容器容量和重量
-        // 注意：不使用 is_full() 预检查，因为合并到已有堆叠不需要额外容量
-        // add_stack 内部会正确处理合并/容量/重量逻辑
+        // 合并到已有堆叠不需要额外容量，但需要新堆叠时必须检查 is_full()
+        let can_merge = to_container
+            .stacks
+            .iter()
+            .any(|s| s.instance.def_id == def_id && s.can_merge_with(&stack));
+        if !can_merge && to_container.is_full() {
+            bevy::log::warn!(
+                target: "inventory",
+                to = ?msg.to_entity,
+                "目标容器已满"
+            );
+            continue;
+        }
         if to_container.max_weight > 0.0 {
             if let Some(def) = item_registry.get(&def_id) {
                 let added_weight = def.weight * to_remove as f32;
@@ -135,8 +146,13 @@ pub fn transfer_item(
     };
 
     // 检查目标容器
-    // 注意：不使用 is_full() 预检查，因为合并到已有堆叠不需要额外容量
-    // add_stack 内部会正确处理合并/容量/重量逻辑
+    // 规则4：检查目标容器容量和重量
+    // 合并到已有堆叠不需要额外容量，但需要新堆叠时必须检查 is_full()
+    let can_merge = to.stacks.iter().any(|s| s.can_merge_with(&new_stack));
+    if !can_merge && to.is_full() {
+        return ContainerResult::Full;
+    }
+
     if to.max_weight > 0.0 {
         if let Some(def) = registry.get(&new_stack.instance.def_id) {
             let added_weight = new_stack.total_weight(def);

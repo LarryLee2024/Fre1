@@ -104,7 +104,7 @@ fn 伤害处理器_generate_基础攻击() {
     let handler = registry.find("Damage").unwrap();
 
     let mut target = goblin_attrs();
-    target.set_base(AttributeKind::Hp, 15.0);
+    target.set_vital(AttributeKind::Hp, 15.0);
 
     let ctx = GenerateContext {
         source_entity: bevy::prelude::Entity::from_bits(1),
@@ -171,7 +171,7 @@ fn 治疗处理器_generate() {
     let handler = registry.find("Heal").unwrap();
 
     let mut target = warrior_attrs();
-    target.set_base(AttributeKind::Hp, 15.0);
+    target.set_vital(AttributeKind::Hp, 15.0);
 
     let ctx = GenerateContext {
         source_entity: bevy::prelude::Entity::from_bits(1),
@@ -253,7 +253,7 @@ fn 伤害预览与generate一致() {
     let damage_handler = registry.find("Damage").unwrap();
 
     let mut target = goblin_attrs();
-    target.set_base(AttributeKind::Hp, 15.0);
+    target.set_vital(AttributeKind::Hp, 15.0);
 
     let gen_ctx = GenerateContext {
         source_entity: bevy::prelude::Entity::from_bits(1),
@@ -299,7 +299,7 @@ fn 治疗预览不超过最大hp() {
     let handler = registry.find("Heal").unwrap();
 
     let mut target = warrior_attrs();
-    target.set_base(AttributeKind::Hp, 28.0); // MaxHp=30
+    target.set_vital(AttributeKind::Hp, 28.0); // MaxHp=30
 
     let ctx = PreviewContext {
         source_attrs: warrior_attrs(),
@@ -325,7 +325,7 @@ fn 伤害预览致死标记() {
     let mut source = warrior_attrs();
     source.set_base(AttributeKind::Might, 25.0); // Attack=50
     let mut target = goblin_attrs();
-    target.set_base(AttributeKind::Hp, 5.0);
+    target.set_vital(AttributeKind::Hp, 5.0);
 
     let ctx = PreviewContext {
         source_attrs: source,

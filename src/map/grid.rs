@@ -167,10 +167,30 @@ impl Plugin for MapGridPlugin {
 
 #[cfg(test)]
 mod tests {
+    // ================================================
+    // AI Self-Check (test_spec.md §13.1)
+    // ================================================
+    // ✅ 测试行为，不是实现
+    // ✅ 符合领域规则
+    // ✅ 测试是确定性的
+    // ✅ 使用标准测试数据
+    // ✅ 没有测试私有实现
+    // ✅ 没有生成不在范围内的测试
+    // ================================================
+
     use super::*;
 
+    /// Test ID: MAP-GRD-001
+    /// Title: GameMap 从关卡配置创建
+    ///
+    /// Given: LevelConfig 包含 width=12, height=10, tile_size=48.0
+    /// When: 调用 GameMap::from_level()
+    /// Then: 创建正确的 GameMap
+    ///
+    /// Assertions: width=12, height=10, tile_size=48.0
     #[test]
     fn game_map_从关卡配置创建() {
+        // Given
         let level = super::super::data::LevelConfig {
             id: "test".into(),
             name: "测试".into(),
@@ -181,7 +201,11 @@ mod tests {
             player_units: vec![],
             enemy_units: vec![],
         };
+
+        // When
         let map = GameMap::from_level(&level);
+
+        // Then
         assert_eq!(map.width, 12);
         assert_eq!(map.height, 10);
         assert_eq!(map.tile_size, 48.0);
@@ -195,25 +219,62 @@ mod tests {
         }
     }
 
+    /// Test ID: MAP-GRD-002
+    /// Title: 坐标转世界坐标（左下角原点）
+    ///
+    /// Given: 10x8 地图，tile_size=64.0
+    /// When: 转换 (0,0) 坐标
+    /// Then: 世界坐标为 (-288.0, -224.0)
+    ///
+    /// Assertions: pos.x == -288.0, pos.y == -224.0
     #[test]
     fn 坐标转世界_左下角原点() {
+        // Given
         let map = make_map();
+
+        // When
         let pos = map.coord_to_world(IVec2::new(0, 0));
+
+        // Then
         assert_eq!(pos.x, -288.0);
         assert_eq!(pos.y, -224.0);
     }
 
+    /// Test ID: MAP-GRD-003
+    /// Title: 坐标转世界坐标（地图中心）
+    ///
+    /// Given: 10x8 地图，tile_size=64.0
+    /// When: 转换 (5,4) 坐标
+    /// Then: 世界坐标为 (32.0, 32.0)
+    ///
+    /// Assertions: pos.x == 32.0, pos.y == 32.0
     #[test]
     fn 坐标转世界_地图中心() {
+        // Given
         let map = make_map();
+
+        // When
         let pos = map.coord_to_world(IVec2::new(5, 4));
+
+        // Then
         assert_eq!(pos.x, 32.0);
         assert_eq!(pos.y, 32.0);
     }
 
+    /// Test ID: MAP-GRD-004
+    /// Title: 世界坐标转网格坐标（往返一致）
+    ///
+    /// Given: 10x8 地图
+    /// When: coord → world → coord 往返转换
+    /// Then: 结果与原始坐标一致
+    ///
+    /// Assertions: back == coord
     #[test]
     fn 世界转坐标_往返一致() {
+        // Given
         let map = make_map();
+
+        // When & Then
         for coord in [IVec2::new(0, 0), IVec2::new(5, 4), IVec2::new(9, 7)] {
             let world = map.coord_to_world(coord);
             let back = map.world_to_coord(world);
@@ -221,22 +282,55 @@ mod tests {
         }
     }
 
+    /// Test ID: MAP-GRD-005
+    /// Title: 边界检查 - 内部坐标合法
+    ///
+    /// Given: 10x8 地图
+    /// When: 检查 (0,0) 和 (9,7)
+    /// Then: 返回 true
+    ///
+    /// Assertions: is_in_bounds() 返回 true
     #[test]
     fn 边界_内部坐标合法() {
+        // Given
         let map = make_map();
+
+        // When & Then
         assert!(map.is_in_bounds(IVec2::new(0, 0)));
         assert!(map.is_in_bounds(IVec2::new(9, 7)));
     }
 
+    /// Test ID: MAP-GRD-006
+    /// Title: 边界检查 - 负坐标非法
+    ///
+    /// Given: 10x8 地图
+    /// When: 检查 (-1,0)
+    /// Then: 返回 false
+    ///
+    /// Assertions: is_in_bounds() 返回 false
     #[test]
     fn 边界_负坐标非法() {
+        // Given
         let map = make_map();
+
+        // When & Then
         assert!(!map.is_in_bounds(IVec2::new(-1, 0)));
     }
 
+    /// Test ID: MAP-GRD-007
+    /// Title: 边界检查 - 超出宽高非法
+    ///
+    /// Given: 10x8 地图
+    /// When: 检查 (10,0) 和 (0,8)
+    /// Then: 返回 false
+    ///
+    /// Assertions: is_in_bounds() 返回 false
     #[test]
     fn 边界_超出宽高非法() {
+        // Given
         let map = make_map();
+
+        // When & Then
         assert!(!map.is_in_bounds(IVec2::new(10, 0)));
         assert!(!map.is_in_bounds(IVec2::new(0, 8)));
     }

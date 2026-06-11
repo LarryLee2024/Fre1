@@ -197,7 +197,7 @@ fn 技能槽_迭代器与特殊技能() {
 fn 战士_MP不足无法释放火球() {
     let skill = fireball();
     let mut attrs = warrior_attrs();
-    attrs.set_base(AttributeKind::Mp, 3.0); // MP=3 < 8
+    attrs.set_vital(AttributeKind::Mp, 3.0); // MP=3 < 8
     let tags = GameplayTags::default();
 
     let result = skill.can_use(&attrs, &tags, None, 0);
@@ -266,7 +266,7 @@ fn 狂暴_HP充足时不可用() {
 fn 狂暴_HP低于30百分比时可用() {
     let skill = berserker_skill();
     let mut attrs = warrior_attrs();
-    attrs.set_base(AttributeKind::Hp, 8.0); // HP=8, MaxHp=30 → 26.7% < 30%
+    attrs.set_vital(AttributeKind::Hp, 8.0); // HP=8, MaxHp=30 → 26.7% < 30%
     let tags = GameplayTags::default();
 
     assert!(skill.can_use(&attrs, &tags, None, 0).is_ok());
@@ -354,7 +354,7 @@ fn 法师_奥术冲击_满足所有条件() {
 fn 法师_奥术冲击_MP不足时失败() {
     let skill = mage_only_skill();
     let mut attrs = mage_attrs();
-    attrs.set_base(AttributeKind::Mp, 5.0); // MP=5 < 10
+    attrs.set_vital(AttributeKind::Mp, 5.0); // MP=5 < 10
     let mut tags = GameplayTags::default();
     tags.add(GameplayTag::MAGE);
 

@@ -49,6 +49,16 @@ pub fn check_equipment_requirements(
 
 #[cfg(test)]
 mod tests {
+    // ================================================
+    // Bevy SRPG AI宪法 v1.1 自检结果（测试专用）
+    // ================================================
+    // ✅ 测行为不测实现：是 — 断言验证需求检查结果，不验证内部匹配逻辑
+    // ✅ 符合领域规则：是 — 覆盖 INV-REQ-1~6 需求检查不变量
+    // ✅ 确定性：是 — 硬编码标签和属性数据
+    // ✅ 使用标准数据：是 — 使用标准 EquipmentRequirement
+    // ✅ 无越界测试：是 — 仅测试公共 API
+    // ✅ 未测试私有实现：是 — 仅通过 pub 接口测试
+    // ================================================
     use super::*;
     use crate::core::attribute::AttributeKind;
     use crate::core::tag::{GameplayTag, TagName};

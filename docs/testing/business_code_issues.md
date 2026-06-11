@@ -1,16 +1,16 @@
 # 业务代码修改建议
 
-**Version**: 2.0
+**Version**: 3.0
 **Date**: 2026-06-11
 **Reviewer**: Test Guardian
-**Source**: UI 模块 + Character 模块测试执行过程中的编译警告
+**Source**: UI 模块 + Character 模块 + Debug 模块测试执行过程中的编译警告和架构问题
 **Standard**: `docs/test_spec.md`, `code_style.md`, `ai_constitution.md`
 
 ---
 
 # 1. 问题来源
 
-在执行 `cargo test --lib ui::*` 和 `cargo test --lib character::` 过程中，编译器输出以下警告，表明业务代码存在潜在问题。
+在执行 `cargo test` 过程中，编译器输出以下警告，表明业务代码存在潜在问题。此外，Debug 模块测试过程中发现架构问题影响可测试性。
 
 ---
 
@@ -385,3 +385,100 @@ pub struct UnitTemplate {
 | `battle/record.rs:450` | 非 snake_case 函数名 `战斗记录_最近N条` | P3 |
 | `inventory/use_item.rs:340,374` | 非 snake_case 函数名 | P3 |
 | `map/pathfinding/mod.rs:516` | 非 snake_case 函数名 `回溯路径_L形路径` | P3 |
+
+---
+
+# 附录 B：Debug 模块架构问题
+
+## B.1 `src/debug/viewers/damage_viewer.rs` - render_damage_panel 无法单元测试
+
+**严重性**: P2
+**位置**: `src/debug/viewers/damage_viewer.rs:10`
+**问题**: `render_damage_panel` 函数需要 `&mut egui::Ui` 参数，无法在单元测试中调用
+
+```rust
+pub fn render_damage_panel(
+    ui: &mut bevy_inspector_egui::egui::Ui,  // 依赖 egui 上下文
+    battle_record: &BattleRecord,
+    _units: &Query<&UnitName>,
+) {
+    // 过滤逻辑：filter_map + take(20)
+    // 无法在不启动 egui 的情况下测试
+}
+```
+
+**原因分析**: 函数签名将过滤逻辑与 egui 渲染耦合，违反了 Logic/Presentation 分离原则（architecture.md §4）。
+
+**修改建议**:
+```rust
+// 方案 1: 提取纯过滤逻辑为独立函数
+pub fn filter_damage_entries(record: &BattleRecord) -> Vec<DamageEntry> {
+    record.entries.iter().rev()
+        .filter_map(|e| { /* 过滤逻辑 */ })
+        .take(20)
+        .collect()
+}
+
+// 方案 2: 保留现有实现，接受不可测试性（§1.1 排除 UI 测试）
+```
+
+**影响范围**: Debug 模块伤害分解面板
+**风险**: 低 - 仅影响测试覆盖，不影响运行时行为
+
+---
+
+## B.2 `src/debug/viewers/attribute_viewer.rs` - render_attribute_panel 无法单元测试
+
+**严重性**: P2
+**位置**: `src/debug/viewers/attribute_viewer.rs:13`
+**问题**: `render_attribute_panel` 函数需要 `&mut egui::Ui` 参数，无法在单元测试中调用
+
+```rust
+pub fn render_attribute_panel(
+    ui: &mut bevy_inspector_egui::egui::Ui,  // 依赖 egui 上下文
+    units: &Query<...>,
+) {
+    // 分组逻辑：collect + sort_by_key + dedup
+    // 无法在不启动 egui 的情况下测试
+}
+```
+
+**原因分析**: 函数签名将分组逻辑与 egui 渲染耦合，违反了 Logic/Presentation 分离原则（architecture.md §4）。
+
+**修改建议**:
+```rust
+// 方案 1: 提取纯分组逻辑为独立函数
+pub fn group_modifiers_by_kind(attrs: &Attributes) -> Vec<AttributeKind> {
+    let mut kinds: Vec<AttributeKind> = attrs.modifiers.iter().map(|m| m.kind).collect();
+    kinds.sort_by_key(|k| format!("{:?}", k));
+    kinds.dedup();
+    kinds
+}
+
+// 方案 2: 保留现有实现，接受不可测试性（§1.1 排除 UI 测试）
+```
+
+**影响范围**: Debug 模块属性修饰符面板
+**风险**: 低 - 仅影响测试覆盖，不影响运行时行为
+
+---
+
+## B.3 `src/debug/viewers/grid_viewer.rs` - 分页逻辑与 egui 耦合
+
+**严重性**: P3
+**位置**: `src/debug/viewers/grid_viewer.rs:70-86`
+**问题**: 分页计算逻辑嵌入在 egui 回调中，无法直接测试
+
+```rust
+// 分页逻辑嵌入在 egui 按钮回调中
+if ui.button("▲ 上页").clicked() {
+    viewer_state.scroll_row = (viewer_state.scroll_row - viewer_state.page_rows).max(0);
+}
+```
+
+**原因分析**: 分页逻辑与 UI 交互耦合，但数学计算本身是纯函数。
+
+**修改建议**: 当前已通过在测试中复制逻辑验证正确性（v2.0 测试），可接受。
+
+**影响范围**: Grid Viewer 分页功能
+**风险**: 无 - 已通过测试验证

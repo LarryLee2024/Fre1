@@ -14,7 +14,7 @@ use crate::common::fixtures::UnitBuilder;
 /// 构建 MP 不足的战士：MP=3
 fn low_mp_warrior_attrs() -> Attributes {
     let mut attrs = UnitBuilder::warrior().attrs().clone();
-    attrs.set_base(AttributeKind::Mp, 3.0);
+    attrs.set_vital(AttributeKind::Mp, 3.0);
     attrs
 }
 

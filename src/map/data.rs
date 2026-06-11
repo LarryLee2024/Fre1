@@ -312,11 +312,31 @@ impl Plugin for MapDataPlugin {
 
 #[cfg(test)]
 mod tests {
+    // ================================================
+    // AI Self-Check (test_spec.md §13.1)
+    // ================================================
+    // ✅ 测试行为，不是实现
+    // ✅ 符合领域规则
+    // ✅ 测试是确定性的
+    // ✅ 使用标准测试数据
+    // ✅ 没有测试私有实现
+    // ✅ 没有生成不在范围内的测试
+    // ================================================
+
     use super::*;
     use ron::de::from_bytes;
 
+    /// Test ID: MAP-DAT-001
+    /// Title: RON 反序列化 - 可通行地形定义
+    ///
+    /// Given: 包含 plain 地形的 RON 字符串
+    /// When: 反序列化为 TerrainDefRon
+    /// Then: 解析出正确的 id, move_cost, passable
+    ///
+    /// Assertions: id="plain", move_cost=1, passable=true
     #[test]
     fn ron_反序列化_地形定义() {
+        // Given
         let ron_str = r#"
             (
                 id: "plain",
@@ -327,14 +347,27 @@ mod tests {
                 passable: true,
             )
         "#;
+
+        // When
         let def: TerrainDefRon = from_bytes(ron_str.as_bytes()).unwrap();
+
+        // Then
         assert_eq!(def.id, "plain");
         assert_eq!(def.move_cost, 1);
         assert!(def.passable);
     }
 
+    /// Test ID: MAP-DAT-002
+    /// Title: RON 反序列化 - 不可通行地形（move_cost=0）
+    ///
+    /// Given: 包含 mountain 的 RON 字符串（move_cost=0, passable=false）
+    /// When: 反序列化为 TerrainDefRon 并转换为 TerrainDef
+    /// Then: TerrainDef.move_cost = None
+    ///
+    /// Assertions: move_cost=None, passable=false
     #[test]
     fn ron_反序列化_不可通行地形() {
+        // Given
         let ron_str = r#"
             (
                 id: "mountain",
@@ -345,15 +378,28 @@ mod tests {
                 passable: false,
             )
         "#;
+
+        // When
         let def: TerrainDefRon = from_bytes(ron_str.as_bytes()).unwrap();
+        let terrain_def: TerrainDef = def.into();
+
+        // Then
         assert_eq!(def.move_cost, 0);
         assert!(!def.passable);
-        let terrain_def: TerrainDef = def.into();
         assert_eq!(terrain_def.move_cost, None);
     }
 
+    /// Test ID: MAP-DAT-003
+    /// Title: RON 反序列化 - 关卡配置
+    ///
+    /// Given: 包含地形网格、玩家和敌人单位的 RON 字符串
+    /// When: 反序列化为 LevelConfigDef
+    /// Then: 解析出 id="tutorial", terrain_grid=4, player_units=1, enemy_units=1
+    ///
+    /// Assertions: 各字段长度和 ID 正确
     #[test]
     fn ron_反序列化_关卡配置() {
+        // Given
         let ron_str = r#"
             (
                 id: "tutorial",
@@ -374,15 +420,28 @@ mod tests {
                 ],
             )
         "#;
+
+        // When
         let def: LevelConfigDef = from_bytes(ron_str.as_bytes()).unwrap();
+
+        // Then
         assert_eq!(def.id, "tutorial");
         assert_eq!(def.terrain_grid.len(), 4);
         assert_eq!(def.player_units.len(), 1);
         assert_eq!(def.enemy_units.len(), 1);
     }
 
+    /// Test ID: MAP-DAT-004
+    /// Title: LevelConfigDef 转换为 LevelConfig
+    ///
+    /// Given: 3x2 关卡，地形网格 "PPF" "PMM"
+    /// When: 调用 LevelConfig::from_def()
+    /// Then: terrain_map 正确解析每个格子
+    ///
+    /// Assertions: (0,0)="plain", (2,0)="forest", (2,1)="mountain"
     #[test]
     fn level_config_def_转换为_level_config() {
+        // Given
         let terrain_reg = {
             let mut reg = TerrainRegistry::default();
             reg.register_defaults();
@@ -400,7 +459,11 @@ mod tests {
             player_units: vec![],
             enemy_units: vec![],
         };
+
+        // When
         let config = LevelConfig::from_def(def, &terrain_reg);
+
+        // Then
         assert_eq!(config.terrain_map.get(&(0, 0)), Some(&"plain".to_string()));
         assert_eq!(config.terrain_map.get(&(2, 0)), Some(&"forest".to_string()));
         assert_eq!(
@@ -409,10 +472,21 @@ mod tests {
         );
     }
 
+    /// Test ID: MAP-DAT-005
+    /// Title: TerrainRegistry 兜底默认值
+    ///
+    /// Given: 空 TerrainRegistry，调用 register_defaults()
+    /// When: 查询 plain/forest/mountain/water
+    /// Then: 全部返回 Some，move_cost/defense_bonus 正确
+    ///
+    /// Assertions: plain.move_cost=Some(1), forest.defense_bonus=2
     #[test]
     fn terrain_registry_兜底默认值() {
+        // Given
         let mut reg = TerrainRegistry::default();
         reg.register_defaults();
+
+        // When & Then
         assert!(reg.get("plain").is_some());
         assert!(reg.get("forest").is_some());
         assert!(reg.get("mountain").is_some());
@@ -421,8 +495,17 @@ mod tests {
         assert_eq!(reg.get("forest").unwrap().defense_bonus, 2);
     }
 
+    /// Test ID: MAP-DAT-006
+    /// Title: LevelRegistry 查询已注册关卡
+    ///
+    /// Given: LevelRegistry 中插入 "test" 关卡
+    /// When: 调用 get("test")
+    /// Then: 返回 Some
+    ///
+    /// Assertions: is_some()
     #[test]
     fn level_registry_查询关卡() {
+        // Given
         let mut registry = LevelRegistry::default();
         registry.levels.insert(
             "test".into(),
@@ -437,17 +520,39 @@ mod tests {
                 enemy_units: vec![],
             },
         );
+
+        // When & Then
         assert!(registry.get("test").is_some());
     }
 
+    /// Test ID: MAP-DAT-007
+    /// Title: LevelRegistry 查询未注册关卡返回 None
+    ///
+    /// Given: 空 LevelRegistry
+    /// When: 调用 get("nonexistent")
+    /// Then: 返回 None
+    ///
+    /// Assertions: is_none()
     #[test]
     fn level_registry_查询未注册返回none() {
+        // Given
         let registry = LevelRegistry::default();
+
+        // When & Then
         assert!(registry.get("nonexistent").is_none());
     }
 
+    /// Test ID: MAP-DAT-008
+    /// Title: LevelRegistry first() 返回第一个关卡
+    ///
+    /// Given: LevelRegistry 中插入 "a" 和 "b" 两个关卡
+    /// When: 调用 first()
+    /// Then: 返回 Some
+    ///
+    /// Assertions: is_some()
     #[test]
     fn level_registry_first() {
+        // Given
         let mut registry = LevelRegistry::default();
         registry.levels.insert(
             "a".into(),
@@ -475,17 +580,39 @@ mod tests {
                 enemy_units: vec![],
             },
         );
+
+        // When & Then
         assert!(registry.first().is_some());
     }
 
+    /// Test ID: MAP-DAT-009
+    /// Title: LevelRegistry first() 空注册表返回 None
+    ///
+    /// Given: 空 LevelRegistry
+    /// When: 调用 first()
+    /// Then: 返回 None
+    ///
+    /// Assertions: is_none()
     #[test]
     fn level_registry_first_空返回none() {
+        // Given
         let registry = LevelRegistry::default();
+
+        // When & Then
         assert!(registry.first().is_none());
     }
 
+    /// Test ID: MAP-DAT-010
+    /// Title: TerrainDefRon 转换可通行地形的 move_cost
+    ///
+    /// Given: TerrainDefRon 包含 forest (move_cost=2, passable=true)
+    /// When: 转换为 TerrainDef
+    /// Then: move_cost=Some(2), passable=true
+    ///
+    /// Assertions: move_cost 和 passable 正确
     #[test]
     fn terrain_def_ron_可通行地形move_cost() {
+        // Given
         let def = TerrainDefRon {
             version: 0,
             id: "forest".into(),
@@ -496,13 +623,26 @@ mod tests {
             passable: true,
             char_code: Some('F'),
         };
+
+        // When
         let terrain: TerrainDef = def.into();
+
+        // Then
         assert_eq!(terrain.move_cost, Some(2));
         assert!(terrain.passable);
     }
 
+    /// Test ID: MAP-DAT-011
+    /// Title: LevelConfig 地形网格解析（2x2 多类型）
+    ///
+    /// Given: 2x2 关卡，地形网格 "PF" "MW"
+    /// When: 调用 LevelConfig::from_def()
+    /// Then: 四个格子分别解析为 plain/forest/mountain/water
+    ///
+    /// Assertions: (0,0)=plain, (1,0)=forest, (0,1)=mountain, (1,1)=water
     #[test]
     fn level_config_地形网格解析() {
+        // Given
         let terrain_reg = {
             let mut reg = TerrainRegistry::default();
             reg.register_defaults();
@@ -520,7 +660,11 @@ mod tests {
             player_units: vec![],
             enemy_units: vec![],
         };
+
+        // When
         let config = LevelConfig::from_def(def, &terrain_reg);
+
+        // Then
         assert_eq!(config.terrain_map.get(&(0, 0)), Some(&"plain".to_string()));
         assert_eq!(config.terrain_map.get(&(1, 0)), Some(&"forest".to_string()));
         assert_eq!(
@@ -530,8 +674,17 @@ mod tests {
         assert_eq!(config.terrain_map.get(&(1, 1)), Some(&"water".to_string()));
     }
 
+    /// Test ID: MAP-DAT-012
+    /// Title: LevelConfig 自定义 char_map 覆盖默认
+    ///
+    /// Given: 自定义 char_map 包含 'D' -> "desert"
+    /// When: 使用地形网格 "PD" 解析
+    /// Then: 'P' 映射为 plain，自定义 'D' 映射为 desert
+    ///
+    /// Assertions: (0,0)=plain, (1,0)=desert
     #[test]
     fn level_config_自定义char_map覆盖默认() {
+        // Given
         let terrain_reg = {
             let mut reg = TerrainRegistry::default();
             reg.register_defaults();
@@ -551,16 +704,33 @@ mod tests {
             player_units: vec![],
             enemy_units: vec![],
         };
+
+        // When
         let config = LevelConfig::from_def(def, &terrain_reg);
+
+        // Then
         assert_eq!(config.terrain_map.get(&(0, 0)), Some(&"plain".to_string()));
         assert_eq!(config.terrain_map.get(&(1, 0)), Some(&"desert".to_string()));
     }
 
+    /// Test ID: MAP-DAT-013
+    /// Title: TerrainRegistry char_map 返回正确映射
+    ///
+    /// Given: 注册了默认地形的 TerrainRegistry
+    /// When: 调用 char_map()
+    /// Then: P->plain, F->forest, M->mountain, W->water
+    ///
+    /// Assertions: 四个字符映射正确
     #[test]
     fn terrain_registry_char_map() {
+        // Given
         let mut reg = TerrainRegistry::default();
         reg.register_defaults();
+
+        // When
         let map = reg.char_map();
+
+        // Then
         assert_eq!(map.get(&'P'), Some(&"plain".to_string()));
         assert_eq!(map.get(&'F'), Some(&"forest".to_string()));
         assert_eq!(map.get(&'M'), Some(&"mountain".to_string()));

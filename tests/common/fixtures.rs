@@ -77,9 +77,9 @@ impl UnitBuilder {
         }
     }
 
-    /// 设置 HP
+    /// 设置 HP（使用 set_vital 设置当前值，set_base 对非 Core Stat 无效）
     pub fn with_hp(mut self, hp: f32) -> Self {
-        self.attrs.set_base(AttributeKind::Hp, hp);
+        self.attrs.set_vital(AttributeKind::Hp, hp);
         self
     }
 

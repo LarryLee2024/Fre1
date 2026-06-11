@@ -256,7 +256,7 @@ fn 治疗效果恢复目标hp() {
                 let mut a = Attributes::default();
                 a.set_base(AttributeKind::Vitality, 5.0);
                 a.fill_vital_resources();
-                a.set_base(AttributeKind::Hp, 10.0); // 受伤状态
+                a.set_vital(AttributeKind::Hp, 10.0); // 受伤状态
                 a
             },
             SkillSlots::default(),

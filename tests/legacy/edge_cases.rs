@@ -181,12 +181,12 @@ fn 伤害处理器_收到heal定义返回none() {
 #[test]
 fn 伤害_精确致死() {
     let mut attrs = warrior_attrs();
-    attrs.set_base(AttributeKind::Hp, 7.0); // 正好等于战士 ATK-哥布林DEF=7
+    attrs.set_vital(AttributeKind::Hp, 7.0); // 正好等于战士 ATK-哥布林DEF=7
 
     // 模拟伤害执行
     let hp = attrs.get(AttributeKind::Hp);
     let new_hp = (hp - 7.0_f32).max(0.0);
-    attrs.set_base(AttributeKind::Hp, new_hp);
+    attrs.set_vital(AttributeKind::Hp, new_hp);
 
     assert_eq!(attrs.get(AttributeKind::Hp), 0.0);
 }
@@ -194,11 +194,11 @@ fn 伤害_精确致死() {
 #[test]
 fn 伤害_超过hp() {
     let mut attrs = warrior_attrs();
-    attrs.set_base(AttributeKind::Hp, 5.0);
+    attrs.set_vital(AttributeKind::Hp, 5.0);
 
     let hp = attrs.get(AttributeKind::Hp);
     let new_hp = (hp - 50.0).max(0.0);
-    attrs.set_base(AttributeKind::Hp, new_hp);
+    attrs.set_vital(AttributeKind::Hp, new_hp);
 
     assert_eq!(attrs.get(AttributeKind::Hp), 0.0);
 }

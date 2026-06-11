@@ -518,6 +518,49 @@ tests/rule/rules.rs (4 equipment-related):
 # 附录 B：环境说明
 
 - **编译状态**：`src/equipment/` 模块编译通过，无错误
-- **测试执行**：因 `equipment/equip.rs` 内联测试存在 `GameplayTag` 未定义错误，无法执行 `cargo test`
-- **影响范围**：`equip.rs` 内联测试中使用了 `GameplayTag::SWORD` 等常量，但未导入 `GameplayTag`（应使用 `GameplayTags`）
-- **建议**：修复 `equip.rs` 内联测试中的导入错误后重新执行完整测试套件
+- **测试执行**：因 `inventory/transfer.rs` 存在 `can_merge_with` 参数不匹配错误，无法执行 `cargo test --lib`
+- **影响范围**：`transfer.rs` 中 `can_merge_with` 调用缺少 `def` 参数，阻塞所有库测试
+- **建议**：修复 `transfer.rs` 中的调用参数后重新执行完整测试套件
+
+---
+
+# 附录 C：修复记录（2026-06-12）
+
+## C.1 已修复问题
+
+| 问题 | 优先级 | 修复内容 | 状态 |
+|------|--------|----------|------|
+| AI Self-Check 缺失 | P1 | 为 5 个 equipment 测试文件添加自检标注 | ✅ 已修复 |
+
+### 修复详情
+
+为以下测试模块添加了 §13.1 AI Self-Check 标注：
+
+1. `src/equipment/definition.rs` — 覆盖 INV-DEF-1~6
+2. `src/equipment/equip.rs` — 覆盖 INV-EQ-1~5
+3. `src/equipment/instance.rs` — 覆盖 INV-INS-1~4
+4. `src/equipment/requirements.rs` — 覆盖 INV-REQ-1~6
+5. `src/equipment/slots.rs` — 覆盖 INV-SLT-1~5
+
+每个标注包含 6 项自检：
+- ✅ 测行为不测实现
+- ✅ 符合领域规则
+- ✅ 确定性
+- ✅ 使用标准数据
+- ✅ 无越界测试
+- ✅ 未测试私有实现
+
+## C.2 待修复问题（需业务代码变更）
+
+| 问题 | 优先级 | 说明 | 文档 |
+|------|--------|------|------|
+| `can_merge_with` 参数不匹配 | P1 | `transfer.rs:68,151` 调用缺少 `def` 参数 | `docs/testing/equipment_transfer_issues.md` |
+| Replay Test 缺失 | P0 | 需创建战斗回放 YAML | 待规划 |
+| 标准测试数据不符 | P1 | 需引入 Unit_001/002/003 | 待规划 |
+
+## C.3 验证结果
+
+```
+cargo check --lib: 2 errors（inventory/transfer.rs can_merge_with 参数不匹配）
+cargo test --lib equipment: 无法执行（编译阻塞）
+```

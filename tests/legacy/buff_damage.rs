@@ -299,7 +299,7 @@ fn 生命回复HoT_每回合回复() {
     let mut buffs = ActiveBuffs::default();
     let mut tags = GameplayTags::default();
 
-    attrs.set_base(AttributeKind::Hp, 20.0);
+    attrs.set_vital(AttributeKind::Hp, 20.0);
 
     apply_buff(
         &mut buffs,
