@@ -1,301 +1,471 @@
-# Trait 扩展体系领域规则 (Trait Rules)
+# Trait 领域
 
-## 1. 领域概述
+Version: 1.0
 
-Trait 系统是 SRPG 角色能力的统一扩展机制。种族、职业、天赋、装备、Buff 均通过 Trait + Modifier 管线影响角色。遵循 **Trait 表示能力，不表示分类**和 **组合优于继承**原则。
+Trait 领域管理角色能力的统一扩展机制。种族、职业、天赋、装备、Buff 均通过 Trait + Modifier 管线影响角色。
 
-### 核心原则
-
-- **Trait 表示能力，不表示分类**：Trait 授予标签、属性修饰或触发 Buff
-- **组合优于继承**：角色由 Trait、Modifier、能力组合构成
-- **统一扩展机制**：种族 = Trait 集合，职业 = Trait 集合，天赋 = 特殊 Trait，装备 = Modifier + Trait，Buff = 临时 Trait
-- **Handler 分发**：新增效果类型只需实现 `TraitEffectHandler` 并注册
-
----
-
-## 2. TraitTrigger — 触发时机
-
-| 触发器 | 说明 | 效果类型 |
-|--------|------|----------|
-| `Passive` | 被动，始终生效 | GrantTag, ModifyAttribute |
-| `OnTurnStart` | 回合开始时触发 | ApplyBuff |
-| `OnTurnEnd` | 回合结束时触发 | ApplyBuff |
-| `OnAttack` | 攻击时触发 | ApplyBuff |
-| `OnHit` | 被攻击时触发 | ApplyBuff |
-| `OnKill` | 击杀时触发 | ApplyBuff |
-
-**规则**：
-- Passive Trait 在角色生成时应用，穿脱装备时重建
-- 触发型 Trait 在对应时机将 ApplyBuff 效果推入 EffectQueue
+核心原则：
+- Trait 表示能力，不表示分类
+- 组合优于继承
+- 统一扩展机制
+- Handler 分发
 
 ---
 
-## 3. TraitEffect — 效果类型
+# 术语定义
 
-| 效果 | 参数 | 触发时机 | 说明 |
-|------|------|----------|------|
-| `GrantTag(tag)` | GameplayTag | Passive | 授予标签 |
-| `ModifyAttribute(mod_def)` | AttributeModifierDef | Passive | 属性修饰 |
-| `ApplyBuff { buff_id, duration }` | String, u32 | 触发型 | 触发时施加 Buff |
+## TraitData
 
-### 3.1 效果与触发器的对应关系
+Trait 的运行时数据，包含触发时机和效果列表。
 
-| 触发器 | 可用效果 |
-|--------|----------|
-| Passive | GrantTag, ModifyAttribute |
-| OnAttack/OnHit/OnKill/OnTurnStart/OnTurnEnd | ApplyBuff |
+不是 TraitCollection。TraitData 是定义，TraitCollection 是实例集合。
 
-**规则**：
-- Passive Trait 的 GrantTag 和 ModifyAttribute 在 `apply_passive_traits()` 中应用
-- 触发型 Trait 的 ApplyBuff 在 `trigger_traits()` 中推入 EffectQueue
-- ApplyBuff 效果在 Passive 触发器下无意义（无触发时机）
-
-### 3.2 type_name — 效果类型标识
-
-```rust
-pub fn type_name(&self) -> &'static str
-```
-
-返回效果变体名，用于 Handler 查找：
-- `"GrantTag"` → GrantTagHandler
-- `"ModifyAttribute"` → ModifyAttributeHandler
-- `"ApplyBuff"` → ApplyBuffHandler
+关键属性：
+- id / name / description：标识和展示
+- trigger：触发时机
+- effects：效果列表
 
 ---
 
-## 4. TraitEffectHandler — 效果处理器
+## TraitTrigger
 
-### 4.1 Handler Trait
+Trait 的触发时机，决定"什么时候生效"。
 
-```rust
-pub trait TraitEffectHandler: Send + Sync + 'static {
-    fn type_name(&self) -> &'static str;
-    fn granted_tags(&self, effect: &TraitEffect) -> Vec<GameplayTag>;
-    fn attribute_modifiers<'a>(&self, effect: &'a TraitEffect) -> Vec<&'a AttributeModifierDef>;
-}
-```
+不是 TraitSource。Trigger 标记"何时触发"，Source 标记"从哪来"。
 
-### 4.2 内置 Handler
+关键属性：
+- Passive：始终生效
+- OnTurnStart / OnTurnEnd：回合触发
+- OnAttack / OnHit / OnKill：战斗触发
 
-| Handler | type_name | granted_tags | attribute_modifiers |
-|---------|-----------|-------------|---------------------|
-| `GrantTagHandler` | "GrantTag" | 提取 GameplayTag | 空 |
-| `ModifyAttributeHandler` | "ModifyAttribute" | 空 | 提取 AttributeModifierDef |
-| `ApplyBuffHandler` | "ApplyBuff" | 空 | 空 |
+---
 
-### 4.3 TraitEffectHandlerRegistry
+## TraitEffect
 
-```rust
-#[derive(Resource)]
-pub struct TraitEffectHandlerRegistry {
-    handlers: HashMap<&'static str, Box<dyn TraitEffectHandler>>,
-}
-```
+Trait 的效果类型，决定"做什么"。
 
-**规则**：
-- 通过 `type_name` 查找 Handler
-- 新增效果类型只需实现 Handler 并注册，无需修改 TraitData
+不是 TraitData。Effect 是 Trait 的组成部分，TraitData 包含多个 Effect。
+
+关键属性：
+- GrantTag：授予标签
+- ModifyAttribute：属性修饰
+- ApplyBuff：触发时施加 Buff
+
+---
+
+## TraitEffectHandler
+
+效果处理器，执行具体效果逻辑。
+
+不是 TraitEffect。Handler 是执行者，Effect 是配置。
+
+关键属性：
+- type_name()：分发键
+- granted_tags()：提取授予的标签
+- attribute_modifiers()：提取属性修饰
+
+---
+
+## TraitSource
+
+Trait 的来源标记，区分内在来源和装备来源。
+
+不是 TraitTrigger。Source 标记"从哪来"，Trigger 标记"何时触发"。
+
+关键属性：
+- Intrinsic：种族/职业/天赋
+- Equipment { slot }：装备，记录槽位
+
+---
+
+## TraitCollection
+
+单位拥有的 Trait 条目集合。
+
+不是 TraitRegistry。Collection 是实例，Registry 是定义注册表。
+
+关键属性：
+- entries：TraitEntry 列表
+
+---
+
+# 领域边界
+
+## 本领域负责
+
+- TraitData 定义和注册表（TraitRegistry）
+- TraitEffectHandler 注册表（TraitEffectHandlerRegistry）
+- TraitTrigger 和 TraitEffect 的对应关系
+- TraitCollection 的增删管理
+- apply_passive_traits 被动效果应用
+- Trait 重建（rebuild_trait_effects）
+
+## 本领域不负责
+
+- 属性计算和修饰符管线（由 stat_system 领域负责）
+- 装备穿脱触发（由 equipment_rules 领域负责）
+- Buff 的生命周期（由 buff_rules 领域负责）
+- 战斗管线中的 Trait 触发调用（由 battle_rules 领域负责）
+- UI 展示（由 ui_rules 领域负责）
+
+## 跨领域通信方式
+
+| 通知内容 | 通信方式 | 目标领域 |
+|----------|----------|----------|
+| 被动效果应用 | 返回值（标签+修饰符） | character |
+| Trait 重建 | 直接函数调用 | equipment |
+| 触发型效果 | 推入 EffectQueue | battle |
+
+---
+
+# 生命周期
+
+本领域无状态机，为纯函数式计算。
+
+Trait 生命周期由外部驱动：
+- 生成时：apply_passive_traits 应用被动效果
+- 穿脱时：rebuild_trait_effects 重建
+- 战斗时：trigger_traits 触发效果
+
+---
+
+# 不变量
+
+## 不变量1：Passive 效果仅 GrantTag 和 ModifyAttribute
+
+任意时刻：
+
+Passive 触发的 Trait 只产生 GrantTag 和 ModifyAttribute 效果。
+
+违反表现：
+
+Passive Trait 产生 ApplyBuff 效果，无触发时机，永远不会执行。
+
+---
+
+## 不变量2：触发型效果仅 ApplyBuff
+
+任意时刻：
+
+OnAttack/OnHit/OnKill/OnTurnStart/OnTurnEnd 触发的 Trait 只产生 ApplyBuff 效果。
+
+违反表现：
+
+触发型 Trait 产生 GrantTag/ModifyAttribute，标签和修饰符在触发时临时添加后无法正确移除。
+
+---
+
+## 不变量3：Handler 覆盖所有效果类型
+
+任意时刻：
+
+TraitEffect 的每个变体都有对应的 TraitEffectHandler 注册。
+
+违反表现：
+
+新增效果类型但未注册 Handler，apply_passive_traits 跳过该效果。
+
+---
+
+## 不变量4：修饰符 Source 区间隔离
+
+apply_passive_traits 完成后：
+
+Trait 修饰符的 ModifierSource 在 Trait 区间内（u64::MAX ~ u64::MAX - 999）。
+
+违反表现：
+
+Trait 修饰符与 Buff/Equipment 修饰符冲突，无法按来源精确移除。
+
+---
+
+# 业务规则
+
+## 规则1：效果与触发器对应
+
+禁止：
+- Passive Trait 使用 ApplyBuff 效果
+- 触发型 Trait 使用 GrantTag / ModifyAttribute 效果
+
+必须：
+- Passive → GrantTag + ModifyAttribute
+- 触发型 → ApplyBuff
+
+---
+
+## 规则2：Handler 分发
+
+禁止：
+- match 分发效果类型
+- 为每种效果类型修改 TraitData 方法
+
+必须：
+- 通过 type_name() 查找 Handler
+- 新增效果类型只需实现 Handler 并注册
+
+允许：
 - 默认注册三个内置 Handler
 
 ---
 
-## 5. TraitData — Trait 运行时数据
+## 规则3：来源追踪
 
-```rust
-pub struct TraitData {
-    pub id: String,
-    pub name: String,
-    pub description: String,
-    pub trigger: TraitTrigger,
-    pub effects: Vec<TraitEffect>,
-}
-```
+禁止：
+- 不区分来源直接增删 Trait
+- 装备穿脱时误删内在 Trait
 
-### 5.1 TraitData 方法
-
-| 方法 | 说明 |
-|------|------|
-| `granted_tags(handlers)` | 通过 Handler 分发收集授予的标签 |
-| `attribute_modifiers(handlers)` | 通过 Handler 分发收集属性修饰 |
-
-### 5.2 TraitDefinition — RON 配置
-
-```rust
-pub struct TraitDefinition {
-    pub version: u32,           // 可选，默认 0
-    pub id: String,
-    pub name: String,
-    pub description: String,
-    pub trigger: TraitTrigger,
-    pub effects: Vec<TraitEffectDef>,  // TagName 替代 GameplayTag
-}
-```
+必须：
+- Intrinsic 标记种族/职业/天赋
+- Equipment { slot } 标记装备来源
+- 脱卸装备时按 source 精确移除
 
 ---
 
-## 6. TraitSource — 来源追踪
+## 规则4：Trait 重建
 
-```rust
-pub enum TraitSource {
-    Intrinsic,                      // 内在来源（种族/职业/天赋）
-    Equipment { slot: EquipmentSlot }, // 装备来源（记录具体槽位）
-}
-```
+禁止：
+- 穿脱装备后跳过 Trait 重建
+- 增量更新 Trait 效果
 
-**规则**：
-- Intrinsic：种族、职业、天赋授予的 Trait
-- Equipment：装备授予的 Trait，记录具体槽位
-- 脱卸装备时按 `TraitSource::Equipment { slot }` 精确移除
+必须：
+- 清除所有 Trait 来源修饰符
+- 清除 Trait 授予的标签
+- 重新应用所有 Passive Trait
+- 重建 GameplayTags
 
 ---
 
-## 7. TraitCollection — Trait 集合组件
+# 流程管线
 
-```rust
-#[derive(Component)]
-pub struct TraitCollection {
-    pub entries: Vec<TraitEntry>,
-}
-```
+## 被动 Trait 应用管线
 
-### 7.1 TraitEntry
+遍历 entries → 跳过非 Passive → Handler 收集标签 → Handler 收集修饰符 → 分配 Source → 返回
 
-```rust
-pub struct TraitEntry {
-    pub trait_id: String,
-    pub source: TraitSource,
-}
-```
+### Step1：遍历 entries
 
-### 7.2 核心操作
+输入：TraitCollection.entries
+处理：逐条检查 trigger
+输出：Passive 触发的 entries
+禁止：处理非 Passive 触发
 
-| 方法 | 说明 |
-|------|------|
-| `new(trait_ids)` | 从 ID 列表创建（全部 Intrinsic） |
-| `has(trait_id)` | 是否拥有指定 Trait |
-| `add_entry(trait_id, source)` | 添加一条 Trait |
-| `remove_by_source(source)` | 按来源移除，返回被移除的 ID 列表 |
-| `trait_ids()` | 获取所有 trait_id（去重） |
+### Step2：Handler 收集
 
----
+输入：TraitEffect + HandlerRegistry
+处理：通过 type_name() 查找 Handler，调用 granted_tags / attribute_modifiers
+输出：标签集合 + 修饰符列表
+禁止：跳过任何效果
 
-## 8. apply_passive_traits — 被动 Trait 应用
+### Step3：分配 Source
 
-```rust
-pub fn apply_passive_traits(
-    trait_collection, registry, handlers
-) -> (GameplayTags, Vec<AttributeModifierInstance>)
-```
-
-**流程**：
-
-```
-1. 遍历 TraitCollection.entries
-2. 跳过非 Passive 触发的 Trait
-3. 通过 Handler 收集 granted_tags
-4. 通过 Handler 收集 attribute_modifiers
-5. 每个 Trait 分配独立的 ModifierSource::trait_source(index)
-6. 返回 (标签集合, 修饰符列表)
-```
-
-**修饰符来源**：
-```rust
-ModifierSource::trait_source(0)  // 第一个 Trait
-ModifierSource::trait_source(1)  // 第二个 Trait
-// ...
-```
-
-Trait 区间：`u64::MAX ~ u64::MAX - 999`，避免与 Buff/Equipment 区间冲突。
+输入：修饰符列表 + index
+处理：每个 Trait 分配 ModifierSource::trait_source(index)
+输出：带 Source 的修饰符实例
+禁止：Source 区间与其他来源冲突
 
 ---
 
-## 9. TraitRegistry — Trait 注册表
+## Trait 重建管线
 
-```rust
-#[derive(Resource)]
-pub struct TraitRegistry {
-    pub traits: HashMap<String, TraitData>,
-}
-```
+清除修饰符 → 清除标签 → 重新应用 Passive → 重建 GameplayTags
 
-### 9.1 内置默认 Trait
+### Step1：清除
 
-| ID | 名称 | 触发 | 效果 |
-|----|------|------|------|
-| `warrior_mastery` | 战士精通 | Passive | GrantTag(WARRIOR), GrantTag(MELEE) |
-| `archer_mastery` | 弓手精通 | Passive | GrantTag(ARCHER), GrantTag(RANGED) |
-| `mage_mastery` | 法师精通 | Passive | GrantTag(MAGE) |
-| `fire_affinity` | 火焰亲和 | Passive | GrantTag(FIRE) |
-| `heavy_armor` | 重甲 | Passive | ModifyAttribute(Defense +3) |
+输入：Attributes + PersistentTags
+处理：remove_trait_modifiers()，重置 from_traits
+输出：清除后的状态
+禁止：清除 from_equipment（装备层不受影响）
 
-### 9.2 数据加载
+### Step2：重新应用
 
-- 加载目录：`assets/traits/`
-- 通过 `RegistryLoader` trait 实现 RON 文件加载
-- `TraitDefinition` 通过 `From<TraitDefinition> for TraitData` 转换
-- 注册表幂等
+输入：TraitCollection + TraitRegistry + HandlerRegistry
+处理：apply_passive_traits()
+输出：新标签 + 新修饰符
+禁止：跳过任何 Passive Trait
 
----
+### Step3：重建标签
 
-## 10. Trait 重建流程
-
-装备穿脱后触发 Trait 重建（`rebuild_trait_effects`）：
-
-```
-1. 清除所有 Trait 来源的修饰符（attrs.remove_trait_modifiers()）
-2. 清除 Trait 授予的标签（persistent.from_traits = default）
-3. 重新应用所有 Passive Trait：
-   - 遍历 TraitCollection.entries
-   - 跳过非 Passive 触发
-   - 授予标签到 persistent.from_traits
-   - 授予属性修饰符（ModifierSource::trait_source）
-4. 重建 GameplayTags（Trait + Equipment 层）
-```
+输入：PersistentTags
+处理：from_traits | from_equipment
+输出：更新后的 GameplayTags
+禁止：包含 Buff 层标签
 
 ---
 
-## 11. RON 配置格式
+# 数据结构
 
-### 11.1 被动 Trait
+## TraitData（Definition）
 
-```ron
-(
-    id: "warrior_mastery",
-    name: "战士精通",
-    description: "近战职业，擅长正面作战",
-    trigger: Passive,
-    effects: [
-        GrantTag(WARRIOR),
-        GrantTag(MELEE),
-    ],
-)
-```
+职责：Trait 的运行时数据
 
-### 11.2 触发型 Trait
+结构：
+- id / name / description：标识和展示
+- trigger：触发时机
+- effects：效果列表
 
-```ron
-(
-    id: "leader_aura",
-    name: "领袖光环",
-    description: "回合开始时为友军施加增益",
-    trigger: OnTurnStart,
-    effects: [
-        ApplyBuff(buff_id: "attack_up", duration: 1),
-    ],
-)
-```
+要求：
+- 通过 Handler 分发收集标签和修饰符
+- RON 配置路径：assets/traits/
 
 ---
 
-## 12. 关键约束
+## TraitEffect（值对象）
 
-1. **Trait 表示能力不表示分类**：不用于模拟继承树
-2. **Passive 效果仅 GrantTag 和 ModifyAttribute**：ApplyBuff 在 Passive 下无意义
-3. **触发型效果仅 ApplyBuff**：GrantTag/ModifyAttribute 是永久效果，不需要触发
-4. **Handler 分发扩展**：新增效果类型只需实现 Handler 并注册
-5. **来源精确追踪**：Intrinsic 和 Equipment { slot } 区分来源
-6. **装备穿脱触发重建**：确保 Trait 效果与装备状态一致
-7. **修饰符独立 source**：每个 Trait 分配独立 ModifierSource，支持精确移除
-8. **Trait 区间隔离**：`u64::MAX ~ u64::MAX - 999`，不与 Buff/Equipment 冲突
-9. **注册表幂等**：重复调用不会重复注册
-10. **触发器在战斗管线中调用**：OnAttack/OnHit/OnKill 由 `trigger_traits()` 处理
+职责：Trait 的效果类型
+
+结构：
+- GrantTag(GameplayTag)：授予标签
+- ModifyAttribute(AttributeModifierDef)：属性修饰
+- ApplyBuff { buff_id, duration }：触发时施加 Buff
+
+要求：
+- 与 TraitTrigger 严格对应
+- type_name() 返回分发键
+
+---
+
+## TraitEffectHandler（Trait）
+
+职责：效果处理器接口
+
+结构：
+- type_name()：分发键
+- granted_tags()：提取授予的标签
+- attribute_modifiers()：提取属性修饰
+
+要求：
+- 新增效果类型只需实现并注册
+- 内置三个 Handler
+
+---
+
+## TraitCollection（Instance Component）
+
+职责：单位 Trait 条目集合
+
+结构：
+- entries：TraitEntry 列表
+
+要求：
+- add_entry 记录来源
+- remove_by_source 精确清理
+- trait_ids() 返回去重列表
+
+---
+
+## TraitSource（值对象）
+
+职责：Trait 来源标记
+
+结构：
+- Intrinsic：内在来源
+- Equipment { slot }：装备来源
+
+要求：
+- 装备穿脱时使用 Equipment 变体
+- 内在 Trait 使用 Intrinsic 变体
+
+---
+
+# 禁止事项
+
+禁止：为每种能力来源写独立逻辑
+
+原因：Trait 是统一扩展机制，所有来源走同一管线
+
+违反后果：种族/职业/装备各有独立逻辑，维护成本指数增长
+
+---
+
+禁止：match 分发效果类型
+
+原因：Handler 通过 type_name() 分发，无需 match
+
+违反后果：新增效果类型需要修改分发代码
+
+---
+
+禁止：Passive Trait 使用 ApplyBuff 效果
+
+原因：Passive 无触发时机，ApplyBuff 永远不会执行
+
+违反后果：效果配置错误，Trait 不生效
+
+---
+
+禁止：穿脱装备后跳过 Trait 重建
+
+原因：装备提供 Trait，穿脱必须同步 TraitCollection
+
+违反后果：角色拥有已卸下装备的 Trait
+
+---
+
+禁止：增量更新 Trait 效果
+
+原因：增量更新容易遗漏，完全重建保证一致性
+
+违反后果：标签和修饰符与实际 Trait 状态不一致
+
+---
+
+# AI 修改规则
+
+## 如果新增 Trait 效果类型
+
+允许：
+- 新增 TraitEffect 变体
+- 新增 TraitEffectHandler 实现并注册
+
+禁止：
+- 修改 TraitData 方法
+- 修改 apply_passive_traits 流程
+- 修改 rebuild_trait_effects 流程
+
+优先检查：
+- TraitEffectHandlerRegistry 注册
+- type_name() 是否与变体名一致
+- 与 TraitTrigger 的对应关系
+
+---
+
+## 如果新增 Trait 触发时机
+
+允许：
+- 新增 TraitTrigger 变体
+- 在对应阶段添加触发调用
+
+禁止：
+- 修改现有触发器的效果对应关系
+- 修改 Handler 分发逻辑
+
+优先检查：
+- 触发位置（battle / turn）
+- EffectQueue 是否可用
+- 触发目标
+
+---
+
+## 如果新增 Trait
+
+允许：
+- 新增 RON 配置文件
+
+禁止：
+- 修改 TraitData 结构
+- 修改 TraitRegistry 加载流程
+
+优先检查：
+- TraitRegistry 注册
+- 效果类型是否有对应 Handler
+- 标签是否在 GameplayTag 枚举中
+
+---
+
+## 如果测试失败
+
+排查顺序：
+1. 检查 TraitTrigger 与 TraitEffect 对应关系
+2. 检查 Handler 是否正确注册
+3. 检查 ModifierSource 区间是否冲突
+4. 检查 Trait 重建是否完整
+5. 检查来源追踪是否正确

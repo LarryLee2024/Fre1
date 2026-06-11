@@ -1,293 +1,462 @@
-# 技能领域规则 (Skill Rules)
+# Skill 领域
 
-## 1. 领域概述
+Version: 1.0
 
-技能系统是战斗系统的核心驱动，负责定义技能数据、管理技能槽位、追踪冷却状态、校验使用条件，以及预览技能效果。遵循 **Definition / Instance 分离**和 **Rule / Content 分离**原则。
+Skill 领域管理技能的定义、槽位、冷却、条件校验和效果预览。遵循 Definition / Instance 分离和 Rule / Content 分离。
 
-### 核心原则
-
-- **Definition / Instance 分离**：`SkillData`（静态定义）与 `SkillCooldowns`（运行时状态）分离
-- **Rule / Content 分离**：代码负责规则（条件校验、冷却逻辑），RON 配置负责内容（技能数值）
-- **数据驱动**：新增技能优先修改 RON 配置，不修改逻辑代码
-- **纯函数校验**：`can_use()` 是纯函数，不修改任何状态
-
----
-
-## 2. SkillData — 技能定义
-
-```rust
-pub struct SkillData {
-    pub id: String,                    // 技能唯一标识
-    pub name: String,                  // 显示名称
-    pub description: String,           // 描述文本
-    pub cost_mp: i32,                  // MP 消耗
-    pub range: u32,                    // 射程（0 = 使用单位基础攻击范围）
-    pub targeting: SkillTargeting,     // 目标类型
-    pub effects: Vec<EffectDef>,       // 效果列表
-    pub tags: Vec<GameplayTag>,        // 技能标签
-    pub conditions: Vec<SkillCondition>, // 使用条件
-    pub cooldown: u32,                 // 冷却回合数
-    pub priority: u32,                 // AI 决策优先级
-}
-```
-
-### 2.1 SkillTargeting — 目标类型
-
-| 类型 | 说明 | 需要选择目标 |
-|------|------|:---:|
-| `SingleEnemy` | 单个敌方单位 | Yes |
-| `SingleAlly` | 单个友方单位 | Yes |
-| `SelfOnly` | 自身 | No |
-| `AoeEnemies` | 自身周围敌方（范围由 range 决定） | No |
-| `AoeAllies` | 自身周围友方 | No |
-| `NoTarget` | 无需目标 | No |
-
-### 2.2 EffectDef — 效果定义
-
-| 类型 | 字段 | 说明 |
-|------|------|------|
-| `Damage` | `multiplier, ignore_def_percent` | 伤害效果 |
-| `Heal` | `amount` | 治疗效果 |
-| `ApplyBuff` | `buff_id, duration` | 施加 Buff |
-| `Cleanse` | — | 净化所有 Debuff |
-
-**规则**：
-- 一个技能可以有多个效果（如火球 = 伤害 + 施加灼烧）
-- 效果通过 `EffectHandlerRegistry` 分发处理
+核心原则：
+- Definition / Instance 分离
+- Rule / Content 分离
+- 数据驱动
+- 纯函数校验
 
 ---
 
-## 3. SkillCondition — 使用条件
+# 术语定义
 
-### 3.1 运行时条件
+## SkillData
 
-| 条件 | 参数 | 说明 |
-|------|------|------|
-| `MpCost(cost)` | i32 | MP 不足时不可使用 |
-| `RequireTag(tag)` | GameplayTag | 自身缺少标签时不可使用 |
-| `TargetRequireTag(tag)` | GameplayTag | 目标缺少标签时不可使用 |
-| `HpBelow(pct)` | f32 (0.0~1.0) | HP 不低于阈值时不可使用 |
-| `HpAbove(pct)` | f32 (0.0~1.0) | HP 不高于阈值时不可使用 |
+技能的静态定义，描述技能"是什么"。
 
-### 3.2 SkillConditionDef — RON 反序列化用
+不是 SkillCooldowns。SkillData 不可变，SkillCooldowns 是运行时状态。
 
-使用 `TagName` 替代 `GameplayTag`，通过 `From<SkillConditionDef> for SkillCondition` 转换。
-
-### 3.3 can_use() — 条件校验
-
-```rust
-pub fn can_use(&self, source_attrs, source_tags, target_tags, current_cooldown) -> Result<(), SkillUseError>
-```
-
-**校验顺序**：
-1. 冷却检查（current_cooldown > 0 → OnCooldown）
-2. 逐条检查 conditions（按定义顺序，短路返回第一个失败条件）
-3. 全部通过 → Ok(())
-
-**规则**：
-- 纯函数，不修改任何状态
-- TargetRequireTag 在 target_tags 为 None 时跳过检查
-
-### 3.4 SkillUseError — 失败原因
-
-| 错误 | 包含信息 |
-|------|----------|
-| `OnCooldown` | remaining: u32 |
-| `InsufficientMp` | required, current |
-| `MissingTag` | tag: GameplayTag |
-| `TargetMissingTag` | tag: GameplayTag |
-| `HpNotBelow` | threshold: f32 |
-| `HpNotAbove` | threshold: f32 |
+关键属性：
+- id / name / description：标识和展示
+- cost_mp / range / targeting / effects / tags / conditions / cooldown：技能参数
 
 ---
 
-## 4. SkillSlots — 技能槽位
+## SkillSlots
 
-```rust
-#[derive(Component)]
-pub struct SkillSlots {
-    pub skill_ids: Vec<String>,
-}
-```
+单位拥有的技能 ID 列表，表示"能使用什么技能"。
 
-**规则**：
-- 每个单位通过 `SkillSlots` 持有可用技能 ID 列表
-- 第一个技能为默认攻击（`basic_attack`）
-- `default_attack()` 空列表时回退到 `BASIC_ATTACK_ID` 常量
-- `special_skill()` 返回第二个技能（如有）
+不是 SkillData。SkillSlots 是引用，SkillData 是定义。
 
-### 4.1 有效射程计算
-
-```rust
-pub fn effective_skill_range(skill_data: &SkillData, base_attack_range: u32) -> u32
-```
-
-- 技能 `range > 0`：使用技能自身射程
-- 技能 `range == 0`：使用单位基础攻击范围
+关键属性：
+- skill_ids：字符串列表，第一个为默认攻击
 
 ---
 
-## 5. SkillCooldowns — 冷却追踪
+## SkillCooldowns
 
-```rust
-#[derive(Component)]
-pub struct SkillCooldowns {
-    cooldowns: HashMap<String, u32>,  // skill_id → 剩余回合数
-}
+技能冷却的运行时追踪，记录每个技能的剩余冷却回合。
+
+不是 SkillData。Cooldowns 是实例状态，SkillData 是配置。
+
+关键属性：
+- cooldowns：skill_id → 剩余回合数映射
+
+---
+
+## SkillCondition
+
+技能使用条件，决定"什么时候能用"。
+
+不是 SkillTargeting。Condition 是前置检查，Targeting 是目标选择方式。
+
+关键属性：
+- MpCost / RequireTag / TargetRequireTag / HpBelow / HpAbove
+
+---
+
+## SkillPreview
+
+技能效果预览，不修改任何状态的纯计算结果。
+
+不是实际伤害。Preview 是估算，实际伤害走 Effect Pipeline。
+
+关键属性：
+- predictions：EffectPreview 列表
+
+---
+
+## effective_skill_range
+
+技能有效射程，考虑技能自身 range 和单位基础攻击范围。
+
+不是 SkillData.range。effective_skill_range 是计算结果，range 是配置值。
+
+关键属性：
+- range > 0 时使用技能自身射程
+- range == 0 时使用单位基础攻击范围
+
+---
+
+# 领域边界
+
+## 本领域负责
+
+- SkillData 定义和注册表（SkillRegistry）
+- SkillSlots 槽位管理
+- SkillCooldowns 冷却追踪和递减
+- SkillCondition 条件校验（can_use）
+- 技能效果预览（SkillPreview）
+- 有效射程计算（effective_skill_range）
+
+## 本领域不负责
+
+- 效果的生成/修饰/执行（由 effect_pipeline / battle_rules 领域负责）
+- 技能目标查找（由 battle_rules 领域负责）
+- Buff 的生命周期（由 buff_rules 领域负责）
+- AI 技能选择（由 ai_rules 领域负责）
+- UI 技能面板展示（由 ui_rules 领域负责）
+
+## 跨领域通信方式
+
+| 通知内容 | 通信方式 | 目标领域 |
+|----------|----------|----------|
+| 技能使用 | CombatIntent 设置 | battle |
+| 冷却设置 | 直接函数调用 | battle（execute_action） |
+| 技能标签 | source_tags 传递 | battle（Modify 阶段） |
+
+---
+
+# 生命周期
+
+本领域无状态机，为纯函数式计算。
+
+can_use() 和 preview_skill_effects() 均为纯函数，不修改状态。
+
+冷却生命周期：
 ```
-
-| 方法 | 说明 |
-|------|------|
-| `get(skill_id)` | 获取当前冷却（未记录返回 0） |
-| `set(skill_id, turns)` | 设置冷却（turns > 0 才记录） |
-| `tick()` | 回合结束递减所有冷却，归零后移除 |
-| `clear()` | 清除所有冷却 |
-
-**冷却生命周期**：
-
-```
-使用技能 → set(skill_id, skill_data.cooldown)
-  ↓
-每回合结束 → tick() 递减
-  ↓
-冷却归零 → 自动移除，技能可用
+使用技能 → set(skill_id, cooldown) → 每回合 tick() → 归零移除
 ```
 
 ---
 
-## 6. SkillRegistry — 技能注册表
+# 不变量
 
-```rust
-#[derive(Resource)]
-pub struct SkillRegistry {
-    pub skills: HashMap<String, SkillData>,
-}
-```
+## 不变量1：can_use 纯函数
 
-| 方法 | 说明 |
-|------|------|
-| `get(id)` | 查找技能定义 |
-| `register(skill)` | 注册技能 |
-| `register_defaults()` | 注册内置默认技能（幂等） |
+任意时刻：
 
-### 6.1 数据加载
+can_use() 不修改任何状态。
 
-通过 `RegistryLoader` trait 实现 RON 文件加载：
+违反表现：
 
-- 加载目录：`assets/skills/`
-- 每个 RON 文件反序列化为 `SkillDef`
-- `SkillDef` 通过 `From<SkillDef> for SkillData` 转换为运行时类型
-- `TagName` → `GameplayTag` 转换在此时完成
-
-### 6.2 内置默认技能
-
-| ID | 名称 | 射程 | 目标 | 效果 | 冷却 |
-|----|------|------|------|------|------|
-| `basic_attack` | 普通攻击 | 0 | SingleEnemy | Damage(1.0x) | 0 |
-| `charge` | 冲锋 | 0 | SingleEnemy | Damage(1.5x) | 2 |
-| `pierce` | 穿刺 | 0 | SingleEnemy | Damage(1.2x, 无视50%防御) | 3 |
-| `fireball` | 火球 | 3 | SingleEnemy | Damage(1.5x) + ApplyBuff(burn, 2) | 2 |
-| `heal` | 治疗 | 2 | SingleAlly | Heal(8) | 2 |
-| `cleanse_skill` | 净化 | 2 | SingleAlly | Cleanse | 3 |
+调用 can_use() 后产生副作用（如修改冷却、扣除 MP）。
 
 ---
 
-## 7. 技能预览
+## 不变量2：冷却归零自动清理
 
-### 7.1 SkillExecutionContext — 执行上下文
+tick() 完成后：
 
-```rust
-pub struct SkillExecutionContext {
-    pub source: Entity,
-    pub target: Entity,
-    pub skill_id: String,
-    pub source_attrs: Attributes,      // 快照
-    pub target_attrs: Attributes,      // 快照
-    pub source_tags: GameplayTags,     // 快照
-    pub target_tags: GameplayTags,     // 快照
-    pub terrain_defense_bonus: i32,
-}
-```
+冷却为 0 的条目必须从 cooldowns 中移除。
 
-**规则**：
-- 纯数据快照，避免 ECS 借用冲突
-- `from_query()` 从 ECS 查询构建
+违反表现：
 
-### 7.2 SkillPreview — 预览结果
-
-```rust
-pub struct SkillPreview {
-    pub skill_id: String,
-    pub skill_name: String,
-    pub predictions: Vec<EffectPreview>,
-}
-```
-
-### 7.3 EffectPreview — 效果预览
-
-| 类型 | 字段 | 说明 |
-|------|------|------|
-| `Damage` | `amount, lethal` | 伤害预览（lethal = 是否致死） |
-| `Heal` | `amount` | 治疗预览（不超过 MaxHp） |
-| `BuffApplied` | `buff_name` | Buff 施加预览 |
-| `Cleanse` | — | 净化预览 |
-
-### 7.4 预览规则
-
-```rust
-pub fn preview_skill_effects(ctx, skill_data, buff_registry) -> SkillPreview
-```
-
-- 纯函数，不修改任何状态
-- 通过 `EffectHandlerRegistry` trait 分发
-- 新增效果类型只需注册 Handler，无需修改预览逻辑
-- 伤害预览：`Attack - Defense - terrain_bonus`，最低 1
-- 治疗预览：`min(amount, MaxHp - Hp)`
-- 致死判定：预览伤害 >= 目标当前 HP
+HashMap 中存在值为 0 的条目，get() 返回 0 但条目仍在。
 
 ---
 
-## 8. SkillDef — RON 配置格式
+## 不变量3：set(0) 不产生记录
 
-```ron
-(
-    version: 1,                    // 配置版本（可选，默认 0）
-    id: "fireball",                // 技能 ID
-    name: "火球",                  // 显示名称
-    description: "远程火属性攻击",  // 描述
-    cost_mp: 5,                    // MP 消耗
-    range: 3,                      // 射程
-    targeting: SingleEnemy,        // 目标类型
-    effects: [
-        Damage(multiplier: 1.5, ignore_def_percent: 0.0),
-        ApplyBuff(buff_id: "burn", duration: 2),
-    ],
-    tags: [FIRE, SKILL_ACTIVE],    // 标签（TagName 枚举）
-    conditions: [
-        MpCost(5),
-        RequireTag(MAGE),
-    ],
-    cooldown: 2,                   // 冷却回合
-    priority: 10,                  // AI 优先级
-)
-```
+set(skill_id, 0) 调用后：
 
-**规则**：
-- `version` 字段可选，缺失时默认为 0（向后兼容）
-- `tags` 使用 `TagName` 枚举，反序列化时转为 `GameplayTag`
-- `conditions` 使用 `SkillConditionDef`，反序列化时转为 `SkillCondition`
+cooldowns 中不存在该 skill_id 的条目。
+
+违反表现：
+
+冷却为 0 的条目被记录，与"无冷却"状态混淆。
 
 ---
 
-## 9. 关键约束
+## 不变量4：预览不修改状态
 
-1. **can_use() 是纯函数**：不修改任何状态，可安全在 UI 和 AI 中调用
-2. **冷却 set > 0 才记录**：`set(skill_id, 0)` 不产生记录
-3. **冷却 tick 自动清理**：归零后从 HashMap 移除
-4. **range = 0 使用基础范围**：技能射程为 0 时回退到单位攻击范围
-5. **预览不修改状态**：`preview_skill_effects()` 是纯函数
-6. **TargetRequireTag 无目标跳过**：`target_tags` 为 None 时不检查目标标签
-7. **注册表幂等**：`register_defaults()` 重复调用不会重复注册
-8. **RON 加载优先**：`assets/skills/` 目录有文件时使用文件数据，否则使用内置默认
-9. **技能标签传递**：`skill_data.tags` 作为 `source_tags` 传入效果管线修饰阶段
-10. **多效果顺序执行**：技能效果按 `effects` 列表顺序依次处理
+preview_skill_effects() 调用后：
+
+所有 ECS 组件和 Resource 无变化。
+
+违反表现：
+
+预览后 HP 被扣减、冷却被设置。
+
+---
+
+# 业务规则
+
+## 规则1：技能定义
+
+禁止：
+- 硬编码技能效果
+- 运行时修改 SkillData
+
+必须：
+- 新增技能修改 RON 配置
+- 技能标签作为 source_tags 传入效果管线
+- 多效果按 effects 列表顺序处理
+
+允许：
+- 无 RON 文件时使用内置默认技能
+- register_defaults() 幂等调用
+
+---
+
+## 规则2：条件校验
+
+禁止：
+- 跳过冷却检查
+- can_use() 中修改状态
+
+必须：
+- 校验顺序：冷却 → conditions（按定义顺序，短路返回）
+- TargetRequireTag 在 target_tags 为 None 时跳过
+- 返回具体失败原因（SkillUseError）
+
+允许：
+- 纯函数调用
+
+---
+
+## 规则3：冷却管理
+
+禁止：
+- 跳过冷却直接使用技能
+- 冷却不递减
+
+必须：
+- 使用技能后 set(skill_id, skill_data.cooldown)
+- 每回合结束调用 tick()
+- 归零后自动移除
+
+允许：
+- clear() 清除所有冷却
+
+---
+
+## 规则4：有效射程
+
+禁止：
+- 硬编码射程
+
+必须：
+- range > 0 使用技能自身射程
+- range == 0 使用单位基础攻击范围
+
+---
+
+# 流程管线
+
+## 条件校验管线
+
+冷却检查 → conditions 逐条检查 → 全部通过
+
+### Step1：冷却检查
+
+输入：skill_id + SkillCooldowns
+处理：get(skill_id)，> 0 则失败
+输出：OnCooldown 或 继续
+禁止：修改冷却值
+
+### Step2：conditions 检查
+
+输入：conditions 列表 + source/target 属性和标签
+处理：按定义顺序逐条检查，短路返回第一个失败
+输出：SkillUseError 或 Ok(())
+禁止：修改任何状态
+
+---
+
+## 预览管线
+
+构建上下文 → 遍历效果 → Handler 生成预览 → 合并结果
+
+### Step1：构建上下文
+
+输入：source/target 实体
+处理：从 ECS 查询构建 SkillExecutionContext 快照
+输出：SkillExecutionContext
+禁止：修改 ECS 状态
+
+### Step2：遍历效果
+
+输入：SkillData.effects + Context
+处理：通过 EffectHandlerRegistry 分发，每个 Handler 生成 EffectPreview
+输出：EffectPreview 列表
+禁止：修改 ECS 状态
+
+---
+
+# 数据结构
+
+## SkillData（Definition）
+
+职责：技能的静态定义
+
+结构：
+- id / name / description：标识和展示
+- cost_mp：MP 消耗
+- range：射程（0 = 使用基础攻击范围）
+- targeting：目标类型（SingleEnemy / SingleAlly / SelfOnly / AoeEnemies / AoeAllies / NoTarget）
+- effects：效果定义列表
+- tags：技能标签列表
+- conditions：使用条件列表
+- cooldown：冷却回合数
+- priority：AI 决策优先级
+
+要求：
+- 不可变，加载后不修改
+- RON 配置路径：assets/skills/
+
+---
+
+## SkillSlots（Instance）
+
+职责：单位拥有的技能 ID 列表
+
+结构：
+- skill_ids：字符串列表
+
+要求：
+- 第一个为默认攻击
+- 空列表时 default_attack() 回退 BASIC_ATTACK_ID
+
+---
+
+## SkillCooldowns（Instance）
+
+职责：冷却追踪
+
+结构：
+- cooldowns：skill_id → 剩余回合数映射
+
+要求：
+- get() 未记录返回 0
+- set(0) 不产生记录
+- tick() 归零后移除
+
+---
+
+## SkillCondition（值对象）
+
+职责：技能使用条件
+
+结构：
+- MpCost(i32)：MP 不足时不可用
+- RequireTag(GameplayTag)：自身缺少标签时不可用
+- TargetRequireTag(GameplayTag)：目标缺少标签时不可用
+- HpBelow(f32) / HpAbove(f32)：HP 阈值检查
+
+要求：
+- can_use() 中按顺序检查
+- TargetRequireTag 在无目标时跳过
+
+---
+
+## SkillPreview（值对象）
+
+职责：技能效果预览结果
+
+结构：
+- skill_id / skill_name：技能标识
+- predictions：EffectPreview 列表
+
+要求：
+- 纯函数生成，不修改状态
+- 伤害预览最低 1，治疗预览不超过 MaxHp
+
+---
+
+# 禁止事项
+
+禁止：硬编码技能效果
+
+原因：技能效果由 RON 配置驱动，硬编码违反 Rule/Content 分离
+
+违反后果：新增技能需要修改代码，无法通过配置扩展
+
+---
+
+禁止：跳过冷却检查
+
+原因：冷却是技能平衡的核心机制
+
+违反后果：技能无限使用，游戏平衡被破坏
+
+---
+
+禁止：can_use() 中修改状态
+
+原因：can_use() 是纯函数，用于 UI 和 AI 安全调用
+
+违反后果：UI 悬停时触发副作用，MP 被扣减
+
+---
+
+禁止：预览修改状态
+
+原因：预览是估算，不是实际执行
+
+违反后果：预览后 HP 被扣减，玩家未确认就受伤
+
+---
+
+禁止：运行时修改 SkillData
+
+原因：SkillData 是共享定义，修改影响所有引用
+
+违反后果：多个单位共享技能定义时产生意外副作用
+
+---
+
+# AI 修改规则
+
+## 如果新增技能
+
+允许：
+- 新增 RON 配置文件
+- 新增 EffectDef 变体（需配套 Handler）
+
+禁止：
+- 修改 SkillData 结构
+- 修改 can_use() 逻辑
+- 修改 SkillRegistry 加载流程
+
+优先检查：
+- EffectHandlerRegistry 是否有对应 Handler
+- SkillCondition 是否覆盖新条件
+- tags 是否在 GameplayTag 枚举中
+
+---
+
+## 如果新增技能条件
+
+允许：
+- 新增 SkillCondition 变体
+- 在 can_use() 中添加检查分支
+
+禁止：
+- 修改现有条件的逻辑
+- 改变条件检查顺序
+
+优先检查：
+- SkillConditionDef RON 反序列化
+- can_use() 短路逻辑
+
+---
+
+## 如果新增效果类型
+
+允许：
+- 新增 EffectDef 变体
+- 新增 EffectHandler 实现并注册
+
+禁止：
+- 修改 preview_skill_effects 流程
+- 修改 generate_combat_effects 流程
+
+优先检查：
+- EffectHandlerRegistry 注册
+- 预览 Handler 是否配套
+
+---
+
+## 如果测试失败
+
+排查顺序：
+1. 检查 can_use() 条件是否全部通过
+2. 检查冷却是否正确递减
+3. 检查 effective_skill_range 计算
+4. 检查 RON 配置是否合法
+5. 检查 EffectHandler 是否正确注册

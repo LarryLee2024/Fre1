@@ -1,312 +1,471 @@
-# 装备领域规则 (Equipment Rules)
+# Equipment 领域
 
-## 1. 领域概述
+Version: 1.0
 
-装备系统管理角色的武器、防具和饰品，通过穿脱操作影响属性、标签和 Trait。遵循 **Definition / Instance 分离**和 **装备 = Modifier + Trait** 原则。
+Equipment 领域管理角色装备的穿脱、槽位、需求检查和效果应用。装备本质 = Modifier + Trait。
 
-### 核心原则
-
-- **Definition / Instance 分离**：`EquipmentDef`（不可变定义）与 `EquipmentInstance`（可变实例）分离
-- **装备 = Modifier + Trait**：装备通过属性修饰符和 Trait 授予影响角色
-- **Rule / Content 分离**：新增装备修改 RON 配置，不修改逻辑代码
-- **标签三层架构**：Trait 授予 → 装备授予 → Buff 授予
-
----
-
-## 2. EquipmentDef — 装备定义
-
-```rust
-pub struct EquipmentDef {
-    pub id: String,                           // 装备唯一标识
-    pub name: String,                         // 显示名称
-    pub description: String,                  // 描述
-    pub slot: EquipmentSlot,                  // 装备槽位
-    pub rarity: Rarity,                       // 稀有度
-    pub tags: Vec<TagName>,                   // 装备标签（SWORD, FIRE, MARTIAL 等）
-    pub modifiers: Vec<AttributeModifierDef>, // 属性修饰符
-    pub traits: Vec<String>,                  // 授予的 Trait ID
-    pub requirements: Vec<EquipmentRequirement>, // 需求条件
-    pub weight: f32,                          // 重量
-}
-```
-
-### 2.1 EquipmentSlot — 装备槽位
-
-| 槽位 | 标签 | 说明 |
-|------|------|------|
-| `MainHand` | 主手 | 武器 |
-| `OffHand` | 副手 | 盾牌/副武器 |
-| `Head` | 头部 | 头盔 |
-| `Body` | 身体 | 铠甲 |
-| `Legs` | 腿部 | 腿甲 |
-| `Feet` | 脚部 | 靴子 |
-| `Accessory1` | 饰品1 | 戒指/项链 |
-| `Accessory2` | 饰品2 | 戒指/项链 |
-
-### 2.2 Rarity — 稀有度
-
-| 稀有度 | 标签 | 排序 |
-|--------|------|------|
-| `Common` | 普通 | 1 |
-| `Uncommon` | 精良 | 2 |
-| `Rare` | 稀有 | 3 |
-| `Epic` | 史诗 | 4 |
-| `Legendary` | 传说 | 5 |
-
-### 2.3 EquipmentRequirement — 装备需求
-
-| 需求 | 参数 | 说明 |
-|------|------|------|
-| `RequireTag(tag)` | TagName | 需要拥有指定标签（如 MARTIAL） |
-| `AttributeMin { kind, value }` | AttributeKind, f32 | 属性最低要求 |
+核心原则：
+- Definition / Instance 分离
+- 装备 = Modifier + Trait
+- Rule / Content 分离
+- 标签三层架构
 
 ---
 
-## 3. EquipmentInstance — 装备实例
+# 术语定义
 
-```rust
-pub struct EquipmentInstance {
-    pub instance_id: u64,         // 唯一实例 ID
-    pub def_id: String,           // 指向定义 ID
-    pub durability: u32,          // 当前耐久度
-    pub max_durability: u32,      // 最大耐久度
-    pub enhance_level: u32,       // 强化等级
-    pub enchantments: Vec<String>, // 附魔 trait
-}
-```
+## EquipmentDef
 
-**规则**：
-- 同一装备定义可以有多个实例
-- 实例拥有独立的耐久、强化等级、附魔
+装备的静态定义，描述装备"是什么"。
+
+不是 EquipmentInstance。Def 不可变，Instance 有独立状态。
+
+关键属性：
+- id / name / description：标识和展示
+- slot：装备槽位
+- rarity：稀有度
+- modifiers：属性修饰符
+- traits：授予的 Trait ID
+- requirements：需求条件
+
+---
+
+## EquipmentInstance
+
+装备的运行时实例，拥有独立状态。
+
+不是 EquipmentDef。Instance 有耐久/强化/附魔，Def 是共享配置。
+
+关键属性：
+- instance_id：唯一实例 ID
+- def_id：指向定义 ID
+- durability / max_durability：耐久度
+- enhance_level：强化等级
+- enchantments：附魔 trait
+
+---
+
+## EquipmentSlots
+
+单位上的装备槽位容器，管理各槽位的装备实例。
+
+不是 EquipmentRegistry。Slots 是实例，Registry 是定义。
+
+关键属性：
+- slots：槽位 → (实例ID, 定义ID) 映射
+
+---
+
+## EquipmentRequirement
+
+装备需求条件，决定"谁能用"。
+
+不是 SkillCondition。Requirement 是装备前置，SkillCondition 是技能前置。
+
+关键属性：
+- RequireTag：需要拥有指定标签
+- AttributeMin：属性最低要求
+
+---
+
+# 领域边界
+
+## 本领域负责
+
+- EquipmentDef 定义和注册表（EquipmentRegistry）
+- EquipmentInstance 的创建和管理
+- EquipmentSlots 槽位管理
+- 穿脱流程（EquipItem / UnequipItem Message）
+- 需求检查（check_equipment_requirements）
+- 装备效果应用（修饰符 + 标签 + Trait）
+- Trait 重建（rebuild_trait_effects）
+
+## 本领域不负责
+
+- 属性计算和修饰符管线（由 stat_system 领域负责）
+- Trait 定义和效果处理（由 trait_rules 领域负责）
+- 背包管理（由 inventory_rules 领域负责）
+- Buff 管理（由 buff_rules 领域负责）
+- UI 展示（由 ui_rules 领域负责）
+
+## 跨领域通信方式
+
+| 通知内容 | 通信方式 | 目标领域 |
+|----------|----------|----------|
+| 穿戴请求 | EquipItem Message | equipment |
+| 脱卸请求 | UnequipItem Message | equipment |
+| 穿戴完成 | ItemEquipped Message | ui / inventory |
+| 脱卸完成 | ItemUnequipped Message | ui / inventory |
+| 穿戴失败 | EquipFailed Message | ui |
+| 属性修饰符变化 | 直接修改 Attributes | stat_system |
+| Trait 变化 | rebuild_trait_effects | trait |
+
+---
+
+# 生命周期
+
+## 装备实例生命周期
+
+| 状态 | 含义 | 可转换到 |
+|------|------|----------|
+| InInventory | 在背包中 | Equipped |
+| Equipped | 装备在槽位上 | InInventory |
+| Destroyed | 已销毁 | — |
+
+## 状态转换图
+
+InInventory → Equipped → InInventory
+                      ↘ Destroyed
+
+## 转换条件
+
+| 从 | 到 | 条件 |
+|----|-----|------|
+| InInventory | Equipped | EquipItem Message + 需求满足 |
+| Equipped | InInventory | UnequipItem Message |
+| Equipped | Equipped | 替换旧装备（先脱后穿） |
+
+---
+
+# 不变量
+
+## 不变量1：穿脱后 Trait 必须重建
+
+穿脱操作完成后：
+
+TraitCollection 必须反映当前装备状态。
+
+违反表现：
+
+卸下装备后仍拥有该装备的 Trait，属性计算错误。
+
+---
+
+## 不变量2：修饰符来源精确追踪
+
+穿脱操作完成后：
+
+装备修饰符的 ModifierSource 必须与 instance_id 对应。
+
+违反表现：
+
+脱卸装备时无法精确移除对应修饰符，残留或误删。
+
+---
+
+## 不变量3：标签分层不混淆
+
+任意时刻：
+
+装备标签存储在 PersistentTags.from_equipment，不与 Trait/Buff 标签混淆。
+
+违反表现：
+
+Buff 过期时误删装备标签，或装备穿脱时误删 Trait 标签。
+
+---
+
+## 不变量4：槽位唯一性
+
+任意时刻：
+
+每个 EquipmentSlot 最多有一个装备实例。
+
+违反表现：
+
+同一槽位出现多个装备，属性叠加错误。
+
+---
+
+# 业务规则
+
+## 规则1：穿戴
+
+禁止：
+- 跳过需求检查
+- 跳过 Trait 重建
+- 不处理旧装备替换
+
+必须：
+- 需求检查先于穿戴，失败发送 EquipFailed
+- 槽位已占用时先脱卸旧装备
+- 从背包移除装备
+- 应用修饰符 + 标签 + Trait
+- 重建 Trait 效果和 GameplayTags
+- 发送 ItemEquipped Message
+
+---
+
+## 规则2：脱卸
+
+禁止：
+- 跳过修饰符清理
+- 跳过 Trait 重建
+- 不放回背包
+
+必须：
+- 移除修饰符（按 ModifierSource 精确移除）
+- 移除装备授予的标签
+- 移除装备授予的 Trait
+- 清除槽位
+- 创建 ItemStack 放回背包
+- 重建 Trait 效果和 GameplayTags
+- 发送 ItemUnequipped Message
+
+---
+
+## 规则3：需求检查
+
+禁止：
+- 跳过任何需求条件
+- 需求检查后修改角色状态
+
+必须：
+- 按定义顺序检查
+- 第一个不满足即返回 Failed
+- RequireTag 检查 GameplayTags
+- AttributeMin 检查属性值
+
+---
+
+## 规则4：装备效果应用
+
+禁止：
+- 直接修改角色基础属性
+- 绕过 Modifier 管线
+
+必须：
+- 修饰符通过 ModifierSource::equipment_source 添加
+- 标签添加到 PersistentTags.from_equipment
+- Trait 添加到 TraitCollection（TraitSource::Equipment { slot }）
+
+---
+
+# 流程管线
+
+## 穿戴管线
+
+查找实例 → 查找定义 → 需求检查 → 脱旧装备 → 从背包移除 → 装备到槽位 → 应用效果 → 重建 Trait → 重建标签 → 发送 Message
+
+### Step1：查找
+
+输入：instance_id + EquipmentRegistry + Container
+处理：查找装备实例和定义
+输出：EquipmentInstance + EquipmentDef
+禁止：实例或定义不存在时静默跳过
+
+### Step2：需求检查
+
+输入：EquipmentDef.requirements + Attributes + GameplayTags
+处理：逐条检查需求
+输出：Satisfied 或 Failed(reason)
+禁止：检查失败时继续穿戴
+
+### Step3：脱旧装备
+
+输入：EquipmentSlots + 槽位
+处理：如果槽位已占用，执行脱卸流程
+输出：旧装备放回背包
+禁止：跳过旧装备处理
+
+### Step4：应用效果
+
+输入：EquipmentDef.modifiers + tags + traits
+处理：添加修饰符、标签、Trait
+输出：属性和标签变化
+禁止：绕过 Modifier 管线
+
+### Step5：重建
+
+输入：TraitCollection + PersistentTags
+处理：rebuild_trait_effects + rebuild_tags_from_components
+输出：更新后的 Trait 和 GameplayTags
+禁止：跳过重建
+
+---
+
+## 脱卸管线
+
+检查槽位 → 移除修饰符 → 移除标签 → 移除 Trait → 清除槽位 → 放回背包 → 重建 Trait → 重建标签 → 发送 Message
+
+### Step1：移除效果
+
+输入：EquipmentDef + ModifierSource
+处理：移除修饰符、标签、Trait
+输出：属性和标签变化
+禁止：遗漏任何修饰符
+
+### Step2：放回背包
+
+输入：EquipmentInstance
+处理：创建 ItemStack 放入 Container
+输出：背包更新
+禁止：丢弃装备
+
+### Step3：重建
+
+输入：TraitCollection + PersistentTags
+处理：rebuild_trait_effects + rebuild_tags_from_components
+输出：更新后的 Trait 和 GameplayTags
+禁止：跳过重建
+
+---
+
+# 数据结构
+
+## EquipmentDef（Definition）
+
+职责：装备的静态定义
+
+结构：
+- id / name / description：标识和展示
+- slot：装备槽位（8 种）
+- rarity：稀有度（5 级）
+- tags：装备标签列表
+- modifiers：属性修饰符列表
+- traits：授予的 Trait ID 列表
+- requirements：需求条件列表
+- weight：重量
+
+要求：
+- 不可变，加载后不修改
+- RON 配置路径：assets/equipment/
+
+---
+
+## EquipmentInstance（Instance）
+
+职责：装备的运行时实例
+
+结构：
+- instance_id：唯一实例 ID
+- def_id：指向定义 ID
+- durability / max_durability：耐久度
+- enhance_level：强化等级
+- enchantments：附魔 trait 列表
+
+要求：
 - 创建时 durability = max_durability
+- 同一 Def 可有多个 Instance
 
 ---
 
-## 4. EquipmentSlots — 装备槽位组件
+## EquipmentSlots（Instance Component）
 
-```rust
-#[derive(Component)]
-pub struct EquipmentSlots {
-    pub slots: HashMap<EquipmentSlot, (u64, String)>,  // 槽位 → (实例ID, 定义ID)
-    pub next_instance_id: u64,
-}
-```
+职责：单位装备槽位容器
 
-| 方法 | 说明 |
-|------|------|
-| `get(slot)` | 获取槽位实例 ID |
-| `get_def_id(slot)` | 获取槽位定义 ID |
-| `is_equipped(slot)` | 槽位是否已装备 |
-| `equip(slot, instance_id, def_id)` | 装备，返回被替换的旧装备 |
-| `unequip(slot)` | 卸下，返回被卸下的装备 |
-| `equipped_slots()` | 获取所有已装备槽位 |
+结构：
+- slots：槽位 → (实例ID, 定义ID) 映射
+- next_instance_id：实例 ID 生成器
 
-**规则**：
-- 装备到已占用槽位时，自动替换旧装备
-- 卸下空槽位返回 None
+要求：
+- 每个槽位最多一个装备
+- equip 返回被替换的旧装备
+- unequip 空槽位返回 None
 
 ---
 
-## 5. 装备需求检查
+# 禁止事项
 
-### 5.1 check_equipment_requirements
+禁止：跳过需求检查
 
-```rust
-pub fn check_equipment_requirements(def, attrs, tags) -> RequirementCheckResult
-```
+原因：需求是装备平衡的核心机制
 
-**检查顺序**：
-1. 遍历 `def.requirements`，按定义顺序
-2. `RequireTag`：检查 `tags.has(tag_name.to_tag())`
-3. `AttributeMin`：检查 `attrs.get(kind) >= value`
-4. 第一个不满足即返回 `Failed(reason)`
-5. 全部满足返回 `Satisfied`
-
-### 5.2 RequirementCheckResult
-
-| 结果 | 说明 |
-|------|------|
-| `Satisfied` | 满足所有需求 |
-| `Failed(reason)` | 不满足，附带原因 |
+违反后果：低属性角色装备高级装备，游戏平衡被破坏
 
 ---
 
-## 6. 穿脱流程
+禁止：穿脱后跳过 Trait 重建
 
-### 6.1 EquipItem Message
+原因：装备提供 Trait，穿脱必须同步 TraitCollection
 
-```rust
-#[derive(Message)]
-pub struct EquipItem {
-    pub target_entity: Entity,
-    pub instance_id: u64,
-}
-```
-
-**穿戴流程**：
-
-```
-1. 从背包查找装备实例
-2. 从注册表查找装备定义
-3. 需求检查 → 失败发送 EquipFailed
-4. 槽位已占用 → 先脱卸旧装备
-5. 从背包移除
-6. 装备到槽位
-7. 应用装备效果（修饰符 + 标签 + Trait）
-8. 重建 Trait 效果
-9. 重建 GameplayTags
-10. 发送 ItemEquipped Message
-```
-
-### 6.2 UnequipItem Message
-
-```rust
-#[derive(Message)]
-pub struct UnequipItem {
-    pub target_entity: Entity,
-    pub slot: EquipmentSlot,
-}
-```
-
-**脱卸流程**：
-
-```
-1. 检查槽位是否有装备
-2. 移除装备修饰符
-3. 移除装备授予的标签
-4. 移除装备授予的 Trait
-5. 清除槽位
-6. 创建 ItemStack 放回背包
-7. 重建 Trait 效果
-8. 重建 GameplayTags
-9. 发送 ItemUnequipped Message
-```
-
-### 6.3 Message 类型
-
-| Message | 方向 | 说明 |
-|---------|------|------|
-| `EquipItem` | UI → 系统 | 请求穿戴装备 |
-| `UnequipItem` | UI → 系统 | 请求脱卸装备 |
-| `ItemEquipped` | 系统 → UI | 装备已穿戴 |
-| `ItemUnequipped` | 系统 → UI | 装备已脱卸 |
-| `EquipFailed` | 系统 → UI | 穿戴失败 |
+违反后果：角色拥有已卸下装备的 Trait，属性计算错误
 
 ---
 
-## 7. 装备效果应用
+禁止：直接修改角色基础属性
 
-### 7.1 apply_equipment_effects
+原因：装备效果必须走 Modifier 管线
 
-```
-1. 添加修饰符到 Attributes（ModifierSource::equipment_source）
-2. 添加标签到 PersistentTags.from_equipment
-3. 添加 Trait 到 TraitCollection（TraitSource::Equipment { slot }）
-```
-
-### 7.2 修饰符来源
-
-```rust
-ModifierSource::equipment_source(instance_id)  // Equipment 区间
-```
-
-装备修饰符通过 `ModifierSource` 追踪，脱卸时按来源精确移除。
-
-### 7.3 标签持久化
-
-装备授予的标签存入 `PersistentTags.from_equipment`，不受 Buff 过期影响。
+违反后果：属性变化无法追踪、无法回滚
 
 ---
 
-## 8. Trait 重建
+禁止：脱卸装备不放回背包
 
-### 8.1 rebuild_trait_effects
+原因：装备是玩家资产，脱卸不是销毁
 
-装备穿脱后调用，确保 Trait 授予的标签和属性修饰符正确：
-
-```
-1. 清除所有 Trait 来源的修饰符
-2. 清除 Trait 授予的标签（persistent.from_traits）
-3. 重新应用所有 Passive Trait：
-   - 授予标签到 persistent.from_traits
-   - 授予属性修饰符（ModifierSource::trait_source）
-```
-
-### 8.2 rebuild_tags_from_components
-
-从组件重建 GameplayTags（Trait + Equipment 层，不含 Buff 层）：
-
-```
-new_tags = persistent.from_traits | persistent.from_equipment
-```
-
-Buff 层由 `resolve_status_effects` 中的 `rebuild_tags` 管理。
+违反后果：装备丢失，玩家体验受损
 
 ---
 
-## 9. EquipmentRegistry — 装备注册表
+禁止：装备标签与 Buff 标签混淆
 
-```rust
-#[derive(Resource)]
-pub struct EquipmentRegistry {
-    defs: HashMap<String, EquipmentDef>,
-}
-```
+原因：标签三层架构要求分层管理
 
-### 9.1 内置默认装备
-
-| ID | 名称 | 槽位 | 稀有度 | 修饰 | 标签 | Trait |
-|----|------|------|--------|------|------|-------|
-| `iron_sword` | 铁剑 | MainHand | Common | Attack +3 | SWORD, MELEE, MARTIAL | — |
-| `leather_armor` | 皮甲 | Body | Common | Defense +2 | LIGHT_ARMOR | — |
-| `flame_dragon_sword` | 炎龙长剑 | MainHand | Epic | Attack +15, CritRate +5 | SWORD, FIRE, MARTIAL, TWO_HANDED | flaming_weapon, dragon_bane |
-| `iron_shield` | 铁盾 | OffHand | Common | Defense +3 | SHIELD | — |
-| `mage_staff` | 法师法杖 | MainHand | Uncommon | MagicAttack +5 | STAFF, SIMPLE | — |
-
-### 9.2 数据加载
-
-- 加载目录：`assets/equipment/`
-- 通过 `RegistryLoader` trait 实现 RON 文件加载
-- 注册表幂等：重复调用不会重复注册
+违反后果：Buff 过期时误删装备标签
 
 ---
 
-## 10. RON 配置格式
+# AI 修改规则
 
-```ron
-(
-    version: 1,
-    id: "flame_dragon_sword",
-    name: "炎龙长剑",
-    description: "蕴含龙焰的古老长剑",
-    slot: MainHand,
-    rarity: Epic,
-    tags: [SWORD, FIRE, MARTIAL, TWO_HANDED],
-    modifiers: [
-        (kind: Attack, op: Add, value: 15.0),
-        (kind: CritRate, op: Add, value: 5.0),
-    ],
-    traits: ["flaming_weapon", "dragon_bane"],
-    requirements: [RequireTag(MARTIAL)],
-    weight: 5.0,
-)
-```
+## 如果新增装备
 
-**规则**：
-- `version`、`description`、`tags`、`modifiers`、`traits`、`requirements`、`weight` 均可选（有默认值）
-- 旧配置无 `version` 字段时默认为 0
+允许：
+- 新增 RON 配置文件
+- 新增 EquipmentSlot 变体
+
+禁止：
+- 修改穿戴/脱卸流程
+- 修改需求检查逻辑
+- 修改 Trait 重建逻辑
+
+优先检查：
+- EquipmentRegistry 注册
+- 修饰符 Source 区间是否冲突
+- Trait ID 是否在 TraitRegistry 中
+- 标签是否在 GameplayTag 枚举中
 
 ---
 
-## 11. 关键约束
+## 如果新增装备需求类型
 
-1. **穿脱必须走 Message**：`EquipItem` / `UnequipItem`，不直接调用函数
-2. **需求检查先于穿戴**：不满足需求发送 `EquipFailed`，不执行穿戴
-3. **替换旧装备**：槽位已占用时先脱卸再穿戴
-4. **脱卸放回背包**：创建 `ItemStack` 放回 `Container`
-5. **修饰符来源追踪**：通过 `ModifierSource::equipment_source(instance_id)` 精确关联
-6. **标签分层管理**：装备标签存入 `persistent.from_equipment`，不与 Buff 混淆
-7. **Trait 重建在穿脱后**：确保 Passive Trait 效果正确
-8. **GameplayTags 重建不含 Buff 层**：装备层只管 Trait + Equipment，Buff 层由 resolve 管理
-9. **注册表幂等**：重复调用 `register_defaults()` 不会重复注册
-10. **实例独立**：同一装备定义可有多个实例，各自拥有独立状态
+允许：
+- 新增 EquipmentRequirement 变体
+- 在 check_equipment_requirements 中添加检查
+
+禁止：
+- 修改现有需求的检查逻辑
+- 改变需求检查顺序
+
+优先检查：
+- RON 反序列化适配
+- 需求检查短路逻辑
+
+---
+
+## 如果新增装备效果
+
+允许：
+- 新增修饰符类型
+- 新增 Trait 授予
+
+禁止：
+- 绕过 Modifier 管线
+- 跳过 Trait 重建
+
+优先检查：
+- ModifierSource 区间
+- TraitCollection 来源追踪
+- GameplayTags 重建
+
+---
+
+## 如果测试失败
+
+排查顺序：
+1. 检查需求检查是否全部通过
+2. 检查修饰符是否正确添加/移除
+3. 检查 Trait 是否正确重建
+4. 检查标签是否分层正确
+5. 检查旧装备是否正确替换

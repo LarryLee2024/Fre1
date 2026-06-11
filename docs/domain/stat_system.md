@@ -1,355 +1,565 @@
-# 属性系统领域规则 (Stat System Rules)
+# Stat System 领域
 
-## 1. 领域概述
+Version: 1.0
 
-属性系统是 SRPG 的数值基础，负责角色的所有数值计算。采用**三层架构**：核心属性（基础值）、衍生属性（实时计算）、生命资源（当前值），通过统一的修饰符管线（Modifier Pipeline）实现所有数值变化。
+Stat System 领域管理角色的所有数值计算，采用三层架构（核心属性 → 衍生属性 → 生命资源），通过统一修饰符管线实现所有数值变化。
 
-### 核心原则
-
-- **Primary Stat 与 Derived Stat 分离**：核心属性有基础值，衍生属性实时计算
-- **Derived Stat 优先实时计算**：不存储衍生属性基础值
-- **统一 Modifier 管线**：所有数值变化通过修饰符栈统一管理
-- **属性公式集中管理**：所有衍生公式定义在 `Attributes` impl 中
-- **配置型数据尽量保持不可变**：模板基础值不随战斗变化
+核心原则：
+- Primary Stat 与 Derived Stat 分离
+- Derived Stat 优先实时计算
+- 统一 Modifier 管线
+- 属性公式集中管理
 
 ---
 
-## 2. 属性分类
+# 术语定义
 
-### 2.1 三层架构
+## Core Stat
 
-| 层级 | 类型 | 存储 | 示例 |
-|------|------|------|------|
-| 核心属性 | 8 维 | `base: HashMap<AttributeKind, f32>` | Might, Dexterity, Agility, Vitality, Intelligence, Willpower, Presence, Luck |
-| 生命资源 | 3 维 | `current_hp/mp/stamina: f32` | HP, MP, Stamina |
-| 衍生属性 | 13 维 | 实时计算，不存储 | MaxHp, Attack, Defense, MoveRange, Initiative 等 |
+8 维核心属性，有基础值，可通过修饰符修改。
 
-### 2.2 AttributeKind 完整枚举
+不是 Derived Stat。Core Stat 有 base 值，Derived Stat 没有。
 
-```
-核心属性（8维，有 base 值）：
-  Might       力量 → 物理攻击力
-  Dexterity   技巧 → 命中、暴击、远程
-  Agility     敏捷 → 行动顺序、闪避、移动
-  Vitality    体质 → 生命、物防
-  Intelligence 智力 → 法术攻击、法力
-  Willpower   意志 → 魔防、治疗、异常抵抗
-  Presence    魅力 → 光环、召唤、指挥
-  Luck        幸运 → 暴击、掉落、随机事件
-
-生命资源（3维，存储当前值）：
-  Hp          当前生命值
-  Mp          当前法力值
-  Stamina     当前耐力值
-
-衍生属性（13维，实时计算）：
-  MaxHp       最大生命值
-  MaxMp       最大法力值
-  MaxStamina  最大耐力值
-  Attack      物理攻击力
-  Defense     物理防御力
-  MagicAttack 魔法攻击力
-  MagicDefense 魔法防御力
-  Accuracy    命中率
-  Evasion     闪避率
-  CritRate    暴击率
-  MoveRange   移动力
-  Initiative  行动速度
-  AttackRange 攻击范围
-```
-
-### 2.3 分类判定
-
-```rust
-impl AttributeKind {
-    pub fn is_core(&self) -> bool    // 8维核心属性
-    pub fn is_vital(&self) -> bool   // 3维生命资源
-    pub fn is_derived(&self) -> bool // 13维衍生属性
-}
-```
-
-**规则**：三类互斥，每个 AttributeKind 恰好属于一个类别。
+关键属性：
+- Might / Dexterity / Agility / Vitality / Intelligence / Willpower / Presence / Luck
 
 ---
 
-## 3. 衍生属性公式
+## Derived Stat
 
-所有衍生属性从核心属性实时推导，公式集中管理：
+13 维衍生属性，从 Core Stat 实时推导，不存储基础值。
 
-| 衍生属性 | 公式 | 依赖核心属性 |
-|----------|------|-------------|
-| MaxHp | `5 + Vitality * 5` | Vitality |
-| MaxMp | `Intelligence * 5` | Intelligence |
-| MaxStamina | `10 + (Vitality + Might) * 2` | Vitality, Might |
-| Attack | `Might * 2` | Might |
-| Defense | `Vitality` | Vitality |
-| MagicAttack | `Intelligence * 2` | Intelligence |
-| MagicDefense | `Willpower` | Willpower |
-| Accuracy | `80 + Dexterity * 2` | Dexterity |
-| Evasion | `Agility * 3` | Agility |
-| CritRate | `5 + Luck` | Luck |
-| MoveRange | `floor(Agility * 0.5) + 2` | Agility |
-| Initiative | `Agility * 2 + Luck` | Agility, Luck |
-| AttackRange | `base_attack_range` | 职业/装备决定 |
+不是 Core Stat。Derived Stat 无 base 值，set_base() 对其无效。
 
-**规则**：
-- 衍生属性不能通过 `set_base()` 设置基础值（会 warn 并忽略）
-- 衍生属性可通过修饰符修改（如 Buff 增加 Attack +5）
-- `AttackRange` 特殊：由 `base_attack_range` 字段决定（职业/装备），不依赖核心属性
+关键属性：
+- MaxHp / MaxMp / MaxStamina / Attack / Defense / MagicAttack / MagicDefense / Accuracy / Evasion / CritRate / MoveRange / Initiative / AttackRange
 
 ---
 
-## 4. 修饰符系统
+## Vital Resource
 
-### 4.1 修饰符操作
+3 维生命资源，存储当前值。
 
-```rust
-pub enum ModifierOp {
-    Add,       // 加法：base + sum(Add modifiers)
-    Multiply,  // 乘法：(base + add_sum) * product(Multiply modifiers)
-}
-```
+不是 Derived Stat。Vital Resource 有 current 值而非 base 值。
 
-**计算顺序**：先加后乘
-```
-最终值 = (base + Σ(Add modifiers)) × Π(Multiply modifiers)
-```
-
-**规则**：
-- 乘法修饰符乘积为 0 时视为 1.0（防止意外归零）
-- 修饰符可作用于核心属性和衍生属性
-- 修饰符作用于核心属性时，会级联影响所有依赖该属性的衍生属性
-
-### 4.2 ModifierSource — 来源标识
-
-```rust
-pub struct ModifierSource(pub u64);
-```
-
-| 区间 | 范围 | 用途 |
-|------|------|------|
-| Trait | `u64::MAX ~ u64::MAX - 999` | 种族/职业/天赋修饰 |
-| Equipment | `u64::MAX - 1000 ~ u64::MAX - 1999` | 装备修饰 |
-| Buff | `1 ~ 999999` | Buff/Debuff 修饰 |
-
-**判定方法**：
-- `is_trait()` — 是否来自 Trait
-- `is_equipment()` — 是否来自装备
-- `is_buff()` — 是否来自 Buff
-
-**规则**：
-- 区间隔离保证不同来源的修饰符不会冲突
-- 可按来源精确移除修饰符（如脱装备时移除 Equipment 区间修饰符）
-
-### 4.3 AttributeModifierDef vs AttributeModifierInstance
-
-| 类型 | 用途 | 包含 source |
-|------|------|-------------|
-| `AttributeModifierDef` | 数据定义（RON/BuffData） | 否 |
-| `AttributeModifierInstance` | 运行时实例 | 是 |
-
-### 4.4 修饰符管理操作
-
-| 操作 | 方法 | 说明 |
-|------|------|------|
-| 添加 | `add_modifier(instance)` | 添加单个修饰符 |
-| 批量添加 | `add_modifiers_from_def(defs, source)` | 从定义列表批量添加 |
-| 按来源移除 | `remove_modifiers_from(source)` | 移除指定来源的所有修饰符 |
-| 移除 Trait 修饰符 | `remove_trait_modifiers()` | 移除 Trait 区间所有修饰符 |
-| 移除 Equipment 修饰符 | `remove_equipment_modifiers()` | 移除 Equipment 区间所有修饰符 |
-| 移除减益修饰符 | `remove_debuff_modifiers()` | 移除 Add<0 或 Multiply<1.0 的修饰符 |
-
-**减益判定规则**：
-- `ModifierOp::Add` 且 `value < 0.0` → 减益
-- `ModifierOp::Multiply` 且 `value < 1.0` → 减益
+关键属性：
+- HP / MP / Stamina
 
 ---
 
-## 5. Attributes 组件
+## Modifier
 
-### 5.1 数据结构
+属性修饰符，通过 Add 或 Multiply 修改属性值。
 
-```rust
-#[derive(Component, Reflect, Default, Debug, Clone)]
-pub struct Attributes {
-    pub base: HashMap<AttributeKind, f32>,  // 核心属性基础值
-    pub current_hp: f32,                    // 当前 HP
-    pub current_mp: f32,                    // 当前 MP
-    pub current_stamina: f32,               // 当前 Stamina
-    pub base_attack_range: u32,             // 基础攻击范围
-    pub modifiers: Vec<AttributeModifierInstance>,  // 修饰符栈
-}
-```
+不是直接属性修改。Modifier 走管线，直接修改绕过管线。
 
-### 5.2 统一访问接口
-
-```rust
-pub fn get(&self, kind: AttributeKind) -> f32
-```
-
-- 核心属性 → `core(kind)` = base + 修饰符
-- 生命资源 → 直接返回当前值
-- 衍生属性 → 从核心属性实时计算 + 修饰符
-
-### 5.3 设置接口
-
-| 方法 | 适用范围 | 说明 |
-|------|----------|------|
-| `set_base(kind, value)` | 核心属性 + 生命资源 | 设置基础值/当前值 |
-| `set_vital(kind, value)` | 仅 HP/MP/Stamina | 语义更清晰：设置当前值 |
-| `set_base_attack_range(range)` | AttackRange | 由职业/装备决定 |
-| `fill_vital_resources()` | HP/MP/Stamina | 初始化为最大值 |
-
-**规则**：
-- `set_base()` 对衍生属性无效（warn 并忽略）
-- `set_vital()` 对非生命资源无效（warn 并忽略）
-- `fill_vital_resources()` 在单位生成时调用一次
+关键属性：
+- ModifierOp：Add（加法）或 Multiply（乘法）
+- value：修饰值
+- source：来源标识（ModifierSource）
 
 ---
 
-## 6. 修饰规则系统（ModifierRule）
+## ModifierSource
 
-### 6.1 设计理念
+修饰符来源标识，u64 类型，按区间隔离。
 
-修饰规则是**数据驱动的效果修饰系统**，替代效果管线中的硬编码 if-else。规则通过标签匹配（source_tag + target_tag）决定是否触发，通过计算器（Calculator）执行具体计算。
+不是 GameplayTag。ModifierSource 标识"谁加的"，GameplayTag 标识"有什么标签"。
 
-### 6.2 ModifierEffect — 修饰效果
+关键属性：
+- Trait 区间：u64::MAX ~ u64::MAX - 999
+- Equipment 区间：u64::MAX - 1000 ~ u64::MAX - 1999
+- Buff 区间：1 ~ 999999
 
-| 效果类型 | 说明 | Calculator |
-|----------|------|------------|
-| `DamageMultiplier(f32)` | 伤害倍率 | `DamageMultiplierCalculator` |
-| `DamageBonus(i32)` | 伤害固定加成 | `DamageBonusCalculator` |
-| `HealMultiplier(f32)` | 治疗倍率 | `HealMultiplierCalculator` |
-| `HealBonus(i32)` | 治疗固定加成 | `HealBonusCalculator` |
+---
 
-### 6.3 ModifierRule — 修饰规则
+## ModifierRule
 
-```rust
-pub struct ModifierRule {
-    pub name: String,           // 规则名称（如"火焰共鸣"）
-    pub source_tag: GameplayTag, // 攻击方技能需要包含的标签
-    pub target_tag: GameplayTag, // 目标需要包含的标签
-    pub effect: ModifierEffect,  // 修饰效果
-}
-```
+数据驱动的效果修饰规则，通过标签匹配触发。
 
-**匹配规则**：
-- 攻击方标签包含 `source_tag` **且** 目标标签包含 `target_tag` 时触发
+不是硬编码 if-else。ModifierRule 是配置，不是代码。
+
+关键属性：
+- source_tag：攻击方技能需要的标签
+- target_tag：目标需要的标签
+- effect：修饰效果（DamageMultiplier / DamageBonus / HealMultiplier / HealBonus）
+
+---
+
+## ModifierCalculator
+
+修饰计算器 trait，执行具体数值计算。
+
+不是 ModifierRule。Calculator 是执行者，Rule 是配置。
+
+关键属性：
+- type_name()：分发键
+- applies_to_damage / applies_to_heal：适用范围
+- calculate()：计算逻辑
+
+---
+
+## ModifierEntry
+
+修饰记录，记录每步修饰的前后值和规则名。
+
+不是 Modifier。Entry 是记录，Modifier 是操作。
+
+关键属性：
+- before / after：修饰前后值
+- rule_name：触发规则名称
+
+---
+
+# 领域边界
+
+## 本领域负责
+
+- 三层属性架构（Core / Derived / Vital）
+- 衍生属性公式计算
+- 修饰符管线的添加、移除、计算
+- ModifierSource 区间管理
+- ModifierRule 的标签匹配和计算
+- 伤害/治疗的修饰计算和下限保护
+
+## 本领域不负责
+
+- 属性变化后的 UI 刷新（由 ui_rules 领域负责）
+- Buff 的生命周期管理（由 buff_rules 领域负责）
+- 装备的穿脱触发（由 equipment_rules 领域负责）
+- 效果管线的生成和执行（由 effect_pipeline 领域负责）
+- Trait 效果分发（由 trait_rules 领域负责）
+
+## 跨领域通信方式
+
+| 通知内容 | 通信方式 | 目标领域 |
+|----------|----------|----------|
+| 属性修饰符变化 | 直接函数调用 | character（重建 Trait） |
+| 伤害/治疗修饰结果 | 返回值 | battle（效果执行） |
+| HP 变化 | 直接修改 | battle（死亡判定） |
+
+---
+
+# 生命周期
+
+本领域无状态机，为纯函数式计算。
+
+属性值 = f(base, modifiers)，任意时刻可重新计算。
+
+---
+
+# 不变量
+
+## 不变量1：衍生属性无基础值
+
+任意时刻：
+
+Derived Stat 不存储 base 值，set_base() 对其无效。
+
+违反表现：
+
+衍生属性与核心属性脱钩，公式一致性被破坏。
+
+---
+
+## 不变量2：先加后乘
+
+任意时刻：
+
+修饰符计算顺序固定：先 Add 后 Multiply。
+
+最终值 = (base + Σ Add) × Π Multiply
+
+违反表现：
+
+修饰符顺序影响结果，同一组修饰符不同顺序得到不同值。
+
+---
+
+## 不变量3：乘法零值保护
+
+任意时刻：
+
+乘法修饰符乘积为 0 时视为 1.0。
+
+违反表现：
+
+单个 Multiply ×0 修饰符将属性归零，角色无法行动。
+
+---
+
+## 不变量4：伤害/治疗下限
+
+修饰计算完成后：
+
+伤害 ≥ 1，治疗 ≥ 0。
+
+违反表现：
+
+伤害为 0 或负数，治疗为负数（变成伤害）。
+
+---
+
+## 不变量5：Source 区间隔离
+
+任意时刻：
+
+Trait / Equipment / Buff 修饰符的 Source 值在各自区间内，互不重叠。
+
+违反表现：
+
+按来源移除修饰符时误删其他来源的修饰符。
+
+---
+
+## 不变量6：三类属性互斥
+
+任意时刻：
+
+每个 AttributeKind 恰好属于 Core / Derived / Vital 三类之一。
+
+违反表现：
+
+is_core() / is_derived() / is_vital() 判定矛盾。
+
+---
+
+# 业务规则
+
+## 规则1：属性访问
+
+禁止：
+- 直接修改最终属性值
+- 对衍生属性调用 set_base()
+- 对非 Vital 调用 set_vital()
+
+必须：
+- 通过 get(kind) 统一访问
+- Core Stat 通过 set_base() 设置基础值
+- Vital Resource 通过 set_vital() 设置当前值
+- Derived Stat 通过公式实时计算
+
+允许：
+- Modifier 作用于 Core Stat 和 Derived Stat
+- Modifier 作用于 Core Stat 时级联影响 Derived Stat
+
+---
+
+## 规则2：修饰符管理
+
+禁止：
+- 绕过 Modifier 管线直接改属性
+- 修饰符无 Source 标识
+- 修饰符无过期条件
+
+必须：
+- 添加修饰符时指定 ModifierSource
+- 按来源移除时使用 remove_modifiers_from(source)
+- 减益判定：Add < 0 或 Multiply < 1.0
+
+允许：
+- 叠加多个修饰符
+- remove_debuff_modifiers() 批量清理减益
+
+---
+
+## 规则3：ModifierRule 标签匹配
+
+禁止：
+- 硬编码 if-else 替代 ModifierRule
+- match 分发效果类型
+
+必须：
+- source_tag ∈ 攻击方标签 AND target_tag ∈ 目标标签时触发
 - 多条规则按顺序叠加
-- 伤害最低为 1，治疗最低为 0
+- 伤害 ≥ 1，治疗 ≥ 0
 
-### 6.4 ModifierCalculator — 计算器 trait
-
-```rust
-pub trait ModifierCalculator: Send + Sync + 'static {
-    fn type_name(&self) -> &'static str;
-    fn applies_to_damage(&self) -> bool;
-    fn applies_to_heal(&self) -> bool;
-    fn calculate(&self, effect: &ModifierEffect, current: f32) -> f32;
-}
-```
-
-**规则**：
-- 新增效果类型只需实现 `ModifierCalculator` 并注册
-- 通过 `type_name()` 分发，无需修改现有代码
-- 内置 4 个计算器，支持自定义扩展
-
-### 6.5 ModifierEntry — 修饰记录
-
-```rust
-pub struct ModifierEntry {
-    pub before: i32,       // 修饰前值
-    pub after: i32,        // 修饰后值
-    pub rule_name: String, // 规则名称
-}
-```
-
-用于 `apply_damage_modifiers_with_breakdown()` 和 `apply_heal_modifiers_with_breakdown()`，记录每步修饰详情，支持伤害明细展示。
-
-### 6.6 应用流程
-
-```
-输入 amount + source_tags + target_tags
-    ↓
-遍历所有 ModifierRule
-    ↓
-匹配 source_tag ∈ source_tags && target_tag ∈ target_tags
-    ↓
-通过 CalculatorRegistry 查找对应计算器
-    ↓
-calculator.calculate(effect, current)
-    ↓
-记录 ModifierEntry（with_breakdown 模式）
-    ↓
-最终值 = max(1, result)（伤害）或 max(0, result)（治疗）
-```
-
-### 6.7 数据驱动配置
-
-- RON 文件路径：`assets/rules/*.ron`（数组格式）
-- 内置默认规则：`火焰共鸣`（FIRE × FIRE → DamageMultiplier(1.5)）
-
-**RON 示例**：
-```ron
-[
-    (
-        name: "火焰共鸣",
-        source_tag: FIRE,
-        target_tag: FIRE,
-        effect: DamageMultiplier(1.5),
-    ),
-    (
-        name: "冰火相克",
-        source_tag: FIRE,
-        target_tag: ICE,
-        effect: DamageMultiplier(0.5),
-    ),
-]
-```
+允许：
+- 自定义 Calculator 注册到 CalculatorRegistry
+- RON 配置新增规则
 
 ---
 
-## 7. 数值示例
+## 规则4：fill_vital_resources
 
-### 7.1 战士模板
+禁止：
+- 战斗中调用 fill_vital_resources()
 
-| 核心属性 | 值 |
-|----------|-----|
-| Might | 5 |
-| Dexterity | 3 |
-| Agility | 6 |
-| Vitality | 5 |
-| Intelligence | 2 |
-| Willpower | 3 |
-| Presence | 2 |
-| Luck | 2 |
+必须：
+- 仅在单位生成时调用一次
+- 将 HP/MP/Stamina 设为对应 Max 值
 
-| 衍生属性 | 计算 | 值 |
-|----------|------|-----|
-| MaxHp | 5 + 5×5 | 30 |
-| MaxMp | 2×5 | 10 |
-| Attack | 5×2 | 10 |
-| Defense | 5 | 5 |
-| MoveRange | floor(6×0.5)+2 | 5 |
-| Initiative | 6×2+2 | 14 |
-| AttackRange | base | 1 |
-
-### 7.2 修饰符叠加示例
-
-战士基础 Attack = 10，添加：
-- Buff Add +5 → `(10 + 5) × 1.0 = 15`
-- Buff Multiply ×1.5 → `(10 + 5) × 1.5 = 22.5`
-- Debuff Add -3 → `(10 + 5 - 3) × 1.5 = 18.0`
+允许：
+- 战斗中通过 set_vital() 修改当前值
 
 ---
 
-## 8. 关键约束
+# 流程管线
 
-1. **衍生属性不可设置基础值**：`set_base()` 对衍生属性无效，保证公式一致性
-2. **先加后乘**：修饰符计算顺序固定，Add 先于 Multiply
-3. **乘法零值保护**：乘法修饰符乘积为 0 时视为 1.0
-4. **伤害最低为 1**：`apply_damage_modifiers` 保证 `result.max(1.0)`
-5. **治疗最低为 0**：`apply_heal_modifiers` 保证 `result.max(0.0)`
-6. **Source 区间隔离**：Trait/Equipment/Buff 各有独立区间，支持精确增减
-7. **减益判定统一**：Add<0 或 Multiply<1.0 为减益，`remove_debuff_modifiers()` 统一清理
-8. **fill_vital_resources 仅初始化时调用**：战斗中通过 `set_vital()` 修改当前值
+## 修饰符计算管线
+
+基础值 → Add 修饰符求和 → Multiply 修饰符求积 → 下限保护
+
+### Step1：基础值
+
+输入：AttributeKind
+处理：Core Stat 返回 base + 修饰符；Derived Stat 从 Core Stat 实时计算
+输出：基础值（含 Core 修饰符）
+禁止：对 Derived Stat 返回 base 值
+
+### Step2：Add 求和
+
+输入：所有 ModifierOp::Add 修饰符
+处理：求和
+输出：加法总和
+禁止：跳过任何 Add 修饰符
+
+### Step3：Multiply 求积
+
+输入：所有 ModifierOp::Multiply 修饰符
+处理：求积，乘积为 0 时视为 1.0
+输出：乘法乘积
+禁止：乘积为 0 时返回 0
+
+### Step4：下限保护
+
+输入：计算结果
+处理：伤害 max(1, result)，治疗 max(0, result)
+输出：最终值
+禁止：跳过下限保护
+
+---
+
+## ModifierRule 应用管线
+
+输入 amount → 遍历规则 → 标签匹配 → Calculator 计算 → 记录 Entry → 下限保护
+
+### Step1：遍历规则
+
+输入：所有 ModifierRule
+处理：逐条检查标签匹配
+输出：匹配的规则列表
+禁止：跳过任何规则
+
+### Step2：Calculator 计算
+
+输入：匹配的 ModifierEffect + 当前值
+处理：通过 CalculatorRegistry 查找计算器，调用 calculate()
+输出：修饰后值
+禁止：绕过 Calculator 直接计算
+
+### Step3：记录 Entry
+
+输入：修饰前后值 + 规则名
+处理：创建 ModifierEntry
+输出：ModifierEntry（with_breakdown 模式）
+禁止：在非 with_breakdown 模式下记录
+
+### Step4：下限保护
+
+输入：最终值
+处理：伤害 max(1, result)，治疗 max(0, result)
+输出：最终值
+禁止：跳过下限保护
+
+---
+
+# 数据结构
+
+## Attributes（Instance）
+
+职责：角色的所有数值容器
+
+结构：
+- base：Core Stat 基础值映射（8 维）
+- current_hp / current_mp / current_stamina：Vital Resource 当前值
+- base_attack_range：基础攻击范围
+- modifiers：修饰符实例列表
+
+要求：
+- get(kind) 统一访问接口
+- 衍生属性通过公式实时计算
+- 修饰符按先加后乘顺序计算
+
+---
+
+## AttributeModifierDef（Definition）
+
+职责：修饰符的数据定义，用于 RON 配置
+
+结构：
+- attribute：目标属性种类
+- op：Add 或 Multiply
+- value：修饰值
+
+要求：
+- 无 Source，由运行时添加时指定
+- 用于 Trait/Buff/装备的属性修饰配置
+
+---
+
+## AttributeModifierInstance（Instance）
+
+职责：运行时修饰符实例
+
+结构：
+- def：AttributeModifierDef
+- source：ModifierSource
+
+要求：
+- Source 必须在对应区间内
+- 按来源精确移除
+
+---
+
+## ModifierRule（Definition）
+
+职责：数据驱动的效果修饰规则
+
+结构：
+- name：规则名称
+- source_tag：攻击方技能标签
+- target_tag：目标标签
+- effect：修饰效果
+
+要求：
+- 标签匹配使用 AND 逻辑
+- RON 配置路径：assets/rules/*.ron
+
+---
+
+## ModifierEntry（记录）
+
+职责：修饰步骤记录
+
+结构：
+- before：修饰前值
+- after：修饰后值
+- rule_name：触发规则名称
+
+要求：
+- 仅在 with_breakdown 模式下生成
+- 写入 BattleRecord
+
+---
+
+# 禁止事项
+
+禁止：直接修改最终属性值
+
+原因：所有属性修改必须走 Modifier 管线，保证来源可追踪
+
+违反后果：属性变化无法追踪、无法回滚、无法调试
+
+---
+
+禁止：对衍生属性调用 set_base()
+
+原因：Derived Stat 由公式推导，不允许设置基础值
+
+违反后果：衍生属性与核心属性脱钩，公式一致性被破坏
+
+---
+
+禁止：绕过 Modifier 管线直接改属性
+
+原因：管线保证先加后乘、下限保护、来源追踪
+
+违反后果：修饰符计算顺序错误、伤害为 0、来源丢失
+
+---
+
+禁止：修饰符无 Source 标识
+
+原因：Source 是按来源移除修饰符的唯一依据
+
+违反后果：无法精确移除过期修饰符（如 Buff 过期、装备卸下）
+
+---
+
+禁止：乘法修饰符乘积归零
+
+原因：单个 ×0 修饰符会将属性归零
+
+违反后果：角色无法行动，游戏逻辑崩溃
+
+---
+
+禁止：硬编码 if-else 替代 ModifierRule
+
+原因：ModifierRule 是数据驱动，新增规则不修改代码
+
+违反后果：新增元素克制关系需要修改代码，违反 Rule/Content 分离
+
+---
+
+禁止：match 分发效果类型
+
+原因：Calculator trait 通过 type_name() 分发，无需 match
+
+违反后果：新增效果类型需要修改分发代码，违反开放封闭原则
+
+---
+
+# AI 修改规则
+
+## 如果新增属性种类
+
+允许：
+- 在 AttributeKind 枚举中新增变体
+- 在 is_core / is_derived / is_vital 中分类
+- 新增衍生公式
+
+禁止：
+- 修改三类互斥规则
+- 修改先加后乘计算顺序
+- 跳过下限保护
+
+优先检查：
+- 新属性属于哪一类（Core / Derived / Vital）
+- 衍生公式是否依赖正确的 Core Stat
+- ModifierRule 是否需要适配
+
+---
+
+## 如果新增修饰效果类型
+
+允许：
+- 新增 ModifierEffect 变体
+- 新增 ModifierCalculator 实现并注册
+
+禁止：
+- 修改现有 Calculator 的计算逻辑
+- 修改 ModifierRule 应用管线流程
+
+优先检查：
+- CalculatorRegistry 注册
+- applies_to_damage / applies_to_heal 判定
+- 下限保护是否覆盖新类型
+
+---
+
+## 如果新增 ModifierRule
+
+允许：
+- 新增 RON 配置文件
+
+禁止：
+- 修改 ModifierRule 应用管线代码
+- 修改 Calculator 分发逻辑
+
+优先检查：
+- source_tag 和 target_tag 是否在 GameplayTag 枚举中
+- effect 类型是否有对应 Calculator
+- 规则叠加顺序
+
+---
+
+## 如果测试失败
+
+排查顺序：
+1. 检查属性分类是否正确（Core / Derived / Vital）
+2. 检查衍生公式是否依赖正确的 Core Stat
+3. 检查修饰符 Source 区间是否冲突
+4. 检查先加后乘计算顺序
+5. 检查下限保护是否生效

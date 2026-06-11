@@ -1,330 +1,424 @@
-# UI 领域规则 (UI Rules)
+# UI 领域
 
-## 1. 领域概述
+Version: 1.0
 
-UI 系统负责所有面板、行动菜单、浮窗、视觉效果的表现层。遵循 **Logic / Presentation 分离**原则：UI 只展示状态，不保存业务真相；业务逻辑不直接操作 UI。
+UI 领域负责所有面板、行动菜单、浮窗、视觉效果的表现层。遵循 Logic / Presentation 分离原则。
 
-### 核心原则
-
-- **UI 不操作 ECS，只发出意图**：UiCommand Message 是唯一交互通道
-- **ViewModel 层隔离**：游戏逻辑 → ViewModel → UI，UI 只读 ViewModel
-- **UI 监听状态变化刷新自己**：不主动轮询
-- **主题系统统一样式**：换皮肤只改 UiTheme，UI 代码不动
-- **焦点管理**：模态面板阻止游戏输入
-
----
-
-## 2. UiCommand — UI 命令事件
-
-```rust
-#[derive(Message)]
-pub enum UiCommand {
-    SelectUnit { entity: Entity },
-    MoveUnit { coord: IVec2 },
-    Attack,
-    Skill { skill_id: String },
-    SelectTarget { coord: IVec2 },
-    Wait,
-    Cancel,
-    EndTurn,
-}
-```
-
-### 2.1 命令与阶段映射
-
-| 命令 | 触发阶段 | 目标阶段 |
-|------|----------|----------|
-| `SelectUnit` | SelectUnit | MoveUnit |
-| `MoveUnit` | MoveUnit | ActionMenu（移动后）/ MovingUnit |
-| `Attack` | ActionMenu | SelectTarget |
-| `Skill` | ActionMenu | SelectTarget |
-| `SelectTarget` | SelectTarget | ExecuteAction / ActionMenu |
-| `Wait` | ActionMenu | WaitAction |
-| `Cancel` | 任意 | 上下文推断回退 |
-| `EndTurn` | 任意 | TurnEnd |
-
-### 2.2 Cancel 上下文推断
-
-```
-有 skill_id → SelectTarget 取消 → ActionMenu
-有菜单实体 → ActionMenu 取消 → 回退位置 → SelectUnit
-否则 → MoveUnit 取消 → SelectUnit
-```
+核心原则：
+- UI 不操作 ECS，只发出意图
+- ViewModel 层隔离
+- UI 监听状态变化刷新自己
+- 主题系统统一样式
+- 焦点管理
 
 ---
 
-## 3. ViewModel 层
+# 术语定义
 
-### 3.1 SelectedUnitView — 选中单位视图
+## UiCommand
 
-```rust
-#[derive(Resource)]
-pub struct SelectedUnitView {
-    pub name: String,
-    pub race: String,
-    pub class: String,
-    pub hp: i32, pub max_hp: i32,
-    pub mp: i32, pub max_mp: i32,
-    pub stamina: i32, pub max_stamina: i32,
-    pub core_attrs: Vec<CoreAttrEntry>,      // 8维核心属性
-    pub combat_attrs: Vec<DerivedAttrEntry>,  // 战斗组衍生属性
-    pub support_attrs: Vec<DerivedAttrEntry>, // 辅助组衍生属性
-    pub skills: Vec<SkillEntry>,
-    pub traits: Vec<TraitEntry>,
-    pub buffs: Vec<BuffEntry>,
-    pub equipment: Vec<EquipmentSlotEntry>,
-    pub inventory: Vec<InventoryEntry>,
-    pub is_selected: bool,
-}
-```
+UI 命令事件，UI → Logic 的唯一交互通道。
 
-**刷新策略**：仅在 `HoveredEntity` 变化时刷新，避免每帧重建。
+不是 ECS 操作。UiCommand 是意图，不是直接状态修改。
 
-### 3.2 HoveredEntity — 悬停实体
-
-```rust
-#[derive(Resource)]
-pub struct HoveredEntity {
-    pub entity: Option<Entity>,
-}
-```
-
-不限于 Selected，任何单位都可查看信息。
-
-### 3.3 TurnInfoView — 回合信息视图
-
-```rust
-#[derive(Resource)]
-pub struct TurnInfoView {
-    pub turn_number: u32,
-    pub is_player_turn: bool,
-    pub turn_order: Vec<(String, bool)>,  // (name, is_player)
-    pub current_index: usize,
-}
-```
-
-**刷新策略**：TurnState 或 TurnOrder 变化时刷新。
-
-### 3.4 CombatPreviewView — 战斗预览视图
-
-```rust
-#[derive(Resource)]
-pub struct CombatPreviewView {
-    pub is_visible: bool,
-    pub estimated_damage: i32,
-    pub hit_rate: i32,
-    pub crit_rate: i32,
-    pub is_lethal: bool,
-}
-```
-
-仅在 SelectTarget 阶段显示。
-
-### 3.5 GameOverState — 胜负状态
-
-```rust
-pub enum GameOverState {
-    Playing,
-    Victory,
-    Defeat,
-}
-```
-
-检测条件：无敌方 → Victory，无玩家 → Defeat。
+关键属性：
+- SelectUnit / MoveUnit / Attack / Skill / SelectTarget / Wait / Cancel / EndTurn
 
 ---
 
-## 4. UiTheme — 主题系统
+## ViewModel
 
-### 4.1 颜色常量
+游戏逻辑 → UI 的数据桥接层。
 
-| 类别 | 字段 | 默认值 |
-|------|------|--------|
-| 面板 | `panel_bg` | rgba(0.1, 0.1, 0.1, 0.9) |
-| 按钮 | `button_bg` / `button_hover` | None / rgba(0.3, 0.3, 0.3, 0.5) |
-| 文本 | `text_primary` / `text_secondary` | White / rgb(0.7, 0.7, 0.7) |
-| 伤害 | `damage_color` / `crit_color` / `heal_color` | 黄 / 红 / 绿 |
-| 范围 | `movable_range` / `attack_range` | 蓝(0.4α) / 红(0.35α) |
-| 高亮 | `selection_highlight` | 黄(0.5α) |
-| 进度条 | `hp_bar_color` / `mp_bar_color` / `stamina_bar_color` | 红 / 蓝 / 绿 |
-| Buff | `buff_color` / `debuff_color` | 绿 / 红 |
+不是 ECS Component。ViewModel 是只读视图，UI 不直接 Query 游戏组件。
 
-### 4.2 字号常量
-
-| 字段 | 默认值 | 用途 |
-|------|--------|------|
-| `font_large` | 24.0 | 大标题 |
-| `font_medium` | 18.0 | 正文 |
-| `font_small` | 14.0 | 小字 |
-| `font_menu` | 16.0 | 菜单按钮 |
-| `font_log` | 13.0 | 战斗日志 |
-| `font_damage` | 16.0 | 伤害数字 |
-| `font_crit` | 22.0 | 暴击数字 |
-
-### 4.3 阵营颜色映射
-
-| 阵营 | 颜色 |
-|------|------|
-| Player | rgb(0.2, 0.5, 1.0) 蓝色系 |
-| Enemy | rgb(1.0, 0.3, 0.2) 红色系 |
-
-已行动单位：饱和度 ×0.2，亮度 ×0.5 + 0.25（变灰）。
+关键属性：
+- SelectedUnitView / TurnInfoView / CombatPreviewView
 
 ---
 
-## 5. UiFocusState — 焦点管理
+## UiTheme
 
-```rust
-#[derive(Component)]
-pub struct BlocksGameInput;  // 标记组件
+主题系统，统一样式配置。
 
-#[derive(Resource)]
-pub struct UiFocusState {
-    pub blocks_input: bool,
-}
-```
+不是硬编码颜色。所有颜色/字号/间距从 UiTheme 读取。
 
-**规则**：
-- 拥有 `BlocksGameInput` 组件的面板会阻止游戏输入
-- `update_ui_focus_state` 系统自动检测并更新 `blocks_input`
-- 游戏输入系统读取 `UiFocusState` 决定是否跳过
+关键属性：
+- 颜色常量 / 字号常量 / 阵营颜色映射
 
 ---
 
-## 6. 高亮与标记
+## UiFocusState
 
-### 6.1 标记组件
+焦点管理，控制模态面板是否阻止游戏输入。
 
-| 组件 | 说明 |
-|------|------|
-| `Selected` | 选中单位 |
-| `MovableRange` | 可移动范围标记 |
-| `AttackRange` | 攻击范围标记 |
-| `SelectionHighlight` | 选中高亮 |
+不是 TurnPhase。Focus 管理 UI 输入，Phase 管理游戏流程。
 
-### 6.2 范围显示
-
-| 函数 | 说明 |
-|------|------|
-| `show_move_range()` | BFS 可达范围，蓝色半透明 |
-| `show_attack_range()` | 曼哈顿距离范围，红色半透明 |
-| `spawn_selection_highlight()` | 选中格子黄色高亮 |
-| `clear_selection()` | 清除选中 + 范围标记 |
-| `clear_markers()` | 仅清除范围标记 |
-
-所有函数接收 `&UiTheme` 参数，响应运行时主题变更。
+关键属性：
+- blocks_input：是否阻止游戏输入
 
 ---
 
-## 7. handle_ui_commands — 命令处理器
+# 领域边界
 
-### 7.1 核心职责
+## 本领域负责
 
-将 UiCommand Message 转化为游戏状态变更：
-- 修改 TurnPhase
-- 设置 CombatIntent
-- 生成 MovingUnit
-- 显示/清除范围标记
-- 发送 ForceEndTurn Message
+- UiCommand Message 定义和处理
+- ViewModel 定义和更新
+- UiTheme 主题系统
+- UiFocusState 焦点管理
+- 高亮与标记（Selected / MovableRange / AttackRange）
+- 战斗日志表现层
+- 战斗飘字表现层
+- 面板和组件库
 
-### 7.2 执行条件
+## 本领域不负责
 
-- `AppState::InGame`
-- `player_turn()`：TurnState.current_faction == Player
+- 游戏逻辑执行（由 battle_rules / turn_rules 领域负责）
+- 属性计算（由 stat_system 领域负责）
+- 效果管线（由 effect_pipeline 领域负责）
+- 数据存储（由各领域 Registry 负责）
 
-### 7.3 关键流程
+## 跨领域通信方式
 
-**MoveUnit 命令**：
-```
-1. 检查是否点击当前位置（原地不动 → ActionMenu）
-2. 检查目标是否在可移动范围内
-3. 计算路径（reconstruct_path）
-4. 生成路径箭头（spawn_path_arrows）
-5. 插入 MovingUnit 组件
-6. 清除范围标记
-```
-
-**SelectTarget 命令**：
-```
-1. 检查点击位置是否有敌方单位
-2. 检查是否在攻击范围内
-3. 在范围内 → 设置 CombatIntent → ExecuteAction
-4. 不在范围内 → 回到 ActionMenu
-```
+| 通知内容 | 通信方式 | 目标领域 |
+|----------|----------|----------|
+| UI 意图 | UiCommand Message | battle / turn |
+| 状态展示 | ViewModel 读取 | 各领域 |
+| 战斗事件 | Message 监听 | combat_log / vfx |
 
 ---
 
-## 8. 模块结构
+# 生命周期
 
-```
-ui/
-├── mod.rs              # 模块定义 + re-exports
-├── plugin.rs           # UiPlugin（组合所有子插件）
-├── events.rs           # UiCommand Message
-├── command_handler.rs  # 命令处理器
-├── view_models.rs      # ViewModel 定义 + 更新系统
-├── theme.rs            # UiTheme 主题系统
-├── focus.rs            # 焦点管理
-├── highlight.rs        # 高亮与标记
-├── camera.rs           # 相机控制
-├── action_menu.rs      # 行动菜单
-├── combat_preview.rs   # 战斗预览
-├── combat_log_handler.rs   # 战斗日志表现层
-├── combat_vfx_handler.rs   # 战斗飘字表现层
-├── tile_info.rs        # 地形浮窗
-├── vfx.rs              # 视觉效果
-├── settings.rs         # 游戏设置
-├── panels/             # 面板模块
-│   ├── unit_info.rs    # 单位信息面板
-│   ├── combat_log_panel.rs  # 战斗日志面板
-│   ├── inventory_panel.rs   # 背包面板
-│   ├── turn_indicator.rs    # 回合指示器
-│   └── action_hint.rs       # 行动提示
-└── widgets/            # 基础组件库
-    ├── layout.rs       # 布局工具
-    ├── resource_bar.rs # 资源条
-    └── popup.rs        # 弹窗
-```
+## UI 交互生命周期
+
+| 状态 | 含义 | 可转换到 |
+|------|------|----------|
+| Idle | 无交互 | Interacting |
+| Interacting | 用户正在操作 | Idle, Modal |
+| Modal | 模态面板打开 | Idle |
+
+## 状态转换图
+
+Idle → Interacting → Idle
+                    → Modal → Idle
+
+## 转换条件
+
+| 从 | 到 | 条件 |
+|----|-----|------|
+| Idle | Interacting | 用户点击/悬停 |
+| Interacting | Idle | 操作完成 |
+| Interacting | Modal | 打开模态面板 |
+| Modal | Idle | 关闭模态面板 |
 
 ---
 
-## 9. 战斗日志表现层
+# 不变量
 
-combat_log_handler 监听 Message 写入 CombatLog：
+## 不变量1：UI 不操作 ECS
 
-| 系统 | 监听 Message |
-|------|-------------|
-| `on_damage_applied` | DamageApplied |
-| `on_heal_applied` | HealApplied |
-| `on_character_died_log` | CharacterDied |
-| `on_stun_applied` | StunApplied |
-| `on_dot_applied` | DotApplied |
-| `on_hot_applied` | HotApplied |
-| `on_item_equipped` | ItemEquipped |
-| `on_item_unequipped` | ItemUnequipped |
+任意时刻：
+
+UI 只通过 UiCommand Message 发出意图，不直接修改 ECS 状态。
+
+违反表现：
+
+UI 代码直接修改 HP、acted、TurnPhase 等游戏状态。
 
 ---
 
-## 10. 战斗飘字表现层
+## 不变量2：ViewModel 隔离
 
-combat_vfx_handler 监听 Message 生成飘字：
+UI 渲染时：
 
-| 系统 | 监听 Message |
-|------|-------------|
-| `on_damage_vfx` | DamageApplied |
-| `on_dot_vfx` | DotApplied |
+UI 只读 ViewModel，不直接 Query 游戏组件。
+
+违反表现：
+
+UI 代码直接读取 Attributes、ActiveBuffs 等组件。
 
 ---
 
-## 11. 关键约束
+## 不变量3：handle_ui_commands 仅玩家回合
 
-1. **UI 不操作 ECS，只发 UiCommand**：所有 UI→Logic 交互通过 Message
-2. **ViewModel 隔离**：UI 只读 ViewModel，不直接 Query 游戏组件
-3. **HoveredEntity 驱动刷新**：SelectedUnitView 仅在悬停变化时重建
-4. **主题统一样式**：所有颜色/字号/间距从 UiTheme 读取
-5. **BlocksGameInput 阻止输入**：模态面板标记此组件
-6. **handle_ui_commands 仅玩家回合**：`player_turn()` 条件过滤
-7. **Cancel 上下文推断**：根据 skill_id / 菜单实体推断回退阶段
-8. **MoveUnit 原地不动**：点击当前位置直接进入 ActionMenu
-9. **已行动单位变灰**：饱和度 ×0.2，亮度调整
-10. **Reflect 注册统一管理**：所有 ViewModel 类型在 UiPlugin 中注册
+UiCommand 处理时：
+
+TurnState.current_faction == Player。
+
+违反表现：
+
+AI 回合时 UI 命令被执行。
+
+---
+
+## 不变量4：BlocksGameInput 阻止输入
+
+模态面板打开时：
+
+游戏输入系统跳过处理。
+
+违反表现：
+
+模态面板打开时，点击穿透到游戏层。
+
+---
+
+# 业务规则
+
+## 规则1：UiCommand 是唯一交互通道
+
+禁止：
+- UI 直接修改 ECS 状态
+- UI 直接调用游戏逻辑函数
+
+必须：
+- 所有 UI→Logic 交互通过 UiCommand Message
+- handle_ui_commands 转化为游戏状态变更
+
+---
+
+## 规则2：ViewModel 刷新策略
+
+禁止：
+- 每帧重建 ViewModel
+
+必须：
+- SelectedUnitView 仅在 HoveredEntity 变化时刷新
+- TurnInfoView 在 TurnState/TurnOrder 变化时刷新
+- CombatPreviewView 仅在 SelectTarget 阶段显示
+
+---
+
+## 规则3：Cancel 上下文推断
+
+禁止：
+- Cancel 总是回到同一阶段
+
+必须：
+- 有 skill_id → SelectTarget 取消 → ActionMenu
+- 有菜单实体 → ActionMenu 取消 → 回退位置 → SelectUnit
+- 否则 → MoveUnit 取消 → SelectUnit
+
+---
+
+## 规则4：主题统一样式
+
+禁止：
+- 硬编码颜色/字号
+- 绕过 UiTheme 直接写样式
+
+必须：
+- 所有颜色/字号/间距从 UiTheme 读取
+- 换皮肤只改 UiTheme
+
+---
+
+# 流程管线
+
+## UI 命令处理管线
+
+UiCommand → 条件检查 → 状态变更 → 范围标记
+
+### Step1：条件检查
+
+输入：UiCommand + TurnPhase + TurnState
+处理：检查是否玩家回合 + 阶段是否匹配
+输出：是否执行
+禁止：AI 回合执行 UI 命令
+
+### Step2：状态变更
+
+输入：UiCommand 内容
+处理：修改 TurnPhase / 设置 CombatIntent / 生成 MovingUnit
+输出：游戏状态变化
+禁止：UI 直接修改 ECS
+
+### Step3：范围标记
+
+输入：命令类型 + 可达范围
+处理：显示/清除移动范围/攻击范围
+输出：视觉标记
+禁止：跳过范围标记
+
+---
+
+## ViewModel 更新管线
+
+状态变化 → 检测变化 → 重建 ViewModel → UI 刷新
+
+### Step1：检测变化
+
+输入：HoveredEntity / TurnState / TurnOrder
+处理：比较新旧值
+输出：是否需要刷新
+禁止：每帧重建
+
+### Step2：重建 ViewModel
+
+输入：ECS 组件数据
+处理：构建 ViewModel
+输出：ViewModel 更新
+禁止：UI 直接 Query
+
+---
+
+# 数据结构
+
+## UiCommand（Message）
+
+职责：UI → Logic 的唯一交互通道
+
+结构：
+- SelectUnit / MoveUnit / Attack / Skill / SelectTarget / Wait / Cancel / EndTurn
+
+要求：
+- 每个命令有明确的阶段映射
+- Cancel 支持上下文推断
+
+---
+
+## SelectedUnitView（Resource）
+
+职责：选中单位信息视图
+
+结构：
+- name / race / class
+- hp / mp / stamina
+- core_attrs / combat_attrs / support_attrs
+- skills / traits / buffs / equipment / inventory
+
+要求：
+- 仅在 HoveredEntity 变化时刷新
+
+---
+
+## UiTheme（Resource）
+
+职责：统一样式配置
+
+结构：
+- 颜色常量（面板/按钮/文本/伤害/范围/高亮/进度条/Buff）
+- 字号常量（large/medium/small/menu/log/damage/crit）
+- 阵营颜色映射
+
+要求：
+- 所有 UI 组件从 UiTheme 读取样式
+
+---
+
+## UiFocusState（Resource）
+
+职责：焦点管理
+
+结构：
+- blocks_input：是否阻止游戏输入
+
+要求：
+- BlocksGameInput 组件标记模态面板
+- update_ui_focus_state 自动检测
+
+---
+
+# 禁止事项
+
+禁止：UI 直接修改 ECS 状态
+
+原因：UiCommand 是唯一交互通道
+
+违反后果：UI 绕过游戏逻辑直接修改状态，逻辑不一致
+
+---
+
+禁止：UI 直接 Query 游戏组件
+
+原因：ViewModel 层隔离
+
+违反后果：UI 与游戏逻辑耦合，难以维护
+
+---
+
+禁止：硬编码颜色/字号
+
+原因：UiTheme 统一样式
+
+违反后果：换皮肤需要修改所有 UI 代码
+
+---
+
+禁止：AI 回合执行 UI 命令
+
+原因：UI 命令仅限玩家回合
+
+违反后果：AI 回合被 UI 干扰
+
+---
+
+禁止：每帧重建 ViewModel
+
+原因：性能优化
+
+违反后果：UI 每帧重建，性能下降
+
+---
+
+# AI 修改规则
+
+## 如果新增 UI 面板
+
+允许：
+- 新增 ViewModel Resource
+- 新增面板组件
+
+禁止：
+- 面板直接 Query 游戏组件
+- 面板直接修改 ECS 状态
+
+优先检查：
+- ViewModel 是否正确隔离
+- UiCommand 是否覆盖新交互
+- UiFocusState 是否需要更新
+
+---
+
+## 如果新增 UiCommand
+
+允许：
+- 新增 UiCommand 变体
+- 在 handle_ui_commands 中添加处理
+
+禁止：
+- 修改现有命令的处理逻辑
+- 跳过阶段检查
+
+优先检查：
+- 命令与阶段映射
+- 是否需要新增 ViewModel
+- Cancel 上下文推断是否需要更新
+
+---
+
+## 如果修改主题
+
+允许：
+- 修改 UiTheme 常量值
+
+禁止：
+- 绕过 UiTheme 直接写样式
+
+优先检查：
+- 所有 UI 组件是否从 UiTheme 读取
+- 阵营颜色映射是否正确
+- 已行动单位变灰效果
+
+---
+
+## 如果测试失败
+
+排查顺序：
+1. 检查 UiCommand 是否正确发送
+2. 检查 handle_ui_commands 是否在玩家回合执行
+3. 检查 ViewModel 是否正确刷新
+4. 检查 UiFocusState 是否阻止输入
+5. 检查主题常量是否正确应用

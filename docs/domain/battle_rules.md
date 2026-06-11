@@ -1,448 +1,548 @@
-# 战斗领域规则 (Battle Rules)
+# Battle 领域
 
-## 1. 领域概述
+Version: 1.0
 
-战斗系统是 SRPG 的核心玩法循环，负责处理从攻击意图到伤害结算的完整流程。采用**三步效果管线**（Generate → Modify → Execute）实现战斗逻辑，通过 Message 机制实现逻辑与表现分离。
+Battle 领域管理从攻击意图到伤害结算的完整战斗流程，采用三步效果管线（Generate → Modify → Execute），通过 Message 实现逻辑与表现分离。
 
-### 核心原则
-
-- **Logic / Presentation 分离**：逻辑产生结果，表现负责展示；伤害计算不依赖 UI 和特效
-- **ECS 是数据流，不是调用链**：不模拟 `player.attack(enemy)`
-- **Message 负责跨 Feature 广播**：伤害、死亡等事件通过 Message 通知
-- **EntityEvent 适合复杂战斗链**：装备→护盾→角色→被动技能
+核心原则：
+- Logic / Presentation 分离
+- ECS 是数据流，不是调用链
+- Message 负责跨 Feature 广播
 
 ---
 
-## 2. 效果管线（Effect Pipeline）
+# 术语定义
 
-### 2.1 三步流程
+## CombatIntent
 
-```
-Generate → Modify → Execute
-  生成       修饰      执行
-```
+攻击意图，表示谁用什么技能攻击谁。
 
-| 步骤 | 系统 | 职责 | 输入 | 输出 |
-|------|------|------|------|------|
-| Generate | `generate_combat_effects` | 从技能定义 + 属性计算原始效果 | CombatIntent + SkillData | EffectQueue.pending |
-| Modify | `modify_effects` | 应用 ModifierRule 修饰规则 | EffectQueue + ModifierRuleRegistry | 修饰后的 EffectQueue |
-| Execute | `execute_effects` | 扣血/加Buff/击杀判定 + 发送 Message | 修饰后的 EffectQueue | 属性变化 + Messages |
+不是 DamageEvent。CombatIntent 是意图，不代表已经发生攻击。
 
-### 2.2 EffectQueue — 效果队列
-
-```rust
-#[derive(Resource, Default)]
-pub struct EffectQueue {
-    pub pending: Vec<PendingEffect>,
-}
-```
-
-**规则**：
-- 管线三步共享同一个 EffectQueue
-- Generate 推入效果，Modify 修改效果，Execute 消费效果
-- Execute 使用 `drain(..)` 清空队列
-
-### 2.3 PendingEffect — 待处理效果
-
-```rust
-pub struct PendingEffect {
-    pub source: Entity,           // 攻击者
-    pub target: Entity,           // 目标
-    pub data: PendingEffectData,  // 效果数据
-    pub source_tags: Vec<GameplayTag>,  // 技能标签
-    pub terrain_id: String,       // 地形 ID
-}
-```
-
-### 2.4 PendingEffectData — 效果数据
-
-| 类型 | 字段 | 说明 |
-|------|------|------|
-| `Damage` | `amount, is_skill, base_amount, modifiers` | 伤害效果 |
-| `Heal` | `amount, base_amount` | 治疗效果 |
-| `ApplyBuff` | `buff_id, duration` | 施加 Buff |
-| `Cleanse` | — | 净化所有 Debuff |
+关键属性：
+- source_entity：攻击者
+- target_coord：目标坐标
+- skill_id：技能 ID
 
 ---
 
-## 3. Generate 阶段详解
+## EffectQueue
 
-### 3.1 攻击者来源
+战斗唯一效果缓冲区，保存待执行效果。
 
-| 来源 | 查找方式 | 场景 |
-|------|----------|------|
-| 玩家 | `Selected` 组件 | 玩家选择攻击 |
-| AI | `CombatIntent.source_entity` | AI 决策攻击 |
+不是直接执行通道。所有效果必须进入队列，禁止直接执行。
 
-### 3.2 前置检查
-
-1. **晕眩检查**：攻击者有 `STUN` 标签时跳过
-2. **冷却检查**：技能冷却 > 0 时跳过（玩家需要，AI 已在决策时检查）
-3. **目标查找**：匹配 `target_coord` 且不同阵营的单位
-
-### 3.3 效果生成
-
-```rust
-for effect_def in &skill_data.effects {
-    if let Some(handler) = handler_registry.find(effect_def.type_name()) {
-        let ctx = GenerateContext { source_attrs, target_attrs, defense_bonus, ... };
-        if let Some(data) = handler.generate(effect_def, &ctx) {
-            queue.push(PendingEffect { ... });
-        }
-    }
-}
-```
-
-**规则**：
-- 通过 `EffectHandlerRegistry` trait 分发，新增效果类型无需修改 generate
-- 地形防御加成（`defense_bonus`）在 Generate 阶段传入
-- 技能标签（`skill_data.tags`）作为 `source_tags` 传递给后续修饰
-
-### 3.4 Trait 触发
-
-Generate 阶段结束后，触发攻击者的 **OnAttack** Trait：
-- 遍历 `TraitCollection`，匹配 `TraitTrigger::OnAttack`
-- 将 `ApplyBuff` 效果推入 EffectQueue
-- `GrantTag` 和 `ModifyAttribute` 是 Passive 效果，不在触发器中处理
+关键属性：
+- pending：PendingEffect 列表
 
 ---
 
-## 4. Modify 阶段详解
+## PendingEffect
 
-### 4.1 修饰规则应用
+待处理效果，尚未经过 Modify 和 Execute。
 
-```rust
-for effect in &mut queue.pending {
-    match &mut effect.data {
-        PendingEffectData::Damage { amount, base_amount, modifiers, .. } => {
-            if base_amount.is_none() { *base_amount = Some(*amount); }
-            let (new_amount, entries) = rules.apply_damage_modifiers_with_breakdown(...);
-            *amount = new_amount;
-            *modifiers = entries;
-        }
-        PendingEffectData::Heal { amount, base_amount } => {
-            if base_amount.is_none() { *base_amount = Some(*amount); }
-            *amount = rules.apply_heal_modifiers(...);
-        }
-        _ => {} // ApplyBuff / Cleanse 不修饰
-    }
-}
-```
+不是最终伤害。PendingEffect 是中间状态，必须经过 Modify → Execute。
 
-**规则**：
-- `base_amount` 在首次 modify 时记录，后续不覆盖
-- 伤害修饰记录 `ModifierEntry` 列表，支持伤害明细展示
-- ApplyBuff 和 Cleanse 不参与修饰
+关键属性：
+- source / target：攻击者/目标实体
+- data：效果数据（Damage / Heal / ApplyBuff / Cleanse）
+- source_tags：技能标签
+- terrain_id：地形 ID
 
 ---
 
-## 5. Execute 阶段详解
+## DamageBreakdown
 
-### 5.1 伤害执行
+伤害分解，记录从原始值到最终值的完整修饰过程。
 
-```
-1. 构建 DamageBreakdown（base_amount → modified_amount → actual_damage）
-2. 扣血：new_hp = max(0, hp - amount)
-3. 发送 DamageApplied Message
-4. 死亡判定：new_hp <= 0 时插入 Dead 组件 + 发送 CharacterDied Message
-```
+不是最终伤害值。Breakdown 是过程记录，actual_damage 是结果。
 
-### 5.2 治疗执行
-
-```
-1. 回血：new_hp = min(max_hp, hp + amount)
-2. 发送 HealApplied Message
-```
-
-**规则**：治疗不超过 MaxHp
-
-### 5.3 Buff 执行
-
-```
-1. 从 BuffRegistry 查找 BuffData
-2. 调用 apply_buff() 施加到目标
-3. 未知 buff_id 静默跳过
-```
-
-### 5.4 Cleanse 执行
-
-```
-1. 调用 remove_all_debuffs() 移除所有减益 Buff
-```
+关键属性：
+- base_amount：Generate 阶段原始值
+- modified_amount：Modify 阶段修饰后值
+- modifiers：每步修饰记录
+- actual_damage：Execute 阶段实际扣血
 
 ---
 
-## 6. CombatIntent — 战斗意图
+## BattleRecord
 
-```rust
-#[derive(Resource, Default)]
-pub struct CombatIntent {
-    pub source_entity: Option<Entity>,  // 攻击者实体
-    pub target_coord: Option<IVec2>,    // 目标坐标
-    pub skill_id: Option<String>,       // 技能 ID
-}
-```
+战斗记录，结构化记录所有战斗事件。
 
-**规则**：
-- 玩家通过 UI 交互设置 CombatIntent
+不是 CombatLog。BattleRecord 是结构化数据，CombatLog 是 UI 展示文本。
+
+关键属性：
+- entries：BattleEntry 列表
+- turn_number：当前回合
+
+---
+
+# 领域边界
+
+## 本领域负责
+
+- 效果管线三步流程（Generate / Modify / Execute）
+- CombatIntent 的设置和消费
+- 伤害/治疗/Buff/Cleanse 的执行
+- 死亡判定（HP ≤ 0 → Dead Tag）
+- Trait 触发器（OnAttack / OnHit / OnKill）
+- DamageBreakdown 伤害分解
+- BattleRecord 战斗记录
+- 行动路由（route_after_action）
+
+## 本领域不负责
+
+- 属性计算和修饰符管线（由 stat_system 领域负责）
+- ModifierRule 的定义和匹配（由 modifier_rules 领域负责）
+- Buff 的生命周期管理（由 buff_rules 领域负责）
+- 技能定义和冷却（由 skill_rules 领域负责）
+- 回合和阶段管理（由 turn_rules 领域负责）
+- UI 展示和战斗日志文本（由 ui_rules 领域负责）
+- AI 决策（由 ai_rules 领域负责）
+
+## 跨领域通信方式
+
+| 通知内容 | 通信方式 | 目标领域 |
+|----------|----------|----------|
+| 伤害发生 | DamageApplied Message | ui / battle_record |
+| 治疗发生 | HealApplied Message | ui / battle_record |
+| 角色死亡 | CharacterDied Message | ui / battle_record / turn |
+| 晕眩施加 | StunApplied Message | ui / battle_record |
+| DoT/HoT | DotApplied / HotApplied Message | ui / battle_record |
+
+---
+
+# 生命周期
+
+## 战斗行动生命周期
+
+| 状态 | 含义 | 可转换到 |
+|------|------|----------|
+| Idle | 无战斗行动 | IntentGenerated |
+| IntentGenerated | CombatIntent 已设置 | EffectsGenerated |
+| EffectsGenerated | Generate 完成 | EffectsModified |
+| EffectsModified | Modify 完成 | EffectsExecuted |
+| EffectsExecuted | Execute 完成 | MessagesSent |
+| MessagesSent | 消息已发送 | Completed |
+| Completed | 行动结束 | Idle |
+
+## 状态转换图
+
+Idle → IntentGenerated → EffectsGenerated → EffectsModified → EffectsExecuted → MessagesSent → Completed → Idle
+
+## 转换条件
+
+| 从 | 到 | 条件 |
+|----|-----|------|
+| Idle | IntentGenerated | 玩家/AI 设置 CombatIntent |
+| IntentGenerated | EffectsGenerated | generate_combat_effects 完成 |
+| EffectsGenerated | EffectsModified | modify_effects 完成 |
+| EffectsModified | EffectsExecuted | execute_effects 完成 |
+| EffectsExecuted | MessagesSent | 所有 Message 发送完成 |
+| MessagesSent | Completed | route_after_action 完成 |
+
+---
+
+# 不变量
+
+## 不变量1：EffectQueue 执行后清空
+
+Execute 阶段结束后：
+
+EffectQueue.pending 必须为空。
+
+违反表现：
+
+残留效果在下一轮被重复执行。
+
+---
+
+## 不变量2：伤害下限
+
+任意时刻：
+
+所有伤害值 ≥ 1。
+
+违反表现：
+
+伤害为 0 或负数，角色无法造成伤害。
+
+---
+
+## 不变量3：治疗上限
+
+Execute 阶段完成后：
+
+治疗后的 HP ≤ MaxHp。
+
+违反表现：
+
+HP 超过 MaxHp，属性系统不一致。
+
+---
+
+## 不变量4：死亡判定一致性
+
+Execute 阶段完成后：
+
+HP ≤ 0 的单位必须拥有 Dead 组件。
+
+违反表现：
+
+死亡单位仍可行动、被选中、被攻击。
+
+---
+
+## 不变量5：管线严格顺序
+
+任意时刻：
+
+效果必须按 Generate → Modify → Execute 顺序处理，不可跳步或乱序。
+
+违反表现：
+
+Generate 直接扣血、Modify 发送死亡消息、Execute 创建新 CombatIntent。
+
+---
+
+## 不变量6：CombatIntent 消费后清除
+
+Execute 阶段完成后：
+
+CombatIntent 的 source_entity / target_coord / skill_id 必须为 None。
+
+违反表现：
+
+下一次行动误读上一次的意图。
+
+---
+
+# 业务规则
+
+## 规则1：效果管线
+
+禁止：
+- 跳过管线直接执行效果
+- 跳过 Modify 阶段
+- 在 Generate 阶段修改 HP
+- 在 Modify 阶段发送 BattleMessage
+- 在 Execute 阶段创建新的 CombatIntent
+
+必须：
+- 所有效果进入 EffectQueue
+- Generate 推入，Modify 修改，Execute 消费
+- Execute 使用 drain(..) 清空队列
+
+允许：
+- ApplyBuff / Cleanse 不参与 Modify 修饰
+
+---
+
+## 规则2：CombatIntent
+
+禁止：
+- 绕过 CombatIntent 直接发起攻击
+- AI 和玩家使用不同的攻击路径
+
+必须：
+- 玩家通过 UI 设置 CombatIntent
 - AI 通过决策系统设置 CombatIntent
-- Generate 阶段读取 CombatIntent 确定攻击者和目标
-
-### 6.1 PrevPosition — 移动前位置
-
-```rust
-#[derive(Resource, Default)]
-pub struct PrevPosition {
-    pub coord: Option<IVec2>,
-}
-```
-
-用于取消操作时回退到移动前位置。
+- Generate 阶段读取 CombatIntent
+- Execute 完成后清除 CombatIntent
 
 ---
 
-## 7. 行动路由
+## 规则3：死亡处理
 
-### 7.1 execute_action_on_enter
+禁止：
+- 直接删除 Entity
+- 跳过 Dead Tag 直接处理死亡
+- 在 HP 变化时内联死亡处理
 
-攻击/技能行动完成后的统一路由：
-
-1. 清除范围标记和高亮
-2. 晕眩单位：标记已行动，移除选中
-3. 设置技能冷却
-4. 标记已行动，移除选中
-5. 调用 `route_after_action()` 前进到下一个单位
-
-### 7.2 wait_action_on_enter
-
-待机行动完成后的统一路由：
-
-1. 清除范围标记和高亮
-2. 标记已行动，移除选中
-3. 调用 `route_after_action()` 前进到下一个单位
-
-### 7.3 route_after_action
-
-从 TurnOrder 队列前进到下一个存活单位：
-
-```
-loop {
-    match turn_order.advance() {
-        Some(next_entity) => {
-            if !is_alive(attrs) { continue; }  // 跳过已死亡单位
-            更新 current_faction
-            如果是 AI，重置计时器
-            切换到 SelectUnit 阶段
-            return;
-        }
-        None => {
-            切换到 TurnEnd 阶段  // 队列耗尽
-            return;
-        }
-    }
-}
-```
-
-**规则**：
-- 通过 HP 判断存活，不依赖 Dead 组件（Dead 是 deferred command）
-- 队列耗尽时自动进入 TurnEnd
+必须：
+- HP ≤ 0 时插入 Dead Tag
+- Dead Hook 自动标记 acted + 移除 Selected
+- 发送 CharacterDied Message
+- route_after_action 通过 HP 判断存活（不依赖 Dead 组件，因为 Dead 是 deferred command）
 
 ---
 
-## 8. Trait 触发器
+## 规则4：Trait 触发
 
-### 8.1 触发时机
+禁止：
+- OnAttack/OnHit/OnKill 处理 GrantTag / ModifyAttribute
 
-| 触发器 | 触发位置 | 说明 |
-|--------|----------|------|
-| `OnAttack` | Generate 阶段末尾 | 攻击者攻击时触发 |
-| `OnHit` | Execute 阶段（被攻击时） | 目标被攻击时触发 |
-| `OnKill` | Execute 阶段（击杀时） | 攻击者击杀时触发 |
+必须：
+- 仅处理 ApplyBuff 效果
+- OnAttack：Generate 阶段末尾，攻击者触发
+- OnHit：Execute 阶段，目标触发
+- OnKill：Execute 阶段，攻击者击杀时触发
 
-### 8.2 触发规则
-
-- 仅处理 `ApplyBuff` 效果，将 Buff 推入 EffectQueue
-- `GrantTag` 和 `ModifyAttribute` 是 Passive 效果，不在触发器中处理
+允许：
 - 多个同类型 Trait 全部触发
-- 触发目标是攻击目标（OnAttack/OnKill）或攻击者（OnHit）
 
 ---
 
-## 9. 战斗消息（Message）
+## 规则5：行动路由
 
-### 9.1 消息类型
+禁止：
+- route_after_action 中依赖 Dead 组件判断存活
 
-| 消息 | 发送时机 | 包含信息 |
-|------|----------|----------|
-| `DamageApplied` | 伤害执行后 | 攻击者/目标/伤害量/技能标记/地形/坐标/伤害分解 |
-| `HealApplied` | 治疗执行后 | 目标/治疗量 |
-| `CharacterDied` | HP ≤ 0 时 | 死亡实体/名称/阵营 |
-| `StunApplied` | 晕眩施加时 | 目标/名称 |
-| `DotApplied` | DoT 伤害时 | 目标/伤害量/坐标 |
-| `HotApplied` | HoT 治疗时 | 目标/治疗量 |
-
-### 9.2 CharacterDied 响应
-
-`on_character_died` 系统响应死亡消息：
-
-1. 从 TurnOrder 队列移除死亡实体
-2. 修正 `current_index`（被移除实体在当前索引之前时减 1）
-3. Despawn 死亡实体
-
-### 9.3 消息注册
-
-Bevy 0.18 要求在使用 `MessageReader`/`MessageWriter` 前注册消息类型：
-
-```rust
-app.add_message::<CharacterDied>()
-    .add_message::<DamageApplied>()
-    .add_message::<HealApplied>()
-    // ...
-```
+必须：
+- 通过 HP 判断存活
+- 队列耗尽时进入 TurnEnd
+- 跳过已死亡单位
 
 ---
 
-## 10. DamageBreakdown — 伤害分解
+## 规则6：战斗记录
 
-```rust
-pub struct DamageBreakdown {
-    pub base_amount: i32,       // 原始效果值（Generate 阶段）
-    pub modified_amount: i32,   // 修饰后效果值（Modify 阶段）
-    pub modifiers: Vec<ModifierEntry>,  // 修饰步骤列表
-    pub actual_damage: i32,     // 实际扣血（Execute 阶段）
-}
-```
+禁止：
+- 修改 BattleRecord 时不记录来源
 
-**规则**：
-- 匹配实际效果管线三步：Generate → Modify → Execute
-- `base_amount` 在 Modify 阶段首次记录
-- `modifiers` 记录每步修饰的 before/after/rule_name
-- `actual_damage` 目前等于 `modified_amount`（未来可能有护盾等减免）
+必须：
+- 所有修饰记录写入 ModifierEntry
+- 记录伤害来源和目标
+- 记录技能 ID 和效果类型
+
+允许：
+- entries_for / recent / stats_for 查询
 
 ---
 
-## 11. 战斗记录系统
+# 流程管线
 
-### 11.1 BattleRecord — 战斗记录资源
+## 效果管线
 
-```rust
-#[derive(Resource, Reflect, Default)]
-pub struct BattleRecord {
-    pub entries: Vec<BattleEntry>,
-    pub turn_number: u32,
-}
-```
+CombatIntent → Generate → Modify → Execute → Messages
 
-### 11.2 BattleEntry — 记录条目
+### Step1：Generate
 
-| 变体 | 记录内容 |
-|------|----------|
-| `TurnStarted { turn }` | 回合开始 |
-| `TurnEnded { turn }` | 回合结束 |
-| `DamageApplied { ... }` | 伤害（含 breakdown） |
-| `HealApplied { ... }` | 治疗 |
-| `DotApplied { ... }` | DoT 伤害 |
-| `HotApplied { ... }` | HoT 治疗 |
-| `StunApplied { ... }` | 晕眩 |
-| `CharacterDied { ... }` | 角色死亡 |
+输入：CombatIntent + SkillData + 属性
+处理：从技能定义生成原始效果，地形防御加成在此传入
+输出：EffectQueue.pending 填充
+禁止：修改 HP、发送 Message、跳过前置检查（晕眩/冷却）
 
-### 11.3 查询接口
+### Step2：Modify
 
-| 方法 | 说明 |
-|------|------|
-| `entries_for(entity)` | 获取指定实体的全部记录 |
-| `entries_for_turn(turn)` | 获取指定回合的全部记录 |
-| `recent(n)` | 获取最近 N 条记录 |
-| `stats_for(entity)` | 计算指定实体的战斗统计 |
-| `clear()` | 清空记录 |
+输入：EffectQueue + ModifierRuleRegistry
+处理：对 Damage/Heal 应用 ModifierRule 修饰，记录 base_amount
+输出：修饰后的 EffectQueue
+禁止：修改 HP、发送 Message、创建新效果
 
-### 11.4 EntityBattleStats — 实体战斗统计
+### Step3：Execute
 
-```rust
-pub struct EntityBattleStats {
-    pub damage_dealt: i32,    // 造成总伤害
-    pub damage_taken: i32,    // 承受总伤害
-    pub heal_received: i32,   // 总治疗量
-    pub kills: i32,           // 击杀数
-}
-```
+输入：修饰后的 EffectQueue
+处理：扣血/回血/施加Buff/净化 + 死亡判定 + 发送 Message
+输出：属性变化 + Messages
+禁止：创建新 CombatIntent、跳过死亡判定
 
-**击杀数计算**：查找致死伤害的攻击者（CharacterDied 前最后一条 DamageApplied 的 attacker）
+### Step4：Messages
 
-### 11.5 录制系统
-
-8 个录制系统通过 `MessageReader` 监听战斗消息，写入 `BattleRecord`：
-
-- `record_turn_started` / `record_turn_ended`
-- `record_damage` / `record_heal`
-- `record_dot` / `record_hot`
-- `record_stun` / `record_character_died`
+输入：Execute 产生的事件
+处理：发送 DamageApplied / HealApplied / CharacterDied 等 Message
+输出：Message 广播
+禁止：在 Message 处理中修改战斗状态
 
 ---
 
-## 12. 战斗日志
+# 数据结构
 
-### 12.1 CombatLog — 日志资源
+## CombatIntent（Resource）
 
-```rust
-pub struct CombatLog {
-    pub entries: VecDeque<Vec<LogSegment>>,  // 最大 50 条
-}
-```
+职责：攻击意图，唯一攻击入口
 
-### 12.2 LogSegment — 日志片段
+结构：
+- source_entity：攻击者实体
+- target_coord：目标坐标
+- skill_id：技能 ID
 
-```rust
-pub struct LogSegment {
-    pub text: String,
-    pub color: Color,
-}
-```
-
-**规则**：
-- 每条日志由多个片段组成，支持多色文本
-- 超过 50 条自动截断最旧记录
-
-### 12.3 日志颜色
-
-| 常量 | 颜色 | 用途 |
-|------|------|------|
-| `NORMAL` | 灰色 | 普通文本 |
-| `DAMAGE` | 红色 | 伤害 |
-| `HEAL` | 绿色 | 治疗 |
-| `KILL` | 粉色 | 击杀 |
-| `PLAYER` | 蓝色 | 玩家名 |
-| `ENEMY` | 橙色 | 敌方名 |
-| `TURN` | 黄色 | 回合标记 |
-| `TERRAIN` | 浅绿 | 地形 |
-
-### 12.4 日志面板功能
-
-- 折叠/展开切换（折叠时只显示最新一条）
-- 拖拽调整面板大小
-- 多色文本横向排列
+要求：
+- 玩家和 AI 共用
+- Execute 后必须清除
 
 ---
 
-## 13. 距离计算
+## EffectQueue（Resource）
 
-```rust
-pub fn manhattan_distance(a: IVec2, b: IVec2) -> u32
-```
+职责：战斗唯一效果缓冲区
 
-使用曼哈顿距离计算格子间距离，用于攻击范围判定。
+结构：
+- pending：PendingEffect 列表
+
+要求：
+- Generate 推入，Modify 修改，Execute drain 清空
+- Execute 后 pending 必须为空
 
 ---
 
-## 14. 关键约束
+## PendingEffect（Instance）
 
-1. **三步管线严格顺序**：Generate → Modify → Execute，不可跳步或乱序
-2. **Logic / Presentation 分离**：Execute 只发送 Message，不调用 UI/VFX
-3. **死亡判定在 Execute**：HP ≤ 0 时插入 Dead + 发送 CharacterDied
-4. **Dead Hook 保证固有行为**：添加 Dead 时自动标记已行动 + 移除选中
-5. **存活判断用 HP**：`route_after_action` 通过 HP 判断存活，不依赖 Dead 组件
-6. **伤害最低为 1**：ModifierRule 保证 `result.max(1.0)`
-7. **治疗不超过 MaxHp**：`min(max_hp, hp + amount)`
-8. **Message 必须注册**：使用前必须 `add_message::<T>()`
-9. **EffectQueue 每轮清空**：Execute 使用 `drain(..)` 消费所有待处理效果
-10. **Trait 触发仅 ApplyBuff**：OnAttack/OnHit/OnKill 只处理 ApplyBuff 效果
+职责：待处理效果
+
+结构：
+- source / target：攻击者/目标实体
+- data：效果数据（Damage / Heal / ApplyBuff / Cleanse）
+- source_tags：技能标签
+- terrain_id：地形 ID
+
+要求：
+- 必须经过 Modify → Execute
+- Damage 包含 amount / base_amount / modifiers
+
+---
+
+## DamageBreakdown（值对象）
+
+职责：伤害分解记录
+
+结构：
+- base_amount：Generate 原始值
+- modified_amount：Modify 修饰后值
+- modifiers：ModifierEntry 列表
+- actual_damage：Execute 实际扣血
+
+要求：
+- 三步对应 Generate → Modify → Execute
+- modifiers 记录每步修饰详情
+
+---
+
+## BattleRecord（Resource）
+
+职责：战斗记录，结构化存储
+
+结构：
+- entries：BattleEntry 列表
+- turn_number：当前回合
+
+要求：
+- 8 个录制系统通过 MessageReader 监听
+- 支持 entries_for / recent / stats_for 查询
+
+---
+
+## EntityBattleStats（值对象）
+
+职责：实体战斗统计
+
+结构：
+- damage_dealt / damage_taken / heal_received / kills
+
+要求：
+- 击杀数从 CharacterDied 前最后一条 DamageApplied 的 attacker 计算
+
+---
+
+# 禁止事项
+
+禁止：跳过管线直接执行效果
+
+原因：管线保证 Generate → Modify → Execute 严格顺序，跳步破坏修饰和记录
+
+违反后果：伤害未经修饰、未经记录、死亡判定被跳过
+
+---
+
+禁止：Generate 阶段修改 HP
+
+原因：Generate 只生成效果，不执行效果
+
+违反后果：伤害未经修饰直接生效，ModifierRule 失效
+
+---
+
+禁止：Modify 阶段发送 BattleMessage
+
+原因：Modify 只修饰效果数值，不产生副作用
+
+违反后果：UI 在修饰未完成时收到通知，显示错误数值
+
+---
+
+禁止：Execute 阶段创建新的 CombatIntent
+
+原因：Execute 是管线终点，不应发起新行动
+
+违反后果：无限循环攻击
+
+---
+
+禁止：直接删除死亡 Entity
+
+原因：死亡是状态标记（Dead Tag），不是即时删除
+
+违反后果：其他系统无法响应死亡事件，TurnOrder 索引错乱
+
+---
+
+禁止：route_after_action 依赖 Dead 组件判断存活
+
+原因：Dead 是 deferred command，可能尚未生效
+
+违反后果：已死亡单位仍被选为下一个行动者
+
+---
+
+# AI 修改规则
+
+## 如果新增效果类型
+
+允许：
+- 新增 EffectHandler 实现并注册
+- 新增 PendingEffectData 变体
+
+禁止：
+- 修改 generate_combat_effects 流程
+- 修改 modify_effects 流程
+- 修改 execute_effects 流程
+
+优先检查：
+- EffectHandlerRegistry 注册
+- Modify 阶段是否需要适配新类型
+- Execute 阶段是否需要适配新类型
+
+---
+
+## 如果新增 Trait 触发时机
+
+允许：
+- 新增 TraitTrigger 变体
+- 在对应阶段添加触发逻辑
+
+禁止：
+- 修改 OnAttack/OnHit/OnKill 的处理逻辑
+- 在触发器中处理非 ApplyBuff 效果
+
+优先检查：
+- 触发位置（Generate 末尾 / Execute 中）
+- 触发目标（攻击者 / 目标）
+- EffectQueue 是否已清空
+
+---
+
+## 如果新增战斗消息
+
+允许：
+- 新增 Message 类型
+- 新增录制系统
+
+禁止：
+- 修改现有 Message 的字段
+- 在 Execute 中直接调用 UI
+
+优先检查：
+- add_message::<T>() 注册
+- MessageReader 消费
+- BattleRecord 录制
+
+---
+
+## 如果测试失败
+
+排查顺序：
+1. 检查管线是否跳步（Generate → Modify → Execute）
+2. 检查 EffectQueue 是否在 Execute 后清空
+3. 检查 CombatIntent 是否在 Execute 后清除
+4. 检查死亡判定是否通过 HP 而非 Dead 组件
+5. 检查 ModifierRule 是否正确匹配标签

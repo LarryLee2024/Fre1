@@ -1,441 +1,536 @@
-# 背包领域规则 (Inventory Rules)
+# Inventory 领域
 
-## 1. 领域概述
+Version: 1.0
 
-背包系统管理物品的存储、堆叠、使用和转移。采用统一容器模型，背包、仓库、宝箱、商店、尸体、掉落袋均为 Container 实例。遵循 **Definition / Instance 分离**和 **Rule / Content 分离**原则。
+Inventory 领域管理物品的存储、堆叠、使用和转移。采用统一容器模型，背包/仓库/宝箱/商店/尸体/掉落袋均为 Container 实例。
 
-### 核心原则
-
-- **统一容器模型**：所有存储空间本质都是 Container
-- **Definition / Instance 分离**：ItemDef（不可变配置）与 ItemInstance（运行时可变）
-- **堆叠合并**：同类型物品自动合并，受 stack_size 和 bind 约束
-- **容量与重量双限制**：格数 + 重量双重约束
-- **消耗品使用**：通过 UseItem Message 触发，自动消耗数量
+核心原则：
+- 统一容器模型
+- Definition / Instance 分离
+- 堆叠合并
+- 容量与重量双限制
 
 ---
 
-## 2. ItemType — 物品类型
+# 术语定义
 
-| 类型 | 说明 | stack_size | 重量 | 特殊字段 |
-|------|------|-----------|------|----------|
-| `Equipment` | 装备 | 1 | 有 | slot, requirements, modifiers, traits |
-| `Consumable` | 消耗品 | 99 | 有 | use_effects |
-| `Material` | 材料 | 99 | 有 | — |
-| `Quest` | 任务物品 | 1 | 0 | quest_state |
-| `Ammo` | 弹药 | 99 | 有 | modifiers |
-| `Currency` | 货币 | 9999 | 0 | — |
-| `Container` | 容器 | 1 | 有 | container_capacity, container_max_weight |
+## ItemDef
 
----
+物品的静态定义，描述物品"是什么"。
 
-## 3. ItemDef — 物品定义
+不是 ItemInstance。Def 不可变，Instance 有独立状态。
 
-```rust
-pub struct ItemDef {
-    pub version: u32,
-    pub id: String,
-    pub name: String,
-    pub description: String,
-    pub item_type: ItemType,
-    pub rarity: Rarity,
-    pub tags: Vec<TagName>,
-    pub stack_size: u32,           // 1=不可堆叠, 99=可堆叠
-    pub weight: f32,               // 0=不占重量
-    pub modifiers: Vec<AttributeModifierDef>,
-    pub traits: Vec<String>,
-    pub requirements: Vec<EquipmentRequirement>,
-    pub slot: Option<EquipmentSlot>,
-    pub use_effects: Vec<UseEffect>,
-    pub container_capacity: Option<u32>,
-    pub container_max_weight: Option<f32>,
-}
-```
-
-**规则**：
-- `item_type` 默认 `Equipment`，兼容旧装备 RON
-- `stack_size` 默认 1
-- 装备的 `slot` 和 `requirements` 仅对 Equipment 类型有意义
-- 消耗品的 `use_effects` 仅对 Consumable 类型有意义
+关键属性：
+- id / name / description：标识和展示
+- item_type：物品类型（Equipment / Consumable / Material / Quest / Ammo / Currency / Container）
+- stack_size：堆叠上限
+- weight：重量
 
 ---
 
-## 4. UseEffect — 使用效果
+## ItemInstance
 
-| 效果 | 参数 | 说明 |
-|------|------|------|
-| `RestoreVital { kind, value }` | AttributeKind, f32 | 恢复 HP/MP/Stamina |
-| `ApplyBuff { buff_id, duration }` | String, u32 | 施加 Buff |
-| `GrantTempTrait { trait_id, duration }` | String, u32 | 授予临时 Trait |
-| `CastSkill { skill_id }` | String | 释放技能（卷轴） |
+物品的运行时实例，拥有独立状态。
 
----
+不是 ItemDef。Instance 有耐久/强化/附魔/绑定，Def 是共享配置。
 
-## 5. ItemInstance — 物品实例
-
-```rust
-pub struct ItemInstance {
-    pub instance_id: u64,          // 全局唯一 ID
-    pub def_id: String,            // 指向定义 ID
-    pub durability: u32,           // 当前耐久度（仅装备）
-    pub max_durability: u32,       // 最大耐久度（仅装备）
-    pub enhance_level: u32,        // 强化等级
-    pub enchantments: Vec<String>, // 附魔 trait
-    pub bind: ItemBind,            // 绑定状态
-    pub signature: Option<String>, // 签名/定制标记
-    pub quest_state: Option<String>, // 任务状态标记
-}
-```
-
-### 5.1 ItemBind — 绑定状态
-
-| 状态 | 说明 |
-|------|------|
-| `None` | 未绑定 |
-| `Pickup` | 拾取绑定 |
-| `Equip` | 装备绑定 |
-| `Account` | 账号绑定 |
-
-### 5.2 实例创建
-
-```rust
-ItemInstance::from_def(instance_id, def)
-```
-
-- 装备：durability = 100, max_durability = 100
-- 非装备：durability = 0, max_durability = 0
-
-### 5.3 InstanceIdCounter
-
-```rust
-#[derive(Resource)]
-pub struct InstanceIdCounter(pub u64);
-```
-
-全局自增 ID 生成器，每次 `next()` 返回递增的 ID。
+关键属性：
+- instance_id：全局唯一 ID
+- def_id：指向定义 ID
+- durability / enhance_level / enchantments / bind
 
 ---
 
-## 6. ItemStack — 物品堆叠
+## ItemStack
 
-```rust
-pub struct ItemStack {
-    pub instance: ItemInstance,
-    pub count: u32,
-}
-```
+物品堆叠，一个 Instance + 数量。
 
-### 6.1 合并规则
+不是 ItemInstance。Stack 是容器中的存储单元，Instance 是物品身份。
 
-```rust
-can_merge_with(other, def) -> bool
-```
-
-条件：
-1. `def_id` 相同
-2. `count + other.count <= def.stack_size`
-3. 双方 `bind == None`
-4. `enhance_level` 相同
-5. `enchantments` 相同
-
-### 6.2 拆分
-
-```rust
-split(count) -> Option<ItemStack>
-```
-
-- `count == 0` 或 `count >= self.count` → 返回 None
-- 拆分出的实例 `instance_id = 0`，由调用方分配新 ID
-
-### 6.3 重量
-
-```rust
-total_weight(def) -> f32  // def.weight * count
-```
+关键属性：
+- instance：ItemInstance
+- count：数量
 
 ---
 
-## 7. Container — 统一容器
+## Container
 
-```rust
-#[derive(Component)]
-pub struct Container {
-    pub kind: ContainerKind,
-    pub stacks: Vec<ItemStack>,
-    pub capacity: u32,             // 0=无限制
-    pub max_weight: f32,           // 0=无限制
-    pub owner: Option<Entity>,
-    pub container_traits: Vec<String>,
-}
-```
+统一容器，所有存储空间的通用模型。
 
-### 7.1 ContainerKind — 容器类型
+不是 ContainerKind。Container 是实例，ContainerKind 是类型标签。
 
-| 类型 | 说明 |
-|------|------|
-| `Backpack` | 角色背包 |
-| `Warehouse` | 仓库 |
-| `Chest` | 宝箱 |
-| `Shop` | 商店 |
-| `Corpse` | 尸体 |
-| `LootBag` | 掉落袋 |
-| `Mail` | 邮件 |
-| `BattleBag` | 战场背包 |
-| `GuildBank` | 公会银行 |
-
-### 7.2 预设容器
-
-| 工厂方法 | 类型 | 容量 | 重量 |
-|----------|------|------|------|
-| `backpack()` | Backpack | 20 | 100.0 |
-| `battle_bag()` | BattleBag | 8 | 30.0 |
-| `chest(cap, weight)` | Chest | 自定义 | 自定义 |
-
-### 7.3 核心操作
-
-| 方法 | 说明 |
-|------|------|
-| `add_stack(stack, registry)` | 添加物品（自动合并），返回成功添加数量 |
-| `remove(instance_id)` | 移除指定实例 |
-| `reduce_stack(instance_id, count)` | 减少堆叠数量，归零自动移除 |
-| `get(instance_id)` | 查找指定实例 |
-| `find_by_def(def_id)` | 按定义 ID 查找 |
-| `filter_by_type(item_type, registry)` | 按类型筛选 |
-| `is_full()` | 是否已满 |
-| `is_overweight(registry)` | 是否超重 |
-| `current_weight(registry)` | 当前总重量 |
-
-### 7.4 add_stack 流程
-
-```
-1. 查找 ItemDef
-2. 尝试合并到已有堆叠（每次合并前检查重量）
-3. 剩余部分作为新堆叠（检查容量和重量）
-4. 返回成功添加的数量（0=完全失败，< count=部分失败）
-```
+关键属性：
+- kind：容器类型
+- stacks：ItemStack 列表
+- capacity / max_weight：容量和重量限制
 
 ---
 
-## 8. BattleInventory — 战场背包
+## UseEffect
 
-```rust
-#[derive(Component)]
-pub struct BattleInventory {
-    pub container: Container,
-    pub source_backpack: Entity,   // 原始背包 Entity
-}
-```
+消耗品的使用效果。
 
-### 8.1 战斗开始
+不是 SkillEffect。UseEffect 是消耗品触发，SkillEffect 是技能触发。
 
-`create_battle_inventory`：
-1. 遍历所有 `Container(Backpack)`
-2. 创建 `BattleInventory`（容量 8，重量 30）
-3. 复制源背包物品到战场背包
-4. Spawn 战场背包实体
-
-### 8.2 战斗结束
-
-`merge_battle_inventory`：
-1. 遍历所有 `BattleInventory`
-2. 将战场背包物品 `drain(..)` 转移回源背包
-3. 战场背包实体由 Despawn 清理
+关键属性：
+- RestoreVital / ApplyBuff / GrantTempTrait / CastSkill
 
 ---
 
-## 9. UseItem — 消耗品使用
+# 领域边界
 
-### 9.1 Message
+## 本领域负责
 
-```rust
-#[derive(Message)]
-pub struct UseItem {
-    pub user_entity: Entity,
-    pub container_entity: Entity,
-    pub instance_id: u64,
-}
-```
+- ItemDef 定义和注册表（ItemRegistry）
+- ItemInstance 创建和管理
+- ItemStack 合并和拆分
+- Container 的增删查改
+- 消耗品使用（UseItem Message）
+- 容器间转移（TransferItem Message）
+- 战场背包（BattleInventory）
+- 资源系统（Resources）
 
-### 9.2 使用流程
+## 本领域不负责
 
-```
-1. 从容器查找物品
-2. 检查 item_type == Consumable
-3. 应用 use_effects：
-   - RestoreVital → 添加属性修饰符
-   - ApplyBuff → 通过 ActiveBuffs 添加 Buff 实例
-4. container.reduce_stack(instance_id, 1)
-5. 发送 ItemUsed Message
-```
+- 装备穿脱逻辑（由 equipment_rules 领域负责）
+- 属性计算和修饰符管线（由 stat_system 领域负责）
+- Buff 的生命周期（由 buff_rules 领域负责）
+- UI 展示（由 ui_rules 领域负责）
 
-### 9.3 ItemUsed 通知
+## 跨领域通信方式
 
-```rust
-#[derive(Message)]
-pub struct ItemUsed {
-    pub user_entity: Entity,
-    pub def_id: String,
-}
-```
+| 通知内容 | 通信方式 | 目标领域 |
+|----------|----------|----------|
+| 消耗品使用 | UseItem Message | inventory |
+| 物品转移 | TransferItem Message | inventory |
+| 使用完成 | ItemUsed Message | ui |
+| 转移完成 | ItemTransferred Message | ui |
+| 恢复属性 | 直接修改 Attributes | stat_system |
+| 施加 Buff | 直接调用 apply_buff | buff |
 
 ---
 
-## 10. TransferItem — 容器间转移
+# 生命周期
 
-### 10.1 Message
+## 物品实例生命周期
 
-```rust
-#[derive(Message)]
-pub struct TransferItem {
-    pub from_entity: Entity,
-    pub to_entity: Entity,
-    pub instance_id: u64,
-    pub count: u32,
-}
-```
+| 状态 | 含义 | 可转换到 |
+|------|------|----------|
+| InContainer | 在某个容器中 | InContainer（转移）, Used, Destroyed |
+| Used | 消耗品已使用 | — |
+| Destroyed | 已销毁 | — |
 
-### 10.2 转移流程
+## 状态转换图
 
-```
-1. 查找源容器中的物品
-2. 检查目标容器容量和重量
-3. 从源容器 reduce_stack
-4. 添加到目标容器 add_stack
-5. 发送 ItemTransferred Message
-```
+InContainer → InContainer（转移）
+            → Used（消耗品使用）
+            → Destroyed（丢弃）
 
-### 10.3 ContainerResult
+## 转换条件
 
-| 结果 | 说明 |
-|------|------|
-| `Ok` | 转移成功 |
-| `Full` | 目标容器已满 |
-| `Overweight` | 目标容器超重 |
-| `NotFound` | 源容器中未找到物品 |
-
-### 10.4 纯函数版本
-
-```rust
-transfer_item(from, to, instance_id, count, registry) -> ContainerResult
-```
-
-用于测试和程序化调用，不依赖 ECS。
+| 从 | 到 | 条件 |
+|----|-----|------|
+| InContainer | InContainer | TransferItem Message |
+| InContainer | Used | UseItem Message + Consumable 类型 |
+| InContainer | Destroyed | reduce_stack 归零 |
 
 ---
 
-## 11. Resources — 资源系统
+# 不变量
 
-```rust
-#[derive(Component)]
-pub struct Resources {
-    pub stacks: Vec<ResourceStack>,
-}
-```
+## 不变量1：InstanceId 全局唯一
 
-### 11.1 ResourceStack
+任意时刻：
 
-```rust
-pub struct ResourceStack {
-    pub resource_id: String,  // "gold", "silver", "fame" 等
-    pub amount: u32,
-}
-```
+每个 ItemInstance 的 instance_id 在全局范围内唯一。
 
-### 11.2 操作
+违反表现：
 
-| 方法 | 说明 |
-|------|------|
-| `add(resource_id, amount)` | 添加资源（自动累加） |
-| `spend(resource_id, amount)` | 消费资源（不足返回 false） |
-| `get(resource_id)` | 查询数量（不存在返回 0） |
+两个物品共享同一 instance_id，查找和移除操作冲突。
 
 ---
 
-## 12. ItemRegistry — 物品注册表
+## 不变量2：堆叠数量不超过上限
 
-```rust
-#[derive(Resource)]
-pub struct ItemRegistry {
-    defs: HashMap<String, ItemDef>,
-}
-```
+任意时刻：
 
-| 方法 | 说明 |
-|------|------|
-| `get(id)` | 查找定义 |
-| `register(def)` | 注册定义 |
-| `iter()` | 遍历所有定义 |
-| `iter_by_type(item_type)` | 按类型筛选 |
-| `len()` / `is_empty()` | 数量查询 |
+ItemStack.count ≤ ItemDef.stack_size。
 
-**数据加载**：`assets/items/` 目录，通过 `RegistryLoader` 加载 RON 文件。
+违反表现：
+
+堆叠数量超过上限，UI 显示异常。
 
 ---
 
-## 13. 内置默认物品
+## 不变量3：容器容量和重量约束
 
-| ID | 名称 | 类型 | 稀有度 | 特殊属性 |
-|----|------|------|--------|----------|
-| `iron_sword` | 铁剑 | Equipment | Common | Attack+3, MainHand |
-| `leather_armor` | 皮甲 | Equipment | Common | Defense+2, Body |
-| `flame_dragon_sword` | 炎龙长剑 | Equipment | Epic | Attack+15, CritRate+5, flaming_weapon+dragon_bane |
-| `iron_shield` | 铁盾 | Equipment | Common | Defense+3, OffHand |
-| `mage_staff` | 法师法杖 | Equipment | Uncommon | MagicAttack+5, MainHand |
-| `potion_healing` | 治疗药水 | Consumable | Common | RestoreVital(Hp, 50) |
-| `potion_mana` | 法力药水 | Consumable | Common | RestoreVital(Mp, 30) |
-| `arrow` | 箭矢 | Ammo | Common | Attack+1 |
+add_stack 完成后：
+
+容器内 stacks 数量 ≤ capacity（capacity > 0 时），总重量 ≤ max_weight（max_weight > 0 时）。
+
+违反表现：
+
+容器超载，物品数量或重量超出限制。
 
 ---
 
-## 14. RON 配置格式
+## 不变量4：空堆叠自动清理
 
-### 14.1 装备
+reduce_stack 完成后：
 
-```ron
-(
-    id: "iron_sword",
-    name: "铁剑",
-    description: "普通的铁剑",
-    item_type: Equipment,
-    rarity: Common,
-    tags: [SWORD, MELEE, MARTIAL],
-    stack_size: 1,
-    weight: 3.0,
-    modifiers: [
-        (kind: Attack, op: Add, value: 3.0),
-    ],
-    slot: Some(MainHand),
-)
-```
+count = 0 的 ItemStack 必须从容器中移除。
 
-### 14.2 消耗品
+违反表现：
 
-```ron
-(
-    id: "potion_healing",
-    name: "治疗药水",
-    description: "恢复 50 HP",
-    item_type: Consumable,
-    rarity: Common,
-    tags: [CONSUMABLE],
-    stack_size: 99,
-    weight: 0.5,
-    use_effects: [
-        RestoreVital(kind: Hp, value: 50.0),
-    ],
-)
-```
+空堆叠残留，占用容器空间。
 
 ---
 
-## 15. 关键约束
+## 不变量5：消耗品仅 Consumable 可使用
 
-1. **统一容器模型**：所有存储空间都是 Container，不单独实现背包/仓库/宝箱
-2. **堆叠合并条件严格**：def_id + bind + enhance_level + enchantments 全部匹配
-3. **容量与重量双限制**：add_stack 逐步检查，部分成功返回已添加数量
-4. **消耗品仅 Consumable 可使用**：Equipment 类型忽略 UseItem
-5. **战场背包战斗开始复制、战斗结束归还**：不直接操作角色背包
-6. **InstanceIdCounter 全局唯一**：跨容器实例 ID 不重复
-7. **转移时不可同时可变借用同一 Entity**：from_entity != to_entity
-8. **Resources 独立于 Container**：货币/声望等不走物品堆叠
-9. **注册表幂等**：重复调用不会重复注册
-10. **旧装备 RON 兼容**：缺少 item_type 默认 Equipment，缺少 stack_size 默认 1
+UseItem 处理完成后：
+
+只有 item_type == Consumable 的物品被执行使用效果。
+
+违反表现：
+
+装备被当作消耗品使用。
+
+---
+
+# 业务规则
+
+## 规则1：堆叠合并
+
+禁止：
+- 不检查合并条件直接合并
+
+必须：
+- def_id 相同
+- count + other.count ≤ stack_size
+- 双方 bind == None
+- enhance_level 相同
+- enchantments 相同
+
+允许：
+- 部分合并（超出上限的部分作为新堆叠）
+
+---
+
+## 规则2：容器操作
+
+禁止：
+- 绕过容量和重量检查添加物品
+- 空堆叠不清理
+
+必须：
+- add_stack 逐步检查容量和重量
+- 部分成功返回已添加数量
+- reduce_stack 归零自动移除
+- 转移时 from_entity != to_entity
+
+---
+
+## 规则3：消耗品使用
+
+禁止：
+- 非 Consumable 类型使用 UseItem
+
+必须：
+- 应用 use_effects（RestoreVital / ApplyBuff / GrantTempTrait / CastSkill）
+- reduce_stack(instance_id, 1)
+- 发送 ItemUsed Message
+
+---
+
+## 规则4：容器间转移
+
+禁止：
+- 同时可变借用同一 Entity
+
+必须：
+- 检查目标容器容量和重量
+- 从源容器 reduce_stack
+- 添加到目标容器 add_stack
+- 发送 ItemTransferred Message
+
+允许：
+- 部分转移成功
+
+---
+
+## 规则5：战场背包
+
+禁止：
+- 战斗中直接操作角色背包
+
+必须：
+- 战斗开始复制源背包物品到 BattleInventory
+- 战斗结束 drain 转移回源背包
+- 战场背包容量 8，重量 30
+
+---
+
+# 流程管线
+
+## 添加物品管线
+
+查找定义 → 尝试合并 → 检查容量 → 检查重量 → 添加新堆叠
+
+### Step1：查找定义
+
+输入：def_id + ItemRegistry
+处理：查找 ItemDef
+输出：ItemDef
+禁止：def_id 不存在时静默跳过
+
+### Step2：尝试合并
+
+输入：ItemStack + 容器中已有堆叠
+处理：逐个检查 can_merge_with，合并
+输出：合并后剩余数量
+禁止：跳过合并条件检查
+
+### Step3：检查容量和重量
+
+输入：剩余数量 + 容器容量/重量
+处理：检查是否可添加新堆叠
+输出：可添加数量
+禁止：绕过容量/重量检查
+
+### Step4：添加新堆叠
+
+输入：剩余物品
+处理：创建新 ItemStack 添加到容器
+输出：成功添加数量
+禁止：添加超过容量的物品
+
+---
+
+## 消耗品使用管线
+
+查找物品 → 类型检查 → 应用效果 → 减少数量 → 发送 Message
+
+### Step1：查找物品
+
+输入：instance_id + Container
+处理：查找 ItemStack
+输出：ItemStack
+禁止：物品不存在时继续
+
+### Step2：类型检查
+
+输入：ItemDef.item_type
+处理：检查是否 Consumable
+输出：是/否
+禁止：非 Consumable 继续使用
+
+### Step3：应用效果
+
+输入：ItemDef.use_effects
+处理：RestoreVital / ApplyBuff / GrantTempTrait / CastSkill
+输出：属性/Buff 变化
+禁止：跳过任何效果
+
+### Step4：减少数量
+
+输入：instance_id + Container
+处理：reduce_stack(instance_id, 1)
+输出：堆叠数量变化
+禁止：归零时不清理
+
+---
+
+# 数据结构
+
+## ItemDef（Definition）
+
+职责：物品的静态定义
+
+结构：
+- id / name / description：标识和展示
+- item_type：物品类型（7 种）
+- rarity：稀有度
+- tags：标签列表
+- stack_size：堆叠上限
+- weight：重量
+- modifiers / traits / requirements / slot：装备相关
+- use_effects：消耗品相关
+- container_capacity / container_max_weight：容器相关
+
+要求：
+- 不可变，加载后不修改
+- RON 配置路径：assets/items/
+
+---
+
+## ItemInstance（Instance）
+
+职责：物品的运行时实例
+
+结构：
+- instance_id：全局唯一 ID
+- def_id：指向定义 ID
+- durability / max_durability：耐久度
+- enhance_level：强化等级
+- enchantments：附魔 trait
+- bind：绑定状态
+- signature / quest_state：定制标记
+
+要求：
+- instance_id 全局唯一
+- 装备创建时 durability = 100
+
+---
+
+## ItemStack（值对象）
+
+职责：容器中的存储单元
+
+结构：
+- instance：ItemInstance
+- count：数量
+
+要求：
+- count ≤ def.stack_size
+- can_merge_with 检查 5 个条件
+- total_weight = def.weight × count
+
+---
+
+## Container（Instance Component）
+
+职责：统一容器
+
+结构：
+- kind：容器类型（9 种）
+- stacks：ItemStack 列表
+- capacity / max_weight：容量和重量限制
+- owner：拥有者实体
+- container_traits：容器 Trait
+
+要求：
+- add_stack 自动合并 + 容量/重量检查
+- reduce_stack 归零自动清理
+- 预设工厂方法
+
+---
+
+## Resources（Instance Component）
+
+职责：货币/声望等资源，独立于物品堆叠
+
+结构：
+- stacks：ResourceStack 列表（resource_id → amount）
+
+要求：
+- add 自动累加
+- spend 不足返回 false
+
+---
+
+# 禁止事项
+
+禁止：绕过容量和重量检查添加物品
+
+原因：容量和重量是游戏平衡的核心约束
+
+违反后果：容器无限装载，游戏经济崩溃
+
+---
+
+禁止：空堆叠不清理
+
+原因：空堆叠占用容器空间，影响容量计算
+
+违反后果：容器显示空槽但无法添加物品
+
+---
+
+禁止：非 Consumable 使用 UseItem
+
+原因：只有消耗品有使用效果
+
+违反后果：装备被当作消耗品使用，物品丢失
+
+---
+
+禁止：战斗中直接操作角色背包
+
+原因：战斗背包是独立副本，战斗结束才合并
+
+违反后果：战斗中物品变化影响非战斗状态
+
+---
+
+禁止：同时可变借用同一 Entity 的容器
+
+原因：Rust 借用规则禁止
+
+违反后果：运行时 panic
+
+---
+
+# AI 修改规则
+
+## 如果新增物品类型
+
+允许：
+- 新增 ItemType 变体
+- 新增 ItemDef 字段
+- 新增 RON 配置
+
+禁止：
+- 修改 Container 核心操作
+- 修改堆叠合并条件
+- 修改容量/重量检查逻辑
+
+优先检查：
+- ItemRegistry 注册
+- stack_size 和 weight 默认值
+- 与装备系统的交互
+
+---
+
+## 如果新增使用效果
+
+允许：
+- 新增 UseEffect 变体
+- 在 UseItem 处理中添加效果分支
+
+禁止：
+- 修改现有 UseEffect 的逻辑
+- 修改 UseItem Message 结构
+
+优先检查：
+- UseItem 处理流程
+- 效果应用是否需要跨领域通信
+- ItemUsed Message 是否需要扩展
+
+---
+
+## 如果新增容器类型
+
+允许：
+- 新增 ContainerKind 变体
+- 新增预设工厂方法
+
+禁止：
+- 修改 Container 核心操作
+- 修改容量/重量检查逻辑
+
+优先检查：
+- 容器预设参数
+- 与战场背包的交互
+- UI 展示适配
+
+---
+
+## 如果测试失败
+
+排查顺序：
+1. 检查堆叠合并条件（5 个条件）
+2. 检查容量和重量约束
+3. 检查 instance_id 全局唯一性
+4. 检查空堆叠是否自动清理
+5. 检查 ItemDef 引用是否合法
