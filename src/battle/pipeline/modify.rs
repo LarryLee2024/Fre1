@@ -29,7 +29,8 @@ pub fn modify_effects(
                     }
                     let (new_amount, entries) =
                         rules.apply_damage_modifiers_with_breakdown(*amount, &effect.source_tags, target_tags);
-                    *amount = new_amount;
+                    // 不变量3：伤害下限保护，Modify 完成后伤害值 ≥ 1
+                    *amount = new_amount.max(1);
                     *modifiers = entries;
                     bevy::log::debug!(
                         target: "battle",

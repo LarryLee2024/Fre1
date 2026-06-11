@@ -151,13 +151,14 @@ impl<'w> ExecuteContext<'w> {
         if let Some(mut target_attrs) = self.world.get_mut::<Attributes>(target_entity) {
             let hp = target_attrs.get(AttributeKind::Hp);
             let max_hp = target_attrs.get(AttributeKind::MaxHp);
-            let new_hp = (hp + amount as f32).min(max_hp);
+            let actual_heal = (amount as f32).min(max_hp - hp).max(0.0);
+            let new_hp = hp + actual_heal;
             target_attrs.set_vital(AttributeKind::Hp, new_hp);
 
             self.pending_messages.push(PendingMessage::Heal(HealApplied {
                 target: target_entity,
                 target_name: target_name.to_string(),
-                amount,
+                amount: actual_heal as i32,
             }));
         }
     }
@@ -298,7 +299,7 @@ impl EffectHandler for DamageHandler {
         Some(PendingEffectData::Damage {
             amount,
             is_skill: ctx.skill_id != crate::skill::BASIC_ATTACK_ID,
-            base_amount: Some(amount),
+            base_amount: None,
             modifiers: Vec::new(),
         })
     }
@@ -386,7 +387,7 @@ impl EffectHandler for HealHandler {
         };
         Some(PendingEffectData::Heal {
             amount: *amount,
-            base_amount: Some(*amount),
+            base_amount: None,
         })
     }
 
