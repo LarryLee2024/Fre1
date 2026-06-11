@@ -113,137 +113,327 @@ impl Default for TraitEffectHandlerRegistry {
 
 #[cfg(test)]
 mod tests {
+    // ================================================
+    // AI Self-Check (test_spec.md §13.1)
+    // ================================================
+    // ✅ 测试行为，不是实现
+    // ✅ 符合领域规则
+    // ✅ 测试是确定性的
+    // ✅ 使用标准测试数据
+    // ✅ 没有测试私有实现
+    // ✅ 没有生成不在范围内的测试
+    // ================================================
+
     use super::*;
     use crate::core::attribute::{AttributeKind, ModifierOp};
 
     // ── GrantTagHandler ──
 
+    /// Test ID: CHR-HDL-001
+    /// Title: GrantTagHandler type_name 返回 "GrantTag"
+    ///
+    /// Given: 一个 GrantTagHandler 实例
+    /// When: 调用 type_name()
+    /// Then: 返回 "GrantTag"
+    ///
+    /// Assertions: type_name == "GrantTag"
     #[test]
-    fn grant_tag_handler_类型名() {
+    fn grant_tag_handler_type_name() {
+        // Given
         let handler = GrantTagHandler;
-        assert_eq!(handler.type_name(), "GrantTag");
+
+        // When
+        let name = handler.type_name();
+
+        // Then
+        assert_eq!(name, "GrantTag");
     }
 
+    /// Test ID: CHR-HDL-002
+    /// Title: GrantTagHandler 授予标签
+    ///
+    /// Given: 一个 GrantTagHandler 和 GrantTag(WARRIOR) 效果
+    /// When: 调用 granted_tags()
+    /// Then: 返回包含 WARRIOR 的标签列表
+    ///
+    /// Assertions: tags.len() == 1, tags.contains(WARRIOR)
     #[test]
-    fn grant_tag_handler_授予标签() {
+    fn grant_tag_handler_grants_tags() {
+        // Given
         let handler = GrantTagHandler;
         let effect = TraitEffect::GrantTag(GameplayTag::WARRIOR);
+
+        // When
         let tags = handler.granted_tags(&effect);
+
+        // Then
         assert_eq!(tags.len(), 1);
         assert!(tags.contains(&GameplayTag::WARRIOR));
     }
 
+    /// Test ID: CHR-HDL-003
+    /// Title: GrantTagHandler 对非 GrantTag 效果返回空标签
+    ///
+    /// Given: 一个 GrantTagHandler 和 ModifyAttribute 效果
+    /// When: 调用 granted_tags()
+    /// Then: 返回空列表
+    ///
+    /// Assertions: tags.is_empty()
     #[test]
-    fn grant_tag_handler_非grant_tag返回空() {
+    fn grant_tag_handler_returns_empty_for_non_grant_tag() {
+        // Given
         let handler = GrantTagHandler;
         let effect = TraitEffect::ModifyAttribute(AttributeModifierDef {
             kind: AttributeKind::Attack,
             op: ModifierOp::Add,
             value: 5.0,
         });
+
+        // When
         let tags = handler.granted_tags(&effect);
+
+        // Then
         assert!(tags.is_empty());
     }
 
+    /// Test ID: CHR-HDL-004
+    /// Title: GrantTagHandler 无属性修饰
+    ///
+    /// Given: 一个 GrantTagHandler 和 GrantTag(FIRE) 效果
+    /// When: 调用 attribute_modifiers()
+    /// Then: 返回空列表
+    ///
+    /// Assertions: mods.is_empty()
     #[test]
-    fn grant_tag_handler_无属性修饰() {
+    fn grant_tag_handler_no_attribute_modifiers() {
+        // Given
         let handler = GrantTagHandler;
         let effect = TraitEffect::GrantTag(GameplayTag::FIRE);
+
+        // When
         let mods = handler.attribute_modifiers(&effect);
+
+        // Then
         assert!(mods.is_empty());
     }
 
     // ── ModifyAttributeHandler ──
 
+    /// Test ID: CHR-HDL-005
+    /// Title: ModifyAttributeHandler type_name 返回 "ModifyAttribute"
+    ///
+    /// Given: 一个 ModifyAttributeHandler 实例
+    /// When: 调用 type_name()
+    /// Then: 返回 "ModifyAttribute"
+    ///
+    /// Assertions: type_name == "ModifyAttribute"
     #[test]
-    fn modify_attribute_handler_类型名() {
+    fn modify_attribute_handler_type_name() {
+        // Given
         let handler = ModifyAttributeHandler;
-        assert_eq!(handler.type_name(), "ModifyAttribute");
+
+        // When
+        let name = handler.type_name();
+
+        // Then
+        assert_eq!(name, "ModifyAttribute");
     }
 
+    /// Test ID: CHR-HDL-006
+    /// Title: ModifyAttributeHandler 返回属性修饰
+    ///
+    /// Given: 一个 ModifyAttributeHandler 和 ModifyAttribute(Attack+10) 效果
+    /// When: 调用 attribute_modifiers()
+    /// Then: 返回包含 Attack 修饰符的列表
+    ///
+    /// Assertions: mods.len() == 1, kind == Attack, value == 10.0
     #[test]
-    fn modify_attribute_handler_返回属性修饰() {
+    fn modify_attribute_handler_returns_modifiers() {
+        // Given
         let handler = ModifyAttributeHandler;
-        let mod_def = AttributeModifierDef {
+        let effect = TraitEffect::ModifyAttribute(AttributeModifierDef {
             kind: AttributeKind::Attack,
             op: ModifierOp::Add,
             value: 10.0,
-        };
-        let effect = TraitEffect::ModifyAttribute(mod_def);
+        });
+
+        // When
         let mods = handler.attribute_modifiers(&effect);
+
+        // Then
         assert_eq!(mods.len(), 1);
         assert_eq!(mods[0].kind, AttributeKind::Attack);
         assert_eq!(mods[0].value, 10.0);
     }
 
+    /// Test ID: CHR-HDL-007
+    /// Title: ModifyAttributeHandler 对非 ModifyAttribute 效果返回空修饰符
+    ///
+    /// Given: 一个 ModifyAttributeHandler 和 GrantTag(MAGE) 效果
+    /// When: 调用 attribute_modifiers()
+    /// Then: 返回空列表
+    ///
+    /// Assertions: mods.is_empty()
     #[test]
-    fn modify_attribute_handler_非modify返回空() {
+    fn modify_attribute_handler_returns_empty_for_non_modify() {
+        // Given
         let handler = ModifyAttributeHandler;
         let effect = TraitEffect::GrantTag(GameplayTag::MAGE);
+
+        // When
         let mods = handler.attribute_modifiers(&effect);
+
+        // Then
         assert!(mods.is_empty());
     }
 
+    /// Test ID: CHR-HDL-008
+    /// Title: ModifyAttributeHandler 无标签授予
+    ///
+    /// Given: 一个 ModifyAttributeHandler 和 ModifyAttribute(Defense*1.5) 效果
+    /// When: 调用 granted_tags()
+    /// Then: 返回空列表
+    ///
+    /// Assertions: tags.is_empty()
     #[test]
-    fn modify_attribute_handler_无标签授予() {
+    fn modify_attribute_handler_no_tags() {
+        // Given
         let handler = ModifyAttributeHandler;
         let effect = TraitEffect::ModifyAttribute(AttributeModifierDef {
             kind: AttributeKind::Defense,
             op: ModifierOp::Multiply,
             value: 1.5,
         });
+
+        // When
         let tags = handler.granted_tags(&effect);
+
+        // Then
         assert!(tags.is_empty());
     }
 
     // ── ApplyBuffHandler ──
 
+    /// Test ID: CHR-HDL-009
+    /// Title: ApplyBuffHandler type_name 返回 "ApplyBuff"
+    ///
+    /// Given: 一个 ApplyBuffHandler 实例
+    /// When: 调用 type_name()
+    /// Then: 返回 "ApplyBuff"
+    ///
+    /// Assertions: type_name == "ApplyBuff"
     #[test]
-    fn apply_buff_handler_类型名() {
+    fn apply_buff_handler_type_name() {
+        // Given
         let handler = ApplyBuffHandler;
-        assert_eq!(handler.type_name(), "ApplyBuff");
+
+        // When
+        let name = handler.type_name();
+
+        // Then
+        assert_eq!(name, "ApplyBuff");
     }
 
+    /// Test ID: CHR-HDL-010
+    /// Title: ApplyBuffHandler 无标签授予
+    ///
+    /// Given: 一个 ApplyBuffHandler 和 ApplyBuff(burn, 3) 效果
+    /// When: 调用 granted_tags()
+    /// Then: 返回空列表
+    ///
+    /// Assertions: tags.is_empty()
     #[test]
-    fn apply_buff_handler_无标签授予() {
+    fn apply_buff_handler_no_tags() {
+        // Given
         let handler = ApplyBuffHandler;
         let effect = TraitEffect::ApplyBuff {
             buff_id: "burn".into(),
             duration: 3,
         };
+
+        // When
         let tags = handler.granted_tags(&effect);
+
+        // Then
         assert!(tags.is_empty());
     }
 
+    /// Test ID: CHR-HDL-011
+    /// Title: ApplyBuffHandler 无属性修饰
+    ///
+    /// Given: 一个 ApplyBuffHandler 和 ApplyBuff(poison, 2) 效果
+    /// When: 调用 attribute_modifiers()
+    /// Then: 返回空列表
+    ///
+    /// Assertions: mods.is_empty()
     #[test]
-    fn apply_buff_handler_无属性修饰() {
+    fn apply_buff_handler_no_modifiers() {
+        // Given
         let handler = ApplyBuffHandler;
         let effect = TraitEffect::ApplyBuff {
             buff_id: "poison".into(),
             duration: 2,
         };
+
+        // When
         let mods = handler.attribute_modifiers(&effect);
+
+        // Then
         assert!(mods.is_empty());
     }
 
     // ── TraitEffectHandlerRegistry ──
 
+    /// Test ID: CHR-HDL-012
+    /// Title: Registry 默认包含三个处理器
+    ///
+    /// Given: 一个使用 with_defaults() 创建的 Registry
+    /// When: 查询三种处理器类型
+    /// Then: 全部存在
+    ///
+    /// Assertions: get("GrantTag").is_some(), get("ModifyAttribute").is_some(), get("ApplyBuff").is_some()
     #[test]
-    fn registry_默认包含三个处理器() {
+    fn registry_default_contains_three_handlers() {
+        // Given
         let registry = TraitEffectHandlerRegistry::with_defaults();
+
+        // When & Then
         assert!(registry.get("GrantTag").is_some());
         assert!(registry.get("ModifyAttribute").is_some());
         assert!(registry.get("ApplyBuff").is_some());
     }
 
+    /// Test ID: CHR-HDL-013
+    /// Title: Registry 查询不存在的处理器返回 None
+    ///
+    /// Given: 一个使用 with_defaults() 创建的 Registry
+    /// When: 查询 "NonExistent"
+    /// Then: 返回 None
+    ///
+    /// Assertions: get("NonExistent").is_none()
     #[test]
-    fn registry_查询不存在返回none() {
+    fn registry_query_nonexistent_returns_none() {
+        // Given
         let registry = TraitEffectHandlerRegistry::with_defaults();
-        assert!(registry.get("NonExistent").is_none());
+
+        // When
+        let result = registry.get("NonExistent");
+
+        // Then
+        assert!(result.is_none());
     }
 
+    /// Test ID: CHR-HDL-014
+    /// Title: Registry 注册自定义处理器
+    ///
+    /// Given: 一个 Registry 和一个自定义 Handler
+    /// When: 注册并查询
+    /// Then: 自定义 Handler 可用并正确执行
+    ///
+    /// Assertions: get("Custom").is_some(), granted_tags 返回 BUFF
     #[test]
-    fn registry_注册自定义处理器() {
+    fn registry_register_custom_handler() {
+        // Given
         let mut registry = TraitEffectHandlerRegistry::with_defaults();
         struct CustomHandler;
         impl TraitEffectHandler for CustomHandler {
@@ -260,18 +450,33 @@ mod tests {
                 vec![]
             }
         }
+
+        // When
         registry.register(Box::new(CustomHandler));
-        assert!(registry.get("Custom").is_some());
         let handler = registry.get("Custom").unwrap();
         let effect = TraitEffect::GrantTag(GameplayTag::FIRE);
         let tags = handler.granted_tags(&effect);
+
+        // Then
+        assert!(registry.get("Custom").is_some());
         assert!(tags.contains(&GameplayTag::BUFF));
     }
 
+    /// Test ID: CHR-HDL-015
+    /// Title: Registry default() 等于 with_defaults()
+    ///
+    /// Given: 两个 Registry，分别用 default() 和 with_defaults() 创建
+    /// When: 查询处理器
+    /// Then: 两者功能相同
+    ///
+    /// Assertions: 两者均包含 "GrantTag"
     #[test]
-    fn registry_default等于with_defaults() {
+    fn registry_default_equals_with_defaults() {
+        // Given
         let r1 = TraitEffectHandlerRegistry::default();
         let r2 = TraitEffectHandlerRegistry::with_defaults();
+
+        // When & Then
         assert!(r1.get("GrantTag").is_some());
         assert!(r2.get("GrantTag").is_some());
     }

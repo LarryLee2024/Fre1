@@ -16,7 +16,7 @@ pub fn minimal_app() -> App {
     app
 }
 
-/// 战斗 App：Core + Buff + Equipment + Inventory
+/// 战斗 App：Core + Buff + Trait + Equipment + Inventory
 pub fn combat_app() -> App {
     let mut app = minimal_app();
     app.add_plugins((
@@ -25,17 +25,17 @@ pub fn combat_app() -> App {
         ModifierRulePlugin,
         TagDefPlugin,
         BuffPlugin,
+        tactical_rpg::character::TraitPlugin,
         EquipmentPlugin,
         InventoryPlugin,
     ));
     app
 }
 
-/// 装备测试 App：combat_app + TraitPlugin + EquipItem/UnequipItem Message + 穿脱系统
+/// 装备测试 App：combat_app + EquipItem/UnequipItem Message + 穿脱系统
 pub fn equipment_app() -> App {
     let mut app = combat_app();
-    // 装备系统需要 TraitRegistry 和 TraitEffectHandlerRegistry
-    app.add_plugins(tactical_rpg::character::TraitPlugin);
+    // TraitPlugin 已在 combat_app 中添加（TraitRegistry + TraitEffectHandlerRegistry）
     app.add_message::<tactical_rpg::equipment::EquipItem>()
         .add_message::<tactical_rpg::equipment::UnequipItem>()
         .add_message::<tactical_rpg::equipment::ItemEquipped>()

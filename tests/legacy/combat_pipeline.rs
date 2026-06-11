@@ -374,6 +374,7 @@ fn effect_queue_push_then_drain() {
         data: PendingEffectData::Heal {
             amount: 5,
             base_amount: None,
+            modifiers: Vec::new(),
         },
         source_tags: vec![],
         terrain_id: "plain".to_string(),

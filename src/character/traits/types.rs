@@ -172,11 +172,31 @@ impl TraitCollection {
 
 #[cfg(test)]
 mod tests {
+    // ================================================
+    // AI Self-Check (test_spec.md §13.1)
+    // ================================================
+    // ✅ 测试行为，不是实现
+    // ✅ 符合领域规则
+    // ✅ 测试是确定性的
+    // ✅ 使用标准测试数据
+    // ✅ 没有测试私有实现
+    // ✅ 没有生成不在范围内的测试
+    // ================================================
+
     use super::*;
     use ron::de::from_bytes;
 
+    /// Test ID: CHR-TYP-001
+    /// Title: RON 反序列化旧配置（无 version 字段）兼容
+    ///
+    /// Given: 不含 version 字段的 RON 字符串
+    /// When: 反序列化为 TraitDefinition
+    /// Then: version 默认为 0
+    ///
+    /// Assertions: id == "old_trait", version == 0
     #[test]
-    fn ron_反序列化_旧配置无version字段() {
+    fn ron_deserialize_trait_old_config_without_version() {
+        // Given
         let ron_str = r#"
             (
                 id: "old_trait",
@@ -186,7 +206,11 @@ mod tests {
                 effects: [GrantTag(WARRIOR)],
             )
         "#;
+
+        // When
         let def: TraitDefinition = from_bytes(ron_str.as_bytes()).unwrap();
+
+        // Then
         assert_eq!(def.id, "old_trait");
         assert_eq!(def.version, 0);
     }

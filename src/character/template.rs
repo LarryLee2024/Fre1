@@ -375,48 +375,124 @@ mod tests {
         assert_eq!(template.ai_behavior, "aggressive");
     }
 
+    /// Test ID: CHR-TPL-003
+    /// Title: UnitTemplateRegistry 默认注册 4 个模板
+    ///
+    /// Given: 一个空的 UnitTemplateRegistry
+    /// When: 调用 register_defaults()
+    /// Then: 注册 4 个默认模板
+    ///
+    /// Assertions: 4 个模板均存在
     #[test]
-    fn unit_template_registry_默认模板() {
+    fn unit_template_registry_default_templates() {
+        // Given
         let mut registry = UnitTemplateRegistry::default();
+
+        // When
         registry.register_defaults();
+
+        // Then
         assert!(registry.get("player_warrior").is_some());
         assert!(registry.get("player_archer").is_some());
         assert!(registry.get("enemy_goblin").is_some());
         assert!(registry.get("enemy_dark_knight").is_some());
     }
 
+    /// Test ID: CHR-TPL-004
+    /// Title: UnitTemplateRegistry 查询已注册模板
+    ///
+    /// Given: 已注册默认模板的 Registry
+    /// When: 查询 "player_warrior"
+    /// Then: 返回正确的模板信息
+    ///
+    /// Assertions: name, faction, base_attack_range 正确
     #[test]
-    fn unit_template_registry_查询() {
+    fn unit_template_registry_query() {
+        // Given
         let mut registry = UnitTemplateRegistry::default();
         registry.register_defaults();
+
+        // When
         let warrior = registry.get("player_warrior").unwrap();
+
+        // Then
         assert_eq!(warrior.name, "战士");
         assert_eq!(warrior.faction, Faction::Player);
         assert_eq!(warrior.base_attack_range, 1);
     }
 
+    /// Test ID: CHR-TPL-005
+    /// Title: UnitTemplateRegistry 查询未注册模板返回 None
+    ///
+    /// Given: 已注册默认模板的 Registry
+    /// When: 查询 "nonexistent"
+    /// Then: 返回 None
+    ///
+    /// Assertions: result.is_none()
     #[test]
-    fn unit_template_registry_查询未注册返回none() {
+    fn unit_template_registry_query_unregistered_returns_none() {
+        // Given
         let mut registry = UnitTemplateRegistry::default();
         registry.register_defaults();
-        assert!(registry.get("nonexistent").is_none());
+
+        // When
+        let result = registry.get("nonexistent");
+
+        // Then
+        assert!(result.is_none());
     }
 
+    /// Test ID: CHR-TPL-006
+    /// Title: FactionDef::Player 转换为 Faction::Player
+    ///
+    /// Given: FactionDef::Player
+    /// When: 调用 .into() 转换
+    /// Then: 返回 Faction::Player
+    ///
+    /// Assertions: faction == Faction::Player
     #[test]
-    fn faction_def_player转换() {
-        let faction: Faction = FactionDef::Player.into();
+    fn faction_def_player_converts() {
+        // Given
+        let def = FactionDef::Player;
+
+        // When
+        let faction: Faction = def.into();
+
+        // Then
         assert_eq!(faction, Faction::Player);
     }
 
+    /// Test ID: CHR-TPL-007
+    /// Title: FactionDef::Enemy 转换为 Faction::Enemy
+    ///
+    /// Given: FactionDef::Enemy
+    /// When: 调用 .into() 转换
+    /// Then: 返回 Faction::Enemy
+    ///
+    /// Assertions: faction == Faction::Enemy
     #[test]
-    fn faction_def_enemy转换() {
-        let faction: Faction = FactionDef::Enemy.into();
+    fn faction_def_enemy_converts() {
+        // Given
+        let def = FactionDef::Enemy;
+
+        // When
+        let faction: Faction = def.into();
+
+        // Then
         assert_eq!(faction, Faction::Enemy);
     }
 
+    /// Test ID: CHR-TPL-008
+    /// Title: RON 反序列化旧配置（无 version 字段）兼容
+    ///
+    /// Given: 不含 version 字段的 RON 字符串
+    /// When: 反序列化为 UnitTemplateDef
+    /// Then: version 默认为 0
+    ///
+    /// Assertions: id == "old_unit", version == 0
     #[test]
-    fn ron_反序列化_旧配置无version字段() {
-        // UnitTemplateDef 的最小 RON（不含 version 字段）
+    fn ron_deserialize_old_config_without_version() {
+        // Given
         let ron_str = format!(
             r#"
             (
@@ -434,7 +510,11 @@ mod tests {
             )
         "#
         );
+
+        // When
         let def: UnitTemplateDef = from_bytes(ron_str.as_bytes()).unwrap();
+
+        // Then
         assert_eq!(def.id, "old_unit");
         assert_eq!(def.version, 0);
     }

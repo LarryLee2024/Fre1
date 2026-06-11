@@ -1,16 +1,16 @@
 # 业务代码修改建议
 
-**Version**: 1.0
+**Version**: 2.0
 **Date**: 2026-06-11
 **Reviewer**: Test Guardian
-**Source**: UI 模块测试执行过程中的编译警告
+**Source**: UI 模块 + Character 模块测试执行过程中的编译警告
 **Standard**: `docs/test_spec.md`, `code_style.md`, `ai_constitution.md`
 
 ---
 
 # 1. 问题来源
 
-在执行 `cargo test --lib ui::*` 过程中，编译器输出以下警告，表明业务代码存在潜在问题。
+在执行 `cargo test --lib ui::*` 和 `cargo test --lib character::` 过程中，编译器输出以下警告，表明业务代码存在潜在问题。
 
 ---
 
@@ -330,8 +330,58 @@ pub fn divider(theme: &UiTheme) -> (Node, BackgroundColor) { ... }  // never use
 
 # 6. 结论
 
-测试执行过程中发现 **10 个业务代码问题**，其中：
-- **2 个 P2 问题**：需要确认意图并修复
-- **8 个 P3 问题**：代码整洁和命名规范问题
+测试执行过程中发现 **12 个业务代码问题**，其中：
+- **2 个 P2 问题**：需要确认意图并修复（无效 drop 调用、未使用的 Widget 函数）
+- **10 个 P3 问题**：代码整洁和命名规范问题
 
 这些问题不影响测试通过，但建议在后续开发中逐步清理，以保持代码质量。
+
+---
+
+# 附录：Character 模块问题详情
+
+以下问题在 `cargo test --lib character::` 执行过程中由编译器报告：
+
+## A.1 `src/character/movement.rs` - 未使用的常量
+
+**严重性**: P3
+**位置**: `src/character/movement.rs:18`
+**问题**: `MOVE_SPEED` 常量未被使用
+
+```rust
+const MOVE_SPEED: f32 = 0.15;  // never used
+```
+
+**修改建议**: 在移动系统中使用该常量，或删除。
+
+## A.2 `src/character/template.rs` - 未使用的字段
+
+**严重性**: P3
+**位置**: `src/character/template.rs:20`
+**问题**: `UnitTemplate` 的 `background` 字段未被读取
+
+```rust
+pub struct UnitTemplate {
+    // ...
+    pub background: String,  // never read
+}
+```
+
+**修改建议**: 如果角色背景功能已废弃，删除该字段；否则保留并添加注释。
+
+## A.3 跨模块编译警告（影响 character 测试执行）
+
+以下警告来自其他模块，但影响 `cargo test` 整体执行：
+
+| 位置 | 问题 | 严重性 |
+|------|------|--------|
+| `battle/events.rs:114` | 未使用导入 `bevy::prelude::*` | P3 |
+| `equipment/definition.rs:266` | 未使用导入 `AttributeKind`, `ModifierOp` | P3 |
+| `equipment/equip.rs:429` | 未使用导入 `TagName` | P3 |
+| `inventory/container.rs:232` | 未使用导入 `InstanceIdCounter` | P3 |
+| `inventory/use_item.rs:193` | 未使用导入 `ItemInstance` | P3 |
+| `skill/preview.rs:142` | 未使用导入 `GameplayTags` | P3 |
+| `core/registry_loader.rs:163` | 字段 `value` 未被读取 | P3 |
+| `battle/record.rs:450` | 非 snake_case 函数名 `战斗记录_最近N条` | P3 |
+| `inventory/use_item.rs:340,374` | 非 snake_case 函数名 | P3 |
+| `map/pathfinding/mod.rs:516` | 非 snake_case 函数名 `回溯路径_L形路径` | P3 |

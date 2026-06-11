@@ -206,12 +206,31 @@ impl Plugin for TraitPlugin {
 
 #[cfg(test)]
 mod tests {
+    // ================================================
+    // AI Self-Check (test_spec.md §13.1)
+    // ================================================
+    // ✅ 测试行为，不是实现
+    // ✅ 符合领域规则
+    // ✅ 测试是确定性的
+    // ✅ 使用标准测试数据
+    // ✅ 没有测试私有实现
+    // ✅ 没有生成不在范围内的测试
+    // ================================================
+
     use super::*;
     use crate::core::attribute::{AttributeKind, ModifierOp};
     use ron::de::from_bytes;
 
+    /// Test ID: CHR-TRT-001
+    /// Title: RON 反序列化 Trait 定义
+    ///
+    /// Given: 有效的 RON 字符串
+    /// When: 反序列化为 TraitDefinition
+    /// Then: 所有字段正确解析
+    ///
+    /// Assertions: id, trigger, effects 正确
     #[test]
-    fn ron_反序列化_trait定义() {
+    fn ron_deserialize_trait_definition() {
         let ron_str = r#"
             (
                 id: "warrior_mastery",
@@ -262,16 +281,36 @@ mod tests {
         assert_eq!(mods[0].value, 5.0);
     }
 
+    /// Test ID: CHR-TRT-002
+    /// Title: TraitCollection 查询已注册标签
+    ///
+    /// Given: 包含 warrior_mastery 和 heavy_armor 的 TraitCollection
+    /// When: 查询 has()
+    /// Then: 正确判断存在性
+    ///
+    /// Assertions: has() 返回正确的 bool
     #[test]
-    fn trait_collection_查询() {
+    fn trait_collection_query() {
+        // Given
         let collection = TraitCollection::new(vec!["warrior_mastery".into(), "heavy_armor".into()]);
+
+        // When & Then
         assert!(collection.has("warrior_mastery"));
         assert!(collection.has("heavy_armor"));
         assert!(!collection.has("mage_mastery"));
     }
 
+    /// Test ID: CHR-TRT-003
+    /// Title: apply_passive_traits 授予标签和修饰符
+    ///
+    /// Given: 包含 Passive trait 的 Registry 和 Collection
+    /// When: 调用 apply_passive_traits()
+    /// Then: 正确授予 GameplayTag 和 AttributeModifier
+    ///
+    /// Assertions: tags 包含 WARRIOR/MELEE, modifiers[0].value == 2.0
     #[test]
-    fn apply_passive_traits_授予标签和修饰符() {
+    fn apply_passive_traits_grants_tags_and_modifiers() {
+        // Given
         let mut registry = TraitRegistry::default();
         registry.traits.insert(
             "warrior_mastery".into(),
@@ -294,16 +333,28 @@ mod tests {
 
         let handlers = TraitEffectHandlerRegistry::with_defaults();
         let collection = TraitCollection::new(vec!["warrior_mastery".into()]);
+
+        // When
         let (tags, modifiers) = apply_passive_traits(&collection, &registry, &handlers);
 
+        // Then
         assert!(tags.has(GameplayTag::WARRIOR));
         assert!(tags.has(GameplayTag::MELEE));
         assert_eq!(modifiers.len(), 1);
         assert_eq!(modifiers[0].value, 2.0);
     }
 
+    /// Test ID: CHR-TRT-004
+    /// Title: apply_passive_traits 跳过非 Passive 触发
+    ///
+    /// Given: 包含 OnAttack trait 的 Registry 和 Collection
+    /// When: 调用 apply_passive_traits()
+    /// Then: 无标签授予，无修饰符
+    ///
+    /// Assertions: !tags.has(FIRE), modifiers.is_empty()
     #[test]
-    fn apply_passive_traits_跳过非被动触发() {
+    fn apply_passive_traits_skips_non_passive_trigger() {
+        // Given
         let mut registry = TraitRegistry::default();
         registry.traits.insert(
             "on_attack_trait".into(),
@@ -318,14 +369,26 @@ mod tests {
 
         let handlers = TraitEffectHandlerRegistry::with_defaults();
         let collection = TraitCollection::new(vec!["on_attack_trait".into()]);
+
+        // When
         let (tags, modifiers) = apply_passive_traits(&collection, &registry, &handlers);
 
+        // Then
         assert!(!tags.has(GameplayTag::FIRE));
         assert!(modifiers.is_empty());
     }
 
+    /// Test ID: CHR-TRT-005
+    /// Title: RON 反序列化 OnTurnStart 触发型 Trait
+    ///
+    /// Given: 有效的 RON 字符串（OnTurnStart 触发）
+    /// When: 反序列化为 TraitDefinition
+    /// Then: 所有字段正确解析
+    ///
+    /// Assertions: id, trigger, effects.len() 正确
     #[test]
-    fn ron_反序列化_触发型trait() {
+    fn ron_deserialize_trait_with_trigger() {
+        // Given
         let ron_str = r#"
             (
                 id: "leader_aura",
@@ -337,14 +400,27 @@ mod tests {
                 ],
             )
         "#;
+
+        // When
         let def: TraitDefinition = from_bytes(ron_str.as_bytes()).unwrap();
+
+        // Then
         assert_eq!(def.id, "leader_aura");
         assert_eq!(def.trigger, TraitTrigger::OnTurnStart);
         assert_eq!(def.effects.len(), 1);
     }
 
+    /// Test ID: CHR-TRT-006
+    /// Title: apply_passive_traits 独立 source_id
+    ///
+    /// Given: 包含多个 Passive trait 的 Registry 和 Collection
+    /// When: 调用 apply_passive_traits()
+    /// Then: 每个修饰符有独立的 source_id
+    ///
+    /// Assertions: modifiers[0].source != modifiers[1].source
     #[test]
-    fn apply_passive_traits_独立source_id() {
+    fn apply_passive_traits_independent_source_id() {
+        // Given
         let mut registry = TraitRegistry::default();
         registry.traits.insert(
             "trait_a".into(),
@@ -374,9 +450,14 @@ mod tests {
                 })],
             },
         );
+
         let handlers = TraitEffectHandlerRegistry::with_defaults();
         let collection = TraitCollection::new(vec!["trait_a".into(), "trait_b".into()]);
+
+        // When
         let (_tags, modifiers) = apply_passive_traits(&collection, &registry, &handlers);
+
+        // Then
         assert_eq!(modifiers.len(), 2);
         assert_ne!(modifiers[0].source, modifiers[1].source);
         assert_eq!(modifiers[0].source, ModifierSource::trait_source(0));
