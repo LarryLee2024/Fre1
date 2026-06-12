@@ -388,7 +388,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn battle_record_log_damage() {
+    fn 战斗记录_记录伤害() {
         let mut record = BattleRecord::default();
         record.record(BattleEntry::DamageApplied {
             target: Entity::from_bits(1),
@@ -407,7 +407,7 @@ mod tests {
     }
 
     #[test]
-    fn battle_record_query_by_entity() {
+    fn 战斗记录_按实体查询() {
         let e1 = Entity::from_bits(1);
         let e2 = Entity::from_bits(2);
         let attacker = Entity::from_bits(3);
@@ -448,7 +448,7 @@ mod tests {
     }
 
     #[test]
-    fn battle_record_recent_n_entries() {
+    fn 战斗记录_最近N条记录() {
         let mut record = BattleRecord::default();
         for i in 0..10 {
             record.record(BattleEntry::TurnStarted { turn: i });
@@ -463,7 +463,7 @@ mod tests {
     }
 
     #[test]
-    fn battle_record_clear() {
+    fn 战斗记录_清空() {
         let mut record = BattleRecord::default();
         record.record(BattleEntry::TurnStarted { turn: 1 });
         record.turn_number = 1;
@@ -473,7 +473,7 @@ mod tests {
     }
 
     #[test]
-    fn battle_record_turn_start_updates_turn_number() {
+    fn 战斗记录_回合开始更新回合数() {
         let mut record = BattleRecord::default();
         record.turn_number = 5;
         record.record(BattleEntry::TurnStarted { turn: 5 });
@@ -481,7 +481,7 @@ mod tests {
     }
 
     #[test]
-    fn battle_record_query_by_turn() {
+    fn 战斗记录_按回合查询() {
         let mut record = BattleRecord::default();
         record.record(BattleEntry::TurnStarted { turn: 1 });
         record.record(BattleEntry::DamageApplied {
@@ -513,7 +513,7 @@ mod tests {
     }
 
     #[test]
-    fn battle_record_entity_stats() {
+    fn 战斗记录_实体统计() {
         let attacker = Entity::from_bits(1);
         let target = Entity::from_bits(2);
         let mut record = BattleRecord::default();
@@ -558,7 +558,7 @@ mod tests {
     }
 
     #[test]
-    fn battle_record_serialize_deserialize() {
+    fn 战斗记录_序列化反序列化() {
         let mut record = BattleRecord::default();
         record.record(BattleEntry::TurnStarted { turn: 1 });
         record.record(BattleEntry::DamageApplied {
@@ -673,7 +673,7 @@ mod tests {
     }
 
     #[test]
-    fn battle_record_damage_breakdown() {
+    fn 战斗记录_伤害分解() {
         let mut record = BattleRecord::default();
         record.record(BattleEntry::DamageApplied {
             target: Entity::from_bits(1),
