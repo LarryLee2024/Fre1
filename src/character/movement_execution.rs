@@ -62,6 +62,8 @@ fn execute_movement(
     let move_range = attrs.get(AttributeKind::MoveRange) as u32;
     let calculator = cost_registry.resolve_from_tags(tags);
 
+    // 使用 find_reachable_tiles 计算可达范围，但不依赖 OccupancyGrid 验证目标
+    // （OccupancyGrid 可能在 show_move_range 和此系统之间被更新）
     let reachable = find_reachable_tiles(
         start_coord,
         move_range,
@@ -73,31 +75,38 @@ fn execute_movement(
         calculator,
     );
 
-    // 验证目标在可达范围内
-    if !reachable.contains_key(&intent.target_coord) {
-        return;
-    }
+    // 直接尝试寻路，如果可达范围包含目标则使用，否则直接寻路
+    let path = if reachable.contains_key(&intent.target_coord) {
+        reconstruct_path(
+            start_coord,
+            intent.target_coord,
+            &reachable,
+            move_range,
+            map,
+            terrain_grid,
+            terrain_registry,
+            calculator,
+        )
+    } else {
+        // OccupancyGrid 可能已更新，直接用曼哈顿距离+地形成本寻路
+        // 不依赖 OccupancyGrid 的可达范围计算
+        find_path_ignore_occupancy(
+            start_coord,
+            intent.target_coord,
+            map,
+            terrain_grid,
+            terrain_registry,
+            calculator,
+        )
+    };
 
-    let path = reconstruct_path(
-        start_coord,
-        intent.target_coord,
-        &reachable,
-        move_range,
-        map,
-        terrain_grid,
-        terrain_registry,
-        calculator,
-    );
-
-    // 验证路径有效性：非空且终点正确
-    // 注意：reconstruct_path 返回的路径不包含起点，只包含从起点之后的格子
+    // 验证路径有效性
     if path.is_empty() || path.last() != Some(&intent.target_coord) {
         return;
     }
 
     spawn_path_arrows(commands, map, &path);
 
-    // 使用固定的移动速度，每格 0.15 秒
     let move_speed = 0.15_f32;
 
     commands.entity(intent.entity).insert(MovingUnit {
@@ -110,4 +119,71 @@ fn execute_movement(
             IntentSource::Ai => TurnPhase::ExecuteAction,
         },
     });
+}
+
+/// 简单寻路：不考虑单位占用，只考虑地形和移动范围
+/// 用于 OccupancyGrid 已被更新但 show_move_range 计算时还未更新的情况
+fn find_path_ignore_occupancy(
+    start: IVec2,
+    target: IVec2,
+    map: &GameMap,
+    terrain_grid: &TerrainGrid,
+    terrain_registry: &TerrainRegistry,
+    calculator: &dyn crate::map::TerrainCostCalculator,
+) -> Vec<IVec2> {
+    use std::collections::{HashMap, VecDeque};
+
+    let directions = [
+        IVec2::new(1, 0),
+        IVec2::new(-1, 0),
+        IVec2::new(0, 1),
+        IVec2::new(0, -1),
+    ];
+
+    let mut came_from: HashMap<IVec2, IVec2> = HashMap::new();
+    let mut cost_so_far: HashMap<IVec2, u32> = HashMap::new();
+    let mut queue = VecDeque::new();
+
+    cost_so_far.insert(start, 0);
+    queue.push_back((start, 0u32));
+
+    while let Some((pos, current_cost)) = queue.pop_front() {
+        if pos == target {
+            break;
+        }
+
+        for dir in &directions {
+            let next = pos + *dir;
+            if !map.is_in_bounds(next) {
+                continue;
+            }
+
+            let terrain_id = terrain_grid.get(next).unwrap_or("plain");
+            let base_cost = terrain_registry.get(terrain_id).and_then(|d| d.move_cost);
+            let cost = match calculator.cost(terrain_id, base_cost) {
+                Some(c) => c,
+                None => continue,
+            };
+
+            let new_cost = current_cost + cost;
+            if !cost_so_far.contains_key(&next) || new_cost < *cost_so_far.get(&next).unwrap() {
+                cost_so_far.insert(next, new_cost);
+                came_from.insert(next, pos);
+                queue.push_back((next, new_cost));
+            }
+        }
+    }
+
+    // 重建路径
+    let mut path = Vec::new();
+    let mut current = target;
+    while current != start {
+        path.push(current);
+        match came_from.get(&current) {
+            Some(&prev) => current = prev,
+            None => return Vec::new(),
+        }
+    }
+    path.reverse();
+    path
 }

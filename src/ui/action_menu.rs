@@ -1,7 +1,10 @@
 // 行动菜单模块：弹出式行动菜单，使用 SkillSlots 动态生成按钮
 // 使用 Widget 库构建，按钮交互通过 UiCommand Message 发出
 
-use crate::skill::SkillRegistry;
+use crate::buff::ActiveBuffs;
+use crate::character::{GridPosition, Selected, TraitCollection, TraitRegistry, UnitName};
+use crate::core::attribute::{AttributeKind, Attributes};
+use crate::skill::{SkillRegistry, SkillSlots};
 use crate::ui::events::UiCommand;
 use crate::ui::focus::BlocksGameInput;
 use crate::ui::theme::UiTheme;
@@ -177,18 +180,99 @@ fn on_enter_action_menu(
     mut menu_entity: ResMut<ActionMenuEntity>,
     skill_registry: Res<SkillRegistry>,
     theme: Res<UiTheme>,
+    selected_query: Query<Entity, With<Selected>>,
+    units: Query<(
+        Entity,
+        &UnitName,
+        &Attributes,
+        &SkillSlots,
+        &ActiveBuffs,
+        Option<&TraitCollection>,
+        Option<&crate::equipment::EquipmentSlots>,
+        Option<&crate::inventory::container::Container>,
+        &GridPosition,
+    )>,
+    trait_registry: Res<TraitRegistry>,
+    _equipment_registry: Res<crate::equipment::EquipmentRegistry>,
+    _item_registry: Res<crate::inventory::definition::ItemRegistry>,
 ) {
-    if view.name.is_empty() {
+    // 优先使用 SelectedUnitView，如果为空则从 Selected 实体构建
+    let mut fallback_view = SelectedUnitView::default();
+    let (grid_coord, view_ref) = if !view.name.is_empty() {
+        (view.grid_coord, view.into_inner())
+    } else if let Ok(entity) = selected_query.single() {
+        if let Ok((
+            _entity,
+            name,
+            attrs,
+            skill_slots,
+            buffs,
+            trait_collection,
+            _equipment_slots,
+            _container,
+            grid_pos,
+        )) = units.get(entity)
+        {
+            fallback_view.name = name.0.clone();
+            fallback_view.grid_coord = grid_pos.coord;
+            fallback_view.is_selected = true;
+            fallback_view.hp = attrs.get(AttributeKind::Hp) as i32;
+            fallback_view.max_hp = attrs.get(AttributeKind::MaxHp) as i32;
+            fallback_view.mp = attrs.get(AttributeKind::Mp) as i32;
+            fallback_view.max_mp = attrs.get(AttributeKind::MaxMp) as i32;
+            fallback_view.stamina = attrs.get(AttributeKind::Stamina) as i32;
+            fallback_view.max_stamina = attrs.get(AttributeKind::MaxStamina) as i32;
+            fallback_view.skills = skill_slots
+                .skill_ids
+                .iter()
+                .filter_map(|id| {
+                    skill_registry.get(id).map(|sd| crate::ui::view_models::SkillEntry {
+                        name: sd.name.clone(),
+                        id: id.to_string(),
+                        cost_mp: sd.cost_mp,
+                        range: sd.range,
+                        cooldown: sd.cooldown,
+                        description: sd.description.clone(),
+                    })
+                })
+                .collect();
+            fallback_view.traits = trait_collection
+                .map(|tc| {
+                    tc.trait_ids()
+                        .iter()
+                        .filter_map(|tid| {
+                            trait_registry.get(tid).map(|td| crate::ui::view_models::TraitEntry {
+                                name: td.name.clone(),
+                                description: td.description.clone(),
+                            })
+                        })
+                        .collect()
+                })
+                .unwrap_or_default();
+            fallback_view.buffs = buffs
+                .iter()
+                .map(|inst| crate::ui::view_models::BuffEntry {
+                    name: inst.name.clone(),
+                    remaining_turns: inst.remaining_turns,
+                    is_buff: inst.is_buff,
+                })
+                .collect();
+            (grid_pos.coord, &fallback_view)
+        } else {
+            return;
+        }
+    } else {
         return;
-    }
-    let unit_world = map.coord_to_world(view.grid_coord);
+    };
+
+    let unit_world = map.coord_to_world(grid_coord);
     if let Ok((camera, cam_transform)) = camera_query.single() {
         if let Ok(screen_pos) = camera.world_to_viewport(cam_transform, unit_world.extend(1.0)) {
             spawn_action_menu(
                 &mut commands,
                 screen_pos.x,
                 screen_pos.y,
-                &view,
+                view_ref,
                 &mut menu_entity,
                 &skill_registry,
                 &theme,

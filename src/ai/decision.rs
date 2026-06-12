@@ -73,7 +73,7 @@ pub fn enemy_ai_system(
         return;
     }
 
-    // AI 计时器
+    // AI 计时器，延迟决策，让玩家能看见 AI 的"思考"过程
     ai_timer.timer.tick(time.delta());
     if !ai_timer.timer.just_finished() {
         return;

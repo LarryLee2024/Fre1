@@ -2,6 +2,7 @@
 
 use crate::map::GameMap;
 use crate::turn::TurnPhase;
+use bevy::picking::prelude::Pickable;
 use bevy::prelude::*;
 
 use super::{GridPosition, MovingUnit, PathArrow};
@@ -58,6 +59,7 @@ fn spawn_line_segment(commands: &mut Commands, start: Vec3, end: Vec3) {
         },
         Transform::from_translation(mid).with_rotation(Quat::from_rotation_z(angle)),
         PathArrow,
+        Pickable::IGNORE,
     ));
 }
 
@@ -76,6 +78,7 @@ fn spawn_arrow_head(commands: &mut Commands, from: Vec3, to: Vec3) {
             .with_rotation(Quat::from_rotation_z(angle))
             .with_scale(Vec3::new(1.0, 0.5, 1.0)), // 压扁成箭头形状
         PathArrow,
+        Pickable::IGNORE,
     ));
 }
 

@@ -1,16 +1,19 @@
 # AGENTS.md — Bevy SRPG Project
 
 ## Project Overview
-Bevy 0.18+ tactical RPG with strict architecture. All game logic follows ECS patterns with enforced separation of concerns.
+Bevy 0.18.1 tactical RPG (回合制战棋) with strict ECS architecture. All game logic follows ECS patterns with enforced separation of concerns.
 
 ## Key Commands
 ```bash
 cargo build                    # Build project
 cargo test                     # Run all tests
-cargo test rule                # Run rule tests only
+cargo test rule                # Run rule tests only (proptest)
 cargo test feature             # Run feature tests only
 cargo test scenario            # Run scenario tests only
+cargo test golden              # Run golden/snapshot tests (insta)
+cargo test system              # Run ECS system integration tests
 cargo test -- --test-threads=1 # Sequential tests (if needed)
+cargo run --features dev       # Run with dev tools (file_watcher, debug_stepping)
 ```
 
 ## Architecture Rules (Non-Negotiable)
@@ -64,22 +67,25 @@ Modifier → Attribute Resolver → Final Stat
 ```
 tests/
 ├── common/          # Shared test utilities
-│   ├── fixtures.rs  # UnitBuilder with standard units (Unit_001/002/003)
+│   ├── fixtures.rs  # UnitBuilder with standard units
 │   ├── app_builder.rs
 │   ├── assertions.rs
 │   └── combat_helpers.rs
 ├── rule/            # Formula/logic tests (proptest)
 ├── feature/         # Complete feature tests
-├── scenario/        # Player flow tests
+├── scenario/        # Player flow tests (BDD style)
 ├── golden/          # Snapshot tests (insta)
 └── system/          # ECS system integration tests
 ```
 
 ### Standard Test Units
 Use `UnitBuilder` from `tests/common/fixtures.rs`:
-- `Unit_001`: Warrior (HP=100, ATK=30, DEF=10, SPD=10)
-- `Unit_002`: Mage (HP=80, ATK=40, DEF=5, SPD=12)
-- `Unit_003`: Tank (HP=150, ATK=20, DEF=20, SPD=5)
+- `UnitBuilder::warrior()` —战士 (Might=5, Vitality=5, Agility=6)
+- `UnitBuilder::mage()` — 法师 (Intelligence=8, Willpower=6)
+- `UnitBuilder::goblin()` — 哥布林 (low stats, Enemy faction)
+- `UnitBuilder::unit_001()` — 标准战士 (HP=100, ATK=30, DEF=10, SPD=10)
+- `UnitBuilder::unit_002()` — 标准法师 (HP=80, ATK=40, DEF=5, SPD=12)
+- `UnitBuilder::unit_003()` — 标准坦克 (HP=150, ATK=20, DEF=20, SPD=5)
 
 ### Test Rules
 - All tests must be deterministic (Seed=42 if random)

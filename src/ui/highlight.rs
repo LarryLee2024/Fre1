@@ -12,6 +12,7 @@ use crate::map::TerrainRegistry;
 use crate::map::runtime::{OccupancyGrid, TerrainGrid};
 use crate::skill::SkillSlots;
 use crate::ui::theme::UiTheme;
+use bevy::picking::prelude::Pickable;
 use bevy::prelude::*;
 
 /// 重新导出 clear_markers，方便调用方统一从 highlight 模块导入
@@ -85,6 +86,7 @@ pub fn show_move_range(
             Transform::from_xyz(world_pos.x, world_pos.y, 0.5),
             MovableRange,
             GridPosition { coord },
+            Pickable::IGNORE,
         ));
     }
 }
@@ -119,6 +121,7 @@ pub fn show_attack_range(
                 Transform::from_xyz(world_pos.x, world_pos.y, 0.6),
                 AttackRange,
                 GridPosition { coord },
+                Pickable::IGNORE,
             ));
         }
     }
@@ -141,5 +144,6 @@ pub fn spawn_selection_highlight(
         },
         Transform::from_xyz(world_pos.x, world_pos.y, 0.8),
         SelectionHighlight,
+        Pickable::IGNORE,
     ));
 }
