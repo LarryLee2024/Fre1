@@ -1,15 +1,14 @@
 use crate::battle::CombatIntent;
 use crate::battle::manhattan_distance;
-use crate::character::{
-    AiBehaviorId, Dead, Faction, GridPosition, MovingUnit, Unit, UnitName, spawn_path_arrows,
-};
+use crate::character::{AiBehaviorId, Dead, Faction, GridPosition, Unit, UnitName};
 use crate::core::attribute::{AttributeKind, Attributes};
 use crate::core::tag::GameplayTags;
 use crate::map::TerrainRegistry;
 use crate::map::runtime::{OccupancyGrid, TerrainGrid};
-use crate::map::{GameMap, TerrainCostRegistry, find_reachable_tiles, reconstruct_path};
+use crate::map::{GameMap, TerrainCostRegistry, find_reachable_tiles};
 use crate::skill::{SkillCooldowns, SkillRegistry, SkillSlots, effective_skill_range};
 use crate::turn::{AiTimer, TurnOrder, TurnPhase};
+use crate::ui::events::{IntentSource, MovementIntent};
 use bevy::prelude::*;
 
 use super::behavior::AiBehaviorRegistry;
@@ -170,26 +169,7 @@ pub fn enemy_ai_system(
         .find(|s| manhattan_distance(best_coord, s.coord) <= effective_range)
         .map(|s| s.entity);
 
-    // 移动单位（动画移动）
-    let path = if best_coord != snapshot.coord {
-        let path = reconstruct_path(
-            snapshot.coord,
-            best_coord,
-            &reachable,
-            snapshot.mov,
-            &map,
-            &terrain_grid,
-            &terrain_registry,
-            calculator,
-        );
-        spawn_path_arrows(&mut commands, &map, &path);
-        path
-    } else {
-        vec![]
-    };
-
     // 设置 CombatIntent，让 Effect Pipeline 处理攻击（不变量1/2合规）
-    // 冷却设置和 acted 标记由 Effect Pipeline 统一处理，AI 不直接执行效果
     if let Some(target_entity) = attack_target {
         let target_coord = snapshots
             .iter()
@@ -201,36 +181,31 @@ pub fn enemy_ai_system(
         combat_intent.target_coord = Some(target_coord);
         combat_intent.skill_id = Some(skill_id.to_string());
 
-        if path.is_empty() {
-            next_phase.set(TurnPhase::ExecuteAction);
-        } else {
-            commands.entity(snapshot.entity).insert(MovingUnit {
-                path,
-                current_index: 0,
-                speed: 0.15,
-                elapsed: 0.0,
-                next_phase: TurnPhase::ExecuteAction,
+        if best_coord != snapshot.coord {
+            // 发送移动意图消息，由统一执行系统处理
+            commands.write_message(MovementIntent {
+                entity: snapshot.entity,
+                target_coord: best_coord,
+                source: IntentSource::Ai,
             });
+        } else {
+            next_phase.set(TurnPhase::ExecuteAction);
         }
     } else {
         // 没有攻击目标，待机
-        // 设置 source_entity 以便 Effect Pipeline 统一标记 acted
         combat_intent.source_entity = Some(snapshot.entity);
         combat_intent.target_coord = None;
         combat_intent.skill_id = None;
 
-        if path.is_empty() {
-            // 不移动，路由到下一个单位
-            // 由 route_after_action 处理
-            next_phase.set(TurnPhase::WaitAction);
-        } else {
-            commands.entity(snapshot.entity).insert(MovingUnit {
-                path,
-                current_index: 0,
-                speed: 0.15,
-                elapsed: 0.0,
-                next_phase: TurnPhase::WaitAction,
+        if best_coord != snapshot.coord {
+            // 发送移动意图消息，由统一执行系统处理
+            commands.write_message(MovementIntent {
+                entity: snapshot.entity,
+                target_coord: best_coord,
+                source: IntentSource::Ai,
             });
+        } else {
+            next_phase.set(TurnPhase::WaitAction);
         }
     }
 }

@@ -18,3 +18,5 @@ mod skill;
 mod traits;
 #[path = "feature/turn.rs"]
 mod turn;
+#[path = "feature/unified_movement.rs"]
+mod unified_movement;

@@ -4,6 +4,7 @@
 mod components;
 mod marker;
 mod movement;
+mod movement_execution;
 mod spawn;
 mod template;
 mod traits;
@@ -21,6 +22,7 @@ use bevy::prelude::*;
 pub use components::*;
 pub use marker::*;
 pub use movement::*;
+pub use movement_execution::*;
 pub use spawn::TurnOrderLabel;
 pub use traits::{
     TraitCollection, TraitData, TraitEffect, TraitEffectHandlerRegistry, TraitPlugin,
@@ -113,6 +115,12 @@ impl Plugin for CharacterPlugin {
         .add_systems(
             Update,
             update_turn_order_label.run_if(in_state(AppState::InGame)),
+        )
+        // 统一移动执行系统：监听 MovementIntent 消息
+        .add_message::<crate::ui::events::MovementIntent>()
+        .add_systems(
+            PostUpdate,
+            movement_execution::movement_execution_system.run_if(in_state(AppState::InGame)),
         );
     }
 }

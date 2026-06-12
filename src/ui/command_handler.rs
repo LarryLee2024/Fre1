@@ -2,20 +2,14 @@
 // 所有 UI→Logic 的交互都通过此模块，UI 层不再直接修改 CombatIntent/TurnPhase
 
 use crate::battle::{CombatIntent, PrevPosition, manhattan_distance};
-use crate::character::{
-    AttackRange, Faction, GridPosition, MovableRange, MovingUnit, Selected, SelectionHighlight,
-    Unit, spawn_path_arrows,
-};
+use crate::character::{AttackRange, Faction, GridPosition, MovableRange, Selected, SelectionHighlight, Unit};
 use crate::core::attribute::{AttributeKind, Attributes};
 use crate::core::tag::GameplayTags;
-use crate::map::{
-    GameMap, OccupancyGrid, TerrainCostRegistry, TerrainGrid, TerrainRegistry,
-    find_reachable_tiles, reconstruct_path,
-};
+use crate::map::{GameMap, OccupancyGrid, TerrainCostRegistry, TerrainGrid, TerrainRegistry};
 use crate::skill::{BASIC_ATTACK_ID, SkillRegistry, SkillSlots, effective_skill_range};
 use crate::turn::{ForceEndTurn, TurnPhase};
 use crate::ui::action_menu::{ActionMenuEntity, despawn_action_menu};
-use crate::ui::events::UiCommand;
+use crate::ui::events::{IntentSource, MovementIntent, UiCommand};
 use crate::ui::highlight::{
     clear_markers, clear_selection, show_attack_range, show_move_range, spawn_selection_highlight,
 };
@@ -88,7 +82,6 @@ pub fn handle_ui_commands(
                     if let Ok((_, _, sel_gp, _, _, _, _)) = units.get(selected_entity) {
                         if sel_gp.coord == *coord {
                             *prev_coord = Some(sel_gp.coord);
-                            // 同步写入 PrevPosition 资源，保持其他系统兼容
                             commands.insert_resource(PrevPosition {
                                 coord: Some(sel_gp.coord),
                             });
@@ -99,7 +92,6 @@ pub fn handle_ui_commands(
                                 commands.entity(h).try_despawn();
                             }
                             spawn_selection_highlight(&mut commands, &map, sel_gp.coord, &theme);
-                            // 进入 ActionMenu，由 on_enter_action_menu 系统自动弹出菜单
                             next_phase.set(TurnPhase::ActionMenu);
                             return;
                         }
@@ -112,49 +104,17 @@ pub fn handle_ui_commands(
 
                 if is_movable {
                     if let Ok(selected_entity) = selected_query.single() {
-                        if let Ok((_, _, old_gp, _, _, _, tags)) = units.get(selected_entity) {
+                        if let Ok((_, _, old_gp, _, _, _, _)) = units.get(selected_entity) {
                             *prev_coord = Some(old_gp.coord);
-                            // 同步写入 PrevPosition 资源，保持其他系统兼容
                             commands.insert_resource(PrevPosition {
                                 coord: Some(old_gp.coord),
                             });
 
-                            let calculator = cost_registry.resolve_from_tags(tags);
-                            let mov = units
-                                .get(selected_entity)
-                                .map(|(_, _, _, _, attrs, _, _)| {
-                                    attrs.get(AttributeKind::MoveRange) as u32
-                                })
-                                .unwrap_or(3);
-                            let reachable = find_reachable_tiles(
-                                old_gp.coord,
-                                mov,
-                                &map,
-                                &terrain.0,
-                                &terrain.1,
-                                &occupancy,
-                                Some(selected_entity),
-                                calculator,
-                            );
-                            let path = reconstruct_path(
-                                old_gp.coord,
-                                *coord,
-                                &reachable,
-                                mov,
-                                &map,
-                                &terrain.0,
-                                &terrain.1,
-                                calculator,
-                            );
-
-                            spawn_path_arrows(&mut commands, &map, &path);
-
-                            commands.entity(selected_entity).insert(MovingUnit {
-                                path,
-                                current_index: 0,
-                                speed: 0.15,
-                                elapsed: 0.0,
-                                next_phase: TurnPhase::ActionMenu,
+                            // 发送移动意图消息，由统一执行系统处理
+                            commands.write_message(MovementIntent {
+                                entity: selected_entity,
+                                target_coord: *coord,
+                                source: IntentSource::Player,
                             });
                         }
                         for h in &highlights {

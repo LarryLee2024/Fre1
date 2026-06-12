@@ -58,9 +58,19 @@ impl From<TerrainDefRon> for TerrainDef {
 }
 
 /// 地形注册表资源
-#[derive(Resource, Default)]
+#[derive(Resource)]
 pub struct TerrainRegistry {
     pub terrains: HashMap<String, TerrainDef>,
+}
+
+impl Default for TerrainRegistry {
+    fn default() -> Self {
+        let mut registry = Self {
+            terrains: HashMap::new(),
+        };
+        registry.register_defaults();
+        registry
+    }
 }
 
 impl TerrainRegistry {
