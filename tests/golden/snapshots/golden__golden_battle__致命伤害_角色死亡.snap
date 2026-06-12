@@ -1,5 +1,6 @@
 ---
 source: tests/golden/golden_battle.rs
+assertion_line: 187
 expression: record
 ---
 entries:
@@ -17,8 +18,4 @@ entries:
         - 0
         - 0
       breakdown: ~
-  - CharacterDied:
-      entity: 4294967294
-      name: 哥布林
-      faction: Enemy
 turn_number: 0

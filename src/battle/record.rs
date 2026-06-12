@@ -384,6 +384,7 @@ pub fn record_character_died(
 
 #[cfg(test)]
 mod tests {
+    use bevy::prelude::*;
     use super::*;
 
     #[test]

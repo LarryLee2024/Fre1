@@ -130,6 +130,7 @@ impl ActiveBuffs {
 
 #[cfg(test)]
 mod tests {
+    use bevy::prelude::*;
     use super::*;
 
     // ── ActiveBuffs 基础操作 ──

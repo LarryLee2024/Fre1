@@ -115,6 +115,7 @@ fn trigger_traits(
 
 #[cfg(test)]
 mod tests {
+    use bevy::prelude::*;
     use super::*;
     use crate::character::{TraitData, TraitSource};
     use crate::core::attribute::{AttributeKind, AttributeModifierDef, ModifierOp};

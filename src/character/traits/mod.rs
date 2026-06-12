@@ -206,6 +206,7 @@ impl Plugin for TraitPlugin {
 
 #[cfg(test)]
 mod tests {
+    use bevy::prelude::*;
     // ================================================
     // AI Self-Check (test_spec.md §13.1)
     // ================================================

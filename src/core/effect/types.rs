@@ -140,6 +140,7 @@ pub fn calculate_damage_from_effect(
 
 #[cfg(test)]
 mod tests {
+    use bevy::prelude::*;
     // ================================================
     // Bevy SRPG AI宪法 v1.1 自检结果（测试专用）
     // ================================================

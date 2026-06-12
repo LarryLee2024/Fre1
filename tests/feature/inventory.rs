@@ -47,8 +47,28 @@ fn register_test_items(app: &mut App) {
         container_max_weight: None,
     };
 
+    let sword = ItemDef {
+        version: 1,
+        id: "iron_sword".into(),
+        name: "铁剑".into(),
+        description: String::new(),
+        item_type: ItemType::Equipment,
+        rarity: Rarity::Common,
+        tags: vec![],
+        stack_size: 1,
+        weight: 3.0,
+        modifiers: vec![],
+        traits: vec![],
+        requirements: vec![],
+        slot: None,
+        use_effects: vec![],
+        container_capacity: None,
+        container_max_weight: None,
+    };
+
     let mut item_reg = app.world_mut().resource_mut::<ItemRegistry>();
     item_reg.register(potion);
+    item_reg.register(sword);
 }
 
 /// 构建背包测试 App（InventoryPlugin 已注册 TransferItem/ItemTransferred 消息和 transfer_item_system）
@@ -158,10 +178,10 @@ fn 目标容器满时转移失败_物品留在源容器() {
     let potion_id = put_item_in_container(&mut app, bag_a, "potion_healing", 10);
 
     // B：容量为 0 的背包（0 表示无限制），但用 capacity=1 并塞满来测试
-    // 先创建容量为 1 的背包，放入一个物品占满
+    // 先创建容量为 1 的背包，放入一个铁剑（stack_size=1，与药水不可合并）占满
     let bag_b = spawn_container(&mut app, ContainerKind::Chest, 1, 100.0);
-    // 放入一个药水占位
-    put_item_in_container(&mut app, bag_b, "potion_healing", 1);
+    // 放入一把铁剑占位（铁剑 stack_size=1，与药水不可合并）
+    put_item_in_container(&mut app, bag_b, "iron_sword", 1);
 
     // 验证 B 已满
     {
@@ -169,7 +189,7 @@ fn 目标容器满时转移失败_物品留在源容器() {
         assert!(container_b.is_full(), "B 应已满");
     }
 
-    // 尝试从 A 转移到 B
+    // 尝试从 A 转移 5 瓶药水到 B（B 已有铁剑占位，容量已满且不可合并）
     app.world_mut().write_message(TransferItem {
         from_entity: bag_a,
         to_entity: bag_b,
@@ -178,16 +198,16 @@ fn 目标容器满时转移失败_物品留在源容器() {
     });
     app.update();
 
-    // 验证：A 中物品未减少
+    // 验证：A 中物品未减少（转移因目标容器满而被拒绝）
     {
         let container_a = app.world().get::<Container>(bag_a).unwrap();
         assert_eq!(container_a.stacks[0].count, 10, "A 中药水应未减少");
     }
 
-    // 验证：B 中仍只有 1 瓶
+    // 验证：B 中仍只有铁剑
     {
         let container_b = app.world().get::<Container>(bag_b).unwrap();
-        assert_eq!(container_b.stacks[0].count, 1, "B 中应仍只有 1 瓶");
+        assert_eq!(container_b.len(), 1, "B 中应仍有 1 个物品");
     }
 }
 
@@ -242,8 +262,8 @@ fn 纯函数transfer_item_成功转移() {
 
 /// INV-IT-004: 纯函数 transfer_item — 目标满返回 Full
 ///
-/// Given: from 容器有 10 瓶药水，to 容器容量=1 已满
-/// When:  调用 transfer_item 转移 5 个
+/// Given: from 容器有 10 瓶药水，to 容器容量=1 已满（铁剑占位，与药水不可合并）
+/// When:  调用 transfer_item 转移 5 瓶药水
 /// Then:  返回 Full，from 仍为 10
 #[test]
 fn 纯函数transfer_item_目标满返回full() {
@@ -266,18 +286,37 @@ fn 纯函数transfer_item_目标满返回full() {
         container_capacity: None,
         container_max_weight: None,
     });
+    registry.register(ItemDef {
+        version: 1,
+        id: "iron_sword".into(),
+        name: "铁剑".into(),
+        description: String::new(),
+        item_type: ItemType::Equipment,
+        rarity: Rarity::Common,
+        tags: vec![],
+        stack_size: 1,
+        weight: 3.0,
+        modifiers: vec![],
+        traits: vec![],
+        requirements: vec![],
+        slot: None,
+        use_effects: vec![],
+        container_capacity: None,
+        container_max_weight: None,
+    });
 
     let mut counter = InstanceIdCounter::default();
-    let def = registry.get("potion_healing").cloned().unwrap();
+    let potion_def = registry.get("potion_healing").cloned().unwrap();
+    let sword_def = registry.get("iron_sword").cloned().unwrap();
 
     let mut from = Container::new(ContainerKind::Backpack, 20, 100.0);
-    // 目标容量为 1，已有一个堆叠
+    // 目标容量为 1，用铁剑占满（铁剑与药水不可合并）
     let mut to = Container::new(ContainerKind::Chest, 1, 100.0);
 
-    let mut stack_from = ItemStack::from_def(&mut counter, &def, 10);
+    let mut stack_from = ItemStack::from_def(&mut counter, &potion_def, 10);
     from.add_stack(&mut stack_from, &registry);
 
-    let mut stack_to = ItemStack::from_def(&mut counter, &def, 1);
+    let mut stack_to = ItemStack::from_def(&mut counter, &sword_def, 1);
     to.add_stack(&mut stack_to, &registry);
 
     assert!(to.is_full());

@@ -158,8 +158,27 @@ fn register_transfer_items(app: &mut App) {
         container_capacity: None,
         container_max_weight: None,
     };
+    let iron_sword = ItemDef {
+        version: 1,
+        id: "iron_sword".into(),
+        name: "铁剑".into(),
+        description: String::new(),
+        item_type: ItemType::Equipment,
+        rarity: Rarity::Common,
+        tags: vec![],
+        stack_size: 1,
+        weight: 3.0,
+        modifiers: vec![],
+        traits: vec![],
+        requirements: vec![],
+        slot: None,
+        use_effects: vec![],
+        container_capacity: None,
+        container_max_weight: None,
+    };
     let mut item_reg = app.world_mut().resource_mut::<ItemRegistry>();
     item_reg.register(potion);
+    item_reg.register(iron_sword);
 }
 
 /// 生成一个带 Container 的 Entity（独立背包）
@@ -650,9 +669,12 @@ fn 转移成功后源减少目标增加() {
 
 /// SYS-010: 目标满时转移失败
 ///
-/// Given: 容器 A 有 10 瓶药水，容器 B 已满（capacity=1）
+/// Given: 容器 A 有 10 瓶药水，容器 B 已满（capacity=1，放了一把铁剑）
 /// When: 从 A 转移 5 瓶到 B
-/// Then: A 仍有 10 瓶，B 仍只有 1 瓶（转移失败）
+/// Then: A 仍有 10 瓶，B 仍只有 1 把铁剑（转移失败）
+///
+/// Note: 用铁剑填满 B 而非药水，因为 transfer_item 先检查 can_merge，
+///       同类物品堆叠会绕过 is_full() 检查。用不同物品确保 is_full() 正确拦截。
 #[test]
 fn 目标满时转移失败() {
     let mut app = combat_app();
@@ -662,9 +684,9 @@ fn 目标满时转移失败() {
     let bag_a = spawn_container(&mut app, ContainerKind::Backpack, 20, 100.0);
     let potion_id = put_item_in_container(&mut app, bag_a, "potion_healing", 10);
 
-    // B：容量为 1 的背包，放入一个物品占满
+    // B：容量为 1 的背包，放入一把铁剑（非可合并物品，与药水类型不同）
     let bag_b = spawn_container(&mut app, ContainerKind::Chest, 1, 100.0);
-    put_item_in_container(&mut app, bag_b, "potion_healing", 1);
+    put_item_in_container(&mut app, bag_b, "iron_sword", 1);
 
     // 确认 B 已满
     {
@@ -688,7 +710,7 @@ fn 目标满时转移失败() {
         "转移失败后源容器物品应未减少"
     );
 
-    // 验证：B 中仍只有 1 瓶
+    // 验证：B 中仍只有 1 把铁剑
     let container_b = app.world().get::<Container>(bag_b).unwrap();
     assert_eq!(
         container_b.stacks[0].count, 1,

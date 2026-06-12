@@ -105,6 +105,7 @@ pub fn remove_all_debuffs(
 
 #[cfg(test)]
 mod tests {
+    use bevy::prelude::*;
     use super::*;
     use crate::core::attribute::{AttributeKind, AttributeModifierDef, ModifierOp};
     use crate::core::tag::GameplayTag;
