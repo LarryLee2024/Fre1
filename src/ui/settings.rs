@@ -166,8 +166,7 @@ mod tests {
             restored.accessibility.color_blind_mode
         );
         assert!(
-            (original.accessibility.auto_battle_speed
-                - restored.accessibility.auto_battle_speed)
+            (original.accessibility.auto_battle_speed - restored.accessibility.auto_battle_speed)
                 .abs()
                 < f32::EPSILON
         );

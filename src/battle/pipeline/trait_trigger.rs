@@ -115,10 +115,10 @@ fn trigger_traits(
 
 #[cfg(test)]
 mod tests {
-    use bevy::prelude::*;
     use super::*;
     use crate::character::{TraitData, TraitSource};
     use crate::core::attribute::{AttributeKind, AttributeModifierDef, ModifierOp};
+    use bevy::prelude::*;
 
     fn make_test_registry() -> TraitRegistry {
         let mut registry = TraitRegistry::default();

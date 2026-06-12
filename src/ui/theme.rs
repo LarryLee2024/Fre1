@@ -269,14 +269,8 @@ mod tests {
         // Then - 颜色
         assert_eq!(theme.panel_bg, Color::srgba(0.1, 0.1, 0.1, 0.9));
         assert_eq!(theme.text_primary, Color::WHITE);
-        assert_eq!(
-            theme.faction_player_color,
-            Color::srgb(0.2, 0.5, 1.0)
-        );
-        assert_eq!(
-            theme.faction_enemy_color,
-            Color::srgb(1.0, 0.3, 0.2)
-        );
+        assert_eq!(theme.faction_player_color, Color::srgb(0.2, 0.5, 1.0));
+        assert_eq!(theme.faction_enemy_color, Color::srgb(1.0, 0.3, 0.2));
 
         // Then - 字号
         assert!((theme.font_large - 24.0).abs() < f32::EPSILON);

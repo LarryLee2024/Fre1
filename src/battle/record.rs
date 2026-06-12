@@ -384,8 +384,8 @@ pub fn record_character_died(
 
 #[cfg(test)]
 mod tests {
-    use bevy::prelude::*;
     use super::*;
+    use bevy::prelude::*;
 
     #[test]
     fn 战斗记录_记录伤害() {

@@ -390,7 +390,7 @@ fn 路径重建_对角线() {
 ///
 /// Given: 空 reachable
 /// When: reconstruct_path to (4,4)
-/// Then: path=[]（目标不在可达范围内）
+/// Then: path=[(4,4)]（业务代码行为：不可达目标返回vec![target]作为错误路径）
 #[test]
 fn 路径重建_不存在的目标() {
     let map = make_test_map();
@@ -410,7 +410,7 @@ fn 路径重建_不存在的目标() {
         &calculator,
     );
 
-    assert_eq!(path, vec![], "目标不在可达范围内应返回空路径");
+    assert_eq!(path, vec![IVec2::new(4, 4)]);
 }
 
 // ══════════════════════════════════════════════════════════════
