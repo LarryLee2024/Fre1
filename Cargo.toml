@@ -36,5 +36,6 @@ default = []
 dev = ["bevy/file_watcher", "bevy/bevy_dev_tools", "bevy/bevy_debug_stepping"]
 
 [dev-dependencies]
+bevy = { version = "0.18.1", features = ["2d"] }
 proptest = "1.5"
 insta = { version = "1.41", features = ["yaml", "redactions"] }
