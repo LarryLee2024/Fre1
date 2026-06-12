@@ -100,11 +100,7 @@ pub fn debug_ai_intent(
         let world_pos = map.coord_to_world(target_coord);
         let iso = Isometry2d::from_translation(world_pos);
         gizmos.rect_2d(iso, size, COLOR_ENEMY);
-        gizmos.rect_2d(
-            iso,
-            Vec2::splat(tile_size + 4.0),
-            COLOR_TARGET_OUTER,
-        );
+        gizmos.rect_2d(iso, Vec2::splat(tile_size + 4.0), COLOR_TARGET_OUTER);
     }
 }
 

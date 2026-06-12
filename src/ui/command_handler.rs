@@ -2,7 +2,9 @@
 // 所有 UI→Logic 的交互都通过此模块，UI 层不再直接修改 CombatIntent/TurnPhase
 
 use crate::battle::{CombatIntent, PrevPosition, manhattan_distance};
-use crate::character::{AttackRange, Faction, GridPosition, MovableRange, Selected, SelectionHighlight, Unit};
+use crate::character::{
+    AttackRange, Faction, GridPosition, MovableRange, Selected, SelectionHighlight, Unit,
+};
 use crate::core::attribute::{AttributeKind, Attributes};
 use crate::core::tag::GameplayTags;
 use crate::map::{GameMap, OccupancyGrid, TerrainCostRegistry, TerrainGrid, TerrainRegistry};

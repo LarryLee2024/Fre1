@@ -36,8 +36,9 @@ mod viewers;
 
 use bevy::prelude::*;
 use bevy::remote::RemotePlugin;
-use bevy_inspector_egui::bevy_egui::EguiContext;
+use bevy_inspector_egui::bevy_egui::{EguiContext, EguiPrimaryContextPass, PrimaryEguiContext};
 use bevy_inspector_egui::egui;
+use std::sync::Arc;
 
 /// 调试视图枚举
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Reflect, Default, Debug)]
@@ -99,6 +100,8 @@ impl Default for DebugPanelState {
 pub fn debug_hotkey_system(
     mut state: ResMut<DebugPanelState>,
     keyboard: Res<ButtonInput<KeyCode>>,
+    mut stepping: ResMut<bevy::ecs::schedule::Stepping>,
+    mut stepping_state: ResMut<stepping_control::DebugSteppingState>,
 ) {
     // F1: 切换主面板显隐
     if keyboard.just_pressed(KeyCode::F1) {
@@ -106,17 +109,34 @@ pub fn debug_hotkey_system(
         return;
     }
 
-    // F6/F7: Stepping 控制（无论面板是否打开都生效）
+    // F6: Stepping 暂停/继续 + 切换到 Stepping 视图
     if keyboard.just_pressed(KeyCode::F6) {
         state.active_view = DebugView::Stepping;
         if !state.show_panel {
             state.show_panel = true;
         }
+        stepping_state.toggle_count += 1;
+        if stepping.is_enabled() {
+            stepping.disable();
+        } else {
+            stepping_state.was_enabled = true;
+            stepping
+                .add_schedule(Update)
+                .add_schedule(FixedUpdate)
+                .add_schedule(PostUpdate)
+                .enable();
+        }
     }
+
+    // F7: Stepping 单步执行 + 切换到 Stepping 视图
     if keyboard.just_pressed(KeyCode::F7) {
         state.active_view = DebugView::Stepping;
         if !state.show_panel {
             state.show_panel = true;
+        }
+        if stepping.is_enabled() {
+            stepping.step_frame();
+            stepping_state.step_count += 1;
         }
     }
 
@@ -157,10 +177,11 @@ impl Plugin for DebugPlugin {
             .register_type::<stepping_control::DebugSteppingState>()
             // 快捷键处理
             .add_systems(PreUpdate, debug_hotkey_system)
-            // 调试按钮（始终显示在右下角）
-            .add_systems(PostUpdate, debug_toggle_button)
-            // 统一调试面板：PostUpdate 中运行
-            .add_systems(PostUpdate, unified_debug_panel)
+            // egui 系统必须在 EguiPrimaryContextPass 中运行
+            .add_systems(
+                EguiPrimaryContextPass,
+                (setup_egui_font, unified_debug_panel).chain(),
+            )
             // Gizmos 可视化：Last 中运行，确保在所有逻辑更新之后绘制
             .add_systems(
                 Last,
@@ -181,39 +202,48 @@ impl Plugin for DebugPlugin {
     }
 }
 
-/// 调试按钮系统：在屏幕右下角显示一个始终可见的按钮，点击打开调试面板
-fn debug_toggle_button(
-    mut state: ResMut<DebugPanelState>,
-    mut egui_ctx: Query<&mut EguiContext, With<bevy::window::PrimaryWindow>>,
+/// 设置 egui 中文字体（仅在首次运行时执行）
+fn setup_egui_font(
+    mut egui_ctx: Query<&mut EguiContext, With<PrimaryEguiContext>>,
+    mut initialized: Local<bool>,
 ) {
+    if *initialized {
+        return;
+    }
+    
     let Ok(mut ctx) = egui_ctx.single_mut() else {
         return;
     };
     let ctx = ctx.get_mut();
-
-    // 在屏幕右下角显示一个小按钮
-    egui::Area::new(egui::Id::new("debug_toggle_area"))
-        .fixed_pos(egui::pos2(
-            ctx.screen_rect().width() - 80.0,
-            ctx.screen_rect().height() - 40.0,
-        ))
-        .show(ctx, |ui| {
-            let label = if state.show_panel {
-                "Hide Debug"
-            } else {
-                "Show Debug"
-            };
-            if ui.button(label).clicked() {
-                state.show_panel = !state.show_panel;
+    
+    // 加载中文字体
+    let mut fonts = egui::FontDefinitions::default();
+    
+    // 读取字体文件
+    if let Ok(font_data) = std::fs::read("assets/fonts/Arial Unicode.ttf") {
+        fonts.font_data.insert(
+            "cn_font".to_string(),
+            Arc::new(egui::FontData::from_owned(font_data)),
+        );
+        
+        // 将中文字体添加到所有字体族中作为 fallback
+        for family in fonts.families.values_mut() {
+            if !family.contains(&"cn_font".to_string()) {
+                family.push("cn_font".to_string());
             }
-        });
+        }
+        
+        ctx.set_fonts(fonts);
+    }
+    
+    *initialized = true;
 }
 
 /// 统一调试面板系统
 #[allow(clippy::too_many_arguments)]
 fn unified_debug_panel(
     mut state: ResMut<DebugPanelState>,
-    mut egui_ctx: Query<&mut EguiContext, With<bevy::window::PrimaryWindow>>,
+    mut egui_ctx: Query<&mut EguiContext, With<PrimaryEguiContext>>,
     mut stepping: ResMut<bevy::ecs::schedule::Stepping>,
     mut stepping_state: ResMut<stepping_control::DebugSteppingState>,
     mut overlay: ResMut<overlay::DebugOverlay>,
@@ -254,27 +284,6 @@ fn unified_debug_panel(
         overlay.show_range_outline = !all_on;
     }
 
-    // F6: Stepping 暂停/继续
-    if keyboard.just_pressed(KeyCode::F6) {
-        stepping_state.toggle_count += 1;
-        if stepping.is_enabled() {
-            stepping.disable();
-        } else {
-            stepping_state.was_enabled = true;
-            stepping
-                .add_schedule(Update)
-                .add_schedule(FixedUpdate)
-                .add_schedule(PostUpdate)
-                .enable();
-        }
-    }
-
-    // F7: Stepping 单步
-    if keyboard.just_pressed(KeyCode::F7) && stepping.is_enabled() {
-        stepping.step_frame();
-        stepping_state.step_count += 1;
-    }
-
     if !state.show_panel {
         return;
     }
@@ -308,51 +317,54 @@ fn unified_debug_panel(
 
                 ui.vertical(|ui| {
                     ui.set_min_width(400.0);
-                    egui::ScrollArea::vertical().show(ui, |ui| {
-                        match state.active_view {
-                            DebugView::Battle => {
-                                viewers::battle_debugger::render(ui, &battle_record, &turn_order, &units);
-                            }
-                            DebugView::Buff => {
-                                viewers::buff_viewer::render(ui, &units);
-                            }
-                            DebugView::Overlay => {
-                                overlay::render(ui, &mut overlay);
-                            }
-                            DebugView::DamageAttribute => {
-                                viewers::damage_attribute_viewer::render(
-                                    ui,
-                                    &mut state.damage_attribute_tab,
-                                    &battle_record,
-                                    &units,
-                                    &unit_names,
-                                );
-                            }
-                            DebugView::TurnQueue => {
-                                viewers::turn_queue_viewer::render(ui, &turn_order, &units);
-                            }
-                            DebugView::Stepping => {
-                                stepping_control::render(ui, &mut stepping, &mut stepping_state);
-                            }
-                            DebugView::Grid => {
-                                viewers::grid_viewer::render(
-                                    ui,
-                                    &terrain_grid,
-                                    &terrain_registry,
-                                    &occupancy,
-                                    &units,
-                                    &mut grid_viewer_state,
-                                );
-                            }
-                            DebugView::Ai => {
-                                viewers::ai_viewer::render(ui, &turn_order, &combat_intent, &units);
-                            }
-                            DebugView::Equipment => {
-                                viewers::equipment_viewer::render(ui, &units);
-                            }
-                            DebugView::Settings => {
-                                viewers::settings_viewer::render(ui, &mut settings);
-                            }
+                    egui::ScrollArea::vertical().show(ui, |ui| match state.active_view {
+                        DebugView::Battle => {
+                            viewers::battle_debugger::render(
+                                ui,
+                                &battle_record,
+                                &turn_order,
+                                &units,
+                            );
+                        }
+                        DebugView::Buff => {
+                            viewers::buff_viewer::render(ui, &units);
+                        }
+                        DebugView::Overlay => {
+                            overlay::render(ui, &mut overlay);
+                        }
+                        DebugView::DamageAttribute => {
+                            viewers::damage_attribute_viewer::render(
+                                ui,
+                                &mut state.damage_attribute_tab,
+                                &battle_record,
+                                &units,
+                                &unit_names,
+                            );
+                        }
+                        DebugView::TurnQueue => {
+                            viewers::turn_queue_viewer::render(ui, &turn_order, &units);
+                        }
+                        DebugView::Stepping => {
+                            stepping_control::render(ui, &mut stepping, &mut stepping_state);
+                        }
+                        DebugView::Grid => {
+                            viewers::grid_viewer::render(
+                                ui,
+                                &terrain_grid,
+                                &terrain_registry,
+                                &occupancy,
+                                &units,
+                                &mut grid_viewer_state,
+                            );
+                        }
+                        DebugView::Ai => {
+                            viewers::ai_viewer::render(ui, &turn_order, &combat_intent, &units);
+                        }
+                        DebugView::Equipment => {
+                            viewers::equipment_viewer::render(ui, &units);
+                        }
+                        DebugView::Settings => {
+                            viewers::settings_viewer::render(ui, &mut settings);
                         }
                     });
                 });

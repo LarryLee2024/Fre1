@@ -36,6 +36,11 @@ use turn::{AppState, TurnPlugin};
 use ui::UiPlugin;
 
 fn main() {
+    // 资产路径：使用编译时项目根目录的绝对路径
+    // Bevy AssetPlugin 以可执行文件目录为基准解析 file_path，需要用绝对路径
+    let manifest_dir = env!("CARGO_MANIFEST_DIR");
+    let asset_path = format!("{manifest_dir}/assets");
+    
     App::new()
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
@@ -43,6 +48,9 @@ fn main() {
                 resolution: (1024u32, 768u32).into(),
                 ..default()
             }),
+            ..default()
+        }).set(AssetPlugin {
+            file_path: asset_path,
             ..default()
         }))
         // 调试插件，仅在debug模式下启用

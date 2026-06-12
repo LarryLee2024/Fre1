@@ -21,7 +21,9 @@ use bevy::prelude::*;
 use tactical_rpg::character::{Faction, GridPosition, MovingUnit, Unit};
 use tactical_rpg::core::attribute::{AttributeKind, Attributes};
 use tactical_rpg::core::tag::GameplayTags;
-use tactical_rpg::map::{GameMap, OccupancyGrid, TerrainCostRegistry, TerrainGrid, TerrainRegistry};
+use tactical_rpg::map::{
+    GameMap, OccupancyGrid, TerrainCostRegistry, TerrainGrid, TerrainRegistry,
+};
 use tactical_rpg::turn::TurnPhase;
 use tactical_rpg::ui::events::{IntentSource, MovementIntent};
 
@@ -46,7 +48,10 @@ fn setup_movement_execution_app() -> App {
         .add_message::<MovementIntent>();
 
     // 注册移动执行系统
-    app.add_systems(bevy::prelude::Update, tactical_rpg::character::movement_execution_system);
+    app.add_systems(
+        bevy::prelude::Update,
+        tactical_rpg::character::movement_execution_system,
+    );
 
     app
 }
@@ -56,7 +61,7 @@ fn spawn_unit_at(app: &mut App, x: i32, y: i32) -> Entity {
     let builder = UnitBuilder::unit_001();
     let mut attrs = builder.attrs().clone();
     attrs.set_base(AttributeKind::MoveRange, 5.0); // 设置移动范围为5格
-    
+
     app.world_mut()
         .spawn((
             Unit {
@@ -150,10 +155,17 @@ fn player_movement_execution_adds_moving_unit() {
 
     // Then: 单位应获得 MovingUnit 组件
     let moving = app.world().get::<MovingUnit>(unit_entity);
-    assert!(moving.is_some(), "Player unit should have MovingUnit component");
+    assert!(
+        moving.is_some(),
+        "Player unit should have MovingUnit component"
+    );
 
     let moving = moving.unwrap();
-    assert_eq!(moving.next_phase, TurnPhase::ActionMenu, "Player movement should transition to ActionMenu");
+    assert_eq!(
+        moving.next_phase,
+        TurnPhase::ActionMenu,
+        "Player movement should transition to ActionMenu"
+    );
     assert!(!moving.path.is_empty(), "Path should not be empty");
 }
 
@@ -183,7 +195,8 @@ fn ai_movement_execution_adds_moving_unit() {
     attrs.set_base_attack_range(1);
     attrs.fill_vital_resources();
 
-    let unit_entity = app.world_mut()
+    let unit_entity = app
+        .world_mut()
         .spawn((
             Unit {
                 faction: Faction::Enemy,
@@ -210,7 +223,11 @@ fn ai_movement_execution_adds_moving_unit() {
     assert!(moving.is_some(), "AI unit should have MovingUnit component");
 
     let moving = moving.unwrap();
-    assert_eq!(moving.next_phase, TurnPhase::ExecuteAction, "AI movement should transition to ExecuteAction");
+    assert_eq!(
+        moving.next_phase,
+        TurnPhase::ExecuteAction,
+        "AI movement should transition to ExecuteAction"
+    );
     assert!(!moving.path.is_empty(), "Path should not be empty");
 }
 
@@ -242,7 +259,10 @@ fn out_of_range_movement_rejected() {
     let moving = app.world().get::<MovingUnit>(unit_entity);
     // 如果添加了 MovingUnit，路径应该为空表示无法到达
     if let Some(m) = moving {
-        assert!(m.path.is_empty(), "Out of range movement should have empty path");
+        assert!(
+            m.path.is_empty(),
+            "Out of range movement should have empty path"
+        );
     }
     // 或者根本没有 MovingUnit
 }
@@ -273,7 +293,10 @@ fn same_position_movement_skipped() {
 
     // Then: 单位不应获得 MovingUnit 组件
     let moving = app.world().get::<MovingUnit>(unit_entity);
-    assert!(moving.is_none(), "Same position movement should not add MovingUnit");
+    assert!(
+        moving.is_none(),
+        "Same position movement should not add MovingUnit"
+    );
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -304,8 +327,16 @@ fn horizontal_movement_path_correct() {
     let moving = app.world().get::<MovingUnit>(unit_entity).unwrap();
     assert!(!moving.path.is_empty(), "Path should not be empty");
     // reconstruct_path 返回的路径不包含起点
-    assert_eq!(moving.path.first(), Some(&IVec2::new(1, 0)), "Path should start at (1,0)");
-    assert_eq!(moving.path.last(), Some(&IVec2::new(3, 0)), "Path should end at target");
+    assert_eq!(
+        moving.path.first(),
+        Some(&IVec2::new(1, 0)),
+        "Path should start at (1,0)"
+    );
+    assert_eq!(
+        moving.path.last(),
+        Some(&IVec2::new(3, 0)),
+        "Path should end at target"
+    );
 }
 
 /// FT-UMV-008: 对角移动路径为直角折线（非斜线飞行）
@@ -341,7 +372,8 @@ fn diagonal_movement_path_is_orthogonal() {
         assert!(
             (diff.x == 0 || diff.y == 0) && (diff.x.abs() <= 1 && diff.y.abs() <= 1),
             "Step from {:?} to {:?} is not orthogonal",
-            from, to
+            from,
+            to
         );
     }
 }
@@ -384,7 +416,11 @@ fn multiple_units_move_independently() {
     assert!(moving2.is_some(), "Unit 2 should have MovingUnit");
 
     // 验证路径不同
-    assert_ne!(moving1.unwrap().path, moving2.unwrap().path, "Paths should be different");
+    assert_ne!(
+        moving1.unwrap().path,
+        moving2.unwrap().path,
+        "Paths should be different"
+    );
 }
 
 // ══════════════════════════════════════════════════════════════

@@ -226,14 +226,16 @@ fn on_enter_action_menu(
                 .skill_ids
                 .iter()
                 .filter_map(|id| {
-                    skill_registry.get(id).map(|sd| crate::ui::view_models::SkillEntry {
-                        name: sd.name.clone(),
-                        id: id.to_string(),
-                        cost_mp: sd.cost_mp,
-                        range: sd.range,
-                        cooldown: sd.cooldown,
-                        description: sd.description.clone(),
-                    })
+                    skill_registry
+                        .get(id)
+                        .map(|sd| crate::ui::view_models::SkillEntry {
+                            name: sd.name.clone(),
+                            id: id.to_string(),
+                            cost_mp: sd.cost_mp,
+                            range: sd.range,
+                            cooldown: sd.cooldown,
+                            description: sd.description.clone(),
+                        })
                 })
                 .collect();
             fallback_view.traits = trait_collection
@@ -241,10 +243,12 @@ fn on_enter_action_menu(
                     tc.trait_ids()
                         .iter()
                         .filter_map(|tid| {
-                            trait_registry.get(tid).map(|td| crate::ui::view_models::TraitEntry {
-                                name: td.name.clone(),
-                                description: td.description.clone(),
-                            })
+                            trait_registry
+                                .get(tid)
+                                .map(|td| crate::ui::view_models::TraitEntry {
+                                    name: td.name.clone(),
+                                    description: td.description.clone(),
+                                })
                         })
                         .collect()
                 })

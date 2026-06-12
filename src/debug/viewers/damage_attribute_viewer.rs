@@ -86,9 +86,7 @@ pub fn render(
 
     // Tab 切换
     ui.horizontal(|ui| {
-        let damage_selected = ui
-            .selectable_label(*tab == 0, "Damage Breakdown")
-            .clicked();
+        let damage_selected = ui.selectable_label(*tab == 0, "Damage Breakdown").clicked();
         let attr_selected = ui
             .selectable_label(*tab == 1, "Attribute Modifier")
             .clicked();

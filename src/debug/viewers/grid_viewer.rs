@@ -76,8 +76,7 @@ pub fn render(
             viewer_state.scroll_row = 0;
         }
         if ui.button("▲ 上页").clicked() {
-            viewer_state.scroll_row =
-                (viewer_state.scroll_row - viewer_state.page_rows).max(0);
+            viewer_state.scroll_row = (viewer_state.scroll_row - viewer_state.page_rows).max(0);
         }
         if ui.button("▼ 下页").clicked() {
             viewer_state.scroll_row =
