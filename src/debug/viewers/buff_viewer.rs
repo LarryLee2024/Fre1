@@ -3,73 +3,76 @@
 
 use crate::buff::ActiveBuffs;
 use crate::character::{Faction, Unit, UnitName};
-use crate::debug::DebugPanelState;
+use crate::core::tag::GameplayTag;
 use bevy::prelude::*;
-use bevy_inspector_egui::bevy_egui::EguiContext;
 use bevy_inspector_egui::egui;
 
-/// Buff Viewer 调试面板（F2 控制显隐）
-pub fn buff_viewer_system(
-    state: Res<DebugPanelState>,
-    mut egui_ctx: Query<&mut EguiContext, With<bevy::window::PrimaryWindow>>,
-    units: Query<(Entity, &Unit, &UnitName, &ActiveBuffs)>,
+/// 渲染 Buff 视图内容
+pub fn render(
+    ui: &mut egui::Ui,
+    units: &Query<(
+        Entity,
+        &Unit,
+        &UnitName,
+        &crate::character::GridPosition,
+        &crate::core::attribute::Attributes,
+        &crate::equipment::EquipmentSlots,
+        &crate::character::TraitCollection,
+        &crate::skill::SkillSlots,
+        &crate::skill::SkillCooldowns,
+        &crate::core::tag::GameplayTags,
+        Option<&crate::character::AiBehaviorId>,
+        Option<&ActiveBuffs>,
+    )>,
 ) {
-    if !state.show_buff_viewer {
-        return;
-    }
-    let Ok(mut ctx) = egui_ctx.single_mut() else {
-        return;
-    };
-    let ctx = ctx.get_mut();
+    ui.heading("Buff Viewer");
 
-    egui::Window::new("Buff Viewer")
-        .default_pos([10.0, 200.0])
-        .default_size([350.0, 400.0])
-        .show(ctx, |ui| {
-            for (entity, unit, name, buffs) in &units {
-                let faction_label = match unit.faction {
-                    Faction::Player => "[友]",
-                    Faction::Enemy => "[敌]",
-                };
-                let header = format!("{}{} (e:{})", faction_label, name.0, entity.index());
+    for (entity, unit, name, _, _, _, _, _, _, _, _, buffs_opt) in units.iter() {
+        let faction_label = match unit.faction {
+            Faction::Player => "[友]",
+            Faction::Enemy => "[敌]",
+        };
+        let header = format!("{}{} (e:{})", faction_label, name.0, entity.index());
 
-                egui::CollapsingHeader::new(&header)
-                    .default_open(buffs.len() > 0)
-                    .show(ui, |ui| {
-                        if buffs.is_empty() {
-                            ui.label("  (无 Buff)");
-                        } else {
-                            for buff in &buffs.instances {
-                                let type_icon = if buff.is_buff { "▲" } else { "▼" };
-                                let dot_label = if buff.dot_damage > 0 {
-                                    format!(" DoT:{}", buff.dot_damage)
-                                } else {
-                                    String::new()
-                                };
-                                let hot_label = if buff.hot_heal > 0 {
-                                    format!(" HoT:{}", buff.hot_heal)
-                                } else {
-                                    String::new()
-                                };
-                                let stun_label =
-                                    if buff.tags.contains(&crate::core::tag::GameplayTag::STUN) {
-                                        " [晕眩]".to_string()
-                                    } else {
-                                        String::new()
-                                    };
-                                ui.label(format!(
-                                    "  {} {} (id:{}) 剩余:{}回合{}{}{}",
-                                    type_icon,
-                                    buff.name,
-                                    buff.buff_id,
-                                    buff.remaining_turns,
-                                    dot_label,
-                                    hot_label,
-                                    stun_label,
-                                ));
-                            }
+        egui::CollapsingHeader::new(&header)
+            .default_open(false)
+            .show(ui, |ui| {
+                if let Some(buffs) = buffs_opt {
+                    if buffs.is_empty() {
+                        ui.label("  (无 Buff)");
+                    } else {
+                        for buff in &buffs.instances {
+                            let type_icon = if buff.is_buff { "▲" } else { "▼" };
+                            let dot_label = if buff.dot_damage > 0 {
+                                format!(" DoT:{}", buff.dot_damage)
+                            } else {
+                                String::new()
+                            };
+                            let hot_label = if buff.hot_heal > 0 {
+                                format!(" HoT:{}", buff.hot_heal)
+                            } else {
+                                String::new()
+                            };
+                            let stun_label = if buff.tags.contains(&GameplayTag::STUN) {
+                                " [晕眩]".to_string()
+                            } else {
+                                String::new()
+                            };
+                            ui.label(format!(
+                                "  {} {} (id:{}) 剩余:{}回合{}{}{}",
+                                type_icon,
+                                buff.name,
+                                buff.buff_id,
+                                buff.remaining_turns,
+                                dot_label,
+                                hot_label,
+                                stun_label,
+                            ));
                         }
-                    });
-            }
-        });
+                    }
+                } else {
+                    ui.label("  (无 ActiveBuffs 组件)");
+                }
+            });
+    }
 }

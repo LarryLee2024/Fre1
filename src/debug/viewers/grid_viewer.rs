@@ -1,16 +1,14 @@
 // Grid Viewer：运行时查看地形网格和占用情况
 // 遵循铁律：复杂系统必须有可视化调试工具
-// 优化：HashMap 预计算 unit 位置 + 视口裁剪，避免每帧 O(cells×units) 扫描
 
 use crate::character::{Faction, GridPosition, Unit, UnitName};
 use crate::map::TerrainRegistry;
 use crate::map::runtime::{OccupancyGrid, TerrainGrid};
 use bevy::prelude::*;
-use bevy_inspector_egui::bevy_egui::EguiContext;
 use bevy_inspector_egui::egui;
 use std::collections::HashMap;
 
-/// Grid Viewer 可视状态：仅渲染视口范围内的行
+/// Grid Viewer 可视状态
 #[derive(Resource)]
 pub struct GridViewerState {
     /// 视口起始行（包含）
@@ -28,278 +26,34 @@ impl Default for GridViewerState {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    // ================================================
-    // AI Self-Check (test_spec.md §13.1)
-    // ================================================
-    // ✅ 测试行为，不是实现
-    // ✅ 符合领域规则
-    // ✅ 测试是确定性的
-    // ✅ 使用标准测试数据
-    // ✅ 没有测试私有实现
-    // ✅ 没有生成不在范围内的测试
-    // ================================================
-
-    use super::*;
-
-    /// Test ID: DBG-GRD-001
-    /// Title: GridViewerState 默认值验证
-    ///
-    /// Given: 新创建的 GridViewerState
-    /// When: 检查默认值
-    /// Then: scroll_row=0, page_rows=20
-    ///
-    /// Assertions: scroll_row == 0, page_rows == 20
-    #[test]
-    fn grid_viewer_state_default_values() {
-        // Given & When
-        let state = GridViewerState::default();
-
-        // Then
-        assert_eq!(state.scroll_row, 0);
-        assert_eq!(state.page_rows, 20);
-    }
-
-    /// Test ID: DBG-GRD-002
-    /// Title: 首页按钮行为
-    ///
-    /// Given: scroll_row=60, page_rows=20, total_rows=100
-    /// When: 点击首页按钮
-    /// Then: scroll_row=0
-    ///
-    /// Assertions: scroll_row == 0
-    #[test]
-    fn pagination_first_page() {
-        // Given
-        let mut state = GridViewerState {
-            scroll_row: 60,
-            page_rows: 20,
-        };
-        let total_rows = 100;
-
-        // When — 首页按钮
-        state.scroll_row = 0;
-
-        // Then
-        assert_eq!(state.scroll_row, 0);
-    }
-
-    /// Test ID: DBG-GRD-003
-    /// Title: 上页按钮行为
-    ///
-    /// Given: scroll_row=40, page_rows=20, total_rows=100
-    /// When: 点击上页按钮
-    /// Then: scroll_row=20
-    ///
-    /// Assertions: scroll_row == 20
-    #[test]
-    fn pagination_prev_page() {
-        // Given
-        let mut state = GridViewerState {
-            scroll_row: 40,
-            page_rows: 20,
-        };
-        let total_rows = 100;
-
-        // When — 上页按钮：(scroll_row - page_rows).max(0)
-        state.scroll_row = (state.scroll_row - state.page_rows).max(0);
-
-        // Then
-        assert_eq!(state.scroll_row, 20);
-    }
-
-    /// Test ID: DBG-GRD-004
-    /// Title: 上页按钮边界：已在首页时
-    ///
-    /// Given: scroll_row=0, page_rows=20, total_rows=100
-    /// When: 点击上页按钮
-    /// Then: scroll_row 保持 0
-    ///
-    /// Assertions: scroll_row == 0
-    #[test]
-    fn pagination_prev_page_at_first_page() {
-        // Given
-        let mut state = GridViewerState {
-            scroll_row: 0,
-            page_rows: 20,
-        };
-        let total_rows = 100;
-
-        // When — 上页按钮：max(0-20, 0) = 0
-        state.scroll_row = (state.scroll_row - state.page_rows).max(0);
-
-        // Then
-        assert_eq!(state.scroll_row, 0);
-    }
-
-    /// Test ID: DBG-GRD-005
-    /// Title: 下页按钮行为
-    ///
-    /// Given: scroll_row=0, page_rows=20, total_rows=100
-    /// When: 点击下页按钮
-    /// Then: scroll_row=20
-    ///
-    /// Assertions: scroll_row == 20
-    #[test]
-    fn pagination_next_page() {
-        // Given
-        let mut state = GridViewerState {
-            scroll_row: 0,
-            page_rows: 20,
-        };
-        let total_rows = 100;
-
-        // When — 下页按钮：(scroll_row + page_rows).min(total_rows - 1)
-        state.scroll_row = (state.scroll_row + state.page_rows).min(total_rows - 1);
-
-        // Then
-        assert_eq!(state.scroll_row, 20);
-    }
-
-    /// Test ID: DBG-GRD-006
-    /// Title: 下页按钮边界：接近末页时
-    ///
-    /// Given: scroll_row=85, page_rows=20, total_rows=100
-    /// When: 点击下页按钮
-    /// Then: scroll_row=99（不超过 total_rows-1）
-    ///
-    /// Assertions: scroll_row == 99
-    #[test]
-    fn pagination_next_page_clamped_to_last() {
-        // Given
-        let mut state = GridViewerState {
-            scroll_row: 85,
-            page_rows: 20,
-        };
-        let total_rows = 100;
-
-        // When — 下页按钮：min(85+20, 99) = 99
-        state.scroll_row = (state.scroll_row + state.page_rows).min(total_rows - 1);
-
-        // Then
-        assert_eq!(state.scroll_row, 99);
-    }
-
-    /// Test ID: DBG-GRD-007
-    /// Title: 末页按钮行为
-    ///
-    /// Given: scroll_row=0, page_rows=20, total_rows=100
-    /// When: 点击末页按钮
-    /// Then: scroll_row=80（最后一页起始行）
-    ///
-    /// Assertions: scroll_row == 80
-    #[test]
-    fn pagination_last_page() {
-        // Given
-        let mut state = GridViewerState {
-            scroll_row: 0,
-            page_rows: 20,
-        };
-        let total_rows = 100;
-
-        // When — 末页按钮：(total_rows - page_rows).max(0)
-        state.scroll_row = (total_rows - state.page_rows).max(0);
-
-        // Then
-        assert_eq!(state.scroll_row, 80);
-    }
-
-    /// Test ID: DBG-GRD-008
-    /// Title: 末页按钮边界：地图小于一页时
-    ///
-    /// Given: scroll_row=0, page_rows=20, total_rows=10
-    /// When: 点击末页按钮
-    /// Then: scroll_row=0（total_rows - page_rows < 0 → max(0)）
-    ///
-    /// Assertions: scroll_row == 0
-    #[test]
-    fn pagination_last_page_map_smaller_than_page() {
-        // Given
-        let mut state = GridViewerState {
-            scroll_row: 0,
-            page_rows: 20,
-        };
-        let total_rows = 10;
-
-        // When — 末页按钮：max(10-20, 0) = 0
-        state.scroll_row = (total_rows - state.page_rows).max(0);
-
-        // Then
-        assert_eq!(state.scroll_row, 0);
-    }
-
-    /// Test ID: DBG-GRD-009
-    /// Title: 视口范围计算
-    ///
-    /// Given: scroll_row=40, page_rows=20, total_rows=100
-    /// When: 计算视口范围
-    /// Then: start_row=40, end_row=60
-    ///
-    /// Assertions: end_row == start_row + page_rows（不超过 total_rows）
-    #[test]
-    fn viewport_range_calculation() {
-        // Given
-        let state = GridViewerState {
-            scroll_row: 40,
-            page_rows: 20,
-        };
-        let total_rows = 100;
-
-        // When
-        let start_row = state.scroll_row;
-        let end_row = (start_row + state.page_rows).min(total_rows);
-
-        // Then
-        assert_eq!(start_row, 40);
-        assert_eq!(end_row, 60);
-    }
-
-    /// Test ID: DBG-GRD-010
-    /// Title: 视口范围边界：末页不足一页时
-    ///
-    /// Given: scroll_row=85, page_rows=20, total_rows=100
-    /// When: 计算视口范围
-    /// Then: start_row=85, end_row=100（不足一页时截断到 total_rows）
-    ///
-    /// Assertions: end_row == total_rows
-    #[test]
-    fn viewport_range_last_page_partial() {
-        // Given
-        let state = GridViewerState {
-            scroll_row: 85,
-            page_rows: 20,
-        };
-        let total_rows = 100;
-
-        // When
-        let start_row = state.scroll_row;
-        let end_row = (start_row + state.page_rows).min(total_rows);
-
-        // Then
-        assert_eq!(start_row, 85);
-        assert_eq!(end_row, 100);
-    }
-}
-
-/// Grid Viewer 调试面板
-pub fn grid_viewer_system(
-    mut egui_ctx: Query<&mut EguiContext, With<bevy::window::PrimaryWindow>>,
-    terrain_grid: Res<TerrainGrid>,
-    terrain_registry: Res<TerrainRegistry>,
-    occupancy: Res<OccupancyGrid>,
-    units: Query<(Entity, &Unit, &UnitName, &GridPosition)>,
-    mut viewer_state: ResMut<GridViewerState>,
+/// 渲染 Grid 视图内容
+pub fn render(
+    ui: &mut egui::Ui,
+    terrain_grid: &TerrainGrid,
+    terrain_registry: &TerrainRegistry,
+    _occupancy: &OccupancyGrid,
+    units: &Query<(
+        Entity,
+        &Unit,
+        &UnitName,
+        &GridPosition,
+        &crate::core::attribute::Attributes,
+        &crate::equipment::EquipmentSlots,
+        &crate::character::TraitCollection,
+        &crate::skill::SkillSlots,
+        &crate::skill::SkillCooldowns,
+        &crate::core::tag::GameplayTags,
+        Option<&crate::character::AiBehaviorId>,
+        Option<&crate::buff::ActiveBuffs>,
+    )>,
+    viewer_state: &mut GridViewerState,
 ) {
-    let Ok(mut ctx) = egui_ctx.single_mut() else {
-        return;
-    };
-    let ctx = ctx.get_mut();
+    ui.heading("Grid Viewer");
 
-    // 预计算 unit 位置 → O(1) 查找
+    // 预计算 unit 位置
     let unit_map: HashMap<IVec2, String> = units
         .iter()
-        .map(|(_, u, n, gp)| {
+        .map(|(_, u, n, gp, ..)| {
             let faction = match u.faction {
                 Faction::Player => "友",
                 Faction::Enemy => "敌",
@@ -311,76 +65,183 @@ pub fn grid_viewer_system(
     let total_rows = terrain_grid.height as i32;
     let total_cols = terrain_grid.width as i32;
 
-    egui::Window::new("Grid Viewer")
-        .default_pos([10.0, 640.0])
-        .default_size([400.0, 300.0])
-        .show(ctx, |ui| {
-            ui.label(format!(
-                "地图尺寸: {}x{}",
-                terrain_grid.width, terrain_grid.height
-            ));
+    ui.label(format!(
+        "地图尺寸: {}x{}",
+        terrain_grid.width, terrain_grid.height
+    ));
 
-            // 视口导航
-            ui.horizontal(|ui| {
-                if ui.button("◀ 首页").clicked() {
-                    viewer_state.scroll_row = 0;
+    // 视口导航
+    ui.horizontal(|ui| {
+        if ui.button("◀ 首页").clicked() {
+            viewer_state.scroll_row = 0;
+        }
+        if ui.button("▲ 上页").clicked() {
+            viewer_state.scroll_row =
+                (viewer_state.scroll_row - viewer_state.page_rows).max(0);
+        }
+        if ui.button("▼ 下页").clicked() {
+            viewer_state.scroll_row =
+                (viewer_state.scroll_row + viewer_state.page_rows).min(total_rows - 1);
+        }
+        if ui.button("末页 ▶").clicked() {
+            viewer_state.scroll_row = (total_rows - viewer_state.page_rows).max(0);
+        }
+        ui.label(format!("行 {}/{}", viewer_state.scroll_row + 1, total_rows));
+    });
+
+    ui.separator();
+
+    // 地形概览
+    ui.heading("地形");
+    let start_row = viewer_state.scroll_row;
+    let end_row = (start_row + viewer_state.page_rows).min(total_rows);
+
+    egui::Grid::new("terrain_grid")
+        .striped(true)
+        .show(ui, |ui| {
+            for y in start_row..end_row {
+                for x in 0..total_cols {
+                    let coord = IVec2::new(x, y);
+                    let terrain_id = terrain_grid.get(coord).unwrap_or("?");
+                    let terrain_name = terrain_registry
+                        .get(terrain_id)
+                        .map(|t| t.name.as_str())
+                        .unwrap_or(terrain_id);
+
+                    let cell_text = match unit_map.get(&coord) {
+                        Some(occupied) => format!("{}:{}", terrain_name, occupied),
+                        None => terrain_name.to_string(),
+                    };
+
+                    ui.label(&cell_text);
                 }
-                if ui.button("▲ 上页").clicked() {
-                    viewer_state.scroll_row =
-                        (viewer_state.scroll_row - viewer_state.page_rows).max(0);
-                }
-                if ui.button("▼ 下页").clicked() {
-                    viewer_state.scroll_row =
-                        (viewer_state.scroll_row + viewer_state.page_rows).min(total_rows - 1);
-                }
-                if ui.button("末页 ▶").clicked() {
-                    viewer_state.scroll_row = (total_rows - viewer_state.page_rows).max(0);
-                }
-                ui.label(format!("行 {}/{}", viewer_state.scroll_row + 1, total_rows));
-            });
-
-            ui.separator();
-
-            // 地形概览（仅渲染视口行）
-            ui.heading("地形");
-            let start_row = viewer_state.scroll_row;
-            let end_row = (start_row + viewer_state.page_rows).min(total_rows);
-
-            egui::Grid::new("terrain_grid")
-                .striped(true)
-                .show(ui, |ui| {
-                    for y in start_row..end_row {
-                        for x in 0..total_cols {
-                            let coord = IVec2::new(x, y);
-                            let terrain_id = terrain_grid.get(coord).unwrap_or("?");
-                            let terrain_name = terrain_registry
-                                .get(terrain_id)
-                                .map(|t| t.name.as_str())
-                                .unwrap_or(terrain_id);
-
-                            let cell_text = match unit_map.get(&coord) {
-                                Some(occupied) => format!("{}:{}", terrain_name, occupied),
-                                None => terrain_name.to_string(),
-                            };
-
-                            ui.label(&cell_text);
-                        }
-                        ui.end_row();
-                    }
-                });
-
-            ui.separator();
-
-            // 占用统计
-            ui.heading("占用");
-            let player_count = units
-                .iter()
-                .filter(|(_, u, _, _)| u.faction == Faction::Player)
-                .count();
-            let enemy_count = units
-                .iter()
-                .filter(|(_, u, _, _)| u.faction == Faction::Enemy)
-                .count();
-            ui.label(format!("友方: {}  敌方: {}", player_count, enemy_count));
+                ui.end_row();
+            }
         });
+
+    ui.separator();
+
+    // 占用统计
+    ui.heading("占用");
+    let player_count = units
+        .iter()
+        .filter(|(_, u, ..)| u.faction == Faction::Player)
+        .count();
+    let enemy_count = units
+        .iter()
+        .filter(|(_, u, ..)| u.faction == Faction::Enemy)
+        .count();
+    ui.label(format!("友方: {}  敌方: {}", player_count, enemy_count));
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn grid_viewer_state_default_values() {
+        let state = GridViewerState::default();
+        assert_eq!(state.scroll_row, 0);
+        assert_eq!(state.page_rows, 20);
+    }
+
+    #[test]
+    fn pagination_first_page() {
+        let mut state = GridViewerState {
+            scroll_row: 60,
+            page_rows: 20,
+        };
+        state.scroll_row = 0;
+        assert_eq!(state.scroll_row, 0);
+    }
+
+    #[test]
+    fn pagination_prev_page() {
+        let mut state = GridViewerState {
+            scroll_row: 40,
+            page_rows: 20,
+        };
+        state.scroll_row = (state.scroll_row - state.page_rows).max(0);
+        assert_eq!(state.scroll_row, 20);
+    }
+
+    #[test]
+    fn pagination_prev_page_at_first_page() {
+        let mut state = GridViewerState {
+            scroll_row: 0,
+            page_rows: 20,
+        };
+        state.scroll_row = (state.scroll_row - state.page_rows).max(0);
+        assert_eq!(state.scroll_row, 0);
+    }
+
+    #[test]
+    fn pagination_next_page() {
+        let mut state = GridViewerState {
+            scroll_row: 0,
+            page_rows: 20,
+        };
+        let total_rows = 100;
+        state.scroll_row = (state.scroll_row + state.page_rows).min(total_rows - 1);
+        assert_eq!(state.scroll_row, 20);
+    }
+
+    #[test]
+    fn pagination_next_page_clamped_to_last() {
+        let mut state = GridViewerState {
+            scroll_row: 85,
+            page_rows: 20,
+        };
+        let total_rows = 100;
+        state.scroll_row = (state.scroll_row + state.page_rows).min(total_rows - 1);
+        assert_eq!(state.scroll_row, 99);
+    }
+
+    #[test]
+    fn pagination_last_page() {
+        let mut state = GridViewerState {
+            scroll_row: 0,
+            page_rows: 20,
+        };
+        let total_rows = 100;
+        state.scroll_row = (total_rows - state.page_rows).max(0);
+        assert_eq!(state.scroll_row, 80);
+    }
+
+    #[test]
+    fn pagination_last_page_map_smaller_than_page() {
+        let mut state = GridViewerState {
+            scroll_row: 0,
+            page_rows: 20,
+        };
+        let total_rows = 10;
+        state.scroll_row = (total_rows - state.page_rows).max(0);
+        assert_eq!(state.scroll_row, 0);
+    }
+
+    #[test]
+    fn viewport_range_calculation() {
+        let state = GridViewerState {
+            scroll_row: 40,
+            page_rows: 20,
+        };
+        let total_rows = 100;
+        let start_row = state.scroll_row;
+        let end_row = (start_row + state.page_rows).min(total_rows);
+        assert_eq!(start_row, 40);
+        assert_eq!(end_row, 60);
+    }
+
+    #[test]
+    fn viewport_range_last_page_partial() {
+        let state = GridViewerState {
+            scroll_row: 85,
+            page_rows: 20,
+        };
+        let total_rows = 100;
+        let start_row = state.scroll_row;
+        let end_row = (start_row + state.page_rows).min(total_rows);
+        assert_eq!(start_row, 85);
+        assert_eq!(end_row, 100);
+    }
 }
