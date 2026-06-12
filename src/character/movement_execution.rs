@@ -5,8 +5,8 @@ use crate::character::{GridPosition, MovingUnit, spawn_path_arrows};
 use crate::core::attribute::{AttributeKind, Attributes};
 use crate::core::tag::GameplayTags;
 use crate::map::{
-    GameMap, OccupancyGrid, TerrainCostRegistry, TerrainGrid, TerrainRegistry, find_reachable_tiles,
-    reconstruct_path,
+    GameMap, OccupancyGrid, TerrainCostRegistry, TerrainGrid, TerrainRegistry,
+    find_reachable_tiles, reconstruct_path,
 };
 use crate::turn::TurnPhase;
 use crate::ui::events::{IntentSource, MovementIntent};
@@ -93,6 +93,7 @@ fn execute_movement(
         find_path_ignore_occupancy(
             start_coord,
             intent.target_coord,
+            move_range,
             map,
             terrain_grid,
             terrain_registry,
@@ -126,6 +127,7 @@ fn execute_movement(
 fn find_path_ignore_occupancy(
     start: IVec2,
     target: IVec2,
+    move_range: u32,
     map: &GameMap,
     terrain_grid: &TerrainGrid,
     terrain_registry: &TerrainRegistry,
@@ -166,6 +168,9 @@ fn find_path_ignore_occupancy(
             };
 
             let new_cost = current_cost + cost;
+            if new_cost > move_range {
+                continue;
+            }
             if !cost_so_far.contains_key(&next) || new_cost < *cost_so_far.get(&next).unwrap() {
                 cost_so_far.insert(next, new_cost);
                 came_from.insert(next, pos);
