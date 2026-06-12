@@ -375,6 +375,7 @@ pub fn update_unit_info(
     for (container_entity, mut vis) in queries.p5().iter_mut() {
         if view.buffs.is_empty() {
             *vis = Visibility::Hidden;
+            commands.entity(container_entity).despawn_children();
         } else {
             *vis = Visibility::Visible;
             // 只在 Buff 数量变化时重建子节点
