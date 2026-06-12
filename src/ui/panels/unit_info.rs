@@ -56,6 +56,7 @@ pub fn spawn_unit_info_panel(mut commands: Commands, theme: Res<UiTheme>) {
             ),
             BackgroundColor(theme.panel_bg),
             UnitInfoPanel,
+            Visibility::Hidden,
         ))
         .insert(Name::new("UnitInfoPanel"))
         .with_children(|parent| {
@@ -185,14 +186,14 @@ pub fn setup_ui_font(cn_font: Res<CnFont>, mut query: Query<&mut TextFont, With<
 /// 更新单位信息面板（读取 SelectedUnitView）
 pub fn update_unit_info(
     view: Res<SelectedUnitView>,
-    mut panel_texts: Query<(&PanelLabel, &mut Text)>,
-    mut hp_fill_query: Query<&mut Node, With<HpBarFill>>,
-    mut mp_fill_query: Query<&mut Node, (With<MpBarFill>, Without<HpBarFill>)>,
-    mut stamina_fill_query: Query<
-        &mut Node,
-        (With<StaminaBarFill>, Without<HpBarFill>, Without<MpBarFill>),
-    >,
-    mut buffs_container_query: Query<(Entity, &mut Visibility), With<BuffsContainer>>,
+    mut queries: ParamSet<(
+        Query<&mut Visibility, With<UnitInfoPanel>>,
+        Query<(&PanelLabel, &mut Text)>,
+        Query<&mut Node, With<HpBarFill>>,
+        Query<&mut Node, (With<MpBarFill>, Without<HpBarFill>)>,
+        Query<&mut Node, (With<StaminaBarFill>, Without<HpBarFill>, Without<MpBarFill>)>,
+        Query<(Entity, &mut Visibility), With<BuffsContainer>>,
+    )>,
     mut commands: Commands,
     theme: Res<UiTheme>,
 ) {
@@ -200,28 +201,17 @@ pub fn update_unit_info(
         return;
     }
 
-    if !view.is_selected {
-        // 隐藏面板内容
-        for (label, mut text) in &mut panel_texts {
-            match label {
-                PanelLabel::UnitName => **text = "选择一个单位".to_string(),
-                PanelLabel::Hp | PanelLabel::Mp | PanelLabel::Stamina => **text = "0/0".to_string(),
-                _ => **text = String::new(),
-            }
-        }
-        for mut node in &mut hp_fill_query {
-            node.width = Val::Percent(0.0);
-        }
-        for mut node in &mut mp_fill_query {
-            node.width = Val::Percent(0.0);
-        }
-        for mut node in &mut stamina_fill_query {
-            node.width = Val::Percent(0.0);
-        }
-        for (container_entity, mut vis) in &mut buffs_container_query {
+    // 控制面板整体可见性
+    let should_show = view.is_selected;
+    for mut vis in queries.p0().iter_mut() {
+        if should_show {
+            *vis = Visibility::Visible;
+        } else {
             *vis = Visibility::Hidden;
-            commands.entity(container_entity).despawn_children();
         }
+    }
+
+    if !should_show {
         return;
     }
 
@@ -231,7 +221,7 @@ pub fn update_unit_info(
     } else {
         0.0
     };
-    for mut node in &mut hp_fill_query {
+    for mut node in queries.p2().iter_mut() {
         node.width = Val::Percent(hp_ratio * 100.0);
     }
 
@@ -241,7 +231,7 @@ pub fn update_unit_info(
     } else {
         0.0
     };
-    for mut node in &mut mp_fill_query {
+    for mut node in queries.p3().iter_mut() {
         node.width = Val::Percent(mp_ratio * 100.0);
     }
 
@@ -251,7 +241,7 @@ pub fn update_unit_info(
     } else {
         0.0
     };
-    for mut node in &mut stamina_fill_query {
+    for mut node in queries.p4().iter_mut() {
         node.width = Val::Percent(sta_ratio * 100.0);
     }
 
@@ -339,7 +329,7 @@ pub fn update_unit_info(
     );
 
     // 统一更新所有面板文本
-    for (label, mut text) in &mut panel_texts {
+    for (label, mut text) in queries.p1().iter_mut() {
         match label {
             PanelLabel::UnitName => **text = view.name.clone(),
             PanelLabel::UnitInfo => {
@@ -382,12 +372,12 @@ pub fn update_unit_info(
     }
 
     // Buff 彩色标签
-    for (container_entity, mut vis) in &mut buffs_container_query {
+    for (container_entity, mut vis) in queries.p5().iter_mut() {
         if view.buffs.is_empty() {
             *vis = Visibility::Hidden;
-            commands.entity(container_entity).despawn_children();
         } else {
             *vis = Visibility::Visible;
+            // 只在 Buff 数量变化时重建子节点
             commands.entity(container_entity).despawn_children();
             commands.entity(container_entity).with_children(|parent| {
                 parent.spawn((
