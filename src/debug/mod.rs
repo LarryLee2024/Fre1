@@ -210,32 +210,36 @@ fn setup_egui_font(
     if *initialized {
         return;
     }
-    
+
     let Ok(mut ctx) = egui_ctx.single_mut() else {
         return;
     };
     let ctx = ctx.get_mut();
-    
+
     // 加载中文字体
     let mut fonts = egui::FontDefinitions::default();
-    
-    // 读取字体文件
-    if let Ok(font_data) = std::fs::read("assets/fonts/Arial Unicode.ttf") {
+
+    // 读取字体文件（编译时绝对路径，避免运行时工作目录问题）
+    let font_path = format!(
+        "{}/assets/fonts/Arial Unicode.ttf",
+        env!("CARGO_MANIFEST_DIR")
+    );
+    if let Ok(font_data) = std::fs::read(&font_path) {
         fonts.font_data.insert(
             "cn_font".to_string(),
             Arc::new(egui::FontData::from_owned(font_data)),
         );
-        
+
         // 将中文字体添加到所有字体族中作为 fallback
         for family in fonts.families.values_mut() {
             if !family.contains(&"cn_font".to_string()) {
                 family.push("cn_font".to_string());
             }
         }
-        
+
         ctx.set_fonts(fonts);
     }
-    
+
     *initialized = true;
 }
 
