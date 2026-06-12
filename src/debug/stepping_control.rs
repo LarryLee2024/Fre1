@@ -10,6 +10,21 @@ use bevy::prelude::*;
 use bevy_inspector_egui::bevy_egui::EguiContext;
 use bevy_inspector_egui::egui;
 
+/// Debug Stepping 状态追踪 Resource
+///
+/// 记录 Stepping 的使用历史，为调试回放和状态分析提供基础数据。
+/// 独立于 Bevy 内置的 Stepping Resource，仅用于调试统计。
+#[derive(Resource, Default, Reflect)]
+#[reflect(Resource)]
+pub struct DebugSteppingState {
+    /// 是否曾经启用过 Stepping
+    pub was_enabled: bool,
+    /// 单步执行次数
+    pub step_count: u32,
+    /// 启用/禁用次数
+    pub toggle_count: u32,
+}
+
 /// Debug Stepping 控制面板
 ///
 /// 提供 System 单步调试能力：
@@ -20,13 +35,16 @@ use bevy_inspector_egui::egui;
 pub fn stepping_control_panel(
     mut egui_ctx: Query<&mut EguiContext, With<bevy::window::PrimaryWindow>>,
     mut stepping: ResMut<Stepping>,
+    mut stepping_state: ResMut<DebugSteppingState>,
     keyboard: Res<ButtonInput<KeyCode>>,
 ) {
     // F6：暂停/继续
     if keyboard.just_pressed(KeyCode::F6) {
+        stepping_state.toggle_count += 1;
         if stepping.is_enabled() {
             stepping.disable();
         } else {
+            stepping_state.was_enabled = true;
             stepping
                 .add_schedule(Update)
                 .add_schedule(FixedUpdate)
@@ -38,6 +56,7 @@ pub fn stepping_control_panel(
     // F7：单步执行
     if keyboard.just_pressed(KeyCode::F7) && stepping.is_enabled() {
         stepping.step_frame();
+        stepping_state.step_count += 1;
     }
 
     let Ok(mut ctx) = egui_ctx.single_mut() else {
@@ -47,7 +66,7 @@ pub fn stepping_control_panel(
 
     egui::Window::new("Debug Stepping")
         .default_pos([740.0, 200.0])
-        .default_size([220.0, 120.0])
+        .default_size([220.0, 160.0])
         .show(ctx, |ui| {
             ui.label("System 单步调试 (F6 暂停/继续, F7 单步)");
             ui.separator();
@@ -61,6 +80,7 @@ pub fn stepping_control_panel(
                     }
                     if ui.button("⏭ 单步").clicked() {
                         stepping.step_frame();
+                        stepping_state.step_count += 1;
                     }
                     if ui.button("⏹ 停用").clicked() {
                         stepping.disable();
@@ -75,6 +95,8 @@ pub fn stepping_control_panel(
             } else {
                 ui.colored_label(egui::Color32::GREEN, "▶ 运行中");
                 if ui.button("⏸ 启用 Stepping").clicked() {
+                    stepping_state.was_enabled = true;
+                    stepping_state.toggle_count += 1;
                     stepping
                         .add_schedule(Update)
                         .add_schedule(FixedUpdate)
@@ -82,5 +104,12 @@ pub fn stepping_control_panel(
                         .enable();
                 }
             }
+
+            // 显示统计信息
+            ui.separator();
+            ui.label(format!(
+                "统计: 切换{}次, 单步{}步",
+                stepping_state.toggle_count, stepping_state.step_count
+            ));
         });
 }

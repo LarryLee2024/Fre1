@@ -11,6 +11,25 @@
 // F7  : Debug Stepping 单步执行
 // F12 : World Inspector（bevy-inspector-egui）
 //
+// ── 面板位置规划 ──
+// 为避免面板重叠遮挡游戏画面，所有调试面板按区域分布：
+//
+// 左侧区域 (x=10):
+//   F1 Battle Debugger:  [10, 10]    - 回合状态快照
+//   F2 Buff Viewer:      [10, 200]   - 单位 Buff 状态
+//
+// 中间区域 (x=370):
+//   F4 Damage & Attribute: [370, 10] - 伤害分解与属性修饰
+//
+// 右侧区域 (x=740):
+//   Debug Overlay:      [740, 10]    - Gizmos 可视化开关
+//   Debug Stepping:     [740, 200]   - 系统单步调试
+//
+// 底部区域 (y=960):
+//   F5 Turn Queue:      [10, 960]    - 行动队列预览
+//
+// 注意：面板位置基于 1920x1080 分辨率设计，高分辨率下会有更多空间
+//
 // ── bevy_remote ──
 // RemotePlugin 已注册，提供 BRP 协议核心能力（查询/修改 Entity 和 Resource）
 // 注意：Bevy 0.18.1 的 bevy_remote 未启用 HTTP 传输层（bevy_internal 设 default-features=false）
@@ -77,8 +96,10 @@ impl Plugin for DebugPlugin {
         app.insert_resource(viewers::GridViewerState::default())
             .insert_resource(overlay::DebugOverlay::default())
             .insert_resource(DebugPanelState::default())
+            .insert_resource(stepping_control::DebugSteppingState::default())
             .register_type::<overlay::DebugOverlay>()
             .register_type::<DebugPanelState>()
+            .register_type::<stepping_control::DebugSteppingState>()
             // 快捷键处理
             .add_systems(PreUpdate, debug_hotkey_system)
             // egui 面板：PostUpdate 中运行

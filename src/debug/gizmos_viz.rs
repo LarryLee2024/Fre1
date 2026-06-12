@@ -11,6 +11,25 @@ use crate::ui::theme::UiTheme;
 use super::overlay::DebugOverlay;
 use bevy::prelude::*;
 
+// ── 颜色常量 ──
+// 所有 Gizmos 可视化颜色在此统一定义，便于维护和主题切换
+
+/// 寻路路径：起点颜色（绿色）
+const COLOR_PATH_START: Color = Color::srgb(0.2, 1.0, 0.2);
+/// 寻路路径：中间节点颜色（青绿色）
+const COLOR_PATH_MID: Color = Color::srgb(0.0, 1.0, 0.5);
+/// 寻路路径：终点颜色（黄色）
+const COLOR_PATH_END: Color = Color::srgb(1.0, 1.0, 0.0);
+
+/// 玩家阵营颜色（蓝色）
+const COLOR_PLAYER: Color = Color::srgb(0.3, 0.6, 1.0);
+/// 敌方阵营颜色（红色）
+const COLOR_ENEMY: Color = Color::srgb(1.0, 0.3, 0.2);
+/// 攻击目标外层轮廓（浅红色）
+const COLOR_TARGET_OUTER: Color = Color::srgb(1.0, 0.5, 0.3);
+/// 未知/中立颜色（灰色）
+const COLOR_UNKNOWN: Color = Color::srgb(0.7, 0.7, 0.7);
+
 // ── 寻路路径调试 ──
 
 /// 绘制移动单位的路径：起点→终点的线框矩形序列
@@ -26,20 +45,19 @@ pub fn debug_pathfinding(
 
     let tile_size = map.tile_size;
     let size = Vec2::splat(tile_size - 4.0);
-    let color = Color::srgb(0.0, 1.0, 0.5);
 
     for moving in &moving_units {
         for (i, &coord) in moving.path.iter().enumerate() {
             let world_pos = map.coord_to_world(coord);
             let iso = Isometry2d::from_translation(world_pos);
 
-            // 路径起点用不同颜色区分
+            // 路径起点/终点/中间节点用不同颜色区分
             let c = if i == 0 {
-                Color::srgb(0.2, 1.0, 0.2)
+                COLOR_PATH_START
             } else if i == moving.path.len() - 1 {
-                Color::srgb(1.0, 1.0, 0.0)
+                COLOR_PATH_END
             } else {
-                color
+                COLOR_PATH_MID
             };
 
             gizmos.rect_2d(iso, size, c);
@@ -64,27 +82,28 @@ pub fn debug_ai_intent(
     let tile_size = map.tile_size;
     let size = Vec2::splat(tile_size - 2.0);
 
-    // 绘制攻击者位置（蓝色菱形轮廓 → 用 rect_2d 替代）
+    // 绘制攻击者位置（敌方用红色，友方用蓝色）
     if let Some(source_entity) = combat_intent.source_entity {
         if let Ok((_, unit, gp)) = units.get(source_entity) {
-            if unit.faction == Faction::Enemy {
-                let world_pos = map.coord_to_world(gp.coord);
-                let iso = Isometry2d::from_translation(world_pos);
-                gizmos.rect_2d(iso, size, Color::srgb(0.3, 0.6, 1.0));
-            }
+            let world_pos = map.coord_to_world(gp.coord);
+            let iso = Isometry2d::from_translation(world_pos);
+            let color = match unit.faction {
+                Faction::Player => COLOR_PLAYER,
+                Faction::Enemy => COLOR_ENEMY,
+            };
+            gizmos.rect_2d(iso, size, color);
         }
     }
 
-    // 绘制攻击目标位置（红色轮廓）
+    // 绘制攻击目标位置（红色轮廓，双层增强可见性）
     if let Some(target_coord) = combat_intent.target_coord {
         let world_pos = map.coord_to_world(target_coord);
         let iso = Isometry2d::from_translation(world_pos);
-        // 画双层轮廓增强可见性
-        gizmos.rect_2d(iso, size, Color::srgb(1.0, 0.2, 0.1));
+        gizmos.rect_2d(iso, size, COLOR_ENEMY);
         gizmos.rect_2d(
             iso,
             Vec2::splat(tile_size + 4.0),
-            Color::srgb(1.0, 0.5, 0.3),
+            COLOR_TARGET_OUTER,
         );
     }
 }
@@ -122,10 +141,10 @@ pub fn debug_occupancy(
             .get_entity(coord)
             .and_then(|e| faction_map.get(&e))
             .map(|&f| match f {
-                Faction::Player => Color::srgb(0.3, 0.6, 1.0),
-                Faction::Enemy => Color::srgb(1.0, 0.3, 0.2),
+                Faction::Player => COLOR_PLAYER,
+                Faction::Enemy => COLOR_ENEMY,
             })
-            .unwrap_or(Color::srgb(0.7, 0.7, 0.7));
+            .unwrap_or(COLOR_UNKNOWN);
 
         gizmos.rect_2d(iso, marker_size, color);
     }
@@ -139,7 +158,7 @@ pub fn debug_range_outline(
     mut gizmos: Gizmos,
     overlay: Res<DebugOverlay>,
     map: Res<GameMap>,
-    theme: Res<UiTheme>,
+    _theme: Res<UiTheme>,
     move_range: Query<&GridPosition, With<MovableRange>>,
     attack_range: Query<&GridPosition, With<AttackRange>>,
 ) {
@@ -151,18 +170,16 @@ pub fn debug_range_outline(
     let size = Vec2::splat(tile_size);
 
     // 移动范围轮廓（蓝色线框）
-    let move_color = Color::srgb(0.3, 0.6, 1.0);
     for gp in &move_range {
         let world_pos = map.coord_to_world(gp.coord);
         let iso = Isometry2d::from_translation(world_pos);
-        gizmos.rect_2d(iso, size, move_color);
+        gizmos.rect_2d(iso, size, COLOR_PLAYER);
     }
 
     // 攻击范围轮廓（红色线框）
-    let attack_color = Color::srgb(1.0, 0.3, 0.2);
     for gp in &attack_range {
         let world_pos = map.coord_to_world(gp.coord);
         let iso = Isometry2d::from_translation(world_pos);
-        gizmos.rect_2d(iso, size, attack_color);
+        gizmos.rect_2d(iso, size, COLOR_ENEMY);
     }
 }
