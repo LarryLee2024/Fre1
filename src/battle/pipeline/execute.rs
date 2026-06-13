@@ -185,30 +185,11 @@ pub fn execute_effects(world: &mut World) {
     for msg in all_pending_messages {
         match msg {
             PendingMessage::Damage(d) => {
-                bevy::log::info!(
-                    target: "battle",
-                    event = "damage_applied",
-                    attacker = ?d.attacker,
-                    attacker_name = %d.attacker_name,
-                    target = ?d.target,
-                    target_name = %d.target_name,
-                    amount = d.amount,
-                    is_skill = d.is_skill,
-                    "伤害已应用"
-                );
                 world
                     .resource_mut::<bevy::ecs::message::Messages<DamageApplied>>()
                     .write(d);
             }
             PendingMessage::Heal(h) => {
-                bevy::log::info!(
-                    target: "battle",
-                    event = "heal_applied",
-                    target = ?h.target,
-                    target_name = %h.target_name,
-                    amount = h.amount,
-                    "治疗已应用"
-                );
                 world
                     .resource_mut::<bevy::ecs::message::Messages<HealApplied>>()
                     .write(h);

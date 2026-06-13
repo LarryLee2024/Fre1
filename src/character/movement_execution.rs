@@ -4,6 +4,7 @@
 use crate::character::{GridPosition, MovingUnit, spawn_path_arrows};
 use crate::core::attribute::{AttributeKind, Attributes};
 use crate::core::tag::GameplayTags;
+use crate::infrastructure::logging::events::UnitMoved;
 use crate::map::{
     GameMap, OccupancyGrid, TerrainCostRegistry, TerrainGrid, TerrainRegistry,
     find_reachable_tiles, reconstruct_path,
@@ -22,6 +23,7 @@ pub fn movement_execution_system(
     occupancy: Res<OccupancyGrid>,
     cost_registry: Res<TerrainCostRegistry>,
     units: Query<(Entity, &Attributes, &GameplayTags, &GridPosition)>,
+    mut log_writer: MessageWriter<UnitMoved>,
 ) {
     for intent in intent_reader.read() {
         execute_movement(
@@ -33,6 +35,7 @@ pub fn movement_execution_system(
             &occupancy,
             &cost_registry,
             &units,
+            &mut log_writer,
         );
     }
 }
@@ -47,6 +50,7 @@ fn execute_movement(
     occupancy: &OccupancyGrid,
     cost_registry: &TerrainCostRegistry,
     units: &Query<(Entity, &Attributes, &GameplayTags, &GridPosition)>,
+    log_writer: &mut MessageWriter<UnitMoved>,
 ) {
     let Ok((_, attrs, tags, grid_pos)) = units.get(intent.entity) else {
         return;
@@ -122,15 +126,12 @@ fn execute_movement(
         },
     });
 
-    bevy::log::info!(
-        target: "character",
-        event = "unit_moved",
-        entity = ?intent.entity,
-        from = ?start_coord,
-        to = ?intent.target_coord,
-        path_len = path_len,
-        "单位移动"
-    );
+    log_writer.write(UnitMoved {
+        entity: intent.entity,
+        unit_name: String::new(), // TODO: 查询 UnitName 组件
+        from: start_coord,
+        to: intent.target_coord,
+    });
 }
 
 /// 简单寻路：不考虑单位占用，只考虑地形和移动范围

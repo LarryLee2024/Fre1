@@ -6,8 +6,10 @@ use crate::character::{
 use crate::core::attribute::AttributeKind;
 use crate::core::attribute::Attributes;
 use crate::core::tag::{GameplayTag, GameplayTags};
+use crate::infrastructure::logging::events::SkillActivated;
 use crate::skill::{SkillCooldowns, SkillRegistry};
 use crate::turn::{AiTimer, TurnOrder, TurnPhase, TurnState};
+use bevy::ecs::message::MessageWriter;
 use bevy::prelude::*;
 
 /// 战斗意图：记录谁攻击谁、用什么技能
@@ -116,6 +118,7 @@ pub fn execute_action_on_enter(
     highlights: Query<Entity, With<SelectionHighlight>>,
     skill_registry: Res<SkillRegistry>,
     mut ai_timer: ResMut<AiTimer>,
+    mut log_skill_writer: MessageWriter<SkillActivated>,
 ) {
     crate::character::clear_markers(&mut commands, &range_entities, &highlights);
 
@@ -139,13 +142,13 @@ pub fn execute_action_on_enter(
 
         if let Some(skill_id) = combat_intent.skill_id.as_deref() {
             if let Some(skill_data) = skill_registry.get(skill_id) {
-                bevy::log::info!(
-                    target: "battle",
-                    event = "skill_activated",
-                    unit = %_name.0,
-                    skill_id = %skill_id,
-                    "技能已使用"
-                );
+                log_skill_writer.write(SkillActivated {
+                    caster: entity,
+                    caster_name: _name.0.clone(),
+                    skill_id: skill_id.to_string(),
+                    target: Entity::PLACEHOLDER, // TODO: 从 CombatIntent 获取目标
+                    target_name: String::new(),
+                });
                 if skill_data.cooldown > 0 {
                     cooldowns.set(skill_id, skill_data.cooldown);
                 }
@@ -192,13 +195,13 @@ pub fn execute_action_on_enter(
             // 设置冷却（与玩家走同一套逻辑）
             if let Some(skill_id) = combat_intent.skill_id.as_deref() {
                 if let Some(skill_data) = skill_registry.get(skill_id) {
-                    bevy::log::info!(
-                        target: "battle",
-                        event = "skill_activated",
-                        unit = ?source_entity,
-                        skill_id = %skill_id,
-                        "AI技能已使用"
-                    );
+                    log_skill_writer.write(SkillActivated {
+                        caster: source_entity,
+                        caster_name: String::new(), // TODO: 查询 UnitName 组件
+                        skill_id: skill_id.to_string(),
+                        target: Entity::PLACEHOLDER, // TODO: 从 CombatIntent 获取目标
+                        target_name: String::new(),
+                    });
                     if skill_data.cooldown > 0 {
                         cooldowns.set(skill_id, skill_data.cooldown);
                     }

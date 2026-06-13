@@ -7,6 +7,7 @@ mod character;
 mod core;
 mod debug;
 mod equipment;
+pub mod infrastructure;
 mod input;
 mod inventory;
 mod map;
@@ -29,6 +30,8 @@ use core::modifier_rule::ModifierRulePlugin;
 use core::tag_def::TagDefPlugin;
 use debug::DebugPlugin;
 use equipment::EquipmentPlugin;
+use infrastructure::audit::AuditPlugin;
+use infrastructure::logging::LogPlugin;
 use input::InputPlugin;
 use inventory::InventoryPlugin;
 use map::MapPlugin;
@@ -75,6 +78,7 @@ fn main() {
             AttributeDefPlugin,
             TagDefPlugin,
         ))
+        .add_plugins((LogPlugin, AuditPlugin))
         // 游戏逻辑插件
         .add_plugins((
             AssetsPlugin,

@@ -3,6 +3,7 @@
 use bevy::ecs::message::MessageReader;
 use bevy::prelude::*;
 
+use crate::infrastructure::logging::events::LevelCompletedEvent;
 use crate::turn::LevelCompleted;
 
 use super::progress::CampaignProgress;
@@ -17,16 +18,13 @@ pub fn on_level_completed(
     mut progress: ResMut<CampaignProgress>,
     campaign_registry: Res<CampaignRegistry>,
     mut reader: MessageReader<LevelCompleted>,
+    mut log_writer: MessageWriter<LevelCompletedEvent>,
 ) {
     for msg in reader.read() {
-        bevy::log::info!(
-            target: "campaign",
-            event = "level_completed",
-            level_id = %msg.level_id,
-            result = ?msg.result,
-            turn = %msg.turn_number,
-            "关卡完成"
-        );
+        log_writer.write(LevelCompletedEvent {
+            level_id: msg.level_id.clone(),
+            success: matches!(msg.result, crate::turn::GameOverState::Victory),
+        });
 
         match msg.result {
             crate::turn::GameOverState::Victory => {
@@ -34,7 +32,6 @@ pub fn on_level_completed(
             }
             crate::turn::GameOverState::Defeat => {
                 // Defeat：当前 Stage 保持 Unlocked，不做任何更改
-                bevy::log::info!(target: "campaign", event = "level_defeated", "关卡失败，可重玩");
             }
             crate::turn::GameOverState::Playing => {
                 // 不应出现 Playing 状态的 LevelCompleted，忽略

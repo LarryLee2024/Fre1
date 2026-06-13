@@ -12,6 +12,9 @@ use crate::character::{
 };
 use crate::core::attribute::{AttributeModifierInstance, Attributes, ModifierSource};
 use crate::core::tag::GameplayTags;
+use crate::infrastructure::logging::events::{
+    EquipmentEquipped as LogEquipmentEquipped, EquipmentUnequipped as LogEquipmentUnequipped,
+};
 use crate::inventory::container::Container;
 use crate::inventory::definition::ItemRegistry;
 use crate::inventory::instance::{ItemInstance, ItemStack};
@@ -62,6 +65,7 @@ pub fn equip_item_system(
     mut equip_reader: MessageReader<EquipItem>,
     mut equipped_writer: MessageWriter<ItemEquipped>,
     mut failed_writer: MessageWriter<EquipFailed>,
+    mut log_equipped_writer: MessageWriter<LogEquipmentEquipped>,
     equipment_registry: Res<EquipmentRegistry>,
     item_registry: Res<ItemRegistry>,
     trait_registry: Res<TraitRegistry>,
@@ -195,15 +199,11 @@ pub fn equip_item_system(
             // 重建 GameplayTags（三层：Trait + Equipment + Buff）
             rebuild_tags_with_buffs(&buffs, &mut tags, &persistent);
 
-            bevy::log::info!(
-                target: "equipment",
-                event = "equipment_equipped",
-                entity = ?entity,
-                def_id = %def.id,
-                slot = ?slot,
-                instance_id = msg.instance_id,
-                "装备已穿戴"
-            );
+            log_equipped_writer.write(LogEquipmentEquipped {
+                target: entity,
+                target_name: String::new(), // TODO: 查询 UnitName 组件
+                equipment_id: def.id.clone(),
+            });
 
             equipped_writer.write(ItemEquipped {
                 entity,
@@ -219,6 +219,7 @@ pub fn equip_item_system(
 pub fn unequip_item_system(
     mut unequip_reader: MessageReader<UnequipItem>,
     mut unequipped_writer: MessageWriter<ItemUnequipped>,
+    mut log_unequipped_writer: MessageWriter<LogEquipmentUnequipped>,
     equipment_registry: Res<EquipmentRegistry>,
     item_registry: Res<ItemRegistry>,
     trait_registry: Res<TraitRegistry>,
@@ -285,14 +286,11 @@ pub fn unequip_item_system(
             // 重建 GameplayTags（三层：Trait + Equipment + Buff）
             rebuild_tags_with_buffs(&buffs, &mut tags, &persistent);
 
-            bevy::log::info!(
-                target: "equipment",
-                event = "equipment_unequipped",
-                entity = ?entity,
-                slot = ?msg.slot,
-                def_id = %def_id,
-                "装备已脱卸"
-            );
+            log_unequipped_writer.write(LogEquipmentUnequipped {
+                target: entity,
+                target_name: String::new(), // TODO: 查询 UnitName 组件
+                equipment_id: def_id.clone(),
+            });
 
             unequipped_writer.write(ItemUnequipped {
                 entity,

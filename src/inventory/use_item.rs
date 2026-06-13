@@ -47,6 +47,7 @@ pub fn use_item_system(
     item_registry: Res<ItemRegistry>,
     buff_registry: Res<BuffRegistry>,
     mut used_writer: MessageWriter<ItemUsed>,
+    mut log_used_writer: MessageWriter<crate::infrastructure::logging::events::ItemUsed>,
     mut trait_writer: MessageWriter<GrantTempTraitEffect>,
     mut skill_writer: MessageWriter<CastSkillEffect>,
 ) {
@@ -103,13 +104,12 @@ pub fn use_item_system(
             def_id: def.id.clone(),
         });
 
-        bevy::log::info!(
-            target: "inventory",
-            event = "consumable_used",
-            entity = ?msg.user_entity,
-            item_id = %def.id,
-            "消耗品已使用"
-        );
+        log_used_writer.write(crate::infrastructure::logging::events::ItemUsed {
+            user: msg.user_entity,
+            user_name: String::new(), // TODO: 查询 UnitName 组件
+            item_id: def.id.clone(),
+            target: Some(msg.user_entity),
+        });
     }
 }
 

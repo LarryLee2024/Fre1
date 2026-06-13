@@ -6,6 +6,7 @@ use crate::battle::{DotApplied, HotApplied, StunApplied};
 use crate::character::{Dead, GridPosition, PersistentTags, Unit, UnitName};
 use crate::core::attribute::{AttributeKind, Attributes, BuffInstanceId, ModifierSource};
 use crate::core::tag::{GameplayTag, GameplayTags};
+use crate::infrastructure::logging::events::BuffExpired;
 use crate::skill::SkillCooldowns;
 use crate::turn::NeedsResolve;
 use bevy::ecs::message::MessageWriter;
@@ -34,6 +35,7 @@ pub fn resolve_status_effects(
     mut dot_writer: MessageWriter<DotApplied>,
     mut hot_writer: MessageWriter<HotApplied>,
     mut stun_writer: MessageWriter<StunApplied>,
+    mut buff_expired_writer: MessageWriter<BuffExpired>,
 ) {
     // 只有回合切换后的首次 SelectUnit 才结算
     if !needs_resolve.0 {
@@ -68,13 +70,6 @@ pub fn resolve_status_effects(
                 remove_buff(&mut buffs, &mut attrs, &mut tags, id);
             }
             // 发送晕眩消息（表现层响应）
-            bevy::log::info!(
-                target: "buff",
-                event = "stun_applied",
-                target_entity = ?entity,
-                target_name = %name.0,
-                "晕眩已结算"
-            );
             stun_writer.write(StunApplied {
                 target: entity,
                 target_name: name.0.clone(),
@@ -89,14 +84,6 @@ pub fn resolve_status_effects(
             attrs.set_vital(AttributeKind::Hp, new_hp);
 
             // 发送 DoT 消息（表现层响应）
-            bevy::log::info!(
-                target: "buff",
-                event = "dot_applied",
-                target_entity = ?entity,
-                target_name = %name.0,
-                damage = dot,
-                "DoT伤害已结算"
-            );
             dot_writer.write(DotApplied {
                 target: entity,
                 target_name: name.0.clone(),
@@ -120,14 +107,6 @@ pub fn resolve_status_effects(
             attrs.set_vital(AttributeKind::Hp, new_hp);
 
             // 发送 HoT 消息（表现层响应）
-            bevy::log::info!(
-                target: "buff",
-                event = "hot_applied",
-                target_entity = ?entity,
-                target_name = %name.0,
-                heal = hot,
-                "HoT治疗已结算"
-            );
             hot_writer.write(HotApplied {
                 target: entity,
                 target_name: name.0.clone(),
@@ -144,14 +123,11 @@ pub fn resolve_status_effects(
             .collect();
         tick_buffs(&mut buffs, &mut attrs, &mut tags, &persistent_tags);
         for buff_id in &expired_buffs {
-            bevy::log::info!(
-                target: "buff",
-                event = "buff_expired",
-                target_entity = ?entity,
-                target_name = %name.0,
-                buff_id = %buff_id,
-                "Buff已过期"
-            );
+            buff_expired_writer.write(BuffExpired {
+                target: entity,
+                target_name: name.0.clone(),
+                buff_id: buff_id.clone(),
+            });
         }
 
         // 5. tick 技能冷却

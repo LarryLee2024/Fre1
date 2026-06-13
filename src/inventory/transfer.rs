@@ -38,6 +38,7 @@ pub fn transfer_item_system(
     mut containers: Query<&mut Container>,
     item_registry: Res<ItemRegistry>,
     mut writer: MessageWriter<ItemTransferred>,
+    mut log_writer: MessageWriter<crate::infrastructure::logging::events::ItemTransferred>,
 ) {
     for msg in messages.read() {
         // 不能同时可变借用两个相同的 Entity
@@ -118,15 +119,12 @@ pub fn transfer_item_system(
                 count: to_remove,
             });
 
-            bevy::log::info!(
-                target: "inventory",
-                event = "item_transferred",
-                from = ?msg.from_entity,
-                to = ?msg.to_entity,
-                def_id = %def_id,
-                count = to_remove,
-                "物品转移完成"
-            );
+            log_writer.write(crate::infrastructure::logging::events::ItemTransferred {
+                item_id: def_id.clone(),
+                amount: to_remove,
+                from_container: format!("{:?}", msg.from_entity),
+                to_container: format!("{:?}", msg.to_entity),
+            });
         }
     }
 }

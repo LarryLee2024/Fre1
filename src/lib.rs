@@ -6,6 +6,7 @@ pub mod campaign;
 pub mod character;
 pub mod core;
 pub mod equipment;
+pub mod infrastructure;
 pub mod input;
 pub mod inventory;
 pub mod map;

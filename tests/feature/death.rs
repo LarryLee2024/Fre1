@@ -137,6 +137,7 @@ fn resolve_test_app() -> App {
     app.add_message::<tactical_rpg::battle::DotApplied>();
     app.add_message::<tactical_rpg::battle::HotApplied>();
     app.add_message::<tactical_rpg::battle::StunApplied>();
+    app.add_message::<tactical_rpg::infrastructure::logging::events::BuffExpired>();
     app.add_systems(Update, resolve_status_effects);
     app
 }

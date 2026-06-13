@@ -45,7 +45,8 @@ fn setup_movement_execution_app() -> App {
         .insert_resource(TerrainRegistry::default())
         .insert_resource(OccupancyGrid::default())
         .insert_resource(TerrainCostRegistry::default())
-        .add_message::<MovementIntent>();
+        .add_message::<MovementIntent>()
+        .add_message::<tactical_rpg::infrastructure::logging::events::UnitMoved>();
 
     // 注册移动执行系统
     app.add_systems(

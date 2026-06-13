@@ -8,6 +8,7 @@ use bevy::ecs::message::MessageWriter;
 use bevy::prelude::*;
 
 use crate::character::{Dead, Faction, Unit, UnitId};
+use crate::infrastructure::logging::events::LevelCompletedEvent;
 use crate::map::{
     ConditionTypeDef, LevelRegistry, LoseConditionDef, VictoryConditionDef, WinConditionDef,
 };
@@ -35,6 +36,7 @@ pub fn check_victory_conditions(
     all_units: Query<(&Unit, Option<&UnitId>), Without<Dead>>,
     mut game_over: ResMut<GameOverState>,
     mut level_completed_writer: MessageWriter<LevelCompleted>,
+    mut log_level_writer: MessageWriter<LevelCompletedEvent>,
 ) {
     // 终态不可逆（FORBIDDEN-5）
     if *game_over != GameOverState::Playing {
@@ -52,6 +54,7 @@ pub fn check_victory_conditions(
             *game_over = GameOverState::Defeat;
             send_level_completed(
                 &mut level_completed_writer,
+                &mut log_level_writer,
                 &level_config.id,
                 GameOverState::Defeat,
                 turn_state.turn_number,
@@ -78,6 +81,7 @@ pub fn check_victory_conditions(
         *game_over = GameOverState::Defeat;
         send_level_completed(
             &mut level_completed_writer,
+            &mut log_level_writer,
             &level_config.id,
             GameOverState::Defeat,
             turn_number,
@@ -86,6 +90,7 @@ pub fn check_victory_conditions(
         *game_over = GameOverState::Victory;
         send_level_completed(
             &mut level_completed_writer,
+            &mut log_level_writer,
             &level_config.id,
             GameOverState::Victory,
             turn_number,
@@ -239,18 +244,15 @@ fn check_turn_limit_exceeded(turn_number: u32, max_turns: u32) -> bool {
 /// 发送 LevelCompleted 消息
 fn send_level_completed(
     writer: &mut MessageWriter<LevelCompleted>,
+    log_writer: &mut MessageWriter<LevelCompletedEvent>,
     level_id: &str,
     result: GameOverState,
     turn_number: u32,
 ) {
-    bevy::log::info!(
-        target: "turn",
-        event = "level_completed",
-        level_id = level_id,
-        result = ?result,
-        turn = turn_number,
-        "关卡完成"
-    );
+    log_writer.write(LevelCompletedEvent {
+        level_id: level_id.to_string(),
+        success: matches!(result, GameOverState::Victory),
+    });
     writer.write(LevelCompleted {
         level_id: level_id.to_string(),
         result,
@@ -454,6 +456,7 @@ mod tests {
             .init_resource::<LevelRegistry>()
             .init_resource::<TurnState>()
             .add_message::<LevelCompleted>()
+            .add_message::<LevelCompletedEvent>()
             .add_systems(Update, check_victory_conditions);
         app
     }
@@ -467,6 +470,7 @@ mod tests {
             .init_resource::<LevelRegistry>()
             .init_resource::<TurnState>()
             .add_message::<LevelCompleted>()
+            .add_message::<LevelCompletedEvent>()
             .add_systems(Update, check_all_dead_safety);
         app
     }

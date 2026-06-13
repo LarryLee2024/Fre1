@@ -7,6 +7,7 @@ use tactical_rpg::core::effect::EffectPlugin;
 use tactical_rpg::core::modifier_rule::ModifierRulePlugin;
 use tactical_rpg::core::tag_def::TagDefPlugin;
 use tactical_rpg::equipment::EquipmentPlugin;
+use tactical_rpg::infrastructure::logging::events as log_events;
 use tactical_rpg::inventory::InventoryPlugin;
 
 /// 最小 App：仅 MinimalPlugins + StatesPlugin
@@ -14,6 +15,22 @@ pub fn minimal_app() -> App {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, bevy::state::app::StatesPlugin));
     app
+}
+
+/// 注册所有日志 Message 类型（供测试 App 使用）
+pub fn register_logging_messages(app: &mut App) {
+    app.add_message::<log_events::ConfigLoaded>()
+        .add_message::<log_events::BuffApplied>()
+        .add_message::<log_events::BuffRemoved>()
+        .add_message::<log_events::BuffExpired>()
+        .add_message::<log_events::SkillActivated>()
+        .add_message::<log_events::LevelCompletedEvent>()
+        .add_message::<log_events::EquipmentEquipped>()
+        .add_message::<log_events::EquipmentUnequipped>()
+        .add_message::<log_events::ItemUsed>()
+        .add_message::<log_events::ItemTransferred>()
+        .add_message::<log_events::UnitMoved>()
+        .add_message::<log_events::SnapshotCreated>();
 }
 
 /// 战斗 App：Core + Buff + Trait + Equipment + Inventory
@@ -29,6 +46,7 @@ pub fn combat_app() -> App {
         EquipmentPlugin,
         InventoryPlugin,
     ));
+    register_logging_messages(&mut app);
     app
 }
 
