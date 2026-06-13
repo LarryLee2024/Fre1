@@ -1,7 +1,7 @@
 // 技能领域模块：数据驱动的技能定义与注册表
 
-mod defaults;
-mod types;
+mod defaults; // 默认技能定义（基础攻击等）
+mod types; // SkillData, SkillTargeting, SkillCondition 等类型定义
 
 pub use types::*;
 

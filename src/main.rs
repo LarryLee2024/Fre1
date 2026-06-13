@@ -19,7 +19,6 @@ use assets::AssetsPlugin;
 use battle::BattlePlugin;
 use bevy::prelude::*;
 use bevy_inspector_egui::bevy_egui::EguiPlugin;
-use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use buff::BuffPlugin;
 use character::CharacterPlugin;
 use core::attribute_def::AttributeDefPlugin;
@@ -57,8 +56,8 @@ fn main() {
                     ..default()
                 }),
         )
-        // 调试插件，仅在debug模式下启用
-        .add_plugins((EguiPlugin::default(), WorldInspectorPlugin::new()))
+        // egui 基础设施（调试面板 / World Inspector 依赖）
+        .add_plugins(EguiPlugin::default())
         // 数据层插件
         .add_plugins((
             SkillPlugin,

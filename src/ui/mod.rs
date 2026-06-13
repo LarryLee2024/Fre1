@@ -1,22 +1,22 @@
 // UI 模块：面板、行动菜单、浮窗、视觉效果
 // 架构：widgets/ 基础库 + panels/ 面板模块 + 各功能模块
 
-mod action_menu;
-mod camera;
-mod combat_log_handler;
-mod combat_preview;
-mod combat_vfx_handler;
-mod command_handler;
-pub mod events;
-mod focus;
-mod highlight;
-mod panels;
-pub mod settings;
-pub mod theme;
-mod tile_info;
-pub mod vfx;
-pub mod view_models;
-mod widgets;
+mod action_menu; // 行动菜单（攻击/技能/待机）
+mod camera; // 摄像机控制（缩放/拖拽）
+mod combat_log_handler; // 战斗日志 Message 监听
+mod combat_preview; // 战斗预览（伤害计算展示）
+mod combat_vfx_handler; // 战斗 VFX（飘字/特效）
+mod command_handler; // UI 命令处理
+pub mod events; // UI 事件定义（UiCommand, MovementIntent）
+mod focus; // UI 焦点状态管理
+mod highlight; // 单位/格子高亮
+mod panels; // UI 面板子模块
+pub mod settings; // GameSettings 用户偏好与 RON 持久化
+pub mod theme; // UiTheme 视觉常量
+mod tile_info; // 格子信息浮窗
+pub mod vfx; // 视觉效果系统
+pub mod view_models; // ViewModel 数据结构
+mod widgets; // 可复用 UI 构建块
 
 use crate::battle::CombatLogCollapsed;
 use crate::character::Faction;

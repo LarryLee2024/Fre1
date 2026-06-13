@@ -1,7 +1,7 @@
 // 回合管理模块：状态机、敏捷驱动行动队列、SystemSet 编排
 
-mod order;
-mod state;
+mod order; // TurnOrder 行动队列（敏捷驱动排序）
+mod state; // AppState, TurnPhase 状态机定义
 
 pub use order::*;
 pub use state::*;

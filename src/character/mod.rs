@@ -1,13 +1,12 @@
 // 角色模块：单位组件、生成、模板、特性
-// 合并了原 unit.rs、data/unit_template.rs、core/trait_def.rs
 
-mod components;
-mod marker;
-mod movement;
-mod movement_execution;
-mod spawn;
-mod template;
-mod traits;
+mod components; // Unit, UnitName, Faction, GridPosition 等核心组件
+mod marker; // Dead, Selected, MovingUnit 等 Tag 组件
+mod movement; // 移动意图与动画
+mod movement_execution; // 移动执行系统（监听 MovementIntent 消息）
+mod spawn; // 单位生成逻辑
+mod template; // UnitTemplate 数据定义与注册表
+mod traits; // Trait 系统（种族/职业/天赋/装备统一抽象）
 
 use crate::battle::CharacterDied;
 use crate::core::attribute::{

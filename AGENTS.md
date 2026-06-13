@@ -29,6 +29,15 @@ Must follow in `main.rs`:
 - **Feature First**: Code organized by business domain (`battle/`, `character/`, `buff/`, etc.)
 - **Forbidden**: `components/`, `systems/`, `events/`, `utils/` as top-level modules
 - **core/**: Must not depend on any business module (attributes, tags, effects, modifiers)
+- **Module Header Comment**: Every `mod.rs` must start with a comment block describing module purpose, followed by inline comments on each `mod` declaration:
+  ```rust
+  // 模块名称：一句话说明模块职责
+  // 补充说明（可选）
+
+  mod sub_a; // 子模块 A 的职责
+  mod sub_b; // 子模块 B 的职责
+  ```
+- **Mod Sync Rule**: When adding/removing/renaming files in a module directory, the `mod.rs` must be updated to match. Missing or stale `mod` declarations cause compilation errors.
 
 ### ECS Constraints
 - **Entity = ID only**: No methods, no `EntityManager`, no OOP patterns

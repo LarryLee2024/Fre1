@@ -2,8 +2,8 @@
 // 替代硬编码的 class_tag 单标签，支持多 trait 组合
 // 支持从 assets/traits/*.ron 外部配置文件加载
 
-mod handlers;
-mod types;
+mod handlers; // TraitEffectHandler trait 与各类型处理器
+mod types; // TraitDef, TraitData, TraitSource 等类型定义
 
 pub use handlers::*;
 pub use types::*;

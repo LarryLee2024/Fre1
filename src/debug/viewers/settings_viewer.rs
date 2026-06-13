@@ -94,5 +94,5 @@ pub fn render(ui: &mut egui::Ui, settings: &mut GameSettings) {
     });
 
     ui.separator();
-    ui.label("设置变更会自动保存到 settings.ron");
+    ui.label("设置变更会自动保存到 assets/settings.ron");
 }

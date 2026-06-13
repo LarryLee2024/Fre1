@@ -1,10 +1,13 @@
-pub mod battle_bag;
-pub mod container;
-pub mod definition;
-pub mod instance;
-pub mod resources;
-pub mod transfer;
-pub mod use_item;
+// 背包模块：容器系统、物品定义、实例管理、物品转移与使用
+// 支持从 assets/items/*.ron 外部配置文件加载物品定义
+
+pub mod battle_bag; // 战斗背包容器（消耗品快捷使用）
+pub mod container; // Container 容器抽象（背包/箱子/仓库）
+pub mod definition; // ItemDef 定义与 ItemRegistry 注册表
+pub mod instance; // ItemInstance, ItemStack 实例管理
+pub mod resources; // Resources 资源堆叠（金币/素材）
+pub mod transfer; // 物品转移逻辑（TransferItem 消息处理）
+pub mod use_item; // 物品使用逻辑（消耗品/装备/技能书）
 
 use crate::core::registry_loader::RegistryLoader;
 use bevy::prelude::*;

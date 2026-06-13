@@ -365,9 +365,7 @@ mod tests {
             .add_message::<TurnEnded>()
             .add_systems(
                 Update,
-                |mut reader: MessageReader<ForceEndTurn>| {
-                    for _ in reader.read() {}
-                },
+                |mut reader: MessageReader<ForceEndTurn>| for _ in reader.read() {},
             );
         app.world_mut().write_message(ForceEndTurn);
         app.update();

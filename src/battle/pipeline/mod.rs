@@ -1,10 +1,10 @@
 // Effect Pipeline：生成→修饰→执行 三步管道
 
-mod execute;
-mod generate;
-mod intent;
-mod modify;
-mod trait_trigger;
+mod execute; // execute_effects 执行系统（apply_effects 子系统）
+mod generate; // 效果生成（CombatIntent → PendingEffect）
+mod intent; // CombatIntent, PrevPosition 定义
+mod modify; // 修饰符管线（Modifier → Final Stat）
+mod trait_trigger; // on_attack/on_hit/on_kill Trait 触发
 
 pub use execute::execute_effects;
 pub use intent::{CombatIntent, PrevPosition};

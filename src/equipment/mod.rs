@@ -2,11 +2,11 @@
 // 遵循「装备 = Modifier + Trait + Tag + Rule」四层架构
 // 支持从 assets/equipment/*.ron 外部配置文件加载
 
-mod definition;
-mod equip;
-mod instance;
-mod requirements;
-mod slots;
+mod definition; // EquipmentDef 定义与 EquipmentRegistry 注册表
+mod equip; // 穿脱逻辑（EquipItem/UnequipItem 消息处理）
+mod instance; // EquipmentInstance 实例管理
+mod requirements; // 装备需求检查（属性/等级/标签）
+mod slots; // EquipmentSlots 装备槽位组件
 
 use crate::core::registry_loader::RegistryLoader;
 use bevy::prelude::*;

@@ -2,8 +2,8 @@
 // TerrainCostCalculator trait 使用 terrain_id: &str，支持数据驱动扩展
 // 寻路直接从 TerrainGrid + OccupancyGrid 读取，不再依赖 Tile Entity
 
-mod algorithms;
-mod cost;
+mod algorithms; // BFS 移动范围与路径搜索算法
+mod cost; // TerrainCostRegistry 地形消耗注册表
 
 pub use algorithms::*;
 pub use cost::*;

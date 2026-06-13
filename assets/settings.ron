@@ -1,0 +1,14 @@
+(
+    ui: (
+        font_scale: 1.0,
+        color_scheme: Normal,
+    ),
+    accessibility: (
+        color_blind_mode: r#None,
+        auto_battle_speed: 1.0,
+    ),
+    gameplay: (
+        animation_speed: 1.0,
+        show_damage_numbers: true,
+    ),
+)

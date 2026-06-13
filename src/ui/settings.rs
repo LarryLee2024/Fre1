@@ -77,18 +77,18 @@ impl Default for GameSettings {
 }
 
 impl GameSettings {
-    /// 从 settings.ron 加载，失败则返回默认值
+    /// 从 assets/settings.ron 加载，失败则返回默认值
     pub fn load() -> Self {
-        std::fs::read_to_string("settings.ron")
+        std::fs::read_to_string("assets/settings.ron")
             .ok()
             .and_then(|s| ron::from_str(&s).ok())
             .unwrap_or_default()
     }
 
-    /// 保存到 settings.ron
+    /// 保存到 assets/settings.ron
     pub fn save(&self) {
         if let Ok(s) = ron::ser::to_string_pretty(self, ron::ser::PrettyConfig::default()) {
-            let _ = std::fs::write("settings.ron", s);
+            let _ = std::fs::write("assets/settings.ron", s);
         }
     }
 }

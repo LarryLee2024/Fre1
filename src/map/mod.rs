@@ -1,11 +1,11 @@
 // 地图模块：网格系统、地形数据、寻路、运行时 Grid
 // Terrain 枚举和 Tile 组件已删除，地形数据由 TerrainGrid 纯数据存储
 
-mod data;
-mod grid;
-mod hp_bar;
-mod pathfinding;
-pub mod runtime;
+mod data; // TerrainRegistry 地形定义注册表
+mod grid; // GameMap 网格渲染与摄像机
+mod hp_bar; // 单位血条 UI
+mod pathfinding; // BFS 寻路算法与地形消耗计算
+pub mod runtime; // TerrainGrid, OccupancyGrid 运行时网格数据
 
 use bevy::prelude::*;
 
