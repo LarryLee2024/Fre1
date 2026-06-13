@@ -50,7 +50,12 @@ pub fn check_victory_conditions(
         // 无胜负条件配置时，仅执行默认全灭检查
         if check_all_dead_players(&alive_players) {
             *game_over = GameOverState::Defeat;
-            send_level_completed(&mut level_completed_writer, &level_config.id, GameOverState::Defeat, turn_state.turn_number);
+            send_level_completed(
+                &mut level_completed_writer,
+                &level_config.id,
+                GameOverState::Defeat,
+                turn_state.turn_number,
+            );
         }
         return;
     };
@@ -58,32 +63,33 @@ pub fn check_victory_conditions(
     let turn_number = turn_state.turn_number;
 
     // 失败优先原则（FORBIDDEN-6）：先检查所有 lose_conditions
-    let any_lose = check_lose_conditions(
-        victory_condition,
-        &alive_players,
-        turn_number,
-    );
+    let any_lose = check_lose_conditions(victory_condition, &alive_players, turn_number);
 
     // 默认全灭检查（绝对不变量 3.1/3.8）
     let all_dead = check_all_dead_players(&alive_players);
 
     // 再检查所有 win_conditions
-    let any_win = check_win_conditions(
-        victory_condition,
-        &alive_enemies,
-        &all_units,
-        turn_number,
-    );
+    let any_win = check_win_conditions(victory_condition, &alive_enemies, &all_units, turn_number);
 
     let is_defeat = any_lose || all_dead;
     let is_victory = any_win;
 
     if is_defeat {
         *game_over = GameOverState::Defeat;
-        send_level_completed(&mut level_completed_writer, &level_config.id, GameOverState::Defeat, turn_number);
+        send_level_completed(
+            &mut level_completed_writer,
+            &level_config.id,
+            GameOverState::Defeat,
+            turn_number,
+        );
     } else if is_victory {
         *game_over = GameOverState::Victory;
-        send_level_completed(&mut level_completed_writer, &level_config.id, GameOverState::Victory, turn_number);
+        send_level_completed(
+            &mut level_completed_writer,
+            &level_config.id,
+            GameOverState::Victory,
+            turn_number,
+        );
     }
 }
 
@@ -93,6 +99,8 @@ pub fn check_victory_conditions(
 /// "全灭玩家即失败"这一绝对不变量被遗漏。
 pub fn check_all_dead_safety(
     mut game_over: ResMut<GameOverState>,
+    level_registry: Res<LevelRegistry>,
+    turn_state: Res<TurnState>,
     alive_players: Query<&Unit, (With<Unit>, Without<Dead>)>,
     mut level_completed_writer: MessageWriter<LevelCompleted>,
 ) {
@@ -107,12 +115,17 @@ pub fn check_all_dead_safety(
     }
 
     // 全灭玩家 → 强制失败
-    bevy::log::warn!(target: "turn", "兜底检查触发：全灭玩家即失败");
+    let level_id = level_registry
+        .first()
+        .map(|c| c.id.as_str())
+        .unwrap_or("unknown");
+    let turn_number = turn_state.turn_number;
+    bevy::log::warn!(target: "turn", level_id = level_id, turn = turn_number, "兜底检查触发：全灭玩家即失败");
     *game_over = GameOverState::Defeat;
     level_completed_writer.write(LevelCompleted {
-        level_id: String::new(),
+        level_id: level_id.to_string(),
         result: GameOverState::Defeat,
-        turn_number: 0,
+        turn_number,
     });
 }
 
@@ -173,11 +186,7 @@ fn check_single_win_condition(
     match cond.condition_type {
         ConditionTypeDef::KillAll => check_kill_all(alive_enemies),
         ConditionTypeDef::SurviveTurns => {
-            let n = cond
-                .params
-                .as_ref()
-                .and_then(|p| p.n)
-                .unwrap_or(u32::MAX); // 缺失参数时条件永不触发（安全默认值）
+            let n = cond.params.as_ref().and_then(|p| p.n).unwrap_or(u32::MAX); // 缺失参数时条件永不触发（安全默认值）
             check_survive_turns(turn_number, n)
         }
         ConditionTypeDef::DefeatBoss => {
@@ -212,9 +221,9 @@ fn check_defeat_boss(
     }
 
     // 在存活单位中查找 boss_id；找不到说明 Boss 已死亡或不存在
-    !all_units.iter().any(|(_, unit_id)| {
-        unit_id.map_or(false, |id| id.0 == boss_id)
-    })
+    !all_units
+        .iter()
+        .any(|(_, unit_id)| unit_id.map_or(false, |id| id.0 == boss_id))
 }
 
 /// 检查 AllDead：所有玩家单位已死亡（排除 Dead 组件）
@@ -297,7 +306,10 @@ mod tests {
     fn 边界值_存活与超时的不对称判定() {
         // 回合 20：存活目标 20 → 满足（>=）；超时限制 20 → 不满足（>）
         assert!(check_survive_turns(20, 20), "回合 20 应满足存活 20 回合");
-        assert!(!check_turn_limit_exceeded(20, 20), "回合 20 不应触发超时 20 限制");
+        assert!(
+            !check_turn_limit_exceeded(20, 20),
+            "回合 20 不应触发超时 20 限制"
+        );
 
         // 回合 21：存活目标 20 → 满足；超时限制 20 → 触发
         assert!(check_survive_turns(21, 20));
@@ -324,12 +336,24 @@ mod tests {
         "#;
         let vc: VictoryConditionDef = ron::de::from_str(ron_str).expect("RON 应正确反序列化");
         assert_eq!(vc.win_conditions.len(), 1);
-        assert_eq!(vc.win_conditions[0].condition_type, ConditionTypeDef::KillAll);
-        assert_eq!(vc.lose_conditions.len(), 2);
-        assert_eq!(vc.lose_conditions[0].condition_type, ConditionTypeDef::AllDead);
-        assert_eq!(vc.lose_conditions[1].condition_type, ConditionTypeDef::TurnLimitExceeded);
         assert_eq!(
-            vc.lose_conditions[1].params.as_ref().and_then(|p| p.max_turns),
+            vc.win_conditions[0].condition_type,
+            ConditionTypeDef::KillAll
+        );
+        assert_eq!(vc.lose_conditions.len(), 2);
+        assert_eq!(
+            vc.lose_conditions[0].condition_type,
+            ConditionTypeDef::AllDead
+        );
+        assert_eq!(
+            vc.lose_conditions[1].condition_type,
+            ConditionTypeDef::TurnLimitExceeded
+        );
+        assert_eq!(
+            vc.lose_conditions[1]
+                .params
+                .as_ref()
+                .and_then(|p| p.max_turns),
             Some(20)
         );
     }
@@ -439,6 +463,8 @@ mod tests {
         app.add_plugins((MinimalPlugins, bevy::state::app::StatesPlugin))
             .init_state::<super::super::state::AppState>()
             .init_resource::<GameOverState>()
+            .init_resource::<LevelRegistry>()
+            .init_resource::<TurnState>()
             .add_message::<LevelCompleted>()
             .add_systems(Update, check_all_dead_safety);
         app
@@ -489,7 +515,10 @@ mod tests {
 
         // 1 alive player, no enemies
         app.world_mut().spawn((
-            Unit { faction: Faction::Player, acted: false },
+            Unit {
+                faction: Faction::Player,
+                acted: false,
+            },
             UnitId("player_1".into()),
         ));
 
@@ -522,11 +551,17 @@ mod tests {
         );
 
         app.world_mut().spawn((
-            Unit { faction: Faction::Enemy, acted: false },
+            Unit {
+                faction: Faction::Enemy,
+                acted: false,
+            },
             UnitId("enemy_1".into()),
         ));
         app.world_mut().spawn((
-            Unit { faction: Faction::Player, acted: false },
+            Unit {
+                faction: Faction::Player,
+                acted: false,
+            },
             UnitId("player_1".into()),
         ));
 
@@ -560,20 +595,30 @@ mod tests {
 
         // Dead player
         app.world_mut().spawn((
-            Unit { faction: Faction::Player, acted: false },
+            Unit {
+                faction: Faction::Player,
+                acted: false,
+            },
             UnitId("dead_player".into()),
             Dead,
         ));
         // Alive enemy
         app.world_mut().spawn((
-            Unit { faction: Faction::Enemy, acted: false },
+            Unit {
+                faction: Faction::Enemy,
+                acted: false,
+            },
             UnitId("enemy_1".into()),
         ));
 
         app.update();
 
         let state = app.world().resource::<GameOverState>();
-        assert_eq!(*state, GameOverState::Defeat, "全灭玩家必须判定 Defeat（不变量 3.1）");
+        assert_eq!(
+            *state,
+            GameOverState::Defeat,
+            "全灭玩家必须判定 Defeat（不变量 3.1）"
+        );
     }
 
     /// Test ID: VC-ECS-004
@@ -634,18 +679,28 @@ mod tests {
         );
 
         app.world_mut().spawn((
-            Unit { faction: Faction::Enemy, acted: false },
+            Unit {
+                faction: Faction::Enemy,
+                acted: false,
+            },
             UnitId("enemy_1".into()),
         ));
         app.world_mut().spawn((
-            Unit { faction: Faction::Player, acted: false },
+            Unit {
+                faction: Faction::Player,
+                acted: false,
+            },
             UnitId("player_1".into()),
         ));
 
         app.update();
 
         let state = app.world().resource::<GameOverState>();
-        assert_eq!(*state, GameOverState::Victory, "Victory 终态不可被覆盖（不变量 3.3）");
+        assert_eq!(
+            *state,
+            GameOverState::Victory,
+            "Victory 终态不可被覆盖（不变量 3.3）"
+        );
     }
 
     /// Test ID: VC-ECS-006
@@ -673,14 +728,21 @@ mod tests {
         );
 
         app.world_mut().spawn((
-            Unit { faction: Faction::Player, acted: false },
+            Unit {
+                faction: Faction::Player,
+                acted: false,
+            },
             UnitId("player_1".into()),
         ));
 
         app.update();
 
         let state = app.world().resource::<GameOverState>();
-        assert_eq!(*state, GameOverState::Defeat, "Defeat 终态不可被覆盖（不变量 3.3）");
+        assert_eq!(
+            *state,
+            GameOverState::Defeat,
+            "Defeat 终态不可被覆盖（不变量 3.3）"
+        );
     }
 
     /// Test ID: VC-ECS-007
@@ -709,11 +771,17 @@ mod tests {
         );
 
         app.world_mut().spawn((
-            Unit { faction: Faction::Player, acted: false },
+            Unit {
+                faction: Faction::Player,
+                acted: false,
+            },
             UnitId("player_1".into()),
         ));
         app.world_mut().spawn((
-            Unit { faction: Faction::Enemy, acted: false },
+            Unit {
+                faction: Faction::Enemy,
+                acted: false,
+            },
             UnitId("enemy_1".into()),
         ));
 
@@ -753,14 +821,21 @@ mod tests {
 
         // No alive players, only enemy
         app.world_mut().spawn((
-            Unit { faction: Faction::Enemy, acted: false },
+            Unit {
+                faction: Faction::Enemy,
+                acted: false,
+            },
             UnitId("enemy_1".into()),
         ));
 
         app.update();
 
         let state = app.world().resource::<GameOverState>();
-        assert_eq!(*state, GameOverState::Defeat, "无配置时全灭玩家仍应判定 Defeat");
+        assert_eq!(
+            *state,
+            GameOverState::Defeat,
+            "无配置时全灭玩家仍应判定 Defeat"
+        );
     }
 
     /// Test ID: VC-ECS-009
@@ -804,7 +879,10 @@ mod tests {
 
         // 必须有存活玩家，否则"全灭玩家即失败"不变量会触发 Defeat
         app.world_mut().spawn((
-            Unit { faction: Faction::Player, acted: false },
+            Unit {
+                faction: Faction::Player,
+                acted: false,
+            },
             UnitId("player_1".into()),
         ));
 
@@ -864,13 +942,19 @@ mod tests {
 
         // Dead boss
         app.world_mut().spawn((
-            Unit { faction: Faction::Enemy, acted: false },
+            Unit {
+                faction: Faction::Enemy,
+                acted: false,
+            },
             UnitId("dark_lord".into()),
             Dead,
         ));
         // Alive player
         app.world_mut().spawn((
-            Unit { faction: Faction::Player, acted: false },
+            Unit {
+                faction: Faction::Player,
+                acted: false,
+            },
             UnitId("player_1".into()),
         ));
 
@@ -908,12 +992,18 @@ mod tests {
 
         // Alive boss
         app.world_mut().spawn((
-            Unit { faction: Faction::Enemy, acted: false },
+            Unit {
+                faction: Faction::Enemy,
+                acted: false,
+            },
             UnitId("dark_lord".into()),
         ));
         // Alive player
         app.world_mut().spawn((
-            Unit { faction: Faction::Player, acted: false },
+            Unit {
+                faction: Faction::Player,
+                acted: false,
+            },
             UnitId("player_1".into()),
         ));
 
@@ -951,7 +1041,10 @@ mod tests {
 
         app.world_mut().resource_mut::<TurnState>().turn_number = 5;
         app.world_mut().spawn((
-            Unit { faction: Faction::Player, acted: false },
+            Unit {
+                faction: Faction::Player,
+                acted: false,
+            },
             UnitId("player_1".into()),
         ));
 
@@ -989,7 +1082,10 @@ mod tests {
 
         app.world_mut().resource_mut::<TurnState>().turn_number = 11;
         app.world_mut().spawn((
-            Unit { faction: Faction::Player, acted: false },
+            Unit {
+                faction: Faction::Player,
+                acted: false,
+            },
             UnitId("player_1".into()),
         ));
 
@@ -1034,18 +1130,28 @@ mod tests {
         // KillAll NOT satisfied (enemy alive), but SurviveTurns IS (turn=5)
         app.world_mut().resource_mut::<TurnState>().turn_number = 5;
         app.world_mut().spawn((
-            Unit { faction: Faction::Enemy, acted: false },
+            Unit {
+                faction: Faction::Enemy,
+                acted: false,
+            },
             UnitId("enemy_1".into()),
         ));
         app.world_mut().spawn((
-            Unit { faction: Faction::Player, acted: false },
+            Unit {
+                faction: Faction::Player,
+                acted: false,
+            },
             UnitId("player_1".into()),
         ));
 
         app.update();
 
         let state = app.world().resource::<GameOverState>();
-        assert_eq!(*state, GameOverState::Victory, "多条件 OR：SurviveTurns 满足即 Victory");
+        assert_eq!(
+            *state,
+            GameOverState::Victory,
+            "多条件 OR：SurviveTurns 满足即 Victory"
+        );
     }
 
     /// Test ID: VC-ECS-016
@@ -1079,7 +1185,10 @@ mod tests {
 
         app.world_mut().resource_mut::<TurnState>().turn_number = 11;
         app.world_mut().spawn((
-            Unit { faction: Faction::Player, acted: false },
+            Unit {
+                faction: Faction::Player,
+                acted: false,
+            },
             UnitId("player_1".into()),
         ));
 
@@ -1105,7 +1214,10 @@ mod tests {
 
         // Only enemies alive, no players
         app.world_mut().spawn((
-            Unit { faction: Faction::Enemy, acted: false },
+            Unit {
+                faction: Faction::Enemy,
+                acted: false,
+            },
             UnitId("enemy_1".into()),
         ));
 
@@ -1130,7 +1242,10 @@ mod tests {
         let mut app = safety_check_test_app();
 
         app.world_mut().spawn((
-            Unit { faction: Faction::Player, acted: false },
+            Unit {
+                faction: Faction::Player,
+                acted: false,
+            },
             UnitId("player_1".into()),
         ));
 
@@ -1187,13 +1302,19 @@ mod tests {
 
         // All players dead
         app.world_mut().spawn((
-            Unit { faction: Faction::Player, acted: false },
+            Unit {
+                faction: Faction::Player,
+                acted: false,
+            },
             UnitId("dead_player".into()),
             Dead,
         ));
         // Enemy alive
         app.world_mut().spawn((
-            Unit { faction: Faction::Enemy, acted: false },
+            Unit {
+                faction: Faction::Enemy,
+                acted: false,
+            },
             UnitId("enemy_1".into()),
         ));
 
