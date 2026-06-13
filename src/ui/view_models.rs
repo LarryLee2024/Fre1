@@ -162,6 +162,49 @@ pub struct TurnInfoView {
     pub current_index: usize,
 }
 
+// ── 框架 UI ViewModel ──
+
+/// 关卡条目（LevelSelect 屏幕用）
+#[derive(Clone, Debug, Reflect)]
+pub struct StageEntry {
+    pub stage_id: String,
+    pub level_name: String,
+    pub status: crate::campaign::progress::StageStatus,
+    pub level_description: String,
+}
+
+/// 关卡选择屏幕状态
+#[derive(Resource, Reflect, Default, Debug)]
+#[reflect(Resource)]
+pub struct LevelSelectState {
+    pub campaign_name: String,
+    pub stages: Vec<StageEntry>,
+    pub selected_stage: Option<String>,
+}
+
+/// 游戏结果类型
+#[derive(Clone, Debug, Reflect, PartialEq, Eq)]
+pub enum GameOutcome {
+    Victory,
+    Defeat,
+}
+
+impl Default for GameOutcome {
+    fn default() -> Self {
+        GameOutcome::Victory
+    }
+}
+
+/// 游戏结果屏幕 ViewModel
+#[derive(Resource, Reflect, Default, Debug)]
+#[reflect(Resource)]
+pub struct GameResultView {
+    pub result: GameOutcome,
+    pub turn_count: u32,
+    pub stage_name: String,
+    pub has_next_stage: bool,
+}
+
 // ── ViewModel 更新系统 ──
 
 /// 从游戏数据构建 SelectedUnitView（基于 HoveredEntity，任何单位都可查看）

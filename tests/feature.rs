@@ -2,6 +2,8 @@
 
 #[path = "feature/buff.rs"]
 mod buff;
+#[path = "feature/campaign.rs"]
+mod campaign;
 #[path = "common/mod.rs"]
 mod common;
 #[path = "feature/consumable.rs"]
@@ -18,5 +20,7 @@ mod skill;
 mod traits;
 #[path = "feature/turn.rs"]
 mod turn;
+#[path = "feature/ui_screens.rs"]
+mod ui_screens;
 #[path = "feature/unified_movement.rs"]
 mod unified_movement;

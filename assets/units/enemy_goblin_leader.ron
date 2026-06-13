@@ -1,0 +1,17 @@
+(
+    id: "enemy_goblin_leader",
+    name: "哥布林队长",
+    faction: Enemy,
+    race: "goblin",
+    background: "raider",
+    class: "warrior",
+    base_attributes: {
+        Might: 5.0, Dexterity: 3.0, Agility: 5.0, Vitality: 5.0,
+        Intelligence: 2.0, Willpower: 3.0, Presence: 2.0, Luck: 2.0,
+    },
+    base_attack_range: 1,
+    skill_ids: ["basic_attack", "charge"],
+    trait_ids: ["warrior_mastery"],
+    ai_behavior: "cautious",
+    initial_equipment: [(MainHand, "iron_sword")],
+)

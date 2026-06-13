@@ -10,7 +10,7 @@
         Intelligence: 3.0, Willpower: 2.0, Presence: 2.0, Luck: 3.0,
     },
     base_attack_range: 3,
-    skill_ids: ["basic_attack"],
+    skill_ids: ["basic_attack", "pierce"],
     trait_ids: ["archer_mastery"],
     ai_behavior: "default",
     initial_equipment: [(MainHand, "iron_sword")],

@@ -2,6 +2,7 @@ mod ai;
 mod assets;
 mod battle;
 mod buff;
+mod campaign;
 mod character;
 mod core;
 mod debug;
@@ -20,6 +21,7 @@ use battle::BattlePlugin;
 use bevy::prelude::*;
 use bevy_inspector_egui::bevy_egui::EguiPlugin;
 use buff::BuffPlugin;
+use campaign::CampaignPlugin;
 use character::CharacterPlugin;
 use core::attribute_def::AttributeDefPlugin;
 use core::effect::EffectPlugin;
@@ -82,10 +84,12 @@ fn main() {
             BattlePlugin,
             AiPlugin,
         ))
+        // 战役模块（在 AssetsPlugin 之后，确保 LevelRegistry 已就绪）
+        .add_plugins(CampaignPlugin)
         // 表现层插件
         .add_plugins((UiPlugin, InputPlugin, DebugPlugin))
         .add_systems(Startup, |mut next: ResMut<NextState<AppState>>| {
-            next.set(AppState::InGame);
+            next.set(AppState::MainMenu);
         })
         .run();
 }

@@ -1,0 +1,7 @@
+(
+    id: "campaign_001",
+    name: "边境之旅",
+    stages: [
+        (id: "stage_001", level_id: "tutorial"),
+    ],
+)

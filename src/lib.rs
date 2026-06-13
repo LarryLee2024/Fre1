@@ -2,6 +2,7 @@ pub mod ai;
 pub mod assets;
 pub mod battle;
 pub mod buff;
+pub mod campaign;
 pub mod character;
 pub mod core;
 pub mod equipment;

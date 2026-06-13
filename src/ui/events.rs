@@ -22,6 +22,24 @@ pub enum UiCommand {
     Cancel,
     /// 结束回合
     EndTurn,
+
+    // ── 菜单命令（非 InGame 状态使用） ──
+    /// 主菜单 → 开始新游戏
+    StartGame,
+    /// 关卡选择：选中一个关卡
+    SelectStage { stage_id: String },
+    /// 确认进入选中关卡
+    ConfirmStage,
+    /// 重玩当前关卡
+    RetryStage,
+    /// 下一关
+    NextStage,
+    /// 返回关卡选择
+    BackToLevelSelect,
+    /// 返回主菜单
+    BackToMainMenu,
+    /// 退出游戏
+    QuitGame,
 }
 
 /// 移动意图事件 - 决策层的输出

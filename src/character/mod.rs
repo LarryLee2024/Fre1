@@ -11,7 +11,7 @@ mod movement_execution;
 /// 单位生成逻辑
 mod spawn;
 /// UnitTemplate 数据定义与注册表
-mod template;
+pub mod template;
 /// Trait 系统（种族/职业/天赋/装备统一抽象）
 mod traits;
 

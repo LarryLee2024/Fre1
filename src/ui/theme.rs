@@ -103,6 +103,28 @@ pub struct UiTheme {
     pub popup_offset: (f32, f32),
     /// 浮窗内边距
     pub popup_padding: UiRect,
+
+    // ── 菜单样式 ──
+    pub menu_title_color: Color,
+    pub menu_button_bg: Color,
+    pub menu_button_hover: Color,
+    pub menu_bg: Color,
+    pub stage_locked_color: Color,
+    pub stage_unlocked_color: Color,
+    pub stage_completed_color: Color,
+    pub stage_selected_border: Color,
+    pub victory_color: Color,
+    pub defeat_color: Color,
+
+    // ── 菜单字号 ──
+    pub font_title: f32,
+    pub font_subtitle: f32,
+
+    // ── 菜单布局 ──
+    pub menu_button_width: f32,
+    pub menu_button_height: f32,
+    pub stage_card_width: f32,
+    pub stage_card_height: f32,
 }
 
 impl Default for UiTheme {
@@ -160,6 +182,28 @@ impl Default for UiTheme {
             bar_label_width: 28.0,
             popup_offset: (20.0, -40.0),
             popup_padding: UiRect::all(Val::Px(8.0)),
+
+            // ── 菜单样式 ──
+            menu_title_color: Color::srgb(1.0, 0.85, 0.4),
+            menu_button_bg: Color::srgba(0.15, 0.15, 0.2, 0.9),
+            menu_button_hover: Color::srgba(0.25, 0.25, 0.35, 0.9),
+            menu_bg: Color::srgba(0.05, 0.05, 0.08, 1.0),
+            stage_locked_color: Color::srgb(0.4, 0.4, 0.4),
+            stage_unlocked_color: Color::srgb(0.3, 0.6, 1.0),
+            stage_completed_color: Color::srgb(0.3, 1.0, 0.3),
+            stage_selected_border: Color::srgb(1.0, 0.85, 0.4),
+            victory_color: Color::srgb(1.0, 0.85, 0.4),
+            defeat_color: Color::srgb(1.0, 0.3, 0.3),
+
+            // ── 菜单字号 ──
+            font_title: 48.0,
+            font_subtitle: 24.0,
+
+            // ── 菜单布局 ──
+            menu_button_width: 240.0,
+            menu_button_height: 48.0,
+            stage_card_width: 180.0,
+            stage_card_height: 120.0,
         }
     }
 }

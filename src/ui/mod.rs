@@ -21,6 +21,8 @@ mod focus;
 mod highlight;
 /// UI 面板子模块
 mod panels;
+/// 框架 UI 屏幕（主菜单/关卡选择/结算）
+pub mod screens;
 /// GameSettings 用户偏好与 RON 持久化
 pub mod settings;
 /// UiTheme 视觉常量
@@ -41,7 +43,13 @@ use crate::ui::view_models::*;
 use bevy::prelude::*;
 
 /// 公共 re-exports
+pub use action_menu::ActionMenuEntity;
+pub use camera::CameraController;
 pub use focus::{BlocksGameInput, UiFocusState};
+pub use panels::action_hint::ActionHint;
+pub use panels::inventory_panel::InventoryPanel;
+pub use panels::turn_indicator::TurnIndicator;
+pub use panels::unit_info::UnitInfoPanel;
 pub use settings::GameSettings;
 pub use theme::UiTheme;
 
@@ -90,6 +98,7 @@ impl Plugin for UiPlugin {
                 tile_info::TileInfoPlugin,
                 vfx::VfxPlugin,
                 combat_preview::CombatPreviewPlugin,
+                screens::ScreensPlugin,
             ))
             .add_systems(
                 Update,

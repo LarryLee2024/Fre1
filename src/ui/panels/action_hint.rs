@@ -4,6 +4,9 @@ use crate::turn::AppState;
 use crate::ui::theme::UiTheme;
 use bevy::prelude::*;
 
+#[derive(Component)]
+pub struct ActionHint;
+
 /// 生成操作提示
 pub fn spawn_action_hint(mut commands: Commands, theme: Res<UiTheme>) {
     commands
@@ -21,7 +24,8 @@ pub fn spawn_action_hint(mut commands: Commands, theme: Res<UiTheme>) {
                 ..default()
             },
         ))
-        .insert(Name::new("ActionHint"));
+        .insert(Name::new("ActionHint"))
+        .insert(ActionHint);
 }
 
 /// 操作提示插件

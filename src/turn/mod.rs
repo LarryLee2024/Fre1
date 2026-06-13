@@ -15,6 +15,15 @@ pub use victory_check::LevelCompleted;
 
 use bevy::prelude::*;
 
+use crate::battle::{CombatIntent, CombatLogCollapsed, CombatLogPanel, PrevPosition};
+use crate::character::Unit;
+use crate::map::TileSprite;
+use crate::ui::view_models::{CombatPreviewView, HoveredEntity, SelectedUnitView};
+use crate::ui::{
+    ActionHint, ActionMenuEntity, CameraController, InventoryPanel, TurnIndicator, UiFocusState,
+    UnitInfoPanel,
+};
+
 /// 回合管理插件
 pub struct TurnPlugin;
 
@@ -42,6 +51,8 @@ impl Plugin for TurnPlugin {
                 OnEnter(AppState::InGame),
                 (GameSet::Camera, GameSet::Map, GameSet::Unit, GameSet::Ui).chain(),
             )
+            // 离开战斗状态时清理所有 InGame entities 并重置资源
+            .add_systems(OnExit(AppState::InGame), cleanup_ingame)
             // 胜负检查在回合结束处理之前运行（读取当前回合号，检查完再递增）
             .add_systems(
                 OnEnter(TurnPhase::TurnEnd),
@@ -63,4 +74,60 @@ impl Plugin for TurnPlugin {
                 init_turn_order.after(GameSet::Unit),
             );
     }
+}
+
+/// 清理 InGame 状态：Despawn 所有战斗实体 + 重置运行时资源
+///
+/// OnEnter(InGame) 的 spawn 系统负责创建，此系统负责销毁。
+/// 保证进出 InGame 不会残留上一局的 entities/resources。
+fn cleanup_ingame(
+    mut commands: Commands,
+    // 标记组件 Query — 所有在 OnEnter(InGame) 中生成的实体
+    cameras: Query<Entity, With<CameraController>>,
+    tiles: Query<Entity, With<TileSprite>>,
+    units: Query<Entity, With<Unit>>,
+    turn_indicators: Query<Entity, With<TurnIndicator>>,
+    unit_info_panels: Query<Entity, With<UnitInfoPanel>>,
+    combat_log_panels: Query<Entity, With<CombatLogPanel>>,
+    inventory_panels: Query<Entity, With<InventoryPanel>>,
+    action_hints: Query<Entity, With<ActionHint>>,
+) {
+    for e in &cameras {
+        commands.entity(e).try_despawn();
+    }
+    for e in &tiles {
+        commands.entity(e).try_despawn();
+    }
+    for e in &units {
+        commands.entity(e).try_despawn();
+    }
+    for e in &turn_indicators {
+        commands.entity(e).try_despawn();
+    }
+    for e in &unit_info_panels {
+        commands.entity(e).try_despawn();
+    }
+    for e in &combat_log_panels {
+        commands.entity(e).try_despawn();
+    }
+    for e in &inventory_panels {
+        commands.entity(e).try_despawn();
+    }
+    for e in &action_hints {
+        commands.entity(e).try_despawn();
+    }
+    // 重置运行时资源到默认值（init_resource 只插一次，不会自动重置）
+    commands.insert_resource(TurnState::default());
+    commands.insert_resource(TurnOrder::default());
+    commands.insert_resource(GameOverState::default());
+    commands.insert_resource(NeedsResolve::default());
+    commands.insert_resource(AiTimer::default());
+    commands.insert_resource(CombatIntent::default());
+    commands.insert_resource(PrevPosition::default());
+    commands.insert_resource(SelectedUnitView::default());
+    commands.insert_resource(CombatPreviewView::default());
+    commands.insert_resource(HoveredEntity::default());
+    commands.insert_resource(CombatLogCollapsed::default());
+    commands.insert_resource(ActionMenuEntity::default());
+    commands.insert_resource(UiFocusState::default());
 }

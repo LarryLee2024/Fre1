@@ -245,6 +245,9 @@ pub fn handle_ui_commands(
                 commands.write_message(ForceEndTurn);
                 next_phase.set(TurnPhase::TurnEnd);
             }
+
+            // 菜单命令在非 InGame 状态下由 handle_menu_commands 处理
+            _ => {}
         }
     }
 }
