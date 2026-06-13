@@ -47,7 +47,12 @@ pub struct AssetsPlugin;
 
 impl Plugin for AssetsPlugin {
     fn build(&self, app: &mut App) {
-        let asset_server = app.world().resource::<AssetServer>();
-        app.insert_resource(CnFont::from(asset_server));
+        // 延迟到 Startup 系统初始化 CnFont，确保 AssetServer 已就绪
+        app.add_systems(
+            Startup,
+            |mut commands: Commands, asset_server: Res<AssetServer>| {
+                commands.insert_resource(CnFont::from(&asset_server));
+            },
+        );
     }
 }
