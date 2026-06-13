@@ -29,6 +29,8 @@
         ],
         lose_conditions: [
             (type: AllDead),
+            (type: TurnLimitExceeded),
         ],
     )),
+    turn_limit: Some(20),
 )
