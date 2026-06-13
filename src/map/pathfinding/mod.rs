@@ -1,9 +1,11 @@
-// 寻路模块：BFS 计算可移动范围与路径
-// TerrainCostCalculator trait 使用 terrain_id: &str，支持数据驱动扩展
-// 寻路直接从 TerrainGrid + OccupancyGrid 读取，不再依赖 Tile Entity
+/// 寻路模块：BFS 计算可移动范围与路径
+/// TerrainCostCalculator trait 使用 terrain_id: &str，支持数据驱动扩展
+/// 寻路直接从 TerrainGrid + OccupancyGrid 读取，不再依赖 Tile Entity
 
-mod algorithms; // BFS 移动范围与路径搜索算法
-mod cost; // TerrainCostRegistry 地形消耗注册表
+/// BFS 移动范围与路径搜索算法
+mod algorithms;
+/// TerrainCostRegistry 地形消耗注册表
+mod cost;
 
 pub use algorithms::*;
 pub use cost::*;

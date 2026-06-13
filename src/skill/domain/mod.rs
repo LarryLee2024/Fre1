@@ -1,7 +1,9 @@
-// 技能领域模块：数据驱动的技能定义与注册表
+/// 技能领域模块：数据驱动的技能定义与注册表
 
-mod defaults; // 默认技能定义（基础攻击等）
-mod types; // SkillData, SkillTargeting, SkillCondition 等类型定义
+/// 默认技能定义（基础攻击等）
+mod defaults;
+/// SkillData, SkillTargeting, SkillCondition 等类型定义
+mod types;
 
 pub use types::*;
 
@@ -9,7 +11,7 @@ use crate::core::registry_loader::RegistryLoader;
 use bevy::prelude::*;
 use std::collections::HashMap;
 
-// ── 技能注册表 ──
+/// ── 技能注册表 ──
 
 /// 技能注册表资源
 #[derive(Resource, Default)]

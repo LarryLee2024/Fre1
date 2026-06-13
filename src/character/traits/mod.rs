@@ -1,9 +1,11 @@
-// Trait 系统：统一抽象，种族/职业/天赋/装备均可引用 traits
-// 替代硬编码的 class_tag 单标签，支持多 trait 组合
-// 支持从 assets/traits/*.ron 外部配置文件加载
+/// Trait 系统：统一抽象，种族/职业/天赋/装备均可引用 traits
+/// 替代硬编码的 class_tag 单标签，支持多 trait 组合
+/// 支持从 assets/traits/*.ron 外部配置文件加载
 
-mod handlers; // TraitEffectHandler trait 与各类型处理器
-mod types; // TraitDef, TraitData, TraitSource 等类型定义
+/// TraitEffectHandler trait 与各类型处理器
+mod handlers;
+/// TraitDef, TraitData, TraitSource 等类型定义
+mod types;
 
 pub use handlers::*;
 pub use types::*;
@@ -14,7 +16,7 @@ use crate::core::tag::{GameplayTag, GameplayTags, TagName};
 use bevy::prelude::*;
 use std::collections::HashMap;
 
-// ── TraitData 方法（依赖 TraitEffectHandlerRegistry，放在 mod.rs）──
+/// ── TraitData 方法（依赖 TraitEffectHandlerRegistry，放在 mod.rs）──
 
 impl TraitData {
     /// 收集此 trait 授予的所有标签（通过 TraitEffectHandlerRegistry 分发）
