@@ -1,11 +1,120 @@
 # Architecture
 
-Version: 3.0
+Version: 4.0
 
 本文件优先级高于任何代码实现。
 
 当代码与本文件冲突时：
 优先认为代码错误，而不是文档错误。
+
+---
+
+# 七层架构（v4 新增）
+
+> 来源：`docs/其他/30.md` 架构提炼、最佳实践综合
+
+项目源码按七层组织。每层有严格定义的职责边界和依赖规则。
+
+详见 `docs/architecture/layer-contracts.md`。
+
+## 七层总览
+
+```
+Layer 1: App          组装整个游戏           → 只注册，不含逻辑
+Layer 2: Core         游戏规则（纯领域逻辑）    → 只依赖 Shared
+Layer 3: Shared       基础能力（通用工具）      → 零外部依赖
+Layer 4: Infra        技术实现               → 依赖 Core + Shared
+Layer 5: Content      内容桥接（配置 → 规则）  → 依赖 Core + Infra + Shared
+Layer 6: Modding      MOD 支持               → 依赖 Core + Shared + Infra + Content
+Layer 7: Tools        开发工具               → 开发期间专用，永不发布
+
+跨层：
+  UI   → 只读 ViewModel，只输出 UiCommand
+  Debug → 只读业务数据
+```
+
+## 三问判断法
+
+每个文件/模块归属于哪层，用三个问题判断：
+
+**Core 问题**：如果明天把 Bevy 删了，换成 Godot/Unity/UE/服务器模拟器，这个逻辑还存在吗？
+→ 存在 → `core/`
+
+**Infrastructure 问题**：如果游戏规则不变，能不能换一种实现方式？
+→ 能 → `infrastructure/`
+
+**Shared 问题**：这个东西既不是游戏规则，也不是技术实现，而是所有模块都会用到的基础工具吗？
+→ 是 → `shared/`
+
+**一句话总结**：Core = 为什么（业务规则），Infrastructure = 怎么做（技术实现），Shared = 通用工具（基础能力）。
+
+## 层间依赖规则
+
+```
+App      → 任意层           ✅（仅注册，不含逻辑）
+Core     → Shared           ✅（唯一允许的外部依赖）
+Shared   → 无               ✅（叶子节点，零外部依赖）
+Infra    → Core, Shared     ✅
+Content  → Core, Infra, Shared  ✅
+UI       → ViewModel only   ✅
+Debug    → Core（只读）      ✅
+Modding  → Core, Shared, Infra, Content  ✅
+Tools    → Core, Shared      ✅
+
+严格禁止：
+Core → Infra              🟥
+Core → Content            🟥
+Core → UI                 🟥
+Core → Modding            🟥
+Shared → Core             🟥
+Shared → Infra            🟥
+Shared → UI                🟥
+```
+
+## Content 层核心区分
+
+> Skill 是 Core，Fireball 是 Content。
+
+- **Core** 回答"怎么做"：技能规则引擎怎么跑、Buff 怎么结算、装备怎么穿脱
+- **Content** 回答"是什么"：火球术数值、剧毒 Buff 持续回合、铁剑属性加成
+
+🟥 **新增内容 = 新增 RON 文件，绝对禁止修改 Rust 代码。**
+
+## 错误架构
+
+错误分三层：
+
+1. **领域错误** → 放领域内部（`core/skill/domain/skill_error.rs`）
+2. **基础设施错误** → 放基础设施内部（`infrastructure/persistence/save/save_error.rs`）
+3. **共享错误工具** → 放 `shared/error/`（`GameResult<T>`、错误转换 trait）
+
+🟥 **绝对禁止**：全局统一 `AppError` 大枚举、`anyhow::Error`、`Box<dyn Error>` 作为业务层返回类型。
+
+详见 `docs/architecture/error-architecture.md`。
+
+## 项目根目录三级分离
+
+```
+project/
+├── src/       → Rust 源码（游戏逻辑）
+├── assets/    → 运行时资源（美术音频）
+├── content/   → 游戏数据（RON 配置）     ← 关键新增
+├── mods/      → MOD 扩展
+├── tools/     → 开发工具
+├── scripts/   → 自动化脚本
+├── tests/     → 集成测试
+├── benchmarks/ → 性能基准
+├── docs/      → 文档
+└── build/     → 构建输出
+```
+
+🟥 **绝对禁止**：将配置数据、美术资源、开发脚本混入同一目录。
+
+详见 `docs/architecture/project-structure.md`。
+
+## 迁移路线
+
+当前项目需要从扁平结构迁移到七层架构。详见 `docs/architecture/migration-roadmap.md`。
 
 ---
 
@@ -67,12 +176,32 @@ SRPG（战棋RPG）
 
 # Feature 划分
 
+## 七层架构下的目录组织
+
+> 详见 `docs/architecture/project-structure.md` 和 `docs/architecture/layer-contracts.md`
+
+源码按七层组织：
+
+```
+src/
+├── app/              # Layer 1: 游戏启动与装配
+├── core/             # Layer 2: 游戏规则（纯领域逻辑）
+├── shared/           # Layer 3: 基础能力（通用工具）
+├── infrastructure/   # Layer 4: 技术实现
+├── content/          # Layer 5: 内容桥接（配置 → 规则）
+├── modding/          # Layer 6: MOD 支持
+├── ui/               # 表现层
+└── debug/            # 调试工具
+```
+
+## Core 内部模块划分
+
 允许：
 
 ```
 core/
-character/
 battle/
+character/
 buff/
 skill/
 equipment/
@@ -80,8 +209,6 @@ inventory/
 map/
 turn/
 ai/
-ui/
-debug/
 ```
 
 禁止：
@@ -1287,7 +1414,23 @@ target_tag（目标标签集合）
 
 ## 注册表
 
-所有配置通过 RON 文件加载：
+所有配置通过 RON 文件加载。
+
+### 配置数据三级分离（v4 新增）
+
+```
+content/*.ron      → 游戏内容（策划可编辑，热重载）
+assets/*.ron       → 引擎配置（定义、标签）     ← 仅含引擎必需的配置
+src/content/       → 内容桥接代码（RON → Registry）
+```
+
+🟥 **游戏内容配置（技能、Buff、关卡等）必须放在 `content/` 目录，不得放在 `assets/` 目录。**
+
+🟥 **`assets/definitions/` 和 `assets/rules/` 中的引擎配置是过渡产物，最终应迁移到 `content/`。**
+
+详见 `docs/architecture/content-pipeline.md`。
+
+### 当前注册表路径（过渡期）
 
 ```
 assets/units/*.ron       → UnitTemplateRegistry
@@ -1300,6 +1443,21 @@ assets/maps/*.ron        → LevelRegistry
 assets/ai/*.ron          → AiBehaviorRegistry
 assets/modifier_rules/*.ron → ModifierRuleRegistry
 assets/traits/*.ron      → TraitRegistry
+```
+
+### 目标注册表路径（迁移后）
+
+```
+content/characters/*.ron    → UnitTemplateRegistry
+content/skills/*.ron        → SkillRegistry
+content/buffs/*.ron         → BuffRegistry
+content/equipments/*.ron    → EquipmentRegistry
+content/items/*.ron         → ItemRegistry
+content/terrains/*.ron      → TerrainRegistry
+content/stages/*.ron        → LevelRegistry
+content/ai_behaviors/*.ron  → AiBehaviorRegistry
+content/formulas/*.ron      → ModifierRuleRegistry
+content/classes/*.ron       → TraitRegistry
 ```
 
 ## 双类型模式
@@ -1853,3 +2011,71 @@ F12 → World Inspector
 8. 🟥 Buff 无来源或永不过期
 9. 🟥 穿脱装备跳过 Trait 重建
 10. 🟥 存档保存 Definition 数据
+11. 🟥 Core 层依赖 Infrastructure 或 UI 层（v4 新增）
+12. 🟥 Shared 层依赖任何其他层（v4 新增）
+13. 🟥 新增内容修改 Rust 代码（v4 新增）
+14. 🟥 领域错误放在 shared/ 或 infrastructure/（v4 新增）
+15. 🟥 shared/ 出现 xxx_utils 垃圾桶模块（v4 新增）
+
+---
+
+# 架构文档索引
+
+> 以下文档是本文件的详细补充，共同构成完整的架构体系。
+
+| 文档 | 内容 |
+|------|------|
+| `architecture/project-structure.md` | 完整项目目录结构（源码树 + 资产树 + 内容树） |
+| `architecture/layer-contracts.md` | 七层架构边界定义、依赖规则、禁止区域 |
+| `architecture/error-architecture.md` | 错误体系设计（领域错误 / 基础设施错误 / 共享工具） |
+| `architecture/content-pipeline.md` | 内容管线（Rule/Content 分离、数据驱动架构） |
+| `architecture/modding-design.md` | MOD 支持架构设计 |
+| `architecture/asset-organization.md` | 美术资产组织与外包工作流 |
+| `architecture/collaboration-model.md` | AI 协作、多人协作、外包美术模型 |
+| `architecture/migration-roadmap.md` | 从当前架构到目标架构的分阶段迁移计划 |
+| `architecture/infrastructure-design.md` | 基础设施层深度设计（日志/存档/回放/热重载等 20 个模块） |
+| `architecture/app-bootstrap.md` | App 层与游戏启动装配设计 |
+| `architecture/plugin-design.md` | Plugin 组织方式与注册顺序设计 |
+| `architecture/skill-buff-abstraction.md` | 技能/Buff/Effect 统一数据驱动抽象模型 |
+| `architecture/component_design_rules.md` | Bevy Component 设计规范（标记/数据/状态组件三位一体） |
+| `architecture/system_design_rules.md` | Bevy System 编写铁律（粒度/参数边界/读写分离） |
+| `architecture/plugin_contract_rules.md` | Plugin 边界与依赖契约（显式依赖/公共API/分层禁令） |
+| `architecture/ids_design.md` | 强类型 ID 系统架构（newtype/分配策略/生命周期） |
+| `architecture/events_audit_design.md` | 领域事件 + Audit 审计系统架构 |
+| `architecture/content_data_format.md` | Content 数据格式规范（RON 配置契约） |
+| `architecture/command_bus_design.md` | 命令总线架构（输入→验证→执行抽象层） |
+| `architecture/determinism_rules.md` | 确定性执行规范（PRNG/精度/迭代排序/状态哈希） |
+| `architecture/battle_fsm_design.md` | 战斗有限状态机设计（阶段/转换/扩展点） |
+| `architecture/pathfinding_design.md` | 寻路与范围计算架构（A* 抽象/缓存/性能预算） |
+| `architecture/schedules_design.md` | Bevy Schedule 与 SystemSet 组织架构 |
+| `architecture/asset_lifecycle_rules.md` | 资源生命周期管理（Handle/加载卸载/热重载同步） |
+| `architecture/config_system_design.md` | 配置系统设计（四层配置/平衡参数/热重载） |
+| `architecture/performance_budget.md` | 性能预算与优化基线（60FPS/模块预算/门禁） |
+| `architecture/validation_rules.md` | 全局数值校验与合法性守卫 |
+| `architecture/testing_architecture.md` | 完整测试体系架构（五层测试/Testbeds/CI） |
+| `architecture/ui_domain_boundary_rules.md` | UI-领域交互边界（只读/单向/分离契约） |
+| `architecture/logging_design.md` | 日志系统设计（tracing/五级日志/结构化字段） |
+| `architecture/save_migration_rules.md` | 存档格式迁移与版本兼容策略 |
+
+---
+
+# 版本修订说明
+
+**v4.1**（当前版本）：
+- 来源：`docs/其他/31遗漏.md` 全面补充
+- 新增 19 篇架构文档，覆盖：ECS 代码层规范（Component/System/Plugin）、核心数据架构（IDs/Events/Audit/Content Format/Command Bus）、SRPG 核心机制（Determinism/Battle FSM/Pathfinding/Schedules）、工程质量（Asset Lifecycle/Config/Performance/Validation）、测试体系（Testing Architecture）、边界守则（UI-Domain/Logging/Save Migration）
+
+**v4.0**：
+1. 新增七层架构（App/Core/Shared/Infra/Content/Modding/Tools）
+2. 新增三问判断法（Core/Infra/Shared 归层标准）
+3. 新增 Content 层核心区分（Skill 是 Core，Fireball 是 Content）
+4. 新增错误架构三层模型（领域/基础设施/共享）
+5. 新增项目根目录三级分离（src/assets/content）
+6. 新增层间依赖规则和禁止区域
+7. 新增 Infrastructure 层深度设计（20 个模块）
+8. 新增 App 启动装配与 Plugin 组织设计
+9. 新增技能/Buff/Effect 统一抽象模型（10 层补充系统）
+10. 来源：`docs/其他/30.md` + `docs/其他/27技能buf抽象.md`
+
+**v3.0**：
+原有架构规范，包含 ECS、属性系统、Effect Pipeline、UI 架构、AI 架构等完整规则。

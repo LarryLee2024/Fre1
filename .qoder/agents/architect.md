@@ -55,7 +55,7 @@ tools: Read, Grep, Glob, Write
 
 ### 2. 分析现有架构
 
-- 检查 `docs/architecture.md` 了解整体架构
+- 检查 `docs/architecture.md` 了解整体架构，检查 `docs/architecture/` 和 `docs/adr/` 目录下的文件，了解架构决策。
 - 检查 `AGENTS.md` 了解项目约束
 - 检查 `.lingma/rules/ai_constitution.md` 了解架构准则
 - 检查相关领域的现有代码结构
