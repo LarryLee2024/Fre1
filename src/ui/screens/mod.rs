@@ -11,6 +11,7 @@ use bevy::prelude::*;
 
 use crate::campaign::progress::{CampaignProgress, StageStatus};
 use crate::campaign::registry::CampaignRegistry;
+use crate::map::LevelRegistry;
 use crate::turn::AppState;
 use crate::ui::events::UiCommand;
 
@@ -73,7 +74,7 @@ impl Plugin for ScreensPlugin {
 
 /// 处理菜单相关的 UiCommand（非战斗状态）
 ///
-/// 处理：StartGame, ConfirmStage, RetryStage, NextStage,
+/// 处理：StartGame, ContinueGame, ConfirmStage, RetryStage, NextStage,
 ///       BackToLevelSelect, BackToMainMenu, QuitGame
 /// SelectStage 和 BackToMainMenu 已在屏幕交互系统中处理。
 fn handle_menu_commands(
@@ -82,6 +83,7 @@ fn handle_menu_commands(
     mut next_state: ResMut<NextState<AppState>>,
     mut campaign_progress: ResMut<CampaignProgress>,
     campaign_registry: Res<CampaignRegistry>,
+    level_registry: Res<LevelRegistry>,
     mut app_exit: MessageWriter<bevy::app::AppExit>,
 ) {
     for cmd in events.read() {
@@ -91,17 +93,54 @@ fn handle_menu_commands(
                 *campaign_progress = CampaignProgress::initialize(&campaign_registry);
                 next_state.set(AppState::LevelSelect);
             }
+            UiCommand::ContinueGame => {
+                // 继续已有战役：直接进入关卡选择
+                // CampaignProgress 已由 campaign 插件初始化，无需重复初始化
+                next_state.set(AppState::LevelSelect);
+            }
             UiCommand::SelectStage { stage_id } => {
                 // 设置选中的关卡
                 campaign_progress.current_stage = Some(stage_id.clone());
             }
             UiCommand::ConfirmStage => {
-                // 验证关卡已解锁
+                // 验证关卡已解锁且 level_id 有效（FORBIDDEN-7）
                 let can_enter = campaign_progress.current_stage.as_ref().is_some_and(|id| {
-                    matches!(
+                    // 1. 检查 stage 状态为 Unlocked 或 Completed
+                    let status_ok = matches!(
                         campaign_progress.stage_status(id),
                         Some(StageStatus::Unlocked) | Some(StageStatus::Completed)
-                    )
+                    );
+                    if !status_ok {
+                        return false;
+                    }
+                    // 2. 验证 stage 存在于 CampaignRegistry 中
+                    let stage_exists = campaign_registry
+                        .get(&campaign_progress.campaign_id)
+                        .and_then(|c| c.stages.iter().find(|s| s.id == *id))
+                        .is_some();
+                    if !stage_exists {
+                        bevy::log::error!(
+                            target: "campaign",
+                            stage_id = %id,
+                            "ConfirmStage: stage 在 CampaignRegistry 中不存在"
+                        );
+                        return false;
+                    }
+                    // 3. 验证 stage 引用的 level_id 存在于 LevelRegistry 中
+                    let level_valid = campaign_registry
+                        .get(&campaign_progress.campaign_id)
+                        .and_then(|c| c.stages.iter().find(|s| s.id == *id))
+                        .map(|stage| level_registry.get(&stage.level_id).is_some())
+                        .unwrap_or(false);
+                    if !level_valid {
+                        bevy::log::error!(
+                            target: "campaign",
+                            stage_id = %id,
+                            "ConfirmStage: level_id 在 LevelRegistry 中不存在"
+                        );
+                        return false;
+                    }
+                    true
                 });
                 if can_enter {
                     // 重置 GameOverState 为 Playing（防止残留终态影响下次战斗）

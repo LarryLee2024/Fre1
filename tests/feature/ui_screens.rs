@@ -31,7 +31,7 @@ use tactical_rpg::campaign::def::{CampaignDef, StageDef};
 use tactical_rpg::campaign::progress::{CampaignProgress, StageStatus};
 use tactical_rpg::campaign::registry::CampaignRegistry;
 use tactical_rpg::map::{LevelConfig, LevelRegistry};
-use tactical_rpg::turn::{AppState, GameOverState};
+use tactical_rpg::turn::{AppState, GameOverState, TurnState};
 use tactical_rpg::ui::events::UiCommand;
 use tactical_rpg::ui::screens::ScreensPlugin;
 use tactical_rpg::ui::screens::game_over::GameOverScreen;
@@ -115,6 +115,9 @@ fn screen_test_app() -> App {
 
     // GameOver 状态（默认 Playing）
     app.insert_resource(GameOverState::Playing);
+
+    // TurnState（update_game_result_view 依赖）
+    app.init_resource::<TurnState>();
 
     // ── Message ──
     app.add_message::<UiCommand>();

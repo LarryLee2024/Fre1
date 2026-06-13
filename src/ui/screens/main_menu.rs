@@ -116,7 +116,7 @@ pub fn handle_main_menu_buttons(
         if start_query.contains(entity) {
             cmd_events.write(UiCommand::StartGame);
         } else if continue_query.contains(entity) {
-            cmd_events.write(UiCommand::StartGame);
+            cmd_events.write(UiCommand::ContinueGame);
         } else if quit_query.contains(entity) {
             cmd_events.write(UiCommand::QuitGame);
         }

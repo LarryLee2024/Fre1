@@ -74,7 +74,10 @@ impl CampaignProgress {
     }
 
     /// 标记当前 stage 为已完成，解锁下一个 stage
-    pub fn complete_current_stage(&mut self) {
+    ///
+    /// 使用 CampaignRegistry 中战役定义的原始 stages 顺序来查找下一个关卡，
+    /// 避免依赖 HashMap 的迭代顺序（不保证与定义顺序一致）。
+    pub fn complete_current_stage(&mut self, registry: &CampaignRegistry) {
         let Some(ref current) = self.current_stage.clone() else {
             return;
         };
@@ -82,11 +85,14 @@ impl CampaignProgress {
         // 标记当前 stage 为 Completed
         self.stages.insert(current.clone(), StageStatus::Completed);
 
-        // 找到下一个 stage 并解锁
-        let stage_ids: Vec<String> = self.stages.keys().cloned().collect();
-        if let Some(pos) = stage_ids.iter().position(|id| id == current) {
-            if pos + 1 < stage_ids.len() {
-                let next_id = &stage_ids[pos + 1];
+        // 从战役定义中按原始 stages 顺序查找下一个关卡
+        let Some(campaign) = registry.get(&self.campaign_id) else {
+            bevy::log::warn!(target: "campaign", campaign_id = %self.campaign_id, "complete_current_stage: 战役未找到");
+            return;
+        };
+        if let Some(pos) = campaign.stages.iter().position(|s| s.id == *current) {
+            if pos + 1 < campaign.stages.len() {
+                let next_id = &campaign.stages[pos + 1].id;
                 if self.stages.get(next_id) == Some(&StageStatus::Locked) {
                     self.stages.insert(next_id.clone(), StageStatus::Unlocked);
                 }

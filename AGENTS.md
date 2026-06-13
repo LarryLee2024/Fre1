@@ -19,6 +19,9 @@
      → @test-guardian（测试审查） → 输出：`docs/testing/`（计划）+ `src/` 和 `tests/`（代码）
      → @code-reviewer（代码审查） → 输出：`docs/reviews/`
      → @refactor-guardian（技术债扫描） → 输出：`docs/refactor/`
+     
+## 必须做的行为
+- 所有 Agent 写的日志，必须按 `.trae/rules/logging_rules.md` 写日志，关键地方必须写日志。
 
 ## 通用行为红线（所有角色必须遵守）
 1. 严禁绕过 Effect/Modifier 管线直接修改战斗数值与属性

@@ -42,25 +42,12 @@ impl CnFont {
     }
 }
 
-/// 初始化中文字体资源
-///
-/// 字体加载回退策略（当前版本）：
-/// 1. 优先加载项目自带字体 fonts/Arial Unicode.ttf
-/// 2. 若加载失败，Bevy 会使用内置默认字体渲染（不支持中文）
-///
-/// 未来迁移路径（Bevy 0.19+）：
-/// - 使用 system_font_discovery 自动发现系统中文字体
-/// - 回退链：系统字体 → 项目自带字体 → Bevy 默认字体
-/// - 示例：asset_server.system_fonts().find_by_name("PingFang SC")
-pub fn init_cn_font(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.insert_resource(CnFont::from(&asset_server));
-}
-
 /// 资源管理插件
 pub struct AssetsPlugin;
 
 impl Plugin for AssetsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, init_cn_font);
+        let asset_server = app.world().resource::<AssetServer>();
+        app.insert_resource(CnFont::from(asset_server));
     }
 }

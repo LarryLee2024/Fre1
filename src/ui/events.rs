@@ -26,6 +26,8 @@ pub enum UiCommand {
     // ── 菜单命令（非 InGame 状态使用） ──
     /// 主菜单 → 开始新游戏
     StartGame,
+    /// 主菜单 → 继续已有战役
+    ContinueGame,
     /// 关卡选择：选中一个关卡
     SelectStage { stage_id: String },
     /// 确认进入选中关卡

@@ -33,7 +33,7 @@ use input::InputPlugin;
 use inventory::InventoryPlugin;
 use map::MapPlugin;
 use skill::SkillPlugin;
-use turn::{AppState, TurnPlugin};
+use turn::TurnPlugin;
 use ui::UiPlugin;
 
 fn main() {
@@ -88,8 +88,5 @@ fn main() {
         .add_plugins(CampaignPlugin)
         // 表现层插件
         .add_plugins((UiPlugin, InputPlugin, DebugPlugin))
-        .add_systems(Startup, |mut next: ResMut<NextState<AppState>>| {
-            next.set(AppState::MainMenu);
-        })
         .run();
 }

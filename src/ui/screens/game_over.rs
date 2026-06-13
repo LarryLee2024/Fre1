@@ -3,7 +3,10 @@ use bevy::prelude::*;
 
 use crate::assets::CnFont;
 use crate::campaign::progress::CampaignProgress;
+use crate::campaign::registry::CampaignRegistry;
+use crate::map::LevelRegistry;
 use crate::turn::GameOverState;
+use crate::turn::TurnState;
 use crate::ui::events::UiCommand;
 use crate::ui::theme::UiTheme;
 use crate::ui::view_models::{GameOutcome, GameResultView};
@@ -25,6 +28,9 @@ pub struct BackToSelectButton;
 pub fn update_game_result_view(
     game_over: Res<GameOverState>,
     campaign_progress: Res<CampaignProgress>,
+    campaign_registry: Res<CampaignRegistry>,
+    level_registry: Res<LevelRegistry>,
+    turn_state: Res<TurnState>,
     mut view: ResMut<GameResultView>,
 ) {
     let result = match *game_over {
@@ -33,27 +39,33 @@ pub fn update_game_result_view(
         GameOverState::Playing => GameOutcome::Victory, // fallback, shouldn't happen
     };
 
-    // 获取当前关卡名称
-    let stage_name = String::new(); // TODO: 从 CampaignRegistry 查找 stage 对应的 level_id
+    // 通过 CampaignRegistry 查找当前 stage 对应的关卡名称
+    let stage_name = campaign_progress
+        .current_stage
+        .as_ref()
+        .and_then(|current_id| {
+            let campaign = campaign_registry.get(&campaign_progress.campaign_id)?;
+            let stage = campaign.stages.iter().find(|s| s.id == *current_id)?;
+            let level = level_registry.get(&stage.level_id)?;
+            Some(level.name.clone())
+        })
+        .unwrap_or_default();
 
-    // 简化：从 turn_state 获取 turn_count（此处用默认值，turn_count 由 OnEnter 系统从别处获取）
-    let turn_count = 0; // TODO: 从 TurnState 获取
+    // 从 TurnState 获取当前回合数
+    let turn_count = turn_state.turn_number;
 
-    // 检查是否有下一关
     let has_next_stage = match result {
-        GameOutcome::Victory => {
-            // 胜利后才可能有下一关
-            let stage_ids: Vec<String> = campaign_progress.stages.keys().cloned().collect();
-            if let Some(ref current) = campaign_progress.current_stage {
-                if let Some(pos) = stage_ids.iter().position(|id| id == current) {
-                    pos + 1 < stage_ids.len()
-                } else {
-                    false
-                }
-            } else {
-                false
-            }
-        }
+        GameOutcome::Victory => match campaign_progress.current_stage.as_ref() {
+            Some(current) => match campaign_registry.get(&campaign_progress.campaign_id) {
+                Some(campaign) => campaign
+                    .stages
+                    .iter()
+                    .position(|s| s.id == *current)
+                    .map_or(false, |pos| pos + 1 < campaign.stages.len()),
+                None => false,
+            },
+            None => false,
+        },
         GameOutcome::Defeat => false,
     };
 
