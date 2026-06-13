@@ -100,3 +100,268 @@ impl CampaignProgress {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::campaign::def::{CampaignDef, StageDef};
+
+    fn test_registry() -> CampaignRegistry {
+        let mut registry = CampaignRegistry::default();
+        registry.campaigns.insert(
+            "test_campaign".to_string(),
+            CampaignDef {
+                id: "test_campaign".to_string(),
+                name: "测试战役".to_string(),
+                stages: vec![
+                    StageDef {
+                        id: "stage_001".to_string(),
+                        level_id: "level_001".to_string(),
+                    },
+                    StageDef {
+                        id: "stage_002".to_string(),
+                        level_id: "level_002".to_string(),
+                    },
+                    StageDef {
+                        id: "stage_003".to_string(),
+                        level_id: "level_003".to_string(),
+                    },
+                ],
+            },
+        );
+        registry
+    }
+
+    // ================================================
+    // initialize() 测试
+    // ================================================
+
+    /// Test ID: CAMPAIGN-001
+    /// 验证 initialize() 设置第一关为 Unlocked，其余为 Locked
+    #[test]
+    fn initialize_first_stage_unlocked_rest_locked() {
+        let registry = test_registry();
+        let progress = CampaignProgress::initialize(&registry);
+
+        assert_eq!(progress.campaign_id, "test_campaign");
+        assert_eq!(progress.current_stage, None);
+        assert_eq!(
+            progress.stage_status("stage_001"),
+            Some(&StageStatus::Unlocked)
+        );
+        assert_eq!(
+            progress.stage_status("stage_002"),
+            Some(&StageStatus::Locked)
+        );
+        assert_eq!(
+            progress.stage_status("stage_003"),
+            Some(&StageStatus::Locked)
+        );
+    }
+
+    /// Test ID: CAMPAIGN-002
+    /// 验证空 registry 返回默认状态
+    #[test]
+    fn initialize_empty_registry_returns_default() {
+        let registry = CampaignRegistry::default();
+        let progress = CampaignProgress::initialize(&registry);
+
+        assert_eq!(progress.campaign_id, "");
+        assert!(progress.stages.is_empty());
+    }
+
+    /// Test ID: CAMPAIGN-003
+    /// 验证单关卡战役初始化
+    #[test]
+    fn initialize_single_stage() {
+        let mut registry = CampaignRegistry::default();
+        registry.campaigns.insert(
+            "single".to_string(),
+            CampaignDef {
+                id: "single".to_string(),
+                name: "单关".to_string(),
+                stages: vec![StageDef {
+                    id: "only_stage".to_string(),
+                    level_id: "level_001".to_string(),
+                }],
+            },
+        );
+
+        let progress = CampaignProgress::initialize(&registry);
+        assert_eq!(
+            progress.stage_status("only_stage"),
+            Some(&StageStatus::Unlocked)
+        );
+    }
+
+    // ================================================
+    // stage_status() 测试
+    // ================================================
+
+    /// Test ID: CAMPAIGN-004
+    /// 验证 stage_status() 返回不存在的关卡为 None
+    #[test]
+    fn stage_status_nonexistent_returns_none() {
+        let registry = test_registry();
+        let progress = CampaignProgress::initialize(&registry);
+
+        assert_eq!(progress.stage_status("nonexistent"), None);
+    }
+
+    // ================================================
+    // complete_current_stage() 测试
+    // ================================================
+
+    /// Test ID: CAMPAIGN-005
+    /// 验证 complete_current_stage() 标记当前关卡 Completed 并解锁下一关
+    #[test]
+    fn complete_current_stage_unlocks_next() {
+        let registry = test_registry();
+        let mut progress = CampaignProgress::initialize(&registry);
+        progress.current_stage = Some("stage_001".to_string());
+
+        progress.complete_current_stage(&registry);
+
+        assert_eq!(
+            progress.stage_status("stage_001"),
+            Some(&StageStatus::Completed)
+        );
+        assert_eq!(
+            progress.stage_status("stage_002"),
+            Some(&StageStatus::Unlocked)
+        );
+        assert_eq!(
+            progress.stage_status("stage_003"),
+            Some(&StageStatus::Locked)
+        );
+    }
+
+    /// Test ID: CAMPAIGN-006
+    /// 验证无 current_stage 时 complete_current_stage 不做任何更改
+    #[test]
+    fn complete_current_stage_no_current_does_nothing() {
+        let registry = test_registry();
+        let mut progress = CampaignProgress::initialize(&registry);
+        // current_stage = None
+
+        progress.complete_current_stage(&registry);
+
+        // 状态不变
+        assert_eq!(
+            progress.stage_status("stage_001"),
+            Some(&StageStatus::Unlocked)
+        );
+        assert_eq!(
+            progress.stage_status("stage_002"),
+            Some(&StageStatus::Locked)
+        );
+    }
+
+    /// Test ID: CAMPAIGN-007
+    /// 验证最后一关完成时不崩溃（无下一关可解锁）
+    #[test]
+    fn complete_last_stage_does_not_panic() {
+        let registry = test_registry();
+        let mut progress = CampaignProgress::initialize(&registry);
+
+        // 先解锁并完成前两关
+        progress.current_stage = Some("stage_001".to_string());
+        progress.complete_current_stage(&registry);
+        progress.current_stage = Some("stage_002".to_string());
+        progress.complete_current_stage(&registry);
+
+        // 完成最后一关
+        progress.current_stage = Some("stage_003".to_string());
+        progress.complete_current_stage(&registry);
+
+        assert_eq!(
+            progress.stage_status("stage_003"),
+            Some(&StageStatus::Completed)
+        );
+    }
+
+    /// Test ID: CAMPAIGN-008
+    /// 验证 complete_current_stage() 保持其他关卡状态不变
+    #[test]
+    fn complete_current_stage_preserves_other_stages() {
+        let registry = test_registry();
+        let mut progress = CampaignProgress::initialize(&registry);
+
+        // 手动设置 stage_003 为 Unlocked（模拟特殊情况）
+        progress
+            .stages
+            .insert("stage_003".to_string(), StageStatus::Unlocked);
+
+        progress.current_stage = Some("stage_001".to_string());
+        progress.complete_current_stage(&registry);
+
+        // stage_003 保持 Unlocked（不被覆盖）
+        assert_eq!(
+            progress.stage_status("stage_003"),
+            Some(&StageStatus::Unlocked)
+        );
+    }
+
+    /// Test ID: CAMPAIGN-009
+    /// 验证连续完成多关
+    #[test]
+    fn complete_multiple_stages_sequentially() {
+        let registry = test_registry();
+        let mut progress = CampaignProgress::initialize(&registry);
+
+        // 完成第一关
+        progress.current_stage = Some("stage_001".to_string());
+        progress.complete_current_stage(&registry);
+        assert_eq!(
+            progress.stage_status("stage_001"),
+            Some(&StageStatus::Completed)
+        );
+        assert_eq!(
+            progress.stage_status("stage_002"),
+            Some(&StageStatus::Unlocked)
+        );
+
+        // 完成第二关
+        progress.current_stage = Some("stage_002".to_string());
+        progress.complete_current_stage(&registry);
+        assert_eq!(
+            progress.stage_status("stage_002"),
+            Some(&StageStatus::Completed)
+        );
+        assert_eq!(
+            progress.stage_status("stage_003"),
+            Some(&StageStatus::Unlocked)
+        );
+    }
+
+    // ================================================
+    // StageStatus::label() 测试
+    // ================================================
+
+    /// Test ID: CAMPAIGN-010
+    /// 验证 StageStatus::label() 返回正确的中文标签
+    #[test]
+    fn stage_status_labels() {
+        assert_eq!(StageStatus::Locked.label(), "已锁定");
+        assert_eq!(StageStatus::Unlocked.label(), "已解锁");
+        assert_eq!(StageStatus::Completed.label(), "已完成");
+    }
+
+    /// Test ID: CAMPAIGN-011
+    /// 验证 StageStatus 的 PartialEq 实现
+    #[test]
+    fn stage_status_equality() {
+        assert_eq!(StageStatus::Locked, StageStatus::Locked);
+        assert_ne!(StageStatus::Locked, StageStatus::Unlocked);
+        assert_ne!(StageStatus::Unlocked, StageStatus::Completed);
+    }
+
+    /// Test ID: CAMPAIGN-012
+    /// 验证 StageStatus 的 Clone 实现
+    #[test]
+    fn stage_status_clone() {
+        let status = StageStatus::Unlocked;
+        let cloned = status.clone();
+        assert_eq!(status, cloned);
+    }
+}
