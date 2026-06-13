@@ -45,9 +45,9 @@ mod tests {
     fn f3_toggle_all_off_to_all_on() {
         let mut overlay = DebugOverlay::default();
         let all_on = overlay.show_pathfinding
-            || overlay.show_ai_intent
-            || overlay.show_occupancy
-            || overlay.show_range_outline;
+            && overlay.show_ai_intent
+            && overlay.show_occupancy
+            && overlay.show_range_outline;
         overlay.show_pathfinding = !all_on;
         overlay.show_ai_intent = !all_on;
         overlay.show_occupancy = !all_on;
@@ -67,9 +67,9 @@ mod tests {
             show_range_outline: true,
         };
         let all_on = overlay.show_pathfinding
-            || overlay.show_ai_intent
-            || overlay.show_occupancy
-            || overlay.show_range_outline;
+            && overlay.show_ai_intent
+            && overlay.show_occupancy
+            && overlay.show_range_outline;
         overlay.show_pathfinding = !all_on;
         overlay.show_ai_intent = !all_on;
         overlay.show_occupancy = !all_on;
@@ -81,7 +81,7 @@ mod tests {
     }
 
     #[test]
-    fn f3_toggle_partial_on_to_all_off() {
+    fn f3_toggle_partial_on_to_all_on() {
         let mut overlay = DebugOverlay {
             show_pathfinding: true,
             show_ai_intent: false,
@@ -89,16 +89,16 @@ mod tests {
             show_range_outline: false,
         };
         let all_on = overlay.show_pathfinding
-            || overlay.show_ai_intent
-            || overlay.show_occupancy
-            || overlay.show_range_outline;
+            && overlay.show_ai_intent
+            && overlay.show_occupancy
+            && overlay.show_range_outline;
         overlay.show_pathfinding = !all_on;
         overlay.show_ai_intent = !all_on;
         overlay.show_occupancy = !all_on;
         overlay.show_range_outline = !all_on;
-        assert!(!overlay.show_pathfinding);
-        assert!(!overlay.show_ai_intent);
-        assert!(!overlay.show_occupancy);
-        assert!(!overlay.show_range_outline);
+        assert!(overlay.show_pathfinding);
+        assert!(overlay.show_ai_intent);
+        assert!(overlay.show_occupancy);
+        assert!(overlay.show_range_outline);
     }
 }

@@ -1,12 +1,19 @@
-// 角色模块：单位组件、生成、模板、特性
+/// 角色模块：单位组件、生成、模板、特性
 
-mod components; // Unit, UnitName, Faction, GridPosition 等核心组件
-mod marker; // Dead, Selected, MovingUnit 等 Tag 组件
-mod movement; // 移动意图与动画
-mod movement_execution; // 移动执行系统（监听 MovementIntent 消息）
-mod spawn; // 单位生成逻辑
-mod template; // UnitTemplate 数据定义与注册表
-mod traits; // Trait 系统（种族/职业/天赋/装备统一抽象）
+/// Unit, UnitName, Faction, GridPosition 等核心组件
+mod components;
+/// Dead, Selected, MovingUnit 等 Tag 组件
+mod marker;
+/// 移动意图与动画
+mod movement;
+/// 移动执行系统（监听 MovementIntent 消息）
+mod movement_execution;
+/// 单位生成逻辑
+mod spawn;
+/// UnitTemplate 数据定义与注册表
+mod template;
+/// Trait 系统（种族/职业/天赋/装备统一抽象）
+mod traits;
 
 use crate::battle::CharacterDied;
 use crate::core::attribute::{
@@ -17,7 +24,7 @@ use crate::core::tag::{GameplayTag, GameplayTags, TagName};
 use crate::turn::{AppState, TurnOrder};
 use bevy::prelude::*;
 
-// 公共 re-exports
+/// 公共 re-exports
 pub use components::*;
 pub use marker::*;
 pub use movement::*;

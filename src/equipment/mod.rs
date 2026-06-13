@@ -1,17 +1,22 @@
-// 装备模块：数据驱动的装备定义、实例管理、穿脱逻辑
-// 遵循「装备 = Modifier + Trait + Tag + Rule」四层架构
-// 支持从 assets/equipment/*.ron 外部配置文件加载
+/// 装备模块：数据驱动的装备定义、实例管理、穿脱逻辑
+/// 遵循「装备 = Modifier + Trait + Tag + Rule」四层架构
+/// 支持从 assets/equipment/*.ron 外部配置文件加载
 
-mod definition; // EquipmentDef 定义与 EquipmentRegistry 注册表
-mod equip; // 穿脱逻辑（EquipItem/UnequipItem 消息处理）
-mod instance; // EquipmentInstance 实例管理
-mod requirements; // 装备需求检查（属性/等级/标签）
-mod slots; // EquipmentSlots 装备槽位组件
+/// EquipmentDef 定义与 EquipmentRegistry 注册表
+mod definition;
+/// 穿脱逻辑（EquipItem/UnequipItem 消息处理）
+mod equip;
+/// EquipmentInstance 实例管理
+mod instance;
+/// 装备需求检查（属性/等级/标签）
+mod requirements;
+/// EquipmentSlots 装备槽位组件
+mod slots;
 
 use crate::core::registry_loader::RegistryLoader;
 use bevy::prelude::*;
 
-// 公共 re-exports
+/// 公共 re-exports
 pub use definition::*;
 pub use equip::*;
 pub use instance::*;

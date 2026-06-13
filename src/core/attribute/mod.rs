@@ -1,7 +1,8 @@
-// 属性系统：8维核心属性 + 衍生属性实时计算 + 修饰符栈
-// 核心属性由种族/职业/等级决定，衍生属性从核心属性公式计算，生命资源存储当前值
+/// 属性系统：8维核心属性 + 衍生属性实时计算 + 修饰符栈
+/// 核心属性由种族/职业/等级决定，衍生属性从核心属性公式计算，生命资源存储当前值
 
-mod types; // AttributeKind, ModifierOp 等枚举定义
+/// AttributeKind, ModifierOp 等枚举定义
+mod types;
 
 pub use types::*;
 
@@ -27,7 +28,7 @@ pub struct Attributes {
 }
 
 impl Attributes {
-    // ── 核心属性访问 ──
+    /// ── 核心属性访问 ──
 
     /// 获取核心属性原始基础值（不含修饰符）
     pub fn core_base(&self, kind: AttributeKind) -> f32 {
@@ -53,7 +54,7 @@ impl Attributes {
         (base + add_sum) * mul
     }
 
-    // ── 衍生属性计算（从核心属性实时推导）──
+    /// ── 衍生属性计算（从核心属性实时推导）──
 
     /// MaxHp = 5 + Vitality * 5
     fn calc_max_hp(&self) -> f32 {
@@ -165,7 +166,7 @@ impl Attributes {
         (base + add_sum) * mul
     }
 
-    // ── 统一属性访问接口 ──
+    /// ── 统一属性访问接口 ──
 
     /// 获取任意属性值（核心/资源/衍生统一接口）
     pub fn get(&self, kind: AttributeKind) -> f32 {

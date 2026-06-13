@@ -287,7 +287,7 @@ mod tests {
                 amount: 5,
                 is_skill: false,
                 base_amount: None,
-                modifiers: Vec::new(),
+                modifiers: Vec::new()
             }
             .type_name(),
             "Damage"
@@ -296,7 +296,7 @@ mod tests {
             PendingEffectData::Heal {
                 amount: 5,
                 base_amount: None,
-                modifiers: Vec::new(),
+                modifiers: Vec::new()
             }
             .type_name(),
             "Heal"

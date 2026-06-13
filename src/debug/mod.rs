@@ -1,14 +1,22 @@
-// 调试工具模块：统一调试面板 + World Inspector + Gizmos 可视化
-// 使用 bevy_egui 实现运行时可视化调试，Gizmos 实现游戏内覆盖层
+/// 调试工具模块：统一调试面板 + World Inspector + Gizmos 可视化
+/// 使用 bevy_egui 实现运行时可视化调试，Gizmos 实现游戏内覆盖层
 
-mod egui_setup; // egui 中文字体初始化
-mod gizmos_viz; // Gizmos 可视化系统
-mod hotkeys; // 快捷键处理系统（F1-F7, F12）
-pub mod overlay; // DebugOverlay 资源 + Overlay 视图渲染
-mod panel; // 面板渲染（统一调试面板 + World Inspector）
-mod state; // 调试状态定义（DebugView, DebugPanelState, WorldInspectorState）
-mod stepping_control; // Debug Stepping 控制面板
-mod viewers; // 各领域调试视图查看器
+/// egui 中文字体初始化
+mod egui_setup;
+/// Gizmos 可视化系统
+mod gizmos_viz;
+/// 快捷键处理系统（F1-F7, F12）
+mod hotkeys;
+/// DebugOverlay 资源 + Overlay 视图渲染
+pub mod overlay;
+/// 面板渲染（统一调试面板 + World Inspector）
+mod panel;
+/// 调试状态定义（DebugView, DebugPanelState, WorldInspectorState）
+mod state;
+/// Debug Stepping 控制面板
+mod stepping_control;
+/// 各领域调试视图查看器
+mod viewers;
 
 use bevy::prelude::*;
 use bevy::remote::RemotePlugin;

@@ -1,17 +1,22 @@
-// 战斗模块：效果管线、伤害计算、战斗日志、战斗事件
+/// 战斗模块：效果管线、伤害计算、战斗日志、战斗事件
 
-mod combat; // 曼哈顿距离、战斗数值计算
-mod events; // 战斗事件定义（DamageApplied, HealApplied, CharacterDied 等）
-mod log; // CombatLog 资源，结构化战斗日志
-mod pipeline; // Effect Pipeline：生成→修饰→执行三步管道
-mod record; // BattleRecord 资源，结构化战斗记录（用于调试面板）
+/// 曼哈顿距离、战斗数值计算
+mod combat;
+/// 战斗事件定义（DamageApplied, HealApplied, CharacterDied 等）
+mod events;
+/// CombatLog 资源，结构化战斗日志
+mod log;
+/// Effect Pipeline：生成→修饰→执行三步管道
+mod pipeline;
+/// BattleRecord 资源，结构化战斗记录（用于调试面板）
+mod record;
 
 use crate::core::effect::{
     EffectDef, EffectQueue, EffectResult, EffectResultData, PendingEffect, PendingEffectData,
 };
 use bevy::prelude::*;
 
-// 公共 re-exports
+/// 公共 re-exports
 pub use combat::*;
 pub use events::*;
 pub use log::*;

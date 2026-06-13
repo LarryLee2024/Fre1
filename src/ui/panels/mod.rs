@@ -1,10 +1,15 @@
-// 面板子模块：每个面板独立模块
+/// 面板子模块：每个面板独立模块
 
-mod action_hint; // 行动提示面板
-mod combat_log_panel; // 战斗日志面板
-mod inventory_panel; // 背包面板
-mod turn_indicator; // 回合指示器
-mod unit_info; // 单位信息面板
+/// 行动提示面板
+mod action_hint;
+/// 战斗日志面板
+mod combat_log_panel;
+/// 背包面板
+mod inventory_panel;
+/// 回合指示器
+mod turn_indicator;
+/// 单位信息面板
+mod unit_info;
 
 pub use action_hint::ActionHintPlugin;
 pub use combat_log_panel::CombatLogPanelPlugin;

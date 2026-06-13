@@ -1,6 +1,5 @@
-// 效果管道：EffectDef → PendingEffect → 修饰 → 执行
-// 替代 combat_event.rs 中的 execute_attack 大函数
-
+/// 效果管道：EffectDef → PendingEffect → 修饰 → 执行
+/// 替代 combat_event.rs 中的 execute_attack 大函数
 mod handler; // EffectHandler trait 与各类型处理器（Damage/Heal/Buff/Cleanse）
 mod types; // EffectDef, PendingEffect, EffectResult 等类型定义
 

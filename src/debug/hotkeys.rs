@@ -26,9 +26,9 @@ pub fn debug_hotkey_system(
     // F3: Overlay 全部切换（无论面板是否打开都生效）
     if keyboard.just_pressed(KeyCode::F3) {
         let all_on = overlay.show_pathfinding
-            || overlay.show_ai_intent
-            || overlay.show_occupancy
-            || overlay.show_range_outline;
+            && overlay.show_ai_intent
+            && overlay.show_occupancy
+            && overlay.show_range_outline;
         overlay.show_pathfinding = !all_on;
         overlay.show_ai_intent = !all_on;
         overlay.show_occupancy = !all_on;

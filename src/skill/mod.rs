@@ -1,14 +1,17 @@
-// 技能模块：数据驱动的技能定义、槽位管理、效果预览
-// 支持从 assets/skills/*.ron 外部配置文件加载
+/// 技能模块：数据驱动的技能定义、槽位管理、效果预览
+/// 支持从 assets/skills/*.ron 外部配置文件加载
 
-mod domain; // SkillData 定义与 SkillRegistry 注册表
-mod preview; // 技能效果预览（伤害计算、范围展示）
-mod slots; // SkillSlots, SkillCooldowns 槽位管理
+/// SkillData 定义与 SkillRegistry 注册表
+mod domain;
+/// 技能效果预览（伤害计算、范围展示）
+mod preview;
+/// SkillSlots, SkillCooldowns 槽位管理
+mod slots;
 
 use crate::core::registry_loader::RegistryLoader;
 use bevy::prelude::*;
 
-// 公共 re-exports
+/// 公共 re-exports
 pub use domain::*;
 pub use slots::*;
 

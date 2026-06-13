@@ -1,22 +1,38 @@
-// UI 模块：面板、行动菜单、浮窗、视觉效果
-// 架构：widgets/ 基础库 + panels/ 面板模块 + 各功能模块
+/// UI 模块：面板、行动菜单、浮窗、视觉效果
+/// 架构：widgets/ 基础库 + panels/ 面板模块 + 各功能模块
 
-mod action_menu; // 行动菜单（攻击/技能/待机）
-mod camera; // 摄像机控制（缩放/拖拽）
-mod combat_log_handler; // 战斗日志 Message 监听
-mod combat_preview; // 战斗预览（伤害计算展示）
-mod combat_vfx_handler; // 战斗 VFX（飘字/特效）
-mod command_handler; // UI 命令处理
-pub mod events; // UI 事件定义（UiCommand, MovementIntent）
-mod focus; // UI 焦点状态管理
-mod highlight; // 单位/格子高亮
-mod panels; // UI 面板子模块
-pub mod settings; // GameSettings 用户偏好与 RON 持久化
-pub mod theme; // UiTheme 视觉常量
-mod tile_info; // 格子信息浮窗
-pub mod vfx; // 视觉效果系统
-pub mod view_models; // ViewModel 数据结构
-mod widgets; // 可复用 UI 构建块
+/// 行动菜单（攻击/技能/待机）
+mod action_menu;
+/// 摄像机控制（缩放/拖拽）
+mod camera;
+/// 战斗日志 Message 监听
+mod combat_log_handler;
+/// 战斗预览（伤害计算展示）
+mod combat_preview;
+/// 战斗 VFX（飘字/特效）
+mod combat_vfx_handler;
+/// UI 命令处理
+mod command_handler;
+/// UI 事件定义（UiCommand, MovementIntent）
+pub mod events;
+/// UI 焦点状态管理
+mod focus;
+/// 单位/格子高亮
+mod highlight;
+/// UI 面板子模块
+mod panels;
+/// GameSettings 用户偏好与 RON 持久化
+pub mod settings;
+/// UiTheme 视觉常量
+pub mod theme;
+/// 格子信息浮窗
+mod tile_info;
+/// 视觉效果系统
+pub mod vfx;
+/// ViewModel 数据结构
+pub mod view_models;
+/// 可复用 UI 构建块
+mod widgets;
 
 use crate::battle::CombatLogCollapsed;
 use crate::character::Faction;
@@ -24,7 +40,7 @@ use crate::turn::{AppState, TurnState};
 use crate::ui::view_models::*;
 use bevy::prelude::*;
 
-// 公共 re-exports
+/// 公共 re-exports
 pub use focus::{BlocksGameInput, UiFocusState};
 pub use settings::GameSettings;
 pub use theme::UiTheme;

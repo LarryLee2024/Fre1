@@ -1,16 +1,20 @@
-// Buff 模块：数据驱动的 Buff/Debuff 定义、实例管理、应用/移除、持续效果结算
-// 支持从 assets/buffs/*.ron 外部配置文件加载
+/// Buff 模块：数据驱动的 Buff/Debuff 定义、实例管理、应用/移除、持续效果结算
+/// 支持从 assets/buffs/*.ron 外部配置文件加载
 
-mod apply; // Buff 应用/移除逻辑
-mod domain; // BuffDef 定义与 BuffRegistry 注册表
-mod instance; // BuffInstance, ActiveBuffs 实例管理
-pub(crate) mod resolve; // 持续效果结算（DoT/HoT/Stun）
+/// Buff 应用/移除逻辑
+mod apply;
+/// BuffDef 定义与 BuffRegistry 注册表
+mod domain;
+/// BuffInstance, ActiveBuffs 实例管理
+mod instance;
+/// 持续效果结算（DoT/HoT/Stun）
+pub(crate) mod resolve;
 
 use crate::core::registry_loader::RegistryLoader;
 use crate::turn::TurnPhase;
 use bevy::prelude::*;
 
-// 公共 re-exports
+/// 公共 re-exports
 pub use apply::*;
 pub use domain::*;
 pub use instance::*;
