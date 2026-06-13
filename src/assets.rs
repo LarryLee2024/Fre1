@@ -47,14 +47,18 @@ pub struct AssetsPlugin;
 
 impl Plugin for AssetsPlugin {
     fn build(&self, app: &mut App) {
-        // 直接插入 CnFont 资源（AssetServer 在 Plugin 注册时已可用）
-        let asset_server = app.world().resource::<AssetServer>();
-        app.insert_resource(CnFont::from(asset_server));
-        bevy::log::info!(
-            target: "assets",
-            event = "fonts_loaded",
-            font = CN_FONT,
-            "字体资源已加载"
+        // 延迟到 Startup 系统初始化 CnFont，确保 AssetServer 已就绪
+        app.add_systems(
+            Startup,
+            |mut commands: Commands, asset_server: Res<AssetServer>| {
+                commands.insert_resource(CnFont::from(&asset_server));
+                bevy::log::info!(
+                    target: "assets",
+                    event = "fonts_loaded",
+                    font = CN_FONT,
+                    "字体资源已加载"
+                );
+            },
         );
     }
 }
