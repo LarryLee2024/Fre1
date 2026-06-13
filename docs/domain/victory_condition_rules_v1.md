@@ -43,7 +43,7 @@ VictoryCheckResult（检查结果）
 | Faction | character_rules | 阵营区分（Player/Enemy）是条件判定的基础 |
 | TurnPhase | turn_rules | 胜负条件在指定的 TurnPhase 阶段检查 |
 | TurnState | turn_rules | SurviveTurns 条件通过 turn_number 判定 |
-| GameOverState | ui（ViewModel） | 胜负条件检查结果驱动 GameOverState 变化 |
+| GameOverState | turn（业务层 Resource） | 胜负条件检查结果驱动 GameOverState 变化 |
 | AppState | turn_rules | GameOverState 非 Playing 时驱动 AppState → GameOver |
 | BattleRecord | battle_rules | 胜负判定结果记录到 BattleRecord |
 | LevelConfig | level_rules | VictoryCondition 作为 LevelConfig 的配置字段 |

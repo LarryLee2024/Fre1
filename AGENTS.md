@@ -13,23 +13,23 @@
 - **@refactor-guardian**：技术债扫描，定期输出债务清单；优先删代码而非加封装
 
 ## 协作流程
-需求 → @domain-designer（领域模型），输出到：`docs/domain/` — 领域模型目录
-     → @architect（ADR 架构设计），输出到：`docs/ADR/` — 架构设计目录
-     → @feature-developer（代码实现），在 `src/` 目录下实现功能代码
-     → @test-guardian（测试审查），输出到：`docs/testing/` — 测试计划目录，在 `src/` 和 `tests/` 目录下实现测试代码
-     → @code-reviewer（代码审查），输出到：`docs/reviews/` — 代码审查目录
-     → @refactor-guardian（定期技术债扫描），输出到：`docs/refactor/` — 技术债扫描目录
+需求 → @domain-designer（领域模型） → 输出：`docs/domain/`
+     → @architect（ADR 架构设计） → 输出：`docs/adr/`
+     → @feature-developer（代码实现） → 输出：`src/`
+     → @test-guardian（测试审查） → 输出：`docs/testing/`（计划）+ `src/` 和 `tests/`（代码）
+     → @code-reviewer（代码审查） → 输出：`docs/reviews/`
+     → @refactor-guardian（技术债扫描） → 输出：`docs/refactor/`
 
 ## 通用行为红线（所有角色必须遵守）
 1. 严禁绕过 Effect/Modifier 管线直接修改战斗数值与属性
 2. 严禁突破模块边界、违反 ECS 架构模式
 3. 严禁修改定义态（Definition）配置数据
 4. 严禁超出自身角色职责范围跨环节作业
-5. 严禁写过时、不符合最新 Bevy 0.18.1 版版本的代码
+5. 严禁写过时、不符合最新 Bevy 0.18.1 版本的代码
 
 ## 参考文档
 - `docs/architecture.md` — 完整架构规范（最高优先级）
 - `docs/coding_rules.md` — 编码风格与工程规范
 - `docs/testing_spec.md` — 测试体系规范
 - `docs/AI开发宪法.md` — AI 开发总原则
-- `docs/.trae/rules/` — 项目规则目录
+- `.lingma/rules/` — 项目规则目录

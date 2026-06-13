@@ -45,7 +45,7 @@ LevelRegistry
 | OccupancyGrid | map_rules | Level 提供 unit 部署坐标，初始化 OccupancyGrid |
 | UnitTemplate | character_rules | Level 通过 template ID 引用 UnitTemplate |
 | TurnPhase | turn_rules | Level 加载后进入 InGame 状态，激活 TurnPhase |
-| GameOverState | ui（ViewModel） | Level 的 VictoryCondition 决定 GameOverState 的判定规则 |
+| GameOverState | turn（业务层 Resource） | Level 的 VictoryCondition 决定 GameOverState 的判定规则 |
 
 ---
 
@@ -149,7 +149,7 @@ Validated ──[验证失败]──► Failed
 - 条件：LevelConfigDef 验证时
 - 不变量：victory_condition 字段必须存在且有效
 - 违反后果：战斗无法判定胜负，游戏永远处于 Playing 状态
-- 备注：当前代码中缺失此字段，需补充
+- 代码实现：`LevelConfigDef.victory_condition: Option<VictoryConditionDef>`，`None` 时使用默认 KillAll
 
 ### 3.10 LevelRegistry 空即为空 🟥
 
