@@ -2056,12 +2056,25 @@ F12 → World Inspector
 | `architecture/ui_domain_boundary_rules.md` | UI-领域交互边界（只读/单向/分离契约） |
 | `architecture/logging_design.md` | 日志系统设计（tracing/五级日志/结构化字段） |
 | `architecture/save_migration_rules.md` | 存档格式迁移与版本兼容策略 |
+| `architecture/i18n_design.md` | 国际化系统架构（Fluent/.ftl/Key驱动/LocalizedText/MOD翻译） |
+| `architecture/tools_architecture.md` | 开发工具链架构（Data Validator/Content Linter/Balance Checker） |
+| `architecture/content_migration_design.md` | 内容格式迁移设计（Content Format V1→V2→V3 迁移链） |
+| `architecture/asset_namespace_design.md` | 资源命名空间设计（base:/mod_x: 前缀防止 MOD 冲突） |
+| `architecture/feature_flag_design.md` | Feature Flag 架构（replay/debug_ui/cheat/modding 条件编译） |
 
 ---
 
 # 版本修订说明
 
-**v4.1**（当前版本）：
+**v4.2**（当前版本）：
+- 来源：`docs/其他/32.国际化.md` + `docs/其他/33遗漏2.md`
+- 新增国际化系统架构（Fluent + Key驱动内容 + MOD翻译）
+- 新增开发工具链架构（Data Validator + Content Linter）
+- 新增内容格式迁移设计（Content Migration Chain）
+- 新增资源命名空间设计（base:/mod_x: 前缀）
+- 新增 Feature Flag 架构（8 个条件编译开关）
+
+**v4.1**：
 - 来源：`docs/其他/31遗漏.md` 全面补充
 - 新增 19 篇架构文档，覆盖：ECS 代码层规范（Component/System/Plugin）、核心数据架构（IDs/Events/Audit/Content Format/Command Bus）、SRPG 核心机制（Determinism/Battle FSM/Pathfinding/Schedules）、工程质量（Asset Lifecycle/Config/Performance/Validation）、测试体系（Testing Architecture）、边界守则（UI-Domain/Logging/Save Migration）
 
