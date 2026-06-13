@@ -22,13 +22,17 @@ pub fn on_unit_pointer_click(
     unit_query: Query<(&Unit, &GridPosition)>,
     turn_state: Res<TurnState>,
     turn_order: Res<TurnOrder>,
-    turn_phase: Res<State<TurnPhase>>,
+    turn_phase: Option<Res<State<TurnPhase>>>,
     mut ui_commands: MessageWriter<UiCommand>,
 ) {
     // 只处理左键
     if trigger.event.button != PointerButton::Primary {
         return;
     }
+    // TurnPhase 可能在 AppState::MainMenu 下未就绪，跳过
+    let Some(turn_phase) = turn_phase else {
+        return;
+    };
     // 只有当前行动单位是玩家阵营时才处理输入
     if turn_state.current_faction != Faction::Player {
         return;

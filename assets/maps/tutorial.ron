@@ -23,12 +23,12 @@
         (template: "enemy_goblin", coord: (8, 3)),
         (template: "enemy_dark_knight", coord: (6, 6)),
     ],
-    victory_condition: (
+    victory_condition: Some((
         win_conditions: [
-            (type: "KillAll"),
+            (type: KillAll),
         ],
         lose_conditions: [
-            (type: "AllDead"),
+            (type: AllDead),
         ],
-    ),
+    )),
 )
