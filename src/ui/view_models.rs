@@ -162,16 +162,6 @@ pub struct TurnInfoView {
     pub current_index: usize,
 }
 
-/// 胜负状态
-#[derive(Resource, Reflect, Default, Debug, PartialEq, Eq)]
-#[reflect(Resource)]
-pub enum GameOverState {
-    #[default]
-    Playing,
-    Victory,
-    Defeat,
-}
-
 // ── ViewModel 更新系统 ──
 
 /// 从游戏数据构建 SelectedUnitView（基于 HoveredEntity，任何单位都可查看）
@@ -478,22 +468,6 @@ pub fn update_turn_info_view(
     }
 }
 
-/// 检查胜负条件，更新 GameOverState
-pub fn update_game_over_state(units: Query<&Unit>, mut game_over: ResMut<GameOverState>) {
-    if *game_over != GameOverState::Playing {
-        return;
-    }
-
-    let has_player = units.iter().any(|u| u.faction == Faction::Player);
-    let has_enemy = units.iter().any(|u| u.faction == Faction::Enemy);
-
-    if !has_enemy {
-        *game_over = GameOverState::Victory;
-    } else if !has_player {
-        *game_over = GameOverState::Defeat;
-    }
-}
-
 #[cfg(test)]
 mod tests {
     // ================================================
@@ -588,47 +562,6 @@ mod tests {
         assert!(!view.is_player_turn);
         assert!(view.turn_order.is_empty());
         assert_eq!(view.current_index, 0);
-    }
-
-    /// Test ID: UI-GAME-001
-    /// Title: GameOverState 默认值为 Playing
-    ///
-    /// Given: GameOverState::default()
-    /// When: 检查枚举值
-    /// Then: 等于 Playing
-    ///
-    /// Assertions: game_over == Playing
-    #[test]
-    fn game_over_state_default_is_playing() {
-        // Given
-        let state = GameOverState::default();
-
-        // When - 无需操作
-
-        // Then
-        assert_eq!(state, GameOverState::Playing);
-    }
-
-    /// Test ID: UI-GAME-002
-    /// Title: GameOverState 枚举值可比较
-    ///
-    /// Given: GameOverState::Victory 和 GameOverState::Defeat
-    /// When: 比较两个不同状态
-    /// Then: 两者不相等
-    ///
-    /// Assertions: Victory != Defeat
-    #[test]
-    fn game_over_state_variants_are_distinct() {
-        // Given
-        let victory = GameOverState::Victory;
-        let defeat = GameOverState::Defeat;
-
-        // When - 无需操作
-
-        // Then
-        assert_ne!(victory, defeat);
-        assert_ne!(victory, GameOverState::Playing);
-        assert_ne!(defeat, GameOverState::Playing);
     }
 
     /// Test ID: UI-INV-004

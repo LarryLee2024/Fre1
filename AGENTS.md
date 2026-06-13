@@ -1,125 +1,35 @@
 # AGENTS.md — Bevy SRPG Project
 
-## Project Overview
-Bevy 0.18.1 tactical RPG (回合制战棋) with strict ECS architecture. All game logic follows ECS patterns with enforced separation of concerns.
+## 项目概述
+基于 Bevy 0.18.1 的回合制战棋项目，严格遵循 ECS 架构与领域分离原则。所有 Agent 输出必须以 `docs/architecture.md` 为最高架构准则。
 
-## Key Commands
-```bash
-cargo build                    # Build project
-cargo test                     # Run all tests
-cargo test rule                # Run rule tests only (proptest)
-cargo test feature             # Run feature tests only
-cargo test scenario            # Run scenario tests only
-cargo test golden              # Run golden/snapshot tests (insta)
-cargo test system              # Run ECS system integration tests
-cargo test -- --test-threads=1 # Sequential tests (if needed)
-cargo run --features dev       # Run with dev tools (file_watcher, debug_stepping)
-```
+## 角色总览
+共 6 个专用 Agent，各角色严格守界，详细 Prompt 见 `.qoder/agents/*.md`。
+- **@architect**：架构设计，输出 ADR；只设计不写代码，所有方案不得违反架构规范
+- **@domain-designer**：领域建模，输出领域文档；不讨论代码实现，术语与现有体系对齐
+- **@feature-developer**：功能实现，按架构与领域模型编码；发现架构问题立即上报，不私自修改
+- **@code-reviewer**：代码审查，按优先级校验合规性；只提意见不直接改代码
+- **@test-guardian**：测试守护，以领域规则优先；Bug 必须转化为可复现的回放测试
+- **@refactor-guardian**：技术债扫描，定期输出债务清单；优先删代码而非加封装
 
-## Architecture Rules (Non-Negotiable)
+## 协作流程
+需求 → @domain-designer（领域模型），输出到：`docs/domain/` — 领域模型目录
+     → @architect（ADR 架构设计），输出到：`docs/ADR/` — 架构设计目录
+     → @feature-developer（代码实现），在 `src/` 目录下实现功能代码
+     → @test-guardian（测试审查），输出到：`docs/testing/` — 测试计划目录，在 `src/` 和 `tests/` 目录下实现测试代码
+     → @code-reviewer（代码审查），输出到：`docs/reviews/` — 代码审查目录
+     → @refactor-guardian（定期技术债扫描），输出到：`docs/refactor/` — 技术债扫描目录
 
-### Plugin Registration Order
-Must follow in `main.rs`:
-1. Core layer: `EffectPlugin`, `ModifierRulePlugin`, `AttributeDefPlugin`, `TagDefPlugin`
-2. Data layer: `SkillPlugin`, `BuffPlugin`, `AiBehaviorPlugin`, `EquipmentPlugin`, `InventoryPlugin`
-3. Logic layer: `AssetsPlugin`, `TurnPlugin`, `MapPlugin`, `CharacterPlugin`, `BattlePlugin`, `AiPlugin`
-4. Presentation layer: `UiPlugin`, `InputPlugin`, `DebugPlugin`
+## 通用行为红线（所有角色必须遵守）
+1. 严禁绕过 Effect/Modifier 管线直接修改战斗数值与属性
+2. 严禁突破模块边界、违反 ECS 架构模式
+3. 严禁修改定义态（Definition）配置数据
+4. 严禁超出自身角色职责范围跨环节作业
+5. 严禁写过时、不符合最新 Bevy 0.18.1 版版本的代码
 
-### Module Organization
-- **Feature First**: Code organized by business domain (`battle/`, `character/`, `buff/`, etc.)
-- **Forbidden**: `components/`, `systems/`, `events/`, `utils/` as top-level modules
-- **core/**: Must not depend on any business module (attributes, tags, effects, modifiers)
-- **Module Header Comment**: Every `mod.rs` must start with a comment block describing module purpose, followed by inline comments on each `mod` declaration:
-  ```rust
-  // 模块名称：一句话说明模块职责
-  // 补充说明（可选）
-
-  mod sub_a; // 子模块 A 的职责
-  mod sub_b; // 子模块 B 的职责
-  ```
-- **Mod Sync Rule**: When adding/removing/renaming files in a module directory, the `mod.rs` must be updated to match. Missing or stale `mod` declarations cause compilation errors.
-
-### ECS Constraints
-- **Entity = ID only**: No methods, no `EntityManager`, no OOP patterns
-- **Component = data only**: No logic in components
-- **System = behavior only**: No state storage in systems
-- **Tag Components > bool**: Use `Dead`, `Stunned` instead of `is_dead: bool`
-
-### Communication
-- **Hook**: Component add/remove side effects (`#[component(on_add=...)]`)
-- **Observer**: Same-feature state changes
-- **Message**: Cross-feature broadcast
-- **Forbidden**: Events for intra-module calls, Observer for high-frequency logic
-
-### Data Flow
-- **Definition (immutable)**: Config loaded from RON files in `assets/`
-- **Instance (mutable)**: Runtime state per entity
-- **Rule/Content separation**: New content = new RON files, never modify logic code
-
-### Effect Pipeline (Critical)
-All combat effects must follow:
-```
-CombatIntent → Generate → Modify → Execute
-```
-**Forbidden**: Direct HP modification, direct buff application, skipping pipeline
-
-### Modifier Pipeline (Critical)
-All attribute modifications must follow:
-```
-Modifier → Attribute Resolver → Final Stat
-```
-**Forbidden**: Direct stat modification, bypassing resolver
-
-## Testing Conventions
-
-### Test Structure
-```
-tests/
-├── common/          # Shared test utilities
-│   ├── fixtures.rs  # UnitBuilder with standard units
-│   ├── app_builder.rs
-│   ├── assertions.rs
-│   └── combat_helpers.rs
-├── rule/            # Formula/logic tests (proptest)
-├── feature/         # Complete feature tests
-├── scenario/        # Player flow tests (BDD style)
-├── golden/          # Snapshot tests (insta)
-└── system/          # ECS system integration tests
-```
-
-### Standard Test Units
-Use `UnitBuilder` from `tests/common/fixtures.rs`:
-- `UnitBuilder::warrior()` —战士 (Might=5, Vitality=5, Agility=6)
-- `UnitBuilder::mage()` — 法师 (Intelligence=8, Willpower=6)
-- `UnitBuilder::goblin()` — 哥布林 (low stats, Enemy faction)
-- `UnitBuilder::unit_001()` — 标准战士 (HP=100, ATK=30, DEF=10, SPD=10)
-- `UnitBuilder::unit_002()` — 标准法师 (HP=80, ATK=40, DEF=5, SPD=12)
-- `UnitBuilder::unit_003()` — 标准坦克 (HP=150, ATK=20, DEF=20, SPD=5)
-
-### Test Rules
-- All tests must be deterministic (Seed=42 if random)
-- Test behavior, not implementation
-- Bug fix: write failing test first, then fix code
-- Use standard test units, not ad-hoc values
-
-## Code Style
-- **Naming**: Types=PascalCase, Functions=snake_case, Constants=SCREAMING_SNAKE_CASE
-- **Files**: One topic per file, 300-500 lines ideal, >1000 lines must split
-- **Functions**: 20-50 lines ideal, >100 lines must refactor, max 3 nesting levels
-- **Early Return**: Prefer over deep nesting
-- **No unwrap/expect** in business code (Result only)
-- **tracing** for logging (no println!/dbg!)
-
-## Critical Warnings
-1. **Never modify Definition objects** at runtime
-2. **Never bypass Effect/Modifier Pipeline**
-3. **Never create `utils.rs` or `components.rs`** as top-level modules
-4. **Never use Entity as OOP object** (no `entity.attack()`)
-5. **Never store state in systems**
-6. **Never use events for intra-module calls**
-
-## Reference Docs
-- `docs/architecture.md` — Full architecture spec (highest priority)
-- `docs/AI开发宪法.md` — AI development constitution
-- `docs/coding_rules.md` — Coding rules
-- `.trae/rules/` — Additional rules and conventions
+## 参考文档
+- `docs/architecture.md` — 完整架构规范（最高优先级）
+- `docs/coding_rules.md` — 编码风格与工程规范
+- `docs/testing_spec.md` — 测试体系规范
+- `docs/AI开发宪法.md` — AI 开发总原则
+- `docs/.trae/rules/` — 项目规则目录

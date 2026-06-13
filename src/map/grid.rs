@@ -201,6 +201,8 @@ mod tests {
             terrain_map: Default::default(),
             player_units: vec![],
             enemy_units: vec![],
+            victory_condition: None,
+            turn_limit: None,
         };
 
         // When

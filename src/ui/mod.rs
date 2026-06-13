@@ -55,7 +55,6 @@ impl Plugin for UiPlugin {
             .add_message::<events::UiCommand>()
             .init_resource::<SelectedUnitView>()
             .init_resource::<TurnInfoView>()
-            .init_resource::<GameOverState>()
             .init_resource::<CombatPreviewView>()
             .init_resource::<HoveredEntity>()
             .init_resource::<CombatLogCollapsed>()
@@ -72,7 +71,6 @@ impl Plugin for UiPlugin {
             .register_type::<SelectedUnitView>()
             .register_type::<CombatPreviewView>()
             .register_type::<TurnInfoView>()
-            .register_type::<GameOverState>()
             .register_type::<focus::UiFocusState>()
             // GameSettings Reflect 注册
             .register_type::<settings::GameSettings>()
@@ -98,7 +96,6 @@ impl Plugin for UiPlugin {
                 (
                     update_selected_unit_view,
                     update_turn_info_view,
-                    update_game_over_state,
                     update_combat_preview_view,
                     update_acted_unit_color,
                     // UI 焦点状态更新

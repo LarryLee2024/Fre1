@@ -1,8 +1,8 @@
 // 回合提示面板：显示当前回合数、胜负判定
 
-use crate::turn::AppState;
+use crate::turn::{AppState, GameOverState};
 use crate::ui::theme::UiTheme;
-use crate::ui::view_models::{GameOverState, TurnInfoView};
+use crate::ui::view_models::TurnInfoView;
 use bevy::prelude::*;
 
 /// 回合提示文本

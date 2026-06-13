@@ -40,3 +40,43 @@ pub enum GameSet {
     Unit,
     Ui,
 }
+
+/// 胜负状态（游戏终态标识，UI 层只读）
+///
+/// Playing → Victory/Defeat 为不可逆转换。
+/// 由 `check_victory_conditions` 系统写入，UI 层仅读取展示。
+#[derive(Resource, Reflect, Default, Debug, Clone, PartialEq, Eq)]
+#[reflect(Resource)]
+pub enum GameOverState {
+    /// 战斗进行中
+    #[default]
+    Playing,
+    /// 玩家胜利（终态，不可逆）
+    Victory,
+    /// 玩家失败（终态，不可逆）
+    Defeat,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Test ID: UI-GAME-001 (migrated from view_models)
+    /// Title: GameOverState 默认值为 Playing
+    #[test]
+    fn game_over_state_default_is_playing() {
+        let state = GameOverState::default();
+        assert_eq!(state, GameOverState::Playing);
+    }
+
+    /// Test ID: UI-GAME-002 (migrated from view_models)
+    /// Title: GameOverState 枚举值可比较
+    #[test]
+    fn game_over_state_variants_are_distinct() {
+        let victory = GameOverState::Victory;
+        let defeat = GameOverState::Defeat;
+        assert_ne!(victory, defeat);
+        assert_ne!(victory, GameOverState::Playing);
+        assert_ne!(defeat, GameOverState::Playing);
+    }
+}

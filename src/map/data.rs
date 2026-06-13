@@ -3,7 +3,7 @@
 
 use crate::core::registry_loader::RegistryLoader;
 use bevy::prelude::*;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 // ── 地形定义 ──
@@ -134,6 +134,66 @@ impl RegistryLoader for TerrainRegistry {
     }
 }
 
+// ── 胜负条件配置 ──
+
+/// 条件类型枚举（数据驱动，从 RON 反序列化）
+#[derive(Clone, Debug, Deserialize, Serialize, Reflect, PartialEq, Eq)]
+#[reflect(Serialize, Deserialize)]
+pub enum ConditionTypeDef {
+    /// 消灭所有敌方单位
+    KillAll,
+    /// 存活 N 回合
+    SurviveTurns,
+    /// 击败指定 Boss
+    DefeatBoss,
+    /// 全灭（默认失败条件）
+    AllDead,
+    /// 超时失败
+    TurnLimitExceeded,
+}
+
+/// 条件参数（可选，各条件类型按需使用）
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Reflect, PartialEq, Eq)]
+#[reflect(Serialize, Deserialize)]
+pub struct ConditionParamsDef {
+    /// SurviveTurns 的目标回合数
+    pub n: Option<u32>,
+    /// DefeatBoss 的 Boss 模板 ID
+    pub boss_id: Option<String>,
+    /// TurnLimitExceeded 的最大回合数
+    pub max_turns: Option<u32>,
+}
+
+/// 单条胜利条件
+#[derive(Clone, Debug, Deserialize, Serialize, Reflect, PartialEq, Eq)]
+#[reflect(Serialize, Deserialize)]
+pub struct WinConditionDef {
+    #[serde(rename = "type")]
+    pub condition_type: ConditionTypeDef,
+    #[serde(default)]
+    pub params: Option<ConditionParamsDef>,
+}
+
+/// 单条失败条件
+#[derive(Clone, Debug, Deserialize, Serialize, Reflect, PartialEq, Eq)]
+#[reflect(Serialize, Deserialize)]
+pub struct LoseConditionDef {
+    #[serde(rename = "type")]
+    pub condition_type: ConditionTypeDef,
+    #[serde(default)]
+    pub params: Option<ConditionParamsDef>,
+}
+
+/// 关卡的完整胜负条件配置（Definition，不可变）
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Reflect, PartialEq, Eq)]
+#[reflect(Serialize, Deserialize)]
+pub struct VictoryConditionDef {
+    #[serde(default)]
+    pub win_conditions: Vec<WinConditionDef>,
+    #[serde(default)]
+    pub lose_conditions: Vec<LoseConditionDef>,
+}
+
 // ── 关卡配置 ──
 
 /// 单位部署条目（RON 反序列化用）
@@ -165,6 +225,12 @@ pub struct LevelConfigDef {
     /// 敌方单位部署
     #[serde(default)]
     pub enemy_units: Vec<UnitDeployDef>,
+    /// 胜负条件配置（数据驱动，None 时使用默认 KillAll）
+    #[serde(default)]
+    pub victory_condition: Option<VictoryConditionDef>,
+    /// 可选回合上限
+    #[serde(default)]
+    pub turn_limit: Option<u32>,
 }
 
 fn default_tile_size() -> f32 {
@@ -183,6 +249,10 @@ pub struct LevelConfig {
     pub terrain_map: HashMap<(i32, i32), String>,
     pub player_units: Vec<UnitDeployDef>,
     pub enemy_units: Vec<UnitDeployDef>,
+    /// 胜负条件配置（不可变，随 LevelConfig 一起加载）
+    pub victory_condition: Option<VictoryConditionDef>,
+    /// 可选回合上限
+    pub turn_limit: Option<u32>,
 }
 
 impl LevelConfig {
@@ -215,6 +285,8 @@ impl LevelConfig {
             terrain_map,
             player_units: def.player_units,
             enemy_units: def.enemy_units,
+            victory_condition: def.victory_condition,
+            turn_limit: def.turn_limit,
         }
     }
 }
@@ -468,6 +540,8 @@ mod tests {
             char_map: HashMap::new(),
             player_units: vec![],
             enemy_units: vec![],
+            victory_condition: None,
+            turn_limit: None,
         };
 
         // When
@@ -528,6 +602,8 @@ mod tests {
                 terrain_map: HashMap::new(),
                 player_units: vec![],
                 enemy_units: vec![],
+                victory_condition: None,
+                turn_limit: None,
             },
         );
 
@@ -575,6 +651,8 @@ mod tests {
                 terrain_map: HashMap::new(),
                 player_units: vec![],
                 enemy_units: vec![],
+                victory_condition: None,
+                turn_limit: None,
             },
         );
         registry.levels.insert(
@@ -588,6 +666,8 @@ mod tests {
                 terrain_map: HashMap::new(),
                 player_units: vec![],
                 enemy_units: vec![],
+                victory_condition: None,
+                turn_limit: None,
             },
         );
 
@@ -669,6 +749,8 @@ mod tests {
             char_map: HashMap::new(),
             player_units: vec![],
             enemy_units: vec![],
+            victory_condition: None,
+            turn_limit: None,
         };
 
         // When
@@ -713,6 +795,8 @@ mod tests {
             char_map: custom_map,
             player_units: vec![],
             enemy_units: vec![],
+            victory_condition: None,
+            turn_limit: None,
         };
 
         // When
