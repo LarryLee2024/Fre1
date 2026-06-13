@@ -139,6 +139,13 @@ pub fn execute_action_on_enter(
 
         if let Some(skill_id) = combat_intent.skill_id.as_deref() {
             if let Some(skill_data) = skill_registry.get(skill_id) {
+                bevy::log::info!(
+                    target: "battle",
+                    event = "skill_activated",
+                    unit = %_name.0,
+                    skill_id = %skill_id,
+                    "技能已使用"
+                );
                 if skill_data.cooldown > 0 {
                     cooldowns.set(skill_id, skill_data.cooldown);
                 }
@@ -185,6 +192,13 @@ pub fn execute_action_on_enter(
             // 设置冷却（与玩家走同一套逻辑）
             if let Some(skill_id) = combat_intent.skill_id.as_deref() {
                 if let Some(skill_data) = skill_registry.get(skill_id) {
+                    bevy::log::info!(
+                        target: "battle",
+                        event = "skill_activated",
+                        unit = ?source_entity,
+                        skill_id = %skill_id,
+                        "AI技能已使用"
+                    );
                     if skill_data.cooldown > 0 {
                         cooldowns.set(skill_id, skill_data.cooldown);
                     }

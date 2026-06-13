@@ -68,11 +68,12 @@ pub fn resolve_status_effects(
                 remove_buff(&mut buffs, &mut attrs, &mut tags, id);
             }
             // 发送晕眩消息（表现层响应）
-            bevy::log::trace!(
+            bevy::log::info!(
                 target: "buff",
+                event = "stun_applied",
                 target_entity = ?entity,
                 target_name = %name.0,
-                "StunApplied 消息发送"
+                "晕眩已结算"
             );
             stun_writer.write(StunApplied {
                 target: entity,
@@ -88,12 +89,13 @@ pub fn resolve_status_effects(
             attrs.set_vital(AttributeKind::Hp, new_hp);
 
             // 发送 DoT 消息（表现层响应）
-            bevy::log::trace!(
+            bevy::log::info!(
                 target: "buff",
+                event = "dot_applied",
                 target_entity = ?entity,
                 target_name = %name.0,
                 damage = dot,
-                "DotApplied 消息发送"
+                "DoT伤害已结算"
             );
             dot_writer.write(DotApplied {
                 target: entity,
@@ -118,12 +120,13 @@ pub fn resolve_status_effects(
             attrs.set_vital(AttributeKind::Hp, new_hp);
 
             // 发送 HoT 消息（表现层响应）
-            bevy::log::trace!(
+            bevy::log::info!(
                 target: "buff",
+                event = "hot_applied",
                 target_entity = ?entity,
                 target_name = %name.0,
                 heal = hot,
-                "HotApplied 消息发送"
+                "HoT治疗已结算"
             );
             hot_writer.write(HotApplied {
                 target: entity,
@@ -133,7 +136,23 @@ pub fn resolve_status_effects(
         }
 
         // 4. tick 递减持续时间，移除过期的 Buff
+        let expired_buffs: Vec<String> = buffs
+            .instances
+            .iter()
+            .filter(|inst| inst.remaining_turns <= 1)
+            .map(|inst| inst.buff_id.clone())
+            .collect();
         tick_buffs(&mut buffs, &mut attrs, &mut tags, &persistent_tags);
+        for buff_id in &expired_buffs {
+            bevy::log::info!(
+                target: "buff",
+                event = "buff_expired",
+                target_entity = ?entity,
+                target_name = %name.0,
+                buff_id = %buff_id,
+                "Buff已过期"
+            );
+        }
 
         // 5. tick 技能冷却
         cooldowns.tick();
