@@ -245,7 +245,7 @@ impl RegistryLoader for BuffRegistry {
     fn register_item(&mut self, item: BuffDef) {
         let id = item.id.clone();
         self.register(item.into());
-        bevy::log::info!(target: "buff", id = %id, "Buff已加载");
+        bevy::log::info!(target: "buff", event = "buff_loaded", id = %id, "Buff已加载");
     }
 
     fn register_defaults(&mut self) {

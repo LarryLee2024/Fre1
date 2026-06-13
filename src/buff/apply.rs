@@ -57,6 +57,17 @@ pub fn apply_buff(
     }
 
     active_buffs.add(instance);
+
+    bevy::log::info!(
+        target: "buff",
+        event = "buff_applied",
+        buff_id = %buff_data.id,
+        instance_id = %instance_id.0,
+        source = ?source_entity,
+        remaining_turns = duration,
+        "Buff 已施加"
+    );
+
     instance_id
 }
 
@@ -68,6 +79,15 @@ pub fn remove_buff(
     instance_id: BuffInstanceId,
 ) {
     if let Some(removed) = active_buffs.remove(instance_id) {
+        bevy::log::info!(
+            target: "buff",
+            event = "buff_removed",
+            buff_id = %removed.buff_id,
+            instance_id = %instance_id.0,
+            source = ?removed.source_entity,
+            "Buff 已移除"
+        );
+
         // 移除修饰符（转换为 ModifierSource）
         attributes.remove_modifiers_from(instance_id.to_modifier_source());
 

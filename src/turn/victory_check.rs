@@ -245,6 +245,7 @@ fn send_level_completed(
 ) {
     bevy::log::info!(
         target: "turn",
+        event = "level_completed",
         level_id = level_id,
         result = ?result,
         turn = turn_number,

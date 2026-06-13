@@ -25,7 +25,7 @@ pub fn on_damage_applied(
 ) {
     for msg in damage_reader.read() {
         bevy::log::debug!(
-            target: "ui",
+            target: "combat_log",
             entity = ?msg.target,
             attacker = %msg.attacker_name,
             target_name = %msg.target_name,
@@ -77,7 +77,7 @@ pub fn on_heal_applied(
 ) {
     for msg in heal_reader.read() {
         bevy::log::debug!(
-            target: "ui",
+            target: "combat_log",
             entity = ?msg.target,
             target_name = %msg.target_name,
             amount = msg.amount,
@@ -103,7 +103,7 @@ pub fn on_character_died_log(
 ) {
     for msg in died_reader.read() {
         bevy::log::debug!(
-            target: "ui",
+            target: "combat_log",
             entity = ?msg.entity,
             name = %msg.name,
             faction = ?msg.faction,
@@ -128,7 +128,7 @@ pub fn on_stun_applied(
     mut combat_log: ResMut<CombatLog>,
 ) {
     for msg in stun_reader.read() {
-        bevy::log::debug!(target: "ui", entity = ?msg.target, target_name = %msg.target_name, "晕眩已应用");
+        bevy::log::debug!(target: "combat_log", entity = ?msg.target, target_name = %msg.target_name, "晕眩已应用");
         combat_log.push(vec![
             LogSegment {
                 text: format!("[{}]", msg.target_name),
@@ -149,7 +149,7 @@ pub fn on_dot_applied(
 ) {
     for msg in dot_reader.read() {
         bevy::log::debug!(
-            target: "ui",
+            target: "combat_log",
             entity = ?msg.target,
             target_name = %msg.target_name,
             amount = msg.amount,
@@ -175,7 +175,7 @@ pub fn on_hot_applied(
 ) {
     for msg in hot_reader.read() {
         bevy::log::debug!(
-            target: "ui",
+            target: "combat_log",
             entity = ?msg.target,
             target_name = %msg.target_name,
             amount = msg.amount,

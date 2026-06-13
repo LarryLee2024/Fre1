@@ -382,7 +382,7 @@ impl RegistryLoader for ModifierRuleRegistry {
     fn register_item(&mut self, item: ModifierRuleDef) {
         let name = item.name.clone();
         self.rules.push(item.into());
-        bevy::log::info!(target: "core", name = %name, "修饰规则已加载");
+        bevy::log::info!(target: "core", event = "modifier_rule_loaded", name = %name, "修饰规则已加载");
     }
 
     fn register_defaults(&mut self) {

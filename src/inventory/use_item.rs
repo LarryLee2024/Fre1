@@ -105,6 +105,7 @@ pub fn use_item_system(
 
         bevy::log::info!(
             target: "inventory",
+            event = "consumable_used",
             entity = ?msg.user_entity,
             item_id = %def.id,
             "消耗品已使用"

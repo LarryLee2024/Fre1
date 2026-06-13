@@ -51,7 +51,7 @@ pub fn load_campaigns(
                         }
                         if all_valid {
                             campaigns.insert(id.clone(), def);
-                            bevy::log::info!(target: "campaign", id = %id, "战役已加载");
+                            bevy::log::info!(target: "campaign", event = "campaign_loaded", id = %id, "战役已加载");
                             loaded = true;
                         }
                     }

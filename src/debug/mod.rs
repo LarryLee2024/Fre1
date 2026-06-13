@@ -52,7 +52,8 @@ impl Plugin for DebugPlugin {
                     panel::unified_debug_panel,
                     panel::world_inspector_ui,
                 )
-                    .chain(),
+                    .chain()
+                    .run_if(in_state(crate::turn::AppState::InGame)),
             )
             // Gizmos 可视化：Last 中运行，确保在所有逻辑更新之后绘制
             .add_systems(
@@ -62,7 +63,8 @@ impl Plugin for DebugPlugin {
                     gizmos_viz::debug_ai_intent,
                     gizmos_viz::debug_occupancy,
                     gizmos_viz::debug_range_outline,
-                ),
+                )
+                    .run_if(in_state(crate::turn::AppState::InGame)),
             );
 
         // Debug Stepping

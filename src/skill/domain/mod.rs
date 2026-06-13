@@ -41,7 +41,7 @@ impl RegistryLoader for SkillRegistry {
     fn register_item(&mut self, item: SkillDef) {
         let id = item.id.clone();
         self.register(item.into());
-        bevy::log::info!(target: "skill", id = %id, "技能已加载");
+        bevy::log::info!(target: "skill", event = "skill_loaded", id = %id, "技能已加载");
     }
 
     fn register_defaults(&mut self) {

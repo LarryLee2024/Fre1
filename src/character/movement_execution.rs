@@ -109,6 +109,7 @@ fn execute_movement(
     spawn_path_arrows(commands, map, &path);
 
     let move_speed = 0.15_f32;
+    let path_len = path.len();
 
     commands.entity(intent.entity).insert(MovingUnit {
         path,
@@ -120,6 +121,16 @@ fn execute_movement(
             IntentSource::Ai => TurnPhase::ExecuteAction,
         },
     });
+
+    bevy::log::info!(
+        target: "character",
+        event = "unit_moved",
+        entity = ?intent.entity,
+        from = ?start_coord,
+        to = ?intent.target_coord,
+        path_len = path_len,
+        "单位移动"
+    );
 }
 
 /// 简单寻路：不考虑单位占用，只考虑地形和移动范围
@@ -171,7 +182,9 @@ fn find_path_ignore_occupancy(
             if new_cost > move_range {
                 continue;
             }
-            if !cost_so_far.contains_key(&next) || new_cost < *cost_so_far.get(&next).unwrap() {
+            if !cost_so_far.contains_key(&next)
+                || cost_so_far.get(&next).is_some_and(|&old| new_cost < old)
+            {
                 cost_so_far.insert(next, new_cost);
                 came_from.insert(next, pos);
                 queue.push_back((next, new_cost));

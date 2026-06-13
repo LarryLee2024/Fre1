@@ -123,7 +123,7 @@ pub trait RegistryLoader: Default {
                     for item in items {
                         registry.register_item(item);
                     }
-                    bevy::log::info!(target: "core", registry = %Self::registry_name(), count = count, "配置加载完成");
+                    bevy::log::info!(target: "core", event = "registry_loaded", registry = %Self::registry_name(), count = count, "配置加载完成");
                 }
                 Err(e) => {
                     bevy::log::error!(

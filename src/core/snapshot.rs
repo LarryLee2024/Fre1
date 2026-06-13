@@ -12,7 +12,15 @@ pub fn save_snapshot(world: &mut World, entities: &[Entity]) -> Option<String> {
     let scene = DynamicSceneBuilder::from_world(world)
         .extract_entities(entities.iter().copied())
         .build();
-    scene.serialize(&type_registry).ok()
+    let result = scene.serialize(&type_registry).ok();
+    bevy::log::info!(
+        target: "snapshot",
+        event = "snapshot_saved",
+        entity_count = entities.len(),
+        success = result.is_some(),
+        "存档已保存"
+    );
+    result
 }
 
 /// 将 World 中所有 Entity 序列化为 RON 字符串
@@ -27,7 +35,15 @@ pub fn save_full_snapshot(world: &mut World) -> Option<String> {
     let scene = DynamicSceneBuilder::from_world(world)
         .extract_entities(all_entities.iter().copied())
         .build();
-    scene.serialize(&type_registry).ok()
+    let result = scene.serialize(&type_registry).ok();
+    bevy::log::info!(
+        target: "snapshot",
+        event = "snapshot_saved",
+        entity_count = all_entities.len(),
+        success = result.is_some(),
+        "完整存档已保存"
+    );
+    result
 }
 
 #[cfg(test)]

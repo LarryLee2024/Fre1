@@ -18,6 +18,10 @@ use crate::ui::events::UiCommand;
 /// 框架屏幕插件
 pub struct ScreensPlugin;
 
+/// 菜单/结算屏幕共用的 UI 相机标记
+#[derive(Component)]
+struct MenuCamera;
+
 impl Plugin for ScreensPlugin {
     fn build(&self, app: &mut App) {
         app
@@ -25,8 +29,14 @@ impl Plugin for ScreensPlugin {
             .init_resource::<super::view_models::LevelSelectState>()
             .init_resource::<super::view_models::GameResultView>()
             // MainMenu 屏幕
-            .add_systems(OnEnter(AppState::MainMenu), main_menu::spawn_main_menu)
-            .add_systems(OnExit(AppState::MainMenu), main_menu::cleanup_main_menu)
+            .add_systems(
+                OnEnter(AppState::MainMenu),
+                (spawn_menu_camera, main_menu::spawn_main_menu),
+            )
+            .add_systems(
+                OnExit(AppState::MainMenu),
+                (despawn_menu_camera, main_menu::cleanup_main_menu),
+            )
             .add_systems(
                 Update,
                 main_menu::handle_main_menu_buttons.run_if(in_state(AppState::MainMenu)),
@@ -34,11 +44,11 @@ impl Plugin for ScreensPlugin {
             // LevelSelect 屏幕
             .add_systems(
                 OnEnter(AppState::LevelSelect),
-                level_select::spawn_level_select,
+                (spawn_menu_camera, level_select::spawn_level_select),
             )
             .add_systems(
                 OnExit(AppState::LevelSelect),
-                level_select::cleanup_level_select,
+                (despawn_menu_camera, level_select::cleanup_level_select),
             )
             .add_systems(
                 Update,
@@ -52,13 +62,14 @@ impl Plugin for ScreensPlugin {
             .add_systems(
                 OnEnter(AppState::GameOver),
                 (
+                    spawn_menu_camera,
                     game_over::update_game_result_view,
                     game_over::spawn_game_over_screen,
                 ),
             )
             .add_systems(
                 OnExit(AppState::GameOver),
-                game_over::cleanup_game_over_screen,
+                (despawn_menu_camera, game_over::cleanup_game_over_screen),
             )
             .add_systems(
                 Update,
@@ -69,6 +80,16 @@ impl Plugin for ScreensPlugin {
                 Update,
                 handle_menu_commands.run_if(not(in_state(AppState::InGame))),
             );
+    }
+}
+
+fn spawn_menu_camera(mut commands: Commands) {
+    commands.spawn((Camera2d, MenuCamera, IsDefaultUiCamera));
+}
+
+fn despawn_menu_camera(mut commands: Commands, cameras: Query<Entity, With<MenuCamera>>) {
+    for entity in &cameras {
+        commands.entity(entity).despawn();
     }
 }
 

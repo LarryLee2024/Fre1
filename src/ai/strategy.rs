@@ -350,9 +350,15 @@ impl AiStrategyRegistry {
         self.target_selectors
             .get(name)
             .unwrap_or_else(|| {
-                self.target_selectors
-                    .get("Nearest")
-                    .expect("Nearest 策略必须注册")
+                self.target_selectors.get("Nearest").unwrap_or_else(|| {
+                    bevy::log::error!(
+                        target: "ai",
+                        event = "ai_strategy_not_found",
+                        strategy = "Nearest",
+                        "Nearest 策略未注册"
+                    );
+                    panic!("Nearest 策略必须注册")
+                })
             })
             .as_ref()
     }
@@ -362,9 +368,15 @@ impl AiStrategyRegistry {
         self.move_selectors
             .get(name)
             .unwrap_or_else(|| {
-                self.move_selectors
-                    .get("Aggressive")
-                    .expect("Aggressive 策略必须注册")
+                self.move_selectors.get("Aggressive").unwrap_or_else(|| {
+                    bevy::log::error!(
+                        target: "ai",
+                        event = "ai_strategy_not_found",
+                        strategy = "Aggressive",
+                        "Aggressive 策略未注册"
+                    );
+                    panic!("Aggressive 策略必须注册")
+                })
             })
             .as_ref()
     }
@@ -376,7 +388,15 @@ impl AiStrategyRegistry {
             .unwrap_or_else(|| {
                 self.skill_selectors
                     .get("PreferSpecial")
-                    .expect("PreferSpecial 策略必须注册")
+                    .unwrap_or_else(|| {
+                        bevy::log::error!(
+                            target: "ai",
+                            event = "ai_strategy_not_found",
+                            strategy = "PreferSpecial",
+                            "PreferSpecial 策略未注册"
+                        );
+                        panic!("PreferSpecial 策略必须注册")
+                    })
             })
             .as_ref()
     }

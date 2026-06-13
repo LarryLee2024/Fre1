@@ -195,11 +195,13 @@ pub fn equip_item_system(
             // 重建 GameplayTags（三层：Trait + Equipment + Buff）
             rebuild_tags_with_buffs(&buffs, &mut tags, &persistent);
 
-            bevy::log::trace!(
+            bevy::log::info!(
                 target: "equipment",
+                event = "equipment_equipped",
                 entity = ?entity,
                 def_id = %def.id,
                 slot = ?slot,
+                instance_id = msg.instance_id,
                 "装备已穿戴"
             );
 
@@ -283,10 +285,12 @@ pub fn unequip_item_system(
             // 重建 GameplayTags（三层：Trait + Equipment + Buff）
             rebuild_tags_with_buffs(&buffs, &mut tags, &persistent);
 
-            bevy::log::trace!(
+            bevy::log::info!(
                 target: "equipment",
+                event = "equipment_unequipped",
                 entity = ?entity,
                 slot = ?msg.slot,
+                def_id = %def_id,
                 "装备已脱卸"
             );
 

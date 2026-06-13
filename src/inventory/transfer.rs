@@ -63,11 +63,13 @@ pub fn transfer_item_system(
         // 规则4：检查目标容器容量和重量
         // 合并到已有堆叠不需要额外容量，但需要新堆叠时必须检查 is_full()
         let def_opt = item_registry.get(&def_id);
-        let can_merge = def_opt.is_some()
-            && to_container
+        let can_merge = match def_opt {
+            Some(def) => to_container
                 .stacks
                 .iter()
-                .any(|s| s.instance.def_id == def_id && s.can_merge_with(&stack, def_opt.unwrap()));
+                .any(|s| s.instance.def_id == def_id && s.can_merge_with(&stack, def)),
+            None => false,
+        };
         if !can_merge && to_container.is_full() {
             bevy::log::warn!(
                 target: "inventory",
@@ -118,6 +120,7 @@ pub fn transfer_item_system(
 
             bevy::log::info!(
                 target: "inventory",
+                event = "item_transferred",
                 from = ?msg.from_entity,
                 to = ?msg.to_entity,
                 def_id = %def_id,
@@ -151,11 +154,10 @@ pub fn transfer_item(
     // 规则4：检查目标容器容量和重量
     // 合并到已有堆叠不需要额外容量，但需要新堆叠时必须检查 is_full()
     let def_opt = registry.get(&new_stack.instance.def_id);
-    let can_merge = def_opt.is_some()
-        && to
-            .stacks
-            .iter()
-            .any(|s| s.can_merge_with(&new_stack, def_opt.unwrap()));
+    let can_merge = match def_opt {
+        Some(def) => to.stacks.iter().any(|s| s.can_merge_with(&new_stack, def)),
+        None => false,
+    };
     if !can_merge && to.is_full() {
         return ContainerResult::Full;
     }

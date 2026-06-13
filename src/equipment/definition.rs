@@ -244,7 +244,7 @@ impl RegistryLoader for EquipmentRegistry {
     fn register_item(&mut self, item: EquipmentDef) {
         let id = item.id.clone();
         self.register(item);
-        bevy::log::info!(target: "equipment", id = %id, "装备已加载");
+        bevy::log::info!(target: "equipment", event = "equipment_loaded", id = %id, "装备已加载");
     }
 
     fn register_defaults(&mut self) {

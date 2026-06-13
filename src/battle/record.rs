@@ -121,7 +121,7 @@ impl BattleRecord {
                 amount,
                 ..
             } => {
-                bevy::log::trace!(target: "battle_record", entity = ?target, unit = %target_name, damage = amount, "DamageApplied");
+                bevy::log::trace!(target: "battle", entity = ?target, unit = %target_name, damage = amount, "DamageApplied");
             }
             BattleEntry::HealApplied {
                 target,
@@ -129,7 +129,7 @@ impl BattleRecord {
                 amount,
                 ..
             } => {
-                bevy::log::trace!(target: "battle_record", entity = ?target, unit = %target_name, heal = amount, "HealApplied");
+                bevy::log::trace!(target: "battle", entity = ?target, unit = %target_name, heal = amount, "HealApplied");
             }
             BattleEntry::DotApplied {
                 target,
@@ -137,7 +137,7 @@ impl BattleRecord {
                 amount,
                 ..
             } => {
-                bevy::log::trace!(target: "battle_record", entity = ?target, unit = %target_name, dot = amount, "DotApplied");
+                bevy::log::trace!(target: "battle", entity = ?target, unit = %target_name, dot = amount, "DotApplied");
             }
             BattleEntry::HotApplied {
                 target,
@@ -145,22 +145,22 @@ impl BattleRecord {
                 amount,
                 ..
             } => {
-                bevy::log::trace!(target: "battle_record", entity = ?target, unit = %target_name, hot = amount, "HotApplied");
+                bevy::log::trace!(target: "battle", entity = ?target, unit = %target_name, hot = amount, "HotApplied");
             }
             BattleEntry::StunApplied {
                 target,
                 target_name,
             } => {
-                bevy::log::trace!(target: "battle_record", entity = ?target, unit = %target_name, "StunApplied");
+                bevy::log::trace!(target: "battle", entity = ?target, unit = %target_name, "StunApplied");
             }
             BattleEntry::CharacterDied { entity, name, .. } => {
-                bevy::log::trace!(target: "battle_record", entity = ?entity, unit = %name, "CharacterDied");
+                bevy::log::trace!(target: "battle", entity = ?entity, unit = %name, "CharacterDied");
             }
             BattleEntry::TurnStarted { turn } => {
-                bevy::log::trace!(target: "battle_record", turn = turn, "TurnStarted");
+                bevy::log::trace!(target: "battle", turn = turn, "TurnStarted");
             }
             BattleEntry::TurnEnded { turn } => {
-                bevy::log::trace!(target: "battle_record", turn = turn, "TurnEnded");
+                bevy::log::trace!(target: "battle", turn = turn, "TurnEnded");
             }
         }
         self.entries.push(entry);

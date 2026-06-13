@@ -119,7 +119,22 @@ impl TerrainCostRegistry {
 
     /// 获取默认（步兵）计算器
     pub fn ground(&self) -> &dyn TerrainCostCalculator {
-        self.get("ground").expect("GroundCostCalculator 必须存在")
+        match self.get("ground") {
+            Some(calc) => calc,
+            None => {
+                bevy::log::error!(
+                    target: "map",
+                    event = "calculator_missing",
+                    name = "ground",
+                    "GroundCostCalculator 缺失，使用 FlyingCostCalculator 作为回退"
+                );
+                // 回退到 flying 计算器（所有地形成本为1）
+                match self.get("flying") {
+                    Some(fallback) => fallback,
+                    None => panic!("GroundCostCalculator 和 FlyingCostCalculator 均未注册"),
+                }
+            }
+        }
     }
 
     /// 根据单位标签解析对应的成本计算器

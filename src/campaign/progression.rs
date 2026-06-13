@@ -21,6 +21,7 @@ pub fn on_level_completed(
     for msg in reader.read() {
         bevy::log::info!(
             target: "campaign",
+            event = "level_completed",
             level_id = %msg.level_id,
             result = ?msg.result,
             turn = %msg.turn_number,
@@ -33,7 +34,7 @@ pub fn on_level_completed(
             }
             crate::turn::GameOverState::Defeat => {
                 // Defeat：当前 Stage 保持 Unlocked，不做任何更改
-                bevy::log::info!(target: "campaign", "关卡失败，可重玩");
+                bevy::log::info!(target: "campaign", event = "level_defeated", "关卡失败，可重玩");
             }
             crate::turn::GameOverState::Playing => {
                 // 不应出现 Playing 状态的 LevelCompleted，忽略

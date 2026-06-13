@@ -74,10 +74,14 @@ impl AiBehaviorRegistry {
     /// 获取默认行为（找不到指定行为时回退）
     pub fn default_behavior(&self) -> &AiBehavior {
         self.behaviors.get("default").unwrap_or_else(|| {
-            self.behaviors
-                .values()
-                .next()
-                .expect("至少需要一个 AI 行为定义")
+            self.behaviors.values().next().unwrap_or_else(|| {
+                bevy::log::error!(
+                    target: "ai",
+                    event = "ai_behavior_registry_empty",
+                    "AI行为注册表为空，无法获取默认行为"
+                );
+                panic!("至少需要一个 AI 行为定义")
+            })
         })
     }
 
@@ -138,7 +142,7 @@ impl RegistryLoader for AiBehaviorRegistry {
     fn register_item(&mut self, item: AiBehaviorDef) {
         let id = item.id.clone();
         self.register(item.into());
-        bevy::log::info!(target: "ai", id = %id, "AI行为已加载");
+        bevy::log::info!(target: "ai", event = "ai_behavior_loaded", id = %id, "AI行为已加载");
     }
 
     fn register_defaults(&mut self) {
