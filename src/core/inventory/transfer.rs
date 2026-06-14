@@ -38,7 +38,7 @@ pub fn transfer_item_system(
     mut containers: Query<&mut Container>,
     item_registry: Res<ItemRegistry>,
     mut writer: MessageWriter<ItemTransferred>,
-    mut log_writer: MessageWriter<crate::infrastructure::logging::events::ItemTransferred>,
+    mut log_writer: MessageWriter<crate::shared::event::inventory::ItemTransferred>,
 ) {
     for msg in messages.read() {
         // 不能同时可变借用两个相同的 Entity
@@ -119,8 +119,8 @@ pub fn transfer_item_system(
                 count: to_remove,
             });
 
-            log_writer.write(crate::infrastructure::logging::events::ItemTransferred {
-                item_id: def_id.clone(),
+            log_writer.write(crate::shared::event::inventory::ItemTransferred {
+                item_id: crate::shared::ids::ItemId::new(def_id.clone()),
                 amount: to_remove,
                 from_container: format!("{:?}", msg.from_entity),
                 to_container: format!("{:?}", msg.to_entity),

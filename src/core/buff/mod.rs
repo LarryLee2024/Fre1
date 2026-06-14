@@ -5,8 +5,8 @@
 mod apply;
 /// BuffDef 定义与 BuffRegistry 注册表
 mod domain;
-/// Buff 领域错误枚举（错误码 BF001-BF004）
-mod error;
+/// Buff 领域错误（domain/buff_error.rs）
+// 错误移至 domain 模块
 /// BuffInstance, ActiveBuffs 实例管理
 mod instance;
 /// 持续效果结算（DoT/HoT/Stun）
@@ -19,7 +19,6 @@ use bevy::prelude::*;
 /// 公共 re-exports
 pub use apply::*;
 pub use domain::*;
-pub use error::*;
 pub use instance::*;
 pub use resolve::resolve_status_effects;
 

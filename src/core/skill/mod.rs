@@ -3,8 +3,8 @@
 
 /// SkillData 定义与 SkillRegistry 注册表
 mod domain;
-/// 技能领域错误枚举（错误码 S001-S005）
-mod error;
+/// 技能领域错误（domain/skill_error.rs）
+// 错误移至 domain 模块
 /// 技能效果预览（伤害计算、范围展示）
 mod preview;
 /// SkillSlots, SkillCooldowns 槽位管理
@@ -15,7 +15,6 @@ use bevy::prelude::*;
 
 /// 公共 re-exports
 pub use domain::*;
-pub use error::*;
 pub use slots::*;
 
 /// 技能插件

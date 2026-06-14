@@ -1,3 +1,8 @@
+/// Buff 领域错误（BuffError, BuffResult）
+mod buff_error;
+
+pub use buff_error::*;
+
 use crate::core::attribute::{AttributeKind, AttributeModifierDef, ModifierOp};
 use crate::core::registry_loader::RegistryLoader;
 use crate::core::tag::{GameplayTag, TagName};

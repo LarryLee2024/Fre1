@@ -6,6 +6,8 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::bevy_egui::{EguiGlobalSettings, EguiPlugin};
 
+use crate::app::error_event::GameErrorMessage;
+use crate::app::error_monitor;
 use crate::content::ContentPlugin;
 use crate::core::ai::{AiBehaviorPlugin, AiPlugin};
 use crate::core::attribute_def::AttributeDefPlugin;
@@ -62,6 +64,9 @@ impl Plugin for AppPlugin {
             ..default()
         })
         .add_plugins(EguiPlugin::default())
+        // 错误消息通道 + 监控系统（在 Core 插件之前注册，确保错误可被捕获）
+        .add_message::<GameErrorMessage>()
+        .add_systems(Update, error_monitor::error_monitor)
         // Content 层 — 合约声明与加载协调
         .add_plugins(ContentPlugin)
         // 数据层插件

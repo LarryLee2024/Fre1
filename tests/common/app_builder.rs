@@ -8,7 +8,16 @@ use tactical_rpg::core::equipment::EquipmentPlugin;
 use tactical_rpg::core::inventory::InventoryPlugin;
 use tactical_rpg::core::modifier_rule::ModifierRulePlugin;
 use tactical_rpg::core::tag_def::TagDefPlugin;
-use tactical_rpg::infrastructure::logging::events as log_events;
+// use tactical_rpg::shared::event::* for all logging
+use tactical_rpg::shared::event::battle;
+use tactical_rpg::shared::event::buff;
+use tactical_rpg::shared::event::campaign;
+use tactical_rpg::shared::event::character;
+use tactical_rpg::shared::event::equipment;
+use tactical_rpg::shared::event::infra;
+use tactical_rpg::shared::event::inventory;
+use tactical_rpg::shared::event::skill;
+use tactical_rpg::shared::event::turn;
 
 /// 最小 App：仅 MinimalPlugins + StatesPlugin
 pub fn minimal_app() -> App {
@@ -19,18 +28,25 @@ pub fn minimal_app() -> App {
 
 /// 注册所有日志 Message 类型（供测试 App 使用）
 pub fn register_logging_messages(app: &mut App) {
-    app.add_message::<log_events::ConfigLoaded>()
-        .add_message::<log_events::BuffApplied>()
-        .add_message::<log_events::BuffRemoved>()
-        .add_message::<log_events::BuffExpired>()
-        .add_message::<log_events::SkillActivated>()
-        .add_message::<log_events::LevelCompletedEvent>()
-        .add_message::<log_events::EquipmentEquipped>()
-        .add_message::<log_events::EquipmentUnequipped>()
-        .add_message::<log_events::ItemUsed>()
-        .add_message::<log_events::ItemTransferred>()
-        .add_message::<log_events::UnitMoved>()
-        .add_message::<log_events::SnapshotCreated>();
+    app.add_message::<battle::DamageDealt>()
+        .add_message::<battle::HealApplied>()
+        .add_message::<battle::CharacterDied>()
+        .add_message::<battle::StunApplied>()
+        .add_message::<battle::DotApplied>()
+        .add_message::<battle::HotApplied>()
+        .add_message::<turn::TurnStarted>()
+        .add_message::<turn::TurnEnded>()
+        .add_message::<buff::BuffApplied>()
+        .add_message::<buff::BuffRemoved>()
+        .add_message::<skill::SkillActivated>()
+        .add_message::<campaign::LevelCompleted>()
+        .add_message::<equipment::EquipmentEquipped>()
+        .add_message::<equipment::EquipmentUnequipped>()
+        .add_message::<inventory::ItemUsed>()
+        .add_message::<inventory::ItemTransferred>()
+        .add_message::<character::UnitMoved>()
+        .add_message::<infra::ConfigLoaded>()
+        .add_message::<infra::SnapshotCreated>();
 }
 
 /// 战斗 App：Core + Buff + Trait + Equipment + Inventory

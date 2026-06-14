@@ -2,6 +2,9 @@ pub mod audit;
 pub mod collections;
 pub mod constants;
 pub mod error;
+/// 统一可观察事件定义（按领域分文件）
+pub mod event;
+/// 跨模块领域事件白名单（占位）
 pub mod events;
 /// Shared 层：基础能力（通用工具）
 ///

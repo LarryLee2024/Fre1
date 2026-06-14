@@ -10,7 +10,7 @@ use crate::core::map::{
 use crate::core::movement::events::{IntentSource, MovementIntent};
 use crate::core::tag::GameplayTags;
 use crate::core::turn::TurnPhase;
-use crate::infrastructure::logging::events::UnitMoved;
+use crate::shared::event::character::UnitMoved;
 use bevy::ecs::message::MessageReader;
 use bevy::prelude::*;
 
@@ -126,11 +126,12 @@ fn execute_movement(
         },
     });
 
+    // TODO(future): Query &UnitId and &UnitName components instead of Entity::to_bits()
     log_writer.write(UnitMoved {
-        entity: intent.entity,
-        unit_name: String::new(), // TODO: 查询 UnitName 组件
-        from: start_coord,
-        to: intent.target_coord,
+        unit_id: crate::shared::ids::UnitId::new(intent.entity.to_bits().to_string()),
+        unit_name: String::new(),
+        from: (start_coord.x, start_coord.y),
+        to: (intent.target_coord.x, intent.target_coord.y),
     });
 }
 

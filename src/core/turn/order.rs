@@ -117,6 +117,7 @@ pub fn init_turn_order(
     units: Query<(Entity, &Unit, &Attributes), Without<Dead>>,
     mut ai_timer: ResMut<AiTimer>,
     mut turn_started_writer: MessageWriter<TurnStarted>,
+    mut commands: Commands,
 ) {
     // 第一回合，不增加回合数
     turn_order.turn_number = turn_state.turn_number;
@@ -124,6 +125,11 @@ pub fn init_turn_order(
     // 发送回合开始消息
     turn_started_writer.write(TurnStarted {
         turn: turn_state.turn_number,
+    });
+    // 共享事件（供 LogObserver 使用）
+    commands.write_message(crate::shared::event::turn::TurnStarted {
+        turn_number: turn_state.turn_number,
+        faction: format!("{:?}", turn_state.current_faction),
     });
     bevy::log::trace!(target: "turn", turn = turn_state.turn_number, "TurnStarted 消息发送");
     bevy::log::debug!(target: "turn", turn = turn_state.turn_number, "回合已开始");
@@ -159,8 +165,10 @@ pub fn turn_end_on_enter(
     mut force_end_reader: MessageReader<ForceEndTurn>,
     mut turn_ended_writer: MessageWriter<TurnEnded>,
     mut turn_started_writer: MessageWriter<TurnStarted>,
+    mut commands: Commands,
 ) {
     // 发送回合结束消息
+    let old_faction = turn_state.current_faction;
     let old_turn = turn_state.turn_number;
     turn_ended_writer.write(TurnEnded {
         turn: turn_state.turn_number,
@@ -199,12 +207,23 @@ pub fn turn_end_on_enter(
         }
     }
 
+    // 共享事件（供 LogObserver 使用）：上一回合结束
+    commands.write_message(crate::shared::event::turn::TurnEnded {
+        turn_number: old_turn,
+        next_faction: format!("{:?}", turn_state.current_faction),
+    });
+
     // 重置 AI 计时器
     ai_timer.timer.reset();
 
     // 发送新回合开始消息
     turn_started_writer.write(TurnStarted {
         turn: turn_state.turn_number,
+    });
+    // 共享事件（供 LogObserver 使用）：新回合开始
+    commands.write_message(crate::shared::event::turn::TurnStarted {
+        turn_number: turn_state.turn_number,
+        faction: format!("{:?}", turn_state.current_faction),
     });
     bevy::log::trace!(target: "turn", turn = turn_state.turn_number, "TurnStarted 消息发送(新回合)");
     bevy::log::debug!(target: "turn", turn = turn_state.turn_number, "新回合已开始");
@@ -268,6 +287,8 @@ mod tests {
             .init_resource::<NeedsResolve>()
             .add_message::<TurnStarted>()
             .add_message::<TurnEnded>()
+            .add_message::<crate::shared::event::turn::TurnStarted>()
+            .add_message::<crate::shared::event::turn::TurnEnded>()
             .add_message::<ForceEndTurn>()
             .add_systems(OnEnter(TurnPhase::TurnEnd), turn_end_on_enter);
         app
@@ -395,6 +416,8 @@ mod tests {
             .init_resource::<NeedsResolve>()
             .add_message::<TurnStarted>()
             .add_message::<TurnEnded>()
+            .add_message::<crate::shared::event::turn::TurnStarted>()
+            .add_message::<crate::shared::event::turn::TurnEnded>()
             .add_message::<ForceEndTurn>()
             .add_systems(OnEnter(TurnPhase::TurnEnd), turn_end_on_enter);
         let e = app

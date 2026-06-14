@@ -8,7 +8,7 @@ use crate::core::character::{
 use crate::core::skill::{SkillCooldowns, SkillRegistry};
 use crate::core::tag::{GameplayTag, GameplayTags};
 use crate::core::turn::{AiTimer, TurnOrder, TurnPhase, TurnState};
-use crate::infrastructure::logging::events::SkillActivated;
+use crate::shared::event::skill::SkillActivated;
 use crate::shared::resettable::ResettableResource;
 use bevy::ecs::message::MessageWriter;
 use bevy::prelude::*;
@@ -129,6 +129,7 @@ pub fn execute_action_on_enter(
 
     // 玩家单位：通过 Selected 查找
     if let Ok((entity, mut unit, _pos, _name, tags, mut cooldowns)) = selected_units.single_mut() {
+        let _ = _name; // 临时：后续用于日志
         if tags.has(GameplayTag::STUN) {
             unit.acted = true;
             commands.entity(entity).remove::<Selected>();
@@ -147,12 +148,13 @@ pub fn execute_action_on_enter(
 
         if let Some(skill_id) = combat_intent.skill_id.as_deref() {
             if let Some(skill_data) = skill_registry.get(skill_id) {
+                // TODO(future): Query &UnitId component instead of Entity::to_bits()
                 log_skill_writer.write(SkillActivated {
-                    caster: entity,
+                    caster: crate::shared::ids::UnitId::new(entity.to_bits().to_string()),
                     caster_name: _name.0.clone(),
-                    skill_id: skill_id.to_string(),
-                    target: Entity::PLACEHOLDER, // TODO: 从 CombatIntent 获取目标
-                    target_name: String::new(),
+                    skill_id: crate::shared::ids::SkillId::new(skill_id),
+                    target: None,
+                    target_name: None,
                 });
                 if skill_data.cooldown > 0 {
                     cooldowns.set(skill_id, skill_data.cooldown);
@@ -200,12 +202,15 @@ pub fn execute_action_on_enter(
             // 设置冷却（与玩家走同一套逻辑）
             if let Some(skill_id) = combat_intent.skill_id.as_deref() {
                 if let Some(skill_data) = skill_registry.get(skill_id) {
+                    // TODO(future): Query &UnitId component instead of Entity::to_bits()
                     log_skill_writer.write(SkillActivated {
-                        caster: source_entity,
-                        caster_name: String::new(), // TODO: 查询 UnitName 组件
-                        skill_id: skill_id.to_string(),
-                        target: Entity::PLACEHOLDER, // TODO: 从 CombatIntent 获取目标
-                        target_name: String::new(),
+                        caster: crate::shared::ids::UnitId::new(
+                            source_entity.to_bits().to_string(),
+                        ),
+                        caster_name: String::new(),
+                        skill_id: crate::shared::ids::SkillId::new(skill_id),
+                        target: None,
+                        target_name: None,
                     });
                     if skill_data.cooldown > 0 {
                         cooldowns.set(skill_id, skill_data.cooldown);

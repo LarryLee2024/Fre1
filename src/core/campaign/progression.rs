@@ -3,8 +3,8 @@
 use bevy::ecs::message::MessageReader;
 use bevy::prelude::*;
 
-use crate::core::turn::LevelCompleted;
-use crate::infrastructure::logging::events::LevelCompletedEvent;
+use crate::core::turn::LevelCompleted as TurnLevelCompleted;
+use crate::shared::event::campaign::LevelCompleted as LogLevelCompleted;
 
 use super::progress::CampaignProgress;
 use super::registry::CampaignRegistry;
@@ -17,13 +17,14 @@ use super::registry::CampaignRegistry;
 pub fn on_level_completed(
     mut progress: ResMut<CampaignProgress>,
     campaign_registry: Res<CampaignRegistry>,
-    mut reader: MessageReader<LevelCompleted>,
-    mut log_writer: MessageWriter<LevelCompletedEvent>,
+    mut reader: MessageReader<TurnLevelCompleted>,
+    mut log_writer: MessageWriter<LogLevelCompleted>,
 ) {
     for msg in reader.read() {
-        log_writer.write(LevelCompletedEvent {
+        log_writer.write(LogLevelCompleted {
             level_id: msg.level_id.clone(),
             success: matches!(msg.result, crate::core::turn::GameOverState::Victory),
+            turns_used: msg.turn_number,
         });
 
         match msg.result {

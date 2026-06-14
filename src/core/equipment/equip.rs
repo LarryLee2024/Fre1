@@ -15,7 +15,7 @@ use crate::core::inventory::container::Container;
 use crate::core::inventory::definition::ItemRegistry;
 use crate::core::inventory::instance::{ItemInstance, ItemStack};
 use crate::core::tag::GameplayTags;
-use crate::infrastructure::logging::events::{
+use crate::shared::event::equipment::{
     EquipmentEquipped as LogEquipmentEquipped, EquipmentUnequipped as LogEquipmentUnequipped,
 };
 use bevy::ecs::message::MessageReader;
@@ -199,9 +199,10 @@ pub fn equip_item_system(
             // 重建 GameplayTags（三层：Trait + Equipment + Buff）
             rebuild_tags_with_buffs(&buffs, &mut tags, &persistent);
 
+            // TODO(future): Query &UnitId and &UnitName components instead of Entity::to_bits()
             log_equipped_writer.write(LogEquipmentEquipped {
-                target: entity,
-                target_name: String::new(), // TODO: 查询 UnitName 组件
+                unit_id: crate::shared::ids::UnitId::new(entity.to_bits().to_string()),
+                unit_name: String::new(),
                 equipment_id: def.id.clone(),
             });
 
@@ -286,9 +287,10 @@ pub fn unequip_item_system(
             // 重建 GameplayTags（三层：Trait + Equipment + Buff）
             rebuild_tags_with_buffs(&buffs, &mut tags, &persistent);
 
+            // TODO(future): Query &UnitId and &UnitName components instead of Entity::to_bits()
             log_unequipped_writer.write(LogEquipmentUnequipped {
-                target: entity,
-                target_name: String::new(), // TODO: 查询 UnitName 组件
+                unit_id: crate::shared::ids::UnitId::new(entity.to_bits().to_string()),
+                unit_name: String::new(),
                 equipment_id: def_id.clone(),
             });
 

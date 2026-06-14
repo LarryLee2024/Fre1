@@ -11,7 +11,7 @@ use crate::core::character::{Dead, Faction, Unit, UnitId};
 use crate::core::map::{
     ConditionTypeDef, LevelRegistry, LoseConditionDef, VictoryConditionDef, WinConditionDef,
 };
-use crate::infrastructure::logging::events::LevelCompletedEvent;
+use crate::shared::event::campaign::LevelCompleted as LogLevelCompleted;
 
 use super::order::TurnState;
 use super::state::GameOverState;
@@ -36,7 +36,7 @@ pub fn check_victory_conditions(
     all_units: Query<(&Unit, Option<&UnitId>), Without<Dead>>,
     mut game_over: ResMut<GameOverState>,
     mut level_completed_writer: MessageWriter<LevelCompleted>,
-    mut log_level_writer: MessageWriter<LevelCompletedEvent>,
+    mut log_level_writer: MessageWriter<LogLevelCompleted>,
 ) {
     // 终态不可逆（FORBIDDEN-5）
     if *game_over != GameOverState::Playing {
@@ -244,14 +244,15 @@ fn check_turn_limit_exceeded(turn_number: u32, max_turns: u32) -> bool {
 /// 发送 LevelCompleted 消息
 fn send_level_completed(
     writer: &mut MessageWriter<LevelCompleted>,
-    log_writer: &mut MessageWriter<LevelCompletedEvent>,
+    log_writer: &mut MessageWriter<LogLevelCompleted>,
     level_id: &str,
     result: GameOverState,
     turn_number: u32,
 ) {
-    log_writer.write(LevelCompletedEvent {
+    log_writer.write(LogLevelCompleted {
         level_id: level_id.to_string(),
         success: matches!(result, GameOverState::Victory),
+        turns_used: turn_number,
     });
     writer.write(LevelCompleted {
         level_id: level_id.to_string(),
@@ -458,7 +459,7 @@ mod tests {
             .init_resource::<LevelRegistry>()
             .init_resource::<TurnState>()
             .add_message::<LevelCompleted>()
-            .add_message::<LevelCompletedEvent>()
+            .add_message::<LogLevelCompleted>()
             .add_systems(Update, check_victory_conditions);
         app
     }
@@ -472,7 +473,7 @@ mod tests {
             .init_resource::<LevelRegistry>()
             .init_resource::<TurnState>()
             .add_message::<LevelCompleted>()
-            .add_message::<LevelCompletedEvent>()
+            .add_message::<LogLevelCompleted>()
             .add_systems(Update, check_all_dead_safety);
         app
     }

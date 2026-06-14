@@ -36,6 +36,8 @@ fn setup_turn_test_app() -> App {
         .init_resource::<NeedsResolve>()
         .add_message::<TurnStarted>()
         .add_message::<TurnEnded>()
+        .add_message::<tactical_rpg::shared::event::turn::TurnStarted>()
+        .add_message::<tactical_rpg::shared::event::turn::TurnEnded>()
         .add_message::<ForceEndTurn>()
         .add_systems(OnEnter(TurnPhase::TurnEnd), turn_end_on_enter);
     app

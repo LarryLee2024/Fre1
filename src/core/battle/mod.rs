@@ -2,8 +2,8 @@
 
 /// 曼哈顿距离、战斗数值计算
 mod combat;
-/// 战斗领域错误枚举（错误码 B001-B006）
-mod error;
+/// 战斗领域模块（错误码 B001-B006 等）
+mod domain;
 /// 战斗事件定义（DamageApplied, HealApplied, CharacterDied 等）
 mod events;
 /// CombatLog 资源，结构化战斗日志
@@ -20,7 +20,7 @@ use bevy::prelude::*;
 
 /// 公共 re-exports
 pub use combat::*;
-pub use error::*;
+pub use domain::*;
 pub use events::*;
 pub use log::*;
 pub use pipeline::{

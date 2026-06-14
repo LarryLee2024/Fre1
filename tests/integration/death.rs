@@ -139,7 +139,10 @@ fn resolve_test_app() -> App {
     app.add_message::<tactical_rpg::core::battle::DotApplied>();
     app.add_message::<tactical_rpg::core::battle::HotApplied>();
     app.add_message::<tactical_rpg::core::battle::StunApplied>();
-    app.add_message::<tactical_rpg::infrastructure::logging::events::BuffExpired>();
+    app.add_message::<tactical_rpg::shared::event::battle::StunApplied>()
+        .add_message::<tactical_rpg::shared::event::battle::DotApplied>()
+        .add_message::<tactical_rpg::shared::event::battle::HotApplied>();
+    app.add_message::<tactical_rpg::shared::event::buff::BuffRemoved>();
     app.add_systems(Update, resolve_status_effects);
     app
 }

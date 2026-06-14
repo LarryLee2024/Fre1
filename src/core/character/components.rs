@@ -114,10 +114,11 @@ impl Dead {
 /// 规则3：HP ≤ 0 时只添加 Dead Tag，死亡通知由 Observer 统一发送
 pub fn on_dead_added(
     trigger: On<Add, Dead>,
+    mut commands: Commands,
     mut died_writer: bevy::ecs::message::MessageWriter<crate::core::battle::CharacterDied>,
-    units: Query<(&Unit, &UnitName), With<Dead>>,
+    units: Query<(&Unit, &UnitName, Option<&UnitId>), With<Dead>>,
 ) {
-    if let Ok((unit, name)) = units.get(trigger.entity) {
+    if let Ok((unit, name, unit_id)) = units.get(trigger.entity) {
         bevy::log::trace!(
             target: "character",
             entity = ?trigger.entity,
@@ -128,6 +129,18 @@ pub fn on_dead_added(
             entity: trigger.entity,
             name: name.0.clone(),
             faction: unit.faction,
+        });
+        // TODO(future): Remove fallback once all entities carry &UnitId component
+        let shared_uid = unit_id
+            .map(|uid| crate::shared::ids::UnitId::new(&uid.0))
+            .unwrap_or_else(|| {
+                crate::shared::ids::UnitId::new(trigger.entity.to_bits().to_string())
+            });
+        commands.write_message(crate::shared::event::battle::CharacterDied {
+            unit_id: shared_uid,
+            name: name.0.clone(),
+            killed_by: None,
+            faction: format!("{:?}", unit.faction),
         });
     }
 }

@@ -8,7 +8,8 @@ use crate::core::character::{Dead, GridPosition, PersistentTags, Unit, UnitName}
 use crate::core::skill::SkillCooldowns;
 use crate::core::tag::{GameplayTag, GameplayTags};
 use crate::core::turn::NeedsResolve;
-use crate::infrastructure::logging::events::BuffExpired;
+use crate::shared::event::battle as shared_battle;
+use crate::shared::event::buff::{BuffRemoveReason, BuffRemoved};
 use bevy::ecs::message::MessageWriter;
 use bevy::prelude::*;
 
@@ -31,11 +32,12 @@ pub fn resolve_status_effects(
         &mut GameplayTags,
         &mut SkillCooldowns,
         &PersistentTags,
+        Option<&crate::core::character::UnitId>,
     )>,
     mut dot_writer: MessageWriter<DotApplied>,
     mut hot_writer: MessageWriter<HotApplied>,
     mut stun_writer: MessageWriter<StunApplied>,
-    mut buff_expired_writer: MessageWriter<BuffExpired>,
+    mut buff_expired_writer: MessageWriter<BuffRemoved>,
 ) {
     // 只有回合切换后的首次 SelectUnit 才结算
     if !needs_resolve.0 {
@@ -53,9 +55,16 @@ pub fn resolve_status_effects(
         mut tags,
         mut cooldowns,
         persistent_tags,
+        unit_id,
     ) in &mut units
     {
         // 队列驱动模式：所有单位都结算（不再按阵营过滤）
+        // TODO(future): Once all entities carry &UnitId component, remove fallback to to_bits()
+        let shared_uid = |e: Entity| {
+            unit_id
+                .map(|uid| crate::shared::ids::UnitId::new(&uid.0))
+                .unwrap_or_else(|| crate::shared::ids::UnitId::new(e.to_bits().to_string()))
+        };
 
         // 1. 晕眩结算：被晕眩的单位本回合无法行动，消耗 Stun
         if buffs.is_stunned() {
@@ -74,6 +83,12 @@ pub fn resolve_status_effects(
                 target: entity,
                 target_name: name.0.clone(),
             });
+            // 共享事件（供 LogObserver 使用）
+            commands.write_message(shared_battle::StunApplied {
+                target: shared_uid(entity),
+                target_name: name.0.clone(),
+                duration: 0,
+            });
         }
 
         // 2. 结算本回合 DoT 伤害
@@ -89,6 +104,12 @@ pub fn resolve_status_effects(
                 target_name: name.0.clone(),
                 amount: dot,
                 target_coord: gp.coord,
+            });
+            // 共享事件（供 LogObserver 使用）
+            commands.write_message(shared_battle::DotApplied {
+                target: shared_uid(entity),
+                target_name: name.0.clone(),
+                amount: dot,
             });
 
             // DoT 死亡判定：只添加 Dead Tag，CharacterDied 由 Dead Observer 统一发送
@@ -112,6 +133,12 @@ pub fn resolve_status_effects(
                 target_name: name.0.clone(),
                 amount: hot,
             });
+            // 共享事件（供 LogObserver 使用）
+            commands.write_message(shared_battle::HotApplied {
+                target: shared_uid(entity),
+                target_name: name.0.clone(),
+                amount: hot,
+            });
         }
 
         // 4. tick 递减持续时间，移除过期的 Buff
@@ -123,10 +150,15 @@ pub fn resolve_status_effects(
             .collect();
         tick_buffs(&mut buffs, &mut attrs, &mut tags, &persistent_tags);
         for buff_id in &expired_buffs {
-            buff_expired_writer.write(BuffExpired {
-                target: entity,
+            // TODO(future): Once all entities carry &UnitId component, remove fallback
+            let target_id = unit_id
+                .map(|uid| crate::shared::ids::UnitId::new(&uid.0))
+                .unwrap_or_else(|| crate::shared::ids::UnitId::new(entity.to_bits().to_string()));
+            buff_expired_writer.write(BuffRemoved {
+                target: target_id,
                 target_name: name.0.clone(),
-                buff_id: buff_id.clone(),
+                buff_id: crate::shared::ids::BuffId::new(buff_id),
+                reason: BuffRemoveReason::Expired,
             });
         }
 

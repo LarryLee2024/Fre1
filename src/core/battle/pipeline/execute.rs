@@ -187,14 +187,52 @@ pub fn execute_effects(world: &mut World) {
     for msg in all_pending_messages {
         match msg {
             PendingMessage::Damage(d) => {
+                // 旧事件（供 BattleRecord / VFX 使用）
                 world
                     .resource_mut::<bevy::ecs::message::Messages<DamageApplied>>()
-                    .write(d);
+                    .write(d.clone());
+                // 共享事件（供 LogObserver 使用）
+                world
+                    .resource_mut::<bevy::ecs::message::Messages<
+                        crate::shared::event::battle::DamageDealt,
+                    >>()
+                    .write(crate::shared::event::battle::DamageDealt {
+                        // TODO(future): Query &UnitId component instead of Entity::to_bits()
+                        // The pipeline only has Entity references currently;
+                        // after core modules adopt UnitId component, query it directly.
+                        attacker: crate::shared::ids::UnitId::new(
+                            d.attacker.to_bits().to_string(),
+                        ),
+                        attacker_name: d.attacker_name,
+                        target: crate::shared::ids::UnitId::new(
+                            d.target.to_bits().to_string(),
+                        ),
+                        target_name: d.target_name,
+                        amount: d.amount,
+                        is_skill: d.is_skill,
+                        skill_id: None,
+                        is_critical: false,
+                    });
             }
             PendingMessage::Heal(h) => {
+                // 旧事件（供 BattleRecord / VFX 使用）
                 world
                     .resource_mut::<bevy::ecs::message::Messages<HealApplied>>()
-                    .write(h);
+                    .write(h.clone());
+                // 共享事件（供 LogObserver 使用）
+                world
+                    .resource_mut::<bevy::ecs::message::Messages<
+                        crate::shared::event::battle::HealApplied,
+                    >>()
+                    .write(crate::shared::event::battle::HealApplied {
+                        // TODO(future): Query &UnitId component instead of Entity::to_bits()
+                        target: crate::shared::ids::UnitId::new(
+                            h.target.to_bits().to_string(),
+                        ),
+                        target_name: h.target_name,
+                        amount: h.amount,
+                        source: None,
+                    });
             }
         }
     }
@@ -237,6 +275,8 @@ mod tests {
         app.add_plugins(MinimalPlugins)
             .add_message::<DamageApplied>()
             .add_message::<HealApplied>()
+            .add_message::<crate::shared::event::battle::DamageDealt>()
+            .add_message::<crate::shared::event::battle::HealApplied>()
             .insert_resource(test_buff_registry())
             .insert_resource(test_terrain_registry())
             .insert_resource(EffectQueue::default())
@@ -294,6 +334,8 @@ mod tests {
         app.add_plugins(MinimalPlugins)
             .add_message::<DamageApplied>()
             .add_message::<HealApplied>()
+            .add_message::<crate::shared::event::battle::DamageDealt>()
+            .add_message::<crate::shared::event::battle::HealApplied>()
             .insert_resource(test_buff_registry())
             .insert_resource(test_terrain_registry())
             .insert_resource(EffectQueue::default())
@@ -350,6 +392,8 @@ mod tests {
         app.add_plugins(MinimalPlugins)
             .add_message::<DamageApplied>()
             .add_message::<HealApplied>()
+            .add_message::<crate::shared::event::battle::DamageDealt>()
+            .add_message::<crate::shared::event::battle::HealApplied>()
             .insert_resource(test_buff_registry())
             .insert_resource(test_terrain_registry())
             .insert_resource(EffectQueue::default())
@@ -406,6 +450,8 @@ mod tests {
         app.add_plugins(MinimalPlugins)
             .add_message::<DamageApplied>()
             .add_message::<HealApplied>()
+            .add_message::<crate::shared::event::battle::DamageDealt>()
+            .add_message::<crate::shared::event::battle::HealApplied>()
             .insert_resource(test_buff_registry())
             .insert_resource(test_terrain_registry())
             .insert_resource(EffectQueue::default())

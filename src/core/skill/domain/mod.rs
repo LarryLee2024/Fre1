@@ -2,9 +2,12 @@
 
 /// 默认技能定义（基础攻击等）
 mod defaults;
+/// 技能领域错误（SkillError, SkillResult）
+mod skill_error;
 /// SkillData, SkillTargeting, SkillCondition 等类型定义
 mod types;
 
+pub use skill_error::*;
 pub use types::*;
 
 use crate::core::registry_loader::RegistryLoader;

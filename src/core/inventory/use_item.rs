@@ -47,7 +47,7 @@ pub fn use_item_system(
     item_registry: Res<ItemRegistry>,
     buff_registry: Res<BuffRegistry>,
     mut used_writer: MessageWriter<ItemUsed>,
-    mut log_used_writer: MessageWriter<crate::infrastructure::logging::events::ItemUsed>,
+    mut log_used_writer: MessageWriter<crate::shared::event::inventory::ItemUsed>,
     mut trait_writer: MessageWriter<GrantTempTraitEffect>,
     mut skill_writer: MessageWriter<CastSkillEffect>,
 ) {
@@ -104,11 +104,14 @@ pub fn use_item_system(
             def_id: def.id.clone(),
         });
 
-        log_used_writer.write(crate::infrastructure::logging::events::ItemUsed {
-            user: msg.user_entity,
-            user_name: String::new(), // TODO: 查询 UnitName 组件
-            item_id: def.id.clone(),
-            target: Some(msg.user_entity),
+        // TODO(future): Query &UnitId component instead of Entity::to_bits()
+        log_used_writer.write(crate::shared::event::inventory::ItemUsed {
+            user: crate::shared::ids::UnitId::new(msg.user_entity.to_bits().to_string()),
+            user_name: String::new(),
+            item_id: crate::shared::ids::ItemId::new(def.id.clone()),
+            target: Some(crate::shared::ids::UnitId::new(
+                msg.user_entity.to_bits().to_string(),
+            )),
         });
     }
 }

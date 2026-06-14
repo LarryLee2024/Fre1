@@ -1,13 +1,15 @@
-/// 背包领域错误
-///
-/// ADR-004 §决策: 分领域错误枚举
-/// 覆盖背包与物品系统中的预期异常：容量不足、物品不存在、堆叠溢出等。
+//! 背包领域错误
+//!
+//! 覆盖背包与物品系统中的预期异常：容量不足、物品不存在、堆叠溢出等。
+//! 错误码格式：I + 三位序号
+//!
+//! I001-I009: 容量/存在性错误
+//! I010-I019: 转移/操作错误
+
 use crate::shared::ids::ItemId;
 use thiserror::Error;
 
-/// 背包领域错误
-///
-/// 错误码格式：I + 三位序号
+/// 背包领域错误枚举
 #[derive(Error, Debug, Clone, PartialEq)]
 pub enum InventoryError {
     /// I001: 背包容量不足
@@ -35,22 +37,36 @@ pub enum InventoryError {
     ContainerNotFound { container_id: String },
 }
 
+/// 背包领域结果类型
+pub type InventoryResult<T> = Result<T, InventoryError>;
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn inventory_error_背包已满() {
+    fn bag_full_包含错误码() {
         let err = InventoryError::BagFull { available: 0 };
-        assert!(err.to_string().contains("I001"));
-        assert!(err.to_string().contains("0"));
+        let msg = err.to_string();
+        assert!(msg.contains("I001"));
+        assert!(msg.contains("0"));
     }
 
     #[test]
-    fn inventory_error_物品不存在() {
+    fn item_not_found_包含item_id() {
         let err = InventoryError::ItemNotFound {
             item_id: ItemId::new("iron_sword"),
         };
-        assert!(err.to_string().contains("iron_sword"));
+        let msg = err.to_string();
+        assert!(msg.contains("iron_sword"));
+    }
+
+    #[test]
+    fn inventory_result_类型可用() {
+        let ok: InventoryResult<i32> = Ok(42);
+        assert_eq!(ok.unwrap(), 42);
+
+        let err: InventoryResult<i32> = Err(InventoryError::BagFull { available: 0 });
+        assert!(err.is_err());
     }
 }

@@ -1,17 +1,18 @@
-/// 基础设施日志事件
-///
-/// 只保留基础设施层面的通知事件。
-/// 业务领域事件统一在 shared/event/ 中定义。
+//! 基础设施事件
+//!
+//! 这些事件不属于任何业务领域，是基础设施层面的通知。
+//! 不涉及业务逻辑，只描述基础设施行为。
+
 use bevy::prelude::*;
 
-/// 配置加载完成事件
+/// 配置已加载
 #[derive(Message, Debug, Clone)]
 pub struct ConfigLoaded {
     pub config_type: String,
     pub id: String,
 }
 
-/// 场景快照创建事件
+/// 快照已创建
 #[derive(Message, Debug, Clone)]
 pub struct SnapshotCreated {
     pub snapshot_id: String,

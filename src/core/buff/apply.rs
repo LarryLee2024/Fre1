@@ -1,3 +1,11 @@
+//! Buff 施加/移除逻辑
+//!
+//! TODO(future): 添加 BuffApplied 共享事件发射
+//! apply_buff() 是纯函数（72+ 调用点），无法直接写 Message。
+//! 需要在关键调用者（effect/handler, execute.rs, use_item.rs）处添加
+//! commands.write_message(shared::event::buff::BuffApplied { ... })。
+//! 目前 apply_buff() 已输出 bevy::log::info!，LogObserver 暂不监听 BuffApplied。
+
 use super::domain::BuffData;
 use super::instance::{ActiveBuffs, BuffInstance};
 use crate::core::attribute::{Attributes, BuffInstanceId};
