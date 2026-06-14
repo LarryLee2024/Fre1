@@ -1,8 +1,8 @@
 // Equipment Viewer：运行时查看所有单位的装备和背包状态
 // 遵循铁律：复杂系统必须有可视化调试工具
 
-use crate::character::{Faction, TraitCollection, Unit, UnitName};
-use crate::equipment::{EquipmentRegistry, EquipmentSlots, Inventory};
+use crate::core::character::{Faction, TraitCollection, Unit, UnitName};
+use crate::core::equipment::{EquipmentRegistry, EquipmentSlots, Inventory};
 use bevy::prelude::*;
 use bevy_inspector_egui::egui;
 
@@ -13,15 +13,15 @@ pub fn render(
         Entity,
         &Unit,
         &UnitName,
-        &crate::character::GridPosition,
+        &crate::core::character::GridPosition,
         &crate::core::attribute::Attributes,
         &EquipmentSlots,
         &TraitCollection,
-        &crate::skill::SkillSlots,
-        &crate::skill::SkillCooldowns,
+        &crate::core::skill::SkillSlots,
+        &crate::core::skill::SkillCooldowns,
         &crate::core::tag::GameplayTags,
-        Option<&crate::character::AiBehaviorId>,
-        Option<&crate::buff::ActiveBuffs>,
+        Option<&crate::core::character::AiBehaviorId>,
+        Option<&crate::core::buff::ActiveBuffs>,
     )>,
 ) {
     ui.heading("Equipment Viewer");
@@ -67,8 +67,8 @@ pub fn render(
                 } else {
                     for entry in &trait_collection.entries {
                         let source_label = match &entry.source {
-                            crate::character::TraitSource::Intrinsic => "内在".to_string(),
-                            crate::character::TraitSource::Equipment { slot } => {
+                            crate::core::character::TraitSource::Intrinsic => "内在".to_string(),
+                            crate::core::character::TraitSource::Equipment { slot } => {
                                 format!("装备({})", slot.label())
                             }
                         };

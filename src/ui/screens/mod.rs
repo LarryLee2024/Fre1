@@ -9,10 +9,10 @@ pub mod main_menu;
 
 use bevy::prelude::*;
 
-use crate::campaign::progress::{CampaignProgress, StageStatus};
-use crate::campaign::registry::CampaignRegistry;
-use crate::map::LevelRegistry;
-use crate::turn::AppState;
+use crate::core::campaign::progress::{CampaignProgress, StageStatus};
+use crate::core::campaign::registry::CampaignRegistry;
+use crate::core::map::LevelRegistry;
+use crate::core::turn::AppState;
 use crate::ui::events::UiCommand;
 
 /// 框架屏幕插件
@@ -165,13 +165,13 @@ fn handle_menu_commands(
                 });
                 if can_enter {
                     // 重置 GameOverState 为 Playing（防止残留终态影响下次战斗）
-                    commands.insert_resource(crate::turn::GameOverState::Playing);
+                    commands.insert_resource(crate::core::turn::GameOverState::Playing);
                     next_state.set(AppState::InGame);
                 }
             }
             UiCommand::RetryStage => {
                 // 重玩当前关卡：先重置游戏状态，再进入 InGame
-                commands.insert_resource(crate::turn::GameOverState::Playing);
+                commands.insert_resource(crate::core::turn::GameOverState::Playing);
                 next_state.set(AppState::InGame);
             }
             UiCommand::NextStage => {

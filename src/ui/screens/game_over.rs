@@ -1,12 +1,12 @@
 /// 游戏结果屏幕
 use bevy::prelude::*;
 
-use crate::assets::CnFont;
-use crate::campaign::progress::CampaignProgress;
-use crate::campaign::registry::CampaignRegistry;
-use crate::map::LevelRegistry;
-use crate::turn::GameOverState;
-use crate::turn::TurnState;
+use crate::core::campaign::progress::CampaignProgress;
+use crate::core::campaign::registry::CampaignRegistry;
+use crate::core::map::LevelRegistry;
+use crate::core::turn::GameOverState;
+use crate::core::turn::TurnState;
+use crate::infrastructure::assets::CnFont;
 use crate::ui::events::UiCommand;
 use crate::ui::theme::UiTheme;
 use crate::ui::view_models::{GameOutcome, GameResultView};

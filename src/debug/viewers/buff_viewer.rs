@@ -1,8 +1,8 @@
 // Buff Viewer：运行时查看所有单位的 Buff 状态
 // 遵循铁律：复杂系统必须有可视化调试工具
 
-use crate::buff::ActiveBuffs;
-use crate::character::{Faction, Unit, UnitName};
+use crate::core::buff::ActiveBuffs;
+use crate::core::character::{Faction, Unit, UnitName};
 use crate::core::tag::GameplayTag;
 use bevy::prelude::*;
 use bevy_inspector_egui::egui;
@@ -14,14 +14,14 @@ pub fn render(
         Entity,
         &Unit,
         &UnitName,
-        &crate::character::GridPosition,
+        &crate::core::character::GridPosition,
         &crate::core::attribute::Attributes,
-        &crate::equipment::EquipmentSlots,
-        &crate::character::TraitCollection,
-        &crate::skill::SkillSlots,
-        &crate::skill::SkillCooldowns,
+        &crate::core::equipment::EquipmentSlots,
+        &crate::core::character::TraitCollection,
+        &crate::core::skill::SkillSlots,
+        &crate::core::skill::SkillCooldowns,
         &crate::core::tag::GameplayTags,
-        Option<&crate::character::AiBehaviorId>,
+        Option<&crate::core::character::AiBehaviorId>,
         Option<&ActiveBuffs>,
     )>,
 ) {

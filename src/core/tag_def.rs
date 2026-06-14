@@ -232,7 +232,7 @@ pub struct TagDefPlugin;
 
 impl Plugin for TagDefPlugin {
     fn build(&self, app: &mut App) {
-        let registry = TagRegistry::load_from_file("assets/definitions/tags.ron");
+        let registry = TagRegistry::load_from_file("content/definitions/tags.ron");
         app.insert_resource(registry);
     }
 }

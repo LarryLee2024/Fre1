@@ -1,9 +1,9 @@
 // 战斗预览浮窗：SelectTarget 阶段鼠标悬停敌方时显示预估伤害/命中/暴击
 // 使用通用 Popup Widget
 
-use crate::battle::CombatIntent;
-use crate::map::GameMap;
-use crate::turn::TurnPhase;
+use crate::core::battle::CombatIntent;
+use crate::core::map::GameMap;
+use crate::core::turn::TurnPhase;
 use crate::ui::theme::UiTheme;
 use crate::ui::view_models::CombatPreviewView;
 use crate::ui::widgets::popup::{add_popup_text, despawn_popup, spawn_popup};
@@ -83,7 +83,7 @@ pub struct CombatPreviewPlugin;
 
 impl Plugin for CombatPreviewPlugin {
     fn build(&self, app: &mut App) {
-        use crate::turn::AppState;
+        use crate::core::turn::AppState;
         app.init_resource::<CombatPreviewEntity>().add_systems(
             Update,
             update_combat_preview_popup.run_if(in_state(AppState::InGame)),

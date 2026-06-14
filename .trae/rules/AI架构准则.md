@@ -1,3 +1,7 @@
+---
+alwaysApply: false
+description: 
+---
 # AI 架构准则
 
 ## 架构原则

@@ -261,7 +261,7 @@ impl ModifierRuleRegistry {
         if self.rules.is_empty() {
             bevy::log::warn!(
                 target: "core",
-                "修饰规则注册表为空，请检查 assets/rules/ 目录下的 RON 配置文件"
+                "修饰规则注册表为空，请检查 content/modifiers/ 目录下的 RON 配置文件"
             );
         }
     }
@@ -403,7 +403,7 @@ pub struct ModifierRulePlugin;
 
 impl Plugin for ModifierRulePlugin {
     fn build(&self, app: &mut App) {
-        let mut registry = ModifierRuleRegistry::load_from_dir_vec("assets/rules");
+        let mut registry = ModifierRuleRegistry::load_from_dir_vec("content/modifiers");
         registry.register_defaults();
         app.insert_resource(registry);
     }

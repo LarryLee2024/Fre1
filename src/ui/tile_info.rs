@@ -1,11 +1,11 @@
 // 地形信息浮窗模块：右键查看地面属性
 // 使用通用 Popup Widget
 
-use crate::character::Faction;
-use crate::map::GameMap;
-use crate::map::TerrainRegistry;
-use crate::map::runtime::TerrainGrid;
-use crate::turn::TurnPhase;
+use crate::core::character::Faction;
+use crate::core::map::GameMap;
+use crate::core::map::TerrainRegistry;
+use crate::core::map::runtime::TerrainGrid;
+use crate::core::turn::TurnPhase;
 use crate::ui::theme::UiTheme;
 use crate::ui::widgets::popup::{add_popup_text, despawn_popup, spawn_popup};
 use bevy::prelude::*;
@@ -24,7 +24,7 @@ pub fn handle_tile_info(
     map: Res<GameMap>,
     terrain_grid: Res<TerrainGrid>,
     terrain_registry: Res<TerrainRegistry>,
-    turn_state: Res<crate::turn::TurnState>,
+    turn_state: Res<crate::core::turn::TurnState>,
     turn_phase: Res<State<TurnPhase>>,
     mut commands: Commands,
     mut tile_info_entity: ResMut<TileInfoEntity>,
@@ -99,7 +99,7 @@ pub struct TileInfoPlugin;
 
 impl Plugin for TileInfoPlugin {
     fn build(&self, app: &mut App) {
-        use crate::turn::AppState;
+        use crate::core::turn::AppState;
         app.init_resource::<TileInfoEntity>()
             .add_systems(Update, handle_tile_info.run_if(in_state(AppState::InGame)));
     }

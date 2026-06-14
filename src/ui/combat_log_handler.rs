@@ -1,12 +1,12 @@
 // 战斗日志表现层：监听 Message，格式化写入 CombatLog
 // 遵循「Logic 发消息，Presentation 响应」原则
 
-use crate::battle::{
+use crate::core::battle::{
     CharacterDied, CombatLog, DamageApplied, DotApplied, HealApplied, HotApplied, LogSegment,
     StunApplied, log_color,
 };
-use crate::character::Faction;
-use crate::equipment::{ItemEquipped, ItemUnequipped};
+use crate::core::character::Faction;
+use crate::core::equipment::{ItemEquipped, ItemUnequipped};
 use bevy::ecs::message::MessageReader;
 use bevy::prelude::*;
 

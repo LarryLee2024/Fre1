@@ -1,12 +1,12 @@
 // AI Viewer：运行时查看 AI 决策状态
 // 遵循铁律：复杂系统必须有可视化调试工具
 
-use crate::battle::CombatIntent;
-use crate::character::{AiBehaviorId, Faction, GridPosition, Unit, UnitName};
 use crate::core::attribute::{AttributeKind, Attributes};
+use crate::core::battle::CombatIntent;
+use crate::core::character::{AiBehaviorId, Faction, GridPosition, Unit, UnitName};
+use crate::core::skill::{SkillCooldowns, SkillSlots};
 use crate::core::tag::GameplayTags;
-use crate::skill::{SkillCooldowns, SkillSlots};
-use crate::turn::TurnOrder;
+use crate::core::turn::TurnOrder;
 use bevy::prelude::*;
 use bevy_inspector_egui::egui;
 
@@ -21,13 +21,13 @@ pub fn render(
         &UnitName,
         &GridPosition,
         &Attributes,
-        &crate::equipment::EquipmentSlots,
-        &crate::character::TraitCollection,
+        &crate::core::equipment::EquipmentSlots,
+        &crate::core::character::TraitCollection,
         &SkillSlots,
         &SkillCooldowns,
         &GameplayTags,
         Option<&AiBehaviorId>,
-        Option<&crate::buff::ActiveBuffs>,
+        Option<&crate::core::buff::ActiveBuffs>,
     )>,
 ) {
     ui.heading("AI Viewer");

@@ -1,9 +1,9 @@
 // 战斗日志面板：可折叠、可调整大小、可滚动
 
-use crate::battle::{
+use crate::core::battle::{
     CombatLogCollapsed, CombatLogContent, CombatLogPanel, CombatLogResizeHandle, CombatLogToggle,
 };
-use crate::turn::AppState;
+use crate::core::turn::AppState;
 use crate::ui::theme::UiTheme;
 use crate::ui::widgets::layout::*;
 use bevy::prelude::*;
@@ -115,7 +115,7 @@ pub struct CombatLogPanelPlugin;
 
 impl Plugin for CombatLogPanelPlugin {
     fn build(&self, app: &mut App) {
-        use crate::turn::GameSet;
+        use crate::core::turn::GameSet;
         app.add_systems(
             OnEnter(AppState::InGame),
             spawn_combat_log_panel.in_set(GameSet::Ui),

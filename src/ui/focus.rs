@@ -8,6 +8,8 @@ use bevy::prelude::*;
 #[derive(Component)]
 pub struct BlocksGameInput;
 
+use crate::shared::resettable::ResettableResource;
+
 /// UI 焦点状态：追踪是否有面板正在阻止游戏输入
 #[derive(Resource, Default, Reflect)]
 #[reflect(Resource)]
@@ -15,6 +17,8 @@ pub struct UiFocusState {
     /// 是否有阻止游戏输入的面板打开
     pub blocks_input: bool,
 }
+
+impl ResettableResource for UiFocusState {}
 
 /// 更新 UI 焦点状态：检查是否存在 BlocksGameInput 面板
 pub fn update_ui_focus_state(

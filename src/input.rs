@@ -3,9 +3,9 @@
 // 单位点击：bevy_picking Pointer 事件（Pickable 组件驱动）
 // 空格子点击：cursor_to_coord 逻辑计算（不创建 Tile Entity）
 
-use crate::character::{Faction, GridPosition, Unit};
-use crate::map::GameMap;
-use crate::turn::{TurnOrder, TurnPhase, TurnState};
+use crate::core::character::{Faction, GridPosition, Unit};
+use crate::core::map::GameMap;
+use crate::core::turn::{TurnOrder, TurnPhase, TurnState};
 use crate::ui::UiFocusState;
 use crate::ui::events::UiCommand;
 use crate::ui::view_models::HoveredEntity;
@@ -294,7 +294,7 @@ pub struct InputPlugin;
 
 impl Plugin for InputPlugin {
     fn build(&self, app: &mut App) {
-        use crate::turn::AppState;
+        use crate::core::turn::AppState;
         app.add_observer(on_unit_pointer_click)
             .add_observer(on_unit_pointer_over)
             .add_observer(on_unit_pointer_out)

@@ -1,9 +1,9 @@
 // Turn Queue Viewer：回合队列查看器
 // 遵循铁律：关键系统必须拥有可视化观察窗口
 
-use crate::character::{Faction, Unit, UnitName};
 use crate::core::attribute::{AttributeKind, Attributes};
-use crate::turn::TurnOrder;
+use crate::core::character::{Faction, Unit, UnitName};
+use crate::core::turn::TurnOrder;
 use bevy::prelude::*;
 use bevy_inspector_egui::egui;
 
@@ -15,15 +15,15 @@ pub fn render(
         Entity,
         &Unit,
         &UnitName,
-        &crate::character::GridPosition,
+        &crate::core::character::GridPosition,
         &Attributes,
-        &crate::equipment::EquipmentSlots,
-        &crate::character::TraitCollection,
-        &crate::skill::SkillSlots,
-        &crate::skill::SkillCooldowns,
+        &crate::core::equipment::EquipmentSlots,
+        &crate::core::character::TraitCollection,
+        &crate::core::skill::SkillSlots,
+        &crate::core::skill::SkillCooldowns,
         &crate::core::tag::GameplayTags,
-        Option<&crate::character::AiBehaviorId>,
-        Option<&crate::buff::ActiveBuffs>,
+        Option<&crate::core::character::AiBehaviorId>,
+        Option<&crate::core::buff::ActiveBuffs>,
     )>,
 ) {
     ui.heading("Turn Queue");

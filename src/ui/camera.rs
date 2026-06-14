@@ -1,7 +1,7 @@
 // 相机控制模块：WASD/方向键平移，滚轮缩放，边缘滚动，平滑移动，相机边界，聚焦单位
 
-use crate::map::GameMap;
-use crate::turn::{AppState, GameSet, TurnOrder};
+use crate::core::map::GameMap;
+use crate::core::turn::{AppState, GameSet, TurnOrder};
 use crate::ui::focus::UiFocusState;
 use bevy::ecs::message::MessageReader;
 use bevy::input::mouse::MouseWheel;
@@ -172,7 +172,7 @@ pub fn camera_smooth_move(
 pub fn camera_focus_on_unit(
     keyboard: Res<ButtonInput<KeyCode>>,
     turn_order: Res<TurnOrder>,
-    unit_positions: Query<&crate::character::GridPosition>,
+    unit_positions: Query<&crate::core::character::GridPosition>,
     mut camera_query: Query<&mut CameraTarget, With<CameraController>>,
     focus_state: Res<UiFocusState>,
     map: Res<GameMap>,

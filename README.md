@@ -39,30 +39,42 @@ cargo test
 
 ```
 src/
-  ai/          # AI 行为系统
-  battle/      # 战斗效果管线（generate → modify → execute）
-  buff/        # Buff/Debuff 系统
-  character/   # 单位组件与 Trait 扩展体系
-  core/        # 属性系统、效果管线、修饰规则、标签系统
-  debug/       # 调试面板与查看器
-  equipment/   # 装备系统
-  inventory/   # 背包系统
-  map/         # 地图、寻路、关卡配置加载
-  skill/       # 技能系统
-  turn/        # 回合状态机、行动顺序、胜负条件检查
-  ui/          # 用户界面面板与组件
-  input/       # 输入处理
+  core/         # 业务逻辑 — 战斗、技能、Buff、地图、角色、AI、回合、装备、背包、战役
+    battle/     # 战斗效果管线（generate → modify → execute）
+    buff/       # Buff/Debuff 系统
+    skill/      # 技能系统
+    character/  # 单位组件与 Trait 扩展体系
+    map/        # 地图、寻路、关卡配置加载
+    turn/       # 回合状态机、行动顺序、胜负条件检查
+    ai/         # AI 行为系统
+    equipment/  # 装备系统
+    inventory/  # 背包系统
+    campaign/   # 战役编排与关卡序列
+  shared/       # 跨层共享类型（强类型 ID、错误工具）
+  infrastructure/ # 基础设施（资源加载、日志）
+  content/      # Content 层统一入口（RON 加载模块）
+  ui/           # 用户界面面板与组件
+  input/        # 输入处理
+  debug/        # 调试面板与查看器
+  app/          # 应用装配与 Plugin 编排
 
-assets/        # RON 配置文件
-  units/       # 单位模板
+content/       # RON 游戏配置（数据驱动）
+  characters/  # 单位模板
   skills/      # 技能定义
   buffs/       # Buff 定义
+  classes/     # 职业与特质
   terrains/    # 地形类型
-  traits/      # 角色特质
-  ai/          # AI 行为模板
-  maps/        # 关卡配置
+  ai_behaviors/ # AI 行为模板
+  stages/      # 关卡配置
+  campaigns/   # 战役定义
   definitions/ # 属性与标签定义
-  rules/       # 游戏规则（元素交互等）
+  modifiers/   # 修饰规则（元素交互等）
+  equipments/  # 装备定义
+  items/       # 物品定义
+
+assets/        # 二进制资源（字体、数据）
+  fonts/       # 字体文件
+  data/        # 运行时数据
 
 docs/
   architecture.md    # 架构规范（最高优先级）
@@ -93,7 +105,7 @@ tests/         # 集成测试、场景测试、快照测试
 
 ## 注意事项
 
-- 资产路径使用编译时绝对路径（`CARGO_MANIFEST_DIR`），发布构建时需确保 assets 目录与可执行文件相对位置正确
+- 配置路径使用编译时绝对路径（`CARGO_MANIFEST_DIR`），发布构建时需确保 content/ 和 assets/ 目录与可执行文件相对位置正确
 - 关卡配置中 `victory_condition` 为 `Option` 类型，`None` 时回退到默认的全灭胜利条件
 - 胜负条件检查仅在 TurnEnd 阶段执行，全灭玩家即失败为绝对不变量（不可被配置覆盖）
 - 胜负同时满足时优先判定失败（失败优先原则）

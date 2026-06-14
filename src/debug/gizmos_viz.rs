@@ -2,10 +2,10 @@
 // 遵循铁律：复杂系统必须有可视化观察窗口
 // Gizmos rect_2d 只画线框轮廓，不画填充矩形，与 Sprite 高亮互补
 
-use crate::battle::CombatIntent;
-use crate::character::{AttackRange, Faction, GridPosition, MovableRange, MovingUnit, Unit};
-use crate::map::GameMap;
-use crate::map::runtime::OccupancyGrid;
+use crate::core::battle::CombatIntent;
+use crate::core::character::{AttackRange, Faction, GridPosition, MovableRange, MovingUnit, Unit};
+use crate::core::map::GameMap;
+use crate::core::map::runtime::OccupancyGrid;
 use crate::ui::theme::UiTheme;
 
 use super::overlay::DebugOverlay;
@@ -73,7 +73,7 @@ pub fn debug_ai_intent(
     overlay: Res<DebugOverlay>,
     map: Res<GameMap>,
     combat_intent: Res<CombatIntent>,
-    units: Query<(Entity, &Unit, &GridPosition), Without<crate::character::Dead>>,
+    units: Query<(Entity, &Unit, &GridPosition), Without<crate::core::character::Dead>>,
 ) {
     if !overlay.show_ai_intent {
         return;

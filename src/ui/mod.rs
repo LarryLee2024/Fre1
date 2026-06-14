@@ -13,7 +13,7 @@ mod combat_preview;
 mod combat_vfx_handler;
 /// UI 命令处理
 mod command_handler;
-/// UI 事件定义（UiCommand, MovementIntent）
+/// UI 事件定义（UiCommand）
 pub mod events;
 /// UI 焦点状态管理
 mod focus;
@@ -36,9 +36,9 @@ pub mod view_models;
 /// 可复用 UI 构建块
 mod widgets;
 
-use crate::battle::CombatLogCollapsed;
-use crate::character::Faction;
-use crate::turn::{AppState, TurnState};
+use crate::core::battle::CombatLogCollapsed;
+use crate::core::character::Faction;
+use crate::core::turn::{AppState, TurnState};
 use crate::ui::view_models::*;
 use bevy::prelude::*;
 
@@ -142,7 +142,10 @@ fn player_turn(turn_state: Res<TurnState>) -> bool {
 /// 已行动单位颜色变灰
 fn update_acted_unit_color(
     theme: Res<UiTheme>,
-    mut units: Query<(&crate::character::Unit, &mut Sprite), Without<crate::character::MovingUnit>>,
+    mut units: Query<
+        (&crate::core::character::Unit, &mut Sprite),
+        Without<crate::core::character::MovingUnit>,
+    >,
 ) {
     use crate::ui::theme::faction_color;
     for (unit, mut sprite) in &mut units {

@@ -1,6 +1,6 @@
 // 背包面板：独立显示选中单位的背包内容
 
-use crate::turn::AppState;
+use crate::core::turn::AppState;
 use crate::ui::theme::UiTheme;
 use crate::ui::view_models::SelectedUnitView;
 use crate::ui::widgets::layout::*;
@@ -84,7 +84,7 @@ pub struct InventoryPanelPlugin;
 
 impl Plugin for InventoryPanelPlugin {
     fn build(&self, app: &mut App) {
-        use crate::turn::GameSet;
+        use crate::core::turn::GameSet;
         app.add_systems(
             OnEnter(AppState::InGame),
             spawn_inventory_panel.in_set(GameSet::Ui),

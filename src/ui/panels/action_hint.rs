@@ -1,6 +1,6 @@
 // 操作提示面板：显示快捷键提示
 
-use crate::turn::AppState;
+use crate::core::turn::AppState;
 use crate::ui::theme::UiTheme;
 use bevy::prelude::*;
 
@@ -33,7 +33,7 @@ pub struct ActionHintPlugin;
 
 impl Plugin for ActionHintPlugin {
     fn build(&self, app: &mut App) {
-        use crate::turn::GameSet;
+        use crate::core::turn::GameSet;
         app.add_systems(
             OnEnter(AppState::InGame),
             spawn_action_hint.in_set(GameSet::Ui),

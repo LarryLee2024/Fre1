@@ -1,7 +1,7 @@
 // 单位信息面板：显示选中单位的属性、资源条、技能、Buff
 
-use crate::assets::CnFont;
-use crate::turn::AppState;
+use crate::core::turn::AppState;
+use crate::infrastructure::assets::CnFont;
 use crate::ui::theme::UiTheme;
 use crate::ui::view_models::SelectedUnitView;
 use crate::ui::widgets::layout::*;
@@ -414,7 +414,7 @@ pub struct UnitInfoPlugin;
 
 impl Plugin for UnitInfoPlugin {
     fn build(&self, app: &mut App) {
-        use crate::turn::GameSet;
+        use crate::core::turn::GameSet;
         app.add_systems(
             OnEnter(AppState::InGame),
             spawn_unit_info_panel.in_set(GameSet::Ui),

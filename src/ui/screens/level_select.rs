@@ -1,10 +1,10 @@
 /// 关卡选择屏幕
 use bevy::prelude::*;
 
-use crate::assets::CnFont;
-use crate::campaign::progress::{CampaignProgress, StageStatus};
-use crate::campaign::registry::CampaignRegistry;
-use crate::map::LevelRegistry;
+use crate::core::campaign::progress::{CampaignProgress, StageStatus};
+use crate::core::campaign::registry::CampaignRegistry;
+use crate::core::map::LevelRegistry;
+use crate::infrastructure::assets::CnFont;
 use crate::ui::events::UiCommand;
 use crate::ui::theme::UiTheme;
 use crate::ui::view_models::{LevelSelectState, StageEntry};

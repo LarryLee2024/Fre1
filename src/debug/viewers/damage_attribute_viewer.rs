@@ -1,12 +1,12 @@
 // Damage & Attribute Viewer：伤害分解与属性修饰符来源分解面板
 // 遵循铁律：关键系统必须拥有可视化观察窗口
 
-use crate::battle::{BattleEntry, BattleRecord, DamageBreakdown};
-use crate::character::{Faction, TraitCollection, Unit, UnitName};
 use crate::core::attribute::{
     AttributeKind, AttributeModifierInstance, Attributes, ModifierOp, ModifierSource,
 };
-use crate::equipment::EquipmentSlots;
+use crate::core::battle::{BattleEntry, BattleRecord, DamageBreakdown};
+use crate::core::character::{Faction, TraitCollection, Unit, UnitName};
+use crate::core::equipment::EquipmentSlots;
 use bevy::prelude::*;
 use bevy_inspector_egui::egui;
 
@@ -70,15 +70,15 @@ pub fn render(
         Entity,
         &Unit,
         &UnitName,
-        &crate::character::GridPosition,
+        &crate::core::character::GridPosition,
         &Attributes,
         &EquipmentSlots,
         &TraitCollection,
-        &crate::skill::SkillSlots,
-        &crate::skill::SkillCooldowns,
+        &crate::core::skill::SkillSlots,
+        &crate::core::skill::SkillCooldowns,
         &crate::core::tag::GameplayTags,
-        Option<&crate::character::AiBehaviorId>,
-        Option<&crate::buff::ActiveBuffs>,
+        Option<&crate::core::character::AiBehaviorId>,
+        Option<&crate::core::buff::ActiveBuffs>,
     )>,
     _unit_names: &Query<&UnitName>,
 ) {
@@ -170,15 +170,15 @@ fn render_attribute_panel(
         Entity,
         &Unit,
         &UnitName,
-        &crate::character::GridPosition,
+        &crate::core::character::GridPosition,
         &Attributes,
         &EquipmentSlots,
         &TraitCollection,
-        &crate::skill::SkillSlots,
-        &crate::skill::SkillCooldowns,
+        &crate::core::skill::SkillSlots,
+        &crate::core::skill::SkillCooldowns,
         &crate::core::tag::GameplayTags,
-        Option<&crate::character::AiBehaviorId>,
-        Option<&crate::buff::ActiveBuffs>,
+        Option<&crate::core::character::AiBehaviorId>,
+        Option<&crate::core::buff::ActiveBuffs>,
     )>,
 ) {
     for (entity, unit, name, _, attrs, slots, trait_collection, ..) in units.iter() {
@@ -298,14 +298,14 @@ fn classify_source(
         let equipped: Vec<_> = slots.equipped_slots();
         if let Some((_, _, def_id)) = equipped.iter().find(|(s, _, _)| {
             let slot_index = match s {
-                crate::equipment::EquipmentSlot::MainHand => 0,
-                crate::equipment::EquipmentSlot::OffHand => 1,
-                crate::equipment::EquipmentSlot::Head => 2,
-                crate::equipment::EquipmentSlot::Body => 3,
-                crate::equipment::EquipmentSlot::Legs => 4,
-                crate::equipment::EquipmentSlot::Feet => 5,
-                crate::equipment::EquipmentSlot::Accessory1 => 6,
-                crate::equipment::EquipmentSlot::Accessory2 => 7,
+                crate::core::equipment::EquipmentSlot::MainHand => 0,
+                crate::core::equipment::EquipmentSlot::OffHand => 1,
+                crate::core::equipment::EquipmentSlot::Head => 2,
+                crate::core::equipment::EquipmentSlot::Body => 3,
+                crate::core::equipment::EquipmentSlot::Legs => 4,
+                crate::core::equipment::EquipmentSlot::Feet => 5,
+                crate::core::equipment::EquipmentSlot::Accessory1 => 6,
+                crate::core::equipment::EquipmentSlot::Accessory2 => 7,
             };
             slot_index as u64 == equip_index
         }) {

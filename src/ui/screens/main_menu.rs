@@ -1,7 +1,7 @@
 /// 主菜单屏幕
 use bevy::prelude::*;
 
-use crate::assets::CnFont;
+use crate::infrastructure::assets::CnFont;
 use crate::ui::events::UiCommand;
 use crate::ui::theme::UiTheme;
 

@@ -4,13 +4,9 @@ pub mod attribute;
 pub mod attribute_def;
 /// EffectHandler 效果处理器管道
 pub mod effect;
-/// 分领域错误体系：每个业务领域独立错误定义（ADR-004）
-pub mod error;
-/// 核心基础设施：GAS 风格的标签、属性、效果管线、修饰规则
+/// ModifierRule 修饰规则注册表
 /// 这些是跨业务模块的共享基础设施，被 character/battle/buff/skill 等模块依赖
 
-/// 强类型 ID 模块：核心领域实体的类型安全标识（ADR-002）
-pub mod id;
 /// ModifierRule 修饰规则注册表
 pub mod modifier_rule;
 /// RON 文件加载器（RegistryLoader trait）
@@ -21,3 +17,36 @@ pub mod snapshot;
 pub mod tag;
 /// TagDef 标签定义注册表
 pub mod tag_def;
+
+/// 技能模块：技能定义、冷却、效果预览
+pub mod skill;
+
+/// Buff 模块：Buff 定义、实例、穿戴/移除、持续效果
+pub mod buff;
+
+/// 地图模块：网格系统、地形数据、寻路、运行时 Grid
+pub mod map;
+
+/// 装备模块：数据驱动的装备定义、实例管理、穿脱逻辑
+pub mod equipment;
+
+/// 背包模块：容器系统、物品定义、实例管理、物品转移与使用
+pub mod inventory;
+
+/// 移动模块：移动意图事件、寻路、执行
+pub mod movement;
+
+/// 角色模块：单位组件、生成、模板、特性
+pub mod character;
+
+/// 战斗模块：战斗效果管线、意图、执行
+pub mod battle;
+
+/// AI 模块：行为系统、决策、目标选择
+pub mod ai;
+
+/// 回合模块：回合状态机、行动顺序、胜负条件
+pub mod turn;
+
+/// 战役模块：关卡流程、胜负条件检查
+pub mod campaign;

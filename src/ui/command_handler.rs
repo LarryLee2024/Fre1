@@ -1,17 +1,18 @@
 // UI 命令处理器：接收 UiCommand Message，执行游戏逻辑
 // 所有 UI→Logic 的交互都通过此模块，UI 层不再直接修改 CombatIntent/TurnPhase
 
-use crate::battle::{CombatIntent, PrevPosition, manhattan_distance};
-use crate::character::{
+use crate::core::attribute::{AttributeKind, Attributes};
+use crate::core::battle::{CombatIntent, PrevPosition, manhattan_distance};
+use crate::core::character::{
     AttackRange, Faction, GridPosition, MovableRange, Selected, SelectionHighlight, Unit,
 };
-use crate::core::attribute::{AttributeKind, Attributes};
+use crate::core::map::{GameMap, OccupancyGrid, TerrainCostRegistry, TerrainGrid, TerrainRegistry};
+use crate::core::movement::events::{IntentSource, MovementIntent};
+use crate::core::skill::{BASIC_ATTACK_ID, SkillRegistry, SkillSlots, effective_skill_range};
 use crate::core::tag::GameplayTags;
-use crate::map::{GameMap, OccupancyGrid, TerrainCostRegistry, TerrainGrid, TerrainRegistry};
-use crate::skill::{BASIC_ATTACK_ID, SkillRegistry, SkillSlots, effective_skill_range};
-use crate::turn::{ForceEndTurn, TurnPhase};
+use crate::core::turn::{ForceEndTurn, TurnPhase};
 use crate::ui::action_menu::{ActionMenuEntity, despawn_action_menu};
-use crate::ui::events::{IntentSource, MovementIntent, UiCommand};
+use crate::ui::events::UiCommand;
 use crate::ui::highlight::{
     clear_markers, clear_selection, show_attack_range, show_move_range, spawn_selection_highlight,
 };

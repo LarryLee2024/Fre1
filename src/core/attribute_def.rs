@@ -298,7 +298,7 @@ pub struct AttributeDefPlugin;
 
 impl Plugin for AttributeDefPlugin {
     fn build(&self, app: &mut App) {
-        let registry = AttributeRegistry::load_from_file("assets/definitions/attributes.ron");
+        let registry = AttributeRegistry::load_from_file("content/definitions/attributes.ron");
         app.insert_resource(registry);
     }
 }

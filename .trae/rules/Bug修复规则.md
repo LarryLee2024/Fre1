@@ -1,3 +1,7 @@
+---
+alwaysApply: false
+description: 
+---
 # AI BugFix Constitution v2.0
 > 适用于：Bevy 0.18+ / DDD / SRPG
 > 优先级仅次于《AI开发宪法》

@@ -209,10 +209,10 @@ impl Default for UiTheme {
 }
 
 /// 阵营对应的单位颜色（表现层映射）
-pub fn faction_color(faction: crate::character::Faction, theme: &UiTheme) -> Color {
+pub fn faction_color(faction: crate::core::character::Faction, theme: &UiTheme) -> Color {
     match faction {
-        crate::character::Faction::Player => theme.faction_player_color,
-        crate::character::Faction::Enemy => theme.faction_enemy_color,
+        crate::core::character::Faction::Player => theme.faction_player_color,
+        crate::core::character::Faction::Enemy => theme.faction_enemy_color,
     }
 }
 
@@ -230,7 +230,7 @@ mod tests {
     // ================================================
 
     use super::*;
-    use crate::character::Faction;
+    use crate::core::character::Faction;
 
     /// Test ID: UI-THM-001
     /// Title: 阵营颜色映射正确区分玩家和敌方

@@ -1,10 +1,10 @@
 // 行动菜单模块：弹出式行动菜单，使用 SkillSlots 动态生成按钮
 // 使用 Widget 库构建，按钮交互通过 UiCommand Message 发出
 
-use crate::buff::ActiveBuffs;
-use crate::character::{GridPosition, Selected, TraitCollection, TraitRegistry, UnitName};
 use crate::core::attribute::{AttributeKind, Attributes};
-use crate::skill::{SkillRegistry, SkillSlots};
+use crate::core::buff::ActiveBuffs;
+use crate::core::character::{GridPosition, Selected, TraitCollection, TraitRegistry, UnitName};
+use crate::core::skill::{SkillRegistry, SkillSlots};
 use crate::ui::events::UiCommand;
 use crate::ui::focus::BlocksGameInput;
 use crate::ui::theme::UiTheme;
@@ -32,11 +32,15 @@ pub struct ActionMenuButton {
     pub kind: ActionKind,
 }
 
+use crate::shared::resettable::ResettableResource;
+
 /// 追踪菜单实体防止重复
 #[derive(Resource, Default)]
 pub struct ActionMenuEntity {
     pub entity: Option<Entity>,
 }
+
+impl ResettableResource for ActionMenuEntity {}
 
 /// 生成行动菜单
 pub fn spawn_action_menu(
@@ -174,7 +178,7 @@ pub fn handle_action_menu_interaction(
 /// 进入行动菜单阶段时自动弹出菜单
 fn on_enter_action_menu(
     mut commands: Commands,
-    map: Res<crate::map::GameMap>,
+    map: Res<crate::core::map::GameMap>,
     camera_query: Query<(&Camera, &GlobalTransform)>,
     view: Res<SelectedUnitView>,
     mut menu_entity: ResMut<ActionMenuEntity>,
@@ -188,13 +192,13 @@ fn on_enter_action_menu(
         &SkillSlots,
         &ActiveBuffs,
         Option<&TraitCollection>,
-        Option<&crate::equipment::EquipmentSlots>,
-        Option<&crate::inventory::container::Container>,
+        Option<&crate::core::equipment::EquipmentSlots>,
+        Option<&crate::core::inventory::container::Container>,
         &GridPosition,
     )>,
     trait_registry: Res<TraitRegistry>,
-    _equipment_registry: Res<crate::equipment::EquipmentRegistry>,
-    _item_registry: Res<crate::inventory::definition::ItemRegistry>,
+    _equipment_registry: Res<crate::core::equipment::EquipmentRegistry>,
+    _item_registry: Res<crate::core::inventory::definition::ItemRegistry>,
 ) {
     // 优先使用 SelectedUnitView，如果为空则从 Selected 实体构建
     let mut fallback_view = SelectedUnitView::default();
@@ -290,7 +294,7 @@ pub struct ActionMenuPlugin;
 
 impl Plugin for ActionMenuPlugin {
     fn build(&self, app: &mut App) {
-        use crate::turn::{AppState, TurnPhase};
+        use crate::core::turn::{AppState, TurnPhase};
         app.init_resource::<ActionMenuEntity>()
             .add_systems(
                 Update,

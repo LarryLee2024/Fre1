@@ -1,3 +1,7 @@
+---
+alwaysApply: false
+description: 
+---
 # Bevy 0.18+ SRPG 架构宪法 v1.6 · ECS篇
 > 定位：Bevy ECS 最佳实践与编码规则，负责所有引擎层代码规范
 > 适用场景：编写系统、组件、通信逻辑、调度配置、状态管理

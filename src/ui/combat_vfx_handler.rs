@@ -1,9 +1,9 @@
 // 战斗 VFX 表现层：监听 Message，生成伤害飘字等特效
 // 遵循「Logic 发消息，Presentation 响应」原则
 
-use crate::assets::CnFont;
-use crate::battle::{DamageApplied, DotApplied};
-use crate::map::GameMap;
+use crate::core::battle::{DamageApplied, DotApplied};
+use crate::core::map::GameMap;
+use crate::infrastructure::assets::CnFont;
 use crate::ui::theme::UiTheme;
 use crate::ui::vfx;
 use bevy::ecs::message::MessageReader;

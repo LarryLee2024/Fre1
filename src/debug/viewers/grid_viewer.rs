@@ -1,9 +1,9 @@
 // Grid Viewer：运行时查看地形网格和占用情况
 // 遵循铁律：复杂系统必须有可视化调试工具
 
-use crate::character::{Faction, GridPosition, Unit, UnitName};
-use crate::map::TerrainRegistry;
-use crate::map::runtime::{OccupancyGrid, TerrainGrid};
+use crate::core::character::{Faction, GridPosition, Unit, UnitName};
+use crate::core::map::TerrainRegistry;
+use crate::core::map::runtime::{OccupancyGrid, TerrainGrid};
 use bevy::prelude::*;
 use bevy_inspector_egui::egui;
 use std::collections::HashMap;
@@ -38,13 +38,13 @@ pub fn render(
         &UnitName,
         &GridPosition,
         &crate::core::attribute::Attributes,
-        &crate::equipment::EquipmentSlots,
-        &crate::character::TraitCollection,
-        &crate::skill::SkillSlots,
-        &crate::skill::SkillCooldowns,
+        &crate::core::equipment::EquipmentSlots,
+        &crate::core::character::TraitCollection,
+        &crate::core::skill::SkillSlots,
+        &crate::core::skill::SkillCooldowns,
         &crate::core::tag::GameplayTags,
-        Option<&crate::character::AiBehaviorId>,
-        Option<&crate::buff::ActiveBuffs>,
+        Option<&crate::core::character::AiBehaviorId>,
+        Option<&crate::core::buff::ActiveBuffs>,
     )>,
     viewer_state: &mut GridViewerState,
 ) {

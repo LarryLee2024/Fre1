@@ -3,10 +3,10 @@
 use bevy::ecs::message::MessageReader;
 use bevy::prelude::*;
 
-use crate::battle::{
+use crate::core::battle::{
     CharacterDied, DamageApplied, DotApplied, HealApplied, HotApplied, StunApplied,
 };
-use crate::turn::{TurnEnded, TurnStarted};
+use crate::core::turn::{TurnEnded, TurnStarted};
 
 use super::events::{
     BuffApplied, BuffExpired, BuffRemoved, ConfigLoaded, EquipmentEquipped, EquipmentUnequipped,
@@ -319,8 +319,8 @@ pub fn log_snapshot_created(mut reader: MessageReader<SnapshotCreated>) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::battle::{CharacterDied, DamageApplied, HealApplied};
-    use crate::character::Faction;
+    use crate::core::battle::{CharacterDied, DamageApplied, HealApplied};
+    use crate::core::character::Faction;
     use bevy::prelude::*;
 
     #[test]

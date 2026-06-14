@@ -1,3 +1,7 @@
+---
+alwaysApply: false
+description: 
+---
 
 # Bevy 0.18+ SRPG 架构宪法 v1.6 · AI协作篇
 > 定位：AI生成代码的直接执行依据，精简可直接作为提示词注入

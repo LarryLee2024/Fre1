@@ -2,9 +2,9 @@
 // 遵循铁律：关键系统必须拥有可视化观察窗口
 // 显示：回合号、当前行动单位、已发生事件数
 
-use crate::battle::{BattleEntry, BattleRecord};
-use crate::character::{Faction, Unit, UnitName};
-use crate::turn::TurnOrder;
+use crate::core::battle::{BattleEntry, BattleRecord};
+use crate::core::character::{Faction, Unit, UnitName};
+use crate::core::turn::TurnOrder;
 use bevy::prelude::*;
 use bevy_inspector_egui::egui;
 
@@ -17,15 +17,15 @@ pub fn render(
         Entity,
         &Unit,
         &UnitName,
-        &crate::character::GridPosition,
+        &crate::core::character::GridPosition,
         &crate::core::attribute::Attributes,
-        &crate::equipment::EquipmentSlots,
-        &crate::character::TraitCollection,
-        &crate::skill::SkillSlots,
-        &crate::skill::SkillCooldowns,
+        &crate::core::equipment::EquipmentSlots,
+        &crate::core::character::TraitCollection,
+        &crate::core::skill::SkillSlots,
+        &crate::core::skill::SkillCooldowns,
         &crate::core::tag::GameplayTags,
-        Option<&crate::character::AiBehaviorId>,
-        Option<&crate::buff::ActiveBuffs>,
+        Option<&crate::core::character::AiBehaviorId>,
+        Option<&crate::core::buff::ActiveBuffs>,
     )>,
 ) {
     ui.heading("Battle Debugger");

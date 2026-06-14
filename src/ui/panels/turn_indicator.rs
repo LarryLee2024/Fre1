@@ -1,6 +1,6 @@
 // 回合提示面板：显示当前回合数、胜负判定
 
-use crate::turn::{AppState, GameOverState};
+use crate::core::turn::{AppState, GameOverState};
 use crate::ui::theme::UiTheme;
 use crate::ui::view_models::TurnInfoView;
 use bevy::prelude::*;
@@ -72,7 +72,7 @@ pub struct TurnIndicatorPlugin;
 
 impl Plugin for TurnIndicatorPlugin {
     fn build(&self, app: &mut App) {
-        use crate::turn::GameSet;
+        use crate::core::turn::GameSet;
         app.add_systems(
             OnEnter(AppState::InGame),
             spawn_turn_indicator.in_set(GameSet::Ui),

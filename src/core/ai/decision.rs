@@ -1,0 +1,211 @@
+use crate::core::attribute::{AttributeKind, Attributes};
+use crate::core::battle::CombatIntent;
+use crate::core::battle::manhattan_distance;
+use crate::core::character::{AiBehaviorId, Dead, Faction, GridPosition, Unit, UnitName};
+use crate::core::map::TerrainRegistry;
+use crate::core::map::runtime::{OccupancyGrid, TerrainGrid};
+use crate::core::map::{GameMap, TerrainCostRegistry, find_reachable_tiles};
+use crate::core::movement::events::{IntentSource, MovementIntent};
+use crate::core::skill::{SkillCooldowns, SkillRegistry, SkillSlots, effective_skill_range};
+use crate::core::tag::GameplayTags;
+use crate::core::turn::{AiTimer, TurnOrder, TurnPhase};
+use bevy::prelude::*;
+
+use super::behavior::AiBehaviorRegistry;
+use super::movement::select_move_coord;
+use super::skill_select::select_skill;
+use super::strategy::AiStrategyRegistry;
+use super::targeting::{UnitSnapshot, select_target_coord};
+
+/// 敌方 AI 系统：基于 TurnOrder 队列驱动
+///
+/// 当 TurnOrder 当前单位是敌方时，AI 计时器到期后自动决策
+/// 攻击效果通过统一的 Effect Pipeline 处理
+/// AI 仅设置 CombatIntent / MovingUnit，不直接执行效果（不变量1/2合规）
+pub fn enemy_ai_system(
+    mut commands: Commands,
+    time: Res<Time>,
+    mut ai_timer: ResMut<AiTimer>,
+    turn_order: Res<TurnOrder>,
+    turn_phase: Res<State<TurnPhase>>,
+    mut next_phase: ResMut<NextState<TurnPhase>>,
+    map: Res<GameMap>,
+    skill_registry: Res<SkillRegistry>,
+    ai_behavior_registry: Res<AiBehaviorRegistry>,
+    ai_strategy_registry: Res<AiStrategyRegistry>,
+    cost_registry: Res<TerrainCostRegistry>,
+    terrain_grid: Res<TerrainGrid>,
+    terrain_registry: Res<TerrainRegistry>,
+    occupancy: Res<OccupancyGrid>,
+    mut combat_intent: ResMut<CombatIntent>,
+    units: Query<
+        (
+            Entity,
+            &Unit,
+            &GridPosition,
+            &UnitName,
+            &Attributes,
+            &SkillSlots,
+            &SkillCooldowns,
+            &GameplayTags,
+            &AiBehaviorId,
+        ),
+        Without<Dead>,
+    >,
+) {
+    // 只在 SelectUnit 阶段执行
+    if *turn_phase.get() != TurnPhase::SelectUnit {
+        return;
+    }
+
+    // 从 TurnOrder 获取当前应该行动的单位
+    let current_entity = match turn_order.current_unit() {
+        Some(e) => e,
+        None => return,
+    };
+
+    // 检查当前单位是否是敌方
+    let current_faction = units
+        .get(current_entity)
+        .map(|(_, u, _, _, _, _, _, _, _)| u.faction)
+        .ok();
+    if current_faction != Some(Faction::Enemy) {
+        return;
+    }
+
+    // AI 计时器，延迟决策，让玩家能看见 AI 的"思考"过程
+    ai_timer.timer.tick(time.delta());
+    if !ai_timer.timer.just_finished() {
+        return;
+    }
+
+    // 收集所有单位快照（不变量3：通过 UnitSnapshot 避免借用冲突）
+    let snapshots: Vec<UnitSnapshot> = units
+        .iter()
+        .map(
+            |(e, u, gp, _name, attrs, skills, cooldowns, tags, ai_id)| UnitSnapshot {
+                entity: e,
+                faction: u.faction,
+                coord: gp.coord,
+                atk: attrs.get(AttributeKind::Attack),
+                hp: attrs.get(AttributeKind::Hp),
+                max_hp: attrs.get(AttributeKind::MaxHp),
+                mov: attrs.get(AttributeKind::MoveRange) as u32,
+                attack_range: attrs.get(AttributeKind::AttackRange) as u32,
+                acted: u.acted,
+                skill_ids: skills.skill_ids.clone(),
+                cooldowns: cooldowns.clone(),
+                ai_behavior_id: ai_id.0.clone(),
+                tags: tags.clone(),
+            },
+        )
+        .collect();
+
+    let player_positions: Vec<IVec2> = snapshots
+        .iter()
+        .filter(|s| s.faction == Faction::Player)
+        .map(|s| s.coord)
+        .collect();
+
+    if player_positions.is_empty() {
+        return;
+    }
+
+    // 获取当前行动的敌方单位快照
+    let Some(snapshot) = snapshots.iter().find(|s| s.entity == current_entity) else {
+        return;
+    };
+
+    // 获取 AI 行为配置
+    let behavior = ai_behavior_registry
+        .get(&snapshot.ai_behavior_id)
+        .unwrap_or_else(|| ai_behavior_registry.default_behavior());
+
+    // 根据目标策略选择目标
+    let target_coord = select_target_coord(
+        &snapshots,
+        snapshot.coord,
+        ai_strategy_registry.target_selector(&behavior.target_strategy),
+    );
+
+    // 根据单位标签解析地形成本计算器
+    let calculator = cost_registry.resolve_from_tags(&snapshot.tags);
+    let reachable = find_reachable_tiles(
+        snapshot.coord,
+        snapshot.mov,
+        &map,
+        &terrain_grid,
+        &terrain_registry,
+        &occupancy,
+        Some(snapshot.entity),
+        calculator,
+    );
+
+    // 根据移动策略选择移动位置
+    let best_coord = select_move_coord(
+        &reachable,
+        snapshot.coord,
+        target_coord,
+        snapshot.attack_range,
+        ai_strategy_registry.move_selector(&behavior.move_strategy),
+    );
+
+    // 根据技能策略选择技能
+    let skill_id = select_skill(
+        &snapshot.skill_ids,
+        &snapshot.cooldowns,
+        ai_strategy_registry.skill_selector(&behavior.skill_strategy),
+        &behavior.skill_priority,
+    );
+
+    let effective_range = skill_registry
+        .get(skill_id)
+        .map(|sd| effective_skill_range(sd, snapshot.attack_range))
+        .unwrap_or(snapshot.attack_range);
+
+    let attack_target = snapshots
+        .iter()
+        .filter(|s| s.faction == Faction::Player)
+        .find(|s| manhattan_distance(best_coord, s.coord) <= effective_range)
+        .map(|s| s.entity);
+
+    // 设置 CombatIntent，让 Effect Pipeline 处理攻击（不变量1/2合规）
+    if let Some(target_entity) = attack_target {
+        let target_coord = snapshots
+            .iter()
+            .find(|s| s.entity == target_entity)
+            .map(|s| s.coord)
+            .unwrap_or_default();
+
+        combat_intent.source_entity = Some(snapshot.entity);
+        combat_intent.target_coord = Some(target_coord);
+        combat_intent.skill_id = Some(skill_id.to_string());
+
+        if best_coord != snapshot.coord {
+            // 发送移动意图消息，由统一执行系统处理
+            commands.write_message(MovementIntent {
+                entity: snapshot.entity,
+                target_coord: best_coord,
+                source: IntentSource::Ai,
+            });
+        } else {
+            next_phase.set(TurnPhase::ExecuteAction);
+        }
+    } else {
+        // 没有攻击目标，待机
+        combat_intent.source_entity = Some(snapshot.entity);
+        combat_intent.target_coord = None;
+        combat_intent.skill_id = None;
+
+        if best_coord != snapshot.coord {
+            // 发送移动意图消息，由统一执行系统处理
+            commands.write_message(MovementIntent {
+                entity: snapshot.entity,
+                target_coord: best_coord,
+                source: IntentSource::Ai,
+            });
+        } else {
+            next_phase.set(TurnPhase::WaitAction);
+        }
+    }
+}

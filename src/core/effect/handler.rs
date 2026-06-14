@@ -2,14 +2,14 @@
 // 新增效果类型只需实现此 trait 并注册，无需修改核心代码
 // 遵循"Trait 描述规则，不描述内容"原则
 
-use crate::battle::DamageBreakdown;
-use crate::battle::{DamageApplied, HealApplied};
-use crate::buff::{ActiveBuffs, BuffRegistry, remove_all_debuffs};
-use crate::character::{Faction, GridPosition, Unit, UnitName};
 use crate::core::attribute::{AttributeKind, Attributes};
+use crate::core::battle::DamageBreakdown;
+use crate::core::battle::{DamageApplied, HealApplied};
+use crate::core::buff::{ActiveBuffs, BuffRegistry, remove_all_debuffs};
+use crate::core::character::{Faction, GridPosition, Unit, UnitName};
+use crate::core::map::TerrainRegistry;
 use crate::core::modifier_rule::ModifierEntry;
 use crate::core::tag::{GameplayTag, GameplayTags};
-use crate::map::TerrainRegistry;
 use bevy::ecs::query::QueryState;
 use bevy::prelude::*;
 use std::collections::HashMap;
@@ -179,7 +179,7 @@ impl<'w> ExecuteContext<'w> {
             if let Ok((mut buffs, mut attrs, mut tags)) =
                 query_state.get_mut(self.world, target_entity)
             {
-                crate::buff::apply_buff(
+                crate::core::buff::apply_buff(
                     &mut buffs,
                     &mut attrs,
                     &mut tags,
@@ -301,7 +301,7 @@ impl EffectHandler for DamageHandler {
 
         Some(PendingEffectData::Damage {
             amount,
-            is_skill: ctx.skill_id != crate::skill::BASIC_ATTACK_ID,
+            is_skill: ctx.skill_id != crate::core::skill::BASIC_ATTACK_ID,
             base_amount: None,
             modifiers: Vec::new(),
         })

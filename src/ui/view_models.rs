@@ -3,15 +3,15 @@
 
 use bevy::prelude::*;
 
-use crate::battle::CombatIntent;
-use crate::buff::ActiveBuffs;
-use crate::character::{
+use crate::core::attribute::{AttributeKind, Attributes};
+use crate::core::battle::CombatIntent;
+use crate::core::buff::ActiveBuffs;
+use crate::core::character::{
     Faction, GridPosition, Selected, TraitCollection, TraitRegistry, Unit, UnitClass, UnitName,
     UnitRace,
 };
-use crate::core::attribute::{AttributeKind, Attributes};
-use crate::skill::{SkillCooldowns, SkillRegistry, SkillSlots};
-use crate::turn::{TurnOrder, TurnPhase, TurnState};
+use crate::core::skill::{SkillCooldowns, SkillRegistry, SkillSlots};
+use crate::core::turn::{TurnOrder, TurnPhase, TurnState};
 
 // ── ViewModel 定义 ──
 
@@ -72,12 +72,16 @@ pub struct InventoryEntry {
     pub instance_id: u64,
 }
 
+use crate::shared::resettable::ResettableResource;
+
 /// 最后点击查看的单位实体（不限于 Selected，任何单位都可查看信息）
 #[derive(Resource, Reflect, Default, Debug, Clone, Copy)]
 #[reflect(Resource)]
 pub struct HoveredEntity {
     pub entity: Option<Entity>,
 }
+
+impl ResettableResource for HoveredEntity {}
 
 /// 选中单位的视图模型
 #[derive(Resource, Reflect, Default, Debug)]
@@ -139,6 +143,8 @@ impl SelectedUnitView {
     }
 }
 
+impl ResettableResource for SelectedUnitView {}
+
 /// 战斗预览视图模型
 #[derive(Resource, Reflect, Default, Debug)]
 #[reflect(Resource)]
@@ -149,6 +155,8 @@ pub struct CombatPreviewView {
     pub crit_rate: i32,
     pub is_lethal: bool,
 }
+
+impl ResettableResource for CombatPreviewView {}
 
 /// 回合信息视图模型（AGI驱动，不再分阵营阶段）
 #[derive(Resource, Reflect, Default, Debug)]
@@ -169,7 +177,7 @@ pub struct TurnInfoView {
 pub struct StageEntry {
     pub stage_id: String,
     pub level_name: String,
-    pub status: crate::campaign::progress::StageStatus,
+    pub status: crate::core::campaign::progress::StageStatus,
     pub level_description: String,
 }
 
@@ -221,14 +229,14 @@ pub fn update_selected_unit_view(
         Option<&UnitClass>,
         Option<&SkillCooldowns>,
         Option<&TraitCollection>,
-        Option<&crate::equipment::EquipmentSlots>,
-        Option<&crate::inventory::container::Container>,
+        Option<&crate::core::equipment::EquipmentSlots>,
+        Option<&crate::core::inventory::container::Container>,
         &GridPosition,
     )>,
     skill_registry: Res<SkillRegistry>,
     trait_registry: Res<TraitRegistry>,
-    equipment_registry: Res<crate::equipment::EquipmentRegistry>,
-    item_registry: Res<crate::inventory::definition::ItemRegistry>,
+    equipment_registry: Res<crate::core::equipment::EquipmentRegistry>,
+    item_registry: Res<crate::core::inventory::definition::ItemRegistry>,
     mut view: ResMut<SelectedUnitView>,
 ) {
     if !hovered.is_changed() && !view.is_added() {
@@ -390,10 +398,10 @@ fn fill_buffs(view: &mut SelectedUnitView, buffs: &ActiveBuffs) {
 
 fn fill_equipment(
     view: &mut SelectedUnitView,
-    equipment_slots: Option<&crate::equipment::EquipmentSlots>,
-    equipment_registry: &crate::equipment::EquipmentRegistry,
+    equipment_slots: Option<&crate::core::equipment::EquipmentSlots>,
+    equipment_registry: &crate::core::equipment::EquipmentRegistry,
 ) {
-    use crate::equipment::EquipmentSlot;
+    use crate::core::equipment::EquipmentSlot;
 
     let all_slots = [
         EquipmentSlot::MainHand,
@@ -438,8 +446,8 @@ fn fill_equipment(
 
 fn fill_inventory(
     view: &mut SelectedUnitView,
-    container: Option<&crate::inventory::container::Container>,
-    item_registry: &crate::inventory::definition::ItemRegistry,
+    container: Option<&crate::core::inventory::container::Container>,
+    item_registry: &crate::core::inventory::definition::ItemRegistry,
 ) {
     view.inventory = container
         .map(|c| {

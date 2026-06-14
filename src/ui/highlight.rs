@@ -2,21 +2,21 @@
 // 逻辑层通过 Message 通知，表现层自行决定如何高亮
 // 修复：所有函数接收 &UiTheme 参数，响应运行时主题变更
 
-use crate::character::{
+use crate::core::attribute::{AttributeKind, Attributes};
+use crate::core::character::{
     AttackRange, GridPosition, MovableRange, Selected, SelectionHighlight, Unit,
 };
-use crate::core::attribute::{AttributeKind, Attributes};
+use crate::core::map::GameMap;
+use crate::core::map::TerrainRegistry;
+use crate::core::map::runtime::{OccupancyGrid, TerrainGrid};
+use crate::core::skill::SkillSlots;
 use crate::core::tag::GameplayTags;
-use crate::map::GameMap;
-use crate::map::TerrainRegistry;
-use crate::map::runtime::{OccupancyGrid, TerrainGrid};
-use crate::skill::SkillSlots;
 use crate::ui::theme::UiTheme;
 use bevy::picking::prelude::Pickable;
 use bevy::prelude::*;
 
 /// 重新导出 clear_markers，方便调用方统一从 highlight 模块导入
-pub use crate::character::clear_markers;
+pub use crate::core::character::clear_markers;
 
 /// 清除选中状态和范围标记
 pub fn clear_selection(
@@ -52,10 +52,10 @@ pub fn show_move_range(
     )>,
     unit: &Unit,
     start_coord: IVec2,
-    calculator: &dyn crate::map::TerrainCostCalculator,
+    calculator: &dyn crate::core::map::TerrainCostCalculator,
     theme: &UiTheme,
 ) {
-    use crate::map::find_reachable_tiles;
+    use crate::core::map::find_reachable_tiles;
 
     let move_points = units
         .iter()
