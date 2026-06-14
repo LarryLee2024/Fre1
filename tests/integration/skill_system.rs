@@ -15,10 +15,10 @@
 // ================================================
 
 use tactical_rpg::core::attribute::{AttributeKind, Attributes};
-use tactical_rpg::core::tag::{GameplayTag, GameplayTags};
 use tactical_rpg::core::skill::{
     BASIC_ATTACK_ID, SkillCooldowns, SkillData, SkillSlots, SkillTargeting, effective_skill_range,
 };
+use tactical_rpg::core::tag::{GameplayTag, GameplayTags};
 
 use crate::common::fixtures::warrior_attrs;
 

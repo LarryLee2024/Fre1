@@ -16,8 +16,10 @@
 // ================================================
 
 use bevy::prelude::*;
-use tactical_rpg::core::buff::{ActiveBuffs, BuffData, apply_buff, remove_all_debuffs, remove_buff};
 use tactical_rpg::core::attribute::{AttributeKind, AttributeModifierDef, Attributes, ModifierOp};
+use tactical_rpg::core::buff::{
+    ActiveBuffs, BuffData, apply_buff, remove_all_debuffs, remove_buff,
+};
 use tactical_rpg::core::effect::calculate_damage_from_effect;
 use tactical_rpg::core::tag::GameplayTags;
 

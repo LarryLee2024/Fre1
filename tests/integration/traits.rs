@@ -17,16 +17,16 @@
 // ================================================
 
 use bevy::prelude::*;
-use tactical_rpg::core::character::{
-    PersistentTags, TraitCollection, TraitData, TraitEffect, TraitEffectHandlerRegistry,
-    TraitRegistry, TraitSource, TraitTrigger,
-};
 use tactical_rpg::core::attribute::{
     AttributeKind, AttributeModifierDef, AttributeModifierInstance, Attributes, ModifierOp,
     ModifierSource,
 };
-use tactical_rpg::core::tag::{GameplayTag, GameplayTags};
+use tactical_rpg::core::character::{
+    PersistentTags, TraitCollection, TraitData, TraitEffect, TraitEffectHandlerRegistry,
+    TraitRegistry, TraitSource, TraitTrigger,
+};
 use tactical_rpg::core::equipment::EquipmentSlot;
+use tactical_rpg::core::tag::{GameplayTag, GameplayTags};
 
 use crate::assert_attr_eq;
 use crate::assert_has_tag;

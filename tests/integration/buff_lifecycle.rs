@@ -14,12 +14,12 @@
 // ✅ 没有生成不在范围内的测试
 // ================================================
 
-use tactical_rpg::core::buff::{
-    ActiveBuffs, BuffData, BuffInstance, apply_buff, remove_all_debuffs, remove_buff,
-};
 use tactical_rpg::core::attribute::{
     AttributeKind, AttributeModifierDef, AttributeModifierInstance, Attributes, BuffInstanceId,
     ModifierOp, ModifierSource,
+};
+use tactical_rpg::core::buff::{
+    ActiveBuffs, BuffData, BuffInstance, apply_buff, remove_all_debuffs, remove_buff,
 };
 use tactical_rpg::core::tag::{GameplayTag, GameplayTags};
 

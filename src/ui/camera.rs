@@ -6,6 +6,7 @@ use crate::ui::focus::UiFocusState;
 use bevy::ecs::message::MessageReader;
 use bevy::input::mouse::MouseWheel;
 use bevy::prelude::*;
+use bevy_inspector_egui::bevy_egui::PrimaryEguiContext;
 
 /// 相机移动速度（像素/秒）
 const CAMERA_MOVE_SPEED: f32 = 300.0;
@@ -56,7 +57,12 @@ impl Plugin for CameraPlugin {
 /// 生成带控制器的相机
 pub fn spawn_camera(mut commands: Commands) {
     commands
-        .spawn((Camera2d, CameraController, CameraTarget::default()))
+        .spawn((
+            Camera2d,
+            CameraController,
+            CameraTarget::default(),
+            PrimaryEguiContext,
+        ))
         .insert(Name::new("GameCamera"));
 }
 

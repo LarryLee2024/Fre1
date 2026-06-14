@@ -8,6 +8,7 @@ pub mod level_select;
 pub mod main_menu;
 
 use bevy::prelude::*;
+use bevy_inspector_egui::bevy_egui::PrimaryEguiContext;
 
 use crate::core::campaign::progress::{CampaignProgress, StageStatus};
 use crate::core::campaign::registry::CampaignRegistry;
@@ -84,7 +85,7 @@ impl Plugin for ScreensPlugin {
 }
 
 fn spawn_menu_camera(mut commands: Commands) {
-    commands.spawn((Camera2d, MenuCamera, IsDefaultUiCamera));
+    commands.spawn((Camera2d, MenuCamera, IsDefaultUiCamera, PrimaryEguiContext));
 }
 
 fn despawn_menu_camera(mut commands: Commands, cameras: Query<Entity, With<MenuCamera>>) {

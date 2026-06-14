@@ -19,8 +19,8 @@ use tactical_rpg::core::battle::{BattleRecord, execute_effects};
 use tactical_rpg::core::buff::BuffRegistry;
 use tactical_rpg::core::character::{GridPosition, UnitName};
 use tactical_rpg::core::effect::{EffectQueue, PendingEffect, PendingEffectData};
-use tactical_rpg::core::registry_loader::RegistryLoader;
 use tactical_rpg::core::map::TerrainRegistry;
+use tactical_rpg::core::registry_loader::RegistryLoader;
 use tactical_rpg::core::skill::SkillSlots;
 
 use crate::common::fixtures::UnitBuilder;

@@ -15,8 +15,8 @@
 // ================================================
 
 use bevy::prelude::*;
-use tactical_rpg::core::character::{Faction, Unit};
 use tactical_rpg::core::attribute::{AttributeKind, Attributes};
+use tactical_rpg::core::character::{Faction, Unit};
 use tactical_rpg::core::turn::{
     ForceEndTurn, NeedsResolve, TurnEnded, TurnOrder, TurnPhase, TurnStarted, TurnState,
     turn_end_on_enter,

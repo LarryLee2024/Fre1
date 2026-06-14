@@ -4,7 +4,7 @@
 //! 负责注册 DefaultPlugins、核心/数据层插件、UI/Input、调试工具。
 
 use bevy::prelude::*;
-use bevy_inspector_egui::bevy_egui::EguiPlugin;
+use bevy_inspector_egui::bevy_egui::{EguiGlobalSettings, EguiPlugin};
 
 use crate::content::ContentPlugin;
 use crate::core::ai::{AiBehaviorPlugin, AiPlugin};
@@ -56,6 +56,11 @@ impl Plugin for AppPlugin {
                 }),
         )
         // egui 基础设施（调试面板 / World Inspector 依赖）
+        // 禁止自动挂载 PrimaryEguiContext 到第一个 Camera（相机销毁会带走 egui context）
+        .insert_resource(EguiGlobalSettings {
+            auto_create_primary_context: false,
+            ..default()
+        })
         .add_plugins(EguiPlugin::default())
         // Content 层 — 合约声明与加载协调
         .add_plugins(ContentPlugin)
