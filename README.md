@@ -77,11 +77,15 @@ assets/        # 二进制资源（字体、数据）
   data/        # 运行时数据
 
 docs/
-  architecture.md    # 架构规范（最高优先级）
-  domain/            # 领域规则文档
-  adr/               # 架构决策记录
-  testing/           # 测试计划
-  reviews/           # 代码审查记录
+  00-governance/     # 治理规则（AI 开发宪法、编码规范）
+  01-architecture/   # 架构设计（README.md 为最高优先级）
+  02-domain/         # 领域规则文档（按子领域分组）
+  03-technical/      # 技术实现文档（ECS、通信、性能）
+  04-data/           # 数据与配置文档
+  05-testing/        # 测试规范
+  06-ai/             # AI 协作流程
+  08-decisions/      # 架构决策记录（ADR）
+  09-history/        # 历史归档
 
 tests/         # 集成测试、场景测试、快照测试
 ```
