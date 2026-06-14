@@ -18,18 +18,18 @@
 // ================================================
 
 use bevy::prelude::*;
-use tactical_rpg::battle::{BattleEntry, BattleRecord, execute_effects};
-use tactical_rpg::buff::{ActiveBuffs, BuffData, BuffRegistry, apply_buff, resolve_status_effects};
-use tactical_rpg::character::{
+use tactical_rpg::core::battle::{BattleEntry, BattleRecord, execute_effects};
+use tactical_rpg::core::buff::{ActiveBuffs, BuffData, BuffRegistry, apply_buff, resolve_status_effects};
+use tactical_rpg::core::character::{
     Dead, Faction, GridPosition, PersistentTags, Selected, Unit, UnitName,
 };
 use tactical_rpg::core::attribute::{AttributeKind, AttributeModifierDef, Attributes, ModifierOp};
 use tactical_rpg::core::effect::{EffectQueue, PendingEffect, PendingEffectData};
 use tactical_rpg::core::registry_loader::RegistryLoader;
 use tactical_rpg::core::tag::{GameplayTag, GameplayTags};
-use tactical_rpg::map::TerrainRegistry;
-use tactical_rpg::skill::{SkillCooldowns, SkillSlots};
-use tactical_rpg::turn::NeedsResolve;
+use tactical_rpg::core::map::TerrainRegistry;
+use tactical_rpg::core::skill::{SkillCooldowns, SkillSlots};
+use tactical_rpg::core::turn::NeedsResolve;
 
 use crate::common::fixtures::UnitBuilder;
 
@@ -133,10 +133,10 @@ fn resolve_test_app() -> App {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, bevy::state::app::StatesPlugin));
     app.init_resource::<NeedsResolve>();
-    app.add_message::<tactical_rpg::battle::CharacterDied>();
-    app.add_message::<tactical_rpg::battle::DotApplied>();
-    app.add_message::<tactical_rpg::battle::HotApplied>();
-    app.add_message::<tactical_rpg::battle::StunApplied>();
+    app.add_message::<tactical_rpg::core::battle::CharacterDied>();
+    app.add_message::<tactical_rpg::core::battle::DotApplied>();
+    app.add_message::<tactical_rpg::core::battle::HotApplied>();
+    app.add_message::<tactical_rpg::core::battle::StunApplied>();
     app.add_message::<tactical_rpg::infrastructure::logging::events::BuffExpired>();
     app.add_systems(Update, resolve_status_effects);
     app

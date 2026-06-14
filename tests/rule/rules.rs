@@ -228,10 +228,10 @@ proptest! {
 // 容器堆叠合并属性测试
 // ══════════════════════════════════════════════════════════════
 
-use tactical_rpg::equipment::Rarity;
-use tactical_rpg::inventory::container::{Container, ContainerKind};
-use tactical_rpg::inventory::definition::{ItemDef, ItemRegistry, ItemType, UseEffect};
-use tactical_rpg::inventory::instance::{InstanceIdCounter, ItemStack};
+use tactical_rpg::core::equipment::Rarity;
+use tactical_rpg::core::inventory::container::{Container, ContainerKind};
+use tactical_rpg::core::inventory::definition::{ItemDef, ItemRegistry, ItemType, UseEffect};
+use tactical_rpg::core::inventory::instance::{InstanceIdCounter, ItemStack};
 
 fn make_item_def(id: &str, stack_size: u32) -> ItemDef {
     ItemDef {

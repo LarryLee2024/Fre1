@@ -18,9 +18,9 @@
 
 use std::collections::HashMap;
 
-use tactical_rpg::character::template::{FactionDef, UnitTemplateDef};
 use tactical_rpg::core::attribute::AttributeKind;
-use tactical_rpg::map::{LevelConfig, LevelConfigDef, TerrainRegistry};
+use tactical_rpg::core::character::template::{FactionDef, UnitTemplateDef};
+use tactical_rpg::core::map::{LevelConfig, LevelConfigDef, TerrainRegistry};
 
 // ══════════════════════════════════════════════════════════════
 // A1: enemy_goblin_leader RON 反序列化
@@ -39,7 +39,7 @@ fn enemy_goblin_leader_deserialization() {
     // Given
     let path = concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/assets/units/enemy_goblin_leader.ron"
+        "/content/characters/enemy_goblin_leader.ron"
     );
     let bytes = std::fs::read(path).expect("读取 enemy_goblin_leader.ron 失败");
 
@@ -134,7 +134,7 @@ fn enemy_goblin_leader_deserialization() {
 #[test]
 fn tutorial_level_deserialization_and_conversion() {
     // Given
-    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/assets/maps/tutorial.ron");
+    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/content/stages/tutorial.ron");
     let bytes = std::fs::read(path).expect("读取 tutorial.ron 失败");
 
     // When - 反序列化 LevelConfigDef
@@ -235,7 +235,7 @@ fn player_archer_skill_ids_contains_pierce() {
     // Given
     let path = concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/assets/units/player_archer.ron"
+        "/content/characters/player_archer.ron"
     );
     let bytes = std::fs::read(path).expect("读取 player_archer.ron 失败");
 
@@ -278,7 +278,10 @@ fn player_archer_skill_ids_contains_pierce() {
 #[test]
 fn player_mage_skill_ids_contains_heal() {
     // Given
-    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/assets/units/player_mage.ron");
+    let path = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/content/characters/player_mage.ron"
+    );
     let bytes = std::fs::read(path).expect("读取 player_mage.ron 失败");
 
     // When
@@ -306,12 +309,12 @@ fn player_mage_skill_ids_contains_heal() {
 /// Assertions: id, name, stages
 #[test]
 fn campaign_001_deserialization() {
-    use tactical_rpg::campaign::def::CampaignDef;
+    use tactical_rpg::core::campaign::def::CampaignDef;
 
     // Given
     let path = concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/assets/campaigns/campaign_001.ron"
+        "/content/campaigns/campaign_001.ron"
     );
     let bytes = std::fs::read(path).expect("读取 campaign_001.ron 失败");
 

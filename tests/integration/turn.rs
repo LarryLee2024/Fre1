@@ -15,9 +15,9 @@
 // ================================================
 
 use bevy::prelude::*;
-use tactical_rpg::character::{Faction, Unit};
+use tactical_rpg::core::character::{Faction, Unit};
 use tactical_rpg::core::attribute::{AttributeKind, Attributes};
-use tactical_rpg::turn::{
+use tactical_rpg::core::turn::{
     ForceEndTurn, NeedsResolve, TurnEnded, TurnOrder, TurnPhase, TurnStarted, TurnState,
     turn_end_on_enter,
 };
@@ -32,7 +32,7 @@ fn setup_turn_test_app() -> App {
         .init_state::<TurnPhase>()
         .init_resource::<TurnState>()
         .init_resource::<TurnOrder>()
-        .init_resource::<tactical_rpg::turn::AiTimer>()
+        .init_resource::<tactical_rpg::core::turn::AiTimer>()
         .init_resource::<NeedsResolve>()
         .add_message::<TurnStarted>()
         .add_message::<TurnEnded>()

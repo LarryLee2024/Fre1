@@ -16,8 +16,8 @@
 
 use bevy::prelude::*;
 use std::collections::HashMap;
-use tactical_rpg::battle::manhattan_distance;
-use tactical_rpg::map::{
+use tactical_rpg::core::battle::manhattan_distance;
+use tactical_rpg::core::map::{
     FlyingCostCalculator, GameMap, GroundCostCalculator, OccupancyGrid, TerrainGrid,
     TerrainRegistry, find_reachable_tiles, reconstruct_path,
 };

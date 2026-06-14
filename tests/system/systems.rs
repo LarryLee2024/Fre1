@@ -15,12 +15,12 @@
 // ================================================
 
 use bevy::prelude::*;
-use tactical_rpg::battle::{
+use tactical_rpg::core::battle::{
     CharacterDied, DotApplied, HotApplied, StunApplied, execute_effects, trigger_on_attack_traits,
     trigger_on_kill_traits,
 };
-use tactical_rpg::buff::{ActiveBuffs, BuffInstance, BuffRegistry, resolve_status_effects};
-use tactical_rpg::character::{
+use tactical_rpg::core::buff::{ActiveBuffs, BuffInstance, BuffRegistry, resolve_status_effects};
+use tactical_rpg::core::character::{
     Faction, GridPosition, PersistentTags, TraitCollection, TraitData, TraitEffect,
     TraitEffectHandlerRegistry, TraitRegistry, TraitSource, TraitTrigger, Unit, UnitName,
 };
@@ -28,18 +28,18 @@ use tactical_rpg::core::attribute::{AttributeKind, Attributes, BuffInstanceId};
 use tactical_rpg::core::effect::{EffectQueue, PendingEffectData};
 use tactical_rpg::core::registry_loader::RegistryLoader;
 use tactical_rpg::core::tag::{GameplayTag, GameplayTags};
-use tactical_rpg::equipment::{
+use tactical_rpg::core::equipment::{
     EquipItem, EquipmentRegistry, EquipmentSlot, EquipmentSlots, Rarity, UnequipItem,
 };
-use tactical_rpg::inventory::container::{Container, ContainerKind};
-use tactical_rpg::inventory::definition::{ItemDef, ItemRegistry, ItemType, UseEffect};
-use tactical_rpg::inventory::instance::{InstanceIdCounter, ItemStack};
-use tactical_rpg::inventory::transfer::TransferItem;
-use tactical_rpg::inventory::use_item::UseItem;
-use tactical_rpg::map::TerrainRegistry;
-use tactical_rpg::skill::SkillCooldowns;
-use tactical_rpg::skill::SkillSlots;
-use tactical_rpg::turn::NeedsResolve;
+use tactical_rpg::core::inventory::container::{Container, ContainerKind};
+use tactical_rpg::core::inventory::definition::{ItemDef, ItemRegistry, ItemType, UseEffect};
+use tactical_rpg::core::inventory::instance::{InstanceIdCounter, ItemStack};
+use tactical_rpg::core::inventory::transfer::TransferItem;
+use tactical_rpg::core::inventory::use_item::UseItem;
+use tactical_rpg::core::map::TerrainRegistry;
+use tactical_rpg::core::skill::SkillCooldowns;
+use tactical_rpg::core::skill::SkillSlots;
+use tactical_rpg::core::turn::NeedsResolve;
 
 use crate::common::app_builder::{combat_app, equipment_app, full_battle_app};
 use crate::common::combat_helpers::{deal_damage, deal_heal, get_hp, tick};

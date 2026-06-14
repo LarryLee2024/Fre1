@@ -16,7 +16,7 @@
 
 use tactical_rpg::core::attribute::{AttributeKind, Attributes};
 use tactical_rpg::core::tag::{GameplayTag, GameplayTags};
-use tactical_rpg::skill::{SkillCondition, SkillData, SkillTargeting, SkillUseError};
+use tactical_rpg::core::skill::{SkillCondition, SkillData, SkillTargeting, SkillUseError};
 
 use crate::common::fixtures::UnitBuilder;
 

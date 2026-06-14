@@ -15,15 +15,15 @@
 // ================================================
 
 use bevy::prelude::*;
-use tactical_rpg::buff::ActiveBuffs;
+use tactical_rpg::core::buff::ActiveBuffs;
 use tactical_rpg::core::attribute::{
     AttributeKind, AttributeModifierInstance, Attributes, ModifierOp,
 };
-use tactical_rpg::equipment::Rarity;
-use tactical_rpg::inventory::container::Container;
-use tactical_rpg::inventory::definition::{ItemDef, ItemRegistry, ItemType, UseEffect};
-use tactical_rpg::inventory::instance::{InstanceIdCounter, ItemStack};
-use tactical_rpg::inventory::use_item::UseItem;
+use tactical_rpg::core::equipment::Rarity;
+use tactical_rpg::core::inventory::container::Container;
+use tactical_rpg::core::inventory::definition::{ItemDef, ItemRegistry, ItemType, UseEffect};
+use tactical_rpg::core::inventory::instance::{InstanceIdCounter, ItemStack};
+use tactical_rpg::core::inventory::use_item::UseItem;
 
 use crate::common::app_builder::combat_app;
 use crate::common::fixtures::UnitBuilder;

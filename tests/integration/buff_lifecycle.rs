@@ -14,7 +14,7 @@
 // ✅ 没有生成不在范围内的测试
 // ================================================
 
-use tactical_rpg::buff::{
+use tactical_rpg::core::buff::{
     ActiveBuffs, BuffData, BuffInstance, apply_buff, remove_all_debuffs, remove_buff,
 };
 use tactical_rpg::core::attribute::{

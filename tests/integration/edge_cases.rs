@@ -13,7 +13,7 @@
 // ✅ 没有生成不在范围内的测试
 // ================================================
 
-use tactical_rpg::buff::{ActiveBuffs, BuffData, apply_buff, remove_buff};
+use tactical_rpg::core::buff::{ActiveBuffs, BuffData, apply_buff, remove_buff};
 use tactical_rpg::core::attribute::{
     AttributeKind, AttributeModifierDef, Attributes, BuffInstanceId, ModifierOp,
 };
@@ -67,7 +67,7 @@ fn 治疗_满血时不增加() {
         source_attrs: source,
         target_attrs: target,
         terrain_defense_bonus: 0,
-        buff_registry: tactical_rpg::buff::BuffRegistry::default(),
+        buff_registry: tactical_rpg::core::buff::BuffRegistry::default(),
     };
 
     let def = EffectDef::Heal { amount: 10 };

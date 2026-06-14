@@ -15,17 +15,17 @@
 // ================================================
 
 use bevy::prelude::*;
-use tactical_rpg::character::{PersistentTags, TraitCollection, TraitSource};
+use tactical_rpg::core::character::{PersistentTags, TraitCollection, TraitSource};
 use tactical_rpg::core::attribute::{AttributeKind, AttributeModifierDef, Attributes, ModifierOp};
 use tactical_rpg::core::registry_loader::RegistryLoader;
 use tactical_rpg::core::tag::{GameplayTag, GameplayTags, TagName};
-use tactical_rpg::equipment::{
+use tactical_rpg::core::equipment::{
     EquipItem, EquipmentDef, EquipmentRegistry, EquipmentRequirement, EquipmentSlot,
     EquipmentSlots, Rarity, UnequipItem,
 };
-use tactical_rpg::inventory::container::Container;
-use tactical_rpg::inventory::definition::{ItemDef, ItemRegistry, ItemType};
-use tactical_rpg::inventory::instance::{InstanceIdCounter, ItemInstance, ItemStack};
+use tactical_rpg::core::inventory::container::Container;
+use tactical_rpg::core::inventory::definition::{ItemDef, ItemRegistry, ItemType};
+use tactical_rpg::core::inventory::instance::{InstanceIdCounter, ItemInstance, ItemStack};
 
 use crate::assert_attr_eq;
 use crate::assert_has_tag;

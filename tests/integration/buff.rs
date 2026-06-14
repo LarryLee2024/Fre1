@@ -18,15 +18,15 @@
 // ================================================
 
 use bevy::prelude::*;
-use tactical_rpg::buff::{ActiveBuffs, BuffData, BuffRegistry, apply_buff, resolve_status_effects};
-use tactical_rpg::character::{GridPosition, UnitName};
+use tactical_rpg::core::buff::{ActiveBuffs, BuffData, BuffRegistry, apply_buff, resolve_status_effects};
+use tactical_rpg::core::character::{GridPosition, UnitName};
 use tactical_rpg::core::attribute::{AttributeKind, AttributeModifierDef, Attributes, ModifierOp};
 use tactical_rpg::core::effect::{EffectQueue, PendingEffect, PendingEffectData};
 use tactical_rpg::core::registry_loader::RegistryLoader;
 use tactical_rpg::core::tag::{GameplayTag, GameplayTags};
-use tactical_rpg::map::TerrainRegistry;
-use tactical_rpg::skill::SkillCooldowns;
-use tactical_rpg::turn::NeedsResolve;
+use tactical_rpg::core::map::TerrainRegistry;
+use tactical_rpg::core::skill::SkillCooldowns;
+use tactical_rpg::core::turn::NeedsResolve;
 
 use crate::common::fixtures::UnitBuilder;
 
@@ -103,12 +103,12 @@ fn buff_test_app() -> App {
     let mut app = crate::common::app_builder::combat_app();
 
     // 注册 Message
-    app.add_message::<tactical_rpg::battle::CharacterDied>()
-        .add_message::<tactical_rpg::battle::DamageApplied>()
-        .add_message::<tactical_rpg::battle::HealApplied>()
-        .add_message::<tactical_rpg::battle::DotApplied>()
-        .add_message::<tactical_rpg::battle::HotApplied>()
-        .add_message::<tactical_rpg::battle::StunApplied>();
+    app.add_message::<tactical_rpg::core::battle::CharacterDied>()
+        .add_message::<tactical_rpg::core::battle::DamageApplied>()
+        .add_message::<tactical_rpg::core::battle::HealApplied>()
+        .add_message::<tactical_rpg::core::battle::DotApplied>()
+        .add_message::<tactical_rpg::core::battle::HotApplied>()
+        .add_message::<tactical_rpg::core::battle::StunApplied>();
 
     // 注册表
     let mut buff_registry = test_buff_registry();
@@ -120,7 +120,7 @@ fn buff_test_app() -> App {
     app.init_resource::<NeedsResolve>();
 
     // 系统
-    app.add_systems(Update, tactical_rpg::battle::execute_effects);
+    app.add_systems(Update, tactical_rpg::core::battle::execute_effects);
     app.add_systems(Update, resolve_status_effects);
 
     app

@@ -2,5 +2,5 @@
 
 #[path = "common/mod.rs"]
 mod common;
-#[path = "scenario/scenarios.rs"]
+#[path = "e2e/scenarios.rs"]
 mod scenarios;

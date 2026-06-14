@@ -13,13 +13,13 @@
 // 标准测试单位（§7.1）：Unit_001/Unit_002/Unit_003
 
 use bevy::prelude::*;
-use tactical_rpg::buff::ActiveBuffs;
-use tactical_rpg::character::TraitCollection;
-use tactical_rpg::character::{Faction, PersistentTags, Unit, UnitId, UnitName};
 use tactical_rpg::core::attribute::{AttributeKind, Attributes};
+use tactical_rpg::core::buff::ActiveBuffs;
+use tactical_rpg::core::character::TraitCollection;
+use tactical_rpg::core::character::{Faction, PersistentTags, Unit, UnitId, UnitName};
+use tactical_rpg::core::equipment::EquipmentSlots;
+use tactical_rpg::core::inventory::container::Container;
 use tactical_rpg::core::tag::GameplayTags;
-use tactical_rpg::equipment::EquipmentSlots;
-use tactical_rpg::inventory::container::Container;
 
 /// 角色构建器：流式 API 构建测试角色
 pub struct UnitBuilder {

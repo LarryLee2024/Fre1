@@ -356,7 +356,7 @@ fn 伤害预览与generate一致() {
         source_attrs: warrior_attrs(),
         target_attrs: target,
         terrain_defense_bonus: 0,
-        buff_registry: tactical_rpg::buff::BuffRegistry::default(),
+        buff_registry: tactical_rpg::core::buff::BuffRegistry::default(),
     };
 
     let def = EffectDef::Damage {
@@ -396,7 +396,7 @@ fn 治疗预览不超过最大hp() {
         source_attrs: warrior_attrs(),
         target_attrs: target,
         terrain_defense_bonus: 0,
-        buff_registry: tactical_rpg::buff::BuffRegistry::default(),
+        buff_registry: tactical_rpg::core::buff::BuffRegistry::default(),
     };
 
     let def = EffectDef::Heal { amount: 8 };
@@ -427,7 +427,7 @@ fn 伤害预览致死标记() {
         source_attrs: source,
         target_attrs: target,
         terrain_defense_bonus: 0,
-        buff_registry: tactical_rpg::buff::BuffRegistry::default(),
+        buff_registry: tactical_rpg::core::buff::BuffRegistry::default(),
     };
 
     let def = EffectDef::Damage {

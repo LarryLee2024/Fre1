@@ -16,7 +16,7 @@
 
 use tactical_rpg::core::attribute::{AttributeKind, Attributes};
 use tactical_rpg::core::tag::{GameplayTag, GameplayTags};
-use tactical_rpg::skill::{
+use tactical_rpg::core::skill::{
     BASIC_ATTACK_ID, SkillCooldowns, SkillData, SkillSlots, SkillTargeting, effective_skill_range,
 };
 
@@ -67,7 +67,7 @@ fn fireball() -> SkillData {
         targeting: SkillTargeting::SingleEnemy,
         effects: vec![],
         tags: vec![],
-        conditions: vec![tactical_rpg::skill::SkillCondition::MpCost(8)],
+        conditions: vec![tactical_rpg::core::skill::SkillCondition::MpCost(8)],
         cooldown: 2,
         priority: 10,
     }
@@ -100,8 +100,8 @@ fn mage_only_skill() -> SkillData {
         effects: vec![],
         tags: vec![],
         conditions: vec![
-            tactical_rpg::skill::SkillCondition::RequireTag(GameplayTag::MAGE),
-            tactical_rpg::skill::SkillCondition::MpCost(10),
+            tactical_rpg::core::skill::SkillCondition::RequireTag(GameplayTag::MAGE),
+            tactical_rpg::core::skill::SkillCondition::MpCost(10),
         ],
         cooldown: 0,
         priority: 20,
@@ -118,7 +118,7 @@ fn berserker_skill() -> SkillData {
         targeting: SkillTargeting::SingleEnemy,
         effects: vec![],
         tags: vec![],
-        conditions: vec![tactical_rpg::skill::SkillCondition::HpBelow(0.3)],
+        conditions: vec![tactical_rpg::core::skill::SkillCondition::HpBelow(0.3)],
         cooldown: 0,
         priority: 30,
     }
@@ -134,7 +134,7 @@ fn purify_skill() -> SkillData {
         targeting: SkillTargeting::SingleAlly,
         effects: vec![],
         tags: vec![],
-        conditions: vec![tactical_rpg::skill::SkillCondition::TargetRequireTag(
+        conditions: vec![tactical_rpg::core::skill::SkillCondition::TargetRequireTag(
             GameplayTag::DEBUFF,
         )],
         cooldown: 0,
@@ -234,7 +234,7 @@ fn 战士_MP不足无法释放火球() {
     let result = skill.can_use(&attrs, &tags, None, 0);
     assert_eq!(
         result,
-        Err(tactical_rpg::skill::SkillUseError::InsufficientMp {
+        Err(tactical_rpg::core::skill::SkillUseError::InsufficientMp {
             required: 8,
             current: 3
         })
@@ -270,7 +270,7 @@ fn 战士_缺少MAGE标签无法释放奥术冲击() {
     let result = skill.can_use(&attrs, &tags, None, 0);
     assert_eq!(
         result,
-        Err(tactical_rpg::skill::SkillUseError::MissingTag {
+        Err(tactical_rpg::core::skill::SkillUseError::MissingTag {
             tag: GameplayTag::MAGE
         })
     );
@@ -309,7 +309,7 @@ fn 狂暴_HP充足时不可用() {
     let result = skill.can_use(&attrs, &tags, None, 0);
     assert_eq!(
         result,
-        Err(tactical_rpg::skill::SkillUseError::HpNotBelow { threshold: 0.3 })
+        Err(tactical_rpg::core::skill::SkillUseError::HpNotBelow { threshold: 0.3 })
     );
 }
 
@@ -347,7 +347,7 @@ fn 净化_目标无DEBUFF标签时不可用() {
     let result = skill.can_use(&attrs, &tags, Some(&target_tags), 0);
     assert_eq!(
         result,
-        Err(tactical_rpg::skill::SkillUseError::TargetMissingTag {
+        Err(tactical_rpg::core::skill::SkillUseError::TargetMissingTag {
             tag: GameplayTag::DEBUFF
         })
     );
@@ -473,7 +473,7 @@ fn 战士_缺少标签且MP不足_第一个条件失败() {
     let result = skill.can_use(&attrs, &tags, None, 0);
     assert_eq!(
         result,
-        Err(tactical_rpg::skill::SkillUseError::MissingTag {
+        Err(tactical_rpg::core::skill::SkillUseError::MissingTag {
             tag: GameplayTag::MAGE
         })
     );

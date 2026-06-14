@@ -18,14 +18,14 @@
 // ================================================
 
 use bevy::prelude::*;
-use tactical_rpg::character::{Faction, GridPosition, MovingUnit, Unit};
 use tactical_rpg::core::attribute::{AttributeKind, Attributes};
-use tactical_rpg::core::tag::GameplayTags;
-use tactical_rpg::map::{
+use tactical_rpg::core::character::{Faction, GridPosition, MovingUnit, Unit};
+use tactical_rpg::core::map::{
     GameMap, OccupancyGrid, TerrainCostRegistry, TerrainGrid, TerrainRegistry,
 };
-use tactical_rpg::turn::TurnPhase;
-use tactical_rpg::ui::events::{IntentSource, MovementIntent};
+use tactical_rpg::core::movement::events::{IntentSource, MovementIntent};
+use tactical_rpg::core::tag::GameplayTags;
+use tactical_rpg::core::turn::TurnPhase;
 
 use crate::common::fixtures::UnitBuilder;
 
@@ -51,7 +51,7 @@ fn setup_movement_execution_app() -> App {
     // 注册移动执行系统
     app.add_systems(
         bevy::prelude::Update,
-        tactical_rpg::character::movement_execution_system,
+        tactical_rpg::core::character::movement_execution_system,
     );
 
     app

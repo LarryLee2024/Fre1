@@ -15,13 +15,13 @@
 // ================================================
 
 use bevy::prelude::*;
-use tactical_rpg::battle::{BattleRecord, execute_effects};
-use tactical_rpg::buff::BuffRegistry;
-use tactical_rpg::character::{GridPosition, UnitName};
+use tactical_rpg::core::battle::{BattleRecord, execute_effects};
+use tactical_rpg::core::buff::BuffRegistry;
+use tactical_rpg::core::character::{GridPosition, UnitName};
 use tactical_rpg::core::effect::{EffectQueue, PendingEffect, PendingEffectData};
 use tactical_rpg::core::registry_loader::RegistryLoader;
-use tactical_rpg::map::TerrainRegistry;
-use tactical_rpg::skill::SkillSlots;
+use tactical_rpg::core::map::TerrainRegistry;
+use tactical_rpg::core::skill::SkillSlots;
 
 use crate::common::fixtures::UnitBuilder;
 
@@ -46,8 +46,8 @@ fn golden_battle_app() -> App {
     app.add_systems(
         Update,
         execute_effects
-            .before(tactical_rpg::battle::record_damage)
-            .before(tactical_rpg::battle::record_character_died),
+            .before(tactical_rpg::core::battle::record_damage)
+            .before(tactical_rpg::core::battle::record_character_died),
     );
     app
 }

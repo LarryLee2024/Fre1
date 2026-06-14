@@ -16,11 +16,11 @@
 // ================================================
 
 use bevy::prelude::*;
-use tactical_rpg::equipment::Rarity;
-use tactical_rpg::inventory::container::{Container, ContainerKind};
-use tactical_rpg::inventory::definition::{ItemDef, ItemRegistry, ItemType};
-use tactical_rpg::inventory::instance::{InstanceIdCounter, ItemStack};
-use tactical_rpg::inventory::transfer::{ContainerResult, TransferItem, transfer_item};
+use tactical_rpg::core::equipment::Rarity;
+use tactical_rpg::core::inventory::container::{Container, ContainerKind};
+use tactical_rpg::core::inventory::definition::{ItemDef, ItemRegistry, ItemType};
+use tactical_rpg::core::inventory::instance::{InstanceIdCounter, ItemStack};
+use tactical_rpg::core::inventory::transfer::{ContainerResult, TransferItem, transfer_item};
 
 use crate::common::app_builder::combat_app;
 

@@ -26,12 +26,12 @@ use std::collections::HashMap;
 
 use bevy::prelude::*;
 
-use tactical_rpg::assets::CnFont;
-use tactical_rpg::campaign::def::{CampaignDef, StageDef};
-use tactical_rpg::campaign::progress::{CampaignProgress, StageStatus};
-use tactical_rpg::campaign::registry::CampaignRegistry;
-use tactical_rpg::map::{LevelConfig, LevelRegistry};
-use tactical_rpg::turn::{AppState, GameOverState, TurnState};
+use tactical_rpg::infrastructure::assets::CnFont;
+use tactical_rpg::core::campaign::def::{CampaignDef, StageDef};
+use tactical_rpg::core::campaign::progress::{CampaignProgress, StageStatus};
+use tactical_rpg::core::campaign::registry::CampaignRegistry;
+use tactical_rpg::core::map::{LevelConfig, LevelRegistry};
+use tactical_rpg::core::turn::{AppState, GameOverState, TurnState};
 use tactical_rpg::ui::events::UiCommand;
 use tactical_rpg::ui::screens::ScreensPlugin;
 use tactical_rpg::ui::screens::game_over::GameOverScreen;
