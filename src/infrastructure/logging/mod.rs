@@ -2,8 +2,7 @@
 ///
 /// 业务代码触发 DomainEvent → LogObserver 监听 → 输出结构化 tracing 日志。
 ///
-/// 业务领域事件统一从 shared::event 注册，基础设施事件保留在 events 子模块。
-pub mod events;
+/// 所有事件统一从 shared::event 注册。
 mod observer;
 
 use bevy::prelude::*;

@@ -15,7 +15,7 @@ use crate::shared::event::inventory;
 use crate::shared::event::skill;
 use crate::shared::event::turn;
 
-use super::events::{ConfigLoaded, SnapshotCreated};
+use crate::shared::event::infra::{ConfigLoaded, SnapshotCreated};
 
 // ==================== 战斗事件日志 ====================
 
