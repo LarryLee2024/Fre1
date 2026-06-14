@@ -255,6 +255,6 @@ let _ = to_container;
 # 7. 参考文档
 
 - `docs/test_spec.md` - 测试宪法 v3.1
-- `.trae/rules/test_spec精简版.md` - 测试规范精简版
+- `.trae/rules/测试规范.md` - 测试规范
 - `docs/domain/ai_rules_v2.md` - AI 领域规则
 - `docs/testing/reviews/ai_test_review.md` - AI 模块测试评审报告

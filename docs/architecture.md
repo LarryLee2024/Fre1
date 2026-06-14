@@ -283,6 +283,7 @@ inventory/
 map/
 turn/
 ai/
+movement/
 ```
 
 禁止：

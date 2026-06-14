@@ -5,7 +5,7 @@
 **版本**: 1.0  
 **日期**: 2026-06-14  
 **范围**: 157 个 Rust 源文件（33,771 行）从扁平结构迁移到七层架构  
-**预估工期**: 30 个工作日（8 个 Phase）  
+**预估工期**: 30 个工作日（7 个执行阶段 Phase 0-6，外加 Phase 7-8 为未来规划）  
 **关键约束**: 每个 Phase 必须保持项目可编译、可运行、所有测试通过
 
 ---
@@ -60,7 +60,7 @@
 - `docs/architecture/error-architecture.md` — 三层错误模型
 - `docs/architecture/content-pipeline.md` — Content/Core 分离
 - `docs/architecture/plugin-design.md` — Plugin 注册顺序
-- `docs/AI开发宪法.md` — AI 开发最高约束
+- `docs/AI开发宪法完整版.md` — AI 开发最高约束
 
 ---
 
@@ -68,7 +68,7 @@
 
 ### 核心决策
 
-**采用分阶段迁移策略，共 8 个 Phase，每个 Phase 保持项目可编译运行。**
+**采用分阶段迁移策略，共 7 个执行阶段（Phase 0-6），Phase 7-8 为未来规划。每个 Phase 保持项目可编译运行。**
 
 迁移顺序遵循**依赖图自底向上**原则：
 ```
@@ -289,8 +289,8 @@ src/core/
 ├── registry_loader.rs         # 现有（保留）
 ├── snapshot.rs                # 现有（保留）
 ├── tag.rs                     # 现有 GameplayTags（保留）
-├── tag_def.rs                 # 现有 TagDefPlugin（保留）
-└── attribute_def.rs           # 现有 AttributeDefPlugin（保留）
+├── tag_def.rs                 # → 迁至 content/tag_def.rs（见 ADR-002 Debt 4）
+└── attribute_def.rs           # → 迁至 content/attribute_def.rs（见 ADR-002 Debt 4）
 ```
 
 **迁移来源**: `src/battle/`, `src/character/`, `src/skill/`, `src/buff/`, `src/equipment/`, `src/inventory/`, `src/ai/`, `src/map/`, `src/turn/`, `src/campaign/`
@@ -1067,7 +1067,7 @@ pub enum InfrastructureError {
 | `assets/maps/*.ron` | `content/stages/*.ron` | 1 | LevelRegistry |
 | `assets/traits/*.ron` | `content/classes/*.ron` | 5 | TraitRegistry |
 | `assets/definitions/*.ron` | `content/definitions/*.ron` | 2 | AttributeDefRegistry, TagDefRegistry | → 参见 ADR-004 for authoritative content paths |
-| `assets/rules/*.ron` | `content/formulas/*.ron` | 1 | ModifierRuleRegistry | → 参见 ADR-004 for authoritative content paths |
+| `assets/rules/*.ron` | `content/modifiers/*.ron` | 1 | ModifierRuleRegistry | → 参见 ADR-004 for authoritative content paths |
 | `assets/settings.ron` | 保留 `assets/settings.ron` | 1 | GameSettings | → 参见 ADR-004 for authoritative content paths |
 
 **总计**: 37 个 RON 文件需要迁移
@@ -1096,7 +1096,7 @@ pub enum InfrastructureError {
 5. 全局搜索 `assets/ai/` → 替换为 `content/ai_behaviors/`
 6. 全局搜索 `assets/maps/` → 替换为 `content/stages/`
 7. 全局搜索 `assets/traits/` → 替换为 `content/classes/`
-8. 全局搜索 `assets/rules/` → 替换为 `content/formulas/`
+8. 全局搜索 `assets/rules/` → 替换为 `content/modifiers/`
 9. 验证游戏正常运行
 
 #### 5.5 实现 RegistryLoader（Day 22-23）
