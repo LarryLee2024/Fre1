@@ -67,48 +67,12 @@ impl GameplayTag {
     pub const BOW: Self = Self(1 << 22);
     pub const STAFF: Self = Self(1 << 23);
 
-    /// 标签中文名
-    pub fn label(&self) -> &'static str {
-        match *self {
-            Self::FIRE => "火焰",
-            Self::ICE => "冰霜",
-            Self::POISON => "毒素",
-            Self::STUN => "晕眩",
-            Self::BURN => "燃烧",
-            Self::REGEN => "恢复",
-            Self::MELEE => "近战",
-            Self::RANGED => "远程",
-            Self::WARRIOR => "战士",
-            Self::ARCHER => "弓手",
-            Self::MAGE => "法师",
-            Self::FLYING => "飞行",
-            Self::MOUNTED => "骑兵",
-            Self::SWIMMING => "水生",
-            Self::CONSUMABLE => "消耗品",
-            Self::AMMO => "弹药",
-            Self::MATERIAL => "材料",
-            Self::CURRENCY => "货币",
-            Self::QUEST_ITEM => "任务物品",
-            Self::HEALING => "治疗",
-            Self::POTION => "药水",
-            Self::SCROLL => "卷轴",
-            Self::FOOD => "食物",
-            Self::SKILL_ACTIVE => "主动技能",
-            Self::SKILL_PASSIVE => "被动技能",
-            Self::BUFF => "增益",
-            Self::DEBUFF => "减益",
-            Self::HEAVY_ARMOR => "重甲",
-            Self::LIGHT_ARMOR => "轻甲",
-            Self::SHIELD => "盾牌",
-            Self::TWO_HANDED => "双手",
-            Self::MARTIAL => "军用",
-            Self::SIMPLE => "简易",
-            Self::SWORD => "剑",
-            Self::AXE => "斧",
-            Self::BOW => "弓",
-            Self::STAFF => "法杖",
-            _ => "未知",
-        }
+    /// 返回位掩码中已使用的 bit 数量
+    pub fn used_bits() -> u32 {
+        TagName::ALL
+            .iter()
+            .map(|name| name.to_tag().0.count_ones())
+            .sum()
     }
 }
 
@@ -116,6 +80,16 @@ impl GameplayTag {
 #[derive(Component, Reflect, Default, Debug, Clone)]
 #[reflect(Component)]
 pub struct GameplayTags(pub u64);
+
+/// 持久化标签（不被 rebuild 丢失，支持 Trait + Equipment 两层）
+#[derive(Component, Reflect, Default, Debug, Clone)]
+#[reflect(Component)]
+pub struct PersistentTags {
+    /// Trait 授予的标签（种族/职业/天赋，最持久）
+    pub from_traits: GameplayTags,
+    /// 装备授予的标签（穿脱变化）
+    pub from_equipment: GameplayTags,
+}
 
 impl GameplayTags {
     pub fn has(&self, tag: GameplayTag) -> bool {
@@ -236,6 +210,47 @@ pub enum TagName {
 }
 
 impl TagName {
+    /// 所有 TagName 变体列表（用于遍历校验）
+    pub const ALL: &'static [TagName] = &[
+        TagName::Fire,
+        TagName::Ice,
+        TagName::Poison,
+        TagName::Stun,
+        TagName::Burn,
+        TagName::Regen,
+        TagName::Melee,
+        TagName::Ranged,
+        TagName::Sword,
+        TagName::Axe,
+        TagName::Bow,
+        TagName::Staff,
+        TagName::Warrior,
+        TagName::Archer,
+        TagName::Mage,
+        TagName::Flying,
+        TagName::Mounted,
+        TagName::Swimming,
+        TagName::Consumable,
+        TagName::Ammo,
+        TagName::Material,
+        TagName::Currency,
+        TagName::QuestItem,
+        TagName::Healing,
+        TagName::Potion,
+        TagName::Scroll,
+        TagName::Food,
+        TagName::SkillActive,
+        TagName::SkillPassive,
+        TagName::Buff,
+        TagName::Debuff,
+        TagName::HeavyArmor,
+        TagName::LightArmor,
+        TagName::Shield,
+        TagName::TwoHanded,
+        TagName::Martial,
+        TagName::Simple,
+    ];
+
     pub fn to_tag(&self) -> GameplayTag {
         match self {
             Self::Fire => GameplayTag::FIRE,
@@ -277,6 +292,12 @@ impl TagName {
             Self::Simple => GameplayTag::SIMPLE,
         }
     }
+}
+
+/// 从 PersistentTags 重建 GameplayTags
+/// 统一标签合并方式，替代 spawn.rs 中的手动位运算
+pub fn rebuild_tags(persistent: &PersistentTags) -> GameplayTags {
+    GameplayTags(persistent.from_traits.0 | persistent.from_equipment.0)
 }
 
 #[cfg(test)]
@@ -372,23 +393,6 @@ mod tests {
         tags.add(GameplayTag::FIRE);
         let empty = GameplayTags::default();
         assert!(tags.has_all(&empty));
-    }
-
-    #[test]
-    fn 标签_label各标签() {
-        assert_eq!(GameplayTag::FIRE.label(), "火焰");
-        assert_eq!(GameplayTag::ICE.label(), "冰霜");
-        assert_eq!(GameplayTag::POISON.label(), "毒素");
-        assert_eq!(GameplayTag::STUN.label(), "晕眩");
-        assert_eq!(GameplayTag::BURN.label(), "燃烧");
-        assert_eq!(GameplayTag::REGEN.label(), "恢复");
-        assert_eq!(GameplayTag::MELEE.label(), "近战");
-        assert_eq!(GameplayTag::RANGED.label(), "远程");
-        assert_eq!(GameplayTag::WARRIOR.label(), "战士");
-        assert_eq!(GameplayTag::ARCHER.label(), "弓手");
-        assert_eq!(GameplayTag::MAGE.label(), "法师");
-        assert_eq!(GameplayTag::BUFF.label(), "增益");
-        assert_eq!(GameplayTag::DEBUFF.label(), "减益");
     }
 
     #[test]

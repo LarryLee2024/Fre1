@@ -1,15 +1,16 @@
 (
+    version: 1,
     id: "heal",
     name: "治疗",
     description: "恢复友方单位8点HP",
-    cost_mp: 0,
+    cost_mp: 6,
     range: 3,
     targeting: SingleAlly,
     effects: [
         Heal(amount: 8),
     ],
     tags: [SKILL_ACTIVE],
-    conditions: [],
+    conditions: [MpCost(6)],
     cooldown: 2,
     priority: 15,
 )

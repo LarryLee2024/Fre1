@@ -32,6 +32,7 @@ use tactical_rpg::core::campaign::registry::CampaignRegistry;
 use tactical_rpg::core::map::{LevelConfig, LevelRegistry};
 use tactical_rpg::core::turn::{AppState, GameOverState, TurnState};
 use tactical_rpg::infrastructure::assets::CnFont;
+use tactical_rpg::infrastructure::localization::{CurrentLocale, Locale, LocalizationService};
 use tactical_rpg::ui::events::UiCommand;
 use tactical_rpg::ui::screens::ScreensPlugin;
 use tactical_rpg::ui::screens::game_over::GameOverScreen;
@@ -118,6 +119,22 @@ fn screen_test_app() -> App {
 
     // TurnState（update_game_result_view 依赖）
     app.init_resource::<TurnState>();
+
+    // Localization（i18n 资源）
+    let mut localization = LocalizationService::new(Locale::ZhCn);
+    // 加载中文 FTL 文件
+    let zh_ui_ftl = include_str!("../../assets/localization/zh-CN/ui.ftl");
+    let _ = localization.load_ftl(Locale::ZhCn, zh_ui_ftl);
+    let zh_buff_ftl = include_str!("../../assets/localization/zh-CN/buff.ftl");
+    let _ = localization.load_ftl(Locale::ZhCn, zh_buff_ftl);
+    let zh_character_ftl = include_str!("../../assets/localization/zh-CN/character.ftl");
+    let _ = localization.load_ftl(Locale::ZhCn, zh_character_ftl);
+    let zh_skill_ftl = include_str!("../../assets/localization/zh-CN/skill.ftl");
+    let _ = localization.load_ftl(Locale::ZhCn, zh_skill_ftl);
+    let zh_system_ftl = include_str!("../../assets/localization/zh-CN/system.ftl");
+    let _ = localization.load_ftl(Locale::ZhCn, zh_system_ftl);
+    app.insert_resource(localization);
+    app.insert_resource(CurrentLocale(Locale::ZhCn));
 
     // ── Message ──
     app.add_message::<UiCommand>();

@@ -6,8 +6,8 @@ use std::collections::HashMap;
 
 use bevy::prelude::*;
 
+use crate::core::ability::{BASIC_ATTACK_ID, SkillCooldowns};
 use crate::core::battle::manhattan_distance;
-use crate::core::skill::{BASIC_ATTACK_ID, SkillCooldowns};
 
 use super::targeting::UnitSnapshot;
 

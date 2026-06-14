@@ -1,4 +1,5 @@
 (
+    version: 1,
     id: "attack_down",
     name: "攻-5",
     default_duration: 3,

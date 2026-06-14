@@ -8,7 +8,7 @@ use crate::core::battle::{DamageApplied, HealApplied};
 use crate::core::buff::{ActiveBuffs, BuffRegistry, remove_all_debuffs};
 use crate::core::character::{Faction, GridPosition, Unit, UnitName};
 use crate::core::map::TerrainRegistry;
-use crate::core::modifier_rule::ModifierEntry;
+use crate::core::modifier::ModifierEntry;
 use crate::core::tag::{GameplayTag, GameplayTags};
 use bevy::ecs::query::QueryState;
 use bevy::prelude::*;
@@ -301,7 +301,7 @@ impl EffectHandler for DamageHandler {
 
         Some(PendingEffectData::Damage {
             amount,
-            is_skill: ctx.skill_id != crate::core::skill::BASIC_ATTACK_ID,
+            is_skill: ctx.skill_id != crate::core::ability::BASIC_ATTACK_ID,
             base_amount: None,
             modifiers: Vec::new(),
         })

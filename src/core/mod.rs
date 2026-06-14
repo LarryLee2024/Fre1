@@ -5,10 +5,10 @@ pub mod attribute_def;
 /// EffectHandler 效果处理器管道
 pub mod effect;
 /// ModifierRule 修饰规则注册表
-/// 这些是跨业务模块的共享基础设施，被 character/battle/buff/skill 等模块依赖
+/// 这些是跨业务模块的共享基础设施，被 character/battle/buff/ability 等模块依赖
 
 /// ModifierRule 修饰规则注册表
-pub mod modifier_rule;
+pub mod modifier;
 /// RON 文件加载器（RegistryLoader trait）
 pub mod registry_loader;
 /// EntitySnapshot 实体快照
@@ -17,9 +17,14 @@ pub mod snapshot;
 pub mod tag;
 /// TagDef 标签定义注册表
 pub mod tag_def;
+/// Trigger 触发器系统：统一注册与分发、嵌套触发栈管理
+pub mod trigger;
 
-/// 技能模块：技能定义、冷却、效果预览
-pub mod skill;
+/// 能力模块：技能定义、冷却、效果预览、执行管线
+pub mod ability;
+
+/// 目标选择模块：技能/能力的目标类型定义与解析
+pub mod targeting;
 
 /// Buff 模块：Buff 定义、实例、穿戴/移除、持续效果
 pub mod buff;

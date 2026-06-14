@@ -12,8 +12,9 @@ tags:
 
 # 属性修饰管线领域
 
-Version: 1.0
+Version: 1.1
 Status: Proposed
+Changelog: v1.1 — 新增"与 Effect 领域的边界"章节，明确 Modify 阶段内部逻辑的所有权边界；新增交叉引用
 
 属性修饰管线领域管理战斗中属性的计算、修饰器的堆叠和效果管线的执行。
 
@@ -298,6 +299,70 @@ Status: Proposed
 | EffectQueue 变更 | Resource 访问 | Battle 领域 |
 | 属性值查询 | 函数调用 | 所有领域 |
 | Trait 效果触发 | 函数调用 | Character 领域 |
+
+---
+
+# 与 Effect 领域的边界
+
+> v1.1 新增 — Effect 成为一级领域后，明确 Modify 阶段内部逻辑的所有权边界。
+
+Effect 和 AttributeModifier 是 Pipeline 中紧密协作但职责清晰分离的两个领域。详见 `docs/02-domain/effect/effect-rules.md` 与 AttributeModifier 领域的精确边界章节。
+
+## 边界原则
+
+| 维度 | Effect 领域负责 | AttributeModifier 领域负责 |
+|------|----------------|---------------------------|
+| **Pipeline 编排** | 三步顺序控制（Generate→Modify→Execute） | — |
+| **Generate 阶段** | EffectHandler.generate() 生成初始值 | — |
+| **Modify 阶段** | 调用时机（何时触发 Modify） | **内部逻辑**：ModifierRuleRegistry 遍历、标签匹配、Calculator 分发 |
+| **Execute 阶段** | EffectHandler.execute() 执行效果 | — |
+| **数据定义** | EffectDef、PendingEffectData、EffectResult | ModifierRule、ModifierEntry、ModifierCalculator、ModifierEffect |
+| **注册表** | EffectHandlerRegistry | **ModifierRuleRegistry**、ModifierCalculatorRegistry |
+| **可观测性** | EffectResult 输出 | **ModifierEntry 记录**（Modify 阶段每步填充） |
+
+## 手续交接点
+
+Effect Pipeline 在 Modify 阶段将 PendingEffectData 交给 AttributeModifier 领域处理：
+
+```
+Effect 领域                          AttributeModifier 领域
+─────────────                       ─────────────────────
+Generate 完成
+  ↓
+PendingEffectData 产出
+  ↓
+调用 Modify ──────────────────────→ ModifierRuleRegistry 遍历
+                                     ↓
+                                   标签匹配（source_tag + target_tag）
+                                     ↓
+                                   Calculator 计算修饰
+                                     ↓
+                                   记录 ModifierEntry
+                                     ↓
+修改后的 PendingEffectData ←──────── 返回
+  ↓
+Execute 阶段
+```
+
+## 共享数据结构
+
+以下数据结构由 Effect 领域定义，但在 AttributeModifier 领域中被深度使用：
+
+- **PendingEffectData**：Modify 阶段的输入/输出载体
+- **ModifierEntry**：Modify 阶段的每步修饰记录（由 AttributeModifier 填充）
+- **PendingEffectData.modifiers**：修饰记录列表（Modify 阶段填充，Execute 阶段消费）
+
+## 不变量交叉检查
+
+| 不变量 | 归属 | 说明 |
+|--------|------|------|
+| Effect 必须走三步管线 | Effect | 禁止跳步 |
+| Generate 和 Modify 为纯函数 | Effect | 不产生副作用 |
+| 属性修改必须通过修饰器栈 | **AttributeModifier** | 禁止直接修改 |
+| 每步修饰必须记录 ModifierEntry | **AttributeModifier** | Modify 阶段填充 |
+| 伤害下限 ≥ 1，治疗下限 ≥ 0 | **AttributeModifier** | Modify 阶段后保证 |
+| ModifierRule 标签匹配 | **AttributeModifier** | source_tag + target_tag 双标签匹配 |
+| Calculator trait 分发 | **AttributeModifier** | 禁止 match 分发修饰效果 |
 
 ---
 
@@ -1049,3 +1114,17 @@ Source 创建 → 栈插入 → 值计算（随 get() 调用）
 8. 检查暴击/克制/地形加成是否通过 Modifier 而非 Effect 实现
 
 > **优化来源**: docs/01-architecture/skill-buff-abstraction.md
+
+---
+
+# 交叉引用
+
+| 主题 | 详细文档 |
+|------|----------|
+| Effect 一级领域规则 | `docs/02-domain/effect/effect-rules.md` |
+| Effect 与 AttributeModifier 边界 | `docs/02-domain/effect/effect-rules.md` 与 AttributeModifier 领域的精确边界 |
+| GameplayTag 标签系统 | `docs/02-domain/tag/tag-rules.md` |
+| 标签匹配驱动 ModifierRule | `docs/08-decisions/ADR-015-技能标签与分类体系.md` |
+| 标签系统架构重整 | `docs/08-decisions/ADR-023-标签系统架构重整.md` |
+| 技能/Buff/Effect 统一抽象 | `docs/01-architecture/skill-buff-abstraction.md` |
+| Effect Pipeline 三步管线 | `docs/01-architecture/skill-buff-abstraction.md` §3.2 |

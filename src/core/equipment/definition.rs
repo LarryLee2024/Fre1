@@ -21,6 +21,20 @@ pub enum EquipmentSlot {
 }
 
 impl EquipmentSlot {
+    /// 装备槽位 i18n key
+    pub fn i18n_key(&self) -> &'static str {
+        match self {
+            Self::MainHand => "equip.slot.main_hand",
+            Self::OffHand => "equip.slot.off_hand",
+            Self::Head => "equip.slot.head",
+            Self::Body => "equip.slot.body",
+            Self::Legs => "equip.slot.legs",
+            Self::Feet => "equip.slot.feet",
+            Self::Accessory1 => "equip.slot.accessory1",
+            Self::Accessory2 => "equip.slot.accessory2",
+        }
+    }
+
     /// 标签中文名
     pub fn label(&self) -> &'static str {
         match self {
@@ -47,6 +61,17 @@ pub enum Rarity {
 }
 
 impl Rarity {
+    /// 稀有度 i18n key
+    pub fn i18n_key(&self) -> &'static str {
+        match self {
+            Self::Common => "equip.rarity.common",
+            Self::Uncommon => "equip.rarity.uncommon",
+            Self::Rare => "equip.rarity.rare",
+            Self::Epic => "equip.rarity.epic",
+            Self::Legendary => "equip.rarity.legendary",
+        }
+    }
+
     pub fn label(&self) -> &'static str {
         match self {
             Self::Common => "普通",

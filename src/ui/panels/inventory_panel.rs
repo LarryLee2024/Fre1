@@ -1,6 +1,7 @@
 // 背包面板：独立显示选中单位的背包内容
 
 use crate::core::turn::AppState;
+use crate::infrastructure::localization::{CurrentLocale, LocalizationService};
 use crate::ui::theme::UiTheme;
 use crate::ui::view_models::SelectedUnitView;
 use crate::ui::widgets::layout::*;
@@ -17,7 +18,14 @@ pub enum InventoryLabel {
 pub struct InventoryPanel;
 
 /// 生成背包面板
-pub fn spawn_inventory_panel(mut commands: Commands, theme: Res<UiTheme>) {
+pub fn spawn_inventory_panel(
+    mut commands: Commands,
+    theme: Res<UiTheme>,
+    localization: Res<LocalizationService>,
+    locale: Res<CurrentLocale>,
+) {
+    let title_text = localization.resolve("ui.inventory.title", &locale.0, None);
+    let empty_text = localization.resolve("ui.inventory.empty", &locale.0, None);
     commands
         .spawn((
             panel_top_right(&theme, theme.gap_large, theme.gap_large, 260.0, 300.0),
@@ -27,7 +35,7 @@ pub fn spawn_inventory_panel(mut commands: Commands, theme: Res<UiTheme>) {
         .insert(Name::new("InventoryPanel"))
         .with_children(|parent| {
             parent.spawn((
-                Text::new("── 背包 ──"),
+                Text::new(title_text),
                 TextFont {
                     font_size: theme.font_medium,
                     ..default()
@@ -35,7 +43,7 @@ pub fn spawn_inventory_panel(mut commands: Commands, theme: Res<UiTheme>) {
                 TextColor(theme.text_primary),
             ));
             parent.spawn((
-                Text::new("空"),
+                Text::new(empty_text),
                 TextFont {
                     font_size: theme.font_small,
                     ..default()
@@ -50,6 +58,8 @@ pub fn spawn_inventory_panel(mut commands: Commands, theme: Res<UiTheme>) {
 pub fn update_inventory_panel(
     view: Res<SelectedUnitView>,
     mut query: Query<(&InventoryLabel, &mut Text)>,
+    localization: Res<LocalizationService>,
+    locale: Res<CurrentLocale>,
 ) {
     if !view.is_changed() {
         return;
@@ -59,7 +69,7 @@ pub fn update_inventory_panel(
         match label {
             InventoryLabel::Items => {
                 if !view.is_selected || view.inventory.is_empty() {
-                    **text = "空".to_string();
+                    **text = localization.resolve("ui.inventory.empty", &locale.0, None);
                 } else {
                     let lines: Vec<String> = view
                         .inventory

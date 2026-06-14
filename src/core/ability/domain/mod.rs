@@ -10,6 +10,9 @@ mod types;
 pub use skill_error::*;
 pub use types::*;
 
+// SkillTargeting 已迁移至 targeting 模块，此处 re-export 保持向后兼容
+pub use crate::core::targeting::SkillTargeting;
+
 use crate::core::registry_loader::RegistryLoader;
 use bevy::prelude::*;
 use std::collections::HashMap;
@@ -115,15 +118,9 @@ mod tests {
         let skill = SkillData {
             id: "fireball".into(),
             name: "火球".into(),
-            description: String::new(),
-            cost_mp: 0,
             range: 3,
-            targeting: SkillTargeting::SingleEnemy,
-            effects: vec![],
-            tags: vec![],
-            conditions: vec![],
             cooldown: 3,
-            priority: 0,
+            ..Default::default()
         };
         let attrs = make_attrs(20.0, 20.0, 10.0);
         let tags = GameplayTags::default();
@@ -136,15 +133,10 @@ mod tests {
         let skill = SkillData {
             id: "fireball".into(),
             name: "火球".into(),
-            description: String::new(),
             cost_mp: 10,
             range: 3,
-            targeting: SkillTargeting::SingleEnemy,
-            effects: vec![],
-            tags: vec![],
             conditions: vec![SkillCondition::MpCost(10)],
-            cooldown: 0,
-            priority: 0,
+            ..Default::default()
         };
         let attrs = make_attrs(20.0, 20.0, 5.0);
         let tags = GameplayTags::default();
@@ -163,15 +155,9 @@ mod tests {
         let skill = SkillData {
             id: "fireball".into(),
             name: "火球".into(),
-            description: String::new(),
-            cost_mp: 0,
             range: 3,
-            targeting: SkillTargeting::SingleEnemy,
-            effects: vec![],
-            tags: vec![],
             conditions: vec![SkillCondition::RequireTag(GameplayTag::MAGE)],
-            cooldown: 0,
-            priority: 0,
+            ..Default::default()
         };
         let attrs = make_attrs(20.0, 20.0, 10.0);
         let tags = GameplayTags::default();
@@ -189,15 +175,10 @@ mod tests {
         let skill = SkillData {
             id: "fireball".into(),
             name: "火球".into(),
-            description: String::new(),
             cost_mp: 5,
             range: 3,
-            targeting: SkillTargeting::SingleEnemy,
-            effects: vec![],
-            tags: vec![],
             conditions: vec![SkillCondition::MpCost(5)],
-            cooldown: 0,
-            priority: 0,
+            ..Default::default()
         };
         let attrs = make_attrs(20.0, 20.0, 10.0);
         let tags = GameplayTags::default();
@@ -209,15 +190,8 @@ mod tests {
         let skill = SkillData {
             id: "desperate".into(),
             name: "背水一战".into(),
-            description: String::new(),
-            cost_mp: 0,
-            range: 1,
-            targeting: SkillTargeting::SingleEnemy,
-            effects: vec![],
-            tags: vec![],
             conditions: vec![SkillCondition::HpBelow(0.5)],
-            cooldown: 0,
-            priority: 0,
+            ..Default::default()
         };
         let attrs_low = make_attrs(5.0, 20.0, 10.0);
         let attrs_ok = make_attrs(15.0, 20.0, 10.0);
@@ -236,6 +210,8 @@ mod tests {
             id: "test".into(),
             name: "测试".into(),
             description: "测试技能".into(),
+            name_key: None,
+            desc_key: None,
             cost_mp: 5,
             range: 3,
             targeting: SkillTargeting::SingleEnemy,
@@ -296,15 +272,9 @@ mod tests {
         let skill = SkillData {
             id: "heal_self".into(),
             name: "自愈".into(),
-            description: String::new(),
-            cost_mp: 0,
-            range: 1,
             targeting: SkillTargeting::SelfOnly,
-            effects: vec![],
-            tags: vec![],
             conditions: vec![SkillCondition::HpAbove(0.5)],
-            cooldown: 0,
-            priority: 0,
+            ..Default::default()
         };
         let attrs_high = make_attrs(15.0, 20.0, 10.0);
         let attrs_low = make_attrs(5.0, 20.0, 10.0);
@@ -321,15 +291,10 @@ mod tests {
         let skill = SkillData {
             id: "purify".into(),
             name: "净化".into(),
-            description: String::new(),
-            cost_mp: 0,
             range: 2,
             targeting: SkillTargeting::SingleAlly,
-            effects: vec![],
-            tags: vec![],
             conditions: vec![SkillCondition::TargetRequireTag(GameplayTag::BUFF)],
-            cooldown: 0,
-            priority: 0,
+            ..Default::default()
         };
         let attrs = make_attrs(20.0, 20.0, 10.0);
         let source_tags = GameplayTags::default();
@@ -364,15 +329,8 @@ mod tests {
         let skill = SkillData {
             id: "simple".into(),
             name: "简单".into(),
-            description: String::new(),
-            cost_mp: 0,
-            range: 1,
             targeting: SkillTargeting::SelfOnly,
-            effects: vec![],
-            tags: vec![],
-            conditions: vec![],
-            cooldown: 0,
-            priority: 0,
+            ..Default::default()
         };
         let attrs = make_attrs(10.0, 20.0, 5.0);
         let tags = GameplayTags::default();
@@ -384,18 +342,13 @@ mod tests {
         let skill = SkillData {
             id: "elite".into(),
             name: "精英技能".into(),
-            description: String::new(),
             cost_mp: 5,
-            range: 1,
             targeting: SkillTargeting::SingleEnemy,
-            effects: vec![],
-            tags: vec![],
             conditions: vec![
                 SkillCondition::MpCost(5),
                 SkillCondition::RequireTag(GameplayTag::MAGE),
             ],
-            cooldown: 0,
-            priority: 0,
+            ..Default::default()
         };
         let mut attrs = make_attrs(20.0, 20.0, 10.0);
         let mut tags = GameplayTags::default();

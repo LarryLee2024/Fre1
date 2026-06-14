@@ -8,7 +8,7 @@ use crate::core::effect::{
     EffectHandlerRegistry, EffectQueue, ExecuteContext, ExecuteOutput, PendingEffectData,
     PendingMessage,
 };
-use crate::core::modifier_rule::ModifierRuleRegistry;
+use crate::core::modifier::ModifierRuleRegistry;
 use crate::core::tag::GameplayTags;
 use bevy::prelude::*;
 
@@ -241,12 +241,12 @@ pub fn execute_effects(world: &mut World) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::ability::SkillSlots;
     use crate::core::attribute::{AttributeKind, Attributes};
     use crate::core::buff::{ActiveBuffs, BuffRegistry};
     use crate::core::character::{Dead, Faction, GridPosition, Unit, UnitName};
     use crate::core::effect::{EffectQueue, PendingEffect, PendingEffectData};
     use crate::core::map::TerrainRegistry;
-    use crate::core::skill::SkillSlots;
     use crate::core::tag::GameplayTags;
 
     fn test_buff_registry() -> BuffRegistry {

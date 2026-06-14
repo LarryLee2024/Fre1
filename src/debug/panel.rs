@@ -26,6 +26,7 @@ pub fn unified_debug_panel(
     occupancy: Res<crate::core::map::runtime::OccupancyGrid>,
     mut grid_viewer_state: ResMut<viewers::GridViewerState>,
     mut settings: ResMut<crate::ui::settings::GameSettings>,
+    tag_registry: Res<crate::core::tag_def::TagRegistry>,
     units: Query<(
         Entity,
         &crate::core::character::Unit,
@@ -34,8 +35,8 @@ pub fn unified_debug_panel(
         &crate::core::attribute::Attributes,
         &crate::core::equipment::EquipmentSlots,
         &crate::core::character::TraitCollection,
-        &crate::core::skill::SkillSlots,
-        &crate::core::skill::SkillCooldowns,
+        &crate::core::ability::SkillSlots,
+        &crate::core::ability::SkillCooldowns,
         &crate::core::tag::GameplayTags,
         Option<&crate::core::character::AiBehaviorId>,
         Option<&crate::core::buff::ActiveBuffs>,
@@ -74,6 +75,7 @@ pub fn unified_debug_panel(
                     &occupancy,
                     &mut grid_viewer_state,
                     &mut settings,
+                    &tag_registry,
                     &units,
                     &unit_names,
                 );
@@ -132,6 +134,7 @@ fn render_content(
     occupancy: &crate::core::map::runtime::OccupancyGrid,
     grid_viewer_state: &mut viewers::GridViewerState,
     settings: &mut crate::ui::settings::GameSettings,
+    tag_registry: &crate::core::tag_def::TagRegistry,
     units: &Query<(
         Entity,
         &crate::core::character::Unit,
@@ -140,8 +143,8 @@ fn render_content(
         &crate::core::attribute::Attributes,
         &crate::core::equipment::EquipmentSlots,
         &crate::core::character::TraitCollection,
-        &crate::core::skill::SkillSlots,
-        &crate::core::skill::SkillCooldowns,
+        &crate::core::ability::SkillSlots,
+        &crate::core::ability::SkillCooldowns,
         &crate::core::tag::GameplayTags,
         Option<&crate::core::character::AiBehaviorId>,
         Option<&crate::core::buff::ActiveBuffs>,
@@ -186,7 +189,7 @@ fn render_content(
                 );
             }
             DebugView::Ai => {
-                viewers::ai_viewer::render(ui, turn_order, combat_intent, units);
+                viewers::ai_viewer::render(ui, turn_order, combat_intent, &tag_registry, units);
             }
             DebugView::Equipment => {
                 viewers::equipment_viewer::render(ui, units);

@@ -1,3 +1,4 @@
+use crate::core::ability::{SkillCooldowns, SkillRegistry, SkillSlots, effective_skill_range};
 use crate::core::attribute::{AttributeKind, Attributes};
 use crate::core::battle::CombatIntent;
 use crate::core::battle::manhattan_distance;
@@ -6,7 +7,6 @@ use crate::core::map::TerrainRegistry;
 use crate::core::map::runtime::{OccupancyGrid, TerrainGrid};
 use crate::core::map::{GameMap, TerrainCostRegistry, find_reachable_tiles};
 use crate::core::movement::events::{IntentSource, MovementIntent};
-use crate::core::skill::{SkillCooldowns, SkillRegistry, SkillSlots, effective_skill_range};
 use crate::core::tag::GameplayTags;
 use crate::core::turn::{AiTimer, TurnOrder, TurnPhase};
 use bevy::prelude::*;

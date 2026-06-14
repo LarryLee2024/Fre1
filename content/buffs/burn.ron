@@ -1,4 +1,5 @@
 (
+    version: 1,
     id: "burn",
     name: "灼-2",
     default_duration: 2,

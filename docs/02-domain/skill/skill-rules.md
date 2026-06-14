@@ -1,7 +1,7 @@
 ---
 id: 02-domain.skill.skill-rules
 title: Skill Rules
-status: draft
+status: deprecated
 owner: domain-designer
 created: 2026-06-14
 updated: 2026-06-14
@@ -9,6 +9,8 @@ tags:
   - domain
   - skill
 ---
+
+> ⚠️ **已过时声明**: 本文档已被 `docs/02-domain/ability/ability-rules.md` 取代。"Skill" 概念已重命名为 "Ability"，对齐 UE GAS（Gameplay Ability System）的 SRPG-GAS 裁切版架构。请以 ability-rules.md 为准。本文档保留供历史参考。
 
 # 技能系统领域
 

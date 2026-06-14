@@ -5,8 +5,8 @@
 
 mod cache;
 mod component;
-mod ftl_loader;
 mod font_fallback;
+mod ftl_loader;
 mod locale;
 mod plugin;
 mod service;

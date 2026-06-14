@@ -7,6 +7,7 @@ use crate::core::map::LevelRegistry;
 use crate::core::turn::GameOverState;
 use crate::core::turn::TurnState;
 use crate::infrastructure::assets::CnFont;
+use crate::infrastructure::localization::{CurrentLocale, LocalizationService};
 use crate::ui::events::UiCommand;
 use crate::ui::theme::UiTheme;
 use crate::ui::view_models::{GameOutcome, GameResultView};
@@ -81,14 +82,22 @@ pub fn spawn_game_over_screen(
     theme: Res<UiTheme>,
     cn_font: Res<CnFont>,
     view: Res<GameResultView>,
+    localization: Res<LocalizationService>,
+    locale: Res<CurrentLocale>,
 ) {
     let title_font = cn_font.text_font(theme.font_title);
     let subtitle_font = cn_font.text_font(theme.font_subtitle);
     let button_font = cn_font.text_font(theme.font_menu);
 
     let (result_text, result_color) = match view.result {
-        GameOutcome::Victory => ("胜利！", theme.victory_color),
-        GameOutcome::Defeat => ("失败...", theme.defeat_color),
+        GameOutcome::Victory => (
+            localization.resolve("ui.game_over.victory", &locale.0, None),
+            theme.victory_color,
+        ),
+        GameOutcome::Defeat => (
+            localization.resolve("ui.game_over.defeat", &locale.0, None),
+            theme.defeat_color,
+        ),
     };
 
     commands
@@ -145,11 +154,14 @@ pub fn spawn_game_over_screen(
             // 按钮区域
             // 胜利时显示"下一关"和"重玩"
             if view.result == GameOutcome::Victory && view.has_next_stage {
-                spawn_game_over_button(parent, "下一关", &theme, &button_font, NextStageButton);
+                let next_text = localization.resolve("ui.game_over.next_stage", &locale.0, None);
+                spawn_game_over_button(parent, &next_text, &theme, &button_font, NextStageButton);
             }
 
-            spawn_game_over_button(parent, "重玩", &theme, &button_font, RetryButton);
-            spawn_game_over_button(parent, "返回选关", &theme, &button_font, BackToSelectButton);
+            let retry_text = localization.resolve("ui.game_over.retry", &locale.0, None);
+            let back_text = localization.resolve("ui.game_over.back_to_select", &locale.0, None);
+            spawn_game_over_button(parent, &retry_text, &theme, &button_font, RetryButton);
+            spawn_game_over_button(parent, &back_text, &theme, &button_font, BackToSelectButton);
         });
 }
 

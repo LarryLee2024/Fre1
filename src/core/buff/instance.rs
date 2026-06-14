@@ -1,4 +1,5 @@
 use crate::core::attribute::BuffInstanceId;
+use crate::core::buff::domain::DurationPolicy;
 use crate::core::tag::GameplayTag;
 use bevy::prelude::*;
 
@@ -9,6 +10,8 @@ pub struct BuffInstance {
     pub buff_id: String,
     pub name: String,
     pub remaining_turns: u32,
+    /// 新字段（ADR-021）：持续策略
+    pub duration_policy: DurationPolicy,
     pub source_entity: Option<Entity>,
     pub tags: Vec<GameplayTag>,
     pub is_buff: bool,
@@ -76,7 +79,10 @@ impl ActiveBuffs {
     pub fn tick(&mut self) {
         self.instances.retain(|inst| inst.remaining_turns > 0);
         for inst in &mut self.instances {
-            inst.remaining_turns -= 1;
+            // 只有 DurationPolicy::Turns 才递减
+            if matches!(inst.duration_policy, DurationPolicy::Turns(_)) {
+                inst.remaining_turns -= 1;
+            }
         }
     }
 
@@ -144,6 +150,7 @@ mod tests {
             buff_id: "attack_up".into(),
             name: "攻+5".into(),
             remaining_turns: 2,
+            duration_policy: DurationPolicy::Turns(2),
             source_entity: None,
             tags: vec![GameplayTag::BUFF],
             is_buff: true,
@@ -163,6 +170,7 @@ mod tests {
             buff_id: "attack_up".into(),
             name: "攻+5".into(),
             remaining_turns: 2,
+            duration_policy: DurationPolicy::Turns(2),
             source_entity: None,
             tags: vec![GameplayTag::BUFF],
             is_buff: true,
@@ -193,6 +201,7 @@ mod tests {
             buff_id: "poison".into(),
             name: "毒".into(),
             remaining_turns: 1,
+            duration_policy: DurationPolicy::Turns(1),
             source_entity: Some(source),
             tags: vec![GameplayTag::DEBUFF],
             is_buff: false,
@@ -206,6 +215,7 @@ mod tests {
             buff_id: "poison".into(),
             name: "毒".into(),
             remaining_turns: 3,
+            duration_policy: DurationPolicy::Turns(3),
             source_entity: Some(source),
             tags: vec![GameplayTag::DEBUFF],
             is_buff: false,
@@ -230,6 +240,7 @@ mod tests {
             buff_id: "poison".into(),
             name: "毒".into(),
             remaining_turns: 1,
+            duration_policy: DurationPolicy::Turns(1),
             source_entity: Some(source_a),
             tags: vec![GameplayTag::DEBUFF],
             is_buff: false,
@@ -243,6 +254,7 @@ mod tests {
             buff_id: "poison".into(),
             name: "毒".into(),
             remaining_turns: 3,
+            duration_policy: DurationPolicy::Turns(3),
             source_entity: Some(source_b),
             tags: vec![GameplayTag::DEBUFF],
             is_buff: false,
@@ -264,6 +276,7 @@ mod tests {
             buff_id: "attack_up".into(),
             name: "攻+5".into(),
             remaining_turns: 2,
+            duration_policy: DurationPolicy::Turns(2),
             source_entity: None,
             tags: vec![GameplayTag::BUFF],
             is_buff: true,
@@ -283,6 +296,7 @@ mod tests {
             buff_id: "attack_up".into(),
             name: "攻+5".into(),
             remaining_turns: 1,
+            duration_policy: DurationPolicy::Turns(1),
             source_entity: None,
             tags: vec![GameplayTag::BUFF],
             is_buff: true,
@@ -294,6 +308,27 @@ mod tests {
         assert_eq!(buffs.instances[0].remaining_turns, 0);
         buffs.tick();
         assert!(buffs.is_empty());
+    }
+
+    #[test]
+    fn 活跃buff_tick_非turns策略不递减() {
+        let mut buffs = ActiveBuffs::default();
+        let id = buffs.next_instance_id();
+        buffs.add(BuffInstance {
+            instance_id: id,
+            buff_id: "permanent_buff".into(),
+            name: "永久".into(),
+            remaining_turns: 5,
+            duration_policy: DurationPolicy::Permanent,
+            source_entity: None,
+            tags: vec![GameplayTag::BUFF],
+            is_buff: true,
+            dot_damage: 0,
+            hot_heal: 0,
+        });
+        buffs.tick();
+        // Permanent buff 不应递减
+        assert_eq!(buffs.instances[0].remaining_turns, 5);
     }
 
     // ── 晕眩 ──
@@ -309,6 +344,7 @@ mod tests {
             buff_id: "stun".into(),
             name: "晕".into(),
             remaining_turns: 1,
+            duration_policy: DurationPolicy::Turns(1),
             source_entity: None,
             tags: vec![GameplayTag::DEBUFF, GameplayTag::STUN],
             is_buff: false,
@@ -327,6 +363,7 @@ mod tests {
             buff_id: "stun".into(),
             name: "晕".into(),
             remaining_turns: 1,
+            duration_policy: DurationPolicy::Turns(1),
             source_entity: None,
             tags: vec![GameplayTag::DEBUFF, GameplayTag::STUN],
             is_buff: false,
@@ -350,6 +387,7 @@ mod tests {
             buff_id: "poison".into(),
             name: "毒".into(),
             remaining_turns: 2,
+            duration_policy: DurationPolicy::Turns(2),
             source_entity: None,
             tags: vec![GameplayTag::DEBUFF],
             is_buff: false,
@@ -362,6 +400,7 @@ mod tests {
             buff_id: "regen".into(),
             name: "愈".into(),
             remaining_turns: 2,
+            duration_policy: DurationPolicy::Turns(2),
             source_entity: None,
             tags: vec![GameplayTag::BUFF],
             is_buff: true,
@@ -383,6 +422,7 @@ mod tests {
             buff_id: "attack_up".into(),
             name: "攻+5".into(),
             remaining_turns: 2,
+            duration_policy: DurationPolicy::Turns(2),
             source_entity: None,
             tags: vec![GameplayTag::BUFF],
             is_buff: true,
@@ -395,6 +435,7 @@ mod tests {
             buff_id: "poison".into(),
             name: "毒".into(),
             remaining_turns: 2,
+            duration_policy: DurationPolicy::Turns(2),
             source_entity: None,
             tags: vec![GameplayTag::DEBUFF],
             is_buff: false,

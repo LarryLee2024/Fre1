@@ -104,6 +104,36 @@ impl AttributeKind {
         )
     }
 
+    /// 属性 i18n key
+    pub fn i18n_key(&self) -> &'static str {
+        match self {
+            Self::Might => "attr.might.label",
+            Self::Dexterity => "attr.dexterity.label",
+            Self::Agility => "attr.agility.label",
+            Self::Vitality => "attr.vitality.label",
+            Self::Intelligence => "attr.intelligence.label",
+            Self::Willpower => "attr.willpower.label",
+            Self::Presence => "attr.presence.label",
+            Self::Luck => "attr.luck.label",
+            Self::Hp => "attr.hp.label",
+            Self::Mp => "attr.mp.label",
+            Self::Stamina => "attr.stamina.label",
+            Self::MaxHp => "attr.max_hp.label",
+            Self::MaxMp => "attr.max_mp.label",
+            Self::MaxStamina => "attr.max_stamina.label",
+            Self::Attack => "attr.attack.label",
+            Self::Defense => "attr.defense.label",
+            Self::MagicAttack => "attr.magic_attack.label",
+            Self::MagicDefense => "attr.magic_defense.label",
+            Self::Accuracy => "attr.accuracy.label",
+            Self::Evasion => "attr.evasion.label",
+            Self::CritRate => "attr.crit_rate.label",
+            Self::MoveRange => "attr.move_range.label",
+            Self::Initiative => "attr.initiative.label",
+            Self::AttackRange => "attr.attack_range.label",
+        }
+    }
+
     /// 属性中文名
     pub fn label(&self) -> &'static str {
         match self {

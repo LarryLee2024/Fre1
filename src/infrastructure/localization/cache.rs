@@ -1,18 +1,22 @@
 //! LocalizedTextCache：文本解析缓存
 
 use std::collections::HashMap;
+use std::collections::VecDeque;
 
 use super::locale::Locale;
 
 /// 文本解析缓存（LRU 淘汰策略）
 /// key: (ftl_key, locale, args_hash) → formatted_string
+///
+/// 使用 VecDeque 作为访问顺序队列，O(1) 头尾操作。
+/// get/insert 时将 key 移至队尾（最近使用），淘汰时从队头移除（最久未用）。
 #[derive(Debug, bevy::prelude::Resource)]
 pub struct LocalizedTextCache {
     cache: HashMap<(String, Locale, u64), String>,
     /// 缓存上限
     max_entries: usize,
-    /// 访问顺序（用于 LRU 淘汰）
-    access_order: Vec<(String, Locale, u64)>,
+    /// 访问顺序队列（VecDeque，队头=最久未用，队尾=最近使用）
+    access_order: VecDeque<(String, Locale, u64)>,
 }
 
 impl Default for LocalizedTextCache {
@@ -26,7 +30,7 @@ impl LocalizedTextCache {
     pub fn new() -> Self {
         Self {
             cache: HashMap::new(),
-            access_order: Vec::new(),
+            access_order: VecDeque::new(),
             max_entries: 2048,
         }
     }
@@ -35,7 +39,7 @@ impl LocalizedTextCache {
     pub fn with_capacity(max_entries: usize) -> Self {
         Self {
             cache: HashMap::with_capacity(max_entries),
-            access_order: Vec::with_capacity(max_entries),
+            access_order: VecDeque::with_capacity(max_entries),
             max_entries,
         }
     }
@@ -44,9 +48,9 @@ impl LocalizedTextCache {
     pub fn get(&mut self, key: &str, locale: &Locale, args_hash: u64) -> Option<String> {
         let cache_key = (key.to_string(), *locale, args_hash);
         if let Some(value) = self.cache.get(&cache_key) {
-            // 更新访问顺序（移到末尾）
+            // O(n) 查找并移除旧位置，O(1) push_back 到队尾
             self.access_order.retain(|k| k != &cache_key);
-            self.access_order.push(cache_key);
+            self.access_order.push_back(cache_key);
             return Some(value.clone());
         }
         None
@@ -59,15 +63,14 @@ impl LocalizedTextCache {
         // 如果已存在，更新访问顺序
         if self.cache.contains_key(&cache_key) {
             self.access_order.retain(|k| k != &cache_key);
-            self.access_order.push(cache_key.clone());
+            self.access_order.push_back(cache_key.clone());
             self.cache.insert(cache_key, value);
             return;
         }
 
-        // LRU 淘汰
+        // LRU 淘汰：从队头移除最久未用的条目
         while self.cache.len() >= self.max_entries {
-            if let Some(oldest) = self.access_order.first().cloned() {
-                self.access_order.remove(0);
+            if let Some(oldest) = self.access_order.pop_front() {
                 self.cache.remove(&oldest);
             } else {
                 break;
@@ -75,7 +78,7 @@ impl LocalizedTextCache {
         }
 
         self.cache.insert(cache_key.clone(), value);
-        self.access_order.push(cache_key);
+        self.access_order.push_back(cache_key);
     }
 
     /// 清空缓存（语言切换时调用）
@@ -144,7 +147,28 @@ mod tests {
         cache.insert("test", &Locale::ZhCn, 100, "v1".to_string());
         cache.insert("test", &Locale::ZhCn, 200, "v2".to_string());
 
-        assert_eq!(cache.get("test", &Locale::ZhCn, 100), Some("v1".to_string()));
-        assert_eq!(cache.get("test", &Locale::ZhCn, 200), Some("v2".to_string()));
+        assert_eq!(
+            cache.get("test", &Locale::ZhCn, 100),
+            Some("v1".to_string())
+        );
+        assert_eq!(
+            cache.get("test", &Locale::ZhCn, 200),
+            Some("v2".to_string())
+        );
+    }
+
+    #[test]
+    fn cache_lru_access_refreshes_order() {
+        let mut cache = LocalizedTextCache::with_capacity(2);
+        cache.insert("a", &Locale::ZhCn, 0, "A".to_string());
+        cache.insert("b", &Locale::ZhCn, 0, "B".to_string());
+        // 访问 "a"，使其变为最近使用
+        cache.get("a", &Locale::ZhCn, 0);
+        // 插入 "c"，应淘汰 "b"（最久未用）
+        cache.insert("c", &Locale::ZhCn, 0, "C".to_string());
+
+        assert!(cache.get("b", &Locale::ZhCn, 0).is_none());
+        assert_eq!(cache.get("a", &Locale::ZhCn, 0), Some("A".to_string()));
+        assert_eq!(cache.get("c", &Locale::ZhCn, 0), Some("C".to_string()));
     }
 }

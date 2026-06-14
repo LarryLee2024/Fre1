@@ -16,6 +16,15 @@ pub enum StageStatus {
 }
 
 impl StageStatus {
+    /// 关卡状态 i18n key
+    pub fn i18n_key(&self) -> &'static str {
+        match self {
+            StageStatus::Locked => "stage.status.locked",
+            StageStatus::Unlocked => "stage.status.unlocked",
+            StageStatus::Completed => "stage.status.completed",
+        }
+    }
+
     pub fn label(&self) -> &str {
         match self {
             StageStatus::Locked => "已锁定",

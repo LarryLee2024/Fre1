@@ -1,7 +1,7 @@
 // 效果管道数据类型：EffectDef、PendingEffectData、EffectResult、EffectQueue
 // 从原 effect.rs 迁移，保留 RON 反序列化支持
 
-use crate::core::modifier_rule::ModifierEntry;
+use crate::core::modifier::ModifierEntry;
 use crate::core::tag::GameplayTag;
 use bevy::prelude::*;
 use serde::Deserialize;

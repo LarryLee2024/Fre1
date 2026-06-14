@@ -18,7 +18,7 @@
 use bevy::prelude::*;
 use tactical_rpg::core::attribute::{AttributeKind, AttributeModifierDef, Attributes, ModifierOp};
 use tactical_rpg::core::buff::{
-    ActiveBuffs, BuffData, apply_buff, remove_all_debuffs, remove_buff,
+    ActiveBuffs, BuffData, DurationPolicy, StackPolicy, apply_buff, remove_all_debuffs, remove_buff,
 };
 use tactical_rpg::core::effect::calculate_damage_from_effect;
 use tactical_rpg::core::tag::GameplayTags;
@@ -32,6 +32,12 @@ fn attack_up_buff() -> BuffData {
     BuffData {
         id: "attack_up".into(),
         name: "攻击提升".into(),
+        name_key: None,
+        description: String::new(),
+        effects: vec![],
+        duration: DurationPolicy::Turns(3),
+        stack: StackPolicy::NoStack,
+        conditions: vec![],
         default_duration: 3,
         modifiers: vec![AttributeModifierDef {
             kind: AttributeKind::Attack,
@@ -52,6 +58,12 @@ fn defense_down_debuff() -> BuffData {
     BuffData {
         id: "defense_down".into(),
         name: "防御降低".into(),
+        name_key: None,
+        description: String::new(),
+        effects: vec![],
+        duration: DurationPolicy::Turns(3),
+        stack: StackPolicy::NoStack,
+        conditions: vec![],
         default_duration: 3,
         modifiers: vec![AttributeModifierDef {
             kind: AttributeKind::Defense,
@@ -72,6 +84,12 @@ fn burning_dot() -> BuffData {
     BuffData {
         id: "burn".into(),
         name: "灼烧".into(),
+        name_key: None,
+        description: String::new(),
+        effects: vec![],
+        duration: DurationPolicy::Turns(3),
+        stack: StackPolicy::NoStack,
+        conditions: vec![],
         default_duration: 3,
         modifiers: vec![],
         tags: vec![
@@ -91,6 +109,12 @@ fn regeneration_hot() -> BuffData {
     BuffData {
         id: "regen".into(),
         name: "生命回复".into(),
+        name_key: None,
+        description: String::new(),
+        effects: vec![],
+        duration: DurationPolicy::Turns(3),
+        stack: StackPolicy::NoStack,
+        conditions: vec![],
         default_duration: 3,
         modifiers: vec![],
         tags: vec![tactical_rpg::core::tag::GameplayTag::BUFF],

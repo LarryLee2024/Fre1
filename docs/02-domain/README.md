@@ -11,8 +11,9 @@ tags:
 
 # Domain Rules
 
-Version: 1.0
+Version: 1.1
 Created: 2026-06-14
+Updated: 2026-06-14 — 新增 targeting/targeting-rules.md（Targeting 一级领域，取代 selector）、新增 ability/ability-rules.md（Ability 一级领域，取代 skill）、更新 trigger/trigger-rules.md v1.1（16 种 Trigger、ExecutionStack + TriggerRegistry 一等概念）
 
 本文档是 `docs/02-domain/` 文件夹所有领域规则文件的汇总索引和速查参考。
 
@@ -22,7 +23,7 @@ Created: 2026-06-14
 
 | 分组 | 文件数 | 覆盖主题 |
 |------|--------|----------|
-| Core Domain | 14 | 战斗、角色、技能、属性修饰、回合、触发、条件、公式、目标选择、持续时间、消耗、堆叠策略、释放前提、输入 |
+| Core Domain | 18 | 战斗、角色、**能力（新增）**、技能（已过时）、效果、属性修饰、回合、触发、条件、公式、**目标选择（新增）**、选择器（已过时）、持续时间、消耗、堆叠策略、释放前提、标签、输入 |
 | Infrastructure | 7 | 错误系统、日志、持久化、热重载、确定性、回放、测试 |
 | Content/Data | 6 | 内容系统、配置系统、内容迁移、资源生命周期、资源组织、Feature Flag |
 | Cross-cutting | 12 | 分层架构、ECS通信、命令总线、共享层、Mod系统、UI架构、本地化、地图地形、AI、性能预算、校验、事件审计 |
@@ -33,20 +34,24 @@ Created: 2026-06-14
 
 | # | 文件 | 架构对应 | 关键词 |
 |---|------|----------|--------|
-| 1 | battle_rules.md | battle_fsm_design.md | 战斗状态机、Effect Pipeline、伤害计算 |
-| 2 | character_rules.md | component_design_rules.md | 角色属性、Faction、UnitSnapshot |
-| 3 | skill_rules.md | skill-buff-abstraction.md | 技能定义、冷却、释放管线 |
-| 4 | attribute_modifier_rules.md | component_design_rules.md | 属性修饰、Modifier管线、叠加规则 |
-| 5 | turn_rules.md | battle_fsm_design.md | 回合阶段、TurnPhase、行动队列 |
-| 6 | trigger_rules.md | events_audit_design.md | 触发器、事件链、Trigger机制 |
-| 7 | condition_rules.md | skill-buff-abstraction.md | 条件系统、效果判断、运行时条件 |
-| 8 | formula_rules.md | content_data_format.md | 公式系统、数值计算、表达式求值 |
-| 9 | selector_rules.md | skill-buff-abstraction.md | 目标选择、AOE、空地选择 |
-| 10 | duration_rules.md | skill-buff-abstraction.md | 持续时间、回合/真实时间、永久效果 |
-| 11 | cost_rules.md | skill-buff-abstraction.md | 消耗系统、资源扣除、消耗类型 |
-| 12 | stack_policy_rules.md | skill-buff-abstraction.md | 堆叠策略、Buff叠加、替换规则 |
-| 13 | requirement_rules.md | skill-buff-abstraction.md | 释放前提、技能可用性、前提检查 |
-| 14 | input_rules.md | infrastructure-design.md | 输入处理、UiCommand、触摸/键盘 |
+| 1 | battle/battle-rules.md | battle_fsm_design.md | 战斗状态机、Effect Pipeline、伤害计算 |
+| 2 | character/character-rules.md | component_design_rules.md | 角色属性、Faction、UnitSnapshot |
+| 3 | **ability/ability-rules.md** | skill-buff-abstraction.md | **新增** Ability 定义、冷却、五阶段释放管线（取代 skill） |
+| 4 | skill/skill-rules.md *(已过时)* | skill-buff-abstraction.md | ⚠️ 已被 ability-rules.md 取代 |
+| 5 | effect/effect-rules.md | skill-buff-abstraction.md §10 | Effect 一级领域（Damage/Heal/ApplyBuff 原子操作） |
+| 6 | attribute-modifier/attribute-modifier-rules.md | component_design_rules.md | 属性修饰、Modifier管线、叠加规则 |
+| 7 | turn/turn-rules.md | battle_fsm_design.md | 回合阶段、TurnPhase、行动队列 |
+| 8 | trigger/trigger-rules.md | events_audit_design.md | 触发器、事件链、Trigger机制、ExecutionStack、TriggerRegistry |
+| 9 | condition/condition-rules.md | skill-buff-abstraction.md | 条件系统、效果判断、运行时条件 |
+| 10 | formula/formula-rules.md | content_data_format.md | 公式系统、数值计算、表达式求值 |
+| 11 | **targeting/targeting-rules.md** | skill-buff-abstraction.md | **新增** 目标选择、AOE、空地选择（取代 selector） |
+| 12 | selector/selector-rules.md *(已过时)* | skill-buff-abstraction.md | ⚠️ 已被 targeting-rules.md 取代 |
+| 13 | duration/duration-rules.md | skill-buff-abstraction.md | 持续时间、回合/真实时间、永久效果 |
+| 14 | cost/cost-rules.md | skill-buff-abstraction.md | 消耗系统、资源扣除、消耗类型 |
+| 15 | stack-policy/stack-policy-rules.md | skill-buff-abstraction.md | 堆叠策略、Buff叠加、替换规则 |
+| 16 | requirement/requirement-rules.md | skill-buff-abstraction.md | 释放前提、技能可用性、前提检查 |
+| 15 | tag/tag-rules.md | skill-buff-abstraction.md §4.9, ADR-023 | **新增** 标签系统（GameplayTag 位掩码、三层标签管理、RON 元数据） |
+| 16 | input/input-rules.md | infrastructure-design.md | 输入处理、UiCommand、触摸/键盘 |
 
 **battle_rules.md**: 战斗状态机领域，管理战斗流程的完整生命周期，包括初始化、回合循环、效果执行、战斗结算。
 - 🟥 Effect Pipeline 必须严格按 Generate → Modify → Execute 三步执行
@@ -57,9 +62,14 @@ Created: 2026-06-14
 - 🟥 角色属性必须通过 Attribute 系统管理
 - 🟩 Faction 区分玩家/敌人/中立；UnitSnapshot 用于AI决策快照
 
-**skill_rules.md**: 技能系统领域，管理技能定义、冷却机制、五阶段释放管线。
+**skill/skill-rules.md**: 技能系统领域，管理技能定义、冷却机制、五阶段释放管线。
 - 🟥 技能释放必须经过 Requirement → Cost → Selector → Effect 四阶段
 - 🟩 技能配置通过 RON 文件数据驱动
+
+**effect/effect-rules.md**（新增）: 效果系统一级领域，管理 Effect 作为 Skill 和 Buff 之间的独立层。
+- 🟥 Effect = 一次性行为（Damage/Heal/ApplyBuff），不管理持续状态
+- 🟩 通过 Effect Pipeline（Generate → Modify → Execute）执行
+- 🟩 通过 EffectHandlerRegistry 统一分发，新增类型只注册不改管线
 
 **attribute_modifier_rules.md**: 属性修饰器领域，管理 Modifier 管线的生成、修改、执行三阶段。
 - 🟥 Modifier 是修改属性的唯一通道，禁止绕过
@@ -100,6 +110,11 @@ Created: 2026-06-14
 **requirement_rules.md**: 释放前提系统领域，管理技能释放前必须满足的条件。
 - 🟥 Requirement 判断"技能能不能放"，前提检查为纯函数
 - 🟩 9种内置前提类型，任一不满足时技能不可用
+
+**tag_rules.md**（新增）: 标签系统领域，管理 GameplayTag 位掩码、三层标签管理和 RON 元数据。
+- 🟥 GameplayTag 位掩码是运行时查询的唯一方式，O(1) 复杂度
+- 🟥 RON 是元数据唯一事实源，禁止 label() 硬编码
+- 🟩 三层标签管理：Trait → Equipment → Buff
 
 **input_rules.md**: 输入处理领域，管理键盘、鼠标、触摸输入到UiCommand的转换。
 - 🟥 输入处理在 InputSchedule 中执行
@@ -258,45 +273,48 @@ Created: 2026-06-14
 
 | 架构文件 | 领域文件 | 关系 |
 |---------|---------|------|
-| battle_fsm_design.md | battle_rules.md | 完全对应 |
-| component_design_rules.md | character_rules.md | 部分重叠 |
-| skill-buff-abstraction.md | skill_rules.md | 完全对应 |
-| component_design_rules.md | attribute_modifier_rules.md | 部分重叠 |
-| battle_fsm_design.md | turn_rules.md | 完全对应 |
-| events_audit_design.md | trigger_rules.md | 部分重叠 |
-| skill-buff-abstraction.md | condition_rules.md | 完全对应 |
-| content_data_format.md | formula_rules.md | 部分重叠 |
-| skill-buff-abstraction.md | selector_rules.md | 完全对应 |
-| skill-buff-abstraction.md | duration_rules.md | 完全对应 |
-| skill-buff-abstraction.md | cost_rules.md | 完全对应 |
-| skill-buff-abstraction.md | stack_policy_rules.md | 完全对应 |
-| skill-buff-abstraction.md | requirement_rules.md | 完全对应 |
-| infrastructure-design.md | input_rules.md | 部分重叠 |
-| error-architecture.md | error_system_rules.md | 完全对应 |
-| logging_design.md | logging_rules.md | 完全对应 |
-| save_migration_rules.md | persistence_rules.md | 完全对应 |
-| infrastructure-design.md | hot_reload_rules.md | 部分重叠 |
-| determinism_rules.md | determinism_rules.md | 完全对应 |
-| events_audit_design.md | replay_rules.md | 完全对应 |
-| testing_architecture.md | testing_rules.md | 完全对应 |
-| content-pipeline.md | content_system_rules.md | 完全对应 |
-| config_system_design.md | config_system_rules.md | 完全对应 |
-| content_migration_design.md | content_migration_rules.md | 完全对应 |
-| asset_lifecycle_rules.md | asset_lifecycle_rules.md | 完全对应 |
-| asset-organization.md | asset_organization_rules.md | 完全对应 |
-| feature_flag_design.md | feature_flag_rules.md | 完全对应 |
-| layer-contracts.md | layer_architecture_rules.md | 完全对应 |
-| schedules_design.md | ecs_communication_rules.md | 部分重叠 |
-| command_bus_design.md | command_bus_rules.md | 完全对应 |
-| infrastructure-design.md | shared_layer_rules.md | 部分重叠 |
-| modding-design.md | modding_system_rules.md | 完全对应 |
-| ui_domain_boundary_rules.md | ui_architecture_rules.md | 完全对应 |
-| i18n_design.md | localization_rules.md | 完全对应 |
-| pathfinding_design.md | map_terrain_rules.md | 完全对应 |
-| infrastructure-design.md | ai_rules.md | 部分重叠 |
-| performance_budget.md | performance_budget_rules.md | 完全对应 |
-| validation_rules.md | validation_rules.md | 完全对应 |
-| events_audit_design.md | event_audit_rules.md | 完全对应 |
+| battle_fsm_design.md | battle/battle-rules.md | 完全对应 |
+| component_design_rules.md | character/character-rules.md | 部分重叠 |
+| skill-buff-abstraction.md | **ability/ability-rules.md** | **新增** Ability 一级领域（取代 skill） |
+| skill-buff-abstraction.md | skill/skill-rules.md *(已过时)* | ⚠️ 已被 ability-rules.md 取代 |
+| skill-buff-abstraction.md §10 | effect/effect-rules.md | Effect 一级领域 |
+| component_design_rules.md | attribute-modifier/attribute-modifier-rules.md | 部分重叠 |
+| battle_fsm_design.md | turn/turn-rules.md | 完全对应 |
+| events_audit_design.md | trigger/trigger-rules.md | 部分重叠（含 ExecutionStack、TriggerRegistry） |
+| skill-buff-abstraction.md | condition/condition-rules.md | 完全对应 |
+| content_data_format.md | formula/formula-rules.md | 部分重叠 |
+| skill-buff-abstraction.md | **targeting/targeting-rules.md** | **新增** 目标选择一级领域（取代 selector） |
+| skill-buff-abstraction.md | selector/selector-rules.md *(已过时)* | ⚠️ 已被 targeting-rules.md 取代 |
+| skill-buff-abstraction.md | duration/duration-rules.md | 完全对应 |
+| skill-buff-abstraction.md | cost/cost-rules.md | 完全对应 |
+| skill-buff-abstraction.md | stack-policy/stack-policy-rules.md | 完全对应 |
+| skill-buff-abstraction.md | requirement/requirement-rules.md | 完全对应 |
+| infrastructure-design.md | input/input-rules.md | 部分重叠 |
+| error-architecture.md | 03-technical/error-system-rules.md | 完全对应 |
+| logging_design.md | 03-technical/logging-rules.md | 完全对应 |
+| save_migration_rules.md | 03-technical/persistence-rules.md | 完全对应 |
+| infrastructure-design.md | 03-technical/hot-reload-rules.md | 部分重叠 |
+| determinism_rules.md | 03-technical/determinism-rules.md | 完全对应 |
+| events_audit_design.md | 03-technical/replay-rules.md | 完全对应 |
+| testing_architecture.md | 05-testing/testing-rules.md | 完全对应 |
+| content-pipeline.md | 04-data/content-system-rules.md | 完全对应 |
+| config_system_design.md | 04-data/config-system-rules.md | 完全对应 |
+| content_migration_design.md | 04-data/content-migration-rules.md | 完全对应 |
+| asset_lifecycle_rules.md | 04-data/asset-lifecycle-rules.md | 完全对应 |
+| asset-organization.md | 04-data/asset-organization-rules.md | 完全对应 |
+| feature_flag_design.md | 04-data/feature-flag-rules.md | 完全对应 |
+| layer-contracts.md | 01-architecture/layer-architecture-rules.md | 完全对应 |
+| schedules_design.md | 03-technical/ecs-communication-rules.md | 部分重叠 |
+| command_bus_design.md | 03-technical/command-bus-rules.md | 完全对应 |
+| infrastructure-design.md | 03-technical/shared-layer-rules.md | 部分重叠 |
+| modding-design.md | 03-technical/modding-system-rules.md | 完全对应 |
+| ui_domain_boundary_rules.md | 03-technical/ui-architecture-rules.md | 完全对应 |
+| i18n_design.md | 03-technical/localization-rules.md | 完全对应 |
+| pathfinding_design.md | 02-domain/map/map-terrain-rules.md | 完全对应 |
+| infrastructure-design.md | 02-domain/ai/ai-rules.md | 部分重叠 |
+| performance_budget.md | 03-technical/performance-budget-rules.md | 完全对应 |
+| validation_rules.md | 04-data/validation-rules.md | 完全对应 |
+| events_audit_design.md | 03-technical/event-audit-rules.md | 完全对应 |
 
 ---
 
@@ -304,21 +322,23 @@ Created: 2026-06-14
 
 | 功能 | 领域文件 |
 |------|---------|
-| 技能释放流程 | skill_rules.md, requirement_rules.md, cost_rules.md, selector_rules.md |
-| Buff/Debuff | attribute_modifier_rules.md, stack_policy_rules.md, duration_rules.md, condition_rules.md |
-| 回合制战斗 | turn_rules.md, battle_rules.md |
-| AI决策 | ai_rules.md |
-| 数值计算 | formula_rules.md, attribute_modifier_rules.md |
-| 地图与寻路 | map_terrain_rules.md |
-| 资源管理 | asset_lifecycle_rules.md, asset_organization_rules.md |
-| 配置数据 | content_system_rules.md, config_system_rules.md, content_migration_rules.md |
-| 存档与回放 | persistence_rules.md, replay_rules.md, determinism_rules.md |
-| UI交互 | ui_architecture_rules.md, input_rules.md, command_bus_rules.md |
-| 错误处理 | error_system_rules.md, logging_rules.md |
-| MOD支持 | modding_system_rules.md |
-| 本地化 | localization_rules.md |
-| 测试规范 | testing_rules.md |
-| 性能优化 | performance_budget_rules.md |
-| 校验规则 | validation_rules.md |
-| 事件审计 | event_audit_rules.md |
-| Feature开关 | feature_flag_rules.md |
+| Ability 释放流程 | ability/ability-rules.md, requirement/requirement-rules.md, cost/cost-rules.md, targeting/targeting-rules.md |
+| 效果执行 | effect/effect-rules.md, attribute-modifier/attribute-modifier-rules.md |
+| Buff/Debuff | buff/buff-rules.md, attribute-modifier/attribute-modifier-rules.md, stack-policy/stack-policy-rules.md, duration/duration-rules.md, condition/condition-rules.md |
+| 触发与执行栈 | trigger/trigger-rules.md（含 ExecutionStack、TriggerRegistry） |
+| 回合制战斗 | turn/turn-rules.md, battle/battle-rules.md |
+| AI决策 | ai/ai-rules.md |
+| 数值计算 | formula/formula-rules.md, attribute-modifier/attribute-modifier-rules.md |
+| 地图与寻路 | map/map-terrain-rules.md |
+| 资源管理 | 04-data/asset-lifecycle-rules.md, 04-data/asset-organization-rules.md |
+| 配置数据 | 04-data/content-system-rules.md, 04-data/config-system-rules.md, 04-data/content-migration-rules.md |
+| 存档与回放 | 03-technical/persistence-rules.md, 03-technical/replay-rules.md, 03-technical/determinism-rules.md |
+| UI交互 | 03-technical/ui-architecture-rules.md, input/input-rules.md, 03-technical/command-bus-rules.md |
+| 错误处理 | 03-technical/error-system-rules.md, 03-technical/logging-rules.md |
+| MOD支持 | 03-technical/modding-system-rules.md |
+| 本地化 | 03-technical/localization-rules.md |
+| 测试规范 | 05-testing/testing-rules.md |
+| 性能优化 | 03-technical/performance-budget-rules.md |
+| 校验规则 | 04-data/validation-rules.md |
+| 事件审计 | 03-technical/event-audit-rules.md |
+| Feature开关 | 04-data/feature-flag-rules.md |

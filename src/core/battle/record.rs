@@ -14,8 +14,8 @@ use super::events::{
 
 // ── 伤害分解 ──
 
-/// 伤害修饰符条目（re-export from core::modifier_rule）
-pub use crate::core::modifier_rule::ModifierEntry;
+/// 伤害修饰符条目（re-export from core::modifier）
+pub use crate::core::modifier::ModifierEntry;
 
 /// 伤害分解记录（匹配实际效果管线：generate → modify → execute）
 #[derive(Debug, Clone, Reflect, Serialize, Deserialize)]

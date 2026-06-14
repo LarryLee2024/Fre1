@@ -7,6 +7,7 @@ use crate::core::battle::{
 };
 use crate::core::character::Faction;
 use crate::core::equipment::{ItemEquipped, ItemUnequipped};
+use crate::infrastructure::localization::{CurrentLocale, LocalizationService};
 use bevy::ecs::message::MessageReader;
 use bevy::prelude::*;
 
@@ -22,7 +23,15 @@ fn faction_log_color(faction: Faction) -> Color {
 pub fn on_damage_applied(
     mut damage_reader: MessageReader<DamageApplied>,
     mut combat_log: ResMut<CombatLog>,
+    localization: Res<LocalizationService>,
+    locale: Res<CurrentLocale>,
 ) {
+    let skill_text = localization.resolve("ui.combat_log.skill", &locale.0, None);
+    let attack_text = localization.resolve("ui.combat_log.attack", &locale.0, None);
+    let attacked_text = localization.resolve("ui.combat_log.attacked", &locale.0, None);
+    let dealt_text = localization.resolve("ui.combat_log.dealt", &locale.0, None);
+    let damage_text = localization.resolve("ui.combat_log.damage", &locale.0, None);
+
     for msg in damage_reader.read() {
         bevy::log::debug!(
             target: "combat_log",
@@ -32,7 +41,11 @@ pub fn on_damage_applied(
             amount = msg.amount,
             "伤害已应用"
         );
-        let skill_label = if msg.is_skill { "技能" } else { "攻击" };
+        let skill_label = if msg.is_skill {
+            &skill_text
+        } else {
+            &attack_text
+        };
         combat_log.push(vec![
             LogSegment {
                 text: format!("[{}]", msg.attacker_name),
@@ -43,7 +56,7 @@ pub fn on_damage_applied(
                 color: log_color::TURN,
             },
             LogSegment {
-                text: " 攻击 ".to_string(),
+                text: attacked_text.clone(),
                 color: log_color::NORMAL,
             },
             LogSegment {
@@ -51,7 +64,7 @@ pub fn on_damage_applied(
                 color: faction_log_color(msg.target_faction),
             },
             LogSegment {
-                text: " 造成 ".to_string(),
+                text: dealt_text.clone(),
                 color: log_color::NORMAL,
             },
             LogSegment {
@@ -59,7 +72,7 @@ pub fn on_damage_applied(
                 color: log_color::DAMAGE,
             },
             LogSegment {
-                text: " 伤害".to_string(),
+                text: damage_text.clone(),
                 color: log_color::NORMAL,
             },
             LogSegment {
@@ -100,7 +113,10 @@ pub fn on_heal_applied(
 pub fn on_character_died_log(
     mut died_reader: MessageReader<CharacterDied>,
     mut combat_log: ResMut<CombatLog>,
+    localization: Res<LocalizationService>,
+    locale: Res<CurrentLocale>,
 ) {
+    let defeated_text = localization.resolve("ui.combat_log.defeated", &locale.0, None);
     for msg in died_reader.read() {
         bevy::log::debug!(
             target: "combat_log",
@@ -115,7 +131,7 @@ pub fn on_character_died_log(
                 color: faction_log_color(msg.faction),
             },
             LogSegment {
-                text: " 被击败！".to_string(),
+                text: defeated_text.clone(),
                 color: log_color::KILL,
             },
         ]);
@@ -126,7 +142,10 @@ pub fn on_character_died_log(
 pub fn on_stun_applied(
     mut stun_reader: MessageReader<StunApplied>,
     mut combat_log: ResMut<CombatLog>,
+    localization: Res<LocalizationService>,
+    locale: Res<CurrentLocale>,
 ) {
+    let stunned_text = localization.resolve("ui.combat_log.stunned", &locale.0, None);
     for msg in stun_reader.read() {
         bevy::log::debug!(target: "combat_log", entity = ?msg.target, target_name = %msg.target_name, "晕眩已应用");
         combat_log.push(vec![
@@ -135,7 +154,7 @@ pub fn on_stun_applied(
                 color: log_color::NORMAL,
             },
             LogSegment {
-                text: " 处于晕眩，无法行动".to_string(),
+                text: stunned_text.clone(),
                 color: log_color::DAMAGE,
             },
         ]);

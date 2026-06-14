@@ -30,7 +30,7 @@ Version: 4.0
 | `asset-organization.md` | 美术资产三树分离（assets/content/src）、Content Packs 组织、角色/地图/音频规范、外包工作流（Git LFS + 自动校验） | 提议 |
 | `asset_lifecycle_rules.md` | Handle 类型选择（Strong/Weak）、分阶段卸载（每帧≤4MB）、SafeAssetRef 封装、内存预算（战斗场景 256MB）、延迟卸载队列、Fallback 资源 | 提议 |
 | `asset_namespace_design.md` | `base:category/name` 命名空间前缀、MOD 隔离、结构化 AssetId + AssetKey(u64) 预计算哈希、Resolution Chain 解析优先级链 | 提议 |
-| `battle_fsm_design.md` | 战斗 FSM（PreBattle→RoundStart→PlayerPhase→EnemyPhase→TurnEnd→VictoryCheck→RoundEnd→PostBattle）、Guard/Action/Effect 三段式、GuardContext 预计算 | 提议 |
+| `battle_fsm_design.md` | 战斗 FSM（PreBattle→RoundStart→PlayerPhase→EnemyPhase→TurnEnd→VictoryCheck→RoundEnd→PostBattle）、Guard/Action/Effect 三段式、GuardContext 预计算、回合内调度时序（Buff Tick→Trigger→ExecutionStack→Action→Settlement） | 提议 |
 | `collaboration-model.md` | AI 6-Agent 协作流程、Handoff 协议、外包美术团队分支策略、CI 分级（PR/Merge/Nightly）、反仓库膨胀策略 | 提议 |
 | `command_bus_design.md` | GameCommand 可序列化枚举（禁止 Box<dyn Command>）、Memento 模式撤销、Cursor-based 执行、ActionQueue 效果链式执行、校验/执行分离 | 提议 |
 | `component_design_rules.md` | 四位一体组件分类（Marker/Data/Status/Definition）、Hook 跨组件安全、变更检测防御性编程、8 字段拆分阈值、序列化 version 字段 | 提议 |
@@ -56,7 +56,7 @@ Version: 4.0
 | `project-structure.md` | 三棵树分离（src/content/assets）、完整源码树+资产树+内容树、MOD 目录结构、外包目录权限、配置模板规范 | 提议 |
 | `save_migration_rules.md` | 存档 SemVer 版本号、向前兼容（新增字段=默认值）、三步删除原则、只保存 Instance 不保存 Definition、纯函数迁移 | 提议 |
 | `schedules_design.md` | 自定义 Schedule（Input/Logic/Presentation）、SystemSet 层级排序、状态门控调度、并行 vs 顺序策略、`.chain()` 性能陷阱 | 提议 |
-| `skill-buff-abstraction.md` | Effect Executor 统一抽象（500 技能收敛为 20-30 个 Executor）、Skill/Buff/Effect 三层数据模型、ActionQueue 效果执行队列 | 提议 |
+| `skill-buff-abstraction.md` | Effect Executor 统一抽象（500 技能收敛为 20-30 个 Executor）、Skill/Buff/Effect 三层数据模型、ExecutionStack（LIFO 响应栈）、TriggerRegistry 统一分发、SRPG-GAS 对齐、Effect 一级领域化 | 提议 |
 | `system_design_rules.md` | 参数上限 8 个、读写分离（Query 参数只读 vs 可变）、禁止 System 间直接调用、命名规范、Exclusive System 使用场景 | 提议 |
 | `testing_architecture.md` | 五层测试金字塔（单元→领域集成→系统集成→E2E→Testbeds）、Battle Replay 测试、failure_snapshots、TestCharacterBuilder | 提议 |
 | `tools_architecture.md` | Tools 层独立二进制（永不发布）、data_validator/content_linter/balance_checker、headless CI 模式、按需实现原则 | 提议 |

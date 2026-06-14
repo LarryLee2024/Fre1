@@ -19,7 +19,8 @@ use tactical_rpg::core::attribute::{
     ModifierOp, ModifierSource,
 };
 use tactical_rpg::core::buff::{
-    ActiveBuffs, BuffData, BuffInstance, apply_buff, remove_all_debuffs, remove_buff,
+    ActiveBuffs, BuffData, BuffInstance, DurationPolicy, StackPolicy, apply_buff,
+    remove_all_debuffs, remove_buff,
 };
 use tactical_rpg::core::tag::{GameplayTag, GameplayTags};
 
@@ -38,6 +39,12 @@ fn make_buff_data(
     BuffData {
         id: id.into(),
         name: id.into(),
+        name_key: None,
+        description: String::new(),
+        effects: vec![],
+        duration: DurationPolicy::Turns(2),
+        stack: StackPolicy::NoStack,
+        conditions: vec![],
         default_duration: 2,
         modifiers,
         tags,
@@ -53,6 +60,12 @@ fn make_stun_buff() -> BuffData {
     BuffData {
         id: "stun".into(),
         name: "晕眩".into(),
+        name_key: None,
+        description: String::new(),
+        effects: vec![],
+        duration: DurationPolicy::Turns(1),
+        stack: StackPolicy::NoStack,
+        conditions: vec![],
         default_duration: 1,
         modifiers: vec![],
         tags: vec![GameplayTag::DEBUFF, GameplayTag::STUN],

@@ -1,69 +1,16 @@
 /// Buff 领域错误（BuffError, BuffResult）
 mod buff_error;
+/// Buff 数据模型类型（BuffData, BuffDef, DurationPolicy, StackPolicy 等）
+mod types;
 
 pub use buff_error::*;
+pub use types::*;
 
 use crate::core::attribute::{AttributeKind, AttributeModifierDef, ModifierOp};
 use crate::core::registry_loader::RegistryLoader;
-use crate::core::tag::{GameplayTag, TagName};
+use crate::core::tag::GameplayTag;
 use bevy::prelude::*;
-use serde::Deserialize;
 use std::collections::HashMap;
-
-/// Buff 数据定义（运行时）
-#[derive(Clone, Debug)]
-pub struct BuffData {
-    pub id: String,
-    pub name: String,
-    pub default_duration: u32,
-    pub modifiers: Vec<AttributeModifierDef>,
-    pub tags: Vec<GameplayTag>,
-    pub dot_damage: i32,
-    pub hot_heal: i32,
-    pub is_stun: bool,
-    pub is_cleanse: bool,
-    pub is_buff: bool,
-}
-
-/// Buff 数据定义（RON 反序列化用，TagName 替代 GameplayTag）
-#[derive(Clone, Debug, Deserialize)]
-pub struct BuffDef {
-    #[serde(default)]
-    pub version: u32,
-    pub id: String,
-    pub name: String,
-    pub default_duration: u32,
-    pub modifiers: Vec<AttributeModifierDef>,
-    pub tags: Vec<TagName>,
-    pub dot_damage: i32,
-    pub hot_heal: i32,
-    pub is_stun: bool,
-    pub is_cleanse: bool,
-    pub is_buff: bool,
-}
-
-impl From<BuffDef> for BuffData {
-    fn from(def: BuffDef) -> Self {
-        BuffData {
-            id: def.id,
-            name: def.name,
-            default_duration: def.default_duration,
-            modifiers: def.modifiers,
-            tags: def.tags.iter().map(|t| t.to_tag()).collect(),
-            dot_damage: def.dot_damage,
-            hot_heal: def.hot_heal,
-            is_stun: def.is_stun,
-            is_cleanse: def.is_cleanse,
-            is_buff: def.is_buff,
-        }
-    }
-}
-
-impl BuffData {
-    pub fn is_debuff(&self) -> bool {
-        !self.is_buff
-    }
-}
 
 /// Buff 注册表资源
 #[derive(Resource, Default, Clone, Debug)]
@@ -92,6 +39,12 @@ impl BuffRegistry {
             BuffData {
                 id: "attack_up".into(),
                 name: "攻+5".into(),
+                name_key: Some("buff.b_001.name".into()),
+                description: String::new(),
+                effects: vec![],
+                duration: DurationPolicy::Turns(3),
+                stack: StackPolicy::NoStack,
+                conditions: vec![],
                 default_duration: 3,
                 modifiers: vec![AttributeModifierDef {
                     kind: AttributeKind::Attack,
@@ -113,6 +66,12 @@ impl BuffRegistry {
             BuffData {
                 id: "attack_down".into(),
                 name: "攻-5".into(),
+                name_key: Some("buff.b_002.name".into()),
+                description: String::new(),
+                effects: vec![],
+                duration: DurationPolicy::Turns(3),
+                stack: StackPolicy::NoStack,
+                conditions: vec![],
                 default_duration: 3,
                 modifiers: vec![AttributeModifierDef {
                     kind: AttributeKind::Attack,
@@ -134,6 +93,12 @@ impl BuffRegistry {
             BuffData {
                 id: "defense_up".into(),
                 name: "防+5".into(),
+                name_key: Some("buff.b_003.name".into()),
+                description: String::new(),
+                effects: vec![],
+                duration: DurationPolicy::Turns(3),
+                stack: StackPolicy::NoStack,
+                conditions: vec![],
                 default_duration: 3,
                 modifiers: vec![AttributeModifierDef {
                     kind: AttributeKind::Defense,
@@ -155,6 +120,12 @@ impl BuffRegistry {
             BuffData {
                 id: "defense_down".into(),
                 name: "防-5".into(),
+                name_key: Some("buff.b_004.name".into()),
+                description: String::new(),
+                effects: vec![],
+                duration: DurationPolicy::Turns(3),
+                stack: StackPolicy::NoStack,
+                conditions: vec![],
                 default_duration: 3,
                 modifiers: vec![AttributeModifierDef {
                     kind: AttributeKind::Defense,
@@ -176,6 +147,12 @@ impl BuffRegistry {
             BuffData {
                 id: "burn".into(),
                 name: "灼-2".into(),
+                name_key: Some("buff.b_005.name".into()),
+                description: String::new(),
+                effects: vec![],
+                duration: DurationPolicy::Turns(2),
+                stack: StackPolicy::NoStack,
+                conditions: vec![],
                 default_duration: 2,
                 modifiers: vec![AttributeModifierDef {
                     kind: AttributeKind::Defense,
@@ -197,6 +174,12 @@ impl BuffRegistry {
             BuffData {
                 id: "poison".into(),
                 name: "毒-3".into(),
+                name_key: Some("buff.b_006.name".into()),
+                description: String::new(),
+                effects: vec![],
+                duration: DurationPolicy::Turns(3),
+                stack: StackPolicy::NoStack,
+                conditions: vec![],
                 default_duration: 3,
                 modifiers: vec![],
                 tags: vec![GameplayTag::DEBUFF, GameplayTag::POISON],
@@ -214,6 +197,12 @@ impl BuffRegistry {
             BuffData {
                 id: "regen".into(),
                 name: "愈+4".into(),
+                name_key: Some("buff.b_007.name".into()),
+                description: String::new(),
+                effects: vec![],
+                duration: DurationPolicy::Turns(3),
+                stack: StackPolicy::NoStack,
+                conditions: vec![],
                 default_duration: 3,
                 modifiers: vec![],
                 tags: vec![GameplayTag::BUFF],
@@ -231,6 +220,58 @@ impl BuffRegistry {
             BuffData {
                 id: "stun".into(),
                 name: "晕眩".into(),
+                name_key: Some("buff.b_008.name".into()),
+                description: String::new(),
+                effects: vec![],
+                duration: DurationPolicy::Turns(1),
+                stack: StackPolicy::NoStack,
+                conditions: vec![],
+                default_duration: 1,
+                modifiers: vec![],
+                tags: vec![GameplayTag::DEBUFF, GameplayTag::POISON],
+                dot_damage: 3,
+                hot_heal: 0,
+                is_stun: false,
+                is_cleanse: false,
+                is_buff: false,
+            },
+        );
+
+        // 再生
+        self.buffs.insert(
+            "regen".into(),
+            BuffData {
+                id: "regen".into(),
+                name: "愈+4".into(),
+                name_key: Some("buff.b_007.name".into()),
+                description: "每回合恢复生命".into(),
+                effects: vec![],
+                duration: DurationPolicy::Turns(3),
+                stack: StackPolicy::NoStack,
+                conditions: vec![],
+                default_duration: 3,
+                modifiers: vec![],
+                tags: vec![GameplayTag::BUFF],
+                dot_damage: 0,
+                hot_heal: 4,
+                is_stun: false,
+                is_cleanse: false,
+                is_buff: true,
+            },
+        );
+
+        // 眩晕
+        self.buffs.insert(
+            "stun".into(),
+            BuffData {
+                id: "stun".into(),
+                name: "晕眩".into(),
+                name_key: Some("buff.b_008.name".into()),
+                description: "无法行动".into(),
+                effects: vec![],
+                duration: DurationPolicy::Turns(1),
+                stack: StackPolicy::NoStack,
+                conditions: vec![],
                 default_duration: 1,
                 modifiers: vec![],
                 tags: vec![GameplayTag::DEBUFF, GameplayTag::STUN],
@@ -269,6 +310,7 @@ impl RegistryLoader for BuffRegistry {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::tag::TagName;
     use ron::de::from_bytes;
 
     // ── BuffDef → BuffData 转换 ──
@@ -279,6 +321,12 @@ mod tests {
             version: 0,
             id: "test_buff".into(),
             name: "测试增益".into(),
+            name_key: None,
+            description: String::new(),
+            effects: vec![],
+            duration: DurationDef::Turns(3),
+            stack: StackDef::NoStack,
+            conditions: vec![],
             default_duration: 3,
             modifiers: vec![AttributeModifierDef {
                 kind: AttributeKind::Attack,
@@ -295,6 +343,10 @@ mod tests {
         let data: BuffData = def.into();
         assert_eq!(data.id, "test_buff");
         assert_eq!(data.tags, vec![GameplayTag::BUFF, GameplayTag::FIRE]);
+        assert_eq!(data.duration, DurationPolicy::Turns(3));
+        assert_eq!(data.stack, StackPolicy::NoStack);
+        assert!(data.effects.is_empty());
+        assert!(data.conditions.is_empty());
     }
 
     // ── RON 反序列化 ──
@@ -320,6 +372,35 @@ mod tests {
         let def: BuffDef = from_bytes(ron_str.as_bytes()).unwrap();
         assert_eq!(def.id, "test_buff");
         assert_eq!(def.tags, vec![TagName::Buff, TagName::Fire]);
+        // 新字段使用默认值
+        assert_eq!(def.duration, DurationDef::Turns(1)); // 默认 Turns(1)
+        assert_eq!(def.stack, StackDef::NoStack); // 默认 NoStack
+        assert!(def.effects.is_empty());
+    }
+
+    #[test]
+    fn ron_反序列化_带duration和stack字段() {
+        let ron_str = r#"
+            (
+                id: "new_buff",
+                name: "新Buff",
+                description: "测试描述",
+                duration: Turns(5),
+                stack: Stackable(3),
+                default_duration: 2,
+                modifiers: [],
+                tags: [BUFF],
+                dot_damage: 0,
+                hot_heal: 0,
+                is_stun: false,
+                is_cleanse: false,
+                is_buff: true,
+            )
+        "#;
+        let def: BuffDef = from_bytes(ron_str.as_bytes()).unwrap();
+        assert_eq!(def.duration, DurationDef::Turns(5));
+        assert_eq!(def.stack, StackDef::Stackable(3));
+        assert_eq!(def.description, "测试描述");
     }
 
     #[test]
@@ -327,6 +408,12 @@ mod tests {
         let data = BuffData {
             id: "test".into(),
             name: "test".into(),
+            name_key: None,
+            description: String::new(),
+            effects: vec![],
+            duration: DurationPolicy::Turns(1),
+            stack: StackPolicy::NoStack,
+            conditions: vec![],
             default_duration: 1,
             modifiers: vec![],
             tags: vec![],
@@ -344,6 +431,12 @@ mod tests {
         let data = BuffData {
             id: "test".into(),
             name: "test".into(),
+            name_key: None,
+            description: String::new(),
+            effects: vec![],
+            duration: DurationPolicy::Turns(1),
+            stack: StackPolicy::NoStack,
+            conditions: vec![],
             default_duration: 1,
             modifiers: vec![],
             tags: vec![],
@@ -364,6 +457,12 @@ mod tests {
             BuffData {
                 id: "test".into(),
                 name: "测试".into(),
+                name_key: None,
+                description: String::new(),
+                effects: vec![],
+                duration: DurationPolicy::Turns(1),
+                stack: StackPolicy::NoStack,
+                conditions: vec![],
                 default_duration: 1,
                 modifiers: vec![],
                 tags: vec![],
@@ -393,6 +492,22 @@ mod tests {
     }
 
     #[test]
+    fn buff_registry_默认buff包含新字段() {
+        let mut registry = BuffRegistry::default();
+        registry.register_defaults();
+
+        let attack_up = registry.get("attack_up").unwrap();
+        assert_eq!(attack_up.duration, DurationPolicy::Turns(3));
+        assert_eq!(attack_up.stack, StackPolicy::NoStack);
+        assert!(attack_up.description.is_empty());
+        assert!(attack_up.effects.is_empty());
+
+        let poison = registry.get("poison").unwrap();
+        assert_eq!(poison.duration, DurationPolicy::Turns(3));
+        assert_eq!(poison.stack, StackPolicy::NoStack);
+    }
+
+    #[test]
     fn ron_反序列化_旧配置无version字段() {
         let ron_str = r#"
             (
@@ -411,5 +526,8 @@ mod tests {
         let def: BuffDef = from_bytes(ron_str.as_bytes()).unwrap();
         assert_eq!(def.id, "old_buff");
         assert_eq!(def.version, 0);
+        // 旧配置无 duration/stack 字段，使用默认值
+        assert_eq!(def.duration, DurationDef::Turns(1));
+        assert_eq!(def.stack, StackDef::NoStack);
     }
 }

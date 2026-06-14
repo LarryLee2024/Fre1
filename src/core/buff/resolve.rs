@@ -2,10 +2,11 @@
 // 纯逻辑：只做数值计算和状态变更，通过 Message 通知表现层
 // 原 status.rs，移入 buff 模块统一管理
 
+use crate::core::ability::SkillCooldowns;
 use crate::core::attribute::{AttributeKind, Attributes, BuffInstanceId, ModifierSource};
 use crate::core::battle::{DotApplied, HotApplied, StunApplied};
+use crate::core::buff::domain::DurationPolicy;
 use crate::core::character::{Dead, GridPosition, PersistentTags, Unit, UnitName};
-use crate::core::skill::SkillCooldowns;
 use crate::core::tag::{GameplayTag, GameplayTags};
 use crate::core::turn::NeedsResolve;
 use crate::shared::event::battle as shared_battle;
@@ -142,10 +143,14 @@ pub fn resolve_status_effects(
         }
 
         // 4. tick 递减持续时间，移除过期的 Buff
+        // 仅 DurationPolicy::Turns 的 buff 会在 tick 中过期
         let expired_buffs: Vec<String> = buffs
             .instances
             .iter()
-            .filter(|inst| inst.remaining_turns <= 1)
+            .filter(|inst| {
+                matches!(inst.duration_policy, DurationPolicy::Turns(_))
+                    && inst.remaining_turns <= 1
+            })
             .map(|inst| inst.buff_id.clone())
             .collect();
         tick_buffs(&mut buffs, &mut attrs, &mut tags, &persistent_tags);
@@ -168,16 +173,22 @@ pub fn resolve_status_effects(
 }
 
 /// tick 所有 Buff：递减持续时间，移除过期的并清理其修饰符和标签
+///
+/// 仅 DurationPolicy::Turns 的 buff 会被递减和过期清理。
+/// 其他策略（UntilDeath, Permanent 等）由外部事件触发移除。
 pub(crate) fn tick_buffs(
     buffs: &mut ActiveBuffs,
     attrs: &mut Attributes,
     tags: &mut GameplayTags,
     persistent: &PersistentTags,
 ) {
+    // 仅识别 DurationPolicy::Turns 且即将过期的 buff
     let expired_ids: Vec<ModifierSource> = buffs
         .instances
         .iter()
-        .filter(|inst| inst.remaining_turns <= 1)
+        .filter(|inst| {
+            matches!(inst.duration_policy, DurationPolicy::Turns(_)) && inst.remaining_turns <= 1
+        })
         .map(|inst| inst.instance_id.to_modifier_source())
         .collect();
 
@@ -235,6 +246,7 @@ mod tests {
             buff_id: buff_id.into(),
             name: buff_id.into(),
             remaining_turns: remaining,
+            duration_policy: DurationPolicy::Turns(remaining),
             source_entity: None,
             tags,
             is_buff,
@@ -403,6 +415,34 @@ mod tests {
         tick_buffs(&mut buffs, &mut attrs, &mut tags, &trait_tags);
 
         assert!(buffs.is_empty());
+    }
+
+    #[test]
+    fn tick_buffs_permanent_buff不递减() {
+        let mut buffs = ActiveBuffs::default();
+        buffs.add(BuffInstance {
+            instance_id: BuffInstanceId(1),
+            buff_id: "permanent".into(),
+            name: "永久".into(),
+            remaining_turns: 5,
+            duration_policy: DurationPolicy::Permanent,
+            source_entity: None,
+            tags: vec![GameplayTag::BUFF],
+            is_buff: true,
+            dot_damage: 0,
+            hot_heal: 0,
+        });
+
+        let mut attrs = Attributes::default();
+        attrs.fill_vital_resources();
+        let mut tags = GameplayTags::default();
+        let trait_tags = PersistentTags::default();
+
+        tick_buffs(&mut buffs, &mut attrs, &mut tags, &trait_tags);
+
+        // Permanent buff 不应递减
+        assert_eq!(buffs.len(), 1);
+        assert_eq!(buffs.instances[0].remaining_turns, 5);
     }
 
     // ── rebuild_tags 测试 ──

@@ -2,6 +2,7 @@
 use bevy::prelude::*;
 
 use crate::infrastructure::assets::CnFont;
+use crate::infrastructure::localization::{CurrentLocale, LocalizationService};
 use crate::ui::events::UiCommand;
 use crate::ui::theme::UiTheme;
 
@@ -19,10 +20,21 @@ pub struct ContinueButton;
 pub struct QuitButton;
 
 /// 生成主菜单
-pub fn spawn_main_menu(mut commands: Commands, theme: Res<UiTheme>, cn_font: Res<CnFont>) {
+pub fn spawn_main_menu(
+    mut commands: Commands,
+    theme: Res<UiTheme>,
+    cn_font: Res<CnFont>,
+    localization: Res<LocalizationService>,
+    locale: Res<CurrentLocale>,
+) {
     let title_font = cn_font.text_font(theme.font_title);
     let button_font = cn_font.text_font(theme.font_menu);
     let small_font = cn_font.text_font(theme.font_small);
+
+    let title_text = localization.resolve("ui.main_menu.title", &locale.0, None);
+    let start_text = localization.resolve("ui.main_menu.start_game", &locale.0, None);
+    let continue_text = localization.resolve("ui.main_menu.continue_game", &locale.0, None);
+    let quit_text = localization.resolve("ui.main_menu.quit_game", &locale.0, None);
 
     commands
         .spawn((
@@ -40,7 +52,7 @@ pub fn spawn_main_menu(mut commands: Commands, theme: Res<UiTheme>, cn_font: Res
         .with_children(|parent| {
             // 标题
             parent.spawn((
-                Text::new("回合制战棋"),
+                Text::new(title_text),
                 title_font,
                 TextColor(theme.menu_title_color),
                 Node {
@@ -50,13 +62,13 @@ pub fn spawn_main_menu(mut commands: Commands, theme: Res<UiTheme>, cn_font: Res
             ));
 
             // "开始游戏"按钮
-            spawn_menu_button(parent, "开始游戏", &theme, &button_font, StartGameButton);
+            spawn_menu_button(parent, &start_text, &theme, &button_font, StartGameButton);
 
             // "继续战役"按钮
-            spawn_menu_button(parent, "继续战役", &theme, &button_font, ContinueButton);
+            spawn_menu_button(parent, &continue_text, &theme, &button_font, ContinueButton);
 
             // "退出游戏"按钮
-            spawn_menu_button(parent, "退出游戏", &theme, &button_font, QuitButton);
+            spawn_menu_button(parent, &quit_text, &theme, &button_font, QuitButton);
 
             // 版本号
             parent.spawn((

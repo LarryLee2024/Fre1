@@ -9,6 +9,7 @@ use bevy_inspector_egui::bevy_egui::{EguiGlobalSettings, EguiPlugin};
 use crate::app::error_event::GameErrorMessage;
 use crate::app::error_monitor;
 use crate::content::ContentPlugin;
+use crate::core::ability::AbilityPlugin;
 use crate::core::ai::{AiBehaviorPlugin, AiPlugin};
 use crate::core::attribute_def::AttributeDefPlugin;
 use crate::core::battle::BattlePlugin;
@@ -19,8 +20,7 @@ use crate::core::effect::EffectPlugin;
 use crate::core::equipment::EquipmentPlugin;
 use crate::core::inventory::InventoryPlugin;
 use crate::core::map::MapPlugin;
-use crate::core::modifier_rule::ModifierRulePlugin;
-use crate::core::skill::SkillPlugin;
+use crate::core::modifier::ModifierRulePlugin;
 use crate::core::tag_def::TagDefPlugin;
 use crate::core::turn::TurnPlugin;
 use crate::infrastructure::assets::AssetsPlugin;
@@ -71,7 +71,7 @@ impl Plugin for AppPlugin {
         .add_plugins(ContentPlugin)
         // 数据层插件
         .add_plugins((
-            SkillPlugin,
+            AbilityPlugin,
             BuffPlugin,
             AiBehaviorPlugin,
             EquipmentPlugin,

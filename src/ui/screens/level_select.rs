@@ -5,6 +5,7 @@ use crate::core::campaign::progress::{CampaignProgress, StageStatus};
 use crate::core::campaign::registry::CampaignRegistry;
 use crate::core::map::LevelRegistry;
 use crate::infrastructure::assets::CnFont;
+use crate::infrastructure::localization::{CurrentLocale, LocalizationService};
 use crate::ui::events::UiCommand;
 use crate::ui::theme::UiTheme;
 use crate::ui::view_models::{LevelSelectState, StageEntry};
@@ -34,6 +35,8 @@ pub fn spawn_level_select(
     level_registry: Res<LevelRegistry>,
     campaign_progress: Res<CampaignProgress>,
     mut view: ResMut<LevelSelectState>,
+    localization: Res<LocalizationService>,
+    locale: Res<CurrentLocale>,
 ) {
     // 构建 ViewModel
     let campaign = campaign_registry.first();
@@ -99,6 +102,7 @@ pub fn spawn_level_select(
                         TextColor(theme.menu_title_color),
                     ));
                     // 返回按钮
+                    let back_text = localization.resolve("ui.level_select.back", &locale.0, None);
                     top.spawn((
                         Button,
                         Node {
@@ -109,7 +113,7 @@ pub fn spawn_level_select(
                         BackButton,
                     ))
                     .with_child((
-                        Text::new("← 返回"),
+                        Text::new(back_text),
                         button_font.clone(),
                         TextColor(theme.text_primary),
                     ));
@@ -131,7 +135,7 @@ pub fn spawn_level_select(
                 },))
                 .with_children(|grid| {
                     for stage in &stages {
-                        spawn_stage_card(grid, stage, &theme, &small_font);
+                        spawn_stage_card(grid, stage, &theme, &small_font, &localization, &locale);
                     }
                 });
 
@@ -171,7 +175,11 @@ pub fn spawn_level_select(
                             ConfirmButton,
                         ))
                         .with_child((
-                            Text::new("进入战斗"),
+                            Text::new(localization.resolve(
+                                "ui.level_select.enter_battle",
+                                &locale.0,
+                                None,
+                            )),
                             button_font.clone(),
                             TextColor(if can_enter {
                                 theme.text_primary
@@ -189,6 +197,8 @@ fn spawn_stage_card(
     stage: &StageEntry,
     theme: &UiTheme,
     font: &TextFont,
+    localization: &LocalizationService,
+    locale: &CurrentLocale,
 ) {
     let status_color = match stage.status {
         StageStatus::Locked => theme.stage_locked_color,
@@ -196,7 +206,7 @@ fn spawn_stage_card(
         StageStatus::Completed => theme.stage_completed_color,
     };
 
-    let status_label = stage.status.label();
+    let status_label = localization.resolve(stage.status.i18n_key(), &locale.0, None);
 
     parent
         .spawn((

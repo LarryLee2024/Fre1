@@ -6,7 +6,7 @@ use tactical_rpg::core::buff::BuffPlugin;
 use tactical_rpg::core::effect::EffectPlugin;
 use tactical_rpg::core::equipment::EquipmentPlugin;
 use tactical_rpg::core::inventory::InventoryPlugin;
-use tactical_rpg::core::modifier_rule::ModifierRulePlugin;
+use tactical_rpg::core::modifier::ModifierRulePlugin;
 use tactical_rpg::core::tag_def::TagDefPlugin;
 // use tactical_rpg::shared::event::* for all logging
 use tactical_rpg::shared::event::battle;

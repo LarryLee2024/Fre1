@@ -4,12 +4,19 @@ use crate::core::battle::{
     CombatLogCollapsed, CombatLogContent, CombatLogPanel, CombatLogResizeHandle, CombatLogToggle,
 };
 use crate::core::turn::AppState;
+use crate::infrastructure::localization::{CurrentLocale, LocalizationService};
 use crate::ui::theme::UiTheme;
 use crate::ui::widgets::layout::*;
 use bevy::prelude::*;
 
 /// 生成战斗日志面板
-pub fn spawn_combat_log_panel(mut commands: Commands, theme: Res<UiTheme>) {
+pub fn spawn_combat_log_panel(
+    mut commands: Commands,
+    theme: Res<UiTheme>,
+    localization: Res<LocalizationService>,
+    locale: Res<CurrentLocale>,
+) {
+    let title_text = localization.resolve("ui.combat_log.title", &locale.0, None);
     commands
         .spawn((
             panel_top_right(
@@ -41,7 +48,7 @@ pub fn spawn_combat_log_panel(mut commands: Commands, theme: Res<UiTheme>) {
                     CombatLogToggle,
                 ));
                 row.spawn((
-                    Text::new("战斗日志"),
+                    Text::new(title_text),
                     TextFont {
                         font_size: theme.font_small,
                         ..default()

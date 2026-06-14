@@ -1,17 +1,60 @@
 [
-    (tag: FIRE, display_name: "火焰", description: "火属性", category: Element),
-    (tag: ICE, display_name: "冰霜", description: "冰属性", category: Element),
-    (tag: POISON, display_name: "毒素", description: "毒属性", category: Element),
-    (tag: STUN, display_name: "晕眩", description: "无法行动", category: Status),
-    (tag: BURN, display_name: "燃烧", description: "每回合受到火焰伤害", category: Status),
-    (tag: REGEN, display_name: "恢复", description: "每回合恢复生命值", category: Status),
-    (tag: MELEE, display_name: "近战", description: "近战攻击", category: Weapon),
-    (tag: RANGED, display_name: "远程", description: "远程攻击", category: Weapon),
-    (tag: WARRIOR, display_name: "战士", description: "战士职业", category: Class),
-    (tag: ARCHER, display_name: "弓手", description: "弓手职业", category: Class),
-    (tag: MAGE, display_name: "法师", description: "法师职业", category: Class),
-    (tag: SKILL_ACTIVE, display_name: "主动技能", description: "主动施放的技能", category: SkillType),
+    // ── 元素 Element ──
+    (tag: FIRE,       display_name: "火焰",     description: "火属性",          category: Element),
+    (tag: ICE,        display_name: "冰霜",     description: "冰属性",          category: Element),
+    (tag: POISON,     display_name: "毒素",     description: "毒属性",          category: Element),
+
+    // ── 状态 Status ──
+    (tag: STUN,       display_name: "晕眩",     description: "无法行动",        category: Status),
+    (tag: BURN,       display_name: "燃烧",     description: "每回合受到火焰伤害", category: Status),
+    (tag: REGEN,      display_name: "恢复",     description: "每回合恢复生命值",  category: Status),
+
+    // ── 攻击类型 Weapon ──
+    (tag: MELEE,      display_name: "近战",     description: "近战攻击",        category: Weapon),
+    (tag: RANGED,     display_name: "远程",     description: "远程攻击",        category: Weapon),
+
+    // ── 武器类型 WeaponType ──
+    (tag: SWORD,      display_name: "剑",       description: "剑类武器",        category: WeaponType),
+    (tag: AXE,        display_name: "斧",       description: "斧类武器",        category: WeaponType),
+    (tag: BOW,        display_name: "弓",       description: "弓类武器",        category: WeaponType),
+    (tag: STAFF,      display_name: "法杖",     description: "法杖武器",        category: WeaponType),
+
+    // ── 职业 Class ──
+    (tag: WARRIOR,    display_name: "战士",     description: "战士职业",        category: Class),
+    (tag: ARCHER,     display_name: "弓手",     description: "弓手职业",        category: Class),
+    (tag: MAGE,       display_name: "法师",     description: "法师职业",        category: Class),
+
+    // ── 移动类型 Movement ──
+    (tag: FLYING,     display_name: "飞行",     description: "飞行单位，可跨越山地和水域", category: Movement),
+    (tag: MOUNTED,    display_name: "骑兵",     description: "骑兵单位，平原高速",       category: Movement),
+    (tag: SWIMMING,   display_name: "水生",     description: "水生单位，水域通行无阻",   category: Movement),
+
+    // ── 技能类型 SkillType ──
+    (tag: SKILL_ACTIVE,  display_name: "主动技能", description: "主动施放的技能", category: SkillType),
     (tag: SKILL_PASSIVE, display_name: "被动技能", description: "被动触发的技能", category: SkillType),
-    (tag: BUFF, display_name: "增益", description: "正面效果", category: BuffType),
+
+    // ── Buff 类型 BuffType ──
+    (tag: BUFF,   display_name: "增益", description: "正面效果", category: BuffType),
     (tag: DEBUFF, display_name: "减益", description: "负面效果", category: BuffType),
+
+    // ── 物品类型 ItemType ──
+    (tag: CONSUMABLE,  display_name: "消耗品",   description: "消耗品",         category: ItemType),
+    (tag: AMMO,        display_name: "弹药",     description: "弹药类物品",     category: ItemType),
+    (tag: MATERIAL,    display_name: "材料",     description: "材料类物品",     category: ItemType),
+    (tag: CURRENCY,    display_name: "货币",     description: "货币类物品",     category: ItemType),
+    (tag: QUEST_ITEM,  display_name: "任务物品", description: "任务相关物品",   category: ItemType),
+
+    // ── 消耗品子类 (归属 ItemType 分类) ──
+    (tag: HEALING,  display_name: "治疗",   description: "治疗类消耗品",   category: ItemType),
+    (tag: POTION,   display_name: "药水",   description: "药水类消耗品",   category: ItemType),
+    (tag: SCROLL,   display_name: "卷轴",   description: "卷轴类消耗品",   category: ItemType),
+    (tag: FOOD,     display_name: "食物",   description: "食物类消耗品",   category: ItemType),
+
+    // ── 装备属性 EquipmentAttribute ──
+    (tag: HEAVY_ARMOR, display_name: "重甲",     description: "重型护甲",      category: EquipmentAttribute),
+    (tag: LIGHT_ARMOR, display_name: "轻甲",     description: "轻型护甲",      category: EquipmentAttribute),
+    (tag: SHIELD,      display_name: "盾牌",     description: "盾牌装备",      category: EquipmentAttribute),
+    (tag: TWO_HANDED,  display_name: "双手",     description: "双手武器",      category: EquipmentAttribute),
+    (tag: MARTIAL,     display_name: "军用",     description: "军用武器熟练度", category: EquipmentAttribute),
+    (tag: SIMPLE,      display_name: "简易",     description: "简易武器熟练度", category: EquipmentAttribute),
 ]

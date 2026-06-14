@@ -1,6 +1,7 @@
 // 回合提示面板：显示当前回合数、胜负判定
 
 use crate::core::turn::{AppState, GameOverState};
+use crate::infrastructure::localization::{CurrentLocale, LocalizationService};
 use crate::ui::theme::UiTheme;
 use crate::ui::view_models::TurnInfoView;
 use bevy::prelude::*;
@@ -10,10 +11,16 @@ use bevy::prelude::*;
 pub struct TurnIndicator;
 
 /// 生成回合提示
-pub fn spawn_turn_indicator(mut commands: Commands, theme: Res<UiTheme>) {
+pub fn spawn_turn_indicator(
+    mut commands: Commands,
+    theme: Res<UiTheme>,
+    localization: Res<LocalizationService>,
+    locale: Res<CurrentLocale>,
+) {
+    let round_text = localization.resolve("ui.turn_indicator.round", &locale.0, None);
     commands
         .spawn((
-            Text::new("第 1 回合"),
+            Text::new(round_text),
             TextFont {
                 font_size: theme.font_large,
                 ..default()
@@ -34,10 +41,12 @@ pub fn spawn_turn_indicator(mut commands: Commands, theme: Res<UiTheme>) {
 pub fn update_turn_indicator(
     turn_view: Res<TurnInfoView>,
     mut query: Query<&mut Text, With<TurnIndicator>>,
+    localization: Res<LocalizationService>,
+    locale: Res<CurrentLocale>,
 ) {
     if turn_view.is_changed() {
         for mut text in &mut query {
-            **text = format!("第 {} 回合", turn_view.turn_number);
+            **text = localization.resolve("ui.turn_indicator.round", &locale.0, None);
         }
     }
 }
@@ -47,18 +56,20 @@ pub fn check_game_over(
     game_over: Res<GameOverState>,
     mut next_app_state: ResMut<NextState<AppState>>,
     mut turn_indicator: Query<&mut Text, With<TurnIndicator>>,
+    localization: Res<LocalizationService>,
+    locale: Res<CurrentLocale>,
 ) {
     if game_over.is_changed() {
         match *game_over {
             GameOverState::Victory => {
                 for mut text in &mut turn_indicator {
-                    **text = "胜利！".to_string();
+                    **text = localization.resolve("ui.turn_indicator.victory", &locale.0, None);
                 }
                 next_app_state.set(AppState::GameOver);
             }
             GameOverState::Defeat => {
                 for mut text in &mut turn_indicator {
-                    **text = "失败...".to_string();
+                    **text = localization.resolve("ui.turn_indicator.defeat", &locale.0, None);
                 }
                 next_app_state.set(AppState::GameOver);
             }

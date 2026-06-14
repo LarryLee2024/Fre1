@@ -16,7 +16,9 @@
 use tactical_rpg::core::attribute::{
     AttributeKind, AttributeModifierDef, Attributes, BuffInstanceId, ModifierOp,
 };
-use tactical_rpg::core::buff::{ActiveBuffs, BuffData, apply_buff, remove_buff};
+use tactical_rpg::core::buff::{
+    ActiveBuffs, BuffData, DurationPolicy, StackPolicy, apply_buff, remove_buff,
+};
 use tactical_rpg::core::effect::{
     EffectDef, EffectHandlerRegistry, EffectPreview, GenerateContext, PreviewContext,
 };
@@ -35,6 +37,12 @@ fn make_buff_data(
     BuffData {
         id: id.into(),
         name: id.into(),
+        name_key: None,
+        description: String::new(),
+        effects: vec![],
+        duration: DurationPolicy::Turns(2),
+        stack: StackPolicy::NoStack,
+        conditions: vec![],
         default_duration: 2,
         modifiers,
         tags,

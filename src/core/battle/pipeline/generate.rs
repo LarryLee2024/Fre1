@@ -2,6 +2,7 @@
 // 同时支持玩家（Selected）和 AI（CombatIntent.source_entity）
 // 使用 EffectHandlerRegistry trait 分发，新增效果类型无需修改此文件
 
+use crate::core::ability::{BASIC_ATTACK_ID, SkillCooldowns, SkillRegistry};
 use crate::core::attribute::Attributes;
 use crate::core::character::{
     GridPosition, Selected, TraitCollection, TraitEffectHandlerRegistry, TraitRegistry, Unit,
@@ -9,7 +10,6 @@ use crate::core::character::{
 };
 use crate::core::effect::{EffectHandlerRegistry, EffectQueue, GenerateContext, PendingEffect};
 use crate::core::map::{TerrainGrid, TerrainRegistry};
-use crate::core::skill::{BASIC_ATTACK_ID, SkillCooldowns, SkillRegistry};
 use crate::core::tag::GameplayTags;
 use bevy::prelude::*;
 
@@ -112,8 +112,20 @@ pub fn generate_combat_effects(
     )
     .entered();
 
-    // 冷却检查（玩家需要，AI 已在决策时检查）
-    if source_cooldowns.get(skill_id) > 0 {
+    // ADR-014 Stage 1: Validate — 调用 can_use()
+    // 先做不含目标标签的检查（冷却、MP、施法者标签、HP 阈值）
+    if let Err(err) = skill_data.can_use(
+        source_attrs,
+        source_tags,
+        None,
+        source_cooldowns.get(skill_id),
+    ) {
+        bevy::log::warn!(
+            target: "battle",
+            skill = %skill_id,
+            error = %format!("{:?}", err),
+            "技能验证失败，跳过效果生成"
+        );
         return;
     }
 
@@ -124,12 +136,28 @@ pub fn generate_combat_effects(
         target_gp,
         _target_name,
         target_attrs,
-        _target_tags,
+        target_tags,
         _target_transform,
     ) in &targets
     {
         if target_gp.coord != target_coord || target_unit.faction == source_unit.faction {
             continue;
+        }
+
+        // 含目标标签的完整验证（支持 TargetRequireTag 条件）
+        if let Err(err) = skill_data.can_use(
+            source_attrs,
+            source_tags,
+            Some(target_tags),
+            source_cooldowns.get(skill_id),
+        ) {
+            bevy::log::warn!(
+                target: "battle",
+                skill = %skill_id,
+                error = %format!("{:?}", err),
+                "技能验证失败（含目标检查），跳过效果生成"
+            );
+            return;
         }
 
         let terrain_id = terrain_grid

@@ -3,6 +3,7 @@
 
 use bevy::prelude::*;
 
+use crate::core::ability::{SkillCooldowns, SkillRegistry, SkillSlots};
 use crate::core::attribute::{AttributeKind, Attributes};
 use crate::core::battle::CombatIntent;
 use crate::core::buff::ActiveBuffs;
@@ -10,7 +11,6 @@ use crate::core::character::{
     Faction, GridPosition, Selected, TraitCollection, TraitRegistry, Unit, UnitClass, UnitName,
     UnitRace,
 };
-use crate::core::skill::{SkillCooldowns, SkillRegistry, SkillSlots};
 use crate::core::turn::{TurnOrder, TurnPhase, TurnState};
 
 // ── ViewModel 定义 ──

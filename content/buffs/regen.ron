@@ -1,4 +1,5 @@
 (
+    version: 1,
     id: "regen",
     name: "愈+4",
     default_duration: 2,

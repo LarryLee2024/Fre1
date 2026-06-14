@@ -1,5 +1,6 @@
 // 单位生成系统：从模板生成初始单位
 
+use crate::core::ability::{SkillCooldowns, SkillSlots};
 use crate::core::attribute::Attributes;
 use crate::core::buff::ActiveBuffs;
 use crate::core::equipment::{
@@ -8,8 +9,7 @@ use crate::core::equipment::{
 use crate::core::inventory::container::Container;
 use crate::core::map::GameMap;
 use crate::core::map::LevelRegistry;
-use crate::core::skill::{SkillCooldowns, SkillSlots};
-use crate::core::tag::{GameplayTag, GameplayTags};
+use crate::core::tag::{GameplayTag, GameplayTags, PersistentTags, rebuild_tags};
 use crate::infrastructure::assets::CnFont;
 use bevy::picking::prelude::Pickable;
 use bevy::prelude::*;
@@ -186,12 +186,9 @@ fn spawn_unit_from_template(
         &mut attributes,
         &mut persistent_tags,
     );
-    // 重建 GameplayTags
+    // 重建 GameplayTags（使用统一的 rebuild_tags）
     let mut gameplay_tags = gameplay_tags;
-    let mut new_tags = GameplayTags::default();
-    new_tags.0 |= persistent_tags.from_traits.0;
-    new_tags.0 |= persistent_tags.from_equipment.0;
-    gameplay_tags.0 = new_tags.0;
+    gameplay_tags.0 = rebuild_tags(&persistent_tags).0;
 
     commands
         .spawn((

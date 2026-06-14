@@ -22,6 +22,19 @@ pub enum ItemType {
 }
 
 impl ItemType {
+    /// 物品类型 i18n key
+    pub fn i18n_key(&self) -> &'static str {
+        match self {
+            Self::Equipment => "item.type.equipment",
+            Self::Consumable => "item.type.consumable",
+            Self::Material => "item.type.material",
+            Self::Quest => "item.type.quest",
+            Self::Ammo => "item.type.ammo",
+            Self::Currency => "item.type.currency",
+            Self::Container => "item.type.container",
+        }
+    }
+
     pub fn label(&self) -> &'static str {
         match self {
             Self::Equipment => "装备",

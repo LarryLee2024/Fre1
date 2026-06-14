@@ -2,10 +2,10 @@
 // 支持从 content/characters/*.ron 外部配置文件加载
 
 use super::components::Faction;
+use crate::core::ability::BASIC_ATTACK_ID;
 use crate::core::attribute::AttributeKind;
 use crate::core::equipment::EquipmentSlot;
 use crate::core::registry_loader::RegistryLoader;
-use crate::core::skill::BASIC_ATTACK_ID;
 use bevy::prelude::*;
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -15,7 +15,10 @@ use std::collections::HashMap;
 #[allow(dead_code)]
 pub struct UnitTemplate {
     pub id: String,
+    /// 旧字段：直接文本（向后兼容）
     pub name: String,
+    /// 新字段：本地化 Key（优先使用）
+    pub name_key: Option<String>,
     pub faction: Faction,
     pub race: String,
     pub background: String,
@@ -37,7 +40,12 @@ pub struct UnitTemplateDef {
     #[serde(default)]
     pub version: u32,
     pub id: String,
+    /// 旧字段：直接文本（向后兼容）
+    #[serde(default)]
     pub name: String,
+    /// 新字段：本地化 Key（优先使用）
+    #[serde(default)]
+    pub name_key: Option<String>,
     pub faction: FactionDef,
     pub race: String,
     pub background: String,
@@ -75,6 +83,7 @@ impl From<UnitTemplateDef> for UnitTemplate {
         UnitTemplate {
             id: def.id,
             name: def.name,
+            name_key: def.name_key,
             faction: def.faction.into(),
             race: def.race,
             background: def.background,
@@ -128,6 +137,7 @@ impl UnitTemplateRegistry {
             UnitTemplate {
                 id: "player_warrior".into(),
                 name: "战士".into(),
+                name_key: Some("character.c_001.name".into()),
                 faction: Faction::Player,
                 race: "人类".into(),
                 background: "士兵".into(),
@@ -162,6 +172,7 @@ impl UnitTemplateRegistry {
             UnitTemplate {
                 id: "player_archer".into(),
                 name: "弓手".into(),
+                name_key: Some("character.c_003.name".into()),
                 faction: Faction::Player,
                 race: "人类".into(),
                 background: "猎人".into(),
@@ -193,6 +204,7 @@ impl UnitTemplateRegistry {
             UnitTemplate {
                 id: "enemy_goblin".into(),
                 name: "哥布林".into(),
+                name_key: Some("character.c_004.name".into()),
                 faction: Faction::Enemy,
                 race: "哥布林".into(),
                 background: "部落".into(),
@@ -224,6 +236,7 @@ impl UnitTemplateRegistry {
             UnitTemplate {
                 id: "enemy_dark_knight".into(),
                 name: "暗黑骑士".into(),
+                name_key: Some("character.c_006.name".into()),
                 faction: Faction::Enemy,
                 race: "亡灵".into(),
                 background: "堕落骑士".into(),
@@ -349,6 +362,7 @@ mod tests {
             version: 0,
             id: "test".into(),
             name: "测试".into(),
+            name_key: None,
             faction: FactionDef::Enemy,
             race: "哥布林".into(),
             background: "部落".into(),

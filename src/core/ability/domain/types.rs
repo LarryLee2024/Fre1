@@ -1,51 +1,15 @@
-// 技能类型定义：SkillData, SkillCondition, SkillTargeting, SkillDef, SkillUseError
+// 技能类型定义：SkillData, SkillCondition, SkillDef, SkillUseError
+// SkillTargeting 已迁移至 crate::core::targeting::types
 
 use crate::core::attribute::AttributeKind;
 use crate::core::effect::EffectDef;
 use crate::core::tag::{GameplayTag, TagName};
+use crate::core::targeting::types::SkillTargeting;
 use bevy::prelude::*;
 use serde::Deserialize;
 
 /// 基础攻击技能 ID 常量
 pub const BASIC_ATTACK_ID: &str = "basic_attack";
-
-// ── 技能目标类型 ──
-
-/// 技能目标类型：决定技能可以作用于谁
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Reflect, Deserialize)]
-#[serde(rename_all = "PascalCase")]
-pub enum SkillTargeting {
-    /// 对单个敌方单位使用
-    SingleEnemy,
-    /// 对单个友方单位使用
-    SingleAlly,
-    /// 对自身使用
-    SelfOnly,
-    /// 对自身周围的敌方单位使用（范围由 range 决定）
-    AoeEnemies,
-    /// 对自身周围的友方单位使用
-    AoeAllies,
-    /// 无需目标（直接对自身生效）
-    NoTarget,
-}
-
-impl SkillTargeting {
-    pub fn label(&self) -> &'static str {
-        match self {
-            Self::SingleEnemy => "单体敌方",
-            Self::SingleAlly => "单体友方",
-            Self::SelfOnly => "自身",
-            Self::AoeEnemies => "范围敌方",
-            Self::AoeAllies => "范围友方",
-            Self::NoTarget => "无目标",
-        }
-    }
-
-    /// 是否需要选择目标
-    pub fn requires_target_selection(&self) -> bool {
-        matches!(self, Self::SingleEnemy | Self::SingleAlly)
-    }
-}
 
 // ── 技能使用条件 ──
 
@@ -93,8 +57,14 @@ impl From<SkillConditionDef> for SkillCondition {
 #[derive(Clone, Debug, Reflect)]
 pub struct SkillData {
     pub id: String,
+    /// 旧字段：直接文本（向后兼容）
     pub name: String,
+    /// 旧字段：直接文本（向后兼容）
     pub description: String,
+    /// 新字段：本地化 Key（优先使用）
+    pub name_key: Option<String>,
+    /// 新字段：本地化 Key（优先使用）
+    pub desc_key: Option<String>,
     pub cost_mp: i32,
     pub range: u32,
     pub targeting: SkillTargeting,
@@ -111,8 +81,18 @@ pub struct SkillDef {
     #[serde(default)]
     pub version: u32,
     pub id: String,
+    /// 旧字段：直接文本（向后兼容）
+    #[serde(default)]
     pub name: String,
+    /// 旧字段：直接文本（向后兼容）
+    #[serde(default)]
     pub description: String,
+    /// 新字段：本地化 Key（优先使用）
+    #[serde(default)]
+    pub name_key: Option<String>,
+    /// 新字段：本地化 Key（优先使用）
+    #[serde(default)]
+    pub desc_key: Option<String>,
     pub cost_mp: i32,
     pub range: u32,
     pub targeting: SkillTargeting,
@@ -129,6 +109,8 @@ impl From<SkillDef> for SkillData {
             id: def.id,
             name: def.name,
             description: def.description,
+            name_key: def.name_key,
+            desc_key: def.desc_key,
             cost_mp: def.cost_mp,
             range: def.range,
             targeting: def.targeting,
@@ -141,8 +123,39 @@ impl From<SkillDef> for SkillData {
     }
 }
 
+impl Default for SkillData {
+    fn default() -> Self {
+        Self {
+            id: String::new(),
+            name: String::new(),
+            description: String::new(),
+            name_key: None,
+            desc_key: None,
+            cost_mp: 0,
+            range: 1,
+            targeting: SkillTargeting::SingleEnemy,
+            effects: vec![],
+            tags: vec![],
+            conditions: vec![],
+            cooldown: 0,
+            priority: 0,
+        }
+    }
+}
+
 impl SkillData {
+    /// 扣除技能消耗（MP）- 属于 Cost 阶段
+    /// 根据 skill.cost_mp 字段扣除，确保 cost_mp 是实际消耗的唯一来源
+    pub fn deduct_cost(&self, attrs: &mut crate::core::attribute::Attributes) {
+        if self.cost_mp > 0 {
+            let current = attrs.get(AttributeKind::Mp);
+            let new_mp = (current - self.cost_mp as f32).max(0.0);
+            attrs.set_vital(AttributeKind::Mp, new_mp);
+        }
+    }
+
     /// 检查单位是否满足使用条件（纯函数，不修改状态）
+    /// ADR-014: 固定检查顺序：冷却 → cost_mp → 自定义条件
     pub fn can_use(
         &self,
         source_attrs: &crate::core::attribute::Attributes,
@@ -150,22 +163,38 @@ impl SkillData {
         target_tags: Option<&crate::core::tag::GameplayTags>,
         current_cooldown: u32,
     ) -> Result<(), SkillUseError> {
-        // 冷却检查
+        // 冷却检查（最先）
         if current_cooldown > 0 {
             return Err(SkillUseError::OnCooldown {
                 remaining: current_cooldown,
             });
         }
 
+        // cost_mp 字段检查（始终执行，ADR-013 要求 cost_mp 是必填字段）
+        if self.cost_mp > 0 {
+            let mp = source_attrs.get(AttributeKind::Mp);
+            if mp < self.cost_mp as f32 {
+                return Err(SkillUseError::InsufficientMp {
+                    required: self.cost_mp,
+                    current: mp as i32,
+                });
+            }
+        }
+
+        // 自定义条件列表（含 SkillCondition::MpCost 以保持 RON 向后兼容）
         for cond in &self.conditions {
             match cond {
                 SkillCondition::MpCost(cost) => {
-                    let mp = source_attrs.get(AttributeKind::Mp);
-                    if mp < *cost as f32 {
-                        return Err(SkillUseError::InsufficientMp {
-                            required: *cost,
-                            current: mp as i32,
-                        });
+                    // cost_mp 字段已检查，此处仅用于兼容旧 RON 配置
+                    // 避免重复错误：仅在 cost_mp 字段未覆盖时检查
+                    if self.cost_mp <= 0 {
+                        let mp = source_attrs.get(AttributeKind::Mp);
+                        if mp < *cost as f32 {
+                            return Err(SkillUseError::InsufficientMp {
+                                required: *cost,
+                                current: mp as i32,
+                            });
+                        }
                     }
                 }
                 SkillCondition::RequireTag(tag) => {
@@ -256,15 +285,8 @@ mod tests {
         SkillData {
             id: "test_skill".into(),
             name: "测试技能".into(),
-            description: String::new(),
-            cost_mp: 0,
-            range: 1,
-            targeting: SkillTargeting::SingleEnemy,
-            effects: vec![],
-            tags: vec![],
             conditions,
-            cooldown: 0,
-            priority: 0,
+            ..Default::default()
         }
     }
 

@@ -1,12 +1,12 @@
 // 角色组件定义：单位身份、阵营、位置、标记等
 
 use super::traits::TraitCollection;
+use crate::core::ability::{SkillCooldowns, SkillSlots};
 use crate::core::attribute::Attributes;
 use crate::core::buff::ActiveBuffs;
 use crate::core::equipment::EquipmentSlots;
 use crate::core::inventory::container::Container;
-use crate::core::skill::{SkillCooldowns, SkillSlots};
-use crate::core::tag::GameplayTags;
+use crate::core::tag::{GameplayTags, PersistentTags};
 use bevy::ecs::lifecycle::{Add, HookContext};
 use bevy::ecs::observer::On;
 use bevy::ecs::world::DeferredWorld;
@@ -145,16 +145,6 @@ pub fn on_dead_added(
     }
 }
 
-/// 持久化标签（不被 rebuild 丢失，支持 Trait + Equipment 两层）
-#[derive(Component, Reflect, Default, Debug, Clone)]
-#[reflect(Component)]
-pub struct PersistentTags {
-    /// Trait 授予的标签（种族/职业/天赋，最持久）
-    pub from_traits: GameplayTags,
-    /// 装备授予的标签（穿脱变化）
-    pub from_equipment: GameplayTags,
-}
-
 /// HP 条背景
 #[derive(Component, Reflect)]
 #[reflect(Component)]
@@ -217,8 +207,8 @@ mod tests {
     // ================================================
 
     use super::*;
+    use crate::core::ability::SkillSlots;
     use crate::core::attribute::Attributes;
-    use crate::core::skill::SkillSlots;
     use crate::core::turn::TurnPhase;
 
     fn make_moving_unit(path: Vec<IVec2>, current_index: usize) -> MovingUnit {

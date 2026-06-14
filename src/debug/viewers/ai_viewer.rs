@@ -1,11 +1,12 @@
 // AI Viewer：运行时查看 AI 决策状态
 // 遵循铁律：复杂系统必须有可视化调试工具
 
+use crate::core::ability::{SkillCooldowns, SkillSlots};
 use crate::core::attribute::{AttributeKind, Attributes};
 use crate::core::battle::CombatIntent;
 use crate::core::character::{AiBehaviorId, Faction, GridPosition, Unit, UnitName};
-use crate::core::skill::{SkillCooldowns, SkillSlots};
 use crate::core::tag::GameplayTags;
+use crate::core::tag_def::TagRegistry;
 use crate::core::turn::TurnOrder;
 use bevy::prelude::*;
 use bevy_inspector_egui::egui;
@@ -15,6 +16,7 @@ pub fn render(
     ui: &mut egui::Ui,
     turn_order: &TurnOrder,
     combat_intent: &CombatIntent,
+    tag_registry: &TagRegistry,
     units: &Query<(
         Entity,
         &Unit,
@@ -119,7 +121,7 @@ pub fn render(
                 let tag_names: Vec<String> = tags
                     .active_tags()
                     .iter()
-                    .map(|t| t.label().to_string())
+                    .map(|t| tag_registry.display_name(*t).to_string())
                     .collect();
                 if tag_names.is_empty() {
                     ui.label("  标签: (无)");

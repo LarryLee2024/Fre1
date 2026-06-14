@@ -14,8 +14,8 @@
 // ✅ 没有生成不在范围内的测试
 // ================================================
 
+use tactical_rpg::core::ability::{SkillCondition, SkillData, SkillTargeting, SkillUseError};
 use tactical_rpg::core::attribute::{AttributeKind, Attributes};
-use tactical_rpg::core::skill::{SkillCondition, SkillData, SkillTargeting, SkillUseError};
 use tactical_rpg::core::tag::{GameplayTag, GameplayTags};
 
 use crate::common::fixtures::UnitBuilder;
@@ -34,15 +34,10 @@ fn mage_only_skill() -> SkillData {
     SkillData {
         id: "arcane_blast".into(),
         name: "奥术冲击".into(),
-        description: String::new(),
-        cost_mp: 0,
         range: 2,
-        targeting: SkillTargeting::SingleEnemy,
-        effects: vec![],
-        tags: vec![],
         conditions: vec![SkillCondition::RequireTag(GameplayTag::MAGE)],
-        cooldown: 0,
         priority: 20,
+        ..Default::default()
     }
 }
 
@@ -51,15 +46,11 @@ fn expensive_skill() -> SkillData {
     SkillData {
         id: "fireball".into(),
         name: "火球".into(),
-        description: String::new(),
         cost_mp: 10,
         range: 3,
-        targeting: SkillTargeting::SingleEnemy,
-        effects: vec![],
-        tags: vec![],
         conditions: vec![SkillCondition::MpCost(10)],
-        cooldown: 0,
         priority: 10,
+        ..Default::default()
     }
 }
 
@@ -68,15 +59,10 @@ fn cooldown_skill() -> SkillData {
     SkillData {
         id: "thunder".into(),
         name: "雷击".into(),
-        description: String::new(),
-        cost_mp: 0,
         range: 3,
-        targeting: SkillTargeting::SingleEnemy,
-        effects: vec![],
-        tags: vec![],
-        conditions: vec![],
         cooldown: 3,
         priority: 15,
+        ..Default::default()
     }
 }
 

@@ -98,8 +98,8 @@ mod tests {
     // ✅ 无越界测试：是 — 仅测试公共 API
     // ✅ 未测试私有实现：是 — 仅通过 pub 接口测试
     // ================================================
+    use super::super::domain::SkillTargeting;
     use super::*;
-    use crate::core::skill::domain::SkillTargeting;
 
     // ── SkillSlots ──
 
@@ -148,6 +148,8 @@ mod tests {
             id: "fireball".into(),
             name: "火球".into(),
             description: String::new(),
+            name_key: None,
+            desc_key: None,
             cost_mp: 0,
             range: 3,
             targeting: SkillTargeting::SingleEnemy,
@@ -166,6 +168,8 @@ mod tests {
             id: BASIC_ATTACK_ID.into(),
             name: "普通攻击".into(),
             description: String::new(),
+            name_key: None,
+            desc_key: None,
             cost_mp: 0,
             range: 0,
             targeting: SkillTargeting::SingleEnemy,

@@ -1,4 +1,4 @@
-use crate::core::skill::SkillCooldowns;
+use crate::core::ability::SkillCooldowns;
 
 use super::strategy::SkillSelector;
 
@@ -16,10 +16,10 @@ pub(crate) fn select_skill<'a>(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::ability::BASIC_ATTACK_ID;
     use crate::core::ai::strategy::{
         AiStrategyRegistry, ByPrioritySkill, PreferBasicSkill, PreferSpecialSkill,
     };
-    use crate::core::skill::BASIC_ATTACK_ID;
 
     #[test]
     fn 技能策略_优先特殊_跳过冷却() {

@@ -11,6 +11,8 @@ mod domain;
 mod instance;
 /// 持续效果结算（DoT/HoT/Stun）
 pub(crate) mod resolve;
+/// ADR-022: Buff 触发系统 — TriggerRegistry、TriggerHandler trait、Trigger 枚举
+pub mod trigger;
 
 use crate::core::registry_loader::RegistryLoader;
 use crate::core::turn::TurnPhase;
@@ -21,6 +23,7 @@ pub use apply::*;
 pub use domain::*;
 pub use instance::*;
 pub use resolve::resolve_status_effects;
+pub use trigger::{Trigger, TriggerHandler, TriggerRegistry};
 
 /// Buff 插件（注册 BuffRegistry 资源 + 持续效果结算系统）
 pub struct BuffPlugin;

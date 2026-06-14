@@ -12,9 +12,9 @@ tags:
 
 # 战斗状态机设计
 
-> Version: 1.0
+> Version: 1.1
 > Status: Proposed
-> 来源：`docs/其他/31遗漏.md` Section 二（第232-239行）
+> 来源：`docs/其他/31遗漏.md` Section 二（第232-239行）、`docs/其他/76.md` §八（调度与确定性）
 
 ---
 
@@ -441,6 +441,110 @@ app-bootstrap.md                  → AppState 层级与启动
 
 ---
 
+## 4.5 回合内调度时序（SRPG-GAS 对齐）
+
+> **来源**：`docs/其他/76.md` §八（调度与确定性）— 所有战斗逻辑挂载到回合固定阶段
+
+回合内所有战斗逻辑必须挂载到回合状态机的固定阶段，完全不用帧更新驱动。以下是精确的调度时序：
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  TurnStarted（Phase 入口，OnEnter(RoundStart) 触发）     │
+├─────────────────────────────────────────────────────────┤
+│  1. Buff Tick & 持续效果结算                              │
+│     ├── 递减所有 DurationPolicy::Turns 的 remaining_turns│
+│     ├── DoT 结算（毒/燃烧等持续伤害）                     │
+│     ├── HoT 结算（再生等持续治疗）                        │
+│     ├── Stun 结算（晕眩单位标记 acted=true）              │
+│     └── 到期 Buff 标记为待移除                            │
+│                                                         │
+│  2. ⭐ 回合开始 Trigger 触发                              │
+│     ├── TriggerRegistry 分发 OnTurnStart                  │
+│     ├── 匹配的 Trigger Handler 返回 EffectDef[]           │
+│     └── EffectDef[] 压入 ExecutionStack（LIFO）           │
+│                                                         │
+│  3. ⭐ ExecutionStack 解析（递归）                         │
+│     ├── 弹出栈顶 Entry                                   │
+│     ├── Condition 检查                                    │
+│     │   ├── 通过 → 进入 Effect Pipeline                   │
+│     │   │              ├── Generate（纯函数）              │
+│     │   │              ├── Modify（ModifierRule 匹配）     │
+│     │   │              └── Execute（副作用 + Message）     │
+│     │   │              ↓                                  │
+│     │   │         Effect 完成 → 新事件触发 → 可能再压栈    │
+│     │   └── 失败 → 跳过，弹出下一个                        │
+│     ├── 栈深度 ≥ MAX_STACK_DEPTH(32) → 强制弹出 + WARN   │
+│     └── 栈空 → 本轮触发链结束                              │
+│                                                         │
+│  4. 过期 Buff 清理                                        │
+│     ├── 移除待移除 Buff                                   │
+│     ├── 清理 Modifier                                     │
+│     └── 触发 BuffRemoved 事件                             │
+│                                                         │
+│  5. 冷却扣减                                              │
+│     └── SkillCooldowns.tick()                             │
+│                                                         │
+├─────────────────────────────────────────────────────────┤
+│  PlayerPhase / EnemyPhase（单位行动阶段）                  │
+│                                                         │
+│  每个单位行动时的子时序：                                  │
+│                                                         │
+│  SelectUnit → MoveUnit → ActionMenu → SelectTarget       │
+│      ↓                                                   │
+│  ExecuteAction:                                           │
+│    1. SkillCast 请求进入                                  │
+│    2. Requirement 检查（can_use 验证）                    │
+│    3. Cost 扣除（MP/HP/弹药）                              │
+│    4. Targeting 目标解析                                  │
+│    5. ⭐ Effect Pipeline（Generate → Modify → Execute）   │
+│       ↓                                                  │
+│    6. ⭐ Trigger 触发 → ExecutionStack 解析               │
+│       ├── OnAttack / AfterAttack / OnDamage 等            │
+│       ├── 匹配 → 返回 EffectDef[] → 压入 Stack            │
+│       └── Stack 解析（深度 ≤ 32，防止无限递归）             │
+│    7. Settlement（冷却设置、状态标记）                      │
+│                                                         │
+├─────────────────────────────────────────────────────────┤
+│  TurnEnded（Phase 出口，OnEnter(TurnEnd) 触发）           │
+├─────────────────────────────────────────────────────────┤
+│  6. 回合结束 Trigger 触发                                 │
+│     ├── TriggerRegistry 分发 OnTurnEnd                    │
+│     └── → ExecutionStack 解析                              │
+│                                                         │
+│  7. Buff 到期最终清理                                     │
+│  8. 冷却扣减（再次确保）                                   │
+│  9. acted 重置 + 队列重建                                  │
+│                                                         │
+├─────────────────────────────────────────────────────────┤
+│  VictoryCheck → RoundEnd / PostBattle                     │
+└─────────────────────────────────────────────────────────┘
+```
+
+### 关键约束
+
+| 约束 | 说明 | 违反后果 |
+|------|------|---------|
+| 🟥 Buff Tick 只发生在 RoundStart | 不在 ExecuteAction 阶段 tick | 持续效果在单位行动后提前结算 |
+| 🟥 Trigger 分发走 Registry | 不在 System 中硬编码匹配 | 新增 Trigger 需改核心代码 |
+| 🟥 ExecutionStack 深度上限 32 | 防止无限递归 | 栈溢出、游戏崩溃 |
+| 🟥 Effect Pipeline 是唯一执行通道 | Trigger 产生的 EffectDef 也走 Pipeline | 修饰规则不生效 |
+| 🟥 冷却扣减只在 TurnEnd | 不在其他阶段 tick | 冷却期缩短、不同步 |
+| 🟩 Replay 确定性 | 同种子 + 同指令序列 = 同结果 | Replay 不可复现 |
+
+### 与领域文档的对应
+
+| 时序步骤 | 负责领域 | 参考文档 |
+|---------|---------|---------|
+| Buff Tick | Buff 领域 | `docs/02-domain/buff/buff-rules.md` §5.3 |
+| Trigger 分发 | Trigger 领域 | `docs/02-domain/trigger/trigger-rules.md` |
+| ExecutionStack 解析 | Trigger 领域 | `docs/02-domain/trigger/trigger-rules.md` |
+| Effect Pipeline | Effect 领域（一级） | `docs/02-domain/effect/effect-rules.md` |
+| Skill 执行管线 | Skill 领域 | `docs/02-domain/skill/skill-rules.md` |
+| Cooldown tick | Skill 领域 | `docs/02-domain/skill/skill-rules.md` |
+| Victory Check | Battle 领域 | `docs/02-domain/battle/battle-rules.md` |
+
+---
+
 ## 5. 禁止事项
 
 | 禁止项 | 理由 | 违反后果 |
@@ -504,13 +608,17 @@ app-bootstrap.md                  → AppState 层级与启动
 
 | 文档 | 关系 |
 |------|------|
-| `docs/02-domain/turn_rules.md` | TurnPhase SubState 在 PlayerPhase/EnemyPhase 内激活 |
-| `docs/02-domain/battle_rules.md` | 胜负条件判定、Effect Pipeline 执行 |
+| `docs/02-domain/turn/turn-rules.md` | TurnPhase SubState 在 PlayerPhase/EnemyPhase 内激活 |
+| `docs/02-domain/battle/battle-rules.md` | 胜负条件判定、Effect Pipeline 执行 |
+| `docs/02-domain/effect/effect-rules.md` | Effect 作为一级领域（v2.0 新增） |
+| `docs/02-domain/trigger/trigger-rules.md` | TriggerRegistry + ExecutionStack 调度 |
+| `docs/02-domain/buff/buff-rules.md` | Buff Tick 生命周期、三层标签重建 |
 | `docs/01-architecture/app-bootstrap.md` | AppState 层级定义、Schedule/SystemSet 组织 |
-| `docs/01-architecture/determinism_rules.md` | FSM 状态转换必须确定性 |
+| `docs/01-architecture/determinism-rules.md` | FSM 状态转换必须确定性 |
 | `docs/01-architecture/schedules_design.md` | 系统在正确 Schedule 中注册 |
-| `docs/02-domain/replay_rules.md` | 回放系统记录 FSM 状态转换序列 |
-| `docs/AI开发宪法完整版.md` | §2.3.6 状态管理、§16.0.1-16.0.5 生命周期、§1.1.7 避免过度设计 |
+| `docs/01-architecture/skill-buff-abstraction.md` | Effect/Trigger/ExecutionStack 完整抽象模型 |
+| `docs/02-domain/replay-rules.md` | 回放系统记录 FSM 状态转换序列 |
+| `docs/00-governance/ai-constitution-complete.md` | §2.3.6 状态管理、§16.0.1-16.0.5 生命周期、§1.1.7 避免过度设计 |
 
 ---
 

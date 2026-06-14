@@ -43,10 +43,7 @@ mod tests {
 
     #[test]
     fn localized_text_with_args() {
-        let lt = LocalizedText::with_args(
-            "ui.test",
-            vec![("damage".into(), "100".into())],
-        );
+        let lt = LocalizedText::with_args("ui.test", vec![("damage".into(), "100".into())]);
         assert_eq!(lt.key, "ui.test");
         assert!(lt.args_keys.is_some());
     }

@@ -224,6 +224,12 @@ mod tests {
         registry.register(BuffData {
             id: "attack_up".into(),
             name: "攻+5".into(),
+            name_key: None,
+            description: String::new(),
+            effects: vec![],
+            duration: crate::core::buff::DurationPolicy::Turns(3),
+            stack: crate::core::buff::StackPolicy::NoStack,
+            conditions: vec![],
             default_duration: 3,
             modifiers: vec![crate::core::attribute::AttributeModifierDef {
                 kind: AttributeKind::Attack,

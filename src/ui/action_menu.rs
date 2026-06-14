@@ -1,10 +1,11 @@
 // 行动菜单模块：弹出式行动菜单，使用 SkillSlots 动态生成按钮
 // 使用 Widget 库构建，按钮交互通过 UiCommand Message 发出
 
+use crate::core::ability::{SkillRegistry, SkillSlots};
 use crate::core::attribute::{AttributeKind, Attributes};
 use crate::core::buff::ActiveBuffs;
 use crate::core::character::{GridPosition, Selected, TraitCollection, TraitRegistry, UnitName};
-use crate::core::skill::{SkillRegistry, SkillSlots};
+use crate::infrastructure::localization::{CurrentLocale, LocalizationService};
 use crate::ui::events::UiCommand;
 use crate::ui::focus::BlocksGameInput;
 use crate::ui::theme::UiTheme;
@@ -51,12 +52,15 @@ pub fn spawn_action_menu(
     menu_entity: &mut ActionMenuEntity,
     skill_registry: &SkillRegistry,
     theme: &UiTheme,
+    localization: &LocalizationService,
+    locale: &CurrentLocale,
 ) {
     despawn_action_menu(commands, menu_entity);
 
     let mut children_entities: Vec<Entity> = Vec::new();
 
     // 攻击按钮
+    let attack_text = localization.resolve("ui.action_menu.attack", &locale.0, None);
     let attack_btn = commands
         .spawn((
             Button,
@@ -66,7 +70,7 @@ pub fn spawn_action_menu(
             },
         ))
         .with_children(|parent| {
-            parent.spawn(label("攻击", theme.font_menu, theme.text_primary));
+            parent.spawn(label(&attack_text, theme.font_menu, theme.text_primary));
         })
         .id();
     children_entities.push(attack_btn);
@@ -91,6 +95,7 @@ pub fn spawn_action_menu(
     }
 
     // 待机按钮
+    let wait_text = localization.resolve("ui.action_menu.wait", &locale.0, None);
     let wait_btn = commands
         .spawn((
             Button,
@@ -100,12 +105,13 @@ pub fn spawn_action_menu(
             },
         ))
         .with_children(|parent| {
-            parent.spawn(label("待机", theme.font_menu, theme.text_primary));
+            parent.spawn(label(&wait_text, theme.font_menu, theme.text_primary));
         })
         .id();
     children_entities.push(wait_btn);
 
     // 取消按钮
+    let cancel_text = localization.resolve("ui.action_menu.cancel", &locale.0, None);
     let cancel_btn = commands
         .spawn((
             Button,
@@ -115,7 +121,7 @@ pub fn spawn_action_menu(
             },
         ))
         .with_children(|parent| {
-            parent.spawn(label("取消", theme.font_menu, theme.text_cancel));
+            parent.spawn(label(&cancel_text, theme.font_menu, theme.text_cancel));
         })
         .id();
     children_entities.push(cancel_btn);
@@ -199,6 +205,8 @@ fn on_enter_action_menu(
     trait_registry: Res<TraitRegistry>,
     _equipment_registry: Res<crate::core::equipment::EquipmentRegistry>,
     _item_registry: Res<crate::core::inventory::definition::ItemRegistry>,
+    localization: Res<LocalizationService>,
+    locale: Res<CurrentLocale>,
 ) {
     // 优先使用 SelectedUnitView，如果为空则从 Selected 实体构建
     let mut fallback_view = SelectedUnitView::default();
@@ -284,6 +292,8 @@ fn on_enter_action_menu(
                 &mut menu_entity,
                 &skill_registry,
                 &theme,
+                &localization,
+                &locale,
             );
         }
     }

@@ -40,15 +40,11 @@ impl FontFallbackChain {
         let mut chain = Self::default();
 
         // 中文：使用 Arial Unicode（项目自带）
-        let zh_fonts = vec![
-            asset_server.load("fonts/Arial Unicode.ttf"),
-        ];
+        let zh_fonts = vec![asset_server.load("fonts/Arial Unicode.ttf")];
         chain.register(Locale::ZhCn, zh_fonts);
 
         // 英文：使用 Arial Unicode
-        let en_fonts = vec![
-            asset_server.load("fonts/Arial Unicode.ttf"),
-        ];
+        let en_fonts = vec![asset_server.load("fonts/Arial Unicode.ttf")];
         chain.register(Locale::EnUs, en_fonts);
 
         chain

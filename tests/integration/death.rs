@@ -18,10 +18,12 @@
 // ================================================
 
 use bevy::prelude::*;
+use tactical_rpg::core::ability::{SkillCooldowns, SkillSlots};
 use tactical_rpg::core::attribute::{AttributeKind, AttributeModifierDef, Attributes, ModifierOp};
 use tactical_rpg::core::battle::{BattleEntry, BattleRecord, execute_effects};
 use tactical_rpg::core::buff::{
-    ActiveBuffs, BuffData, BuffRegistry, apply_buff, resolve_status_effects,
+    ActiveBuffs, BuffData, BuffRegistry, DurationPolicy, StackPolicy, apply_buff,
+    resolve_status_effects,
 };
 use tactical_rpg::core::character::{
     Dead, Faction, GridPosition, PersistentTags, Selected, Unit, UnitName,
@@ -29,7 +31,6 @@ use tactical_rpg::core::character::{
 use tactical_rpg::core::effect::{EffectQueue, PendingEffect, PendingEffectData};
 use tactical_rpg::core::map::TerrainRegistry;
 use tactical_rpg::core::registry_loader::RegistryLoader;
-use tactical_rpg::core::skill::{SkillCooldowns, SkillSlots};
 use tactical_rpg::core::tag::{GameplayTag, GameplayTags};
 use tactical_rpg::core::turn::NeedsResolve;
 
@@ -108,6 +109,12 @@ fn make_buff_data(
     BuffData {
         id: id.into(),
         name: id.into(),
+        name_key: None,
+        description: String::new(),
+        effects: vec![],
+        duration: DurationPolicy::Turns(3),
+        stack: StackPolicy::NoStack,
+        conditions: vec![],
         default_duration: 3,
         modifiers,
         tags,

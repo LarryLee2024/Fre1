@@ -2,6 +2,7 @@
 
 use crate::core::turn::AppState;
 use crate::infrastructure::assets::CnFont;
+use crate::infrastructure::localization::{CurrentLocale, LocalizationService};
 use crate::ui::theme::UiTheme;
 use crate::ui::view_models::SelectedUnitView;
 use crate::ui::widgets::layout::*;
@@ -45,7 +46,13 @@ pub struct StaminaBarFill;
 pub struct BuffsContainer;
 
 /// 生成单位信息面板
-pub fn spawn_unit_info_panel(mut commands: Commands, theme: Res<UiTheme>) {
+pub fn spawn_unit_info_panel(
+    mut commands: Commands,
+    theme: Res<UiTheme>,
+    localization: Res<LocalizationService>,
+    locale: Res<CurrentLocale>,
+) {
+    let select_unit_text = localization.resolve("ui.unit_info.select_unit", &locale.0, None);
     commands
         .spawn((
             panel_bottom(
@@ -62,7 +69,7 @@ pub fn spawn_unit_info_panel(mut commands: Commands, theme: Res<UiTheme>) {
         .with_children(|parent| {
             // 单位名称
             parent.spawn((
-                Text::new("选择一个单位"),
+                Text::new(select_unit_text),
                 TextFont {
                     font_size: theme.font_medium,
                     ..default()
@@ -196,6 +203,8 @@ pub fn update_unit_info(
     )>,
     mut commands: Commands,
     theme: Res<UiTheme>,
+    localization: Res<LocalizationService>,
+    locale: Res<CurrentLocale>,
 ) {
     if !view.is_changed() {
         return;
@@ -245,6 +254,14 @@ pub fn update_unit_info(
         node.width = Val::Percent(sta_ratio * 100.0);
     }
 
+    let core_attrs_header = localization.resolve("ui.unit_info.core_attrs", &locale.0, None);
+    let combat_attrs_header = localization.resolve("ui.unit_info.combat_attrs", &locale.0, None);
+    let support_attrs_header = localization.resolve("ui.unit_info.support_attrs", &locale.0, None);
+    let skills_header = localization.resolve("ui.unit_info.skills", &locale.0, None);
+    let traits_header = localization.resolve("ui.unit_info.traits", &locale.0, None);
+    let equipment_header = localization.resolve("ui.unit_info.equipment", &locale.0, None);
+    let none_text = localization.resolve("ui.unit_info.none", &locale.0, None);
+
     // 核心属性（两行四列）
     let core_line1: Vec<String> = view
         .core_attrs
@@ -260,7 +277,8 @@ pub fn update_unit_info(
         .map(|a| format!("{}:{}", a.label, a.value))
         .collect();
     let core_text = format!(
-        "── 核心属性 ──\n{}  \n{}",
+        "{}\n{}  \n{}",
+        core_attrs_header,
         core_line1.join("  "),
         core_line2.join("  ")
     );
@@ -271,7 +289,7 @@ pub fn update_unit_info(
         .iter()
         .map(|a| format!("{}:{}", a.label, a.value))
         .collect();
-    let combat_text = format!("── 战斗属性 ──\n{}", combat_line.join("  "));
+    let combat_text = format!("{}\n{}", combat_attrs_header, combat_line.join("  "));
 
     // 辅助属性
     let support_line: Vec<String> = view
@@ -279,7 +297,7 @@ pub fn update_unit_info(
         .iter()
         .map(|a| format!("{}:{}", a.label, a.value))
         .collect();
-    let support_text = format!("── 辅助属性 ──\n{}", support_line.join("  "));
+    let support_text = format!("{}\n{}", support_attrs_header, support_line.join("  "));
 
     // 技能（带详细信息）
     let skill_lines: Vec<String> = view
@@ -305,9 +323,10 @@ pub fn update_unit_info(
         })
         .collect();
     let skills_text = format!(
-        "── 技能 ──\n{}",
+        "{}\n{}",
+        skills_header,
         if skill_lines.is_empty() {
-            "无".to_string()
+            none_text.clone()
         } else {
             skill_lines.join("\n")
         }
@@ -320,9 +339,10 @@ pub fn update_unit_info(
         .map(|t| format!("  {} - {}", t.name, t.description))
         .collect();
     let traits_text = format!(
-        "── 特性 ──\n{}",
+        "{}\n{}",
+        traits_header,
         if trait_lines.is_empty() {
-            "无".to_string()
+            none_text.clone()
         } else {
             trait_lines.join("\n")
         }
@@ -366,7 +386,7 @@ pub fn update_unit_info(
                         }
                     })
                     .collect();
-                **text = format!("── 装备 ──\n{}", lines.join("\n"));
+                **text = format!("{}\n{}", equipment_header, lines.join("\n"));
             }
         }
     }
@@ -380,9 +400,10 @@ pub fn update_unit_info(
             *vis = Visibility::Visible;
             // 只在 Buff 数量变化时重建子节点
             commands.entity(container_entity).despawn_children();
+            let status_header = localization.resolve("ui.unit_info.status_header", &locale.0, None);
             commands.entity(container_entity).with_children(|parent| {
                 parent.spawn((
-                    Text::new("── 状态 ── "),
+                    Text::new(format!("{} ", status_header)),
                     TextFont {
                         font_size: theme.font_small,
                         ..default()

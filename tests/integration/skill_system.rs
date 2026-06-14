@@ -14,10 +14,10 @@
 // ✅ 没有生成不在范围内的测试
 // ================================================
 
-use tactical_rpg::core::attribute::{AttributeKind, Attributes};
-use tactical_rpg::core::skill::{
+use tactical_rpg::core::ability::{
     BASIC_ATTACK_ID, SkillCooldowns, SkillData, SkillSlots, SkillTargeting, effective_skill_range,
 };
+use tactical_rpg::core::attribute::{AttributeKind, Attributes};
 use tactical_rpg::core::tag::{GameplayTag, GameplayTags};
 
 use crate::common::fixtures::warrior_attrs;
@@ -45,15 +45,8 @@ fn basic_attack() -> SkillData {
     SkillData {
         id: BASIC_ATTACK_ID.into(),
         name: "普通攻击".into(),
-        description: String::new(),
-        cost_mp: 0,
         range: 0,
-        targeting: SkillTargeting::SingleEnemy,
-        effects: vec![],
-        tags: vec![],
-        conditions: vec![],
-        cooldown: 0,
-        priority: 0,
+        ..Default::default()
     }
 }
 
@@ -61,15 +54,12 @@ fn fireball() -> SkillData {
     SkillData {
         id: "fireball".into(),
         name: "火球".into(),
-        description: String::new(),
         cost_mp: 8,
         range: 3,
-        targeting: SkillTargeting::SingleEnemy,
-        effects: vec![],
-        tags: vec![],
-        conditions: vec![tactical_rpg::core::skill::SkillCondition::MpCost(8)],
+        conditions: vec![tactical_rpg::core::ability::SkillCondition::MpCost(8)],
         cooldown: 2,
         priority: 10,
+        ..Default::default()
     }
 }
 
@@ -77,15 +67,12 @@ fn heal() -> SkillData {
     SkillData {
         id: "heal".into(),
         name: "治疗".into(),
-        description: String::new(),
         cost_mp: 5,
         range: 2,
         targeting: SkillTargeting::SingleAlly,
-        effects: vec![],
-        tags: vec![],
-        conditions: vec![],
         cooldown: 2,
         priority: 15,
+        ..Default::default()
     }
 }
 
@@ -93,18 +80,14 @@ fn mage_only_skill() -> SkillData {
     SkillData {
         id: "arcane_blast".into(),
         name: "奥术冲击".into(),
-        description: String::new(),
         cost_mp: 10,
         range: 2,
-        targeting: SkillTargeting::SingleEnemy,
-        effects: vec![],
-        tags: vec![],
         conditions: vec![
-            tactical_rpg::core::skill::SkillCondition::RequireTag(GameplayTag::MAGE),
-            tactical_rpg::core::skill::SkillCondition::MpCost(10),
+            tactical_rpg::core::ability::SkillCondition::RequireTag(GameplayTag::MAGE),
+            tactical_rpg::core::ability::SkillCondition::MpCost(10),
         ],
-        cooldown: 0,
         priority: 20,
+        ..Default::default()
     }
 }
 
@@ -112,15 +95,9 @@ fn berserker_skill() -> SkillData {
     SkillData {
         id: "berserk".into(),
         name: "狂暴".into(),
-        description: String::new(),
-        cost_mp: 0,
-        range: 1,
-        targeting: SkillTargeting::SingleEnemy,
-        effects: vec![],
-        tags: vec![],
-        conditions: vec![tactical_rpg::core::skill::SkillCondition::HpBelow(0.3)],
-        cooldown: 0,
+        conditions: vec![tactical_rpg::core::ability::SkillCondition::HpBelow(0.3)],
         priority: 30,
+        ..Default::default()
     }
 }
 
@@ -128,17 +105,13 @@ fn purify_skill() -> SkillData {
     SkillData {
         id: "purify".into(),
         name: "净化".into(),
-        description: String::new(),
-        cost_mp: 0,
         range: 2,
         targeting: SkillTargeting::SingleAlly,
-        effects: vec![],
-        tags: vec![],
-        conditions: vec![tactical_rpg::core::skill::SkillCondition::TargetRequireTag(
-            GameplayTag::DEBUFF,
-        )],
-        cooldown: 0,
+        conditions: vec![
+            tactical_rpg::core::ability::SkillCondition::TargetRequireTag(GameplayTag::DEBUFF),
+        ],
         priority: 25,
+        ..Default::default()
     }
 }
 
@@ -234,7 +207,7 @@ fn 战士_MP不足无法释放火球() {
     let result = skill.can_use(&attrs, &tags, None, 0);
     assert_eq!(
         result,
-        Err(tactical_rpg::core::skill::SkillUseError::InsufficientMp {
+        Err(tactical_rpg::core::ability::SkillUseError::InsufficientMp {
             required: 8,
             current: 3
         })
@@ -270,7 +243,7 @@ fn 战士_缺少MAGE标签无法释放奥术冲击() {
     let result = skill.can_use(&attrs, &tags, None, 0);
     assert_eq!(
         result,
-        Err(tactical_rpg::core::skill::SkillUseError::MissingTag {
+        Err(tactical_rpg::core::ability::SkillUseError::MissingTag {
             tag: GameplayTag::MAGE
         })
     );
@@ -309,7 +282,7 @@ fn 狂暴_HP充足时不可用() {
     let result = skill.can_use(&attrs, &tags, None, 0);
     assert_eq!(
         result,
-        Err(tactical_rpg::core::skill::SkillUseError::HpNotBelow { threshold: 0.3 })
+        Err(tactical_rpg::core::ability::SkillUseError::HpNotBelow { threshold: 0.3 })
     );
 }
 
@@ -347,9 +320,11 @@ fn 净化_目标无DEBUFF标签时不可用() {
     let result = skill.can_use(&attrs, &tags, Some(&target_tags), 0);
     assert_eq!(
         result,
-        Err(tactical_rpg::core::skill::SkillUseError::TargetMissingTag {
-            tag: GameplayTag::DEBUFF
-        })
+        Err(
+            tactical_rpg::core::ability::SkillUseError::TargetMissingTag {
+                tag: GameplayTag::DEBUFF
+            }
+        )
     );
 }
 
@@ -473,7 +448,7 @@ fn 战士_缺少标签且MP不足_第一个条件失败() {
     let result = skill.can_use(&attrs, &tags, None, 0);
     assert_eq!(
         result,
-        Err(tactical_rpg::core::skill::SkillUseError::MissingTag {
+        Err(tactical_rpg::core::ability::SkillUseError::MissingTag {
             tag: GameplayTag::MAGE
         })
     );

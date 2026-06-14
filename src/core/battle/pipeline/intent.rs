@@ -1,11 +1,11 @@
 // 战斗意图模块：行动后路由、行动执行
 
+use crate::core::ability::{SkillCooldowns, SkillRegistry};
 use crate::core::attribute::AttributeKind;
 use crate::core::attribute::Attributes;
 use crate::core::character::{
     AttackRange, Faction, GridPosition, MovableRange, Selected, SelectionHighlight, Unit, UnitName,
 };
-use crate::core::skill::{SkillCooldowns, SkillRegistry};
 use crate::core::tag::{GameplayTag, GameplayTags};
 use crate::core::turn::{AiTimer, TurnOrder, TurnPhase, TurnState};
 use crate::shared::event::skill::SkillActivated;
@@ -54,7 +54,12 @@ fn clear_combat_intent(intent: &mut CombatIntent) {
 fn route_after_action(
     turn_order: &mut TurnOrder,
     non_selected_units: &Query<
-        (&mut Unit, &Attributes, &mut SkillCooldowns, &GameplayTags),
+        (
+            &mut Unit,
+            &mut Attributes,
+            &mut SkillCooldowns,
+            &GameplayTags,
+        ),
         Without<Selected>,
     >,
     next_phase: &mut ResMut<NextState<TurnPhase>>,
@@ -93,6 +98,10 @@ fn route_after_action(
 
 /// 执行攻击（OnEnter ExecuteAction）
 ///
+/// ADR-014 Stage 2 (Cost): 扣 MP + 设置冷却
+/// ADR-014 Stage 3 (Cast): 发送 SkillActivated Message
+/// ADR-014 Stage 5 (Settlement): 路由到下一个单位
+///
 /// 统一路由：玩家和 AI 行动完后都走同一套规则
 /// AI 通过 CombatIntent.source_entity 标识，与玩家共享 Effect Pipeline（不变量1合规）
 pub fn execute_action_on_enter(
@@ -104,11 +113,17 @@ pub fn execute_action_on_enter(
             &UnitName,
             &GameplayTags,
             &mut SkillCooldowns,
+            &mut Attributes,
         ),
         With<Selected>,
     >,
     mut non_selected_units: Query<
-        (&mut Unit, &Attributes, &mut SkillCooldowns, &GameplayTags),
+        (
+            &mut Unit,
+            &mut Attributes,
+            &mut SkillCooldowns,
+            &GameplayTags,
+        ),
         Without<Selected>,
     >,
     mut turn_order: ResMut<TurnOrder>,
@@ -128,14 +143,13 @@ pub fn execute_action_on_enter(
     crate::core::character::clear_markers(&mut commands, &range_entities, &highlights);
 
     // 玩家单位：通过 Selected 查找
-    if let Ok((entity, mut unit, _pos, _name, tags, mut cooldowns)) = selected_units.single_mut() {
-        let _ = _name; // 临时：后续用于日志
+    if let Ok((entity, mut unit, _pos, _name, tags, mut cooldowns, mut attrs)) =
+        selected_units.single_mut()
+    {
         if tags.has(GameplayTag::STUN) {
             unit.acted = true;
             commands.entity(entity).remove::<Selected>();
-            // 不变量6：Execute 后清除 CombatIntent
             clear_combat_intent(&mut combat_intent);
-            // 晕眩也走统一路由
             route_after_action(
                 &mut turn_order,
                 &non_selected_units,
@@ -146,8 +160,15 @@ pub fn execute_action_on_enter(
             return;
         }
 
+        // ADR-014 Stage 2-3: Cost + Cast（与玩家共享 Effect Pipeline）
         if let Some(skill_id) = combat_intent.skill_id.as_deref() {
             if let Some(skill_data) = skill_registry.get(skill_id) {
+                // Stage 2: 扣 MP + 设置冷却
+                skill_data.deduct_cost(&mut attrs);
+                if skill_data.cooldown > 0 {
+                    cooldowns.set(skill_id, skill_data.cooldown);
+                }
+                // Stage 3: 发送 SkillActivated Message
                 // TODO(future): Query &UnitId component instead of Entity::to_bits()
                 log_skill_writer.write(SkillActivated {
                     caster: crate::shared::ids::UnitId::new(entity.to_bits().to_string()),
@@ -156,19 +177,13 @@ pub fn execute_action_on_enter(
                     target: None,
                     target_name: None,
                 });
-                if skill_data.cooldown > 0 {
-                    cooldowns.set(skill_id, skill_data.cooldown);
-                }
             }
         }
 
         unit.acted = true;
         commands.entity(entity).remove::<Selected>();
-
-        // 不变量6：Execute 后清除 CombatIntent
         clear_combat_intent(&mut combat_intent);
 
-        // 统一路由：从队列前进到下一个单位
         route_after_action(
             &mut turn_order,
             &non_selected_units,
@@ -181,13 +196,11 @@ pub fn execute_action_on_enter(
 
     // AI 单位：通过 CombatIntent.source_entity 查找，与玩家共享 Effect Pipeline
     if let Some(source_entity) = combat_intent.source_entity {
-        if let Ok((mut unit, _attrs, mut cooldowns, tags)) =
+        if let Ok((mut unit, mut attrs, mut cooldowns, tags)) =
             non_selected_units.get_mut(source_entity)
         {
-            // 晕眩检查
             if tags.has(GameplayTag::STUN) {
                 unit.acted = true;
-                // 不变量6：Execute 后清除 CombatIntent
                 clear_combat_intent(&mut combat_intent);
                 route_after_action(
                     &mut turn_order,
@@ -199,9 +212,15 @@ pub fn execute_action_on_enter(
                 return;
             }
 
-            // 设置冷却（与玩家走同一套逻辑）
+            // ADR-014 Stage 2-3: Cost + Cast（与玩家共享 Effect Pipeline）
             if let Some(skill_id) = combat_intent.skill_id.as_deref() {
                 if let Some(skill_data) = skill_registry.get(skill_id) {
+                    // Stage 2: 扣 MP + 设置冷却
+                    skill_data.deduct_cost(&mut attrs);
+                    if skill_data.cooldown > 0 {
+                        cooldowns.set(skill_id, skill_data.cooldown);
+                    }
+                    // Stage 3: 发送 SkillActivated Message
                     // TODO(future): Query &UnitId component instead of Entity::to_bits()
                     log_skill_writer.write(SkillActivated {
                         caster: crate::shared::ids::UnitId::new(
@@ -212,9 +231,6 @@ pub fn execute_action_on_enter(
                         target: None,
                         target_name: None,
                     });
-                    if skill_data.cooldown > 0 {
-                        cooldowns.set(skill_id, skill_data.cooldown);
-                    }
                 }
             }
 
@@ -240,7 +256,12 @@ pub fn execute_action_on_enter(
 pub fn wait_action_on_enter(
     mut selected_units: Query<(Entity, &mut Unit), With<Selected>>,
     mut non_selected_units: Query<
-        (&mut Unit, &Attributes, &mut SkillCooldowns, &GameplayTags),
+        (
+            &mut Unit,
+            &mut Attributes,
+            &mut SkillCooldowns,
+            &GameplayTags,
+        ),
         Without<Selected>,
     >,
     mut turn_order: ResMut<TurnOrder>,

@@ -5,8 +5,8 @@ use std::sync::Mutex;
 
 use fluent::{FluentArgs, FluentBundle, FluentResource};
 
-use super::locale::Locale;
 use super::cache::LocalizedTextCache;
+use super::locale::Locale;
 
 /// 本地化错误
 #[derive(Debug, thiserror::Error)]
@@ -28,8 +28,8 @@ pub struct LocalizationService {
 }
 
 struct LocalizationInner {
-    /// 已加载的 FTL 内容（locale → 内容列表）
-    ftl_contents: HashMap<Locale, Vec<String>>,
+    /// 已加载的 FTL 内容（locale → 合并后的内容）
+    ftl_contents: HashMap<Locale, String>,
     /// 默认语言
     default_locale: Locale,
     /// 文本解析缓存
@@ -49,35 +49,28 @@ impl LocalizationService {
     }
 
     /// 加载指定 locale 的 FTL 文件内容
-    pub fn load_ftl(
-        &self,
-        locale: Locale,
-        ftl_content: &str,
-    ) -> Result<(), LocalizationError> {
+    pub fn load_ftl(&self, locale: Locale, ftl_content: &str) -> Result<(), LocalizationError> {
         // 验证 FTL 内容可解析
         let _resource = FluentResource::try_new(ftl_content.to_string())
             .map_err(|(_, e)| LocalizationError::ParseError(format!("{:?}", e)))?;
 
-        let mut inner = self.inner.lock().map_err(|e| {
-            LocalizationError::LoadError(format!("锁获取失败: {}", e))
-        })?;
+        let mut inner = self
+            .inner
+            .lock()
+            .map_err(|e| LocalizationError::LoadError(format!("锁获取失败: {}", e)))?;
 
-        inner
-            .ftl_contents
-            .entry(locale)
-            .or_default()
-            .push(ftl_content.to_string());
+        // 合并到已有内容
+        let existing = inner.ftl_contents.entry(locale).or_default();
+        if !existing.is_empty() {
+            existing.push('\n');
+        }
+        existing.push_str(ftl_content);
 
         Ok(())
     }
 
     /// 解析本地化 Key，返回目标语言文本
-    pub fn resolve(
-        &self,
-        key: &str,
-        locale: &Locale,
-        args: Option<&FluentArgs>,
-    ) -> String {
+    pub fn resolve(&self, key: &str, locale: &Locale, args: Option<&FluentArgs>) -> String {
         let mut inner = match self.inner.lock() {
             Ok(inner) => inner,
             Err(_) => return String::new(),
@@ -160,17 +153,10 @@ impl LocalizationInner {
     }
 
     /// 尝试在指定 locale 中解析 Key
-    fn try_resolve(
-        &self,
-        key: &str,
-        locale: &Locale,
-        args: Option<&FluentArgs>,
-    ) -> Option<String> {
-        let contents = self.ftl_contents.get(locale)?;
+    fn try_resolve(&self, key: &str, locale: &Locale, args: Option<&FluentArgs>) -> Option<String> {
+        let content = self.ftl_contents.get(locale)?;
 
-        // 合并所有 FTL 内容并解析
-        let combined = contents.join("\n");
-        let resource = FluentResource::try_new(combined).ok()?;
+        let resource = FluentResource::try_new(content.clone()).ok()?;
 
         let mut bundle = FluentBundle::new(vec![]);
         bundle.add_resource(resource).ok()?;
@@ -190,13 +176,12 @@ impl LocalizationInner {
 
     /// 检查 Key 是否存在
     fn has_key(&self, key: &str, locale: &Locale) -> bool {
-        let contents = match self.ftl_contents.get(locale) {
+        let content = match self.ftl_contents.get(locale) {
             Some(c) => c,
             None => return false,
         };
 
-        let combined = contents.join("\n");
-        if let Ok(resource) = FluentResource::try_new(combined) {
+        if let Ok(resource) = FluentResource::try_new(content.clone()) {
             let mut bundle = FluentBundle::new(vec![]);
             if bundle.add_resource(resource).is_ok() {
                 return bundle.get_message(key).is_some();
@@ -316,5 +301,24 @@ test-greeting = Hello { $name }
         let locales = service.loaded_locales();
         assert!(locales.contains(&Locale::ZhCn));
         assert!(locales.contains(&Locale::EnUs));
+    }
+
+    #[test]
+    fn resolve_with_args_actual_parameters() {
+        let service = make_service_with_test_ftl();
+        let mut args = FluentArgs::new();
+        args.set("name", "测试用户");
+        let result = service.resolve("test-greeting", &Locale::ZhCn, Some(&args));
+        assert!(result.contains("测试用户"));
+        assert!(result.contains("你好"));
+    }
+
+    #[test]
+    fn merge_multiple_ftl_loads() {
+        let service = LocalizationService::new(Locale::ZhCn);
+        service.load_ftl(Locale::ZhCn, "key1 = 值1").unwrap();
+        service.load_ftl(Locale::ZhCn, "key2 = 值2").unwrap();
+        assert_eq!(service.resolve("key1", &Locale::ZhCn, None), "值1");
+        assert_eq!(service.resolve("key2", &Locale::ZhCn, None), "值2");
     }
 }

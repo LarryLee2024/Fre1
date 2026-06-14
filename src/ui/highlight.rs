@@ -2,6 +2,7 @@
 // 逻辑层通过 Message 通知，表现层自行决定如何高亮
 // 修复：所有函数接收 &UiTheme 参数，响应运行时主题变更
 
+use crate::core::ability::SkillSlots;
 use crate::core::attribute::{AttributeKind, Attributes};
 use crate::core::character::{
     AttackRange, GridPosition, MovableRange, Selected, SelectionHighlight, Unit,
@@ -9,7 +10,6 @@ use crate::core::character::{
 use crate::core::map::GameMap;
 use crate::core::map::TerrainRegistry;
 use crate::core::map::runtime::{OccupancyGrid, TerrainGrid};
-use crate::core::skill::SkillSlots;
 use crate::core::tag::GameplayTags;
 use crate::ui::theme::UiTheme;
 use bevy::picking::prelude::Pickable;

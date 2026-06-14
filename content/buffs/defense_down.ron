@@ -1,4 +1,5 @@
 (
+    version: 1,
     id: "defense_down",
     name: "防-5",
     default_duration: 3,

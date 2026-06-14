@@ -27,8 +27,7 @@ impl Plugin for LocalizationPlugin {
                 (
                     systems::on_language_changed,
                     systems::resolve_localized_texts,
-                )
-                    .chain(),
+                ),
             );
     }
 }

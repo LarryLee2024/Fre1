@@ -171,7 +171,7 @@ impl Plugin for AiBehaviorPlugin {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::skill::BASIC_ATTACK_ID;
+    use crate::core::ability::BASIC_ATTACK_ID;
     use ron::de::from_bytes;
 
     #[test]

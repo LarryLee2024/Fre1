@@ -18,6 +18,7 @@
 // ================================================
 
 use bevy::prelude::*;
+use tactical_rpg::core::ability::SkillCooldowns;
 use tactical_rpg::core::attribute::{AttributeKind, Attributes};
 use tactical_rpg::core::battle::{BattleEntry, BattleRecord, CharacterDied, execute_effects};
 use tactical_rpg::core::buff::{ActiveBuffs, BuffData, BuffRegistry, resolve_status_effects};
@@ -28,7 +29,6 @@ use tactical_rpg::core::effect::{
 };
 use tactical_rpg::core::map::TerrainRegistry;
 use tactical_rpg::core::registry_loader::RegistryLoader;
-use tactical_rpg::core::skill::SkillCooldowns;
 use tactical_rpg::core::tag::GameplayTag;
 use tactical_rpg::core::turn::NeedsResolve;
 

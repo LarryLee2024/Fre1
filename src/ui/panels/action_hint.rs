@@ -1,6 +1,7 @@
 // 操作提示面板：显示快捷键提示
 
 use crate::core::turn::AppState;
+use crate::infrastructure::localization::{CurrentLocale, LocalizationService};
 use crate::ui::theme::UiTheme;
 use bevy::prelude::*;
 
@@ -8,10 +9,16 @@ use bevy::prelude::*;
 pub struct ActionHint;
 
 /// 生成操作提示
-pub fn spawn_action_hint(mut commands: Commands, theme: Res<UiTheme>) {
+pub fn spawn_action_hint(
+    mut commands: Commands,
+    theme: Res<UiTheme>,
+    localization: Res<LocalizationService>,
+    locale: Res<CurrentLocale>,
+) {
+    let hint_text = localization.resolve("ui.action_hint.default", &locale.0, None);
     commands
         .spawn((
-            Text::new("左键选择/移动 | 右键取消 | ESC 关闭面板/取消 | E 结束回合"),
+            Text::new(hint_text),
             TextFont {
                 font_size: theme.font_small,
                 ..default()

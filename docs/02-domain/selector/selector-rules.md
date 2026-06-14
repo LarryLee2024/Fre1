@@ -1,7 +1,7 @@
 ---
 id: 02-domain.selector.selector-rules
 title: Selector Rules
-status: draft
+status: deprecated
 owner: domain-designer
 created: 2026-06-14
 updated: 2026-06-14
@@ -9,6 +9,8 @@ tags:
   - domain
   - selector
 ---
+
+> ⚠️ **已过时声明**: 本文档已被 `docs/02-domain/targeting/targeting-rules.md` 取代。"Selector" 概念已重命名为 "Targeting"，扩展了目标解析的语义范围。请以 targeting-rules.md 为准。本文档保留供历史参考。
 
 # 目标选择器系统领域
 

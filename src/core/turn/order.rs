@@ -168,7 +168,7 @@ pub fn turn_end_on_enter(
     mut commands: Commands,
 ) {
     // 发送回合结束消息
-    let old_faction = turn_state.current_faction;
+    let _old_faction = turn_state.current_faction; // reserved for potential future use
     let old_turn = turn_state.turn_number;
     turn_ended_writer.write(TurnEnded {
         turn: turn_state.turn_number,

@@ -15,12 +15,16 @@
 // ================================================
 
 use bevy::prelude::*;
+use tactical_rpg::core::ability::SkillCooldowns;
+use tactical_rpg::core::ability::SkillSlots;
 use tactical_rpg::core::attribute::{AttributeKind, Attributes, BuffInstanceId};
 use tactical_rpg::core::battle::{
     CharacterDied, DotApplied, HotApplied, StunApplied, execute_effects, trigger_on_attack_traits,
     trigger_on_kill_traits,
 };
-use tactical_rpg::core::buff::{ActiveBuffs, BuffInstance, BuffRegistry, resolve_status_effects};
+use tactical_rpg::core::buff::{
+    ActiveBuffs, BuffInstance, BuffRegistry, DurationPolicy, resolve_status_effects,
+};
 use tactical_rpg::core::character::{
     Faction, GridPosition, PersistentTags, TraitCollection, TraitData, TraitEffect,
     TraitEffectHandlerRegistry, TraitRegistry, TraitSource, TraitTrigger, Unit, UnitName,
@@ -36,8 +40,6 @@ use tactical_rpg::core::inventory::transfer::TransferItem;
 use tactical_rpg::core::inventory::use_item::UseItem;
 use tactical_rpg::core::map::TerrainRegistry;
 use tactical_rpg::core::registry_loader::RegistryLoader;
-use tactical_rpg::core::skill::SkillCooldowns;
-use tactical_rpg::core::skill::SkillSlots;
 use tactical_rpg::core::tag::{GameplayTag, GameplayTags};
 use tactical_rpg::core::turn::NeedsResolve;
 
@@ -366,6 +368,7 @@ fn buff_tick减少剩余回合数() {
             buff_id: "test_buff".into(),
             name: "测试Buff".into(),
             remaining_turns: 3,
+            duration_policy: DurationPolicy::Turns(3),
             source_entity: None,
             tags: vec![GameplayTag::BUFF],
             is_buff: true,
@@ -436,6 +439,7 @@ fn buff过期后自动移除() {
             buff_id: "expiring_buff".into(),
             name: "即将过期".into(),
             remaining_turns: 1,
+            duration_policy: DurationPolicy::Turns(1),
             source_entity: None,
             tags: vec![GameplayTag::BUFF],
             is_buff: true,

@@ -16,7 +16,7 @@ pub(crate) struct UnitSnapshot {
     pub attack_range: u32,
     pub acted: bool,
     pub skill_ids: Vec<String>,
-    pub cooldowns: crate::core::skill::SkillCooldowns,
+    pub cooldowns: crate::core::ability::SkillCooldowns,
     pub ai_behavior_id: String,
     /// 单位标签（用于解析地形成本计算器）
     pub tags: crate::core::tag::GameplayTags,
@@ -41,11 +41,11 @@ pub(crate) fn select_target_coord(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::ability::SkillCooldowns;
     use crate::core::ai::strategy::{
         AiStrategyRegistry, LowestHpPercentTarget, MostDangerousTarget, NearestTarget,
         WeakestTarget,
     };
-    use crate::core::skill::SkillCooldowns;
 
     fn make_snapshot(
         entity: Entity,

@@ -24,6 +24,7 @@ use crate::core::tag::{GameplayTag, GameplayTags, TagName};
 use crate::core::turn::{AppState, TurnOrder};
 use bevy::prelude::*;
 
+pub use crate::core::tag::PersistentTags;
 /// 公共 re-exports
 pub use components::*;
 pub use marker::*;

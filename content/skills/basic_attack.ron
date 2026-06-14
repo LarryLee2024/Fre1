@@ -1,4 +1,5 @@
 (
+    version: 1,
     id: "basic_attack",
     name: "普通攻击",
     description: "基础物理攻击",
@@ -8,7 +9,7 @@
     effects: [
         Damage(multiplier: 1.0, ignore_def_percent: 0.0),
     ],
-    tags: [],
+    tags: [MELEE, SKILL_ACTIVE],
     conditions: [],
     cooldown: 0,
     priority: 0,

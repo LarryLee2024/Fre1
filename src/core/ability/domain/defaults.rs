@@ -1,8 +1,13 @@
 // 技能默认注册数据
+//
+// ADR-013: 内置默认技能作为 RON 加载的后备（当 content/skills/ 为空时使用）
+// ADR-015: 所有技能必须携带分类标签(SKILL_ACTIVE/SKILL_PASSIVE)和元素/武器标签
 
 use super::SkillRegistry;
 use super::types::*;
 use crate::core::effect::EffectDef;
+use crate::core::tag::GameplayTag;
+use crate::core::targeting::SkillTargeting;
 
 /// 注册内置默认技能（确保基础功能可用）
 pub fn register_defaults(registry: &mut SkillRegistry) {
@@ -14,6 +19,8 @@ pub fn register_defaults(registry: &mut SkillRegistry) {
         id: BASIC_ATTACK_ID.into(),
         name: "普通攻击".into(),
         description: "基础物理攻击".into(),
+        name_key: Some("skill.s_1001.name".into()),
+        desc_key: Some("skill.s_1001.desc".into()),
         cost_mp: 0,
         range: 0,
         targeting: SkillTargeting::SingleEnemy,
@@ -21,7 +28,7 @@ pub fn register_defaults(registry: &mut SkillRegistry) {
             multiplier: 1.0,
             ignore_def_percent: 0.0,
         }],
-        tags: vec![],
+        tags: vec![GameplayTag::MELEE, GameplayTag::SKILL_ACTIVE],
         conditions: vec![],
         cooldown: 0,
         priority: 0,
@@ -32,15 +39,17 @@ pub fn register_defaults(registry: &mut SkillRegistry) {
         id: "charge".into(),
         name: "冲锋".into(),
         description: "1.5倍伤害，需要近战".into(),
-        cost_mp: 0,
+        name_key: Some("skill.s_1002.name".into()),
+        desc_key: Some("skill.s_1002.desc".into()),
+        cost_mp: 5,
         range: 0,
         targeting: SkillTargeting::SingleEnemy,
         effects: vec![EffectDef::Damage {
             multiplier: 1.5,
             ignore_def_percent: 0.0,
         }],
-        tags: vec![],
-        conditions: vec![],
+        tags: vec![GameplayTag::MELEE, GameplayTag::SKILL_ACTIVE],
+        conditions: vec![SkillCondition::MpCost(5)],
         cooldown: 2,
         priority: 5,
     });
@@ -50,15 +59,17 @@ pub fn register_defaults(registry: &mut SkillRegistry) {
         id: "pierce".into(),
         name: "穿刺".into(),
         description: "无视50%防御".into(),
-        cost_mp: 0,
+        name_key: Some("skill.s_1003.name".into()),
+        desc_key: Some("skill.s_1003.desc".into()),
+        cost_mp: 8,
         range: 0,
         targeting: SkillTargeting::SingleEnemy,
         effects: vec![EffectDef::Damage {
             multiplier: 1.2,
             ignore_def_percent: 50.0,
         }],
-        tags: vec![],
-        conditions: vec![],
+        tags: vec![GameplayTag::MELEE, GameplayTag::SKILL_ACTIVE],
+        conditions: vec![SkillCondition::MpCost(8)],
         cooldown: 3,
         priority: 8,
     });
@@ -68,7 +79,9 @@ pub fn register_defaults(registry: &mut SkillRegistry) {
         id: "fireball".into(),
         name: "火球".into(),
         description: "远程火属性攻击".into(),
-        cost_mp: 0,
+        name_key: Some("skill.s_1004.name".into()),
+        desc_key: Some("skill.s_1004.desc".into()),
+        cost_mp: 10,
         range: 3,
         targeting: SkillTargeting::SingleEnemy,
         effects: vec![
@@ -81,8 +94,12 @@ pub fn register_defaults(registry: &mut SkillRegistry) {
                 duration: 2,
             },
         ],
-        tags: vec![],
-        conditions: vec![],
+        tags: vec![
+            GameplayTag::FIRE,
+            GameplayTag::RANGED,
+            GameplayTag::SKILL_ACTIVE,
+        ],
+        conditions: vec![SkillCondition::MpCost(10)],
         cooldown: 2,
         priority: 10,
     });
@@ -92,12 +109,14 @@ pub fn register_defaults(registry: &mut SkillRegistry) {
         id: "heal".into(),
         name: "治疗".into(),
         description: "恢复友方生命值".into(),
-        cost_mp: 0,
+        name_key: Some("skill.s_1005.name".into()),
+        desc_key: Some("skill.s_1005.desc".into()),
+        cost_mp: 6,
         range: 2,
         targeting: SkillTargeting::SingleAlly,
         effects: vec![EffectDef::Heal { amount: 8 }],
-        tags: vec![],
-        conditions: vec![],
+        tags: vec![GameplayTag::SKILL_ACTIVE],
+        conditions: vec![SkillCondition::MpCost(6)],
         cooldown: 2,
         priority: 15,
     });
@@ -107,12 +126,14 @@ pub fn register_defaults(registry: &mut SkillRegistry) {
         id: "cleanse_skill".into(),
         name: "净化".into(),
         description: "驱散友方所有负面效果".into(),
-        cost_mp: 0,
+        name_key: Some("skill.s_1006.name".into()),
+        desc_key: Some("skill.s_1006.desc".into()),
+        cost_mp: 8,
         range: 2,
         targeting: SkillTargeting::SingleAlly,
         effects: vec![EffectDef::Cleanse],
-        tags: vec![],
-        conditions: vec![],
+        tags: vec![GameplayTag::SKILL_ACTIVE],
+        conditions: vec![SkillCondition::MpCost(8)],
         cooldown: 3,
         priority: 12,
     });
