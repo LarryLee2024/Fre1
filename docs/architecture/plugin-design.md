@@ -1,8 +1,9 @@
 # Plugin 组织设计
 
-> Version: 1.0
+> Version: 1.1
 > Status: Proposed
 > 来源：`docs/其他/30.md` 第1410-1441行（Plugin 细化）、`docs/architecture.md`（七层架构、插件注册顺序）
+> 宪法依据：`docs/AI开发宪法完整版.md` v1.6 — 第3.0节模块化与Plugin边界、第1.5节复杂度预算、第2.2节四级通信机制
 
 ---
 
@@ -142,11 +143,13 @@ impl Plugin for BattlePlugin {
             .init_resource::<EffectQueue>()
 
             // 注册 System（业务逻辑）
+            // 效果管线使用自定义 Schedule（非 .chain()）
+            // 详见 docs/architecture/app-bootstrap.md EffectPipelineSchedule
             .add_systems(Update, (
                 generate_effects,
                 modify_effects,
                 execute_effects,
-            ).chain().run_if(in_state(AppState::InGame)))
+            ).run_if(in_state(AppState::InGame)))
     }
 }
 ```
@@ -163,14 +166,14 @@ impl Plugin for BattlePlugin {
 
 ### 4.3 run_if 条件
 
-Plugin 注册的 System 应该使用 `run_if` 控制执行条件：
+Plugin 注册的 System 应该使用 `run_if` 控制执行条件 — 〔宪法 2.3.7 运行条件优先〕：
 
 ```rust
 // 回合相关系统只在 InGame 时执行
 .add_systems(Update, (
     turn_system,
     movement_system,
-).chain().run_if(in_state(AppState::InGame)))
+).run_if(in_state(AppState::InGame)))
 
 // UI 系统只在对应状态时执行
 .add_systems(Update, ui_system.run_if(in_state(AppState::MainMenu)))
@@ -179,10 +182,10 @@ Plugin 注册的 System 应该使用 `run_if` 控制执行条件：
 ### 4.4 SubState 注册
 
 ```rust
-// 注册 TurnPhase 为 AppState::InGame 的 SubState
+// 注册 TurnPhase 为 AppState::InGame 的 SubState — 〔宪法 2.3.6〕
 app.add_sub_state::<TurnPhase>();
 
-// 系统只在特定 TurnPhase 执行
+// 系统只在特定 TurnPhase 执行 — 〔宪法 2.3.7 运行条件优先〕
 app.add_systems(Update, (
     select_unit_system.run_if(in_state(TurnPhase::SelectUnit)),
     move_unit_system.run_if(in_state(TurnPhase::MoveUnit)),
@@ -295,10 +298,10 @@ impl Plugin for UiPlugin {
 
 ### 7.3 通信规则
 
-- 🟥 **禁止 Plugin 间循环依赖**（A 依赖 B，B 又依赖 A）
-- 🟥 **禁止跨层注册**（UI Plugin 禁止注册 Core 系统的 Message）
-- 🟩 **跨层 Message 注册在 App 层做**（App 是唯一允许全局视野的层）
-- 🟩 **模块内部优先函数调用**（不需要走 Message）
+- 🟥 **禁止 Plugin 间循环依赖**（A 依赖 B，B 又依赖 A） — 〔宪法 1.3.2 依赖方向铁则〕
+- 🟥 **禁止跨层注册**（UI Plugin 禁止注册 Core 系统的 Message） — 〔宪法 3.0.4 跨模块交互规范〕
+- 🟩 **跨层 Message 注册在 App 层做**（App 是唯一允许全局视野的层） — 〔宪法 3.0.2〕
+- 🟩 **模块内部优先函数调用**（不需要走 Message） — 〔宪法 2.2.5 模块内部优先函数调用〕
 
 ---
 
@@ -360,24 +363,255 @@ mod tests {
 
 ## 9. 禁止事项
 
-| 禁止项 | 理由 | 替代方案 |
-|--------|------|----------|
-| 🟥 Plugin 内部包含跨模块注册逻辑 | 每个 Plugin 只管自己 | 跨层注册在 App 层做 |
-| 🟥 Plugin::build 中执行业务逻辑 | 只注册不执行 | 业务逻辑放在 System 中 |
-| 🟥 Plugin 间循环依赖 | 编译错误、难以维护 | 重新设计模块边界 |
-| 🟥 UI Plugin 注册 Core 系统的 Message | 跨层注册 | 跨层 Message 在 App 层注册 |
-| 🟥 跳过 Plugin 直接注册 System | 破坏模块边界 | 通过 Plugin 注册 |
-| 🟥 为单个实现创建 Plugin | 过度拆分 | 按业务领域拆分 |
+> **宪法依据**：〔宪法 3.0.1-3.0.7 模块化与Plugin边界〕
+
+| 禁止项 | 理由 | 替代方案 | 宪法条款 |
+|--------|------|----------|----------|
+| 🟥 Plugin 内部包含跨模块注册逻辑 | 每个 Plugin 只管自己 | 跨层注册在 App 层做 | 3.0.1 |
+| 🟥 Plugin::build 中执行业务逻辑 | 只注册不执行 | 业务逻辑放在 System 中 | 3.0.2 |
+| 🟥 Plugin 间循环依赖 | 编译错误、难以维护 | 重新设计模块边界 | 1.3.2 |
+| 🟥 UI Plugin 注册 Core 系统的 Message | 跨层注册 | 跨层 Message 在 App 层注册 | 3.0.4 |
+| 🟥 跳过 Plugin 直接注册 System | 破坏模块边界 | 通过 Plugin 注册 | 3.0.2 |
+| 🟥 为单个实现创建 Plugin | 过度拆分 | 按业务领域拆分 | 1.5.2 |
 
 ---
 
-## 10. 交叉引用
+## 10. 声明式 Plugin 哲学强化
+
+> **优化来源**: `docs/其他/63.md`
+
+### `build()` 禁止事项
+
+Plugin 的 `build()` 方法是**声明式注册点**，不是业务逻辑执行点。
+
+🟥 **`build()` 中禁止的行为**：
+
+| 禁止行为 | 理由 | 正确做法 |
+|---------|------|---------|
+| 执行业务逻辑 | `build()` 只在注册时调用一次 | 业务逻辑放在 System 中 |
+| 硬编码数值 | 违反数据驱动原则 | 数值从 RON 配置读取 |
+| 直接修改 Resource 值 | `build()` 时 Resource 可能未就绪 | 用 System 修改 |
+| 触发 Message | `build()` 时无 System 消费 Message | 在 System 中触发 |
+| 执行文件 I/O | 阻塞注册流程 | 在 startup System 中执行 |
+
+```rust
+// 🟥 禁止：在 build() 中执行业务逻辑
+impl Plugin for BattlePlugin {
+    fn build(&self, app: &mut App) {
+        // 🟥 禁止：硬编码数值
+        let damage = 100;
+
+        // 🟥 禁止：直接修改 Resource
+        let mut record = BattleRecord::default();
+        record.add_event(BattleEvent::Start);
+
+        // 🟥 禁止：触发 Message
+        // app world 发送消息...
+    }
+}
+
+// ✅ 正确：build() 只做声明式注册
+impl Plugin for BattlePlugin {
+    fn build(&self, app: &mut App) {
+        app
+            // 声明依赖
+            .add_plugins((SkillPlugin, BuffPlugin))
+            // 声明 Message
+            .add_message::<DamageApplied>()
+            // 声明 Resource
+            .init_resource::<BattleRecord>()
+            // 声明 System
+            .add_systems(Update, battle_system);
+    }
+}
+```
+
+---
+
+## 11. Message vs Observer 分离决策表
+
+> **优化来源**: `docs/其他/63.md`
+
+### 决策矩阵
+
+| 场景 | 通信方式 | 示例 |
+|------|---------|------|
+| **跨 Plugin 广播** | Message | `BattlePlugin` → `UiPlugin`：`DamageApplied` |
+| **同 Plugin 内局部响应** | Observer | `BattlePlugin` 内部：`when_added::<Dead>` → 清理 |
+| **跨 Plugin 只读查询** | Resource | `DebugPlugin` 读取 `BattleRecord` |
+| **UI → 业务命令** | UiCommand | `UiPlugin` → `CommandHandler` → Core System |
+| **组件固有行为** | Hook | `Dead` 标签添加时移除移动组件 |
+| **全局事件通知** | Message | `CharacterDied` → 多个 Plugin 消费 |
+
+### 选择原则
+
+```
+是否跨 Plugin 边界？
+├─ 是 → Message（跨边界广播）
+└─ 否 → 是否需要解耦？
+    ├─ 是 → Observer（同 Plugin 内解耦响应）
+    └─ 否 → 直接函数调用
+```
+
+### 代码示例
+
+```rust
+// ✅ 跨 Plugin 通信：Message
+// BattlePlugin 发送
+fn execute_damage_system(mut writer: MessageWriter<DamageApplied>) {
+    writer.write(DamageApplied { value: 10 });
+}
+
+// UiPlugin 消费
+fn combat_vfx_handler(mut reader: MessageReader<DamageApplied>) {
+    for msg in reader.read() {
+        spawn_damage_text(msg.value);
+    }
+}
+
+// ✅ 同 Plugin 响应：Observer
+// BattlePlugin 内部
+fn setup_battle_observers(app: &mut App) {
+    app.observe(when_added::<Dead>, cleanup_dead_entities);
+}
+```
+
+### 规则
+
+- 🟥 **跨 Plugin 通信必须使用 Message** — 禁止直接调用其他 Plugin 的 System
+- 🟥 **同 Plugin 内局部响应优先使用 Observer** — 减少 Message 污染
+- 🟩 **Resource 用于跨 Plugin 只读查询** — 不适合广播场景
+
+---
+
+## 12. 条件编译最佳实践
+
+> **优化来源**: `docs/其他/63.md`
+
+### PluginGroup + 内部 cfg 模式
+
+条件编译应在**各 PluginGroup 内部**处理，保持 App 层干净：
+
+```rust
+// ✅ 最佳实践：PluginGroup 内部处理条件编译
+pub struct DevPluginGroup;
+
+impl PluginGroup for DevPluginGroup {
+    fn build(&self) -> PluginGroupBuilder {
+        let mut group = PluginGroupBuilder::default();
+
+        // 内部 cfg：DevPluginGroup 统一管理条件编译
+        #[cfg(feature = "dev")]
+        group = group.add::<DebugPlugin>();
+
+        #[cfg(feature = "egui_inspector")]
+        group = group.add::<WorldInspectorPlugin>();
+
+        group
+    }
+}
+
+// ✅ App 层保持干净：只注册 PluginGroup
+fn main() {
+    App::new()
+        .add_plugins(DefaultPlugins)
+        .add_plugins(SharedPlugin)
+        .add_plugins(CorePluginGroup)
+        .add_plugins(ContentPluginGroup)
+        .add_plugins(UiPluginGroup)
+        .add_plugins(DevPluginGroup) // 条件编译在内部处理
+        .run();
+}
+```
+
+### Feature Flag 分组
+
+| Feature | 管理 PluginGroup | 说明 |
+|---------|-----------------|------|
+| `dev` | `DevPluginGroup` | 开发工具 |
+| `modding` | `ModdingPluginGroup` | MOD 支持 |
+| `replay` | `ReplayPluginGroup` | 战斗回放 |
+
+### 规则
+
+- 🟥 **App 层禁止散落 `#[cfg]`** — 条件编译集中在 PluginGroup 内部
+- 🟩 **PluginGroup 统一管理 Feature Flag** — 一个 Feature 对应一个 PluginGroup
+- 🟩 **PluginGroup 内部处理降级逻辑** — 缺失 Feature 时提供默认行为
+
+---
+
+## 13. Plugin 生命周期钩子
+
+> **优化来源**: `docs/其他/63.md`
+> ⚠️ **宪法 1.5.2 警告**：以下 `initialize()` 和 `shutdown()` 钩子为预留扩展点设计。Bevy 原生 Plugin trait 仅包含 `build()` 方法。在 Bevy 官方支持生命周期钩子前，禁止提前实现复杂框架。仅允许定义 trait 接口，禁止添加复杂实现逻辑。当前阶段应通过 System 的 `OnEnter`/`OnExit` 实现等效功能。
+
+### 概念
+
+除了标准的 `build()` 方法，Plugin 可以定义额外的生命周期钩子：
+
+```rust
+pub trait Plugin: Downcast + Send + Sync + 'static {
+    fn build(&self, app: &mut App);
+
+    /// 可选：Plugin 初始化完成后的钩子
+    /// 适合执行需要所有 Resource 就绪后的初始化逻辑
+    fn initialize(&self, app: &mut App) {
+        // 默认空实现
+    }
+
+    /// 可选：Plugin 卸载前的钩子
+    /// 适合清理资源、保存状态
+    fn shutdown(&self, app: &mut App) {
+        // 默认空实现
+    }
+}
+```
+
+### 使用场景
+
+```rust
+impl Plugin for SavePlugin {
+    fn build(&self, app: &mut App) {
+        // 声明 Resource 和 System
+        app.init_resource::<SaveManager>()
+           .add_systems(Startup, load_settings);
+    }
+
+    fn initialize(&self, app: &mut App) {
+        // 所有 Plugin 注册完毕后执行
+        // 适合：验证依赖、建立连接、加载配置
+        let settings = app.world().resource::<Settings>();
+        info!("SavePlugin initialized with path: {}", settings.save_path);
+    }
+
+    fn shutdown(&self, app: &mut App) {
+        // Plugin 卸载前执行
+        // 适合：保存状态、关闭连接、清理缓存
+        if let Some(manager) = app.world().get_resource::<SaveManager>() {
+            manager.flush_pending_saves();
+        }
+    }
+}
+```
+
+### 规则
+
+- 🟩 **`initialize()` 适合验证性逻辑** — 确保所有依赖 Resource 已就绪
+- 🟩 **`shutdown()` 适合清理性逻辑** — 保存状态、释放资源
+- 🟥 **`initialize()` 中禁止注册新 Plugin** — Plugin 注册应在 `build()` 中完成
+- 🟥 **`shutdown()` 中禁止触发 Message** — 此时消费 Message 的 System 可能已卸载
+
+---
+
+## 14. 交叉引用
 
 | 文档 | 关系 |
 |------|------|
+| `docs/AI开发宪法完整版.md` | 宪法第3.0节模块化与Plugin边界、第1.5节复杂度预算、第2.2节四级通信机制 |
 | `docs/architecture.md` | 七层架构、插件注册顺序（第724-747行） |
-| `docs/architecture/app-bootstrap.md` | App 层启动序列与 Plugin 组装 |
+| `docs/architecture/app-bootstrap.md` | App 层启动序列与 Plugin 组装、EffectPipelineSchedule |
 | `docs/architecture/layer-contracts.md` | 各层 Plugin 职责边界 |
+| `docs/architecture/plugin_contract_rules.md` | Plugin 边界与依赖契约 |
 | `docs/architecture/project-structure.md` | Plugin 目录结构（第80-94行） |
 | `docs/其他/30.md` | 原始 Plugin 建议（第1410-1441行） |
 

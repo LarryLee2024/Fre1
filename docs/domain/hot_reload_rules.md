@@ -1,6 +1,6 @@
 # 热重载安全领域
 
-Version: 1.0
+Version: 1.1
 Status: Proposed
 
 热重载安全领域定义热重载的安全边界——什么可以/不可以热重载，什么时机可以/不可以热重载。只允许热重载 Definition 数据，绝不触碰 Instance 数据。
@@ -10,6 +10,16 @@ Status: Proposed
 - 战斗进行中禁止热重载（必须等到 TurnEnd 或 BattleEnd）
 - 热重载前必须验证数据合法性
 - 热重载失败必须回退到上次有效状态
+
+## 宪法合规矩子
+
+| 条款 | 级别 | 落地规则 |
+|------|------|----------|
+| 12.1.5 热重载优先 | 🟥 | 所有配置必须优先支持热重载 |
+| 12.1.6 自动校验 | 🟥 | 配置之间的引用关系必须实现自动校验 |
+| 14.0.5 资源热重载 | 🟥 | 高频修改的资源必须优先支持热重载 |
+| 11.5.1 命令层统一 | 🟩 | 热重载操作标准化为命令，支持回放和测试 |
+| 22.2 配置与运行时分离 | 🟥 | 只热重载 Definition，绝不触碰 Instance |
 
 ---
 
@@ -178,11 +188,11 @@ Idle → Detecting → ReloadPending → Reloading → Idle
 
 # 不变量
 
-## 不变量1：热重载只更新 Definition
+## 不变量1：热重载只更新 Definition [宪法 12.1.5 🟥]
 
 任意时刻：
 
-热重载只更新 Registry 中的 Definition 数据。禁止热重载修改任何运行时 Instance 数据（ECS Component）。
+🟥 热重载只更新 Registry 中的 Definition 数据。禁止热重载修改任何运行时 Instance 数据（ECS Component）。这是宪法最高优先级条款（22.2 配置与运行时分离）。
 
 违反表现：
 
@@ -190,11 +200,11 @@ Idle → Detecting → ReloadPending → Reloading → Idle
 
 ---
 
-## 不变量2：Running 中的战斗不可热重载
+## 不变量2：Running 中的战斗不可热重载 [宪法 12.1.5 🟥]
 
 任意时刻：
 
-当游戏处于 Running 战斗状态（回合进行中、战斗阶段中间）时，禁止执行热重载。必须等到 TurnEnd 或 BattleEnd 阶段。
+🟥 当游戏处于 Running 战斗状态（回合进行中、战斗阶段中间）时，禁止执行热重载。必须等到 TurnEnd 或 BattleEnd 阶段。破坏热重载时机保证回放确定性。
 
 违反表现：
 
@@ -228,22 +238,26 @@ Idle → Detecting → ReloadPending → Reloading → Idle
 
 # 业务规则
 
-## 规则1：热重载安全边界
+## 规则1：热重载安全边界 [宪法 12.1.5 / 14.0.5 🟥]
+
+🟥 **所有配置必须优先支持热重载。高频修改的资源必须优先支持热重载。**
 
 允许：
-- 热重载 Definition（RON 配置文件）
-- 热重载 UI 主题配置
-- 热重载关卡配置（非战斗中）
+- 🟥 热重载 Definition（RON 配置文件）
+- 🟥 热重载 UI 主题配置
+- 🟥 热重载关卡配置（非战斗中）
+- 🟩 高频修改的资源（技能、Buff、装备定义）优先支持热重载
 
 禁止：
-- 热重载 Instance 数据
-- 热重载战斗中任何数据
+- 🟥 热重载 Instance 数据（违反 22.2 配置与运行时分离）
+- 🟥 热重载战斗中任何数据
 - 热重载代码模块（需要重启）
 
 必须：
 - 热重载前验证文件格式合法性
-- 热重载后发送重载通知
+- 🟥 热重载后发送重载通知
 - 热重载失败时回退到上次有效状态
+- 🟥 配置之间的引用关系必须实现自动校验（12.1.6）
 
 ---
 
@@ -322,6 +336,47 @@ Idle → Detecting → ReloadPending → Reloading → Idle
 - 重载通知通过 Message 系统广播
 - 重载通知在 Registry 更新后发送
 - 重载通知携带完整的更新信息
+
+---
+
+## 规则6：热重载事件风暴缓解 [NEW since v2.2]
+
+> **优化来源**: docs/architecture/config_system_design.md §4.1
+
+必须：
+- 热重载通知只传递 config_type（如 `SkillConfig`），不传递 changes 列表
+- 下游 System 收到通知后标记 `NeedsRebuild<T>` Marker
+- 在下一帧的特定 Phase（如 PreparePhase）统一执行重建
+- 避免一帧内触发大量变更事件导致下游 System 卡顿
+
+禁止：
+- 热重载通知携带完整的变更列表（大数据量导致性能问题）
+- 下游 System 收到通知后立即同步重建（阻塞主线程）
+- 策划保存大量配置时在一帧内触发所有下游重建
+
+允许：
+- 合并同一配置类型的多次变更为一次重建
+- 延迟到下一帧的特定 Phase 统一执行重建
+- 使用 Marker 标记"需要重建"的系统，避免重复重建
+
+---
+
+## 规则7：配置拆分为细粒度 Resource [NEW since v2.2]
+
+> **优化来源**: docs/architecture/config_system_design.md §2.2
+
+必须：
+- GameRulesConfig 按领域拆分为独立 Resource（`BattleConfig`、`SkillConfig`、`BuffConfig`）
+- 每个 Resource 可独立热重载
+- System 只声明所需 `Res<T>`，其他 System 可并行
+
+禁止：
+- 将所有游戏规则塞入单一的 `GameRulesConfig` Resource（全局读锁竞争）
+- 修改 SkillConfig 时触发 BattleConfig 的 `Changed` 检测
+
+允许：
+- 使用 Bevy Asset（`Handle<T>`）天然支持热重载
+- MOD 精确替换单个配置文件而不影响其他
 
 ---
 

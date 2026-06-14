@@ -1,11 +1,16 @@
 # 领域事件与审计领域
 
-Version: 1.0
+Version: 1.1
 Status: Proposed
+> **优化来源**: `docs/architecture/events_audit_design.md`（吸收 50.md、34.md、74借鉴.md §4/§8/§22：废除 DomainEvent 大枚举、GameplayCue、双轨制、Observer/Trigger、EventOrd、反膨胀流式写入、S-tier 优先级）
 
 领域事件与审计领域管理跨模块通信的事实记录载体和结构化事件记录基础设施，为回放、调试和测试验证提供数据源。
 
-核心原则：
+核心原则（对应宪法第二部分 2.2.6/2.2.7 + 第十三部分 13.10 领域事件与审计轨迹）：
+- 🟩 2.2.6 领域事件是唯一业务事实源（日志/回放/UI/成就/任务共用同一事件源）
+- 🟥 2.2.7 绝对禁止为临时副作用随意新增领域事件
+- 🟩 13.10.1 所有核心业务事实必须通过领域事件表达
+- 🟩 13.10.3 核心战斗流程必须生成结构化审计轨迹
 - 事件只描述已发生的事实，不表达意图
 - 审计系统不侵入业务逻辑路径
 - 事件携带完整上下文，消费者无需反向查询
@@ -32,13 +37,18 @@ Status: Proposed
 
 ## 事件目录（Event Catalog）
 
-所有 DomainEvent 类型的注册表，定义在 `DomainEvent` 枚举中。不是代码。不是文档。
+> **优化来源**: `docs/architecture/events_audit_design.md`
+
+🟥 **废除 DomainEvent 大枚举**。每个事件是**独立的 Struct**，独立注册为 Bevy Message。
+
+不是枚举变体。不是代码。不是文档。
 
 关键属性：
-- 统一管理所有跨模块事件类型
-- 每个事件变体包含完整的字段定义
-- 新增事件类型必须在此枚举中注册
-- 事件类型列表：SkillCasted、DamageDealt、HealApplied、BuffApplied、BuffRemoved、CharacterDied、CharacterRevived、TurnStarted、TurnEnded、UnitMoved、ItemEquipped、ItemUnequipped、ItemUsed、BattleInitialized、BattleEnded
+- 🟥 每个事件必须是独立的 Struct（如 `pub struct SkillCasted { ... }`），不是 DomainEvent 枚举的变体
+- 每个事件 Struct 实现 `Auditable` Trait，审计系统通过 Trait 统一收集
+- 每个事件独立注册为 Bevy Message（`add_message::<T>()`）
+- 新增事件无需修改现有文件——只需创建新 Struct + 注册，符合 OCP 开放封闭原则
+- 避免大枚举的缓存惩罚和"新增一个事件要改十个文件"的 OCP 灾难
 
 ---
 
@@ -74,6 +84,9 @@ Status: Proposed
 
 ## 事件白名单（EventWhitelist）
 
+> 🟥 对应宪法 2.2.7：所有领域事件必须纳入统一白名单文档管理，新增事件必须先更新白名单
+> 🟩 对应宪法 13.10.2：所有正式领域事件必须收录在白名单文档中
+
 控制哪些事件类型被审计记录的集合。位于 `shared/audit/event_whitelist.rs`。
 
 不是全量记录。不是黑名单。
@@ -100,18 +113,190 @@ Status: Proposed
 
 ---
 
+## Observer 优先 Event
+
+> **优化来源**: `docs/architecture/events_audit_design.md` §8
+
+Bevy 0.15+ 的 Observer（实体级观察者）优于传统 EventReader/EventWriter 用于 SRPG 的实体级事件处理。装饰器型子系统（审计、统计、日志）应优先使用 `Trigger::<T>::watch()` 模式。
+
+不是全局广播。不是弃用 Event。不是替代所有 Event。
+
+关键属性：
+- Observer 绑定到具体 Entity，事件只触发给相关实体，零全局轮询开销
+- 🟥 装饰器型子系统（审计、统计、日志）应优先使用 Bevy 0.15+ 的 `Trigger::<T>::watch()`，而非 EventReader 轮询
+- `Trigger::<DamageApplied>::watch()` 是实体级观察者，事件只触发给相关实体，零全局轮询开销
+- 审计系统本质是"装饰器"——不修改事件流，只旁路观察。Observer/Trigger 模式完美匹配这一语义
+- 适用于 entity 级别的伤害、死亡、状态变化（精确过滤）
+- 传统 Event 适用于 TurnStart、PhaseChange 等全局变化
+
+选择准则：
+
+| 场景 | 推荐模式 | 原因 |
+|------|---------|------|
+| 审计/统计/日志（装饰器） | Observer/Trigger | 零轮询、实体级精准订阅 |
+| UI 更新（全局广播） | MessageReader | UI 需要感知所有事件 |
+| 跨模块核心逻辑 | MessageReader | 需要帧级顺序保证 |
+
+---
+
+## 审计复用事件
+
+Audit Trail 直接复用 DomainEvent，无需建立独立的审计事件体系。
+
+不是双事件系统。不是独立存储。不是审计专属事件。
+
+关键属性：
+- 结构化 DomainEvent 本身就是天然的审计记录
+- 审计系统通过 EventWhitelist 过滤需要记录的事件类型
+- 拒绝" DomainEvent + 独立审计事件"的双事件模式
+- 减少事件定义冗余，降低维护成本
+- AuditRecord 包含 DomainEvent 完整数据 + 审计元数据（sequence、tick、state_hash）
+
+---
+
+## Auditable Trait（可审计事件接口）
+
+> **优化来源**: `docs/architecture/events_audit_design.md`
+
+所有可审计的事件实现 `Auditable` Trait，审计系统通过 Trait 统一收集，无需硬编码 Reader。
+
+不是枚举变体。不是事件定义。不是业务逻辑。
+
+关键属性：
+- `Auditable` Trait 定义：`fn to_audit_payload() -> AuditEventPayload` + `fn event_type_name() -> &'static str`
+- 🟥 所有需要被审计系统记录的独立事件 Struct 必须实现 `Auditable`
+- 审计系统只需监听 `Auditable` 事件，无需为每个事件类型写单独的 MessageReader
+- 通过 Bevy Plugin 或宏自动注册，彻底消除 `audit_recording_system` 中的硬编码 Reader
+
+---
+
+## EventOrd（同 Tick 内确定性排序键）
+
+> **优化来源**: `docs/architecture/events_audit_design.md`
+
+同 Tick 内可能有多个事件，需确定性排序。
+
+不是时间戳。不是系统自动分配。不是随机值。
+
+关键属性：
+- `EventOrd(u64)` 由发送方显式指定，不由系统自动分配
+- 同一 Tick 内的事件按 EventOrd 升序排列
+- 🟥 禁止使用时钟时间戳排序（时钟不确定）
+- 确保相同输入序列下事件处理顺序一致
+
+---
+
+## GameplayCue 模式（逻辑→表现分离）
+
+> **优化来源**: `docs/architecture/events_audit_design.md` §4
+
+一个 DomainEvent 被多个表现消费者独立响应：VFX 系统、Audio 系统、UI 系统各自监听同一事件，互不依赖。
+
+不是逻辑与表现耦合。不是函数调用。不是面条代码。
+
+关键属性：
+- 效果执行（纯逻辑）发出 DomainEvent，表现层通过 DomainEvent 触发，不执行逻辑
+- VFX 系统监听事件 → 播放火焰/冰霜特效
+- Audio 系统监听事件 → 播放爆炸/治疗音效
+- UI 系统监听事件 → 显示伤害飘字
+- 三个消费者互不依赖，各自独立响应同一个事件
+- 🟥 禁止在 Effect 执行函数中直接调用 `spawn_vfx()` / `play_sfx()` / `show_damage_number()`（面条代码反模式）
+- 效果执行后必须发出 DomainEvent，表现层通过 DomainEvent 触发
+
+---
+
+## 双轨制日志（Command Stream vs Audit Trail）
+
+> **优化来源**: `docs/architecture/events_audit_design.md`
+
+🟥 **回放系统绝不通过 AuditTrail 驱动逻辑重演**——这是 Event Sourcing 最常见的误区。必须区分两条独立的数据轨道：
+
+不是同一条数据。不是互相替代。不是可选其一。
+
+关键属性：
+- **Track A: Command Stream（输入流）** — 用于确定性回放
+  - 内容：PlayerInput、AiDecision、RngSeed
+  - 用途：确定性回放、帧同步联机、断线重连
+  - 特性：极小、必须严格保序、参与状态机重演
+- **Track B: Audit Trail（审计流）** — 用于调试/统计
+  - 内容：DomainEvent（伤害、死亡、Buff 触发）
+  - 用途：开发期 Debug、战后统计面板、成就触发、AI 行为分析
+  - 特性：较大、旁路记录、绝不参与逻辑重演
+- Command（命令）是**输入**：玩家指令 A 在坐标 X 释放技能 Y
+- Event（事件）是**结果**：A 对 B 造成了 50 点伤害
+- 回放系统重放"命令"让引擎自己跑出相同结果，而非重放"伤害事件"
+
+---
+
+## Feature Flag 隔离
+
+Audit/Replay 等非核心功能通过 `cfg(feature = "...")` 条件编译隔离。
+
+不是运行时开关。不是 Config。不是可选依赖。
+
+关键属性：
+- 使用 Rust 原生 `#[cfg(feature = "replay")]` 控制功能编译
+- 独立 feature：replay / debug_ui / cheat / modding
+- 禁用时代码完全不编译，零运行时开销
+- 禁用时无任何性能损耗（编译器物理移除）
+- 与运行时 Config 明确区分：Feature Flag 控制"代码是否存在"，Config 控制"存在时是否激活"
+
+---
+
+## 审计反膨胀（流式写入）
+
+> **优化来源**: `docs/architecture/events_audit_design.md`
+
+🟥 **审计轨迹不存储在内存中整个战斗期间的数据**。每 1000 条事件分块写入磁盘文件，释放内存压力。
+
+不是全量内存存储。不是每条写入。不是可选优化。
+
+关键属性：
+- AuditTrail 使用 buffer + writer 模式：当前块缓冲区最多 1000 条
+- 达到 chunk_size（默认 1000）时自动 flush_to_disk
+- 序列化并写入文件后释放 buffer 内存
+- 🟥 禁止审计轨迹全量存储在内存中（长时间战斗 OOM）
+- 🟥 禁止使用 `Box<dyn Any>` 做审计 feature 分发（运行时开销，零成本设计被破坏）
+- 使用 concrete types + cfg gate，编译器完全优化掉审计代码
+
+---
+
+## S-Tier 优先级
+
+> **优化来源**: `docs/architecture/events_audit_design.md` §34.md
+
+🟥 **Domain Event 系统 + Replay/Deterministic Random 被标注为 S-tier，必须在内容扩展之前完成。**
+
+不是可选优化。不是后期补丁。不是 B/C 级工具。
+
+关键属性：
+- 优先级排序（来自 34.md S 级 5 项）：
+  1. 全局强类型 ID 体系（第 1 周）
+  2. Content Registry 统一注册中心（第 1 周）
+  3. Domain Event 领域事件体系（第 1 周）
+  4. Replay 架构前置设计（第 1 周）
+  5. Deterministic Random 确定性随机（第 1 周）
+- 最小可行性架构（MVA）节奏：第一周定义核心 Event + GameRng → 跑通 Demo
+- 第一个月：3 个技能 + 简单录像回放
+- 第三个月：引入 Data Validator、Namespace 等 B/C 级工具
+- 这三个做对了，后面加 1000 个技能都只是在地基上盖楼
+
+---
+
 # 领域边界
 
 ## 本领域负责
 
-- 领域事件类型定义（DomainEvent 枚举，14 种事件类型）
+- 领域事件类型定义（独立事件 Struct + Auditable Trait，14 种事件类型）
 - 事件注册表管理（Event Catalog）
-- 审计记录结构（AuditRecord、AuditMetadata）
-- 审计轨迹管理（AuditTrail Resource）
+- 审计记录结构（AuditRecord、AuditMetadata、EventOrd）
+- 审计轨迹管理（AuditTrail Resource，流式写入）
 - 事件白名单控制（EventWhitelist）
 - 审计记录系统（监听事件 → 检查白名单 → 记录到 AuditTrail）
 - 事件路由（通过 Bevy Message 系统广播）
 - 事件发送方 → 接收方映射表维护
+- GameplayCue 模式（逻辑→表现分离）
+- 双轨制日志（Command Stream vs Audit Trail）
 
 ## 本领域不负责
 
@@ -126,10 +311,11 @@ Status: Proposed
 
 | 通知内容 | 通信方式 | 目标领域 |
 |----------|----------|----------|
-| 领域事件广播 | Message（DomainEvent 各变体） | 所有消费方模块 |
+| 领域事件广播 | Message（独立事件 Struct） | 所有消费方模块 |
 | 审计轨迹数据 | Resource（AuditTrail）只读 | 回放、调试、测试、AI |
 | 事件白名单配置 | Resource（EventWhitelist） | 审计记录系统 |
 | 事件发送方→接收方映射 | 文档（Event Catalog 表格） | 所有事件生产者和消费者 |
+| 双轨制数据 | Command Stream（回放）/ Audit Trail（调试） | 回放系统 / 调试面板 |
 
 ---
 
@@ -140,6 +326,8 @@ Status: Proposed
 ```
 生产者 System → MessageWriter<T>.write(event) → EventBus 缓冲 → 按类型分发 → 消费者 System
 ```
+
+注：每个事件是独立 Struct，通过 `add_message::<T>()` 独立注册。
 
 ## 审计记录生命周期
 
@@ -182,6 +370,9 @@ Status: Proposed
 
 ## 不变量1：事件描述已发生的事实
 
+> 🟩 对应宪法 2.2.6：领域事件是唯一业务事实源
+> 🟩 对应宪法 13.10.1：所有核心业务事实必须通过领域事件表达
+
 任意时刻：
 
 DomainEvent 的语义必须是"已经发生"的事实记录，不是命令、请求或意图。事件名称使用过去分词或过去时态（如 `SkillCasted`、`DamageDealt`）。
@@ -220,7 +411,7 @@ DomainEvent 的语义必须是"已经发生"的事实记录，不是命令、请
 
 任意时刻：
 
-每个 DomainEvent 变体通过 `app.add_message::<T>()` 注册一次。重复注册会导致消息被多次分发。
+每个独立事件 Struct 通过 `app.add_message::<T>()` 注册一次。重复注册会导致消息被多次分发。
 
 违反表现：
 
@@ -256,19 +447,22 @@ DomainEvent 的语义必须是"已经发生"的事实记录，不是命令、请
 
 ## 规则1：跨模块通信使用 DomainEvent Message
 
+> **优化来源**: `docs/architecture/events_audit_design.md`
+
 禁止：
 - 跨模块通信使用函数直接调用（同模块内允许函数调用）
 - 使用裸 Bevy Event 替代 DomainEvent
 - 模块内部逻辑使用事件传递（应用函数调用）
 
 必须：
-- 跨 Feature 广播的通信使用 DomainEvent Message
+- 跨 Feature 广播的通信使用独立事件 Struct（实现 Auditable Trait）
+- 每个事件 Struct 通过 `add_message::<T>()` 独立注册
 - 事件生产者通过 `MessageWriter<T>.write(event)` 发送
 - 事件消费者通过 `MessageReader<T>` 读取
 
 允许：
 - 同一模块内的逻辑直接函数调用
-- 使用 DomainEvent 的子集进行模块内通信
+- 使用事件 Struct 的子集进行模块内通信
 
 ---
 
@@ -302,6 +496,9 @@ DomainEvent 的语义必须是"已经发生"的事实记录，不是命令、请
 
 ## 规则4：新增事件类型必须更新 EventWhitelist
 
+> 🟥 对应宪法 2.2.7：新增事件必须先更新白名单
+> 🟥 对应宪法 2.2.7：绝对禁止为临时副作用随意新增领域事件
+
 禁止：
 - 新增 DomainEvent 变体后不更新白名单
 - 使用未注册的事件类型进行审计记录
@@ -331,13 +528,97 @@ DomainEvent 的语义必须是"已经发生"的事实记录，不是命令、请
 ## 规则6：事件类型注册与映射
 
 禁止：
-- DomainEvent 变体在 App 中注册多次
+- 独立事件 Struct 在 App 中注册多次
 - 新增事件类型后不更新 sender→receiver 映射表
 
 必须：
-- 每个事件类型在 App 中只注册一次
+- 每个事件类型在 App 中只注册一次（`add_message::<T>()`）
 - 新增事件类型必须在事件注册表中添加 sender→receiver 映射
 - 映射表包含发送方模块和所有接收方模块
+
+---
+
+## 规则7：Observer 优先于 EventReader（实体级事件 + 装饰器模式）
+
+> **优化来源**: `docs/architecture/events_audit_design.md` §8
+
+允许：
+- Entity 级别的伤害、死亡、状态变化使用 Observer（精确过滤，零全局轮询）
+- TurnStart、PhaseChange 等全局变化使用传统 Event（EventReader/EventWriter）
+- 同一模块内直接函数调用，不用 Observer 模拟
+- 🟥 装饰器型子系统（审计、统计、日志）优先使用 `Trigger::<T>::watch()` 模式
+
+禁止：
+- 所有事件都用 EventReader（全局轮询，性能差）
+- 所有事件都用 Observer（全局变化用 Observer 没有意义）
+- 在 Observer 中修改事件数据本身
+
+必须：
+- 实体级事件（DamageDealt、CharacterDied、BuffApplied）优先使用 Observer
+- 全局事件（TurnStarted、BattleInitialized）使用传统 Event
+- Observer 通过 `commands.entity(target).observe(...)` 注册
+- 装饰器型子系统通过 `Trigger::<T>::watch()` 订阅，零全局轮询开销
+
+---
+
+## 规则8：Audit Trail 复用 DomainEvent + 双轨制
+
+> **优化来源**: `docs/architecture/events_audit_design.md`
+
+允许：
+- Audit Trail 直接复用独立事件 Struct 作为审计数据源
+- 通过 EventWhitelist 控制哪些事件被审计记录
+- 新增事件时同步更新 EventWhitelist
+
+禁止：
+- 建立独立的审计事件体系（双事件模式）
+- 审计系统定义自己的事件类型（与 DomainEvent 平行）
+- 审计事件与 DomainEvent 字段不一致
+- 🟥 回放系统通过 AuditTrail 驱动逻辑重演（Event Sourcing 最常见误区）
+
+必须：
+- AuditRecord 的 event 字段存储独立事件 Struct 的完整数据
+- 新增事件 Struct 后必须调用 `EventWhitelist.register()` 注册
+- 审计系统通过 MessageReader 或 Observer 监听事件，不侵入业务代码
+- 🟥 回放系统消费 Command Stream（输入流），Audit Trail 仅用于调试/统计（双轨制）
+
+---
+
+## 规则9：Feature Flag 独立功能隔离
+
+允许：
+- replay / debug_ui / cheat / modding 作为独立 Rust feature
+- 使用 `#[cfg(feature = "...")]` 条件编译控制功能
+- App 层通过 PluginGroup 统一管理条件编译的 Plugin
+
+禁止：
+- 在 Core 层用 `cfg(feature)` 做业务逻辑分支
+- Feature Flag 之间产生依赖（启用 replay 不应强制启用 debug_ui）
+- 运行时切换 Feature（Feature 是编译时概念）
+
+必须：
+- 每个 Feature 独立，可单独启用/禁用
+- 禁用 Feature 时代码完全不编译，零运行时开销
+- CI 测试所有 Feature 组合的编译和测试
+
+---
+
+## 规则10：禁止 Core 层 Feature 业务分支
+
+允许：
+- App 层使用 Feature Flag 控制 Plugin 注册
+- Infrastructure 层使用 Feature Flag 控制功能模块
+- Core 层定义 Trait，由 Infrastructure 层在 Feature 启用时提供实现
+
+禁止：
+- Core 层 `calculate_damage()` 中使用 `#[cfg(feature = "xxx")]` 做分支
+- Core 层任何业务逻辑受 Feature Flag 影响
+- Core 层因 Feature 禁用而改变行为
+
+必须：
+- Core 层业务规则在任何构建配置下数学等价
+- Core 层与 Feature-gated 功能交互通过 Trait 抽象（定义 Trait，Infra 提供实现）
+- Core 层代码不含任何 `#[cfg(feature)]` 宏
 
 ---
 
@@ -352,7 +633,7 @@ DomainEvent 的语义必须是"已经发生"的事实记录，不是命令、请
 ### 生产者 System
 
 输入：业务逻辑执行结果
-处理：构造 DomainEvent 变体，通过 MessageWriter 发送
+处理：构造独立事件 Struct（实现 Auditable），通过 MessageWriter 发送
 输出：事件进入 EventBus 缓冲
 禁止：在生产者中直接操作 AuditTrail
 
@@ -380,8 +661,8 @@ DomainEvent 的语义必须是"已经发生"的事实记录，不是命令、请
 
 ### 事件广播
 
-输入：领域事件（DomainEvent）
-处理：审计记录系统通过 MessageReader 接收
+输入：独立事件 Struct（实现 Auditable Trait）
+处理：审计记录系统通过 MessageReader 或 Observer 接收
 输出：待审计的事件
 禁止：业务代码直接推送事件到审计系统
 
@@ -417,32 +698,37 @@ DomainEvent 的语义必须是"已经发生"的事实记录，不是命令、请
 
 # 数据结构
 
-## DomainEvent（领域事件枚举）
+## DomainEvent（独立事件 Struct）
 
-职责：统一的领域事件类型目录，所有跨模块事件在此注册
+> **优化来源**: `docs/architecture/events_audit_design.md`
 
-结构：
-- SkillCasted — 技能已释放（caster、skill_id、targets）
-- DamageDealt — 伤害已施加（source、target、amount、is_critical、skill_id）
-- HealApplied — 治疗已施加（source、target、amount、skill_id）
-- BuffApplied — Buff 已施加（source、target、buff_id、stacks）
-- BuffRemoved — Buff 已移除（target、buff_id、reason）
-- CharacterDied — 角色死亡（unit、killer、final_hp）
-- CharacterRevived — 角色复活（unit、reviver、revived_hp）
-- TurnStarted — 回合开始（turn_number、active_unit）
-- TurnEnded — 回合结束（turn_number）
-- UnitMoved — 单位移动（unit、from、to、path_length）
-- ItemEquipped — 装备穿戴（unit、item_id、slot）
-- ItemUnequipped — 装备脱下（unit、item_id、slot）
-- ItemUsed — 物品使用（user、item_id、targets）
-- BattleInitialized — 战斗初始化完成（stage_id、units）
-- BattleEnded — 战斗结束（winner、total_turns）
+职责：每个事件是独立的 Struct，实现 `Auditable` Trait，独立注册为 Bevy Message
+
+结构（每个事件独立定义）：
+- SkillCasted — { caster: UnitId, skill_id: SkillId, targets: Vec<UnitId> }
+- DamageDealt — { source: UnitId, target: UnitId, amount: i32, is_critical: bool, skill_id: Option<SkillId> }
+- HealApplied — { source: UnitId, target: UnitId, amount: i32, skill_id: Option<SkillId> }
+- BuffApplied — { source: UnitId, target: UnitId, buff_id: BuffId, stacks: u32 }
+- BuffRemoved — { target: UnitId, buff_id: BuffId, reason: String }
+- CharacterDied — { unit: UnitId, killer: Option<UnitId>, final_hp: i32 }
+- CharacterRevived — { unit: UnitId, reviver: UnitId, revived_hp: i32 }
+- TurnStarted — { turn_number: u32, active_unit: UnitId }
+- TurnEnded — { turn_number: u32 }
+- UnitMoved — { unit: UnitId, from: GridCoord, to: GridCoord, path_length: u32 }
+- ItemEquipped — { unit: UnitId, item_id: ItemId, slot: EquipmentSlot }
+- ItemUnequipped — { unit: UnitId, item_id: ItemId, slot: EquipmentSlot }
+- ItemUsed — { user: UnitId, item_id: ItemId, targets: Vec<UnitId> }
+- BattleInitialized — { stage_id: StageId, units: Vec<UnitId> }
+- BattleEnded — { winner: Faction, total_turns: u32 }
 
 要求：
-- 每个变体只携带数据字段，不包含方法
+- 🟥 每个事件必须是独立的 Struct（不是枚举变体）
+- 每个 Struct 实现 `Auditable` Trait
+- 每个 Struct 通过 `add_message::<T>()` 独立注册
 - 所有 ID 字段使用 Strong ID 类型
 - 使用 serde 支持序列化/反序列化
 - 语义为"已发生"的事实记录
+- 每个事件只携带数据字段，不包含方法
 
 ---
 
@@ -479,20 +765,43 @@ DomainEvent 的语义必须是"已经发生"的事实记录，不是命令、请
 
 ---
 
-## AuditTrail（审计轨迹）
+## EventOrd（事件排序键）
 
-职责：按时间顺序收集所有被审计的领域事件
+> **优化来源**: `docs/architecture/events_audit_design.md`
+
+职责：同一 Tick 内的事件确定性排序
 
 结构：
-- records — Vec — 事件序列（按 sequence 排序）
+- ord — u64 — 排序键值（由发送方显式指定）
+
+要求：
+- 同一 Tick 内的事件按 EventOrd 升序排列
+- EventOrd 由发送方显式指定，不由系统自动分配
+- 🟥 禁止使用时钟时间戳排序（时钟不确定）
+- 确保相同输入序列下事件处理顺序一致
+
+---
+
+## AuditTrail（审计轨迹）
+
+> **优化来源**: `docs/architecture/events_audit_design.md`
+
+职责：按时间顺序收集所有被审计的领域事件，流式写入磁盘
+
+结构：
+- buffer — Vec — 当前块缓冲区（最多 1000 条）
 - next_sequence — u64 — 下一个序号
 - current_tick — u32 — 当前 tick 编号
+- writer — BufWriter — 写入文件句柄
+- chunk_size — usize — 块大小阈值（默认 1000）
 
 要求：
 - Bevy Resource，可被审计记录系统和消费者访问
+- 🟥 审计轨迹不存储在内存中整个战斗期间的数据，每 1000 条事件分块写入磁盘
 - 只提供追加写入和只读查询接口
 - 支持按 tick 范围查询记录
 - 禁止修改已写入的记录
+- 使用 concrete types + cfg gate（禁止 `Box<dyn Any>` 动态分发）
 
 ---
 
@@ -593,20 +902,87 @@ DomainEvent 的语义必须是"已经发生"的事实记录，不是命令、请
 
 ---
 
+禁止：建立独立审计事件体系（双事件模式）
+
+原因：结构化事件 Struct 本身就是天然的审计记录，双事件模式增加维护成本且容易不一致。
+
+违反后果：审计事件与事件 Struct 字段不同步、维护两套事件定义的冗余成本。
+
+---
+
+禁止：回放系统通过 AuditTrail 驱动逻辑重演
+
+原因：这是 Event Sourcing 最常见的误区。回放系统必须消费 Command Stream（输入流），而非 Audit Trail（审计流）。
+
+违反后果：回放结果不可确定性，破坏"相同初始条件 + 相同命令 → 相同结果"的保证。
+
+---
+
+禁止：使用 DomainEvent 大枚举
+
+原因：大枚举导致"新增一个事件要改十个文件"的 OCP 灾难，且有缓存惩罚。独立 Struct + Auditable Trait 是正确模式。
+
+违反后果：新增事件需要修改枚举定义、所有 match 分支、所有消费者代码，维护成本指数增长。
+
+---
+
+禁止：审计轨迹全量存储在内存中
+
+原因：长时间战斗导致内存膨胀，可能 OOM。
+
+违反后果：长时间战斗内存占用不可预测，Release 构建崩溃。
+
+---
+
+禁止：在单个事件上计算 state_hash
+
+原因：计算全局状态哈希极其昂贵，每事件计算会导致性能雪崩。
+
+违反后果：帧率暴跌，游戏卡顿。
+
+---
+
+禁止：Domain Event 系统在内容扩展之后才构建
+
+原因：Domain Event + Replay/Deterministic Random 是 S-tier 优先级，必须在内容扩展之前完成。这三个做对了，后面加 1000 个技能都只是在地基上盖楼。
+
+违反后果：后期重构成本指数增长，已有的技能/Buff 内容都需要适配事件系统。
+
+---
+
+禁止：Core 层业务逻辑使用 Feature Flag 分支
+
+原因：Core 层业务规则在任何构建配置下必须数学等价，Feature 分支会导致"开发模式能打赢，Release 模式打不赢"的灵异 Bug。
+
+违反后果：不同构建配置下游戏行为不一致，核心战斗规则的纯粹性被破坏。
+
+---
+
+禁止：在 Core 层使用 cfg(feature) 做业务逻辑分支
+
+原因：Core 层是纯领域逻辑层，不应感知编译配置。Feature-gated 功能通过 Trait 抽象交互。
+
+违反后果：Core 层代码因 Feature 禁用而改变行为，违反 Architecture 的分层原则。
+
+---
+
 # AI 修改规则
 
 ## 如果新增 DomainEvent 事件类型
 
+> **优化来源**: `docs/architecture/events_audit_design.md`
+
 允许：
-- 在 `DomainEvent` 枚举中添加新变体
-- 为新事件添加字段（携带完整上下文）
-- 在 `EventWhitelist` 中注册新事件类型
+- 🟥 创建新的独立事件 Struct（如 `pub struct TrapTriggered { ... }`），不是在枚举中添加变体
+- 为新事件实现 `Auditable` Trait
+- 在 `EventWhitelist` 中注册新事件类型（使用 `TypeId`）
 
 禁止：
-- 在事件变体中添加业务方法
+- 在事件 Struct 中添加业务方法
 - 事件字段使用裸 Entity 或 String（应使用 Strong ID）
 - 未在白名单注册就使用新事件
 - 事件字段缺失接收方所需的上下文
+- 使用 DomainEvent 大枚举（OCP 灾难 + 缓存惩罚）
 
 优先检查：
 - 事件是否真的需要跨模块广播（同模块内应直接函数调用）
@@ -649,7 +1025,7 @@ DomainEvent 的语义必须是"已经发生"的事实记录，不是命令、请
 - 修改白名单的检查逻辑
 
 优先检查：
-- 新增的事件类型是否在 DomainEvent 枚举中定义
+- 新增的事件类型是否创建了独立 Struct（而非在枚举中添加变体）
 - 移除的事件类型是否仍有消费者依赖
 - 白名单修改是否影响现有审计数据的完整性
 

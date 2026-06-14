@@ -24,7 +24,7 @@ Status: Proposed
     → 放 shared/error
 ```
 
-### 一句话判断标准
+### 一句话判断标准 🟩
 
 - **如果删掉 Bevy，这个错误还存在吗？** → Domain Error → 领域内部
 - **如果游戏规则不变，能换一种实现方式吗？** → Infrastructure Error → 基础设施内部
@@ -51,7 +51,9 @@ core/ai/domain/ai_error.rs             # AiError
 
 ### 设计规范
 
-#### 1. 每个领域独立错误枚举
+#### 1. 每个领域独立错误枚举 🟥
+
+🟥 **绝对禁止**：使用全局统一的 `AppError` 大枚举、`anyhow::Error`、`Box<dyn Error>` 作为业务层返回错误类型（宪法 13.9.1）。
 
 ```rust
 // core/skill/domain/skill_error.rs
@@ -74,9 +76,9 @@ pub enum SkillError {
 }
 ```
 
-#### 2. 错误码规范
+#### 2. 错误码规范 🟩
 
-- 格式：领域前缀 + 序号
+- 🟩 格式：领域前缀 + 序号（宪法 13.9.3 推荐）
 - 前缀对照表：
 
 | 领域 | 前缀 | 示例 |
@@ -91,9 +93,9 @@ pub enum SkillError {
 | AI | AI | AI001, AI002 |
 | Talent | T | T001, T002 |
 
-#### 3. 错误必须携带完整上下文
+#### 3. 错误必须携带完整上下文 🟥
 
-🟥 **绝对禁止**：无上下文的错误变体。
+🟥 **绝对禁止**：仅返回无上下文的错误变体（如 `InvalidTarget`）（宪法 13.9.3）。
 
 ```rust
 // ❌ 错误：缺少上下文
@@ -103,9 +105,9 @@ SkillNotFound
 SkillNotFound { skill_id: SkillId }
 ```
 
-#### 4. 失败分类学
+#### 4. 失败分类学 🟥
 
-必须严格区分四类失败场景：
+🟥 必须严格区分四类失败场景，不得混用（宪法 13.9.2）：
 
 | 分类 | 含义 | 实现 | 示例 |
 |------|------|------|------|
@@ -114,7 +116,7 @@ SkillNotFound { skill_id: SkillId }
 | **InfrastructureError** | 底层能力异常 | `Result::Err` | 资源加载失败、存档IO错误 |
 | **Bug** | 非法状态、断言失败 | `panic!` / `unreachable!` | 状态机非法跳转 |
 
-**RuleFailure 不用 `Result::Err`**——规则失败是正常业务流程，不是错误。
+**RuleFailure 不用 `Result::Err`**——规则失败是正常业务流程，不是错误 🟥。
 
 ```rust
 // ✅ 正确：规则失败用专门的结果枚举
@@ -170,7 +172,7 @@ pub enum SaveError {
 
 #### 关键约束
 
-- 🟥 基础设施错误禁止包含领域语义
+- 🟥 基础设施错误禁止包含领域语义（宪法 13.9.1）
 - 🟥 `SaveError` 不应该知道 `SkillId`、`UnitId` 等领域类型
 - 🟩 基础设施错误只关注技术层面的失败原因
 
@@ -178,42 +180,35 @@ pub enum SaveError {
 
 ## 第三层：共享错误工具（Shared Error Tools）
 
+> **优化来源**：`docs/其他/49.md` — "shared/error 的循环依赖风险"、"GameResult 应该属于 App 层或 Infra 层"。
+
 ### 放置位置
 
 ```
 shared/error/
 ├── mod.rs           # 公开导出
-├── result.rs        # GameResult<T> 类型别名
 ├── context.rs       # 错误上下文工具
-└── extensions.rs    # 错误转换 trait
+└── extensions.rs    # 错误转换 trait（ErrorExt, LogIfError）
 ```
 
 ### 设计规范
 
-#### GameResult 类型别名
+#### 各层定义自己的 Result 别名
+
+🟥 **GameResult 不应定义在 shared/ 层**。shared 层是最底层的工具层，如果它依赖 InfrastructureError 就会引入循环依赖。每层定义自己的 Result 别名：
 
 ```rust
-// shared/error/result.rs
-use infrastructure::persistence::save::SaveError;
+// core/skill/domain/mod.rs
+pub type SkillResult<T> = Result<T, SkillError>;
 
-/// 基础设施层错误类型别名
-pub type GameResult<T> = Result<T, InfrastructureError>;
+// core/battle/domain/mod.rs
+pub type BattleResult<T> = Result<T, BattleError>;
 
-/// 通用错误类型（用于需要返回多种错误的基础设施层代码）
-#[derive(Debug, thiserror::Error)]
-pub enum InfrastructureError {
-    #[error("持久化错误: {0}")]
-    Persistence(#[from] SaveError),
-    
-    #[error("资源加载错误: {0}")]
-    Asset(#[from] AssetError),
-    
-    #[error("网络错误: {0}")]
-    Network(#[from] NetworkError),
-    
-    #[error("配置错误: {0}")]
-    Config(String),
-}
+// infrastructure/persistence/save/mod.rs
+pub type SaveResult<T> = Result<T, SaveError>;
+
+// infrastructure/mod.rs — 仅 Infra 层定义基础设施 Result
+pub type InfraResult<T> = Result<T, InfrastructureError>;
 ```
 
 #### 错误上下文工具
@@ -259,11 +254,12 @@ impl<T, E: std::fmt::Debug> LogIfError<T, E> for Result<T, E> {
 
 ### 关键约束
 
-🟥 **shared/error 禁止**：
+🟥 **shared/error 禁止**（宪法 13.9.1）：
 - 定义任何领域错误变体（SkillError、BattleError 等）
 - 引用任何领域类型（UnitId、SkillId 等）
 - 创建超级 `AppError` 大枚举
 - 使用 `anyhow::Error` 或 `Box<dyn Error>` 作为业务层返回类型
+- 定义 `GameResult<T>` 或 `InfrastructureError`（属于 Infra 层或 App 层）
 
 ```rust
 // ❌ 绝对禁止
@@ -279,6 +275,20 @@ pub type GameResult<T> = Result<T, anyhow::Error>;
 // ❌ 绝对禁止
 pub type GameResult<T> = Result<T, Box<dyn std::error::Error>>;
 ```
+
+#### 错误库选型：thiserror vs miette
+
+> **优化来源**：`docs/其他/49.md` — "thiserror vs miette 选型建议"。
+
+| 场景 | 推荐库 | 理由 |
+|------|--------|------|
+| Core 层领域错误 | `thiserror` | 小巧、编译快、零依赖 |
+| Infra 层错误 | `thiserror` | 同上 |
+| CLI 工具 | `miette` | 丰富的诊断信息、snippets |
+| 内容校验（RON 解析） | `miette` | 友好的错误位置提示 |
+| 测试代码 | `anyhow` | 快速原型、不需要结构化错误 |
+
+🟥 **Core 和 Infra 层禁止使用 `miette`**——它会引入大量依赖，拖慢编译速度。
 
 ---
 
@@ -308,70 +318,118 @@ fn save_game(...) -> Result<SaveData, SaveError> {
 
 ### 跨层错误处理
 
+> **优化来源**：`docs/其他/49.md` — "跨层错误转换的 Source Chain 断链"、"依赖倒置与 Port/Adapter 模式"。
+
+🟥 **Core 层绝对不能直接依赖 Infra 层的类型（包括错误类型）**。使用 Port/Adapter 模式隔离：
+
 ```rust
-// 当 Core 调用 Infrastructure 时
+// ❌ 致命反模式：Core 直接调用 Infra 并用 .to_string() 转换（断链！）
 fn load_character() -> Result<Character, SkillError> {
     let data = asset_loader.load(path)
         .map_err(|e| SkillError::AssetLoadFailed { 
             path: path.to_string(),
-            reason: e.to_string() 
+            reason: e.to_string()  // ❌ source chain 断裂，丢失底层根因
         })?;
-    // ...
+}
+
+// ✅ 正确做法：Port/Adapter 模式
+// Core 层定义端口 trait 和自己的错误类型
+// core/skill/domain/skill_error.rs
+pub enum SkillError {
+    SkillDataNotFound { skill_id: SkillId },
+    // ... 不包含 Infra 层的 AssetError
+}
+
+// Core 层只接收已加载好的数据
+fn cast_skill(skill_data: &SkillData, caster: &Unit) -> Result<SkillCastResult, SkillError> {
+    // 如果数据缺失，Core 抛出 SkillError::SkillDataNotFound
+    // 资源加载失败由 Infra 层自行处理并上报 InfrastructureError
+}
+
+// Infra 层的 AssetLoader 处理加载失败
+// infrastructure/assets/asset_loader.rs
+fn load_skill_data(path: &str) -> Result<SkillData, AssetError> {
+    // 资源加载失败在此处理，不会穿透到 Core 层
 }
 ```
 
-跨层错误通过**错误转换**处理，将底层错误映射为领域语义。
+**关键原则**：资源加载的失败应该由 Infra 层的 AssetLoader 或 Baker System 自己处理并上报 `InfrastructureError`，**根本不应该穿透到 Core 层的业务逻辑中**。
 
 ---
 
 ## 错误架构总图
 
-```
-┌────────────────────────────────────────────────┐
-│  App 层                                        │
-│  - 错误处理兜底                                │
-│  - 日志记录                                    │
-│  - 用户提示                                    │
-├────────────────────────────────────────────────┤
-│  UI 层                                         │
-│  - 错误提示展示                                │
-│  - ViewModel 错误状态映射                       │
-├────────────────────────────────────────────────┤
-│  Core 层                          DomainError   │
-│  skill_error.rs                                 │
-│  buff_error.rs                                  │
-│  battle_error.rs                                │
-│  ...                                            │
-├────────────────────────────────────────────────┤
-│  Shared 层                       Error Tools   │
-│  GameResult<T>                                  │
-│  ErrorContext                                   │
-│  LogIfError                                    │
-├────────────────────────────────────────────────┤
-│  Infra 层                    InfrastructureError│
-│  save_error.rs                                  │
-│  asset_error.rs                                 │
-│  network_error.rs                               │
-│  ...                                            │
-└────────────────────────────────────────────────┘
+> **优化来源**：`docs/其他/49.md` — "Bevy System 的错误吞没断层"、"全局 ErrorEvent 与 System 错误处理范式"。
+
+### Bevy System 错误处理铁律
+
+🟥 Bevy 的普通 System（`fn(Query, Res) -> ()`）默认不支持返回 `Result`。如果 System 内部调用业务函数返回了 `Err`，程序员极易顺手写个 `.unwrap()` 或默默吞掉错误，导致"技能没放出来但游戏没报错"的幽灵 Bug。
+
+**铁律：所有 System 内部的业务调用，失败时必须发送事件，严禁吞没！** 🟥
+
+> ⚠️ **注意**：`GameErrorEvent` 中的泛型参数是各领域错误枚举的联合体（通过枚举包装），**不是**全局 `AppError`。每个领域仍使用独立的错误枚举（`SkillError`、`BattleError` 等），`GameErrorEvent` 仅作为 Bevy System 层的事件通道，将领域错误传递给 UI 层统一处理。
+
+```rust
+// 定义全局错误事件
+#[derive(Event)]
+pub struct GameErrorEvent(pub DomainError);  // DomainError 是各领域错误的联合包装，非全局 AppError
+
+// ✅ 正确：System 内部错误上报全局事件
+fn process_skill_input(
+    skill_query: Query<&SkillDef>,
+    mut err_events: EventWriter<GameErrorEvent>,
+) {
+    match try_cast_skill(...) {
+        Ok(result) => { /* 处理 UI 表现 */ }
+        Err(e) => {
+            // ✅ 上报全局事件，由 UI 层统一弹窗或提示
+            err_events.send(GameErrorEvent(e));
+        }
+    }
+}
+
+// ❌ 严禁吞没：
+// tracing::error!("{}", e);  // 静默日志 = 幽灵 Bug
+// .unwrap();                  // 直接 Panic
 ```
 
-### 错误流向
+**ErrorMonitor System**：专门消费 `GameErrorEvent`，转化为 Toast 提示或弹窗：
+
+```rust
+fn error_monitor_system(
+    mut events: EventReader<GameErrorEvent>,
+    mut toast_writer: EventWriter<ToastEvent>,
+) {
+    for GameErrorEvent(err) in events.read() {
+        toast_writer.send(ToastEvent {
+            message: format!("{}", err),
+            level: ToastLevel::Error,
+        });
+    }
+}
+```
+
+### Graceful Degradation（优雅降级） 🟩
+
+- 当 System 遇到 `InfrastructureError`（如贴图加载失败）时，使用"缺失占位符"继续运行
+- 🟥 严禁在 Update 阶段的 System 中 Panic（宪法 13.9.4）
+- 🟩 强制使用 `tracing::error!` 而非 `println!`，必须携带 span 上下文（宪法 13.1.1）
 
 ```
-Infrastructure Error → 转换 → Domain Error → UI 展示
+Infrastructure Error → 转换 → GameErrorEvent → ErrorMonitor → UI Toast
                          ↑
-                    错误转换在调用方进行
-                    不改变底层错误定义
+                    ErrorMonitor 统一消费
+                    不侵入业务逻辑
 ```
 
 ---
 
 ## thiserror 使用规范
 
-### Entity 字段处理
+### Entity 字段处理 🟩
 
-Bevy `Entity` 不实现 `std::error::Error`，在 thiserror 中不能作为 `source` 字段。
+🟥 Bevy `Entity` 不实现 `std::error::Error`，在 thiserror 中不能作为 `source` 字段。
+🟥 日志和错误信息中必须输出业务可读的字符串 ID，禁止直接打印 `Entity(xxx)` 原生格式（宪法 1.2.2）。
 
 ```rust
 // ❌ 错误：Entity 作为 source 字段
@@ -383,7 +441,7 @@ EntityNotFound(#[source] Entity),  // 编译失败！
 UnitNotFound { entity: Entity },  // 注意：不是 source，不需要 #[source]
 ```
 
-### 错误码前缀映射
+### 错误码前缀映射 🟩
 
 | 领域 | 前缀 | 起始编号 |
 |------|------|---------|
@@ -402,9 +460,9 @@ UnitNotFound { entity: Entity },  // 注意：不是 source，不需要 #[source
 
 ---
 
-## 业务层 Panic 禁令
+## 业务层 Panic 禁令 🟥
 
-🟥 **绝对禁止**：在以下核心业务领域代码中使用 `unwrap()`、`expect()`、`panic!()`：
+🟥 **绝对禁止**：在以下核心业务领域代码中使用 `unwrap()`、`expect()`、`panic!()`（宪法 13.9.4）：
 
 - `core/battle/`
 - `core/skill/`
@@ -435,34 +493,38 @@ src/core/error/
 ├── buff_error.rs        # BuffError    ← 需迁移到 core/buff/domain/
 ├── skill_error.rs       # SkillError   ← 需迁移到 core/skill/domain/
 ├── inventory_error.rs   # InventoryError ← 需迁移到 core/inventory/domain/
-├── game_result.rs       # GameResult   ← 需迁移到 shared/error/
+├── game_result.rs       # GameResult   ← 需迁移到 infrastructure/（非 shared！）
 └── mod.rs               # 模块入口    ← 分拆
 ```
 
 ### 目标状态
 
 ```
-core/skill/domain/skill_error.rs
-core/buff/domain/buff_error.rs
-core/battle/domain/battle_error.rs
-core/inventory/domain/inventory_error.rs
-core/equipment/domain/equipment_error.rs
+core/skill/domain/skill_error.rs      # SkillError + SkillResult<T>
+core/buff/domain/buff_error.rs        # BuffError + BuffResult<T>
+core/battle/domain/battle_error.rs    # BattleError + BattleResult<T>
+core/inventory/domain/inventory_error.rs  # InventoryError
+core/equipment/domain/equipment_error.rs  # EquipmentError
 
 shared/error/
 ├── mod.rs
-├── result.rs           # GameResult<T>
 ├── context.rs           # ErrorContext trait
-└── extensions.rs        # LogIfError trait
+└── extensions.rs        # LogIfError trait（仅工具，无 Error 类型）
 
-infrastructure/persistence/save/save_error.rs
-infrastructure/assets/asset_error.rs
+infrastructure/mod.rs    # InfrastructureError + InfraResult<T>
+infrastructure/persistence/save/save_error.rs  # SaveError
+infrastructure/assets/asset_error.rs           # AssetError
+
+app/error.rs             # GameErrorEvent（Bevy System 错误上报）
 ```
 
 ### 迁移步骤
 
-1. 在各 `core/xxx/domain/` 目录创建错误文件
-2. 迁移错误枚举到对应领域
-3. 创建 `shared/error/` 模块，放置 `GameResult<T>` 和错误工具
-4. 更新所有 `use` 引用
-5. 验证编译通过
-6. 删除 `src/core/error/` 临时目录
+1. 在各 `core/xxx/domain/` 目录创建错误文件，定义 `XxxError` + `XxxResult<T>`
+2. 将 `GameResult<T>` 和 `InfrastructureError` 从 `shared/error/` 迁移到 `infrastructure/`
+3. 在 `shared/error/` 中仅保留 `ErrorContext` trait 和 `LogIfError` trait
+4. 定义 `GameErrorEvent` 事件，在 App 层注册
+5. 更新所有 `use` 引用
+6. 验证编译通过
+7. 删除 `src/core/error/` 临时目录
+8. 添加 CI 测试：`cargo test --no-default-features`、`cargo test --all-features`

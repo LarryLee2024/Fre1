@@ -1,11 +1,19 @@
 # 错误体系领域
 
-Version: 1.0
+Version: 1.1
 Status: Proposed
+> **优化来源**: `docs/architecture/error-architecture.md`（吸收 49.md 内容：GameErrorEvent、Port/Adapter、GameResult 重定位、thiserror vs miette、RuleFailure 物理分离）
 
 错误体系领域管理项目中所有错误、失败和异常的分类、归属、设计和使用规范。
 
-核心原则：
+核心原则（对应宪法第十三部分 13.9 错误体系规范）：
+- 🟩 13.9.1 每个领域定义独立错误枚举（SkillError、BattleError、BuffError 等）
+- 🟥 13.9.1 绝对禁止使用全局 AppError 大枚举、anyhow::Error、Box<dyn Error>
+- 🟩 13.9.2 失败分类学：RuleFailure（正常拒绝）vs DomainError（程序异常）vs InfrastructureError vs Bug
+- 🟥 13.9.2 RuleFailure 不是错误，禁止用 Result::Err 返回
+- 🟩 13.9.3 所有错误必须携带完整上下文（ID、名称、原因）
+- 🟥 13.9.3 绝对禁止无上下文的错误变体
+- 🟥 13.9.4 核心业务领域绝对禁止 unwrap()/expect()/panic!()
 - 领域错误归领域，基础设施错误归基础设施，共享工具归 Shared
 - 规则失败不是错误，是正常业务流程
 - 全局 AppError 大枚举是反模式
@@ -85,15 +93,18 @@ Status: Proposed
 
 ## 共享错误工具（Shared Error Tools）
 
-所有模块共享的错误处理基础设施。例如：`GameResult<T>` 类型别名、错误上下文 trait、日志记录 trait。
+> **优化来源**: `docs/architecture/error-architecture.md`
 
-不是错误定义。不是错误枚举。
+所有模块共享的错误处理基础设施。例如：错误上下文 trait、日志记录 trait。
+
+不是错误定义。不是错误枚举。🟥 不包含 `GameResult<T>`（GameResult 属于 App 层或 Infra 层，NOT shared/）。
 
 关键属性：
 - 定义在 `shared/error/` 目录
 - 不包含任何错误变体
 - 不包含任何领域类型
-- 提供错误处理工具而非错误分类
+- 不定义 `GameResult<T>` 或 `InfrastructureError`（属于 Infra 层或 App 层）
+- 提供错误处理工具（`ErrorContext` trait、`LogIfError` trait）而非错误分类
 
 ---
 
@@ -118,7 +129,7 @@ Status: Proposed
 | Inventory | I | 001 | I001, I002 |
 | Equipment | E | 001 | E001, E002 |
 | Character | CH | 001 | CH001, CH002 |
-| Turn | T | 001 | T001, T002 |
+| Talent | T | 001 | T001, T002 |
 | Quest | Q | 001 | Q001, Q002 |
 | Dialogue | D | 001 | D001, D002 |
 | AI | AI | 001 | AI001, AI002 |
@@ -128,6 +139,92 @@ Status: Proposed
 | Asset | ASSET | 001 | ASSET001, ASSET002 |
 | Network | NET | 001 | NET001, NET002 |
 | Config | CFG | 001 | CFG001, CFG002 |
+
+---
+
+## RuleFailure 与 DomainError 物理分离
+
+"法力不足"是 RuleFailure（正常游戏结果），不是 DomainError（程序错误）。两者在类型系统中物理隔离。
+
+不是 DomainError。不是程序错误。不是可选分离。
+
+关键属性：
+- RuleFailure 使用专门的结果枚举（如 `SkillCastResult`），是正常业务流程的分支
+- DomainError 使用 `Result::Err` 返回，是真正的异常情况
+- UI 根据 RuleFailure 变灰按钮，根据 DomainError 弹窗提示
+- 混淆两者会导致错误处理代码中充斥正常业务逻辑判断
+
+---
+
+## GameErrorEvent（Bevy System 错误传播事件）
+
+> **优化来源**: `docs/architecture/error-architecture.md`
+
+Bevy System 返回 `()`，无法用 `Result` 返回错误。Domain Error 必须通过 GameErrorEvent（Bevy Event）传播，严禁吞没。
+
+不是返回 Result。不是静默吞咽。不是日志替代。
+
+关键属性：
+- 定义 `pub struct GameErrorEvent(pub DomainError)` 作为 Bevy Event（🟥 必须包装 DomainError，不是 `Box<dyn Error>`）
+- 🟥 所有 System 内部的业务调用失败时，必须通过 `EventWriter<GameErrorEvent>.send()` 上报
+- 由专门的 ErrorMonitor System 统一消费并转化为 Toast 提示或弹窗
+- 禁止 System 内部 `let _ = result` 忽略错误
+- 禁止 System 内部 `.unwrap()` / `.expect()` / `panic!()`
+- 禁止 System 内部 `tracing::error!` 后静默继续（幽灵 Bug）
+
+---
+
+## 跨层错误转换反模式
+
+使用 `.to_string()` 转换底层错误是 Rust 错误处理的头号反模式，会破坏错误链（source chain）。
+
+不是 `.from()`。不是 `.map_err()`。不是错误链本身。
+
+关键属性：
+- `.to_string()` 丢失底层错误的 `source()` 链接，日志只打印顶层信息
+- 正确做法：使用 `map_err` 保留底层错误，或使用 `From` trait 自动转换
+- Core 层不应直接依赖 Infra 层的错误类型（依赖倒置）
+- Core 层只接收已加载好的数据（如 `Res<Assets<SkillData>>`），资源加载失败由 Infra 层自行处理
+- 错误转换必须在调用方进行，保持底层错误定义纯净
+
+---
+
+## Port/Adapter 错误隔离模式
+
+> **优化来源**: `docs/architecture/error-architecture.md`
+
+Core 层绝对不能直接依赖 Infra 层的类型（包括错误类型）。通过 Port/Adapter 模式隔离跨层错误。
+
+不是直接调用。不是 `.to_string()` 转换。不是 Source Chain 断链。
+
+关键属性：
+- Core 层定义 Port trait（如 `SavePort`），并定义自己的错误类型（如 `SkillError::SkillDataNotFound`）
+- Infra 层实现 Port trait，使用自己的错误类型（如 `SaveError`、`AssetError`）
+- 资源加载的失败由 Infra 层的 AssetLoader 或 Baker System 自己处理并上报 `InfrastructureError`，根本不穿透到 Core 层
+- Core 层只接收已加载好的数据，如果数据缺失则抛出 `SkillError::SkillDataNotFound`（领域语义）
+- 🟥 禁止 Core 层直接调用 Infra 层函数并用 `.to_string()` 转换错误（source chain 断裂）
+
+---
+
+## 错误库选型：thiserror vs miette
+
+> **优化来源**: `docs/architecture/error-architecture.md`
+
+不同层次使用不同的错误库，按场景选型。
+
+| 场景 | 推荐库 | 理由 |
+|------|--------|------|
+| Core 层领域错误 | `thiserror` | 小巧、编译快、零依赖 |
+| Infra 层错误 | `thiserror` | 同上 |
+| CLI 工具 | `miette` | 丰富的诊断信息、snippets |
+| 内容校验（RON 解析） | `miette` | 友好的错误位置提示 |
+| 测试代码 | `anyhow` | 快速原型、不需要结构化错误 |
+
+关键属性：
+- 🟥 Core 和 Infra 层禁止使用 `miette`——它会引入大量依赖，拖慢编译速度
+- thiserror 适合业务层：`#[derive(Error)]` + `#[error]` 属性宏，零运行时开销
+- miette 适合终端工具：提供代码片段定位、丰富诊断信息
+- anyhow 仅限测试：快速原型验证，不用于生产代码
 
 ---
 
@@ -206,7 +303,7 @@ Proposed → Accepted → Active → Deprecated → Removed
 
 任意时刻：
 
-`shared/error/` 中不定义任何错误变体，只提供 `GameResult<T>`、`ErrorContext`、`LogIfError` 等工具。
+`shared/error/` 中不定义任何错误变体，只提供 `ErrorContext`、`LogIfError` 等工具。
 
 违反表现：
 
@@ -242,6 +339,9 @@ Proposed → Accepted → Active → Deprecated → Removed
 
 ## 规则1：错误分领域定义
 
+> 🟩 对应宪法 13.9.1：每个领域定义独立错误枚举
+> 🟥 对应宪法 13.9.1：绝对禁止使用全局 AppError 大枚举、anyhow::Error、Box<dyn Error>
+
 允许：
 - 每个业务领域在自己的 `domain/` 子目录定义错误枚举
 - 基础设施模块在自己的目录定义基础设施错误
@@ -262,6 +362,8 @@ Proposed → Accepted → Active → Deprecated → Removed
 
 ## 规则2：规则失败用结果枚举
 
+> 🟥 对应宪法 13.9.2：RuleFailure 不是错误，禁止用 Result::Err 返回
+
 允许：
 - 使用专门的结果枚举表达规则失败
 - 结果枚举包含成功和失败两个分支
@@ -278,6 +380,9 @@ Proposed → Accepted → Active → Deprecated → Removed
 ---
 
 ## 规则3：错误必须携带完整上下文
+
+> 🟩 对应宪法 13.9.3：所有错误必须携带完整上下文
+> 🟥 对应宪法 13.9.3：绝对禁止无上下文的错误变体
 
 允许：
 - 使用带命名参数的错误变体
@@ -362,6 +467,102 @@ Proposed → Accepted → Active → Deprecated → Removed
 
 ---
 
+## 规则8：Bevy System 错误处理铁律
+
+> **优化来源**: `docs/architecture/error-architecture.md`
+
+允许：
+- System 内部业务调用失败时，通过 `EventWriter<GameErrorEvent>.send()` 上报全局事件（🟥 包装 DomainError，不是 Box<dyn Error>）
+- 使用 `tracing::error!` 记录结构化日志（携带 span 上下文）
+- UI 层统一消费 GameErrorEvent 并转化为用户可读提示
+
+禁止：
+- System 内部 `.unwrap()` / `.expect()` / `panic!()`
+- System 内部 `let _ = result` 忽略错误
+- System 内部静默吞咽错误（`if let Err(e) = ... { println!("{}", e); }` 后继续执行）
+- System 返回 Result（Bevy 普通 System 不支持返回 Result）
+
+必须：
+- 所有 System 内部的业务调用失败时，必须发送 GameErrorEvent 或使用 `tracing::error!`
+- 错误日志必须携带 span 上下文（如 `tracing::error!(skill_id = %id, "Cast failed")`）
+- Graceful Degradation：遇到 InfrastructureError 时使用缺失占位符继续运行
+
+---
+
+## 规则9：ErrorContext 强制携带
+
+允许：
+- 每个错误变体携带至少一个上下文字段（ID、名称、原因等）
+- 使用 ErrorContext trait 的 `with_context` 方法在 Result 上附加上下文
+
+禁止：
+- 无上下文的错误变体（如 `SkillNotFound` 不带 ID）
+- 仅返回 `"failed"` 的错误信息
+- 跨层调用时丢失上下文信息
+
+必须：
+- 每个错误变体携带至少一个上下文字段
+- 跨层调用时使用 `map_err` 或 ErrorContext 保持上下文信息
+- 错误消息用 `#[error]` 属性标注格式化内容
+
+---
+
+## 规则10：Core 层 Panic 绝对禁令
+
+> 🟥 对应宪法 13.9.4：核心业务领域绝对禁止 unwrap()/expect()/panic!()
+
+允许：
+- 在测试代码中使用 `panic!` 表达断言失败
+- 在工具/编辑器代码中使用 `unreachable!` 表达不可达路径
+
+禁止：
+- Core 层（战斗、技能、Buff 等核心领域）使用 `unwrap()` / `expect()` / `panic!()`
+- Infrastructure 层在 Update 阶段的 System 中 Panic
+- 任何业务逻辑路径上的 Panic
+
+必须：
+- Core 层遇到异常状态时返回 DomainError 或 RuleFailure
+- Infrastructure 层遇到加载失败时使用缺失占位符继续运行
+- CI 中引入 `clippy::unwrap_used` 规则静态扫描 Core 层
+
+---
+
+## 规则11：Entity 不可作为 #[source]
+
+允许：
+- 领域错误中使用 Entity 字段（如 `UnitNotFound { entity: Entity }`）
+- Entity 字段使用 `{:?}` Debug 格式化
+
+禁止：
+- Entity 字段作为 `#[source]`（Entity 不实现 StdError，会导致编译失败）
+- 基础设施错误中包含 Entity 字段（Entity 是 ECS 概念，基础设施层不感知）
+- 共享错误工具中使用 Entity 字段（共享层不依赖 ECS）
+
+必须：
+- Entity 字段使用 Debug 格式化显示，错误消息中格式为 `{entity:?}`
+- Entity 字段不参与错误链（source chain）追溯
+
+---
+
+## 规则12：跨领域错误聚合规则
+
+允许：
+- Battle 层调用 Skill + Buff 时，使用 `Result::and_then` 或 `?` 传播错误
+- 聚合多个领域的错误到一个复合错误类型（如 `BattleExecutionError`）
+- 使用 `From` trait 自动转换底层错误
+
+禁止：
+- 在 Battle 层直接 `unwrap()` Skill 或 Buff 的返回值
+- 创建包含所有领域错误变体的"超级枚举"（回到 AppError 反模式）
+- 用 `.to_string()` 转换底层错误（破坏错误链）
+
+必须：
+- 跨领域调用时，调用方将底层错误映射为本领域语义
+- 保持底层错误定义纯净（SkillError 不包含 BattleError 变体）
+- 错误聚合在调用方进行，不修改底层错误定义
+
+---
+
 # 管线
 
 ## 错误处理管线
@@ -437,18 +638,20 @@ Proposed → Accepted → Active → Deprecated → Removed
 
 ---
 
-## GameResult<T>（共享工具）
+## InfraResult<T>（基础设施层统一 Result 别名）
 
 职责：基础设施层统一类型别名
 
 结构：
 - Type alias: `Result<T, InfrastructureError>`
 - InfrastructureError 包含 SaveError、AssetError、NetworkError 等基础设施错误变体
+- 定义在 `infrastructure/mod.rs`（🟥 不在 shared/ 层）
 
 要求：
 - 不包含任何领域错误变体
 - 不包含 SkillId、UnitId 等领域类型
 - 只用于基础设施层代码的统一错误处理
+- 与 `docs/architecture/error-architecture.md` 保持一致
 
 ---
 
@@ -491,6 +694,30 @@ Proposed → Accepted → Active → Deprecated → Removed
 原因：shared/error 只提供错误处理工具（GameResult、ErrorContext、LogIfError），不定义任何具体错误。定义错误变体会导致 shared 变成垃圾桶。
 
 违反后果：shared 成为新的万能错误垃圾桶。
+
+---
+
+禁止：Bevy System 吞咽错误
+
+原因：System 内部业务调用失败后静默忽略，会导致"技能没放出来但游戏没报错"的幽灵 Bug。必须通过 GameErrorEvent 上报。
+
+违反后果：玩家以为出 Bug 了，实际是错误被吞没，无法定位问题。
+
+---
+
+禁止：跨层错误转换使用 .to_string()
+
+原因：`.to_string()` 破坏 `std::error::Error::source()` 链接，日志只打印顶层信息，丢失底层真实原因。
+
+违反后果：调试时无法追溯错误根因，只能看到"资源加载失败"而不知道是文件不存在还是解析失败。
+
+---
+
+禁止：Core 层业务代码中使用 unwrap / expect / panic
+
+原因：核心业务逻辑必须优雅处理所有错误，任何 panic 都是程序缺陷，尤其在海量 MOD 和复杂数值交互下。
+
+违反后果：游戏运行时崩溃、存档丢失、用户体验灾难。
 
 ---
 

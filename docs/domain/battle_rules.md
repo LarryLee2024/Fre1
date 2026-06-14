@@ -6,9 +6,10 @@ Status: Proposed
 战斗系统领域管理战斗的整体生命周期、胜负条件判定、战斗终态管理和 Effect Pipeline 执行。
 
 核心原则：
-- 战斗状态机驱动全局流程，终态不可逆
-- 胜负条件数据驱动、可组合，失败优先于胜利
-- 所有战斗效果必须经过 Effect Pipeline，禁止绕过管线
+- 🟩 11.1.2 战斗状态机驱动全局流程，终态不可逆
+- 🟩 11.4.1 胜负条件数据驱动、可组合，失败优先于胜利
+- 🟩 11.2.1 所有战斗效果必须经过 Effect Pipeline，禁止绕过管线
+- 🟩 11.5.1 所有操作入口为标准化命令（Command Layer）
 
 ---
 
@@ -84,7 +85,7 @@ Status: Proposed
 
 ## CombatIntent（战斗意图）
 
-传递玩家或 AI 的攻击意图到 Effect Pipeline 的 Resource。
+🟩 11.5.1 传递玩家或 AI 的攻击意图到 Effect Pipeline 的 Resource。所有操作入口为标准化命令，CombatIntent 是战斗命令的具体形式。
 
 不是攻击指令。不是技能效果。
 
@@ -112,7 +113,7 @@ Status: Proposed
 
 ## 战斗阶段（BattlePhase）
 
-战斗的宏观生命周期状态机，管理从战斗初始化到结束的 8 个阶段。映射为 Bevy State（SubState of AppState::InGame）。
+🟩 11.1.1 战斗的宏观生命周期状态机，管理从战斗初始化到结束的 8 个阶段。映射为 Bevy State（SubState of AppState::InGame）。
 
 不是回合阶段（TurnPhase）。不是 AppState。
 
@@ -122,6 +123,47 @@ Status: Proposed
 - 通过 NextState 驱动转换，禁止手动设置
 - 每个阶段有 OnEnter/OnExit 钩子系统
 - 来源：`docs/architecture/battle_fsm_design.md`
+
+---
+
+## 战斗 FSM 三层架构
+
+AppState → BattlePhase → TurnPhase 三级状态机。
+
+不是单层 FSM。不是 Resource 状态。
+
+关键属性：
+- AppState：游戏宏观流程（MainMenu → LevelSelect → InGame → GameOver）
+- BattlePhase：战斗内流程（PreBattle → RoundStart → ... → PostBattle）
+- TurnPhase：回合内微观流程（SelectUnit → ... → TurnEnd）
+- 每层职责单一，禁止跨层直接跳转
+
+---
+
+## GuardContext
+
+批量 ECS 查询预计算 → HashMap 快照，避免 Guard 重复查询。
+
+不是实时查询。不是全局状态。
+
+关键属性：
+- 在 Phase 进入时一次性收集所有 Guard 需要的数据
+- 存储为 `GuardContext` Resource（`HashMap<Entity, UnitStatsSnapshot>`）
+- Guard 只读 Context，不直接查 ECS
+- 将 N 次随机 ECS 查询压缩为 1 次批量收集 + N 次 HashMap 查找
+
+---
+
+## ImmediateEffect vs QueuedEffect
+
+🟩 1.1.4 伤害立即 / 动画排队的分立执行。
+
+不是同步执行。不是单一步骤。
+
+关键属性：
+- ImmediateEffect：伤害结算立即生效（直接修改 HP）
+- 🟩 1.1.4 QueuedEffect：动画/音效入队延迟执行，不阻塞 FSM 推进（逻辑与表现分离）
+- 两者分离保证 FSM 推进不被表现层阻塞
 
 ---
 
@@ -258,7 +300,7 @@ VictoryCheck → RoundEnd（未终态时）
 
 # 不变量
 
-## 不变量1：全灭玩家即失败
+## 不变量1：全灭玩家即失败 🟥 11.4.1
 
 任意时刻：
 
@@ -270,11 +312,11 @@ VictoryCheck → RoundEnd（未终态时）
 
 ---
 
-## 不变量2：失败优先于胜利
+## 不变量2：失败优先于胜利 🟥 11.4.1
 
 回合结算阶段：
 
-当失败条件和胜利条件同时满足时，`GameOverState` 必须为 `Defeat`，不是 `Victory`。
+🟩 11.4.1 当失败条件和胜利条件同时满足时，`GameOverState` 必须为 `Defeat`，不是 `Victory`。
 
 违反表现：
 
@@ -306,11 +348,11 @@ VictoryCheck → RoundEnd（未终态时）
 
 ---
 
-## 不变量5：胜负检查仅在 TurnEnd 阶段执行
+## 不变量5：胜负检查仅在 TurnEnd 阶段执行 🟥 11.1.1
 
 回合生命周期：
 
-响应式胜负检查（`check_victory_conditions`）仅在 `OnEnter(TurnPhase::TurnEnd)` 时执行，不在其他阶段执行。参见 `turn_rules.md#回合结算（TurnEnd Phase）`。
+🟩 11.1.1 响应式胜负检查（`check_victory_conditions`）仅在 `OnEnter(TurnPhase::TurnEnd)` 时执行，不在其他阶段执行。参见 `turn_rules.md#回合结算（TurnEnd Phase）`。
 
 违反表现：
 
@@ -354,6 +396,34 @@ VictoryCheck → RoundEnd（未终态时）
 
 ---
 
+## 不变量9：FSM 状态存储为 Component（非 Resource）
+
+> **优化来源**: docs/architecture/battle_fsm_design.md — FSM 挂载到 BattleArena 实体，支持多战场并行
+
+任意时刻：
+
+FSM 状态（BattleFsm）必须是 Component，挂载在 BattleArena 实体上，支持多战场并行。禁止将 FSM 状态存储为全局 Resource。
+
+违反表现：
+
+全局 Resource 导致无法支持多战场并存（如主线关卡 + 支线副本同时运行）。
+
+---
+
+## 不变量10：FSM → Event 单向规则
+
+> **优化来源**: docs/architecture/battle_fsm_design.md — 确定性保证，FSM 只发出事实事件
+
+任意时刻：
+
+FSM 只负责发出事实事件（TurnStarted、SkillCastFinished 等），事件监听器禁止直接修改 BattleFsm Component。反馈路径必须通过下一帧 Guard 重新评估实现。
+
+违反表现：
+
+FSM 发了事件，事件监听器又改了 FSM 状态，形成循环依赖，破坏确定性和可回放性。
+
+---
+
 # 业务规则
 
 ## 规则1：胜负条件组合
@@ -375,7 +445,7 @@ VictoryCheck → RoundEnd（未终态时）
 
 ---
 
-## 规则2：Effect Pipeline 执行
+## 规则2：Effect Pipeline 执行 🟩 11.2.1
 
 禁止：
 - 跳过 Generate → Modify → Execute 三步管线
@@ -421,6 +491,119 @@ VictoryCheck → RoundEnd（未终态时）
 | OnExit(TurnEnd) | 回合结束 | Buff 过期检查、持续效果结算 |
 | OnEnter(VictoryCheck) | 胜负判定前 | 准备判定数据 |
 | OnEnter(PostBattle) | 战斗结束 | 播放结算动画、保存结果 |
+
+---
+
+## 规则4：TransitionRule 模式 🟩 11.1.2
+
+禁止：
+- 将转换逻辑写死在 State 内部
+- 状态与转换条件耦合
+
+必须：
+- 状态与转换逻辑分离，使用独立的 TransitionRule
+- TransitionRule 定义 Guard（能不能转）、Action（即时操作）、Effect（领域事件）三段式
+- MOD 可以注入新的转换规则而不覆盖原有逻辑
+
+允许：
+- 新增 TransitionRule 需要 ADR 审批
+- 调整 Guard 的判断条件
+
+---
+
+## 规则5：Guard/Action/Effect 三阶段模式
+
+> **优化来源**: docs/architecture/battle_fsm_design.md — 物理分离 Guard（纯函数只读）、Action（同步变更）、Effect（事件发射）
+
+禁止：
+- Guard 内部执行 IO 操作（如 asset_server.load()）
+- Guard 内部修改 ECS 状态
+- Effect 直接修改 FSM 状态
+
+必须：
+- Guard：纯函数，无副作用，决定"能不能转"，只读 GuardContext
+- Action：同步操作，处理状态切换时的即时逻辑（如播放音效）
+- Effect：异步/延迟效果，触发领域事件（如 UnitDamaged），只发事件不改 FSM
+
+允许：
+- Guard 可读取 GuardContext Resource
+- Action 可修改当前实体的 Component
+- Effect 发送 Message/Event 到其他领域
+
+---
+
+## 规则6：转换优先级协议
+
+> **优化来源**: docs/architecture/battle_fsm_design.md — 显式 priority: u32 字段、高优先级短路评估
+
+禁止：
+- 多条 TransitionRule 同时满足时随机选择
+- 无优先级标记的 TransitionRule
+
+必须：
+- 每条规则必须有显式 `priority: u32` 字段
+- 同优先级时，按声明顺序（RON 文件中的先后）裁决
+- 高优先级规则触发后，立即短路，不再评估后续规则
+
+优先级数值规范：
+- 0-99 = 常规行动（移动、攻击、技能）
+- 100-199 = 打断/反击
+- 200-299 = 死亡/退场
+- 300+ = 系统级强制转换
+
+---
+
+## 规则7：GuardContext 预计算
+
+> **优化来源**: docs/architecture/battle_fsm_design.md — 批量 ECS 查询预计算、性能提升 10-100 倍
+
+禁止：
+- Guard 内部频繁调用 query.get() 或 commands.entity()
+- 每次 Guard 评估时重新查询 ECS
+
+必须：
+- 在 Phase 进入时，一次性收集所有 Guard 需要的数据到 GuardContext
+- Guard 只读 GuardContext，通过 HashMap 查找获取数据
+- GuardContext 包含视线/射程预计算结果
+- `OnEnter(BattlePhase::RoundStart)` 时重建 GuardContext
+- `OnEnter(BattlePhase::PlayerPhase)` / `OnEnter(BattlePhase::EnemyPhase)` 时刷新
+
+允许：
+- GuardContext 在 Phase 入口缓存后，整个 Phase 期间复用
+
+---
+
+## 规则8：EnemyPhase 子拆分
+
+禁止：
+- EnemyPhase 单状态阻塞（AI 思考 + AI 执行合一导致画面卡顿）
+
+必须：
+- EnemyPhase 拆分为：AI 思考 → AI 执行 两个子阶段
+- AI 思考阶段：计算路径、评估目标（可分帧）
+- AI 执行阶段：发送 Command、执行动画
+
+允许：
+- AI 思考结果缓存，执行阶段读取缓存
+
+---
+
+## 规则9：一帧延迟反模式（One-Frame Lag）[NEW]
+
+> **优化来源**: docs/architecture/battle_fsm_design.md — ECS 架构固有特性，Guard 在第 N 帧评估，Transition 在第 N+1 帧通过 Commands 应用
+
+禁止：
+- 在同一帧内假设状态已经改变（FSM 转换存在一帧延迟）
+- 事件监听器直接修改 BattleFsm Component（反馈路径必须通过下一帧 Guard 重新评估）
+
+必须：
+- 状态转换不是即时的，Event → FSM 的反馈必须通过下一帧 Guard 重新评估
+- FSM → Event 为单向输出，FSM 只负责发出事实事件
+- Event → FSM 绝对禁止，事件监听器不能直接修改 BattleFsm Component
+- Replay 系统需要记录 `(tick, from, to, trigger_rule_id, seed)` 以精准复现
+
+允许：
+- 在 Effect 中发送领域事件，由下一帧 Guard 评估是否触发转换
 
 ---
 
@@ -685,6 +868,37 @@ BattleStart → RoundStart → TurnLoop → TurnEnd → VictoryCheck → RoundEn
 ---
 
 # AI 修改规则
+
+## 宪法合规检查清单
+
+修改本领域代码前，必须逐项确认：
+- 🟩 11.1.1 回合阶段划分标准化，遵循 Start → Phase Decision → Unit Action → Settlement → End
+- 🟩 11.1.2 状态驱动回合流转，禁止手动调用回合切换函数
+- 🟩 11.2.1 技能执行遵循 Validate → Cost → Cast → Effect → Settlement 五阶段管线
+- 🟩 11.4.1 胜负条件数据驱动，禁止硬编码单一判定逻辑
+- 🟩 11.5.1 所有操作入口为标准化命令，禁止绕过命令层
+- 🟩 11.7 读写分离：预览/仿真路径无副作用，写操作通过命令收口
+- 🟩 11.8 核心规则支持离线仿真，不依赖运行时
+- 🟩 11.9 随机数按用途拆分独立流，禁止全局共用单一 RNG
+
+## 领域事件清单
+
+本领域产生的领域事件（🟩 2.2.6 领域事件是唯一业务事实源）：
+- `BattleStarted` — 战斗开始，携带 battle_id、level_id
+- `BattleEnded` — 战斗结束，携带 battle_id、result（Victory/Defeat）
+- `TurnStarted` — 回合开始，携带 turn_number、faction
+- `TurnEnded` — 回合结束，携带 turn_number
+- `UnitMoved` — 单位移动，携带 unit_id、from_coord、to_coord
+- `UnitAttacked` — 单位攻击，携带 attacker_id、target_id、skill_id
+- `UnitDamaged` — 单位受伤，携带 target_id、damage、modifiers
+- `UnitDied` — 单位死亡，携带 unit_id、killer_id
+- `SkillCastStarted` — 技能施放开始，携带 caster_id、skill_id
+- `SkillCastFinished` — 技能施放完成，携带 caster_id、skill_id、effect_results
+- `LevelCompleted` — 关卡完成，携带 battle_id、result
+
+> 🟩 2.2.7 新增领域事件必须先更新白名单文档
+> 🟩 13.10.1 所有核心业务事实通过领域事件表达，日志、回放、UI 均监听同一事件源
+> 🟩 11.9.2 业务逻辑禁止直接调用 `rand::random()`，必须通过统一的随机数服务获取
 
 ## 如果新增胜负条件类型
 

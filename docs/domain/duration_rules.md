@@ -6,9 +6,46 @@ Status: Proposed
 持续策略领域管理 Buff/Effect 的持续时长规则，包括回合倒计时、条件终止和战斗结束终止等多种策略。
 
 核心原则：
-- 持续策略独立于 Buff 定义，是可组合的策略组件
-- 持续结算在 TurnEnd 阶段统一执行，禁止在其他阶段递减
-- 每个 Buff 必须有明确的 DurationPolicy，禁止永久存在
+- 🟩 持续策略独立于 Buff 定义，是可组合的策略组件（宪法 1.1.6 组合优先）
+- 🟩 持续结算在 TurnEnd 阶段统一执行，禁止在其他阶段递减
+- 🟩 每个 Buff 必须有明确的 DurationPolicy，禁止永久存在（宪法 11.3.1 Buff 四阶段生命周期）
+- 🟩 过期时必须清理对应的 Modifier，保证临时状态干净（宪法 11.3.1 Remove 阶段）
+- 🟥 禁止在非 TurnEnd 阶段递减回合倒计时
+- 🟥 禁止跳过 Modifier 清理（宪法 8.0.3）
+
+---
+
+# 宪法合规声明
+
+本领域遵循以下宪法条款：
+
+| 条款编号 | 条款名称 | 合规状态 | 说明 |
+|----------|----------|----------|------|
+| 11.3.1 | Buff 四阶段标准化 | 🟩 已合规 | Duration 管理 Apply→Tick→Expire→Remove 中的 Tick 和 Expire |
+| 1.1.6 | 组合优先于继承 | 🟩 已合规 | DurationPolicy 作为可组合策略组件，独立于 Buff 定义 |
+| 1.1.2 | 定义与实例分离 | 🟩 已合规 | DurationPolicy（定义态）与 DurationMarker（运行态）分离 |
+| 8.0.3 | 属性修改规范 | 🟩 已合规 | 过期时清理 Modifier，保证属性值正确还原 |
+| 2.2.4 | Message 跨域广播 | 🟩 已合规 | BuffExpired/DurationTerminated 用于跨域通知 |
+| 2.2.6 | 领域事件是唯一事实源 | 🟩 已合规 | 过期事件作为 Buff 移除的业务事实 |
+| 11.7.1 | 读路径无副作用 | 🟩 已合规 | Duration 检查为纯读操作 |
+| 18.4.1 | 战斗完全可重现 | 🟩 已合规 | Duration 结算结果确定，支持回放 |
+
+---
+
+# 四级通信机制（宪法 2.2）
+
+持续策略领域在四级通信机制中的定位：
+
+| 通信层级 | 用途 | 持续策略领域应用 |
+|----------|------|-------------|
+| Hook（2.2.1） | 组件生命周期 | DurationMarker 组件添加/移除时的副作用 |
+| Trigger（2.2.2） | Feature 内事件链 | 条件终止（UntilXxx）通过 Trigger 事件驱动 |
+| Observer（2.2.3） | 局部状态变化响应 | Duration 变化触发的 UI 层数刷新 |
+| Message（2.2.4） | 跨域广播 | BuffExpired/DurationTerminated 通知 Buff 领域移除 |
+
+禁止事项（宪法 2.2.5）：
+- 🟥 禁止将 Duration 检查逻辑事件化（纯函数直接调用即可）
+- 🟥 禁止为临时状态清理单独创建领域事件
 
 ---
 
@@ -25,6 +62,8 @@ Buff/Effect 的持续时长规则，定义 Buff 何时过期。
 - 每个 Buff 实例携带一个 DurationPolicy 实例
 - DurationPolicy 是 Value Object，不可变
 - 从 BuffDef 的 duration 字段反序列化
+
+> **优化来源**: docs/architecture/skill-buff-abstraction.md §4.6 — Duration 作为十大正交子系统之一，与 StackPolicy 完全独立
 
 ---
 
@@ -560,7 +599,55 @@ Trigger 事件（AfterDamaged / Move / Attack / Death）→ 检查 DurationPolic
 
 ---
 
-# 交叉引用
+# 宪法禁止事项
+
+以下禁止事项源自 AI 开发宪法，持续策略领域必须严格遵守：
+
+## 禁止：过期 Buff 不清理 Modifier（宪法 8.0.3）
+
+原因：Buff 过期或条件终止时，必须通知 Attribute Modifier 领域清理对应的 Modifier。
+
+违反后果：属性值与实际状态不一致，Buff 过期后属性未还原。
+
+---
+
+## 禁止：在非 TurnEnd 阶段递减回合倒计时（宪法 11.3.1）
+
+原因：Buff 四阶段生命周期中 Tick 阶段固定在 TurnEnd 执行。
+
+违反后果：Buff 提前过期或延迟过期，影响战斗平衡。
+
+---
+
+## 禁止：Duration 检查逻辑事件化（宪法 2.2.5）
+
+原因：Duration 检查是纯函数直接调用，无需事件化。仅条件终止（UntilXxx）需要通过 Trigger 事件驱动。
+
+违反后果：过度事件化导致调试困难、性能下降。
+
+---
+
+## 禁止：读路径产生副作用（宪法 11.7.1）
+
+原因：Duration 过期检查为纯读操作，不修改游戏状态（仅在确认过期后才执行移除）。
+
+违反后果：检查过程改变游戏状态、仿真结果不准确。
+
+---
+
+## 禁止：为未来需求过度设计 Duration 策略（宪法 1.1.7）
+
+原因：当前 7 种策略类型已覆盖所有已知场景，禁止为未明确需求提前设计更多策略。
+
+违反后果：架构复杂度上升、维护成本增加。
+
+---
+
+## 禁止：跳过临时状态清理（宪法 11.3.1 Remove 阶段）
+
+原因：Buff 移除时必须清理所有临时状态（Modifier、Marker、StackCount），保证干净移除。
+
+违反后果：残留的 Modifier 或 Marker 导致属性值异常、状态污染。
 
 | 主题 | 详细文档 |
 |------|----------|

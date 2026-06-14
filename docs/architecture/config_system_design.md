@@ -11,10 +11,13 @@ Status: Proposed
 - `docs/architecture/infrastructure-design.md` — Infrastructure 层 config 模块设计
 - `docs/architecture.md` — 数据驱动总纲（配置三级分离）
 - `docs/architecture/content-pipeline.md` — 内容管线（Definition 加载）
+- `docs/AI开发宪法完整版.md` — AI 开发宪法（最高约束力），本文档对应条款：1.1.2（定义与实例分离）、12.1.1-12.1.6（数据驱动核心）、12.2.1（Schema）、12.4.1（平衡参数全配置化）、14.0.1（统一设置管理）
 
 ---
 
 ## 1. 配置分层模型
+
+> **宪法 §1.1.2（定义与实例分离）**：所有配置层（EngineConfig、GameRulesConfig、UserSettings）均为 Definition 数据，运行时只读，不可变。DebugSwitches 为运行时内存状态，不持久化。
 
 ### 1.1 四层配置架构
 
@@ -111,6 +114,36 @@ pub struct SkillConfig {
 }
 ```
 
+> **优化来源**：`docs/其他/44.md` — 反"上帝配置"：将单一 GameRulesConfig 拆分为细粒度的独立 Resource
+
+**反上帝配置（Anti-God-Config）规则**：
+
+🟥 **禁止将所有游戏规则塞入单一的 `GameRulesConfig` Resource**。
+
+Bevy 中所有 System 读取同一个 `Res<GameRulesConfig>` 会产生全局读锁竞争，阻碍 System 并行执行。且修改任一子模块会触发整个 Resource 的 `Changed` 状态，导致所有依赖系统重新执行。
+
+**正确做法 — 按领域拆分为细粒度 Resource**：
+
+```rust
+// ✅ 正确：拆分为独立 Resource，各自可独立热重载
+#[derive(Resource)]
+pub struct BattleConfig { /* ... */ }
+
+#[derive(Resource)]
+pub struct SkillConfig { /* ... */ }
+
+#[derive(Resource)]
+pub struct BuffConfig { /* ... */ }
+
+// 或使用 Bevy Asset（Handle<T>）天然支持热重载
+// 游戏逻辑通过 Assets<BattleConfig> 访问
+```
+
+**性能收益**：
+- System 只声明所需 `Res<SkillConfig>`，其他 System 可并行
+- 修改 SkillConfig 不触发 BattleConfig 的 `Changed` 检测
+- MOD 可精确替换单个配置文件而不影响其他
+
 **规则**：
 - 🟥 GameRulesConfig 是 Definition 数据，运行时只读
 - 🟩 GameRulesConfig 支持热重载（战斗外）
@@ -144,10 +177,37 @@ pub struct DisplaySettings {
 }
 ```
 
+> **优化来源**：`docs/其他/44.md` — 引入防抖机制（Debounce），避免 UI 滑块拖动时的高频 IO 卡顿
+
+**防抖写入机制**：
+
+用户在设置界面拖动"音量滑块"或"UI 缩放滑块"时，每次微小变更都会触发磁盘写入，导致严重 IO 阻塞和卡顿。
+
+```
+UI 层：滑块拖动时只修改内存中的 UserSettings（立即生效）
+    ↓
+防抖 Timer：停止操作 200ms 后触发写入
+    ↓
+异步写入：使用 AsyncComputeTaskPool 将配置写入磁盘
+```
+
+**实现要点**：
+
+```rust
+#[derive(Resource)]
+pub struct UserSettingsDebounce {
+    pub timer: Timer,  // 200ms 防抖窗口
+    pub needs_write: bool,
+}
+
+// 音量等轻量设置：内存修改立即生效，防抖写盘
+// 分辨率/全屏等重型设置：UI 显示"待应用"状态，点击"Apply"按钮才生效
+```
+
 **规则**：
 - 🟩 UserSettings 加载一次后缓存在内存中
 - 🟩 修改后立即生效（音量、分辨率等）
-- 🟩 UserSettings 修改时自动保存到用户目录
+- 🟩 UserSettings 修改时自动保存到用户目录（防抖 200ms）
 - 🟥 UserSettings 不影响游戏逻辑正确性
 
 ### 2.4 DebugSwitches
@@ -232,6 +292,38 @@ DebugSwitches 初始化       ← Dev 构建初始化
 | UserSettings | 🟨 | 部分 | 音量等立即生效，分辨率需重启 |
 | DebugSwitches | ✅ | 任意 | 运行时内存，随时可改 |
 
+> **优化来源**：`docs/其他/44.md` — 战斗锁规则强化 + 热重载事件风暴缓解
+
+**战斗锁（Battle Lock）规则**：
+
+🟥 **在战斗中（AppState::InGame）期间，禁止 ALL 配置热重载**。
+
+如果在战斗中途修改了伤害公式或暴击率，当前的 Replay 录像将彻底作废。这把锁是确定性架构的底线。
+
+```rust
+// 实现：在热重载系统中检查 AppState
+fn config_hot_reload_system(
+    state: Res<State<AppState>>,
+    // ...
+) {
+    if *state.get() == AppState::InGame {
+        return; // 战斗中跳过所有热重载
+    }
+    // 正常热重载逻辑...
+}
+```
+
+**热重载事件风暴缓解**：
+
+策划保存包含 500 个技能配置的 RON 文件时，可能在一帧内触发大量变更事件，导致下游 System 卡顿。
+
+```
+优化方案：
+1. ConfigReloaded 事件只传递 config_type（如 SkillConfig），不传递 changes 列表
+2. 下游 System 收到事件后标记 NeedsRebuild<SkillConfig> Marker
+3. 在下一帧的特定 Phase（如 PreparePhase）统一执行重建
+```
+
 ### 4.2 热重载流程
 
 ```
@@ -285,11 +377,92 @@ pub struct ConfigReloaded {
 
 验证失败时使用默认值并记录 ERROR 日志。
 
+### 5.3 配置加载失败分级处理
+
+> **优化来源**：`docs/其他/44.md` — 按配置类型分级处理加载失败，EngineConfig 失败直接 panic，其他优雅降级
+
+不同配置类型的加载失败应有不同的处理策略：
+
+| 配置类型 | 失败行为 | 理由 |
+|---------|---------|------|
+| EngineConfig | 🟥 ERROR 日志 + 使用硬编码默认值 | 引擎参数缺失时必须优雅降级，禁止 panic（宪法 §13.9.4） |
+| GameRulesConfig | 🟥 ERROR 日志 + 使用默认值 | 游戏规则可降级，不能因配置错误导致闪退 |
+| UserSettings | 🟨 WARN 日志 + 重置为默认值 | 用户设置非关键，重置即可恢复 |
+
+```rust
+// 实现示例
+fn load_config<T: ConfigResource>(path: &str) -> T {
+    match load_from_path(path) {
+        Ok(config) => match config.validate() {
+            Ok(()) => config,
+            Err(e) => {
+                error!("配置验证失败: {:?}，使用默认值", e);
+                T::default_config()
+            }
+        },
+        Err(e) => {
+            error!("配置加载失败: {:?}，使用默认值", e);
+            T::default_config()
+        }
+    }
+}
+```
+
 ---
 
-## 6. 调试开关实现
+## 6. MOD 配置覆盖机制
 
-### 6.1 Feature Gate
+> **优化来源**：`docs/其他/44.md` — MOD 配置使用 Patch 语义（深度合并）而非 Override（整体替换）
+
+### 6.1 Patch vs Override
+
+SRPG 的 MOD 生态要求配置覆盖采用 **Patch 语义**（深度合并），而非 Override（整体替换）：
+
+```
+❌ Override（整体替换）：MOD 需要复制整个 skill.ron 文件，两个 MOD 修改同一文件只能二选一
+✅ Patch（深度合并）：MOD 只写修改的字段，系统自动合并到基础配置
+```
+
+### 6.2 实现方式
+
+```
+content/rules/
+├── base/                    # 基础配置
+│   ├── battle.ron
+│   ├── skill.ron
+│   └── buff.ron
+└── overrides/               # 覆盖配置（MOD 或策划微调）
+    ├── mod_balance/
+    │   └── skill.ron        # 只包含修改的字段
+    └── mod_new_skills/
+        └── skill.ron        # 新增或覆盖特定技能
+```
+
+**加载流程**：
+1. 加载 `base/skill.ron` 作为基础
+2. 遍历 `overrides/` 下所有 RON 文件
+3. 按 `load_order` 排序，后加载的覆盖先加载的
+4. 执行深度合并（Deep Merge）：数值字段直接替换，数组字段可选 Append 或 Replace
+
+### 6.3 合并策略标记
+
+```ron
+// MOD 配置中可指定合并策略
+(
+    id: "fireball",
+    base_damage: 60,                    // 数值字段：直接替换
+    buff_effects: Append(["stun"]),     // 数组字段：追加而非替换
+    // buff_effects: Replace(["stun"]), // 如需整体替换，显式声明
+)
+```
+
+**冲突日志**：当发生 MOD 覆盖时，系统必须在 debug.log 中输出 Warning，方便 MOD 作者排查兼容性问题。
+
+---
+
+## 7. 调试开关实现
+
+### 7.1 Feature Gate
 
 ```rust
 // Cargo.toml
@@ -307,7 +480,7 @@ dev = ["debug_switches"]
 app.add_plugins(DebugSwitchPlugin);
 ```
 
-### 6.2 调试面板集成
+### 7.2 调试面板集成
 
 - 🟩 通过 `bevy_egui` 调试面板控制 DebugSwitches
 - 🟩 快捷键切换常用开关（如 F8 = God Mode）
@@ -315,7 +488,7 @@ app.add_plugins(DebugSwitchPlugin);
 
 ---
 
-## 7. 禁止事项
+## 8. 禁止事项
 
 - 🟥 **硬编码平衡性数字在 Rust 代码中**（必须在 GameRulesConfig 中）
 - 🟥 **运行时修改 Config 定义**（Config 是只读的）
@@ -328,9 +501,9 @@ app.add_plugins(DebugSwitchPlugin);
 
 ---
 
-## 8. 实现备注
+## 9. 实现备注
 
-### 8.1 ConfigResource 统一接口
+### 9.1 ConfigResource 统一接口
 
 ```rust
 pub trait ConfigResource: Resource + Default + Clone + 'static {
@@ -343,7 +516,7 @@ pub trait ConfigResource: Resource + Default + Clone + 'static {
 }
 ```
 
-### 8.2 配置管理 Plugin
+### 9.2 配置管理 Plugin
 
 ```rust
 pub struct ConfigPlugin;
@@ -361,7 +534,7 @@ impl Plugin for ConfigPlugin {
 
 ---
 
-## 9. 与其他文档的关系
+## 10. 与其他文档的关系
 
 | 文档 | 关系 |
 |------|------|

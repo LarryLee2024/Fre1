@@ -65,6 +65,27 @@ pub trait PathFinder: Send + Sync {
 }
 ```
 
+#### PathFindingContext 封装
+
+当参数列表过长时，封装为上下文结构体提升可读性和可维护性：
+
+```rust
+/// 寻路上下文 — 封装所有寻路计算所需的输入参数
+pub struct PathFindingContext<'a> {
+    pub start: IVec2,
+    pub move_points: u32,
+    pub terrain: &'a TerrainGrid,
+    pub occupancy: &'a OccupancyGrid,
+    pub cost_calculator: &'a dyn TerrainCostCalculator,
+    pub blocker: &'a dyn UnitBlocker,
+}
+
+// 简化后的接口
+fn find_reachable_tiles(&self, ctx: &PathFindingContext) -> HashMap<IVec2, u32>;
+```
+
+> **优化来源**: `docs/其他/59.md`（PathFindingContext 封装建议）
+
 #### 默认实现：BFS PathFinder
 
 ```rust
@@ -263,6 +284,37 @@ fn cost(&self, terrain_id: &str, base_cost: Option<u32>) -> Option<u32> {
 }
 ```
 
+#### 视线检测抽象
+
+技能范围的 Line 类型需要明确的视线检测规则：
+
+```rust
+/// 视线检测 trait
+/// 用于技能范围计算中的 Line 类型判定
+pub trait LineOfSightChecker: Send + Sync {
+    /// 检查从 source 到 target 的直线上是否存在遮挡
+    fn has_line_of_sight(&self, source: IVec2, target: IVec2, terrain: &TerrainGrid) -> bool;
+}
+
+/// 默认实现：Bresenham 直线扫描
+pub struct DefaultLineOfSightChecker;
+
+impl LineOfSightChecker for DefaultLineOfSightChecker {
+    fn has_line_of_sight(&self, source: IVec2, target: IVec2, terrain: &TerrainGrid) -> bool {
+        // Bresenham 算法遍历 source→target 直线上的每个格子
+        // 若任一格子为不可通行地形 → 返回 false（被遮挡）
+        // 飞行单位的视线不被地面单位阻挡
+    }
+}
+```
+
+**飞行单位阻挡规则补充**：
+- 飞行单位的视线不被地面单位阻挡（`FlyingUnitBlocker` 实现）
+- 飞行单位可穿过敌方单位（`FlyThroughEnemyBlocker` 实现）
+- 但飞行单位仍被不可通行地形阻挡（如墙壁、悬崖）
+
+> **优化来源**: `docs/其他/59.md`（视线检测抽象与飞行单位阻挡规则建议）
+
 ---
 
 ### 2.4 缓存策略
@@ -307,6 +359,40 @@ struct CachedRange {
 4. Buff 应用/移除（影响移动力）→ 清除该单位的 move_range 缓存
 5. 装备穿脱（影响攻击范围）→ 清除该单位的 attack_range 缓存
 6. 回合开始 → 清除所有缓存（acted 重置影响可达范围）
+7. **软失效** → N 帧未使用的缓存条目自动标记为无效，下次访问时重新计算
+
+#### 缓存软失效策略
+
+冷门缓存长期占用内存的问题，通过"软失效"机制解决：
+
+```rust
+/// 缓存条目（增加 last_accessed 字段）
+struct CachedRange {
+    result: RangeResult,
+    frame_created: u32,
+    last_accessed: u32,   // 最后一次被访问的帧号
+    valid: bool,
+}
+
+/// 软失效常量
+const CACHE_SOFT_EXPIRY_FRAMES: u32 = 120;  // 120 帧（约 2 秒）未使用则失效
+
+/// 缓存清理系统（每帧执行）
+fn soft_expire_cache(mut cache: ResMut<RangeCache>, current_frame: Res<FrameCounter>) {
+    for entry in cache.all_entries_mut() {
+        if entry.valid && (current_frame.0 - entry.last_accessed > CACHE_SOFT_EXPIRY_FRAMES) {
+            entry.valid = false;  // 标记为失效，下次访问时重新计算
+        }
+    }
+}
+```
+
+**优势**：
+- 频繁访问的缓存保持有效（每次访问更新 `last_accessed`）
+- 冷门缓存自动释放，避免内存泄漏
+- 比立即清空更温和，不会导致突发的计算压力
+
+> **优化来源**: `docs/其他/59.md`（缓存"软失效"策略建议）
 ```
 
 #### 缓存内存预算
@@ -359,6 +445,110 @@ pub struct PathfindingStats {
     pub cache_misses: u64,
     pub avg_calculation_time_us: f64,  // 微秒
     pub max_calculation_time_us: f64,
+}
+```
+
+### Bevy Schedule 集成
+
+寻路系统在 Bevy Schedule 中的位置应明确划分：
+
+> **优化来源**: `docs/其他/59.md`（Bevy Schedule 集成建议）
+
+```rust
+/// 寻路系统注册到 Bevy Schedule
+impl Plugin for PathfindingPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(PreUpdate, clear_range_cache)       // 清除过期缓存
+           .add_systems(Update, calculate_ranges)            // 范围计算
+           .add_systems(PostUpdate, apply_range_results)     // 结果应用
+           .insert_resource(PathfindingStats::default())
+           .insert_resource(RangeCache::default());
+    }
+}
+```
+
+**阶段职责**：
+- **PreUpdate**：清除过期缓存（事件驱动 + 软失效），释放内存
+- **Update**：执行范围计算（BFS/A*），更新缓存
+- **PostUpdate**：将计算结果应用到游戏状态（触发 UI 更新等）
+
+### 并行计算支持
+
+多单位同时计算范围时，可利用 rayon 并行加速：
+
+> **优化来源**: `docs/其他/59.md`（并行计算支持建议）
+
+```rust
+use rayon::prelude::*;
+
+/// 并行计算多个单位的移动范围
+pub fn calculate_ranges_parallel(
+    units: &[(Entity, IVec2, u32)],  // (Entity, 位置, 移动力)
+    ctx: &PathFindingContext,
+) -> HashMap<Entity, HashMap<IVec2, u32>> {
+    units.par_iter()
+        .map(|&(entity, start, move_points)| {
+            // 注意：ChaCha8Rng 需 clone 给每个线程
+            let thread_ctx = PathFindingContext {
+                start,
+                move_points,
+                terrain: ctx.terrain,
+                occupancy: ctx.occupancy,
+                cost_calculator: ctx.cost_calculator,
+                blocker: ctx.blocker,
+            };
+            let result = BfsPathFinder.find_reachable_tiles(&thread_ctx);
+            (entity, result)
+        })
+        .collect()
+}
+```
+
+**注意事项**：
+- `PathFindingContext` 中的所有引用必须是 `Sync` 的（已满足，因为底层数据是不可变的）
+- 若使用随机数生成器（如 ChaCha8Rng），需为每个线程 clone 独立实例
+- 并行计算仅适用于独立的单位范围计算，有依赖关系的计算（如链式触发）需串行
+
+### 大地图兜底策略
+
+对于 40×40 及以上的大型地图，单帧计算可能超时，需要兜底策略：
+
+> **优化来源**: `docs/其他/59.md`（大地图兜底策略建议）
+
+| 地图规模 | 策略 | 说明 |
+|---------|------|------|
+| ≤ 30×30 | 正常计算 | 单帧完成所有范围计算 |
+| 31-50 | 分帧计算 | 每帧最多 8 个路径请求，超限排队 |
+| > 50 | 分帧 + 降精度 | 每帧 4 个请求，BFS 限制最大搜索步数 |
+
+```rust
+/// 大地图分帧计算 Resource
+#[derive(Resource)]
+pub struct LargeMapScheduler {
+    /// 排队中的路径请求
+    pending_requests: VecDeque<PathRequest>,
+    /// 每帧最大处理数
+    max_per_frame: usize,
+    /// 当前帧已处理数
+    processed_this_frame: usize,
+}
+
+impl LargeMapScheduler {
+    /// 根据地图大小初始化
+    pub fn for_map_size(width: u32, height: u32) -> Self {
+        let max_per_frame = if width * height > 2500 {
+            4   // 超大地图
+        } else if width * height > 900 {
+            8   // 大地图
+        } else {
+            usize::MAX  // 正常地图，不限制
+        };
+        Self {
+            pending_requests: VecDeque::new(),
+            max_per_frame,
+            processed_this_frame: 0,
+        }
+    }
 }
 ```
 
@@ -431,3 +621,18 @@ find_reachable_tiles 的 move_points 参数必须是当前剩余移动力。
 | `docs/domain/turn_rules.md` | 移动范围影响回合行动选择 |
 | `docs/domain/battle_rules.md` | 攻击范围影响 Effect Pipeline 目标选择 |
 | `docs/architecture.md` | Pathfinding 模块边界定义 |
+| `docs/AI开发宪法完整版.md` | §9.0.1-9.0.7 地图系统、§1.4.1 领域纯度、§11.7 读写分离 |
+
+---
+
+## 宪法合规说明
+
+| 条款 | 合规状态 | 说明 |
+|------|---------|------|
+| 🟩 §9.0.6 寻路数据动态生成 | ✅ 合规 | PathFinder trait 在运行时计算 |
+| 🟩 §9.0.4 OccupancyGrid 独立 | ✅ 合规 | OccupancyGrid 作为独立数据结构 |
+| 🟩 §9.0.5 数据与渲染分离 | ✅ 合规 | 纯数据计算，与渲染层完全分离 |
+| 🟩 §1.4.1 领域纯度 | ✅ 合规 | PathFinder trait 和 PathFindingContext 为纯数据结构，不绑定 Bevy ECS |
+| 🟩 §1.4.2 领域无副作用 | ✅ 合规 | 寻路函数为纯计算，不修改外部状态 |
+| 🟩 §11.7 读写分离 | ✅ 合规 | 范围计算为只读操作，结果通过独立步骤应用 |
+| 🟩 §2.3.4 Resource 规范 | ✅ 合规 | RangeCache 为全局唯一缓存状态 |

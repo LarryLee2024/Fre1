@@ -1,8 +1,10 @@
 # Project Structure Specification
 
-Version: 1.0
+Version: 1.1
 Status: Proposed
 Source: `docs/其他/30.md` 架构提炼
+> **宪法依据**：`docs/AI开发宪法完整版.md` v1.6 — 第1.1节模块划分原则（Feature First）、第4.0节代码组织宪法
+> ⚠️ **文件大小警告**（宪法 4.0.3）：本文件超过1000行，建议在后续迭代中考虑拆分。当前保持单一文件是因为项目结构规范需要全局视角，内聚性优先于行数指标。
 
 本文档定义 SRPG 项目的完整目录结构规范。
 适用于几十万行代码级别、支持 MOD、AI 协作、外包美术、长期更新的大型项目。
@@ -11,7 +13,11 @@ Source: `docs/其他/30.md` 架构提炼
 
 ## 核心原则
 
+> **宪法依据**：〔宪法 1.1.1 Feature First〕按业务领域拆分模块，绝对禁止按技术类型拆分全局目录
+
 ### 三棵树分离
+
+> **宪法依据**：〔宪法 1.1.2 定义与实例分离〕、〔宪法 1.1.3 规则与内容分离〕
 
 项目必须分离为三棵独立的树：
 
@@ -638,11 +644,13 @@ src/
 
 ### 源码树关键约束
 
-1. 🟥 **core/ 禁止依赖任何业务模块** — core 模块的 `use` 语句不得出现 `battle/`, `skill/`, `buff/` 等
-2. 🟥 **shared/ 禁止包含任何业务逻辑** — shared 只放通用工具，不放 `skill_utils`、`buff_utils` 等
-3. 🟥 **infrastructure/ 禁止包含领域错误** — `SkillError` 放在 `core/skill/`，不在 `infrastructure/`
-4. 🟩 **content/ 是唯一的内容桥接层** — 连接外部 RON 数据到内部 Registry
-5. 🟩 **modding/ 只暴露稳定 API** — MOD 作者只需要了解 `modding/api/` 暴露的接口
+> **宪法依据**：〔宪法 1.3.2 依赖方向铁则〕、〔宪法 3.0.1 接口最小化原则〕、〔宪法 3.0.7 通用代码规范〕
+
+1. 🟥 **core/ 禁止依赖任何业务模块** — core 模块的 `use` 语句不得出现 `battle/`, `skill/`, `buff/` 等 〔宪法 1.3.2〕
+2. 🟥 **shared/ 禁止包含任何业务逻辑** — shared 只放通用工具，不放 `skill_utils`、`buff_utils` 等 〔宪法 3.0.7〕
+3. 🟥 **infrastructure/ 禁止包含领域错误** — `SkillError` 放在 `core/skill/`，不在 `infrastructure/` 〔宪法 13.9.1〕
+4. 🟩 **content/ 是唯一的内容桥接层** — 连接外部 RON 数据到内部 Registry 〔宪法 1.1.3〕
+5. 🟩 **modding/ 只暴露稳定 API** — MOD 作者只需要了解 `modding/api/` 暴露的接口 〔宪法 3.0.1〕
 
 ---
 
@@ -796,8 +804,10 @@ assets/
 
 ### 资产树关键约束
 
-1. 🟥 **assets/ 只存放二进制资源** — 美术、音频、字体、Shader、粒子等
-2. 🟥 **assets/ 禁止存放游戏配置数据** — 配置数据放 `content/`
+> **宪法依据**：〔宪法 1.1.2 定义与实例分离〕、〔宪法 12.1.4 资源管理〕
+
+1. 🟥 **assets/ 只存放二进制资源** — 美术、音频、字体、Shader、粒子等 〔宪法 1.1.2〕
+2. 🟥 **assets/ 禁止存放游戏配置数据** — 配置数据放 `content/` 〔宪法 1.1.3〕
 3. 🟩 **按类型组织，不按功能** — `audio/bgm/` 不放 `audio/battle/bgm/` 中，按类型分
 4. 🟩 **角色资源按角色目录组织** — 每个 NPC/角色 有独立目录（利于外包）
 
@@ -892,9 +902,11 @@ content/
 
 ### 内容树关键约束
 
-1. 🟥 **content/ 只存放 RON 配置文件** — 禁止放 Rust 代码
-2. 🟥 **新增内容 = 新增 RON 文件** — 禁止修改逻辑代码
-3. 🟩 **Skill 是 Core，Fireball 是 Content** — 规则在 src/core/skill/，数据在 content/skills/
+> **宪法依据**：〔宪法 1.1.3 规则与内容分离〕、〔宪法 12.1.1 职责划分〕
+
+1. 🟥 **content/ 只存放 RON 配置文件** — 禁止放 Rust 代码 〔宪法 1.1.3〕
+2. 🟥 **新增内容 = 新增 RON 文件** — 禁止修改逻辑代码 〔宪法 1.1.3〕
+3. 🟩 **Skill 是 Core，Fireball 是 Content** — 规则在 src/core/skill/，数据在 content/skills/ 〔宪法 1.1.3〕
 4. 🟩 **content/ 目录结构对齐 src/core/ 模块结构** — 每个 core 模块对应一个 content 子目录
 
 ---
@@ -1007,7 +1019,12 @@ docs/
 │   ├── infrastructure-design.md
 │   ├── app-bootstrap.md
 │   ├── skill-buff-abstraction.md
-│   └── plugin-design.md
+│   ├── plugin-design.md
+│   ├── i18n_design.md
+│   ├── tools_architecture.md
+│   ├── content_migration_design.md
+│   ├── asset_namespace_design.md
+│   └── feature_flag_design.md
 ├── adr/                       # 架构决策记录
 ├── domain/                    # 领域规则
 ├── testing/                   # 测试规范
@@ -1018,6 +1035,190 @@ docs/
 ├── AI开发宪法.md              # AI 开发宪法
 └── 其他/                      # 参考材料
 ```
+
+---
+
+## 三棵树物理分离（再强调）
+
+> **优化来源**: `docs/其他/64.md`
+> **宪法依据**：〔宪法 1.1.1 Feature First〕、〔宪法 1.1.2 定义与实例分离〕、〔宪法 1.1.3 规则与内容分离〕
+
+三棵树不仅是逻辑分离，更是**物理分离**——禁止交叉引用、禁止混放。
+
+```
+项目根目录/
+├── src/                          # 树1：源码（Rust 代码）
+│   ├── app/                      #   启动装配
+│   ├── core/                     #   游戏规则
+│   ├── shared/                   #   基础能力
+│   ├── infrastructure/           #   技术实现
+│   ├── content/                  #   内容桥接
+│   ├── modding/                  #   MOD 支持
+│   ├── debug/                    #   调试工具
+│   └── ui/                       #   UI 表现
+│
+├── content/                      # 树2：内容（RON 配置）
+│   ├── skills/                   #   技能定义
+│   ├── buffs/                    #   Buff 定义
+│   ├── characters/               #   角色模板
+│   ├── stages/                   #   关卡定义
+│   ├── terrains/                 #   地形定义
+│   ├── items/                    #   物品定义
+│   ├── equipments/               #   装备定义
+│   └── ...
+│
+└── assets/                       # 树3：资产（二进制资源）
+    ├── art/                      #   美术
+    ├── audio/                    #   音频
+    ├── ui/                       #   UI 资源
+    ├── shaders/                  #   Shader
+    ├── fonts/                    #   字体
+    ├── localization/             #   多语言
+    └── ...
+```
+
+### 禁止交叉规则
+
+> **宪法依据**：〔宪法 1.1.2 定义与实例分离〕、〔宪法 1.1.3 规则与内容分离〕
+
+| 禁止行为 | 理由 | 替代方案 | 宪法条款 |
+|---------|------|---------|----------|
+| 🟥 `src/` 中引入 `content/` 路径硬编码 | 内容路径变化影响编译 | 通过 `AssetServer` 动态加载 | 1.1.3 |
+| 🟥 `content/` 中放入 Rust 代码 | 混淆数据与逻辑 | 代码放 `src/` | 1.1.3 |
+| 🟥 `assets/` 中放入 RON 配置 | 混淆资产与配置 | 配置放 `content/` | 1.1.2 |
+| 🟥 `mods/` 中直接修改 `src/` | MOD 不应修改游戏源码 | 通过 `modding/api/` 扩展 | 3.0.1 |
+
+---
+
+## RON 内容文件 → Registry 映射路径表
+
+> **优化来源**: `docs/其他/64.md`
+
+| content/ 路径 | RON 文件类型 | 加载模块（src/content/） | 注册目标（src/core/） | 交叉引用 |
+|--------------|-------------|------------------------|---------------------|---------|
+| `content/skills/*.ron` | `SkillDef` | `content/skills/skill_content.rs` | `SkillRegistry` | `docs/architecture/content-pipeline.md` |
+| `content/buffs/*.ron` | `BuffDef` | `content/buffs/buff_content.rs` | `BuffRegistry` | `docs/architecture/content-pipeline.md` |
+| `content/characters/*.ron` | `UnitTemplate` | `content/characters/character_content.rs` | `UnitRegistry` | `docs/architecture/content-pipeline.md` |
+| `content/stages/*.ron` | `StageDef` | `content/stages/stage_content.rs` | `StageRegistry` | `docs/architecture/content-pipeline.md` |
+| `content/terrains/*.ron` | `TerrainDef` | `content/terrains/terrain_content.rs` | `TerrainRegistry` | `docs/architecture/content-pipeline.md` |
+| `content/items/*.ron` | `ItemDef` | `content/items/item_content.rs` | `ItemRegistry` | `docs/architecture/content-pipeline.md` |
+| `content/equipments/*.ron` | `EquipmentDef` | `content/equipments/equipment_content.rs` | `EquipmentRegistry` | `docs/architecture/content-pipeline.md` |
+| `content/classes/*.ron` | `ClassDef` | `content/classes/class_content.rs` | `ClassRegistry` | `docs/architecture/content-pipeline.md` |
+| `content/ai_behaviors/*.ron` | `AiBehaviorDef` | `content/ai_behaviors/ai_behavior_content.rs` | `AiBehaviorRegistry` | `docs/architecture/content-pipeline.md` |
+
+### 规则
+
+> **宪法依据**：〔宪法 12.1.1 职责划分〕配置定义内容，代码解释配置
+
+- 🟥 **每种 RON 文件必须有明确的加载模块和注册目标** — 禁止无 Registry 的 RON 〔宪法 12.2.1〕
+- 🟩 **加载模块遵循 `加载 → 校验 → 注册` 三步模式** — 详见 `docs/architecture/content-pipeline.md` 〔宪法 12.1.1〕
+- 🟩 **RON 文件路径与 Registry 名称保持一致** — `content/skills/` → `SkillRegistry`
+
+---
+
+## MOD 沙箱标准布局
+
+> **优化来源**: `docs/其他/64.md`
+
+MOD 目录遵循标准布局，确保安全隔离：
+
+```
+mods/
+├── official/                     # 官方 MOD 示例
+│   └── example_mod/
+│       ├── manifest.ron          #   MOD 清单（名称、版本、依赖）
+│       ├── content/              #   MOD 内容（RON 配置）
+│       │   ├── skills/           #     新增技能
+│       │   ├── buffs/            #     新增 Buff
+│       │   ├── characters/       #     新增角色
+│       │   └── ...
+│       ├── localization/         #   MOD 本地化
+│       │   ├── en/               #     英文
+│       │   └── zh_cn/            #     中文
+│       └── assets/               #   MOD 资产（可选）
+│           ├── art/              #     自定义美术
+│           └── audio/            #     自定义音频
+│
+├── community/                    # 社区 MOD（gitignore）
+│   └── <mod_name>/
+│       ├── manifest.ron
+│       ├── content/
+│       ├── localization/
+│       └── assets/
+│
+└── dev/                          # 开发中 MOD
+    └── test_mod/
+        ├── manifest.ron
+        ├── content/
+        └── localization/
+```
+
+### manifest.ron 标准格式
+
+```rust
+pub struct ModManifest {
+    pub name: String,              // MOD 名称
+    pub version: String,           // 语义化版本
+    pub author: String,            // 作者
+    pub description: String,       // 描述
+    pub dependencies: Vec<String>, // 依赖的其他 MOD
+    pub compatibility: ModCompat,  // 兼容性声明
+    pub capabilities: Vec<ModCapability>, // 声明的能力
+}
+
+pub enum ModCapability {
+    AddSkills,       // 可以添加新技能
+    AddBuffs,        // 可以添加新 Buff
+    AddCharacters,   // 可以添加新角色
+    ModifyBalance,   // 可以修改数值平衡
+    AddMaps,         // 可以添加新地图
+}
+```
+
+### 规则
+
+> **宪法依据**：〔宪法 17.2.1 Mod支持预留〕核心系统设计时预留轻量扩展点
+
+- 🟥 **MOD 内容只能放在 `mods/<name>/content/`** — 禁止修改项目根 `content/` 〔宪法 1.1.3〕
+- 🟥 **MOD 资产只能放在 `mods/<name>/assets/`** — 禁止修改项目根 `assets/`
+- 🟩 **MOD 必须声明 `manifest.ron`** — 包含版本、依赖、能力声明 〔宪法 12.6.1〕
+- 🟩 **MOD 沙箱必须限制执行权限** — 详见 `src/modding/sandbox/sandbox_runner.rs`
+
+---
+
+## 层级模块索引表
+
+> **优化来源**: `docs/其他/64.md`
+
+快速跳转：想找 X → 看 Y → 调用 Z
+
+| 我想找... | 看这个文件/目录 | 调用这个 API/类型 |
+|-----------|---------------|------------------|
+| 战斗伤害计算 | `src/core/battle/combat.rs` | `calculate_damage()` |
+| 技能定义 | `content/skills/*.ron` | `SkillDef` → `SkillRegistry` |
+| Buff 施加逻辑 | `src/core/buff/buff_apply.rs` | `apply_buff()` |
+| 回合状态机 | `src/core/turn/turn_phase.rs` | `TurnPhase` |
+| 角色属性 | `src/core/character/unit.rs` | `Unit` Component |
+| 装备穿脱 | `src/core/equipment/equip.rs` | `equip_item()` / `unequip_item()` |
+| 寻路算法 | `src/core/map/pathfinding/bfs.rs` | `bfs_pathfinding()` |
+| 存档保存/加载 | `src/infrastructure/persistence/` | `SavePlugin` / `LoadPlugin` |
+| 内容加载 | `src/content/content_plugin.rs` | `ContentPlugin` |
+| UI 面板 | `src/ui/panels/` | `UiPlugin` |
+| 调试面板 | `src/debug/panels/` | `DebugPlugin` |
+| MOD API | `src/modding/api/mod_api.rs` | `ModApi` |
+| 错误类型 | `src/core/xxx/domain/xxx_error.rs` | `XxxError` |
+| 共享 ID | `src/shared/ids/` | `UnitId`, `SkillId`, ... |
+| 测试工具 | `src/shared/testing/` | `spawn_test_battle()` |
+| 游戏常量 | `src/shared/constants/` | `MAX_LEVEL`, ... |
+| 校验工具 | `src/shared/validation/` | `validate_*()` |
+
+### 规则
+
+> **宪法依据**：〔宪法 3.0.1 接口最小化原则〕、〔宪法 3.0.4 跨模块交互规范〕
+
+- 🟩 **每个模块必须有明确的入口文件** — `plugin.rs` 或 `mod.rs` 〔宪法 3.0.2〕
+- 🟩 **模块间通过 Message 通信** — 禁止直接 `use` 其他模块内部类型 〔宪法 3.0.4〕
+- 🟩 **新增功能先查索引表** — 避免重复造轮子
 
 ---
 

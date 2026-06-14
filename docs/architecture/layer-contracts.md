@@ -1,9 +1,11 @@
 # Layer Contracts — 七层架构边界定义
 
-Version: 1.0
+Version: 1.1
 Status: Proposed
 
 本文档定义 SRPG 项目的七层架构边界、依赖规则、禁止事项和判断标准。
+
+> **宪法依据**：`docs/AI开发宪法完整版.md` v1.6 — 第1.3节架构分层与依赖方向、第1.4节领域纯度原则、第3.0节模块化与Plugin边界
 
 ---
 
@@ -136,7 +138,7 @@ Core → Modding   ❌ 禁止
 Core → Tools     ❌ 禁止
 ```
 
-🟥 Core 层**只能依赖 Shared 层**。
+🟥 Core 层**只能依赖 Shared 层** — 〔宪法 1.3.2 依赖方向铁则：领域层不得依赖应用层与表现层〕
 
 **发现 core 模块 use 了 infrastructure、ui、modding 等层时**：
 
@@ -195,8 +197,7 @@ Shared 层提供**所有模块都能复用的基础工具**。
 核心 trait（DamageSource, Healable 等）
 测试工具（spawn_test_battle 等）
 版本管理工具
-GameResult<T> 类型别名
-错误转换 trait
+错误转换 trait（ErrorContext, LogIfError）
 ```
 
 ### 绝对不在 Shared 的
@@ -215,7 +216,7 @@ anyhow::Error      ❌ 全局错误类型是反模式
 ```
 src/shared/
 ├── ids/             # 强类型 ID
-├── error/           # GameResult<T> + 错误转换 trait
+├── error/           # ErrorContext + LogIfError 错误转换 trait
 ├── events/          # 跨模块领域事件
 ├── audit/           # 审计轨迹基础设施
 ├── random/          # 确定性随机数
@@ -237,7 +238,7 @@ Shared → 无依赖     ✅ Shared 不依赖任何其他层
 其他层 → Shared     ✅ 所有层都可以依赖 Shared
 ```
 
-🟥 **Shared 层禁止依赖任何其他层**。
+🟥 **Shared 层禁止依赖任何其他层** — 〔宪法 1.3.2 依赖方向铁则〕
 
 Shared 是依赖图的**叶子节点**——它只提供工具，不消费任何业务逻辑。
 
@@ -311,7 +312,7 @@ AI 决策规则      ❌ 这是游戏规则，回 core/ai/
 ### 依赖规则
 
 ```
-Infra → Core      ✅ 允许（但只通过 shared 事件，不直接依赖内部）
+Infra → Core      ✅ 允许（但只通过 shared 事件，不直接依赖内部）〔宪法 3.0.4〕
 Infra → Shared    ✅ 允许
 Infra → Content   ✅ 允许（加载数据需要）
 Infra → UI        ❌ 禁止
@@ -378,8 +379,8 @@ Content → Modding   ❌ 禁止
 
 ### 关键约束
 
-- 🟥 Content 层禁止包含任何游戏规则逻辑
-- 🟩 Content 层只做"加载 → 校验 → 注册"三件事
+- 🟥 Content 层禁止包含任何游戏规则逻辑 — 〔宪法 1.1.3 规则与内容分离〕
+- 🟩 Content 层只做"加载 → 校验 → 注册"三件事 — 〔宪法 12.1.1 职责划分〕
 - 🟩 Content 层的测试可以用 Mock Registry 替代真实 Registry
 
 ### 双类型模式（Core + Content 协作）
@@ -453,12 +454,14 @@ Tools 层提供**开发期间的工具链**。
 
 UI 是一个**跨层模块**，但它有严格的边界规则。
 
+> **宪法依据**：〔宪法 1.1.4 逻辑与表现强制分离〕、〔宪法 10.0.2 状态单向流动〕
+
 #### 依赖规则
 
 ```
 UI → ViewModel    ✅ 只读 ViewModel
 UI → UiCommand    ✅ 只输出 UiCommand
-UI → Core         ❌ 绝对禁止直接查询 ECS 组件
+UI → Core         ❌ 绝对禁止直接查询 ECS 组件 — 〔宪法 10.0.2〕
 UI → Infra        ❌ 绝对禁止
 ```
 
@@ -514,7 +517,7 @@ Debug → UI         ❌ 禁止
 App      → 任意层           ✅（仅注册，不含逻辑）
 Core     → Shared           ✅（唯一允许的外部依赖）
 Shared   → 无               ✅（叶子节点，零外部依赖）
-Infra    → Core, Shared     ✅（技术实现依赖规则）
+Infra    → Core, Shared, Content  ✅（技术实现依赖规则，Content 用于加载数据）
 Content  → Core, Infra, Shared  ✅（桥接层，连接数据与规则）
 UI       → ViewModel only   ✅（只读状态层）
 Debug    → Core only（只读） ✅
@@ -524,20 +527,24 @@ Tools    → Core, Shared      ✅（开发工具）
 
 ### 严格禁止的依赖方向
 
+> **宪法依据**：〔宪法 1.3.2 依赖方向铁则〕领域层不得依赖应用层与表现层
+
 ```
-Core → Infra         🟥 禁止（规则不依赖技术实现）
-Core → Content       🟥 禁止（规则不依赖数据加载）
-Core → UI            🟥 禁止（规则不依赖表现层）
+Core → Infra         🟥 禁止（规则不依赖技术实现）〔宪法 1.3.2〕
+Core → Content       🟥 禁止（规则不依赖数据加载）〔宪法 1.3.2〕
+Core → UI            🟥 禁止（规则不依赖表现层）〔宪法 1.3.2〕
 Core → Modding       🟥 禁止（规则不依赖 MOD）
-Shared → Core        🟥 禁止（基础不依赖规则）
+Shared → Core        🟥 禁止（基础不依赖规则）〔宪法 1.3.2〕
 Shared → Infra       🟥 禁止（基础不依赖技术实现）
 Shared → UI          🟥 禁止（基础不依赖表现层）
-Infra → UI           🟥 禁止（技术不依赖表现层）
+Infra → UI           🟥 禁止（技术不依赖表现层）〔宪法 1.3.2〕
 ```
 
 ---
 
 ## 三个垃圾桶警告
+
+> **宪法依据**：〔宪法 4.0.2 按业务拆文件〕、〔宪法 3.0.7 通用代码规范〕
 
 在大型项目中，以下三个目录最容易退化为垃圾桶：
 
@@ -571,6 +578,8 @@ Infra → UI           🟥 禁止（技术不依赖表现层）
 
 ## 错误归属规范（补充）
 
+> **宪法依据**：〔宪法 13.9.1 分领域错误原则〕每个领域定义独立错误枚举，禁止全局AppError
+
 参照 `docs/architecture/error-architecture.md` 完整规范。此处简述：
 
 ### 领域错误 → core/xxx/domain/
@@ -600,16 +609,31 @@ pub enum SaveError {
 ### 共享错误工具 → shared/error/
 
 ```rust
-// shared/error/result.rs
-pub type GameResult<T> = Result<T, InfrastructureError>;
+// shared/error/context.rs
+pub trait ErrorContext<T, E> {
+    fn with_context(self, f: impl FnOnce() -> String) -> Result<T, E>;
+}
 
 // shared/error/extensions.rs
-pub trait ErrorExt {
-    fn with_context(self, context: &str) -> Self;
+pub trait LogIfError<T, E> {
+    fn log_if_error(self, context: &str) -> Option<T>;
 }
 ```
 
-🟥 **绝对禁止**：
+🟥 **GameResult 不应定义在 shared/ 层**。详见 `docs/architecture/error-architecture.md` 迁移计划。每层定义自己的 Result 别名：
+
+```rust
+// core/skill/domain/mod.rs
+pub type SkillResult<T> = Result<T, SkillError>;
+
+// infrastructure/persistence/save/mod.rs
+pub type SaveResult<T> = Result<T, SaveError>;
+
+// infrastructure/mod.rs
+pub type InfraResult<T> = Result<T, InfrastructureError>;
+```
+
+🟥 **绝对禁止** — 〔宪法 13.9.1 分领域错误原则〕：
 - 全局统一 `AppError` 大枚举
 - `anyhow::Error`、`Box<dyn Error>` 作为业务层返回类型
 - 领域错误放在 `infrastructure/` 或 `shared/`
@@ -619,9 +643,11 @@ pub trait ErrorExt {
 
 ## 跨层通信规范
 
+> **宪法依据**：〔宪法 2.2 四级通信机制〕Hook/Trigger/Observer/Message、〔宪法 3.0.4 跨模块交互规范〕
+
 ### Core ↔ Core
 
-通过 **Message** 广播。
+通过 **Message** 广播 — 〔宪法 2.2.4 Message = 跨Feature全局广播〕
 
 ```
 core/battle → core/skill     只能通过 DamageApplied / HealApplied Message
@@ -684,3 +710,373 @@ MOD 添加新技能 → mod/api → SkillRegistry.insert_mod_skill()
 - [ ] 它是否创建了 xxx_utils 垃圾桶？
 
 如果任何一项为"是"，必须重构。
+
+---
+
+## 层间依赖自动化检测
+
+> **优化来源**: `docs/其他/64.md`
+
+手动检查层间依赖容易遗漏。应通过自动化工具强制执行：
+
+### dependcheck.rs 脚本模式
+
+在 `scripts/` 目录下维护依赖检查脚本：
+
+```rust
+// scripts/dependcheck.rs
+// 功能：扫描所有 src/ 文件的 use 语句，检测跨层违规
+
+use std::fs;
+use std::path::Path;
+
+struct LayerViolation {
+    file: String,
+    line: usize,
+    imported: String,
+    rule: String,
+}
+
+fn check_layer_dependencies(src_dir: &Path) -> Vec<LayerViolation> {
+    let mut violations = Vec::new();
+
+    // 扫描 core/ 目录
+    for entry in fs::read_dir(src_dir.join("core")).unwrap() {
+        let content = fs::read_to_string(entry.path()).unwrap();
+        for (line_no, line) in content.lines().enumerate() {
+            // 检测 core 是否引用了 infrastructure/ui/modding
+            if line.contains("use crate::infrastructure")
+                || line.contains("use crate::ui")
+                || line.contains("use crate::modding")
+            {
+                violations.push(LayerViolation {
+                    file: entry.path().to_string_lossy().to_string(),
+                    line: line_no + 1,
+                    imported: line.to_string(),
+                    rule: "core 禁止依赖 infrastructure/ui/modding".to_string(),
+                });
+            }
+        }
+    }
+
+    // 扫描 shared/ 目录（禁止依赖任何层）
+    for entry in fs::read_dir(src_dir.join("shared")).unwrap() {
+        let content = fs::read_to_string(entry.path()).unwrap();
+        for (line_no, line) in content.lines().enumerate() {
+            if line.contains("use crate::core")
+                || line.contains("use crate::infrastructure")
+                || line.contains("use crate::ui")
+                || line.contains("use crate::modding")
+            {
+                violations.push(LayerViolation {
+                    file: entry.path().to_string_lossy().to_string(),
+                    line: line_no + 1,
+                    imported: line.to_string(),
+                    rule: "shared 禁止依赖任何业务层".to_string(),
+                });
+            }
+        }
+    }
+
+    violations
+}
+```
+
+### Custom Clippy Lint
+
+开发自定义 Clippy lint，检查跨层导入：
+
+```rust
+// 使用 cargo clippy -- -W layer_violation
+// 检测规则：
+// - core/ 下的 use 语句不得引用 infrastructure/、ui/、modding/
+// - shared/ 下的 use 语句不得引用 core/、infrastructure/、ui/、modding/
+// - infrastructure/ 下的 use 语句不得引用 ui/、modding/
+```
+
+### CI 集成
+
+```bash
+# 在 CI 中运行层间依赖检查
+cargo run --script dependcheck.rs
+# 如果有违规，输出：
+# ARCHITECTURE VIOLATION: core/battle/combat.rs:15 引用了 infrastructure/persistence
+# 规则：core 禁止依赖 infrastructure
+
+# 自动修复（如果支持）
+cargo run --script dependcheck.rs --fix
+```
+
+### 规则
+
+- 🟥 **CI 必须运行层间依赖检查** — 每次 PR 必须通过
+- 🟥 **发现违规必须立即修复** — 不允许"先通过后续修"
+- 🟩 **自定义 Clippy lint 作为开发期检查** — IDE 中实时提示
+- 🟩 **dependcheck.rs 作为最终防线** — CI 中强制执行
+
+---
+
+## 核心层依赖禁令（强化）
+
+> **优化来源**: `docs/其他/64.md`
+
+### 绝对禁止的依赖方向
+
+```
+Core → Infrastructure  🟥 禁止（游戏规则不依赖技术实现）
+Core → UI              🟥 禁止（游戏规则不依赖表现层）
+Core → Modding         🟥 禁止（游戏规则不依赖 MOD）
+Core → Debug           🟥 禁止（游戏规则不依赖调试工具）
+Core → Content         🟥 禁止（游戏规则不依赖数据加载）
+```
+
+### 强化检测
+
+```rust
+// 编译时检测：在 CI 中运行
+// 扫描 core/ 下所有文件的 use 语句
+// 如果发现 use crate::infrastructure::xxx → 违规
+// 如果发现 use crate::ui::xxx → 违规
+// 如果发现 use crate::modding::xxx → 违规
+
+// 示例违规输出：
+// ═══════════════════════════════════════════════════
+// ARCHITECTURE VIOLATION: core/battle/combat.rs:15
+//   use crate::infrastructure::persistence::save;
+//   违反规则：core 禁止依赖 infrastructure
+//   正确做法：通过 Shared 事件或 Message 通信
+// ═══════════════════════════════════════════════════
+```
+
+### 例外场景
+
+| 场景 | 是否允许 | 说明 |
+|------|---------|------|
+| Core → Shared | ✅ 允许 | Shared 是基础能力层 |
+| Core → Core（其他模块） | ⚠️ 有限允许 | 通过 Message 通信，禁止直接 `use` 内部类型 |
+| Core → Infrastructure（测试中） | ⚠️ 有限允许 | 仅在 `#[cfg(test)]` 中 Mock |
+
+### 规则
+
+- 🟥 **Core 层是依赖图的最内层** — 只能依赖 Shared（叶子节点）
+- 🟥 **Core 违规必须在 CI 阻断** — 不允许"技术债"积累
+- 🟩 **Core 内部模块通信使用 Message** — 禁止直接 `use` 其他模块内部类型
+
+---
+
+## 架构例外与审批流程
+
+### 例外场景定义
+
+大型项目难免有边缘场景需要临时放宽约束。以下场景可申请例外：
+
+| 场景 | 允许的放宽 | 审批要求 |
+|------|-----------|---------|
+| 性能优化 | Core 层可直接读取 Infrastructure 数据（只读） | Architect 审批 + ADR 记录 |
+| 紧急修复 | 跨层直接调用（跳过事件机制） | Tech Lead 审批 + 24h 内修复 |
+| 平台集成 | Infrastructure 直接依赖平台 API | Architect 审批 + feature gate |
+
+### 审批流程
+
+```
+1. 发起例外申请（在 ADR 中记录）
+   ├── 例外原因（性能优化/紧急修复/平台集成）
+   ├── 放宽的具体约束
+   ├── 影响范围评估
+   └── 预计修复时间
+
+2. Architect 审批
+   ├── 性能优化例外 → Architect 审批
+   ├── 紧急修复例外 → Tech Lead 审批（事后补 ADR）
+   └── 平台集成例外 → Architect 审批
+
+3. 记录与跟踪
+   ├── 在 ADR 中记录例外决策
+   ├── 在代码中标记 TODO 和有效期
+   └── 在下次迭代中优先修复
+```
+
+### 临时约束标记
+
+```rust
+// 性能优化例外：Core 直接读取 Infrastructure 数据（只读）
+// TODO(ADR-042): 2026-07-01 前重构为事件机制
+fn optimized_damage_calc(unit_data: &UnitData) -> i32 {
+    // 例外：Core 直接读取 Infrastructure 的 UnitData
+    // 审批人：Architect，原因：战斗结算路径性能要求
+    unit_data.base_damage * unit_data.multiplier
+}
+```
+
+> **优化来源**：`docs/其他/55.md` — 例外审批「性能优化/紧急修复可临时放宽约束，记录 ADR」
+
+---
+
+## 架构版本管理与演进流程
+
+### 版本号规则
+
+架构文档使用语义化版本号（SemVer）：
+
+| 变更类型 | 版本号变更 | 审批要求 |
+|---------|-----------|---------|
+| MAJOR | 结构性重构（如合并/拆分层） | 全员 Review + CEO 批准 |
+| MINOR | 新增模块或接口 | Architect 审批 |
+| PATCH | 规则修正、示例更新 | 自主修改 |
+
+### 演进流程
+
+```
+1. 需求评审
+   ├── 业务变化导致分层规则调整
+   ├── 新增模块需要跨层通信
+   └── 性能要求需要放宽约束
+
+2. 规则修订
+   ├── Architect 编写 ADR
+   ├── 更新 layer-contracts.md
+   └── 更新相关架构文档
+
+3. 全团队同步
+   ├── 架构评审会议
+   ├── 更新 Code Review 检查清单
+   └── 更新 CI 检测脚本
+
+4. 代码迁移
+   ├── 迁移检查清单（6 项）
+   ├── 过渡期规则（新旧代码共存）
+   └── 迁移完成确认
+```
+
+### 兼容性保障
+
+- 迁移期间新旧代码共存，通过 `#[deprecated]` 标记旧接口
+- 迁移完成后删除旧代码，确保零遗留
+- 每次架构变更必须配套迁移指南
+
+> **优化来源**：`docs/其他/55.md` — 架构演进「版本管理与演进流程（MAJOR 全员 Review，MINOR Architect 审批）」
+
+---
+
+## 跨层通信完整代码示例
+
+### Message 通信示例（Core ↔ Core）
+
+```rust
+// shared/events/combat.rs — 定义跨模块消息
+#[derive(Message, Debug, Clone)]
+pub struct DamageApplied {
+    pub source: UnitId,
+    pub target: UnitId,
+    pub skill_id: Option<SkillId>,
+    pub amount: i32,
+}
+
+// core/battle/ — 发送消息
+fn apply_damage_system(
+    mut ev_damage: EventWriter<DamageApplied>,
+    query: Query<(&UnitId, &Health)>,
+) {
+    for (unit_id, health) in &query {
+        ev_damage.send(DamageApplied {
+            source: UnitId::new("warrior_001"),
+            target: unit_id.clone(),
+            skill_id: None,
+            amount: 10,
+        });
+    }
+}
+
+// core/skill/ — 接收消息
+fn on_damage_applied(
+    mut trigger: Trigger<DamageApplied>,
+    mut query: Query<(&UnitId, &mut Health)>,
+) {
+    let event = trigger.event();
+    for (unit_id, mut health) in &mut query {
+        if *unit_id == event.target {
+            health.current -= event.amount;
+        }
+    }
+}
+```
+
+### Content 层 RON → Registry 示例
+
+```rust
+// content/skills/skill_content.rs
+use crate::core::skill::{SkillDef, SkillData, SkillRegistry};
+
+pub fn load_skill_from_ron(path: &Path) -> Result<(), AssetError> {
+    // 1. 从 RON 加载 SkillDef（字符串引用）
+    let skill_def: SkillDef = load_ron(path)?;
+
+    // 2. 转换为运行时类型（Strong ID 引用）
+    let skill_data: SkillData = skill_def.into();
+
+    // 3. 注册到 Registry
+    // 注意：Content 层可以访问 Core 的 Registry（Content → Core 允许）
+    // 但不能直接修改 Core 的业务逻辑
+    app.world.resource_mut::<SkillRegistry>().insert(skill_data);
+
+    Ok(())
+}
+```
+
+> **优化来源**：`docs/其他/55.md` — 跨层通信「Message 通信 + Content 层 RON→Registry 完整示例」
+
+---
+
+## 性能权衡规范
+
+> **宪法依据**：〔宪法 1.5.1 复杂度优先于性能〕架构复杂度预算优先级高于性能优化预算
+
+### 核心路径简化规则
+
+严格的跨层通信（如 Message/事件）可能带来少量性能开销。以下规范平衡架构纯洁性与性能需求：
+
+| 路径类型 | 通信机制 | 简化条件 |
+|---------|---------|---------|
+| 核心战斗路径 | 可简化为直接函数调用 | 需 ADR 批准 + 文档说明 |
+| 非核心路径 | 必须严格遵守分层规则 | 无例外 |
+
+### 核心路径识别
+
+```
+核心路径（性能敏感）：
+  ├── 战斗伤害计算（每帧多次）
+  ├── 属性修饰计算（每帧多次）
+  ├── 寻路算法（每帧调用）
+  └── 回合状态机转换
+
+非核心路径（可严格分层）：
+  ├── 背包操作（用户触发）
+  ├── 装备穿脱（用户触发）
+  ├── UI 更新（每帧但非关键）
+  └── 日志记录（异步）
+```
+
+### 简化审批流程
+
+```rust
+// ADR-043: 战斗伤害计算性能优化
+// 原因：跨层 Message 在战斗结算路径中产生 0.5ms 额外开销
+// 决策：Core 层直接调用战斗计算函数，跳过事件机制
+// 有效期：2026-08-01 前评估是否需要重构
+// 审批人：Architect
+
+fn calculate_damage_fast(attacker: &UnitData, target: &UnitData) -> i32 {
+    // 例外：Core 直接读取数据，跳过事件机制
+    attacker.attack - target.defense
+}
+```
+
+### 性能检测指标
+
+| 指标 | 阈值 | 说明 |
+|------|------|------|
+| 跨层通信单次耗时 | < 0.1ms | 超过则考虑简化 |
+| 战斗结算总耗时 | < 5ms | 包含所有计算 |
+| 帧预算占用 | < 16.67ms | 60fps 帧预算 |
+
+> **优化来源**：`docs/其他/55.md` — 性能权衡「核心路径可适当简化通信机制，需文档说明+ADR 批准」

@@ -10,7 +10,7 @@ Status: Proposed
 交叉引用：
 - `docs/architecture.md` — 测试总纲（所有功能必须优先编写测试）
 - `docs/architecture/layer-contracts.md` — 七层架构边界定义
-- `docs/testing_spec.md` — 测试体系规范（如已存在）
+- `docs/test_spec.md` — 测试体系规范（如已存在）
 
 ---
 
@@ -20,10 +20,29 @@ Status: Proposed
 
 1. **分层对齐**：测试层级与架构层级一一对应，每层只验证自身职责，不越界测试下层实现
 2. **权责封闭**：领域规则测试绝不依赖 Bevy 运行时，系统测试绝不硬编码业务数值
-3. **确定性优先**：所有可自动化测试必须可复现，随机、时间、迭代顺序全部可控
+3. **确定性优先**：所有可自动化测试必须可复现，随机、时间、迭代顺序全部可控（宪法 §18.4.1）
 4. **测试即工具**：测试资产同时是开发调试资产，测试夹具、沙盒环境可被全项目复用
 
+### 1.0 宪法测试条款对齐
+
+> **以下条款为宪法强制要求，本测试架构必须完全覆盖**：
+
+| 宪法条款 | 要求 | 本文档覆盖 |
+|---------|------|-----------|
+| §18.1.1 测试优先 | 所有功能必须优先编写测试 | ✅ 分层测试体系 |
+| §18.1.2 Bug 修复流程 | 先写重现测试，再修复 | ✅ 测试失败快照机制 |
+| §18.2.1 三层测试体系 | 单元 → 集成 → 回放 | ✅ 五层扩展（含回放） |
+| §18.2.2 SRPG 测试优先 | 复杂逻辑优先用 Battle Replay | ✅ replay_validator |
+| §18.3.1 Builder 模式 | TestCharacterBuilder、TestBattleBuilder | ✅ shared/testing/fixtures |
+| §18.3.2 Golden Test | 战斗回放、配置导出用金文件对比 | ✅ replay_validator |
+| §18.4.1 确定性 | 同状态+同输入+同种子=同结果 | ✅ DeterministicRng |
+| §18.4.2 禁止系统时间 | 核心逻辑用 GameTime 服务 | ⚠️ 待实现 |
+| §18.4.3 战斗 Bug 规范 | 战斗 Bug → Battle Replay → 永久测试 | ✅ failure_snapshots |
+| §18.4.5 资产沉淀 | 修复的 Bug → 测试资产 | ✅ failure_snapshots |
+
 ### 1.2 测试金字塔
+
+> **宪法 §18.2.1 对齐**：宪法规定三层测试体系（单元测试 → 集成测试 → 回放测试）。本文档扩展为五层，将"集成测试"细分为"领域集成"和"系统集成"，并新增 Testbeds 调试层。核心三层与宪法完全对齐。
 
 ```
            ┌──────────┐
@@ -39,14 +58,67 @@ Status: Proposed
      └────────────────┘
 ```
 
-### 1.3 目标比例
+### 1.3 目标比例（精确化）
 
-| 测试类型 | 目标占比 | 执行速度 |
-|---------|---------|---------|
-| 领域单元测试 | 70% | 毫秒级 |
-| 领域集成测试 | 15% | 百毫秒级 |
-| 系统集成测试 | 10% | 秒级 |
-| E2E 回归测试 | 5% | 分钟级 |
+> **优化来源**：`docs/其他/69.md` — 测试金字塔比例精确化
+
+| 测试类型 | 目标占比 | 执行速度 | 覆盖目标 | 典型用例数 |
+|---------|---------|---------|---------|-----------|
+| 领域单元测试 | **70%** | 毫秒级 | 每条领域规则至少一组 | 500+ |
+| 领域集成测试 | **15%** | 百毫秒级 | 跨模块链路完整覆盖 | 100+ |
+| 系统集成测试 | **10%** | 秒级 | 核心系统调度与交互 | 50+ |
+| E2E 回归测试 | **5%** | 分钟级 | 主干流程不崩溃 | 20+ |
+
+覆盖率指标：
+- 🟩 领域规则覆盖率：**100%**（每条规则必须有对应测试）
+- 🟩 核心 ECS 系统覆盖率：**≥ 90%**（伤害/Buff/回合系统）
+- 🟩 E2E 主流程覆盖率：**100%**（进入战斗→操作→胜利/失败）
+
+### 1.4 领域层零 Bevy 依赖的 TDD 工作流
+
+> **优化来源**：`docs/其他/69.md` — 领域层零 Bevy 依赖的 TDD 工作流示例
+
+TDD（测试驱动开发）在领域层的最佳实践：先写测试，再实现，再验证。由于领域层零 Bevy 依赖，TDD 循环极快：
+
+```rust
+// ═══ Step 1: 写测试（先失败） ═══
+// core/battle/tests/damage_calculation.rs
+#[test]
+fn critical_hit_doubles_damage() {
+    let attacker = Attributes { attack: 100, crit_rate: 100.0, ..Default::default() };
+    let defender = Attributes { defense: 20, ..Default::default() };
+    let modifiers = vec![Modifier::Critical { multiplier: 2.0 }];
+
+    let result = calculate_damage(100, &attacker, &defender, &modifiers);
+
+    assert_eq!(result.value, 180); // (100 * 2.0) - 20 = 180
+}
+
+// ═══ Step 2: 实现（让测试通过） ═══
+// core/battle/damage.rs
+pub fn calculate_damage(
+    base: i32,
+    attacker: &Attributes,
+    defender: &Attributes,
+    modifiers: &[Modifier],
+) -> DamageResult {
+    let mut damage = base as f32;
+    for m in modifiers {
+        match m {
+            Modifier::Critical { multiplier } => damage *= multiplier,
+            _ => {}
+        }
+    }
+    let final_damage = (damage - defender.defense as f32).max(1.0) as i32;
+    DamageResult { value: final_damage }
+}
+
+// ═══ Step 3: 验证（cargo test，毫秒级完成） ═══
+// $ cargo test critical_hit -- --nocapture
+// test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+```
+
+**TDD 循环速度**：由于领域层零 Bevy 依赖，每次测试运行只需 < 100ms，开发者可以每 5-10 秒完成一次 TDD 循环。这比"改代码→重新编译 Bevy→启动游戏→手动验证"的反馈循环快 100 倍。
 
 ---
 
@@ -164,7 +236,7 @@ fn skill_cast_damage_buff_full_flow() {
 - 插件装配：注册指定 Plugin 后，必要的 Resource、System 是否正常初始化
 - 系统调度：系统执行顺序是否符合 `schedules` 设计，是否存在顺序依赖 bug
 - 事件流转：发送领域事件后，对应系统是否正确触发、组件是否正确变更
-- ECS 通信：跨模块通过事件/组件交互是否符合 `ecs_communication_rules.md`
+- ECS 通信：跨模块通过事件/组件交互是否符合 `docs/domain/ecs_communication_rules.md`
 
 #### 技术要点
 
@@ -304,6 +376,10 @@ fn player_can_win_battle_through_combat() {
 
 ##### 5. replay_validator 回放验证器
 
+> **宪法 §18.2.2 SRPG 测试优先**：复杂 SRPG 逻辑必须优先使用 Battle Replay 测试，而非 BDD。replay_validator 是确定性保障的核心工具。
+
+> **宪法 §18.3.2 Golden Test 对齐**：战斗回放、配置导出等稳定输出，必须使用金文件对比测试。版本升级后输出变化必须显式确认。
+
 - 批量重放历史回放文件，校验同一输入是否得到完全相同的结果
 - 是确定性保障的核心工具，每次引擎升级、架构重构后必跑
 - 自动对比状态哈希，输出不一致的帧位置与差异点
@@ -314,6 +390,7 @@ fn player_can_win_battle_through_combat() {
 - 🟩 每个 Testbed 必须有 README 说明使用方法
 - 🟩 Testbeds 代码可以引用内部实现（开发工具权限更宽）
 - 🟥 Testbeds 代码永不进入发布构建
+- 🟥 **所有 Testbeds 必须使用 DeterministicRng，禁止依赖系统时间**（宪法 §18.4.2 禁止业务逻辑依赖系统时间）
 
 ---
 
@@ -390,6 +467,8 @@ project/
 
 ## 4. shared/testing 公共测试库
 
+> **宪法 §18.3.1 对齐**：核心测试必须使用 Builder 模式构造测试数据（TestCharacterBuilder、TestBattleBuilder），禁止每个测试手动构造大量实体与组件。
+
 ### 4.1 测试夹具库（Fixture）
 
 ```rust
@@ -434,6 +513,10 @@ pub fn full_party_battle() -> BattleContext {
 
 ### 4.2 确定性基础设施
 
+> **宪法 §18.4.1 强制要求**：相同初始状态 + 相同输入序列 + 相同 RNG 种子，必须得到完全一致的战斗结果。这是 Battle Replay、Bug 复现、自动化测试的核心基础。
+
+> **优化来源**：`docs/其他/69.md` — DeterministicRng + hash_game_state 用于回放验证的完整代码示例
+
 ```rust
 // shared/testing/deterministic.rs
 
@@ -452,14 +535,98 @@ impl DeterministicRng {
         self.state = self.state.wrapping_mul(6364136223846793005).wrapping_add(1);
         (self.state >> 32) as u32
     }
+
+    pub fn next_f32(&mut self) -> f32 {
+        self.next_u32() as f32 / u32::MAX as f32
+    }
+
+    pub fn fork(&self, tag: u64) -> Self {
+        Self::new(self.seed ^ tag)
+    }
 }
 
-/// 状态哈希工具
-pub fn hash_game_state(world: &World) -> u64 {
+/// 状态哈希工具：用于回放验证和回归测试
+pub fn hash_game_state(
+    units: &[(Entity, &Attributes, &GridPosition, &ActiveBuffs)],
+    turn: &TurnOrder,
+    phase: &BattlePhase,
+) -> u64 {
+    use std::hash::{Hash, Hasher};
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    // 哈希所有单位的属性、位置、Buff 状态
-    // 返回唯一哈希值
+
+    // 哈希所有单位状态
+    for (entity, attrs, pos, buffs) in units {
+        entity.hash(&mut hasher);
+        attrs.max_hp.hash(&mut hasher);
+        attrs.current_hp.hash(&mut hasher);
+        attrs.attack.hash(&mut hasher);
+        attrs.defense.hash(&mut hasher);
+        pos.x.hash(&mut hasher);
+        pos.y.hash(&mut hasher);
+        buffs.0.hash(&mut hasher); // Buff 列表哈希
+    }
+
+    // 哈希回合状态
+    turn.current_index().hash(&mut hasher);
+    phase.hash(&mut hasher);
+
     hasher.finish()
+}
+
+/// 回放验证：录制 + 重放 + 哈希对比
+pub struct ReplayRecorder {
+    seed: u64,
+    frames: Vec<FrameSnapshot>,
+}
+
+pub struct FrameSnapshot {
+    frame: u64,
+    state_hash: u64,
+    actions: Vec<PlayerAction>,
+}
+
+impl ReplayRecorder {
+    pub fn new(seed: u64) -> Self {
+        Self { seed, frames: Vec::new() }
+    }
+
+    pub fn record_frame(&mut self, frame: u64, state_hash: u64, actions: Vec<PlayerAction>) {
+        self.frames.push(FrameSnapshot { frame, state_hash, actions });
+    }
+
+    /// 重放录制的操作序列，验证每帧状态哈希是否一致
+    pub fn verify_replay(&self) -> Result<(), ReplayError> {
+        let mut rng = DeterministicRng::new(self.seed);
+        let mut world = create_test_world(&mut rng);
+
+        for recorded in &self.frames {
+            // 执行录制的操作
+            for action in &recorded.actions {
+                execute_action(&mut world, action, &mut rng);
+            }
+
+            // 推进一帧
+            world.advance_frame();
+
+            // 计算当前状态哈希
+            let current_hash = hash_game_state(
+                &world.units(),
+                &world.turn_order(),
+                &world.battle_phase(),
+            );
+
+            // 对比哈希
+            if current_hash != recorded.state_hash {
+                return Err(ReplayError::HashMismatch {
+                    frame: recorded.frame,
+                    expected: recorded.state_hash,
+                    actual: current_hash,
+                });
+            }
+        }
+
+        Ok(())
+    }
 }
 ```
 
@@ -516,6 +683,8 @@ pub fn assert_error_type<T: std::fmt::Debug>(
 
 **存放位置**：`content/tests/`
 
+> **优化来源**：`docs/其他/69.md` — Content 测试独立成层的完整流程（RON 引用完整性/数值合法性/格式合规性 CI 集成）
+
 ### 5.1 测试范围
 
 - **引用完整性**：技能引用的 Buff ID、特效 ID 是否真实存在
@@ -523,7 +692,40 @@ pub fn assert_error_type<T: std::fmt::Debug>(
 - **格式合规性**：所有配置文件是否符合 schema、必填字段是否缺失
 - **规则一致性**：配置数值是否符合领域规则约束（如堆叠数量上限）
 
-### 5.2 典型测试
+### 5.2 完整测试流程
+
+```
+RON 文件变更（git diff）
+    ↓
+CI 触发 content/tests/
+    ↓
+┌─────────────────────────────────────────────────┐
+│ Step 1: 引用完整性检查                            │
+│   扫描所有 SkillDef → 验证引用的 BuffId 存在       │
+│   扫描所有 BuffDef → 验证引用的 EffectDef 存在     │
+│   扫描所有 MapDef → 验证引用的 UnitTemplate 存在   │
+├─────────────────────────────────────────────────┤
+│ Step 2: 数值合法性检查                            │
+│   伤害值 > 0，冷却时间 ∈ [0, 99]                  │
+│   属性加成比例 ∈ [-100%, +500%]                   │
+│   Buff 叠层数 ∈ [1, 99]                          │
+├─────────────────────────────────────────────────┤
+│ Step 3: 格式合规性检查                            │
+│   所有必填字段存在                                 │
+│   枚举值在合法范围内                               │
+│   文件名与内部 id 一致                             │
+├─────────────────────────────────────────────────┤
+│ Step 4: 规则一致性检查                            │
+│   技能消耗不超过属性上限                           │
+│   Buff 持续时间不为 0                              │
+│   公式引用的属性存在                               │
+└─────────────────────────────────────────────────┘
+    ↓
+通过 → CI 继续
+失败 → 阻塞合并，输出详细错误报告
+```
+
+### 5.3 典型测试
 
 ```rust
 // content/tests/reference_integrity.rs
@@ -542,6 +744,48 @@ fn all_skill_buff_references_exist() {
         }
     }
 }
+
+// content/tests/value_validity.rs
+#[test]
+fn all_damage_values_positive() {
+    let skills = load_all_skills();
+    for skill in &skills {
+        for effect in &skill.effects {
+            if let EffectDef::Damage(amount) = effect {
+                assert!(
+                    *amount > 0,
+                    "Skill '{}' has non-positive damage: {}",
+                    skill.id, amount
+                );
+            }
+        }
+    }
+}
+
+// content/tests/schema_compliance.rs
+#[test]
+fn all_skills_have_required_fields() {
+    let skills = load_all_skills();
+    for skill in &skills {
+        assert!(!skill.id.is_empty(), "Skill missing id");
+        assert!(!skill.name.is_empty(), "Skill '{}' missing name", skill.id);
+        assert!(skill.cooldown >= 0, "Skill '{}' has negative cooldown", skill.id);
+    }
+}
+```
+
+### 5.4 CI 集成
+
+```yaml
+# .github/workflows/content-validation.yml
+- name: Content Validation
+  run: |
+    # 仅在 content/ 目录有变更时运行
+    if git diff --name-only HEAD~1 | grep -q "^content/"; then
+      cargo test --test content -- --nocapture
+    else
+      echo "No content changes, skipping validation"
+    fi
 ```
 
 ---
@@ -590,6 +834,93 @@ E2E 回归测试（cargo test --test e2e）
 - 🟥 E2E 测试失败：阻塞合并
 - 🟩 性能基准回归 >10%：标记警告，不阻塞合并
 
+### 6.4 测试失败快照机制
+
+> **宪法 §18.1.2 Bug 修复流程对齐**：发现 Bug 后必须先编写重现测试，再修复 Bug。失败快照机制确保 Bug 可复现，自动转化为永久测试用例。
+
+> **优化来源**：`docs/其他/69.md` — 测试失败快照机制（自动保存失败时的战斗状态快照便于复现）
+
+当集成测试或 E2E 测试失败时，自动保存当前游戏状态快照，便于本地复现和调试：
+
+```rust
+// shared/testing/snapshot.rs
+
+use std::path::PathBuf;
+
+/// 测试失败时自动保存状态快照
+pub struct FailureSnapshot {
+    output_dir: PathBuf,
+}
+
+impl FailureSnapshot {
+    pub fn new(output_dir: impl Into<PathBuf>) -> Self {
+        Self { output_dir: output_dir.into() }
+    }
+
+    /// 保存战斗状态快照
+    pub fn save_battle_snapshot(
+        &self,
+        test_name: &str,
+        world: &World,
+        frame: u64,
+    ) -> PathBuf {
+        let snapshot_dir = self.output_dir.join("failure_snapshots");
+        std::fs::create_dir_all(&snapshot_dir).unwrap();
+
+        let filename = format!("{}_frame_{}.ron", test_name, frame);
+        let path = snapshot_dir.join(&filename);
+
+        // 序列化关键状态到 RON
+        let snapshot = BattleSnapshot {
+            frame,
+            timestamp: chrono::Utc::now(),
+            units: serialize_units(world),
+            turn_order: serialize_turn_order(world),
+            buffs: serialize_buffs(world),
+            map_state: serialize_map(world),
+        };
+
+        let ron_string = ron::to_string(&snapshot).unwrap();
+        std::fs::write(&path, ron_string).unwrap();
+
+        eprintln!("📸 Failure snapshot saved: {}", path.display());
+        path
+    }
+}
+
+// 在测试中使用
+#[test]
+fn complex_buff_interaction() {
+    let mut app = setup_test_app();
+    let snapshot = FailureSnapshot::new("test_output");
+
+    // ... 执行测试逻辑 ...
+
+    if let Err(e) = assertion_result {
+        // 测试失败时自动保存快照
+        snapshot.save_battle_snapshot(
+            "complex_buff_interaction",
+            app.world(),
+            current_frame,
+        );
+        panic!("Test failed: {}", e);
+    }
+}
+```
+
+快照输出格式：
+```
+test_output/failure_snapshots/
+├── complex_buff_interaction_frame_42.ron    # 失败时的状态快照
+├── complex_buff_interaction_frame_42.meta   # 元数据（测试名、时间、RNG 种子）
+└── ...
+```
+
+开发者可以：
+1. 查看快照文件，了解失败时的完整游戏状态
+2. 用 `battle_simulator` 沙盒加载快照，交互式调试
+3. 🟥 将快照转换为回归测试用例，防止同类问题再次发生（宪法 §18.4.5 所有修复的 Bug 最终都必须沉淀为测试资产）
+
 ---
 
 ## 7. 测试编写规范
@@ -631,6 +962,71 @@ E2E 回归测试（cargo test --test e2e）
 
 ---
 
+## 9. 测试维护生命周期
+
+> **优化来源**：`docs/其他/69.md` — 测试维护生命周期（Test Deprecation Protocol 标记废弃测试）
+
+### 9.1 测试生命周期阶段
+
+```
+新建 → 活跃 → 过时 → 废弃 → 删除
+  │      │       │       │       │
+  │      │       │       │       └─ 从代码库移除
+  │      │       │       └─ 标记 #[deprecated]，保留 1 个版本
+  │      │       └─ 标记 #[ignore]，在 CI 中跳过
+  │      └─ CI 每次运行，定期审查覆盖有效性
+  └─ 新增测试，必须包含在 CI 中
+```
+
+### 9.2 Test Deprecation Protocol（废弃协议）
+
+当业务规则变更导致测试不再适用时，禁止直接删除测试，必须遵循以下流程：
+
+```rust
+// ❌ 禁止：直接删除过时测试
+// #[test]
+// fn old_damage_test() { ... }  // 删除后无法追溯
+
+// ✅ 正确：标记废弃，保留原因
+#[test]
+#[deprecated(since = "v0.3.0", note = "伤害公式已重构为 Modifier 链，此测试不再适用")]
+#[ignore] // CI 中跳过
+fn old_damage_test_without_modifiers() {
+    // 此测试验证的是旧版伤害公式（无 Modifier 链）
+    // 新版伤害计算已迁移到 damage_with_modifiers_test.rs
+    // 废弃原因：PR #142 重构了伤害计算管线
+    let result = calculate_damage_v2(100, 30);
+    assert_eq!(result, 70);
+}
+```
+
+### 9.3 测试审查检查清单
+
+每月审查一次测试健康度：
+
+| 检查项 | 方法 | 处理方式 |
+|--------|------|---------|
+| 测试是否仍然覆盖有效规则 | 对照领域规则文档 | 无对应规则 → 标记废弃 |
+| 测试是否在 CI 中运行 | 检查 `#[ignore]` 标记 | 被忽略 > 3 个月 → 标记废弃 |
+| 测试是否与其他测试重复 | 代码审查 | 重复 → 合并或删除 |
+| 测试是否硬编码了过时数值 | 对照 RON 配置 | 数值过时 → 更新 fixtures |
+| 测试执行时间是否异常 | CI 报告分析 | > 10s → 优化或拆分 |
+
+### 9.4 覆盖率指标
+
+```yaml
+# CI 中的覆盖率报告
+coverage:
+  domain_rules: 100%     # 每条领域规则必须有对应测试
+  core_systems: ">=90%"  # 伤害/Buff/回合系统
+  e2e_main_flow: 100%    # 进入战斗→操作→胜利/失败
+  
+  # 覆盖率下降告警
+  fail_on_decrease: true  # 任何层覆盖率下降 → CI 失败
+```
+
+---
+
 ## 9. 落地优先级
 
 | 优先级 | 任务 | 理由 |
@@ -651,4 +1047,4 @@ E2E 回归测试（cargo test --test e2e）
 | `layer-contracts.md` | 测试层级与架构层级一一对应 |
 | `testing_spec.md` | 本文档覆盖更完整的测试体系 |
 | `infrastructure-design.md` | 回放测试利用 audit 模块 |
-| `replay_rules.md` | replay_validator 验证回放确定性 |
+| `docs/domain/replay_rules.md` | replay_validator 验证回放确定性 |

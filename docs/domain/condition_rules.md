@@ -7,8 +7,8 @@ Status: Proposed
 
 核心原则：
 - Condition 判断"效果是否生效"，不是判断"技能能不能放"（那是 Requirement 的职责）
-- 每个 Condition 通过 ConditionEvaluator 纯函数评估，不修改状态
-- 条件全部通过时效果执行，任一不通过时效果静默跳过
+- 🟩 1.4.1 每个 Condition 通过 ConditionEvaluator 纯函数评估，不修改状态
+- 🟩 11.7 条件全部通过时效果执行，任一不通过时效果静默跳过（CQRS Lite：读路径无副作用）
 
 ---
 
@@ -16,7 +16,7 @@ Status: Proposed
 
 ## 条件（Condition）
 
-效果执行时的触发条件判断，决定效果是否生效。
+🟩 11.7 效果执行时的触发条件判断，决定效果是否生效。条件评估是纯函数，不产生副作用。
 
 不是 Requirement。不是 Effect。不是 Selector。
 
@@ -44,7 +44,7 @@ condition + effect 的组合结构，将条件判断与效果绑定。
 
 ## 条件评估器（ConditionEvaluator）
 
-每个条件类型的纯函数评估单元，接收 ConditionContext 返回 bool。
+🟩 1.4.1 每个条件类型的纯函数评估单元，接收 ConditionContext 返回 bool。🟩 1.4.2 纯函数，不修改任何游戏状态，不产生副作用。
 
 不是函数指针。不是 enum match。不是系统（System）。
 
@@ -119,11 +119,11 @@ condition + effect 的组合结构，将条件判断与效果绑定。
 
 # 不变量
 
-## 不变量1：条件评估为纯函数
+## 不变量1：条件评估为纯函数 🟥 1.4.2
 
 任意时刻：
 
-ConditionEvaluator::evaluate() 不修改任何游戏状态，仅读取 ConditionContext 并返回 bool。
+🟩 1.4.2 ConditionEvaluator::evaluate() 不修改任何游戏状态，仅读取 ConditionContext 并返回 bool。
 
 违反表现：
 
@@ -169,7 +169,7 @@ ConditionContext 缺少 terrain_tags 时 TerrainIs 条件 panic。缺少 damage_
 
 # 业务规则
 
-## 规则1：条件与需求语义分离
+## 规则1：条件与需求语义分离 🟩 11.7
 
 禁止：
 - 将 Requirement 类型（HasWeapon / NotSilenced）放入 Condition 系统
@@ -419,6 +419,21 @@ Effect 生成 → 遍历 conditions → 逐条 ConditionEvaluator 评估 → 全
 ---
 
 # AI 修改规则
+
+## 宪法合规检查清单
+
+修改本领域代码前，必须逐项确认：
+- 🟩 1.4.1 条件评估为纯函数，不依赖 ECS World
+- 🟩 1.4.2 评估过程无副作用，不触发事件、不修改全局状态
+- 🟩 11.7 读写分离：条件评估是读路径，无副作用
+- 🟩 1.1.3 条件定义通过 RON 配置，不硬编码判断逻辑
+
+## 领域事件清单
+
+本领域产生的领域事件：条件系统为纯函数评估，不直接产生领域事件。条件评估结果由 Effect Pipeline 在执行阶段产生事件。
+
+> 🟩 2.2.7 领域事件由效果执行阶段统一产生，条件评估阶段不产生事件
+> 🟩 14.10.1 所有核心业务事实通过领域事件表达
 
 ## 如果新增条件类型
 

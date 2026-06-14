@@ -9,6 +9,12 @@ Status: Proposed
 
 ## 当前状态分析
 
+> ⚠️ **宪法提醒（§1.1.1 Feature First）**：当前迁移目标为七层架构（App/Core/Shared/Infra/Content/Modding/Tools），该结构按技术层级组织，与宪法 §1.1.1 "按业务领域拆分顶层模块" 存在张力。迁移决策基于以下理由：
+> 1. 七层架构是项目长期维护的已验证方案，经过 ADR 评审
+> 2. Core 层内部仍按业务领域拆分（battle/、skill/、buff/ 等），符合 Feature First 精神
+> 3. 共享工具（Shared）和技术实现（Infrastructure）的分离降低了跨模块耦合
+> 4. **如未来架构复盘发现七层结构导致业务模块内聚性下降，应优先回归 Feature First 顶层结构**
+
 ### 当前目录结构
 
 ```
@@ -65,11 +71,32 @@ src/
 
 ## 迁移原则
 
-1. 🟥 **每个阶段必须保持项目可编译、可运行**
-2. 🟥 **每个阶段必须通过所有现有测试**
+1. 🟥 **每个阶段必须保持项目可编译、可运行**（宪法 §20.7.1 CI 门禁标准）
+2. 🟥 **每个阶段必须通过所有现有测试**（宪法 §18.1.1 测试优先）
 3. 🟩 **优先迁移基础层（Shared），再迁移业务层（Core）**
-4. 🟩 **每阶段的迁移范围最小化**
-5. 🟩 **每阶段完成后做一次完整的架构 Review**
+4. 🟩 **每阶段的迁移范围最小化**（宪法 §1.5.1 复杂度优先）
+5. 🟩 **每阶段完成后做一次完整的架构 Review**（宪法 §17.0.8 架构复盘每 3 个月）
+
+---
+
+## 回滚机制（Git Tag）
+
+每个 Phase 必须建立明确的 Git Tag 回滚点，确保出现未预见问题时可快速回退：
+
+**操作流程**：
+1. **Phase 开始前**：创建起始 Tag — `git tag -a phase-N-start -m "Phase N 开始"`
+2. **Phase 完成后**：创建完成 Tag — `git tag -a phase-N-complete -m "Phase N 完成"`
+3. **验证通过后**：合入主分支
+
+**分支策略**：
+- 基于 `develop` 创建 `feature/phase-N` 分支进行迁移
+- 验证通过后合入 `develop`
+- 出现问题时 `git revert phase-N-complete` 或 `git reset --hard phase-N-start`
+
+**高风险阶段额外策略**：
+- Phase 4（Content 层迁移配置数据）：采用"灰度迁移"策略 — 先迁移 10% 配置验证，再全量迁移
+
+> **优化来源**: `docs/其他/57.md`（回滚机制补充建议）
 
 ---
 
@@ -89,6 +116,14 @@ src/
 - `cargo build` 通过
 - `cargo test` 通过
 - 目录结构存在但代码未迁移
+
+**自动化工具支持**：
+1. 预配置 `cargo fix`：在 `.cargo/config.toml` 中配置路径替换规则，便于批量更新 `use` 语句
+2. 路径替换脚本：编写 `scripts/migrate_paths.py`，自动扫描并替换旧模块路径为新路径
+3. 验证脚本：编写 `scripts/verify_migration.sh`，自动化执行 `cargo build` + `cargo test` + `cargo clippy` + 依赖图检查
+4. 架构约束检查脚本：编写 `scripts/check_arch.sh`，验证层间依赖合规（如 `core` 不依赖 `infrastructure`）
+
+> **优化来源**: `docs/其他/57.md`（自动化工具支持建议）
 
 ---
 
@@ -309,6 +344,16 @@ assets/traits/*.ron     → content/classes/（部分）
 
 **风险**：这是影响最大的迁移步骤，必须逐步进行，每迁移一类配置就验证一次。
 
+**功能验证清单**（Phase 4 完成后必须逐项验证）：
+- [ ] 角色属性加载正常（`content/characters/*.ron` 正确读取，属性值无丢失）
+- [ ] 技能释放效果符合预期（技能定义加载正确，Effect Pipeline 正常执行）
+- [ ] 地图寻路无异常（地形配置加载正确，移动范围/攻击范围计算正确）
+- [ ] Buff 结算正确（Buff 定义加载正确，Modifier Stack 求值无误）
+- [ ] 关卡配置加载正常（胜利/失败条件正确触发）
+- [ ] 存档/读档功能正常（序列化/反序列化路径正确）
+
+> **优化来源**: `docs/其他/57.md`（Phase 4 功能验证清单建议）
+
 ---
 
 ## Phase 5：App 层
@@ -339,6 +384,8 @@ src/app/plugins.rs
 
 ## Phase 6：Modding 层（未来）
 
+> ⚠️ **宪法 §1.1.7 提醒**：以下为预留设计，禁止提前实现完整 Mod 框架。Phase 6 仅在明确需要 MOD 支持时启动，且只实现轻量扩展点，不构建完整框架。
+
 **目标**：建立 MOD 支持框架。
 
 ### 6.1 创建 Modding 层骨架
@@ -362,6 +409,8 @@ src/modding/compatibility/
 ---
 
 ## Phase 7：Tools 层（未来）
+
+> ⚠️ **宪法 §1.1.7 提醒**：Tools 层按需实现，仅在内容量增长到人工审查不可行时启动。参见 `docs/architecture/tools_architecture.md` 的实现路线。
 
 **目标**：建立开发工具链。
 
@@ -427,6 +476,25 @@ src/
 - 每 Phase 完成后做一次全局搜索替换，清理所有旧引用
 - 使用编译器警告发现遗漏的引用
 
+### 技术债务清理窗口期
+
+每个 Phase 完成后预留 **1 天** 作为技术债务清理窗口期：
+
+1. **`#[deprecated]` 标记清理**：搜索所有 `#[deprecated]` 标记的旧路径重导出，替换为直接引用新路径
+2. **死代码删除**：清理不再使用的 `pub use` 重导出、临时兼容代码
+3. **全局搜索验证**：`grep -r "旧路径"` 确认无残留引用
+4. **Clippy 检查**：`cargo clippy -- -D warnings` 确认无警告
+
+**示例**：
+```rust
+// Phase 1 完成后，在 Phase 2 开始前清理：
+// #[deprecated(note = "请使用 crate::shared::ids::UnitId")]  ← 删除此行
+// pub use crate::shared::ids::UnitId;                          ← 删除此行
+// 所有引用已更新为 crate::shared::ids::UnitId
+```
+
+> **优化来源**: `docs/其他/57.md`（技术债务清理窗口期建议）
+
 ---
 
 ## 迁移风险与缓解
@@ -440,9 +508,39 @@ src/
 | 配置路径变更 | Phase 4 使用兼容层，同时支持新旧路径 |
 | 团队混乱 | 每个 Phase 完成后通知全团队，更新开发文档 |
 
+### 团队协作规范
+
+**Code Review 参与人与标准**：
+- **参与人**：技术负责人（必须参与）+ 核心开发者（1-2 人）
+- **Review 标准**：
+  1. 模块依赖关系是否合规（不违反层级约束）
+  2. 旧路径的 `pub use` 重新导出是否已创建
+  3. 所有 `use` 引用是否已更新到新路径
+  4. 是否引入了循环依赖
+  5. 测试覆盖率是否满足要求
+
+**文档同步要求**：
+- 每 Phase 完成后必须更新 `docs/architecture.md` 中的目录结构说明
+- 更新 `AGENTS.md` 中的模块引用规则
+- 更新开发规范文档中的模块路径约定
+
+**任务分配矩阵**：
+
+| Phase | 核心开发者 | 测试 | 数据/配置 | 技术负责人 |
+|-------|-----------|------|----------|-----------|
+| Phase 0-1 | 1 人 | — | — | Review |
+| Phase 2 | 1 人 | 1 人 | — | Review |
+| Phase 3 | 1 人 | — | — | Review |
+| Phase 4 | 1 人 | 1 人 | 1 人 | Review |
+| Phase 5 | 1 人 | — | — | Review |
+
+> **优化来源**: `docs/其他/57.md`（团队协作细节补充建议）
+
 ---
 
 ## 迁移完成后的验证清单
+
+🟥 **以下验证项全部通过才能确认迁移完成**：
 
 - [ ] `src/` 下无顶层业务模块（battle/、skill/ 等都在 core/ 下）
 - [ ] `src/core/id/` 不存在（已迁移到 `src/shared/ids/`）
@@ -452,8 +550,8 @@ src/
 - [ ] `content/` 项目根目录存在且包含 RON 配置
 - [ ] `assets/` 不包含 RON 配置数据（只有二进制资源）
 - [ ] `src/shared/` 不包含任何业务逻辑
-- [ ] `src/core/` 不依赖 `src/infrastructure/`
-- [ ] `src/shared/` 不依赖任何其他层
-- [ ] 所有测试通过
-- [ ] 编译无警告
-- [ ] 架构 Review 完成
+- [ ] 🟥 `src/core/` 不依赖 `src/infrastructure/`（宪法 §1.3.2 依赖方向铁则）
+- [ ] 🟥 `src/shared/` 不依赖任何其他层（宪法 §1.3.2）
+- [ ] 所有测试通过（宪法 §20.7.1）
+- [ ] 编译无警告（宪法 §20.1.1 Warning Budget = 0）
+- [ ] 架构 Review 完成（宪法 §17.0.8）

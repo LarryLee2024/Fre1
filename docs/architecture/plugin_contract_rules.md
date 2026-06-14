@@ -1,9 +1,10 @@
 # Plugin 边界与依赖契约
 
-Version: 1.0
+Version: 1.1
 Status: Proposed
 Source: `docs/其他/31遗漏.md` 第一节
 Related: `docs/architecture.md` 插件注册顺序、`docs/architecture/plugin-design.md`
+> **宪法依据**：`docs/AI开发宪法完整版.md` v1.6 — 第3.0节模块化与Plugin边界、第2.2节四级通信机制、第1.5节复杂度预算
 
 ---
 
@@ -21,7 +22,7 @@ Related: `docs/architecture.md` 插件注册顺序、`docs/architecture/plugin-d
 
 ### 规则
 
-🟥 **每个 Plugin 必须显式声明其依赖的其他 Plugin。禁止隐式依赖。**
+🟥 **每个 Plugin 必须显式声明其依赖的其他 Plugin。禁止隐式依赖。** — 〔宪法 3.0.2 Plugin是唯一对外入口〕
 
 ```rust
 // 🟥 禁止：隐式依赖（依赖其他 Plugin 注册的 Resource，但未声明）
@@ -81,7 +82,7 @@ App::new()
 
 ### 规则
 
-🟥 **Plugin 只能通过公共 Event + 公共 Resource + 公共 Component 对外暴露能力。禁止调用其他 Plugin 的私有系统。**
+🟥 **Plugin 只能通过公共 Event + 公共 Resource + 公共 Component 对外暴露能力。禁止调用其他 Plugin 的私有系统。** — 〔宪法 3.0.1 接口最小化原则〕
 
 ```rust
 // ✅ 正确：通过公共 API 暴露能力
@@ -98,12 +99,14 @@ impl Plugin for BattlePlugin {
             // 公共 Resource：其他 Plugin 可以读取
             .init_resource::<BattleRecord>()
 
+            // 效果管线使用自定义 Schedule（非 .chain()）
+            // 详见 docs/architecture/app-bootstrap.md EffectPipelineSchedule
             // 私有 System：只在本 Plugin 内部执行
             .add_systems(Update, (
                 generate_effects,
                 modify_effects,
                 execute_effects,
-            ).chain());
+            ).run_if(in_state(AppState::InGame)));
     }
 }
 
@@ -136,7 +139,7 @@ impl Plugin for UiPlugin {
 
 ### 规则
 
-🟥 **领域 Plugin 禁止依赖 UI Plugin。基础设施 Plugin 禁止反向依赖领域 Plugin。**
+🟥 **领域 Plugin 禁止依赖 UI Plugin。基础设施 Plugin 禁止反向依赖领域 Plugin。** — 〔宪法 1.3.2 依赖方向铁则〕
 
 ```
 依赖方向图：
@@ -201,7 +204,7 @@ impl Plugin for SavePlugin {
 
 ### 规则
 
-🟥 **Plugin 必须按以下顺序注册。违反顺序会导致 Resource 未就绪或循环依赖。**
+🟥 **Plugin 必须按以下顺序注册。违反顺序会导致 Resource 未就绪或循环依赖。** — 〔宪法 3.0.2 Plugin是唯一对外入口〕
 
 ```
 1. Shared Plugin       → 零依赖（最早）
@@ -257,7 +260,7 @@ App::new()
 
 ### 规则
 
-🟥 **Plugin 之间只能通过注册的 Message/Observer 或共享 Resource 通信。禁止绕过 Plugin 边界直接注册资源。**
+🟥 **Plugin 之间只能通过注册的 Message/Observer 或共享 Resource 通信。禁止绕过 Plugin 边界直接注册资源。** — 〔宪法 3.0.4 跨模块交互规范〕
 
 ```rust
 // ✅ 正确：通过 Message 通信
@@ -319,7 +322,7 @@ impl Plugin for BattlePlugin {
 
 ### 规则
 
-🟥 **禁止 Plugin 间循环依赖（A 依赖 B，B 又依赖 A）。**
+🟥 **禁止 Plugin 间循环依赖（A 依赖 B，B 又依赖 A）。** — 〔宪法 1.3.2 依赖方向铁则〕
 
 ```rust
 // 🟥 禁止：循环依赖
@@ -369,7 +372,7 @@ Plugin 依赖图检测：
 
 ### 规则
 
-🟩 **每个 Plugin 必须可以独立测试，仅需 Mock 其声明的依赖。**
+🟩 **每个 Plugin 必须可以独立测试，仅需 Mock 其声明的依赖。** — 〔宪法 18.2.1 三层测试体系〕
 
 ```rust
 // ✅ 正确：Plugin 独立测试
@@ -416,18 +419,20 @@ mod tests {
 
 ## 禁止事项总览
 
-| 禁止项 | 理由 | 替代方案 |
-|--------|------|----------|
-| 🟥 Plugin 隐式依赖其他 Plugin | Resource 未就绪时运行会 panic | 显式声明依赖 |
-| 🟥 调用其他 Plugin 的私有系统 | 破坏模块边界，无法独立测试 | 通过 Message/Resource 通信 |
-| 🟥 领域 Plugin 依赖 UI Plugin | 领域逻辑不依赖表现层 | 通过 ViewModel 只读通信 |
-| 🟥 基础设施 Plugin 反向依赖领域 Plugin | 技术实现不依赖业务逻辑 | 通过 Message 监听领域事件 |
-| 🟥 Plugin 注册顺序错误 | 后注册的 Plugin 依赖先注册的 Resource | 按 Shared → Infra → Core → Content → UI 顺序注册 |
-| 🟥 绕过 Plugin 边界直接注册资源 | 破坏 Plugin 的封装性 | 在 Plugin 的 build() 中注册 |
-| 🟥 Plugin 间循环依赖 | 编译错误、难以维护 | 提取公共依赖到 Shared |
-| 🟥 Plugin::build() 中执行业务逻辑 | Plugin 只负责声明，不负责执行 | 业务逻辑放在 System 中 |
-| 🟥 跨层注册（UI Plugin 注册 Core 系统的 Message） | 跨层注册破坏分层架构 | 跨层 Message 在 App 层注册 |
-| 🟥 为单个实现创建 Plugin | 过度拆分 | 按业务领域拆分 |
+> **宪法依据**：〔宪法 3.0.1-3.0.7 模块化与Plugin边界〕
+
+| 禁止项 | 理由 | 替代方案 | 宪法条款 |
+|--------|------|----------|----------|
+| 🟥 Plugin 隐式依赖其他 Plugin | Resource 未就绪时运行会 panic | 显式声明依赖 | 3.0.2 |
+| 🟥 调用其他 Plugin 的私有系统 | 破坏模块边界，无法独立测试 | 通过 Message/Resource 通信 | 3.0.1 |
+| 🟥 领域 Plugin 依赖 UI Plugin | 领域逻辑不依赖表现层 | 通过 ViewModel 只读通信 | 1.3.2 |
+| 🟥 基础设施 Plugin 反向依赖领域 Plugin | 技术实现不依赖业务逻辑 | 通过 Message 监听领域事件 | 1.3.2 |
+| 🟥 Plugin 注册顺序错误 | 后注册的 Plugin 依赖先注册的 Resource | 按 Shared → Infra → Core → Content → UI 顺序注册 | 3.0.2 |
+| 🟥 绕过 Plugin 边界直接注册资源 | 破坏 Plugin 的封装性 | 在 Plugin 的 build() 中注册 | 3.0.1 |
+| 🟥 Plugin 间循环依赖 | 编译错误、难以维护 | 提取公共依赖到 Shared | 1.3.2 |
+| 🟥 Plugin::build() 中执行业务逻辑 | Plugin 只负责声明，不负责执行 | 业务逻辑放在 System 中 | 3.0.2 |
+| 🟥 跨层注册（UI Plugin 注册 Core 系统的 Message） | 跨层注册破坏分层架构 | 跨层 Message 在 App 层注册 | 1.3.2 |
+| 🟥 为单个实现创建 Plugin | 过度拆分 | 按业务领域拆分 | 1.5.2 |
 
 ---
 
@@ -513,13 +518,239 @@ fn combat_vfx_handler(mut reader: MessageReader<DamageApplied>) {
 
 ---
 
+## 动态依赖支持
+
+> **优化来源**: `docs/其他/62.md`
+
+### 条件依赖模式
+
+静态依赖声明无法处理运行时条件依赖。对于可选功能，使用 `cfg(feature = "...")` 条件依赖模式：
+
+```rust
+// ✅ 条件依赖：Feature 开关 + 条件注册
+impl Plugin for BattlePlugin {
+    fn build(&self, app: &mut App) {
+        // 强依赖：必须注册
+        app.add_plugins((SkillPlugin, BuffPlugin));
+
+        // 弱依赖：条件注册（通过 Feature Flag 控制）
+        #[cfg(feature = "advanced_ai")]
+        app.add_plugins(AdvancedAiPlugin);
+
+        #[cfg(feature = "debug_tools")]
+        app.add_plugins(DebugOverlayPlugin);
+    }
+}
+
+// ✅ 运行时条件依赖：检查 Resource 是否存在
+impl Plugin for BattlePlugin {
+    fn build(&self, app: &mut App) {
+        // 强依赖：无条件注册
+        app.add_plugins((SkillPlugin, BuffPlugin));
+
+        // 弱依赖：运行时检查（仅当 Resource 已存在时注册）
+        if app.world().contains_resource::<DebugSettings>() {
+            app.add_plugins(DebugPlugin);
+        }
+    }
+}
+```
+
+### 规则
+
+- 🟥 **强依赖必须在 `build()` 中无条件注册** — 缺失强依赖会导致 panic
+- 🟩 **弱依赖通过 `#[cfg(feature = "...")]` 条件编译注册** — 缺失弱依赖时优雅降级
+- 🟩 **弱依赖缺失时必须有兜底逻辑** — 不能因为缺少可选 Plugin 而导致功能异常
+- 🟩 **App 层统一管理所有 Feature Flag** — 禁止各 Plugin 内部随意检查 Feature
+
+---
+
+## Plugin 版本兼容性契约
+
+> **优化来源**: `docs/其他/62.md`
+
+### Semantic Versioning 规则
+
+Plugin API 遵循 SemVer：`MAJOR.MINOR.PATCH`
+
+| 版本变更 | 含义 | 示例 |
+|---------|------|------|
+| MAJOR | 公共 API 断裂（删除/修改 Message、Resource、Component） | `DamageApplied` 字段变更 |
+| MINOR | 新增公共 API（新增 Message、Resource） | 新增 `SkillCastFailed` Message |
+| PATCH | 内部修复，不影响公共 API | 修复伤害计算精度 |
+
+### 版本声明
+
+```rust
+pub struct BattlePlugin {
+    version: PluginVersion, // MAJOR.MINOR.PATCH
+}
+
+pub struct PluginVersion {
+    pub major: u32,
+    pub minor: u32,
+    pub patch: u32,
+}
+
+impl Plugin for BattlePlugin {
+    fn build(&self, app: &mut App) {
+        // 声明公共 API 变更
+        app.add_plugins(PluginCompatibilityCheck::new(self.version.clone()));
+    }
+}
+```
+
+### 规则
+
+- 🟥 **MAJOR 版本变更必须提供迁移路径** — 旧版本 Message 的消费者必须能平滑升级
+- 🟩 **MINOR 版本变更应保持向后兼容** — 新增 API 不影响现有消费者
+- 🟩 **PATCH 版本变更不应影响公共 API** — 仅修复内部逻辑
+
+---
+
+## 强/弱依赖区分
+
+> **优化来源**: `docs/其他/62.md`
+
+### 强依赖
+
+插件运行**必须**初始化的依赖。缺失时会导致 panic 或功能异常。
+
+```rust
+// 强依赖：BattlePlugin 运行必须依赖 SkillPlugin 和 BuffPlugin
+impl Plugin for BattlePlugin {
+    fn build(&self, app: &mut App) {
+        // 🟥 强依赖：无条件注册
+        app.add_plugins((SkillPlugin, BuffPlugin));
+    }
+}
+```
+
+### 弱依赖
+
+可选功能依赖的插件。缺失时优雅降级，不影响核心功能。
+
+```rust
+// 弱依赖：BattlePlugin 可选依赖 AdvancedAiPlugin
+impl Plugin for BattlePlugin {
+    fn build(&self, app: &mut App) {
+        // 🟩 弱依赖：条件注册
+        #[cfg(feature = "advanced_ai")]
+        app.add_plugins(AdvancedAiPlugin);
+
+        // 核心功能不依赖 AdvancedAiPlugin
+        app.add_systems(Update, battle_system);
+    }
+}
+```
+
+### 区分标准
+
+| 维度 | 强依赖 | 弱依赖 |
+|------|--------|--------|
+| 缺失后果 | panic / 功能异常 | 优雅降级 |
+| 注册方式 | 无条件 `add_plugins()` | `#[cfg(feature = "...")]` |
+| 适用场景 | 核心业务逻辑 | 扩展功能、调试工具 |
+| 测试要求 | 必须 Mock 注册 | 可选 Mock |
+
+---
+
+## 依赖检测自动化工具
+
+> **优化来源**: `docs/其他/62.md`
+
+### 编译时检查（proc_macro）
+
+开发过程宏在编译时验证 Plugin 依赖声明：
+
+```rust
+// 使用过程宏强制验证依赖声明
+#[derive(PluginContract)]
+#[requires(SkillPlugin, BuffPlugin)]  // 强依赖
+#[optional(AdvancedAiPlugin)]         // 弱依赖
+pub struct BattlePlugin;
+```
+
+### CI 依赖图分析
+
+在 CI 中运行依赖图分析，自动检测：
+
+```bash
+# 生成依赖图
+cargo plugin-graph --output=plugin-dependencies.dot
+
+# 检测循环依赖
+cargo plugin-graph --check-cycles
+
+# 检测跨层依赖违规
+cargo plugin-graph --forbidden "core:ui, core:debug"
+
+# 输出依赖分析报告
+cargo plugin-graph --report=ci-report.md
+```
+
+### 规则
+
+- 🟥 **CI 必须运行依赖图分析** — 每次 PR 必须通过依赖检查
+- 🟩 **proc_macro 编译时验证依赖声明** — 编译阶段拦截违规
+- 🟩 **运行时监控 Plugin 间非法访问** — 调试模式下检测越界调用
+
+---
+
+## 性能契约
+
+> **优化来源**: `docs/其他/62.md`
+> ⚠️ **宪法 1.5.2 警告**：以下 `PluginPerformanceContract` trait 为预留扩展点设计，属于轻量级接口预留。在对应功能未实现前，禁止提前实现完整框架。仅允许定义 trait 接口，禁止添加复杂实现逻辑。
+
+### 定义
+
+每个 Plugin 定义性能预算元数据，作为架构约束的一部分：
+
+```rust
+pub trait PluginPerformanceContract {
+    /// 单帧最大执行时间（毫秒）
+    fn max_frame_time(&self) -> Duration;
+
+    /// 最大内存占用（字节）
+    fn max_memory_footprint(&self) -> usize;
+
+    /// 最大 Message 队列长度
+    fn max_message_queue_size(&self) -> usize;
+}
+
+impl PluginPerformanceContract for BattlePlugin {
+    fn max_frame_time(&self) -> Duration {
+        Duration::from_millis(2) // 战斗系统单帧不超过 2ms
+    }
+
+    fn max_memory_footprint(&self) -> usize {
+        1024 * 1024 // 1MB
+    }
+
+    fn max_message_queue_size(&self) -> usize {
+        256 // 最多 256 条待处理 Message
+    }
+}
+```
+
+### 规则
+
+- 🟩 **关键 Plugin 必须定义性能契约** — BattlePlugin、TurnPlugin 等高频 Plugin
+- 🟩 **性能契约应与 `SystemSet` 并行策略关联** — 高频系统使用并行执行
+- 🟩 **高频 Message 建议批量处理** — 避免单帧触发过多事件导致性能损耗
+- 🟩 **Plugin 拆分粒度参考性能预算** — 单 Plugin 超出预算时考虑拆分
+
+---
+
 ## 交叉引用
 
 | 文档 | 关系 |
 |------|------|
+| `docs/AI开发宪法完整版.md` | 宪法第3.0节模块化与Plugin边界、第2.2节四级通信机制、第1.5节复杂度预算 |
 | `docs/architecture.md` | 插件注册顺序（第 724-747 行） |
 | `docs/architecture/plugin-design.md` | Plugin 设计模式、粒度规则 |
 | `docs/architecture/layer-contracts.md` | 各层 Plugin 职责边界 |
+| `docs/architecture/app-bootstrap.md` | App 层启动序列与 Plugin 组装、EffectPipelineSchedule |
 | `docs/architecture/component_design_rules.md` | Plugin 注册的 Component 设计规范 |
 | `docs/architecture/system_design_rules.md` | Plugin 注册的 System 编写规范 |
 | `docs/domain/ecs_communication_rules.md` | Plugin 间通信方式 |

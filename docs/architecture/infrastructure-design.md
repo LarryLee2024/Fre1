@@ -84,13 +84,15 @@ infrastructure/localization/       → localization_error.rs
 错误架构详细规则见 `docs/architecture/error-architecture.md`。
 
 **红线**：
-- 🟥 基础设施错误禁止包含领域语义（`SkillId`、`UnitId` 等）
-- 🟥 基础设施错误只关注技术层面的失败原因
-- 🟥 禁止在 infrastructure/ 中创建全局统一 `AppError` 大枚举
+- 🟥 基础设施错误禁止包含领域语义（`SkillId`、`UnitId` 等）（宪法 §13.9.1 分领域错误原则）
+- 🟥 基础设施错误只关注技术层面的失败原因（宪法 §13.9.2 失败分类学）
+- 🟥 禁止在 infrastructure/ 中创建全局统一 `AppError` 大枚举（宪法 §13.9.1）
 
 ---
 
 ## 2. 模块总览
+
+> ⚠️ **宪法 §1.1.7 提醒**：以下模块列表包含未来 P2/P3 模块（如 networking、steam、cloud_save、scripting_runtime 等），这些为预留设计。**禁止在当前阶段提前实现未明确需要的模块**。仅实现 P0/P1 模块，其余在明确需求时再启动。
 
 | # | 模块 | 中文 | 优先级 | 状态 |
 |---|------|------|--------|------|
@@ -114,6 +116,74 @@ infrastructure/localization/       → localization_error.rs
 | 18 | scripting_runtime | 脚本运行时 | P3 | 🔲 待实现 |
 | 19 | audit | 审计基础设施 | P0 | ✅ 已实现 |
 | 20 | modding | MOD 基础设施 | P3 | 🔲 待实现 |
+
+### 模块依赖图（Mermaid）
+
+```mermaid
+graph TD
+    subgraph P0["P0 核心模块"]
+        logging
+        audit
+        persistence
+        assets
+    end
+
+    subgraph P1["P1 重要模块"]
+        localization
+        replay
+        config
+        hot_reload
+        crash_report
+        importer
+    end
+
+    subgraph P2["P2 增强模块"]
+        analytics
+        telemetry
+        diagnostics
+        profiler
+        exporter
+    end
+
+    subgraph P3["P3 扩展模块"]
+        networking
+        steam
+        cloud_save
+        scripting_runtime
+        modding
+    end
+
+    replay --> audit
+    replay --> persistence
+    cloud_save --> persistence
+    cloud_save --> networking
+    cloud_save --> steam
+    hot_reload --> assets
+    localization --> assets
+    crash_report --> logging
+    crash_report --> persistence
+    analytics --> audit
+    telemetry --> crash_report
+    telemetry --> profiler
+    importer --> assets
+    modding --> assets
+    modding --> scripting_runtime
+    scripting_runtime -.->|沙箱隔离| logging
+```
+
+### 依赖约束矩阵
+
+以下模块对之间**禁止直接依赖**（即使通过间接路径也不允许）：
+
+| 禁止依赖 | 原因 |
+|---------|------|
+| `hot_reload` → `replay` | 热重载不应感知回放逻辑 |
+| `scripting_runtime` → `steam` | 脚本运行时不应直接依赖平台 API |
+| `logging` → `persistence` | 日志不应依赖存档（避免循环） |
+| `analytics` → `logging` | 数据分析不应依赖日志实现 |
+| `profiler` → `diagnostics` | 性能分析不应依赖诊断（职责分离） |
+
+> **优化来源**：`docs/其他/54.md` — 可视化依赖「Mermaid 模块依赖图 + 依赖约束矩阵表」
 
 ---
 
@@ -147,10 +217,10 @@ impl Plugin for LogPlugin {
 - `bevy` — Observer 机制
 
 **禁止事项**：
-- 🟥 在每帧系统中打印 Info/Debug 级别日志
-- 🟥 通过堆砌日志进行调试（应使用 Inspector/Replay/Debug Panel）
-- 🟥 循环内日志
-- 🟥 使用 `println!`、`dbg!`、`log` crate
+- 🟥 在每帧系统中打印 Info/Debug 级别日志（宪法 §13.4）
+- 🟥 通过堆砌日志进行调试（应使用 Inspector/Replay/Debug Panel）（宪法 §13.7.1）
+- 🟥 循环内日志（宪法 §13.4）
+- 🟥 使用 `println!`、`dbg!`、`log` crate（宪法 §13.1.1）
 
 **当前状态**：✅ 已实现（`src/infrastructure/logging/`），包含 events.rs、observer.rs。
 
@@ -180,15 +250,51 @@ pub fn load_game(path: impl AsRef<Path>, registries: &Registries) -> Result<Save
 pub fn migrate(data: SaveData, from: SemVer, to: SemVer) -> Result<SaveData, MigrationError>;
 ```
 
+**存档序列化抽象 trait**（实现 JSON/二进制切换）：
+
+```rust
+pub trait SaveSerializer: Send + Sync {
+    fn serialize(&self, data: &SaveData) -> Result<Vec<u8>, SerializeError>;
+    fn deserialize(&self, bytes: &[u8]) -> Result<SaveData, DeserializeError>;
+    fn format_name(&self) -> &str;
+}
+
+/// JSON 实现（开发阶段默认）
+pub struct JsonSerializer;
+impl SaveSerializer for JsonSerializer {
+    fn serialize(&self, data: &SaveData) -> Result<Vec<u8>, SerializeError> {
+        serde_json::to_vec_pretty(data).map_err(|e| SerializeError::JsonFailed { reason: e.to_string() })
+    }
+    fn deserialize(&self, bytes: &[u8]) -> Result<SaveData, DeserializeError> {
+        serde_json::from_slice(bytes).map_err(|e| DeserializeError::JsonFailed { reason: e.to_string() })
+    }
+    fn format_name(&self) -> &str { "json" }
+}
+
+/// 二进制实现（生产阶段，预留）
+#[cfg(feature = "binary_save")]
+pub struct BincodeSerializer;
+#[cfg(feature = "binary_save")]
+impl SaveSerializer for BincodeSerializer {
+    fn serialize(&self, data: &SaveData) -> Result<Vec<u8>, SerializeError> {
+        bincode::serialize(data).map_err(|e| SerializeError::BincodeFailed { reason: e.to_string() })
+    }
+    fn deserialize(&self, bytes: &[u8]) -> Result<SaveData, DeserializeError> {
+        bincode::deserialize(bytes).map_err(|e| DeserializeError::BincodeFailed { reason: e.to_string() })
+    }
+    fn format_name(&self) -> &str { "bincode" }
+}
+```
+
 **依赖**：
 - `shared/error/` — GameResult 类型
 - Core 层事件 — 通过 Message 接收存档触发信号
 
 **禁止事项**：
-- 🟥 保存 Definition 数据
+- 🟥 保存 Definition 数据（宪法 §1.1.2 定义与实例分离）
 - 🟥 运行时创建新的 Definition
-- 🟥 存档格式无版本号
-- 🟥 跨大版本不提供迁移函数
+- 🟥 存档格式无版本号（宪法 §12.6.1 强制版本字段）
+- 🟥 跨大版本不提供迁移函数（宪法 §12.6.2 向后兼容原则）
 
 **目录结构**：
 
@@ -256,6 +362,8 @@ assets/
 ---
 
 ### 3.4 localization（多语言）
+
+> **详细设计**：参见 `docs/architecture/i18n_design.md`（国际化系统架构，含 Fluent/.ftl 方案、Key 驱动机制、MOD 翻译支持）。
 
 **职责**：多语言支持系统，管理 locale、字符串表、字体集成。
 
@@ -771,6 +879,55 @@ pub trait ScriptRuntime {
 - 🟥 脚本修改 Definition 数据
 - 🟥 脚本执行无超时限制
 
+**MOD 脚本运行时安全边界**：
+
+| 安全维度 | 限制规则 | 超限处理 |
+|---------|---------|---------|
+| CPU 配额 | 单 tick 执行时间 ≤ 50ms | 超时强制终止，记录 WARN |
+| 内存配额 | 单脚本堆内存 ≤ 16MB | OOM 前终止，记录 ERROR |
+| 文件系统 | 仅允许读写 `mods/<mod_id>/` 目录 | 越权访问立即拒绝，记录 WARN |
+| 网络 | 禁止任何网络请求 | 编译期拒绝 + 运行时拦截 |
+| Definition | 禁止修改任何 Definition 数据 | 运行时拦截，记录 ERROR |
+| API 白名单 | MOD 可调用的 API 范围明确列出 | 未授权 API 调用拒绝 |
+
+```rust
+/// MOD 沙箱配置
+pub struct SandboxConfig {
+    /// 单 tick CPU 时间上限（毫秒）
+    pub max_cpu_time_ms: u64,         // 默认 50ms
+    /// 单脚本内存上限（字节）
+    pub max_memory_bytes: usize,      // 默认 16MB (16 * 1024 * 1024)
+    /// 允许访问的文件系统路径前缀
+    pub allowed_fs_paths: Vec<PathBuf>, // 仅 mods/<mod_id>/
+    /// 允许调用的 API 模块
+    pub allowed_apis: Vec<String>,    // 如 ["registry.query", "event.emit"]
+    /// 禁止调用的 API 模块
+    pub denied_apis: Vec<String>,     // 如 ["network.*", "definition.modify"]
+}
+
+impl Default for SandboxConfig {
+    fn default() -> Self {
+        Self {
+            max_cpu_time_ms: 50,
+            max_memory_bytes: 16 * 1024 * 1024,
+            allowed_fs_paths: vec![],
+            allowed_apis: vec![
+                "registry.query".into(),
+                "event.emit".into(),
+                "logger.info".into(),
+            ],
+            denied_apis: vec![
+                "network.*".into(),
+                "definition.modify".into(),
+                "filesystem.*".into(),
+            ],
+        }
+    }
+}
+```
+
+> **优化来源**：`docs/其他/54.md` — MOD 安全边界「CPU 配额 50ms/tick、内存配额 16MB、文件系统沙箱规则」
+
 ---
 
 ### 3.19 audit（审计基础设施）
@@ -878,7 +1035,57 @@ pub trait ModFileSystem {
 **禁止**：
 - 🟥 同时维护两套序列化逻辑（应通过 trait 抽象）
 
-### 4.2 存档版本管理：SemVer + 迁移函数
+### 4.2 跨平台适配原则
+
+**决策**：涉及文件系统、平台 API 的模块必须使用跨平台抽象。
+
+**适用模块**：steam、config、cloud_save、crash_report、persistence、assets
+
+**核心原则**：
+
+| 原则 | 要求 |
+|------|------|
+| 路径处理 | 统一使用 `std::path::Path` / `PathBuf`，禁止硬编码路径分隔符 |
+| 平台 API 封装 | 平台特定 API 必须封装为统一 trait，通过 feature flag 条件编译 |
+| 配置目录 | 使用 `dirs` crate 获取标准目录（`config_dir()`、`data_dir()`） |
+| 文件权限 | 使用 `std::fs::set_permissions` 而非平台特定 API |
+
+**禁止事项**：
+- 🟥 直接调用 Windows 注册表 API（应封装为 `PlatformConfig` trait）
+- 🟥 依赖 macOS 独有文件系统特性（如 `.app` bundle 路径）
+- 🟥 硬编码 `/` 或 `\` 路径分隔符（使用 `Path::join`）
+- 🟥 假设文件系统大小写敏感性（macOS 默认不敏感）
+
+```rust
+/// 跨平台配置目录访问 trait
+pub trait PlatformPaths {
+    fn config_dir(&self) -> Option<PathBuf>;
+    fn data_dir(&self) -> Option<PathBuf>;
+    fn cache_dir(&self) -> Option<PathBuf>;
+    fn log_dir(&self) -> Option<PathBuf>;
+}
+
+/// 默认实现（使用 dirs crate）
+pub struct DefaultPlatformPaths;
+impl PlatformPaths for DefaultPlatformPaths {
+    fn config_dir(&self) -> Option<PathBuf> {
+        dirs::config_dir().map(|p| p.join("bevy_srpg"))
+    }
+    fn data_dir(&self) -> Option<PathBuf> {
+        dirs::data_dir().map(|p| p.join("bevy_srpg"))
+    }
+    fn cache_dir(&self) -> Option<PathBuf> {
+        dirs::cache_dir().map(|p| p.join("bevy_srpg"))
+    }
+    fn log_dir(&self) -> Option<PathBuf> {
+        dirs::data_dir().map(|p| p.join("bevy_srpg").join("logs"))
+    }
+}
+```
+
+> **优化来源**：`docs/其他/54.md` — 跨平台适配「路径处理用 std::path + 平台 API 封装」
+
+### 4.3 存档版本管理：SemVer + 迁移函数
 
 **决策**：存档格式使用 SemVer 版本号，每次格式变更递增版本，版本之间提供迁移函数。
 
@@ -909,7 +1116,7 @@ pub fn migrate(mut data: SaveData, target: SemVer) -> Result<SaveData, Migration
 }
 ```
 
-### 4.3 回放 = 审计事件重放
+### 4.4 回放 = 审计事件重放
 
 **决策**：Replay = 从初始条件 + 重放审计事件，不是逐帧录制。
 
@@ -928,7 +1135,7 @@ pub fn migrate(mut data: SaveData, target: SemVer) -> Result<SaveData, Migration
 4. 回放时 → 加载初始状态 → 按事件序列重新执行
 ```
 
-### 4.4 热重载边界
+### 4.5 热重载边界
 
 **决策**：只有 Definition 数据可以热重载，Instance 数据绝不触碰，战斗中禁止热重载。
 
@@ -946,7 +1153,7 @@ Instance 数据      → 🟥 禁止热重载
 战斗中任何数据     → 🟥 禁止热重载
 ```
 
-### 4.5 资源加载：内容 vs 资源
+### 4.6 资源加载：内容 vs 资源
 
 **决策**：内容数据（RON 配置）和二进制资源（图片/音频）使用不同的加载管线。
 
@@ -965,7 +1172,9 @@ Instance 数据      → 🟥 禁止热重载
 | 验证 | 结构验证 | 格式验证 |
 | 缓存 | Registry | AssetServer |
 
-### 4.6 错误策略：模块独立错误枚举
+### 4.7 错误策略：模块独立错误枚举
+
+> **宪法 §13.9.1 对齐**：每个基础设施模块定义自己的错误枚举，不创建全局 InfrastructureError。与宪法"每个领域定义独立错误枚举"原则一致。
 
 **决策**：每个基础设施模块定义自己的错误枚举，不创建全局 InfrastructureError。
 
@@ -1182,6 +1391,8 @@ src/infrastructure/
 
 ### 8.1 Infrastructure → Core
 
+> ⚠️ **宪法 §1.3.2 依赖方向说明**：Infrastructure 依赖 Core（通过共享事件）属于七层架构的特殊设计决策。在宪法的三层模型中，领域层不应依赖上层。此处 Infrastructure → Core 的依赖仅限于监听 Core 触发的领域事件，不直接调用 Core 函数。
+
 Infrastructure 可以依赖 Core，但只通过 shared 事件：
 
 ```
@@ -1267,6 +1478,39 @@ fn test_save_performance_under_100ms() { ... }
 #[test]
 fn test_load_performance_under_200ms() { ... }
 ```
+
+---
+
+## 10. 核心监控指标
+
+P0 模块必须接入以下核心可观测指标，便于线上问题排查和性能调优：
+
+| 模块 | 核心监控指标 | 采集方式 | 告警阈值 |
+|------|------------|---------|---------|
+| persistence | 存档成功率（%） | 事件计数 | < 99% 触发 WARN |
+| persistence | 存档耗时 P50/P99 | Histogram | P99 > 200ms 触发 WARN |
+| persistence | 版本迁移失败率（%） | 事件计数 | > 0 触发 ERROR |
+| assets | 资源加载耗时 P50/P99 | Histogram | P99 > 500ms 触发 WARN |
+| assets | 资源加载成功率（%） | 事件计数 | < 95% 触发 WARN |
+| assets | 热重载失败率（%） | 事件计数 | > 0 触发 WARN |
+| logging | 日志写入失败次数 | 事件计数 | > 0 触发 WARN |
+| crash_report | 崩溃率（次/小时） | 事件计数 | > 0 触发 ERROR |
+| crash_report | 崩溃类型分布 | 直方图 | panic 占比 > 80% 排查 |
+| networking | 连接成功率（%） | 事件计数 | < 90% 触发 WARN |
+| networking | 延迟 P50/P99 | Histogram | P99 > 500ms 触发 WARN |
+| networking | 消息丢包率（%） | 事件计数 | > 5% 触发 WARN |
+
+**Bevy 集成**：利用 `bevy::diagnostic` 框架注册自定义诊断计数器：
+
+```rust
+// 在 P0 模块的 Plugin 中注册诊断
+app.add_systems(Startup, |mut diagnostics: ResMut<DiagnosticsStore>| {
+    diagnostics.add(AssetLoadTimeDiagnostic::default());
+    diagnostics.add(SaveSuccessRateDiagnostic::default());
+});
+```
+
+> **优化来源**：`docs/其他/54.md` — 核心监控指标「存档成功率、资源加载耗时 P50/P99、崩溃类型分布」
 
 ---
 

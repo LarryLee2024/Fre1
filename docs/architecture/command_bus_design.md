@@ -5,12 +5,14 @@ Status: Proposed
 
 Source: `docs/其他/31遗漏.md`（高优先级第 4 项）
 
+> **优化来源**: `docs/其他/41.md`
+
 本文档定义 SRPG 项目的命令总线架构，覆盖命令模式、校验层、执行层、命令队列和与 Effect Pipeline 的集成。命令总线是实现"操作可回滚、可回放、可同步"的核心抽象。
 
 交叉引用：
-- `ecs_communication_rules.md` — Message 通信机制、UiCommand 定义
-- `shared_layer_rules.md` — Strong ID 在命令中的使用
-- `replay_rules.md` — 命令队列如何支持回放
+- `docs/domain/ecs_communication_rules.md` — Message 通信机制、UiCommand 定义
+- `docs/domain/shared_layer_rules.md` — Strong ID 在命令中的使用
+- `docs/domain/replay_rules.md` — 命令队列如何支持回放
 - `content-pipeline.md` — 配置驱动的命令参数
 
 ---
@@ -24,6 +26,24 @@ Source: `docs/其他/31遗漏.md`（高优先级第 4 项）
 - 操作可回滚：命令队列支持撤销（pop last command）
 - 操作可回放：命令序列可序列化、重放
 - 校验与执行分离：校验阶段只读、执行阶段只写
+
+> **优化来源**: `docs/其他/74借鉴.md` §13 — Command Pattern 是 Unity 大型 SRPG 的核心抽象
+
+**跨引擎类比**：Unity 大型 SRPG 项目广泛使用 Command Pattern。SRPG 特别适合此模式，因为回合制的"选择→确认→执行"天然对应"校验→执行"流程。三大基本命令类型覆盖了 SRPG 的核心操作：
+
+| 命令类型 | 对应操作 | 模式说明 |
+|----------|---------|---------|
+| `MoveCommand` | 单位移动 | 移动是 SRPG 最高频操作 |
+| `CastSkillCommand` | 释放技能 | 技能是战斗核心 |
+| `UseItemCommand` | 使用物品 | 道具是策略维度 |
+
+**Command Pattern → Replay / AI / 联机直接受益**：
+
+```
+Command 是纯数据 → 序列化存储 → Replay 回放
+Command 统一接口   → AI 只需生成 Command → 与 Player 共用执行路径
+Command 序列传输   → 网络同步 → 联机对战
+```
 
 ---
 
@@ -47,7 +67,227 @@ Source: `docs/其他/31遗漏.md`（高优先级第 4 项）
 
 ---
 
+## Bevy ECS 落地关键约束
+
+> **优化来源**: `docs/其他/41.md`
+
+### Exclusive System 要求
+
+🟥 **Command Bus 的核心执行 System 必须声明为 Exclusive System（如 `fn run_command_bus(world: &mut World)`），禁止在普通并行 System 中直接调用 execute。**
+
+原因：
+- `CommandQueue::execute` 接收 `&mut World`
+- 在 Bevy 中，直接传递 `&mut World` 意味着代码必须运行在 Exclusive System 中
+- 这会阻塞所有其他并行 System 的执行
+- 对于回合制 SRPG，在"玩家行动阶段"或"结算阶段"使用 Exclusive System 是完全合理且推荐的，因为此时本来就需要串行处理核心逻辑以保证确定性
+
+```rust
+// ✅ 正确：Exclusive System
+fn run_command_bus(world: &mut World) {
+    // 可以安全地获取 &mut World
+    let mut queue = world.resource_mut::<CommandQueue>();
+    // ...
+}
+
+// 🟥 错误：并行 System 中调用
+fn bad_system(queue: ResMut<CommandQueue>, world: &World) {
+    // 编译器会报错：cannot borrow `*world` as mutable because it is also borrowed as immutable
+}
+```
+
+### Effect Pipeline 集成规则
+
+- Command 只负责生成 CombatIntent，绝不直接修改血量
+- 扣血、加 Buff 必须全部交给 Effect Pipeline 处理
+- 保持 Command 的纯粹性，保证伤害结算逻辑的全局唯一性
+
+---
+
 ## 架构
+
+### GameCommand 枚举（数据驱动命令）
+
+> **优化来源**: `docs/其他/41.md` — 将 `Box<dyn Command>` 重构为可序列化的枚举，解决 Trait Object 无法序列化的问题。
+
+🟥 **禁止使用 `Box<dyn Command>` 存储命令**。改为使用可序列化的 `GameCommand` 枚举：
+
+```rust
+// src/core/command/game_command.rs
+
+use bevy::prelude::*;
+use serde::{Serialize, Deserialize};
+use crate::shared::ids::*;
+
+/// 数据驱动的命令枚举 — 可序列化、可反射、可用于存档/Replay/网络同步
+#[derive(Serialize, Deserialize, Clone, Reflect, Debug)]
+pub enum GameCommand {
+    /// 释放技能
+    CastSkill {
+        caster: UnitId,
+        skill_id: SkillId,
+        targets: Vec<UnitId>,
+    },
+    /// 移动
+    Move {
+        unit: UnitId,
+        target: IVec2,
+    },
+    /// 使用物品
+    UseItem {
+        user: UnitId,
+        item_id: ItemId,
+        targets: Vec<UnitId>,
+    },
+    /// 结束回合
+    EndTurn {
+        unit: UnitId,
+    },
+}
+
+impl GameCommand {
+    /// 命令描述（用于日志和调试）
+    pub fn description(&self) -> String {
+        match self {
+            GameCommand::CastSkill { caster, skill_id, targets } => {
+                format!("CastSkill({}, caster={}, targets={:?})", skill_id, caster, targets)
+            }
+            GameCommand::Move { unit, target } => {
+                format!("Move({}, target={})", unit, target)
+            }
+            GameCommand::UseItem { user, item_id, targets } => {
+                format!("UseItem({}, user={}, targets={:?})", item_id, user, targets)
+            }
+            GameCommand::EndTurn { unit } => {
+                format!("EndTurn(unit={})", unit)
+            }
+        }
+    }
+}
+```
+
+**优势**：
+- `GameCommand` 是纯数据，可以轻松序列化为 RON 用于存档/Replay/网络同步
+- 完美契合"数据驱动"和"MOD 注入"理念（MOD 可以通过反射扩展 Enum 的变体或拦截执行器）
+- 编译时类型安全，无需动态分发
+
+### CommandExecutor（命令执行器）
+
+```rust
+// src/core/command/command_executor.rs
+
+/// 统一的命令执行器 — 通过 match 分发执行逻辑
+pub fn execute_command(
+    cmd: &GameCommand,
+    world: &mut World,
+    ctx: &CommandContext,
+) -> CommandResult {
+    match cmd {
+        GameCommand::CastSkill { caster, skill_id, targets } => {
+            execute_cast_skill(caster, skill_id, targets, world, ctx)
+        }
+        GameCommand::Move { unit, target } => {
+            execute_move(unit, target, world, ctx)
+        }
+        GameCommand::UseItem { user, item_id, targets } => {
+            execute_use_item(user, item_id, targets, world, ctx)
+        }
+        GameCommand::EndTurn { unit } => {
+            execute_end_turn(unit, world, ctx)
+        }
+    }
+}
+```
+
+### Command Trait（过渡方案 — ⚠️ 待废弃）
+
+> ⚠️ **宪法合规警告（§1.1.7 过度设计）**：以下 Command trait 设计与 `GameCommand` 枚举方案存在重复。根据宪法 §1.1.7 "只解决当前复杂度"原则，应优先使用 `GameCommand` 枚举方案，Command trait 仅作为过渡期向后兼容保留。**新代码禁止使用 `Box<dyn Command>`，统一使用 `GameCommand` 枚举。**
+
+保留 Command trait 用于校验逻辑，但执行层使用 GameCommand 枚举：
+
+```rust
+// src/core/command/command_trait.rs
+
+/// 命令校验 trait — 仅用于校验逻辑（过渡方案，最终废弃）
+pub trait CommandValidator: Send + Sync + 'static {
+    /// 校验命令是否可执行（只读，不修改状态）
+    fn validate(&self, world: &World, context: &CommandContext) -> Result<(), ValidationError>;
+}
+```
+
+### Memento 模式（状态快照撤销）
+
+> **优化来源**: `docs/其他/41.md` — 放弃反向操作 undo，改用状态快照。在复杂 SRPG 中，一个 CastSkillCommand 可能触发 Effect Pipeline 导致连锁反应，手写 undo 逻辑是地狱难度。
+
+🟥 **禁止在 Command trait 中定义 undo 方法**。改用 Memento 模式：
+
+```rust
+// src/core/command/memento.rs
+
+/// 状态快照 — 保存受影响 Entity 的相关 Component
+#[derive(Debug, Clone)]
+pub struct StateSnapshot {
+    /// 受影响的 Entity
+    pub entity: Entity,
+    /// 快照时的 Component 数据
+    pub attributes: Option<Attributes>,
+    pub grid_position: Option<GridPosition>,
+    pub buffs: Option<Buffs>,
+    // ... 其他需要快照的 Component
+}
+
+/// 命令执行历史 — 存储状态快照用于撤销
+#[derive(Resource)]
+pub struct CommandHistory {
+    /// 状态快照栈（后进先出）
+    snapshots: Vec<StateSnapshot>,
+    /// 最大历史长度（防止内存溢出）
+    max_history: usize,
+}
+
+impl CommandHistory {
+    /// 执行命令前，自动提取受影响 Entity 的状态快照
+    pub fn take_snapshot(&mut self, entity: Entity, world: &World) {
+        let snapshot = StateSnapshot {
+            entity,
+            attributes: world.entity(entity).get::<Attributes>().cloned(),
+            grid_position: world.entity(entity).get::<GridPosition>().cloned(),
+            buffs: world.entity(entity).get::<Buffs>().cloned(),
+        };
+        self.snapshots.push(snapshot);
+
+        // 防止内存溢出
+        if self.snapshots.len() > self.max_history {
+            self.snapshots.remove(0);
+        }
+    }
+
+    /// 撤销：从历史栈弹出 StateSnapshot，覆盖当前 Entity 的状态
+    pub fn undo_last(&mut self, world: &mut World) -> Result<(), ExecutionError> {
+        let snapshot = self.snapshots.pop()
+            .ok_or(ExecutionError::StateChangeFailed {
+                reason: "No history to undo".to_string(),
+            })?;
+
+        // 恢复 Component 状态
+        if let Some(attrs) = snapshot.attributes {
+            world.entity_mut(snapshot.entity).insert(attrs);
+        }
+        if let Some(pos) = snapshot.grid_position {
+            world.entity_mut(snapshot.entity).insert(pos);
+        }
+        if let Some(buffs) = snapshot.buffs {
+            world.entity_mut(snapshot.entity).insert(buffs);
+        }
+
+        Ok(())
+    }
+}
+```
+
+**优势**：
+- 代码量减少 80%，且绝对可靠
+- 无需关心 Effect Pipeline 有多复杂（伤害、Buff、反击、吸血、被动技能等连锁反应）
+- 撤销时直接恢复整个 Entity 状态，保证一致性
 
 ### Command Trait
 
@@ -326,6 +566,7 @@ pub struct CommandQueue {
     /// 已执行的命令历史
     executed: Vec<QueuedCommand>,
     /// 待执行的命令缓冲
+    /// ⚠️ 过渡方案：新代码应使用 Vec<GameCommand> 替代 Vec<Box<dyn Command>>
     pending: Vec<Box<dyn Command>>,
 }
 
@@ -428,6 +669,81 @@ impl CommandQueue {
     ├─ 是 → 逐个执行
     └─ 否 → 整批拒绝，返回校验错误
 ```
+
+### Cursor-based 执行（游标执行）
+
+> **优化来源**: `docs/其他/41.md` — 游标指针追踪队列中的执行位置，支持断点恢复和分段执行。
+
+```rust
+// src/core/command/command_queue.rs
+
+/// 命令队列 — 支持游标执行、撤销、回放和批量原子执行
+#[derive(Resource)]
+pub struct CommandQueue {
+    /// 待执行的命令列表
+    commands: Vec<GameCommand>,
+    /// 已执行的命令历史（用于撤销）
+    history: CommandHistory,
+    /// 游标指针 — 追踪当前执行位置
+    cursor: usize,
+    /// 批次元数据
+    batch_id: Option<BatchId>,
+}
+
+impl CommandQueue {
+    /// 游标执行：从当前 cursor 位置开始执行
+    pub fn execute_from_cursor(
+        &mut self,
+        world: &mut World,
+        ctx: &CommandContext,
+    ) -> Vec<CommandResult> {
+        let mut results = Vec::new();
+
+        while self.cursor < self.commands.len() {
+            let cmd = &self.commands[self.cursor];
+
+            // 1. 快照（用于撤销）
+            self.take_snapshot_for_command(cmd, world);
+
+            // 2. 校验
+            if let Err(e) = validate_command(cmd, world, ctx) {
+                results.push(CommandResult::ValidationFailed(e));
+                break; // 停在失败位置，cursor 不前进
+            }
+
+            // 3. 执行
+            let result = execute_command(cmd, world, ctx);
+            results.push(result);
+
+            // 4. 推进游标
+            self.cursor += 1;
+        }
+
+        results
+    }
+
+    /// 暂停执行（保存当前 cursor 位置）
+    pub fn pause(&self) -> usize {
+        self.cursor
+    }
+
+    /// 从指定位置恢复执行
+    pub fn resume_from(&mut self, position: usize, world: &mut World, ctx: &CommandContext) -> Vec<CommandResult> {
+        self.cursor = position;
+        self.execute_from_cursor(world, ctx)
+    }
+
+    /// 重置游标到队列开头（用于重放）
+    pub fn reset_cursor(&mut self) {
+        self.cursor = 0;
+    }
+}
+```
+
+**优势**：
+- 支持断点恢复：执行到一半可以暂停，稍后从断点继续
+- 支持分段执行：可以将长队列分成多个批次执行
+- 支持重放：重置游标后可以重新执行整个队列
 
 ---
 
@@ -676,6 +992,88 @@ fn execute(&self, world: &mut World, context: &CommandContext) -> CommandResult 
 
 ---
 
+## ActionQueue（效果执行队列）
+
+> **优化来源**: `docs/其他/74借鉴.md` §18 — ActionQueue 顺序执行队列
+
+很多人遗漏了 ActionQueue 的设计。技能释放后，伤害、Buff、死亡、反击等效果必须按顺序链式执行，而非并行处理。
+
+### ActionQueue vs CommandQueue 的区别
+
+| | CommandQueue | ActionQueue |
+|---|-------------|-------------|
+| **记录内容** | 用户操作（移动、释放技能、使用物品） | 效果执行（伤害、Buff、死亡判定、反击） |
+| **生产者** | Player Input / AI Decision | Effect Pipeline |
+| **执行时机** | 玩家/AI 行动阶段 | 效果结算阶段 |
+| **数据粒度** | 粗粒度（一个 Command = 一个操作） | 细粒度（一个 Action = 一个效果步骤） |
+| **核心价值** | 操作可回滚/可回放 | 效果执行顺序确定性 |
+
+### ActionQueue 链式执行
+
+```
+技能释放
+    ↓
+ActionQueue 入队：
+    1. DamageAction → 计算伤害、扣 HP
+    2. BuffAction → 施加 Buff/Debuff
+    3. DeathCheckAction → 判定死亡、触发 Death Event
+    4. CounterAttackAction → 触发反击（如果目标存活且有反击 Buff）
+    ↓
+逐个执行，每步结果影响下一步
+```
+
+### 为什么需要 ActionQueue
+
+没有 ActionQueue 会出现：
+
+```rust
+// 🟥 并行处理 — 顺序不确定
+spawn_damage_effect(target, 100);
+spawn_buff_effect(target, Poison);  // 可能在伤害之前执行
+check_death(target);                 // 可能在 Buff 之前执行
+trigger_counter(target, attacker);   // 可能在死亡检查之前执行
+```
+
+使用 ActionQueue：
+
+```rust
+// ✅ 顺序执行 — 确定性保证
+action_queue.push(DamageAction { target, amount: 100 });
+action_queue.push(BuffAction { target, buff_id: "poison" });
+action_queue.push(DeathCheckAction { target });
+action_queue.push(CounterAttackAction { target, attacker });
+
+// 逐个执行，每步结果影响下一步
+while let Some(action) = action_queue.pop() {
+    action.execute(world);
+}
+```
+
+### Bevy ECS 映射
+
+```rust
+#[derive(Resource)]
+pub struct ActionQueue {
+    actions: VecDeque<PendingAction>,
+}
+
+/// 待执行的效果动作
+#[derive(Debug, Clone)]
+pub enum PendingAction {
+    Damage { source: Entity, target: Entity, amount: i32 },
+    Heal { source: Entity, target: Entity, amount: i32 },
+    ApplyBuff { target: Entity, buff_id: BuffId },
+    RemoveBuff { target: Entity, buff_id: BuffId },
+    DeathCheck { entity: Entity },
+    CounterAttack { target: Entity, attacker: Entity },
+    TriggerSkill { source: Entity, skill_id: SkillId, targets: Vec<Entity> },
+}
+```
+
+> ActionQueue 作为 Effect Pipeline 的执行容器，确保效果的顺序解析。详见 `docs/architecture/skill-buff-abstraction.md` §ActionQueue。
+
+---
+
 ## 通信流程
 
 ### 命令通信全链路
@@ -798,6 +1196,82 @@ let commands = command_queue.export_for_replay();
 | 命令使用 Strong ID | 类型安全、可序列化 |
 | 命令携带完整上下文 | 执行时无需反向查询 |
 | 批量执行保证原子性 | 全有或全无 |
+| Command Bus 使用 Exclusive System | 保证确定性，避免借用冲突 |
+
+### 常见反模式警示
+
+> **优化来源**: `docs/其他/41.md`
+
+🟥 **反模式 1：在 validate 中调用 asset_server.load()**
+- IO 操作破坏确定性且极慢
+- 校验阶段必须只读，不产生任何副作用
+
+🟥 **反模式 2：在 execute 中直接 world.spawn() 生成新单位**
+- 应通过 Effect Pipeline 的 SpawnUnitEffect 处理
+- 保持 Command 的纯粹性
+
+🟥 **反模式 3：试图手写复杂的 undo 逻辑来逆转连锁反应**
+- 使用 Memento 模式（状态快照）
+- 代码量减少 80%，且绝对可靠
+
+🟥 **反模式 4：使用 Box<dyn Command> 存储命令**
+- Trait Object 无法直接序列化
+- 使用 GameCommand 枚举，支持 Reflect + serde
+
+---
+
+## Command 序列化与 Replay 协议
+
+> **优化来源**: `docs/其他/41.md`
+
+### GameCommand 序列化格式
+
+```ron
+// replay/battle_001.ron
+[
+    (tick: 10, cmd: Move { unit: "warrior_001", target: (5, 3) }),
+    (tick: 12, cmd: CastSkill { caster: "mage_001", skill_id: "base:fireball", targets: ["enemy_003"] }),
+    (tick: 15, cmd: EndTurn { unit: "warrior_001" }),
+]
+```
+
+### Replay 环境还原
+
+重放时必须还原：
+1. 随机种子（`rng_seed`）— 保证伪随机操作结果一致
+2. 回合阶段（`phase`）— 保证命令在正确的阶段执行
+3. 单位状态（`Attributes`、`GridPosition`）— 保证校验结果一致
+
+### Replay 执行器
+
+```rust
+pub fn replay_commands(
+    replay_data: &[ReplayEntry],
+    world: &mut World,
+) -> Result<(), ReplayError> {
+    // 1. 还原初始状态
+    // 2. 按 tick 顺序执行命令
+    for entry in replay_data {
+        // 还原随机种子
+        let ctx = CommandContext {
+            turn_number: entry.tick / 100, // 根据 tick 计算回合号
+            phase: "PlayerAction".to_string(),
+            source: CommandSource::Replay,
+            random_seed: entry.rng_seed,
+        };
+
+        // 执行命令
+        let result = execute_command(&entry.cmd, world, &ctx);
+        if let CommandResult::ValidationFailed(e) = result {
+            return Err(ReplayError::ValidationFailed {
+                tick: entry.tick,
+                error: e,
+            });
+        }
+    }
+    Ok(())
+}
+```
 
 ---
 
@@ -837,3 +1311,28 @@ let commands = command_queue.export_for_replay();
 - 所有使用该命令的模块是否同步更新
 - 校验逻辑是否仍然完整
 - 是否影响命令队列的撤销/回放功能
+
+---
+
+## 宪法合规说明
+
+| 条款 | 合规状态 | 说明 |
+|------|---------|------|
+| 🟩 §11.5.1 命令层 | ✅ 合规 | 所有操作封装为标准化 Command |
+| 🟩 §11.7 读写分离 | ✅ 合规 | Validate 只读，Execute 写入 |
+| 🟩 §1.2.1 强类型 ID | ✅ 合规 | 使用 UnitId、SkillId、ItemId |
+| 🟩 §2.3.4 Resource 规范 | ✅ 合规 | CommandQueue 为全局唯一状态 |
+| 🟥 §1.1.7 避免过度设计 | ⚠️ 需关注 | Box<dyn Command> 与 GameCommand 枚举重复，应统一 |
+| 🟥 §20.6.1 禁止 todo!() | ⚠️ 需关注 | 代码示例中的 todo!() 仅为占位，实现时必须替换 |
+
+⚠️ **§1.1.7 过渡期说明**：文档同时存在 `GameCommand` 枚举方案（推荐）和 `Command` trait + `Box<dyn Command>` 方案（过渡）。新代码必须使用 `GameCommand` 枚举，`Box<dyn Command>` 仅在迁移期间保留，应在下一个架构复盘时完全移除。
+
+## 交叉引用
+
+| 文档 | 关系 |
+|------|------|
+| `docs/architecture/skill-buff-abstraction.md` | Effect Pipeline 集成、ActionQueue 设计 |
+| `docs/architecture/schedules_design.md` | Command Bus 在 Schedule 中的位置 |
+| `docs/architecture/battle_fsm_design.md` | 命令执行与 FSM 状态转换的关系 |
+| `docs/architecture/component_design_rules.md` | Strong ID 在命令中的使用 |
+| `docs/AI开发宪法完整版.md` | §11.5.1 命令层、§11.7 读写分离、§1.1.7 避免过度设计 |
