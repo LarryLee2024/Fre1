@@ -13,7 +13,7 @@
 // 标准测试单位（§7.1）：Unit_001/Unit_002/Unit_003
 
 use bevy::prelude::*;
-use tactical_rpg::core::attribute::{AttributeKind, Attributes};
+use tactical_rpg::core::attribute::Attributes;
 use tactical_rpg::core::buff::ActiveBuffs;
 use tactical_rpg::core::character::TraitCollection;
 use tactical_rpg::core::character::{Faction, PersistentTags, Unit, UnitId, UnitName};
@@ -29,19 +29,20 @@ pub struct UnitBuilder {
 }
 
 impl UnitBuilder {
-    /// 战士模板：Might=5, Vitality=5, Agility=6
+    /// 战士模板：phys_atk=5, max_hp=50, phys_def=3
     pub fn warrior() -> Self {
         let mut attrs = Attributes::default();
-        attrs.set_base(AttributeKind::Might, 5.0);
-        attrs.set_base(AttributeKind::Vitality, 5.0);
-        attrs.set_base(AttributeKind::Agility, 6.0);
-        attrs.set_base(AttributeKind::Dexterity, 3.0);
-        attrs.set_base(AttributeKind::Intelligence, 2.0);
-        attrs.set_base(AttributeKind::Willpower, 3.0);
-        attrs.set_base(AttributeKind::Presence, 2.0);
-        attrs.set_base(AttributeKind::Luck, 2.0);
-        attrs.set_base_attack_range(1);
-        attrs.fill_vital_resources();
+        attrs.set_base("phys_atk", 5);
+        attrs.set_base("max_hp", 50);
+        attrs.set_base("phys_def", 3);
+        attrs.set_base("magic_atk", 2);
+        attrs.set_base("magic_def", 3);
+        attrs.set_base("dodge_rate", 600);
+        attrs.set_base("hit_rate", 300);
+        attrs.set_base("crit_rate", 200);
+        attrs.set_base("move_range", 3);
+        attrs.set_base("atk_range", 1);
+        attrs.fill_hp();
         Self {
             faction: Faction::Player,
             attrs,
@@ -49,19 +50,20 @@ impl UnitBuilder {
         }
     }
 
-    /// 法师模板：Intelligence=8, Willpower=6
+    /// 法师模板：magic_atk=8, max_hp=30, magic_def=6
     pub fn mage() -> Self {
         let mut attrs = Attributes::default();
-        attrs.set_base(AttributeKind::Might, 2.0);
-        attrs.set_base(AttributeKind::Vitality, 3.0);
-        attrs.set_base(AttributeKind::Agility, 4.0);
-        attrs.set_base(AttributeKind::Dexterity, 3.0);
-        attrs.set_base(AttributeKind::Intelligence, 8.0);
-        attrs.set_base(AttributeKind::Willpower, 6.0);
-        attrs.set_base(AttributeKind::Presence, 4.0);
-        attrs.set_base(AttributeKind::Luck, 2.0);
-        attrs.set_base_attack_range(3);
-        attrs.fill_vital_resources();
+        attrs.set_base("phys_atk", 2);
+        attrs.set_base("max_hp", 30);
+        attrs.set_base("phys_def", 1);
+        attrs.set_base("magic_atk", 8);
+        attrs.set_base("magic_def", 6);
+        attrs.set_base("dodge_rate", 400);
+        attrs.set_base("hit_rate", 300);
+        attrs.set_base("crit_rate", 200);
+        attrs.set_base("move_range", 3);
+        attrs.set_base("atk_range", 3);
+        attrs.fill_hp();
         Self {
             faction: Faction::Player,
             attrs,
@@ -72,16 +74,15 @@ impl UnitBuilder {
     /// 哥布林模板：低属性敌人
     pub fn goblin() -> Self {
         let mut attrs = Attributes::default();
-        attrs.set_base(AttributeKind::Might, 3.0);
-        attrs.set_base(AttributeKind::Vitality, 3.0);
-        attrs.set_base(AttributeKind::Agility, 5.0);
-        attrs.set_base(AttributeKind::Dexterity, 3.0);
-        attrs.set_base(AttributeKind::Intelligence, 1.0);
-        attrs.set_base(AttributeKind::Willpower, 1.0);
-        attrs.set_base(AttributeKind::Presence, 1.0);
-        attrs.set_base(AttributeKind::Luck, 3.0);
-        attrs.set_base_attack_range(1);
-        attrs.fill_vital_resources();
+        attrs.set_base("phys_atk", 3);
+        attrs.set_base("max_hp", 30);
+        attrs.set_base("phys_def", 1);
+        attrs.set_base("dodge_rate", 500);
+        attrs.set_base("hit_rate", 300);
+        attrs.set_base("crit_rate", 300);
+        attrs.set_base("move_range", 3);
+        attrs.set_base("atk_range", 1);
+        attrs.fill_hp();
         Self {
             faction: Faction::Enemy,
             attrs,
@@ -90,20 +91,21 @@ impl UnitBuilder {
     }
 
     /// Test ID: FIX-001
-    /// Unit_001 标准战士（§7.1）：HP=100, ATK=30, DEF=10, SPD=10
+    /// Unit_001 标准战士（§7.1）：phys_atk=15, max_hp=200, phys_def=10
     /// 用于所有战斗相关测试的标准战士单位
     pub fn unit_001() -> Self {
         let mut attrs = Attributes::default();
-        attrs.set_base(AttributeKind::Might, 15.0);
-        attrs.set_base(AttributeKind::Vitality, 20.0);
-        attrs.set_base(AttributeKind::Agility, 10.0);
-        attrs.set_base(AttributeKind::Dexterity, 5.0);
-        attrs.set_base(AttributeKind::Intelligence, 3.0);
-        attrs.set_base(AttributeKind::Willpower, 5.0);
-        attrs.set_base(AttributeKind::Presence, 3.0);
-        attrs.set_base(AttributeKind::Luck, 3.0);
-        attrs.set_base_attack_range(1);
-        attrs.fill_vital_resources();
+        attrs.set_base("phys_atk", 15);
+        attrs.set_base("max_hp", 200);
+        attrs.set_base("phys_def", 10);
+        attrs.set_base("magic_atk", 3);
+        attrs.set_base("magic_def", 5);
+        attrs.set_base("dodge_rate", 1000);
+        attrs.set_base("hit_rate", 500);
+        attrs.set_base("crit_rate", 300);
+        attrs.set_base("move_range", 3);
+        attrs.set_base("atk_range", 1);
+        attrs.fill_hp();
         Self {
             faction: Faction::Player,
             attrs,
@@ -112,20 +114,21 @@ impl UnitBuilder {
     }
 
     /// Test ID: FIX-002
-    /// Unit_002 标准法师（§7.1）：HP=80, ATK=40, DEF=5, SPD=12
+    /// Unit_002 标准法师（§7.1）：magic_atk=20, max_hp=100, magic_def=10
     /// 用于所有战斗相关测试的标准法师单位
     pub fn unit_002() -> Self {
         let mut attrs = Attributes::default();
-        attrs.set_base(AttributeKind::Might, 3.0);
-        attrs.set_base(AttributeKind::Vitality, 10.0);
-        attrs.set_base(AttributeKind::Agility, 12.0);
-        attrs.set_base(AttributeKind::Dexterity, 5.0);
-        attrs.set_base(AttributeKind::Intelligence, 20.0);
-        attrs.set_base(AttributeKind::Willpower, 10.0);
-        attrs.set_base(AttributeKind::Presence, 5.0);
-        attrs.set_base(AttributeKind::Luck, 3.0);
-        attrs.set_base_attack_range(3);
-        attrs.fill_vital_resources();
+        attrs.set_base("phys_atk", 3);
+        attrs.set_base("max_hp", 100);
+        attrs.set_base("phys_def", 5);
+        attrs.set_base("magic_atk", 20);
+        attrs.set_base("magic_def", 10);
+        attrs.set_base("dodge_rate", 1200);
+        attrs.set_base("hit_rate", 500);
+        attrs.set_base("crit_rate", 300);
+        attrs.set_base("move_range", 3);
+        attrs.set_base("atk_range", 3);
+        attrs.fill_hp();
         Self {
             faction: Faction::Player,
             attrs,
@@ -134,20 +137,21 @@ impl UnitBuilder {
     }
 
     /// Test ID: FIX-003
-    /// Unit_003 标准坦克（§7.1）：HP=150, ATK=20, DEF=20, SPD=5
+    /// Unit_003 标准坦克（§7.1）：phys_atk=10, max_hp=300, phys_def=20
     /// 用于所有战斗相关测试的标准坦克单位
     pub fn unit_003() -> Self {
         let mut attrs = Attributes::default();
-        attrs.set_base(AttributeKind::Might, 10.0);
-        attrs.set_base(AttributeKind::Vitality, 30.0);
-        attrs.set_base(AttributeKind::Agility, 5.0);
-        attrs.set_base(AttributeKind::Dexterity, 3.0);
-        attrs.set_base(AttributeKind::Intelligence, 2.0);
-        attrs.set_base(AttributeKind::Willpower, 8.0);
-        attrs.set_base(AttributeKind::Presence, 5.0);
-        attrs.set_base(AttributeKind::Luck, 2.0);
-        attrs.set_base_attack_range(1);
-        attrs.fill_vital_resources();
+        attrs.set_base("phys_atk", 10);
+        attrs.set_base("max_hp", 300);
+        attrs.set_base("phys_def", 20);
+        attrs.set_base("magic_atk", 2);
+        attrs.set_base("magic_def", 8);
+        attrs.set_base("dodge_rate", 500);
+        attrs.set_base("hit_rate", 300);
+        attrs.set_base("crit_rate", 200);
+        attrs.set_base("move_range", 3);
+        attrs.set_base("atk_range", 1);
+        attrs.fill_hp();
         Self {
             faction: Faction::Player,
             attrs,
@@ -155,9 +159,9 @@ impl UnitBuilder {
         }
     }
 
-    /// 设置 HP（使用 set_vital 设置当前值，set_base 对非 Core Stat 无效）
-    pub fn with_hp(mut self, hp: f32) -> Self {
-        self.attrs.set_vital(AttributeKind::Hp, hp);
+    /// 设置当前 HP（直接设置 current_hp 字段）
+    pub fn with_hp(mut self, hp: i32) -> Self {
+        self.attrs.current_hp = hp;
         self
     }
 

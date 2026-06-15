@@ -293,55 +293,70 @@ fn fill_vital_attrs(view: &mut SelectedUnitView, attrs: &Attributes) {
     view.max_stamina = attrs.get("max_stamina") as i32;
 }
 
+fn attr_label(config_id: &str) -> &'static str {
+    match config_id {
+        "phys_atk" => "攻击",
+        "phys_def" => "防御",
+        "magic_atk" => "魔攻",
+        "magic_def" => "魔防",
+        "max_hp" => "生命",
+        "hit_rate" => "命中",
+        "dodge_rate" => "闪避",
+        "crit_rate" => "暴击",
+        "move_range" => "移动",
+        "atk_range" => "射程",
+        "initiative" => "先攻",
+        _ => "未知",
+    }
+}
+
 fn fill_core_attrs(view: &mut SelectedUnitView, attrs: &Attributes) {
-    view.core_attrs = [
-        AttributeKind::Might,
-        AttributeKind::Dexterity,
-        AttributeKind::Agility,
-        AttributeKind::Vitality,
-        AttributeKind::Intelligence,
-        AttributeKind::Willpower,
-        AttributeKind::Presence,
-        AttributeKind::Luck,
-    ]
-    .iter()
-    .map(|kind| CoreAttrEntry {
-        label: kind.short_label().to_string(),
-        value: attrs.get(*kind) as i32,
-    })
-    .collect();
+    let ids = [
+        "phys_atk",
+        "magic_atk",
+        "phys_def",
+        "max_hp",
+        "magic_def",
+        "dodge_rate",
+        "hit_rate",
+        "crit_rate",
+    ];
+    view.core_attrs = ids
+        .iter()
+        .map(|&id| CoreAttrEntry {
+            label: attr_label(id).to_string(),
+            value: attrs.get(id) as i32,
+        })
+        .collect();
 }
 
 fn fill_combat_attrs(view: &mut SelectedUnitView, attrs: &Attributes) {
-    view.combat_attrs = [
-        AttributeKind::Attack,
-        AttributeKind::Defense,
-        AttributeKind::MagicAttack,
-        AttributeKind::MagicDefense,
-    ]
-    .iter()
-    .map(|kind| DerivedAttrEntry {
-        label: kind.label().to_string(),
-        value: attrs.get(*kind) as i32,
-    })
-    .collect();
+    let ids = ["phys_atk", "phys_def", "magic_atk", "magic_def"];
+    view.combat_attrs = ids
+        .iter()
+        .map(|&id| DerivedAttrEntry {
+            label: attr_label(id).to_string(),
+            value: attrs.get(id) as i32,
+        })
+        .collect();
 }
 
 fn fill_support_attrs(view: &mut SelectedUnitView, attrs: &Attributes) {
-    view.support_attrs = [
-        AttributeKind::Accuracy,
-        AttributeKind::Evasion,
-        AttributeKind::CritRate,
-        AttributeKind::MoveRange,
-        AttributeKind::Initiative,
-        AttributeKind::AttackRange,
-    ]
-    .iter()
-    .map(|kind| DerivedAttrEntry {
-        label: kind.label().to_string(),
-        value: attrs.get(*kind) as i32,
-    })
-    .collect();
+    let ids = [
+        "hit_rate",
+        "dodge_rate",
+        "crit_rate",
+        "move_range",
+        "initiative",
+        "atk_range",
+    ];
+    view.support_attrs = ids
+        .iter()
+        .map(|&id| DerivedAttrEntry {
+            label: attr_label(id).to_string(),
+            value: attrs.get(id) as i32,
+        })
+        .collect();
 }
 
 fn fill_skills(

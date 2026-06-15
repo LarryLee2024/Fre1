@@ -5,7 +5,7 @@
 
 use super::SkillRegistry;
 use super::types::*;
-use crate::core::effect::EffectDef;
+use crate::core::effect::{DurationDef, EffectDef, StackingDef};
 use crate::core::tag::GameplayTag;
 use crate::core::targeting::SkillTargeting;
 
@@ -28,7 +28,7 @@ pub fn register_defaults(registry: &mut SkillRegistry) {
             multiplier: 1.0,
             ignore_def_percent: 0.0,
         }],
-        tags: vec![GameplayTag::MELEE, GameplayTag::SKILL_ACTIVE],
+        tags: vec![GameplayTag::WEAPON_SWORD, GameplayTag::SPECIAL_STATE],
         conditions: vec![],
         cooldown: 0,
         priority: 0,
@@ -48,7 +48,7 @@ pub fn register_defaults(registry: &mut SkillRegistry) {
             multiplier: 1.5,
             ignore_def_percent: 0.0,
         }],
-        tags: vec![GameplayTag::MELEE, GameplayTag::SKILL_ACTIVE],
+        tags: vec![GameplayTag::WEAPON_SWORD, GameplayTag::SPECIAL_STATE],
         conditions: vec![SkillCondition::MpCost(5)],
         cooldown: 2,
         priority: 5,
@@ -68,7 +68,7 @@ pub fn register_defaults(registry: &mut SkillRegistry) {
             multiplier: 1.2,
             ignore_def_percent: 50.0,
         }],
-        tags: vec![GameplayTag::MELEE, GameplayTag::SKILL_ACTIVE],
+        tags: vec![GameplayTag::WEAPON_SWORD, GameplayTag::SPECIAL_STATE],
         conditions: vec![SkillCondition::MpCost(8)],
         cooldown: 3,
         priority: 8,
@@ -89,15 +89,16 @@ pub fn register_defaults(registry: &mut SkillRegistry) {
                 multiplier: 1.5,
                 ignore_def_percent: 0.0,
             },
-            EffectDef::ApplyBuff {
-                buff_id: "burn".into(),
-                duration: 2,
+            EffectDef::ApplyModifier {
+                modifier_id: "burn".into(),
+                duration: DurationDef::TurnLimited(2),
+                stacking: StackingDef::Replace,
             },
         ],
         tags: vec![
-            GameplayTag::FIRE,
-            GameplayTag::RANGED,
-            GameplayTag::SKILL_ACTIVE,
+            GameplayTag::DMG_FIRE,
+            GameplayTag::WEAPON_BOW,
+            GameplayTag::SPECIAL_STATE,
         ],
         conditions: vec![SkillCondition::MpCost(10)],
         cooldown: 2,
@@ -115,7 +116,7 @@ pub fn register_defaults(registry: &mut SkillRegistry) {
         range: 2,
         targeting: SkillTargeting::SingleAlly,
         effects: vec![EffectDef::Heal { amount: 8 }],
-        tags: vec![GameplayTag::SKILL_ACTIVE],
+        tags: vec![GameplayTag::SPECIAL_STATE],
         conditions: vec![SkillCondition::MpCost(6)],
         cooldown: 2,
         priority: 15,
@@ -132,7 +133,7 @@ pub fn register_defaults(registry: &mut SkillRegistry) {
         range: 2,
         targeting: SkillTargeting::SingleAlly,
         effects: vec![EffectDef::Cleanse],
-        tags: vec![GameplayTag::SKILL_ACTIVE],
+        tags: vec![GameplayTag::SPECIAL_STATE],
         conditions: vec![SkillCondition::MpCost(8)],
         cooldown: 3,
         priority: 12,

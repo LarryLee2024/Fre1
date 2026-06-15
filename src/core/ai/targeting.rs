@@ -9,9 +9,9 @@ pub(crate) struct UnitSnapshot {
     pub entity: Entity,
     pub faction: Faction,
     pub coord: IVec2,
-    pub atk: f32,
-    pub hp: f32,
-    pub max_hp: f32,
+    pub atk: i32,
+    pub hp: i32,
+    pub max_hp: i32,
     pub mov: u32,
     pub attack_range: u32,
     pub acted: bool,
@@ -51,9 +51,9 @@ mod tests {
         entity: Entity,
         faction: Faction,
         coord: IVec2,
-        atk: f32,
-        hp: f32,
-        max_hp: f32,
+        atk: i32,
+        hp: i32,
+        max_hp: i32,
     ) -> UnitSnapshot {
         UnitSnapshot {
             entity,
@@ -78,17 +78,17 @@ mod tests {
             Entity::PLACEHOLDER,
             Faction::Player,
             IVec2::new(3, 0),
-            10.0,
-            20.0,
-            20.0,
+            10,
+            20,
+            20,
         );
         let p2 = make_snapshot(
             Entity::PLACEHOLDER,
             Faction::Player,
             IVec2::new(10, 10),
-            10.0,
-            20.0,
-            20.0,
+            10,
+            20,
+            20,
         );
         let snapshots = vec![p1, p2];
         let selector = NearestTarget;
@@ -102,17 +102,17 @@ mod tests {
             Entity::PLACEHOLDER,
             Faction::Player,
             IVec2::new(3, 0),
-            10.0,
-            5.0,
-            20.0,
+            10,
+            5,
+            20,
         );
         let p2 = make_snapshot(
             Entity::PLACEHOLDER,
             Faction::Player,
             IVec2::new(5, 0),
-            10.0,
-            18.0,
-            20.0,
+            10,
+            18,
+            20,
         );
         let snapshots = vec![p1, p2];
         let selector = WeakestTarget;
@@ -126,17 +126,17 @@ mod tests {
             Entity::PLACEHOLDER,
             Faction::Player,
             IVec2::new(3, 0),
-            5.0,
-            20.0,
-            20.0,
+            5,
+            20,
+            20,
         );
         let p2 = make_snapshot(
             Entity::PLACEHOLDER,
             Faction::Player,
             IVec2::new(5, 0),
-            15.0,
-            20.0,
-            20.0,
+            15,
+            20,
+            20,
         );
         let snapshots = vec![p1, p2];
         let selector = MostDangerousTarget;
@@ -150,17 +150,17 @@ mod tests {
             Entity::PLACEHOLDER,
             Faction::Player,
             IVec2::new(3, 0),
-            10.0,
-            2.0,
-            20.0,
+            10,
+            2,
+            20,
         );
         let p2 = make_snapshot(
             Entity::PLACEHOLDER,
             Faction::Player,
             IVec2::new(5, 0),
-            10.0,
-            15.0,
-            20.0,
+            10,
+            15,
+            20,
         );
         let snapshots = vec![p1, p2];
         let selector = LowestHpPercentTarget;
@@ -183,17 +183,17 @@ mod tests {
             Entity::PLACEHOLDER,
             Faction::Player,
             IVec2::new(3, 0),
-            10.0,
-            5.0,
-            20.0,
+            10,
+            5,
+            20,
         );
         let p2 = make_snapshot(
             Entity::PLACEHOLDER,
             Faction::Player,
             IVec2::new(5, 0),
-            15.0,
-            18.0,
-            20.0,
+            15,
+            18,
+            20,
         );
         let snapshots = vec![p1, p2];
 

@@ -15,7 +15,7 @@
 // ================================================
 
 use bevy::prelude::*;
-use tactical_rpg::core::attribute::{AttributeKind, Attributes};
+use tactical_rpg::core::attribute::Attributes;
 use tactical_rpg::core::character::{Faction, Unit};
 use tactical_rpg::core::turn::{
     ForceEndTurn, NeedsResolve, TurnEnded, TurnOrder, TurnPhase, TurnStarted, TurnState,
@@ -44,12 +44,12 @@ fn setup_turn_test_app() -> App {
 }
 
 /// 生成带指定阵营和 Initiative 的单位
-fn spawn_unit(app: &mut App, faction: Faction, initiative: f32) -> Entity {
+fn spawn_unit(app: &mut App, faction: Faction, initiative: i32) -> Entity {
     let mut attrs = Attributes::default();
-    attrs.set_base(AttributeKind::Agility, initiative / 2.0);
-    attrs.set_base(AttributeKind::Luck, 0.0);
-    attrs.set_base_attack_range(1);
-    attrs.fill_vital_resources();
+    attrs.set_base("dodge_rate", initiative / 2);
+    attrs.set_base("crit_rate", 0);
+    attrs.set_base("atk_range", 1);
+    attrs.fill_hp();
     app.world_mut()
         .spawn((
             Unit {
@@ -74,7 +74,7 @@ fn spawn_unit(app: &mut App, faction: Faction, initiative: f32) -> Entity {
 fn 回合结束_回合数递增() {
     let mut app = setup_turn_test_app();
 
-    spawn_unit(&mut app, Faction::Player, 10.0);
+    spawn_unit(&mut app, Faction::Player, 10);
 
     // 初始回合数为 1
     assert_eq!(app.world().resource::<TurnState>().turn_number, 1);
@@ -102,8 +102,8 @@ fn 回合结束_回合数递增() {
 fn 回合结束_重置单位行动状态() {
     let mut app = setup_turn_test_app();
 
-    let e1 = spawn_unit(&mut app, Faction::Player, 10.0);
-    let e2 = spawn_unit(&mut app, Faction::Enemy, 8.0);
+    let e1 = spawn_unit(&mut app, Faction::Player, 10);
+    let e2 = spawn_unit(&mut app, Faction::Enemy, 8);
 
     // 模拟两个单位都已行动
     {
@@ -141,7 +141,7 @@ fn 回合结束_重置单位行动状态() {
 fn 强制结束回合_force_end_turn消息() {
     let mut app = setup_turn_test_app();
 
-    spawn_unit(&mut app, Faction::Player, 10.0);
+    spawn_unit(&mut app, Faction::Player, 10);
 
     // 发送 ForceEndTurn 消息
     app.world_mut().write_message(ForceEndTurn);

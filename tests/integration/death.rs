@@ -19,7 +19,7 @@
 
 use bevy::prelude::*;
 use tactical_rpg::core::ability::{SkillCooldowns, SkillSlots};
-use tactical_rpg::core::attribute::{AttributeKind, AttributeModifierDef, Attributes, ModifierOp};
+use tactical_rpg::core::attribute::{AttributeModifierDef, Attributes, ModifierOp};
 use tactical_rpg::core::battle::{BattleEntry, BattleRecord, execute_effects};
 use tactical_rpg::core::buff::{
     ActiveBuffs, BuffData, BuffRegistry, DurationPolicy, StackPolicy, apply_buff,
@@ -131,7 +131,7 @@ fn make_poison() -> BuffData {
         "poison",
         false,
         vec![],
-        vec![GameplayTag::DEBUFF, GameplayTag::POISON],
+        vec![GameplayTag::DEBUFF, GameplayTag::DMG_MAGICAL],
         3,
         0,
     )
@@ -227,16 +227,12 @@ fn 致命伤害触发死亡_dead标记和character_died消息() {
     let mut app = death_test_app();
 
     // 生成角色：HP=5 的哥布林
-    let goblin = spawn_unit(&mut app, UnitBuilder::goblin().with_hp(5.0), "哥布林");
+    let goblin = spawn_unit(&mut app, UnitBuilder::goblin().with_hp(5), "哥布林");
     let warrior = spawn_unit(&mut app, UnitBuilder::warrior(), "战士");
 
     // 验证初始状态
-    let hp = app
-        .world()
-        .get::<Attributes>(goblin)
-        .unwrap()
-        .get(AttributeKind::Hp);
-    assert_eq!(hp, 5.0);
+    let hp = app.world().get::<Attributes>(goblin).unwrap().current_hp;
+    assert_eq!(hp, 5);
     assert!(app.world().get::<Dead>(goblin).is_none());
 
     // ── 通过 Effect Pipeline 造成致命伤害 ──
@@ -254,12 +250,8 @@ fn 致命伤害触发死亡_dead标记和character_died消息() {
     assert!(unit.acted, "Dead Hook 应将 acted 设为 true");
 
     // ── 验证 HP 降为 0 ──
-    let hp = app
-        .world()
-        .get::<Attributes>(goblin)
-        .unwrap()
-        .get(AttributeKind::Hp);
-    assert_eq!(hp, 0.0, "致命伤害后 HP 应为 0");
+    let hp = app.world().get::<Attributes>(goblin).unwrap().current_hp;
+    assert_eq!(hp, 0, "致命伤害后 HP 应为 0");
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -290,7 +282,7 @@ fn 死亡角色_resolve_status_effects不处理() {
             GridPosition::default(),
             {
                 let mut attrs = warrior_attrs();
-                attrs.set_vital(AttributeKind::Hp, 0.0); // HP=0
+                attrs.current_hp = 0; // HP=0
                 attrs
             },
             {
@@ -309,12 +301,8 @@ fn 死亡角色_resolve_status_effects不处理() {
         .id();
 
     // 记录死亡前的 HP
-    let hp_before = app
-        .world()
-        .get::<Attributes>(entity)
-        .unwrap()
-        .get(AttributeKind::Hp);
-    assert_eq!(hp_before, 0.0);
+    let hp_before = app.world().get::<Attributes>(entity).unwrap().current_hp;
+    assert_eq!(hp_before, 0);
 
     // 确认 Dead 组件存在
     assert!(app.world().get::<Dead>(entity).is_some());
@@ -330,11 +318,7 @@ fn 死亡角色_resolve_status_effects不处理() {
 
     // ── 验证：死亡角色的 HP 不应被 DoT 进一步降低 ──
     // resolve_status_effects 的 Query 应排除 Dead 实体
-    let hp_after = app
-        .world()
-        .get::<Attributes>(entity)
-        .unwrap()
-        .get(AttributeKind::Hp);
+    let hp_after = app.world().get::<Attributes>(entity).unwrap().current_hp;
     assert_eq!(hp_after, hp_before, "死亡角色不应再受 DoT 影响");
 }
 
@@ -375,21 +359,13 @@ fn 存活角色_resolve_status_effects正常处理dot() {
         ))
         .id();
 
-    let hp_before = app
-        .world()
-        .get::<Attributes>(entity)
-        .unwrap()
-        .get(AttributeKind::Hp);
+    let hp_before = app.world().get::<Attributes>(entity).unwrap().current_hp;
 
     // ── 触发 resolve_status_effects ──
     app.world_mut().resource_mut::<NeedsResolve>().0 = true;
     app.update();
 
     // ── 验证：存活角色受到 DoT 伤害 ──
-    let hp_after = app
-        .world()
-        .get::<Attributes>(entity)
-        .unwrap()
-        .get(AttributeKind::Hp);
-    assert_eq!(hp_after, hp_before - 3.0, "存活角色应受到 Poison DoT 伤害");
+    let hp_after = app.world().get::<Attributes>(entity).unwrap().current_hp;
+    assert_eq!(hp_after, hp_before - 3, "存活角色应受到 Poison DoT 伤害");
 }

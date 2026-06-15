@@ -36,9 +36,9 @@ pub struct TurnOrder {
 
 impl TurnOrder {
     /// 根据所有单位的 Initiative 降序排列，生成行动队列
-    pub fn build(units: &[(Entity, f32)]) -> Vec<Entity> {
+    pub fn build(units: &[(Entity, i32)]) -> Vec<Entity> {
         let mut sorted: Vec<_> = units.to_vec();
-        sorted.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+        sorted.sort_by(|a, b| b.1.cmp(&a.1));
         sorted.into_iter().map(|(e, _)| e).collect()
     }
 
@@ -135,7 +135,7 @@ pub fn init_turn_order(
     bevy::log::debug!(target: "turn", turn = turn_state.turn_number, "回合已开始");
 
     // 重建行动队列
-    let unit_initiatives: Vec<(Entity, f32)> = units
+    let unit_initiatives: Vec<(Entity, i32)> = units
         .iter()
         .map(|(entity, _, attrs)| (entity, attrs.get("initiative")))
         .collect();
@@ -193,7 +193,7 @@ pub fn turn_end_on_enter(
     needs_resolve.0 = true;
 
     // 重建行动队列：所有存活单位按 Initiative 降序
-    let unit_initiatives: Vec<(Entity, f32)> = units
+    let unit_initiatives: Vec<(Entity, i32)> = units
         .iter()
         .map(|(entity, _, attrs)| (entity, attrs.get("initiative")))
         .collect();
@@ -240,7 +240,7 @@ mod tests {
         let e1 = Entity::from_bits(1);
         let e2 = Entity::from_bits(2);
         let e3 = Entity::from_bits(3);
-        let units = vec![(e1, 10.0), (e2, 20.0), (e3, 15.0)];
+        let units = vec![(e1, 10), (e2, 20), (e3, 15)];
         let queue = TurnOrder::build(&units);
         assert_eq!(queue, vec![e2, e3, e1]);
     }
@@ -249,7 +249,7 @@ mod tests {
     fn 行动队列_相同initiative稳定排序() {
         let e1 = Entity::from_bits(1);
         let e2 = Entity::from_bits(2);
-        let units = vec![(e1, 10.0), (e2, 10.0)];
+        let units = vec![(e1, 10), (e2, 10)];
         let queue = TurnOrder::build(&units);
         assert_eq!(queue, vec![e1, e2]); // 保持原始顺序
     }

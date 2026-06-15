@@ -16,8 +16,7 @@ pub mod template;
 mod traits;
 
 use crate::core::attribute::{
-    AttributeModifierDef, AttributeModifierInstance, Attributes, BuffInstanceId, ModifierOp,
-    ModifierSource,
+    AttributeModifierDef, AttributeModifierInstance, BuffInstanceId, ModifierOp, ModifierSource,
 };
 use crate::core::battle::CharacterDied;
 use crate::core::tag::{GameplayTag, GameplayTags};

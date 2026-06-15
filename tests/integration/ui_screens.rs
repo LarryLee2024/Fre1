@@ -27,8 +27,8 @@ use std::collections::HashMap;
 use bevy::prelude::*;
 
 use tactical_rpg::core::campaign::def::{CampaignDef, StageDef};
-use tactical_rpg::core::campaign::progress::{CampaignProgress, StageStatus};
 use tactical_rpg::core::campaign::registry::CampaignRegistry;
+use tactical_rpg::core::campaign::state::{CampaignProgress, StageStatus};
 use tactical_rpg::core::map::{LevelConfig, LevelRegistry};
 use tactical_rpg::core::turn::{AppState, GameOverState, TurnState};
 use tactical_rpg::infrastructure::assets::CnFont;

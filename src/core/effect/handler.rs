@@ -2,7 +2,7 @@
 // 新增效果类型只需实现此 trait 并注册，无需修改核心代码
 // 遵循"Trait 描述规则，不描述内容"原则
 
-use crate::core::attribute::Attributes;
+use crate::core::attribute::{Attributes, CoreAttribute};
 use crate::core::battle::DamageBreakdown;
 use crate::core::battle::{DamageApplied, HealApplied};
 use crate::core::buff::{ActiveBuffs, BuffRegistry, remove_all_debuffs};
@@ -15,8 +15,7 @@ use bevy::prelude::*;
 use std::collections::HashMap;
 
 use super::types::{
-    DurationDef, EffectDef, PendingEffect, PendingEffectData, StackingDef,
-    calculate_damage_from_effect,
+    DurationDef, EffectDef, PendingEffect, PendingEffectData, calculate_damage_from_effect,
 };
 
 // ── 上下文结构体（纯数据，避免 ECS 借用问题）──
@@ -227,6 +226,7 @@ impl<'w> ExecuteContext<'w> {
     }
 
     /// 对目标施加 Buff
+    #[allow(deprecated)]
     pub fn apply_buff(
         &mut self,
         target_entity: Entity,
@@ -258,6 +258,7 @@ impl<'w> ExecuteContext<'w> {
     }
 
     /// 对目标驱散所有 Debuff
+    #[allow(deprecated)]
     pub fn apply_cleanse(&mut self, target_entity: Entity) {
         let mut query_state: QueryState<(&mut ActiveBuffs, &mut Attributes, &mut GameplayTags)> =
             QueryState::new(self.world);
@@ -343,6 +344,7 @@ impl EffectHandler for DamageHandler {
         "Damage"
     }
 
+    #[allow(deprecated)]
     fn generate(&self, def: &EffectDef, ctx: &GenerateContext) -> Option<PendingEffectData> {
         let EffectDef::Damage {
             multiplier,
@@ -354,7 +356,7 @@ impl EffectHandler for DamageHandler {
 
         let effective_atk = ctx.source_attrs.get("phys_atk") as f32;
         let effective_def = ctx.target_attrs.get("phys_def") as f32;
-        let base_def = ctx.target_attrs.core_value(crate::CoreAttribute::PhysDef) as f32;
+        let base_def = ctx.target_attrs.core_value(CoreAttribute::PhysDef) as f32;
 
         let amount = calculate_damage_from_effect(
             effective_atk,
@@ -373,6 +375,7 @@ impl EffectHandler for DamageHandler {
         })
     }
 
+    #[allow(deprecated)]
     fn preview(&self, def: &EffectDef, ctx: &PreviewContext) -> Option<EffectPreview> {
         let EffectDef::Damage {
             multiplier,
@@ -384,7 +387,7 @@ impl EffectHandler for DamageHandler {
 
         let effective_atk = ctx.source_attrs.get("phys_atk") as f32;
         let effective_def = ctx.target_attrs.get("phys_def") as f32;
-        let base_def = ctx.target_attrs.core_value(crate::CoreAttribute::PhysDef) as f32;
+        let base_def = ctx.target_attrs.core_value(CoreAttribute::PhysDef) as f32;
 
         let amount = calculate_damage_from_effect(
             effective_atk,
@@ -496,53 +499,6 @@ impl EffectHandler for HealHandler {
     }
 }
 
-/// Buff 处理器
-pub struct BuffHandler;
-
-impl EffectHandler for BuffHandler {
-    fn type_name(&self) -> &'static str {
-        "ApplyBuff"
-    }
-
-    fn generate(&self, def: &EffectDef, _ctx: &GenerateContext) -> Option<PendingEffectData> {
-        let EffectDef::ApplyBuff { buff_id, duration } = def else {
-            return None;
-        };
-        Some(PendingEffectData::ApplyBuff {
-            buff_id: buff_id.clone(),
-            duration: *duration,
-        })
-    }
-
-    fn preview(&self, def: &EffectDef, ctx: &PreviewContext) -> Option<EffectPreview> {
-        let EffectDef::ApplyBuff { buff_id, .. } = def else {
-            return None;
-        };
-        let buff_name = ctx
-            .buff_registry
-            .get(buff_id)
-            .map(|b| b.name.as_str())
-            .unwrap_or(buff_id);
-        Some(EffectPreview::BuffApplied {
-            buff_name: buff_name.to_string(),
-        })
-    }
-
-    fn execute(&self, effect: &PendingEffect, ctx: &mut ExecuteContext) -> Option<ExecuteOutput> {
-        let PendingEffectData::ApplyBuff { buff_id, duration } = &effect.data else {
-            return None;
-        };
-
-        ctx.apply_buff(effect.target, buff_id, effect.source, *duration);
-
-        Some(ExecuteOutput {
-            target_died: false,
-            target: effect.target,
-            source: effect.source,
-        })
-    }
-}
-
 /// 净化处理器
 pub struct CleanseHandler;
 
@@ -604,7 +560,7 @@ impl EffectHandler for ModifierHandler {
         })
     }
 
-    fn preview(&self, def: &EffectDef, ctx: &PreviewContext) -> Option<EffectPreview> {
+    fn preview(&self, def: &EffectDef, _ctx: &PreviewContext) -> Option<EffectPreview> {
         let EffectDef::ApplyModifier { modifier_id, .. } = def else {
             return None;
         };
@@ -712,7 +668,6 @@ impl EffectHandlerRegistry {
     pub fn register_defaults(&mut self) {
         self.register(Box::new(DamageHandler));
         self.register(Box::new(HealHandler));
-        self.register(Box::new(BuffHandler));
         self.register(Box::new(CleanseHandler));
         self.register(Box::new(ModifierHandler));
     }
@@ -805,11 +760,11 @@ mod tests {
     }
 
     #[test]
-    fn 注册表_默认注册4个处理器() {
+    fn 注册表_默认注册处理器() {
         let registry = EffectHandlerRegistry::default();
         assert!(registry.find("Damage").is_some());
         assert!(registry.find("Heal").is_some());
-        assert!(registry.find("ApplyBuff").is_some());
+        assert!(registry.find("ApplyModifier").is_some());
         assert!(registry.find("Cleanse").is_some());
         assert!(registry.find("Unknown").is_none());
     }
@@ -890,25 +845,6 @@ mod tests {
             assert_eq!(amount, 8);
         } else {
             panic!("应该是治疗预览");
-        }
-    }
-
-    #[test]
-    fn buff处理器_生成() {
-        let registry = EffectHandlerRegistry::default();
-        let handler = registry.find("ApplyBuff").unwrap();
-        let ctx = make_generate_ctx();
-        let def = EffectDef::ApplyBuff {
-            buff_id: "burn".into(),
-            duration: 2,
-        };
-        let result = handler.generate(&def, &ctx);
-        assert!(result.is_some());
-        if let PendingEffectData::ApplyBuff { buff_id, duration } = result.unwrap() {
-            assert_eq!(buff_id, "burn");
-            assert_eq!(duration, 2);
-        } else {
-            panic!("应该是 Buff 数据");
         }
     }
 

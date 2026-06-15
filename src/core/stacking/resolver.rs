@@ -34,7 +34,7 @@ pub fn resolve_stacking(
     };
 
     // 根据叠层策略判定
-    match ctx.rule {
+    match new_rule {
         // Replace: 替换旧实例
         StackingRule::Replace => StackingResult::Replaced,
 

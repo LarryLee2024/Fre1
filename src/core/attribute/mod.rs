@@ -311,6 +311,13 @@ impl Attributes {
         }
     }
 
+    /// 移除所有 Trait 来源的修饰符（Phase 2 桥接）
+    pub fn remove_trait_modifiers(&mut self) {
+        for mods in self.modifiers.values_mut() {
+            mods.retain(|m| !m.source.is_trait());
+        }
+    }
+
     /// 设置基础攻击范围（临时桥接，将在 Step 4 删除）
     pub fn set_base_attack_range(&mut self, value: u32) {
         self.set_base("atk_range", value as i32);

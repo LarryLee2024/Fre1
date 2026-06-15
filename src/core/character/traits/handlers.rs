@@ -125,7 +125,7 @@ mod tests {
     // ================================================
 
     use super::*;
-    use crate::core::attribute::{AttributeKind, ModifierOp};
+    use crate::core::attribute::ModifierOp;
 
     // ── GrantTagHandler ──
 
@@ -161,14 +161,14 @@ mod tests {
     fn 授予标签处理器_授予标签() {
         // Given
         let handler = GrantTagHandler;
-        let effect = TraitEffect::GrantTag(GameplayTag::WARRIOR);
+        let effect = TraitEffect::GrantTag(GameplayTag::ALLY);
 
         // When
         let tags = handler.granted_tags(&effect);
 
         // Then
         assert_eq!(tags.len(), 1);
-        assert!(tags.contains(&GameplayTag::WARRIOR));
+        assert!(tags.contains(&GameplayTag::ALLY));
     }
 
     /// Test ID: CHR-HDL-003
@@ -184,9 +184,9 @@ mod tests {
         // Given
         let handler = GrantTagHandler;
         let effect = TraitEffect::ModifyAttribute(AttributeModifierDef {
-            kind: AttributeKind::Attack,
+            config_id: "phys_atk".to_string(),
             op: ModifierOp::Add,
-            value: 5.0,
+            value: 5,
         });
 
         // When
@@ -208,7 +208,7 @@ mod tests {
     fn 授予标签处理器_无属性修饰符() {
         // Given
         let handler = GrantTagHandler;
-        let effect = TraitEffect::GrantTag(GameplayTag::FIRE);
+        let effect = TraitEffect::GrantTag(GameplayTag::DMG_FIRE);
 
         // When
         let mods = handler.attribute_modifiers(&effect);
@@ -252,9 +252,9 @@ mod tests {
         // Given
         let handler = ModifyAttributeHandler;
         let effect = TraitEffect::ModifyAttribute(AttributeModifierDef {
-            kind: AttributeKind::Attack,
+            config_id: "phys_atk".to_string(),
             op: ModifierOp::Add,
-            value: 10.0,
+            value: 10,
         });
 
         // When
@@ -262,8 +262,8 @@ mod tests {
 
         // Then
         assert_eq!(mods.len(), 1);
-        assert_eq!(mods[0].kind, AttributeKind::Attack);
-        assert_eq!(mods[0].value, 10.0);
+        assert_eq!(mods[0].config_id, "phys_atk");
+        assert_eq!(mods[0].value, 10);
     }
 
     /// Test ID: CHR-HDL-007
@@ -278,7 +278,7 @@ mod tests {
     fn 修改属性处理器_非修改返回空() {
         // Given
         let handler = ModifyAttributeHandler;
-        let effect = TraitEffect::GrantTag(GameplayTag::MAGE);
+        let effect = TraitEffect::GrantTag(GameplayTag::SPECIAL_STATE);
 
         // When
         let mods = handler.attribute_modifiers(&effect);
@@ -300,9 +300,9 @@ mod tests {
         // Given
         let handler = ModifyAttributeHandler;
         let effect = TraitEffect::ModifyAttribute(AttributeModifierDef {
-            kind: AttributeKind::Defense,
+            config_id: "phys_def".to_string(),
             op: ModifierOp::Multiply,
-            value: 1.5,
+            value: 15000,
         });
 
         // When
@@ -454,7 +454,7 @@ mod tests {
         // When
         registry.register(Box::new(CustomHandler));
         let handler = registry.get("Custom").unwrap();
-        let effect = TraitEffect::GrantTag(GameplayTag::FIRE);
+        let effect = TraitEffect::GrantTag(GameplayTag::DMG_FIRE);
         let tags = handler.granted_tags(&effect);
 
         // Then

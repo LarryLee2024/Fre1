@@ -237,7 +237,7 @@ mod tests {
                 name: "旧配置",
                 description: "没有version字段",
                 trigger: Passive,
-                effects: [GrantTag(WARRIOR)],
+                effects: [GrantTag("dmg_physical")],
             )
         "#;
 

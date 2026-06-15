@@ -5,15 +5,10 @@
 
 #[cfg(test)]
 mod tests {
-    use crate::core::ability::*;
-    use crate::core::attribute::*;
-    use crate::core::buff::*;
     use crate::core::cue::*;
     use crate::core::effect::*;
     use crate::core::execution::*;
-    use crate::core::modifier::*;
     use crate::core::stacking::*;
-    use crate::core::tag::*;
     use crate::infrastructure::pipeline::*;
     use crate::infrastructure::registry::*;
     use crate::infrastructure::replay::*;

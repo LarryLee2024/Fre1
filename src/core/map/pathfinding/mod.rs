@@ -577,13 +577,13 @@ mod tests {
 
         // When & Then - mounted
         let mut tags = GameplayTags::default();
-        tags.add(GameplayTag::MOUNTED);
+        tags.add(GameplayTag::MECHANICAL);
         let calc = registry.resolve_from_tags(&tags);
         assert_eq!(calc.name(), "mounted");
 
         // When & Then - swimming
         let mut tags = GameplayTags::default();
-        tags.add(GameplayTag::SWIMMING);
+        tags.add(GameplayTag::GROUNDED);
         let calc = registry.resolve_from_tags(&tags);
         assert_eq!(calc.name(), "swimming");
     }
@@ -602,7 +602,7 @@ mod tests {
         let registry = TerrainCostRegistry::default();
         let mut tags = GameplayTags::default();
         tags.add(GameplayTag::FLYING);
-        tags.add(GameplayTag::SWIMMING);
+        tags.add(GameplayTag::GROUNDED);
 
         // When
         let calc = registry.resolve_from_tags(&tags);

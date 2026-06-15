@@ -17,7 +17,7 @@
 use tactical_rpg::core::ability::{
     BASIC_ATTACK_ID, SkillCooldowns, SkillData, SkillSlots, SkillTargeting, effective_skill_range,
 };
-use tactical_rpg::core::attribute::{AttributeKind, Attributes};
+use tactical_rpg::core::attribute::Attributes;
 use tactical_rpg::core::tag::{GameplayTag, GameplayTags};
 
 use crate::common::fixtures::warrior_attrs;
@@ -28,16 +28,17 @@ use crate::common::fixtures::warrior_attrs;
 /// 注意：与 crate::common::fixtures::mage_attrs() 属性值不同，保留本地版本
 fn mage_attrs() -> Attributes {
     let mut a = Attributes::default();
-    a.set_base(AttributeKind::Might, 2.0);
-    a.set_base(AttributeKind::Vitality, 3.0);
-    a.set_base(AttributeKind::Agility, 6.0);
-    a.set_base(AttributeKind::Dexterity, 3.0);
-    a.set_base(AttributeKind::Intelligence, 5.0);
-    a.set_base(AttributeKind::Willpower, 4.0);
-    a.set_base(AttributeKind::Presence, 3.0);
-    a.set_base(AttributeKind::Luck, 2.0);
-    a.set_base_attack_range(2);
-    a.fill_vital_resources();
+    a.set_base("phys_atk", 2);
+    a.set_base("max_hp", 3);
+    a.set_base("dodge_rate", 6);
+    a.set_base("hit_rate", 3);
+    a.set_base("magic_atk", 5);
+    a.set_base("magic_def", 4);
+    a.set_base("crit_rate", 3);
+    a.set_base("move_range", 3);
+    a.set_base("atk_range", 2);
+    a.set_base("mp", 25);
+    a.fill_hp();
     a
 }
 
@@ -83,7 +84,7 @@ fn mage_only_skill() -> SkillData {
         cost_mp: 10,
         range: 2,
         conditions: vec![
-            tactical_rpg::core::ability::SkillCondition::RequireTag(GameplayTag::MAGE),
+            tactical_rpg::core::ability::SkillCondition::RequireTag(GameplayTag::ALLY),
             tactical_rpg::core::ability::SkillCondition::MpCost(10),
         ],
         priority: 20,
@@ -154,7 +155,8 @@ fn 技能槽_冷却递减后技能恢复可用() {
     cooldowns.set("fireball", 2);
 
     let skill = fireball();
-    let attrs = warrior_attrs();
+    let mut attrs = warrior_attrs();
+    attrs.set_base("mp", 999);
     let tags = GameplayTags::default();
 
     // 冷却中不可用
@@ -201,7 +203,7 @@ fn 技能槽_迭代器与特殊技能() {
 fn 战士_MP不足无法释放火球() {
     let skill = fireball();
     let mut attrs = warrior_attrs();
-    attrs.set_vital(AttributeKind::Mp, 3.0); // MP=3 < 8
+    attrs.set_base("mp", 3);
     let tags = GameplayTags::default();
 
     let result = skill.can_use(&attrs, &tags, None, 0);
@@ -237,14 +239,15 @@ fn 法师_MP足够可以释放火球() {
 #[test]
 fn 战士_缺少MAGE标签无法释放奥术冲击() {
     let skill = mage_only_skill();
-    let attrs = warrior_attrs();
+    let mut attrs = warrior_attrs();
+    attrs.set_base("mp", 999); // 绕过 MP 检查以触发 RequireTag 检查
     let tags = GameplayTags::default(); // 没有 MAGE 标签
 
     let result = skill.can_use(&attrs, &tags, None, 0);
     assert_eq!(
         result,
         Err(tactical_rpg::core::ability::SkillUseError::MissingTag {
-            tag: GameplayTag::MAGE
+            tag: GameplayTag::ALLY
         })
     );
 }
@@ -259,7 +262,7 @@ fn 法师_拥有MAGE标签可以释放奥术冲击() {
     let skill = mage_only_skill();
     let attrs = mage_attrs();
     let mut tags = GameplayTags::default();
-    tags.add(GameplayTag::MAGE);
+    tags.add(GameplayTag::ALLY);
 
     assert!(skill.can_use(&attrs, &tags, None, 0).is_ok());
 }
@@ -295,7 +298,7 @@ fn 狂暴_HP充足时不可用() {
 fn 狂暴_HP低于30百分比时可用() {
     let skill = berserker_skill();
     let mut attrs = warrior_attrs();
-    attrs.set_vital(AttributeKind::Hp, 8.0); // HP=8, MaxHp=30 → 26.7% < 30%
+    attrs.current_hp = 8; // HP=8, MaxHp=50 → 16% < 30%
     let tags = GameplayTags::default();
 
     assert!(skill.can_use(&attrs, &tags, None, 0).is_ok());
@@ -410,7 +413,7 @@ fn 法师_奥术冲击_满足所有条件() {
     let skill = mage_only_skill();
     let attrs = mage_attrs();
     let mut tags = GameplayTags::default();
-    tags.add(GameplayTag::MAGE);
+    tags.add(GameplayTag::ALLY);
 
     // MP=25 >= 10, 有 MAGE 标签, 冷却=0
     assert!(skill.can_use(&attrs, &tags, None, 0).is_ok());
@@ -425,9 +428,9 @@ fn 法师_奥术冲击_满足所有条件() {
 fn 法师_奥术冲击_MP不足时失败() {
     let skill = mage_only_skill();
     let mut attrs = mage_attrs();
-    attrs.set_vital(AttributeKind::Mp, 5.0); // MP=5 < 10
+    attrs.set_base("mp", 5); // MP=5 < 10 → MP 不足
     let mut tags = GameplayTags::default();
-    tags.add(GameplayTag::MAGE);
+    tags.add(GameplayTag::ALLY);
 
     let result = skill.can_use(&attrs, &tags, None, 0);
     assert!(result.is_err());
@@ -441,7 +444,8 @@ fn 法师_奥术冲击_MP不足时失败() {
 #[test]
 fn 战士_缺少标签且MP不足_第一个条件失败() {
     let skill = mage_only_skill();
-    let attrs = warrior_attrs(); // 没有 MAGE 标签, MP=10
+    let mut attrs = warrior_attrs();
+    attrs.set_base("mp", 10); // 足够 MP 以触发 RequireTag 检查
     let tags = GameplayTags::default();
 
     // 第一个失败条件是 MissingTag
@@ -449,7 +453,7 @@ fn 战士_缺少标签且MP不足_第一个条件失败() {
     assert_eq!(
         result,
         Err(tactical_rpg::core::ability::SkillUseError::MissingTag {
-            tag: GameplayTag::MAGE
+            tag: GameplayTag::ALLY
         })
     );
 }
@@ -471,7 +475,8 @@ fn 多技能冷却独立递减() {
 
     let fireball = fireball();
     let heal = heal();
-    let attrs = warrior_attrs();
+    let mut attrs = warrior_attrs();
+    attrs.set_base("mp", 999);
     let tags = GameplayTags::default();
 
     // 第1轮 tick
@@ -510,7 +515,8 @@ fn 冷却clear后所有技能立即可用() {
 
     let fireball = fireball();
     let heal = heal();
-    let attrs = warrior_attrs();
+    let mut attrs = warrior_attrs();
+    attrs.set_base("mp", 999);
     let tags = GameplayTags::default();
 
     assert!(

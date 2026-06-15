@@ -6,7 +6,6 @@
 /// 此模块保留用于向后兼容，将在后续版本中移除。
 
 /// Buff 应用/移除逻辑
-#[deprecated(note = "Use effect::ApplyModifier instead")]
 mod apply;
 /// BuffDef 定义与 BuffRegistry 注册表
 mod domain;
@@ -24,7 +23,8 @@ use crate::core::turn::TurnPhase;
 use bevy::prelude::*;
 
 /// 公共 re-exports
-pub use apply::*;
+#[deprecated(note = "Use effect::ApplyModifier instead")]
+pub use apply::{apply_buff, apply_buff_with_stack, remove_all_debuffs, remove_buff};
 pub use domain::*;
 pub use instance::*;
 pub use resolve::resolve_status_effects;

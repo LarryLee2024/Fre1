@@ -305,9 +305,9 @@ mod tests {
                 description: "普通的铁剑",
                 slot: MainHand,
                 rarity: Common,
-                tags: [SWORD, MELEE, MARTIAL],
+                tags: ["sword", "melee", "martial"],
                 modifiers: [
-                    (kind: Attack, op: Add, value: 3.0),
+                    (config_id: "phys_atk", op: Add, value: 3),
                 ],
             )
         "#;
@@ -330,13 +330,13 @@ mod tests {
                 description: "蕴含龙焰的古老长剑",
                 slot: MainHand,
                 rarity: Epic,
-                tags: [SWORD, FIRE, MARTIAL, TWO_HANDED],
+                tags: ["weapon_sword", "dmg_fire", "martial", "two_handed"],
                 modifiers: [
-                    (kind: Attack, op: Add, value: 15.0),
-                    (kind: CritRate, op: Add, value: 5.0),
+                    (config_id: "phys_atk", op: Add, value: 15),
+                    (config_id: "crit_rate", op: Add, value: 500),
                 ],
                 traits: ["flaming_weapon", "dragon_bane"],
-                requirements: [RequireTag(MARTIAL)],
+                requirements: [RequireTag("martial")],
             )
         "#;
         let def: EquipmentDef = from_bytes(ron_str.as_bytes()).unwrap();

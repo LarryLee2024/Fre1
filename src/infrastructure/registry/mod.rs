@@ -10,7 +10,7 @@ use bevy::prelude::*;
 pub struct RegistryPlugin;
 
 impl Plugin for RegistryPlugin {
-    fn build(&self, app: &mut App) {
+    fn build(&self, _app: &mut App) {
         // Registry 是最底层无依赖模块
         // 各子模块的 Registry 由各自 Plugin 注册
         // 此插件作为统一入口标记

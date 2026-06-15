@@ -17,7 +17,7 @@
 use bevy::prelude::*;
 use tactical_rpg::core::ability::SkillCooldowns;
 use tactical_rpg::core::ability::SkillSlots;
-use tactical_rpg::core::attribute::{AttributeKind, Attributes, BuffInstanceId};
+use tactical_rpg::core::attribute::{Attributes, BuffInstanceId};
 use tactical_rpg::core::battle::{
     CharacterDied, DotApplied, HotApplied, StunApplied, execute_effects, trigger_on_attack_traits,
     trigger_on_kill_traits,
@@ -29,12 +29,12 @@ use tactical_rpg::core::character::{
     Faction, GridPosition, PersistentTags, TraitCollection, TraitData, TraitEffect,
     TraitEffectHandlerRegistry, TraitRegistry, TraitSource, TraitTrigger, Unit, UnitName,
 };
-use tactical_rpg::core::effect::{EffectQueue, PendingEffectData};
+use tactical_rpg::core::effect::{DurationDef, EffectQueue, PendingEffectData};
 use tactical_rpg::core::equipment::{
     EquipItem, EquipmentRegistry, EquipmentSlot, EquipmentSlots, Rarity, UnequipItem,
 };
 use tactical_rpg::core::inventory::container::{Container, ContainerKind};
-use tactical_rpg::core::inventory::definition::{ItemDef, ItemRegistry, ItemType, UseEffect};
+use tactical_rpg::core::inventory::def::{ItemDef, ItemRegistry, ItemType, UseEffect};
 use tactical_rpg::core::inventory::instance::{InstanceIdCounter, ItemStack};
 use tactical_rpg::core::inventory::transfer::TransferItem;
 use tactical_rpg::core::inventory::use_item::UseItem;
@@ -130,8 +130,8 @@ fn register_consumables(app: &mut App) {
         requirements: vec![],
         slot: None,
         use_effects: vec![UseEffect::RestoreVital {
-            kind: AttributeKind::Hp,
-            value: 50.0,
+            config_id: "max_hp".into(),
+            value: 50,
         }],
         container_capacity: None,
         container_max_weight: None,
@@ -241,8 +241,8 @@ fn 伤害效果减少目标hp() {
             },
             {
                 let mut a = Attributes::default();
-                a.set_base(AttributeKind::Vitality, 5.0);
-                a.fill_vital_resources();
+                a.set_base("max_hp", 30);
+                a.fill_hp();
                 a
             },
             SkillSlots::default(),
@@ -268,7 +268,7 @@ fn 伤害效果减少目标hp() {
     tick(&mut app);
 
     let hp = get_hp(&app, target);
-    assert!(hp < 30.0, "伤害效果应减少目标 HP，实际 HP = {}", hp);
+    assert!(hp < 30, "伤害效果应减少目标 HP，实际 HP = {}", hp);
 }
 
 /// SYS-002: 治疗效果恢复目标 HP
@@ -296,9 +296,9 @@ fn 治疗效果恢复目标hp() {
             },
             {
                 let mut a = Attributes::default();
-                a.set_base(AttributeKind::Vitality, 5.0);
-                a.fill_vital_resources();
-                a.set_vital(AttributeKind::Hp, 10.0); // 受伤状态
+                a.set_base("max_hp", 30);
+                a.fill_hp();
+                a.current_hp = 10; // 受伤状态
                 a
             },
             SkillSlots::default(),
@@ -314,8 +314,8 @@ fn 治疗效果恢复目标hp() {
     tick(&mut app);
 
     let hp = get_hp(&app, target);
-    assert!(hp > 10.0, "治疗效果应恢复目标 HP，实际 HP = {}", hp);
-    assert!(hp <= 30.0, "治疗不应超过 MaxHp，实际 HP = {}", hp);
+    assert!(hp > 10, "治疗效果应恢复目标 HP，实际 HP = {}", hp);
+    assert!(hp <= 30, "治疗不应超过 MaxHp，实际 HP = {}", hp);
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -347,8 +347,8 @@ fn buff_tick减少剩余回合数() {
             },
             {
                 let mut a = Attributes::default();
-                a.set_base(AttributeKind::Vitality, 5.0);
-                a.fill_vital_resources();
+                a.set_base("max_hp", 30);
+                a.fill_hp();
                 a
             },
             ActiveBuffs::default(),
@@ -418,8 +418,8 @@ fn buff过期后自动移除() {
             },
             {
                 let mut a = Attributes::default();
-                a.set_base(AttributeKind::Vitality, 5.0);
-                a.fill_vital_resources();
+                a.set_base("max_hp", 30);
+                a.fill_hp();
                 a
             },
             ActiveBuffs::default(),
@@ -768,11 +768,16 @@ fn on_attack_trait触发后效果入队() {
     assert_eq!(queue.pending.len(), 1, "OnAttack Trait 应产生 1 个效果");
     assert_eq!(queue.pending[0].source, attacker);
     assert_eq!(queue.pending[0].target, target);
-    if let PendingEffectData::ApplyBuff { buff_id, duration } = &queue.pending[0].data {
-        assert_eq!(buff_id, "attack_up");
-        assert_eq!(*duration, 2);
+    if let PendingEffectData::ApplyModifier {
+        modifier_id,
+        duration,
+        ..
+    } = &queue.pending[0].data
+    {
+        assert_eq!(modifier_id, "attack_up");
+        assert_eq!(*duration, DurationDef::TurnLimited(2));
     } else {
-        panic!("期望 ApplyBuff 效果");
+        panic!("期望 ApplyModifier 效果");
     }
 }
 

@@ -113,7 +113,7 @@ fn execute_movement(
     spawn_path_arrows(commands, map, &path);
 
     let move_speed = 0.15_f32;
-    let path_len = path.len();
+    let _path_len = path.len();
 
     commands.entity(intent.entity).insert(MovingUnit {
         path,

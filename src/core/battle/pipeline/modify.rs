@@ -73,9 +73,7 @@ pub fn modify_effects(
                         "治疗修饰"
                     );
                 }
-                PendingEffectData::ApplyModifier { .. }
-                | PendingEffectData::ApplyBuff { .. }
-                | PendingEffectData::Cleanse => {}
+                PendingEffectData::ApplyModifier { .. } | PendingEffectData::Cleanse => {}
             }
         }
     }

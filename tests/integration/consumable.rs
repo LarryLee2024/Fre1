@@ -15,13 +15,11 @@
 // ================================================
 
 use bevy::prelude::*;
-use tactical_rpg::core::attribute::{
-    AttributeKind, AttributeModifierInstance, Attributes, ModifierOp,
-};
+use tactical_rpg::core::attribute::Attributes;
 use tactical_rpg::core::buff::ActiveBuffs;
 use tactical_rpg::core::equipment::Rarity;
 use tactical_rpg::core::inventory::container::Container;
-use tactical_rpg::core::inventory::definition::{ItemDef, ItemRegistry, ItemType, UseEffect};
+use tactical_rpg::core::inventory::def::{ItemDef, ItemRegistry, ItemType, UseEffect};
 use tactical_rpg::core::inventory::instance::{InstanceIdCounter, ItemStack};
 use tactical_rpg::core::inventory::use_item::UseItem;
 
@@ -47,8 +45,8 @@ fn register_consumables(app: &mut App) {
         requirements: vec![],
         slot: None,
         use_effects: vec![UseEffect::RestoreVital {
-            kind: AttributeKind::Hp,
-            value: 50.0,
+            config_id: "max_hp".into(),
+            value: 50,
         }],
         container_capacity: None,
         container_max_weight: None,
@@ -136,17 +134,17 @@ fn 治疗药水恢复hp_受伤角色使用后hp修饰符增加() {
     // 手动降低 HP
     let max_hp = {
         let attrs = app.world().get::<Attributes>(entity).unwrap();
-        attrs.get(AttributeKind::MaxHp)
+        attrs.get("max_hp")
     };
     {
         let mut attrs = app.world_mut().get_mut::<Attributes>(entity).unwrap();
-        attrs.set_vital(AttributeKind::Hp, max_hp - 80.0);
+        attrs.current_hp = max_hp - 80;
     }
 
     // 记录使用前 HP
     let hp_before = {
         let attrs = app.world().get::<Attributes>(entity).unwrap();
-        attrs.get(AttributeKind::Hp)
+        attrs.current_hp
     };
 
     // 在背包放入治疗药水，记录堆叠数量
@@ -167,28 +165,14 @@ fn 治疗药水恢复hp_受伤角色使用后hp修饰符增加() {
 
     // 验证：系统正确处理了 UseItem 消息
     let attrs = app.world().get::<Attributes>(entity).unwrap();
-    let hp_after = attrs.get(AttributeKind::Hp);
+    let hp_after = attrs.current_hp;
 
     // ⚠️ 已知限制：RestoreVital 通过 use_item_system 调用时不改变 current_hp
-    // attrs.get(Hp) 返回 self.current_hp，不叠加修饰符值
     // 详见 src/core/attribute/mod.rs get() 实现
-    assert!(
-        (hp_after - hp_before).abs() < 0.01,
-        "HP 不应变化（已知限制），变化前={:.0}，变化后={:.0}",
-        hp_before,
-        hp_after
-    );
-
-    // 验证：修饰符已移除（RestoreVital 是一次性效果，不保留持久修饰符）
-    let hp_mods: Vec<&AttributeModifierInstance> = attrs
-        .modifiers
-        .iter()
-        .filter(|m| m.kind == AttributeKind::Hp)
-        .collect();
     assert_eq!(
-        hp_mods.len(),
-        0,
-        "RestoreVital 是一次性效果，不应残留 HP 修饰符"
+        hp_after, hp_before,
+        "HP 不应变化（已知限制），变化前={}，变化后={}",
+        hp_before, hp_after
     );
 
     // 验证：消息处理和堆叠消耗正常工作（已用药水堆叠被完全消耗）

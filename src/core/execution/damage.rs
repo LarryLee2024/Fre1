@@ -17,11 +17,9 @@ impl Execution for DamageExecution {
 
     fn calculate(&self, ctx: &ExecutionContext) -> ExecutionResult {
         let mut breakdown = Vec::new();
-        let mut value = 0.0;
 
         let effective_atk = ctx.source_attrs.attack;
         let effective_def = ctx.target_attrs.defense;
-        let base_def = ctx.target_attrs.defense;
 
         // 获取参数
         let multiplier = ctx.base_value;
@@ -37,29 +35,27 @@ impl Execution for DamageExecution {
             input: effective_atk,
             output: effective_atk,
         });
-        value = effective_atk;
+
+        let mut value = effective_atk;
 
         // Step 2: 应用倍率
-        let after_multiplier = effective_atk * multiplier;
+        value = value * multiplier;
         breakdown.push(StepRecord {
             name: "multiplier".to_string(),
             input: effective_atk,
-            output: after_multiplier,
+            output: value,
         });
-        value = after_multiplier;
 
         // Step 3: 防御计算
         let effective_def_after_ignore = effective_def * (1.0 - ignore_def_percent);
         let defense_reduction = effective_def_after_ignore.min(value);
-        let after_defense = (value - defense_reduction).max(1.0);
+        value = (value - defense_reduction).max(1.0);
 
         breakdown.push(StepRecord {
             name: "defense_reduction".to_string(),
             input: effective_def_after_ignore,
             output: defense_reduction,
         });
-
-        value = after_defense;
 
         // Step 4: 最终伤害（最低为1）
         breakdown.push(StepRecord {

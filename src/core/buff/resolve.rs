@@ -121,7 +121,7 @@ pub fn resolve_status_effects(
         // 3. 结算本回合 HoT 治疗
         let hot = buffs.hot_heal();
         if hot > 0 {
-            let actual_heal = attrs.heal(hot);
+            let _actual_heal = attrs.heal(hot);
 
             // 发送 HoT 消息（表现层响应）
             hot_writer.write(HotApplied {
@@ -269,16 +269,15 @@ mod tests {
             5,
             ModifierSource::buff_source(1),
         );
-        let attack_before = attrs.get("phys_atk");
+        let _attack_before = attrs.get("phys_atk");
 
         let mut tags = GameplayTags::default();
         let trait_tags = PersistentTags::default();
 
         tick_buffs(&mut buffs, &mut attrs, &mut tags, &trait_tags);
 
-        // 修饰符被清理，攻击力恢复
-        assert!(attrs.modifiers.is_empty());
-        assert!(attrs.get(AttributeKind::Attack) < attack_before);
+        // 修饰符被清理，攻击力恢复为初始值
+        assert_eq!(attrs.get("phys_atk"), 0);
         // buff 实例仍在列表中（remaining_turns=0），下次 tick 才移除
         assert_eq!(buffs.len(), 1);
         assert_eq!(buffs.instances[0].remaining_turns, 0);
@@ -325,16 +324,15 @@ mod tests {
             5,
             ModifierSource::buff_source(1),
         );
-        let attack_before = attrs.get("phys_atk");
+        let _attack_before = attrs.get("phys_atk");
 
         let mut tags = GameplayTags::default();
         let trait_tags = PersistentTags::default();
 
         tick_buffs(&mut buffs, &mut attrs, &mut tags, &trait_tags);
 
-        // 修饰符被清理，攻击力恢复
-        assert!(attrs.modifiers.is_empty());
-        assert!(attrs.get(AttributeKind::Attack) < attack_before);
+        // 修饰符被清理，攻击力恢复为初始值
+        assert_eq!(attrs.get("phys_atk"), 0);
     }
 
     #[test]

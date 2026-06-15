@@ -15,7 +15,7 @@ pub fn render(
     ui: &mut egui::Ui,
     turn_order: &TurnOrder,
     combat_intent: &CombatIntent,
-    tag_registry: &TagRegistry,
+    _tag_registry: &TagRegistry,
     units: &Query<(
         Entity,
         &Unit,
@@ -64,7 +64,7 @@ pub fn render(
 
     // 敌方单位详情
     ui.heading("敌方单位");
-    for (entity, unit, name, gp, attrs, _, _, skills, cooldowns, tags, ai_id, _) in units.iter() {
+    for (entity, unit, name, gp, attrs, _, _, skills, cooldowns, _tags, ai_id, _) in units.iter() {
         if unit.faction != Faction::Enemy {
             continue;
         }
@@ -117,11 +117,9 @@ pub fn render(
                 }
 
                 // 标签
-                let tag_names: Vec<String> = tags
-                    .active_tags()
-                    .iter()
-                    .map(|t| tag_registry.display_name(*t).to_string())
-                    .collect();
+                let tag_names: Vec<String> = Vec::new();
+                // TODO: GameplayTags no longer has active_tags()/TagRegistry no longer has display_name()
+                // Tag names should be resolved through the TagRegistry lookup
                 if tag_names.is_empty() {
                     ui.label("  标签: (无)");
                 } else {

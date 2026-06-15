@@ -140,13 +140,13 @@ impl TerrainCostRegistry {
     /// 根据单位标签解析对应的成本计算器
     /// 优先级：SWIMMING > FLYING > MOUNTED > 默认(ground)
     pub fn resolve_from_tags(&self, tags: &GameplayTags) -> &dyn TerrainCostCalculator {
-        if tags.has(GameplayTag::SWIMMING) {
+        if tags.has(GameplayTag::GROUNDED) {
             return self.get("swimming").unwrap_or(self.ground());
         }
         if tags.has(GameplayTag::FLYING) {
             return self.get("flying").unwrap_or(self.ground());
         }
-        if tags.has(GameplayTag::MOUNTED) {
+        if tags.has(GameplayTag::MECHANICAL) {
             return self.get("mounted").unwrap_or(self.ground());
         }
         self.ground()

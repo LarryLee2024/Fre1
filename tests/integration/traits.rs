@@ -18,8 +18,7 @@
 
 use bevy::prelude::*;
 use tactical_rpg::core::attribute::{
-    AttributeKind, AttributeModifierDef, AttributeModifierInstance, Attributes, ModifierOp,
-    ModifierSource,
+    AttributeModifierDef, AttributeModifierInstance, Attributes, ModifierOp, ModifierSource,
 };
 use tactical_rpg::core::character::{
     PersistentTags, TraitCollection, TraitData, TraitEffect, TraitEffectHandlerRegistry,
@@ -54,9 +53,9 @@ fn register_grant_tag_trait(app: &mut App, trait_id: &str, tag: GameplayTag) {
 fn register_modify_attr_trait(
     app: &mut App,
     trait_id: &str,
-    kind: AttributeKind,
+    config_id: &str,
     op: ModifierOp,
-    value: f32,
+    value: i32,
 ) {
     let trait_data = TraitData {
         id: trait_id.to_string(),
@@ -64,7 +63,7 @@ fn register_modify_attr_trait(
         description: String::new(),
         trigger: TraitTrigger::Passive,
         effects: vec![TraitEffect::ModifyAttribute(AttributeModifierDef {
-            kind,
+            config_id: config_id.into(),
             op,
             value,
         })],
@@ -100,7 +99,7 @@ fn apply_trait_effects(app: &mut App, entity: Entity) {
             let source = ModifierSource::trait_source(trait_source_index);
             for mod_def in trait_data.attribute_modifiers(&handlers) {
                 modifiers_to_add.push(AttributeModifierInstance {
-                    kind: mod_def.kind,
+                    config_id: mod_def.config_id.clone(),
                     op: mod_def.op,
                     value: mod_def.value,
                     source,
@@ -134,7 +133,12 @@ fn apply_trait_effects(app: &mut App, entity: Entity) {
     {
         let mut attrs = app.world_mut().get_mut::<Attributes>(entity).unwrap();
         for modifier in modifiers_to_add {
-            attrs.add_modifier(modifier);
+            attrs.add_modifier(
+                modifier.config_id,
+                modifier.op,
+                modifier.value,
+                modifier.source,
+            );
         }
     }
 }
@@ -163,14 +167,14 @@ fn 被动trait授予标签_添加passive_grant_tag后标签出现在gameplay_tag
     let mut app = equipment_app();
 
     // 注册一个 Passive + GrantTag(FIRE) 的 Trait
-    register_grant_tag_trait(&mut app, "fire_affinity_test", GameplayTag::FIRE);
+    register_grant_tag_trait(&mut app, "fire_affinity_test", GameplayTag::DMG_FIRE);
 
     // 创建角色
     let entity = UnitBuilder::warrior().spawn(&mut app);
 
     // 穿戴前：角色没有 FIRE 标签
     let tags = app.world().get::<GameplayTags>(entity).unwrap();
-    assert_not_has_tag!(tags, GameplayTag::FIRE);
+    assert_not_has_tag!(tags, GameplayTag::DMG_FIRE);
 
     // 给角色添加 Trait（Intrinsic 来源）
     {
@@ -184,11 +188,11 @@ fn 被动trait授予标签_添加passive_grant_tag后标签出现在gameplay_tag
 
     // 验证：FIRE 标签出现在 GameplayTags 中
     let tags = app.world().get::<GameplayTags>(entity).unwrap();
-    assert_has_tag!(tags, GameplayTag::FIRE);
+    assert_has_tag!(tags, GameplayTag::DMG_FIRE);
 
     // 验证：PersistentTags.from_traits 层有标签
     let persistent = app.world().get::<PersistentTags>(entity).unwrap();
-    assert!(persistent.from_traits.has(GameplayTag::FIRE));
+    assert!(persistent.from_traits.has(GameplayTag::DMG_FIRE));
 }
 
 /// FT-TRT-002: 多个 Trait 授予多个标签
@@ -200,8 +204,8 @@ fn 被动trait授予标签_添加passive_grant_tag后标签出现在gameplay_tag
 fn 被动trait授予标签_多个trait授予多个标签() {
     let mut app = equipment_app();
 
-    register_grant_tag_trait(&mut app, "warrior_trait", GameplayTag::WARRIOR);
-    register_grant_tag_trait(&mut app, "fire_trait", GameplayTag::FIRE);
+    register_grant_tag_trait(&mut app, "warrior_trait", GameplayTag::ALLY);
+    register_grant_tag_trait(&mut app, "fire_trait", GameplayTag::DMG_FIRE);
 
     let entity = UnitBuilder::warrior().spawn(&mut app);
 
@@ -216,8 +220,8 @@ fn 被动trait授予标签_多个trait授予多个标签() {
     rebuild_gameplay_tags(&mut app, entity);
 
     let tags = app.world().get::<GameplayTags>(entity).unwrap();
-    assert_has_tag!(tags, GameplayTag::WARRIOR);
-    assert_has_tag!(tags, GameplayTag::FIRE);
+    assert_has_tag!(tags, GameplayTag::ALLY);
+    assert_has_tag!(tags, GameplayTag::DMG_FIRE);
 }
 
 /// FT-TRT-003: 非 Passive 触发不授予标签
@@ -235,7 +239,7 @@ fn 被动trait授予标签_非passive触发不授予标签() {
         name: "攻击触发".to_string(),
         description: String::new(),
         trigger: TraitTrigger::OnAttack,
-        effects: vec![TraitEffect::GrantTag(GameplayTag::FIRE)],
+        effects: vec![TraitEffect::GrantTag(GameplayTag::DMG_FIRE)],
     };
     app.world_mut()
         .resource_mut::<TraitRegistry>()
@@ -253,7 +257,7 @@ fn 被动trait授予标签_非passive触发不授予标签() {
 
     // OnAttack 触发的 Trait 不应在被动阶段授予标签
     let tags = app.world().get::<GameplayTags>(entity).unwrap();
-    assert_not_has_tag!(tags, GameplayTag::FIRE);
+    assert_not_has_tag!(tags, GameplayTag::DMG_FIRE);
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -335,7 +339,7 @@ fn 装备trait完整生命周期_添加后entry存在_移除后entry消失() {
 fn 装备trait_不同来源的trait独立管理() {
     let mut app = equipment_app();
 
-    register_grant_tag_trait(&mut app, "shared_trait", GameplayTag::FIRE);
+    register_grant_tag_trait(&mut app, "shared_trait", GameplayTag::DMG_FIRE);
 
     let entity = UnitBuilder::warrior().spawn(&mut app);
 
@@ -388,7 +392,7 @@ fn 装备trait_不同来源的trait独立管理() {
 fn 装备trait_intrinsic来源不受equipment移除影响() {
     let mut app = equipment_app();
 
-    register_grant_tag_trait(&mut app, "innate_trait", GameplayTag::WARRIOR);
+    register_grant_tag_trait(&mut app, "innate_trait", GameplayTag::ALLY);
 
     let entity = UnitBuilder::warrior().spawn(&mut app);
 
@@ -432,21 +436,15 @@ fn 装备trait_intrinsic来源不受equipment移除影响() {
 fn trait修改属性_添加passive_modify_attribute后属性值变化() {
     let mut app = equipment_app();
 
-    // 注册一个 Passive + ModifyAttribute(Defense, Add, 5.0) 的 Trait
-    register_modify_attr_trait(
-        &mut app,
-        "tough_body",
-        AttributeKind::Defense,
-        ModifierOp::Add,
-        5.0,
-    );
+    // 注册一个 Passive + ModifyAttribute(phys_def, Add, 5) 的 Trait
+    register_modify_attr_trait(&mut app, "tough_body", "phys_def", ModifierOp::Add, 5);
 
     let entity = UnitBuilder::warrior().spawn(&mut app);
 
     // 记录基础防御值
     let base_defense = {
         let attrs = app.world().get::<Attributes>(entity).unwrap();
-        attrs.get(AttributeKind::Defense)
+        attrs.get("phys_def")
     };
 
     // 添加 Trait
@@ -460,7 +458,7 @@ fn trait修改属性_添加passive_modify_attribute后属性值变化() {
 
     // 验证：防御值增加了 5
     let attrs = app.world().get::<Attributes>(entity).unwrap();
-    assert_attr_eq!(attrs, AttributeKind::Defense, base_defense as i32 + 5);
+    assert_attr_eq!(attrs, "phys_def", base_defense + 5);
 }
 
 /// FT-TRT-008: Trait 修改属性 — 移除后属性恢复
@@ -472,19 +470,13 @@ fn trait修改属性_添加passive_modify_attribute后属性值变化() {
 fn trait修改属性_移除trait后属性恢复() {
     let mut app = equipment_app();
 
-    register_modify_attr_trait(
-        &mut app,
-        "tough_body",
-        AttributeKind::Defense,
-        ModifierOp::Add,
-        5.0,
-    );
+    register_modify_attr_trait(&mut app, "tough_body", "phys_def", ModifierOp::Add, 5);
 
     let entity = UnitBuilder::warrior().spawn(&mut app);
 
     let base_defense = {
         let attrs = app.world().get::<Attributes>(entity).unwrap();
-        attrs.get(AttributeKind::Defense)
+        attrs.get("phys_def")
     };
 
     // 添加 Trait
@@ -497,7 +489,7 @@ fn trait修改属性_移除trait后属性恢复() {
 
     // 验证属性已增加
     let attrs = app.world().get::<Attributes>(entity).unwrap();
-    assert_attr_eq!(attrs, AttributeKind::Defense, base_defense as i32 + 5);
+    assert_attr_eq!(attrs, "phys_def", base_defense + 5);
 
     // 移除 Trait
     {
@@ -508,7 +500,7 @@ fn trait修改属性_移除trait后属性恢复() {
 
     // 验证：属性恢复到基础值
     let attrs = app.world().get::<Attributes>(entity).unwrap();
-    assert_attr_eq!(attrs, AttributeKind::Defense, base_defense as i32);
+    assert_attr_eq!(attrs, "phys_def", base_defense);
 }
 
 /// FT-TRT-009: Trait 乘法修饰符
@@ -520,20 +512,20 @@ fn trait修改属性_移除trait后属性恢复() {
 fn trait修改属性_乘法修饰符() {
     let mut app = equipment_app();
 
-    // 注册一个 Passive + ModifyAttribute(Attack, Multiply, 1.5) 的 Trait
+    // 注册一个 Passive + ModifyAttribute(phys_atk, Multiply, 15000) 的 Trait
     register_modify_attr_trait(
         &mut app,
         "berserker",
-        AttributeKind::Attack,
+        "phys_atk",
         ModifierOp::Multiply,
-        1.5,
+        15000, // 1.5x in permille
     );
 
     let entity = UnitBuilder::warrior().spawn(&mut app);
 
     let base_attack = {
         let attrs = app.world().get::<Attributes>(entity).unwrap();
-        attrs.get(AttributeKind::Attack)
+        attrs.get("phys_atk")
     };
 
     // 添加 Trait
@@ -545,8 +537,8 @@ fn trait修改属性_乘法修饰符() {
 
     // 验证：攻击力乘以 1.5
     let attrs = app.world().get::<Attributes>(entity).unwrap();
-    let expected = (base_attack * 1.5) as i32;
-    assert_attr_eq!(attrs, AttributeKind::Attack, expected);
+    let expected = base_attack * 15000 / 10000;
+    assert_attr_eq!(attrs, "phys_atk", expected);
 }
 
 /// FT-TRT-010: 多个 Trait 同时修改不同属性
@@ -559,30 +551,18 @@ fn trait修改属性_多个trait同时修改属性() {
     let mut app = equipment_app();
 
     // 注册两个修改不同属性的 Trait
-    register_modify_attr_trait(
-        &mut app,
-        "iron_skin",
-        AttributeKind::Defense,
-        ModifierOp::Add,
-        3.0,
-    );
-    register_modify_attr_trait(
-        &mut app,
-        "sharp_eye",
-        AttributeKind::Accuracy,
-        ModifierOp::Add,
-        10.0,
-    );
+    register_modify_attr_trait(&mut app, "iron_skin", "phys_def", ModifierOp::Add, 3);
+    register_modify_attr_trait(&mut app, "sharp_eye", "hit_rate", ModifierOp::Add, 10);
 
     let entity = UnitBuilder::warrior().spawn(&mut app);
 
     let base_defense = {
         let attrs = app.world().get::<Attributes>(entity).unwrap();
-        attrs.get(AttributeKind::Defense)
+        attrs.get("phys_def")
     };
     let base_accuracy = {
         let attrs = app.world().get::<Attributes>(entity).unwrap();
-        attrs.get(AttributeKind::Accuracy)
+        attrs.get("hit_rate")
     };
 
     // 添加两个 Trait
@@ -595,8 +575,8 @@ fn trait修改属性_多个trait同时修改属性() {
 
     // 验证：两个属性都增加了
     let attrs = app.world().get::<Attributes>(entity).unwrap();
-    assert_attr_eq!(attrs, AttributeKind::Defense, base_defense as i32 + 3);
-    assert_attr_eq!(attrs, AttributeKind::Accuracy, base_accuracy as i32 + 10);
+    assert_attr_eq!(attrs, "phys_def", base_defense + 3);
+    assert_attr_eq!(attrs, "hit_rate", base_accuracy + 10);
 }
 
 /// FT-TRT-011: 同时授予标签和修改属性
@@ -615,12 +595,12 @@ fn trait修改属性_同时授予标签和修改属性() {
         description: String::new(),
         trigger: TraitTrigger::Passive,
         effects: vec![
-            TraitEffect::GrantTag(GameplayTag::WARRIOR),
-            TraitEffect::GrantTag(GameplayTag::MELEE),
+            TraitEffect::GrantTag(GameplayTag::ALLY),
+            TraitEffect::GrantTag(GameplayTag::DMG_PHYSICAL),
             TraitEffect::ModifyAttribute(AttributeModifierDef {
-                kind: AttributeKind::Defense,
+                config_id: "phys_def".into(),
                 op: ModifierOp::Add,
-                value: 2.0,
+                value: 2,
             }),
         ],
     };
@@ -632,7 +612,7 @@ fn trait修改属性_同时授予标签和修改属性() {
 
     let base_defense = {
         let attrs = app.world().get::<Attributes>(entity).unwrap();
-        attrs.get(AttributeKind::Defense)
+        attrs.get("phys_def")
     };
 
     // 添加 Trait
@@ -645,10 +625,10 @@ fn trait修改属性_同时授予标签和修改属性() {
 
     // 验证：标签已授予
     let tags = app.world().get::<GameplayTags>(entity).unwrap();
-    assert_has_tag!(tags, GameplayTag::WARRIOR);
-    assert_has_tag!(tags, GameplayTag::MELEE);
+    assert_has_tag!(tags, GameplayTag::ALLY);
+    assert_has_tag!(tags, GameplayTag::DMG_PHYSICAL);
 
     // 验证：属性已修改
     let attrs = app.world().get::<Attributes>(entity).unwrap();
-    assert_attr_eq!(attrs, AttributeKind::Defense, base_defense as i32 + 2);
+    assert_attr_eq!(attrs, "phys_def", base_defense + 2);
 }

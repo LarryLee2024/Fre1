@@ -126,7 +126,7 @@ impl LoadableSingleRegistry for AttributeRegistry {
                 )));
             }
             self.definitions.insert(
-                id,
+                id.clone(),
                 AttributeDefinition {
                     id,
                     name_key: attr_def.name_key,
@@ -304,7 +304,7 @@ mod tests {
         ];
         for id_str in &expected_ids {
             assert!(
-                reg.contains(&AttributeId::new(id_str)),
+                reg.contains(&AttributeId::new(*id_str)),
                 "Missing attribute: {}",
                 id_str
             );

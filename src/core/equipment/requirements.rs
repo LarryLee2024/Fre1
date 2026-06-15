@@ -1,6 +1,7 @@
 // 装备需求检查：验证单位是否满足装备穿戴条件
 
 use super::def::{EquipmentDef, EquipmentRequirement};
+use super::equip::tag_id_to_gameplay_tag;
 use crate::core::attribute::Attributes;
 use crate::core::tag::GameplayTags;
 
@@ -28,17 +29,17 @@ pub fn check_equipment_requirements(
     for req in &def.requirements {
         match req {
             EquipmentRequirement::RequireTag(tag_name) => {
-                let tag = tag_name.to_tag();
+                let tag = tag_id_to_gameplay_tag(tag_name);
                 if !tags.has(tag) {
                     return RequirementCheckResult::Failed(format!("缺少标签: {:?}", tag_name));
                 }
             }
-            EquipmentRequirement::AttributeMin { kind, value } => {
-                let current = attrs.get(*kind);
+            EquipmentRequirement::AttributeMin { config_id, value } => {
+                let current = attrs.get(config_id);
                 if current < *value {
                     return RequirementCheckResult::Failed(format!(
-                        "属性不足: {:?} 当前={} 需要={}",
-                        kind, current, value
+                        "属性不足: {} 当前={} 需要={}",
+                        config_id, current, value
                     ));
                 }
             }
@@ -60,15 +61,13 @@ mod tests {
     // ✅ 未测试私有实现：是 — 仅通过 pub 接口测试
     // ================================================
     use super::*;
-    use crate::core::attribute::AttributeKind;
     use crate::core::equipment::def::{EquipmentSlot, Rarity};
-    use crate::core::tag::{GameplayTag, TagName};
+    use crate::core::tag::GameplayTag;
 
     /// 辅助：创建测试用属性
     fn make_test_attrs() -> Attributes {
         let mut attrs = Attributes::default();
-        attrs.set_base(AttributeKind::Might, 5.0);
-        attrs.set_base(AttributeKind::Attack, 10.0);
+        attrs.set_base("phys_atk", 10);
         attrs
     }
 
@@ -104,12 +103,12 @@ mod tests {
             tags: vec![],
             modifiers: vec![],
             traits: vec![],
-            requirements: vec![EquipmentRequirement::RequireTag("martial")],
+            requirements: vec![EquipmentRequirement::RequireTag("martial".to_string())],
             weight: 0.0,
         };
         let attrs = make_test_attrs();
         let mut tags = GameplayTags::default();
-        tags.add(GameplayTag::MARTIAL);
+        tags.add(GameplayTag::DMG_PHYSICAL);
         assert!(check_equipment_requirements(&def, &attrs, &tags).is_satisfied());
     }
 
@@ -125,7 +124,7 @@ mod tests {
             tags: vec![],
             modifiers: vec![],
             traits: vec![],
-            requirements: vec![EquipmentRequirement::RequireTag("martial")],
+            requirements: vec![EquipmentRequirement::RequireTag("martial".to_string())],
             weight: 0.0,
         };
         let attrs = make_test_attrs();
@@ -150,8 +149,8 @@ mod tests {
             modifiers: vec![],
             traits: vec![],
             requirements: vec![EquipmentRequirement::AttributeMin {
-                kind: AttributeKind::Attack,
-                value: 8.0,
+                config_id: "phys_atk".to_string(),
+                value: 8,
             }],
             weight: 0.0,
         };
@@ -173,8 +172,8 @@ mod tests {
             modifiers: vec![],
             traits: vec![],
             requirements: vec![EquipmentRequirement::AttributeMin {
-                kind: AttributeKind::Attack,
-                value: 20.0,
+                config_id: "phys_atk".to_string(),
+                value: 20,
             }],
             weight: 0.0,
         };
@@ -200,17 +199,17 @@ mod tests {
             modifiers: vec![],
             traits: vec![],
             requirements: vec![
-                EquipmentRequirement::RequireTag("martial"),
+                EquipmentRequirement::RequireTag("martial".to_string()),
                 EquipmentRequirement::AttributeMin {
-                    kind: AttributeKind::Attack,
-                    value: 20.0,
+                    config_id: "phys_atk".to_string(),
+                    value: 20,
                 },
             ],
             weight: 0.0,
         };
         let attrs = make_test_attrs();
         let mut tags = GameplayTags::default();
-        tags.add(GameplayTag::MARTIAL);
+        tags.add(GameplayTag::DMG_PHYSICAL);
         // 标签满足但属性不足
         let result = check_equipment_requirements(&def, &attrs, &tags);
         assert!(!result.is_satisfied());

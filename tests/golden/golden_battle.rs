@@ -145,7 +145,7 @@ fn 基础战斗_战士攻击哥布林() {
 fn 治疗战斗_角色受伤后治疗() {
     let mut app = golden_battle_app();
 
-    let warrior = spawn_unit(&mut app, UnitBuilder::warrior().with_hp(10.0), "战士");
+    let warrior = spawn_unit(&mut app, UnitBuilder::warrior().with_hp(10), "战士");
     let goblin = spawn_unit(&mut app, UnitBuilder::goblin(), "哥布林");
     let healer = spawn_unit(&mut app, UnitBuilder::mage().player(), "牧师");
 
@@ -176,7 +176,7 @@ fn 致命伤害_角色死亡() {
     let mut app = golden_battle_app();
 
     let warrior = spawn_unit(&mut app, UnitBuilder::warrior(), "战士");
-    let goblin = spawn_unit(&mut app, UnitBuilder::goblin().with_hp(3.0), "哥布林");
+    let goblin = spawn_unit(&mut app, UnitBuilder::goblin().with_hp(3), "哥布林");
 
     // 战士对哥布林造成 10 点伤害（致死）
     enqueue_damage(&mut app, warrior, goblin, 10, false);

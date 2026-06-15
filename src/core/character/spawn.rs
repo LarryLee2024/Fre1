@@ -111,7 +111,7 @@ fn spawn_unit_from_template(
     // 构建 Attributes：从模板设置核心属性基础值
     let mut attributes = Attributes::default();
     for (kind, value) in &template.base_attributes {
-        attributes.set_base(*kind, *value);
+        attributes.set_base(kind, *value);
     }
     attributes.set_base_attack_range(template.base_attack_range);
     attributes.fill_vital_resources();
@@ -139,7 +139,12 @@ fn spawn_unit_from_template(
     };
     // 应用 trait 属性修饰符
     for modifier in trait_modifiers {
-        attributes.add_modifier(modifier);
+        attributes.add_modifier(
+            modifier.config_id,
+            modifier.op,
+            modifier.value,
+            modifier.source,
+        );
     }
 
     // 构建 SkillSlots

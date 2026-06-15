@@ -1,13 +1,13 @@
 // App 构建器：最小/战斗/装备/完整 App
 
 use bevy::prelude::*;
-use tactical_rpg::core::attribute_def::AttributeDefPlugin;
+use tactical_rpg::core::attribute::AttributeRegistryPlugin;
 use tactical_rpg::core::buff::BuffPlugin;
 use tactical_rpg::core::effect::EffectPlugin;
 use tactical_rpg::core::equipment::EquipmentPlugin;
 use tactical_rpg::core::inventory::InventoryPlugin;
 use tactical_rpg::core::modifier::ModifierRulePlugin;
-use tactical_rpg::core::tag_def::TagDefPlugin;
+use tactical_rpg::core::tag::TagPlugin;
 // use tactical_rpg::shared::event::* for all logging
 use tactical_rpg::shared::event::battle;
 use tactical_rpg::shared::event::buff;
@@ -53,10 +53,10 @@ pub fn register_logging_messages(app: &mut App) {
 pub fn combat_app() -> App {
     let mut app = minimal_app();
     app.add_plugins((
-        AttributeDefPlugin,
+        AttributeRegistryPlugin,
         EffectPlugin,
         ModifierRulePlugin,
-        TagDefPlugin,
+        TagPlugin,
         BuffPlugin,
         tactical_rpg::core::character::TraitPlugin,
         EquipmentPlugin,

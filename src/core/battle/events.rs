@@ -83,7 +83,7 @@ pub fn on_character_died(
     mut commands: Commands,
     mut died_reader: MessageReader<CharacterDied>,
     mut turn_order: ResMut<TurnOrder>,
-    unit_ids: Query<&crate::core::character::UnitId>,
+    _unit_ids: Query<&crate::core::character::UnitId>,
 ) {
     for msg in died_reader.read() {
         // 找到被移除实体的位置，修正 current_index
@@ -106,7 +106,6 @@ mod tests {
     use super::*;
     use crate::core::character::Faction;
     use crate::core::turn::TurnOrder;
-    use bevy::prelude::*;
 
     #[test]
     fn 角色死亡_消息字段() {

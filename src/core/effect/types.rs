@@ -77,9 +77,6 @@ pub enum EffectDef {
     },
     /// 清除所有减益效果
     Cleanse,
-    /// 应用 Buff（DEPRECATED：请使用 ApplyModifier）
-    #[deprecated(note = "Use ApplyModifier instead (ADR-026)")]
-    ApplyBuff { buff_id: String, duration: u32 },
 }
 
 impl EffectDef {
@@ -89,16 +86,12 @@ impl EffectDef {
             Self::Heal { .. } => "Heal",
             Self::ApplyModifier { .. } => "ApplyModifier",
             Self::Cleanse => "Cleanse",
-            #[allow(deprecated)]
-            Self::ApplyBuff { .. } => "ApplyBuff",
         }
     }
 
     pub fn duration(&self) -> Option<DurationDef> {
         match self {
             Self::ApplyModifier { duration, .. } => Some(*duration),
-            #[allow(deprecated)]
-            Self::ApplyBuff { duration, .. } => Some(DurationDef::TurnLimited(*duration)),
             _ => None,
         }
     }
@@ -142,12 +135,6 @@ pub enum PendingEffectData {
         stacking: StackingDef,
     },
     Cleanse,
-    /// 应用 Buff（DEPRECATED：请使用 ApplyModifier）
-    #[deprecated(note = "Use ApplyModifier instead (ADR-026)")]
-    ApplyBuff {
-        buff_id: String,
-        duration: u32,
-    },
 }
 
 impl PendingEffectData {
@@ -157,8 +144,6 @@ impl PendingEffectData {
             Self::Heal { .. } => "Heal",
             Self::ApplyModifier { .. } => "ApplyModifier",
             Self::Cleanse => "Cleanse",
-            #[allow(deprecated)]
-            Self::ApplyBuff { .. } => "ApplyBuff",
         }
     }
 }
@@ -185,11 +170,6 @@ pub enum EffectResultData {
         modifier_id: String,
     },
     CleanseApplied,
-    /// Buff 已应用（DEPRECATED）
-    #[deprecated(note = "Use ModifierApplied instead (ADR-026)")]
-    BuffApplied {
-        buff_id: String,
-    },
 }
 
 /// 效果队列资源
@@ -234,7 +214,6 @@ pub fn calculate_damage_from_effect(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use bevy::prelude::*;
 
     #[test]
     fn 持续时间_默认为瞬时() {

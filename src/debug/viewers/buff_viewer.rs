@@ -53,7 +53,7 @@ pub fn render(
                             } else {
                                 String::new()
                             };
-                            let stun_label = if buff.tags.contains(&GameplayTag::STUN) {
+                            let stun_label = if buff.tags.contains(&GameplayTag::CONTROL_HARD) {
                                 " [晕眩]".to_string()
                             } else {
                                 String::new()

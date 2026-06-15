@@ -91,7 +91,7 @@ pub fn generate_combat_effects(
     };
 
     // 晕眩检查
-    if source_tags.has(crate::core::tag::GameplayTag::STUN) {
+    if source_tags.has(crate::core::tag::GameplayTag::CONTROL_HARD) {
         return;
     }
 

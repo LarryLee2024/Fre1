@@ -4,7 +4,9 @@
 use crate::core::character::{
     TraitCollection, TraitEffect, TraitEffectHandlerRegistry, TraitRegistry, TraitTrigger,
 };
-use crate::core::effect::{EffectQueue, PendingEffect, PendingEffectData};
+use crate::core::effect::{
+    DurationDef, EffectQueue, PendingEffect, PendingEffectData, StackingDef,
+};
 use bevy::prelude::*;
 
 /// 在攻击生成阶段触发攻击者的 OnAttack Trait 效果
@@ -90,9 +92,10 @@ fn trigger_traits(
                     queue.push(PendingEffect {
                         source: source_entity,
                         target,
-                        data: PendingEffectData::ApplyBuff {
-                            buff_id: buff_id.clone(),
-                            duration: *duration,
+                        data: PendingEffectData::ApplyModifier {
+                            modifier_id: buff_id.clone(),
+                            duration: DurationDef::TurnLimited(*duration),
+                            stacking: StackingDef::Replace,
                         },
                         source_tags: vec![],
                         terrain_id: String::new(),
@@ -118,7 +121,6 @@ mod tests {
     use super::*;
     use crate::core::attribute::{AttributeModifierDef, ModifierOp};
     use crate::core::character::{TraitData, TraitSource};
-    use bevy::prelude::*;
 
     fn make_test_registry() -> TraitRegistry {
         let mut registry = TraitRegistry::default();
@@ -188,11 +190,16 @@ mod tests {
         assert_eq!(queue.pending.len(), 1);
         assert_eq!(queue.pending[0].source, attacker);
         assert_eq!(queue.pending[0].target, target);
-        if let PendingEffectData::ApplyBuff { buff_id, duration } = &queue.pending[0].data {
-            assert_eq!(buff_id, "attack_up");
-            assert_eq!(*duration, 2);
+        if let PendingEffectData::ApplyModifier {
+            modifier_id,
+            duration,
+            ..
+        } = &queue.pending[0].data
+        {
+            assert_eq!(modifier_id, "attack_up");
+            assert_eq!(*duration, DurationDef::TurnLimited(2));
         } else {
-            panic!("期望 ApplyBuff 效果");
+            panic!("期望 ApplyModifier 效果");
         }
     }
 

@@ -15,7 +15,6 @@ pub mod def;
 pub use def::*;
 
 use bevy::prelude::*;
-use serde::Deserialize;
 
 // ============================================================================
 // GameplayTag — 位掩码常量

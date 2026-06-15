@@ -3,7 +3,6 @@
 /// 遵循「日志是领域事件的消费者」原则（宪法 §14.8.1）。
 /// 所有业务领域事件从 shared::event 导入，基础设施事件从 super::events 导入。
 use bevy::ecs::message::MessageReader;
-use bevy::prelude::*;
 use tracing::info;
 
 use crate::shared::event::battle;

@@ -45,14 +45,14 @@ mod tests {
             [
                 (
                     name: "火焰共鸣",
-                    source_tag: FIRE,
-                    target_tag: FIRE,
+                    source_tag: "dmg_fire",
+                    target_tag: "dmg_fire",
                     effect: DamageMultiplier(1.5),
                 ),
                 (
                     name: "冰火相克",
-                    source_tag: FIRE,
-                    target_tag: ICE,
+                    source_tag: "dmg_fire",
+                    target_tag: "dmg_ice",
                     effect: DamageMultiplier(0.5),
                 ),
             ]
@@ -66,17 +66,17 @@ mod tests {
         let registry = ModifierRuleRegistry {
             rules: vec![ModifierRule {
                 name: "火焰共鸣".into(),
-                source_tag: GameplayTag::FIRE,
-                target_tag: GameplayTag::FIRE,
+                source_tag: GameplayTag::DMG_FIRE,
+                target_tag: GameplayTag::DMG_FIRE,
                 effect: ModifierEffect::DamageMultiplier(1.5),
             }],
             ..Default::default()
         };
 
         let mut target_tags = GameplayTags::default();
-        target_tags.add(GameplayTag::FIRE);
+        target_tags.add(GameplayTag::DMG_FIRE);
 
-        let result = registry.apply_damage_modifiers(10, &[GameplayTag::FIRE], &target_tags);
+        let result = registry.apply_damage_modifiers(10, &[GameplayTag::DMG_FIRE], &target_tags);
         assert_eq!(result, 15); // 10 * 1.5 = 15
     }
 
@@ -85,15 +85,15 @@ mod tests {
         let registry = ModifierRuleRegistry {
             rules: vec![ModifierRule {
                 name: "火焰共鸣".into(),
-                source_tag: GameplayTag::FIRE,
-                target_tag: GameplayTag::FIRE,
+                source_tag: GameplayTag::DMG_FIRE,
+                target_tag: GameplayTag::DMG_FIRE,
                 effect: ModifierEffect::DamageMultiplier(1.5),
             }],
             ..Default::default()
         };
 
         let target_tags = GameplayTags::default(); // 无 FIRE 标签
-        let result = registry.apply_damage_modifiers(10, &[GameplayTag::FIRE], &target_tags);
+        let result = registry.apply_damage_modifiers(10, &[GameplayTag::DMG_FIRE], &target_tags);
         assert_eq!(result, 10); // 无匹配，不变
     }
 
@@ -102,17 +102,17 @@ mod tests {
         let registry = ModifierRuleRegistry {
             rules: vec![ModifierRule {
                 name: "毒伤加深".into(),
-                source_tag: GameplayTag::POISON,
-                target_tag: GameplayTag::POISON,
+                source_tag: GameplayTag::DEBUFF,
+                target_tag: GameplayTag::DEBUFF,
                 effect: ModifierEffect::DamageBonus(5),
             }],
             ..Default::default()
         };
 
         let mut target_tags = GameplayTags::default();
-        target_tags.add(GameplayTag::POISON);
+        target_tags.add(GameplayTag::DEBUFF);
 
-        let result = registry.apply_damage_modifiers(10, &[GameplayTag::POISON], &target_tags);
+        let result = registry.apply_damage_modifiers(10, &[GameplayTag::DEBUFF], &target_tags);
         assert_eq!(result, 15); // 10 + 5 = 15
     }
 
@@ -121,15 +121,15 @@ mod tests {
         let registry = ModifierRuleRegistry {
             rules: vec![ModifierRule {
                 name: "火焰治愈".into(),
-                source_tag: GameplayTag::FIRE,
-                target_tag: GameplayTag::FIRE,
+                source_tag: GameplayTag::DMG_FIRE,
+                target_tag: GameplayTag::DMG_FIRE,
                 effect: ModifierEffect::HealMultiplier(2.0),
             }],
             ..Default::default()
         };
         let mut target_tags = GameplayTags::default();
-        target_tags.add(GameplayTag::FIRE);
-        let result = registry.apply_heal_modifiers(10, &[GameplayTag::FIRE], &target_tags);
+        target_tags.add(GameplayTag::DMG_FIRE);
+        let result = registry.apply_heal_modifiers(10, &[GameplayTag::DMG_FIRE], &target_tags);
         assert_eq!(result, 20);
     }
 
@@ -138,7 +138,7 @@ mod tests {
         let registry = ModifierRuleRegistry {
             rules: vec![ModifierRule {
                 name: "治愈加成".into(),
-                source_tag: GameplayTag::REGEN,
+                source_tag: GameplayTag::DMG_PHYSICAL,
                 target_tag: GameplayTag::BUFF,
                 effect: ModifierEffect::HealBonus(5),
             }],
@@ -146,7 +146,7 @@ mod tests {
         };
         let mut target_tags = GameplayTags::default();
         target_tags.add(GameplayTag::BUFF);
-        let result = registry.apply_heal_modifiers(10, &[GameplayTag::REGEN], &target_tags);
+        let result = registry.apply_heal_modifiers(10, &[GameplayTag::DMG_PHYSICAL], &target_tags);
         assert_eq!(result, 15);
     }
 
@@ -155,8 +155,8 @@ mod tests {
         let registry = ModifierRuleRegistry {
             rules: vec![ModifierRule {
                 name: "火焰治愈".into(),
-                source_tag: GameplayTag::FIRE,
-                target_tag: GameplayTag::FIRE,
+                source_tag: GameplayTag::DMG_FIRE,
+                target_tag: GameplayTag::DMG_FIRE,
                 effect: ModifierEffect::HealMultiplier(2.0),
             }],
             ..Default::default()
@@ -172,22 +172,22 @@ mod tests {
             rules: vec![
                 ModifierRule {
                     name: "倍率".into(),
-                    source_tag: GameplayTag::FIRE,
-                    target_tag: GameplayTag::FIRE,
+                    source_tag: GameplayTag::DMG_FIRE,
+                    target_tag: GameplayTag::DMG_FIRE,
                     effect: ModifierEffect::DamageMultiplier(1.5),
                 },
                 ModifierRule {
                     name: "加成".into(),
-                    source_tag: GameplayTag::FIRE,
-                    target_tag: GameplayTag::FIRE,
+                    source_tag: GameplayTag::DMG_FIRE,
+                    target_tag: GameplayTag::DMG_FIRE,
                     effect: ModifierEffect::DamageBonus(3),
                 },
             ],
             ..Default::default()
         };
         let mut target_tags = GameplayTags::default();
-        target_tags.add(GameplayTag::FIRE);
-        let result = registry.apply_damage_modifiers(10, &[GameplayTag::FIRE], &target_tags);
+        target_tags.add(GameplayTag::DMG_FIRE);
+        let result = registry.apply_damage_modifiers(10, &[GameplayTag::DMG_FIRE], &target_tags);
         assert_eq!(result, 18);
     }
 
@@ -196,15 +196,15 @@ mod tests {
         let registry = ModifierRuleRegistry {
             rules: vec![ModifierRule {
                 name: "减伤".into(),
-                source_tag: GameplayTag::ICE,
-                target_tag: GameplayTag::ICE,
+                source_tag: GameplayTag::DMG_ICE,
+                target_tag: GameplayTag::DMG_ICE,
                 effect: ModifierEffect::DamageMultiplier(0.01),
             }],
             ..Default::default()
         };
         let mut target_tags = GameplayTags::default();
-        target_tags.add(GameplayTag::ICE);
-        let result = registry.apply_damage_modifiers(10, &[GameplayTag::ICE], &target_tags);
+        target_tags.add(GameplayTag::DMG_ICE);
+        let result = registry.apply_damage_modifiers(10, &[GameplayTag::DMG_ICE], &target_tags);
         assert_eq!(result, 1);
     }
 
@@ -213,15 +213,15 @@ mod tests {
         let registry = ModifierRuleRegistry {
             rules: vec![ModifierRule {
                 name: "减少".into(),
-                source_tag: GameplayTag::POISON,
-                target_tag: GameplayTag::POISON,
+                source_tag: GameplayTag::DEBUFF,
+                target_tag: GameplayTag::DEBUFF,
                 effect: ModifierEffect::HealMultiplier(0.01),
             }],
             ..Default::default()
         };
         let mut target_tags = GameplayTags::default();
-        target_tags.add(GameplayTag::POISON);
-        let result = registry.apply_heal_modifiers(10, &[GameplayTag::POISON], &target_tags);
+        target_tags.add(GameplayTag::DEBUFF);
+        let result = registry.apply_heal_modifiers(10, &[GameplayTag::DEBUFF], &target_tags);
         assert_eq!(result, 0);
     }
 

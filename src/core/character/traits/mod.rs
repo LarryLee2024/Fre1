@@ -241,8 +241,8 @@ mod tests {
                 description: "近战职业",
                 trigger: Passive,
                 effects: [
-                    GrantTag(WARRIOR),
-                    GrantTag(MELEE),
+                    GrantTag("dmg_physical"),
+                    GrantTag("weapon_sword"),
                 ],
             )
         "#;

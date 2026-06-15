@@ -19,13 +19,15 @@
 
 use bevy::prelude::*;
 use tactical_rpg::core::ability::SkillCooldowns;
-use tactical_rpg::core::attribute::{AttributeKind, AttributeModifierDef, Attributes, ModifierOp};
+use tactical_rpg::core::attribute::{AttributeModifierDef, Attributes, ModifierOp};
 use tactical_rpg::core::buff::{
     ActiveBuffs, BuffData, BuffRegistry, DurationPolicy, StackPolicy, apply_buff,
     resolve_status_effects,
 };
 use tactical_rpg::core::character::{GridPosition, UnitName};
-use tactical_rpg::core::effect::{EffectQueue, PendingEffect, PendingEffectData};
+use tactical_rpg::core::effect::{
+    DurationDef, EffectQueue, PendingEffect, PendingEffectData, StackingDef,
+};
 use tactical_rpg::core::map::TerrainRegistry;
 use tactical_rpg::core::registry_loader::RegistryLoader;
 use tactical_rpg::core::tag::{GameplayTag, GameplayTags};
@@ -64,7 +66,7 @@ fn register_test_buffs(registry: &mut BuffRegistry) {
             conditions: vec![],
             default_duration: 3,
             modifiers: vec![],
-            tags: vec![GameplayTag::DEBUFF, GameplayTag::POISON],
+            tags: vec![GameplayTag::DEBUFF, GameplayTag::DMG_MAGICAL],
             dot_damage: 3,
             hot_heal: 0,
             is_stun: false,
@@ -86,7 +88,7 @@ fn register_test_buffs(registry: &mut BuffRegistry) {
             conditions: vec![],
             default_duration: 1,
             modifiers: vec![],
-            tags: vec![GameplayTag::DEBUFF, GameplayTag::STUN],
+            tags: vec![GameplayTag::DEBUFF, GameplayTag::CONTROL_HARD],
             dot_damage: 0,
             hot_heal: 0,
             is_stun: true,
@@ -159,15 +161,16 @@ fn spawn_unit(app: &mut App, builder: UnitBuilder, name: &str) -> Entity {
     entity
 }
 
-/// 入队 ApplyBuff 效果
+/// 入队 ApplyModifier 效果
 fn enqueue_apply_buff(app: &mut App, source: Entity, target: Entity, buff_id: &str, duration: u32) {
     let mut queue = app.world_mut().resource_mut::<EffectQueue>();
     queue.pending.push(PendingEffect {
         source,
         target,
-        data: PendingEffectData::ApplyBuff {
-            buff_id: buff_id.into(),
-            duration,
+        data: PendingEffectData::ApplyModifier {
+            modifier_id: buff_id.into(),
+            duration: DurationDef::TurnLimited(duration),
+            stacking: StackingDef::Replace,
         },
         source_tags: vec![],
         terrain_id: String::new(),
@@ -234,7 +237,7 @@ fn make_poison() -> BuffData {
         "poison",
         false,
         vec![],
-        vec![GameplayTag::DEBUFF, GameplayTag::POISON],
+        vec![GameplayTag::DEBUFF, GameplayTag::DMG_MAGICAL],
         3,
         0,
     )
@@ -245,9 +248,9 @@ fn make_attack_up() -> BuffData {
         "attack_up",
         true,
         vec![AttributeModifierDef {
-            kind: AttributeKind::Attack,
+            config_id: "phys_atk".into(),
             op: ModifierOp::Add,
-            value: 5.0,
+            value: 5,
         }],
         vec![GameplayTag::BUFF],
         0,
@@ -301,13 +304,9 @@ fn poison完整生命周期_施加_dot_过期移除() {
     let warrior = spawn_unit(&mut app, UnitBuilder::warrior(), "战士");
     let caster = spawn_unit(&mut app, UnitBuilder::mage(), "法师");
 
-    // 初始 HP=30
-    let initial_hp = app
-        .world()
-        .get::<Attributes>(warrior)
-        .unwrap()
-        .get(AttributeKind::Hp);
-    assert_eq!(initial_hp, 30.0);
+    // 初始 HP=50
+    let initial_hp = app.world().get::<Attributes>(warrior).unwrap().current_hp;
+    assert_eq!(initial_hp, 50);
 
     // ── 通过 Effect Pipeline 施加 Poison（duration=3） ──
     enqueue_apply_buff(&mut app, caster, warrior, "poison", 3);
@@ -322,12 +321,8 @@ fn poison完整生命周期_施加_dot_过期移除() {
     // ── 第1回合：resolve 结算 DoT + tick ──
     trigger_resolve(&mut app);
 
-    let hp_after_r1 = app
-        .world()
-        .get::<Attributes>(warrior)
-        .unwrap()
-        .get(AttributeKind::Hp);
-    assert_eq!(hp_after_r1, 27.0, "第1回合 DoT 应扣 3 HP");
+    let hp_after_r1 = app.world().get::<Attributes>(warrior).unwrap().current_hp;
+    assert_eq!(hp_after_r1, 47, "第1回合 DoT 应扣 3 HP");
 
     // resolve_status_effects 内部已 tick：remaining 3→2
     let buffs = app.world().get::<ActiveBuffs>(warrior).unwrap();
@@ -336,12 +331,8 @@ fn poison完整生命周期_施加_dot_过期移除() {
     // ── 第2回合：resolve 结算 DoT + tick ──
     trigger_resolve(&mut app);
 
-    let hp_after_r2 = app
-        .world()
-        .get::<Attributes>(warrior)
-        .unwrap()
-        .get(AttributeKind::Hp);
-    assert_eq!(hp_after_r2, 24.0, "第2回合 DoT 应扣 3 HP");
+    let hp_after_r2 = app.world().get::<Attributes>(warrior).unwrap().current_hp;
+    assert_eq!(hp_after_r2, 44, "第2回合 DoT 应扣 3 HP");
 
     let buffs = app.world().get::<ActiveBuffs>(warrior).unwrap();
     assert_eq!(buffs.instances[0].remaining_turns, 1);
@@ -349,12 +340,8 @@ fn poison完整生命周期_施加_dot_过期移除() {
     // ── 第3回合：resolve 结算 DoT + tick（remaining 1→0，修饰符清理） ──
     trigger_resolve(&mut app);
 
-    let hp_after_r3 = app
-        .world()
-        .get::<Attributes>(warrior)
-        .unwrap()
-        .get(AttributeKind::Hp);
-    assert_eq!(hp_after_r3, 21.0, "第3回合 DoT 应扣 3 HP");
+    let hp_after_r3 = app.world().get::<Attributes>(warrior).unwrap().current_hp;
+    assert_eq!(hp_after_r3, 41, "第3回合 DoT 应扣 3 HP");
 
     // remaining=0 的 buff 在下次 tick 时被移除
     // resolve_status_effects 的 tick_buffs 会先递减到 0，然后下次 tick 才移除
@@ -369,12 +356,8 @@ fn poison完整生命周期_施加_dot_过期移除() {
     assert_eq!(buffs.dot_damage(), 0, "Poison 过期后 DoT 应为 0");
 
     // HP 保持第3回合结算后的值（第4回合无 DoT）
-    let final_hp = app
-        .world()
-        .get::<Attributes>(warrior)
-        .unwrap()
-        .get(AttributeKind::Hp);
-    assert_eq!(final_hp, 21.0);
+    let final_hp = app.world().get::<Attributes>(warrior).unwrap().current_hp;
+    assert_eq!(final_hp, 41);
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -396,25 +379,25 @@ fn 增攻buff修改属性_施加后增加_过期后恢复() {
     let warrior = spawn_unit(&mut app, UnitBuilder::warrior(), "战士");
     let caster = spawn_unit(&mut app, UnitBuilder::mage(), "法师");
 
-    // 战士基础 Attack = Might*2 = 5*2 = 10
+    // 战士基础 phys_atk = 5
     let base_attack = app
         .world()
         .get::<Attributes>(warrior)
         .unwrap()
-        .get(AttributeKind::Attack);
-    assert_eq!(base_attack, 10.0);
+        .get("phys_atk");
+    assert_eq!(base_attack, 5);
 
     // ── 通过 Effect Pipeline 施加增攻 Buff（duration=3） ──
     enqueue_apply_buff(&mut app, caster, warrior, "attack_up", 3);
     tick(&mut app);
 
-    // 验证 Attack 增加
+    // 验证 phys_atk 增加
     let attack_with_buff = app
         .world()
         .get::<Attributes>(warrior)
         .unwrap()
-        .get(AttributeKind::Attack);
-    assert_eq!(attack_with_buff, 15.0, "增攻 Buff 应使 Attack +5");
+        .get("phys_atk");
+    assert_eq!(attack_with_buff, 10, "增攻 Buff 应使 phys_atk +5");
 
     // 验证 Buff 存在
     let buffs = app.world().get::<ActiveBuffs>(warrior).unwrap();
@@ -427,8 +410,8 @@ fn 增攻buff修改属性_施加后增加_过期后恢复() {
         .world()
         .get::<Attributes>(warrior)
         .unwrap()
-        .get(AttributeKind::Attack);
-    assert_eq!(attack, 15.0, "Buff 期间 Attack 保持 15");
+        .get("phys_atk");
+    assert_eq!(attack, 10, "Buff 期间 phys_atk 保持 10");
 
     // ── 第2回合 resolve + tick：remaining 2→1 ──
     trigger_resolve(&mut app);
@@ -436,8 +419,8 @@ fn 增攻buff修改属性_施加后增加_过期后恢复() {
         .world()
         .get::<Attributes>(warrior)
         .unwrap()
-        .get(AttributeKind::Attack);
-    assert_eq!(attack, 15.0, "Buff 期间 Attack 保持 15");
+        .get("phys_atk");
+    assert_eq!(attack, 10, "Buff 期间 phys_atk 保持 10");
 
     // ── 第3回合 resolve + tick：remaining 1→0，修饰符清理 ──
     trigger_resolve(&mut app);
@@ -445,8 +428,8 @@ fn 增攻buff修改属性_施加后增加_过期后恢复() {
         .world()
         .get::<Attributes>(warrior)
         .unwrap()
-        .get(AttributeKind::Attack);
-    assert_eq!(attack, 10.0, "Buff 过期后 Attack 应恢复为 10");
+        .get("phys_atk");
+    assert_eq!(attack, 5, "Buff 过期后 phys_atk 应恢复为 5");
 
     // ── 第4回合 resolve + tick：remaining=0 的 buff 被移除 ──
     trigger_resolve(&mut app);
@@ -524,7 +507,7 @@ fn cleanse_只移除debuff保留buff() {
     apply_buff(&mut buffs, &mut attrs, &mut tags, &poison, None, 3);
 
     assert_eq!(buffs.len(), 2);
-    assert_eq!(attrs.get(AttributeKind::Attack), 15.0); // 10+5
+    assert_eq!(attrs.get("phys_atk"), 10); // 5+5
     assert_eq!(buffs.dot_damage(), 3);
 
     // ── Cleanse ──
@@ -533,6 +516,6 @@ fn cleanse_只移除debuff保留buff() {
     // 只有 Buff 保留
     assert_eq!(buffs.len(), 1);
     assert_eq!(buffs.instances[0].buff_id, "attack_up");
-    assert_eq!(attrs.get(AttributeKind::Attack), 15.0); // 保留
+    assert_eq!(attrs.get("phys_atk"), 10); // 保留
     assert_eq!(buffs.dot_damage(), 0); // Poison 被驱散
 }

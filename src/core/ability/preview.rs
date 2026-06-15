@@ -147,33 +147,33 @@ mod tests {
     // ================================================
     use super::super::domain::{BASIC_ATTACK_ID, SkillTargeting};
     use super::*;
-    
+
     use crate::core::effect::EffectDef;
 
-    fn make_source_attrs(atk: f32) -> crate::core::attribute::Attributes {
+    fn make_source_attrs(atk: i32) -> crate::core::attribute::Attributes {
         let mut attrs = crate::core::attribute::Attributes::default();
-        // Attack = Might * 2, 所以 Might = atk / 2
-        attrs.set_base("phys_atk", atk / 2.0);
+        // phys_atk 直接存储攻击力值
+        attrs.set_base("phys_atk", atk);
         attrs.set_base_attack_range(1);
         attrs.fill_vital_resources();
         attrs
     }
 
-    fn make_target_attrs(def: f32, hp: f32) -> crate::core::attribute::Attributes {
+    fn make_target_attrs(def: i32, hp: i32) -> crate::core::attribute::Attributes {
         let mut attrs = crate::core::attribute::Attributes::default();
-        // Defense = Vitality, 所以 Vitality = def
-        // MaxHp = 5 + Vitality * 5 = 5 + def * 5
+        // MaxHp = 5 + def * 5（沿用旧系统的派生公式）
+        let max_hp = 5 + def * 5;
         attrs.set_base("phys_def", def);
-        attrs.fill_vital_resources();
+        attrs.set_base("max_hp", max_hp);
         // 覆盖当前 HP 为指定值
-        attrs.set_vital("current_hp", hp);
+        attrs.current_hp = hp;
         attrs
     }
 
     #[test]
     fn 预览_伤害预览() {
-        let source_attrs = make_source_attrs(10.0);
-        let target_attrs = make_target_attrs(3.0, 20.0);
+        let source_attrs = make_source_attrs(10);
+        let target_attrs = make_target_attrs(3, 20);
 
         let ctx = SkillExecutionContext {
             source: Entity::from_bits(1),
@@ -220,8 +220,8 @@ mod tests {
 
     #[test]
     fn 预览_致死伤害标记() {
-        let source_attrs = make_source_attrs(50.0);
-        let target_attrs = make_target_attrs(3.0, 5.0);
+        let source_attrs = make_source_attrs(50);
+        let target_attrs = make_target_attrs(3, 5);
 
         let ctx = SkillExecutionContext {
             source: Entity::from_bits(1),
@@ -263,7 +263,7 @@ mod tests {
     #[test]
     fn 预览_治疗预览() {
         let source_attrs = crate::core::attribute::Attributes::default();
-        let target_attrs = make_target_attrs(3.0, 12.0);
+        let target_attrs = make_target_attrs(3, 12);
         // MaxHp = 5 + 3*5 = 20
 
         let ctx = SkillExecutionContext {
@@ -303,7 +303,7 @@ mod tests {
     #[test]
     fn 预览_治疗不超过最大hp() {
         let source_attrs = crate::core::attribute::Attributes::default();
-        let target_attrs = make_target_attrs(3.0, 18.0);
+        let target_attrs = make_target_attrs(3, 18);
         // MaxHp = 5 + 3*5 = 20
 
         let ctx = SkillExecutionContext {

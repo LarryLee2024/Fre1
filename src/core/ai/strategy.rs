@@ -80,9 +80,9 @@ impl TargetSelector for LowestHpPercentTarget {
     fn select(&self, candidates: &[UnitSnapshot], _my_coord: IVec2) -> Option<IVec2> {
         candidates
             .iter()
-            .min_by_key(|s| {
-                if s.max_hp > 0.0 {
-                    (s.hp / s.max_hp * 100.0) as i32
+            .max_by_key(|s| {
+                if s.max_hp > 0 {
+                    100 - (s.hp * 100 / s.max_hp)
                 } else {
                     0
                 }

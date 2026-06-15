@@ -8,7 +8,7 @@
     targeting: SingleEnemy,
     effects: [
         Damage(multiplier: 1.8, ignore_def_percent: 0.0),
-        ApplyBuff(buff_id: "burn", duration: 2),
+        ApplyModifier(modifier_id: "burn", duration: TurnLimited(2), stacking: Replace),
     ],
     tags: [FIRE, RANGED, SKILL_ACTIVE],
     conditions: [MpCost(10)],

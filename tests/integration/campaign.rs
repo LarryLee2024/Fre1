@@ -18,7 +18,6 @@
 
 use std::collections::HashMap;
 
-use tactical_rpg::core::attribute::AttributeKind;
 use tactical_rpg::core::character::template::{FactionDef, UnitTemplateDef};
 use tactical_rpg::core::map::{LevelConfig, LevelConfigDef, TerrainRegistry};
 
@@ -77,42 +76,16 @@ fn 敌方哥布林队长_ron反序列化正确() {
     );
     assert_eq!(def.trait_ids.len(), 1, "应恰好有 1 个 trait");
 
-    // 核心属性
-    assert!(
-        (def.base_attributes
-            .get(&AttributeKind::Might)
-            .copied()
-            .unwrap_or(0.0)
-            - 5.0)
-            .abs()
-            < f32::EPSILON
+    // 核心属性（RON 文件键名保持向后兼容，运行时映射到 config_id）
+    assert_eq!(def.base_attributes.get("phys_atk").copied().unwrap_or(0), 5);
+    assert_eq!(def.base_attributes.get("max_hp").copied().unwrap_or(0), 50);
+    assert_eq!(
+        def.base_attributes.get("dodge_rate").copied().unwrap_or(0),
+        500
     );
-    assert!(
-        (def.base_attributes
-            .get(&AttributeKind::Vitality)
-            .copied()
-            .unwrap_or(0.0)
-            - 5.0)
-            .abs()
-            < f32::EPSILON
-    );
-    assert!(
-        (def.base_attributes
-            .get(&AttributeKind::Agility)
-            .copied()
-            .unwrap_or(0.0)
-            - 5.0)
-            .abs()
-            < f32::EPSILON
-    );
-    assert!(
-        (def.base_attributes
-            .get(&AttributeKind::Intelligence)
-            .copied()
-            .unwrap_or(0.0)
-            - 2.0)
-            .abs()
-            < f32::EPSILON
+    assert_eq!(
+        def.base_attributes.get("magic_atk").copied().unwrap_or(0),
+        2
     );
 
     // 初始装备

@@ -16,7 +16,7 @@
 // ================================================
 
 use bevy::prelude::*;
-use tactical_rpg::core::attribute::{AttributeKind, AttributeModifierDef, Attributes, ModifierOp};
+use tactical_rpg::core::attribute::{AttributeModifierDef, Attributes, ModifierOp};
 use tactical_rpg::core::buff::{
     ActiveBuffs, BuffData, DurationPolicy, StackPolicy, apply_buff, remove_all_debuffs, remove_buff,
 };
@@ -40,9 +40,9 @@ fn attack_up_buff() -> BuffData {
         conditions: vec![],
         default_duration: 3,
         modifiers: vec![AttributeModifierDef {
-            kind: AttributeKind::Attack,
+            config_id: "phys_atk".into(),
             op: ModifierOp::Add,
-            value: 5.0,
+            value: 5,
         }],
         tags: vec![tactical_rpg::core::tag::GameplayTag::BUFF],
         dot_damage: 0,
@@ -66,9 +66,9 @@ fn defense_down_debuff() -> BuffData {
         conditions: vec![],
         default_duration: 3,
         modifiers: vec![AttributeModifierDef {
-            kind: AttributeKind::Defense,
+            config_id: "phys_def".into(),
             op: ModifierOp::Add,
-            value: -5.0,
+            value: -5,
         }],
         tags: vec![tactical_rpg::core::tag::GameplayTag::DEBUFF],
         dot_damage: 0,
@@ -94,7 +94,7 @@ fn burning_dot() -> BuffData {
         modifiers: vec![],
         tags: vec![
             tactical_rpg::core::tag::GameplayTag::DEBUFF,
-            tactical_rpg::core::tag::GameplayTag::FIRE,
+            tactical_rpg::core::tag::GameplayTag::DMG_FIRE,
         ],
         dot_damage: 3,
         hot_heal: 0,
@@ -150,10 +150,10 @@ fn 增攻Buff_应用后攻击力增加() {
         3,
     );
 
-    // 原 Attack=10, 加5 → 15
-    assert_eq!(attrs.get(AttributeKind::Attack), 15.0);
+    // 原 phys_atk=5, 加5 → 10
+    assert_eq!(attrs.get("phys_atk"), 10);
     // MaxHp 不受影响
-    assert_eq!(attrs.get(AttributeKind::MaxHp), 30.0);
+    assert_eq!(attrs.max_hp(), 50);
 }
 
 /// LBD-002: 减防 Debuff — 应用后防御力降低
@@ -176,8 +176,8 @@ fn 减防Debuff_应用后防御力降低() {
         3,
     );
 
-    // 原 Defense=5, 减5 → 0
-    assert_eq!(attrs.get(AttributeKind::Defense), 0.0);
+    // 原 phys_def=3, 减5 → -2
+    assert_eq!(attrs.get("phys_def"), -2);
 }
 
 /// LBD-003: 多个 Buff 叠加应用
@@ -208,9 +208,9 @@ fn 多个Buff_叠加应用() {
         3,
     );
 
-    // Attack=10+5=15, Defense=5-5=0
-    assert_eq!(attrs.get(AttributeKind::Attack), 15.0);
-    assert_eq!(attrs.get(AttributeKind::Defense), 0.0);
+    // phys_atk=5+5=10, phys_def=3-5=-2
+    assert_eq!(attrs.get("phys_atk"), 10);
+    assert_eq!(attrs.get("phys_def"), -2);
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -236,10 +236,10 @@ fn 移除增攻Buff_攻击力恢复() {
         None,
         3,
     );
-    assert_eq!(attrs.get(AttributeKind::Attack), 15.0);
+    assert_eq!(attrs.get("phys_atk"), 10);
 
     remove_buff(&mut buffs, &mut attrs, &mut tags, instance_id);
-    assert_eq!(attrs.get(AttributeKind::Attack), 10.0);
+    assert_eq!(attrs.get("phys_atk"), 5);
 }
 
 /// LBD-005: 移除多个 Buff — 属性全部恢复
@@ -269,14 +269,14 @@ fn 移除多个Buff_属性全部恢复() {
         None,
         3,
     );
-    assert_eq!(attrs.get(AttributeKind::Attack), 15.0);
-    assert_eq!(attrs.get(AttributeKind::Defense), 0.0);
+    assert_eq!(attrs.get("phys_atk"), 10);
+    assert_eq!(attrs.get("phys_def"), -2);
 
     remove_buff(&mut buffs, &mut attrs, &mut tags, id1);
     remove_buff(&mut buffs, &mut attrs, &mut tags, id2);
 
-    assert_eq!(attrs.get(AttributeKind::Attack), 10.0);
-    assert_eq!(attrs.get(AttributeKind::Defense), 5.0);
+    assert_eq!(attrs.get("phys_atk"), 5);
+    assert_eq!(attrs.get("phys_def"), 3);
 }
 
 /// LBD-006: 移除不存在的 Buff — 属性不变
@@ -290,14 +290,14 @@ fn 移除不存在的Buff_属性不变() {
     let mut buffs = ActiveBuffs::default();
     let mut tags = GameplayTags::default();
 
-    let original_attack = attrs.get(AttributeKind::Attack);
+    let original_attack = attrs.get("phys_atk");
     remove_buff(
         &mut buffs,
         &mut attrs,
         &mut tags,
         tactical_rpg::core::attribute::BuffInstanceId(999),
     );
-    assert_eq!(attrs.get(AttributeKind::Attack), original_attack);
+    assert_eq!(attrs.get("phys_atk"), original_attack);
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -333,15 +333,15 @@ fn 移除所有Debuff_增益保留() {
     );
     apply_buff(&mut buffs, &mut attrs, &mut tags, &burning_dot(), None, 3);
 
-    assert_eq!(attrs.get(AttributeKind::Attack), 15.0); // +5
-    assert_eq!(attrs.get(AttributeKind::Defense), 0.0); // -5
+    assert_eq!(attrs.get("phys_atk"), 10); // +5
+    assert_eq!(attrs.get("phys_def"), -2); // -5
 
     remove_all_debuffs(&mut buffs, &mut attrs, &mut tags);
 
-    // Debuff 移除 → Defense 恢复
-    assert_eq!(attrs.get(AttributeKind::Defense), 5.0);
-    // Buff 保留 → Attack 仍加5
-    assert_eq!(attrs.get(AttributeKind::Attack), 15.0);
+    // Debuff 移除 → phys_def 恢复
+    assert_eq!(attrs.get("phys_def"), 3);
+    // Buff 保留 → phys_atk 仍加5
+    assert_eq!(attrs.get("phys_atk"), 10);
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -361,7 +361,7 @@ fn 灼烧DoT_每回合造成伤害() {
 
     apply_buff(&mut buffs, &mut attrs, &mut tags, &burning_dot(), None, 3);
 
-    let initial_hp = attrs.get(AttributeKind::Hp);
+    let initial_hp = attrs.current_hp;
 
     // Tick 递减
     buffs.tick();
@@ -381,7 +381,7 @@ fn 生命回复HoT_每回合回复() {
     let mut buffs = ActiveBuffs::default();
     let mut tags = GameplayTags::default();
 
-    attrs.set_vital(AttributeKind::Hp, 20.0);
+    attrs.current_hp = 20;
 
     apply_buff(
         &mut buffs,
@@ -412,7 +412,7 @@ fn Buff过期_从ActiveBuffs移除但属性仍保留() {
         ..attack_up_buff()
     };
     apply_buff(&mut buffs, &mut attrs, &mut tags, &buff_data, None, 1);
-    assert_eq!(attrs.get(AttributeKind::Attack), 15.0);
+    assert_eq!(attrs.get("phys_atk"), 10);
 
     // Tick 1 → remaining_turns: 1 → 0
     // Tick 2 → buff expired, removed from ActiveBuffs
@@ -422,7 +422,7 @@ fn Buff过期_从ActiveBuffs移除但属性仍保留() {
     // buff 实例已过期移除
     assert!(buffs.is_empty());
     // 属性修饰符仍保留（需要手动 remove_buff 才会清除）
-    assert_eq!(attrs.get(AttributeKind::Attack), 15.0);
+    assert_eq!(attrs.get("phys_atk"), 10);
 
     // 手动 remove_buff 后属性才恢复
     // 注意：instance 已被 tick 移除，remove_buff 找不到，所以这里改用 remove_buff_before_expiry 测试
@@ -455,15 +455,15 @@ fn 增攻Buff_提高物理伤害() {
 
     // calculate_damage_from_effect(atk, def, base_def, multiplier, ignore_def%, terrain_bonus)
     let dmg = calculate_damage_from_effect(
-        attrs.get(AttributeKind::Attack), // 15
-        5.0,                              // target def
-        5.0,                              // base def
-        1.0,                              // multiplier
-        0.0,                              // ignore def %
-        0,                                // terrain defense bonus
+        attrs.get("phys_atk") as f32, // 10
+        5.0,                          // target def
+        5.0,                          // base def
+        1.0,                          // multiplier
+        0.0,                          // ignore def %
+        0,                            // terrain defense bonus
     );
-    // 15 - 5 = 10
-    assert_eq!(dmg, 10);
+    // 10 - 5 = 5
+    assert_eq!(dmg, 5);
 }
 
 /// LBD-012: 减防 Debuff — 提高受到伤害
@@ -488,15 +488,15 @@ fn 减防Debuff_提高受到伤害() {
     );
 
     let dmg = calculate_damage_from_effect(
-        10.0,                              // attacker atk
-        attrs.get(AttributeKind::Defense), // 0
-        5.0,                               // base def
+        10.0,                         // attacker atk
+        attrs.get("phys_def") as f32, // -2
+        5.0,                          // base def
         1.0,
         0.0,
         0,
     );
-    // 10 - 0 = 10
-    assert_eq!(dmg, 10);
+    // 10 - (-2) = 12
+    assert_eq!(dmg, 12);
 }
 
 /// LBD-013: 同时增攻和减防 — 伤害大幅提升
@@ -533,15 +533,15 @@ fn 同时增攻和减防_伤害大幅提升() {
     );
 
     let dmg = calculate_damage_from_effect(
-        attacker_attrs.get(AttributeKind::Attack),  // 15
-        defender_attrs.get(AttributeKind::Defense), // 0
+        attacker_attrs.get("phys_atk") as f32, // 10
+        defender_attrs.get("phys_def") as f32, // -2
         5.0,
         1.0,
         0.0,
         0,
     );
-    // 15 - 0 = 15
-    assert_eq!(dmg, 15);
+    // 10 - (-2) = 12
+    assert_eq!(dmg, 12);
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -565,18 +565,18 @@ fn 增攻Buff_完整生命周期_应用_手动移除() {
 
     // 应用
     let instance_id = apply_buff(&mut buffs, &mut attrs, &mut tags, &buff_data, None, 3);
-    assert_eq!(attrs.get(AttributeKind::Attack), 15.0);
+    assert_eq!(attrs.get("phys_atk"), 10);
 
     // Tick 1 → 剩余2，属性不变
     buffs.tick();
-    assert_eq!(attrs.get(AttributeKind::Attack), 15.0);
+    assert_eq!(attrs.get("phys_atk"), 10);
 
     // Tick 2 → 剩余1，属性不变
     buffs.tick();
-    assert_eq!(attrs.get(AttributeKind::Attack), 15.0);
+    assert_eq!(attrs.get("phys_atk"), 10);
 
     // 手动移除 buff → 属性恢复
     remove_buff(&mut buffs, &mut attrs, &mut tags, instance_id);
     assert!(buffs.is_empty());
-    assert_eq!(attrs.get(AttributeKind::Attack), 10.0);
+    assert_eq!(attrs.get("phys_atk"), 5);
 }

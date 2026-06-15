@@ -77,7 +77,7 @@ mod tests {
     // ✅ 未测试私有实现：是 — 仅通过 pub 接口测试
     // ================================================
     use super::*;
-    
+
     use crate::core::effect::EffectDef;
     use crate::core::tag::{GameplayTag, GameplayTags};
     use ron::de::from_bytes;
@@ -94,22 +94,11 @@ mod tests {
 
     // ── SkillData::can_use ──
 
-    fn make_attrs(hp: f32, max_hp: f32, mp: f32) -> crate::core::attribute::Attributes {
+    fn make_attrs(hp: i32, max_hp: i32, mp: i32) -> crate::core::attribute::Attributes {
         let mut attrs = crate::core::attribute::Attributes::default();
-        // 通过核心属性 Vitality 推导 MaxHp，通过 Intelligence 推导 MaxMp
-        // MaxHp = 5 + Vitality * 5, 所以 Vitality = (max_hp - 5) / 5
-        // MaxMp = Intelligence * 5, 所以 Intelligence = mp / 5
-        let vit = if max_hp > 5.0 {
-            (max_hp - 5.0) / 5.0
-        } else {
-            0.0
-        };
-        let int = if mp > 0.0 { mp / 5.0 } else { 0.0 };
-        attrs.set_base(AttributeKind::Vitality, vit);
-        attrs.set_base(AttributeKind::Intelligence, int);
-        attrs.fill_vital_resources();
-        // 覆盖当前 HP 为指定值
-        attrs.set_vital(AttributeKind::Hp, hp);
+        attrs.set_base("max_hp", max_hp);
+        attrs.current_hp = hp;
+        attrs.set_base("mp", mp);
         attrs
     }
 
@@ -122,7 +111,7 @@ mod tests {
             cooldown: 3,
             ..Default::default()
         };
-        let attrs = make_attrs(20.0, 20.0, 10.0);
+        let attrs = make_attrs(20, 20, 10);
         let tags = GameplayTags::default();
         let result = skill.can_use(&attrs, &tags, None, 2);
         assert_eq!(result, Err(SkillUseError::OnCooldown { remaining: 2 }));
@@ -138,7 +127,7 @@ mod tests {
             conditions: vec![SkillCondition::MpCost(10)],
             ..Default::default()
         };
-        let attrs = make_attrs(20.0, 20.0, 5.0);
+        let attrs = make_attrs(20, 20, 5);
         let tags = GameplayTags::default();
         let result = skill.can_use(&attrs, &tags, None, 0);
         assert_eq!(
@@ -159,7 +148,7 @@ mod tests {
             conditions: vec![SkillCondition::RequireTag(GameplayTag::SPECIAL_STATE)],
             ..Default::default()
         };
-        let attrs = make_attrs(20.0, 20.0, 10.0);
+        let attrs = make_attrs(20, 20, 10);
         let tags = GameplayTags::default();
         let result = skill.can_use(&attrs, &tags, None, 0);
         assert_eq!(
@@ -180,7 +169,7 @@ mod tests {
             conditions: vec![SkillCondition::MpCost(5)],
             ..Default::default()
         };
-        let attrs = make_attrs(20.0, 20.0, 10.0);
+        let attrs = make_attrs(20, 20, 10);
         let tags = GameplayTags::default();
         assert!(skill.can_use(&attrs, &tags, None, 0).is_ok());
     }
@@ -193,8 +182,8 @@ mod tests {
             conditions: vec![SkillCondition::HpBelow(0.5)],
             ..Default::default()
         };
-        let attrs_low = make_attrs(5.0, 20.0, 10.0);
-        let attrs_ok = make_attrs(15.0, 20.0, 10.0);
+        let attrs_low = make_attrs(5, 20, 10);
+        let attrs_ok = make_attrs(15, 20, 10);
         let tags = GameplayTags::default();
         assert!(skill.can_use(&attrs_low, &tags, None, 0).is_ok());
         assert_eq!(
@@ -219,8 +208,8 @@ mod tests {
                 multiplier: 1.5,
                 ignore_def_percent: 0.0,
             }],
-            tags: vec!["dmg_fire", "special_state"],
-            conditions: vec![SkillConditionDef::RequireTag("special_state")],
+            tags: vec!["dmg_fire".to_string(), "special_state".to_string()],
+            conditions: vec![SkillConditionDef::RequireTag("special_state".to_string())],
             cooldown: 2,
             priority: 10,
         };
@@ -249,12 +238,12 @@ mod tests {
                 targeting: SingleEnemy,
                 effects: [
                     Damage(multiplier: 2.0, ignore_def_percent: 50.0),
-                    ApplyBuff(buff_id: "burn", duration: 2),
+                    ApplyModifier(modifier_id: "burn", duration: TurnLimited(2), stacking: Replace),
                 ],
-                tags: [FIRE, SKILL_ACTIVE],
+                    tags: ["dmg_fire", "special_state"],
                 conditions: [
                     MpCost(10),
-                    RequireTag(MAGE),
+                        RequireTag("mage"),
                 ],
                 cooldown: 3,
                 priority: 20,
@@ -262,7 +251,10 @@ mod tests {
         "#;
         let def: SkillDef = from_bytes(ron_str.as_bytes()).unwrap();
         assert_eq!(def.id, "test_skill");
-        assert_eq!(def.tags, vec!["dmg_fire", "special_state"]);
+        assert_eq!(
+            def.tags,
+            vec!["dmg_fire".to_string(), "special_state".to_string()]
+        );
         assert_eq!(def.effects.len(), 2);
         assert_eq!(def.conditions.len(), 2);
     }
@@ -276,8 +268,8 @@ mod tests {
             conditions: vec![SkillCondition::HpAbove(0.5)],
             ..Default::default()
         };
-        let attrs_high = make_attrs(15.0, 20.0, 10.0);
-        let attrs_low = make_attrs(5.0, 20.0, 10.0);
+        let attrs_high = make_attrs(15, 20, 10);
+        let attrs_low = make_attrs(5, 20, 10);
         let tags = GameplayTags::default();
         assert!(skill.can_use(&attrs_high, &tags, None, 0).is_ok());
         assert_eq!(
@@ -296,7 +288,7 @@ mod tests {
             conditions: vec![SkillCondition::TargetRequireTag(GameplayTag::BUFF)],
             ..Default::default()
         };
-        let attrs = make_attrs(20.0, 20.0, 10.0);
+        let attrs = make_attrs(20, 20, 10);
         let source_tags = GameplayTags::default();
         let mut target_tags_with = GameplayTags::default();
         target_tags_with.add(GameplayTag::BUFF);
@@ -332,7 +324,7 @@ mod tests {
             targeting: SkillTargeting::SelfOnly,
             ..Default::default()
         };
-        let attrs = make_attrs(10.0, 20.0, 5.0);
+        let attrs = make_attrs(10, 20, 5);
         let tags = GameplayTags::default();
         assert!(skill.can_use(&attrs, &tags, None, 0).is_ok());
     }
@@ -350,12 +342,12 @@ mod tests {
             ],
             ..Default::default()
         };
-        let mut attrs = make_attrs(20.0, 20.0, 10.0);
+        let mut attrs = make_attrs(20, 20, 10);
         let mut tags = GameplayTags::default();
         tags.add(GameplayTag::SPECIAL_STATE);
         assert!(skill.can_use(&attrs, &tags, None, 0).is_ok());
 
-        attrs.set_vital(AttributeKind::Mp, 2.0);
+        attrs.set_base("mp", 2);
         assert_eq!(
             skill.can_use(&attrs, &tags, None, 0),
             Err(SkillUseError::InsufficientMp {

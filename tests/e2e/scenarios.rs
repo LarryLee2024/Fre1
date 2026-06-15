@@ -19,12 +19,12 @@
 
 use bevy::prelude::*;
 use tactical_rpg::core::ability::SkillCooldowns;
-use tactical_rpg::core::attribute::{AttributeKind, Attributes};
+use tactical_rpg::core::attribute::Attributes;
 use tactical_rpg::core::battle::{BattleEntry, BattleRecord, CharacterDied, execute_effects};
 use tactical_rpg::core::buff::{ActiveBuffs, BuffData, BuffRegistry, resolve_status_effects};
 use tactical_rpg::core::character::{Dead, Faction, GridPosition, Unit, UnitName};
 use tactical_rpg::core::effect::{
-    EffectHandlerRegistry, EffectQueue, PendingEffect, PendingEffectData,
+    DurationDef, EffectQueue, PendingEffect, PendingEffectData, StackingDef,
     calculate_damage_from_effect,
 };
 use tactical_rpg::core::map::TerrainRegistry;
@@ -97,15 +97,22 @@ fn enqueue_skill_damage(app: &mut App, source: Entity, target: Entity, amount: i
     });
 }
 
-/// 入队 ApplyBuff 效果
-fn enqueue_apply_buff(app: &mut App, source: Entity, target: Entity, buff_id: &str, duration: u32) {
+/// 入队 ApplyModifier 效果
+fn enqueue_apply_modifier(
+    app: &mut App,
+    source: Entity,
+    target: Entity,
+    modifier_id: &str,
+    duration: u32,
+) {
     let mut queue = app.world_mut().resource_mut::<EffectQueue>();
     queue.pending.push(PendingEffect {
         source,
         target,
-        data: PendingEffectData::ApplyBuff {
-            buff_id: buff_id.into(),
-            duration,
+        data: PendingEffectData::ApplyModifier {
+            modifier_id: modifier_id.into(),
+            duration: DurationDef::TurnLimited(duration),
+            stacking: StackingDef::Replace,
         },
         source_tags: vec![],
         terrain_id: String::new(),
@@ -131,7 +138,7 @@ fn trigger_resolve(app: &mut App) {
 /// SCN-001: 火球vs骑士 — 法师对骑士造成技能伤害 + Burning Buff
 ///
 /// Given: 法师(Mage)和骑士(Warrior/Enemy)在场
-/// When: 法师释放火球（Damage 12 + ApplyBuff "burn" duration=2）
+/// When: 法师释放火球（Damage 12 + ApplyModifier "burn" duration=2）
 /// Then: 骑士 HP 减少 12，获得 burn Buff（DoT=2, remaining=2）
 #[test]
 fn 火球vs骑士_技能伤害加burning_buff() {
@@ -141,25 +148,17 @@ fn 火球vs骑士_技能伤害加burning_buff() {
     let mage = spawn_unit(&mut app, UnitBuilder::mage(), "法师");
     let knight = spawn_unit(&mut app, UnitBuilder::warrior().enemy(), "暗黑骑士");
 
-    let knight_hp_before = app
-        .world()
-        .get::<Attributes>(knight)
-        .unwrap()
-        .get(AttributeKind::Hp);
+    let knight_hp_before = app.world().get::<Attributes>(knight).unwrap().current_hp;
     let knight_buffs_before = app.world().get::<ActiveBuffs>(knight).unwrap().len();
 
-    // ── When：法师释放火球（Damage + ApplyBuff burning） ──
+    // ── When：法师释放火球（Damage + ApplyModifier burning） ──
     // 火球术 = 技能伤害 12 + Burning Buff (duration=2)
     enqueue_skill_damage(&mut app, mage, knight, 12);
-    enqueue_apply_buff(&mut app, mage, knight, "burn", 2);
+    enqueue_apply_modifier(&mut app, mage, knight, "burn", 2);
     tick(&mut app);
 
     // ── Then：骑士受到伤害 ──
-    let knight_hp_after = app
-        .world()
-        .get::<Attributes>(knight)
-        .unwrap()
-        .get(AttributeKind::Hp);
+    let knight_hp_after = app.world().get::<Attributes>(knight).unwrap().current_hp;
     assert!(
         knight_hp_after < knight_hp_before,
         "骑士应受到技能伤害：HP 从 {} 降至 {}",
@@ -168,7 +167,7 @@ fn 火球vs骑士_技能伤害加burning_buff() {
     );
     assert_eq!(
         knight_hp_after,
-        knight_hp_before - 12.0,
+        knight_hp_before - 12,
         "骑士应受到 12 点技能伤害"
     );
 
@@ -204,15 +203,11 @@ fn 毒伤战斗_每回合受到dot伤害() {
     let warrior = spawn_unit(&mut app, UnitBuilder::warrior(), "战士");
     let caster = spawn_unit(&mut app, UnitBuilder::mage(), "法师");
 
-    let initial_hp = app
-        .world()
-        .get::<Attributes>(warrior)
-        .unwrap()
-        .get(AttributeKind::Hp);
-    assert_eq!(initial_hp, 30.0, "战士初始 HP 应为 30");
+    let initial_hp = app.world().get::<Attributes>(warrior).unwrap().current_hp;
+    assert_eq!(initial_hp, 50, "战士初始 HP 应为 50");
 
     // 通过 Effect Pipeline 施加 Poison（duration=3, dot_damage=3）
-    enqueue_apply_buff(&mut app, caster, warrior, "poison", 3);
+    enqueue_apply_modifier(&mut app, caster, warrior, "poison", 3);
     tick(&mut app);
 
     // 验证 Poison 已添加
@@ -229,42 +224,26 @@ fn 毒伤战斗_每回合受到dot伤害() {
     trigger_resolve(&mut app);
 
     // ── Then：战士每回合受到 DoT 伤害 ──
-    let hp_after_r1 = app
-        .world()
-        .get::<Attributes>(warrior)
-        .unwrap()
-        .get(AttributeKind::Hp);
-    assert_eq!(hp_after_r1, 27.0, "第1回合 DoT 应扣 3 HP（30-3=27）");
+    let hp_after_r1 = app.world().get::<Attributes>(warrior).unwrap().current_hp;
+    assert_eq!(hp_after_r1, 47, "第1回合 DoT 应扣 3 HP（50-3=47）");
 
     // 第2回合结算
     trigger_resolve(&mut app);
 
-    let hp_after_r2 = app
-        .world()
-        .get::<Attributes>(warrior)
-        .unwrap()
-        .get(AttributeKind::Hp);
-    assert_eq!(hp_after_r2, 24.0, "第2回合 DoT 应扣 3 HP（27-3=24）");
+    let hp_after_r2 = app.world().get::<Attributes>(warrior).unwrap().current_hp;
+    assert_eq!(hp_after_r2, 44, "第2回合 DoT 应扣 3 HP（47-3=44）");
 
     // 第3回合结算
     trigger_resolve(&mut app);
 
-    let hp_after_r3 = app
-        .world()
-        .get::<Attributes>(warrior)
-        .unwrap()
-        .get(AttributeKind::Hp);
-    assert_eq!(hp_after_r3, 21.0, "第3回合 DoT 应扣 3 HP（24-3=21）");
+    let hp_after_r3 = app.world().get::<Attributes>(warrior).unwrap().current_hp;
+    assert_eq!(hp_after_r3, 41, "第3回合 DoT 应扣 3 HP（44-3=41）");
 
     // 第4回合：Poison 过期，不再造成 DoT
     trigger_resolve(&mut app);
 
-    let hp_after_r4 = app
-        .world()
-        .get::<Attributes>(warrior)
-        .unwrap()
-        .get(AttributeKind::Hp);
-    assert_eq!(hp_after_r4, 21.0, "Poison 过期后不再造成 DoT 伤害");
+    let hp_after_r4 = app.world().get::<Attributes>(warrior).unwrap().current_hp;
+    assert_eq!(hp_after_r4, 41, "Poison 过期后不再造成 DoT 伤害");
 
     let buffs = app.world().get::<ActiveBuffs>(warrior).unwrap();
     assert!(buffs.is_empty(), "Poison 过期后应被移除");
@@ -315,8 +294,8 @@ fn 地形优势_森林地形减少伤害() {
     // ── 验证完整管道：不同地形生成的伤害量入队后实际扣血不同 ──
     let mut app = scenario_test_app();
     let attacker = spawn_unit(&mut app, UnitBuilder::warrior(), "战士");
-    let target_in_forest = spawn_unit(&mut app, UnitBuilder::goblin().with_hp(30.0), "森林哥布林");
-    let target_on_plain = spawn_unit(&mut app, UnitBuilder::goblin().with_hp(30.0), "平原哥布林");
+    let target_in_forest = spawn_unit(&mut app, UnitBuilder::goblin().with_hp(30), "森林哥布林");
+    let target_on_plain = spawn_unit(&mut app, UnitBuilder::goblin().with_hp(30), "平原哥布林");
 
     // 入队不同地形生成的伤害量
     let mut queue = app.world_mut().resource_mut::<EffectQueue>();
@@ -350,15 +329,15 @@ fn 地形优势_森林地形减少伤害() {
         .world()
         .get::<Attributes>(target_in_forest)
         .unwrap()
-        .get(AttributeKind::Hp);
+        .current_hp;
     let hp_plain = app
         .world()
         .get::<Attributes>(target_on_plain)
         .unwrap()
-        .get(AttributeKind::Hp);
+        .current_hp;
 
-    assert_eq!(hp_plain, 23.0, "平原：30-7=23");
-    assert_eq!(hp_forest, 25.0, "森林：30-5=25");
+    assert_eq!(hp_plain, 23, "平原：30-7=23");
+    assert_eq!(hp_forest, 25, "森林：30-5=25");
     assert!(hp_forest > hp_plain, "森林地形目标 HP 应高于平原地形目标");
 }
 
@@ -381,15 +360,12 @@ fn 击杀触发死亡_dead标记和character_died消息() {
 
     // ── Given：目标 HP 很低 ──
     let attacker = spawn_unit(&mut app, UnitBuilder::warrior(), "战士");
-    let target = spawn_unit(&mut app, UnitBuilder::goblin().with_hp(5.0), "残血哥布林");
+    let target = spawn_unit(&mut app, UnitBuilder::goblin().with_hp(5), "残血哥布林");
 
     // 验证初始状态
     assert_eq!(
-        app.world()
-            .get::<Attributes>(target)
-            .unwrap()
-            .get(AttributeKind::Hp),
-        5.0,
+        app.world().get::<Attributes>(target).unwrap().current_hp,
+        5,
         "目标初始 HP 应为 5"
     );
     assert!(
@@ -412,10 +388,6 @@ fn 击杀触发死亡_dead标记和character_died消息() {
     assert!(unit.acted, "Dead Hook 应将 acted 设为 true");
 
     // HP 应降为 0
-    let hp = app
-        .world()
-        .get::<Attributes>(target)
-        .unwrap()
-        .get(AttributeKind::Hp);
-    assert_eq!(hp, 0.0, "致命伤害后 HP 应为 0");
+    let hp = app.world().get::<Attributes>(target).unwrap().current_hp;
+    assert_eq!(hp, 0, "致命伤害后 HP 应为 0");
 }

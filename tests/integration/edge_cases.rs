@@ -13,14 +13,13 @@
 // ✅ 没有生成不在范围内的测试
 // ================================================
 
-use tactical_rpg::core::attribute::{
-    AttributeKind, AttributeModifierDef, Attributes, BuffInstanceId, ModifierOp,
-};
+use tactical_rpg::core::attribute::{AttributeModifierDef, Attributes, BuffInstanceId, ModifierOp};
 use tactical_rpg::core::buff::{
     ActiveBuffs, BuffData, DurationPolicy, StackPolicy, apply_buff, remove_buff,
 };
 use tactical_rpg::core::effect::{
-    EffectDef, EffectHandlerRegistry, EffectPreview, GenerateContext, PreviewContext,
+    DurationDef, EffectDef, EffectHandlerRegistry, EffectPreview, GenerateContext, PreviewContext,
+    StackingDef,
 };
 use tactical_rpg::core::tag::{GameplayTag, GameplayTags};
 
@@ -102,9 +101,9 @@ fn 修饰符_add_then_multiply() {
         "atk_add",
         true,
         vec![AttributeModifierDef {
-            kind: AttributeKind::Attack,
+            config_id: "phys_atk".into(),
             op: ModifierOp::Add,
-            value: 5.0,
+            value: 5,
         }],
         vec![GameplayTag::BUFF],
     );
@@ -112,9 +111,9 @@ fn 修饰符_add_then_multiply() {
         "atk_mul",
         true,
         vec![AttributeModifierDef {
-            kind: AttributeKind::Attack,
+            config_id: "phys_atk".into(),
             op: ModifierOp::Multiply,
-            value: 1.5,
+            value: 15000, // 1.5x in permille
         }],
         vec![GameplayTag::BUFF],
     );
@@ -124,16 +123,16 @@ fn 修饰符_add_then_multiply() {
     let mut tags = GameplayTags::default();
 
     apply_buff(&mut buffs, &mut attrs, &mut tags, &buff_add, None, 3);
-    // Attack = (10 + 5) = 15
-    assert_eq!(attrs.get(AttributeKind::Attack), 15.0);
+    // phys_atk = (5 + 5) = 10
+    assert_eq!(attrs.get("phys_atk"), 10);
 
     apply_buff(&mut buffs, &mut attrs, &mut tags, &buff_mul, None, 3);
-    // Attack = (10 + 5) * 1.5 = 22.5
-    assert_eq!(attrs.get(AttributeKind::Attack), 22.5);
+    // phys_atk = (5 + 5) * 15000/10000 = 15
+    assert_eq!(attrs.get("phys_atk"), 15);
 
     // 移除 multiply
     remove_buff(&mut buffs, &mut attrs, &mut tags, BuffInstanceId(2));
-    assert_eq!(attrs.get(AttributeKind::Attack), 15.0);
+    assert_eq!(attrs.get("phys_atk"), 10);
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -240,14 +239,14 @@ fn 伤害处理器_收到heal定义返回none() {
 #[test]
 fn 伤害_精确致死() {
     let mut attrs = warrior_attrs();
-    attrs.set_vital(AttributeKind::Hp, 7.0); // 正好等于战士 ATK-哥布林DEF=7
+    attrs.current_hp = 7;
 
     // 模拟伤害执行
-    let hp = attrs.get(AttributeKind::Hp);
-    let new_hp = (hp - 7.0_f32).max(0.0);
-    attrs.set_vital(AttributeKind::Hp, new_hp);
+    let hp = attrs.current_hp;
+    let new_hp = (hp - 7).max(0);
+    attrs.current_hp = new_hp;
 
-    assert_eq!(attrs.get(AttributeKind::Hp), 0.0);
+    assert_eq!(attrs.current_hp, 0);
 }
 
 /// LEC-009: 伤害超过 HP — HP 下限为 0
@@ -258,13 +257,13 @@ fn 伤害_精确致死() {
 #[test]
 fn 伤害_超过hp() {
     let mut attrs = warrior_attrs();
-    attrs.set_vital(AttributeKind::Hp, 5.0);
+    attrs.current_hp = 5;
 
-    let hp = attrs.get(AttributeKind::Hp);
-    let new_hp = (hp - 50.0).max(0.0);
-    attrs.set_vital(AttributeKind::Hp, new_hp);
+    let hp = attrs.current_hp;
+    let new_hp = (hp - 50).max(0);
+    attrs.current_hp = new_hp;
 
-    assert_eq!(attrs.get(AttributeKind::Hp), 0.0);
+    assert_eq!(attrs.current_hp, 0);
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -279,12 +278,12 @@ fn 伤害_超过hp() {
 #[test]
 fn 标签_add重复_idempotent() {
     let mut tags = GameplayTags::default();
-    tags.add(GameplayTag::FIRE);
-    tags.add(GameplayTag::FIRE);
-    tags.add(GameplayTag::FIRE);
+    tags.add(GameplayTag::DMG_FIRE);
+    tags.add(GameplayTag::DMG_FIRE);
+    tags.add(GameplayTag::DMG_FIRE);
 
     let mut count = 0;
-    if tags.has(GameplayTag::FIRE) {
+    if tags.has(GameplayTag::DMG_FIRE) {
         count += 1;
     }
     assert_eq!(count, 1); // 只有一个 FIRE
@@ -298,8 +297,8 @@ fn 标签_add重复_idempotent() {
 #[test]
 fn 标签_remove不存在的idempotent() {
     let mut tags = GameplayTags::default();
-    tags.remove(GameplayTag::FIRE); // 不崩溃
-    assert!(!tags.has(GameplayTag::FIRE));
+    tags.remove(GameplayTag::DMG_FIRE); // 不崩溃
+    assert!(!tags.has(GameplayTag::DMG_FIRE));
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -323,12 +322,13 @@ fn effect_def_type_name_覆盖所有变体() {
     );
     assert_eq!(EffectDef::Heal { amount: 5 }.type_name(), "Heal");
     assert_eq!(
-        EffectDef::ApplyBuff {
-            buff_id: "x".into(),
-            duration: 1
+        EffectDef::ApplyModifier {
+            modifier_id: "x".into(),
+            duration: DurationDef::TurnLimited(1),
+            stacking: StackingDef::Replace,
         }
         .type_name(),
-        "ApplyBuff"
+        "ApplyModifier"
     );
     assert_eq!(EffectDef::Cleanse.type_name(), "Cleanse");
 }

@@ -18,7 +18,7 @@
 // ================================================
 
 use bevy::prelude::*;
-use tactical_rpg::core::attribute::{AttributeKind, Attributes};
+use tactical_rpg::core::attribute::Attributes;
 use tactical_rpg::core::character::{Faction, GridPosition, MovingUnit, Unit};
 use tactical_rpg::core::map::{
     GameMap, OccupancyGrid, TerrainCostRegistry, TerrainGrid, TerrainRegistry,
@@ -61,7 +61,7 @@ fn setup_movement_execution_app() -> App {
 fn spawn_unit_at(app: &mut App, x: i32, y: i32) -> Entity {
     let builder = UnitBuilder::unit_001();
     let mut attrs = builder.attrs().clone();
-    attrs.set_base(AttributeKind::MoveRange, 5.0); // 设置移动范围为5格
+    attrs.set_base("move_range", 5); // 设置移动范围为5格
 
     app.world_mut()
         .spawn((
@@ -185,16 +185,16 @@ fn 统一移动_AI移动执行添加MovingUnit() {
 
     // Given: AI 单位在 (0,0)
     let mut attrs = Attributes::default();
-    attrs.set_base(AttributeKind::Might, 15.0);
-    attrs.set_base(AttributeKind::Vitality, 20.0);
-    attrs.set_base(AttributeKind::Agility, 10.0);
-    attrs.set_base(AttributeKind::Dexterity, 5.0);
-    attrs.set_base(AttributeKind::Intelligence, 3.0);
-    attrs.set_base(AttributeKind::Willpower, 5.0);
-    attrs.set_base(AttributeKind::Presence, 3.0);
-    attrs.set_base(AttributeKind::Luck, 3.0);
-    attrs.set_base_attack_range(1);
-    attrs.fill_vital_resources();
+    attrs.set_base("phys_atk", 15);
+    attrs.set_base("max_hp", 20);
+    attrs.set_base("dodge_rate", 10);
+    attrs.set_base("hit_rate", 5);
+    attrs.set_base("magic_atk", 3);
+    attrs.set_base("magic_def", 5);
+    attrs.set_base("crit_rate", 3);
+    attrs.set_base("move_range", 3);
+    attrs.set_base("atk_range", 1);
+    attrs.fill_hp();
 
     let unit_entity = app
         .world_mut()

@@ -3,7 +3,6 @@ pub mod resolver;
 pub mod types;
 pub mod validator;
 
-pub use resolver::*;
 pub use types::*;
 pub use validator::*;
 

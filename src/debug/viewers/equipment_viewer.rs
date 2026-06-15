@@ -2,7 +2,7 @@
 // 遵循铁律：复杂系统必须有可视化调试工具
 
 use crate::core::character::{Faction, TraitCollection, Unit, UnitName};
-use crate::core::equipment::{EquipmentRegistry, EquipmentSlots, Inventory};
+use crate::core::equipment::EquipmentSlots;
 use bevy::prelude::*;
 use bevy_inspector_egui::egui;
 

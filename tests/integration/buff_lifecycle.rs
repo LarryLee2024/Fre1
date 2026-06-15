@@ -15,8 +15,8 @@
 // ================================================
 
 use tactical_rpg::core::attribute::{
-    AttributeKind, AttributeModifierDef, AttributeModifierInstance, Attributes, BuffInstanceId,
-    ModifierOp, ModifierSource,
+    AttributeModifierDef, AttributeModifierInstance, Attributes, BuffInstanceId, ModifierOp,
+    ModifierSource,
 };
 use tactical_rpg::core::buff::{
     ActiveBuffs, BuffData, BuffInstance, DurationPolicy, StackPolicy, apply_buff,
@@ -68,7 +68,7 @@ fn make_stun_buff() -> BuffData {
         conditions: vec![],
         default_duration: 1,
         modifiers: vec![],
-        tags: vec![GameplayTag::DEBUFF, GameplayTag::STUN],
+        tags: vec![GameplayTag::DEBUFF, GameplayTag::CONTROL_HARD],
         dot_damage: 0,
         hot_heal: 0,
         is_stun: true,
@@ -92,9 +92,9 @@ fn 攻击buff_施加_递减_过期_修饰符清理() {
         "attack_up",
         true,
         vec![AttributeModifierDef {
-            kind: AttributeKind::Attack,
+            config_id: "phys_atk".into(),
             op: ModifierOp::Add,
-            value: 5.0,
+            value: 5,
         }],
         vec![GameplayTag::BUFF],
         0,
@@ -108,7 +108,7 @@ fn 攻击buff_施加_递减_过期_修饰符清理() {
     // ── 施加 ──
     let instance_id = apply_buff(&mut buffs, &mut attrs, &mut tags, &buff_data, None, 3);
     assert_eq!(buffs.len(), 1);
-    assert_eq!(attrs.get(AttributeKind::Attack), 15.0); // 10+5=15
+    assert_eq!(attrs.get("phys_atk"), 10); // 5+5=10
     assert!(tags.has(GameplayTag::BUFF));
 
     // ── tick 第1轮：remaining 3→2 ──
@@ -125,7 +125,7 @@ fn 攻击buff_施加_递减_过期_修饰符清理() {
     }
     assert_eq!(buffs.len(), 1);
     assert_eq!(buffs.instances[0].remaining_turns, 2);
-    assert_eq!(attrs.get(AttributeKind::Attack), 15.0); // 仍在
+    assert_eq!(attrs.get("phys_atk"), 10); // 仍在
 
     // ── tick 第2轮：remaining 2→1 ──
     let expired: Vec<_> = buffs
@@ -139,7 +139,7 @@ fn 攻击buff_施加_递减_过期_修饰符清理() {
         attrs.remove_modifiers_from(*id);
     }
     assert_eq!(buffs.instances[0].remaining_turns, 1);
-    assert_eq!(attrs.get(AttributeKind::Attack), 15.0);
+    assert_eq!(attrs.get("phys_atk"), 10);
 
     // ── tick 第3轮：remaining 1→0 → 过期 → 修饰符清理 ──
     let expired: Vec<_> = buffs
@@ -152,8 +152,7 @@ fn 攻击buff_施加_递减_过期_修饰符清理() {
     for id in &expired {
         attrs.remove_modifiers_from(*id);
     }
-    assert!(attrs.modifiers.is_empty());
-    assert_eq!(attrs.get(AttributeKind::Attack), 10.0); // 恢复
+    assert_eq!(attrs.get("phys_atk"), 5); // 恢复
 
     // ── tick 第4轮：remaining=0 的被移除 ──
     buffs.tick();
@@ -200,7 +199,7 @@ fn dot_buff_每轮扣血() {
         "poison",
         false,
         vec![],
-        vec![GameplayTag::DEBUFF, GameplayTag::POISON],
+        vec![GameplayTag::DEBUFF, GameplayTag::DMG_MAGICAL],
         3, // dot_damage=3
         0,
     );
@@ -209,16 +208,16 @@ fn dot_buff_每轮扣血() {
     let mut attrs = warrior_attrs();
     let mut tags = GameplayTags::default();
 
-    attrs.set_vital(AttributeKind::Hp, 20.0);
+    attrs.current_hp = 20;
     apply_buff(&mut buffs, &mut attrs, &mut tags, &poison, None, 3);
 
     // 模拟 resolve_status_effects 中的 DoT 结算
     let dot = buffs.dot_damage();
     assert_eq!(dot, 3);
-    let hp = attrs.get(AttributeKind::Hp);
-    let new_hp = (hp - dot as f32).max(0.0);
-    attrs.set_vital(AttributeKind::Hp, new_hp);
-    assert_eq!(attrs.get(AttributeKind::Hp), 17.0);
+    let hp = attrs.current_hp;
+    let new_hp = (hp - dot).max(0);
+    attrs.current_hp = new_hp;
+    assert_eq!(attrs.current_hp, 17);
 
     // tick
     let expired: Vec<_> = buffs
@@ -235,9 +234,9 @@ fn dot_buff_每轮扣血() {
     // 第2轮 dot
     let dot = buffs.dot_damage();
     assert_eq!(dot, 3);
-    let hp = attrs.get(AttributeKind::Hp);
-    attrs.set_vital(AttributeKind::Hp, (hp - dot as f32).max(0.0));
-    assert_eq!(attrs.get(AttributeKind::Hp), 14.0);
+    let hp = attrs.current_hp;
+    attrs.current_hp = (hp - dot).max(0);
+    assert_eq!(attrs.current_hp, 14);
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -264,28 +263,28 @@ fn hot_buff_每轮回血_不超过最大hp() {
     let mut attrs = warrior_attrs();
     let mut tags = GameplayTags::default();
 
-    attrs.set_vital(AttributeKind::Hp, 18.0); // MaxHp=30
+    attrs.current_hp = 18; // max_hp=50
     apply_buff(&mut buffs, &mut attrs, &mut tags, &regen, None, 3);
 
     // 第1轮 HoT
     let hot = buffs.hot_heal();
     assert_eq!(hot, 4);
-    let hp = attrs.get(AttributeKind::Hp);
-    let max_hp = attrs.get(AttributeKind::MaxHp);
-    attrs.set_vital(AttributeKind::Hp, (hp + hot as f32).min(max_hp));
-    assert_eq!(attrs.get(AttributeKind::Hp), 22.0);
+    let hp = attrs.current_hp;
+    let max_hp = attrs.max_hp();
+    attrs.current_hp = (hp + hot).min(max_hp);
+    assert_eq!(attrs.current_hp, 22);
 
     // 第2轮 HoT
     let hot = buffs.hot_heal();
-    let hp = attrs.get(AttributeKind::Hp);
-    attrs.set_vital(AttributeKind::Hp, (hp + hot as f32).min(max_hp));
-    assert_eq!(attrs.get(AttributeKind::Hp), 26.0);
+    let hp = attrs.current_hp;
+    attrs.current_hp = (hp + hot).min(max_hp);
+    assert_eq!(attrs.current_hp, 26);
 
     // 第3轮 HoT
     let hot = buffs.hot_heal();
-    let hp = attrs.get(AttributeKind::Hp);
-    attrs.set_vital(AttributeKind::Hp, (hp + hot as f32).min(max_hp));
-    assert_eq!(attrs.get(AttributeKind::Hp), 30.0); // cap at MaxHp
+    let hp = attrs.current_hp;
+    attrs.current_hp = (hp + hot).min(max_hp);
+    assert_eq!(attrs.current_hp, 30);
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -303,9 +302,9 @@ fn cleanse_移除所有debuff保留buff() {
         "attack_up",
         true,
         vec![AttributeModifierDef {
-            kind: AttributeKind::Attack,
+            config_id: "phys_atk".into(),
             op: ModifierOp::Add,
-            value: 5.0,
+            value: 5,
         }],
         vec![GameplayTag::BUFF],
         0,
@@ -315,9 +314,9 @@ fn cleanse_移除所有debuff保留buff() {
         "defense_down",
         false,
         vec![AttributeModifierDef {
-            kind: AttributeKind::Defense,
+            config_id: "phys_def".into(),
             op: ModifierOp::Add,
-            value: -3.0,
+            value: -3,
         }],
         vec![GameplayTag::DEBUFF],
         0,
@@ -327,7 +326,7 @@ fn cleanse_移除所有debuff保留buff() {
         "poison",
         false,
         vec![],
-        vec![GameplayTag::DEBUFF, GameplayTag::POISON],
+        vec![GameplayTag::DEBUFF, GameplayTag::DMG_MAGICAL],
         3,
         0,
     );
@@ -341,8 +340,8 @@ fn cleanse_移除所有debuff保留buff() {
     apply_buff(&mut buffs, &mut attrs, &mut tags, &poison, None, 3);
 
     assert_eq!(buffs.len(), 3);
-    assert_eq!(attrs.get(AttributeKind::Attack), 15.0); // 10+5
-    assert_eq!(attrs.get(AttributeKind::Defense), 2.0); // 5-3
+    assert_eq!(attrs.get("phys_atk"), 10); // 5+5
+    assert_eq!(attrs.get("phys_def"), 0); // 3-3
     assert_eq!(buffs.dot_damage(), 3);
 
     // 驱散
@@ -350,8 +349,8 @@ fn cleanse_移除所有debuff保留buff() {
 
     assert_eq!(buffs.len(), 1);
     assert_eq!(buffs.instances[0].buff_id, "attack_up");
-    assert_eq!(attrs.get(AttributeKind::Attack), 15.0); // 保留
-    assert_eq!(attrs.get(AttributeKind::Defense), 5.0); // 恢复
+    assert_eq!(attrs.get("phys_atk"), 10); // 保留
+    assert_eq!(attrs.get("phys_def"), 3); // 恢复
     assert_eq!(buffs.dot_damage(), 0);
 }
 
@@ -370,11 +369,11 @@ fn 共享标签_两个buff共享FIRE_移除一个_标签保留() {
         "fire_a",
         true,
         vec![AttributeModifierDef {
-            kind: AttributeKind::Attack,
+            config_id: "phys_atk".into(),
             op: ModifierOp::Add,
-            value: 3.0,
+            value: 3,
         }],
-        vec![GameplayTag::BUFF, GameplayTag::FIRE],
+        vec![GameplayTag::BUFF, GameplayTag::DMG_FIRE],
         0,
         0,
     );
@@ -382,11 +381,11 @@ fn 共享标签_两个buff共享FIRE_移除一个_标签保留() {
         "fire_b",
         true,
         vec![AttributeModifierDef {
-            kind: AttributeKind::Defense,
+            config_id: "phys_def".into(),
             op: ModifierOp::Add,
-            value: 2.0,
+            value: 2,
         }],
-        vec![GameplayTag::BUFF, GameplayTag::FIRE],
+        vec![GameplayTag::BUFF, GameplayTag::DMG_FIRE],
         0,
         0,
     );
@@ -398,19 +397,19 @@ fn 共享标签_两个buff共享FIRE_移除一个_标签保留() {
     let id_a = apply_buff(&mut buffs, &mut attrs, &mut tags, &fire_a, None, 3);
     let id_b = apply_buff(&mut buffs, &mut attrs, &mut tags, &fire_b, None, 3);
 
-    assert!(tags.has(GameplayTag::FIRE));
+    assert!(tags.has(GameplayTag::DMG_FIRE));
     assert_eq!(buffs.len(), 2);
 
     // 移除 fire_a
     remove_buff(&mut buffs, &mut attrs, &mut tags, id_a);
 
     // FIRE 仍由 fire_b 提供
-    assert!(tags.has(GameplayTag::FIRE));
+    assert!(tags.has(GameplayTag::DMG_FIRE));
     assert!(tags.has(GameplayTag::BUFF));
     assert_eq!(buffs.len(), 1);
-    // Attack 恢复，Defense 保留
-    assert_eq!(attrs.get(AttributeKind::Attack), 10.0);
-    assert_eq!(attrs.get(AttributeKind::Defense), 7.0);
+    // phys_atk 恢复，phys_def 保留
+    assert_eq!(attrs.get("phys_atk"), 5);
+    assert_eq!(attrs.get("phys_def"), 5);
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -457,9 +456,9 @@ fn 多buff_属性修饰符正确叠加() {
         "attack_up",
         true,
         vec![AttributeModifierDef {
-            kind: AttributeKind::Attack,
+            config_id: "phys_atk".into(),
             op: ModifierOp::Add,
-            value: 5.0,
+            value: 5,
         }],
         vec![GameplayTag::BUFF],
         0,
@@ -469,9 +468,9 @@ fn 多buff_属性修饰符正确叠加() {
         "attack_up2",
         true,
         vec![AttributeModifierDef {
-            kind: AttributeKind::Attack,
+            config_id: "phys_atk".into(),
             op: ModifierOp::Add,
-            value: 3.0,
+            value: 3,
         }],
         vec![GameplayTag::BUFF],
         0,
@@ -483,14 +482,14 @@ fn 多buff_属性修饰符正确叠加() {
     let mut tags = GameplayTags::default();
 
     apply_buff(&mut buffs, &mut attrs, &mut tags, &atk_up, None, 3);
-    assert_eq!(attrs.get(AttributeKind::Attack), 15.0); // 10+5
+    assert_eq!(attrs.get("phys_atk"), 10); // 5+5
 
     apply_buff(&mut buffs, &mut attrs, &mut tags, &atk_up2, None, 3);
-    assert_eq!(attrs.get(AttributeKind::Attack), 18.0); // 10+5+3
+    assert_eq!(attrs.get("phys_atk"), 13); // 5+5+3
 
     // 移除第一个
     remove_buff(&mut buffs, &mut attrs, &mut tags, BuffInstanceId(1));
-    assert_eq!(attrs.get(AttributeKind::Attack), 13.0); // 10+3
+    assert_eq!(attrs.get("phys_atk"), 8); // 5+3
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -508,11 +507,15 @@ fn buff施加_标签同步更新() {
         "burn",
         false,
         vec![AttributeModifierDef {
-            kind: AttributeKind::Defense,
+            config_id: "phys_def".into(),
             op: ModifierOp::Add,
-            value: -2.0,
+            value: -2,
         }],
-        vec![GameplayTag::DEBUFF, GameplayTag::BURN, GameplayTag::FIRE],
+        vec![
+            GameplayTag::DEBUFF,
+            GameplayTag::DMG_FIRE,
+            GameplayTag::DMG_FIRE,
+        ],
         2,
         0,
     );
@@ -524,13 +527,13 @@ fn buff施加_标签同步更新() {
     apply_buff(&mut buffs, &mut attrs, &mut tags, &burn, None, 2);
 
     assert!(tags.has(GameplayTag::DEBUFF));
-    assert!(tags.has(GameplayTag::BURN));
-    assert!(tags.has(GameplayTag::FIRE));
-    assert_eq!(attrs.get(AttributeKind::Defense), 3.0); // 5-2
+    assert!(tags.has(GameplayTag::DMG_FIRE));
+    assert!(tags.has(GameplayTag::DMG_FIRE));
+    assert_eq!(attrs.get("phys_def"), 1); // 3-2
 
     // 移除后标签清除
     remove_buff(&mut buffs, &mut attrs, &mut tags, BuffInstanceId(1));
-    assert!(!tags.has(GameplayTag::BURN));
-    assert!(!tags.has(GameplayTag::FIRE));
-    assert_eq!(attrs.get(AttributeKind::Defense), 5.0);
+    assert!(!tags.has(GameplayTag::DMG_FIRE));
+    assert!(!tags.has(GameplayTag::DMG_FIRE));
+    assert_eq!(attrs.get("phys_def"), 3);
 }

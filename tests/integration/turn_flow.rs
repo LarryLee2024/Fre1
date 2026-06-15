@@ -14,7 +14,7 @@
 // ================================================
 
 use bevy::prelude::*;
-use tactical_rpg::core::attribute::{AttributeKind, Attributes};
+use tactical_rpg::core::attribute::Attributes;
 use tactical_rpg::core::character::{Faction, Unit};
 use tactical_rpg::core::turn::{
     ForceEndTurn, NeedsResolve, TurnEnded, TurnOrder, TurnPhase, TurnStarted, TurnState,
@@ -40,12 +40,12 @@ fn setup_turn_test_app() -> App {
     app
 }
 
-fn spawn_unit(app: &mut App, faction: Faction, initiative: f32) -> Entity {
+fn spawn_unit(app: &mut App, faction: Faction, initiative: i32) -> Entity {
     let mut attrs = Attributes::default();
-    attrs.set_base(AttributeKind::Agility, initiative / 2.0);
-    attrs.set_base(AttributeKind::Luck, 0.0);
-    attrs.set_base_attack_range(1);
-    attrs.fill_vital_resources();
+    attrs.set_base("dodge_rate", initiative / 2);
+    attrs.set_base("crit_rate", 0);
+    attrs.set_base("atk_range", 1);
+    attrs.fill_hp();
     app.world_mut()
         .spawn((
             Unit {
@@ -71,7 +71,7 @@ fn 行动队列_按initiative降序排列() {
     let e1 = Entity::from_bits(1);
     let e2 = Entity::from_bits(2);
     let e3 = Entity::from_bits(3);
-    let queue = TurnOrder::build(&[(e1, 10.0), (e2, 20.0), (e3, 15.0)]);
+    let queue = TurnOrder::build(&[(e1, 10), (e2, 20), (e3, 15)]);
     assert_eq!(queue, vec![e2, e3, e1]);
 }
 
@@ -84,7 +84,7 @@ fn 行动队列_按initiative降序排列() {
 fn 行动队列_相同initiative稳定排序() {
     let e1 = Entity::from_bits(1);
     let e2 = Entity::from_bits(2);
-    let queue = TurnOrder::build(&[(e1, 10.0), (e2, 10.0)]);
+    let queue = TurnOrder::build(&[(e1, 10), (e2, 10)]);
     assert_eq!(queue, vec![e1, e2]);
 }
 
@@ -134,8 +134,8 @@ fn 行动队列_current_unit和advance() {
 fn 回合结束_重建队列并增加回合数() {
     let mut app = setup_turn_test_app();
 
-    spawn_unit(&mut app, Faction::Player, 10.0);
-    spawn_unit(&mut app, Faction::Enemy, 8.0);
+    spawn_unit(&mut app, Faction::Player, 10);
+    spawn_unit(&mut app, Faction::Enemy, 8);
 
     app.world_mut()
         .resource_mut::<NextState<TurnPhase>>()
@@ -159,7 +159,7 @@ fn 回合结束_重建队列并增加回合数() {
 fn 回合结束_needs_resolve标记设置() {
     let mut app = setup_turn_test_app();
 
-    spawn_unit(&mut app, Faction::Player, 10.0);
+    spawn_unit(&mut app, Faction::Player, 10);
 
     app.world_mut()
         .resource_mut::<NextState<TurnPhase>>()
@@ -179,7 +179,7 @@ fn 回合结束_needs_resolve标记设置() {
 fn 回合结束_总是切换到_select_unit() {
     let mut app = setup_turn_test_app();
 
-    spawn_unit(&mut app, Faction::Player, 10.0);
+    spawn_unit(&mut app, Faction::Player, 10);
 
     app.world_mut()
         .resource_mut::<NextState<TurnPhase>>()
@@ -204,8 +204,8 @@ fn 回合结束_当前阵营为队首单位阵营() {
     let mut app = setup_turn_test_app();
 
     // 敌方先行动（initiative 高）
-    spawn_unit(&mut app, Faction::Enemy, 20.0);
-    spawn_unit(&mut app, Faction::Player, 10.0);
+    spawn_unit(&mut app, Faction::Enemy, 20);
+    spawn_unit(&mut app, Faction::Player, 10);
 
     app.world_mut()
         .resource_mut::<NextState<TurnPhase>>()
@@ -229,7 +229,7 @@ fn 回合结束_当前阵营为队首单位阵营() {
 fn 回合结束_needs_resolve标记被重置() {
     let mut app = setup_turn_test_app();
 
-    spawn_unit(&mut app, Faction::Player, 10.0);
+    spawn_unit(&mut app, Faction::Player, 10);
 
     // 先触发一次回合结束，设置 needs_resolve
     app.world_mut()
@@ -256,7 +256,7 @@ fn 回合结束_needs_resolve标记被重置() {
 fn 回合结束_ai计时器重置() {
     let mut app = setup_turn_test_app();
 
-    spawn_unit(&mut app, Faction::Player, 10.0);
+    spawn_unit(&mut app, Faction::Player, 10);
 
     // 模拟计时器已过期
     {
@@ -289,7 +289,7 @@ fn 回合结束_ai计时器重置() {
 fn 多次回合结束_回合数持续递增() {
     let mut app = setup_turn_test_app();
 
-    spawn_unit(&mut app, Faction::Player, 10.0);
+    spawn_unit(&mut app, Faction::Player, 10);
 
     // 第1次回合结束
     app.world_mut()
@@ -326,8 +326,8 @@ fn 多次回合结束_回合数持续递增() {
 fn 回合结束_重置所有单位acted状态() {
     let mut app = setup_turn_test_app();
 
-    let e1 = spawn_unit(&mut app, Faction::Player, 10.0);
-    let e2 = spawn_unit(&mut app, Faction::Enemy, 8.0);
+    let e1 = spawn_unit(&mut app, Faction::Player, 10);
+    let e2 = spawn_unit(&mut app, Faction::Enemy, 8);
 
     // 模拟两个单位都已行动
     {
@@ -361,8 +361,8 @@ fn 回合结束_重置所有单位acted状态() {
 fn 回合结束_只有部分单位acted也全部重置() {
     let mut app = setup_turn_test_app();
 
-    let e1 = spawn_unit(&mut app, Faction::Player, 10.0);
-    let e2 = spawn_unit(&mut app, Faction::Enemy, 8.0);
+    let e1 = spawn_unit(&mut app, Faction::Player, 10);
+    let e2 = spawn_unit(&mut app, Faction::Enemy, 8);
 
     // 只有 e1 已行动
     {
@@ -397,9 +397,9 @@ fn 回合结束_只有部分单位acted也全部重置() {
 fn 回合结束_重建队列过滤已死亡单位() {
     let mut app = setup_turn_test_app();
 
-    let e1 = spawn_unit(&mut app, Faction::Player, 10.0);
-    let e2 = spawn_unit(&mut app, Faction::Enemy, 8.0);
-    let e3 = spawn_unit(&mut app, Faction::Player, 5.0);
+    let e1 = spawn_unit(&mut app, Faction::Player, 10);
+    let e2 = spawn_unit(&mut app, Faction::Enemy, 8);
+    let e3 = spawn_unit(&mut app, Faction::Player, 5);
 
     // 初始回合结束，建立队列
     app.world_mut()
@@ -440,8 +440,8 @@ fn 回合结束_重建队列过滤已死亡单位() {
 fn 回合结束_所有敌方死亡后队列只有玩家() {
     let mut app = setup_turn_test_app();
 
-    let e1 = spawn_unit(&mut app, Faction::Player, 10.0);
-    let e2 = spawn_unit(&mut app, Faction::Enemy, 8.0);
+    let e1 = spawn_unit(&mut app, Faction::Player, 10);
+    let e2 = spawn_unit(&mut app, Faction::Enemy, 8);
 
     // 初始回合结束
     app.world_mut()

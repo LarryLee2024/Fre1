@@ -156,9 +156,7 @@ pub fn execute_effects(world: &mut World) {
                         *amount = new_amount;
                         *modifiers = entries;
                     }
-                    PendingEffectData::ApplyModifier { .. }
-                    | PendingEffectData::ApplyBuff { .. }
-                    | PendingEffectData::Cleanse => {}
+                    PendingEffectData::ApplyModifier { .. } | PendingEffectData::Cleanse => {}
                 }
             }
         }

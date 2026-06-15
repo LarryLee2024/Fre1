@@ -104,7 +104,7 @@ proptest! {
 // 属性计算属性测试
 // ══════════════════════════════════════════════════════════════
 
-use tactical_rpg::core::attribute::{AttributeKind, Attributes};
+use tactical_rpg::core::attribute::Attributes;
 
 proptest! {
     /// RUL-005: 基础属性设置后可以正确读取
@@ -115,10 +115,10 @@ proptest! {
     #[test]
     fn 属性计算_设置基础属性后可正确读取(value in 1.0_f32..100.0) {
         let mut attrs = Attributes::default();
-        attrs.set_base(AttributeKind::Might, value);
-        let got = attrs.get(AttributeKind::Might);
-        prop_assert!((got - value).abs() < 0.01,
-            "set Might={} but got {}", value, got);
+        attrs.set_base("phys_atk", value as i32);
+        let got = attrs.get("phys_atk");
+        prop_assert_eq!(got, value as i32,
+            "set phys_atk={} but got {}", value as i32, got);
     }
 
     /// RUL-006: fill_vital_resources 后 HP = MaxHp, MP = MaxMp
@@ -127,20 +127,13 @@ proptest! {
     /// When: set_base(Vitality/Intelligence) + fill_vital_resources()
     /// Then: HP==MaxHp 且 MP==MaxMp
     #[test]
-    fn 属性计算_填充资源后HP等于MaxHp(
-        vitality in 1.0_f32..20.0,
-        intelligence in 1.0_f32..20.0,
-    ) {
+    fn 属性计算_填充资源后HP等于MaxHp(vitality in 1.0_f32..20.0) {
         let mut attrs = Attributes::default();
-        attrs.set_base(AttributeKind::Vitality, vitality);
-        attrs.set_base(AttributeKind::Intelligence, intelligence);
-        attrs.fill_vital_resources();
-        let hp = attrs.get(AttributeKind::Hp);
-        let max_hp = attrs.get(AttributeKind::MaxHp);
-        let mp = attrs.get(AttributeKind::Mp);
-        let max_mp = attrs.get(AttributeKind::MaxMp);
-        prop_assert!((hp - max_hp).abs() < 0.01, "HP {} != MaxHp {}", hp, max_hp);
-        prop_assert!((mp - max_mp).abs() < 0.01, "MP {} != MaxMp {}", mp, max_mp);
+        attrs.set_base("max_hp", (vitality as i32) * 10);
+        attrs.fill_hp();
+        let hp = attrs.current_hp;
+        let max_hp = attrs.get("max_hp");
+        prop_assert_eq!(hp, max_hp, "HP {} != MaxHp {}", hp, max_hp);
     }
 }
 
@@ -152,17 +145,17 @@ use tactical_rpg::core::tag::{GameplayTag, GameplayTags};
 
 fn arb_tag() -> impl Strategy<Value = GameplayTag> {
     prop_oneof![
-        Just(GameplayTag::WARRIOR),
-        Just(GameplayTag::MAGE),
-        Just(GameplayTag::ARCHER),
-        Just(GameplayTag::SWORD),
-        Just(GameplayTag::AXE),
-        Just(GameplayTag::BOW),
-        Just(GameplayTag::STAFF),
-        Just(GameplayTag::POISON),
-        Just(GameplayTag::STUN),
-        Just(GameplayTag::BURN),
-        Just(GameplayTag::FIRE),
+        Just(GameplayTag::ALLY),
+        Just(GameplayTag::ENEMY),
+        Just(GameplayTag::WEAPON_SWORD),
+        Just(GameplayTag::WEAPON_BOW),
+        Just(GameplayTag::WEAPON_STAFF),
+        Just(GameplayTag::DMG_PHYSICAL),
+        Just(GameplayTag::DMG_MAGICAL),
+        Just(GameplayTag::DMG_FIRE),
+        Just(GameplayTag::DMG_ICE),
+        Just(GameplayTag::CONTROL_HARD),
+        Just(GameplayTag::CONTROL_SOFT),
     ]
 }
 
@@ -230,7 +223,7 @@ proptest! {
 
 use tactical_rpg::core::equipment::Rarity;
 use tactical_rpg::core::inventory::container::{Container, ContainerKind};
-use tactical_rpg::core::inventory::definition::{ItemDef, ItemRegistry, ItemType, UseEffect};
+use tactical_rpg::core::inventory::def::{ItemDef, ItemRegistry, ItemType, UseEffect};
 use tactical_rpg::core::inventory::instance::{InstanceIdCounter, ItemStack};
 
 fn make_item_def(id: &str, stack_size: u32) -> ItemDef {

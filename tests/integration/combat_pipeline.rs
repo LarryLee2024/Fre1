@@ -14,10 +14,10 @@
 // ✅ 没有生成不在范围内的测试
 // ================================================
 
-use tactical_rpg::core::attribute::{AttributeKind, Attributes};
+use tactical_rpg::core::attribute::Attributes;
 use tactical_rpg::core::effect::{
-    EffectDef, EffectHandlerRegistry, EffectPreview, EffectQueue, GenerateContext, PendingEffect,
-    PendingEffectData, PreviewContext, calculate_damage_from_effect,
+    DurationDef, EffectDef, EffectHandlerRegistry, EffectPreview, EffectQueue, GenerateContext,
+    PendingEffect, PendingEffectData, PreviewContext, StackingDef, calculate_damage_from_effect,
 };
 use tactical_rpg::core::tag::{GameplayTag, GameplayTags};
 
@@ -25,20 +25,20 @@ use crate::common::fixtures::warrior_attrs;
 
 // ── 测试辅助 ──
 
-/// 哥布林模板：Might=4, Vitality=3 → Attack=8, Defense=3, MaxHp=20
+/// 哥布林模板
 /// 注意：与 crate::common::fixtures::goblin_attrs() 属性值不同，保留本地版本
 fn goblin_attrs() -> Attributes {
     let mut a = Attributes::default();
-    a.set_base(AttributeKind::Might, 4.0);
-    a.set_base(AttributeKind::Vitality, 3.0);
-    a.set_base(AttributeKind::Agility, 4.0);
-    a.set_base(AttributeKind::Dexterity, 2.0);
-    a.set_base(AttributeKind::Intelligence, 1.0);
-    a.set_base(AttributeKind::Willpower, 2.0);
-    a.set_base(AttributeKind::Presence, 1.0);
-    a.set_base(AttributeKind::Luck, 2.0);
-    a.set_base_attack_range(1);
-    a.fill_vital_resources();
+    a.set_base("phys_atk", 4);
+    a.set_base("max_hp", 18);
+    a.set_base("phys_def", 3);
+    a.set_base("dodge_rate", 400);
+    a.set_base("hit_rate", 200);
+    a.set_base("magic_atk", 1);
+    a.set_base("magic_def", 2);
+    a.set_base("crit_rate", 200);
+    a.set_base("atk_range", 1);
+    a.fill_hp();
     a
 }
 
@@ -165,7 +165,7 @@ fn 伤害处理器_generate_基础攻击() {
     let handler = registry.find("Damage").unwrap();
 
     let mut target = goblin_attrs();
-    target.set_vital(AttributeKind::Hp, 15.0);
+    target.current_hp = 15;
 
     let ctx = GenerateContext {
         source_entity: bevy::prelude::Entity::from_bits(1),
@@ -187,7 +187,7 @@ fn 伤害处理器_generate_基础攻击() {
         PendingEffectData::Damage {
             amount, is_skill, ..
         } => {
-            assert_eq!(amount, 7);
+            assert_eq!(amount, 2);
             assert!(!is_skill);
         }
         _ => panic!("应该是 Damage"),
@@ -196,9 +196,9 @@ fn 伤害处理器_generate_基础攻击() {
 
 /// LCP-011: 伤害处理器 generate 技能攻击
 ///
-/// Given: DamageHandler, 战士 ATK=10, 哥布林 DEF=3, skill_id="power_strike"
+/// Given: DamageHandler, 战士 ATK=5, 哥布林 DEF=3, skill_id="power_strike"
 /// When: generate(Damage { multiplier=1.5 })
-/// Then: PendingEffectData::Damage { amount=10, is_skill=true }
+/// Then: PendingEffectData::Damage { amount=3, is_skill=true }
 #[test]
 fn 伤害处理器_generate_技能攻击() {
     let registry = EffectHandlerRegistry::default();
@@ -224,7 +224,7 @@ fn 伤害处理器_generate_技能攻击() {
         amount, is_skill, ..
     } = result
     {
-        assert_eq!(amount, 10); // (10-3)*1.5=10.5→10
+        assert_eq!(amount, 3); // (5-3)*1.5=3
         assert!(is_skill);
     } else {
         panic!("应该是 Damage");
@@ -242,7 +242,7 @@ fn 治疗处理器_generate() {
     let handler = registry.find("Heal").unwrap();
 
     let mut target = warrior_attrs();
-    target.set_vital(AttributeKind::Hp, 15.0);
+    target.current_hp = 15;
 
     let ctx = GenerateContext {
         source_entity: bevy::prelude::Entity::from_bits(1),
@@ -272,7 +272,7 @@ fn 治疗处理器_generate() {
 #[test]
 fn buff处理器_generate() {
     let registry = EffectHandlerRegistry::default();
-    let handler = registry.find("ApplyBuff").unwrap();
+    let handler = registry.find("ApplyModifier").unwrap();
 
     let ctx = GenerateContext {
         source_entity: bevy::prelude::Entity::from_bits(1),
@@ -285,14 +285,19 @@ fn buff处理器_generate() {
         terrain_id: "plain".to_string(),
     };
 
-    let def = EffectDef::ApplyBuff {
-        buff_id: "burn".into(),
-        duration: 2,
+    let def = EffectDef::ApplyModifier {
+        modifier_id: "burn".into(),
+        duration: DurationDef::TurnLimited(2),
+        stacking: StackingDef::Replace,
     };
     let result = handler.generate(&def, &ctx).unwrap();
-    if let PendingEffectData::ApplyBuff { buff_id, duration } = result {
-        assert_eq!(buff_id, "burn");
-        assert_eq!(duration, 2);
+    if let PendingEffectData::ApplyModifier {
+        modifier_id,
+        duration: _,
+        stacking: _,
+    } = result
+    {
+        assert_eq!(modifier_id, "burn");
     } else {
         panic!("应该是 ApplyBuff");
     }
@@ -339,7 +344,7 @@ fn 伤害预览与generate一致() {
     let damage_handler = registry.find("Damage").unwrap();
 
     let mut target = goblin_attrs();
-    target.set_vital(AttributeKind::Hp, 15.0);
+    target.current_hp = 15;
 
     let gen_ctx = GenerateContext {
         source_entity: bevy::prelude::Entity::from_bits(1),
@@ -390,7 +395,7 @@ fn 治疗预览不超过最大hp() {
     let handler = registry.find("Heal").unwrap();
 
     let mut target = warrior_attrs();
-    target.set_vital(AttributeKind::Hp, 28.0); // MaxHp=30
+    target.current_hp = 28; // max_hp=50
 
     let ctx = PreviewContext {
         source_attrs: warrior_attrs(),
@@ -402,7 +407,7 @@ fn 治疗预览不超过最大hp() {
     let def = EffectDef::Heal { amount: 8 };
     let preview = handler.preview(&def, &ctx).unwrap();
     if let EffectPreview::Heal { amount } = preview {
-        assert_eq!(amount, 2); // min(8, 30-28)=2
+        assert_eq!(amount, 8); // min(8, 50-28)=8
     } else {
         panic!("应该是 Heal 预览");
     }
@@ -419,9 +424,9 @@ fn 伤害预览致死标记() {
     let handler = registry.find("Damage").unwrap();
 
     let mut source = warrior_attrs();
-    source.set_base(AttributeKind::Might, 25.0); // Attack=50
+    source.set_base("phys_atk", 25); // phys_atk=25
     let mut target = goblin_attrs();
-    target.set_vital(AttributeKind::Hp, 5.0);
+    target.current_hp = 5;
 
     let ctx = PreviewContext {
         source_attrs: source,
@@ -572,9 +577,10 @@ fn 多效果技能_伤害加buff() {
             multiplier: 1.2,
             ignore_def_percent: 0.0,
         },
-        EffectDef::ApplyBuff {
-            buff_id: "burn".into(),
-            duration: 2,
+        EffectDef::ApplyModifier {
+            modifier_id: "burn".into(),
+            duration: DurationDef::TurnLimited(2),
+            stacking: StackingDef::Replace,
         },
     ];
 
@@ -598,14 +604,14 @@ fn 多效果技能_伤害加buff() {
     assert!(matches!(
         queue.pending[0].data,
         PendingEffectData::Damage {
-            amount: 8,
+            amount: 2,
             is_skill: true,
             ..
         }
     ));
     assert!(matches!(
         queue.pending[1].data,
-        PendingEffectData::ApplyBuff { ref buff_id, duration: 2 } if buff_id == "burn"
+        PendingEffectData::ApplyModifier { ref modifier_id, duration: DurationDef::TurnLimited(2), stacking: StackingDef::Replace } if modifier_id == "burn"
     ));
 }
 
@@ -621,14 +627,14 @@ fn 多效果技能_伤害加buff() {
 #[test]
 fn 标签_add_has_remove_链路() {
     let mut tags = GameplayTags::default();
-    assert!(!tags.has(GameplayTag::FIRE));
+    assert!(!tags.has(GameplayTag::DMG_FIRE));
 
-    tags.add(GameplayTag::FIRE);
-    assert!(tags.has(GameplayTag::FIRE));
-    assert!(!tags.has(GameplayTag::ICE));
+    tags.add(GameplayTag::DMG_FIRE);
+    assert!(tags.has(GameplayTag::DMG_FIRE));
+    assert!(!tags.has(GameplayTag::DMG_ICE));
 
-    tags.remove(GameplayTag::FIRE);
-    assert!(!tags.has(GameplayTag::FIRE));
+    tags.remove(GameplayTag::DMG_FIRE);
+    assert!(!tags.has(GameplayTag::DMG_FIRE));
 }
 
 /// LCP-025: 标签 has_any / has_all
@@ -639,13 +645,13 @@ fn 标签_add_has_remove_链路() {
 #[test]
 fn 标签_has_any_has_all() {
     let mut tags = GameplayTags::default();
-    tags.add(GameplayTag::FIRE);
+    tags.add(GameplayTag::DMG_FIRE);
     tags.add(GameplayTag::BUFF);
 
-    let check = GameplayTags::from_tags(&[GameplayTag::FIRE, GameplayTag::ICE]);
+    let check = GameplayTags::from_tags(&[GameplayTag::DMG_FIRE, GameplayTag::DMG_ICE]);
     assert!(tags.has_any(&check));
     assert!(!tags.has_all(&check));
 
-    tags.add(GameplayTag::ICE);
+    tags.add(GameplayTag::DMG_ICE);
     assert!(tags.has_all(&check));
 }

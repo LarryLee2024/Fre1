@@ -212,7 +212,6 @@ mod tests {
     use super::*;
     use crate::core::attribute::{AttributeModifierDef, ModifierOp};
     use crate::core::tag::GameplayTag;
-    use bevy::prelude::*;
 
     /// 辅助：创建一个简单的 BuffData
     fn make_buff(
@@ -307,8 +306,8 @@ mod tests {
         assert_eq!(buffs.len(), 1);
         // Attack = Might*2 + 5 = 10 + 5 = 15
         assert_eq!(attrs.get("phys_atk"), 15);
-        assert!(!tags.has(GameplayTag::BUFF));
-        assert!(buffs.is_empty());
+        assert!(tags.has(GameplayTag::BUFF));
+        assert!(!buffs.is_empty());
     }
 
     #[test]

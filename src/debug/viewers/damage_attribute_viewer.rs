@@ -2,13 +2,14 @@
 // 遵循铁律：关键系统必须拥有可视化观察窗口
 
 use crate::core::attribute::{
-    AttributeKind, AttributeModifierInstance, Attributes, ModifierOp, ModifierSource,
+    Attributes, CoreAttribute, ModifierOp, ModifierSource, StoredModifier,
 };
 use crate::core::battle::{BattleEntry, BattleRecord, DamageBreakdown};
 use crate::core::character::{Faction, TraitCollection, Unit, UnitName};
 use crate::core::equipment::EquipmentSlots;
 use bevy::prelude::*;
 use bevy_inspector_egui::egui;
+use std::collections::HashMap;
 
 /// 伤害条目（纯数据，Logic/Presentation 分离）
 pub struct DamageEntry {
@@ -54,9 +55,9 @@ pub fn filter_damage_entries(record: &BattleRecord, limit: usize) -> Vec<DamageE
 }
 
 /// 提取有修饰符的属性类型
-pub fn group_modifiers_by_kind(attrs: &Attributes) -> Vec<AttributeKind> {
-    let mut kinds: Vec<AttributeKind> = attrs.modifiers.iter().map(|m| m.kind).collect();
-    kinds.sort_by_key(|k| format!("{:?}", k));
+pub fn group_modifiers_by_kind(attrs: &Attributes) -> Vec<String> {
+    let mut kinds: Vec<String> = attrs.modifiers.keys().cloned().collect();
+    kinds.sort();
     kinds.dedup();
     kinds
 }
@@ -204,68 +205,56 @@ fn render_attributes(
 ) {
     let kinds_with_mods = group_modifiers_by_kind(attrs);
 
-    ui.label(format!(
-        "HP: {:.0} / {:.0}",
-        attrs.get(AttributeKind::Hp),
-        attrs.get(AttributeKind::MaxHp)
-    ));
-    ui.label(format!(
-        "MP: {:.0} / {:.0}",
-        attrs.get(AttributeKind::Mp),
-        attrs.get(AttributeKind::MaxMp)
-    ));
+    ui.label(format!("HP: {} / {}", attrs.current_hp, attrs.max_hp()));
+    ui.label(format!("MP: {} / {}", attrs.get("mp"), attrs.get("max_mp")));
 
     ui.separator();
 
-    let core_kinds = [
-        AttributeKind::Might,
-        AttributeKind::Dexterity,
-        AttributeKind::Agility,
-        AttributeKind::Vitality,
-        AttributeKind::Intelligence,
-        AttributeKind::Willpower,
-        AttributeKind::Presence,
-        AttributeKind::Luck,
-    ];
+    for attr in CoreAttribute::all() {
+        let label = format!("{:?}", attr);
+        let config_id = attr.config_id();
+        let base = attrs.core_value(attr);
+        let final_val = attrs.get(config_id);
 
-    for kind in &core_kinds {
-        let label = kind.label();
-        let base = attrs.core_base(*kind);
-        let final_val = attrs.core(*kind);
-
-        if kinds_with_mods.contains(kind) {
-            egui::CollapsingHeader::new(format!("{} = {:.0}", label, final_val))
+        if kinds_with_mods.iter().any(|k| k == config_id) {
+            egui::CollapsingHeader::new(format!("{} = {}", label, final_val))
                 .default_open(false)
                 .show(ui, |ui| {
-                    ui.label(format!("  基础: {:.0}", base));
-                    render_modifiers_for_kind(ui, &attrs.modifiers, *kind, slots, trait_collection);
+                    ui.label(format!("  基础: {}", base));
+                    render_modifiers_for_kind(
+                        ui,
+                        &attrs.modifiers,
+                        config_id,
+                        slots,
+                        trait_collection,
+                    );
                 });
         } else {
-            ui.label(format!("{} = {:.0}", label, final_val));
+            ui.label(format!("{} = {}", label, final_val));
         }
     }
 }
 
 fn render_modifiers_for_kind(
     ui: &mut egui::Ui,
-    modifiers: &[AttributeModifierInstance],
-    kind: AttributeKind,
+    modifiers: &HashMap<String, Vec<StoredModifier>>,
+    config_id: &str,
     slots: &EquipmentSlots,
     trait_collection: &TraitCollection,
 ) {
-    let kind_mods: Vec<_> = modifiers.iter().filter(|m| m.kind == kind).collect();
-    if kind_mods.is_empty() {
-        return;
-    }
+    let kind_mods = match modifiers.get(config_id) {
+        Some(mods) => mods,
+        None => return,
+    };
 
     for m in kind_mods {
         let source_label = classify_source(m.source, slots, trait_collection);
         let op_label = match m.op {
-            ModifierOp::Add => format!("+{:.0}", m.value),
+            ModifierOp::Add => format!("+{}", m.value),
             ModifierOp::Multiply => format!("x{:.2}", m.value),
         };
 
-        let color = if m.value < 0.0 {
+        let color = if m.value < 0 {
             egui::Color32::from_rgb(255, 100, 100)
         } else {
             egui::Color32::from_rgb(100, 255, 100)

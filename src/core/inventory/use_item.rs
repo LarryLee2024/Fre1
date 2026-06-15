@@ -2,9 +2,7 @@
 
 use super::container::Container;
 use super::def::{ItemDef, ItemRegistry, ItemType, UseEffect};
-use crate::core::attribute::{
-    AttributeKind, AttributeModifierInstance, Attributes, ModifierOp, ModifierSource,
-};
+use crate::core::attribute::{Attributes, ModifierOp, ModifierSource};
 use crate::core::buff::{ActiveBuffs, BuffRegistry, apply_buff};
 use crate::core::tag::GameplayTags;
 use bevy::prelude::*;
@@ -137,27 +135,29 @@ fn apply_use_effects(
     let mut pending = Vec::new();
     for effect in &def.use_effects {
         match effect {
-            UseEffect::RestoreVital { kind, value } => {
+            UseEffect::RestoreVital { config_id, value } => {
                 // 不变量6：属性修改必须通过 Modifier 管线
                 // 使用 ModifierSource 追踪来源，通过 add_modifier 记录修饰，
-                // 再通过 set_vital 应用实际恢复值
+                // 再通过 heal/set_base 应用实际恢复值
                 let source = ModifierSource::consumable_source(user_entity);
-                attrs.add_modifier(AttributeModifierInstance {
-                    kind: *kind,
-                    op: ModifierOp::Add,
-                    value: *value,
-                    source,
-                });
+                attrs.add_modifier(config_id.clone(), ModifierOp::Add, *value, source);
                 // 计算恢复后的值（受 MaxHp/MaxMp/MaxStamina 上限约束）
-                let current = attrs.get(*kind);
-                let max_kind = match kind {
-                    "current_hp" => "max_hp",
-                    "mp" => "max_mp",
-                    "stamina" => "max_stamina",
-                    _ => *kind,
-                };
-                let max = attrs.get(max_kind);
-                attrs.set_vital(*kind, current.min(max));
+                match config_id.as_str() {
+                    "current_hp" => {
+                        attrs.heal(*value);
+                    }
+                    "mp" | "stamina" => {
+                        let max_kind = if *config_id == *"mp" {
+                            "max_mp"
+                        } else {
+                            "max_stamina"
+                        };
+                        let current = attrs.get(config_id.as_str());
+                        let max = attrs.get(max_kind);
+                        attrs.set_base(config_id.as_str(), current.min(max));
+                    }
+                    _ => {}
+                }
                 // 立即移除修饰符（RestoreVital 是一次性效果，不是持久修饰）
                 attrs.remove_modifiers_from(source);
             }
@@ -211,8 +211,8 @@ mod tests {
             requirements: vec![],
             slot: None,
             use_effects: vec![UseEffect::RestoreVital {
-                kind: "current_hp",
-                value: 50.0,
+                config_id: "current_hp".to_string(),
+                value: 50,
             }],
             container_capacity: None,
             container_max_weight: None,
@@ -232,9 +232,9 @@ mod tests {
             conditions: vec![],
             default_duration: 3,
             modifiers: vec![crate::core::attribute::AttributeModifierDef {
-                kind: "phys_atk",
+                config_id: "phys_atk".to_string(),
                 op: ModifierOp::Add,
-                value: 5.0,
+                value: 5,
             }],
             tags: vec![GameplayTag::BUFF],
             dot_damage: 0,
@@ -252,7 +252,7 @@ mod tests {
         let mut attrs = Attributes::default();
         attrs.fill_vital_resources();
         // 先扣血，验证恢复
-        attrs.set_vital("current_hp", 10.0);
+        attrs.current_hp = 10;
         let mut buffs = ActiveBuffs::default();
         let mut tags = GameplayTags::default();
         let buff_registry = BuffRegistry::default();
@@ -270,7 +270,7 @@ mod tests {
         // HP 应恢复 50，但不超过 MaxHp
         let hp = attrs.get("current_hp");
         let max_hp = attrs.get("max_hp");
-        assert_eq!(hp, (10.0_f32 + 50.0).min(max_hp));
+        assert_eq!(hp, (10 + 50).min(max_hp));
     }
 
     #[test]

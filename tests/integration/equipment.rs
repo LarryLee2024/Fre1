@@ -15,17 +15,17 @@
 // ================================================
 
 use bevy::prelude::*;
-use tactical_rpg::core::attribute::{AttributeKind, AttributeModifierDef, Attributes, ModifierOp};
+use tactical_rpg::core::attribute::{AttributeModifierDef, Attributes, ModifierOp};
 use tactical_rpg::core::character::{PersistentTags, TraitCollection, TraitSource};
 use tactical_rpg::core::equipment::{
     EquipItem, EquipmentDef, EquipmentRegistry, EquipmentRequirement, EquipmentSlot,
     EquipmentSlots, Rarity, UnequipItem,
 };
 use tactical_rpg::core::inventory::container::Container;
-use tactical_rpg::core::inventory::definition::{ItemDef, ItemRegistry, ItemType};
+use tactical_rpg::core::inventory::def::{ItemDef, ItemRegistry, ItemType};
 use tactical_rpg::core::inventory::instance::{InstanceIdCounter, ItemInstance, ItemStack};
 use tactical_rpg::core::registry_loader::RegistryLoader;
-use tactical_rpg::core::tag::{GameplayTag, GameplayTags, TagName};
+use tactical_rpg::core::tag::{GameplayTag, GameplayTags};
 
 use crate::assert_attr_eq;
 use crate::assert_has_tag;
@@ -146,13 +146,13 @@ fn 装备穿脱完整流程_穿戴后属性标签变化_脱卸后恢复() {
     // 记录穿戴前的基础属性
     let base_attack = {
         let attrs = app.world().get::<Attributes>(entity).unwrap();
-        attrs.get(AttributeKind::Attack)
+        attrs.get("phys_atk")
     };
-    // 战士 Might=5 → Attack = 5*2 = 10
+    // 战士 phys_atk=5
     assert_attr_eq!(
         app.world().get::<Attributes>(entity).unwrap(),
-        AttributeKind::Attack,
-        10
+        "phys_atk",
+        5
     );
 
     // 在背包放入铁剑（Attack+3）
@@ -168,18 +168,18 @@ fn 装备穿脱完整流程_穿戴后属性标签变化_脱卸后恢复() {
     // 验证：属性增加
     assert_attr_eq!(
         app.world().get::<Attributes>(entity).unwrap(),
-        AttributeKind::Attack,
-        base_attack as i32 + 3
+        "phys_atk",
+        base_attack + 3
     );
 
     // 验证：标签添加
     assert_has_tag!(
         app.world().get::<GameplayTags>(entity).unwrap(),
-        GameplayTag::SWORD
+        GameplayTag::WEAPON_SWORD
     );
     assert_has_tag!(
         app.world().get::<GameplayTags>(entity).unwrap(),
-        GameplayTag::MARTIAL
+        GameplayTag::DMG_PHYSICAL
     );
 
     // 验证：背包中已移除
@@ -200,18 +200,18 @@ fn 装备穿脱完整流程_穿戴后属性标签变化_脱卸后恢复() {
     // 验证：属性恢复
     assert_attr_eq!(
         app.world().get::<Attributes>(entity).unwrap(),
-        AttributeKind::Attack,
-        base_attack as i32
+        "phys_atk",
+        base_attack
     );
 
     // 验证：标签移除
     assert_not_has_tag!(
         app.world().get::<GameplayTags>(entity).unwrap(),
-        GameplayTag::SWORD
+        GameplayTag::WEAPON_SWORD
     );
     assert_not_has_tag!(
         app.world().get::<GameplayTags>(entity).unwrap(),
-        GameplayTag::MARTIAL
+        GameplayTag::DMG_PHYSICAL
     );
 
     // 验证：物品回到背包
@@ -245,16 +245,16 @@ fn 穿戴需求不满足_属性不足_发送equip_failed() {
         description: "需要极高力量".into(),
         slot: EquipmentSlot::MainHand,
         rarity: Rarity::Epic,
-        tags: vec![TagName::Sword, TagName::Martial],
+        tags: vec!["weapon_sword".to_string(), "martial".to_string()],
         modifiers: vec![AttributeModifierDef {
-            kind: AttributeKind::Attack,
+            config_id: "phys_atk".into(),
             op: ModifierOp::Add,
-            value: 20.0,
+            value: 20,
         }],
         traits: vec![],
         requirements: vec![EquipmentRequirement::AttributeMin {
-            kind: AttributeKind::Might,
-            value: 20.0, // 需要 Might >= 20
+            config_id: "phys_atk".into(),
+            value: 20, // 需要 phys_atk >= 20
         }],
         weight: 8.0,
     };
@@ -275,8 +275,8 @@ fn 穿戴需求不满足_属性不足_发送equip_failed() {
 
     // 验证：属性不变
     let attrs = app.world().get::<Attributes>(entity).unwrap();
-    // 哥布林 Might=3 → Attack = 3*2 = 6
-    assert_attr_eq!(attrs, AttributeKind::Attack, 6);
+    // 哥布林 phys_atk=3
+    assert_attr_eq!(attrs, "phys_atk", 3);
 
     // 验证：装备槽未占用
     let slots = app.world().get::<EquipmentSlots>(entity).unwrap();
@@ -342,11 +342,11 @@ fn 穿戴新装备_同槽位自动脱卸旧装备_旧装备回背包() {
         description: "比铁剑更强的钢剑".into(),
         slot: EquipmentSlot::MainHand,
         rarity: Rarity::Uncommon,
-        tags: vec![TagName::Sword, TagName::Martial],
+        tags: vec!["weapon_sword".to_string(), "martial".to_string()],
         modifiers: vec![AttributeModifierDef {
-            kind: AttributeKind::Attack,
+            config_id: "phys_atk".into(),
             op: ModifierOp::Add,
-            value: 6.0, // 铁剑 +3，钢剑 +6
+            value: 6, // 铁剑 +3，钢剑 +6
         }],
         traits: vec![],
         requirements: vec![],
@@ -368,11 +368,11 @@ fn 穿戴新装备_同槽位自动脱卸旧装备_旧装备回背包() {
     });
     app.update();
 
-    // 验证：铁剑已穿戴，Attack = 10 + 3 = 13
+    // 验证：铁剑已穿戴，phys_atk = 5 + 3 = 8
     assert_attr_eq!(
         app.world().get::<Attributes>(entity).unwrap(),
-        AttributeKind::Attack,
-        13
+        "phys_atk",
+        8
     );
     let slots = app.world().get::<EquipmentSlots>(entity).unwrap();
     assert_eq!(
@@ -387,11 +387,11 @@ fn 穿戴新装备_同槽位自动脱卸旧装备_旧装备回背包() {
     });
     app.update();
 
-    // 验证：钢剑已穿戴，Attack = 10 + 6 = 16
+    // 验证：钢剑已穿戴，phys_atk = 5 + 6 = 11
     assert_attr_eq!(
         app.world().get::<Attributes>(entity).unwrap(),
-        AttributeKind::Attack,
-        16
+        "phys_atk",
+        11
     );
     let slots = app.world().get::<EquipmentSlots>(entity).unwrap();
     assert_eq!(
@@ -423,7 +423,7 @@ fn 装备trait生命周期_穿戴时添加trait_脱卸时移除trait() {
 
     // 创建战士，添加 MARTIAL 标签以满足炎龙长剑需求
     let entity = UnitBuilder::warrior().spawn(&mut app);
-    add_gameplay_tag(&mut app, entity, GameplayTag::MARTIAL);
+    add_gameplay_tag(&mut app, entity, GameplayTag::DMG_PHYSICAL);
 
     // 炎龙长剑拥有 traits: ["flaming_weapon", "dragon_bane"]
     let sword_id = put_item_in_backpack(&mut app, entity, "flame_dragon_sword");
@@ -491,11 +491,11 @@ fn 装备trait_多件装备trait共存_脱卸一件不影响另一件() {
         description: "龙族头盔".into(),
         slot: EquipmentSlot::Head,
         rarity: Rarity::Rare,
-        tags: vec![TagName::HeavyArmor],
+        tags: vec!["heavy_armor".to_string()],
         modifiers: vec![AttributeModifierDef {
-            kind: AttributeKind::Defense,
+            config_id: "phys_def".into(),
             op: ModifierOp::Add,
-            value: 5.0,
+            value: 5,
         }],
         traits: vec!["dragon_bane".into()], // 与炎龙长剑共享 dragon_bane
         requirements: vec![],
@@ -505,7 +505,7 @@ fn 装备trait_多件装备trait共存_脱卸一件不影响另一件() {
 
     // 创建战士，添加 MARTIAL 标签以满足炎龙长剑需求
     let entity = UnitBuilder::warrior().spawn(&mut app);
-    add_gameplay_tag(&mut app, entity, GameplayTag::MARTIAL);
+    add_gameplay_tag(&mut app, entity, GameplayTag::DMG_PHYSICAL);
 
     // 在背包放入炎龙长剑和龙盔
     let sword_id = put_item_in_backpack(&mut app, entity, "flame_dragon_sword");
@@ -578,11 +578,11 @@ fn 多槽位装备_同时穿戴不同槽位_属性叠加() {
     // 记录基础值
     let base_attack = {
         let attrs = app.world().get::<Attributes>(entity).unwrap();
-        attrs.get(AttributeKind::Attack)
+        attrs.get("phys_atk")
     };
     let base_defense = {
         let attrs = app.world().get::<Attributes>(entity).unwrap();
-        attrs.get(AttributeKind::Defense)
+        attrs.get("phys_def")
     };
 
     // 在背包放入铁剑（MainHand, Attack+3）和皮甲（Body, Defense+2）
@@ -605,8 +605,8 @@ fn 多槽位装备_同时穿戴不同槽位_属性叠加() {
 
     // 验证：Attack 和 Defense 同时增加
     let attrs = app.world().get::<Attributes>(entity).unwrap();
-    assert_attr_eq!(attrs, AttributeKind::Attack, base_attack as i32 + 3);
-    assert_attr_eq!(attrs, AttributeKind::Defense, base_defense as i32 + 2);
+    assert_attr_eq!(attrs, "phys_atk", base_attack + 3);
+    assert_attr_eq!(attrs, "phys_def", base_defense + 2);
 
     // 验证：两个槽位都已占用
     let slots = app.world().get::<EquipmentSlots>(entity).unwrap();
@@ -633,7 +633,7 @@ fn persistent_tags_装备标签写入from_equipment层() {
 
     // 穿戴前：from_equipment 为空
     let persistent = app.world().get::<PersistentTags>(entity).unwrap();
-    assert!(!persistent.from_equipment.has(GameplayTag::SWORD));
+    assert!(!persistent.from_equipment.has(GameplayTag::WEAPON_SWORD));
 
     // 在背包放入铁剑
     let sword_id = put_item_in_backpack(&mut app, entity, "iron_sword");
@@ -647,8 +647,8 @@ fn persistent_tags_装备标签写入from_equipment层() {
 
     // 穿戴后：from_equipment 有标签
     let persistent = app.world().get::<PersistentTags>(entity).unwrap();
-    assert!(persistent.from_equipment.has(GameplayTag::SWORD));
-    assert!(persistent.from_equipment.has(GameplayTag::MARTIAL));
+    assert!(persistent.from_equipment.has(GameplayTag::WEAPON_SWORD));
+    assert!(persistent.from_equipment.has(GameplayTag::DMG_PHYSICAL));
 
     // 脱卸
     app.world_mut().write_message(UnequipItem {
@@ -659,6 +659,6 @@ fn persistent_tags_装备标签写入from_equipment层() {
 
     // 脱卸后：from_equipment 标签清除
     let persistent = app.world().get::<PersistentTags>(entity).unwrap();
-    assert!(!persistent.from_equipment.has(GameplayTag::SWORD));
-    assert!(!persistent.from_equipment.has(GameplayTag::MARTIAL));
+    assert!(!persistent.from_equipment.has(GameplayTag::WEAPON_SWORD));
+    assert!(!persistent.from_equipment.has(GameplayTag::DMG_PHYSICAL));
 }
