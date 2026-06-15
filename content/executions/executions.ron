@@ -1,0 +1,20 @@
+[
+    // 伤害执行器配置
+    (
+        type_name: "Damage",
+        name: "伤害计算",
+        description: "基础伤害计算：Attack - Defense",
+    ),
+    // 治疗执行器配置
+    (
+        type_name: "Heal",
+        name: "治疗计算",
+        description: "基础治疗计算：HealPower * (1 + HealBonus)",
+    ),
+    // 护盾执行器配置
+    (
+        type_name: "Shield",
+        name: "护盾计算",
+        description: "基础护盾计算：ShieldPower * (1 + ShieldBonus)",
+    ),
+]

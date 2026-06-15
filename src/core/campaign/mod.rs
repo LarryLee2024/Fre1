@@ -4,9 +4,9 @@
 /// 已有代码无需修改。Campaign 只通过 level_id 引用 Level，不内嵌任何 Level 数据。
 pub mod def;
 pub mod loader;
+pub mod registry;
 pub mod state;
 pub mod system;
-pub mod registry;
 
 use bevy::prelude::*;
 

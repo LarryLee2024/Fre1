@@ -1,0 +1,32 @@
+[
+    // 伤害表现事件配置
+    (
+        type_name: "Damage",
+        name: "伤害表现",
+        description: "伤害应用后的表现事件",
+    ),
+    // 死亡表现事件配置
+    (
+        type_name: "Death",
+        name: "死亡表现",
+        description: "实体死亡后的表现事件",
+    ),
+    // 治疗表现事件配置
+    (
+        type_name: "Heal",
+        name: "治疗表现",
+        description: "治疗应用后的表现事件",
+    ),
+    // Buff施加表现事件配置
+    (
+        type_name: "BuffApply",
+        name: "Buff施加表现",
+        description: "Buff施加后的表现事件",
+    ),
+    // 护盾表现事件配置
+    (
+        type_name: "Shield",
+        name: "护盾表现",
+        description: "护盾应用后的表现事件",
+    ),
+]

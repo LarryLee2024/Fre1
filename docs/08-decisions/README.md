@@ -39,3 +39,4 @@ tags:
 | `ADR-023-标签系统架构重整.md` | 标签系统架构重整：三重数据源消除、TagCategory 扩展、label() 废弃、register_defaults() 删除、u64 耗尽预案、统一 rebuild_tags() |
 | `ADR-024-标签系统迁移方案.md` | 标签系统分阶段迁移计划（4 Phase）：RON 扩展 → API 迁移 → label() 全域替换 → 清理与验证 |
 | `ADR-025-七领域模块化架构设计.md` | 七领域(Tag/Modifier/Buff/Effect/Targeting/Ability/Trigger)独立模块化：目录结构、Plugin 注册顺序(DAG)、跨模块通信、数据流方向、EffectDef 所有权迁移 |
+| `ADR-026-SRPG-Lite-GAS-架构对齐.md` | SRPG Lite-GAS 冻结架构对齐：10+3模块(10业务+3基建)、删除独立Buff、新增Execution/Cue/Stacking/Attribute、GAS执行链时序冻结、12条Forbidden |

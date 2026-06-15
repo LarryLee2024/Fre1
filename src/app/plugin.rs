@@ -16,11 +16,14 @@ use crate::core::battle::BattlePlugin;
 use crate::core::buff::BuffPlugin;
 use crate::core::campaign::CampaignPlugin;
 use crate::core::character::CharacterPlugin;
+use crate::core::cue::CuePlugin;
 use crate::core::effect::EffectPlugin;
 use crate::core::equipment::EquipmentPlugin;
+use crate::core::execution::ExecutionPlugin;
 use crate::core::inventory::InventoryPlugin;
 use crate::core::map::MapPlugin;
 use crate::core::modifier::ModifierRulePlugin;
+use crate::core::stacking::StackingPlugin;
 use crate::core::tag::TagDefPlugin;
 use crate::core::tag::TagPlugin;
 use crate::core::targeting::TargetingPlugin;
@@ -30,6 +33,8 @@ use crate::infrastructure::assets::AssetsPlugin;
 use crate::infrastructure::audit::AuditPlugin;
 use crate::infrastructure::localization::LocalizationPlugin;
 use crate::infrastructure::logging::LogPlugin;
+use crate::infrastructure::pipeline::BattlePipelinePlugin;
+use crate::infrastructure::registry::RegistryPlugin;
 use crate::input::InputPlugin;
 use crate::shared::SharedPlugin;
 use crate::ui::UiPlugin;
@@ -74,6 +79,8 @@ impl Plugin for AppPlugin {
         .add_systems(Update, error_monitor::error_monitor)
         // Shared 层 — 零依赖基础设施（ids, error, events, audit 等）
         .add_plugins(SharedPlugin)
+        // 统一注册中心（ADR-026 §十一，最底层）
+        .add_plugins(RegistryPlugin)
         // 本地化基础设施（语言切换、文本解析）
         .add_plugins(LocalizationPlugin)
         // Content 层 — 合约声明与加载协调
@@ -85,9 +92,13 @@ impl Plugin for AppPlugin {
         .add_plugins(ModifierRulePlugin)
         // Layer 3：依赖 modifier + tag
         .add_plugins(EffectPlugin)
-        // Layer 4：平行依赖 effect（共 3 个，无相互依赖）
+        // Layer 4：依赖 effect（ADR-026 新增 Stacking + Execution + Cue）
+        .add_plugins((StackingPlugin, ExecutionPlugin, CuePlugin))
+        // Pipeline 调度层（整合 GAS 链）
+        .add_plugins(BattlePipelinePlugin)
+        // Layer 5：平行依赖 effect（共 3 个，无相互依赖）
         .add_plugins((BuffPlugin, TargetingPlugin, TriggerPlugin))
-        // Layer 5：依赖所有下层（tag/modifier/effect/buff/targeting/trigger）
+        // Layer 6：依赖所有下层（tag/modifier/effect/stacking/buff/targeting/trigger）
         .add_plugins(AbilityPlugin)
         // Layer 6：非七领域的数据层插件
         .add_plugins((AiBehaviorPlugin, EquipmentPlugin, InventoryPlugin))

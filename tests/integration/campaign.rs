@@ -231,7 +231,7 @@ fn 教学关卡_ron反序列化并转换正确() {
 ///
 /// Assertions: id, skill_ids
 #[test]
-fn 玩家弓箭手_技能含穿透() { {
+fn 玩家弓箭手_技能含穿透() {
     // Given
     let path = concat!(
         env!("CARGO_MANIFEST_DIR"),
@@ -276,7 +276,7 @@ fn 玩家弓箭手_技能含穿透() { {
 ///
 /// Assertions: id, skill_ids contains heal
 #[test]
-fn 玩家法师_技能含治疗() { {
+fn 玩家法师_技能含治疗() {
     // Given
     let path = concat!(
         env!("CARGO_MANIFEST_DIR"),
@@ -308,7 +308,7 @@ fn 玩家法师_技能含治疗() { {
 ///
 /// Assertions: id, name, stages
 #[test]
-fn 战役001_ron反序列化正确() { {
+fn 战役001_ron反序列化正确() {
     use tactical_rpg::core::campaign::def::CampaignDef;
 
     // Given

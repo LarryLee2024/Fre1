@@ -12,5 +12,9 @@ pub mod localization;
 pub mod logging;
 /// 持久化模块（空壳，Phase 4.3）
 pub mod persistence;
+/// 回合战斗执行管线（ADR-026 §十二）
+pub mod pipeline;
+/// 统一注册中心（ADR-026 §十一）
+pub mod registry;
 /// 回放模块（空壳，Phase 4.3）
 pub mod replay;

@@ -7,3 +7,7 @@ pub mod input;
 pub mod modding;
 pub mod shared;
 pub mod ui;
+
+/// GAS 链集成测试
+#[cfg(test)]
+mod gas_integration_test;

@@ -1,11 +1,11 @@
+/// 移动动画（路径线、箭头、平滑插值）
+mod animation;
 /// 角色模块：单位组件、生成、模板、特性
 
 /// Unit, UnitName, Faction, GridPosition 等核心组件
 mod components;
 /// Dead, Selected, MovingUnit 等 Tag 组件
 mod marker;
-/// 移动动画（路径线、箭头、平滑插值）
-mod animation;
 /// 移动执行系统（监听 MovementIntent 消息）
 mod movement_execution;
 /// 单位生成逻辑
@@ -25,10 +25,10 @@ use crate::core::turn::{AppState, TurnOrder};
 use bevy::prelude::*;
 
 pub use crate::core::tag::PersistentTags;
+pub use animation::*;
 /// 公共 re-exports
 pub use components::*;
 pub use marker::*;
-pub use animation::*;
 pub use movement_execution::*;
 pub use spawn::TurnOrderLabel;
 pub use traits::{

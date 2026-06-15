@@ -441,9 +441,10 @@ app-bootstrap.md                  → AppState 层级与启动
 
 ---
 
-## 4.5 回合内调度时序（SRPG-GAS 对齐）
+## 4.5 回合内调度时序（SRPG Lite-GAS 对齐）
 
 > **来源**：`docs/其他/76.md` §八（调度与确定性）— 所有战斗逻辑挂载到回合固定阶段
+> **ADR-026 扩展**：Effect Pipeline 内部扩展为 Effect → Stacking → Execution → Modifier → Attribute → Tag → Cue 全链路
 
 回合内所有战斗逻辑必须挂载到回合状态机的固定阶段，完全不用帧更新驱动。以下是精确的调度时序：
 
@@ -496,7 +497,14 @@ app-bootstrap.md                  → AppState 层级与启动
 │    2. Requirement 检查（can_use 验证）                    │
 │    3. Cost 扣除（MP/HP/弹药）                              │
 │    4. Targeting 目标解析                                  │
-│    5. ⭐ Effect Pipeline（Generate → Modify → Execute）   │
+│    5. ⭐ Effect Pipeline（Generate → Modify → Execute）
+       ├── Generate（生成 Effect 意图）
+       ├── Stacking（堆叠策略匹配：Replace/RefreshDuration/StackAdd/StackMax）
+       ├── Execution（公式执行：Damage/Heal/Shield Execution trait 分发）
+       ├── Modifier（ModifierRule 修饰匹配）
+       ├── Attribute（基础/派生属性刷新）
+       ├── Tag（标签变更）
+       └── Cue（表现事件下发 → UI/特效/音效订阅）   │
 │       ↓                                                  │
 │    6. ⭐ Trigger 触发 → ExecutionStack 解析               │
 │       ├── OnAttack / AfterAttack / OnDamage 等            │
@@ -539,6 +547,9 @@ app-bootstrap.md                  → AppState 层级与启动
 | Trigger 分发 | Trigger 领域 | `docs/02-domain/trigger/trigger-rules.md` |
 | ExecutionStack 解析 | Trigger 领域 | `docs/02-domain/trigger/trigger-rules.md` |
 | Effect Pipeline | Effect 领域（一级） | `docs/02-domain/effect/effect-rules.md` |
+| Execution 算式执行 | Execution 领域（新增） | `docs/02-domain/execution/execution-rules.md` |
+| Cue 表现事件 | Cue 领域（新增） | `docs/02-domain/cue/cue-rules.md` |
+| Stacking 堆叠策略 | Stacking 领域 | `docs/02-domain/stack-policy/stack-policy-rules.md` |
 | Skill 执行管线 | Skill 领域 | `docs/02-domain/skill/skill-rules.md` |
 | Cooldown tick | Skill 领域 | `docs/02-domain/skill/skill-rules.md` |
 | Victory Check | Battle 领域 | `docs/02-domain/battle/battle-rules.md` |

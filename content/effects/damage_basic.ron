@@ -1,0 +1,32 @@
+[
+    // 基础伤害效果
+    (
+        id: "damage_basic",
+        name: "基础伤害",
+        type_name: "Damage",
+        params: {
+            multiplier: 1.0,
+            ignore_def_percent: 0.0,
+        },
+    ),
+    // 高倍率伤害效果
+    (
+        id: "damage_high",
+        name: "高倍率伤害",
+        type_name: "Damage",
+        params: {
+            multiplier: 1.5,
+            ignore_def_percent: 0.0,
+        },
+    ),
+    // 无视防御伤害效果
+    (
+        id: "damage_true",
+        name: "真实伤害",
+        type_name: "Damage",
+        params: {
+            multiplier: 1.0,
+            ignore_def_percent: 100.0,
+        },
+    ),
+]

@@ -11,7 +11,7 @@ tags:
 
 # Architecture
 
-Version: 4.0
+Version: 4.1
 
 本文件优先级高于任何代码实现。
 
@@ -56,7 +56,7 @@ Version: 4.0
 | `project-structure.md` | 三棵树分离（src/content/assets）、完整源码树+资产树+内容树、MOD 目录结构、外包目录权限、配置模板规范 | 提议 |
 | `save_migration_rules.md` | 存档 SemVer 版本号、向前兼容（新增字段=默认值）、三步删除原则、只保存 Instance 不保存 Definition、纯函数迁移 | 提议 |
 | `schedules_design.md` | 自定义 Schedule（Input/Logic/Presentation）、SystemSet 层级排序、状态门控调度、并行 vs 顺序策略、`.chain()` 性能陷阱 | 提议 |
-| `skill-buff-abstraction.md` | Effect Executor 统一抽象（500 技能收敛为 20-30 个 Executor）、Skill/Buff/Effect 三层数据模型、ExecutionStack（LIFO 响应栈）、TriggerRegistry 统一分发、SRPG-GAS 对齐、Effect 一级领域化 | 提议 |
+| `skill-buff-abstraction.md` | Effect Executor 统一抽象（500 技能收敛为 20-30 个 Executor）、Skill/Buff/Effect 三层数据模型 → SRPG Lite-GAS 10 模块对齐（Buff 吸收为 Effect+Duration，新增 Execution 算式层、Cue 表现总线）、ExecutionStack（LIFO 响应栈）、TriggerRegistry 统一分发 | 提议 |
 | `system_design_rules.md` | 参数上限 8 个、读写分离（Query 参数只读 vs 可变）、禁止 System 间直接调用、命名规范、Exclusive System 使用场景 | 提议 |
 | `testing_architecture.md` | 五层测试金字塔（单元→领域集成→系统集成→E2E→Testbeds）、Battle Replay 测试、failure_snapshots、TestCharacterBuilder | 提议 |
 | `tools_architecture.md` | Tools 层独立二进制（永不发布）、data_validator/content_linter/balance_checker、headless CI 模式、按需实现原则 | 提议 |
@@ -415,6 +415,10 @@ TraitEffect::ApplyBuff → buff/apply 执行
 - 硬编码职业效果
 
 ## Buff
+
+> **⚠️ ADR-026 DEPRECATION**: Buff is being absorbed into Effect as `Duration::TurnLimited(N)` variants.
+> New design: buff = Effect + Duration, not a standalone top-level module.
+> See `docs/08-decisions/ADR-026-SRPG-Lite-GAS-架构对齐.md`.
 
 负责：
 
@@ -1270,7 +1274,14 @@ OccupancyGrid
 
 # Effect Pipeline
 
-战斗效果必须走三步管线：
+> **ADR-026 SRPG Lite-GAS 扩展**: Effect Pipeline 扩展为完整的 GAS 执行链：
+> ```
+> Effect（生成效果意图） → Stacking（堆叠策略匹配） → Execution（公式执行） → Modifier（属性修饰） → Attribute（属性刷新） → Tag（标签变更） → Cue（表现事件）
+> ```
+> 新增 Execution 层作为独立公式执行层（trait-based），参见 `docs/02-domain/execution/execution-rules.md`。
+> 新增 Cue 层作为统一表现事件总线，参见 `docs/02-domain/cue/cue-rules.md`。
+
+战斗效果必须走核心三步管线：
 
 ```
 Generate（生成效果）
@@ -1591,7 +1602,11 @@ assets/traits/*.ron      → TraitRegistry
 ```
 content/characters/*.ron    → UnitTemplateRegistry
 content/skills/*.ron        → SkillRegistry
-content/buffs/*.ron         → BuffRegistry
+content/buffs/*.ron         → BuffRegistry（⚠️ 已废弃，吸收为 Effect + Duration）
+content/effects/*.ron       → EffectRegistry（含 Duration::TurnLimited 统一管理）
+content/executions/*.ron    → ExecutionRegistry（**新增** 执行算式注册）
+content/cues/*.ron          → CueRegistry（**新增** 表现信号配置）
+content/attributes/*.ron    → AttributeRegistry（**新增** 基础/派生属性定义）
 content/equipments/*.ron    → EquipmentRegistry
 content/items/*.ron         → ItemRegistry
 content/terrains/*.ron      → TerrainRegistry
@@ -2486,7 +2501,18 @@ F12 → World Inspector
 
 # 版本修订说明
 
-**v4.2**（当前版本）：
+**v4.3**（当前版本）：
+- 来源：`docs/其他/77.md` SRPG Lite-GAS 冻结架构对齐
+- **BIGGEST**: 对齐 SRPG Lite-GAS 10+3 模块架构
+- 删除顶层 Buff 模块 — Buff 统一为 Effect + Duration::TurnLimited
+- 新增 Execution 执行算式层（trait-based 公式分发，消灭大型 match）
+- 新增 Cue 表现信号总线（GameplayCue 强制逻辑/表现分离）
+- 新增 Attribute 一级领域（Primary/Derived 属性双分层）
+- 升级 Stacking 为 4 枚举模型（Replace/RefreshDuration/StackAdd/StackMax）
+- 新增 ADR-026 记录架构对齐决策
+- 更新全部 domain 文档索引和交叉引用
+
+**v4.2**：
 - 来源：`docs/其他/32.国际化.md` + `docs/其他/33遗漏2.md`
 - 新增国际化系统架构（Fluent + Key驱动内容 + MOD翻译）
 - 新增开发工具链架构（Data Validator + Content Linter）

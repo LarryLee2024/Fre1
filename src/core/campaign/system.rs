@@ -6,8 +6,8 @@ use bevy::prelude::*;
 use crate::core::turn::LevelCompleted as TurnLevelCompleted;
 use crate::shared::event::campaign::LevelCompleted as LogLevelCompleted;
 
-use super::state::CampaignProgress;
 use super::registry::CampaignRegistry;
+use super::state::CampaignProgress;
 
 /// 处理关卡完成事件，更新战役进度
 ///
@@ -44,8 +44,8 @@ pub fn on_level_completed(
 #[cfg(test)]
 mod tests {
     use crate::core::campaign::def::{CampaignDef, StageDef};
-    use crate::core::campaign::state::{CampaignProgress, StageStatus};
     use crate::core::campaign::registry::CampaignRegistry;
+    use crate::core::campaign::state::{CampaignProgress, StageStatus};
 
     fn test_registry() -> CampaignRegistry {
         let mut registry = CampaignRegistry::default();

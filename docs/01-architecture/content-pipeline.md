@@ -240,12 +240,14 @@ XxxRegistry (全局注册表，不可变)
 | Content 目录 | Core 模块 | 说明 |
 |--------------|-----------|------|
 | `content/skills/` | `src/core/skill/` | 技能数据 ↔ 技能规则 |
-| `content/buffs/` | `src/core/buff/` | Buff数据 ↔ Buff规则 |
+| `content/buffs/` | `src/core/buff/` | ⚠️ 已废弃（吸收为 Effect + Duration），参见 ADR-026 |
 | `content/effects/` | `src/core/effect/` | 效果数据 ↔ 效果规则 |
 | `content/formulas/` | `src/core/formula/` | 公式数据 ↔ 公式引擎 |
 | `content/classes/` | `src/core/character/` | 职业数据 ↔ 角色规则 |
 | `content/characters/` | `src/core/character/` | 角色数据 ↔ 角色规则 |
 | `content/enemies/` | `src/core/character/` | 敌人数据 ↔ 角色规则 |
+| `content/executions/` | `src/core/execution/` | **新增** 执行算式数据 ↔ Execution 算式引擎 |
+| `content/cues/` | `src/core/cue/` | **新增** 表现信号配置 ↔ Cue 事件路由 |
 | `content/items/` | `src/core/inventory/` | 物品数据 ↔ 背包规则 |
 | `content/equipments/` | `src/core/equipment/` | 装备数据 ↔ 装备规则 |
 | `content/quests/` | `src/core/quest/` | 任务数据 ↔ 任务规则 |

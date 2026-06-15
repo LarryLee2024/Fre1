@@ -1,25 +1,31 @@
 ---
 id: 01-architecture.skill-buff-abstraction
-title: Skill Buff Abstraction
+title: SRPG Lite-GAS 统一数据驱动抽象模型
 status: draft
 owner: architect
 created: 2026-06-14
-updated: 2026-06-14
+updated: 2026-06-15
 tags:
   - architecture
+  - gas
+  - skill-buff-effect
 ---
 
-# 技能/Buff/Effect 统一数据驱动抽象模型
+# SRPG Lite-GAS 统一数据驱动抽象模型
 
-Version: 2.0
+Version: 3.0
 Status: Proposed
-Source: `docs/其他/27技能buf抽象.md` + `docs/其他/76.md`（SRPG-GAS 架构裁切）
+Source: `docs/其他/27技能buf抽象.md` + `docs/其他/76.md`（SRPG-GAS 架构裁切）+ `docs/其他/77.md`（SRPG Lite-GAS 冻结版）
 
-本文档定义 SRPG 项目的技能、Buff、Effect 统一数据驱动抽象模型。
-核心目标：500 技能 + 1000 Buff 收敛为 20~30 个 Effect Executor，新增内容只改配置不改代码。
+本文档定义 SRPG 项目的统一数据驱动抽象模型，覆盖完整的 GAS（Gameplay Ability System）链路。
+核心目标：500 技能 + 1000 Buff 收敛为 20~30 个 Execution Executor，新增内容只改配置不改代码。
+
+> v3.0 变更：对齐 SRPG Lite-GAS 冻结版架构（`docs/其他/77.md`），新增 Execution 层和 Cue 层，
+> Buff 不再是独立顶层模块（Effect + Duration 替代），属性系统升级为 Primary/Derived 一级领域。
 
 > 本文档是 `architecture.md`、`content-pipeline.md`、`attribute_modifier_rules.md`、`skill_rules.md` 的胶水层，
-> 将分散的 Effect Pipeline、Skill Registry、Buff 模块、标签系统、修饰规则统一到一个概念模型中。
+> 将完整的 GAS 链路（Ability → Targeting → Effect → Stacking → Execution → Modifier → Attribute → Tag → Cue → Replay）
+> 统一到一个概念模型中。
 
 ---
 
@@ -69,36 +75,47 @@ fn lightning()
 
 本项目的 Skill/Buff/Effect 抽象并非凭空设计，而是与 UE 的 **Gameplay Ability System（GAS）** 完全对应。GAS 是 UE 在 AAA 级项目中经过大量验证的战斗子系统架构，我们的设计已覆盖其核心概念。
 
-### GAS ↔ 本项目 概念映射表
+### GAS ↔ 本项目 概念映射表（10 模块 + 3 基建）
+
+> v3.0 更新：对齐 `docs/其他/77.md` SRPG Lite-GAS 冻结版，从 8 概念扩展为 10 模块 + 3 基建。
 
 | UE GAS 概念 | 本项目概念 | 说明 |
 |-------------|-----------|------|
-| **GameplayAbility** | **Skill**（技能） | 一次能力释放的完整定义：选择目标 → 消耗资源 → 执行效果 |
-| **GameplayEffect** | **Effect**（效果） | 真正执行的原子操作：伤害、治疗、加 Buff 等 |
+| **GameplayAbility** | **Ability**（技能） | 一次能力释放的完整定义：选择目标 → 消耗资源 → 执行效果 |
+| **GameplayEffect** | **Effect**（效果） | 通用效果总层（v3.0 合并原 Buff），含 Duration 变体区分瞬时/回合/永久 |
+| — | **Stacking**（堆叠）🆕 | 效果堆叠策略中心：Replace / RefreshDuration / StackAdd / StackMax |
+| — | **Execution**（执行算式）🆕 | trait-based 公式执行层：DamageExecution / HealExecution / ShieldExecution |
 | **GameplayTag** | **Tag**（标签） | 分类与匹配系统：元素类型、伤害类型、状态标记 |
-| **Attribute** | **Stat**（属性） | 可被修改的数值：HP、MP、攻击力、防御力 |
-| **GameplayCue** | **DomainEvent → VFX/Audio/UI** | 逻辑→表现分离：效果执行后发出事件，表现层监听并响应 |
-| **AttributeSet** | **AttributeSet**（属性集） | 集中管理的属性容器：Health、Mana、Attack、Defense |
+| **Attribute** | **Attribute**（属性） | Primary（基础）/ Derived（派生）双层属性体系 |
+| **AttributeSet** | **Attribute**（属性） | 集中管理的属性容器：由 Modifier 统一计算 Derived 属性 |
 | **Modifier** | **Modifier**（修饰器） | 数值修饰链：暴击倍率、元素克制、地形加成 |
+| **GameplayCue** | **Cue**（表现信号）🆕 | 统一表现事件总线：业务逻辑只发 Cue，表现层独立订阅响应 |
 | **AbilitySystemComponent** | **EffectHandlerRegistry**（Resource） | 全局效果处理器注册表 |
+| — | **Registry**（基建）🆕 | 资产统一注册中心：Ability/Effect/Execution/Tag 全局注册 |
+| — | **Pipeline**（基建）🆕 | 回合战斗执行管线：Turn System 驱动 |
+| — | **Replay**（基建）🆕 | 确定性战斗回放基建：指令 + 种子快照 |
 
 ### 核心设计原则：Skill 只负责"我要做什么"，Effect 负责"真正执行"
 
 这是 GAS 最重要的设计洞察，也是本项目的铁律：
 
 ```
-Skill = 意图声明（我要做什么）
+Ability = 意图声明（我要做什么）
     ↓
-Effect = 真正执行（怎么算、怎么改状态）
+Effect = 时长定义（瞬时/回合持续/永久常驻）
+    ↓
+Execution = 公式执行（怎么算数值）
+    ↓
+Modifier = 属性修改（怎么改属性）
 ```
 
 示例：
 
-| 技能 | Skill 声明（意图） | Effect[] 真正执行 |
-|------|-------------------|------------------|
-| 火球术 | `Skill { selector: EnemySingle, effects: [Damage(120)] }` | DamageEffect → 计算伤害 → 扣 HP → 发出 DamageApplied |
-| 治疗术 | `Skill { selector: AllySingle, effects: [Heal(100)] }` | HealEffect → 计算治疗量 → 加 HP → 发出 HealApplied |
-| 中毒箭 | `Skill { selector: EnemySingle, effects: [Damage(80), ApplyBuff(Poison)] }` | DamageEffect + BuffEffect → 两步执行 |
+| 技能 | Ability 声明（意图） | Effect[] 真正执行 |
+|------|---------------------|------------------|
+| 火球术 | `Ability { selector: EnemySingle, effects: [Damage(120)] }` | DamageEffect → DamageExecution 计算 → Modifier 修饰 → 扣 HP → Cue 飘字 |
+| 治疗术 | `Ability { selector: AllySingle, effects: [Heal(100)] }` | HealEffect → HealExecution 计算 → Modifier 修饰 → 加 HP → Cue 飘字 |
+| 中毒箭 | `Ability { selector: EnemySingle, effects: [Damage(80), ApplyModifier(Poison)] }` | DamageEffect + PoisonEffect(Duration::TurnLimited(3)) → 两步执行 |
 
 **禁止**在 Skill 里写执行逻辑：
 
@@ -113,15 +130,81 @@ fn cast_fireball() {
 
 ### GAS 参考说明
 
-本项目的 **Effect Pipeline 三步（Generate → Modify → Execute）** 与 UE GAS 的核心流程完全对应：
+本项目的 **Effect Pipeline** 与 UE GAS 的核心流程完全对应，但裁剪了网络相关复杂度：
 
 | UE GAS 流程 | 本项目流程 | 说明 |
 |-------------|-----------|------|
 | `ApplyGameplayEffect` | **Generate** | 生成初始效果数据（基础值计算） |
+| `ExecutionCalculation` | **Execution** 🆕 | trait-based 公式执行（伤害/治疗/护盾公式） |
 | `Modifier` | **Modify** | 修饰器链调整数值（暴击/克制/地形） |
 | `Execute` | **Execute** | 最终执行效果（修改 World 状态） |
+| `GameplayCue` | **Cue** 🆕 | 表现层事件总线（飘字/动画/音效） |
 
-> 本项目现有的 10 子系统设计（Condition、Requirement、Selector、Modifier、Cost、Duration、StackPolicy、Trigger、Tag、Formula）本质上是将 UE GAS 的单体架构拆分为正交子系统，更适合 Bevy ECS 的组件化思维。这是对 UE GAS 的**演进而非降级**。
+> 本项目将 UE GAS 的单体架构拆分为 10 个正交子系统 + 3 个基础设施，更适合 Bevy ECS 的组件化思维。
+> 这是对 UE GAS 的**演进而非降级**——保留核心思想，裁剪网络复杂度，适配单机回合制 SRPG。
+
+> **v3.0 架构冻结**：10 模块（Attribute / Tag / Modifier / Stacking / Execution / Effect / Targeting / Ability / Trigger / Cue）+ 3 基建（Registry / Pipeline / Replay），详见 `docs/其他/77.md`。
+
+---
+
+# 1.2 完整 GAS 链路（v3.0 冻结版）
+
+> **来源**：`docs/其他/77.md` §十 — SRPG Lite-GAS 100 分方案
+
+本项目的完整执行链路是**单向闭环、无反向依赖、无循环调用**的：
+
+```
+Ability（技能定义 + 施法校验）
+    ↓
+Targeting（纯函数目标筛选、无副作用）
+    ↓
+Effect（时效定义：瞬时 / 回合持续 / 永久常驻）
+    ↓
+Stacking（堆叠策略匹配：覆写 / 刷新 / 叠加 / 上限）
+    ↓
+Execution（公式执行：伤害 / 治疗 / 百分比 / 自定义算式）
+    ↓
+Modifier（属性修改单元批量挂载）
+    ↓
+Attribute（基础 → 派生属性批量刷新计算）
+    ↓
+Tag（标签增减、状态判定、互斥拦截）
+    ↓
+Cue（下发表现事件、逻辑与表现彻底解耦）
+    ↓
+Replay（指令 + 种子快照持久化）
+```
+
+### 链路设计规约
+
+| 规约 | 说明 |
+|------|------|
+| **单向依赖** | 上层可调用下层，禁止反向依赖 |
+| **无副作用** | Targeting 是纯函数，Execution 是纯计算 |
+| **确定性** | 同输入 + 同种子 = 同结果，Replay 原生适配 |
+| **可测试** | 每层可独立单元测试，无需模拟整条链路 |
+
+### Buff 吸收说明（v3.0 核心变更）
+
+> **v3.0 核心决策**：删除独立的顶层 Buff 模块。Buff 本质上是 **Effect + Duration** 的组合。
+
+| 传统模型 | v3.0 模型 | 说明 |
+|---------|----------|------|
+| Buff 作为独立顶层模块 | Effect + Duration::TurnLimited | 两者归一，减少跨模块依赖 |
+| Equipment 效果 | Effect + Duration::Permanent | 装备 = 永久 Effect |
+| 瞬间伤害 | Effect + Duration::Instant | 瞬时效果 = 即时 Effect |
+| 持续治疗（HoT） | Effect + Duration::TurnLimited | HoT = 回合持续 Effect |
+
+```
+// 火球术 = 瞬时 Effect
+Effect { kind: Damage(120), duration: Duration::Instant }
+
+// 中毒 = 回合持续 Effect（原 Buff）
+Effect { kind: ApplyModifier(Poison), duration: Duration::TurnLimited(3) }
+
+// 装备属性加成 = 永久 Effect（原 Equipment 效果）
+Effect { kind: ApplyModifier(AttackBoost), duration: Duration::Permanent }
+```
 
 ---
 
@@ -207,39 +290,58 @@ for effect in skill.effects {
 
 > ⚠️ **§1.1.7 过度设计警告**：20 种 Effect 类型为设计目标，当前仅实现 4 种。**新增 Effect 类型必须基于当前明确需求**，禁止为未来可能出现的玩法提前实现完整 Effect 类型集。每新增一个 Effect 类型，必须证明当前有对应的技能/Buff 需求。
 
-## 2.4 第四层：Buff = Trigger[] + Effect[]
+> **v3.0 变更**：Effect 分类表中的 `ApplyBuff` / `ApplyDebuff` 在 v3.0 中统一为 `ApplyModifier` + Duration 变体。原独立的 Buff 领域已被吸收，见 §2.4。
 
-Buff 才是真正的大头：
+## 2.4 第四层：Buff 吸收为 Effect + Duration（v3.0）
 
-```
-100 技能 ≈ 15 种 Effect 组合
-100 Buff = 100 种规则
-```
+> **v3.0 核心变更**：Buff 不再是独立顶层模块，而是 **Effect + Duration::TurnLimited** 的组合。详见 `docs/其他/77.md` §二。
 
-Buff 模型：
+传统模型中 Buff 是独立实体，v3.0 中 Buff 的能力被完全吸收到 Effect 体系：
 
 ```
+// v2.0（旧模型）：Buff 是独立顶层模块
 Buff {
-    triggers[],      // 触发时机（什么时候触发）
-    duration,        // 持续策略（持续多久）
-    stack_policy,    // 叠层规则（如何叠层）
-    conditions[],    // 生效条件（是否触发）
-    effects[],       // 效果列表（触发什么）
-    tags,            // 标签（分类）
+    triggers[],      // 触发时机
+    duration,        // 持续策略
+    stack_policy,    // 叠层规则
+    conditions[],    // 生效条件
+    effects[],       // 效果列表
+    tags,            // 标签
+}
+
+// v3.0（新模型）：Buff = Effect + Duration::TurnLimited
+Effect {
+    kind: ApplyModifier(modifier_id),  // 效果内容
+    duration: Duration::TurnLimited(3), // 持续 3 回合 = 原 Buff
+    stacking: StackingRule::StackMax(5), // 叠层规则
+    triggers: [TurnStart],             // 触发时机
+    conditions: [],                     // 生效条件
+    tags: [Status.Poison],             // 标签
 }
 ```
 
-### 经典 Buff 示例
+### Duration 变体决定效果性质
 
-| Buff | Trigger | Effect[] |
-|------|---------|----------|
-| 中毒 | TurnStart | [Damage(30)] |
-| 再生 | TurnStart | [Heal(30)] |
-| 狂怒 | AfterDamaged | [ModifyAttribute(Attack, +10%)] |
-| 荆棘 | AfterDamaged | [DamageBack(20)] |
-| 吸血 | AfterAttack | [Heal(造成伤害 × 20%)] |
+| Duration 变体 | 对应概念 | 说明 | 示例 |
+|---------------|---------|------|------|
+| `Duration::Instant` | 瞬时效果 | 执行后立即消失 | 伤害、击退、即时治疗 |
+| `Duration::TurnLimited(u32)` | 回合 Buff | 持续 N 回合后过期 | 中毒、眩晕、攻击增减 |
+| `Duration::UntilDeath` | 标记效果 | 直到死亡才消失 | 诅咒、标记 |
+| `Duration::Permanent` | 永久效果 | 被动光环、装备属性 | 职业天赋、装备加成 |
+| `Duration::BattleEnd` | 战斗效果 | 战斗结束消失 | 增益、场地效果 |
 
-本质完全一样，只是参数不同。
+### 经典 Buff 示例（v3.0 表达）
+
+| Buff 概念 | Effect kind | Duration | Trigger | Stacking |
+|-----------|------------|----------|---------|----------|
+| 中毒 | ApplyModifier(Poison) | TurnLimited(3) | TurnStart | StackMax(5) |
+| 再生 | ApplyModifier(Regen) | TurnLimited(3) | TurnStart | RefreshDuration |
+| 狂怒 | ApplyModifier(Rage) | TurnLimited(2) | AfterDamaged | StackAdd |
+| 荆棘 | ApplyModifier(Thorns) | Permanent | AfterDamaged | Replace |
+| 吸血 | ApplyModifier(Lifesteal) | Permanent | AfterAttack | RefreshDuration |
+| Boss 光环 | ApplyModifier(BossAura) | Permanent | — | Replace |
+
+> 本质完全一样，只是 Duration 和 Stacking 参数不同。v3.0 中不存在独立的"Buff 概念"，所有 Buff 效果统一表达为 Effect + Duration + Stacking。
 
 ### Trigger 枚举（11 种触发时机）
 
@@ -558,6 +660,83 @@ Modifier 链按类型顺序执行：**加算 → 乘算 → 覆盖**，保证数
 > ⚠️ **铁律**：不要直接改属性 — 所有属性变动必须通过 Modifier Pipeline。直接修改属性会破坏修饰链的可观测性和回放一致性。
 
 > Modifier 的详细实现见 `docs/02-domain/attribute_modifier_rules.md`。
+
+---
+
+## 4.3.1 Execution（执行算式层）🆕
+
+> **来源**：`docs/其他/77.md` §五 — UE GameplayEffectExecutionCalculation 精简适配
+
+### 为什么需要 Execution 层
+
+Effect 定义"做什么"（造成伤害、恢复生命），Modifier 定义"怎么调整数值"（暴击倍率、元素克制），但**具体怎么算**——是 `Attack - Defense` 还是 `MaxHP * 10%` 还是 `Attack * CritMultiplier`——这个职责属于 Execution。
+
+如果没有 Execution 层：
+
+```rust
+// 🟥 禁止：Effect 内部直接写公式，match 分支膨胀
+match damage_type {
+    Physical => atk - def,
+    Magical => matk - mdef,
+    TrueDamage => atk,
+    CritDamage => atk * crit_multiplier,
+    TerrainDamage => max_hp * 0.1,
+    // 每新增一种公式，这里就要加一个分支 → 爆炸
+}
+```
+
+### Execution trait 模式
+
+所有数值计算公式通过 trait 注册，Effect 只负责调用：
+
+```rust
+/// Execution trait — 所有效果执行算式的统一接口
+pub trait Execution: Send + Sync {
+    /// 算式 ID
+    fn execution_id(&self) -> ExecutionId;
+
+    /// 执行计算：输入上下文 → 输出最终数值
+    fn calculate(&self, ctx: &ExecutionContext) -> i32;
+}
+```
+
+### 具体 Execution 实现
+
+| Execution | 说明 | 计算逻辑 |
+|-----------|------|---------|
+| **DamageExecution** | 物理/魔法伤害 | `ATK * (1 + CritBonus) * ElementMultiplier - DEF * Resistance` |
+| **HealExecution** | 治疗量计算 | `BaseHeal * (1 + HealBonus)` |
+| **ShieldExecution** | 护盾吸收量 | `ShieldValue * (1 + ShieldBonus)` |
+| **TrueDamageExecution** | 真实伤害 | `ATK`（无视防御） |
+| **TerrainDamageExecution** | 地形伤害 | `MaxHP * Percentage` |
+| **PoisonExecution** | 中毒伤害 | `SourceATK * Stacks * Multiplier` |
+
+### Execution 在 GAS 链路中的位置
+
+```
+Effect（定义效果类型和参数）
+    ↓
+Execution（选择对应的 Execution trait 计算数值）
+    ↓
+Modifier（修饰计算结果：暴击/克制/地形加成）
+    ↓
+Attribute（更新最终属性值）
+```
+
+### ExecutionRegistry（算式注册表）
+
+所有 Execution 统一注册到 ExecutionRegistry，新增算式只需注册不改代码：
+
+```rust
+#[derive(Resource)]
+pub struct ExecutionRegistry {
+    executions: HashMap<ExecutionId, Box<dyn Execution>>,
+}
+```
+
+> **与 EffectHandler 的区别**：EffectHandler 管理"效果生命周期"（generate → modify → execute 三步），Execution 管理"数值计算公式"（纯函数，只算不改状态）。EffectHandler 在 Execute 阶段调用 Execution 获取最终数值，再通过 Modifier 修饰后应用到 World。
+
+> Execution 的详细实现见 `docs/02-domain/effect/effect-rules.md`。
 
 ---
 
@@ -886,6 +1065,94 @@ Stack LIFO 解析 → 每个 Entry 进入 Effect Pipeline
 
 ---
 
+## 4.8.3 Cue（表现信号总线）🆕
+
+> **来源**：`docs/其他/77.md` §六 — UE GameplayCue 精简适配
+
+### 为什么需要 Cue 层
+
+业务逻辑（伤害计算、Buff 施加、死亡处理）不应该直接调用任何 UI/特效/音效代码。Cue 层是**统一的表现事件总线**，业务逻辑只发 Cue 事件，表现层独立订阅响应。
+
+```
+// 🟥 禁止：业务逻辑直接操作表现
+fn execute_damage() {
+    target.hp -= damage;
+    spawn_floating_text(damage);    // 不应该在这里
+    play_hit_sound();               // 不应该在这里
+    shake_camera();                 // 不应该在这里
+}
+
+// 🟩 正确：业务逻辑只发 Cue
+fn execute_damage() {
+    target.hp -= damage;
+    cue_sender.send(CueEvent::DamageApplied { target, amount: damage });
+    // 表现层独立响应
+}
+```
+
+### CueEvent 类型
+
+| CueEvent | 说明 | 表现层响应 |
+|----------|------|-----------|
+| `DamageApplied` | 伤害已应用 | 飘字 + 受击特效 + 音效 |
+| `HealApplied` | 治疗已应用 | 绿色飘字 + 治疗特效 |
+| `BuffApplied` | 效果已施加 | Buff 图标 + 施加特效 |
+| `BuffRemoved` | 效果已移除 | Buff 图标消失 |
+| `Death` | 单位死亡 | 死亡动画 + 音效 |
+| `Revive` | 单位复活 | 复活特效 |
+| `CriticalHit` | 暴击触发 | 暴击特效 + 特殊音效 |
+| `ElementWeak` | 元素弱点 | 元素特效 |
+| `ShieldBreak` | 护盾破碎 | 破碎特效 |
+| `TurnStart` | 回合开始 | 回合切换 UI |
+| `LevelUp` | 升级 | 升级特效 + UI |
+
+### Cue 与 Message 的关系
+
+Cue 本质上是 Message 的一个子集，专门服务于表现层：
+
+```
+DomainEvent（通用领域事件）
+    ├── DamageApplied → 既发 Message（跨模块通信）又发 Cue（表现响应）
+    ├── HealApplied → 同上
+    └── CharacterDied → 同上
+
+CueEvent（表现专用事件）
+    ├── DamageApplied（飘字/特效）
+    ├── CriticalHit（暴击特效）
+    └── ...（纯表现，不影响业务逻辑）
+```
+
+### Bevy ECS 映射
+
+```rust
+/// Cue 发送器 — 业务层通过此发送表现事件
+#[derive(Resource)]
+pub struct CueSender {
+    sender: Sender<CueEvent>,
+}
+
+/// Cue 订阅器 — 表现层通过此监听表现事件
+#[derive(Resource)]
+pub struct CueReceiver {
+    receiver: Receiver<CueEvent>,
+}
+```
+
+### Cue 设计规约
+
+| 规约 | 说明 |
+|------|------|
+| **单向数据** | Cue 只携带纯数据（target_id、amount、element），不携带资源路径 |
+| **无副作用** | 发送 Cue 不修改任何业务状态 |
+| **零依赖** | Cue 模块不依赖任何 UI/特效/音效模块 |
+| **可丢弃** | 表现层未订阅时，Cue 事件静默丢弃，不影响业务逻辑 |
+
+> **与 §3.3 PendingMessage 的关系**：PendingMessage 是 Effect Pipeline 内部的消息传递机制，Cue 是面向表现层的事件总线。Effect Execute 阶段产生的 PendingMessage 可以同时触发 CueEvent，但两者职责不同：PendingMessage 用于跨模块业务通信，CueEvent 用于表现层订阅。
+
+> Cue 的详细实现见 `docs/02-domain/effect/cue_rules.md`（待建）。
+
+---
+
 ## 4.9 Tag（标签系统）
 
 标签是大型项目神器。
@@ -1036,82 +1303,80 @@ impl FormulaRegistry {
 
 # 5. 最终统一模型
 
-## 5.1 数据驱动架构图
+## 5.1 数据驱动架构图（v3.0）
 
 ```
-Skill
+Ability（技能定义 + 施法校验）
 ├─ Requirement    ← 能不能放（释放前提）
 ├─ Cost           ← 消耗什么（MP/HP/怒气/弹药...）
-├─ Selector       ← 对谁放（敌方单体/十字/全体...）
-├─ Effect[]       ← 放什么效果（Damage/Heal/Buff...）
+├─ Targeting      ← 对谁放（敌方单体/十字/全体...）
+├─ Effect[]       ← 放什么效果（Damage/Heal/ApplyModifier...）
 └─ Tags           ← 分类标签（Fire/Physical/Melee...）
 
-Buff
-├─ Trigger[]      ← 什么时候触发（TurnStart/AfterDamaged...）
-├─ Duration       ← 持续多久（N回合/直到死亡/永久...）
-├─ StackPolicy    ← 如何叠层（可叠N层/不可叠/刷新...）
-├─ Condition[]    ← 触发条件（HP<30%/背击/有Buff...）
-├─ Effect[]       ← 触发什么效果（Damage/Heal/ModifyAttribute...）
+Effect（含原 Buff 能力）
+├─ kind           ← 效果内容（Damage/Heal/ApplyModifier...）
+├─ duration       ← 持续策略（Instant/TurnLimited/Permanent...）
+├─ stacking       ← 堆叠规则（Replace/Refresh/StackAdd/StackMax...）
+├─ triggers[]     ← 触发时机（TurnStart/AfterDamaged...）
+├─ conditions[]   ← 生效条件（HP<30%/背击/有Buff...）
 └─ Tags           ← 分类标签（Poison/Debuff/Physical...）
 
-Effect 执行
+执行链路
     ↓
-Modifier 链       ← 暴击/属性克制/地形/天气
+Execution        ← 公式计算（DamageExecution/HealExecution...）
     ↓
-Formula           ← 计算公式
+Modifier 链      ← 暴击/属性克制/地形/天气
     ↓
-最终结果
+Attribute        ← 基础→派生属性刷新
+    ↓
+Tag              ← 标签增减/状态判定
+    ↓
+Cue              ← 表现事件（飘字/动画/音效）
 ```
 
-## 5.2 概念关系图
+## 5.2 概念关系图（v3.0）
 
 ```
                     ┌─────────────────┐
-                    │   Skill (配置)    │
+                    │  Ability (配置)   │
                     │ ─────────────── │
                     │ Requirement[]    │
                     │ Cost[]           │
-                    │ Selector         │
+                    │ Targeting        │
                     │ Effect[]         │
                     │ Tags             │
                     └────────┬────────┘
                              │
                              ▼
                     ┌─────────────────┐
-                    │ Effect Pipeline  │
-                    │ Generate→Modify  │
-                    │ →Execute         │
+                    │  Effect 层       │
+                    │ kind + Duration  │
+                    │ + Stacking       │
                     └────────┬────────┘
                              │
-              ┌──────────────┼──────────────┐
-              ▼              ▼              ▼
-     ┌──────────────┐ ┌──────────┐ ┌──────────────┐
-     │ EffectHandler │ │ Modifier │ │   Formula    │
-     │ (trait 分发)  │ │ 链(修饰) │ │  (计算公式)  │
-     └──────┬───────┘ └──────────┘ └──────────────┘
-            │
-            ▼
-     ┌──────────────┐
-     │ 游戏状态变更  │
-     └──────────────┘
-
-                    ┌─────────────────┐
-                    │   Buff (配置)     │
-                    │ ─────────────── │
-                    │ Trigger[]        │
-                    │ Duration         │
-                    │ StackPolicy      │
-                    │ Condition[]      │
-                    │ Effect[]         │
-                    │ Tags             │
-                    └────────┬────────┘
-                             │
-                             ▼
-                    ┌─────────────────┐
-                    │  Buff 规则引擎    │
-                    │ Trigger→Validate │
-                    │ →Effect Pipeline │
-                    └─────────────────┘
+               ┌─────────────┼─────────────┐
+               ▼             ▼             ▼
+      ┌──────────────┐ ┌──────────┐ ┌──────────────┐
+      │  Execution   │ │ Modifier │ │  Attribute   │
+      │ (公式计算)   │ │ 链(修饰) │ │ (属性刷新)  │
+      └──────┬───────┘ └──────────┘ └──────────────┘
+             │
+             ▼
+      ┌──────────────┐
+      │     Tag      │
+      │ (标签判定)   │
+      └──────┬───────┘
+             │
+             ▼
+      ┌──────────────┐
+      │     Cue      │
+      │ (表现事件)   │
+      └──────┬───────┘
+             │
+             ▼
+      ┌──────────────┐
+      │ 游戏状态变更  │
+      └──────────────┘
 ```
 
 ---
@@ -1122,17 +1387,20 @@ Formula           ← 计算公式
 
 | 概念 | Rule（Rust 代码） | Content（RON 配置） | Registry（运行时注册） |
 |------|-------------------|---------------------|----------------------|
-| **Skill** | 技能规则引擎（Validation → Route → Effect Pipeline）| SkillDef（selector, effects[], cost, requirement）| SkillRegistry（Resource）|
-| **Buff** | Buff 规则引擎（Trigger → Validate → Effect Pipeline）| BuffDef（triggers[], duration, stack_policy, conditions[], effects[]）| BuffRegistry（Resource）|
-| **Effect** | EffectHandler trait（generate / preview / execute）| EffectDef 变体（Damage / Heal / Shield / ...）| EffectHandlerRegistry（Resource）|
-| **Selector** | TargetSelector trait（resolve_targets）| SelectorDef（EnemySingle / EnemyAOE / ...）| 内嵌在 SkillDef 中 |
-| **Cost** | CostValidator trait（check / consume）| CostDef（MpCost / HpCost / ItemCost / ...）| 内嵌在 SkillDef 中 |
-| **Requirement** | RequirementChecker trait（can_cast）| RequirementDef（HasWeapon / NotSilenced / ...）| 内嵌在 SkillDef 中 |
-| **Condition** | ConditionEvaluator trait（evaluate）| ConditionDef（HpBelow / BehindTarget / ...）| 内嵌在 BuffDef 中 |
-| **Duration** | DurationPolicy trait（tick / expired）| DurationDef（Turns / UntilDeath / ...）| 内嵌在 BuffDef 中 |
-| **StackPolicy** | StackPolicy trait（can_stack / merge）| StackDef（Stackable / MaxStack / ...）| 内嵌在 BuffDef 中 |
+| **Ability** | 技能规则引擎（Validation → Route → Effect Pipeline）| AbilityDef（selector, effects[], cost, requirement）| AbilityRegistry（Resource）|
+| **Effect** | EffectHandler trait（generate / preview / execute）| EffectDef 变体（Damage / Heal / ApplyModifier / ...）| EffectHandlerRegistry（Resource）|
+| **Execution** 🆕 | Execution trait（calculate）| ExecutionDef（DamageExecution / HealExecution / ...）| ExecutionRegistry（Resource）|
+| **Stacking** 🆕 | StackingRule 枚举（Replace / RefreshDuration / StackAdd / StackMax）| 嵌入 EffectDef 的 stacking 字段 | 无独立 Registry，由 Effect 统一管理 |
+| **Selector** | TargetSelector trait（resolve_targets）| SelectorDef（EnemySingle / EnemyAOE / ...）| 内嵌在 AbilityDef 中 |
+| **Cost** | CostValidator trait（check / consume）| CostDef（MpCost / HpCost / ItemCost / ...）| 内嵌在 AbilityDef 中 |
+| **Requirement** | RequirementChecker trait（can_cast）| RequirementDef（HasWeapon / NotSilenced / ...）| 内嵌在 AbilityDef 中 |
+| **Condition** | ConditionEvaluator trait（evaluate）| ConditionDef（HpBelow / BehindTarget / ...）| 内嵌在 EffectDef 中 |
+| **Duration** | DurationPolicy trait（tick / expired）| DurationDef（Instant / TurnLimited / Permanent / ...）| 内嵌在 EffectDef 中 |
+| **Modifier** | ModifierRule trait + ModifierCalculator | ModifierRuleDef（Flat / Percent / Override）| ModifierRuleRegistry（Resource）|
+| **Attribute** 🆕 | Primary/Derived 属性计算 | AttributeDef（Might / Agility / MaxHp / ...）| AttributeRegistry（Resource）|
 | **Formula** | Formula trait（calculate）| FormulaDef（PhysicalDamage / MagicDamage / ...）| FormulaRegistry（Resource）|
 | **Tag** | GameplayTag 位掩码（has / add / remove）| TagName 枚举变体（Fire / Ice / Physical / ...）| 内嵌在各定义中 |
+| **Cue** 🆕 | CueEvent 枚举 + CueSender/Receiver | 无配置（纯代码枚举）| 无独立 Registry（Message 机制）|
 
 ### 完整链路示例：SkillDef → RON → Registry → 运行时
 
@@ -1557,14 +1825,19 @@ AbilityCast + TargetSelection + RandomSeed
 |------|----------|
 | 效果管线 Generate→Modify→Execute | `docs/02-domain/attribute_modifier_rules.md` |
 | Effect 一级领域规则 | `docs/02-domain/effect/effect-rules.md` |
-| Skill 定义与验证 | `docs/02-domain/skill/skill-rules.md` |
+| Execution 执行算式 | `docs/02-domain/effect/effect-rules.md`（§4.3.1 对应） |
+| Cue 表现信号总线 | `docs/02-domain/effect/cue_rules.md`（待建） |
+| Stacking 堆叠规则 | `docs/02-domain/stack-policy/stack-policy_rules.md` |
+| Attribute 属性体系 | `docs/02-domain/character/character-rules.md` |
+| Ability 定义与验证 | `docs/02-domain/skill/skill-rules.md` |
 | Rule/Content 分离、数据驱动架构 | `docs/01-architecture/content-pipeline.md` |
-| GameplayTag 位掩码实现 | `docs/02-domain/selector/selector-rules.md` |
+| GameplayTag 位掩码实现 | `docs/02-domain/shared_layer_rules.md` |
 | 七层架构、模块边界 | `docs/01-architecture/README.md` |
 | Trigger 规则定义（含 ExecutionStack） | `docs/02-domain/trigger/trigger-rules.md` |
-| Stack 解析策略 | `docs/02-domain/stack-policy/stack-policy-rules.md` |
+| Stack 解析策略 | `docs/02-domain/stack-policy/stack-policy_rules.md` |
 | 战斗 FSM 与调度时序 | `docs/01-architecture/battle-fsm-design.md` |
-| SRPG-GAS 方案原始来源 | `docs/其他/76.md` |
+| SRPG Lite-GAS 冻结版架构 | `docs/其他/77.md` |
+| SRPG-GAS 裁切方案 | `docs/其他/76.md` |
 | 原始 Skill/Buff 抽象来源 | `docs/其他/27技能buf抽象.md` |
 | 宪法条款 | `docs/00-governance/ai-constitution-complete.md` |
 
@@ -1608,33 +1881,39 @@ AbilityCast + TargetSelection + RandomSeed
 | 9 | **Trigger System** | 卡牌游戏 | TriggerRegistry（§4.8.2） | 统一触发注册与分发 |
 | 10 | **Action Queue** | RPG 工业经验 | Action Queue + ExecutionStack（§4.8.1） | 执行调度与嵌套响应 |
 
-### SRPG-GAS 对齐声明
+### SRPG-GAS 对齐声明（v3.0 更新）
 
-> **来源**：`docs/其他/76.md` §一（核心问题）— 不照搬 GAS，做 SRPG 轻量版能力框架
+> **来源**：`docs/其他/77.md` §一 — SRPG Lite-GAS 冻结版架构
 
-本项目不照搬 Unreal GAS（Gameplay Ability System），而是做 **SRPG-GAS（轻量版领域化 Ability Framework）**。
+本项目不照搬 Unreal GAS（Gameplay Ability System），而是做 **SRPG Lite-GAS（轻量版领域化 Ability Framework）**。
 
 GAS 的 70% 复杂度来自网络同步、预测回滚、客户端服务端一致性，对本项目的单机回合制 SRPG 是纯负担。本项目裁剪了以下 GAS 复杂度：
 
-- ❌ GameplayCue（用 Message 替代）
 - ❌ Prediction / Client Prediction / Server Reconciliation（不需要）
 - ❌ ASC 网络同步 / 复制（不需要）
+- ❌ GameplayTask 体系（SRPG 不需要单独抽象）
+- ❌ Aggregator 黑盒计算（用 Execution trait 替代）
 - ❌ 实时触发 / 帧同步（用回合驱动替代）
 
 保留了以下 GAS 精华并适配为 SRPG 领域模型：
 
-| GAS 精华 | SRPG-GAS 映射 | 项目状态 |
-|----------|--------------|---------|
-| Ability | Skill（能力释放管线） | ✅ 已实现 |
-| Effect | Effect（一级领域） | ✅ 已实现（v2.0 升级） |
-| GameplayTag | GameplayTag（位掩码标签） | ✅ 已实现 |
+| GAS 精华 | SRPG-Lite-GAS 映射 | 项目状态 |
+|----------|-------------------|---------|
+| Ability | Ability（能力释放管线） | ✅ 已实现 |
+| Effect | Effect（一级领域，含 Duration 变体） | ✅ 已实现（v3.0 吸收 Buff） |
+| GameplayTag | Tag（位掩码标签） | ✅ 已实现 |
 | Modifier | ModifierRule + ModifierCalculator | ✅ 已实现 |
-| AttributeSet | Attributes / AttributeKind | ✅ 已实现 |
-| Cost | CostDef + SkillCondition | ✅ 已实现 |
+| Attribute | Attribute（Primary/Derived 双层） | ✅ 已实现 |
+| Execution | Execution trait（公式执行） | 🆕 v3.0 新增 |
+| Stacking | StackingRule 枚举 | 🆕 v3.0 新增 |
+| Cue | CueEvent（表现信号总线） | 🆕 v3.0 新增 |
+| Cost | CostDef | ✅ 已实现 |
 | Cooldown | SkillCooldowns | ✅ 已实现 |
-| Requirement | SkillCondition + Requirement | ✅ 已实现 |
-| Trigger | Trigger（TriggerRegistry 统一分发） | ✅ 已实现（v2.0 升级） |
-| Execution Stack | ExecutionStack（LIFO 响应栈） | ✅ 新增（v2.0） |
+| Requirement | Requirement | ✅ 已实现 |
+| Trigger | TriggerRegistry 统一分发 | ✅ 已实现 |
+| Execution Stack | ExecutionStack（LIFO 响应栈） | ✅ 已实现 |
+| Registry | ExecutionRegistry / EffectHandlerRegistry | 🆕 v3.0 强化 |
+| Replay | BattleReplay（确定性回放） | 🆕 v3.0 新增 |
 
 ### 融合架构宣言
 
@@ -1655,3 +1934,31 @@ SRPG 工业经验     — Command Pattern、Formula、Requirement、Trigger、St
 **核心洞察**：Bevy 0.18 是优秀的 ECS 框架，但不等于成熟的游戏开发框架。很多工业级经验需要主动引入。本项目的架构本质上是 **Bevy ECS 作为运行时底座 + UE GAS 作为战斗抽象骨架 + Godot/Unity 的数据驱动思想 + SRPG 行业的 Trigger/Stack/Command 经验**。
 
 > 这套融合架构是独立开发长期连载战棋 RPG 能够达到的最稳、最可扩展的路线。
+
+---
+
+# 版本修订说明
+
+**v3.0**（当前版本）：
+- 来源：`docs/其他/77.md`（SRPG Lite-GAS 冻结版架构）
+- **核心变更**：对齐 SRPG Lite-GAS 10 模块 + 3 基建冻结版架构
+- 新增 §1.2 完整 GAS 链路图（Ability → Targeting → Effect → Stacking → Execution → Modifier → Attribute → Tag → Cue → Replay）
+- 新增 §4.3.1 Execution 层（trait-based 公式执行，替代 Effect 内部 match 分支）
+- 新增 §4.8.3 Cue 层（统一表现事件总线，业务逻辑零耦合 UI）
+- Buff 吸收为 Effect + Duration（删除独立顶层 Buff 模块）
+- GAS 映射表从 8 概念扩展为 10 模块 + 3 基建
+- Attribute 升级为 Primary/Derived 双层一级领域
+- Stacking 升级为独立领域（Replace / RefreshDuration / StackAdd / StackMax）
+- §5 数据驱动架构图和概念关系图全面更新
+- §6 Content/Rule 映射表新增 Execution / Stacking / Attribute / Cue 行
+- §附录B GAS 对齐声明更新（新增 Execution / Stacking / Cue / Registry / Replay）
+
+**v2.0**：
+- 新增 ExecutionStack（LIFO 响应栈）
+- 新增 TriggerRegistry 统一注册与分发
+- Effect 一级领域化
+- Effect Pipeline 三步（Generate → Modify → Execute）
+
+**v1.0**：
+- 初始版本：Skill/Buff/Effect 统一数据驱动抽象模型
+- 20 种 Effect 分类、10 大补充系统、收敛原理

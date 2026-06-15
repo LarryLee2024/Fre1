@@ -1,8 +1,8 @@
 /// 游戏结果屏幕
 use bevy::prelude::*;
 
-use crate::core::campaign::state::CampaignProgress;
 use crate::core::campaign::registry::CampaignRegistry;
+use crate::core::campaign::state::CampaignProgress;
 use crate::core::map::LevelRegistry;
 use crate::core::turn::GameOverState;
 use crate::core::turn::TurnState;

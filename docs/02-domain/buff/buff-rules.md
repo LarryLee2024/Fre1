@@ -10,11 +10,15 @@ tags:
   - buff
 ---
 
+> **⚠️ DEPRECATION NOTICE**: Per ADR-026 (SRPG Lite-GAS Architecture Alignment), the Buff domain is being absorbed into the **Effect domain** as `Duration::TurnLimited(N)` variants. New design should model all buffs as Effect + Duration, not as standalone Buff entities. See `docs/02-domain/effect/effect-rules.md` and `docs/08-decisions/ADR-026-SRPG-Lite-GAS-架构对齐.md`.
+>
+> This file is preserved for reference during migration. Do not use as basis for new designs.
+
 # Buff 系统领域
 
-Version: 1.1
-Status: Proposed
-Changelog: v1.1 — 新增"与 Effect 领域的边界"章节、Buff→Effect→Modifier→Tag 数据流、ExecutionStack 协作说明、SRPG-GAS 对齐声明
+Version: 1.2
+Status: Deprecated (absorbed into Effect + Duration)
+Changelog: v1.2 — ADR-026 SRPG Lite-GAS 对齐：标记为已废弃，Buff 统一为 Effect + Duration::TurnLimited；顶层 Buff 模块删除
 
 Buff 系统领域管理持续性效果（Buff/Debuff）的定义、施加、持续、触发、叠层和移除。Buff 是 SRPG 战斗系统的核心组成之一，与 Skill、Effect Pipeline、Modifier 管线紧密协作。
 

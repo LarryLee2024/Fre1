@@ -1,27 +1,83 @@
 // 效果管道数据类型：EffectDef、PendingEffectData、EffectResult、EffectQueue
 // 从原 effect.rs 迁移，保留 RON 反序列化支持
+// ADR-026 §二：Buff 统一为带 Duration 的 Effect
 
 use crate::core::modifier::ModifierEntry;
 use crate::core::tag::GameplayTag;
 use bevy::prelude::*;
 use serde::Deserialize;
 
+/// 持续时间定义（ADR-026 §二）
+///
+/// Buff 统一为带 Duration 的 Effect，Duration 定义效果持续多久。
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Reflect, Deserialize)]
+#[serde(rename_all = "PascalCase")]
+pub enum DurationDef {
+    /// 瞬时效果（立即生效，无持续时间）
+    Instant,
+    /// 持续 N 回合（tick 递减）
+    TurnLimited(u32),
+    /// 永久效果（直到手动移除）
+    Permanent,
+}
+
+impl Default for DurationDef {
+    fn default() -> Self {
+        DurationDef::Instant
+    }
+}
+
+/// 叠层策略定义（ADR-026 §六）
+///
+/// 效果重复施加时的处理规则。
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Reflect, Deserialize)]
+#[serde(rename_all = "PascalCase")]
+pub enum StackingDef {
+    /// 替换旧实例
+    Replace,
+    /// 刷新持续时间，不叠加
+    RefreshDuration,
+    /// 叠加层数，无上限
+    StackAdd,
+    /// 叠加层数，上限为参数值
+    StackMax { max_stack: u32 },
+}
+
+impl Default for StackingDef {
+    fn default() -> Self {
+        StackingDef::Replace
+    }
+}
+
 /// 效果定义（用于 SkillData 中声明技能效果，支持 RON 反序列化）
+///
+/// ADR-026 §二：Buff 统一为带 Duration 的 Effect
 #[derive(Clone, Debug, Reflect, Deserialize)]
 #[serde(rename_all = "PascalCase")]
 pub enum EffectDef {
+    /// 伤害效果
     Damage {
         multiplier: f32,
         ignore_def_percent: f32,
     },
-    Heal {
-        amount: i32,
+    /// 治疗效果
+    Heal { amount: i32 },
+    /// 应用修饰器效果（替代原 ApplyBuff）
+    ///
+    /// ADR-026：Buff 统一为带 Duration 的 Effect
+    ApplyModifier {
+        /// 修饰器 ID
+        modifier_id: String,
+        /// 持续时间
+        duration: DurationDef,
+        /// 叠层策略
+        stacking: StackingDef,
     },
-    ApplyBuff {
-        buff_id: String,
-        duration: u32,
-    },
+    /// 清除所有减益效果
     Cleanse,
+    /// 应用 Buff（兼容旧系统，待废弃）
+    #[deprecated(note = "Use ApplyModifier instead")]
+    ApplyBuff { buff_id: String, duration: u32 },
 }
 
 impl EffectDef {
@@ -31,8 +87,28 @@ impl EffectDef {
         match self {
             Self::Damage { .. } => "Damage",
             Self::Heal { .. } => "Heal",
-            Self::ApplyBuff { .. } => "ApplyBuff",
+            Self::ApplyModifier { .. } => "ApplyModifier",
             Self::Cleanse => "Cleanse",
+            #[allow(deprecated)]
+            Self::ApplyBuff { .. } => "ApplyBuff",
+        }
+    }
+
+    /// 获取持续时间定义（如果效果有持续时间）
+    pub fn duration(&self) -> Option<DurationDef> {
+        match self {
+            Self::ApplyModifier { duration, .. } => Some(*duration),
+            #[allow(deprecated)]
+            Self::ApplyBuff { duration, .. } => Some(DurationDef::TurnLimited(*duration)),
+            _ => None,
+        }
+    }
+
+    /// 获取叠层策略（如果效果有叠层策略）
+    pub fn stacking(&self) -> Option<StackingDef> {
+        match self {
+            Self::ApplyModifier { stacking, .. } => Some(*stacking),
+            _ => None,
         }
     }
 }
@@ -65,11 +141,19 @@ pub enum PendingEffectData {
         /// modify 阶段记录的修饰步骤详情（规则4：每步修饰必须记录）
         modifiers: Vec<ModifierEntry>,
     },
+    /// 应用修饰器效果（替代原 ApplyBuff）
+    ApplyModifier {
+        modifier_id: String,
+        duration: DurationDef,
+        stacking: StackingDef,
+    },
+    Cleanse,
+    /// 应用 Buff（兼容旧系统，待废弃）
+    #[deprecated(note = "Use ApplyModifier instead")]
     ApplyBuff {
         buff_id: String,
         duration: u32,
     },
-    Cleanse,
 }
 
 impl PendingEffectData {
@@ -79,8 +163,10 @@ impl PendingEffectData {
         match self {
             Self::Damage { .. } => "Damage",
             Self::Heal { .. } => "Heal",
-            Self::ApplyBuff { .. } => "ApplyBuff",
+            Self::ApplyModifier { .. } => "ApplyModifier",
             Self::Cleanse => "Cleanse",
+            #[allow(deprecated)]
+            Self::ApplyBuff { .. } => "ApplyBuff",
         }
     }
 }
@@ -95,10 +181,23 @@ pub struct EffectResult {
 
 #[derive(Clone, Debug, Reflect)]
 pub enum EffectResultData {
-    Damage { amount: i32, killed: bool },
-    Heal { amount: i32 },
-    BuffApplied { buff_id: String },
+    Damage {
+        amount: i32,
+        killed: bool,
+    },
+    Heal {
+        amount: i32,
+    },
+    /// 修饰器已应用（ADR-026 §二）
+    ModifierApplied {
+        modifier_id: String,
+    },
     CleanseApplied,
+    /// Buff 已应用（兼容旧系统，待废弃）
+    #[deprecated(note = "Use ModifierApplied instead")]
+    BuffApplied {
+        buff_id: String,
+    },
 }
 
 /// 效果队列资源

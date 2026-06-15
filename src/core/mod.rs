@@ -8,6 +8,15 @@ pub mod effect;
 /// ModifierRule 修饰规则注册表
 pub mod modifier;
 
+/// Stacking 模块：效果堆叠规则中心（ADR-026 §六）
+pub mod stacking;
+
+/// Execution 模块：效果执行算式层（ADR-026 §三）
+pub mod execution;
+
+/// Cue 模块：表现层信号总线（ADR-026 §四）
+pub mod cue;
+
 /// RON 文件加载器（RegistryLoader trait）
 pub mod registry_loader;
 

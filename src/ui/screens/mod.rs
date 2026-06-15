@@ -10,8 +10,8 @@ pub mod main_menu;
 use bevy::prelude::*;
 use bevy_inspector_egui::bevy_egui::PrimaryEguiContext;
 
-use crate::core::campaign::state::{CampaignProgress, StageStatus};
 use crate::core::campaign::registry::CampaignRegistry;
+use crate::core::campaign::state::{CampaignProgress, StageStatus};
 use crate::core::map::LevelRegistry;
 use crate::core::turn::AppState;
 use crate::ui::events::UiCommand;

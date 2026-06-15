@@ -1,7 +1,12 @@
 /// Buff 模块：数据驱动的 Buff/Debuff 定义、实例管理、应用/移除、持续效果结算
 /// 支持从 content/buffs/*.ron 外部配置文件加载
+///
+/// ⚠️ DEPRECATED: 此模块已废弃，请使用 effect 模块中的 ApplyModifier 替代。
+/// ADR-026 §二：Buff 统一为带 Duration 的 Effect。
+/// 此模块保留用于向后兼容，将在后续版本中移除。
 
 /// Buff 应用/移除逻辑
+#[deprecated(note = "Use effect::ApplyModifier instead")]
 mod apply;
 /// BuffDef 定义与 BuffRegistry 注册表
 mod domain;

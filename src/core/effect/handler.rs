@@ -505,6 +505,67 @@ impl EffectHandler for CleanseHandler {
     }
 }
 
+/// 修饰器处理器（ADR-026 §二：替代 Buff 处理器）
+pub struct ModifierHandler;
+
+impl EffectHandler for ModifierHandler {
+    fn type_name(&self) -> &'static str {
+        "ApplyModifier"
+    }
+
+    fn generate(&self, def: &EffectDef, _ctx: &GenerateContext) -> Option<PendingEffectData> {
+        let EffectDef::ApplyModifier {
+            modifier_id,
+            duration,
+            stacking,
+        } = def
+        else {
+            return None;
+        };
+        Some(PendingEffectData::ApplyModifier {
+            modifier_id: modifier_id.clone(),
+            duration: *duration,
+            stacking: *stacking,
+        })
+    }
+
+    fn preview(&self, def: &EffectDef, ctx: &PreviewContext) -> Option<EffectPreview> {
+        let EffectDef::ApplyModifier { modifier_id, .. } = def else {
+            return None;
+        };
+        // 修饰器效果预览：显示修饰器名称
+        Some(EffectPreview::BuffApplied {
+            buff_name: modifier_id.clone(),
+        })
+    }
+
+    fn execute(&self, effect: &PendingEffect, ctx: &mut ExecuteContext) -> Option<ExecuteOutput> {
+        let PendingEffectData::ApplyModifier {
+            modifier_id,
+            duration,
+            stacking,
+        } = &effect.data
+        else {
+            return None;
+        };
+
+        // 暂时使用旧的 apply_buff 逻辑，后续将迁移到 Modifier 系统
+        // TODO: 实现独立的 Modifier 应用逻辑
+        let duration_turns = match duration {
+            super::types::DurationDef::Instant => 0,
+            super::types::DurationDef::TurnLimited(n) => *n,
+            super::types::DurationDef::Permanent => 999,
+        };
+        ctx.apply_buff(effect.target, modifier_id, effect.source, duration_turns);
+
+        Some(ExecuteOutput {
+            target_died: false,
+            target: effect.target,
+            source: effect.source,
+        })
+    }
+}
+
 // ── 处理器注册表 ──
 
 /// 效果处理器注册表资源
@@ -541,12 +602,13 @@ impl EffectHandlerRegistry {
         self.handlers.insert(name, handler);
     }
 
-    /// 注册4个内置处理器
+    /// 注册内置处理器
     pub fn register_defaults(&mut self) {
         self.register(Box::new(DamageHandler));
         self.register(Box::new(HealHandler));
         self.register(Box::new(BuffHandler));
         self.register(Box::new(CleanseHandler));
+        self.register(Box::new(ModifierHandler));
     }
 }
 
