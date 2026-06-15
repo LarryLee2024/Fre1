@@ -14,8 +14,12 @@ pub mod ids;
 pub mod math;
 pub mod random;
 pub mod resettable;
+/// Shared 层统一 Plugin
+pub mod shared_plugin;
 pub mod testing;
 pub mod time;
 pub mod traits;
 pub mod validation;
 pub mod versioning;
+
+pub use shared_plugin::SharedPlugin;

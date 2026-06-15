@@ -28,8 +28,10 @@ use crate::core::trigger::TriggerPlugin;
 use crate::core::turn::TurnPlugin;
 use crate::infrastructure::assets::AssetsPlugin;
 use crate::infrastructure::audit::AuditPlugin;
+use crate::infrastructure::localization::LocalizationPlugin;
 use crate::infrastructure::logging::LogPlugin;
 use crate::input::InputPlugin;
+use crate::shared::SharedPlugin;
 use crate::ui::UiPlugin;
 
 use crate::debug::DebugPlugin;
@@ -70,6 +72,10 @@ impl Plugin for AppPlugin {
         // 错误消息通道 + 监控系统（在 Core 插件之前注册，确保错误可被捕获）
         .add_message::<GameErrorMessage>()
         .add_systems(Update, error_monitor::error_monitor)
+        // Shared 层 — 零依赖基础设施（ids, error, events, audit 等）
+        .add_plugins(SharedPlugin)
+        // 本地化基础设施（语言切换、文本解析）
+        .add_plugins(LocalizationPlugin)
         // Content 层 — 合约声明与加载协调
         .add_plugins(ContentPlugin)
         // ── ADR-025 七领域 DAG 层序 ──

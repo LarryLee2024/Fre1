@@ -31,7 +31,8 @@ use bevy::prelude::*;
 pub struct ContentPlugin;
 
 impl Plugin for ContentPlugin {
-    fn build(&self, app: &mut App) {
+    fn build(&self, _app: &mut App) {
+        // Phase 1.4: 初步收拢加载逻辑
         // 当前内容加载由各 core Plugin 自行处理。
         // ContentPlugin 作为契约声明，未来可在此集中管理：
         //
@@ -40,6 +41,8 @@ impl Plugin for ContentPlugin {
         // 3. 集中化错误处理与恢复策略
         //
         // 参见 ADR-004 §4.3 迁移计划。
-        let _ = app;
+        //
+        // 注意：当前保持原有加载逻辑不变，避免破坏现有功能。
+        // 后续 Phase 将逐步迁移加载逻辑至此。
     }
 }

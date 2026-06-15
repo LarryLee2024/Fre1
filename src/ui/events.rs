@@ -68,7 +68,7 @@ mod tests {
     ///
     /// Assertions: 变体构造成功（编译时验证）
     #[test]
-    fn ui_command_variants_constructible() {
+    fn ui命令_各变体可构造() {
         // Given - 无
 
         // When - 构造所有变体
@@ -101,7 +101,7 @@ mod tests {
     ///
     /// Assertions: 解构后 entity 字段等于 42
     #[test]
-    fn ui_command_select_unit_carries_entity() {
+    fn ui命令_选择单位携带entity() {
         // Given
         let expected_entity = Entity::from_bits(42);
 
@@ -127,7 +127,7 @@ mod tests {
     ///
     /// Assertions: 解构后 skill_id 等于 "fireball"
     #[test]
-    fn ui_command_skill_carries_skill_id() {
+    fn ui命令_技能携带skill_id() {
         // Given
         let expected_skill_id = "fireball".to_string();
 
@@ -153,7 +153,7 @@ mod tests {
     ///
     /// Assertions: 解构后 coord 等于 (3, 4)
     #[test]
-    fn ui_command_move_unit_carries_coord() {
+    fn ui命令_移动单位携带坐标() {
         // Given
         let expected_coord = IVec2::new(3, 4);
 

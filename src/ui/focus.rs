@@ -55,7 +55,7 @@ mod tests {
     ///
     /// Assertions: blocks_input == false
     #[test]
-    fn ui_focus_state_default_does_not_block_input() {
+    fn ui焦点状态_默认不阻止输入() {
         // Given
         let focus_state = UiFocusState::default();
 
@@ -74,7 +74,7 @@ mod tests {
     ///
     /// Assertions: blocks_input == true
     #[test]
-    fn ui_focus_state_can_block_input() {
+    fn ui焦点状态_可阻止输入() {
         // Given
         let mut focus_state = UiFocusState::default();
 
@@ -94,7 +94,7 @@ mod tests {
     ///
     /// Assertions: blocks_input == false
     #[test]
-    fn ui_focus_state_can_unblock_input() {
+    fn ui焦点状态_可恢复阻止输入() {
         // Given
         let mut focus_state = UiFocusState { blocks_input: true };
 

@@ -256,7 +256,7 @@ mod tests {
     ///
     /// Assertions: position == None
     #[test]
-    fn camera_target_default_has_no_position() {
+    fn 相机目标_默认值无目标位置() {
         // Given
         let target = CameraTarget::default();
 
@@ -275,7 +275,7 @@ mod tests {
     ///
     /// Assertions: position == Some(Vec2::new(100.0, 200.0))
     #[test]
-    fn camera_target_can_set_position() {
+    fn 相机目标_可设置目标位置() {
         // Given
         let mut target = CameraTarget::default();
         let expected = Vec2::new(100.0, 200.0);
@@ -296,7 +296,7 @@ mod tests {
     ///
     /// Assertions: new_pos 在 current 和 target 之间
     #[test]
-    fn camera_smooth_move_interpolation_formula() {
+    fn 相机平滑移动_插值公式正确() {
         // Given
         let current = Vec2::new(0.0, 0.0);
         let target = Vec2::new(100.0, 100.0);
@@ -323,7 +323,7 @@ mod tests {
     ///
     /// Assertions: 缩放值在 [0.3, 3.0] 范围内
     #[test]
-    fn camera_zoom_clamped_to_valid_range() {
+    fn 相机缩放_钳制到有效范围() {
         // Given
         let zoom_min: f32 = CAMERA_ZOOM_MIN;
         let zoom_max: f32 = CAMERA_ZOOM_MAX;
