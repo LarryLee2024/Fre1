@@ -86,7 +86,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn execution_registry_default_has_3_executors() {
+    fn 执行器注册表_默认有3个执行器() {
         let registry = ExecutionRegistry::default();
         assert!(registry.get("Damage").is_some());
         assert!(registry.get("Heal").is_some());
@@ -94,13 +94,13 @@ mod tests {
     }
 
     #[test]
-    fn execution_registry_unknown_returns_none() {
+    fn 执行器注册表_未知返回None() {
         let registry = ExecutionRegistry::default();
         assert!(registry.get("Unknown").is_none());
     }
 
     #[test]
-    fn execution_plugin_registers_resource() {
+    fn 执行器插件_注册资源() {
         let mut app = App::new();
         app.add_plugins(MinimalPlugins);
         app.add_plugins(ExecutionPlugin);

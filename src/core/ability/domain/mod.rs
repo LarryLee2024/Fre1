@@ -204,7 +204,7 @@ mod tests {
     }
 
     #[test]
-    fn skill_def_转换为_skill_data() {
+    fn skill_def_转换为skill_data() {
         let def = SkillDef {
             version: 0,
             id: "test".into(),

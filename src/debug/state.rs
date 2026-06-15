@@ -76,7 +76,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn debug_panel_state_default_all_off() {
+    fn debug_panel_state_默认全部关闭() {
         let state = DebugPanelState::default();
         assert!(state.show_panel);
         assert_eq!(state.active_view, DebugView::Battle);
@@ -84,23 +84,23 @@ mod tests {
     }
 
     #[test]
-    fn debug_view_all_returns_correct_count() {
+    fn debug_view_all_返回正确数量() {
         assert_eq!(DebugView::all().len(), 10);
     }
 
     #[test]
-    fn debug_view_default_is_battle() {
+    fn debug_view_默认是battle() {
         assert_eq!(DebugView::default(), DebugView::Battle);
     }
 
     #[test]
-    fn debug_view_equality() {
+    fn debug_view_相等性() {
         assert_eq!(DebugView::Battle, DebugView::Battle);
         assert_ne!(DebugView::Battle, DebugView::Buff);
     }
 
     #[test]
-    fn debug_view_hash_consistency() {
+    fn debug_view_哈希一致性() {
         use std::collections::HashSet;
         let mut set = HashSet::new();
         for &(view, _, _) in DebugView::all() {

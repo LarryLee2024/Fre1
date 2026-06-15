@@ -22,7 +22,7 @@ mod tests {
 
     /// 测试 StackingRule 4-enum 完整场景
     #[test]
-    fn stacking_rule_complete_scenarios() {
+    fn 叠层规则_完整场景() {
         // 场景1: Replace - 替换旧实例
         let rule = StackingRule::Replace;
         let ctx = StackingContext {
@@ -71,7 +71,7 @@ mod tests {
 
     /// 测试 Execution 注册表完整流程
     #[test]
-    fn execution_registry_complete() {
+    fn 执行器注册表_完整流程() {
         let registry = ExecutionRegistry::default();
 
         // 验证所有内置执行器已注册
@@ -85,7 +85,7 @@ mod tests {
 
     /// 测试 Execution 计算完整流程
     #[test]
-    fn execution_calculation_complete() {
+    fn 执行器计算_完整流程() {
         // 伤害计算
         let damage_executor = DamageExecution;
         let ctx = ExecutionContext {
@@ -156,7 +156,7 @@ mod tests {
 
     /// 测试 Cue 事件发射完整流程
     #[test]
-    fn cue_emission_complete() {
+    fn Cue发射_完整流程() {
         let mut emitter = CueEmitter::default();
 
         // 发射各种 CueEvent
@@ -180,7 +180,7 @@ mod tests {
 
     /// 测试 EffectDef DurationDef 完整场景
     #[test]
-    fn effect_def_duration_complete() {
+    fn 效果定义_持续时间完整() {
         use crate::core::effect::DurationDef;
         use crate::core::effect::StackingDef;
 
@@ -214,7 +214,7 @@ mod tests {
 
     /// 测试 GasPhase 完整流程
     #[test]
-    fn gas_phase_complete() {
+    fn GAS阶段_完整流程() {
         let phases = GasPhase::all();
         assert_eq!(phases.len(), 10);
 
@@ -237,7 +237,7 @@ mod tests {
 
     /// 测试 Replay 完整流程
     #[test]
-    fn replay_complete() {
+    fn 回放_完整流程() {
         let record = BattleRecord {
             seed: 42,
             turn_count: 3,
@@ -297,7 +297,7 @@ mod tests {
 
     /// 测试 AssetRegistry 完整流程
     #[test]
-    fn asset_registry_complete() {
+    fn 资产注册表_完整流程() {
         let mut registry = AssetRegistry::default();
 
         // 注册各种资产

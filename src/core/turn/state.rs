@@ -68,7 +68,7 @@ mod tests {
     /// Test ID: UI-GAME-001 (migrated from view_models)
     /// Title: GameOverState 默认值为 Playing
     #[test]
-    fn game_over_state_default_is_playing() {
+    fn game_over_state_默认是playing() {
         let state = GameOverState::default();
         assert_eq!(state, GameOverState::Playing);
     }
@@ -76,7 +76,7 @@ mod tests {
     /// Test ID: UI-GAME-002 (migrated from view_models)
     /// Title: GameOverState 枚举值可比较
     #[test]
-    fn game_over_state_variants_are_distinct() {
+    fn game_over_state_变体是不同的() {
         let victory = GameOverState::Victory;
         let defeat = GameOverState::Defeat;
         assert_ne!(victory, defeat);

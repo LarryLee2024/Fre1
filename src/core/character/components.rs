@@ -232,7 +232,7 @@ mod tests {
     ///
     /// Assertions: target_coord == Some(IVec2::new(1, 0))
     #[test]
-    fn moving_unit_target_coord_within_path() {
+    fn 移动单位_目标坐标在路径内() {
         // Given
         let unit = make_moving_unit(
             vec![IVec2::new(0, 0), IVec2::new(1, 0), IVec2::new(2, 0)],
@@ -255,7 +255,7 @@ mod tests {
     ///
     /// Assertions: target_coord == None
     #[test]
-    fn moving_unit_target_coord_empty_path() {
+    fn 移动单位_目标坐标空路径() {
         // Given
         let unit = make_moving_unit(vec![], 0);
 
@@ -275,7 +275,7 @@ mod tests {
     ///
     /// Assertions: target_coord == None
     #[test]
-    fn moving_unit_target_coord_index_out_of_bounds() {
+    fn 移动单位_目标坐标索引越界() {
         // Given
         let unit = make_moving_unit(vec![IVec2::new(0, 0)], 5);
 
@@ -297,7 +297,7 @@ mod tests {
     ///
     /// Assertions: is_finished == false
     #[test]
-    fn moving_unit_is_finished_not_yet() {
+    fn 移动单位_未完成() {
         // Given
         let unit = make_moving_unit(vec![IVec2::new(0, 0), IVec2::new(1, 0)], 0);
 
@@ -317,7 +317,7 @@ mod tests {
     ///
     /// Assertions: is_finished == true
     #[test]
-    fn moving_unit_is_finished_completed() {
+    fn 移动单位_已完成() {
         // Given
         let unit = make_moving_unit(vec![IVec2::new(0, 0)], 1);
 
@@ -337,7 +337,7 @@ mod tests {
     ///
     /// Assertions: is_finished == true
     #[test]
-    fn moving_unit_is_finished_empty_path() {
+    fn 移动单位_空路径() {
         // Given
         let unit = make_moving_unit(vec![], 0);
 
@@ -357,7 +357,7 @@ mod tests {
     ///
     /// Assertions: is_finished == true
     #[test]
-    fn moving_unit_is_finished_just_arrived() {
+    fn 移动单位_刚到达() {
         // Given
         let unit = make_moving_unit(vec![IVec2::new(0, 0), IVec2::new(1, 0)], 2);
 
@@ -379,7 +379,7 @@ mod tests {
     ///
     /// Assertions: unit.acted == true
     #[test]
-    fn dead_hook_marks_unit_as_acted() {
+    fn dead_hook_标记单位已行动() {
         // Given
         let mut world = World::new();
         let entity = world
@@ -406,7 +406,7 @@ mod tests {
     ///
     /// Assertions: world.get::<Selected>(entity).is_none()
     #[test]
-    fn dead_hook_removes_selected() {
+    fn dead_hook_移除选中() {
         // Given
         let mut world = World::new();
         let entity = world
@@ -435,7 +435,7 @@ mod tests {
     ///
     /// Assertions: unit.acted == true
     #[test]
-    fn dead_hook_no_selected_does_not_panic() {
+    fn dead_hook_无选中不panic() {
         // Given
         let mut world = World::new();
         let entity = world
@@ -461,7 +461,7 @@ mod tests {
     ///
     /// Assertions: 所有 Required Components 存在
     #[test]
-    fn unit_auto_inserts_required_components() {
+    fn unit_自动插入必需组件() {
         // Given
         let mut world = World::new();
         let entity = world
@@ -489,7 +489,7 @@ mod tests {
     ///
     /// Assertions: id.0 == "knight_001"
     #[test]
-    fn unit_id_basic_property() {
+    fn unit_id_基本属性() {
         // Given
         let id = UnitId("knight_001".into());
 
@@ -508,7 +508,7 @@ mod tests {
     ///
     /// Assertions: a == b, a != c, set.contains(b), !set.contains(c)
     #[test]
-    fn unit_id_equality_and_hash() {
+    fn unit_id_相等性和哈希() {
         // Given
         let a = UnitId("knight_001".into());
         let b = UnitId("knight_001".into());
@@ -534,7 +534,7 @@ mod tests {
     ///
     /// Assertions: unit_id.0 == "warrior_001"
     #[test]
-    fn unit_id_mount_and_read() {
+    fn unit_id_挂载和读取() {
         // Given
         let mut world = World::new();
         let entity = world

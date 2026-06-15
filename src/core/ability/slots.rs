@@ -198,7 +198,7 @@ mod tests {
     }
 
     #[test]
-    fn 冷却_tick递减() {
+    fn 冷却_tick_递减() {
         let mut cds = SkillCooldowns::default();
         cds.set("fireball", 2);
         cds.tick();
@@ -208,7 +208,7 @@ mod tests {
     }
 
     #[test]
-    fn 冷却_clear清空() {
+    fn 冷却_clear_清空() {
         let mut cds = SkillCooldowns::default();
         cds.set("fireball", 3);
         cds.set("pierce", 2);

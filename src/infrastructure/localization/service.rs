@@ -265,7 +265,7 @@ test-greeting = Hello { $name }
     }
 
     #[test]
-    fn resolve_missing_key_returns_placeholder() {
+    fn resolve_missing_key_返回占位符() {
         let service = make_service_with_test_ftl();
         let result = service.resolve("nonexistent.key", &Locale::ZhCn, None);
         assert!(result.contains("MISSING") || result.is_empty());
@@ -304,7 +304,7 @@ test-greeting = Hello { $name }
     }
 
     #[test]
-    fn resolve_with_args_actual_parameters() {
+    fn resolve_with_args_实际参数() {
         let service = make_service_with_test_ftl();
         let mut args = FluentArgs::new();
         args.set("name", "测试用户");

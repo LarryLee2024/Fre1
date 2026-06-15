@@ -180,7 +180,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn cue_emitter_emit_damage() {
+    fn Cue发射器_发射伤害() {
         let mut emitter = CueEmitter::default();
         emitter.emit_damage(Entity::from_bits(1), 50, true, Some(Entity::from_bits(2)));
         assert_eq!(emitter.damage_events.len(), 1);
@@ -189,7 +189,7 @@ mod tests {
     }
 
     #[test]
-    fn cue_emitter_has_pending() {
+    fn Cue发射器_有待发送事件() {
         let mut emitter = CueEmitter::default();
         assert!(!emitter.has_pending());
 
@@ -198,7 +198,7 @@ mod tests {
     }
 
     #[test]
-    fn cue_emitter_clear() {
+    fn Cue发射器_清空() {
         let mut emitter = CueEmitter::default();
         emitter.emit_damage(Entity::from_bits(1), 50, false, None);
         emitter.emit_heal(Entity::from_bits(2), 30, None);

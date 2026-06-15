@@ -141,7 +141,7 @@ mod tests {
 
     /// 空注册表测试
     #[test]
-    fn registry_default_is_empty() {
+    fn 注册表_默认为空() {
         let registry = TriggerRegistry::new();
         assert!(!registry.has_handlers(Trigger::TurnStart));
         assert!(!registry.has_handlers(Trigger::AfterDamaged));
@@ -149,7 +149,7 @@ mod tests {
 
     /// dispatch 空注册表返回空 Vec
     #[test]
-    fn dispatch_empty_registry() {
+    fn 分发_空注册表() {
         let registry = TriggerRegistry::new();
         let ctx = TriggerContext {
             trigger: Trigger::TurnStart,
@@ -186,7 +186,7 @@ mod tests {
     }
 
     #[test]
-    fn register_and_dispatch_single_handler() {
+    fn 注册并分发单个处理器() {
         let mut registry = TriggerRegistry::new();
         registry.register(Box::new(MockHealHandler { amount: 5 }));
 
@@ -235,7 +235,7 @@ mod tests {
     }
 
     #[test]
-    fn handlers_sorted_by_priority_descending() {
+    fn 处理器_按优先级降序排序() {
         let mut registry = TriggerRegistry::new();
         registry.register(Box::new(LowPriorityHandler));
         registry.register(Box::new(HighPriorityHandler));
@@ -258,7 +258,7 @@ mod tests {
 
     /// dispatch 对不匹配的 trigger 类型返回空
     #[test]
-    fn dispatch_wrong_trigger_type() {
+    fn 分发_错误触发器类型() {
         let mut registry = TriggerRegistry::new();
         registry.register(Box::new(MockHealHandler { amount: 5 }));
 

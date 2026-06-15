@@ -358,7 +358,7 @@ mod tests {
     }
 
     #[test]
-    fn effect_def_type_name() {
+    fn 效果定义_类型名() {
         assert_eq!(
             EffectDef::Damage {
                 multiplier: 1.0,
@@ -380,7 +380,7 @@ mod tests {
     }
 
     #[test]
-    fn pending_effect_data_type_name() {
+    fn 待处理效果数据_类型名() {
         assert_eq!(
             PendingEffectData::Damage {
                 amount: 5,

@@ -313,7 +313,7 @@ mod tests {
     ///
     /// Assertions: id, faction, race, class, skill_ids, trait_ids 正确
     #[test]
-    fn ron_deserialize_unit_template() {
+    fn ron_反序列化_单位模板() {
         let ron_str = format!(
             r#"
             (
@@ -356,7 +356,7 @@ mod tests {
     ///
     /// Assertions: id, faction, race, class, trait_ids, ai_behavior 正确
     #[test]
-    fn unit_template_def_converts_to_unit_template() {
+    fn 单位模板定义_转换为单位模板() {
         // Given
         let def = UnitTemplateDef {
             version: 0,
@@ -398,7 +398,7 @@ mod tests {
     ///
     /// Assertions: 4 个模板均存在
     #[test]
-    fn unit_template_registry_default_templates() {
+    fn 单位模板注册表_默认模板() {
         // Given
         let mut registry = UnitTemplateRegistry::default();
 
@@ -421,7 +421,7 @@ mod tests {
     ///
     /// Assertions: name, faction, base_attack_range 正确
     #[test]
-    fn unit_template_registry_query() {
+    fn 单位模板注册表_查询() {
         // Given
         let mut registry = UnitTemplateRegistry::default();
         registry.register_defaults();
@@ -444,7 +444,7 @@ mod tests {
     ///
     /// Assertions: result.is_none()
     #[test]
-    fn unit_template_registry_query_unregistered_returns_none() {
+    fn 单位模板注册表_查询未注册返回none() {
         // Given
         let mut registry = UnitTemplateRegistry::default();
         registry.register_defaults();
@@ -465,7 +465,7 @@ mod tests {
     ///
     /// Assertions: faction == Faction::Player
     #[test]
-    fn faction_def_player_converts() {
+    fn 阵营定义_玩家转换() {
         // Given
         let def = FactionDef::Player;
 
@@ -485,7 +485,7 @@ mod tests {
     ///
     /// Assertions: faction == Faction::Enemy
     #[test]
-    fn faction_def_enemy_converts() {
+    fn 阵营定义_敌方转换() {
         // Given
         let def = FactionDef::Enemy;
 
@@ -505,7 +505,7 @@ mod tests {
     ///
     /// Assertions: id == "old_unit", version == 0
     #[test]
-    fn ron_deserialize_old_config_without_version() {
+    fn ron_反序列化_旧配置无version字段() {
         // Given
         let ron_str = format!(
             r#"

@@ -124,7 +124,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn cue_damage_construction() {
+    fn Cue伤害_构造() {
         let cue = CueDamage {
             target: Entity::from_bits(1),
             amount: 50,
@@ -136,7 +136,7 @@ mod tests {
     }
 
     #[test]
-    fn cue_death_construction() {
+    fn Cue死亡_构造() {
         let cue = CueDeath {
             entity: Entity::from_bits(1),
             killer: Some(Entity::from_bits(2)),
@@ -145,7 +145,7 @@ mod tests {
     }
 
     #[test]
-    fn cue_heal_construction() {
+    fn Cue治疗_构造() {
         let cue = CueHeal {
             target: Entity::from_bits(1),
             amount: 30,

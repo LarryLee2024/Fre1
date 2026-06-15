@@ -247,7 +247,7 @@ mod tests {
     }
 
     #[test]
-    fn consumable_apply_restore_effect() {
+    fn 消耗品_施加恢复效果() {
         let def = test_consumable_def();
         let mut attrs = Attributes::default();
         attrs.fill_vital_resources();
@@ -274,7 +274,7 @@ mod tests {
     }
 
     #[test]
-    fn consumable_apply_buff_effect() {
+    fn 消耗品_施加buff效果() {
         let mut def = test_consumable_def();
         def.use_effects = vec![UseEffect::ApplyBuff {
             buff_id: "attack_up".into(),
@@ -305,7 +305,7 @@ mod tests {
     }
 
     #[test]
-    fn consumable_non_consumable_skipped() {
+    fn 消耗品_非消耗品跳过() {
         let def = ItemDef {
             version: 1,
             id: "iron_sword".into(),
@@ -346,7 +346,7 @@ mod tests {
     }
 
     #[test]
-    fn consumable_grant_temp_trait_returns_pending_effect() {
+    fn 消耗品_授予临时trait返回待处理效果() {
         let mut def = test_consumable_def();
         def.use_effects = vec![UseEffect::GrantTempTrait {
             trait_id: "fire_resist".into(),
@@ -380,7 +380,7 @@ mod tests {
     }
 
     #[test]
-    fn consumable_cast_skill_returns_pending_effect() {
+    fn 消耗品_施放技能返回待处理效果() {
         let mut def = test_consumable_def();
         def.use_effects = vec![UseEffect::CastSkill {
             skill_id: "fireball".into(),

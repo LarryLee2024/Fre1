@@ -65,13 +65,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn resolve_no_existing_returns_newly_applied() {
+    fn 解析_无已有效果_返回新施加() {
         let result = resolve_stacking(None, StackingRule::Replace);
         assert_eq!(result, StackingResult::NewlyApplied);
     }
 
     #[test]
-    fn resolve_replace_returns_replaced() {
+    fn 解析_替换策略_返回已替换() {
         let ctx = StackingContext {
             current_stacks: 3,
             rule: StackingRule::Replace,
@@ -81,7 +81,7 @@ mod tests {
     }
 
     #[test]
-    fn resolve_refresh_returns_refreshed() {
+    fn 解析_刷新策略_返回已刷新() {
         let ctx = StackingContext {
             current_stacks: 1,
             rule: StackingRule::RefreshDuration,
@@ -91,7 +91,7 @@ mod tests {
     }
 
     #[test]
-    fn resolve_stack_add_increments() {
+    fn 解析_叠加策略_层数递增() {
         let ctx = StackingContext {
             current_stacks: 2,
             rule: StackingRule::StackAdd,
@@ -101,7 +101,7 @@ mod tests {
     }
 
     #[test]
-    fn resolve_stack_max_below_limit() {
+    fn 解析_上限叠加_低于上限() {
         let ctx = StackingContext {
             current_stacks: 2,
             rule: StackingRule::StackMax(5),
@@ -111,7 +111,7 @@ mod tests {
     }
 
     #[test]
-    fn resolve_stack_max_at_limit_ignores() {
+    fn 解析_上限叠加_达到上限忽略() {
         let ctx = StackingContext {
             current_stacks: 5,
             rule: StackingRule::StackMax(5),
@@ -121,7 +121,7 @@ mod tests {
     }
 
     #[test]
-    fn resolve_stack_max_above_limit_ignores() {
+    fn 解析_上限叠加_超过上限忽略() {
         let ctx = StackingContext {
             current_stacks: 10,
             rule: StackingRule::StackMax(5),

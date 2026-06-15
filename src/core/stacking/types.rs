@@ -106,7 +106,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn stacking_rule_max_stacks() {
+    fn 叠层规则_最大层数() {
         assert_eq!(StackingRule::Replace.max_stacks(), 1);
         assert_eq!(StackingRule::RefreshDuration.max_stacks(), 1);
         assert_eq!(StackingRule::StackAdd.max_stacks(), u32::MAX);
@@ -114,7 +114,7 @@ mod tests {
     }
 
     #[test]
-    fn stacking_rule_allows_stacking() {
+    fn 叠层规则_允许叠加() {
         assert!(!StackingRule::Replace.allows_stacking());
         assert!(!StackingRule::RefreshDuration.allows_stacking());
         assert!(StackingRule::StackAdd.allows_stacking());
@@ -122,26 +122,26 @@ mod tests {
     }
 
     #[test]
-    fn stacking_rule_is_replace() {
+    fn 叠层规则_是否替换() {
         assert!(StackingRule::Replace.is_replace());
         assert!(!StackingRule::RefreshDuration.is_replace());
     }
 
     #[test]
-    fn stacking_rule_is_refresh() {
+    fn 叠层规则_是否刷新() {
         assert!(StackingRule::RefreshDuration.is_refresh());
         assert!(!StackingRule::Replace.is_refresh());
     }
 
     #[test]
-    fn stacking_rule_def_conversion() {
+    fn 叠层规则定义_转换() {
         let def = StackingRuleDef::StackMax { max_stack: 3 };
         let rule: StackingRule = def.into();
         assert_eq!(rule, StackingRule::StackMax(3));
     }
 
     #[test]
-    fn stacking_rule_def_zero_max_becomes_one() {
+    fn 叠层规则定义_零上限变为一() {
         let def = StackingRuleDef::StackMax { max_stack: 0 };
         let rule: StackingRule = def.into();
         assert_eq!(rule, StackingRule::StackMax(1));

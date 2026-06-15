@@ -333,7 +333,7 @@ mod tests {
     }
 
     #[test]
-    fn attribute_registry_查询() {
+    fn 属性注册表_查询() {
         let mut registry = AttributeRegistry::default();
         registry.register_defaults();
 
@@ -343,14 +343,14 @@ mod tests {
     }
 
     #[test]
-    fn attribute_registry_显示名称回退() {
+    fn 属性注册表_显示名称回退() {
         let registry = AttributeRegistry::default();
         // 没有注册定义时回退到 kind.label()
         assert_eq!(registry.display_name(AttributeKind::Hp), "HP");
     }
 
     #[test]
-    fn attribute_registry_defaults_包含所有属性() {
+    fn 属性注册表_默认包含所有属性() {
         let mut registry = AttributeRegistry::default();
         registry.register_defaults();
         // 8 核心属性
@@ -391,14 +391,14 @@ mod tests {
     }
 
     #[test]
-    fn attribute_registry_defaults_总数为24() {
+    fn 属性注册表_默认总数为24() {
         let mut registry = AttributeRegistry::default();
         registry.register_defaults();
         assert_eq!(registry.definitions.len(), 24);
     }
 
     #[test]
-    fn attribute_registry_显示名称_已注册() {
+    fn 属性注册表_显示名称_已注册() {
         let mut registry = AttributeRegistry::default();
         registry.register_defaults();
         assert_eq!(registry.display_name(AttributeKind::Attack), "物理攻击力");
@@ -407,7 +407,7 @@ mod tests {
     }
 
     #[test]
-    fn attribute_registry_查询所有默认属性() {
+    fn 属性注册表_查询所有默认属性() {
         let mut registry = AttributeRegistry::default();
         registry.register_defaults();
         // 核心属性

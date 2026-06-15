@@ -316,7 +316,7 @@ mod tests {
     // ── BuffDef → BuffData 转换 ──
 
     #[test]
-    fn buff_def_转换为_buff_data() {
+    fn buff定义_转换为buff数据() {
         let def = BuffDef {
             version: 0,
             id: "test_buff".into(),
@@ -450,7 +450,7 @@ mod tests {
     }
 
     #[test]
-    fn buff_registry_查询已注册buff() {
+    fn buff注册表_查询已注册buff() {
         let mut registry = BuffRegistry::default();
         registry.buffs.insert(
             "test".into(),
@@ -477,13 +477,13 @@ mod tests {
     }
 
     #[test]
-    fn buff_registry_查询未注册返回none() {
+    fn buff注册表_查询未注册返回none() {
         let registry = BuffRegistry::default();
         assert!(registry.get("nonexistent").is_none());
     }
 
     #[test]
-    fn buff_registry_默认注册() {
+    fn buff注册表_默认注册() {
         let mut registry = BuffRegistry::default();
         registry.register_defaults();
         assert!(registry.get("attack_up").is_some());
@@ -492,7 +492,7 @@ mod tests {
     }
 
     #[test]
-    fn buff_registry_默认buff包含新字段() {
+    fn buff注册表_默认buff包含新字段() {
         let mut registry = BuffRegistry::default();
         registry.register_defaults();
 

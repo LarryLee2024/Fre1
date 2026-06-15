@@ -63,13 +63,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn discover_ftl_files_nonexistent_dir() {
+    fn discover_ftl_files_不存在目录() {
         let files = discover_ftl_files("/nonexistent/path");
         assert!(files.is_empty());
     }
 
     #[test]
-    fn load_ftl_file_nonexistent() {
+    fn load_ftl_file_不存在() {
         let result = load_ftl_file("/nonexistent/file.ftl");
         assert!(result.is_err());
     }

@@ -29,7 +29,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn stacking_plugin_registers_types() {
+    fn 叠层插件_注册类型() {
         let mut app = App::new();
         app.add_plugins(MinimalPlugins);
         app.add_plugins(StackingPlugin);
@@ -38,7 +38,7 @@ mod tests {
     }
 
     #[test]
-    fn full_stack_scenario() {
+    fn 完整叠层场景() {
         // 场景：中毒叠层，最多5层
         let rule = StackingRule::StackMax(5);
 
@@ -72,7 +72,7 @@ mod tests {
     }
 
     #[test]
-    fn replace_scenario() {
+    fn 替换场景() {
         let rule = StackingRule::Replace;
 
         // 第一次施加
@@ -89,7 +89,7 @@ mod tests {
     }
 
     #[test]
-    fn refresh_scenario() {
+    fn 刷新场景() {
         let rule = StackingRule::RefreshDuration;
 
         // 第一次施加

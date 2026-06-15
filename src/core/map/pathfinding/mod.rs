@@ -68,7 +68,7 @@ mod tests {
     ///
     /// Assertions: 非空，(3,2) 和 (2,3) 可达，(2,2) 不可达
     #[test]
-    fn ground_unit_reachability_with_mp_3_on_plains() {
+    fn 地面单位_mp_3平原可达性() {
         // Given
         let map = make_test_map();
         let grid = all_plain_grid(&map);
@@ -104,7 +104,7 @@ mod tests {
     ///
     /// Assertions: reachable.is_empty()
     #[test]
-    fn ground_unit_mp_0_no_reachable_tiles() {
+    fn 地面单位_mp_0_无可到达格子() {
         // Given
         let map = make_test_map();
         let grid = all_plain_grid(&map);
@@ -137,7 +137,7 @@ mod tests {
     ///
     /// Assertions: len==4，包含上下左右
     #[test]
-    fn ground_unit_mp_1_adjacent_4_tiles_only() {
+    fn 地面单位_mp_1_仅相邻4格() {
         // Given
         let map = make_test_map();
         let grid = all_plain_grid(&map);
@@ -174,7 +174,7 @@ mod tests {
     ///
     /// Assertions: len==2，仅 (1,2) 和 (2,1) 可达
     #[test]
-    fn ground_unit_cannot_traverse_mountain_or_water() {
+    fn 地面单位_不能穿越山地或水域() {
         // Given
         let map = make_test_map();
         let mut grid = all_plain_grid(&map);
@@ -211,7 +211,7 @@ mod tests {
     ///
     /// Assertions: (3,2) 在集合中且 remaining=0，(4,2) 不在集合中
     #[test]
-    fn ground_unit_forest_costs_2_mp() {
+    fn 地面单位_森林消耗2mp() {
         // Given
         let map = make_test_map();
         let mut grid = all_plain_grid(&map);
@@ -247,7 +247,7 @@ mod tests {
     ///
     /// Assertions: (3,2) 不可达，(4,2) 不可达，(4,1) 可达
     #[test]
-    fn ground_unit_occupied_tile_unreachable() {
+    fn 地面单位_被占格子不可达() {
         // Given
         let map = make_test_map();
         let grid = all_plain_grid(&map);
@@ -284,7 +284,7 @@ mod tests {
     ///
     /// Assertions: len==4
     #[test]
-    fn ground_unit_self_position_not_counted_as_occupied() {
+    fn 地面单位_自身位置不计为被占() {
         // Given
         let map = make_test_map();
         let grid = all_plain_grid(&map);
@@ -319,7 +319,7 @@ mod tests {
     ///
     /// Assertions: (1,0) 和 (0,1) 可达，(-1,0) 和 (0,-1) 不可达
     #[test]
-    fn ground_unit_corner_position_mp_limited() {
+    fn 地面单位_角落位置mp受限() {
         // Given
         let map = make_test_map();
         let grid = all_plain_grid(&map);
@@ -357,7 +357,7 @@ mod tests {
     ///
     /// Assertions: len==4，(3,2) 和 (2,3) 可达
     #[test]
-    fn flying_unit_traverses_mountain_water_cost_1() {
+    fn 飞行单位_穿越山地水域消耗1() {
         // Given
         let map = make_test_map();
         let mut grid = all_plain_grid(&map);
@@ -396,7 +396,7 @@ mod tests {
     ///
     /// Assertions: (3,2) remaining=0，(4,2) 不可达
     #[test]
-    fn mounted_unit_plains_cost_1_forest_cost_3() {
+    fn 骑兵单位_平原消耗1森林消耗3() {
         // Given
         let map = make_test_map();
         let mut grid = all_plain_grid(&map);
@@ -432,7 +432,7 @@ mod tests {
     ///
     /// Assertions: (3,2) 和 (2,3) 不可达
     #[test]
-    fn mounted_unit_cannot_traverse_mountain_or_water() {
+    fn 骑兵单位_不能穿越山地或水域() {
         // Given
         let map = make_test_map();
         let mut grid = all_plain_grid(&map);
@@ -470,7 +470,7 @@ mod tests {
     ///
     /// Assertions: (3,2) 可达
     #[test]
-    fn swimming_unit_water_cost_1() {
+    fn 游泳单位_水域消耗1() {
         // Given
         let map = make_test_map();
         let mut grid = all_plain_grid(&map);
@@ -504,7 +504,7 @@ mod tests {
     ///
     /// Assertions: (3,2) 不可达
     #[test]
-    fn swimming_unit_cannot_traverse_mountain() {
+    fn 游泳单位_不能穿越山地() {
         // Given
         let map = make_test_map();
         let mut grid = all_plain_grid(&map);
@@ -540,7 +540,7 @@ mod tests {
     ///
     /// Assertions: 四个计算器都存在
     #[test]
-    fn terrain_cost_registry_contains_four_calculators_by_default() {
+    fn 地形消耗注册表_默认包含四个计算器() {
         // Given
         let registry = TerrainCostRegistry::default();
 
@@ -560,7 +560,7 @@ mod tests {
     ///
     /// Assertions: 四种标签分别解析出正确计算器
     #[test]
-    fn terrain_cost_registry_resolves_from_tags() {
+    fn 地形消耗注册表_从标签解析() {
         // Given
         let registry = TerrainCostRegistry::default();
 
@@ -597,7 +597,7 @@ mod tests {
     ///
     /// Assertions: calc.name() == "swimming"
     #[test]
-    fn swimming_priority_over_flying() {
+    fn 游泳优先于飞行() {
         // Given
         let registry = TerrainCostRegistry::default();
         let mut tags = GameplayTags::default();
@@ -622,7 +622,7 @@ mod tests {
     ///
     /// Assertions: path == vec![IVec2::new(2,2)]
     #[test]
-    fn reconstruct_path_same_start_end_returns_self() {
+    fn 重建路径_起点终点相同返回自身() {
         // Given
         let map = make_test_map();
         let grid = all_plain_grid(&map);
@@ -655,7 +655,7 @@ mod tests {
     ///
     /// Assertions: path == vec![(2,1), (2,2)]
     #[test]
-    fn reconstruct_path_l_shape() {
+    fn 重建路径_L形() {
         // Given
         let map = make_test_map();
         let grid = all_plain_grid(&map);

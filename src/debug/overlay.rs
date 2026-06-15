@@ -33,7 +33,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn debug_overlay_default_all_off() {
+    fn debug_overlay_默认全部关闭() {
         let overlay = DebugOverlay::default();
         assert!(!overlay.show_pathfinding);
         assert!(!overlay.show_ai_intent);
@@ -42,7 +42,7 @@ mod tests {
     }
 
     #[test]
-    fn f3_toggle_all_off_to_all_on() {
+    fn F3_全部关闭到全部开启() {
         let mut overlay = DebugOverlay::default();
         let all_on = overlay.show_pathfinding
             && overlay.show_ai_intent
@@ -59,7 +59,7 @@ mod tests {
     }
 
     #[test]
-    fn f3_toggle_all_on_to_all_off() {
+    fn F3_全部开启到全部关闭() {
         let mut overlay = DebugOverlay {
             show_pathfinding: true,
             show_ai_intent: true,
@@ -81,7 +81,7 @@ mod tests {
     }
 
     #[test]
-    fn f3_toggle_partial_on_to_all_on() {
+    fn F3_部分开启到全部开启() {
         let mut overlay = DebugOverlay {
             show_pathfinding: true,
             show_ai_intent: false,

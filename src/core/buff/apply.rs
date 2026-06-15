@@ -286,7 +286,7 @@ mod tests {
     }
 
     #[test]
-    fn apply_buff_添加修饰符和标签() {
+    fn 施加buff_添加修饰符和标签() {
         let mut buffs = ActiveBuffs::default();
         let mut attrs = make_test_attrs();
         let mut tags = GameplayTags::default();
@@ -311,7 +311,7 @@ mod tests {
     }
 
     #[test]
-    fn remove_buff_清理修饰符和标签() {
+    fn 移除buff_清理修饰符和标签() {
         let mut buffs = ActiveBuffs::default();
         let mut attrs = make_test_attrs();
         let mut tags = GameplayTags::default();
@@ -339,7 +339,7 @@ mod tests {
     }
 
     #[test]
-    fn remove_buff_共享标签不被误删() {
+    fn 移除buff_共享标签不被误删() {
         let mut buffs = ActiveBuffs::default();
         let mut attrs = make_test_attrs();
         let mut tags = GameplayTags::default();
@@ -374,7 +374,7 @@ mod tests {
     }
 
     #[test]
-    fn apply_buff_cleanse_驱散所有debuff() {
+    fn 施加buff_驱散所有debuff() {
         let mut buffs = ActiveBuffs::default();
         let mut attrs = make_test_attrs();
         let mut tags = GameplayTags::default();
@@ -419,7 +419,7 @@ mod tests {
     }
 
     #[test]
-    fn remove_all_debuffs_只移除debuff保留buff() {
+    fn 移除所有debuff_只移除debuff保留buff() {
         let mut buffs = ActiveBuffs::default();
         let mut attrs = make_test_attrs();
         let mut tags = GameplayTags::default();
@@ -460,7 +460,7 @@ mod tests {
     }
 
     #[test]
-    fn apply_buff_同源刷新不重复添加修饰符() {
+    fn 施加buff_同源刷新不重复添加修饰符() {
         let mut buffs = ActiveBuffs::default();
         let mut attrs = make_test_attrs();
         let mut tags = GameplayTags::default();
@@ -505,7 +505,7 @@ mod tests {
     }
 
     #[test]
-    fn apply_buff_不同源同id可共存() {
+    fn 施加buff_不同源同id可共存() {
         let mut buffs = ActiveBuffs::default();
         let mut attrs = make_test_attrs();
         let mut tags = GameplayTags::default();
@@ -550,7 +550,7 @@ mod tests {
     // ── StackPolicy 测试（ADR-021） ──
 
     #[test]
-    fn stack_nostack_不同源同id刷新不新增() {
+    fn 叠层_nostack_不同源同id刷新不新增() {
         let mut buffs = ActiveBuffs::default();
         let mut attrs = make_test_attrs();
         let mut tags = GameplayTags::default();
@@ -586,7 +586,7 @@ mod tests {
     }
 
     #[test]
-    fn stack_nostack_不同源同id也刷新() {
+    fn 叠层_nostack_不同源同id也刷新() {
         let mut buffs = ActiveBuffs::default();
         let mut attrs = make_test_attrs();
         let mut tags = GameplayTags::default();
@@ -623,7 +623,7 @@ mod tests {
     }
 
     #[test]
-    fn stack_stackable_在上限内可叠多层() {
+    fn 叠层_stackable_在上限内可叠多层() {
         let mut buffs = ActiveBuffs::default();
         let mut attrs = make_test_attrs();
         let mut tags = GameplayTags::default();
@@ -675,7 +675,7 @@ mod tests {
     }
 
     #[test]
-    fn stack_stackable_达到上限移除最旧() {
+    fn 叠层_stackable_达到上限移除最旧() {
         let mut buffs = ActiveBuffs::default();
         let mut attrs = make_test_attrs();
         let mut tags = GameplayTags::default();
@@ -747,7 +747,7 @@ mod tests {
     }
 
     #[test]
-    fn stack_stackable_no_refresh_达到上限跳过() {
+    fn 叠层_stackable_no_refresh_达到上限跳过() {
         let mut buffs = ActiveBuffs::default();
         let mut attrs = make_test_attrs();
         let mut tags = GameplayTags::default();

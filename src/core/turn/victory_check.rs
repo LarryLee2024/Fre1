@@ -369,7 +369,7 @@ mod tests {
     /// Test ID: VC-FUNC-006
     /// Title: WinConditionDef KillAll 条件类型匹配
     #[test]
-    fn win_condition_kill_all_type() {
+    fn win_condition_kill_all_类型() {
         let cond = WinConditionDef {
             condition_type: ConditionTypeDef::KillAll,
             params: None,
@@ -381,7 +381,7 @@ mod tests {
     /// Test ID: VC-FUNC-007
     /// Title: WinConditionDef SurviveTurns 携带参数
     #[test]
-    fn win_condition_survive_turns_params() {
+    fn win_condition_survive_turns_参数() {
         let cond = WinConditionDef {
             condition_type: ConditionTypeDef::SurviveTurns,
             params: Some(ConditionParamsDef {
@@ -397,7 +397,7 @@ mod tests {
     /// Test ID: VC-FUNC-008
     /// Title: LoseConditionDef TurnLimitExceeded 携带参数
     #[test]
-    fn lose_condition_turn_limit_params() {
+    fn lose_condition_turn_limit_参数() {
         let cond = LoseConditionDef {
             condition_type: ConditionTypeDef::TurnLimitExceeded,
             params: Some(ConditionParamsDef {
@@ -413,7 +413,7 @@ mod tests {
     /// Test ID: VC-FUNC-009
     /// Title: VictoryConditionDef 默认值为空
     #[test]
-    fn victory_condition_default_is_empty() {
+    fn victory_condition_默认为空() {
         let vc = VictoryConditionDef::default();
         assert!(vc.win_conditions.is_empty());
         assert!(vc.lose_conditions.is_empty());

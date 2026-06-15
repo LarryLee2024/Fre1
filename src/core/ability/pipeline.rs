@@ -214,7 +214,7 @@ mod tests {
     }
 
     #[test]
-    fn prepare_execution_mp不足失败() {
+    fn prepare_execution_mp_不足失败() {
         let skill = make_test_skill(10, 0);
         let source_attrs = make_attrs(3.0, 30.0); // MP=3 < 10
         let target_attrs = make_attrs(5.0, 20.0);
@@ -266,7 +266,7 @@ mod tests {
     }
 
     #[test]
-    fn apply_costs_mp不足不减到负数() {
+    fn apply_costs_mp_不足不减到负数() {
         let skill = make_test_skill(10, 0);
         let mut attrs = make_attrs(3.0, 30.0); // MP=3 < 10
 

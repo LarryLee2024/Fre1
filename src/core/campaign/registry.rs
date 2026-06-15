@@ -71,7 +71,7 @@ mod tests {
     }
 
     #[test]
-    fn get_campaign_has_correct_stages() {
+    fn get_campaign_有正确关卡() {
         let registry = test_registry();
         let campaign = registry.get("campaign_a").unwrap();
         assert_eq!(campaign.stages.len(), 1);
@@ -79,7 +79,7 @@ mod tests {
     }
 
     #[test]
-    fn first_returns_some_when_not_empty() {
+    fn first_非空时返回some() {
         let registry = test_registry();
         let first = registry.first();
         assert!(first.is_some());
@@ -88,13 +88,13 @@ mod tests {
     }
 
     #[test]
-    fn first_returns_none_when_empty() {
+    fn first_空时返回none() {
         let registry = CampaignRegistry::default();
         assert!(registry.first().is_none());
     }
 
     #[test]
-    fn first_returns_only_campaign() {
+    fn first_只返回一个战役() {
         let mut registry = CampaignRegistry::default();
         registry.campaigns.insert(
             "only".to_string(),

@@ -272,7 +272,7 @@ mod tests {
     }
 
     #[test]
-    fn apply_damage_effect_扣血() {
+    fn 施加伤害效果_扣血() {
         let mut app = App::new();
         app.add_plugins(MinimalPlugins)
             .add_message::<DamageApplied>()
@@ -331,7 +331,7 @@ mod tests {
     }
 
     #[test]
-    fn apply_damage_effect_致死添加dead标记() {
+    fn 施加伤害效果_致死添加dead标记() {
         let mut app = App::new();
         app.add_plugins(MinimalPlugins)
             .add_message::<DamageApplied>()
@@ -389,7 +389,7 @@ mod tests {
     }
 
     #[test]
-    fn apply_heal_effect_回血() {
+    fn 施加治疗效果_回血() {
         let mut app = App::new();
         app.add_plugins(MinimalPlugins)
             .add_message::<DamageApplied>()
@@ -447,7 +447,7 @@ mod tests {
     }
 
     #[test]
-    fn apply_heal_effect_不超过maxhp() {
+    fn 施加治疗效果_不超过maxhp() {
         let mut app = App::new();
         app.add_plugins(MinimalPlugins)
             .add_message::<DamageApplied>()
@@ -505,7 +505,7 @@ mod tests {
     }
 
     #[test]
-    fn apply_buff_effect_正常施加() {
+    fn 施加buff效果_正常施加() {
         let mut buffs = ActiveBuffs::default();
         let mut attrs = Attributes::default();
         attrs.fill_vital_resources();
@@ -525,7 +525,7 @@ mod tests {
     }
 
     #[test]
-    fn apply_buff_effect_未知buff静默跳过() {
+    fn 施加buff效果_未知buff静默跳过() {
         let mut buffs = ActiveBuffs::default();
         let mut attrs = Attributes::default();
         attrs.fill_vital_resources();

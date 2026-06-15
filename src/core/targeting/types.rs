@@ -72,7 +72,7 @@ mod tests {
     }
 
     #[test]
-    fn targeting_requires_target_selection() {
+    fn targeting_需要目标选择() {
         assert!(SkillTargeting::SingleEnemy.requires_target_selection());
         assert!(SkillTargeting::SingleAlly.requires_target_selection());
         assert!(!SkillTargeting::SelfOnly.requires_target_selection());

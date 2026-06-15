@@ -69,7 +69,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn skill_not_found_包含错误码和技能id() {
+    fn 技能未找到_包含错误码和技能id() {
         let err = BattleError::SkillNotFound {
             skill_id: SkillId::new("fireball"),
         };
@@ -79,7 +79,7 @@ mod tests {
     }
 
     #[test]
-    fn target_not_found_包含unit_id() {
+    fn 目标未找到_包含unit_id() {
         let err = BattleError::TargetNotFound {
             target: UnitId::new("goblin_01"),
         };
@@ -89,7 +89,7 @@ mod tests {
     }
 
     #[test]
-    fn empty_effect_queue_包含上下文() {
+    fn 空效果队列_包含上下文() {
         let err = BattleError::EmptyEffectQueue {
             pipeline: "damage",
             status: QueueStatus::NeverPopulated,
@@ -100,7 +100,7 @@ mod tests {
     }
 
     #[test]
-    fn invalid_combat_intent_包含双方单位() {
+    fn 无效战斗意图_包含双方单位() {
         let err = BattleError::InvalidCombatIntent {
             from: UnitId::new("warrior"),
             target: UnitId::new("mage"),
@@ -113,7 +113,7 @@ mod tests {
     }
 
     #[test]
-    fn battle_error_相等性() {
+    fn 战斗错误_相等性() {
         let a = BattleError::EmptyEffectQueue {
             pipeline: "test",
             status: QueueStatus::NeverPopulated,
@@ -126,7 +126,7 @@ mod tests {
     }
 
     #[test]
-    fn battle_result_类型可用() {
+    fn 战斗结果_类型可用() {
         let ok: BattleResult<i32> = Ok(42);
         assert_eq!(ok.unwrap(), 42);
 

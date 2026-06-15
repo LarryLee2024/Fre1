@@ -138,14 +138,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn grid_viewer_state_default_values() {
+    fn grid_viewer_state_默认值() {
         let state = GridViewerState::default();
         assert_eq!(state.scroll_row, 0);
         assert_eq!(state.page_rows, 20);
     }
 
     #[test]
-    fn pagination_first_page() {
+    fn 分页_第一页() {
         let mut state = GridViewerState {
             scroll_row: 60,
             page_rows: 20,
@@ -155,7 +155,7 @@ mod tests {
     }
 
     #[test]
-    fn pagination_prev_page() {
+    fn 分页_上一页() {
         let mut state = GridViewerState {
             scroll_row: 40,
             page_rows: 20,
@@ -165,7 +165,7 @@ mod tests {
     }
 
     #[test]
-    fn pagination_prev_page_at_first_page() {
+    fn 分页_上一页在第一页() {
         let mut state = GridViewerState {
             scroll_row: 0,
             page_rows: 20,
@@ -175,7 +175,7 @@ mod tests {
     }
 
     #[test]
-    fn pagination_next_page() {
+    fn 分页_下一页() {
         let mut state = GridViewerState {
             scroll_row: 0,
             page_rows: 20,
@@ -186,7 +186,7 @@ mod tests {
     }
 
     #[test]
-    fn pagination_next_page_clamped_to_last() {
+    fn 分页_下一页限制到最后() {
         let mut state = GridViewerState {
             scroll_row: 85,
             page_rows: 20,
@@ -197,7 +197,7 @@ mod tests {
     }
 
     #[test]
-    fn pagination_last_page() {
+    fn 分页_最后一页() {
         let mut state = GridViewerState {
             scroll_row: 0,
             page_rows: 20,
@@ -208,7 +208,7 @@ mod tests {
     }
 
     #[test]
-    fn pagination_last_page_map_smaller_than_page() {
+    fn 分页_最后一页地图小于页() {
         let mut state = GridViewerState {
             scroll_row: 0,
             page_rows: 20,
@@ -219,7 +219,7 @@ mod tests {
     }
 
     #[test]
-    fn viewport_range_calculation() {
+    fn 视口范围计算() {
         let state = GridViewerState {
             scroll_row: 40,
             page_rows: 20,
@@ -232,7 +232,7 @@ mod tests {
     }
 
     #[test]
-    fn viewport_range_last_page_partial() {
+    fn 视口范围_最后一页部分() {
         let state = GridViewerState {
             scroll_row: 85,
             page_rows: 20,

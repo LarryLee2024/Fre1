@@ -82,7 +82,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn locale_default_is_zh_cn() {
+    fn locale_默认是zh_cn() {
         assert_eq!(Locale::default(), Locale::ZhCn);
     }
 

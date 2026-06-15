@@ -233,7 +233,7 @@ mod tests {
     ///
     /// Assertions: id, trigger, effects 正确
     #[test]
-    fn ron_deserialize_trait_definition() {
+    fn ron_反序列化_trait定义() {
         let ron_str = r#"
             (
                 id: "warrior_mastery",
@@ -253,7 +253,7 @@ mod tests {
     }
 
     #[test]
-    fn trait_def_转换为_trait_data() {
+    fn trait定义_转换为trait数据() {
         let def = TraitDefinition {
             version: 0,
             id: "test".into(),
@@ -293,7 +293,7 @@ mod tests {
     ///
     /// Assertions: has() 返回正确的 bool
     #[test]
-    fn trait_collection_query() {
+    fn trait集合_查询() {
         // Given
         let collection = TraitCollection::new(vec!["warrior_mastery".into(), "heavy_armor".into()]);
 
@@ -312,7 +312,7 @@ mod tests {
     ///
     /// Assertions: tags 包含 WARRIOR/MELEE, modifiers[0].value == 2.0
     #[test]
-    fn apply_passive_traits_grants_tags_and_modifiers() {
+    fn 施加passive_traits_授予标签和修饰符() {
         // Given
         let mut registry = TraitRegistry::default();
         registry.traits.insert(
@@ -356,7 +356,7 @@ mod tests {
     ///
     /// Assertions: !tags.has(FIRE), modifiers.is_empty()
     #[test]
-    fn apply_passive_traits_skips_non_passive_trigger() {
+    fn 施加passive_traits_跳过非passive触发器() {
         // Given
         let mut registry = TraitRegistry::default();
         registry.traits.insert(
@@ -390,7 +390,7 @@ mod tests {
     ///
     /// Assertions: id, trigger, effects.len() 正确
     #[test]
-    fn ron_deserialize_trait_with_trigger() {
+    fn ron_反序列化_trait带触发器() {
         // Given
         let ron_str = r#"
             (
@@ -422,7 +422,7 @@ mod tests {
     ///
     /// Assertions: modifiers[0].source != modifiers[1].source
     #[test]
-    fn apply_passive_traits_independent_source_id() {
+    fn 施加passive_traits_独立source_id() {
         // Given
         let mut registry = TraitRegistry::default();
         registry.traits.insert(

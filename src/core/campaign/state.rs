@@ -148,7 +148,7 @@ mod tests {
     /// Test ID: CAMPAIGN-001
     /// 验证 initialize() 设置第一关为 Unlocked，其余为 Locked
     #[test]
-    fn initialize_first_stage_unlocked_rest_locked() {
+    fn 初始化_第一关解锁其余锁定() {
         let registry = test_registry();
         let progress = CampaignProgress::initialize(&registry);
 
@@ -171,7 +171,7 @@ mod tests {
     /// Test ID: CAMPAIGN-002
     /// 验证空 registry 返回默认状态
     #[test]
-    fn initialize_empty_registry_returns_default() {
+    fn 初始化_空注册表返回默认() {
         let registry = CampaignRegistry::default();
         let progress = CampaignProgress::initialize(&registry);
 
@@ -182,7 +182,7 @@ mod tests {
     /// Test ID: CAMPAIGN-003
     /// 验证单关卡战役初始化
     #[test]
-    fn initialize_single_stage() {
+    fn 初始化_单关卡() {
         let mut registry = CampaignRegistry::default();
         registry.campaigns.insert(
             "single".to_string(),
@@ -210,7 +210,7 @@ mod tests {
     /// Test ID: CAMPAIGN-004
     /// 验证 stage_status() 返回不存在的关卡为 None
     #[test]
-    fn stage_status_nonexistent_returns_none() {
+    fn stage_status_不存在返回none() {
         let registry = test_registry();
         let progress = CampaignProgress::initialize(&registry);
 
@@ -224,7 +224,7 @@ mod tests {
     /// Test ID: CAMPAIGN-005
     /// 验证 complete_current_stage() 标记当前关卡 Completed 并解锁下一关
     #[test]
-    fn complete_current_stage_unlocks_next() {
+    fn 完成当前关卡_解锁下一关() {
         let registry = test_registry();
         let mut progress = CampaignProgress::initialize(&registry);
         progress.current_stage = Some("stage_001".to_string());
@@ -248,7 +248,7 @@ mod tests {
     /// Test ID: CAMPAIGN-006
     /// 验证无 current_stage 时 complete_current_stage 不做任何更改
     #[test]
-    fn complete_current_stage_no_current_does_nothing() {
+    fn 完成当前关卡_无当前关卡无操作() {
         let registry = test_registry();
         let mut progress = CampaignProgress::initialize(&registry);
         // current_stage = None
@@ -269,7 +269,7 @@ mod tests {
     /// Test ID: CAMPAIGN-007
     /// 验证最后一关完成时不崩溃（无下一关可解锁）
     #[test]
-    fn complete_last_stage_does_not_panic() {
+    fn 完成最后一关_不panic() {
         let registry = test_registry();
         let mut progress = CampaignProgress::initialize(&registry);
 
@@ -292,7 +292,7 @@ mod tests {
     /// Test ID: CAMPAIGN-008
     /// 验证 complete_current_stage() 保持其他关卡状态不变
     #[test]
-    fn complete_current_stage_preserves_other_stages() {
+    fn 完成当前关卡_保留其他关卡() {
         let registry = test_registry();
         let mut progress = CampaignProgress::initialize(&registry);
 
@@ -314,7 +314,7 @@ mod tests {
     /// Test ID: CAMPAIGN-009
     /// 验证连续完成多关
     #[test]
-    fn complete_multiple_stages_sequentially() {
+    fn 连续完成多个关卡() {
         let registry = test_registry();
         let mut progress = CampaignProgress::initialize(&registry);
 
@@ -350,7 +350,7 @@ mod tests {
     /// Test ID: CAMPAIGN-010
     /// 验证 StageStatus::label() 返回正确的中文标签
     #[test]
-    fn stage_status_labels() {
+    fn stage_status_标签() {
         assert_eq!(StageStatus::Locked.label(), "已锁定");
         assert_eq!(StageStatus::Unlocked.label(), "已解锁");
         assert_eq!(StageStatus::Completed.label(), "已完成");
@@ -359,7 +359,7 @@ mod tests {
     /// Test ID: CAMPAIGN-011
     /// 验证 StageStatus 的 PartialEq 实现
     #[test]
-    fn stage_status_equality() {
+    fn stage_status_相等性() {
         assert_eq!(StageStatus::Locked, StageStatus::Locked);
         assert_ne!(StageStatus::Locked, StageStatus::Unlocked);
         assert_ne!(StageStatus::Unlocked, StageStatus::Completed);

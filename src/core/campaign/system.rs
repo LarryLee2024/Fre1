@@ -74,7 +74,7 @@ mod tests {
     }
 
     #[test]
-    fn victory_completes_current_stage_unlocks_next() {
+    fn 胜利_完成当前关卡解锁下一关() {
         let registry = test_registry();
         let mut progress = CampaignProgress::initialize(&registry);
         progress.current_stage = Some("stage_001".to_string());
@@ -96,7 +96,7 @@ mod tests {
     }
 
     #[test]
-    fn sequential_victories_unlock_all_stages() {
+    fn 连续胜利_解锁所有关卡() {
         let registry = test_registry();
         let mut progress = CampaignProgress::initialize(&registry);
 
@@ -121,7 +121,7 @@ mod tests {
     }
 
     #[test]
-    fn defeat_keeps_current_stage_unlocked() {
+    fn 失败_保持当前关卡解锁() {
         let registry = test_registry();
         let mut progress = CampaignProgress::initialize(&registry);
         progress.current_stage = Some("stage_001".to_string());
@@ -139,7 +139,7 @@ mod tests {
     }
 
     #[test]
-    fn playing_state_is_ignored() {
+    fn playing状态_被忽略() {
         let registry = test_registry();
         let mut progress = CampaignProgress::initialize(&registry);
         progress.current_stage = Some("stage_001".to_string());
@@ -151,7 +151,7 @@ mod tests {
     }
 
     #[test]
-    fn victory_with_no_current_stage_does_nothing() {
+    fn 无当前关卡时胜利_无操作() {
         let registry = test_registry();
         let mut progress = CampaignProgress::initialize(&registry);
 
@@ -164,7 +164,7 @@ mod tests {
     }
 
     #[test]
-    fn victory_on_last_stage_does_not_panic() {
+    fn 最后一关胜利_不panic() {
         let registry = test_registry();
         let mut progress = CampaignProgress::initialize(&registry);
 
@@ -184,7 +184,7 @@ mod tests {
     }
 
     #[test]
-    fn victory_after_defeat_unlocks_next() {
+    fn 失败后胜利_解锁下一关() {
         let registry = test_registry();
         let mut progress = CampaignProgress::initialize(&registry);
         progress.current_stage = Some("stage_001".to_string());
@@ -202,7 +202,7 @@ mod tests {
     }
 
     #[test]
-    fn current_stage_needs_manual_update_after_victory() {
+    fn 当前关卡_胜利后需手动更新() {
         let registry = test_registry();
         let mut progress = CampaignProgress::initialize(&registry);
         progress.current_stage = Some("stage_001".to_string());
@@ -216,7 +216,7 @@ mod tests {
     }
 
     #[test]
-    fn double_victory_same_stage_does_not_double_unlock() {
+    fn 同一关卡双胜利_不双重解锁() {
         let registry = test_registry();
         let mut progress = CampaignProgress::initialize(&registry);
         progress.current_stage = Some("stage_001".to_string());
@@ -231,7 +231,7 @@ mod tests {
     }
 
     #[test]
-    fn defeat_preserves_current_stage_pointer() {
+    fn 失败_保留当前关卡指针() {
         let registry = test_registry();
         let mut progress = CampaignProgress::initialize(&registry);
         progress.current_stage = Some("stage_001".to_string());

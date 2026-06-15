@@ -109,7 +109,7 @@ mod tests {
     use bevy::prelude::*;
 
     #[test]
-    fn character_died_消息字段() {
+    fn 角色死亡_消息字段() {
         let msg = CharacterDied {
             entity: Entity::from_bits(42),
             name: "哥布林".to_string(),
@@ -120,7 +120,7 @@ mod tests {
     }
 
     #[test]
-    fn damage_applied_消息字段() {
+    fn 伤害应用_消息字段() {
         let msg = DamageApplied {
             target: Entity::from_bits(1),
             target_name: "哥布林".to_string(),
@@ -139,7 +139,7 @@ mod tests {
     }
 
     #[test]
-    fn heal_applied_消息字段() {
+    fn 治疗应用_消息字段() {
         let msg = HealApplied {
             target: Entity::from_bits(1),
             target_name: "战士".to_string(),
@@ -149,7 +149,7 @@ mod tests {
     }
 
     #[test]
-    fn dot_applied_消息字段() {
+    fn dot应用_消息字段() {
         let msg = DotApplied {
             target: Entity::from_bits(1),
             target_name: "战士".to_string(),
@@ -160,7 +160,7 @@ mod tests {
     }
 
     #[test]
-    fn hot_applied_消息字段() {
+    fn hot应用_消息字段() {
         let msg = HotApplied {
             target: Entity::from_bits(1),
             target_name: "战士".to_string(),
@@ -170,7 +170,7 @@ mod tests {
     }
 
     #[test]
-    fn stun_applied_消息字段() {
+    fn 晕眩应用_消息字段() {
         let msg = StunApplied {
             target: Entity::from_bits(1),
             target_name: "战士".to_string(),

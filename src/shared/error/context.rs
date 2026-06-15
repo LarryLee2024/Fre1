@@ -53,7 +53,7 @@ mod tests {
 
     /// InfrastructureError 的 with_context 应输出 DEBUG 日志并保留原始错误
     #[test]
-    fn infrastructure_error_with_context() {
+    fn infrastructure_error_带上下文() {
         let result: Result<i32, InfrastructureError> =
             Err(InfrastructureError::AssetLoadFailed("test.ron".into()));
 
@@ -67,7 +67,7 @@ mod tests {
 
     /// Ok 路径应直接通过，不触发闭包
     #[test]
-    fn ok_with_context_passthrough() {
+    fn ok_with_context_透传() {
         let result: Result<i32, InfrastructureError> = Ok(42);
 
         let val = result
@@ -79,7 +79,7 @@ mod tests {
 
     /// 字符串错误类型的 with_context
     #[test]
-    fn string_error_with_context() {
+    fn string_error_带上下文() {
         let result: Result<i32, &str> = Err("文件不存在");
 
         let err = result

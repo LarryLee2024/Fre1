@@ -272,7 +272,7 @@ mod tests {
     }
 
     #[test]
-    fn tag_registry_查询() {
+    fn 标签注册表_查询() {
         let registry = TagRegistry::from_enum_defaults();
 
         let def = registry.get(GameplayTag::FIRE).unwrap();
@@ -281,7 +281,7 @@ mod tests {
     }
 
     #[test]
-    fn tag_registry_按分类查询() {
+    fn 标签注册表_按分类查询() {
         let registry = TagRegistry::from_enum_defaults();
 
         let elements = registry.tags_by_category(TagCategory::Element);
@@ -290,20 +290,20 @@ mod tests {
     }
 
     #[test]
-    fn tag_registry_显示名称回退() {
+    fn 标签注册表_显示名称回退() {
         let registry = TagRegistry::default();
         assert_eq!(registry.display_name(GameplayTag::FIRE), "火焰");
     }
 
     #[test]
-    fn tag_registry_from_enum_defaults_覆盖所有标签() {
+    fn 标签注册表_from_enum_defaults_覆盖所有标签() {
         let registry = TagRegistry::from_enum_defaults();
         let missing = registry.ron_missing_tags();
         assert!(missing.is_empty(), "from_enum_defaults 应覆盖所有 TagName");
     }
 
     #[test]
-    fn tag_registry_new_categories() {
+    fn 标签注册表_新分类() {
         let registry = TagRegistry::from_enum_defaults();
         // WeaponType
         let weapon_types = registry.tags_by_category(TagCategory::WeaponType);
@@ -317,7 +317,7 @@ mod tests {
     }
 
     #[test]
-    fn tag_category_default_for() {
+    fn 标签分类_默认值() {
         assert_eq!(
             TagCategory::default_for(&TagName::Fire),
             TagCategory::Element
@@ -342,7 +342,7 @@ mod tests {
     }
 
     #[test]
-    fn ron_coverage_all_tags() {
+    fn ron_覆盖所有标签() {
         let registry = TagRegistry::load_from_file("content/definitions/tags.ron");
         let missing = registry.ron_missing_tags();
         assert!(
@@ -353,7 +353,7 @@ mod tests {
     }
 
     #[test]
-    fn tag_category_coverage_all_tags() {
+    fn 标签分类_覆盖所有标签() {
         let registry = TagRegistry::load_from_file("content/definitions/tags.ron");
         let all_categories = [
             TagCategory::Element,

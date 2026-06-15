@@ -68,7 +68,7 @@ mod tests {
     use std::collections::HashMap;
 
     #[test]
-    fn shield_calculation_basic() {
+    fn 护盾计算_基础() {
         let ctx = ExecutionContext {
             source_entity: Entity::from_bits(1),
             target_entity: Entity::from_bits(2),
@@ -94,7 +94,7 @@ mod tests {
     }
 
     #[test]
-    fn shield_calculation_with_bonus() {
+    fn 护盾计算_带加成() {
         let ctx = ExecutionContext {
             source_entity: Entity::from_bits(1),
             target_entity: Entity::from_bits(2),

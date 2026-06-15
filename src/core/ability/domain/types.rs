@@ -326,7 +326,7 @@ mod tests {
     // ── MpCost 条件 ──
 
     #[test]
-    fn can_use_mp不足返回错误() {
+    fn can_use_mp_不足返回错误() {
         let skill = make_skill(vec![SkillCondition::MpCost(10)]);
         let attrs = make_attrs(5.0, 30.0, 5.0); // MP=5 < 10
         let tags = GameplayTags::default();
@@ -342,7 +342,7 @@ mod tests {
     }
 
     #[test]
-    fn can_use_mp足够成功() {
+    fn can_use_mp_足够成功() {
         let skill = make_skill(vec![SkillCondition::MpCost(10)]);
         let attrs = make_attrs(15.0, 30.0, 5.0); // MP=15 >= 10
         let tags = GameplayTags::default();
@@ -424,7 +424,7 @@ mod tests {
     // MaxHp = 5 + Vitality * 5
 
     #[test]
-    fn can_use_hp不低于阈值返回错误() {
+    fn can_use_hp_不低于阈值返回错误() {
         let skill = make_skill(vec![SkillCondition::HpBelow(0.5)]); // 需要HP低于50%
         // Vitality=5 → MaxHp=30, HP=20 → HP%=20/30=66.7% >= 50%
         let attrs = make_attrs(10.0, 20.0, 5.0);
@@ -435,7 +435,7 @@ mod tests {
     }
 
     #[test]
-    fn can_use_hp低于阈值成功() {
+    fn can_use_hp_低于阈值成功() {
         let skill = make_skill(vec![SkillCondition::HpBelow(0.5)]); // 需要HP低于50%
         // Vitality=5 → MaxHp=30, HP=10 → HP%=10/30=33.3% < 50%
         let attrs = make_attrs(10.0, 10.0, 5.0);
@@ -448,7 +448,7 @@ mod tests {
     // ── HpAbove 条件 ──
 
     #[test]
-    fn can_use_hp不高于阈值返回错误() {
+    fn can_use_hp_不高于阈值返回错误() {
         let skill = make_skill(vec![SkillCondition::HpAbove(0.5)]); // 需要HP高于50%
         // Vitality=5 → MaxHp=30, HP=10 → HP%=10/30=33.3% < 50%
         let attrs = make_attrs(10.0, 10.0, 5.0);
@@ -459,7 +459,7 @@ mod tests {
     }
 
     #[test]
-    fn can_use_hp高于阈值成功() {
+    fn can_use_hp_高于阈值成功() {
         let skill = make_skill(vec![SkillCondition::HpAbove(0.5)]); // 需要HP高于50%
         // Vitality=5 → MaxHp=30, HP=20 → HP%=20/30=66.7% > 50%
         let attrs = make_attrs(10.0, 20.0, 5.0);
@@ -512,7 +512,7 @@ mod tests {
     }
 
     #[test]
-    fn targeting_requires_target_selection() {
+    fn targeting_需要目标选择() {
         assert!(SkillTargeting::SingleEnemy.requires_target_selection());
         assert!(SkillTargeting::SingleAlly.requires_target_selection());
         assert!(!SkillTargeting::SelfOnly.requires_target_selection());

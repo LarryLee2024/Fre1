@@ -138,7 +138,7 @@ mod tests {
     ///
     /// Assertions: type_name == "GrantTag"
     #[test]
-    fn grant_tag_handler_type_name() {
+    fn 授予标签处理器_类型名() {
         // Given
         let handler = GrantTagHandler;
 
@@ -158,7 +158,7 @@ mod tests {
     ///
     /// Assertions: tags.len() == 1, tags.contains(WARRIOR)
     #[test]
-    fn grant_tag_handler_grants_tags() {
+    fn 授予标签处理器_授予标签() {
         // Given
         let handler = GrantTagHandler;
         let effect = TraitEffect::GrantTag(GameplayTag::WARRIOR);
@@ -180,7 +180,7 @@ mod tests {
     ///
     /// Assertions: tags.is_empty()
     #[test]
-    fn grant_tag_handler_returns_empty_for_non_grant_tag() {
+    fn 授予标签处理器_非授予标签返回空() {
         // Given
         let handler = GrantTagHandler;
         let effect = TraitEffect::ModifyAttribute(AttributeModifierDef {
@@ -205,7 +205,7 @@ mod tests {
     ///
     /// Assertions: mods.is_empty()
     #[test]
-    fn grant_tag_handler_no_attribute_modifiers() {
+    fn 授予标签处理器_无属性修饰符() {
         // Given
         let handler = GrantTagHandler;
         let effect = TraitEffect::GrantTag(GameplayTag::FIRE);
@@ -228,7 +228,7 @@ mod tests {
     ///
     /// Assertions: type_name == "ModifyAttribute"
     #[test]
-    fn modify_attribute_handler_type_name() {
+    fn 修改属性处理器_类型名() {
         // Given
         let handler = ModifyAttributeHandler;
 
@@ -248,7 +248,7 @@ mod tests {
     ///
     /// Assertions: mods.len() == 1, kind == Attack, value == 10.0
     #[test]
-    fn modify_attribute_handler_returns_modifiers() {
+    fn 修改属性处理器_返回修饰符() {
         // Given
         let handler = ModifyAttributeHandler;
         let effect = TraitEffect::ModifyAttribute(AttributeModifierDef {
@@ -275,7 +275,7 @@ mod tests {
     ///
     /// Assertions: mods.is_empty()
     #[test]
-    fn modify_attribute_handler_returns_empty_for_non_modify() {
+    fn 修改属性处理器_非修改返回空() {
         // Given
         let handler = ModifyAttributeHandler;
         let effect = TraitEffect::GrantTag(GameplayTag::MAGE);
@@ -296,7 +296,7 @@ mod tests {
     ///
     /// Assertions: tags.is_empty()
     #[test]
-    fn modify_attribute_handler_no_tags() {
+    fn 修改属性处理器_无标签() {
         // Given
         let handler = ModifyAttributeHandler;
         let effect = TraitEffect::ModifyAttribute(AttributeModifierDef {
@@ -323,7 +323,7 @@ mod tests {
     ///
     /// Assertions: type_name == "ApplyBuff"
     #[test]
-    fn apply_buff_handler_type_name() {
+    fn 施加buff处理器_类型名() {
         // Given
         let handler = ApplyBuffHandler;
 
@@ -343,7 +343,7 @@ mod tests {
     ///
     /// Assertions: tags.is_empty()
     #[test]
-    fn apply_buff_handler_no_tags() {
+    fn 施加buff处理器_无标签() {
         // Given
         let handler = ApplyBuffHandler;
         let effect = TraitEffect::ApplyBuff {
@@ -367,7 +367,7 @@ mod tests {
     ///
     /// Assertions: mods.is_empty()
     #[test]
-    fn apply_buff_handler_no_modifiers() {
+    fn 施加buff处理器_无修饰符() {
         // Given
         let handler = ApplyBuffHandler;
         let effect = TraitEffect::ApplyBuff {
@@ -393,7 +393,7 @@ mod tests {
     ///
     /// Assertions: get("GrantTag").is_some(), get("ModifyAttribute").is_some(), get("ApplyBuff").is_some()
     #[test]
-    fn registry_default_contains_three_handlers() {
+    fn 注册表_默认包含三个处理器() {
         // Given
         let registry = TraitEffectHandlerRegistry::with_defaults();
 
@@ -412,7 +412,7 @@ mod tests {
     ///
     /// Assertions: get("NonExistent").is_none()
     #[test]
-    fn registry_query_nonexistent_returns_none() {
+    fn 注册表_查询不存在返回none() {
         // Given
         let registry = TraitEffectHandlerRegistry::with_defaults();
 
@@ -432,7 +432,7 @@ mod tests {
     ///
     /// Assertions: get("Custom").is_some(), granted_tags 返回 BUFF
     #[test]
-    fn registry_register_custom_handler() {
+    fn 注册表_注册自定义处理器() {
         // Given
         let mut registry = TraitEffectHandlerRegistry::with_defaults();
         struct CustomHandler;
@@ -471,7 +471,7 @@ mod tests {
     ///
     /// Assertions: 两者均包含 "GrantTag"
     #[test]
-    fn registry_default_equals_with_defaults() {
+    fn 注册表_默认等于带默认值() {
         // Given
         let r1 = TraitEffectHandlerRegistry::default();
         let r2 = TraitEffectHandlerRegistry::with_defaults();

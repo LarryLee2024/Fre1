@@ -175,7 +175,7 @@ mod tests {
     use ron::de::from_bytes;
 
     #[test]
-    fn ron_反序列化_ai行为() {
+    fn ron_反序列化_AI行为() {
         let ron_str = r#"
             (
                 id: "aggressive",
@@ -193,7 +193,7 @@ mod tests {
     }
 
     #[test]
-    fn ai_behavior_def_转换为_ai_behavior() {
+    fn AI行为定义_转换为AI行为() {
         let def = AiBehaviorDef {
             version: 0,
             id: "test".into(),
@@ -212,7 +212,7 @@ mod tests {
     }
 
     #[test]
-    fn ai_behavior_registry_默认行为() {
+    fn AI行为注册表_默认行为() {
         let mut registry = AiBehaviorRegistry::default();
         registry.register_defaults();
 

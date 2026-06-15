@@ -40,7 +40,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn cue_plugin_registers_events() {
+    fn Cue插件_注册事件() {
         let mut app = App::new();
         app.add_plugins(MinimalPlugins);
         app.add_plugins(CuePlugin);
@@ -49,7 +49,7 @@ mod tests {
     }
 
     #[test]
-    fn full_cue_scenario() {
+    fn 完整Cue场景() {
         let mut app = App::new();
         app.add_plugins(MinimalPlugins);
         app.add_plugins(CuePlugin);
