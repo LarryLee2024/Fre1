@@ -32,7 +32,7 @@ proptest! {
     /// When: 调用 calculate_damage_from_effect
     /// Then: 返回值 >= 1
     #[test]
-    fn damage_always_at_least_1(
+    fn 伤害公式_伤害值至少为1(
         atk in 0.0_f32..1000.0,
         def in 0.0_f32..1000.0,
         base_def in 0.0_f32..1000.0,
@@ -52,7 +52,7 @@ proptest! {
     /// When: ignore_def=0.5 vs ignore_def=0.0
     /// Then: 高忽略防御的伤害 >= 低忽略防御的伤害
     #[test]
-    fn ignore_def_increases_damage(
+    fn 伤害公式_忽视防御比例越高伤害越高(
         atk in 100.0_f32..500.0,
         def in 50.0_f32..200.0,
         base_def in 50.0_f32..200.0,
@@ -70,7 +70,7 @@ proptest! {
     /// When: multiplier=2.0 vs multiplier=1.0
     /// Then: 高倍率的伤害 >= 低倍率的伤害
     #[test]
-    fn higher_multiplier_more_damage(
+    fn 伤害公式_倍率越高伤害越高(
         atk in 100.0_f32..500.0,
         def in 10.0_f32..100.0,
         base_def in 10.0_f32..100.0,
@@ -87,7 +87,7 @@ proptest! {
     /// When: terrain_bonus=20 vs terrain_bonus=0
     /// Then: 有地形加成的伤害 <= 无地形加成的伤害
     #[test]
-    fn terrain_defense_reduces_damage(
+    fn 伤害公式_地形防御加成减少伤害(
         atk in 100.0_f32..500.0,
         def in 10.0_f32..100.0,
         base_def in 10.0_f32..100.0,
@@ -113,7 +113,7 @@ proptest! {
     /// When: set_base(Might, value) 然后 get(Might)
     /// Then: 读取值与设置值偏差 < 0.01
     #[test]
-    fn set_base_then_get(value in 1.0_f32..100.0) {
+    fn 属性计算_设置基础属性后可正确读取(value in 1.0_f32..100.0) {
         let mut attrs = Attributes::default();
         attrs.set_base(AttributeKind::Might, value);
         let got = attrs.get(AttributeKind::Might);
@@ -127,7 +127,7 @@ proptest! {
     /// When: set_base(Vitality/Intelligence) + fill_vital_resources()
     /// Then: HP==MaxHp 且 MP==MaxMp
     #[test]
-    fn fill_vital_resources_full(
+    fn 属性计算_填充资源后HP等于MaxHp(
         vitality in 1.0_f32..20.0,
         intelligence in 1.0_f32..20.0,
     ) {
@@ -173,7 +173,7 @@ proptest! {
     /// When: tags.add(tag)
     /// Then: tags.has(tag) == true
     #[test]
-    fn add_then_has(tag in arb_tag()) {
+    fn 标签运算_添加标签后has返回true(tag in arb_tag()) {
         let mut tags = GameplayTags::default();
         tags.add(tag);
         prop_assert!(tags.has(tag), "tag {:?} added but has() returns false", tag);
@@ -185,7 +185,7 @@ proptest! {
     /// When: tags.add(tag) 然后 tags.remove(tag)
     /// Then: tags.has(tag) == false
     #[test]
-    fn add_remove_then_not_has(tag in arb_tag()) {
+    fn 标签运算_添加再移除后has返回false(tag in arb_tag()) {
         let mut tags = GameplayTags::default();
         tags.add(tag);
         tags.remove(tag);
@@ -198,7 +198,7 @@ proptest! {
     /// When: tags.add(tag) ×3 然后 tags.remove(tag) ×1
     /// Then: tags.has(tag) == false（幂等：多次添加等于一次）
     #[test]
-    fn add_idempotent(tag in arb_tag()) {
+    fn 标签运算_重复添加同一标签幂等(tag in arb_tag()) {
         let mut tags = GameplayTags::default();
         tags.add(tag);
         tags.add(tag);
@@ -213,7 +213,7 @@ proptest! {
     /// When: add(tag1) + add(tag2) 然后 remove(tag1)
     /// Then: has(tag1)==false 但 has(tag2)==true
     #[test]
-    fn different_tags_independent(tag1 in arb_tag(), tag2 in arb_tag()) {
+    fn 标签运算_不同标签互不干扰(tag1 in arb_tag(), tag2 in arb_tag()) {
         prop_assume!(tag1 != tag2);
         let mut tags = GameplayTags::default();
         tags.add(tag1);
@@ -261,7 +261,7 @@ proptest! {
     /// When: ItemStack::from_def + container.add_stack
     /// Then: 每个堆叠的 count <= stack_size
     #[test]
-    fn single_add_within_stack_size(
+    fn 堆叠合并_单次添加在stack_size限制内(
         stack_size in 2_u32..99,
         add_count in 1_u32..99,  // add_count <= stack_size 的情况
     ) {
@@ -287,7 +287,7 @@ proptest! {
     /// When: 两次 add_stack 到同一容器
     /// Then: 总数量守恒（first_add + second_add），堆叠数 <= 2
     #[test]
-    fn merge_into_existing_stack(stack_size in 5_u32..20, first_add in 1_u32..3, second_add in 1_u32..3) {
+    fn 堆叠合并_多次添加后合并逻辑正确(stack_size in 5_u32..20, first_add in 1_u32..3, second_add in 1_u32..3) {
         let def = make_item_def("potion", stack_size);
         let mut registry = ItemRegistry::default();
         registry.register(def.clone());
@@ -315,7 +315,7 @@ proptest! {
     /// When: 循环 add_stack 超过容量
     /// Then: stacks.len() <= capacity
     #[test]
-    fn capacity_limit_respected(capacity in 1_u32..5, num_items in 1_u32..10) {
+    fn 堆叠合并_容量满时无法添加更多堆叠(capacity in 1_u32..5, num_items in 1_u32..10) {
         let def = make_item_def("weapon", 1);
         let mut registry = ItemRegistry::default();
         registry.register(def.clone());

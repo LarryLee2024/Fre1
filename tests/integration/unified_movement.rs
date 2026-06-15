@@ -88,7 +88,7 @@ fn spawn_unit_at(app: &mut App, x: i32, y: i32) -> Entity {
 /// When:  构造 MovementIntent { source: Player }
 /// Then:  事件字段正确设置
 #[test]
-fn movement_intent_player_constructible() {
+fn 统一移动_玩家移动意图可正确构造() {
     // Given
     let entity = Entity::from_bits(42);
     let target = IVec2::new(5, 5);
@@ -112,7 +112,7 @@ fn movement_intent_player_constructible() {
 /// When:  构造 MovementIntent { source: Ai }
 /// Then:  事件字段正确设置
 #[test]
-fn movement_intent_ai_constructible() {
+fn 统一移动_AI移动意图可正确构造() {
     // Given
     let entity = Entity::from_bits(99);
     let target = IVec2::new(3, 7);
@@ -140,7 +140,7 @@ fn movement_intent_ai_constructible() {
 /// When:  运行移动执行系统
 /// Then:  单位获得 MovingUnit 组件，next_phase = ActionMenu
 #[test]
-fn player_movement_execution_adds_moving_unit() {
+fn 统一移动_玩家移动执行添加MovingUnit() {
     let mut app = setup_movement_execution_app();
 
     // Given: 玩家单位在 (0,0)
@@ -180,7 +180,7 @@ fn player_movement_execution_adds_moving_unit() {
 /// When:  运行移动执行系统
 /// Then:  单位获得 MovingUnit 组件，next_phase = ExecuteAction
 #[test]
-fn ai_movement_execution_adds_moving_unit() {
+fn 统一移动_AI移动执行添加MovingUnit() {
     let mut app = setup_movement_execution_app();
 
     // Given: AI 单位在 (0,0)
@@ -242,7 +242,7 @@ fn ai_movement_execution_adds_moving_unit() {
 /// When:  发送 MovementIntent
 /// Then:  单位没有 MovingUnit 组件（路径为空）
 #[test]
-fn out_of_range_movement_rejected() {
+fn 统一移动_超出移动范围被拒绝() {
     let mut app = setup_movement_execution_app();
 
     // Given: 单位在 (0,0)，MoveRange 默认约 3-5
@@ -278,7 +278,7 @@ fn out_of_range_movement_rejected() {
 /// When:  运行移动执行系统
 /// Then:  单位没有 MovingUnit 组件
 #[test]
-fn same_position_movement_skipped() {
+fn 统一移动_原地不动不触发移动() {
     let mut app = setup_movement_execution_app();
 
     // Given: 单位在 (3,3)
@@ -310,7 +310,7 @@ fn same_position_movement_skipped() {
 /// When:  执行移动
 /// Then:  路径包含 [(1,0), (2,0), (3,0)]（不包含起点）
 #[test]
-fn horizontal_movement_path_correct() {
+fn 统一移动_水平移动路径正确() {
     let mut app = setup_movement_execution_app();
 
     // Given: 单位在 (0,0)
@@ -346,7 +346,7 @@ fn horizontal_movement_path_correct() {
 /// When:  执行移动
 /// Then:  路径应为直角折线，如 [(1,0), (2,0), (2,1), (2,2)]（不包含起点）
 #[test]
-fn diagonal_movement_path_is_orthogonal() {
+fn 统一移动_对角移动路径为直角折线() {
     let mut app = setup_movement_execution_app();
 
     // Given: 单位在 (0,0)
@@ -389,7 +389,7 @@ fn diagonal_movement_path_is_orthogonal() {
 /// When:  同时发送两个 MovementIntent
 /// Then:  两个单位都获得独立的 MovingUnit 组件
 #[test]
-fn multiple_units_move_independently() {
+fn 统一移动_多单位移动互不干扰() {
     let mut app = setup_movement_execution_app();
 
     // Given: 两个单位
@@ -434,7 +434,7 @@ fn multiple_units_move_independently() {
 /// When:  检查 MovingUnit.speed
 /// Then:  speed = 0.15
 #[test]
-fn movement_speed_is_fixed() {
+fn 统一移动_移动速度固定为015秒每格() {
     let mut app = setup_movement_execution_app();
 
     // Given: 单位在 (0,0)

@@ -35,7 +35,7 @@ use tactical_rpg::core::map::{LevelConfig, LevelConfigDef, TerrainRegistry};
 ///
 /// Assertions: id, name, faction, class, race, skill_ids, trait_ids, ai_behavior
 #[test]
-fn enemy_goblin_leader_deserialization() {
+fn 敌方哥布林队长_ron反序列化正确() {
     // Given
     let path = concat!(
         env!("CARGO_MANIFEST_DIR"),
@@ -132,7 +132,7 @@ fn enemy_goblin_leader_deserialization() {
 ///
 /// Assertions: id, name, dimensions, units, victory_condition, turn_limit
 #[test]
-fn tutorial_level_deserialization_and_conversion() {
+fn 教学关卡_ron反序列化并转换正确() {
     // Given
     let path = concat!(env!("CARGO_MANIFEST_DIR"), "/content/stages/tutorial.ron");
     let bytes = std::fs::read(path).expect("读取 tutorial.ron 失败");
@@ -231,7 +231,7 @@ fn tutorial_level_deserialization_and_conversion() {
 ///
 /// Assertions: id, skill_ids
 #[test]
-fn player_archer_skill_ids_contains_pierce() {
+fn 玩家弓箭手_技能含穿透() { {
     // Given
     let path = concat!(
         env!("CARGO_MANIFEST_DIR"),
@@ -276,7 +276,7 @@ fn player_archer_skill_ids_contains_pierce() {
 ///
 /// Assertions: id, skill_ids contains heal
 #[test]
-fn player_mage_skill_ids_contains_heal() {
+fn 玩家法师_技能含治疗() { {
     // Given
     let path = concat!(
         env!("CARGO_MANIFEST_DIR"),
@@ -308,7 +308,7 @@ fn player_mage_skill_ids_contains_heal() {
 ///
 /// Assertions: id, name, stages
 #[test]
-fn campaign_001_deserialization() {
+fn 战役001_ron反序列化正确() { {
     use tactical_rpg::core::campaign::def::CampaignDef;
 
     // Given

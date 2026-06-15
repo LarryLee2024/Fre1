@@ -94,7 +94,7 @@ mod tests {
     ///
     /// Assertions: blocks_input == false
     #[test]
-    fn ui焦点状态_可恢复阻止输入() {
+    fn ui焦点状态_可解除阻止输入() {
         // Given
         let mut focus_state = UiFocusState { blocks_input: true };
 
