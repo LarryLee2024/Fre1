@@ -1,7 +1,7 @@
 /// 关卡选择屏幕
 use bevy::prelude::*;
 
-use crate::core::campaign::progress::{CampaignProgress, StageStatus};
+use crate::core::campaign::state::{CampaignProgress, StageStatus};
 use crate::core::campaign::registry::CampaignRegistry;
 use crate::core::map::LevelRegistry;
 use crate::infrastructure::assets::CnFont;

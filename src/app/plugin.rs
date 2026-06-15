@@ -11,7 +11,7 @@ use crate::app::error_monitor;
 use crate::content::ContentPlugin;
 use crate::core::ability::AbilityPlugin;
 use crate::core::ai::{AiBehaviorPlugin, AiPlugin};
-use crate::core::attribute_def::AttributeDefPlugin;
+use crate::core::attribute::AttributeDefPlugin;
 use crate::core::battle::BattlePlugin;
 use crate::core::buff::BuffPlugin;
 use crate::core::campaign::CampaignPlugin;
@@ -21,7 +21,10 @@ use crate::core::equipment::EquipmentPlugin;
 use crate::core::inventory::InventoryPlugin;
 use crate::core::map::MapPlugin;
 use crate::core::modifier::ModifierRulePlugin;
-use crate::core::tag_def::TagDefPlugin;
+use crate::core::tag::TagDefPlugin;
+use crate::core::tag::TagPlugin;
+use crate::core::targeting::TargetingPlugin;
+use crate::core::trigger::TriggerPlugin;
 use crate::core::turn::TurnPlugin;
 use crate::infrastructure::assets::AssetsPlugin;
 use crate::infrastructure::audit::AuditPlugin;
@@ -69,21 +72,20 @@ impl Plugin for AppPlugin {
         .add_systems(Update, error_monitor::error_monitor)
         // Content 层 — 合约声明与加载协调
         .add_plugins(ContentPlugin)
-        // 数据层插件
-        .add_plugins((
-            AbilityPlugin,
-            BuffPlugin,
-            AiBehaviorPlugin,
-            EquipmentPlugin,
-            InventoryPlugin,
-        ))
-        // 核心层插件
-        .add_plugins((
-            EffectPlugin,
-            ModifierRulePlugin,
-            AttributeDefPlugin,
-            TagDefPlugin,
-        ))
+        // ── ADR-025 七领域 DAG 层序 ──
+        // Layer 1：无依赖的基础类型注册
+        .add_plugins((TagPlugin, TagDefPlugin, AttributeDefPlugin))
+        // Layer 2：依赖 tag + attribute
+        .add_plugins(ModifierRulePlugin)
+        // Layer 3：依赖 modifier + tag
+        .add_plugins(EffectPlugin)
+        // Layer 4：平行依赖 effect（共 3 个，无相互依赖）
+        .add_plugins((BuffPlugin, TargetingPlugin, TriggerPlugin))
+        // Layer 5：依赖所有下层（tag/modifier/effect/buff/targeting/trigger）
+        .add_plugins(AbilityPlugin)
+        // Layer 6：非七领域的数据层插件
+        .add_plugins((AiBehaviorPlugin, EquipmentPlugin, InventoryPlugin))
+        // 基础设施层（日志、审计）
         .add_plugins((LogPlugin, AuditPlugin))
         // 游戏逻辑插件
         .add_plugins((

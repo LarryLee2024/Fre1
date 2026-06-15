@@ -1,6 +1,6 @@
 // 装备穿脱逻辑：EquipItem/UnequipItem Message + 穿脱系统
 
-use super::definition::{EquipmentDef, EquipmentRegistry, EquipmentSlot};
+use super::def::{EquipmentDef, EquipmentRegistry, EquipmentSlot};
 use super::instance::EquipmentInstance;
 use super::requirements::check_equipment_requirements;
 use super::slots::EquipmentSlots;
@@ -12,7 +12,7 @@ use crate::core::character::{
     TraitCollection, TraitEffectHandlerRegistry, TraitRegistry, TraitSource, TraitTrigger,
 };
 use crate::core::inventory::container::Container;
-use crate::core::inventory::definition::ItemRegistry;
+use crate::core::inventory::def::ItemRegistry;
 use crate::core::inventory::instance::{ItemInstance, ItemStack};
 use crate::core::tag::GameplayTags;
 use crate::shared::event::equipment::{
@@ -439,7 +439,7 @@ mod tests {
     // ================================================
     use super::*;
     use crate::core::attribute::AttributeKind;
-    use crate::core::inventory::definition::{ItemDef, ItemType};
+    use crate::core::inventory::def::{ItemDef, ItemType};
     use crate::core::registry_loader::RegistryLoader;
     use crate::core::tag::GameplayTag;
 

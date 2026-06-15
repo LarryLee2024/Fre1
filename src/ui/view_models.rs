@@ -177,7 +177,7 @@ pub struct TurnInfoView {
 pub struct StageEntry {
     pub stage_id: String,
     pub level_name: String,
-    pub status: crate::core::campaign::progress::StageStatus,
+    pub status: crate::core::campaign::state::StageStatus,
     pub level_description: String,
 }
 
@@ -236,7 +236,7 @@ pub fn update_selected_unit_view(
     skill_registry: Res<SkillRegistry>,
     trait_registry: Res<TraitRegistry>,
     equipment_registry: Res<crate::core::equipment::EquipmentRegistry>,
-    item_registry: Res<crate::core::inventory::definition::ItemRegistry>,
+    item_registry: Res<crate::core::inventory::def::ItemRegistry>,
     mut view: ResMut<SelectedUnitView>,
 ) {
     if !hovered.is_changed() && !view.is_added() {
@@ -447,7 +447,7 @@ fn fill_equipment(
 fn fill_inventory(
     view: &mut SelectedUnitView,
     container: Option<&crate::core::inventory::container::Container>,
-    item_registry: &crate::core::inventory::definition::ItemRegistry,
+    item_registry: &crate::core::inventory::def::ItemRegistry,
 ) {
     view.inventory = container
         .map(|c| {
@@ -543,7 +543,7 @@ mod tests {
     ///
     /// Assertions: name 为空, is_selected 为 false
     #[test]
-    fn selected_unit_view_default_is_empty() {
+    fn 选中单位视图_默认值为空() {
         // Given
         let view = SelectedUnitView::default();
 
@@ -579,7 +579,7 @@ mod tests {
     ///
     /// Assertions: is_visible == false, estimated_damage == 0
     #[test]
-    fn combat_preview_view_default_is_hidden() {
+    fn 战斗预览视图_默认不可见() {
         // Given
         let view = CombatPreviewView::default();
 
@@ -602,7 +602,7 @@ mod tests {
     ///
     /// Assertions: turn_number == 0, is_player_turn == false
     #[test]
-    fn turn_info_view_default_is_zero() {
+    fn 回合信息视图_默认值为零() {
         // Given
         let view = TurnInfoView::default();
 
@@ -624,7 +624,7 @@ mod tests {
     ///
     /// Assertions: entity == None
     #[test]
-    fn hovered_entity_default_is_none() {
+    fn 悬停实体_默认值为none() {
         // Given
         let hovered = HoveredEntity::default();
 
@@ -643,7 +643,7 @@ mod tests {
     ///
     /// Assertions: entity == Some(Entity::from_bits(42))
     #[test]
-    fn hovered_entity_can_set_entity() {
+    fn 悬停实体_可设置entity() {
         // Given
         let mut hovered = HoveredEntity::default();
         let expected = Entity::from_bits(42);

@@ -1,5 +1,5 @@
 //! 背包领域模块
 
-mod inventory_error;
+mod error;
 
-pub use inventory_error::*;
+pub use error::*;

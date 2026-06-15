@@ -241,7 +241,7 @@ mod tests {
     ///
     /// Assertions: player_color != enemy_color
     #[test]
-    fn faction_color_distinguishes_player_and_enemy() {
+    fn 阵营颜色_区分玩家和敌方() {
         // Given
         let theme = UiTheme::default();
 
@@ -262,7 +262,7 @@ mod tests {
     ///
     /// Assertions: blue > red
     #[test]
-    fn faction_color_player_is_blue_tinted() {
+    fn 阵营颜色_玩家为蓝色系() {
         // Given
         let theme = UiTheme::default();
 
@@ -283,7 +283,7 @@ mod tests {
     ///
     /// Assertions: red > blue
     #[test]
-    fn faction_color_enemy_is_red_tinted() {
+    fn 阵营颜色_敌方为红色系() {
         // Given
         let theme = UiTheme::default();
 
@@ -304,7 +304,7 @@ mod tests {
     ///
     /// Assertions: 颜色/字号/间距值正确
     #[test]
-    fn ui_theme_default_values_complete() {
+    fn 主题_默认值完整性() {
         // Given
         let theme = UiTheme::default();
 

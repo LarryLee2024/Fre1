@@ -1,7 +1,5 @@
 /// Attributes 组件、修饰符栈、实时计算
 pub mod attribute;
-/// AttributeDef 属性定义注册表
-pub mod attribute_def;
 /// EffectHandler 效果处理器管道
 pub mod effect;
 /// ModifierRule 修饰规则注册表
@@ -9,14 +7,16 @@ pub mod effect;
 
 /// ModifierRule 修饰规则注册表
 pub mod modifier;
+
 /// RON 文件加载器（RegistryLoader trait）
 pub mod registry_loader;
+
 /// EntitySnapshot 实体快照
 pub mod snapshot;
-/// GameplayTags 组件与标签操作
+
+/// GameplayTags 组件与标签操作 + TagDef 标签定义注册表
 pub mod tag;
-/// TagDef 标签定义注册表
-pub mod tag_def;
+
 /// Trigger 触发器系统：统一注册与分发、嵌套触发栈管理
 pub mod trigger;
 

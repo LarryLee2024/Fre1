@@ -1,7 +1,7 @@
 // 统一容器：Container / ContainerKind
 // 背包、仓库、宝箱、商店、尸体、掉落袋本质都是 Container
 
-use super::definition::ItemRegistry;
+use super::def::ItemRegistry;
 use super::instance::{ItemBind, ItemStack};
 use bevy::prelude::*;
 use serde::Deserialize;
@@ -203,7 +203,7 @@ impl Container {
     /// 按物品类型筛选
     pub fn filter_by_type(
         &self,
-        item_type: super::definition::ItemType,
+        item_type: super::def::ItemType,
         registry: &ItemRegistry,
     ) -> Vec<&ItemStack> {
         self.stacks
@@ -228,7 +228,7 @@ impl Container {
 
 #[cfg(test)]
 mod tests {
-    use super::super::definition::{ItemDef, ItemType};
+    use super::super::def::{ItemDef, ItemType};
     use super::super::instance::ItemInstance;
     use super::*;
     use crate::core::equipment::Rarity;

@@ -1,7 +1,7 @@
 // 消耗品使用系统：UseItem Message + use_item_system
 
 use super::container::Container;
-use super::definition::{ItemDef, ItemRegistry, ItemType, UseEffect};
+use super::def::{ItemDef, ItemRegistry, ItemType, UseEffect};
 use crate::core::attribute::{
     AttributeKind, AttributeModifierInstance, Attributes, ModifierOp, ModifierSource,
 };

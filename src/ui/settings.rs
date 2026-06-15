@@ -125,7 +125,7 @@ mod tests {
     ///
     /// Assertions: font_scale=1.0, color_scheme=Normal, color_blind_mode=None, auto_battle_speed=1.0, animation_speed=1.0, show_damage_numbers=true
     #[test]
-    fn game_settings_default_has_reasonable_values() {
+    fn 设置_默认值合理() {
         // Given
         let s = GameSettings::default();
 
@@ -149,7 +149,7 @@ mod tests {
     ///
     /// Assertions: 所有字段相等
     #[test]
-    fn game_settings_ron_roundtrip_preserves_all_fields() {
+    fn 设置_ron序列化往返保持一致() {
         // Given
         let original = GameSettings::default();
 
@@ -189,7 +189,7 @@ mod tests {
     ///
     /// Assertions: 每个枚举值序列化往返后相等
     #[test]
-    fn color_blind_mode_all_variants_roundtrip() {
+    fn 色盲模式_所有枚举值序列化反序列化() {
         // Given
         let modes = [
             ColorBlindMode::None,

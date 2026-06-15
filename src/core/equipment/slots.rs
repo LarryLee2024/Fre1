@@ -1,6 +1,6 @@
 // 装备槽位：EquipmentSlots 组件
 
-use super::definition::EquipmentSlot;
+use super::def::EquipmentSlot;
 use bevy::prelude::*;
 use std::collections::HashMap;
 

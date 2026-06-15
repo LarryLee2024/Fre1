@@ -204,7 +204,7 @@ fn on_enter_action_menu(
     )>,
     trait_registry: Res<TraitRegistry>,
     _equipment_registry: Res<crate::core::equipment::EquipmentRegistry>,
-    _item_registry: Res<crate::core::inventory::definition::ItemRegistry>,
+    _item_registry: Res<crate::core::inventory::def::ItemRegistry>,
     localization: Res<LocalizationService>,
     locale: Res<CurrentLocale>,
 ) {

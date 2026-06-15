@@ -1,5 +1,5 @@
 //! 战斗领域模块
 
-mod battle_error;
+mod error;
 
-pub use battle_error::*;
+pub use error::*;

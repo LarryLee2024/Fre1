@@ -3,7 +3,7 @@
 /// 支持从 content/equipments/*.ron 外部配置文件加载
 
 /// EquipmentDef 定义与 EquipmentRegistry 注册表
-mod definition;
+mod def;
 /// 穿脱逻辑（EquipItem/UnequipItem 消息处理）
 mod equip;
 /// EquipmentInstance 实例管理
@@ -17,7 +17,7 @@ use crate::core::registry_loader::RegistryLoader;
 use bevy::prelude::*;
 
 /// 公共 re-exports
-pub use definition::*;
+pub use def::*;
 pub use equip::*;
 pub use instance::*;
 pub use requirements::*;
@@ -28,12 +28,12 @@ pub struct EquipmentPlugin;
 
 impl Plugin for EquipmentPlugin {
     fn build(&self, app: &mut App) {
-        let registry = definition::EquipmentRegistry::load_from_dir("content/equipments");
+        let registry = def::EquipmentRegistry::load_from_dir("content/equipments");
         app.insert_resource(registry)
             // 注册 Reflect 类型
-            .register_type::<definition::EquipmentSlot>()
-            .register_type::<definition::Rarity>()
-            .register_type::<definition::EquipmentRequirement>()
+            .register_type::<def::EquipmentSlot>()
+            .register_type::<def::Rarity>()
+            .register_type::<def::EquipmentRequirement>()
             .register_type::<slots::EquipmentSlots>();
         // 注册 Message（Bevy 0.18 要求 MessageReader/Writer 前 add_message）
         app.add_message::<equip::EquipItem>();

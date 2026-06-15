@@ -1,9 +1,12 @@
+/// 属性定义注册表（RON 加载）
+pub mod def;
 /// 属性系统：8维核心属性 + 衍生属性实时计算 + 修饰符栈
 /// 核心属性由种族/职业/等级决定，衍生属性从核心属性公式计算，生命资源存储当前值
 
 /// AttributeKind, ModifierOp 等枚举定义
 mod types;
 
+pub use def::*;
 pub use types::*;
 
 use bevy::prelude::*;

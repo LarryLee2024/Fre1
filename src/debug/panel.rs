@@ -26,7 +26,7 @@ pub fn unified_debug_panel(
     occupancy: Res<crate::core::map::runtime::OccupancyGrid>,
     mut grid_viewer_state: ResMut<viewers::GridViewerState>,
     mut settings: ResMut<crate::ui::settings::GameSettings>,
-    tag_registry: Res<crate::core::tag_def::TagRegistry>,
+    tag_registry: Res<crate::core::tag::TagRegistry>,
     units: Query<(
         Entity,
         &crate::core::character::Unit,
@@ -134,7 +134,7 @@ fn render_content(
     occupancy: &crate::core::map::runtime::OccupancyGrid,
     grid_viewer_state: &mut viewers::GridViewerState,
     settings: &mut crate::ui::settings::GameSettings,
-    tag_registry: &crate::core::tag_def::TagRegistry,
+    tag_registry: &crate::core::tag::TagRegistry,
     units: &Query<(
         Entity,
         &crate::core::character::Unit,

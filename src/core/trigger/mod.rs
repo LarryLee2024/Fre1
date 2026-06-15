@@ -3,9 +3,11 @@
 /// 参考：docs/02-domain/trigger/trigger-rules.md
 mod registry;
 mod stack;
+mod types;
 
-pub use registry::{Trigger, TriggerContext, TriggerHandler, TriggerRegistry};
+pub use registry::{TriggerHandler, TriggerRegistry};
 pub use stack::{ExecutionStack, MAX_STACK_DEPTH, StackEntry, StackOverflowError};
+pub use types::{Trigger, TriggerContext};
 
 use bevy::prelude::*;
 

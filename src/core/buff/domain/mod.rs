@@ -1,9 +1,9 @@
 /// Buff 领域错误（BuffError, BuffResult）
-mod buff_error;
+mod error;
 /// Buff 数据模型类型（BuffData, BuffDef, DurationPolicy, StackPolicy 等）
 mod types;
 
-pub use buff_error::*;
+pub use error::*;
 pub use types::*;
 
 use crate::core::attribute::{AttributeKind, AttributeModifierDef, ModifierOp};

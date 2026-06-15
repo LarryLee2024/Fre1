@@ -1,7 +1,7 @@
 // 战场背包：BattleInventory 组件 + 战斗开始/结束时的创建与合并
 
 use super::container::{Container, ContainerKind};
-use super::definition::ItemRegistry;
+use super::def::ItemRegistry;
 use bevy::prelude::*;
 
 /// 战场背包组件（战斗中生成，战斗结束合并回角色背包）
@@ -62,7 +62,7 @@ pub fn merge_battle_inventory(
 mod tests {
     use super::*;
     use crate::core::equipment::Rarity;
-    use crate::core::inventory::definition::{ItemDef, ItemType};
+    use crate::core::inventory::def::{ItemDef, ItemType};
     use crate::core::inventory::instance::ItemInstance;
     use crate::core::inventory::instance::ItemStack;
 

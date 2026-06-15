@@ -155,7 +155,7 @@ mod tests {
     ///
     /// Assertions: flex_direction == Column, row_gap == gap_small
     #[test]
-    fn vbox_returns_column_layout() {
+    fn vbox_返回纵向布局() {
         // Given
         let theme = UiTheme::default();
 
@@ -176,7 +176,7 @@ mod tests {
     ///
     /// Assertions: flex_direction == Row, column_gap == gap_small, align_items == Center
     #[test]
-    fn hbox_returns_row_layout() {
+    fn hbox_返回横向布局() {
         // Given
         let theme = UiTheme::default();
 
@@ -198,7 +198,7 @@ mod tests {
     ///
     /// Assertions: flex_direction == Column, padding == panel_padding
     #[test]
-    fn panel_returns_padded_column() {
+    fn panel_返回带内边距布局() {
         // Given
         let theme = UiTheme::default();
 
@@ -219,7 +219,7 @@ mod tests {
     ///
     /// Assertions: text 内容正确, font_size == 16.0, color == WHITE
     #[test]
-    fn label_returns_correct_components() {
+    fn label_返回正确组件() {
         // Given
         let text = "测试";
         let font_size = 16.0;
@@ -243,7 +243,7 @@ mod tests {
     ///
     /// Assertions: width == 100%, height == 1px, color == divider_color
     #[test]
-    fn divider_returns_horizontal_line() {
+    fn divider_返回水平分隔线() {
         // Given
         let theme = UiTheme::default();
 

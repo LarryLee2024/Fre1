@@ -3,11 +3,11 @@
 /// 默认技能定义（基础攻击等）
 mod defaults;
 /// 技能领域错误（SkillError, SkillResult）
-mod skill_error;
+mod error;
 /// SkillData, SkillTargeting, SkillCondition 等类型定义
 mod types;
 
-pub use skill_error::*;
+pub use error::*;
 pub use types::*;
 
 // SkillTargeting 已迁移至 targeting 模块，此处 re-export 保持向后兼容

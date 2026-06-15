@@ -1,7 +1,7 @@
 // 容器间转移：TransferItem Message + transfer_item 系统
 
 use super::container::Container;
-use super::definition::ItemRegistry;
+use super::def::ItemRegistry;
 use super::instance::ItemStack;
 use bevy::prelude::*;
 
@@ -183,7 +183,7 @@ mod tests {
     use super::*;
     use crate::core::equipment::Rarity;
     use crate::core::inventory::container::ContainerKind;
-    use crate::core::inventory::definition::{ItemDef, ItemType};
+    use crate::core::inventory::def::{ItemDef, ItemType};
     use crate::core::inventory::instance::ItemInstance;
 
     fn test_registry() -> ItemRegistry {

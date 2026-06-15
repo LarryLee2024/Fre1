@@ -134,7 +134,7 @@ mod tests {
     ///
     /// Assertions: float_speed == 40.0, fade_start == 0.5
     #[test]
-    fn damage_popup_config_default_has_reasonable_values() {
+    fn 伤害弹窗_配置默认值合理() {
         // Given
         let config = DamagePopupConfig::default();
 
@@ -154,7 +154,7 @@ mod tests {
     ///
     /// Assertions: fade_ratio == 0.5
     #[test]
-    fn damage_popup_fade_ratio_calculation() {
+    fn 伤害弹窗_淡出比例计算() {
         // Given
         let fade_start = 0.5_f32;
         let ratio = 0.75_f32;
@@ -175,7 +175,7 @@ mod tests {
     ///
     /// Assertions: fade_ratio == 0.0
     #[test]
-    fn damage_popup_fade_ratio_at_boundary() {
+    fn 伤害弹窗_淡出比例边界值() {
         // Given
         let fade_start = 0.5_f32;
         let ratio = 0.5_f32;
@@ -196,7 +196,7 @@ mod tests {
     ///
     /// Assertions: fade_ratio == 1.0
     #[test]
-    fn damage_popup_fade_ratio_at_completion() {
+    fn 伤害弹窗_淡出比例完成时() {
         // Given
         let fade_start = 0.5_f32;
         let ratio = 1.0_f32;

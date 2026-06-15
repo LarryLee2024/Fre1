@@ -6,7 +6,7 @@ pub mod battle_bag;
 /// Container 容器抽象（背包/箱子/仓库）
 pub mod container;
 /// ItemDef 定义与 ItemRegistry 注册表
-pub mod definition;
+pub mod def;
 /// 背包领域模块（错误码 I001-I005 等）
 mod domain;
 /// ItemInstance, ItemStack 实例管理
@@ -21,7 +21,7 @@ pub mod use_item;
 use crate::core::registry_loader::RegistryLoader;
 use bevy::prelude::*;
 use container::{Container, ContainerKind};
-use definition::{ItemRegistry, ItemType, UseEffect};
+use def::{ItemRegistry, ItemType, UseEffect};
 pub use domain::*;
 use instance::{InstanceIdCounter, ItemBind, ItemInstance, ItemStack};
 use resources::{ResourceStack, Resources};

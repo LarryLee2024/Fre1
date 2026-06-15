@@ -4,8 +4,8 @@
 /// 已有代码无需修改。Campaign 只通过 level_id 引用 Level，不内嵌任何 Level 数据。
 pub mod def;
 pub mod loader;
-pub mod progress;
-pub mod progression;
+pub mod state;
+pub mod system;
 pub mod registry;
 
 use bevy::prelude::*;
@@ -16,10 +16,10 @@ pub struct CampaignPlugin;
 impl Plugin for CampaignPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<registry::CampaignRegistry>()
-            .init_resource::<progress::CampaignProgress>()
-            .register_type::<progress::CampaignProgress>()
-            .register_type::<progress::StageStatus>()
+            .init_resource::<state::CampaignProgress>()
+            .register_type::<state::CampaignProgress>()
+            .register_type::<state::StageStatus>()
             .add_systems(Startup, loader::load_campaigns)
-            .add_systems(Update, progression::on_level_completed);
+            .add_systems(Update, system::on_level_completed);
     }
 }

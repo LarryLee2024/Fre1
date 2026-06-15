@@ -1,6 +1,6 @@
 // 物品实例与堆叠：ItemInstance / ItemBind / ItemStack
 
-use super::definition::{ItemDef, ItemType};
+use super::def::{ItemDef, ItemType};
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 

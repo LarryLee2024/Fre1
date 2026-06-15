@@ -1,5 +1,9 @@
 // 标签系统：位掩码实现，O(1) 查询，替代硬编码枚举匹配
 
+pub mod def;
+
+pub use def::*;
+
 use bevy::prelude::*;
 use serde::Deserialize;
 
@@ -298,6 +302,21 @@ impl TagName {
 /// 统一标签合并方式，替代 spawn.rs 中的手动位运算
 pub fn rebuild_tags(persistent: &PersistentTags) -> GameplayTags {
     GameplayTags(persistent.from_traits.0 | persistent.from_equipment.0)
+}
+
+/// 标签层 Plugin（ADR-025 七领域之 TagPlugin）
+///
+/// 职责：注册标签系统的所有类型，作为七领域 DAG 的第 1 层。
+/// 无依赖，所有其它领域都依赖此层。
+pub struct TagPlugin;
+
+impl Plugin for TagPlugin {
+    fn build(&self, app: &mut App) {
+        app.register_type::<GameplayTag>()
+            .register_type::<GameplayTags>()
+            .register_type::<PersistentTags>()
+            .register_type::<TagName>();
+    }
 }
 
 #[cfg(test)]

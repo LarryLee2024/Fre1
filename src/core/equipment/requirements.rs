@@ -1,6 +1,6 @@
 // 装备需求检查：验证单位是否满足装备穿戴条件
 
-use super::definition::{EquipmentDef, EquipmentRequirement};
+use super::def::{EquipmentDef, EquipmentRequirement};
 use crate::core::attribute::Attributes;
 use crate::core::tag::GameplayTags;
 
@@ -61,7 +61,7 @@ mod tests {
     // ================================================
     use super::*;
     use crate::core::attribute::AttributeKind;
-    use crate::core::equipment::definition::{EquipmentSlot, Rarity};
+    use crate::core::equipment::def::{EquipmentSlot, Rarity};
     use crate::core::tag::{GameplayTag, TagName};
 
     /// 辅助：创建测试用属性
