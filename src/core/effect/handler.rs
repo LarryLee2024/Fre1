@@ -14,7 +14,10 @@ use bevy::ecs::query::QueryState;
 use bevy::prelude::*;
 use std::collections::HashMap;
 
-use super::types::{DurationDef, EffectDef, PendingEffect, PendingEffectData, StackingDef, calculate_damage_from_effect};
+use super::types::{
+    DurationDef, EffectDef, PendingEffect, PendingEffectData, StackingDef,
+    calculate_damage_from_effect,
+};
 
 // ── 上下文结构体（纯数据，避免 ECS 借用问题）──
 
@@ -96,10 +99,7 @@ pub enum CueEvent {
         killer: Option<Entity>,
     },
     /// Buff/Modifier 施加表现
-    ModifierApplied {
-        target: Entity,
-        modifier_id: String,
-    },
+    ModifierApplied { target: Entity, modifier_id: String },
 }
 
 impl<'w> ExecuteContext<'w> {
@@ -131,20 +131,24 @@ impl<'w> ExecuteContext<'w> {
 
     /// 收集 Cue 治疗事件
     pub fn emit_cue_heal(&mut self, target: Entity, amount: i32, source: Option<Entity>) {
-        self.cue_events
-            .push(CueEvent::Heal { target, amount, source });
+        self.cue_events.push(CueEvent::Heal {
+            target,
+            amount,
+            source,
+        });
     }
 
     /// 收集 Cue 死亡事件
     pub fn emit_cue_death(&mut self, entity: Entity, killer: Option<Entity>) {
-        self.cue_events
-            .push(CueEvent::Death { entity, killer });
+        self.cue_events.push(CueEvent::Death { entity, killer });
     }
 
     /// 收集 Cue Modifier 施加事件
     pub fn emit_cue_modifier_applied(&mut self, target: Entity, modifier_id: String) {
-        self.cue_events
-            .push(CueEvent::ModifierApplied { target, modifier_id });
+        self.cue_events.push(CueEvent::ModifierApplied {
+            target,
+            modifier_id,
+        });
     }
 
     /// 对目标扣血 + 死亡判定 + 收集消息

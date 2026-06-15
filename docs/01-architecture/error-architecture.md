@@ -187,6 +187,23 @@ pub enum SaveError {
 - 🟥 基础设施错误禁止包含领域语义（宪法 13.9.1）
 - 🟥 `SaveError` 不应该知道 `SkillId`、`UnitId` 等领域类型
 - 🟩 基础设施错误只关注技术层面的失败原因
+- 🟩 `infrastructure::error.rs` 只放置**跨子模块的公共基础设施错误变体**，各子模块保留自己独立的细分错误枚举
+
+**跨子模块公共错误 vs 子模块细分错误**：
+
+```
+infrastructure/error.rs              # 跨子模块通用错误（IO、序列化、资源加载）
+infrastructure/assets/asset_error.rs  # 资产子模块独立错误
+infrastructure/persistence/error.rs   # 持久化子模块独立错误
+
+# 设计原则：子模块错误只在子模块内传播，
+# 仅当错误需要跨越基础设施子模块时，才转换为顶层 InfrastructureError
+```
+
+**理由**：将所有子模块错误塞入顶层枚举会导致：
+- 编译耦合：修改资产错误枚举时，依赖顶层枚举的其他模块全部重编译
+- 枚举膨胀：`infrastructure::error` 退化为迷你版上帝枚举
+- 违背"只解决当前复杂度"原则
 
 ---
 
@@ -421,6 +438,38 @@ fn error_monitor_system(
 }
 ```
 
+### 降低 error_monitor 接入成本：SystemResultExt（待实现）
+
+当前 `error_monitor` 通道无人使用，核心原因是"发消息比写 `error!` 麻烦"。解决方案是在 `shared/error/` 中提供一个 `SystemResultExt` trait：
+
+```rust
+/// 为 Result 提供 `.report_error()` 方法，自动将 Err 包装为 GameErrorMessage 发送到 World。
+/// 一个方法调用 = 一行代码，和 `tracing::error!()` 成本接近。
+pub trait SystemResultExt<T, E: Into<GameErrorMessage>> {
+    fn report_error(self, world: &mut World) -> Option<T>;
+}
+```
+
+`report_error` 内部执行：
+1. 将 `Err(e)` 通过 `Into<GameErrorMessage>` 转换为错误消息
+2. 通过 `World::send_message()` 发送到 error_monitor 通道
+3. 返回 `None`，调用方无需额外处理
+
+**状态**：待实现，作为 ADR-028 §决策3 的后续执行项。
+
+### Bevy 原生 Result 支持（未来路径）
+
+Bevy 0.16+ 开始支持 System 直接返回 `Result` 类型（通过 `SystemParam` 扩展），内置了统一的错误上报机制。未来路径：
+
+```
+升级 Bevy → 利用原生 System Result 机制
+         → error_monitor 适配 Bevy 原生错误上报管道
+         → 业务层无需额外 API 调用
+         → 零额外接入成本
+```
+
+**当前阶段**：不强制。保持 `GameErrorEvent` 消息通道作为跨版本兼容方案，等 Bevy 原生 API 稳定后再评估。
+
 ### Graceful Degradation（优雅降级） 🟩
 
 - 当 System 遇到 `InfrastructureError`（如贴图加载失败）时，使用"缺失占位符"继续运行
@@ -429,9 +478,9 @@ fn error_monitor_system(
 
 ```
 Infrastructure Error → 转换 → GameErrorEvent → ErrorMonitor → UI Toast
-                         ↑
-                    ErrorMonitor 统一消费
-                    不侵入业务逻辑
+                          ↑
+                     ErrorMonitor 统一消费
+                     不侵入业务逻辑
 ```
 
 ---

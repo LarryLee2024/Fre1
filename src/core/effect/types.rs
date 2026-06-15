@@ -233,8 +233,8 @@ pub fn calculate_damage_from_effect(
 
 #[cfg(test)]
 mod tests {
-    use bevy::prelude::*;
     use super::*;
+    use bevy::prelude::*;
 
     #[test]
     fn 持续时间_默认为瞬时() {

@@ -310,6 +310,24 @@ Proposed → Accepted → Active → Deprecated → Removed
 
 ---
 
+## 不变量1a：infrastructure::error 只放跨子模块公共错误
+
+任意时刻：
+
+`infrastructure::error.rs` 只放置跨子模块的通用基础设施错误变体（IO、序列化、资源加载等）。
+各子模块（assets/、persistence/ 等）保留自己独立的细分错误枚举。
+
+违反表现：
+
+`infrastructure::error` 中出现 `AssetError::FormatInvalid`（应放在子模块内）或枚举膨胀超过 10 个变体。
+
+设计原则：
+- 子模块错误只在子模块内传播，不暴露到顶层
+- 仅当错误需要跨越基础设施子模块传播时，才转换为顶层 `InfrastructureError`
+- 避免顶层枚举退化为迷你版上帝枚举，降低子模块修改时的编译影响面
+
+---
+
 ## 不变量2：共享工具不含错误变体
 
 任意时刻：
@@ -343,6 +361,32 @@ Proposed → Accepted → Active → Deprecated → Removed
 违反表现：
 
 `SkillNotFound` 不带任何上下文。`InvalidTarget` 不带施法者和目标 ID。
+
+---
+
+## 不变量5：unwrap 按场景分级管理
+
+任意时刻：
+
+unwrap/expect/panic 的容忍度按场景分级，不搞"全项目零 unwrap"一刀切。
+
+| 场景 | 容忍度 | 说明 |
+|------|--------|------|
+| System 初始化、Plugin 构建、Startup System | 🟩 可接受 | 失败即启动失败，没有运行时风险 |
+| 测试代码、测试夹具 | 🟩 可接受 | 测试失败应提供清晰消息 |
+| 工具代码、编辑器 | 🟩 可接受 | 不影响运行时 |
+| 运行时路径（battle pipeline、skill cast、buff tick） | 🟥 禁止 | 必须优雅处理 |
+| 用户输入驱动逻辑 | 🟥 禁止 | 非法输入不应导致崩溃 |
+| 跨模块数据传递（Entity 查询、资源访问） | 🟥 禁止 | 预期可能有不存在的数据 |
+
+违反表现：
+- 战斗管线代码中出现 `.unwrap()` 或 `.expect()`（违反规则10）
+- 初始化代码被归入"运行时路径"错误扫描（误报）
+
+管理工具：
+- CI 中使用 `clippy::unwrap_used` 静态扫描 core 层
+- 初始化/测试代码使用 `#[allow(clippy::unwrap_used)]` 显式豁免
+- 代码审查时按场景标签分类评估，而非单纯计数
 
 ---
 
@@ -497,6 +541,34 @@ Proposed → Accepted → Active → Deprecated → Removed
 - 所有 System 内部的业务调用失败时，必须发送 GameErrorEvent 或使用 `tracing::error!`
 - 错误日志必须携带 span 上下文（如 `tracing::error!(skill_id = %id, "Cast failed")`）
 - Graceful Degradation：遇到 InfrastructureError 时使用缺失占位符继续运行
+
+### 降低 error_monitor 接入成本：SystemResultExt
+
+当前 `error_monitor` 通道无人使用的核心原因是"发消息比写 `error!` 麻烦"。建议在 `shared/error/` 中提供 SystemResultExt trait 降低接入成本：
+
+```rust
+/// 为 Result 提供 `.report_error()` 方法
+/// 自动将 Err 包装为 GameErrorEvent 发送到 World
+pub trait SystemResultExt<T, E: Into<GameErrorEvent>> {
+    fn report_error(self, world: &mut World) -> Option<T>;
+}
+```
+
+业务代码只需一行：`result.report_error(&mut world);`，和写 `tracing::error!()` 成本接近。
+
+**状态**：待实现（ADR-028 §决策3 的后续执行项）。
+
+### Bevy 原生 Result 支持（未来路径）
+
+Bevy 0.16+ 支持 System 直接返回 `Result`。未来升级后可利用原生机制：
+
+```
+升级 Bevy → 利用原生 System Result 错误上报
+         → error_monitor 适配 Bevy 原生管道
+         → 业务层零额外 API 调用成本
+```
+
+**当前阶段**：不强制迁移。保持 GameErrorEvent 消息通道作为跨版本兼容方案。
 
 ---
 

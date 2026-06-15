@@ -29,6 +29,7 @@ use crate::core::tag::TagPlugin;
 use crate::core::targeting::TargetingPlugin;
 use crate::core::trigger::TriggerPlugin;
 use crate::core::turn::TurnPlugin;
+use crate::debug::DebugPlugin;
 use crate::infrastructure::assets::AssetsPlugin;
 use crate::infrastructure::audit::AuditPlugin;
 use crate::infrastructure::localization::LocalizationPlugin;
@@ -39,7 +40,6 @@ use crate::infrastructure::replay::BattleReplayPlugin;
 use crate::input::InputPlugin;
 use crate::shared::SharedPlugin;
 use crate::ui::UiPlugin;
-use crate::debug::DebugPlugin;
 
 /// App 层统一插件：组装游戏所有 Plugin
 ///
@@ -89,9 +89,21 @@ impl Plugin for AppPlugin {
         .add_plugins(CuePlugin)
         .add_plugins((BattlePipelinePlugin, BattleReplayPlugin))
         // ═══ 非 GAS 链模块 ═══
-        .add_plugins((BuffPlugin, AiBehaviorPlugin, EquipmentPlugin, InventoryPlugin))
+        .add_plugins((
+            BuffPlugin,
+            AiBehaviorPlugin,
+            EquipmentPlugin,
+            InventoryPlugin,
+        ))
         .add_plugins((LogPlugin, AuditPlugin))
-        .add_plugins((AssetsPlugin, TurnPlugin, MapPlugin, CharacterPlugin, BattlePlugin, AiPlugin))
+        .add_plugins((
+            AssetsPlugin,
+            TurnPlugin,
+            MapPlugin,
+            CharacterPlugin,
+            BattlePlugin,
+            AiPlugin,
+        ))
         .add_plugins(CampaignPlugin)
         .add_plugins((UiPlugin, InputPlugin))
         .add_plugins(DebugPlugin);
