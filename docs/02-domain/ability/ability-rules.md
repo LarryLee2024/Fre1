@@ -1007,3 +1007,96 @@ Ability 执行必须严格按 Requirement → Cost → Targeting → Effect → 
 | 消耗系统（Cost） | `docs/02-domain/cost/cost-rules.md` |
 | 释放前提（Requirement） | `docs/02-domain/requirement/requirement-rules.md` |
 | 原始 Skill 文档（已过时） | `docs/02-domain/skill/skill-rules.md` |
+
+---
+
+## 附录：铃兰参考数据
+
+> 领域：Ability | 来源：78铃兰.md §三、补充8 | 数据层：Definition + Instance
+
+#### AbilityDefinition（Definition层）
+
+| 字段名 | 类型 | 约束 | 说明 |
+|--------|------|------|------|
+| `id` | AbilityId | PK | 技能唯一标识 |
+| `name_key` | String | - | 技能名称本地化Key |
+| `desc_key` | String | - | 技能描述本地化Key |
+| `ability_type` | AbilityType | - | 技能类型 |
+| `cost` | CostDef | - | 消耗定义 |
+| `cooldown` | Option<u32> | - | 冷却回合数 |
+| `range` | u32 | ≥1 | 射程 |
+| `targeting` | TargetingId | FK | 目标选择规则引用 |
+| `effects` | Vec<EffectId> | FK | 效果列表引用 |
+| `tags_required` | Vec<TagId> | - | 需具备的Tag |
+| `tags_forbidden` | Vec<TagId> | - | 禁止具备的Tag |
+| `special_rules` | Vec<SpecialRule> | - | 特殊规则 |
+
+#### AbilityInstance（Instance层）
+
+| 字段名 | 类型 | 说明 |
+|--------|------|------|
+| `entity` | Entity | 所属实体 |
+| `ability_id` | AbilityId | 引用AbilityDefinition |
+| `cooldown_remaining` | u32 | 剩余冷却回合 |
+| `current_energy_cost` | f32 | 当前能量消耗 |
+
+#### 技能五大分类
+
+| 类型 | 行动消耗 | 触发方式 | 典型例子 |
+|------|----------|----------|----------|
+| `NormalAttack` | 消耗1次行动 | 玩家主动释放 | 普通攻击、远程射击 |
+| `ActiveSkill` | 消耗能量+行动 | 玩家主动释放 | 火球、冲锋、治疗 |
+| `ReactionSkill` | 不消耗行动 | 事件触发 | 反击、援护、回击 |
+| `SupportSkill` | 瞬发，保留行动 | 玩家主动释放 | 加Buff、驱散、自身回血 |
+| `PassiveSkill` | 无消耗 | 常驻/条件触发 | 个性、天赋、装备被动 |
+
+> **Data Law 004 注意**：反应技(ReactionSkill)在铃兰中归为技能分类，但按Data Law 004，Ability不拥有行为，反应技应归属Trigger领域。建议实现时将ReactionSkill映射为Trigger+Ability组合。
+
+#### 资源管控三层体系
+
+**行动点（AP）**
+
+| 字段 | 类型 | 约束 | 说明 |
+|------|------|------|------|
+| `base_ap` | u32 | =1 | 每回合默认行动点 |
+| `current_ap` | u32 | ≤max_ap | 当前行动点 |
+| `max_ap` | u32 | ≥1 | 单回合行动点上限 |
+
+**能量（CP）**
+
+| 字段 | 类型 | 约束 | 说明 |
+|------|------|------|------|
+| `current_cp` | f32 | ≤max_cp | 当前能量 |
+| `max_cp` | f32 | >0 | 能量上限 |
+| `regen_per_turn` | f32 | ≥0 | 每回合固定回复 |
+| `bonus_on_kill` | f32 | ≥0 | 击杀额外回复 |
+| `bonus_on_hit` | f32 | ≥0 | 受击额外回复 |
+
+**CostDef 结构**
+
+```yaml
+cost:
+  ap: 1           # 行动点消耗
+  cp: 0           # 能量消耗（0=不消耗）
+  hp_pct: 0.0     # 生命值百分比消耗（可选）
+```
+
+#### Schema草案
+
+```yaml
+# ability_config.ron
+(
+  abilities: [
+    (id: "normal_attack", name_key: "skill.s_1000.name", desc_key: "skill.s_1000.desc", ability_type: NormalAttack,
+     cost: (ap: 1, cp: 0), cooldown: None, range: 1,
+     targeting: "single_enemy", effects: ["phys_damage"],
+     tags_required: [], tags_forbidden: ["control_full"],
+     special_rules: []),
+    (id: "fireball", name_key: "skill.s_1001.name", desc_key: "skill.s_1001.desc", ability_type: ActiveSkill,
+     cost: (ap: 1, cp: 30), cooldown: Some(3), range: 3,
+     targeting: "single_enemy", effects: ["fire_damage", "apply_burn"],
+     tags_required: [], tags_forbidden: ["silenced"],
+     special_rules: []),
+  ],
+)
+```

@@ -1128,3 +1128,149 @@ Source 创建 → 栈插入 → 值计算（随 get() 调用）
 | 标签系统架构重整 | `docs/08-decisions/ADR-023-标签系统架构重整.md` |
 | 技能/Buff/Effect 统一抽象 | `docs/01-architecture/skill-buff-abstraction.md` |
 | Effect Pipeline 三步管线 | `docs/01-architecture/skill-buff-abstraction.md` §3.2 |
+
+---
+
+## 附录：铃兰参考数据
+
+### Attribute 引用数据
+
+> 领域：Attribute | 来源：78铃兰.md §一、§六、补充11 | 数据层：Definition + Instance + Runtime
+
+#### 数据实体清单
+
+##### AttributeDefinition（Definition层）
+
+角色固有属性定义，战斗中不可变，是所有百分比加成的计算基数。
+
+| 字段名 | 类型 | 约束 | 说明 |
+|--------|------|------|------|
+| `id` | AttributeId | PK | 属性唯一标识 |
+| `name_key` | String | - | 属性名称本地化Key |
+| `category` | Enum | core/secondary | 属性分类 |
+| `base_value` | f32 | ≥0 | 基础数值 |
+| `min_value` | f32 | ≥0 | 属性下限 |
+| `max_value` | f32 | >min_value | 属性上限 |
+
+**核心五维（category = core）**
+
+| AttributeId | 名称 | 下限 | 上限 |
+|-------------|------|------|------|
+| `phys_atk` | 物理攻击 | 0 | 无上限 |
+| `magic_atk` | 魔法攻击 | 0 | 无上限 |
+| `phys_def` | 物理防御 | 0 | 无上限 |
+| `magic_def` | 魔法防御 | 0 | 无上限 |
+| `max_hp` | 最大生命值 | 1 | 无上限 |
+
+**次级属性（category = secondary）**
+
+| AttributeId | 名称 | 下限 | 上限 |
+|-------------|------|------|------|
+| `crit_rate` | 暴击率 | 0 | 0.95 |
+| `crit_dmg` | 暴击伤害 | 1.5 | 无上限 |
+| `move_range` | 移动范围 | 1 | 无上限 |
+| `atk_range` | 攻击范围 | 1 | 无上限 |
+| `hit_rate` | 命中率 | 0 | 1.0 |
+| `dodge_rate` | 闪避率 | 0 | 0.8 |
+
+##### AttributeInstance（Instance层）
+
+| 字段名 | 类型 | 说明 |
+|--------|------|------|
+| `entity` | Entity | 所属实体 |
+| `attribute_id` | AttributeId | 属性引用 |
+| `base_value` | f32 | 基础面板值（战斗外固定） |
+| `modifiers` | Vec<ModifierRef> | 当前生效的修正列表 |
+
+#### 属性转换机制
+
+| 字段名 | 类型 | 说明 |
+|--------|------|------|
+| `source_attr` | AttributeId | 源属性（如防御、当前损失血量） |
+| `target_attr` | AttributeId | 目标属性（如攻击） |
+| `ratio` | f32 | 转换比例 |
+| `condition` | Option<ConditionId> | 触发条件（可选） |
+
+转换规则：
+- 转换后的属性**可被后续百分比加成放大**
+- 部分条件型加成**不参与转换**
+
+#### 数值边界强制规则
+
+| 规则 | 约束 |
+|------|------|
+| 取整规则 | 向下取整，最小为1 |
+| 属性下限 | 防御最低0，移动最低1 |
+| 暴击率上限 | 95% |
+| 闪避率上限 | 80% |
+| 命中率上限 | 100% |
+| 减伤上限 | 90% |
+| 结算顺序 | 所有百分比计算完成后统一取整 |
+
+---
+
+### Modifier 引用数据
+
+> 领域：Modifier | 来源：78铃兰.md §一、§二、§五、§六 | 数据层：Definition + Instance
+
+#### 数据实体清单
+
+##### ModifierDefinition（Definition层）
+
+| 字段名 | 类型 | 约束 | 说明 |
+|--------|------|------|------|
+| `id` | ModifierId | PK | 修正器唯一标识 |
+| `target_attr` | AttributeId | FK | 目标属性 |
+| `operation` | ModifierOp | - | 修正操作类型 |
+| `value` | f32 | - | 修正值 |
+| `stacking_rule` | StackingId | FK | 堆叠策略引用 |
+| `source_type` | Enum | buff/equipment/trait/terrain | 来源分类 |
+
+##### ModifierOp 枚举
+
+| 操作 | 公式 | 叠加方式 | 适用属性 |
+|------|------|----------|----------|
+| `Add` | base + value | - | 固定值加成 |
+| `AddPercent` | base × (1 + Σvalue) | 加算 | 攻击%、暴击率、增伤% |
+| `MulPercent` | base × Π(1 - value) | 乘算 | 降防、无视防御、减伤、易伤 |
+
+#### 各区间的叠加方式
+
+| 区间 | ModifierOp | 叠加方式 |
+|------|-----------|----------|
+| 攻击百分比 | AddPercent | 加算 |
+| 固定攻击加成 | Add | 加算 |
+| 降防效果 | MulPercent | 乘算 |
+| 无视防御 | MulPercent | 乘算 |
+| 增伤效果 | AddPercent | 加算 |
+| 易伤效果 | MulPercent | 乘算 |
+| 减伤效果 | MulPercent | 乘算 |
+| 暴击率 | AddPercent | 加算 |
+| 暴击伤害 | AddPercent | 加算 |
+
+#### Modifier来源分类
+
+| 来源类型 | 说明 | 生命周期 |
+|----------|------|----------|
+| Buff | Buff附加的属性修正 | 随Buff存在 |
+| Equipment | 装备词条附加的属性修正 | 装备穿戴期间 |
+| Trait | 天赋/被动附加的属性修正 | 永久 |
+| Terrain | 地形附加的属性修正 | 站在对应地形时 |
+
+#### Schema草案
+
+```yaml
+# modifier_config.ron
+(
+  modifiers: [
+    (id: "atk_up_20", target_attr: "phys_atk", operation: AddPercent, value: 0.2,
+     stacking_rule: "additive_same_name_max"),
+    (id: "def_down_40", target_attr: "phys_def", operation: MulPercent, value: 0.4,
+     stacking_rule: "multiplicative"),
+    (id: "armor_pen_40", target_attr: "phys_def", operation: MulPercent, value: 0.4,
+     stacking_rule: "multiplicative"),
+    (id: "dmg_up_15", target_attr: "dmg_multiplier", operation: AddPercent, value: 0.15,
+     stacking_rule: "additive"),
+  ],
+)
+```

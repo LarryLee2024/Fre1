@@ -629,3 +629,137 @@ Effect 调用 → 查找 ExecutionRegistry → 构建 ExecutionContext → execu
 | 触发器和上下文 | `docs/02-domain/trigger/trigger-rules.md` |
 | 属性定义与派生 | `docs/02-domain/attribute-modifier/attribute-modifier-rules.md` |
 | SRPG Lite-GAS 冻结架构 | `docs/其他/77.md` §九（最终推荐架构）、§十（100分方案） |
+
+---
+
+## 附录：铃兰参考数据
+
+> 领域：Execution | 来源：78铃兰.md §二、补充6、补充11 | 数据层：Runtime
+
+#### ExecutionContext（Runtime层）
+
+| 字段名 | 类型 | 说明 |
+|--------|------|------|
+| `attacker` | Entity | 攻击者 |
+| `defender` | Entity | 防御者 |
+| `skill_multiplier` | f32 | 技能倍率 |
+| `damage_type` | DamageTypeTag | 伤害类型 |
+| `is_crit` | bool | 是否暴击 |
+| `is_backstab` | bool | 是否背击 |
+| `height_advantage` | Option<HeightMod> | 高低地修正 |
+
+#### 伤害类型分类
+
+| 类型 | 防御减免 | 护盾交互 | 说明 |
+|------|----------|----------|------|
+| `Physical` | 受物防减免 | 物理护盾可挡 | 物理攻击 |
+| `Magical` | 受魔防减免 | 魔法护盾可挡 | 魔法攻击 |
+| `Pierce` | 无视防御 | 部分护盾可挡 | 穿透攻击 |
+| `True` | 无视防御无视护盾 | 不可挡 | 真实伤害 |
+
+#### 四段伤害公式
+
+**第一段：攻击值结算**
+
+```
+最终攻击值 = (基础攻击 × (1 + Σ攻击百分比加算) + Σ固定攻击加成 + 属性转换攻击) × 属性克制倍率 × 高低地修正
+```
+
+| 输入 | 类型 | 叠加方式 |
+|------|------|----------|
+| 基础攻击 | f32 | - |
+| 攻击百分比 | AddPercent | 加算 |
+| 固定攻击加成 | Add | 加算 |
+| 属性转换攻击 | Add | 加算 |
+| 属性克制倍率 | MulPercent | 乘算 |
+| 高低地修正 | MulPercent | 乘算 |
+
+**第二段：防御值结算**
+
+```
+有效防御 = 目标防御 × Π(1 - 降防效果) × Π(1 - 无视防御效果)
+```
+
+| 输入 | 类型 | 叠加方式 |
+|------|------|----------|
+| 目标防御 | f32 | - |
+| 降防效果 | MulPercent | 乘算 |
+| 无视防御 | MulPercent | 乘算 |
+
+**第三段：基础伤害计算**
+
+```
+基础伤害 = (最终攻击值 - 有效防御) × 技能倍率
+```
+
+**第四段：最终伤害修正**
+
+```
+最终伤害 = 基础伤害 × Π(1 + 增伤效果) × Π(1 + 易伤效果) × Π(1 - 减伤效果) × 暴击倍率
+```
+
+| 输入 | 类型 | 叠加方式 |
+|------|------|----------|
+| 基础伤害 | f32 | 第三段输出 |
+| 增伤效果 | AddPercent | 加算 |
+| 易伤效果 | MulPercent | 乘算 |
+| 减伤效果 | MulPercent | 乘算 |
+| 暴击倍率 | f32 | 暴击时=crit_dmg，否则=1.0 |
+
+#### 治疗计算公式
+
+```
+基础治疗量 = 攻击 × 技能倍率 / 治疗强度
+最终治疗量 = 基础治疗量 × (1 + 受治疗提升) × 暴击倍率 × AOE衰减
+```
+
+#### 护盾吸收顺序
+
+```
+伤害 → 先扣通用护盾 → 再扣物理/魔法专属护盾 → 最后扣HP
+```
+
+#### 数值边界强制规则
+
+| 规则 | 约束 |
+|------|------|
+| 取整 | 向下取整，最小为1 |
+| 防御下限 | ≥0 |
+| 移动下限 | ≥1 |
+| 暴击率上限 | ≤95% |
+| 闪避率上限 | ≤80% |
+| 减伤上限 | ≤90% |
+
+#### Schema草案
+
+```yaml
+# execution_config.ron
+(
+  damage_formula: (
+    stages: [
+      (name: "attack_resolve",
+       inputs: ["base_atk", "atk_pct_sum", "atk_flat_sum", "convert_atk"],
+       formula: "(base_atk * (1 + atk_pct_sum) + atk_flat_sum + convert_atk) * element_mod * height_mod"),
+      (name: "defense_resolve",
+       inputs: ["target_def", "def_break_product", "armor_pen_product"],
+       formula: "target_def * def_break_product * armor_pen_product"),
+      (name: "base_damage",
+       inputs: ["final_atk", "effective_def", "skill_multiplier"],
+       formula: "(final_atk - effective_def) * skill_multiplier"),
+      (name: "final_damage",
+       inputs: ["base_dmg", "dmg_up_sum", "vuln_product", "dmg_red_product", "crit_multiplier"],
+       formula: "base_dmg * (1 + dmg_up_sum) * vuln_product * dmg_red_product * crit_multiplier"),
+    ],
+    boundaries: (
+      min_damage: 1,
+      max_damage_reduction: 0.9,
+      max_crit_rate: 0.95,
+      max_dodge_rate: 0.8,
+      max_hit_rate: 1.0,
+      min_defense: 0.0,
+      min_move_range: 1,
+      rounding: Floor,
+    ),
+  ),
+)
+```

@@ -425,3 +425,162 @@ Effect 领域的不变量与 AttributeModifier 领域的不变量互补：
 | **Trigger** | Effect 执行完成后产生领域事件 → Trigger 系统分发 | Effect 不管理触发链；Trigger 不修改 Effect 执行逻辑 |
 | **ExecutionStack** | Effect 执行结果可能压入 Stack 产生嵌套触发 | Effect 领域不感知 Stack；Stack 由 Trigger 领域管理。详见 `docs/02-domain/trigger/trigger-rules.md` ExecutionStack 章节 |
 | **BattleRecord** | Effect 执行结果记录到 BattleRecord | Effect 执行时发送 Message；BattleRecord 异步消费 |
+
+---
+
+## 附录：铃兰参考数据
+
+> 领域：Effect | 来源：78铃兰.md §四、补充3、补充4、补充5、补充6、补充7、补充10 | 数据层：Definition + Instance
+
+#### EffectDefinition（Definition层）
+
+| 字段名 | 类型 | 约束 | 说明 |
+|--------|------|------|------|
+| `id` | EffectId | PK | 效果唯一标识 |
+| `name_key` | String | - | 效果名称本地化Key（ApplyBuff类型使用） |
+| `desc_key` | String | - | 效果描述本地化Key（ApplyBuff类型使用） |
+| `effect_type` | EffectType | - | 效果类型 |
+| `duration` | Option<DurationDef> | - | 持续时间定义 |
+| `stacking` | Option<StackingId> | FK | 堆叠策略引用 |
+| `cue` | Option<CueId> | FK | 表现引用 |
+
+#### EffectInstance（Instance层）
+
+| 字段名 | 类型 | 说明 |
+|--------|------|------|
+| `entity` | Entity | 挂载目标实体 |
+| `effect_id` | EffectId | 引用EffectDefinition |
+| `source_entity` | Option<Entity> | 来源实体 |
+| `remaining_duration` | Option<u32> | 剩余持续回合 |
+| `current_stack` | u32 | 当前层数 |
+| `lifecycle_phase` | LifecyclePhase | 当前生命周期阶段 |
+
+#### EffectType 枚举
+
+| 类型 | 说明 | 产出 |
+|------|------|------|
+| `Damage` | 伤害效果 | 扣减HP |
+| `Heal` | 治疗效果 | 恢复HP |
+| `ApplyBuff` | 施加Buff | 添加Tag + Modifier |
+| `Dispel` | 驱散效果 | 移除Tag + Modifier |
+| `Displacement` | 位移效果 | 改变位置 |
+| `ApplyShield` | 施加护盾 | 添加护盾实例 |
+| `Summon` | 召唤效果 | 创建召唤物实体 |
+| `Kill` | 死亡效果 | 标记死亡 |
+
+#### Buff生命周期
+
+```
+Apply（施加）→ Tick（周期触发）→ Expire（到期）→ Remove（移除）
+```
+
+| 阶段 | 触发时机 | 行为 |
+|------|----------|------|
+| Apply | 效果施加时 | 添加到目标，触发入场效果，刷新持续时间/层数 |
+| Tick | 按回合/按行动 | 周期效果触发（如中毒每回合掉血） |
+| Expire | 持续时间归零 | 触发到期效果 |
+| Remove | 被驱散/覆盖 | 执行清理逻辑 |
+
+#### 各类Effect详细数据
+
+**Damage Effect**
+
+| 字段名 | 类型 | 说明 |
+|--------|------|------|
+| `damage_type` | DamageTypeTag | 物理/魔法/穿透/真实 |
+| `skill_multiplier` | f32 | 技能倍率 |
+| `can_crit` | bool | 是否可暴击 |
+| `is_multi_hit` | bool | 是否多段伤害 |
+| `hit_count` | Option<u32> | 多段伤害段数 |
+
+**Heal Effect**
+
+| 字段名 | 类型 | 说明 |
+|--------|------|------|
+| `heal_base` | Enum | atk_based/fixed |
+| `heal_multiplier` | f32 | 治疗倍率 |
+| `can_crit` | bool | 是否可暴击 |
+| `aoe_decay` | Option<f32> | AOE治疗递减率 |
+| `overheal_to_shield` | Option<f32> | 过量治疗转护盾比例 |
+
+**Shield Effect**
+
+| 字段名 | 类型 | 说明 |
+|--------|------|------|
+| `shield_type` | Enum | physical/magical/universal |
+| `shield_value` | f32 | 护盾吸收量 |
+| `is_regen_shield` | bool | 是否每回合回复 |
+| `regen_value` | Option<f32> | 每回合回复值 |
+| `damage_type_filter` | Option<Vec<DamageTypeTag>> | 只吸收特定伤害类型 |
+
+**Dispel Effect**
+
+| 字段名 | 类型 | 说明 |
+|--------|------|------|
+| `dispel_type` | Enum | buff/debuff/all |
+| `dispel_count` | u32 | 驱散数量 |
+| `dispel_priority` | Enum | newest/oldest/strongest |
+
+**Displacement Effect**
+
+| 字段名 | 类型 | 说明 |
+|--------|------|------|
+| `displacement_type` | Enum | active/forced |
+| `direction` | Option<Direction> | 强制位移方向 |
+| `distance` | u32 | 位移格数 |
+| `can_cross_obstacle` | bool | 是否可穿越障碍 |
+| `wall_damage_pct` | Option<f32> | 撞墙伤害（最大生命值%） |
+| `can_push_units` | bool | 是否推开路径上单位 |
+
+**Summon Effect**
+
+| 字段名 | 类型 | 说明 |
+|--------|------|------|
+| `summon_template` | CharacterId | 召唤物模板 |
+| `inherit_ratio` | f32 | 属性继承比例 |
+| `max_count` | u32 | 最大召唤数量 |
+| `duration` | Option<u32> | 召唤持续回合 |
+
+#### 死亡结算链路
+
+```
+伤害结算完成 → 血量≤0判定
+  ↓
+濒死窗口（回血/免死/假死）
+  ↓ 血量仍≤0
+「即将死亡」事件（最后一次触发被动）
+  ↓
+清除可驱散Buff/Debuff（保留机制Tag）
+  ↓
+「单位死亡」事件（击杀者触发击杀被动）
+  ↓
+标记死亡，移除实体控制权
+```
+
+#### 状态三大分类
+
+| 分类 | 颜色标识 | 可驱散 |
+|------|----------|--------|
+| 增益 | 橙色 | 是 |
+| 减益 | 红色/紫色 | 是 |
+| 特殊 | 蓝色/灰色 | 否 |
+
+#### Schema草案
+
+```yaml
+# effect_config.ron
+(
+  effects: [
+    (id: "phys_damage", effect_type: Damage,
+     damage: (damage_type: "dmg_physical", can_crit: true)),
+    (id: "poison", name_key: "buff.b_001.name", desc_key: "buff.b_001.desc", effect_type: ApplyBuff,
+     duration: (duration_type: Turns, value: 3, tick_timing: ActionEnd),
+     stacking: "stack_independent",
+     max_stack: 9,
+     tick_effect: "poison_tick"),
+    (id: "knockback_2", effect_type: Displacement,
+     displacement: (displacement_type: Forced, distance: 2,
+                    can_cross_obstacle: false, wall_damage_pct: 0.1)),
+  ],
+)
+```

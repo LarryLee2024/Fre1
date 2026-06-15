@@ -4,7 +4,7 @@ title: Domain Rules
 status: stable
 owner: domain-designer
 created: 2026-06-14
-updated: 2026-06-14
+updated: 2026-06-15
 tags:
   - domain
 ---
@@ -148,6 +148,8 @@ Updated: 2026-06-15 — ADR-026 SRPG Lite-GAS 架构对齐：新增 execution/ex
 **input_rules.md**: 输入处理领域，管理键盘、鼠标、触摸输入到UiCommand的转换。
 - 🟥 输入处理在 InputSchedule 中执行
 - 🟩 输入转换为 UiCommand Message 传递给Core层
+
+> **📎 铃兰参考数据**：部分领域文档末尾附有"铃兰参考数据"附录，提供来自《铃兰之剑》战斗系统的引用数据。对应 companion 文件存放于各领域目录下（如 `attribute-modifier/01_Attribute_ll.md`、`attribute-modifier/03_Modifier_ll.md`），可作为 Schema 设计、属性定义、公式计算等参考。详见各文档末尾附录。
 
 ---
 

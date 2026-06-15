@@ -580,3 +580,64 @@ Targeting 类型与 Ability 定义解耦。同一 Targeting 类型可被多个 A
 | 消耗系统（Cost） | `docs/02-domain/cost/cost-rules.md` |
 | 释放前提（Requirement） | `docs/02-domain/requirement/requirement-rules.md` |
 | 原始 Selector 文档（已过时） | `docs/02-domain/selector/selector-rules.md` |
+
+---
+
+## 附录：铃兰参考数据
+
+> 领域：Targeting | 来源：78铃兰.md §三.3、补充4 | 数据层：Definition
+
+#### TargetingDefinition（Definition层）
+
+| 字段名 | 类型 | 约束 | 说明 |
+|--------|------|------|------|
+| `id` | TargetingId | PK | 目标选择规则唯一标识 |
+| `target_type` | TargetType | - | 目标类型 |
+| `range` | u32 | ≥1 | 射程 |
+| `aoe_shape` | Option<AoEShape> | - | AOE形状（可选） |
+| `filters` | Vec<TargetFilter> | - | 目标筛选条件 |
+
+#### TargetType 枚举
+
+| 类型 | 说明 | 典型技能 |
+|------|------|----------|
+| `SingleEnemy` | 单体敌方 | 普攻、单体技能 |
+| `SingleAlly` | 单体友方 | 治疗单体、加Buff |
+| `Self` | 自身 | 自身增益、自我治疗 |
+| `AoEEnemy` | 范围敌方 | 火球、旋风斩 |
+| `AoEAlly` | 范围友方 | 群体治疗、群体增益 |
+| `AllEnemy` | 全体敌方 | 全屏大招 |
+| `DirectionalLine` | 方向线 | 冲锋、直线技能 |
+
+#### 目标筛选条件
+
+| 筛选维度 | 类型 | 说明 |
+|----------|------|------|
+| 阵营筛选 | TagId | ally/enemy/neutral |
+| 状态筛选 | TagId | 是否具备/禁止某Tag |
+| 距离筛选 | (min, max) | 最近/最远优先 |
+
+#### 位移目标选择
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `displacement_targeting` | Enum | active/forced |
+| `path_check` | bool | 是否检查路径合法性 |
+| `terrain_check` | bool | 是否检查地形可通行性 |
+| `unit_collision` | Enum | block/pass_through/push |
+
+#### Schema草案
+
+```yaml
+# targeting_config.ron
+(
+  targetings: [
+    (id: "single_enemy", target_type: SingleEnemy, range: 1,
+     filters: [(faction: "enemy")]),
+    (id: "aoe_enemy_3x3", target_type: AoEEnemy, range: 3,
+     aoe_shape: Cross(radius: 1),
+     filters: [(faction: "enemy")]),
+    (id: "self", target_type: Self, range: 0, filters: []),
+  ],
+)
+```

@@ -769,3 +769,124 @@ Idle
 3. 检查事件序列是否按时间顺序排列
 4. 检查回放执行是否与原始战斗逻辑一致
 5. 检查回放文件格式版本号是否正确
+
+---
+
+## 附录：铃兰参考数据（Pipeline + Replay）
+
+> 领域：Pipeline + Replay | 来源：78铃兰.md §八、补充9、补充12 | 数据层：Runtime + Persistence
+
+#### 回合执行管线
+
+```
+回合开始
+  ├─ 回合开始阶段
+  │   ├─ 回合开始事件触发
+  │   ├─ Buff回合开始Tick
+  │   └─ AP/CP回复
+  ├─ 行动阶段
+  │   ├─ 按速度排序行动
+  │   ├─ 每个单位：
+  │   │   ├─ 选择行动
+  │   │   ├─ 执行行动
+  │   │   └─ 行动结束事件
+  │   └─ 直到所有单位行动完毕
+  └─ 回合结束阶段
+      ├─ 回合结束事件触发
+      ├─ Buff回合结束Tick
+      ├─ 冷却-1
+      └─ 检查胜负条件
+```
+
+#### 技能执行管线（7步）
+
+```
+1. 前置校验 → 消耗检查 + 冷却检查 + 标签检查
+2. 目标选择 → 按Targeting规则确定目标
+3. 消耗扣除 → 扣AP/CP
+4. 效果执行 → 按Effect列表顺序执行
+5. 被动触发 → 触发相关Trigger
+6. 状态更新 → 更新UI/记录战斗日志
+7. 冷却设置 → 设置技能冷却
+```
+
+#### 行动调度规则
+
+**速度排序**：速度从高到低 → 速度相同按阵营固定排序 → 再按站位固定排序
+
+**插队规则**
+
+| 操作 | 效果 |
+|------|------|
+| 立即行动 | 插入当前行动位的下一位 |
+| 延迟行动 | 移到当前回合队尾 |
+| 再行动 | 插入当前回合队尾 |
+
+#### ReplayEvent（Persistence层）
+
+| 字段名 | 类型 | 约束 | 说明 |
+|--------|------|------|------|
+| `turn` | u32 | - | 回合号 |
+| `action_index` | u32 | - | 行动序号 |
+| `actor` | EntityId | - | 行动实体 |
+| `action_type` | ActionType | - | 行动类型 |
+| `target` | Option<EntityId> | - | 目标实体 |
+| `ability_id` | Option<AbilityId> | - | 使用的技能 |
+| `seed` | u64 | - | 随机数种子快照 |
+| `result_snapshot` | ResultSnapshot | - | 结果快照 |
+
+#### Replay确定性约束
+
+| 规则 | 说明 |
+|------|------|
+| 固定管线 | 技能执行7步管线严格有序 |
+| 确定性排序 | 速度→阵营→站位，无随机 |
+| 统一取整 | 所有百分比计算完成后统一取整 |
+| 数值边界 | 属性下限/概率上限锁死 |
+| 触发链限制 | 链深度=0，防止无限触发 |
+| AI共用规则 | AI决策使用同一套执行管线 |
+
+**禁止的非确定性因素**
+
+| 禁止项 | 原因 |
+|--------|------|
+| 当前时间 | Replay必须可重现 |
+| 系统随机 | 必须使用确定性RNG |
+| 外部状态 | 不可依赖外部输入 |
+| 浮点精度差异 | 统一取整消除 |
+
+#### Schema草案
+
+```yaml
+# pipeline_config.ron
+(
+  turn_pipeline: (
+    phases: [
+      (name: "TurnStart", events: ["TurnStart"], tick_timing: TurnStart),
+      (name: "ActionPhase", events: ["ActionStart", "ActionEnd"]),
+      (name: "TurnEnd", events: ["TurnEnd"], tick_timing: TurnEnd),
+    ],
+  ),
+  skill_pipeline: (
+    steps: [
+      (name: "Validate", checks: ["cost", "cooldown", "tags"]),
+      (name: "TargetSelect", rule: "targeting"),
+      (name: "CostDeduct", resources: ["ap", "cp"]),
+      (name: "EffectExecute", order: "sequential"),
+      (name: "TriggerFire", events: ["AfterSkillCast", "SkillHit"]),
+      (name: "StateUpdate", outputs: ["ui", "battle_log"]),
+      (name: "CooldownSet", value: "cooldown"),
+    ],
+  ),
+)
+
+# replay_event.ron
+(
+  events: [
+    (turn: 1, action_index: 0, actor: "unit_001",
+     action_type: UseAbility, target: Some("unit_002"),
+     ability_id: Some("fireball"), seed: 12345678,
+     result_snapshot: (damage: 45, target_hp: 55)),
+  ],
+)
+```
