@@ -1,6 +1,6 @@
 //! 战斗领域事件
 
-use crate::shared::ids::{SkillId, UnitId};
+use crate::shared::ids::{AbilityId, UnitId};
 use bevy::prelude::*;
 
 /// 伤害已结算
@@ -12,7 +12,7 @@ pub struct DamageDealt {
     pub target_name: String,
     pub amount: i32,
     pub is_skill: bool,
-    pub skill_id: Option<SkillId>,
+    pub skill_id: Option<AbilityId>,
     pub is_critical: bool,
 }
 

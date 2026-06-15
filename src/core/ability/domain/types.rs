@@ -1,9 +1,9 @@
 // 技能类型定义：SkillData, SkillCondition, SkillDef, SkillUseError
 // SkillTargeting 已迁移至 crate::core::targeting::types
 
-use crate::core::attribute::AttributeKind;
+
 use crate::core::effect::EffectDef;
-use crate::core::tag::{GameplayTag, TagName};
+use crate::core::tag::GameplayTag;
 use crate::core::targeting::types::SkillTargeting;
 use bevy::prelude::*;
 use serde::Deserialize;
@@ -148,9 +148,9 @@ impl SkillData {
     /// 根据 skill.cost_mp 字段扣除，确保 cost_mp 是实际消耗的唯一来源
     pub fn deduct_cost(&self, attrs: &mut crate::core::attribute::Attributes) {
         if self.cost_mp > 0 {
-            let current = attrs.get(AttributeKind::Mp);
+            let current = attrs.get("mp");
             let new_mp = (current - self.cost_mp as f32).max(0.0);
-            attrs.set_vital(AttributeKind::Mp, new_mp);
+            attrs.set_vital("mp", new_mp);
         }
     }
 
@@ -172,7 +172,7 @@ impl SkillData {
 
         // cost_mp 字段检查（始终执行，ADR-013 要求 cost_mp 是必填字段）
         if self.cost_mp > 0 {
-            let mp = source_attrs.get(AttributeKind::Mp);
+            let mp = source_attrs.get("mp");
             if mp < self.cost_mp as f32 {
                 return Err(SkillUseError::InsufficientMp {
                     required: self.cost_mp,
@@ -188,7 +188,7 @@ impl SkillData {
                     // cost_mp 字段已检查，此处仅用于兼容旧 RON 配置
                     // 避免重复错误：仅在 cost_mp 字段未覆盖时检查
                     if self.cost_mp <= 0 {
-                        let mp = source_attrs.get(AttributeKind::Mp);
+                        let mp = source_attrs.get("mp");
                         if mp < *cost as f32 {
                             return Err(SkillUseError::InsufficientMp {
                                 required: *cost,
@@ -210,15 +210,15 @@ impl SkillData {
                     }
                 }
                 SkillCondition::HpBelow(pct) => {
-                    let hp = source_attrs.get(AttributeKind::Hp);
-                    let max_hp = source_attrs.get(AttributeKind::MaxHp);
+                    let hp = source_attrs.get("current_hp");
+                    let max_hp = source_attrs.get("max_hp");
                     if max_hp > 0.0 && hp / max_hp >= *pct {
                         return Err(SkillUseError::HpNotBelow { threshold: *pct });
                     }
                 }
                 SkillCondition::HpAbove(pct) => {
-                    let hp = source_attrs.get(AttributeKind::Hp);
-                    let max_hp = source_attrs.get(AttributeKind::MaxHp);
+                    let hp = source_attrs.get("current_hp");
+                    let max_hp = source_attrs.get("max_hp");
                     if max_hp > 0.0 && hp / max_hp < *pct {
                         return Err(SkillUseError::HpNotAbove { threshold: *pct });
                     }
@@ -296,8 +296,8 @@ mod tests {
         attrs.set_base(AttributeKind::Vitality, vitality);
         attrs.fill_vital_resources();
         // 覆盖当前 HP 和 MP 为指定值
-        attrs.set_vital(AttributeKind::Hp, hp);
-        attrs.set_vital(AttributeKind::Mp, mp);
+        attrs.set_vital("current_hp", hp);
+        attrs.set_vital("mp", mp);
         attrs
     }
 
@@ -355,7 +355,7 @@ mod tests {
 
     #[test]
     fn can_use_缺少标签返回错误() {
-        let skill = make_skill(vec![SkillCondition::RequireTag(GameplayTag::FIRE)]);
+        let skill = make_skill(vec![SkillCondition::RequireTag(GameplayTag::DMG_FIRE)]);
         let attrs = make_attrs(10.0, 30.0, 5.0);
         let tags = GameplayTags::default(); // 没有FIRE标签
 
@@ -363,17 +363,17 @@ mod tests {
         assert_eq!(
             result,
             Err(SkillUseError::MissingTag {
-                tag: GameplayTag::FIRE
+                tag: GameplayTag::DMG_FIRE
             })
         );
     }
 
     #[test]
     fn can_use_拥有标签成功() {
-        let skill = make_skill(vec![SkillCondition::RequireTag(GameplayTag::FIRE)]);
+        let skill = make_skill(vec![SkillCondition::RequireTag(GameplayTag::DMG_FIRE)]);
         let attrs = make_attrs(10.0, 30.0, 5.0);
         let mut tags = GameplayTags::default();
-        tags.add(GameplayTag::FIRE);
+        tags.add(GameplayTag::DMG_FIRE);
 
         let result = skill.can_use(&attrs, &tags, None, 0);
         assert!(result.is_ok());
@@ -383,7 +383,7 @@ mod tests {
 
     #[test]
     fn can_use_目标缺少标签返回错误() {
-        let skill = make_skill(vec![SkillCondition::TargetRequireTag(GameplayTag::STUN)]);
+        let skill = make_skill(vec![SkillCondition::TargetRequireTag(GameplayTag::CONTROL_HARD)]);
         let attrs = make_attrs(10.0, 30.0, 5.0);
         let tags = GameplayTags::default();
         let target_tags = GameplayTags::default(); // 没有STUN标签
@@ -392,18 +392,18 @@ mod tests {
         assert_eq!(
             result,
             Err(SkillUseError::TargetMissingTag {
-                tag: GameplayTag::STUN
+                tag: GameplayTag::CONTROL_HARD
             })
         );
     }
 
     #[test]
     fn can_use_目标拥有标签成功() {
-        let skill = make_skill(vec![SkillCondition::TargetRequireTag(GameplayTag::STUN)]);
+        let skill = make_skill(vec![SkillCondition::TargetRequireTag(GameplayTag::CONTROL_HARD)]);
         let attrs = make_attrs(10.0, 30.0, 5.0);
         let tags = GameplayTags::default();
         let mut target_tags = GameplayTags::default();
-        target_tags.add(GameplayTag::STUN);
+        target_tags.add(GameplayTag::CONTROL_HARD);
 
         let result = skill.can_use(&attrs, &tags, Some(&target_tags), 0);
         assert!(result.is_ok());
@@ -411,7 +411,7 @@ mod tests {
 
     #[test]
     fn can_use_无目标标签检查跳过() {
-        let skill = make_skill(vec![SkillCondition::TargetRequireTag(GameplayTag::STUN)]);
+        let skill = make_skill(vec![SkillCondition::TargetRequireTag(GameplayTag::CONTROL_HARD)]);
         let attrs = make_attrs(10.0, 30.0, 5.0);
         let tags = GameplayTags::default();
 
@@ -475,11 +475,11 @@ mod tests {
     fn can_use_多条件全部满足() {
         let skill = make_skill(vec![
             SkillCondition::MpCost(5),
-            SkillCondition::RequireTag(GameplayTag::FIRE),
+            SkillCondition::RequireTag(GameplayTag::DMG_FIRE),
         ]);
         let attrs = make_attrs(10.0, 30.0, 5.0); // MP=10 >= 5
         let mut tags = GameplayTags::default();
-        tags.add(GameplayTag::FIRE);
+        tags.add(GameplayTag::DMG_FIRE);
 
         let result = skill.can_use(&attrs, &tags, None, 0);
         assert!(result.is_ok());
@@ -489,11 +489,11 @@ mod tests {
     fn can_use_多条件之一不满足() {
         let skill = make_skill(vec![
             SkillCondition::MpCost(5),
-            SkillCondition::RequireTag(GameplayTag::FIRE),
+            SkillCondition::RequireTag(GameplayTag::DMG_FIRE),
         ]);
         let attrs = make_attrs(3.0, 30.0, 5.0); // MP=3 < 5
         let mut tags = GameplayTags::default();
-        tags.add(GameplayTag::FIRE);
+        tags.add(GameplayTag::DMG_FIRE);
 
         let result = skill.can_use(&attrs, &tags, None, 0);
         assert!(result.is_err());

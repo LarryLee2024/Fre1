@@ -3,7 +3,7 @@
 // 修复：所有函数接收 &UiTheme 参数，响应运行时主题变更
 
 use crate::core::ability::SkillSlots;
-use crate::core::attribute::{AttributeKind, Attributes};
+use crate::core::attribute::Attributes;
 use crate::core::character::{
     AttackRange, GridPosition, MovableRange, Selected, SelectionHighlight, Unit,
 };
@@ -60,7 +60,7 @@ pub fn show_move_range(
     let move_points = units
         .iter()
         .find(|(_, u, gp, _, _, _, _)| u.faction == unit.faction && gp.coord == start_coord)
-        .map(|(_, _, _, _, attrs, _, _)| attrs.get(AttributeKind::MoveRange) as u32)
+        .map(|(_, _, _, _, attrs, _, _)| attrs.get("move_range") as u32)
         .unwrap_or(3);
 
     let reachable = find_reachable_tiles(

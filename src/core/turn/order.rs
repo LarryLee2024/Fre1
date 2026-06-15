@@ -1,6 +1,6 @@
 // 回合行动队列与资源：行动顺序、回合状态、辅助资源、阶段系统
 
-use crate::core::attribute::{AttributeKind, Attributes};
+use crate::core::attribute::Attributes;
 use crate::core::character::{Dead, Faction, Unit};
 use bevy::ecs::message::{MessageReader, MessageWriter};
 use bevy::prelude::*;
@@ -137,7 +137,7 @@ pub fn init_turn_order(
     // 重建行动队列
     let unit_initiatives: Vec<(Entity, f32)> = units
         .iter()
-        .map(|(entity, _, attrs)| (entity, attrs.get(AttributeKind::Initiative)))
+        .map(|(entity, _, attrs)| (entity, attrs.get("initiative")))
         .collect();
     turn_order.queue = TurnOrder::build(&unit_initiatives);
     turn_order.current_index = 0;
@@ -195,7 +195,7 @@ pub fn turn_end_on_enter(
     // 重建行动队列：所有存活单位按 Initiative 降序
     let unit_initiatives: Vec<(Entity, f32)> = units
         .iter()
-        .map(|(entity, _, attrs)| (entity, attrs.get(AttributeKind::Initiative)))
+        .map(|(entity, _, attrs)| (entity, attrs.get("initiative")))
         .collect();
     turn_order.queue = TurnOrder::build(&unit_initiatives);
     turn_order.current_index = 0;

@@ -147,13 +147,13 @@ mod tests {
     // ================================================
     use super::super::domain::{BASIC_ATTACK_ID, SkillTargeting};
     use super::*;
-    use crate::core::attribute::AttributeKind;
+    
     use crate::core::effect::EffectDef;
 
     fn make_source_attrs(atk: f32) -> crate::core::attribute::Attributes {
         let mut attrs = crate::core::attribute::Attributes::default();
         // Attack = Might * 2, 所以 Might = atk / 2
-        attrs.set_base(AttributeKind::Might, atk / 2.0);
+        attrs.set_base("phys_atk", atk / 2.0);
         attrs.set_base_attack_range(1);
         attrs.fill_vital_resources();
         attrs
@@ -163,10 +163,10 @@ mod tests {
         let mut attrs = crate::core::attribute::Attributes::default();
         // Defense = Vitality, 所以 Vitality = def
         // MaxHp = 5 + Vitality * 5 = 5 + def * 5
-        attrs.set_base(AttributeKind::Vitality, def);
+        attrs.set_base("phys_def", def);
         attrs.fill_vital_resources();
         // 覆盖当前 HP 为指定值
-        attrs.set_vital(AttributeKind::Hp, hp);
+        attrs.set_vital("current_hp", hp);
         attrs
     }
 

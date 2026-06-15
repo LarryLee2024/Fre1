@@ -116,7 +116,7 @@ fn trigger_traits(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::attribute::{AttributeKind, AttributeModifierDef, ModifierOp};
+    use crate::core::attribute::{AttributeModifierDef, ModifierOp};
     use crate::core::character::{TraitData, TraitSource};
     use bevy::prelude::*;
 
@@ -156,9 +156,9 @@ mod tests {
                 description: String::new(),
                 trigger: TraitTrigger::Passive,
                 effects: vec![TraitEffect::ModifyAttribute(AttributeModifierDef {
-                    kind: AttributeKind::Attack,
+                    config_id: "phys_atk".into(),
                     op: ModifierOp::Add,
-                    value: 5.0,
+                    value: 5,
                 })],
             },
         );

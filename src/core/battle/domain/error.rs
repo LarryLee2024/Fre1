@@ -7,7 +7,7 @@
 //! B010-B019: 单位相关
 //! B020-B029: 伤害相关
 
-use crate::shared::ids::{SkillId, UnitId};
+use crate::shared::ids::{AbilityId, UnitId};
 use thiserror::Error;
 
 /// 战斗领域错误枚举
@@ -18,7 +18,7 @@ use thiserror::Error;
 pub enum BattleError {
     /// B001: 技能配置不存在
     #[error("B001: 技能配置不存在: {skill_id}")]
-    SkillNotFound { skill_id: SkillId },
+    SkillNotFound { skill_id: AbilityId },
 
     /// B002: 目标单位不存在
     #[error("B002: 目标单位不存在: {target}")]
@@ -71,7 +71,7 @@ mod tests {
     #[test]
     fn 技能未找到_包含错误码和技能id() {
         let err = BattleError::SkillNotFound {
-            skill_id: SkillId::new("fireball"),
+            skill_id: AbilityId::new("fireball"),
         };
         let msg = err.to_string();
         assert!(msg.contains("B001"));

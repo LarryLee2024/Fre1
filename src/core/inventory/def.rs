@@ -1,10 +1,8 @@
 // 物品定义：ItemDef / ItemType / UseEffect / ItemRegistry
 
-use crate::core::attribute::AttributeKind;
 use crate::core::attribute::AttributeModifierDef;
 use crate::core::equipment::{EquipmentRequirement, EquipmentSlot, Rarity};
 use crate::core::registry_loader::RegistryLoader;
-use crate::core::tag::TagName;
 use bevy::prelude::*;
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -51,8 +49,8 @@ impl ItemType {
 /// 消耗品使用效果
 #[derive(Clone, Debug, Reflect, Deserialize)]
 pub enum UseEffect {
-    /// 恢复 HP/MP/Stamina
-    RestoreVital { kind: AttributeKind, value: f32 },
+    /// 恢复 HP/MP（config_id 如 "max_hp"）
+    RestoreVital { config_id: String, value: i32 },
     /// 施加 Buff
     ApplyBuff { buff_id: String, duration: u32 },
     /// 授予临时 Trait
@@ -78,9 +76,9 @@ pub struct ItemDef {
     #[serde(default = "default_item_type")]
     pub item_type: ItemType,
     pub rarity: Rarity,
-    /// 物品标签
+    /// 物品标签（如 "consumable", "weapon_sword"）
     #[serde(default)]
-    pub tags: Vec<TagName>,
+    pub tags: Vec<String>,
     /// 最大堆叠数（1 = 不可堆叠，如装备；99 = 可堆叠，如药水）
     #[serde(default = "default_stack_size")]
     pub stack_size: u32,
@@ -161,13 +159,13 @@ impl ItemRegistry {
                 description: "普通的铁剑".into(),
                 item_type: ItemType::Equipment,
                 rarity: Rarity::Common,
-                tags: vec![TagName::Sword, TagName::Melee, TagName::Martial],
+                tags: vec!["weapon_sword".into(), "martial".into()],
                 stack_size: 1,
                 weight: 3.0,
                 modifiers: vec![AttributeModifierDef {
-                    kind: AttributeKind::Attack,
+                    config_id: "phys_atk".into(),
                     op: crate::core::attribute::ModifierOp::Add,
-                    value: 3.0,
+                    value: 3,
                 }],
                 traits: vec![],
                 requirements: vec![],
@@ -183,13 +181,13 @@ impl ItemRegistry {
                 description: "轻便的皮甲".into(),
                 item_type: ItemType::Equipment,
                 rarity: Rarity::Common,
-                tags: vec![TagName::LightArmor],
+                tags: vec!["light_armor".into()],
                 stack_size: 1,
                 weight: 4.0,
                 modifiers: vec![AttributeModifierDef {
-                    kind: AttributeKind::Defense,
+                    config_id: "phys_def".into(),
                     op: crate::core::attribute::ModifierOp::Add,
-                    value: 2.0,
+                    value: 2,
                 }],
                 traits: vec![],
                 requirements: vec![],
@@ -206,27 +204,27 @@ impl ItemRegistry {
                 item_type: ItemType::Equipment,
                 rarity: Rarity::Epic,
                 tags: vec![
-                    TagName::Sword,
-                    TagName::Fire,
-                    TagName::Martial,
-                    TagName::TwoHanded,
+                    "weapon_sword".into(),
+                    "dmg_fire".into(),
+                    "martial".into(),
+                    "two_handed".into(),
                 ],
                 stack_size: 1,
                 weight: 5.0,
                 modifiers: vec![
                     AttributeModifierDef {
-                        kind: AttributeKind::Attack,
+                        config_id: "phys_atk".into(),
                         op: crate::core::attribute::ModifierOp::Add,
-                        value: 15.0,
+                        value: 15,
                     },
                     AttributeModifierDef {
-                        kind: AttributeKind::CritRate,
+                        config_id: "crit_rate".into(),
                         op: crate::core::attribute::ModifierOp::Add,
-                        value: 5.0,
+                        value: 500,
                     },
                 ],
                 traits: vec!["flaming_weapon".into(), "dragon_bane".into()],
-                requirements: vec![EquipmentRequirement::RequireTag(TagName::Martial)],
+                requirements: vec![EquipmentRequirement::RequireTag("martial".into())],
                 slot: Some(EquipmentSlot::MainHand),
                 use_effects: vec![],
                 container_capacity: None,
@@ -239,13 +237,13 @@ impl ItemRegistry {
                 description: "坚固的铁盾".into(),
                 item_type: ItemType::Equipment,
                 rarity: Rarity::Common,
-                tags: vec![TagName::Shield],
+                tags: vec!["shield".into()],
                 stack_size: 1,
                 weight: 6.0,
                 modifiers: vec![AttributeModifierDef {
-                    kind: AttributeKind::Defense,
+                    config_id: "phys_def".into(),
                     op: crate::core::attribute::ModifierOp::Add,
-                    value: 3.0,
+                    value: 3,
                 }],
                 traits: vec![],
                 requirements: vec![],
@@ -261,13 +259,13 @@ impl ItemRegistry {
                 description: "蕴含魔力的法杖".into(),
                 item_type: ItemType::Equipment,
                 rarity: Rarity::Uncommon,
-                tags: vec![TagName::Staff, TagName::Simple],
+                tags: vec!["weapon_staff".into(), "simple".into()],
                 stack_size: 1,
                 weight: 2.0,
                 modifiers: vec![AttributeModifierDef {
-                    kind: AttributeKind::MagicAttack,
+                    config_id: "magic_atk".into(),
                     op: crate::core::attribute::ModifierOp::Add,
-                    value: 5.0,
+                    value: 5,
                 }],
                 traits: vec![],
                 requirements: vec![],
@@ -284,7 +282,7 @@ impl ItemRegistry {
                 description: "恢复 50 HP".into(),
                 item_type: ItemType::Consumable,
                 rarity: Rarity::Common,
-                tags: vec![TagName::Consumable],
+                tags: vec!["consumable".into()],
                 stack_size: 99,
                 weight: 0.5,
                 modifiers: vec![],
@@ -292,8 +290,8 @@ impl ItemRegistry {
                 requirements: vec![],
                 slot: None,
                 use_effects: vec![UseEffect::RestoreVital {
-                    kind: AttributeKind::Hp,
-                    value: 50.0,
+                    config_id: "max_hp".into(),
+                    value: 50,
                 }],
                 container_capacity: None,
                 container_max_weight: None,
@@ -305,7 +303,7 @@ impl ItemRegistry {
                 description: "恢复 30 MP".into(),
                 item_type: ItemType::Consumable,
                 rarity: Rarity::Common,
-                tags: vec![TagName::Consumable],
+                tags: vec!["consumable".into()],
                 stack_size: 99,
                 weight: 0.5,
                 modifiers: vec![],
@@ -313,8 +311,8 @@ impl ItemRegistry {
                 requirements: vec![],
                 slot: None,
                 use_effects: vec![UseEffect::RestoreVital {
-                    kind: AttributeKind::Mp,
-                    value: 30.0,
+                    config_id: "max_hp".into(),
+                    value: 30,
                 }],
                 container_capacity: None,
                 container_max_weight: None,
@@ -327,13 +325,13 @@ impl ItemRegistry {
                 description: "普通箭矢".into(),
                 item_type: ItemType::Ammo,
                 rarity: Rarity::Common,
-                tags: vec![TagName::Ammo],
+                tags: vec!["ammo".into()],
                 stack_size: 99,
                 weight: 0.1,
                 modifiers: vec![AttributeModifierDef {
-                    kind: AttributeKind::Attack,
+                    config_id: "phys_atk".into(),
                     op: crate::core::attribute::ModifierOp::Add,
-                    value: 1.0,
+                    value: 1,
                 }],
                 traits: vec![],
                 requirements: vec![],
@@ -387,11 +385,11 @@ mod tests {
                 description: "普通的铁剑",
                 item_type: Equipment,
                 rarity: Common,
-                tags: [SWORD, MELEE, MARTIAL],
+                tags: ["weapon_sword", "martial"],
                 stack_size: 1,
                 weight: 3.0,
                 modifiers: [
-                    (kind: Attack, op: Add, value: 3.0),
+                    (config_id: "phys_atk", op: Add, value: 3),
                 ],
                 slot: Some(MainHand),
             )
@@ -413,11 +411,11 @@ mod tests {
                 description: "恢复 50 HP",
                 item_type: Consumable,
                 rarity: Common,
-                tags: [CONSUMABLE],
+                tags: ["consumable"],
                 stack_size: 99,
                 weight: 0.5,
                 use_effects: [
-                    RestoreVital(kind: Hp, value: 50.0),
+                    RestoreVital(config_id: "max_hp", value: 50),
                 ],
             )
         "#;
@@ -490,7 +488,7 @@ mod tests {
                 stack_size: 99,
                 weight: 0.1,
                 modifiers: [
-                    (kind: Attack, op: Add, value: 1.0),
+                    (config_id: "phys_atk", op: Add, value: 1),
                 ],
             )
         "#;

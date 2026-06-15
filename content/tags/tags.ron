@@ -1,0 +1,55 @@
+(
+    tags: [
+        // === 元素标签 (Elemental) ===
+        (id: "dmg_fire",     category: Elemental, priority_weight: 0, dispellable: false, reflectable: true),
+        (id: "dmg_ice",      category: Elemental, priority_weight: 0, dispellable: false, reflectable: true),
+        (id: "dmg_physical", category: Elemental, priority_weight: 0, dispellable: false, reflectable: true),
+        (id: "dmg_magical",  category: Elemental, priority_weight: 0, dispellable: false, reflectable: true),
+        (id: "dmg_pierce",   category: Elemental, priority_weight: 0, dispellable: false, reflectable: false),
+        (id: "dmg_true",     category: Elemental, priority_weight: 0, dispellable: false, reflectable: false),
+
+        // === 状态标签 (Status) ===
+        (id: "buff",           category: Status, priority_weight: 0,  dispellable: true,  reflectable: false),
+        (id: "debuff",         category: Status, priority_weight: 0,  dispellable: true,  reflectable: false),
+        (id: "special_state",  category: Status, priority_weight: 0,  dispellable: false, reflectable: false),
+        (id: "control_soft",   category: Status, priority_weight: 1,  dispellable: true,  reflectable: false),
+        (id: "control_hard",   category: Status, priority_weight: 2,  dispellable: true,  reflectable: false),
+        (id: "control_full",   category: Status, priority_weight: 3,  dispellable: true,  reflectable: false),
+        (id: "invincible",     category: Status, priority_weight: 99, dispellable: false, reflectable: false),
+        (id: "untargetable",   category: Status, priority_weight: 98, dispellable: false, reflectable: false),
+
+        // === 阵营标签 (Class) ===
+        (id: "ally",       category: Class, priority_weight: 0, dispellable: false, reflectable: false),
+        (id: "enemy",      category: Class, priority_weight: 0, dispellable: false, reflectable: false),
+        (id: "summon",     category: Class, priority_weight: 0, dispellable: false, reflectable: false),
+        (id: "boss",       category: Class, priority_weight: 0, dispellable: false, reflectable: false),
+        (id: "mechanical", category: Class, priority_weight: 0, dispellable: false, reflectable: false),
+
+        // === 装备标签 (Equipment) ===
+        (id: "weapon_sword",  category: Equipment, priority_weight: 0, dispellable: false, reflectable: false),
+        (id: "weapon_bow",    category: Equipment, priority_weight: 0, dispellable: false, reflectable: false),
+        (id: "weapon_staff",  category: Equipment, priority_weight: 0, dispellable: false, reflectable: false),
+        (id: "heavy_armor",   category: Equipment, priority_weight: 0, dispellable: false, reflectable: false),
+        (id: "light_armor",   category: Equipment, priority_weight: 0, dispellable: false, reflectable: false),
+        (id: "shield",        category: Equipment, priority_weight: 0, dispellable: false, reflectable: false),
+
+        // === 机制标签 (Mechanism) ===
+        (id: "flying",          category: Mechanism, priority_weight: 0,  dispellable: false, reflectable: false),
+        (id: "grounded",        category: Mechanism, priority_weight: 0,  dispellable: false, reflectable: false),
+        (id: "dispellable",     category: Mechanism, priority_weight: 0,  dispellable: false, reflectable: false),
+        (id: "undispellable",   category: Mechanism, priority_weight: 0,  dispellable: false, reflectable: false),
+        (id: "reflectable",     category: Mechanism, priority_weight: 0,  dispellable: false, reflectable: false),
+        (id: "untriggerable",   category: Mechanism, priority_weight: 0,  dispellable: false, reflectable: false),
+    ],
+    mutual_exclusions: [
+        (tag_a: "flying", tag_b: "grounded"),
+        (tag_a: "control_full", tag_b: "control_hard"),
+        (tag_a: "control_full", tag_b: "control_soft"),
+        (tag_a: "invincible", tag_b: "dmg_physical"),
+        (tag_a: "invincible", tag_b: "dmg_magical"),
+        (tag_a: "invincible", tag_b: "dmg_pierce"),
+        (tag_a: "invincible", tag_b: "dmg_true"),
+        (tag_a: "invincible", tag_b: "dmg_fire"),
+        (tag_a: "invincible", tag_b: "dmg_ice"),
+    ],
+)

@@ -1,0 +1,18 @@
+(
+    attributes: [
+        // ── 核心五维 (Core) ──
+        (id: "phys_atk",   name_key: "attr.a_001.name", category: Core,    default: 10, min: 0, max: 99999),
+        (id: "magic_atk",  name_key: "attr.a_002.name", category: Core,    default: 10, min: 0, max: 99999),
+        (id: "phys_def",   name_key: "attr.a_003.name", category: Core,    default: 5,  min: 0, max: 99999),
+        (id: "magic_def",  name_key: "attr.a_004.name", category: Core,    default: 5,  min: 0, max: 99999),
+        (id: "max_hp",     name_key: "attr.a_005.name", category: Core,    default: 100, min: 1, max: 99999),
+
+        // ── 次级属性 (Secondary) ──
+        (id: "crit_rate",  name_key: "attr.a_006.name", category: Secondary, default: 500,   min: 0,    max: 9500),
+        (id: "crit_dmg",   name_key: "attr.a_007.name", category: Secondary, default: 15000, min: 15000, max: 50000),
+        (id: "move_range", name_key: "attr.a_008.name", category: Secondary, default: 3,     min: 1,    max: 99),
+        (id: "atk_range",  name_key: "attr.a_009.name", category: Secondary, default: 1,     min: 1,    max: 99),
+        (id: "hit_rate",   name_key: "attr.a_010.name", category: Secondary, default: 10000, min: 0,    max: 10000),
+        (id: "dodge_rate", name_key: "attr.a_011.name", category: Secondary, default: 500,   min: 0,    max: 8000),
+    ],
+)

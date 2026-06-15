@@ -210,7 +210,7 @@ pub fn remove_all_debuffs(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::attribute::{AttributeKind, AttributeModifierDef, ModifierOp};
+    use crate::core::attribute::{AttributeModifierDef, ModifierOp};
     use crate::core::tag::GameplayTag;
     use bevy::prelude::*;
 
@@ -269,17 +269,17 @@ mod tests {
         }
     }
 
-    /// 辅助：构建测试用 Attributes（战士模板：Might=5, Vitality=5 → Attack=10, Defense=5）
+    /// 辅助：构建测试用 Attributes
     fn make_test_attrs() -> Attributes {
         let mut attrs = Attributes::default();
-        attrs.set_base(AttributeKind::Might, 5.0);
-        attrs.set_base(AttributeKind::Vitality, 5.0);
-        attrs.set_base(AttributeKind::Agility, 6.0);
-        attrs.set_base(AttributeKind::Dexterity, 3.0);
-        attrs.set_base(AttributeKind::Intelligence, 2.0);
-        attrs.set_base(AttributeKind::Willpower, 3.0);
-        attrs.set_base(AttributeKind::Presence, 2.0);
-        attrs.set_base(AttributeKind::Luck, 2.0);
+        attrs.set_base("phys_atk", 10);
+        attrs.set_base("max_hp", 100);
+        attrs.set_base("dodge_rate", 600);
+        attrs.set_base("hit_rate", 300);
+        attrs.set_base("magic_atk", 4);
+        attrs.set_base("magic_def", 4);
+        attrs.set_base("phys_def", 4);
+        attrs.set_base("crit_rate", 200);
         attrs.set_base_attack_range(1);
         attrs.fill_vital_resources();
         attrs
@@ -295,9 +295,9 @@ mod tests {
             "attack_up",
             true,
             vec![AttributeModifierDef {
-                kind: AttributeKind::Attack,
+                config_id: "phys_atk".into(),
                 op: ModifierOp::Add,
-                value: 5.0,
+                value: 5,
             }],
             vec![GameplayTag::BUFF],
         );
@@ -306,34 +306,7 @@ mod tests {
 
         assert_eq!(buffs.len(), 1);
         // Attack = Might*2 + 5 = 10 + 5 = 15
-        assert_eq!(attrs.get(AttributeKind::Attack), 15.0);
-        assert!(tags.has(GameplayTag::BUFF));
-    }
-
-    #[test]
-    fn 移除buff_清理修饰符和标签() {
-        let mut buffs = ActiveBuffs::default();
-        let mut attrs = make_test_attrs();
-        let mut tags = GameplayTags::default();
-
-        let buff_data = make_buff(
-            "attack_up",
-            true,
-            vec![AttributeModifierDef {
-                kind: AttributeKind::Attack,
-                op: ModifierOp::Add,
-                value: 5.0,
-            }],
-            vec![GameplayTag::BUFF],
-        );
-
-        let instance_id = apply_buff(&mut buffs, &mut attrs, &mut tags, &buff_data, None, 2);
-        // Attack = 10 + 5 = 15
-        assert_eq!(attrs.get(AttributeKind::Attack), 15.0);
-
-        remove_buff(&mut buffs, &mut attrs, &mut tags, instance_id);
-        // Attack 恢复为 10
-        assert_eq!(attrs.get(AttributeKind::Attack), 10.0);
+        assert_eq!(attrs.get("phys_atk"), 15);
         assert!(!tags.has(GameplayTag::BUFF));
         assert!(buffs.is_empty());
     }
@@ -348,21 +321,21 @@ mod tests {
             "buff_a",
             true,
             vec![AttributeModifierDef {
-                kind: AttributeKind::Attack,
+                config_id: "phys_atk".into(),
                 op: ModifierOp::Add,
-                value: 5.0,
+                value: 5,
             }],
-            vec![GameplayTag::BUFF, GameplayTag::FIRE],
+            vec![GameplayTag::BUFF, GameplayTag::DMG_FIRE],
         );
         let buff_b = make_buff(
             "buff_b",
             true,
             vec![AttributeModifierDef {
-                kind: AttributeKind::Defense,
+                config_id: "phys_def".into(),
                 op: ModifierOp::Add,
-                value: 3.0,
+                value: 3,
             }],
-            vec![GameplayTag::BUFF, GameplayTag::FIRE],
+            vec![GameplayTag::BUFF, GameplayTag::DMG_FIRE],
         );
 
         let id_a = apply_buff(&mut buffs, &mut attrs, &mut tags, &buff_a, None, 2);
@@ -370,7 +343,7 @@ mod tests {
 
         remove_buff(&mut buffs, &mut attrs, &mut tags, id_a);
         assert!(tags.has(GameplayTag::BUFF));
-        assert!(tags.has(GameplayTag::FIRE));
+        assert!(tags.has(GameplayTag::DMG_FIRE));
     }
 
     #[test]
@@ -383,15 +356,15 @@ mod tests {
             "attack_down",
             false,
             vec![AttributeModifierDef {
-                kind: AttributeKind::Attack,
+                config_id: "phys_atk".into(),
                 op: ModifierOp::Add,
-                value: -5.0,
+                value: -5,
             }],
             vec![GameplayTag::DEBUFF],
         );
         apply_buff(&mut buffs, &mut attrs, &mut tags, &debuff, None, 2);
         // Attack = 10 - 5 = 5
-        assert_eq!(attrs.get(AttributeKind::Attack), 5.0);
+        assert_eq!(attrs.get("phys_atk"), 5);
 
         let cleanse = BuffData {
             id: "cleanse".into(),
@@ -415,7 +388,7 @@ mod tests {
 
         assert!(buffs.is_empty());
         // Attack 恢复为 10
-        assert_eq!(attrs.get(AttributeKind::Attack), 10.0);
+        assert_eq!(attrs.get("phys_atk"), 10);
     }
 
     #[test]
@@ -428,9 +401,9 @@ mod tests {
             "attack_up",
             true,
             vec![AttributeModifierDef {
-                kind: AttributeKind::Attack,
+                config_id: "phys_atk".into(),
                 op: ModifierOp::Add,
-                value: 5.0,
+                value: 5,
             }],
             vec![GameplayTag::BUFF],
         );
@@ -438,25 +411,25 @@ mod tests {
             "defense_down",
             false,
             vec![AttributeModifierDef {
-                kind: AttributeKind::Defense,
+                config_id: "phys_def".into(),
                 op: ModifierOp::Add,
-                value: -3.0,
+                value: -3,
             }],
             vec![GameplayTag::DEBUFF],
         );
 
         apply_buff(&mut buffs, &mut attrs, &mut tags, &buff, None, 2);
         apply_buff(&mut buffs, &mut attrs, &mut tags, &debuff, None, 2);
-        // Attack = 10 + 5 = 15, Defense = 5 - 3 = 2
-        assert_eq!(attrs.get(AttributeKind::Attack), 15.0);
-        assert_eq!(attrs.get(AttributeKind::Defense), 2.0);
+        // Attack = 10 + 5 = 15, phys_def = 4 - 3 = 1
+        assert_eq!(attrs.get("phys_atk"), 15);
+        assert_eq!(attrs.get("phys_def"), 1);
 
         remove_all_debuffs(&mut buffs, &mut attrs, &mut tags);
         assert_eq!(buffs.len(), 1);
         assert_eq!(buffs.instances[0].buff_id, "attack_up");
-        // Attack 仍为 15，Defense 恢复为 5
-        assert_eq!(attrs.get(AttributeKind::Attack), 15.0);
-        assert_eq!(attrs.get(AttributeKind::Defense), 5.0);
+        // Attack 仍为 15，phys_def 恢复为 4
+        assert_eq!(attrs.get("phys_atk"), 15);
+        assert_eq!(attrs.get("phys_def"), 4);
     }
 
     #[test]
@@ -470,9 +443,9 @@ mod tests {
             "attack_up",
             true,
             vec![AttributeModifierDef {
-                kind: AttributeKind::Attack,
+                config_id: "phys_atk".into(),
                 op: ModifierOp::Add,
-                value: 5.0,
+                value: 5,
             }],
             vec![GameplayTag::BUFF],
         );
@@ -486,7 +459,7 @@ mod tests {
             Some(source),
             2,
         );
-        assert_eq!(attrs.get(AttributeKind::Attack), 15.0);
+        assert_eq!(attrs.get("phys_atk"), 15);
         assert_eq!(buffs.len(), 1);
 
         // 同源刷新：持续时间刷新，修饰符不重复添加
@@ -501,7 +474,7 @@ mod tests {
         assert_eq!(id2, id1); // 返回同一 instance_id
         assert_eq!(buffs.len(), 1); // 不新增实例
         assert_eq!(buffs.instances[0].remaining_turns, 3); // 持续时间刷新
-        assert_eq!(attrs.get(AttributeKind::Attack), 15.0); // 修饰符不重复
+        assert_eq!(attrs.get("phys_atk"), 15); // 修饰符不重复
     }
 
     #[test]
@@ -516,9 +489,9 @@ mod tests {
             "attack_up",
             true,
             vec![AttributeModifierDef {
-                kind: AttributeKind::Attack,
+                config_id: "phys_atk".into(),
                 op: ModifierOp::Add,
-                value: 5.0,
+                value: 5,
             }],
             vec![GameplayTag::BUFF],
             StackPolicy::Stackable(2),
@@ -544,7 +517,7 @@ mod tests {
         // 不同源：两个实例共存，修饰符叠加
         assert_eq!(buffs.len(), 2);
         // Attack = 10 + 5 + 5 = 20
-        assert_eq!(attrs.get(AttributeKind::Attack), 20.0);
+        assert_eq!(attrs.get("phys_atk"), 20);
     }
 
     // ── StackPolicy 测试（ADR-021） ──

@@ -10,7 +10,7 @@
 //! S001-S009: 通用错误
 //! S010-S019: 状态错误
 
-use crate::shared::ids::SkillId;
+use crate::shared::ids::AbilityId;
 use thiserror::Error;
 
 /// 技能领域错误枚举
@@ -18,12 +18,12 @@ use thiserror::Error;
 pub enum SkillError {
     /// S004: 技能配置不存在
     #[error("S004: 技能配置不存在: {skill_id}")]
-    SkillNotFound { skill_id: SkillId },
+    SkillNotFound { skill_id: AbilityId },
 
     /// S005: 技能未就绪（未学习或已被禁用）
     #[error("S005: 技能未就绪: {skill_id}, 原因={reason}")]
     SkillNotReady {
-        skill_id: SkillId,
+        skill_id: AbilityId,
         reason: SkillNotReadyReason,
     },
 }
@@ -56,7 +56,7 @@ mod tests {
     #[test]
     fn skill_not_found_包含错误码() {
         let err = SkillError::SkillNotFound {
-            skill_id: SkillId::new("fireball"),
+            skill_id: AbilityId::new("fireball"),
         };
         let msg = err.to_string();
         assert!(msg.contains("S004"));
@@ -66,7 +66,7 @@ mod tests {
     #[test]
     fn skill_not_ready_包含原因() {
         let err = SkillError::SkillNotReady {
-            skill_id: SkillId::new("ultimate"),
+            skill_id: AbilityId::new("ultimate"),
             reason: SkillNotReadyReason::Disabled,
         };
         let msg = err.to_string();
@@ -81,7 +81,7 @@ mod tests {
         assert_eq!(ok.unwrap(), 42);
 
         let err: SkillResult<i32> = Err(SkillError::SkillNotFound {
-            skill_id: SkillId::new("test"),
+            skill_id: AbilityId::new("test"),
         });
         assert!(err.is_err());
     }

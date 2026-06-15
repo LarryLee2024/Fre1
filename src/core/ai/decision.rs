@@ -1,5 +1,5 @@
 use crate::core::ability::{SkillCooldowns, SkillRegistry, SkillSlots, effective_skill_range};
-use crate::core::attribute::{AttributeKind, Attributes};
+use crate::core::attribute::Attributes;
 use crate::core::battle::CombatIntent;
 use crate::core::battle::manhattan_distance;
 use crate::core::character::{AiBehaviorId, Dead, Faction, GridPosition, Unit, UnitName};
@@ -87,11 +87,11 @@ pub fn enemy_ai_system(
                 entity: e,
                 faction: u.faction,
                 coord: gp.coord,
-                atk: attrs.get(AttributeKind::Attack),
-                hp: attrs.get(AttributeKind::Hp),
-                max_hp: attrs.get(AttributeKind::MaxHp),
-                mov: attrs.get(AttributeKind::MoveRange) as u32,
-                attack_range: attrs.get(AttributeKind::AttackRange) as u32,
+                atk: attrs.get("phys_atk"),
+                hp: attrs.current_hp,
+                max_hp: attrs.max_hp(),
+                mov: attrs.get("move_range") as u32,
+                attack_range: attrs.get("atk_range") as u32,
                 acted: u.acted,
                 skill_ids: skills.skill_ids.clone(),
                 cooldowns: cooldowns.clone(),

@@ -10,8 +10,49 @@
 
 use crate::core::attribute::AttributeModifierDef;
 use crate::core::effect::EffectDef;
-use crate::core::tag::{GameplayTag, TagName};
+use crate::core::tag::GameplayTag;
 use serde::Deserialize;
+
+/// 将 Tag ID 字符串转换为 GameplayTag（临时函数，后续替换为 TagRegistry 查询）
+fn tag_id_to_gameplay_tag(id: &str) -> GameplayTag {
+    match id {
+        "buff" => GameplayTag::BUFF,
+        "debuff" => GameplayTag::DEBUFF,
+        "special_state" => GameplayTag::SPECIAL_STATE,
+        "dmg_fire" => GameplayTag::DMG_FIRE,
+        "dmg_ice" => GameplayTag::DMG_ICE,
+        "dmg_physical" => GameplayTag::DMG_PHYSICAL,
+        "dmg_magical" => GameplayTag::DMG_MAGICAL,
+        "dmg_pierce" => GameplayTag::DMG_PIERCE,
+        "dmg_true" => GameplayTag::DMG_TRUE,
+        "control_soft" => GameplayTag::CONTROL_SOFT,
+        "control_hard" => GameplayTag::CONTROL_HARD,
+        "control_full" => GameplayTag::CONTROL_FULL,
+        "invincible" => GameplayTag::INVINCIBLE,
+        "untargetable" => GameplayTag::UNTARGETABLE,
+        "ally" => GameplayTag::ALLY,
+        "enemy" => GameplayTag::ENEMY,
+        "summon" => GameplayTag::SUMMON,
+        "boss" => GameplayTag::BOSS,
+        "mechanical" => GameplayTag::MECHANICAL,
+        "flying" => GameplayTag::FLYING,
+        "grounded" => GameplayTag::GROUNDED,
+        "dispellable" => GameplayTag::DISPELLABLE,
+        "undispellable" => GameplayTag::UNDISPELLABLE,
+        "reflectable" => GameplayTag::REFLECTABLE,
+        "untriggerable" => GameplayTag::UNTRIGGERABLE,
+        "weapon_sword" => GameplayTag::WEAPON_SWORD,
+        "weapon_bow" => GameplayTag::WEAPON_BOW,
+        "weapon_staff" => GameplayTag::WEAPON_STAFF,
+        "heavy_armor" => GameplayTag::HEAVY_ARMOR,
+        "light_armor" => GameplayTag::LIGHT_ARMOR,
+        "shield" => GameplayTag::SHIELD,
+        _ => {
+            bevy::log::warn!(target: "buff", "Unknown tag_id: {}", id);
+            GameplayTag::from_bits(0)
+        }
+    }
+}
 
 // ──────────────────────────── DurationPolicy（ADR-021） ────────────────────────────
 
@@ -226,7 +267,7 @@ pub struct BuffDef {
     // ── 旧字段 ──
     pub default_duration: u32,
     pub modifiers: Vec<AttributeModifierDef>,
-    pub tags: Vec<TagName>,
+    pub tags: Vec<String>,
     pub dot_damage: i32,
     pub hot_heal: i32,
     pub is_stun: bool,
@@ -258,7 +299,7 @@ impl From<BuffDef> for BuffData {
             conditions: def.conditions,
             default_duration: def.default_duration,
             modifiers: def.modifiers,
-            tags: def.tags.iter().map(|t| t.to_tag()).collect(),
+            tags: def.tags.iter().map(|t| tag_id_to_gameplay_tag(t)).collect(),
             dot_damage: def.dot_damage,
             hot_heal: def.hot_heal,
             is_stun: def.is_stun,

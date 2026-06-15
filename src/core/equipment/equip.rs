@@ -445,14 +445,14 @@ mod tests {
 
     fn make_test_attrs() -> Attributes {
         let mut attrs = Attributes::default();
-        attrs.set_base(AttributeKind::Might, 5.0);
-        attrs.set_base(AttributeKind::Vitality, 5.0);
-        attrs.set_base(AttributeKind::Agility, 6.0);
-        attrs.set_base(AttributeKind::Dexterity, 3.0);
-        attrs.set_base(AttributeKind::Intelligence, 2.0);
-        attrs.set_base(AttributeKind::Willpower, 3.0);
-        attrs.set_base(AttributeKind::Presence, 2.0);
-        attrs.set_base(AttributeKind::Luck, 2.0);
+        attrs.set_base("phys_atk", 5.0);
+        attrs.set_base("phys_def", 5.0);
+        attrs.set_base("dodge_rate", 6.0);
+        attrs.set_base("hit_rate", 3.0);
+        attrs.set_base("magic_atk", 2.0);
+        attrs.set_base("magic_def", 3.0);
+        attrs.set_base("presence", 2.0);
+        attrs.set_base("crit_rate", 2.0);
         attrs.set_base_attack_range(1);
         attrs.fill_vital_resources();
         attrs
@@ -514,9 +514,9 @@ mod tests {
         );
 
         let base_attack = 10.0;
-        assert_eq!(attrs.get(AttributeKind::Attack), base_attack + 3.0);
-        assert!(persistent.from_equipment.has(GameplayTag::SWORD));
-        assert!(persistent.from_equipment.has(GameplayTag::MARTIAL));
+        assert_eq!(attrs.get("phys_atk"), base_attack + 3.0);
+        assert!(persistent.from_equipment.has(GameplayTag::WEAPON_SWORD));
+        assert!(persistent.from_equipment.has(GameplayTag::DMG_PHYSICAL));
     }
 
     #[test]
@@ -568,8 +568,8 @@ mod tests {
             &mut trait_collection,
         );
 
-        assert_eq!(attrs.get(AttributeKind::Attack), 10.0);
-        assert!(!persistent.from_equipment.has(GameplayTag::SWORD));
+        assert_eq!(attrs.get("phys_atk"), 10.0);
+        assert!(!persistent.from_equipment.has(GameplayTag::WEAPON_SWORD));
         assert!(container.get(instance_id).is_some());
     }
 
@@ -600,10 +600,10 @@ mod tests {
             &TraitEffectHandlerRegistry::with_defaults(),
         );
 
-        assert!(persistent.from_equipment.has(GameplayTag::SWORD));
-        assert!(persistent.from_equipment.has(GameplayTag::FIRE));
-        assert!(persistent.from_equipment.has(GameplayTag::MARTIAL));
-        assert!(persistent.from_equipment.has(GameplayTag::TWO_HANDED));
+        assert!(persistent.from_equipment.has(GameplayTag::WEAPON_SWORD));
+        assert!(persistent.from_equipment.has(GameplayTag::DMG_FIRE));
+        assert!(persistent.from_equipment.has(GameplayTag::DMG_PHYSICAL));
+        assert!(persistent.from_equipment.has(GameplayTag::HEAVY_ARMOR));
     }
 
     #[test]

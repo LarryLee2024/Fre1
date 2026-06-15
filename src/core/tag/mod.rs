@@ -1,5 +1,15 @@
-// 标签系统：位掩码实现，O(1) 查询，替代硬编码枚举匹配
+//! 标签系统（ADR-031 §2）
+//!
+//! 位掩码实现，O(1) 查询。基于 Linglan 5 分类模型：
+//! - Elemental（bits 0-7）：伤害类型
+//! - Status（bits 8-15）：状态/控制层级
+//! - Class（bits 16-23）：阵营/身份
+//! - Equipment（bits 24-31）：装备属性
+//! - Mechanism（bits 32-39）：底层机制
+//!
+//! 标签定义从 RON 加载（`content/tags/tags.ron`）。
 
+pub mod control;
 pub mod def;
 
 pub use def::*;
@@ -7,93 +17,83 @@ pub use def::*;
 use bevy::prelude::*;
 use serde::Deserialize;
 
+// ============================================================================
+// GameplayTag — 位掩码常量
+// ============================================================================
+
 /// 游戏标签（位掩码）
+///
+/// 每个标签占用 1 bit，支持 O(1) 查询和组合运算。
+/// 5 分类分布：
+///   bits 0-7  : Elemental（伤害类型）
+///   bits 8-15 : Status（状态/控制层级）
+///   bits 16-23: Class（阵营/身份）
+///   bits 24-31: Equipment（装备属性）
+///   bits 32-39: Mechanism（底层机制）
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Reflect)]
 pub struct GameplayTag(pub u64);
 
 impl GameplayTag {
-    // ── 元素 ──
-    pub const FIRE: Self = Self(1 << 0);
-    pub const ICE: Self = Self(1 << 1);
-    pub const POISON: Self = Self(1 << 2);
+    // ========== Elemental（bits 0-7）==========
+    pub const DMG_FIRE: Self = Self(1 << 0);
+    pub const DMG_ICE: Self = Self(1 << 1);
+    pub const DMG_PHYSICAL: Self = Self(1 << 2);
+    pub const DMG_MAGICAL: Self = Self(1 << 3);
+    pub const DMG_PIERCE: Self = Self(1 << 4);
+    pub const DMG_TRUE: Self = Self(1 << 5);
 
-    // ── 状态条件 ──
-    pub const STUN: Self = Self(1 << 8);
-    pub const BURN: Self = Self(1 << 9);
-    pub const REGEN: Self = Self(1 << 10);
+    // ========== Status（bits 8-15）==========
+    pub const BUFF: Self = Self(1 << 8);
+    pub const DEBUFF: Self = Self(1 << 9);
+    pub const SPECIAL_STATE: Self = Self(1 << 10);
+    pub const CONTROL_SOFT: Self = Self(1 << 11);
+    pub const CONTROL_HARD: Self = Self(1 << 12);
+    pub const CONTROL_FULL: Self = Self(1 << 13);
+    pub const INVINCIBLE: Self = Self(1 << 14);
+    pub const UNTARGETABLE: Self = Self(1 << 15);
 
-    // ── 武器/攻击类型 ──
-    pub const MELEE: Self = Self(1 << 16);
-    pub const RANGED: Self = Self(1 << 17);
+    // ========== Class / Faction（bits 16-23）==========
+    pub const ALLY: Self = Self(1 << 16);
+    pub const ENEMY: Self = Self(1 << 17);
+    pub const SUMMON: Self = Self(1 << 18);
+    pub const BOSS: Self = Self(1 << 19);
+    pub const MECHANICAL: Self = Self(1 << 20);
 
-    // ── 职业 ──
-    pub const WARRIOR: Self = Self(1 << 24);
-    pub const ARCHER: Self = Self(1 << 25);
-    pub const MAGE: Self = Self(1 << 26);
+    // ========== Equipment（bits 24-31）==========
+    pub const WEAPON_SWORD: Self = Self(1 << 24);
+    pub const WEAPON_BOW: Self = Self(1 << 25);
+    pub const WEAPON_STAFF: Self = Self(1 << 26);
+    pub const HEAVY_ARMOR: Self = Self(1 << 27);
+    pub const LIGHT_ARMOR: Self = Self(1 << 28);
+    pub const SHIELD: Self = Self(1 << 29);
 
-    // ── 移动类型 ──
-    pub const FLYING: Self = Self(1 << 48);
-    pub const MOUNTED: Self = Self(1 << 49);
-    pub const SWIMMING: Self = Self(1 << 50);
+    // ========== Mechanism（bits 32-39）==========
+    pub const FLYING: Self = Self(1 << 32);
+    pub const GROUNDED: Self = Self(1 << 33);
+    pub const DISPELLABLE: Self = Self(1 << 34);
+    pub const UNDISPELLABLE: Self = Self(1 << 35);
+    pub const REFLECTABLE: Self = Self(1 << 36);
+    pub const UNTRIGGERABLE: Self = Self(1 << 37);
 
-    // ── 物品类型 ──
-    pub const CONSUMABLE: Self = Self(1 << 51);
-    pub const AMMO: Self = Self(1 << 52);
-    pub const MATERIAL: Self = Self(1 << 53);
-    pub const CURRENCY: Self = Self(1 << 54);
-    pub const QUEST_ITEM: Self = Self(1 << 55);
+    /// 从 u64 原始值构造
+    pub const fn from_bits(bits: u64) -> Self {
+        Self(bits)
+    }
 
-    // ── 消耗品子类 ──
-    pub const HEALING: Self = Self(1 << 56);
-    pub const POTION: Self = Self(1 << 57);
-    pub const SCROLL: Self = Self(1 << 58);
-    pub const FOOD: Self = Self(1 << 59);
-
-    // ── 技能类型 ──
-    pub const SKILL_ACTIVE: Self = Self(1 << 32);
-    pub const SKILL_PASSIVE: Self = Self(1 << 33);
-
-    // ── Buff 类型 ──
-    pub const BUFF: Self = Self(1 << 40);
-    pub const DEBUFF: Self = Self(1 << 41);
-
-    // ── 装备属性 ──
-    pub const HEAVY_ARMOR: Self = Self(1 << 42);
-    pub const LIGHT_ARMOR: Self = Self(1 << 43);
-    pub const SHIELD: Self = Self(1 << 44);
-    pub const TWO_HANDED: Self = Self(1 << 45);
-    pub const MARTIAL: Self = Self(1 << 46);
-    pub const SIMPLE: Self = Self(1 << 47);
-
-    // ── 武器类型 ──
-    pub const SWORD: Self = Self(1 << 20);
-    pub const AXE: Self = Self(1 << 21);
-    pub const BOW: Self = Self(1 << 22);
-    pub const STAFF: Self = Self(1 << 23);
-
-    /// 返回位掩码中已使用的 bit 数量
-    pub fn used_bits() -> u32 {
-        TagName::ALL
-            .iter()
-            .map(|name| name.to_tag().0.count_ones())
-            .sum()
+    /// 返回位掩码的原始值
+    pub const fn bits(&self) -> u64 {
+        self.0
     }
 }
 
-/// 实体上的标签集合组件
+// ============================================================================
+// GameplayTags — 实体标签组件
+// ============================================================================
+
+/// 实体上的标签集合组件（运行时）
 #[derive(Component, Reflect, Default, Debug, Clone)]
 #[reflect(Component)]
 pub struct GameplayTags(pub u64);
-
-/// 持久化标签（不被 rebuild 丢失，支持 Trait + Equipment 两层）
-#[derive(Component, Reflect, Default, Debug, Clone)]
-#[reflect(Component)]
-pub struct PersistentTags {
-    /// Trait 授予的标签（种族/职业/天赋，最持久）
-    pub from_traits: GameplayTags,
-    /// 装备授予的标签（穿脱变化）
-    pub from_equipment: GameplayTags,
-}
 
 impl GameplayTags {
     pub fn has(&self, tag: GameplayTag) -> bool {
@@ -125,300 +125,196 @@ impl GameplayTags {
         result
     }
 
-    /// 返回所有已激活的标签列表
-    pub fn active_tags(&self) -> Vec<GameplayTag> {
-        const ALL_TAGS: &[GameplayTag] = &[
-            GameplayTag::FIRE,
-            GameplayTag::ICE,
-            GameplayTag::POISON,
-            GameplayTag::STUN,
-            GameplayTag::BURN,
-            GameplayTag::REGEN,
-            GameplayTag::MELEE,
-            GameplayTag::RANGED,
-            GameplayTag::SWORD,
-            GameplayTag::AXE,
-            GameplayTag::BOW,
-            GameplayTag::STAFF,
-            GameplayTag::WARRIOR,
-            GameplayTag::ARCHER,
-            GameplayTag::MAGE,
-            GameplayTag::FLYING,
-            GameplayTag::MOUNTED,
-            GameplayTag::SWIMMING,
-            GameplayTag::CONSUMABLE,
-            GameplayTag::AMMO,
-            GameplayTag::MATERIAL,
-            GameplayTag::CURRENCY,
-            GameplayTag::QUEST_ITEM,
-            GameplayTag::HEALING,
-            GameplayTag::POTION,
-            GameplayTag::SCROLL,
-            GameplayTag::FOOD,
-            GameplayTag::SKILL_ACTIVE,
-            GameplayTag::SKILL_PASSIVE,
-            GameplayTag::BUFF,
-            GameplayTag::DEBUFF,
-            GameplayTag::HEAVY_ARMOR,
-            GameplayTag::LIGHT_ARMOR,
-            GameplayTag::SHIELD,
-            GameplayTag::TWO_HANDED,
-            GameplayTag::MARTIAL,
-            GameplayTag::SIMPLE,
-        ];
-        ALL_TAGS.iter().copied().filter(|t| self.has(*t)).collect()
+    /// 检查是否满足条件 tag（AND 语义）
+    pub fn matches(&self, required: GameplayTag) -> bool {
+        self.has(required)
     }
 }
 
-/// 标签名称枚举（用于数据定义中的序列化/反序列化）
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Reflect, Deserialize)]
-#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-pub enum TagName {
-    Fire,
-    Ice,
-    Poison,
-    Stun,
-    Burn,
-    Regen,
-    Melee,
-    Ranged,
-    Sword,
-    Axe,
-    Bow,
-    Staff,
-    Warrior,
-    Archer,
-    Mage,
-    Flying,
-    Mounted,
-    Swimming,
-    Consumable,
-    Ammo,
-    Material,
-    Currency,
-    QuestItem,
-    Healing,
-    Potion,
-    Scroll,
-    Food,
-    SkillActive,
-    SkillPassive,
-    Buff,
-    Debuff,
-    HeavyArmor,
-    LightArmor,
-    Shield,
-    TwoHanded,
-    Martial,
-    Simple,
+// ============================================================================
+// PersistentTags — 持久化标签组件
+// ============================================================================
+
+/// 持久化标签（不被 rebuild 丢失，支持 Trait + Equipment 两层）
+#[derive(Component, Reflect, Default, Debug, Clone)]
+#[reflect(Component)]
+pub struct PersistentTags {
+    /// Trait 授予的标签（种族/职业/天赋，最持久）
+    pub from_traits: GameplayTags,
+    /// 装备授予的标签（穿脱变化）
+    pub from_equipment: GameplayTags,
 }
 
-impl TagName {
-    /// 所有 TagName 变体列表（用于遍历校验）
-    pub const ALL: &'static [TagName] = &[
-        TagName::Fire,
-        TagName::Ice,
-        TagName::Poison,
-        TagName::Stun,
-        TagName::Burn,
-        TagName::Regen,
-        TagName::Melee,
-        TagName::Ranged,
-        TagName::Sword,
-        TagName::Axe,
-        TagName::Bow,
-        TagName::Staff,
-        TagName::Warrior,
-        TagName::Archer,
-        TagName::Mage,
-        TagName::Flying,
-        TagName::Mounted,
-        TagName::Swimming,
-        TagName::Consumable,
-        TagName::Ammo,
-        TagName::Material,
-        TagName::Currency,
-        TagName::QuestItem,
-        TagName::Healing,
-        TagName::Potion,
-        TagName::Scroll,
-        TagName::Food,
-        TagName::SkillActive,
-        TagName::SkillPassive,
-        TagName::Buff,
-        TagName::Debuff,
-        TagName::HeavyArmor,
-        TagName::LightArmor,
-        TagName::Shield,
-        TagName::TwoHanded,
-        TagName::Martial,
-        TagName::Simple,
-    ];
-
-    pub fn to_tag(&self) -> GameplayTag {
-        match self {
-            Self::Fire => GameplayTag::FIRE,
-            Self::Ice => GameplayTag::ICE,
-            Self::Poison => GameplayTag::POISON,
-            Self::Stun => GameplayTag::STUN,
-            Self::Burn => GameplayTag::BURN,
-            Self::Regen => GameplayTag::REGEN,
-            Self::Melee => GameplayTag::MELEE,
-            Self::Ranged => GameplayTag::RANGED,
-            Self::Sword => GameplayTag::SWORD,
-            Self::Axe => GameplayTag::AXE,
-            Self::Bow => GameplayTag::BOW,
-            Self::Staff => GameplayTag::STAFF,
-            Self::Warrior => GameplayTag::WARRIOR,
-            Self::Archer => GameplayTag::ARCHER,
-            Self::Mage => GameplayTag::MAGE,
-            Self::Flying => GameplayTag::FLYING,
-            Self::Mounted => GameplayTag::MOUNTED,
-            Self::Swimming => GameplayTag::SWIMMING,
-            Self::Consumable => GameplayTag::CONSUMABLE,
-            Self::Ammo => GameplayTag::AMMO,
-            Self::Material => GameplayTag::MATERIAL,
-            Self::Currency => GameplayTag::CURRENCY,
-            Self::QuestItem => GameplayTag::QUEST_ITEM,
-            Self::Healing => GameplayTag::HEALING,
-            Self::Potion => GameplayTag::POTION,
-            Self::Scroll => GameplayTag::SCROLL,
-            Self::Food => GameplayTag::FOOD,
-            Self::SkillActive => GameplayTag::SKILL_ACTIVE,
-            Self::SkillPassive => GameplayTag::SKILL_PASSIVE,
-            Self::Buff => GameplayTag::BUFF,
-            Self::Debuff => GameplayTag::DEBUFF,
-            Self::HeavyArmor => GameplayTag::HEAVY_ARMOR,
-            Self::LightArmor => GameplayTag::LIGHT_ARMOR,
-            Self::Shield => GameplayTag::SHIELD,
-            Self::TwoHanded => GameplayTag::TWO_HANDED,
-            Self::Martial => GameplayTag::MARTIAL,
-            Self::Simple => GameplayTag::SIMPLE,
-        }
-    }
-}
+// ============================================================================
+// rebuild_tags
+// ============================================================================
 
 /// 从 PersistentTags 重建 GameplayTags
-/// 统一标签合并方式，替代 spawn.rs 中的手动位运算
+///
+/// 统一标签合并方式：Trait 标签 | Equipment 标签
 pub fn rebuild_tags(persistent: &PersistentTags) -> GameplayTags {
     GameplayTags(persistent.from_traits.0 | persistent.from_equipment.0)
 }
 
+// ============================================================================
+// TagPlugin
+// ============================================================================
+
 /// 标签层 Plugin（ADR-025 七领域之 TagPlugin）
 ///
-/// 职责：注册标签系统的所有类型，作为七领域 DAG 的第 1 层。
-/// 无依赖，所有其它领域都依赖此层。
+/// 职责：注册标签系统的所有类型。
+/// 在七领域 DAG 中为第 1 层，无其它依赖。
 pub struct TagPlugin;
 
 impl Plugin for TagPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<GameplayTag>()
             .register_type::<GameplayTags>()
-            .register_type::<PersistentTags>()
-            .register_type::<TagName>();
+            .register_type::<PersistentTags>();
     }
 }
 
+// ============================================================================
+// Tests
+// ============================================================================
+
 #[cfg(test)]
 mod tests {
-    // ================================================
-    // Bevy SRPG AI宪法 v1.1 自检结果（测试专用）
-    // ================================================
-    // ✅ 测行为不测实现：是 — 断言验证标签位运算结果，不验证内部 u64 表示
-    // ✅ 符合领域规则：是 — 覆盖 INV-TAG-1~5 标签系统不变量
-    // ✅ 确定性：是 — 硬编码标签值
-    // ✅ 使用标准数据：是 — 使用标准 GameplayTag 枚举
-    // ✅ 无越界测试：是 — 仅测试公共 API
-    // ✅ 未测试私有实现：是 — 仅通过 pub 接口测试
-    // ================================================
     use super::*;
 
     #[test]
-    fn 标签_位掩码查询() {
-        let mut tags = GameplayTags::default();
-        assert!(!tags.has(GameplayTag::FIRE));
-
-        tags.add(GameplayTag::FIRE);
-        assert!(tags.has(GameplayTag::FIRE));
-        assert!(!tags.has(GameplayTag::ICE));
-
-        tags.remove(GameplayTag::FIRE);
-        assert!(!tags.has(GameplayTag::FIRE));
+    fn gameplay_tag_bitmask() {
+        let tag = GameplayTag::DMG_FIRE;
+        assert_eq!(tag.bits(), 1 << 0);
     }
 
     #[test]
-    fn 标签_多标签组合() {
+    fn gameplay_tags_has_add_remove() {
         let mut tags = GameplayTags::default();
-        tags.add(GameplayTag::FIRE);
-        tags.add(GameplayTag::DEBUFF);
+        assert!(!tags.has(GameplayTag::DMG_FIRE));
 
-        assert!(tags.has(GameplayTag::FIRE));
-        assert!(tags.has(GameplayTag::DEBUFF));
-        assert!(!tags.has(GameplayTag::ICE));
+        tags.add(GameplayTag::DMG_FIRE);
+        assert!(tags.has(GameplayTag::DMG_FIRE));
+        assert!(!tags.has(GameplayTag::DMG_ICE));
+
+        tags.remove(GameplayTag::DMG_FIRE);
+        assert!(!tags.has(GameplayTag::DMG_FIRE));
     }
 
     #[test]
-    fn 标签_has_any() {
+    fn gameplay_tags_multi_bit() {
         let mut tags = GameplayTags::default();
-        tags.add(GameplayTag::FIRE);
+        tags.add(GameplayTag::DMG_FIRE);
+        tags.add(GameplayTag::BUFF);
 
-        let check = GameplayTags::from_tags(&[GameplayTag::FIRE, GameplayTag::ICE]);
+        assert!(tags.has(GameplayTag::DMG_FIRE));
+        assert!(tags.has(GameplayTag::BUFF));
+        assert!(!tags.has(GameplayTag::DMG_ICE));
+    }
+
+    #[test]
+    fn gameplay_tags_has_any() {
+        let mut tags = GameplayTags::default();
+        tags.add(GameplayTag::DMG_FIRE);
+
+        let check = GameplayTags::from_tags(&[GameplayTag::DMG_FIRE, GameplayTag::DMG_ICE]);
         assert!(tags.has_any(&check));
     }
 
     #[test]
-    fn 标签_has_all() {
+    fn gameplay_tags_has_all() {
         let mut tags = GameplayTags::default();
-        tags.add(GameplayTag::FIRE);
+        tags.add(GameplayTag::DMG_FIRE);
 
-        let check = GameplayTags::from_tags(&[GameplayTag::FIRE, GameplayTag::ICE]);
+        let check = GameplayTags::from_tags(&[GameplayTag::DMG_FIRE, GameplayTag::DMG_ICE]);
         assert!(!tags.has_all(&check));
 
-        tags.add(GameplayTag::ICE);
+        tags.add(GameplayTag::DMG_ICE);
         assert!(tags.has_all(&check));
     }
 
     #[test]
-    fn tag_name_转换() {
-        assert_eq!(TagName::Fire.to_tag(), GameplayTag::FIRE);
-        assert_eq!(TagName::Stun.to_tag(), GameplayTag::STUN);
-    }
-
-    #[test]
-    fn 标签_from_tags空数组() {
+    fn gameplay_tags_from_tags_empty() {
         let tags = GameplayTags::from_tags(&[]);
-        assert!(!tags.has(GameplayTag::FIRE));
+        assert!(!tags.has(GameplayTag::DMG_FIRE));
     }
 
     #[test]
-    fn 标签_from_tags多个标签() {
-        let tags = GameplayTags::from_tags(&[GameplayTag::FIRE, GameplayTag::STUN]);
-        assert!(tags.has(GameplayTag::FIRE));
-        assert!(tags.has(GameplayTag::STUN));
-        assert!(!tags.has(GameplayTag::ICE));
+    fn gameplay_tags_from_tags_multiple() {
+        let tags = GameplayTags::from_tags(&[GameplayTag::DMG_FIRE, GameplayTag::BUFF]);
+        assert!(tags.has(GameplayTag::DMG_FIRE));
+        assert!(tags.has(GameplayTag::BUFF));
+        assert!(!tags.has(GameplayTag::DMG_ICE));
     }
 
     #[test]
-    fn 标签_has_any都不匹配() {
+    fn gameplay_tags_add_idempotent() {
         let mut tags = GameplayTags::default();
-        tags.add(GameplayTag::FIRE);
-        let check = GameplayTags::from_tags(&[GameplayTag::ICE, GameplayTag::STUN]);
-        assert!(!tags.has_any(&check));
+        tags.add(GameplayTag::DMG_FIRE);
+        tags.add(GameplayTag::DMG_FIRE); // twice
+        assert!(tags.has(GameplayTag::DMG_FIRE));
     }
 
     #[test]
-    fn 标签_has_all空集() {
+    fn gameplay_tags_has_all_empty_set() {
         let mut tags = GameplayTags::default();
-        tags.add(GameplayTag::FIRE);
+        tags.add(GameplayTag::DMG_FIRE);
         let empty = GameplayTags::default();
         assert!(tags.has_all(&empty));
     }
 
     #[test]
-    fn 标签_add重复幂等() {
+    fn gameplay_tags_has_any_no_match() {
         let mut tags = GameplayTags::default();
-        tags.add(GameplayTag::FIRE);
-        tags.add(GameplayTag::FIRE);
-        assert!(tags.has(GameplayTag::FIRE));
+        tags.add(GameplayTag::DMG_FIRE);
+        let check = GameplayTags::from_tags(&[GameplayTag::DMG_ICE, GameplayTag::BUFF]);
+        assert!(!tags.has_any(&check));
+    }
+
+    #[test]
+    fn gameplay_tags_matches() {
+        let mut tags = GameplayTags::default();
+        tags.add(GameplayTag::ALLY);
+        assert!(tags.matches(GameplayTag::ALLY));
+        assert!(!tags.matches(GameplayTag::ENEMY));
+    }
+
+    #[test]
+    fn rebuild_tags_combines_sources() {
+        let mut traits = GameplayTags::default();
+        traits.add(GameplayTag::ALLY);
+        let mut equip = GameplayTags::default();
+        equip.add(GameplayTag::HEAVY_ARMOR);
+
+        let persistent = PersistentTags {
+            from_traits: traits,
+            from_equipment: equip,
+        };
+
+        let rebuilt = rebuild_tags(&persistent);
+        assert!(rebuilt.has(GameplayTag::ALLY));
+        assert!(rebuilt.has(GameplayTag::HEAVY_ARMOR));
+    }
+
+    #[test]
+    fn gameplay_tag_distinct_bits() {
+        // Verify no bits overlap between categories
+        let elemental = GameplayTag::from_bits(0xFF);
+        let status = GameplayTag::from_bits(0xFF00);
+        let class_faction = GameplayTag::from_bits(0xFF0000);
+        let equipment = GameplayTag::from_bits(0xFF000000);
+        let mechanism = GameplayTag::from_bits(0xFF00000000);
+
+        // Categories should be in distinct byte regions
+        assert_eq!(elemental.0 & status.0, 0);
+        assert_eq!(elemental.0 & class_faction.0, 0);
+        assert_eq!(elemental.0 & equipment.0, 0);
+        assert_eq!(elemental.0 & mechanism.0, 0);
+        assert_eq!(status.0 & class_faction.0, 0);
+        assert_eq!(status.0 & equipment.0, 0);
+        assert_eq!(status.0 & mechanism.0, 0);
+        assert_eq!(class_faction.0 & equipment.0, 0);
+        assert_eq!(class_faction.0 & mechanism.0, 0);
+        assert_eq!(equipment.0 & mechanism.0, 0);
     }
 }

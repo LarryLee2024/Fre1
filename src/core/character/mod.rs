@@ -16,11 +16,11 @@ pub mod template;
 mod traits;
 
 use crate::core::attribute::{
-    AttributeKind, AttributeModifierDef, AttributeModifierInstance, Attributes, BuffInstanceId,
-    ModifierOp, ModifierSource,
+    AttributeModifierDef, AttributeModifierInstance, Attributes, BuffInstanceId, ModifierOp,
+    ModifierSource,
 };
 use crate::core::battle::CharacterDied;
-use crate::core::tag::{GameplayTag, GameplayTags, TagName};
+use crate::core::tag::{GameplayTag, GameplayTags};
 use crate::core::turn::{AppState, TurnOrder};
 use bevy::prelude::*;
 
@@ -106,17 +106,14 @@ impl Plugin for CharacterPlugin {
         .register_type::<PathArrow>()
         .register_type::<MovingUnit>()
         // 核心 attribute 类型
-        .register_type::<AttributeKind>()
         .register_type::<ModifierOp>()
         .register_type::<AttributeModifierDef>()
         .register_type::<ModifierSource>()
         .register_type::<BuffInstanceId>()
         .register_type::<AttributeModifierInstance>()
-        .register_type::<Attributes>()
         // 核心 tag 类型
         .register_type::<GameplayTag>()
         .register_type::<GameplayTags>()
-        .register_type::<TagName>()
         // 移动动画系统：只在游戏中运行
         .add_systems(Update, animate_movement.run_if(in_state(AppState::InGame)))
         .add_systems(

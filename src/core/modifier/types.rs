@@ -1,6 +1,6 @@
 // 修饰规则类型定义
 
-use crate::core::tag::{GameplayTag, TagName};
+use crate::core::tag::GameplayTag;
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -63,6 +63,47 @@ pub enum ModifierEffectDef {
     HealBonus(i32),
 }
 
+/// 将 Tag ID 字符串转换为 GameplayTag（临时函数，后续替换为 TagRegistry 查询）
+fn tag_id_to_gameplay_tag(id: &str) -> GameplayTag {
+    match id {
+        "dmg_fire" => GameplayTag::DMG_FIRE,
+        "dmg_ice" => GameplayTag::DMG_ICE,
+        "dmg_physical" => GameplayTag::DMG_PHYSICAL,
+        "dmg_magical" => GameplayTag::DMG_MAGICAL,
+        "dmg_pierce" => GameplayTag::DMG_PIERCE,
+        "dmg_true" => GameplayTag::DMG_TRUE,
+        "buff" => GameplayTag::BUFF,
+        "debuff" => GameplayTag::DEBUFF,
+        "special_state" => GameplayTag::SPECIAL_STATE,
+        "control_soft" => GameplayTag::CONTROL_SOFT,
+        "control_hard" => GameplayTag::CONTROL_HARD,
+        "control_full" => GameplayTag::CONTROL_FULL,
+        "invincible" => GameplayTag::INVINCIBLE,
+        "untargetable" => GameplayTag::UNTARGETABLE,
+        "ally" => GameplayTag::ALLY,
+        "enemy" => GameplayTag::ENEMY,
+        "summon" => GameplayTag::SUMMON,
+        "boss" => GameplayTag::BOSS,
+        "mechanical" => GameplayTag::MECHANICAL,
+        "weapon_sword" => GameplayTag::WEAPON_SWORD,
+        "weapon_bow" => GameplayTag::WEAPON_BOW,
+        "weapon_staff" => GameplayTag::WEAPON_STAFF,
+        "heavy_armor" => GameplayTag::HEAVY_ARMOR,
+        "light_armor" => GameplayTag::LIGHT_ARMOR,
+        "shield" => GameplayTag::SHIELD,
+        "flying" => GameplayTag::FLYING,
+        "grounded" => GameplayTag::GROUNDED,
+        "dispellable" => GameplayTag::DISPELLABLE,
+        "undispellable" => GameplayTag::UNDISPELLABLE,
+        "reflectable" => GameplayTag::REFLECTABLE,
+        "untriggerable" => GameplayTag::UNTRIGGERABLE,
+        _ => {
+            bevy::log::warn!(target: "modifier", "Unknown tag_id in modifier: {}", id);
+            GameplayTag::from_bits(0)
+        }
+    }
+}
+
 /// 修饰规则（RON 反序列化用）
 #[derive(Clone, Debug, Deserialize)]
 pub struct ModifierRuleDef {
@@ -70,8 +111,8 @@ pub struct ModifierRuleDef {
     #[serde(default)]
     pub version: u32,
     pub name: String,
-    pub source_tag: TagName,
-    pub target_tag: TagName,
+    pub source_tag: String,
+    pub target_tag: String,
     pub effect: ModifierEffectDef,
 }
 
@@ -79,8 +120,8 @@ impl From<ModifierRuleDef> for ModifierRule {
     fn from(def: ModifierRuleDef) -> Self {
         ModifierRule {
             name: def.name,
-            source_tag: def.source_tag.to_tag(),
-            target_tag: def.target_tag.to_tag(),
+            source_tag: tag_id_to_gameplay_tag(&def.source_tag),
+            target_tag: tag_id_to_gameplay_tag(&def.target_tag),
             effect: match def.effect {
                 ModifierEffectDef::DamageMultiplier(v) => ModifierEffect::DamageMultiplier(v),
                 ModifierEffectDef::DamageBonus(v) => ModifierEffect::DamageBonus(v),

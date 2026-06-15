@@ -104,7 +104,7 @@ mod tests {
             tags: vec![],
             modifiers: vec![],
             traits: vec![],
-            requirements: vec![EquipmentRequirement::RequireTag(TagName::Martial)],
+            requirements: vec![EquipmentRequirement::RequireTag("martial")],
             weight: 0.0,
         };
         let attrs = make_test_attrs();
@@ -125,7 +125,7 @@ mod tests {
             tags: vec![],
             modifiers: vec![],
             traits: vec![],
-            requirements: vec![EquipmentRequirement::RequireTag(TagName::Martial)],
+            requirements: vec![EquipmentRequirement::RequireTag("martial")],
             weight: 0.0,
         };
         let attrs = make_test_attrs();
@@ -200,7 +200,7 @@ mod tests {
             modifiers: vec![],
             traits: vec![],
             requirements: vec![
-                EquipmentRequirement::RequireTag(TagName::Martial),
+                EquipmentRequirement::RequireTag("martial"),
                 EquipmentRequirement::AttributeMin {
                     kind: AttributeKind::Attack,
                     value: 20.0,

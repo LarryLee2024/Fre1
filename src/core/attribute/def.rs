@@ -1,451 +1,389 @@
-// 属性定义注册表：属性元数据外部化，支持 UI 自动生成
-// AttributeKind 仍为枚举（运行时类型安全），显示元数据从 RON 加载
+//! 属性定义注册表（ADR-031 §1）
+//!
+//! 基于新的 5+6 Linglan 属性模型：
+//! - 核心五维：phys_atk, magic_atk, phys_def, magic_def, max_hp
+//! - 次级六维：crit_rate, crit_dmg, move_range, atk_range, hit_rate, dodge_rate
+//!
+//! 所有数值边界从 RON 配置读取，禁止硬编码。
+//! 所有数值使用 i32（百分比 = 万分比，如 50% = 5000）。
 
-use crate::core::attribute::AttributeKind;
-use crate::core::registry_loader::RegistryLoader;
+use crate::shared::ids::AttributeId;
+use crate::shared::registry::loader::LoadError;
+use crate::shared::registry::validatable::ValidationSeverity;
+use crate::shared::registry::{
+    LoadableSingleRegistry, Registry, RegistryInitStage, ValidatableRegistry, ValidationError,
+};
+use bevy::app::{App, Plugin, PreStartup};
 use bevy::prelude::*;
 use serde::Deserialize;
 use std::collections::HashMap;
 
-/// 属性定义（RON 反序列化用）
-#[derive(Clone, Debug, Deserialize)]
+// ============================================================================
+// RON 反序列化类型
+// ============================================================================
+
+/// RON 文件顶层结构
+#[derive(Debug, Clone, Deserialize)]
+pub struct AttributeDefList {
+    pub attributes: Vec<AttributeDef>,
+}
+
+/// RON 单条属性定义
+#[derive(Debug, Clone, Deserialize)]
+pub struct AttributeDef {
+    pub id: String,
+    pub name_key: String,
+    pub category: AttributeCategory,
+    pub default: i32,
+    pub min: i32,
+    pub max: i32,
+}
+
+// ============================================================================
+// AttributeCategory
+// ============================================================================
+
+/// 属性分类
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deserialize)]
+pub enum AttributeCategory {
+    Core,
+    Secondary,
+}
+
+// ============================================================================
+// AttributeDefinition
+// ============================================================================
+
+/// 属性定义（运行时元数据，Definition 层，不可变）
+#[derive(Debug, Clone)]
 pub struct AttributeDefinition {
-    /// 配置版本号（预留，用于未来存档兼容性检查）
-    #[serde(default)]
-    pub version: u32,
-    pub kind: AttributeKind,
-    pub display_name: String,
-    pub description: String,
-    pub default_value: f32,
-    pub min_value: f32,
-    pub max_value: f32,
+    /// 属性唯一标识
+    pub id: AttributeId,
+    /// 本地化 Key（用于 UI 显示）
+    pub name_key: String,
+    /// 属性分类
+    pub category: AttributeCategory,
+    /// 默认值
+    pub default: i32,
+    /// 最小值（含）
+    pub min: i32,
+    /// 最大值（含）
+    pub max: i32,
 }
 
-/// 属性注册表资源
-#[derive(Resource, Default)]
+impl AttributeDefinition {
+    /// 将值钳制到 [min, max] 区间
+    pub fn clamp(&self, value: i32) -> i32 {
+        value.clamp(self.min, self.max)
+    }
+}
+
+// ============================================================================
+// AttributeRegistry
+// ============================================================================
+
+/// 属性注册表（Layer 1，零依赖）
+///
+/// 管理所有 AttributeDefinition，以 AttributeId 为 Key。
+/// 加载完成后在运行时只读。
+#[derive(Resource, Default, Debug)]
 pub struct AttributeRegistry {
-    pub definitions: HashMap<AttributeKind, AttributeDefinition>,
+    definitions: HashMap<AttributeId, AttributeDefinition>,
 }
 
-impl AttributeRegistry {
-    pub fn get(&self, kind: AttributeKind) -> Option<&AttributeDefinition> {
-        self.definitions.get(&kind)
+impl Registry for AttributeRegistry {
+    type Key = AttributeId;
+    type Data = AttributeDefinition;
+
+    fn len(&self) -> usize {
+        self.definitions.len()
     }
 
-    /// 获取属性显示名称（找不到则回退到 kind 的 label）
-    pub fn display_name(&self, kind: AttributeKind) -> &str {
-        self.definitions
-            .get(&kind)
-            .map(|d| d.display_name.as_str())
-            .unwrap_or(kind.label())
+    fn get(&self, key: &AttributeId) -> Option<&AttributeDefinition> {
+        self.definitions.get(key)
     }
 
-    /// 注册内置默认属性定义（8核心 + 3资源 + 13衍生 = 24种）
-    fn register_defaults(&mut self) {
-        if !self.definitions.is_empty() {
-            return;
+    fn keys(&self) -> Vec<&AttributeId> {
+        self.definitions.keys().collect()
+    }
+
+    fn iter(&self) -> Box<dyn Iterator<Item = (&AttributeId, &AttributeDefinition)> + '_> {
+        Box::new(self.definitions.iter())
+    }
+}
+
+impl LoadableSingleRegistry for AttributeRegistry {
+    type Def = AttributeDefList;
+    type Error = RegistryLoadError;
+
+    fn register_def(&mut self, def: AttributeDefList) -> Result<(), Self::Error> {
+        for attr_def in def.attributes {
+            let id = AttributeId::new(&attr_def.id);
+            if self.definitions.contains_key(&id) {
+                return Err(RegistryLoadError::Duplicate(format!(
+                    "Duplicate attribute definition: {}",
+                    attr_def.id
+                )));
+            }
+            self.definitions.insert(
+                id,
+                AttributeDefinition {
+                    id,
+                    name_key: attr_def.name_key,
+                    category: attr_def.category,
+                    default: attr_def.default,
+                    min: attr_def.min,
+                    max: attr_def.max,
+                },
+            );
         }
-        let defaults = vec![
-            // ── 8 维核心属性 ──
-            AttributeDefinition {
-                version: 0,
-                kind: AttributeKind::Might,
-                display_name: "力量".into(),
-                description: "物理攻击力".into(),
-                default_value: 0.0,
-                min_value: 0.0,
-                max_value: 999.0,
-            },
-            AttributeDefinition {
-                version: 0,
-                kind: AttributeKind::Dexterity,
-                display_name: "技巧".into(),
-                description: "命中、暴击、远程".into(),
-                default_value: 0.0,
-                min_value: 0.0,
-                max_value: 999.0,
-            },
-            AttributeDefinition {
-                version: 0,
-                kind: AttributeKind::Agility,
-                display_name: "敏捷".into(),
-                description: "行动顺序、闪避、移动".into(),
-                default_value: 0.0,
-                min_value: 0.0,
-                max_value: 999.0,
-            },
-            AttributeDefinition {
-                version: 0,
-                kind: AttributeKind::Vitality,
-                display_name: "体质".into(),
-                description: "生命、物防".into(),
-                default_value: 0.0,
-                min_value: 0.0,
-                max_value: 999.0,
-            },
-            AttributeDefinition {
-                version: 0,
-                kind: AttributeKind::Intelligence,
-                display_name: "智力".into(),
-                description: "法术攻击、法力".into(),
-                default_value: 0.0,
-                min_value: 0.0,
-                max_value: 999.0,
-            },
-            AttributeDefinition {
-                version: 0,
-                kind: AttributeKind::Willpower,
-                display_name: "意志".into(),
-                description: "魔防、治疗、异常抵抗".into(),
-                default_value: 0.0,
-                min_value: 0.0,
-                max_value: 999.0,
-            },
-            AttributeDefinition {
-                version: 0,
-                kind: AttributeKind::Presence,
-                display_name: "魅力".into(),
-                description: "光环、召唤、指挥".into(),
-                default_value: 0.0,
-                min_value: 0.0,
-                max_value: 999.0,
-            },
-            AttributeDefinition {
-                version: 0,
-                kind: AttributeKind::Luck,
-                display_name: "幸运".into(),
-                description: "暴击、掉落、随机事件".into(),
-                default_value: 0.0,
-                min_value: 0.0,
-                max_value: 999.0,
-            },
-            // ── 生命资源 ──
-            AttributeDefinition {
-                version: 0,
-                kind: AttributeKind::Hp,
-                display_name: "生命值".into(),
-                description: "当前生命值".into(),
-                default_value: 0.0,
-                min_value: 0.0,
-                max_value: 9999.0,
-            },
-            AttributeDefinition {
-                version: 0,
-                kind: AttributeKind::Mp,
-                display_name: "魔法值".into(),
-                description: "当前魔法值".into(),
-                default_value: 0.0,
-                min_value: 0.0,
-                max_value: 9999.0,
-            },
-            AttributeDefinition {
-                version: 0,
-                kind: AttributeKind::Stamina,
-                display_name: "耐力值".into(),
-                description: "当前耐力值".into(),
-                default_value: 0.0,
-                min_value: 0.0,
-                max_value: 9999.0,
-            },
-            // ── 衍生属性 ──
-            AttributeDefinition {
-                version: 0,
-                kind: AttributeKind::MaxHp,
-                display_name: "最大生命值".into(),
-                description: "生命值上限".into(),
-                default_value: 0.0,
-                min_value: 0.0,
-                max_value: 9999.0,
-            },
-            AttributeDefinition {
-                version: 0,
-                kind: AttributeKind::MaxMp,
-                display_name: "最大魔法值".into(),
-                description: "魔法值上限".into(),
-                default_value: 0.0,
-                min_value: 0.0,
-                max_value: 9999.0,
-            },
-            AttributeDefinition {
-                version: 0,
-                kind: AttributeKind::MaxStamina,
-                display_name: "最大耐力值".into(),
-                description: "耐力值上限".into(),
-                default_value: 0.0,
-                min_value: 0.0,
-                max_value: 9999.0,
-            },
-            AttributeDefinition {
-                version: 0,
-                kind: AttributeKind::Attack,
-                display_name: "物理攻击力".into(),
-                description: "物理伤害基础".into(),
-                default_value: 0.0,
-                min_value: 0.0,
-                max_value: 9999.0,
-            },
-            AttributeDefinition {
-                version: 0,
-                kind: AttributeKind::Defense,
-                display_name: "物理防御力".into(),
-                description: "物理伤害减免".into(),
-                default_value: 0.0,
-                min_value: 0.0,
-                max_value: 9999.0,
-            },
-            AttributeDefinition {
-                version: 0,
-                kind: AttributeKind::MagicAttack,
-                display_name: "魔法攻击力".into(),
-                description: "魔法伤害基础".into(),
-                default_value: 0.0,
-                min_value: 0.0,
-                max_value: 9999.0,
-            },
-            AttributeDefinition {
-                version: 0,
-                kind: AttributeKind::MagicDefense,
-                display_name: "魔法防御力".into(),
-                description: "魔法伤害减免".into(),
-                default_value: 0.0,
-                min_value: 0.0,
-                max_value: 9999.0,
-            },
-            AttributeDefinition {
-                version: 0,
-                kind: AttributeKind::Accuracy,
-                display_name: "命中率".into(),
-                description: "攻击命中概率".into(),
-                default_value: 80.0,
-                min_value: 0.0,
-                max_value: 9999.0,
-            },
-            AttributeDefinition {
-                version: 0,
-                kind: AttributeKind::Evasion,
-                display_name: "闪避率".into(),
-                description: "躲避攻击概率".into(),
-                default_value: 0.0,
-                min_value: 0.0,
-                max_value: 9999.0,
-            },
-            AttributeDefinition {
-                version: 0,
-                kind: AttributeKind::CritRate,
-                display_name: "暴击率".into(),
-                description: "暴击触发概率".into(),
-                default_value: 5.0,
-                min_value: 0.0,
-                max_value: 100.0,
-            },
-            AttributeDefinition {
-                version: 0,
-                kind: AttributeKind::MoveRange,
-                display_name: "移动力".into(),
-                description: "每回合可移动格数".into(),
-                default_value: 0.0,
-                min_value: 0.0,
-                max_value: 99.0,
-            },
-            AttributeDefinition {
-                version: 0,
-                kind: AttributeKind::Initiative,
-                display_name: "行动速度".into(),
-                description: "决定行动顺序".into(),
-                default_value: 0.0,
-                min_value: 0.0,
-                max_value: 9999.0,
-            },
-            AttributeDefinition {
-                version: 0,
-                kind: AttributeKind::AttackRange,
-                display_name: "攻击范围".into(),
-                description: "攻击距离（格数）".into(),
-                default_value: 1.0,
-                min_value: 1.0,
-                max_value: 99.0,
-            },
-        ];
+        Ok(())
+    }
+}
 
-        for def in defaults {
-            self.definitions.insert(def.kind, def);
+impl ValidatableRegistry for AttributeRegistry {
+    fn validate(&self) -> Vec<ValidationError> {
+        let mut errors = Vec::new();
+        for (id, def) in &self.definitions {
+            // min ≤ max
+            if def.min > def.max {
+                errors.push(ValidationError::error_for(
+                    "AttributeRegistry",
+                    id,
+                    format!("min ({}) > max ({})", def.min, def.max),
+                ));
+            }
+            // default ∈ [min, max]
+            if def.default < def.min || def.default > def.max {
+                errors.push(ValidationError::error_for(
+                    "AttributeRegistry",
+                    id,
+                    format!(
+                        "default ({}) outside range [{}, {}]",
+                        def.default, def.min, def.max
+                    ),
+                ));
+            }
+            // max_hp must have min ≥ 1
+            if id.as_str() == "max_hp" && def.min < 1 {
+                errors.push(ValidationError::error_for(
+                    "AttributeRegistry",
+                    id,
+                    "max_hp min must be ≥ 1",
+                ));
+            }
+        }
+        errors
+    }
+}
+
+// ============================================================================
+// RegistryLoadError
+// ============================================================================
+
+/// AttributeRegistry 加载错误
+#[derive(Debug)]
+pub enum RegistryLoadError {
+    /// 重复的 ID
+    Duplicate(String),
+    /// 文件加载错误
+    Load(LoadError),
+}
+
+impl std::fmt::Display for RegistryLoadError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            RegistryLoadError::Duplicate(msg) => write!(f, "Duplicate attribute: {}", msg),
+            RegistryLoadError::Load(e) => write!(f, "Load error: {}", e),
         }
     }
 }
 
-impl RegistryLoader for AttributeRegistry {
-    type Item = AttributeDefinition;
+impl std::error::Error for RegistryLoadError {}
 
-    fn register_item(&mut self, item: AttributeDefinition) {
-        self.definitions.insert(item.kind, item);
-    }
-
-    fn register_defaults(&mut self) {
-        AttributeRegistry::register_defaults(self);
-    }
-
-    fn is_empty(&self) -> bool {
-        self.definitions.is_empty()
-    }
-
-    fn registry_name() -> &'static str {
-        "属性定义"
+impl From<LoadError> for RegistryLoadError {
+    fn from(e: LoadError) -> Self {
+        RegistryLoadError::Load(e)
     }
 }
 
-/// 属性定义插件
-pub struct AttributeDefPlugin;
+// ============================================================================
+// Plugin
+// ============================================================================
 
-impl Plugin for AttributeDefPlugin {
+/// 属性注册表初始化 System
+fn init_attribute_registry(mut commands: Commands) {
+    let registry = match AttributeRegistry::load_from_file("content/attributes/attributes.ron") {
+        Ok(reg) => {
+            // 执行自校验
+            let errors = reg.validate();
+            if !errors.is_empty() {
+                for err in &errors {
+                    bevy::log::warn!(
+                        target: "core",
+                        "AttributeRegistry validation: {}",
+                        err
+                    );
+                }
+            }
+            reg
+        }
+        Err(e) => {
+            bevy::log::error!(
+                target: "core",
+                error = %e,
+                "Failed to load AttributeRegistry, using defaults"
+            );
+            AttributeRegistry::default()
+        }
+    };
+    commands.insert_resource(registry);
+}
+
+/// 属性注册表 Plugin
+pub struct AttributeRegistryPlugin;
+
+impl Plugin for AttributeRegistryPlugin {
     fn build(&self, app: &mut App) {
-        let registry = AttributeRegistry::load_from_file("content/definitions/attributes.ron");
-        app.insert_resource(registry);
+        app.add_systems(
+            PreStartup,
+            init_attribute_registry.in_set(RegistryInitStage::Layer1),
+        );
     }
 }
+
+// ============================================================================
+// Tests
+// ============================================================================
 
 #[cfg(test)]
 mod tests {
-    // ================================================
-    // Bevy SRPG AI宪法 v1.1 自检结果（测试专用）
-    // ================================================
-    // ✅ 测行为不测实现：是 — 断言验证 Registry 查询结果，不验证内部 HashMap 结构
-    // ✅ 符合领域规则：是 — 覆盖 INV-REG-4/INV-REG-5 属性注册表不变量
-    // ✅ 确定性：是 — 硬编码数据，无随机数
-    // ✅ 使用标准数据：是 — 使用 register_defaults() 标准注册
-    // ✅ 无越界测试：是 — 仅测试公共 API
-    // ✅ 未测试私有实现：是 — 仅通过 pub 接口测试
-    // ================================================
     use super::*;
-    use ron::de::from_bytes;
+    use crate::shared::registry::Registry;
 
     #[test]
-    fn ron_反序列化_属性定义() {
-        let ron_str = r#"
-            [
-                (kind: Hp, display_name: "生命值", description: "当前生命值", default_value: 0.0, min_value: 0.0, max_value: 9999.0),
-                (kind: Attack, display_name: "物理攻击力", description: "物理伤害基础", default_value: 0.0, min_value: 0.0, max_value: 9999.0),
-            ]
-        "#;
-        let defs: Vec<AttributeDefinition> = from_bytes(ron_str.as_bytes()).unwrap();
-        assert_eq!(defs.len(), 2);
-        assert_eq!(defs[0].display_name, "生命值");
-        assert_eq!(defs[1].kind, AttributeKind::Attack);
+    fn registry_empty_by_default() {
+        let reg = AttributeRegistry::default();
+        assert!(reg.is_empty());
+        assert_eq!(reg.len(), 0);
     }
 
     #[test]
-    fn 属性注册表_查询() {
-        let mut registry = AttributeRegistry::default();
-        registry.register_defaults();
+    fn registry_load_from_file() {
+        let reg = AttributeRegistry::load_from_file("content/attributes/attributes.ron").unwrap();
+        assert_eq!(reg.len(), 11);
 
-        let def = registry.get(AttributeKind::Attack).unwrap();
-        assert_eq!(def.display_name, "物理攻击力");
-        assert_eq!(def.max_value, 9999.0);
+        let phys_atk = reg.get(&AttributeId::new("phys_atk")).unwrap();
+        assert_eq!(phys_atk.category, AttributeCategory::Core);
+        assert_eq!(phys_atk.default, 10);
+        assert_eq!(phys_atk.min, 0);
+        assert_eq!(phys_atk.max, 99999);
+
+        let crit_rate = reg.get(&AttributeId::new("crit_rate")).unwrap();
+        assert_eq!(crit_rate.category, AttributeCategory::Secondary);
+        assert_eq!(crit_rate.default, 500);
+        assert_eq!(crit_rate.min, 0);
+        assert_eq!(crit_rate.max, 9500);
     }
 
     #[test]
-    fn 属性注册表_显示名称回退() {
-        let registry = AttributeRegistry::default();
-        // 没有注册定义时回退到 kind.label()
-        assert_eq!(registry.display_name(AttributeKind::Hp), "HP");
-    }
-
-    #[test]
-    fn 属性注册表_默认包含所有属性() {
-        let mut registry = AttributeRegistry::default();
-        registry.register_defaults();
-        // 8 核心属性
-        for kind in [
-            AttributeKind::Might,
-            AttributeKind::Dexterity,
-            AttributeKind::Agility,
-            AttributeKind::Vitality,
-            AttributeKind::Intelligence,
-            AttributeKind::Willpower,
-            AttributeKind::Presence,
-            AttributeKind::Luck,
-        ] {
-            assert!(registry.get(kind).is_some(), "缺少核心属性: {:?}", kind);
-        }
-        // 3 生命资源
-        for kind in [AttributeKind::Hp, AttributeKind::Mp, AttributeKind::Stamina] {
-            assert!(registry.get(kind).is_some(), "缺少生命资源: {:?}", kind);
-        }
-        // 12 衍生属性
-        for kind in [
-            AttributeKind::MaxHp,
-            AttributeKind::MaxMp,
-            AttributeKind::MaxStamina,
-            AttributeKind::Attack,
-            AttributeKind::Defense,
-            AttributeKind::MagicAttack,
-            AttributeKind::MagicDefense,
-            AttributeKind::Accuracy,
-            AttributeKind::Evasion,
-            AttributeKind::CritRate,
-            AttributeKind::MoveRange,
-            AttributeKind::Initiative,
-            AttributeKind::AttackRange,
-        ] {
-            assert!(registry.get(kind).is_some(), "缺少衍生属性: {:?}", kind);
+    fn registry_contains_all_expected_ids() {
+        let reg = AttributeRegistry::load_from_file("content/attributes/attributes.ron").unwrap();
+        let expected_ids = [
+            "phys_atk",
+            "magic_atk",
+            "phys_def",
+            "magic_def",
+            "max_hp",
+            "crit_rate",
+            "crit_dmg",
+            "move_range",
+            "atk_range",
+            "hit_rate",
+            "dodge_rate",
+        ];
+        for id_str in &expected_ids {
+            assert!(
+                reg.contains(&AttributeId::new(id_str)),
+                "Missing attribute: {}",
+                id_str
+            );
         }
     }
 
     #[test]
-    fn 属性注册表_默认总数为24() {
-        let mut registry = AttributeRegistry::default();
-        registry.register_defaults();
-        assert_eq!(registry.definitions.len(), 24);
+    fn registry_get_nonexistent() {
+        let reg = AttributeRegistry::default();
+        assert!(reg.get(&AttributeId::new("nonexistent")).is_none());
     }
 
     #[test]
-    fn 属性注册表_显示名称_已注册() {
-        let mut registry = AttributeRegistry::default();
-        registry.register_defaults();
-        assert_eq!(registry.display_name(AttributeKind::Attack), "物理攻击力");
-        assert_eq!(registry.display_name(AttributeKind::Might), "力量");
-        assert_eq!(registry.display_name(AttributeKind::Defense), "物理防御力");
+    fn registry_keys_and_iter() {
+        let reg = AttributeRegistry::load_from_file("content/attributes/attributes.ron").unwrap();
+        let keys = reg.keys();
+        assert_eq!(keys.len(), 11);
+
+        let entries: Vec<_> = reg.iter().collect();
+        assert_eq!(entries.len(), 11);
     }
 
     #[test]
-    fn 属性注册表_查询所有默认属性() {
-        let mut registry = AttributeRegistry::default();
-        registry.register_defaults();
-        // 核心属性
-        assert_eq!(registry.get(AttributeKind::Might).unwrap().max_value, 999.0);
-        // 生命资源
-        assert_eq!(registry.get(AttributeKind::Hp).unwrap().max_value, 9999.0);
-        assert_eq!(registry.get(AttributeKind::Mp).unwrap().max_value, 9999.0);
-        assert_eq!(
-            registry.get(AttributeKind::Stamina).unwrap().max_value,
-            9999.0
+    fn validation_passes_for_valid_data() {
+        let reg = AttributeRegistry::load_from_file("content/attributes/attributes.ron").unwrap();
+        let errors = reg.validate();
+        assert!(errors.is_empty(), "Validation errors: {:?}", errors);
+    }
+
+    #[test]
+    fn validation_catches_min_greater_than_max() {
+        let mut reg = AttributeRegistry::default();
+        reg.definitions.insert(
+            AttributeId::new("bad_attr"),
+            AttributeDefinition {
+                id: AttributeId::new("bad_attr"),
+                name_key: "test".into(),
+                category: AttributeCategory::Core,
+                default: 50,
+                min: 100,
+                max: 10,
+            },
         );
-        // 衍生属性
-        assert_eq!(
-            registry.get(AttributeKind::MaxHp).unwrap().max_value,
-            9999.0
+        let errors = reg.validate();
+        assert!(!errors.is_empty());
+        assert!(errors.iter().any(|e| e.message.contains("min")));
+    }
+
+    #[test]
+    fn validation_catches_default_out_of_range() {
+        let mut reg = AttributeRegistry::default();
+        reg.definitions.insert(
+            AttributeId::new("bad_default"),
+            AttributeDefinition {
+                id: AttributeId::new("bad_default"),
+                name_key: "test".into(),
+                category: AttributeCategory::Secondary,
+                default: 99999,
+                min: 0,
+                max: 100,
+            },
         );
-        assert_eq!(
-            registry.get(AttributeKind::Defense).unwrap().max_value,
-            9999.0
-        );
-        assert_eq!(
-            registry.get(AttributeKind::MoveRange).unwrap().max_value,
-            99.0
-        );
-        assert_eq!(
-            registry
-                .get(AttributeKind::AttackRange)
-                .unwrap()
-                .default_value,
-            1.0
-        );
-        assert_eq!(
-            registry.get(AttributeKind::Accuracy).unwrap().default_value,
-            80.0
-        );
-        assert_eq!(
-            registry.get(AttributeKind::CritRate).unwrap().max_value,
-            100.0
-        );
+        let errors = reg.validate();
+        assert!(!errors.is_empty());
+        assert!(errors.iter().any(|e| e.message.contains("default")));
+    }
+
+    #[test]
+    fn clamp_value_to_boundaries() {
+        let def = AttributeDefinition {
+            id: AttributeId::new("test"),
+            name_key: "test".into(),
+            category: AttributeCategory::Core,
+            default: 50,
+            min: 0,
+            max: 100,
+        };
+        assert_eq!(def.clamp(-10), 0);
+        assert_eq!(def.clamp(50), 50);
+        assert_eq!(def.clamp(200), 100);
     }
 }

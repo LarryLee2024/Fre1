@@ -1,7 +1,6 @@
 // 战斗意图模块：行动后路由、行动执行
 
 use crate::core::ability::{SkillCooldowns, SkillRegistry};
-use crate::core::attribute::AttributeKind;
 use crate::core::attribute::Attributes;
 use crate::core::character::{
     AttackRange, Faction, GridPosition, MovableRange, Selected, SelectionHighlight, Unit, UnitName,
@@ -36,7 +35,7 @@ impl ResettableResource for PrevPosition {}
 
 /// 判断单位是否存活（HP > 0）
 fn is_alive(attrs: &Attributes) -> bool {
-    attrs.get(AttributeKind::Hp) > 0.0
+    attrs.current_hp > 0
 }
 
 /// 清除 CombatIntent（不变量6：Execute 后必须清除）
@@ -146,7 +145,7 @@ pub fn execute_action_on_enter(
     if let Ok((entity, mut unit, _pos, _name, tags, mut cooldowns, mut attrs)) =
         selected_units.single_mut()
     {
-        if tags.has(GameplayTag::STUN) {
+        if tags.has(GameplayTag::CONTROL_HARD) {
             unit.acted = true;
             commands.entity(entity).remove::<Selected>();
             clear_combat_intent(&mut combat_intent);
@@ -173,7 +172,7 @@ pub fn execute_action_on_enter(
                 log_skill_writer.write(SkillActivated {
                     caster: crate::shared::ids::UnitId::new(entity.to_bits().to_string()),
                     caster_name: _name.0.clone(),
-                    skill_id: crate::shared::ids::SkillId::new(skill_id),
+                    skill_id: crate::shared::ids::AbilityId::new(skill_id),
                     target: None,
                     target_name: None,
                 });
@@ -199,7 +198,7 @@ pub fn execute_action_on_enter(
         if let Ok((mut unit, mut attrs, mut cooldowns, tags)) =
             non_selected_units.get_mut(source_entity)
         {
-            if tags.has(GameplayTag::STUN) {
+            if tags.has(GameplayTag::CONTROL_HARD) {
                 unit.acted = true;
                 clear_combat_intent(&mut combat_intent);
                 route_after_action(
@@ -227,7 +226,7 @@ pub fn execute_action_on_enter(
                             source_entity.to_bits().to_string(),
                         ),
                         caster_name: String::new(),
-                        skill_id: crate::shared::ids::SkillId::new(skill_id),
+                        skill_id: crate::shared::ids::AbilityId::new(skill_id),
                         target: None,
                         target_name: None,
                     });

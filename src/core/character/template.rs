@@ -3,7 +3,6 @@
 
 use super::components::Faction;
 use crate::core::ability::BASIC_ATTACK_ID;
-use crate::core::attribute::AttributeKind;
 use crate::core::equipment::EquipmentSlot;
 use crate::core::registry_loader::RegistryLoader;
 use bevy::prelude::*;
@@ -23,8 +22,8 @@ pub struct UnitTemplate {
     pub race: String,
     pub background: String,
     pub class: String,
-    /// 核心属性基础值（仅8维核心属性）
-    pub base_attributes: HashMap<AttributeKind, f32>,
+    /// 核心属性基础值（按 config_id 字符串键，如 "phys_atk"）
+    pub base_attributes: HashMap<String, i32>,
     /// 基础攻击范围（由职业/装备决定）
     pub base_attack_range: u32,
     pub skill_ids: Vec<String>,
@@ -50,8 +49,8 @@ pub struct UnitTemplateDef {
     pub race: String,
     pub background: String,
     pub class: String,
-    /// 核心属性基础值（仅8维核心属性，RON 中使用 PascalCase 名如 Might: 5.0）
-    pub base_attributes: HashMap<AttributeKind, f32>,
+    /// 核心属性基础值（按 config_id 字符串键，如 "phys_atk": 10）
+    pub base_attributes: HashMap<String, i32>,
     pub base_attack_range: u32,
     pub skill_ids: Vec<String>,
     pub trait_ids: Vec<String>,
@@ -120,16 +119,19 @@ impl UnitTemplateRegistry {
             return;
         }
         // 战士
-        let warrior_attrs: HashMap<AttributeKind, f32> = {
+        let warrior_attrs: HashMap<String, i32> = {
             let mut m = HashMap::new();
-            m.insert(AttributeKind::Might, 5.0);
-            m.insert(AttributeKind::Dexterity, 3.0);
-            m.insert(AttributeKind::Agility, 6.0);
-            m.insert(AttributeKind::Vitality, 5.0);
-            m.insert(AttributeKind::Intelligence, 2.0);
-            m.insert(AttributeKind::Willpower, 3.0);
-            m.insert(AttributeKind::Presence, 2.0);
-            m.insert(AttributeKind::Luck, 2.0);
+            m.insert("phys_atk".into(), 12);
+            m.insert("magic_atk".into(), 2);
+            m.insert("phys_def".into(), 10);
+            m.insert("magic_def".into(), 5);
+            m.insert("max_hp".into(), 120);
+            m.insert("crit_rate".into(), 500);
+            m.insert("crit_dmg".into(), 1500);
+            m.insert("move_range".into(), 3);
+            m.insert("atk_range".into(), 1);
+            m.insert("hit_rate".into(), 8500);
+            m.insert("dodge_rate".into(), 500);
             m
         };
         self.templates.insert(
@@ -155,16 +157,19 @@ impl UnitTemplateRegistry {
         );
 
         // 弓手
-        let archer_attrs: HashMap<AttributeKind, f32> = {
+        let archer_attrs: HashMap<String, i32> = {
             let mut m = HashMap::new();
-            m.insert(AttributeKind::Might, 4.0);
-            m.insert(AttributeKind::Dexterity, 6.0);
-            m.insert(AttributeKind::Agility, 6.0);
-            m.insert(AttributeKind::Vitality, 3.0);
-            m.insert(AttributeKind::Intelligence, 3.0);
-            m.insert(AttributeKind::Willpower, 2.0);
-            m.insert(AttributeKind::Presence, 2.0);
-            m.insert(AttributeKind::Luck, 3.0);
+            m.insert("phys_atk".into(), 10);
+            m.insert("magic_atk".into(), 3);
+            m.insert("phys_def".into(), 4);
+            m.insert("magic_def".into(), 3);
+            m.insert("max_hp".into(), 80);
+            m.insert("crit_rate".into(), 1000);
+            m.insert("crit_dmg".into(), 1500);
+            m.insert("move_range".into(), 3);
+            m.insert("atk_range".into(), 3);
+            m.insert("hit_rate".into(), 8000);
+            m.insert("dodge_rate".into(), 1000);
             m
         };
         self.templates.insert(
@@ -187,16 +192,19 @@ impl UnitTemplateRegistry {
         );
 
         // 哥布林
-        let goblin_attrs: HashMap<AttributeKind, f32> = {
+        let goblin_attrs: HashMap<String, i32> = {
             let mut m = HashMap::new();
-            m.insert(AttributeKind::Might, 4.0);
-            m.insert(AttributeKind::Dexterity, 2.0);
-            m.insert(AttributeKind::Agility, 4.0);
-            m.insert(AttributeKind::Vitality, 3.0);
-            m.insert(AttributeKind::Intelligence, 1.0);
-            m.insert(AttributeKind::Willpower, 2.0);
-            m.insert(AttributeKind::Presence, 1.0);
-            m.insert(AttributeKind::Luck, 2.0);
+            m.insert("phys_atk".into(), 6);
+            m.insert("magic_atk".into(), 1);
+            m.insert("phys_def".into(), 3);
+            m.insert("magic_def".into(), 2);
+            m.insert("max_hp".into(), 50);
+            m.insert("crit_rate".into(), 300);
+            m.insert("crit_dmg".into(), 1500);
+            m.insert("move_range".into(), 3);
+            m.insert("atk_range".into(), 1);
+            m.insert("hit_rate".into(), 7000);
+            m.insert("dodge_rate".into(), 800);
             m
         };
         self.templates.insert(
@@ -219,16 +227,19 @@ impl UnitTemplateRegistry {
         );
 
         // 暗黑骑士
-        let dark_knight_attrs: HashMap<AttributeKind, f32> = {
+        let dark_knight_attrs: HashMap<String, i32> = {
             let mut m = HashMap::new();
-            m.insert(AttributeKind::Might, 6.0);
-            m.insert(AttributeKind::Dexterity, 3.0);
-            m.insert(AttributeKind::Agility, 4.0);
-            m.insert(AttributeKind::Vitality, 6.0);
-            m.insert(AttributeKind::Intelligence, 2.0);
-            m.insert(AttributeKind::Willpower, 4.0);
-            m.insert(AttributeKind::Presence, 3.0);
-            m.insert(AttributeKind::Luck, 2.0);
+            m.insert("phys_atk".into(), 14);
+            m.insert("magic_atk".into(), 2);
+            m.insert("phys_def".into(), 10);
+            m.insert("magic_def".into(), 8);
+            m.insert("max_hp".into(), 130);
+            m.insert("crit_rate".into(), 500);
+            m.insert("crit_dmg".into(), 1500);
+            m.insert("move_range".into(), 3);
+            m.insert("atk_range".into(), 1);
+            m.insert("hit_rate".into(), 8500);
+            m.insert("dodge_rate".into(), 300);
             m
         };
         self.templates.insert(
@@ -324,9 +335,11 @@ mod tests {
                 background: "士兵",
                 class: "战士",
                 base_attributes: {{
-                    Might: 5.0, Dexterity: 3.0, Agility: 6.0,
-                    Vitality: 5.0, Intelligence: 2.0, Willpower: 3.0,
-                    Presence: 2.0, Luck: 2.0,
+                    "phys_atk": 12, "magic_atk": 2, "phys_def": 10,
+                    "magic_def": 5, "max_hp": 120,
+                    "crit_rate": 500, "crit_dmg": 1500,
+                    "move_range": 3, "atk_range": 1,
+                    "hit_rate": 8500, "dodge_rate": 500,
                 }},
                 base_attack_range: 1,
                 skill_ids: ["{}", "charge"],
@@ -369,8 +382,8 @@ mod tests {
             class: "战士".into(),
             base_attributes: {
                 let mut m = HashMap::new();
-                m.insert(AttributeKind::Might, 4.0);
-                m.insert(AttributeKind::Vitality, 3.0);
+                m.insert("phys_atk".into(), 6);
+                m.insert("max_hp".into(), 50);
                 m
             },
             base_attack_range: 1,

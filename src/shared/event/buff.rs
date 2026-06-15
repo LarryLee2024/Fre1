@@ -1,6 +1,6 @@
 //! Buff 领域事件
 
-use crate::shared::ids::{BuffId, UnitId};
+use crate::shared::ids::{EffectId, UnitId};
 use bevy::prelude::*;
 
 /// Buff 已施加
@@ -8,7 +8,7 @@ use bevy::prelude::*;
 pub struct BuffApplied {
     pub target: UnitId,
     pub target_name: String,
-    pub buff_id: BuffId,
+    pub buff_id: EffectId,
     pub source: Option<UnitId>,
     pub remaining_turns: u32,
 }
@@ -18,7 +18,7 @@ pub struct BuffApplied {
 pub struct BuffRemoved {
     pub target: UnitId,
     pub target_name: String,
-    pub buff_id: BuffId,
+    pub buff_id: EffectId,
     pub reason: BuffRemoveReason,
 }
 

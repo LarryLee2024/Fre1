@@ -2,7 +2,7 @@
 // 使用 Widget 库构建，按钮交互通过 UiCommand Message 发出
 
 use crate::core::ability::{SkillRegistry, SkillSlots};
-use crate::core::attribute::{AttributeKind, Attributes};
+use crate::core::attribute::Attributes;
 use crate::core::buff::ActiveBuffs;
 use crate::core::character::{GridPosition, Selected, TraitCollection, TraitRegistry, UnitName};
 use crate::infrastructure::localization::{CurrentLocale, LocalizationService};
@@ -228,12 +228,12 @@ fn on_enter_action_menu(
             fallback_view.name = name.0.clone();
             fallback_view.grid_coord = grid_pos.coord;
             fallback_view.is_selected = true;
-            fallback_view.hp = attrs.get(AttributeKind::Hp) as i32;
-            fallback_view.max_hp = attrs.get(AttributeKind::MaxHp) as i32;
-            fallback_view.mp = attrs.get(AttributeKind::Mp) as i32;
-            fallback_view.max_mp = attrs.get(AttributeKind::MaxMp) as i32;
-            fallback_view.stamina = attrs.get(AttributeKind::Stamina) as i32;
-            fallback_view.max_stamina = attrs.get(AttributeKind::MaxStamina) as i32;
+            fallback_view.hp = attrs.current_hp as i32;
+            fallback_view.max_hp = attrs.max_hp() as i32;
+            fallback_view.mp = attrs.get("mp") as i32;
+            fallback_view.max_mp = attrs.get("max_mp") as i32;
+            fallback_view.stamina = attrs.get("stamina") as i32;
+            fallback_view.max_stamina = attrs.get("max_stamina") as i32;
             fallback_view.skills = skill_slots
                 .skill_ids
                 .iter()

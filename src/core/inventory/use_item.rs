@@ -151,9 +151,9 @@ fn apply_use_effects(
                 // 计算恢复后的值（受 MaxHp/MaxMp/MaxStamina 上限约束）
                 let current = attrs.get(*kind);
                 let max_kind = match kind {
-                    AttributeKind::Hp => AttributeKind::MaxHp,
-                    AttributeKind::Mp => AttributeKind::MaxMp,
-                    AttributeKind::Stamina => AttributeKind::MaxStamina,
+                    "current_hp" => "max_hp",
+                    "mp" => "max_mp",
+                    "stamina" => "max_stamina",
                     _ => *kind,
                 };
                 let max = attrs.get(max_kind);
@@ -211,7 +211,7 @@ mod tests {
             requirements: vec![],
             slot: None,
             use_effects: vec![UseEffect::RestoreVital {
-                kind: AttributeKind::Hp,
+                kind: "current_hp",
                 value: 50.0,
             }],
             container_capacity: None,
@@ -232,7 +232,7 @@ mod tests {
             conditions: vec![],
             default_duration: 3,
             modifiers: vec![crate::core::attribute::AttributeModifierDef {
-                kind: AttributeKind::Attack,
+                kind: "phys_atk",
                 op: ModifierOp::Add,
                 value: 5.0,
             }],
@@ -252,7 +252,7 @@ mod tests {
         let mut attrs = Attributes::default();
         attrs.fill_vital_resources();
         // 先扣血，验证恢复
-        attrs.set_vital(AttributeKind::Hp, 10.0);
+        attrs.set_vital("current_hp", 10.0);
         let mut buffs = ActiveBuffs::default();
         let mut tags = GameplayTags::default();
         let buff_registry = BuffRegistry::default();
@@ -268,8 +268,8 @@ mod tests {
         );
 
         // HP 应恢复 50，但不超过 MaxHp
-        let hp = attrs.get(AttributeKind::Hp);
-        let max_hp = attrs.get(AttributeKind::MaxHp);
+        let hp = attrs.get("current_hp");
+        let max_hp = attrs.get("max_hp");
         assert_eq!(hp, (10.0_f32 + 50.0).min(max_hp));
     }
 

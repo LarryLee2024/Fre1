@@ -3,7 +3,7 @@
 // 原 status.rs，移入 buff 模块统一管理
 
 use crate::core::ability::SkillCooldowns;
-use crate::core::attribute::{AttributeKind, Attributes, BuffInstanceId, ModifierSource};
+use crate::core::attribute::{Attributes, BuffInstanceId, ModifierSource};
 use crate::core::battle::{DotApplied, HotApplied, StunApplied};
 use crate::core::buff::domain::DurationPolicy;
 use crate::core::character::{Dead, GridPosition, PersistentTags, Unit, UnitName};
@@ -73,7 +73,7 @@ pub fn resolve_status_effects(
             let stun_ids: Vec<BuffInstanceId> = buffs
                 .instances
                 .iter()
-                .filter(|b| b.tags.contains(&GameplayTag::STUN))
+                .filter(|b| b.tags.contains(&GameplayTag::CONTROL_HARD))
                 .map(|b| b.instance_id)
                 .collect();
             for id in stun_ids {
@@ -95,27 +95,25 @@ pub fn resolve_status_effects(
         // 2. 结算本回合 DoT 伤害
         let dot = buffs.dot_damage();
         if dot > 0 {
-            let hp = attrs.get(AttributeKind::Hp);
-            let new_hp = (hp - dot as f32).max(0.0);
-            attrs.set_vital(AttributeKind::Hp, new_hp);
+            let actual_damage = attrs.take_damage(dot);
 
             // 发送 DoT 消息（表现层响应）
             dot_writer.write(DotApplied {
                 target: entity,
                 target_name: name.0.clone(),
-                amount: dot,
+                amount: actual_damage,
                 target_coord: gp.coord,
             });
             // 共享事件（供 LogObserver 使用）
             commands.write_message(shared_battle::DotApplied {
                 target: shared_uid(entity),
                 target_name: name.0.clone(),
-                amount: dot,
+                amount: actual_damage,
             });
 
             // DoT 死亡判定：只添加 Dead Tag，CharacterDied 由 Dead Observer 统一发送
             // 规则3：禁止在 HP 变化时内联死亡处理（宪法 5.0 分层：Hook+Observer+Message）
-            if new_hp <= 0.0 {
+            if !attrs.is_alive() {
                 commands.entity(entity).insert(Dead);
             }
         }
@@ -123,10 +121,7 @@ pub fn resolve_status_effects(
         // 3. 结算本回合 HoT 治疗
         let hot = buffs.hot_heal();
         if hot > 0 {
-            let hp = attrs.get(AttributeKind::Hp);
-            let max_hp = attrs.get(AttributeKind::MaxHp);
-            let new_hp = (hp + hot as f32).min(max_hp);
-            attrs.set_vital(AttributeKind::Hp, new_hp);
+            let actual_heal = attrs.heal(hot);
 
             // 发送 HoT 消息（表现层响应）
             hot_writer.write(HotApplied {
@@ -162,7 +157,7 @@ pub fn resolve_status_effects(
             buff_expired_writer.write(BuffRemoved {
                 target: target_id,
                 target_name: name.0.clone(),
-                buff_id: crate::shared::ids::BuffId::new(buff_id),
+                buff_id: crate::shared::ids::EffectId::new(buff_id),
                 reason: BuffRemoveReason::Expired,
             });
         }
@@ -229,9 +224,7 @@ pub(crate) fn rebuild_tags(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::attribute::{
-        AttributeKind, AttributeModifierInstance, BuffInstanceId, ModifierOp, ModifierSource,
-    };
+    use crate::core::attribute::{BuffInstanceId, ModifierOp, ModifierSource};
     use crate::core::buff::BuffInstance;
 
     fn make_test_buff(
@@ -270,13 +263,13 @@ mod tests {
 
         let mut attrs = Attributes::default();
         attrs.fill_vital_resources();
-        attrs.add_modifier(AttributeModifierInstance {
-            kind: AttributeKind::Attack,
-            op: ModifierOp::Add,
-            value: 5.0,
-            source: ModifierSource::buff_source(1),
-        });
-        let attack_before = attrs.get(AttributeKind::Attack);
+        attrs.add_modifier(
+            "phys_atk".into(),
+            ModifierOp::Add,
+            5,
+            ModifierSource::buff_source(1),
+        );
+        let attack_before = attrs.get("phys_atk");
 
         let mut tags = GameplayTags::default();
         let trait_tags = PersistentTags::default();
@@ -326,13 +319,13 @@ mod tests {
 
         let mut attrs = Attributes::default();
         attrs.fill_vital_resources();
-        attrs.add_modifier(AttributeModifierInstance {
-            kind: AttributeKind::Attack,
-            op: ModifierOp::Add,
-            value: 5.0,
-            source: ModifierSource::buff_source(1),
-        });
-        let attack_before = attrs.get(AttributeKind::Attack);
+        attrs.add_modifier(
+            "phys_atk".into(),
+            ModifierOp::Add,
+            5,
+            ModifierSource::buff_source(1),
+        );
+        let attack_before = attrs.get("phys_atk");
 
         let mut tags = GameplayTags::default();
         let trait_tags = PersistentTags::default();
@@ -388,7 +381,7 @@ mod tests {
             1,
             "fire_shield",
             1,
-            vec![GameplayTag::BUFF, GameplayTag::FIRE],
+            vec![GameplayTag::BUFF, GameplayTag::DMG_FIRE],
             true,
         ));
 
@@ -400,7 +393,7 @@ mod tests {
         tick_buffs(&mut buffs, &mut attrs, &mut tags, &trait_tags);
 
         // 过期 buff（remaining_turns=0）的标签不应出现
-        assert!(!tags.has(GameplayTag::FIRE));
+        assert!(!tags.has(GameplayTag::DMG_FIRE));
         assert!(!tags.has(GameplayTag::BUFF));
     }
 
@@ -454,7 +447,7 @@ mod tests {
             1,
             "fire_shield",
             3,
-            vec![GameplayTag::BUFF, GameplayTag::FIRE],
+            vec![GameplayTag::BUFF, GameplayTag::DMG_FIRE],
             true,
         ));
 
@@ -463,7 +456,7 @@ mod tests {
 
         rebuild_tags(&buffs, &mut tags, &trait_tags);
 
-        assert!(tags.has(GameplayTag::FIRE));
+        assert!(tags.has(GameplayTag::DMG_FIRE));
         assert!(tags.has(GameplayTag::BUFF));
     }
 
@@ -472,37 +465,43 @@ mod tests {
         let buffs = ActiveBuffs::default();
         let mut tags = GameplayTags::default();
         let trait_tags = PersistentTags {
-            from_traits: GameplayTags::from_tags(&[GameplayTag::WARRIOR]),
+            from_traits: GameplayTags::from_tags(&[GameplayTag::ALLY]),
             from_equipment: GameplayTags::default(),
         };
 
         rebuild_tags(&buffs, &mut tags, &trait_tags);
 
-        assert!(tags.has(GameplayTag::WARRIOR));
+        assert!(tags.has(GameplayTag::ALLY));
     }
 
     #[test]
     fn rebuild_tags_清除非trait非buff标签() {
         let buffs = ActiveBuffs::default();
-        let mut tags = GameplayTags::from_tags(&[GameplayTag::FIRE, GameplayTag::WARRIOR]);
+        let mut tags = GameplayTags::from_tags(&[GameplayTag::DMG_FIRE, GameplayTag::ALLY]);
         let trait_tags = PersistentTags::default();
 
         rebuild_tags(&buffs, &mut tags, &trait_tags);
 
         // FIRE 来自旧 buff，trait_tags 为空 → 应该被清除
-        assert!(!tags.has(GameplayTag::FIRE));
-        assert!(!tags.has(GameplayTag::WARRIOR));
+        assert!(!tags.has(GameplayTag::DMG_FIRE));
+        assert!(!tags.has(GameplayTag::ALLY));
     }
 
     #[test]
     fn rebuild_tags_多buff多标签合并() {
         let mut buffs = ActiveBuffs::default();
-        buffs.add(make_test_buff(1, "fire", 3, vec![GameplayTag::FIRE], true));
+        buffs.add(make_test_buff(
+            1,
+            "fire",
+            3,
+            vec![GameplayTag::DMG_FIRE],
+            true,
+        ));
         buffs.add(make_test_buff(
             2,
             "stun",
             3,
-            vec![GameplayTag::STUN, GameplayTag::DEBUFF],
+            vec![GameplayTag::CONTROL_HARD, GameplayTag::DEBUFF],
             false,
         ));
 
@@ -511,19 +510,19 @@ mod tests {
 
         rebuild_tags(&buffs, &mut tags, &trait_tags);
 
-        assert!(tags.has(GameplayTag::FIRE));
-        assert!(tags.has(GameplayTag::STUN));
+        assert!(tags.has(GameplayTag::DMG_FIRE));
+        assert!(tags.has(GameplayTag::CONTROL_HARD));
         assert!(tags.has(GameplayTag::DEBUFF));
     }
 
     #[test]
     fn rebuild_tags_空buff空trait() {
         let buffs = ActiveBuffs::default();
-        let mut tags = GameplayTags::from_tags(&[GameplayTag::FIRE]);
+        let mut tags = GameplayTags::from_tags(&[GameplayTag::DMG_FIRE]);
         let trait_tags = PersistentTags::default();
 
         rebuild_tags(&buffs, &mut tags, &trait_tags);
 
-        assert!(!tags.has(GameplayTag::FIRE));
+        assert!(!tags.has(GameplayTag::DMG_FIRE));
     }
 }

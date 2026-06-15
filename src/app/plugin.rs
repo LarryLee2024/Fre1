@@ -10,7 +10,7 @@ use crate::app::error_monitor;
 use crate::content::ContentPlugin;
 use crate::core::ability::AbilityPlugin;
 use crate::core::ai::{AiBehaviorPlugin, AiPlugin};
-use crate::core::attribute::AttributeDefPlugin;
+use crate::core::attribute::AttributeRegistryPlugin;
 use crate::core::battle::BattlePlugin;
 #[allow(deprecated)]
 use crate::core::buff::BuffPlugin;
@@ -24,7 +24,6 @@ use crate::core::inventory::InventoryPlugin;
 use crate::core::map::MapPlugin;
 use crate::core::modifier::ModifierRulePlugin;
 use crate::core::stacking::StackingPlugin;
-use crate::core::tag::TagDefPlugin;
 use crate::core::tag::TagPlugin;
 use crate::core::targeting::TargetingPlugin;
 use crate::core::trigger::TriggerPlugin;
@@ -81,7 +80,7 @@ impl Plugin for AppPlugin {
         .add_plugins(RegistryPlugin)
         .add_plugins(LocalizationPlugin)
         .add_plugins(ContentPlugin)
-        .add_plugins((AttributeDefPlugin, TagPlugin, TagDefPlugin))
+        .add_plugins((AttributeRegistryPlugin, TagPlugin))
         .add_plugins(ModifierRulePlugin)
         .add_plugins(EffectPlugin)
         .add_plugins((StackingPlugin, ExecutionPlugin))

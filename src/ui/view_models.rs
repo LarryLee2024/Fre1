@@ -4,7 +4,7 @@
 use bevy::prelude::*;
 
 use crate::core::ability::{SkillCooldowns, SkillRegistry, SkillSlots};
-use crate::core::attribute::{AttributeKind, Attributes};
+use crate::core::attribute::Attributes;
 use crate::core::battle::CombatIntent;
 use crate::core::buff::ActiveBuffs;
 use crate::core::character::{
@@ -285,12 +285,12 @@ pub fn update_selected_unit_view(
 }
 
 fn fill_vital_attrs(view: &mut SelectedUnitView, attrs: &Attributes) {
-    view.hp = attrs.get(AttributeKind::Hp) as i32;
-    view.max_hp = attrs.get(AttributeKind::MaxHp) as i32;
-    view.mp = attrs.get(AttributeKind::Mp) as i32;
-    view.max_mp = attrs.get(AttributeKind::MaxMp) as i32;
-    view.stamina = attrs.get(AttributeKind::Stamina) as i32;
-    view.max_stamina = attrs.get(AttributeKind::MaxStamina) as i32;
+    view.hp = attrs.current_hp as i32;
+    view.max_hp = attrs.max_hp() as i32;
+    view.mp = attrs.get("mp") as i32;
+    view.max_mp = attrs.get("max_mp") as i32;
+    view.stamina = attrs.get("stamina") as i32;
+    view.max_stamina = attrs.get("max_stamina") as i32;
 }
 
 fn fill_core_attrs(view: &mut SelectedUnitView, attrs: &Attributes) {

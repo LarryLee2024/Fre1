@@ -2,7 +2,7 @@
 // 所有 UI→Logic 的交互都通过此模块，UI 层不再直接修改 CombatIntent/TurnPhase
 
 use crate::core::ability::{BASIC_ATTACK_ID, SkillRegistry, SkillSlots, effective_skill_range};
-use crate::core::attribute::{AttributeKind, Attributes};
+use crate::core::attribute::Attributes;
 use crate::core::battle::{CombatIntent, PrevPosition, manhattan_distance};
 use crate::core::character::{
     AttackRange, Faction, GridPosition, MovableRange, Selected, SelectionHighlight, Unit,
@@ -175,7 +175,7 @@ pub fn handle_ui_commands(
                             let skill_id =
                                 combat_intent.skill_id.as_deref().unwrap_or(BASIC_ATTACK_ID);
                             if let Some(skill_data) = skill_registry.get(skill_id) {
-                                let base_range = attrs.get(AttributeKind::AttackRange) as u32;
+                                let base_range = attrs.get("atk_range") as u32;
                                 let effective_range = effective_skill_range(skill_data, base_range);
                                 if manhattan_distance(sel_gp.coord, enemy_coord) <= effective_range
                                 {
@@ -273,7 +273,7 @@ fn show_range_for_selected(
 ) {
     if let Ok(selected_entity) = selected_query.single() {
         if let Ok((_, _, gp, _, attrs, _, _)) = units.get(selected_entity) {
-            let base_range = attrs.get(AttributeKind::AttackRange) as u32;
+            let base_range = attrs.get("atk_range") as u32;
             if let Some(skill_data) = skill_registry.get(skill_id) {
                 let range = effective_skill_range(skill_data, base_range);
                 show_attack_range(commands, map, gp.coord, range, theme);

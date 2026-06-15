@@ -6,7 +6,7 @@ mod types;
 pub use error::*;
 pub use types::*;
 
-use crate::core::attribute::{AttributeKind, AttributeModifierDef, ModifierOp};
+use crate::core::attribute::{AttributeModifierDef, ModifierOp};
 use crate::core::registry_loader::RegistryLoader;
 use crate::core::tag::GameplayTag;
 use bevy::prelude::*;
@@ -47,9 +47,9 @@ impl BuffRegistry {
                 conditions: vec![],
                 default_duration: 3,
                 modifiers: vec![AttributeModifierDef {
-                    kind: AttributeKind::Attack,
+                    config_id: "phys_atk".into(),
                     op: ModifierOp::Add,
-                    value: 5.0,
+                    value: 5,
                 }],
                 tags: vec![GameplayTag::BUFF],
                 dot_damage: 0,
@@ -74,9 +74,9 @@ impl BuffRegistry {
                 conditions: vec![],
                 default_duration: 3,
                 modifiers: vec![AttributeModifierDef {
-                    kind: AttributeKind::Attack,
+                    config_id: "phys_atk".into(),
                     op: ModifierOp::Add,
-                    value: -5.0,
+                    value: -5,
                 }],
                 tags: vec![GameplayTag::DEBUFF],
                 dot_damage: 0,
@@ -101,9 +101,9 @@ impl BuffRegistry {
                 conditions: vec![],
                 default_duration: 3,
                 modifiers: vec![AttributeModifierDef {
-                    kind: AttributeKind::Defense,
+                    config_id: "phys_def".into(),
                     op: ModifierOp::Add,
-                    value: 5.0,
+                    value: 5,
                 }],
                 tags: vec![GameplayTag::BUFF],
                 dot_damage: 0,
@@ -128,9 +128,9 @@ impl BuffRegistry {
                 conditions: vec![],
                 default_duration: 3,
                 modifiers: vec![AttributeModifierDef {
-                    kind: AttributeKind::Defense,
+                    config_id: "phys_def".into(),
                     op: ModifierOp::Add,
-                    value: -5.0,
+                    value: -5,
                 }],
                 tags: vec![GameplayTag::DEBUFF],
                 dot_damage: 0,
@@ -155,11 +155,11 @@ impl BuffRegistry {
                 conditions: vec![],
                 default_duration: 2,
                 modifiers: vec![AttributeModifierDef {
-                    kind: AttributeKind::Defense,
+                    config_id: "phys_def".into(),
                     op: ModifierOp::Add,
-                    value: -2.0,
+                    value: -2,
                 }],
-                tags: vec![GameplayTag::DEBUFF, GameplayTag::BURN, GameplayTag::FIRE],
+                tags: vec![GameplayTag::DEBUFF, GameplayTag::DMG_FIRE],
                 dot_damage: 2,
                 hot_heal: 0,
                 is_stun: false,
@@ -182,53 +182,7 @@ impl BuffRegistry {
                 conditions: vec![],
                 default_duration: 3,
                 modifiers: vec![],
-                tags: vec![GameplayTag::DEBUFF, GameplayTag::POISON],
-                dot_damage: 3,
-                hot_heal: 0,
-                is_stun: false,
-                is_cleanse: false,
-                is_buff: false,
-            },
-        );
-
-        // 再生
-        self.buffs.insert(
-            "regen".into(),
-            BuffData {
-                id: "regen".into(),
-                name: "愈+4".into(),
-                name_key: Some("buff.b_007.name".into()),
-                description: String::new(),
-                effects: vec![],
-                duration: DurationPolicy::Turns(3),
-                stack: StackPolicy::NoStack,
-                conditions: vec![],
-                default_duration: 3,
-                modifiers: vec![],
-                tags: vec![GameplayTag::BUFF],
-                dot_damage: 0,
-                hot_heal: 4,
-                is_stun: false,
-                is_cleanse: false,
-                is_buff: true,
-            },
-        );
-
-        // 眩晕
-        self.buffs.insert(
-            "stun".into(),
-            BuffData {
-                id: "stun".into(),
-                name: "晕眩".into(),
-                name_key: Some("buff.b_008.name".into()),
-                description: String::new(),
-                effects: vec![],
-                duration: DurationPolicy::Turns(1),
-                stack: StackPolicy::NoStack,
-                conditions: vec![],
-                default_duration: 1,
-                modifiers: vec![],
-                tags: vec![GameplayTag::DEBUFF, GameplayTag::POISON],
+                tags: vec![GameplayTag::DEBUFF],
                 dot_damage: 3,
                 hot_heal: 0,
                 is_stun: false,
@@ -274,7 +228,7 @@ impl BuffRegistry {
                 conditions: vec![],
                 default_duration: 1,
                 modifiers: vec![],
-                tags: vec![GameplayTag::DEBUFF, GameplayTag::STUN],
+                tags: vec![GameplayTag::DEBUFF, GameplayTag::CONTROL_HARD],
                 dot_damage: 0,
                 hot_heal: 0,
                 is_stun: true,
@@ -310,7 +264,6 @@ impl RegistryLoader for BuffRegistry {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::tag::TagName;
     use ron::de::from_bytes;
 
     // ── BuffDef → BuffData 转换 ──
@@ -329,11 +282,11 @@ mod tests {
             conditions: vec![],
             default_duration: 3,
             modifiers: vec![AttributeModifierDef {
-                kind: AttributeKind::Attack,
+                config_id: "phys_atk".into(),
                 op: ModifierOp::Add,
-                value: 10.0,
+                value: 10,
             }],
-            tags: vec![TagName::Buff, TagName::Fire],
+            tags: vec!["buff".to_string(), "dmg_fire".to_string()],
             dot_damage: 0,
             hot_heal: 0,
             is_stun: false,
@@ -342,7 +295,7 @@ mod tests {
         };
         let data: BuffData = def.into();
         assert_eq!(data.id, "test_buff");
-        assert_eq!(data.tags, vec![GameplayTag::BUFF, GameplayTag::FIRE]);
+        assert_eq!(data.tags, vec![GameplayTag::BUFF, GameplayTag::DMG_FIRE]);
         assert_eq!(data.duration, DurationPolicy::Turns(3));
         assert_eq!(data.stack, StackPolicy::NoStack);
         assert!(data.effects.is_empty());
@@ -359,9 +312,9 @@ mod tests {
                 name: "测试增益",
                 default_duration: 2,
                 modifiers: [
-                    (kind: Attack, op: Add, value: 5.0),
+                    (config_id: "phys_atk", op: Add, value: 5),
                 ],
-                tags: [BUFF, FIRE],
+                tags: ["buff", "dmg_fire"],
                 dot_damage: 0,
                 hot_heal: 3,
                 is_stun: false,
@@ -371,7 +324,7 @@ mod tests {
         "#;
         let def: BuffDef = from_bytes(ron_str.as_bytes()).unwrap();
         assert_eq!(def.id, "test_buff");
-        assert_eq!(def.tags, vec![TagName::Buff, TagName::Fire]);
+        assert_eq!(def.tags, vec!["buff".to_string(), "dmg_fire".to_string()]);
         // 新字段使用默认值
         assert_eq!(def.duration, DurationDef::Turns(1)); // 默认 Turns(1)
         assert_eq!(def.stack, StackDef::NoStack); // 默认 NoStack
@@ -389,7 +342,7 @@ mod tests {
                 stack: Stackable(3),
                 default_duration: 2,
                 modifiers: [],
-                tags: [BUFF],
+                tags: ["buff"],
                 dot_damage: 0,
                 hot_heal: 0,
                 is_stun: false,

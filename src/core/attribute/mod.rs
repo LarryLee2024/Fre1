@@ -1,597 +1,577 @@
-/// 属性定义注册表（RON 加载）
-pub mod def;
-/// 属性系统：8维核心属性 + 衍生属性实时计算 + 修饰符栈
-/// 核心属性由种族/职业/等级决定，衍生属性从核心属性公式计算，生命资源存储当前值
+//! 属性系统（ADR-031 §1）
+//!
+//! 基于 Linglan 5+6 属性模型：
+//! - 核心五维：PhysAtk / MagicAtk / PhysDef / MagicDef / MaxHp
+//! - 次级六维：CritRate / CritDmg / MoveRange / AtkRange / HitRate / DodgeRate
+//!
+//! 所有数值使用 i32（百分比 = 万分比，如 50% = 5000）。
+//! 禁止 f32、禁止硬编码派生公式。
 
-/// AttributeKind, ModifierOp 等枚举定义
-mod types;
+pub mod conversion;
+pub mod def;
+pub mod ops;
 
 pub use def::*;
-pub use types::*;
 
 use bevy::prelude::*;
+use enum_map::{Enum, EnumMap};
+use serde::Deserialize;
 use std::collections::HashMap;
 
-/// 属性组件：核心属性基础值 + 生命资源当前值 + 修饰符栈
-#[derive(Component, Reflect, Default, Debug, Clone)]
-#[reflect(Component)]
+// ============================================================================
+// CoreAttribute — 核心五维
+// ============================================================================
+
+/// 核心属性枚举（5 维，Definition → Instance 固定）
+///
+/// 对应 Linglan 核心五维：物理攻击、魔法攻击、物理防御、魔法防御、最大生命值。
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Enum)]
+pub enum CoreAttribute {
+    PhysAtk,
+    MagicAtk,
+    PhysDef,
+    MagicDef,
+    MaxHp,
+}
+
+impl CoreAttribute {
+    /// 返回核心属性对应的 RON 配置 ID 字符串
+    pub fn config_id(&self) -> &'static str {
+        match self {
+            CoreAttribute::PhysAtk => "phys_atk",
+            CoreAttribute::MagicAtk => "magic_atk",
+            CoreAttribute::PhysDef => "phys_def",
+            CoreAttribute::MagicDef => "magic_def",
+            CoreAttribute::MaxHp => "max_hp",
+        }
+    }
+
+    /// 返回所有核心属性
+    pub const fn all() -> [CoreAttribute; 5] {
+        [
+            CoreAttribute::PhysAtk,
+            CoreAttribute::MagicAtk,
+            CoreAttribute::PhysDef,
+            CoreAttribute::MagicDef,
+            CoreAttribute::MaxHp,
+        ]
+    }
+}
+
+// ============================================================================
+// SecondaryAttribute — 次级六维
+// ============================================================================
+
+/// 次级属性枚举（6 维，运行时由 Modifier 管线计算）
+///
+/// 对应 Linglan 次级六维：暴击率、暴击伤害、移动范围、攻击范围、命中率、闪避率。
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Enum)]
+pub enum SecondaryAttribute {
+    CritRate,
+    CritDmg,
+    MoveRange,
+    AtkRange,
+    HitRate,
+    DodgeRate,
+}
+
+impl SecondaryAttribute {
+    /// 返回次级属性对应的 RON 配置 ID 字符串
+    pub fn config_id(&self) -> &'static str {
+        match self {
+            SecondaryAttribute::CritRate => "crit_rate",
+            SecondaryAttribute::CritDmg => "crit_dmg",
+            SecondaryAttribute::MoveRange => "move_range",
+            SecondaryAttribute::AtkRange => "atk_range",
+            SecondaryAttribute::HitRate => "hit_rate",
+            SecondaryAttribute::DodgeRate => "dodge_rate",
+        }
+    }
+
+    /// 返回所有次级属性
+    pub const fn all() -> [SecondaryAttribute; 6] {
+        [
+            SecondaryAttribute::CritRate,
+            SecondaryAttribute::CritDmg,
+            SecondaryAttribute::MoveRange,
+            SecondaryAttribute::AtkRange,
+            SecondaryAttribute::HitRate,
+            SecondaryAttribute::DodgeRate,
+        ]
+    }
+}
+
+// ============================================================================
+// Attributes Component
+// ============================================================================
+
+/// 内部修饰符条目
+#[derive(Clone, Debug)]
+pub(crate) struct StoredModifier {
+    pub op: ModifierOp,
+    pub value: i32,
+    pub source: ModifierSource,
+}
+
+/// 运行时属性组件（Instance 层）
+///
+/// 存储实体的核心属性基础值和次级属性当前值。
+/// 次级属性由 Modifier 管线（Step 4）实时计算。
+///
+/// 临时修饰符存储（`base_values` + `modifiers`）提供向前兼容的
+/// get/set 接口，供 Phase 2 下游消费者编译使用。
+/// 将在 Step 4（Modifier 重构）中替换为正式的 Modifier 管线。
+#[derive(Component, Default, Debug, Clone)]
 pub struct Attributes {
-    /// 核心属性基础值（8维：Might/Dexterity/Agility/Vitality/Intelligence/Willpower/Presence/Luck）
-    pub base: HashMap<AttributeKind, f32>,
-    /// 当前 HP（战斗中变化）
-    pub current_hp: f32,
-    /// 当前 MP（战斗中变化）
-    pub current_mp: f32,
-    /// 当前 Stamina（战斗中变化）
-    pub current_stamina: f32,
-    /// 基础攻击范围（由职业/装备决定，不随属性变化）
-    pub base_attack_range: u32,
-    /// 修饰符栈
-    pub modifiers: Vec<AttributeModifierInstance>,
+    /// 核心属性：基础值（战斗外固定，由 UnitTemplate 设定）
+    pub core: EnumMap<CoreAttribute, i32>,
+    /// 次级属性：当前值（由 Modifier 管线计算）
+    pub secondary: EnumMap<SecondaryAttribute, i32>,
+    /// 当前生命值（战斗中变化，不可超过 MaxHp 或低于 0）
+    pub current_hp: i32,
+    /// 基础属性存储（按 config_id 字符串键，用于非枚举属性访问）
+    pub base_values: HashMap<String, i32>,
+    /// 活动修饰符存储（config_id → 修饰符列表），临时方案
+    pub(crate) modifiers: HashMap<String, Vec<StoredModifier>>,
 }
 
 impl Attributes {
-    /// ── 核心属性访问 ──
-
-    /// 获取核心属性原始基础值（不含修饰符）
-    pub fn core_base(&self, kind: AttributeKind) -> f32 {
-        self.base.get(&kind).copied().unwrap_or(0.0)
-    }
-
-    /// 获取核心属性最终值（base + 修饰符）
-    pub fn core(&self, kind: AttributeKind) -> f32 {
-        let base = self.core_base(kind);
-        let add_sum: f32 = self
-            .modifiers
-            .iter()
-            .filter(|m| m.kind == kind && m.op == ModifierOp::Add)
-            .map(|m| m.value)
-            .sum();
-        let mul_product: f32 = self
-            .modifiers
-            .iter()
-            .filter(|m| m.kind == kind && m.op == ModifierOp::Multiply)
-            .map(|m| m.value)
-            .product::<f32>();
-        let mul = if mul_product == 0.0 { 1.0 } else { mul_product };
-        (base + add_sum) * mul
-    }
-
-    /// ── 衍生属性计算（从核心属性实时推导）──
-
-    /// MaxHp = 5 + Vitality * 5
-    fn calc_max_hp(&self) -> f32 {
-        let vit = self.core(AttributeKind::Vitality);
-        let base = 5.0 + vit * 5.0;
-        self.apply_modifiers(AttributeKind::MaxHp, base)
-    }
-
-    /// MaxMp = Intelligence * 5
-    fn calc_max_mp(&self) -> f32 {
-        let int = self.core(AttributeKind::Intelligence);
-        let base = int * 5.0;
-        self.apply_modifiers(AttributeKind::MaxMp, base)
-    }
-
-    /// MaxStamina = 10 + (Vitality + Might) * 2
-    fn calc_max_stamina(&self) -> f32 {
-        let vit = self.core(AttributeKind::Vitality);
-        let mig = self.core(AttributeKind::Might);
-        let base = 10.0 + (vit + mig) * 2.0;
-        self.apply_modifiers(AttributeKind::MaxStamina, base)
-    }
-
-    /// Attack = Might * 2
-    fn calc_attack(&self) -> f32 {
-        let mig = self.core(AttributeKind::Might);
-        let base = mig * 2.0;
-        self.apply_modifiers(AttributeKind::Attack, base)
-    }
-
-    /// Defense = Vitality
-    fn calc_defense(&self) -> f32 {
-        let vit = self.core(AttributeKind::Vitality);
-        let base = vit;
-        self.apply_modifiers(AttributeKind::Defense, base)
-    }
-
-    /// MagicAttack = Intelligence * 2
-    fn calc_magic_attack(&self) -> f32 {
-        let int = self.core(AttributeKind::Intelligence);
-        let base = int * 2.0;
-        self.apply_modifiers(AttributeKind::MagicAttack, base)
-    }
-
-    /// MagicDefense = Willpower
-    fn calc_magic_defense(&self) -> f32 {
-        let wil = self.core(AttributeKind::Willpower);
-        let base = wil;
-        self.apply_modifiers(AttributeKind::MagicDefense, base)
-    }
-
-    /// Accuracy = 80 + Dexterity * 2
-    fn calc_accuracy(&self) -> f32 {
-        let dex = self.core(AttributeKind::Dexterity);
-        let base = 80.0 + dex * 2.0;
-        self.apply_modifiers(AttributeKind::Accuracy, base)
-    }
-
-    /// Evasion = Agility * 3
-    fn calc_evasion(&self) -> f32 {
-        let agi = self.core(AttributeKind::Agility);
-        let base = agi * 3.0;
-        self.apply_modifiers(AttributeKind::Evasion, base)
-    }
-
-    /// CritRate = 5 + Luck
-    fn calc_crit_rate(&self) -> f32 {
-        let lck = self.core(AttributeKind::Luck);
-        let base = 5.0 + lck;
-        self.apply_modifiers(AttributeKind::CritRate, base)
-    }
-
-    /// MoveRange = floor(Agility * 0.5) + 2
-    fn calc_move_range(&self) -> f32 {
-        let agi = self.core(AttributeKind::Agility);
-        let base = (agi * 0.5).floor() + 2.0;
-        self.apply_modifiers(AttributeKind::MoveRange, base)
-    }
-
-    /// Initiative = Agility * 2 + Luck
-    fn calc_initiative(&self) -> f32 {
-        let agi = self.core(AttributeKind::Agility);
-        let lck = self.core(AttributeKind::Luck);
-        let base = agi * 2.0 + lck;
-        self.apply_modifiers(AttributeKind::Initiative, base)
-    }
-
-    /// AttackRange = base_attack_range（由职业/装备决定）
-    fn calc_attack_range(&self) -> f32 {
-        let base = self.base_attack_range as f32;
-        self.apply_modifiers(AttributeKind::AttackRange, base)
-    }
-
-    /// 对衍生属性基础值应用修饰符
-    fn apply_modifiers(&self, kind: AttributeKind, base: f32) -> f32 {
-        let add_sum: f32 = self
-            .modifiers
-            .iter()
-            .filter(|m| m.kind == kind && m.op == ModifierOp::Add)
-            .map(|m| m.value)
-            .sum();
-        let mul_product: f32 = self
-            .modifiers
-            .iter()
-            .filter(|m| m.kind == kind && m.op == ModifierOp::Multiply)
-            .map(|m| m.value)
-            .product::<f32>();
-        let mul = if mul_product == 0.0 { 1.0 } else { mul_product };
-        (base + add_sum) * mul
-    }
-
-    /// ── 统一属性访问接口 ──
-
-    /// 获取任意属性值（核心/资源/衍生统一接口）
-    pub fn get(&self, kind: AttributeKind) -> f32 {
-        match kind {
-            // 核心属性
-            AttributeKind::Might
-            | AttributeKind::Dexterity
-            | AttributeKind::Agility
-            | AttributeKind::Vitality
-            | AttributeKind::Intelligence
-            | AttributeKind::Willpower
-            | AttributeKind::Presence
-            | AttributeKind::Luck => self.core(kind),
-
-            // 生命资源
-            AttributeKind::Hp => self.current_hp,
-            AttributeKind::Mp => self.current_mp,
-            AttributeKind::Stamina => self.current_stamina,
-
-            // 衍生属性
-            AttributeKind::MaxHp => self.calc_max_hp(),
-            AttributeKind::MaxMp => self.calc_max_mp(),
-            AttributeKind::MaxStamina => self.calc_max_stamina(),
-            AttributeKind::Attack => self.calc_attack(),
-            AttributeKind::Defense => self.calc_defense(),
-            AttributeKind::MagicAttack => self.calc_magic_attack(),
-            AttributeKind::MagicDefense => self.calc_magic_defense(),
-            AttributeKind::Accuracy => self.calc_accuracy(),
-            AttributeKind::Evasion => self.calc_evasion(),
-            AttributeKind::CritRate => self.calc_crit_rate(),
-            AttributeKind::MoveRange => self.calc_move_range(),
-            AttributeKind::Initiative => self.calc_initiative(),
-            AttributeKind::AttackRange => self.calc_attack_range(),
+    /// 创建新的 Attributes 实例，初值为全 0
+    pub fn new() -> Self {
+        Self {
+            core: EnumMap::default(),
+            secondary: EnumMap::default(),
+            current_hp: 0,
+            base_values: HashMap::new(),
+            modifiers: HashMap::new(),
         }
     }
 
-    /// 设置基础值（仅 Core Stat 有效）
-    /// 🟥 不变量7合规：Vital Resource 必须通过 set_vital() 设置当前值
-    pub fn set_base(&mut self, kind: AttributeKind, value: f32) {
-        if kind.is_core() {
-            self.base.insert(kind, value);
+    /// 获取核心属性值
+    pub fn core_value(&self, attr: CoreAttribute) -> i32 {
+        self.core[attr]
+    }
+
+    /// 设置核心属性基础值（超出边界时 clamp）
+    pub fn set_core(&mut self, attr: CoreAttribute, value: i32) {
+        self.core[attr] = value.max(0); // 核心属性最小值 0
+    }
+
+    /// 获取次级属性值
+    pub fn secondary_value(&self, attr: SecondaryAttribute) -> i32 {
+        self.secondary[attr]
+    }
+
+    /// 设置次级属性值（超出边界时 clamp）
+    /// 通常由 Modifier 管线调用，不直接使用
+    pub fn set_secondary(&mut self, attr: SecondaryAttribute, value: i32) {
+        self.secondary[attr] = value;
+    }
+
+    /// 获取最大生命值（核心属性 MaxHp）
+    pub fn max_hp(&self) -> i32 {
+        self.core[CoreAttribute::MaxHp]
+    }
+
+    /// 设置最大生命值
+    pub fn set_max_hp(&mut self, value: i32) {
+        self.core[CoreAttribute::MaxHp] = value.max(1);
+        // 确保 current_hp 不超过新的最大值
+        self.current_hp = self.current_hp.min(self.max_hp());
+    }
+
+    /// 初始化当前生命值为最大值
+    pub fn fill_hp(&mut self) {
+        self.current_hp = self.max_hp();
+    }
+
+    /// 受到伤害（减去护盾 / 减伤后调用）
+    /// 返回实际造成的伤害量
+    pub fn take_damage(&mut self, amount: i32) -> i32 {
+        let actual = amount.min(self.current_hp);
+        self.current_hp -= actual;
+        actual
+    }
+
+    /// 恢复生命值（不超过最大值）
+    /// 返回实际恢复量
+    pub fn heal(&mut self, amount: i32) -> i32 {
+        let missing = self.max_hp().saturating_sub(self.current_hp);
+        let actual = amount.min(missing);
+        self.current_hp += actual;
+        actual
+    }
+
+    /// 是否存活
+    pub fn is_alive(&self) -> bool {
+        self.current_hp > 0
+    }
+
+    /// 生命值百分比（万分比，如 50% = 5000）
+    pub fn hp_percent(&self) -> i32 {
+        let max = self.max_hp();
+        if max <= 0 {
+            return 0;
+        }
+        (self.current_hp as i64 * 10000 / max as i64) as i32
+    }
+
+    /// 已损失生命值
+    pub fn lost_hp(&self) -> i32 {
+        self.max_hp().saturating_sub(self.current_hp)
+    }
+
+    // ========================================================================
+    // 临时向后兼容接口（Phase 2 编译桥接，Step 4 重构时删除）
+    // ========================================================================
+
+    /// 通过 config_id 获取属性的当前值（基础值 + 修饰符求和）
+    ///
+    /// 优先匹配 CoreAttribute 和 SecondaryAttribute 枚举，然后查 base_values。
+    pub fn get(&self, config_id: &str) -> i32 {
+        // 先查枚举属性
+        let base = match config_id {
+            "phys_atk" => self.core_value(CoreAttribute::PhysAtk),
+            "magic_atk" => self.core_value(CoreAttribute::MagicAtk),
+            "phys_def" => self.core_value(CoreAttribute::PhysDef),
+            "magic_def" => self.core_value(CoreAttribute::MagicDef),
+            "max_hp" => self.core_value(CoreAttribute::MaxHp),
+            "crit_rate" => self.secondary_value(SecondaryAttribute::CritRate),
+            "crit_dmg" => self.secondary_value(SecondaryAttribute::CritDmg),
+            "move_range" => self.secondary_value(SecondaryAttribute::MoveRange),
+            "atk_range" => self.secondary_value(SecondaryAttribute::AtkRange),
+            "hit_rate" => self.secondary_value(SecondaryAttribute::HitRate),
+            "dodge_rate" => self.secondary_value(SecondaryAttribute::DodgeRate),
+            _ => *self.base_values.get(config_id).unwrap_or(&0),
+        };
+        // 叠加修饰符
+        if let Some(mods) = self.modifiers.get(config_id) {
+            let mut total = base as i64;
+            for m in mods {
+                match m.op {
+                    ModifierOp::Add => total += m.value as i64,
+                    ModifierOp::Multiply => total = total * m.value as i64 / 10000,
+                }
+            }
+            total as i32
         } else {
-            bevy::log::warn!(
-                target: "core",
-                kind = ?kind,
-                "set_base() 仅用于 Core Stat，Vital Resource 请用 set_vital()，Derived Stat 无 base"
-            );
+            base
         }
     }
 
-    /// 设置生命资源当前值（HP/MP/Stamina）
-    /// 语义更清晰：set_vital 修改的是"当前值"而非"基础值"
-    pub fn set_vital(&mut self, kind: AttributeKind, value: f32) {
-        match kind {
-            AttributeKind::Hp => self.current_hp = value,
-            AttributeKind::Mp => self.current_mp = value,
-            AttributeKind::Stamina => self.current_stamina = value,
+    /// 通过 config_id 设置基础属性值
+    pub fn set_base(&mut self, config_id: &str, value: i32) {
+        match config_id {
+            "phys_atk" => self.set_core(CoreAttribute::PhysAtk, value),
+            "magic_atk" => self.set_core(CoreAttribute::MagicAtk, value),
+            "phys_def" => self.set_core(CoreAttribute::PhysDef, value),
+            "magic_def" => self.set_core(CoreAttribute::MagicDef, value),
+            "max_hp" => self.set_max_hp(value),
+            "crit_rate" => self.set_secondary(SecondaryAttribute::CritRate, value),
+            "crit_dmg" => self.set_secondary(SecondaryAttribute::CritDmg, value),
+            "move_range" => self.set_secondary(SecondaryAttribute::MoveRange, value),
+            "atk_range" => self.set_secondary(SecondaryAttribute::AtkRange, value),
+            "hit_rate" => self.set_secondary(SecondaryAttribute::HitRate, value),
+            "dodge_rate" => self.set_secondary(SecondaryAttribute::DodgeRate, value),
             _ => {
-                bevy::log::warn!(
-                    target: "core",
-                    kind = ?kind,
-                    "set_vital 仅用于生命资源(HP/MP/Stamina)"
-                );
+                self.base_values.insert(config_id.to_string(), value);
             }
         }
     }
 
-    /// 设置基础攻击范围（由职业/装备决定）
-    pub fn set_base_attack_range(&mut self, range: u32) {
-        self.base_attack_range = range;
+    /// 添加单个修饰符
+    pub fn add_modifier(
+        &mut self,
+        config_id: String,
+        op: ModifierOp,
+        value: i32,
+        source: ModifierSource,
+    ) {
+        self.modifiers
+            .entry(config_id)
+            .or_default()
+            .push(StoredModifier { op, value, source });
     }
 
-    /// 添加修饰符
-    pub fn add_modifier(&mut self, modifier: AttributeModifierInstance) {
-        self.modifiers.push(modifier);
-    }
-
-    /// 移除来自指定来源的所有修饰符
-    pub fn remove_modifiers_from(&mut self, source: ModifierSource) {
-        self.modifiers.retain(|m| m.source != source);
-    }
-
-    /// 移除所有 Trait 来源的修饰符
-    pub fn remove_trait_modifiers(&mut self) {
-        self.modifiers.retain(|m| !m.source.is_trait());
-    }
-
-    /// 移除所有 Equipment 来源的修饰符
-    pub fn remove_equipment_modifiers(&mut self) {
-        self.modifiers.retain(|m| !m.source.is_equipment());
-    }
-
-    /// 移除所有减益修饰符（值为负的 Add 修饰符 + 值 < 1.0 的 Multiply 修饰符）
-    pub fn remove_debuff_modifiers(&mut self) {
-        self.modifiers.retain(|m| match m.op {
-            ModifierOp::Add => m.value >= 0.0,
-            ModifierOp::Multiply => m.value >= 1.0,
-        });
-    }
-
-    /// 从定义列表和 ModifierSource 批量添加修饰符
+    /// 从定义列表添加修饰符
     pub fn add_modifiers_from_def(
         &mut self,
         defs: &[AttributeModifierDef],
         source: ModifierSource,
     ) {
         for def in defs {
-            self.add_modifier(AttributeModifierInstance {
-                kind: def.kind,
-                op: def.op,
-                value: def.value,
-                source,
-            });
+            self.add_modifier(def.config_id.clone(), def.op, def.value, source);
         }
     }
 
-    /// 初始化生命资源为最大值（生成单位时调用）
+    /// 移除指定来源的所有修饰符
+    pub fn remove_modifiers_from(&mut self, source: ModifierSource) {
+        for mods in self.modifiers.values_mut() {
+            mods.retain(|m| m.source != source);
+        }
+    }
+
+    /// 设置基础攻击范围（临时桥接，将在 Step 4 删除）
+    pub fn set_base_attack_range(&mut self, value: u32) {
+        self.set_base("atk_range", value as i32);
+    }
+
+    /// 填充生命资源（临时桥接，等效于 fill_hp）
     pub fn fill_vital_resources(&mut self) {
-        self.current_hp = self.calc_max_hp();
-        self.current_mp = self.calc_max_mp();
-        self.current_stamina = self.calc_max_stamina();
+        self.fill_hp();
     }
 }
 
+// ============================================================================
+// 跨模块类型（供 Buff / Equipment / Modifier 模块引用）
+// 这些类型将在 Step 4（Modifier 重构）中迁移到 modifier 模块。
+// ============================================================================
+
+/// 修饰符操作类型
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Reflect, Deserialize)]
+pub enum ModifierOp {
+    /// 加法：base + value
+    Add,
+    /// 乘法：base * value / 10000（value 为万分比）
+    Multiply,
+}
+
+/// 属性修饰符定义（用于 BuffData 等数据定义，支持 RON 反序列化）
+#[derive(Clone, Debug, Reflect, Deserialize)]
+pub struct AttributeModifierDef {
+    /// 配置 ID（如 "phys_atk"），运行时需查找 AttributeRegistry
+    pub config_id: String,
+    pub op: ModifierOp,
+    /// 修饰值（万分比时如 5000 = 50%）
+    pub value: i32,
+}
+
+/// 修饰符来源：统一标识 Trait / Equipment / Buff
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Reflect)]
+pub struct ModifierSource(pub u64);
+
+impl ModifierSource {
+    // ── Trait 区间：u64::MAX ~ u64::MAX - 999 ──
+    pub fn trait_source(index: u64) -> Self {
+        Self(u64::MAX - index)
+    }
+
+    // ── Equipment 区间：u64::MAX - 1000 ~ u64::MAX - 1999 ──
+    pub fn equipment_source(index: u64) -> Self {
+        Self(u64::MAX - 1000 - index)
+    }
+
+    // ── Buff 区间：1 ~ 999999 ──
+    pub fn buff_source(id: u64) -> Self {
+        Self(id)
+    }
+
+    // ── Consumable 区间：u64::MAX - 2001 ~ u64::MAX - 2999 ──
+    pub fn consumable_source(entity: Entity) -> Self {
+        Self(u64::MAX - 2001 - entity.to_bits())
+    }
+
+    pub fn is_trait(&self) -> bool {
+        self.0 > u64::MAX - 1000
+    }
+
+    pub fn is_equipment(&self) -> bool {
+        self.0 > u64::MAX - 2000 && self.0 <= u64::MAX - 1000
+    }
+
+    pub fn is_buff(&self) -> bool {
+        self.0 < u64::MAX - 2000
+    }
+}
+
+/// Buff 实例的唯一标识（保留向后兼容，Buff 系统内部使用）
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Reflect)]
+pub struct BuffInstanceId(pub u64);
+
+impl BuffInstanceId {
+    /// 转换为 ModifierSource（Buff 区间）
+    pub fn to_modifier_source(self) -> ModifierSource {
+        ModifierSource::buff_source(self.0)
+    }
+}
+
+/// 属性修饰符实例（运行时，关联到具体来源）
+#[derive(Clone, Debug, Reflect)]
+pub struct AttributeModifierInstance {
+    pub config_id: String,
+    pub op: ModifierOp,
+    pub value: i32,
+    pub source: ModifierSource,
+}
+
+// ============================================================================
+// Tests
+// ============================================================================
+
 #[cfg(test)]
 mod tests {
-    // ================================================
-    // Bevy SRPG AI宪法 v1.1 自检结果（测试专用）
-    // ================================================
-    // ✅ 测行为不测实现：是 — 断言验证属性计算结果，不验证内部修饰符栈
-    // ✅ 符合领域规则：是 — 覆盖 INV-ATR-1~7 全部属性不变量
-    // ✅ 确定性：是 — 硬编码战士/弓手/哥布林/法师模板
-    // ✅ 使用标准数据：是 — 使用 make_warrior_attrs() 标准构建器
-    // ✅ 无越界测试：是 — 仅测试公共 API
-    // ✅ 未测试私有实现：是 — 仅通过 pub 接口测试
-    // ================================================
     use super::*;
 
-    fn make_warrior_attrs() -> Attributes {
-        let mut attrs = Attributes::default();
-        attrs.set_base(AttributeKind::Might, 5.0);
-        attrs.set_base(AttributeKind::Dexterity, 3.0);
-        attrs.set_base(AttributeKind::Agility, 6.0);
-        attrs.set_base(AttributeKind::Vitality, 5.0);
-        attrs.set_base(AttributeKind::Intelligence, 2.0);
-        attrs.set_base(AttributeKind::Willpower, 3.0);
-        attrs.set_base(AttributeKind::Presence, 2.0);
-        attrs.set_base(AttributeKind::Luck, 2.0);
-        attrs.set_base_attack_range(1);
-        attrs.fill_vital_resources();
+    // ── CoreAttribute ──
+
+    #[test]
+    fn core_attribute_config_id() {
+        assert_eq!(CoreAttribute::PhysAtk.config_id(), "phys_atk");
+        assert_eq!(CoreAttribute::MaxHp.config_id(), "max_hp");
+    }
+
+    #[test]
+    fn core_attribute_all_count() {
+        assert_eq!(CoreAttribute::all().len(), 5);
+    }
+
+    // ── SecondaryAttribute ──
+
+    #[test]
+    fn secondary_attribute_config_id() {
+        assert_eq!(SecondaryAttribute::CritRate.config_id(), "crit_rate");
+        assert_eq!(SecondaryAttribute::DodgeRate.config_id(), "dodge_rate");
+    }
+
+    #[test]
+    fn secondary_attribute_all_count() {
+        assert_eq!(SecondaryAttribute::all().len(), 6);
+    }
+
+    // ── Attributes Component ──
+
+    fn make_test_attrs() -> Attributes {
+        let mut attrs = Attributes::new();
+        attrs.set_core(CoreAttribute::PhysAtk, 100);
+        attrs.set_core(CoreAttribute::MagicAtk, 80);
+        attrs.set_core(CoreAttribute::PhysDef, 60);
+        attrs.set_core(CoreAttribute::MagicDef, 50);
+        attrs.set_core(CoreAttribute::MaxHp, 500);
+        attrs.fill_hp();
         attrs
     }
 
     #[test]
-    fn 核心属性_基础值() {
-        let attrs = make_warrior_attrs();
-        assert_eq!(attrs.core(AttributeKind::Might), 5.0);
-        assert_eq!(attrs.core(AttributeKind::Vitality), 5.0);
+    fn attributes_new_is_zero() {
+        let attrs = Attributes::new();
+        assert_eq!(attrs.core_value(CoreAttribute::PhysAtk), 0);
+        assert_eq!(attrs.current_hp, 0);
     }
 
     #[test]
-    fn 衍生属性_战士模板() {
-        let attrs = make_warrior_attrs();
-        // MaxHp = 5 + 5*5 = 30
-        assert_eq!(attrs.get(AttributeKind::MaxHp), 30.0);
-        // Attack = 5*2 = 10
-        assert_eq!(attrs.get(AttributeKind::Attack), 10.0);
-        // Defense = 5
-        assert_eq!(attrs.get(AttributeKind::Defense), 5.0);
-        // MoveRange = floor(6*0.5) + 2 = 3 + 2 = 5
-        assert_eq!(attrs.get(AttributeKind::MoveRange), 5.0);
-        // AttackRange = 1
-        assert_eq!(attrs.get(AttributeKind::AttackRange), 1.0);
-        // MagicAttack = 2*2 = 4
-        assert_eq!(attrs.get(AttributeKind::MagicAttack), 4.0);
-        // MagicDefense = 3
-        assert_eq!(attrs.get(AttributeKind::MagicDefense), 3.0);
+    fn attributes_core_values() {
+        let attrs = make_test_attrs();
+        assert_eq!(attrs.core_value(CoreAttribute::PhysAtk), 100);
+        assert_eq!(attrs.core_value(CoreAttribute::MaxHp), 500);
     }
 
     #[test]
-    fn 衍生属性_弓手模板() {
-        let mut attrs = Attributes::default();
-        attrs.set_base(AttributeKind::Might, 4.0);
-        attrs.set_base(AttributeKind::Dexterity, 6.0);
-        attrs.set_base(AttributeKind::Agility, 6.0);
-        attrs.set_base(AttributeKind::Vitality, 3.0);
-        attrs.set_base(AttributeKind::Intelligence, 3.0);
-        attrs.set_base(AttributeKind::Willpower, 2.0);
-        attrs.set_base(AttributeKind::Presence, 2.0);
-        attrs.set_base(AttributeKind::Luck, 3.0);
-        attrs.set_base_attack_range(3);
-        attrs.fill_vital_resources();
-
-        // MaxHp = 5 + 3*5 = 20
-        assert_eq!(attrs.get(AttributeKind::MaxHp), 20.0);
-        // Attack = 4*2 = 8
-        assert_eq!(attrs.get(AttributeKind::Attack), 8.0);
-        // Defense = 3
-        assert_eq!(attrs.get(AttributeKind::Defense), 3.0);
-        // MoveRange = floor(6*0.5) + 2 = 5
-        assert_eq!(attrs.get(AttributeKind::MoveRange), 5.0);
-        // AttackRange = 3
-        assert_eq!(attrs.get(AttributeKind::AttackRange), 3.0);
+    fn attributes_fill_hp() {
+        let mut attrs = make_test_attrs();
+        assert_eq!(attrs.current_hp, 500);
     }
 
     #[test]
-    fn 生命资源_初始化为最大值() {
-        let attrs = make_warrior_attrs();
-        assert_eq!(attrs.get(AttributeKind::Hp), 30.0);
-        assert_eq!(attrs.get(AttributeKind::MaxHp), 30.0);
+    fn attributes_take_damage() {
+        let mut attrs = make_test_attrs();
+        let dealt = attrs.take_damage(30);
+        assert_eq!(dealt, 30);
+        assert_eq!(attrs.current_hp, 470);
     }
 
     #[test]
-    fn 生命资源_战斗中变化() {
-        let mut attrs = make_warrior_attrs();
-        attrs.set_vital(AttributeKind::Hp, 20.0);
-        assert_eq!(attrs.get(AttributeKind::Hp), 20.0);
-        assert_eq!(attrs.get(AttributeKind::MaxHp), 30.0); // MaxHp 不变
+    fn attributes_take_damage_does_not_go_below_zero() {
+        let mut attrs = make_test_attrs();
+        let dealt = attrs.take_damage(9999);
+        assert_eq!(dealt, 500);
+        assert_eq!(attrs.current_hp, 0);
     }
 
     #[test]
-    fn 加法修饰符_核心属性() {
-        let mut attrs = make_warrior_attrs();
-        attrs.add_modifier(AttributeModifierInstance {
-            kind: AttributeKind::Might,
-            op: ModifierOp::Add,
-            value: 3.0,
-            source: ModifierSource::buff_source(1),
-        });
-        // Might: 5 + 3 = 8
-        assert_eq!(attrs.core(AttributeKind::Might), 8.0);
-        // Attack 衍生: 8*2 = 16
-        assert_eq!(attrs.get(AttributeKind::Attack), 16.0);
+    fn attributes_heal() {
+        let mut attrs = make_test_attrs();
+        attrs.take_damage(100);
+        let healed = attrs.heal(50);
+        assert_eq!(healed, 50);
+        assert_eq!(attrs.current_hp, 450);
     }
 
     #[test]
-    fn 加法修饰符_衍生属性() {
-        let mut attrs = make_warrior_attrs();
-        attrs.add_modifier(AttributeModifierInstance {
-            kind: AttributeKind::Attack,
-            op: ModifierOp::Add,
-            value: 5.0,
-            source: ModifierSource::buff_source(1),
-        });
-        // Attack: (5*2) + 5 = 15
-        assert_eq!(attrs.get(AttributeKind::Attack), 15.0);
+    fn attributes_heal_does_not_exceed_max() {
+        let mut attrs = make_test_attrs();
+        attrs.take_damage(50);
+        let healed = attrs.heal(200);
+        assert_eq!(healed, 50); // only heals missing hp
+        assert_eq!(attrs.current_hp, 500);
     }
 
     #[test]
-    fn 乘法修饰符_衍生属性() {
-        let mut attrs = make_warrior_attrs();
-        attrs.add_modifier(AttributeModifierInstance {
-            kind: AttributeKind::Attack,
-            op: ModifierOp::Multiply,
-            value: 1.5,
-            source: ModifierSource::buff_source(1),
-        });
-        // Attack: 10 * 1.5 = 15
-        assert_eq!(attrs.get(AttributeKind::Attack), 15.0);
+    fn attributes_is_alive() {
+        let mut attrs = make_test_attrs();
+        assert!(attrs.is_alive());
+        attrs.take_damage(500);
+        assert!(!attrs.is_alive());
     }
 
     #[test]
-    fn 移除指定源修饰符() {
-        let mut attrs = make_warrior_attrs();
-        attrs.add_modifier(AttributeModifierInstance {
-            kind: AttributeKind::Attack,
-            op: ModifierOp::Add,
-            value: 5.0,
-            source: ModifierSource::buff_source(1),
-        });
-        attrs.add_modifier(AttributeModifierInstance {
-            kind: AttributeKind::Attack,
-            op: ModifierOp::Add,
-            value: 3.0,
-            source: ModifierSource::buff_source(2),
-        });
-        attrs.remove_modifiers_from(ModifierSource::buff_source(1));
-        // Attack: 10 + 3 = 13
-        assert_eq!(attrs.get(AttributeKind::Attack), 13.0);
+    fn attributes_hp_percent() {
+        let mut attrs = make_test_attrs();
+        assert_eq!(attrs.hp_percent(), 10000); // 100%
+        attrs.take_damage(250);
+        assert_eq!(attrs.hp_percent(), 5000); // 50%
+        attrs.take_damage(250);
+        assert_eq!(attrs.hp_percent(), 0);
     }
 
     #[test]
-    fn 移除减益修饰符() {
-        let mut attrs = make_warrior_attrs();
-        attrs.add_modifier(AttributeModifierInstance {
-            kind: AttributeKind::Attack,
-            op: ModifierOp::Add,
-            value: 5.0,
-            source: ModifierSource::buff_source(1),
-        });
-        attrs.add_modifier(AttributeModifierInstance {
-            kind: AttributeKind::Attack,
-            op: ModifierOp::Add,
-            value: -3.0,
-            source: ModifierSource::buff_source(2),
-        });
-        attrs.remove_debuff_modifiers();
-        // Attack: 10 + 5 = 15
-        assert_eq!(attrs.get(AttributeKind::Attack), 15.0);
+    fn attributes_lost_hp() {
+        let mut attrs = make_test_attrs();
+        assert_eq!(attrs.lost_hp(), 0);
+        attrs.take_damage(100);
+        assert_eq!(attrs.lost_hp(), 100);
     }
 
     #[test]
-    fn 不能设置衍生属性基础值() {
-        let mut attrs = make_warrior_attrs();
-        let before = attrs.get(AttributeKind::Attack);
-        attrs.set_base(AttributeKind::Attack, 999.0);
-        assert_eq!(attrs.get(AttributeKind::Attack), before);
+    fn attributes_set_max_hp_clamps_current_hp() {
+        let mut attrs = make_test_attrs();
+        attrs.set_max_hp(300);
+        assert_eq!(attrs.current_hp, 300); // current clamped
     }
 
     #[test]
-    fn add_modifiers_from_def_批量添加() {
-        let mut attrs = make_warrior_attrs();
-        let defs = vec![
-            AttributeModifierDef {
-                kind: AttributeKind::Attack,
-                op: ModifierOp::Add,
-                value: 5.0,
-            },
-            AttributeModifierDef {
-                kind: AttributeKind::Defense,
-                op: ModifierOp::Add,
-                value: -2.0,
-            },
-        ];
-        attrs.add_modifiers_from_def(&defs, ModifierSource::buff_source(1));
-        // Attack: 10 + 5 = 15
-        assert_eq!(attrs.get(AttributeKind::Attack), 15.0);
-        // Defense: 5 - 2 = 3
-        assert_eq!(attrs.get(AttributeKind::Defense), 3.0);
+    fn attributes_set_max_hp_minimum_one() {
+        let mut attrs = make_test_attrs();
+        attrs.set_max_hp(0);
+        assert_eq!(attrs.core_value(CoreAttribute::MaxHp), 1);
     }
 
     #[test]
-    fn 哥布林模板() {
-        let mut attrs = Attributes::default();
-        attrs.set_base(AttributeKind::Might, 4.0);
-        attrs.set_base(AttributeKind::Dexterity, 2.0);
-        attrs.set_base(AttributeKind::Agility, 4.0);
-        attrs.set_base(AttributeKind::Vitality, 3.0);
-        attrs.set_base(AttributeKind::Intelligence, 1.0);
-        attrs.set_base(AttributeKind::Willpower, 2.0);
-        attrs.set_base(AttributeKind::Presence, 1.0);
-        attrs.set_base(AttributeKind::Luck, 2.0);
-        attrs.set_base_attack_range(1);
-        attrs.fill_vital_resources();
+    fn attributes_core_value_min_zero() {
+        let mut attrs = Attributes::new();
+        attrs.set_core(CoreAttribute::PhysAtk, -100);
+        assert_eq!(attrs.core_value(CoreAttribute::PhysAtk), 0);
+    }
 
-        // MaxHp = 5 + 3*5 = 20
-        assert_eq!(attrs.get(AttributeKind::MaxHp), 20.0);
-        // Attack = 4*2 = 8
-        assert_eq!(attrs.get(AttributeKind::Attack), 8.0);
-        // Defense = 3
-        assert_eq!(attrs.get(AttributeKind::Defense), 3.0);
-        // MoveRange = floor(4*0.5) + 2 = 2 + 2 = 4
-        assert_eq!(attrs.get(AttributeKind::MoveRange), 4.0);
+    // ── ModifierSource ──
+
+    #[test]
+    fn modifier_source_classification() {
+        let buff = ModifierSource::buff_source(42);
+        assert!(buff.is_buff());
+        assert!(!buff.is_trait());
+        assert!(!buff.is_equipment());
+
+        let trait_src = ModifierSource::trait_source(0);
+        assert!(trait_src.is_trait());
+
+        let equip = ModifierSource::equipment_source(0);
+        assert!(equip.is_equipment());
     }
 
     #[test]
-    fn 法师模板() {
-        let mut attrs = Attributes::default();
-        attrs.set_base(AttributeKind::Might, 2.0);
-        attrs.set_base(AttributeKind::Dexterity, 3.0);
-        attrs.set_base(AttributeKind::Agility, 6.0);
-        attrs.set_base(AttributeKind::Vitality, 3.0);
-        attrs.set_base(AttributeKind::Intelligence, 5.0);
-        attrs.set_base(AttributeKind::Willpower, 4.0);
-        attrs.set_base(AttributeKind::Presence, 3.0);
-        attrs.set_base(AttributeKind::Luck, 2.0);
-        attrs.set_base_attack_range(2);
-        attrs.fill_vital_resources();
-
-        // MaxHp = 5 + 3*5 = 20
-        assert_eq!(attrs.get(AttributeKind::MaxHp), 20.0);
-        // MagicAttack = 5*2 = 10
-        assert_eq!(attrs.get(AttributeKind::MagicAttack), 10.0);
-        // MagicDefense = 4
-        assert_eq!(attrs.get(AttributeKind::MagicDefense), 4.0);
-        // MoveRange = floor(6*0.5) + 2 = 5
-        assert_eq!(attrs.get(AttributeKind::MoveRange), 5.0);
-        // MaxMp = 5*5 = 25
-        assert_eq!(attrs.get(AttributeKind::MaxMp), 25.0);
-    }
-
-    // ── set_vital 测试 ──
-
-    #[test]
-    fn set_vital_设置hp当前值() {
-        let mut attrs = Attributes::default();
-        attrs.fill_vital_resources();
-        attrs.set_vital(AttributeKind::Hp, 5.0);
-        assert_eq!(attrs.get(AttributeKind::Hp), 5.0);
-    }
-
-    #[test]
-    fn set_vital_设置mp当前值() {
-        let mut attrs = Attributes::default();
-        attrs.fill_vital_resources();
-        attrs.set_vital(AttributeKind::Mp, 3.0);
-        assert_eq!(attrs.get(AttributeKind::Mp), 3.0);
-    }
-
-    #[test]
-    fn set_vital_设置stamina当前值() {
-        let mut attrs = Attributes::default();
-        attrs.fill_vital_resources();
-        attrs.set_vital(AttributeKind::Stamina, 7.0);
-        assert_eq!(attrs.get(AttributeKind::Stamina), 7.0);
-    }
-
-    #[test]
-    fn set_vital_不影响最大值() {
-        let mut attrs = Attributes::default();
-        attrs.fill_vital_resources();
-        let max_hp = attrs.get(AttributeKind::MaxHp);
-        attrs.set_vital(AttributeKind::Hp, 5.0);
-        assert_eq!(attrs.get(AttributeKind::MaxHp), max_hp);
-    }
-
-    #[test]
-    fn set_vital_非生命资源不生效() {
-        let mut attrs = Attributes::default();
-        attrs.fill_vital_resources();
-        let attack_before = attrs.get(AttributeKind::Attack);
-        attrs.set_vital(AttributeKind::Attack, 999.0);
-        assert_eq!(attrs.get(AttributeKind::Attack), attack_before);
+    fn buff_instance_id_conversion() {
+        let id = BuffInstanceId(42);
+        let source = id.to_modifier_source();
+        assert!(source.is_buff());
     }
 }

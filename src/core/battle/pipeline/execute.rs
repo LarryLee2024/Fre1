@@ -244,7 +244,7 @@ pub fn execute_effects(world: &mut World) {
 mod tests {
     use super::*;
     use crate::core::ability::SkillSlots;
-    use crate::core::attribute::{AttributeKind, Attributes};
+    use crate::core::attribute::Attributes;
     use crate::core::buff::{ActiveBuffs, BuffRegistry};
     use crate::core::character::{Dead, Faction, GridPosition, Unit, UnitName};
     use crate::core::effect::{EffectQueue, PendingEffect, PendingEffectData};
@@ -263,11 +263,10 @@ mod tests {
         reg
     }
 
-    fn make_test_attrs(hp: f32, max_hp: f32) -> Attributes {
+    fn make_test_attrs(hp: i32, max_hp: i32) -> Attributes {
         let mut attrs = Attributes::default();
-        attrs.set_base(AttributeKind::Vitality, ((max_hp - 5.0) / 5.0).max(0.0));
-        attrs.fill_vital_resources();
-        attrs.set_vital(AttributeKind::Hp, hp);
+        attrs.set_max_hp(max_hp);
+        attrs.current_hp = hp;
         attrs
     }
 
@@ -294,7 +293,7 @@ mod tests {
                     faction: Faction::Enemy,
                     acted: false,
                 },
-                make_test_attrs(30.0, 30.0),
+                make_test_attrs(30, 30),
                 SkillSlots::default(),
                 ActiveBuffs::default(),
                 GameplayTags::default(),
@@ -327,7 +326,7 @@ mod tests {
         });
         app.update();
         let attrs = app.world().get::<Attributes>(target).unwrap();
-        assert_eq!(attrs.get(AttributeKind::Hp), 20.0);
+        assert_eq!(attrs.current_hp, 20);
     }
 
     #[test]
@@ -353,7 +352,7 @@ mod tests {
                     faction: Faction::Enemy,
                     acted: false,
                 },
-                make_test_attrs(5.0, 30.0),
+                make_test_attrs(5, 30),
                 SkillSlots::default(),
                 ActiveBuffs::default(),
                 GameplayTags::default(),
@@ -411,7 +410,7 @@ mod tests {
                     faction: Faction::Player,
                     acted: false,
                 },
-                make_test_attrs(10.0, 30.0),
+                make_test_attrs(10, 30),
                 SkillSlots::default(),
                 ActiveBuffs::default(),
                 GameplayTags::default(),
@@ -443,7 +442,7 @@ mod tests {
         });
         app.update();
         let attrs = app.world().get::<Attributes>(target).unwrap();
-        assert_eq!(attrs.get(AttributeKind::Hp), 25.0);
+        assert_eq!(attrs.current_hp, 25);
     }
 
     #[test]
@@ -469,7 +468,7 @@ mod tests {
                     faction: Faction::Player,
                     acted: false,
                 },
-                make_test_attrs(25.0, 30.0),
+                make_test_attrs(25, 30),
                 SkillSlots::default(),
                 ActiveBuffs::default(),
                 GameplayTags::default(),
@@ -501,14 +500,14 @@ mod tests {
         });
         app.update();
         let attrs = app.world().get::<Attributes>(target).unwrap();
-        assert_eq!(attrs.get(AttributeKind::Hp), 30.0);
+        assert_eq!(attrs.current_hp, 30);
     }
 
     #[test]
     fn 施加buff效果_正常施加() {
         let mut buffs = ActiveBuffs::default();
         let mut attrs = Attributes::default();
-        attrs.fill_vital_resources();
+        attrs.fill_hp();
         let mut tags = GameplayTags::default();
         let registry = test_buff_registry();
         if let Some(buff_data) = registry.get("attack_up") {
@@ -528,7 +527,7 @@ mod tests {
     fn 施加buff效果_未知buff静默跳过() {
         let mut buffs = ActiveBuffs::default();
         let mut attrs = Attributes::default();
-        attrs.fill_vital_resources();
+        attrs.fill_hp();
         let mut tags = GameplayTags::default();
         let registry = test_buff_registry();
         if let Some(buff_data) = registry.get("nonexistent_buff") {

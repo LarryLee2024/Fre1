@@ -2,7 +2,7 @@
 
 use crate::core::attribute::AttributeModifierDef;
 use crate::core::equipment::EquipmentSlot;
-use crate::core::tag::{GameplayTag, TagName};
+use crate::core::tag::GameplayTag;
 use bevy::prelude::*;
 use serde::Deserialize;
 
@@ -24,12 +24,12 @@ pub enum TraitTrigger {
     OnKill,
 }
 
-/// Trait 效果定义（RON 反序列化用，TagName 替代 GameplayTag）
+/// Trait 效果定义（RON 反序列化用，tag_id 字符串）
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "PascalCase")]
 pub enum TraitEffectDef {
-    /// 授予标签
-    GrantTag(TagName),
+    /// 授予标签（tag_id 如 "warrior", "dmg_fire"）
+    GrantTag(String),
     /// 属性修饰（永久，作为基础值的一部分）
     ModifyAttribute(AttributeModifierDef),
     /// 触发时施加 Buff
@@ -55,10 +55,44 @@ impl TraitEffect {
     }
 }
 
+/// 将 Tag ID 字符串转换为 GameplayTag 位掩码
+///
+/// 临时函数，后续会替换为 TagRegistry 运行时查询。
+fn tag_id_to_gameplay_tag(id: &str) -> GameplayTag {
+    match id {
+        "buff" => GameplayTag::BUFF,
+        "debuff" => GameplayTag::DEBUFF,
+        "dmg_fire" => GameplayTag::DMG_FIRE,
+        "dmg_ice" => GameplayTag::DMG_ICE,
+        "dmg_physical" => GameplayTag::DMG_PHYSICAL,
+        "dmg_magical" => GameplayTag::DMG_MAGICAL,
+        "control_soft" => GameplayTag::CONTROL_SOFT,
+        "control_hard" => GameplayTag::CONTROL_HARD,
+        "control_full" => GameplayTag::CONTROL_FULL,
+        "invincible" => GameplayTag::INVINCIBLE,
+        "untargetable" => GameplayTag::UNTARGETABLE,
+        "ally" => GameplayTag::ALLY,
+        "enemy" => GameplayTag::ENEMY,
+        "flying" => GameplayTag::FLYING,
+        "grounded" => GameplayTag::GROUNDED,
+        "dispellable" => GameplayTag::DISPELLABLE,
+        "undispellable" => GameplayTag::UNDISPELLABLE,
+        "weapon_sword" => GameplayTag::WEAPON_SWORD,
+        "weapon_bow" => GameplayTag::WEAPON_BOW,
+        "weapon_staff" => GameplayTag::WEAPON_STAFF,
+        _ => {
+            bevy::log::warn!(target: "traits", "Unknown tag_id in trait effect: {}", id);
+            GameplayTag::from_bits(0) // 空标签
+        }
+    }
+}
+
 impl From<TraitEffectDef> for TraitEffect {
     fn from(def: TraitEffectDef) -> Self {
         match def {
-            TraitEffectDef::GrantTag(tag_name) => TraitEffect::GrantTag(tag_name.to_tag()),
+            TraitEffectDef::GrantTag(tag_id) => {
+                TraitEffect::GrantTag(tag_id_to_gameplay_tag(&tag_id))
+            }
             TraitEffectDef::ModifyAttribute(mod_def) => TraitEffect::ModifyAttribute(mod_def),
             TraitEffectDef::ApplyBuff { buff_id, duration } => {
                 TraitEffect::ApplyBuff { buff_id, duration }

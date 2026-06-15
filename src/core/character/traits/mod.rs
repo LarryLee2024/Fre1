@@ -12,7 +12,7 @@ pub use types::*;
 
 use crate::core::attribute::{AttributeModifierDef, AttributeModifierInstance, ModifierSource};
 use crate::core::registry_loader::RegistryLoader;
-use crate::core::tag::{GameplayTag, GameplayTags, TagName};
+use crate::core::tag::{GameplayTag, GameplayTags};
 use bevy::prelude::*;
 use std::collections::HashMap;
 
@@ -73,7 +73,7 @@ pub fn apply_passive_traits(
             let source = ModifierSource::trait_source(trait_source_index);
             for mod_def in trait_data.attribute_modifiers(handlers) {
                 modifiers.push(AttributeModifierInstance {
-                    kind: mod_def.kind,
+                    config_id: mod_def.config_id.clone(),
                     op: mod_def.op,
                     value: mod_def.value,
                     source,
@@ -115,8 +115,8 @@ impl TraitRegistry {
                 description: "近战职业，擅长正面作战".into(),
                 trigger: TraitTrigger::Passive,
                 effects: vec![
-                    TraitEffectDef::GrantTag(TagName::Warrior),
-                    TraitEffectDef::GrantTag(TagName::Melee),
+                    TraitEffectDef::GrantTag("warrior".into()),
+                    TraitEffectDef::GrantTag("melee".into()),
                 ],
             },
             TraitDefinition {
@@ -126,8 +126,8 @@ impl TraitRegistry {
                 description: "远程职业，擅长远距离攻击".into(),
                 trigger: TraitTrigger::Passive,
                 effects: vec![
-                    TraitEffectDef::GrantTag(TagName::Archer),
-                    TraitEffectDef::GrantTag(TagName::Ranged),
+                    TraitEffectDef::GrantTag("archer".into()),
+                    TraitEffectDef::GrantTag("ranged".into()),
                 ],
             },
             TraitDefinition {
@@ -136,7 +136,7 @@ impl TraitRegistry {
                 name: "法师精通".into(),
                 description: "魔法职业，擅长元素攻击".into(),
                 trigger: TraitTrigger::Passive,
-                effects: vec![TraitEffectDef::GrantTag(TagName::Mage)],
+                effects: vec![TraitEffectDef::GrantTag("mage".into())],
             },
             TraitDefinition {
                 version: 0,
@@ -144,7 +144,7 @@ impl TraitRegistry {
                 name: "火焰亲和".into(),
                 description: "拥有火焰力量".into(),
                 trigger: TraitTrigger::Passive,
-                effects: vec![TraitEffectDef::GrantTag(TagName::Fire)],
+                effects: vec![TraitEffectDef::GrantTag("dmg_fire".into())],
             },
             TraitDefinition {
                 version: 0,
@@ -153,9 +153,9 @@ impl TraitRegistry {
                 description: "装备重甲，防御+3".into(),
                 trigger: TraitTrigger::Passive,
                 effects: vec![TraitEffectDef::ModifyAttribute(AttributeModifierDef {
-                    kind: crate::core::attribute::AttributeKind::Defense,
+                    config_id: "phys_def".into(),
                     op: crate::core::attribute::ModifierOp::Add,
-                    value: 3.0,
+                    value: 3,
                 })],
             },
         ];
@@ -221,7 +221,7 @@ mod tests {
     // ================================================
 
     use super::*;
-    use crate::core::attribute::{AttributeKind, ModifierOp};
+    use crate::core::attribute::ModifierOp;
     use ron::de::from_bytes;
 
     /// Test ID: CHR-TRT-001
@@ -261,11 +261,11 @@ mod tests {
             description: "测试trait".into(),
             trigger: TraitTrigger::OnAttack,
             effects: vec![
-                TraitEffectDef::GrantTag(TagName::Fire),
+                TraitEffectDef::GrantTag("dmg_fire".into()),
                 TraitEffectDef::ModifyAttribute(AttributeModifierDef {
-                    kind: AttributeKind::Attack,
+                    config_id: "phys_atk".into(),
                     op: ModifierOp::Add,
-                    value: 5.0,
+                    value: 5,
                 }),
             ],
         };
@@ -276,12 +276,12 @@ mod tests {
 
         let handlers = TraitEffectHandlerRegistry::with_defaults();
         let tags = data.granted_tags(&handlers);
-        assert_eq!(tags, vec![GameplayTag::FIRE]);
+        assert_eq!(tags, vec![GameplayTag::DMG_FIRE]);
 
         let mods = data.attribute_modifiers(&handlers);
         assert_eq!(mods.len(), 1);
-        assert_eq!(mods[0].kind, AttributeKind::Attack);
-        assert_eq!(mods[0].value, 5.0);
+        assert_eq!(mods[0].config_id, "phys_atk");
+        assert_eq!(mods[0].value, 5);
     }
 
     /// Test ID: CHR-TRT-002
@@ -323,12 +323,12 @@ mod tests {
                 description: String::new(),
                 trigger: TraitTrigger::Passive,
                 effects: vec![
-                    TraitEffect::GrantTag(GameplayTag::WARRIOR),
-                    TraitEffect::GrantTag(GameplayTag::MELEE),
+                    TraitEffect::GrantTag(GameplayTag::ALLY),
+                    TraitEffect::GrantTag(GameplayTag::DMG_PHYSICAL),
                     TraitEffect::ModifyAttribute(AttributeModifierDef {
-                        kind: AttributeKind::Defense,
+                        config_id: "phys_def".into(),
                         op: ModifierOp::Add,
-                        value: 2.0,
+                        value: 2,
                     }),
                 ],
             },
@@ -341,10 +341,10 @@ mod tests {
         let (tags, modifiers) = apply_passive_traits(&collection, &registry, &handlers);
 
         // Then
-        assert!(tags.has(GameplayTag::WARRIOR));
-        assert!(tags.has(GameplayTag::MELEE));
+        assert!(tags.has(GameplayTag::ALLY));
+        assert!(tags.has(GameplayTag::DMG_PHYSICAL));
         assert_eq!(modifiers.len(), 1);
-        assert_eq!(modifiers[0].value, 2.0);
+        assert_eq!(modifiers[0].value, 2);
     }
 
     /// Test ID: CHR-TRT-004
@@ -366,7 +366,7 @@ mod tests {
                 name: "攻击触发".into(),
                 description: String::new(),
                 trigger: TraitTrigger::OnAttack,
-                effects: vec![TraitEffect::GrantTag(GameplayTag::FIRE)],
+                effects: vec![TraitEffect::GrantTag(GameplayTag::DMG_FIRE)],
             },
         );
 
@@ -377,7 +377,7 @@ mod tests {
         let (tags, modifiers) = apply_passive_traits(&collection, &registry, &handlers);
 
         // Then
-        assert!(!tags.has(GameplayTag::FIRE));
+        assert!(!tags.has(GameplayTag::DMG_FIRE));
         assert!(modifiers.is_empty());
     }
 
@@ -433,9 +433,9 @@ mod tests {
                 description: String::new(),
                 trigger: TraitTrigger::Passive,
                 effects: vec![TraitEffect::ModifyAttribute(AttributeModifierDef {
-                    kind: AttributeKind::Attack,
+                    config_id: "phys_atk".into(),
                     op: ModifierOp::Add,
-                    value: 2.0,
+                    value: 2,
                 })],
             },
         );
@@ -447,9 +447,9 @@ mod tests {
                 description: String::new(),
                 trigger: TraitTrigger::Passive,
                 effects: vec![TraitEffect::ModifyAttribute(AttributeModifierDef {
-                    kind: AttributeKind::Defense,
+                    config_id: "phys_def".into(),
                     op: ModifierOp::Add,
-                    value: 3.0,
+                    value: 3,
                 })],
             },
         );

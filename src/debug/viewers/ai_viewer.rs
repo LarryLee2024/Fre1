@@ -2,7 +2,7 @@
 // 遵循铁律：复杂系统必须有可视化调试工具
 
 use crate::core::ability::{SkillCooldowns, SkillSlots};
-use crate::core::attribute::{AttributeKind, Attributes};
+use crate::core::attribute::Attributes;
 use crate::core::battle::CombatIntent;
 use crate::core::character::{AiBehaviorId, Faction, GridPosition, Unit, UnitName};
 use crate::core::tag::{GameplayTags, TagRegistry};
@@ -80,17 +80,17 @@ pub fn render(
                 ui.label(format!("  位置: ({}, {})", gp.coord.x, gp.coord.y));
                 ui.label(format!(
                     "  HP: {:.0}/{:.0}  MP: {:.0}/{:.0}",
-                    attrs.get(AttributeKind::Hp),
-                    attrs.get(AttributeKind::MaxHp),
-                    attrs.get(AttributeKind::Mp),
-                    attrs.get(AttributeKind::MaxMp),
+                    attrs.current_hp as f64,
+                    attrs.max_hp() as f64,
+                    attrs.get("mp") as f64,
+                    attrs.get("max_mp") as f64,
                 ));
                 ui.label(format!(
                     "  ATK:{:.0} DEF:{:.0} MOV:{:.0} RNG:{:.0}",
-                    attrs.get(AttributeKind::Attack),
-                    attrs.get(AttributeKind::Defense),
-                    attrs.get(AttributeKind::MoveRange),
-                    attrs.get(AttributeKind::AttackRange),
+                    attrs.get("phys_atk") as f64,
+                    attrs.get("phys_def") as f64,
+                    attrs.get("move_range") as f64,
+                    attrs.get("atk_range") as f64,
                 ));
                 ui.label(format!(
                     "  行动: {}",

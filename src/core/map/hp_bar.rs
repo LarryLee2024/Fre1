@@ -4,7 +4,7 @@
 
 use bevy::prelude::*;
 
-use crate::core::attribute::{AttributeKind, Attributes};
+use crate::core::attribute::Attributes;
 use crate::core::character::{HpBarFg, Unit};
 
 /// 更新地图上单位实体的 HP 条宽度（每个单位独立计算）
@@ -15,8 +15,8 @@ pub fn update_hp_bars(
 ) {
     let bar_width = map.tile_size * 0.6;
     for (attrs, children) in &units {
-        let hp = attrs.get(AttributeKind::Hp);
-        let max_hp = attrs.get(AttributeKind::MaxHp);
+        let hp = attrs.current_hp as f32;
+        let max_hp = attrs.max_hp() as f32;
         let ratio = if max_hp > 0.0 {
             (hp / max_hp).max(0.0)
         } else {

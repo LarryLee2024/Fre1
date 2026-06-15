@@ -77,9 +77,9 @@ mod tests {
     // ✅ 未测试私有实现：是 — 仅通过 pub 接口测试
     // ================================================
     use super::*;
-    use crate::core::attribute::AttributeKind;
+    
     use crate::core::effect::EffectDef;
-    use crate::core::tag::{GameplayTag, GameplayTags, TagName};
+    use crate::core::tag::{GameplayTag, GameplayTags};
     use ron::de::from_bytes;
 
     // ── SkillTargeting ──
@@ -156,7 +156,7 @@ mod tests {
             id: "fireball".into(),
             name: "火球".into(),
             range: 3,
-            conditions: vec![SkillCondition::RequireTag(GameplayTag::MAGE)],
+            conditions: vec![SkillCondition::RequireTag(GameplayTag::SPECIAL_STATE)],
             ..Default::default()
         };
         let attrs = make_attrs(20.0, 20.0, 10.0);
@@ -165,7 +165,7 @@ mod tests {
         assert_eq!(
             result,
             Err(SkillUseError::MissingTag {
-                tag: GameplayTag::MAGE
+                tag: GameplayTag::SPECIAL_STATE
             })
         );
     }
@@ -219,8 +219,8 @@ mod tests {
                 multiplier: 1.5,
                 ignore_def_percent: 0.0,
             }],
-            tags: vec![TagName::Fire, TagName::SkillActive],
-            conditions: vec![SkillConditionDef::RequireTag(TagName::Mage)],
+            tags: vec!["dmg_fire", "special_state"],
+            conditions: vec![SkillConditionDef::RequireTag("special_state")],
             cooldown: 2,
             priority: 10,
         };
@@ -228,12 +228,12 @@ mod tests {
         assert_eq!(data.id, "test");
         assert_eq!(
             data.tags,
-            vec![GameplayTag::FIRE, GameplayTag::SKILL_ACTIVE]
+            vec![GameplayTag::DMG_FIRE, GameplayTag::SPECIAL_STATE]
         );
         assert_eq!(data.conditions.len(), 1);
         assert!(matches!(
             data.conditions[0],
-            SkillCondition::RequireTag(GameplayTag::MAGE)
+            SkillCondition::RequireTag(GameplayTag::SPECIAL_STATE)
         ));
     }
 
@@ -262,7 +262,7 @@ mod tests {
         "#;
         let def: SkillDef = from_bytes(ron_str.as_bytes()).unwrap();
         assert_eq!(def.id, "test_skill");
-        assert_eq!(def.tags, vec![TagName::Fire, TagName::SkillActive]);
+        assert_eq!(def.tags, vec!["dmg_fire", "special_state"]);
         assert_eq!(def.effects.len(), 2);
         assert_eq!(def.conditions.len(), 2);
     }
@@ -346,13 +346,13 @@ mod tests {
             targeting: SkillTargeting::SingleEnemy,
             conditions: vec![
                 SkillCondition::MpCost(5),
-                SkillCondition::RequireTag(GameplayTag::MAGE),
+                SkillCondition::RequireTag(GameplayTag::SPECIAL_STATE),
             ],
             ..Default::default()
         };
         let mut attrs = make_attrs(20.0, 20.0, 10.0);
         let mut tags = GameplayTags::default();
-        tags.add(GameplayTag::MAGE);
+        tags.add(GameplayTag::SPECIAL_STATE);
         assert!(skill.can_use(&attrs, &tags, None, 0).is_ok());
 
         attrs.set_vital(AttributeKind::Mp, 2.0);

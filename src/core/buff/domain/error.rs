@@ -7,7 +7,7 @@
 //! BF010-BF019: 叠加相关
 //! BF020-BF029: 目标相关
 
-use crate::shared::ids::BuffId;
+use crate::shared::ids::EffectId;
 use thiserror::Error;
 
 /// Buff 领域错误枚举
@@ -15,7 +15,7 @@ use thiserror::Error;
 pub enum BuffError {
     /// BF001: Buff 配置不存在
     #[error("BF001: Buff 配置不存在: {buff_id}")]
-    BuffNotFound { buff_id: BuffId },
+    BuffNotFound { buff_id: EffectId },
 
     /// BF002: Buff 实例不存在
     #[error("BF002: Buff 实例不存在: instance_id={instance_id}")]
@@ -24,7 +24,7 @@ pub enum BuffError {
     /// BF003: Buff 叠加超过上限
     #[error("BF003: Buff 叠加超过上限: {buff_id}, 当前 {current}, 上限 {max}")]
     StackOverflow {
-        buff_id: BuffId,
+        buff_id: EffectId,
         current: u32,
         max: u32,
     },
@@ -35,7 +35,7 @@ pub enum BuffError {
         /// 目标 ID
         target: String,
         /// Buff ID
-        buff_id: BuffId,
+        buff_id: EffectId,
         /// 失败原因
         reason: InvalidTargetReason,
     },
@@ -78,7 +78,7 @@ mod tests {
     #[test]
     fn buff_not_found_包含错误码() {
         let err = BuffError::BuffNotFound {
-            buff_id: BuffId::new("poison"),
+            buff_id: EffectId::new("poison"),
         };
         assert!(err.to_string().contains("BF001"));
         assert!(err.to_string().contains("poison"));
@@ -87,7 +87,7 @@ mod tests {
     #[test]
     fn stack_overflow_包含详情() {
         let err = BuffError::StackOverflow {
-            buff_id: BuffId::new("berserk"),
+            buff_id: EffectId::new("berserk"),
             current: 5,
             max: 3,
         };
@@ -101,7 +101,7 @@ mod tests {
     fn invalid_target_包含完整上下文() {
         let err = BuffError::InvalidTarget {
             target: "enemy_01".into(),
-            buff_id: BuffId::new("stun"),
+            buff_id: EffectId::new("stun"),
             reason: InvalidTargetReason::Immune,
         };
         let msg = err.to_string();
@@ -116,7 +116,7 @@ mod tests {
         assert_eq!(ok.unwrap(), 42);
 
         let err: BuffResult<i32> = Err(BuffError::BuffNotFound {
-            buff_id: BuffId::new("test"),
+            buff_id: EffectId::new("test"),
         });
         assert!(err.is_err());
     }

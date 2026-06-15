@@ -89,14 +89,14 @@ impl ActiveBuffs {
     pub fn is_stunned(&self) -> bool {
         self.instances
             .iter()
-            .any(|b| b.remaining_turns > 0 && b.tags.contains(&GameplayTag::STUN))
+            .any(|b| b.remaining_turns > 0 && b.tags.contains(&GameplayTag::CONTROL_HARD))
     }
 
     /// 消耗晕眩：移除所有带 STUN 标签的 Buff，返回是否原本处于晕眩
     pub fn consume_stun(&mut self) -> bool {
         let was = self.is_stunned();
         self.instances
-            .retain(|b| !b.tags.contains(&GameplayTag::STUN));
+            .retain(|b| !b.tags.contains(&GameplayTag::CONTROL_HARD));
         was
     }
 
@@ -346,7 +346,7 @@ mod tests {
             remaining_turns: 1,
             duration_policy: DurationPolicy::Turns(1),
             source_entity: None,
-            tags: vec![GameplayTag::DEBUFF, GameplayTag::STUN],
+            tags: vec![GameplayTag::DEBUFF, GameplayTag::CONTROL_HARD],
             is_buff: false,
             dot_damage: 0,
             hot_heal: 0,
@@ -365,7 +365,7 @@ mod tests {
             remaining_turns: 1,
             duration_policy: DurationPolicy::Turns(1),
             source_entity: None,
-            tags: vec![GameplayTag::DEBUFF, GameplayTag::STUN],
+            tags: vec![GameplayTag::DEBUFF, GameplayTag::CONTROL_HARD],
             is_buff: false,
             dot_damage: 0,
             hot_heal: 0,

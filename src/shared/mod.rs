@@ -13,6 +13,13 @@ pub mod events;
 pub mod ids;
 pub mod math;
 pub mod random;
+/// Registry 基础 trait 族（ADR-030 §2）
+///
+/// - [`registry::Registry`] — 只读查询接口
+/// - [`registry::LoadableRegistry`] — RON 加载支持
+/// - [`registry::ValidatableRegistry`] — 自校验支持
+/// - [`registry::RegistryInitStage`] — DAG 初始化阶段
+pub mod registry;
 pub mod resettable;
 /// Shared 层统一 Plugin
 pub mod shared_plugin;

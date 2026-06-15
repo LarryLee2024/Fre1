@@ -1,7 +1,7 @@
 // Turn Queue Viewer：回合队列查看器
 // 遵循铁律：关键系统必须拥有可视化观察窗口
 
-use crate::core::attribute::{AttributeKind, Attributes};
+use crate::core::attribute::Attributes;
 use crate::core::character::{Faction, Unit, UnitName};
 use crate::core::turn::TurnOrder;
 use bevy::prelude::*;
@@ -50,7 +50,7 @@ pub fn render(
             Faction::Player => "[友]",
             Faction::Enemy => "[敌]",
         };
-        let initiative = attrs.get(AttributeKind::Initiative);
+        let initiative = attrs.get("initiative");
         let marker = if is_current { "▶" } else { " " };
 
         let text = format!(

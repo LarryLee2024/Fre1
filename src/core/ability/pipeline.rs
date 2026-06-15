@@ -7,7 +7,7 @@
 //   Stage 4: Effect（效果执行）→ Effect Pipeline（在 battle/pipeline/ 中实现）
 //   Stage 5: Settlement（结算）→ 死亡检查 + Trait 触发
 
-use crate::core::attribute::{AttributeKind, Attributes};
+use crate::core::attribute::Attributes;
 use crate::core::tag::GameplayTags;
 use crate::core::turn::TurnOrder;
 use bevy::prelude::*;
@@ -96,7 +96,7 @@ pub fn apply_skill_costs(
 
 /// 判断单位是否存活（HP > 0）
 pub fn is_unit_alive(attrs: &Attributes) -> bool {
-    attrs.get(AttributeKind::Hp) > 0.0
+    attrs.current_hp > 0
 }
 
 /// Stage 5: 路由到下一个单位
@@ -153,22 +153,21 @@ mod tests {
         }
     }
 
-    fn make_attrs(mp: f32, hp: f32) -> Attributes {
+    fn make_attrs(mp: i32, hp: i32) -> Attributes {
         let mut attrs = Attributes::default();
-        // Vitality=5 → MaxHp=30, Intelligence=2 → MaxMp=10
-        attrs.set_base(crate::core::attribute::AttributeKind::Vitality, 5.0);
-        attrs.set_base(crate::core::attribute::AttributeKind::Intelligence, 2.0);
-        attrs.fill_vital_resources();
-        attrs.set_vital(crate::core::attribute::AttributeKind::Hp, hp);
-        attrs.set_vital(crate::core::attribute::AttributeKind::Mp, mp);
+        attrs.set_max_hp(30);
+        attrs.set_base("mp", 10);
+        attrs.fill_hp();
+        attrs.current_hp = hp;
+        attrs.set_base("mp", mp);
         attrs
     }
 
     #[test]
     fn prepare_execution_验证通过() {
         let skill = make_test_skill(5, 2);
-        let source_attrs = make_attrs(10.0, 30.0);
-        let target_attrs = make_attrs(5.0, 20.0);
+        let source_attrs = make_attrs(10, 30);
+        let target_attrs = make_attrs(5, 20);
         let tags = GameplayTags::default();
         let cooldowns = SkillCooldowns::default();
 
@@ -190,7 +189,7 @@ mod tests {
     #[test]
     fn prepare_execution_冷却中失败() {
         let skill = make_test_skill(0, 2);
-        let attrs = make_attrs(10.0, 30.0);
+        let attrs = make_attrs(10, 30);
         let tags = GameplayTags::default();
         let mut cooldowns = SkillCooldowns::default();
         cooldowns.set("test_skill", 3);
@@ -216,8 +215,8 @@ mod tests {
     #[test]
     fn prepare_execution_mp_不足失败() {
         let skill = make_test_skill(10, 0);
-        let source_attrs = make_attrs(3.0, 30.0); // MP=3 < 10
-        let target_attrs = make_attrs(5.0, 20.0);
+        let source_attrs = make_attrs(3, 30); // MP=3 < 10
+        let target_attrs = make_attrs(5, 20);
         let tags = GameplayTags::default();
         let cooldowns = SkillCooldowns::default();
 
@@ -245,19 +244,19 @@ mod tests {
     #[test]
     fn apply_costs_扣mp和冷却() {
         let skill = make_test_skill(5, 3);
-        let mut attrs = make_attrs(10.0, 30.0);
+        let mut attrs = make_attrs(10, 30);
         let mut cooldowns = SkillCooldowns::default();
 
         apply_skill_costs(&skill, &mut attrs, &mut cooldowns);
 
-        assert_eq!(attrs.get(AttributeKind::Mp), 5.0); // 10 - 5 = 5
+        assert_eq!(attrs.get("mp"), 5); // 10 - 5 = 5
         assert_eq!(cooldowns.get("test_skill"), 3);
     }
 
     #[test]
     fn apply_costs_冷却为0不设置() {
         let skill = make_test_skill(5, 0);
-        let mut attrs = make_attrs(10.0, 30.0);
+        let mut attrs = make_attrs(10, 30);
         let mut cooldowns = SkillCooldowns::default();
 
         apply_skill_costs(&skill, &mut attrs, &mut cooldowns);
@@ -268,22 +267,22 @@ mod tests {
     #[test]
     fn apply_costs_mp_不足不减到负数() {
         let skill = make_test_skill(10, 0);
-        let mut attrs = make_attrs(3.0, 30.0); // MP=3 < 10
+        let mut attrs = make_attrs(3, 30); // MP=3 < 10
 
         apply_skill_costs(&skill, &mut attrs, &mut SkillCooldowns::default());
 
-        assert_eq!(attrs.get(AttributeKind::Mp), 0.0); // max(3-10, 0) = 0
+        assert_eq!(attrs.get("mp"), 0); // max(3-10, 0) = 0
     }
 
     #[test]
     fn is_alive_存活检测() {
         let mut attrs = Attributes::default();
-        attrs.set_base(crate::core::attribute::AttributeKind::Vitality, 5.0);
-        attrs.fill_vital_resources();
-        attrs.set_vital(crate::core::attribute::AttributeKind::Hp, 10.0);
+        attrs.set_max_hp(30);
+        attrs.fill_hp();
+        attrs.current_hp = 10;
         assert!(is_unit_alive(&attrs));
 
-        attrs.set_vital(crate::core::attribute::AttributeKind::Hp, 0.0);
+        attrs.current_hp = 0;
         assert!(!is_unit_alive(&attrs));
     }
 }

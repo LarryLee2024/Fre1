@@ -2,7 +2,7 @@
 // 新增效果类型只需实现此 trait 并注册，无需修改核心代码
 // 遵循"Trait 描述规则，不描述内容"原则
 
-use crate::core::attribute::{AttributeKind, Attributes};
+use crate::core::attribute::Attributes;
 use crate::core::battle::DamageBreakdown;
 use crate::core::battle::{DamageApplied, HealApplied};
 use crate::core::buff::{ActiveBuffs, BuffRegistry, remove_all_debuffs};
@@ -182,9 +182,8 @@ impl<'w> ExecuteContext<'w> {
         // 扣血
         let mut target_died = false;
         if let Some(mut target_attrs) = self.world.get_mut::<Attributes>(target_entity) {
-            let hp = target_attrs.get(AttributeKind::Hp);
-            let new_hp = (hp - amount as f32).max(0.0);
-            target_attrs.set_vital(AttributeKind::Hp, new_hp);
+            let new_hp = (target_attrs.current_hp - amount).max(0);
+            target_attrs.current_hp = new_hp;
 
             // 收集伤害消息
             self.pending_messages
@@ -203,7 +202,7 @@ impl<'w> ExecuteContext<'w> {
                 }));
 
             // 死亡判定：记录需要插入 Dead Tag 的实体（延迟插入避免借用冲突）
-            if new_hp <= 0.0 {
+            if new_hp <= 0 {
                 self.dead_entities.push(target_entity);
                 target_died = true;
             }
@@ -214,17 +213,15 @@ impl<'w> ExecuteContext<'w> {
     /// 对目标回血（不超过 MaxHp）+ 收集消息
     pub fn apply_heal(&mut self, target_entity: Entity, target_name: &str, amount: i32) {
         if let Some(mut target_attrs) = self.world.get_mut::<Attributes>(target_entity) {
-            let hp = target_attrs.get(AttributeKind::Hp);
-            let max_hp = target_attrs.get(AttributeKind::MaxHp);
-            let actual_heal = (amount as f32).min(max_hp - hp).max(0.0);
-            let new_hp = hp + actual_heal;
-            target_attrs.set_vital(AttributeKind::Hp, new_hp);
+            let max_hp = target_attrs.max_hp();
+            let actual_heal = amount.min(max_hp - target_attrs.current_hp).max(0);
+            target_attrs.current_hp += actual_heal;
 
             self.pending_messages
                 .push(PendingMessage::Heal(HealApplied {
                     target: target_entity,
                     target_name: target_name.to_string(),
-                    amount: actual_heal as i32,
+                    amount: actual_heal,
                 }));
         }
     }
@@ -355,9 +352,9 @@ impl EffectHandler for DamageHandler {
             return None;
         };
 
-        let effective_atk = ctx.source_attrs.get(AttributeKind::Attack);
-        let effective_def = ctx.target_attrs.get(AttributeKind::Defense);
-        let base_def = ctx.target_attrs.core_base(AttributeKind::Vitality);
+        let effective_atk = ctx.source_attrs.get("phys_atk") as f32;
+        let effective_def = ctx.target_attrs.get("phys_def") as f32;
+        let base_def = ctx.target_attrs.core_value(crate::CoreAttribute::PhysDef) as f32;
 
         let amount = calculate_damage_from_effect(
             effective_atk,
@@ -385,9 +382,9 @@ impl EffectHandler for DamageHandler {
             return None;
         };
 
-        let effective_atk = ctx.source_attrs.get(AttributeKind::Attack);
-        let effective_def = ctx.target_attrs.get(AttributeKind::Defense);
-        let base_def = ctx.target_attrs.core_base(AttributeKind::Vitality);
+        let effective_atk = ctx.source_attrs.get("phys_atk") as f32;
+        let effective_def = ctx.target_attrs.get("phys_def") as f32;
+        let base_def = ctx.target_attrs.core_value(crate::CoreAttribute::PhysDef) as f32;
 
         let amount = calculate_damage_from_effect(
             effective_atk,
@@ -397,10 +394,10 @@ impl EffectHandler for DamageHandler {
             *ignore_def_percent,
             ctx.terrain_defense_bonus,
         );
-        let current_hp = ctx.target_attrs.get(AttributeKind::Hp);
+        let current_hp = ctx.target_attrs.current_hp;
         Some(EffectPreview::Damage {
             amount,
-            lethal: current_hp - amount as f32 <= 0.0,
+            lethal: current_hp - amount <= 0,
         })
     }
 
@@ -474,9 +471,9 @@ impl EffectHandler for HealHandler {
         let EffectDef::Heal { amount } = def else {
             return None;
         };
-        let max_hp = ctx.target_attrs.get(AttributeKind::MaxHp);
-        let current_hp = ctx.target_attrs.get(AttributeKind::Hp);
-        let actual = (*amount as f32).min(max_hp - current_hp).max(0.0) as i32;
+        let max_hp = ctx.target_attrs.max_hp();
+        let current_hp = ctx.target_attrs.current_hp;
+        let actual = (*amount).min(max_hp - current_hp).max(0);
         Some(EffectPreview::Heal { amount: actual })
     }
 
@@ -740,28 +737,26 @@ mod tests {
     /// 构建测试用 GenerateContext
     fn make_generate_ctx() -> GenerateContext {
         let mut source_attrs = Attributes::default();
-        source_attrs.set_base(AttributeKind::Might, 5.0);
-        source_attrs.set_base(AttributeKind::Vitality, 5.0);
-        source_attrs.set_base(AttributeKind::Agility, 6.0);
-        source_attrs.set_base(AttributeKind::Dexterity, 3.0);
-        source_attrs.set_base(AttributeKind::Intelligence, 2.0);
-        source_attrs.set_base(AttributeKind::Willpower, 3.0);
-        source_attrs.set_base(AttributeKind::Presence, 2.0);
-        source_attrs.set_base(AttributeKind::Luck, 2.0);
+        source_attrs.set_base("phys_atk", 10);
+        source_attrs.set_base("phys_def", 10);
+        source_attrs.set_base("magic_atk", 4);
+        source_attrs.set_base("magic_def", 6);
+        source_attrs.set_base("max_hp", 30);
+        source_attrs.set_base("hit_rate", 6000);
+        source_attrs.set_base("dodge_rate", 6000);
         source_attrs.set_base_attack_range(1);
-        source_attrs.fill_vital_resources();
+        source_attrs.fill_hp();
 
         let mut target_attrs = Attributes::default();
-        target_attrs.set_base(AttributeKind::Might, 2.0);
-        target_attrs.set_base(AttributeKind::Vitality, 3.0);
-        target_attrs.set_base(AttributeKind::Agility, 4.0);
-        target_attrs.set_base(AttributeKind::Dexterity, 2.0);
-        target_attrs.set_base(AttributeKind::Intelligence, 1.0);
-        target_attrs.set_base(AttributeKind::Willpower, 2.0);
-        target_attrs.set_base(AttributeKind::Presence, 1.0);
-        target_attrs.set_base(AttributeKind::Luck, 2.0);
+        target_attrs.set_base("phys_atk", 4);
+        target_attrs.set_base("phys_def", 3);
+        target_attrs.set_base("magic_atk", 2);
+        target_attrs.set_base("magic_def", 4);
+        target_attrs.set_base("max_hp", 20);
+        target_attrs.set_base("hit_rate", 4000);
+        target_attrs.set_base("dodge_rate", 4000);
         target_attrs.set_base_attack_range(1);
-        target_attrs.fill_vital_resources();
+        target_attrs.fill_hp();
 
         GenerateContext {
             source_entity: Entity::from_bits(1),
@@ -778,30 +773,28 @@ mod tests {
     /// 构建测试用 PreviewContext
     fn make_preview_ctx() -> PreviewContext {
         let mut source_attrs = Attributes::default();
-        source_attrs.set_base(AttributeKind::Might, 5.0);
-        source_attrs.set_base(AttributeKind::Vitality, 5.0);
-        source_attrs.set_base(AttributeKind::Agility, 6.0);
-        source_attrs.set_base(AttributeKind::Dexterity, 3.0);
-        source_attrs.set_base(AttributeKind::Intelligence, 2.0);
-        source_attrs.set_base(AttributeKind::Willpower, 3.0);
-        source_attrs.set_base(AttributeKind::Presence, 2.0);
-        source_attrs.set_base(AttributeKind::Luck, 2.0);
+        source_attrs.set_base("phys_atk", 10);
+        source_attrs.set_base("phys_def", 10);
+        source_attrs.set_base("magic_atk", 4);
+        source_attrs.set_base("magic_def", 6);
+        source_attrs.set_base("max_hp", 30);
+        source_attrs.set_base("hit_rate", 6000);
+        source_attrs.set_base("dodge_rate", 6000);
         source_attrs.set_base_attack_range(1);
-        source_attrs.fill_vital_resources();
+        source_attrs.fill_hp();
 
         let mut target_attrs = Attributes::default();
-        target_attrs.set_base(AttributeKind::Might, 2.0);
-        target_attrs.set_base(AttributeKind::Vitality, 3.0);
-        target_attrs.set_base(AttributeKind::Agility, 4.0);
-        target_attrs.set_base(AttributeKind::Dexterity, 2.0);
-        target_attrs.set_base(AttributeKind::Intelligence, 1.0);
-        target_attrs.set_base(AttributeKind::Willpower, 2.0);
-        target_attrs.set_base(AttributeKind::Presence, 1.0);
-        target_attrs.set_base(AttributeKind::Luck, 2.0);
+        target_attrs.set_base("phys_atk", 4);
+        target_attrs.set_base("phys_def", 3);
+        target_attrs.set_base("magic_atk", 2);
+        target_attrs.set_base("magic_def", 4);
+        target_attrs.set_base("max_hp", 20);
+        target_attrs.set_base("hit_rate", 4000);
+        target_attrs.set_base("dodge_rate", 4000);
         target_attrs.set_base_attack_range(1);
-        target_attrs.fill_vital_resources();
+        target_attrs.fill_hp();
         // HP 有缺口，用于测试治疗预览
-        target_attrs.set_vital(AttributeKind::Hp, 12.0);
+        target_attrs.current_hp = 12;
 
         PreviewContext {
             source_attrs,

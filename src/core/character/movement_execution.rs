@@ -1,7 +1,7 @@
 // 统一移动执行系统：监听 MovementIntent，统一处理移动逻辑
 // 实现意图与执行分离，确保 AI 和玩家使用相同的移动路径
 
-use crate::core::attribute::{AttributeKind, Attributes};
+use crate::core::attribute::Attributes;
 use crate::core::character::{GridPosition, MovingUnit, spawn_path_arrows};
 use crate::core::map::{
     GameMap, OccupancyGrid, TerrainCostRegistry, TerrainGrid, TerrainRegistry,
@@ -63,7 +63,7 @@ fn execute_movement(
         return;
     }
 
-    let move_range = attrs.get(AttributeKind::MoveRange) as u32;
+    let move_range = attrs.get("move_range") as u32;
     let calculator = cost_registry.resolve_from_tags(tags);
 
     // 使用 find_reachable_tiles 计算可达范围，但不依赖 OccupancyGrid 验证目标

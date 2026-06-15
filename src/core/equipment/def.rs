@@ -2,7 +2,6 @@
 
 use crate::core::attribute::AttributeModifierDef;
 use crate::core::registry_loader::RegistryLoader;
-use crate::core::tag::TagName;
 use bevy::prelude::*;
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -86,13 +85,10 @@ impl Rarity {
 /// 装备需求条件
 #[derive(Clone, Debug, Reflect, Deserialize)]
 pub enum EquipmentRequirement {
-    /// 需要指定标签（如 MARTIAL 表示军用武器熟练度）
-    RequireTag(TagName),
-    /// 属性最低要求
-    AttributeMin {
-        kind: crate::core::attribute::AttributeKind,
-        value: f32,
-    },
+    /// 需要指定标签（如 "martial" 表示军用武器熟练度）
+    RequireTag(String),
+    /// 属性最低要求（config_id 如 "phys_atk"）
+    AttributeMin { config_id: String, value: i32 },
 }
 
 /// 装备定义（RON 配置，不可变）
@@ -106,9 +102,9 @@ pub struct EquipmentDef {
     pub description: String,
     pub slot: EquipmentSlot,
     pub rarity: Rarity,
-    /// 装备标签（如 SWORD, FIRE, MARTIAL）
+    /// 装备标签（如 "sword", "dmg_fire", "martial"）
     #[serde(default)]
-    pub tags: Vec<TagName>,
+    pub tags: Vec<String>,
     /// 属性修饰
     #[serde(default)]
     pub modifiers: Vec<AttributeModifierDef>,
@@ -152,11 +148,11 @@ impl EquipmentRegistry {
                 description: "普通的铁剑".into(),
                 slot: EquipmentSlot::MainHand,
                 rarity: Rarity::Common,
-                tags: vec![TagName::Sword, TagName::Melee, TagName::Martial],
+                tags: vec!["weapon_sword".into(), "martial".into()],
                 modifiers: vec![AttributeModifierDef {
-                    kind: crate::core::attribute::AttributeKind::Attack,
+                    config_id: "phys_atk".into(),
                     op: crate::core::attribute::ModifierOp::Add,
-                    value: 3.0,
+                    value: 3,
                 }],
                 traits: vec![],
                 requirements: vec![],
@@ -169,11 +165,11 @@ impl EquipmentRegistry {
                 description: "轻便的皮甲".into(),
                 slot: EquipmentSlot::Body,
                 rarity: Rarity::Common,
-                tags: vec![TagName::LightArmor],
+                tags: vec!["light_armor".into()],
                 modifiers: vec![AttributeModifierDef {
-                    kind: crate::core::attribute::AttributeKind::Defense,
+                    config_id: "phys_def".into(),
                     op: crate::core::attribute::ModifierOp::Add,
-                    value: 2.0,
+                    value: 2,
                 }],
                 traits: vec![],
                 requirements: vec![],
@@ -187,25 +183,25 @@ impl EquipmentRegistry {
                 slot: EquipmentSlot::MainHand,
                 rarity: Rarity::Epic,
                 tags: vec![
-                    TagName::Sword,
-                    TagName::Fire,
-                    TagName::Martial,
-                    TagName::TwoHanded,
+                    "weapon_sword".into(),
+                    "dmg_fire".into(),
+                    "martial".into(),
+                    "two_handed".into(),
                 ],
                 modifiers: vec![
                     AttributeModifierDef {
-                        kind: crate::core::attribute::AttributeKind::Attack,
+                        config_id: "phys_atk".into(),
                         op: crate::core::attribute::ModifierOp::Add,
-                        value: 15.0,
+                        value: 15,
                     },
                     AttributeModifierDef {
-                        kind: crate::core::attribute::AttributeKind::CritRate,
+                        config_id: "crit_rate".into(),
                         op: crate::core::attribute::ModifierOp::Add,
-                        value: 5.0,
+                        value: 500, // 5% = 500/10000
                     },
                 ],
                 traits: vec!["flaming_weapon".into(), "dragon_bane".into()],
-                requirements: vec![EquipmentRequirement::RequireTag(TagName::Martial)],
+                requirements: vec![EquipmentRequirement::RequireTag("martial".into())],
                 weight: 5.0,
             },
             EquipmentDef {
@@ -215,11 +211,11 @@ impl EquipmentRegistry {
                 description: "坚固的铁盾".into(),
                 slot: EquipmentSlot::OffHand,
                 rarity: Rarity::Common,
-                tags: vec![TagName::Shield],
+                tags: vec!["shield".into()],
                 modifiers: vec![AttributeModifierDef {
-                    kind: crate::core::attribute::AttributeKind::Defense,
+                    config_id: "phys_def".into(),
                     op: crate::core::attribute::ModifierOp::Add,
-                    value: 3.0,
+                    value: 3,
                 }],
                 traits: vec![],
                 requirements: vec![],
@@ -232,11 +228,11 @@ impl EquipmentRegistry {
                 description: "蕴含魔力的法杖".into(),
                 slot: EquipmentSlot::MainHand,
                 rarity: Rarity::Uncommon,
-                tags: vec![TagName::Staff, TagName::Simple],
+                tags: vec!["weapon_staff".into(), "simple".into()],
                 modifiers: vec![AttributeModifierDef {
-                    kind: crate::core::attribute::AttributeKind::MagicAttack,
+                    config_id: "magic_atk".into(),
                     op: crate::core::attribute::ModifierOp::Add,
-                    value: 5.0,
+                    value: 5,
                 }],
                 traits: vec![],
                 requirements: vec![],
