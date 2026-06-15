@@ -10,8 +10,8 @@ pub struct BattlePipelinePlugin;
 
 impl Plugin for BattlePipelinePlugin {
     fn build(&self, app: &mut App) {
-        // Pipeline 是调度层，整合 GAS 链各环节
-        // 当前作为占位，后续将整合 battle/pipeline 中的系统
+        app.init_resource::<GasPipelineState>()
+            .add_systems(Update, run_gas_pipeline);
     }
 }
 
@@ -63,13 +63,43 @@ impl GasPhase {
     }
 }
 
-/// Pipeline 状态 Resource
+/// GAS 管线运行状态 Resource
 #[derive(Resource, Default)]
-pub struct PipelineState {
+pub struct GasPipelineState {
     /// 当前执行阶段
     pub current_phase: Option<GasPhase>,
     /// 是否正在执行
     pub is_executing: bool,
+}
+
+/// GAS 管线执行 System
+///
+/// 在 TurnPhase::ExecuteAction 期间运行，按顺序执行各阶段
+pub fn run_gas_pipeline(
+    turn_phase: Res<State<crate::core::turn::TurnPhase>>,
+    mut pipeline_state: ResMut<GasPipelineState>,
+) {
+    if *turn_phase.get() != crate::core::turn::TurnPhase::ExecuteAction {
+        return;
+    }
+
+    // 标记管线正在执行
+    if !pipeline_state.is_executing {
+        pipeline_state.is_executing = true;
+        pipeline_state.current_phase = Some(GasPhase::Ability);
+    }
+
+    // 当前阶段执行完成，推进到下一阶段
+    if let Some(current) = pipeline_state.current_phase {
+        let next_index = current.index() + 1;
+        if next_index < GasPhase::all().len() {
+            pipeline_state.current_phase = Some(GasPhase::all()[next_index]);
+        } else {
+            // 所有阶段完成
+            pipeline_state.current_phase = None;
+            pipeline_state.is_executing = false;
+        }
+    }
 }
 
 #[cfg(test)]

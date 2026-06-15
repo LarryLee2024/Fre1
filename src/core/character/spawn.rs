@@ -2,7 +2,9 @@
 
 use crate::core::ability::{SkillCooldowns, SkillSlots};
 use crate::core::attribute::Attributes;
+#[allow(deprecated)]
 use crate::core::buff::ActiveBuffs;
+
 use crate::core::equipment::{
     EquipmentInstance, EquipmentRegistry, EquipmentSlots, apply_equipment_effects,
 };

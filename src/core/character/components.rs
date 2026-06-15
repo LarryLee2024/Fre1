@@ -3,7 +3,7 @@
 use super::traits::TraitCollection;
 use crate::core::ability::{SkillCooldowns, SkillSlots};
 use crate::core::attribute::Attributes;
-use crate::core::buff::ActiveBuffs;
+
 use crate::core::equipment::EquipmentSlots;
 use crate::core::inventory::container::Container;
 use crate::core::tag::{GameplayTags, PersistentTags};
@@ -30,7 +30,6 @@ pub enum Faction {
     Attributes,
     SkillSlots,
     SkillCooldowns,
-    ActiveBuffs,
     GameplayTags,
     PersistentTags,
     TraitCollection,
@@ -477,7 +476,7 @@ mod tests {
         assert!(world.get::<Attributes>(entity).is_some());
         assert!(world.get::<SkillSlots>(entity).is_some());
         assert!(world.get::<GridPosition>(entity).is_some());
-        assert!(world.get::<ActiveBuffs>(entity).is_some());
+        // ActiveBuffs 已移除（ADR-026：Buff 统一为 ApplyModifier）
     }
 
     /// Test ID: CHR-UID-001

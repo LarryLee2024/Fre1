@@ -1,12 +1,11 @@
 /// 效果管道：EffectDef → PendingEffect → 修饰 → 执行
-/// 替代 combat_event.rs 中的 execute_attack 大函数
-mod handler; // EffectHandler trait 与各类型处理器（Damage/Heal/Buff/Cleanse）
-mod types; // EffectDef, PendingEffect, EffectResult 等类型定义
+/// ADR-026 §二：Buff 已删除，统一为 ApplyModifier
+mod handler;
+mod types;
 
-// 重新导出所有公共类型，保持外部导入路径兼容
 pub use handler::{
-    BuffHandler, CleanseHandler, DamageHandler, EffectHandler, EffectHandlerRegistry,
-    EffectPreview, ExecuteContext, ExecuteOutput, GenerateContext, HealHandler, PendingMessage,
+    CleanseHandler, DamageHandler, EffectHandler, EffectHandlerRegistry, EffectPreview,
+    ExecuteContext, ExecuteOutput, GenerateContext, HealHandler, ModifierHandler, PendingMessage,
     PreviewContext,
 };
 pub use types::*;

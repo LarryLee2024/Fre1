@@ -52,6 +52,14 @@ impl Default for ExecutionRegistry {
     }
 }
 
+impl std::fmt::Debug for ExecutionRegistry {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ExecutionRegistry")
+            .field("count", &self.executors.len())
+            .finish()
+    }
+}
+
 impl ExecutionRegistry {
     /// 注册执行器
     pub fn register(&mut self, executor: Box<dyn Execution>) {

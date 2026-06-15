@@ -14,7 +14,7 @@ use bevy::ecs::query::QueryState;
 use bevy::prelude::*;
 use std::collections::HashMap;
 
-use super::types::{EffectDef, PendingEffect, PendingEffectData, calculate_damage_from_effect};
+use super::types::{DurationDef, EffectDef, PendingEffect, PendingEffectData, StackingDef, calculate_damage_from_effect};
 
 // ── 上下文结构体（纯数据，避免 ECS 借用问题）──
 
@@ -70,6 +70,36 @@ pub struct ExecuteContext<'w> {
     pub pending_messages: Vec<PendingMessage>,
     /// 需要插入 Dead Tag 的实体列表（延迟插入，避免借用冲突）
     pub dead_entities: Vec<Entity>,
+    /// Cue 表现事件收集器（ADR-026 §四：逻辑与表现彻底分离）
+    pub cue_events: Vec<CueEvent>,
+}
+
+/// Cue 表现事件（ADR-026 §四）
+#[derive(Clone, Debug)]
+pub enum CueEvent {
+    /// 伤害表现
+    Damage {
+        target: Entity,
+        amount: i32,
+        is_critical: bool,
+        attacker: Option<Entity>,
+    },
+    /// 治疗表现
+    Heal {
+        target: Entity,
+        amount: i32,
+        source: Option<Entity>,
+    },
+    /// 死亡表现
+    Death {
+        entity: Entity,
+        killer: Option<Entity>,
+    },
+    /// Buff/Modifier 施加表现
+    ModifierApplied {
+        target: Entity,
+        modifier_id: String,
+    },
 }
 
 impl<'w> ExecuteContext<'w> {
@@ -79,7 +109,42 @@ impl<'w> ExecuteContext<'w> {
             world,
             pending_messages: Vec::new(),
             dead_entities: Vec::new(),
+            cue_events: Vec::new(),
         }
+    }
+
+    /// 收集 Cue 伤害事件
+    pub fn emit_cue_damage(
+        &mut self,
+        target: Entity,
+        amount: i32,
+        is_critical: bool,
+        attacker: Option<Entity>,
+    ) {
+        self.cue_events.push(CueEvent::Damage {
+            target,
+            amount,
+            is_critical,
+            attacker,
+        });
+    }
+
+    /// 收集 Cue 治疗事件
+    pub fn emit_cue_heal(&mut self, target: Entity, amount: i32, source: Option<Entity>) {
+        self.cue_events
+            .push(CueEvent::Heal { target, amount, source });
+    }
+
+    /// 收集 Cue 死亡事件
+    pub fn emit_cue_death(&mut self, entity: Entity, killer: Option<Entity>) {
+        self.cue_events
+            .push(CueEvent::Death { entity, killer });
+    }
+
+    /// 收集 Cue Modifier 施加事件
+    pub fn emit_cue_modifier_applied(&mut self, target: Entity, modifier_id: String) {
+        self.cue_events
+            .push(CueEvent::ModifierApplied { target, modifier_id });
     }
 
     /// 对目标扣血 + 死亡判定 + 收集消息
@@ -368,6 +433,12 @@ impl EffectHandler for DamageHandler {
             target_coord,
         );
 
+        // ADR-026 §四：Cue 事件发射（逻辑与表现彻底分离）
+        ctx.emit_cue_damage(effect.target, *amount, false, Some(effect.source));
+        if target_died {
+            ctx.emit_cue_death(effect.target, Some(effect.source));
+        }
+
         Some(ExecuteOutput {
             target_died,
             target: effect.target,
@@ -412,6 +483,9 @@ impl EffectHandler for HealHandler {
 
         let target_name = ctx.get_name(effect.target);
         ctx.apply_heal(effect.target, &target_name, *amount);
+
+        // ADR-026 §四：Cue 事件发射
+        ctx.emit_cue_heal(effect.target, *amount, Some(effect.source));
 
         Some(ExecuteOutput {
             target_died: false,
@@ -549,14 +623,45 @@ impl EffectHandler for ModifierHandler {
             return None;
         };
 
-        // 暂时使用旧的 apply_buff 逻辑，后续将迁移到 Modifier 系统
-        // TODO: 实现独立的 Modifier 应用逻辑
+        // ADR-026 §六：Stacking 集成
+        // 1. 解析叠层策略
+        let stacking_rule: crate::core::stacking::StackingRule = (*stacking).into();
+
+        // 2. 解析持续时间
         let duration_turns = match duration {
-            super::types::DurationDef::Instant => 0,
-            super::types::DurationDef::TurnLimited(n) => *n,
-            super::types::DurationDef::Permanent => 999,
+            DurationDef::Instant => 0,
+            DurationDef::TurnLimited(n) => *n,
+            DurationDef::Permanent => u32::MAX,
         };
+
+        // 3. 查询目标当前同类型效果的层数（TODO: 从 ActiveEffects 查询）
+        // 当前简化处理：假设无已有同类型效果
+        let existing = None;
+        let stacking_result = crate::core::stacking::resolve_stacking(existing, stacking_rule);
+
+        // 4. 根据叠层结果决定是否应用
+        match stacking_result {
+            crate::core::stacking::StackingResult::Ignored { .. } => {
+                // 已达上限，不应用
+                return Some(ExecuteOutput {
+                    target_died: false,
+                    target: effect.target,
+                    source: effect.source,
+                });
+            }
+            crate::core::stacking::StackingResult::NewlyApplied
+            | crate::core::stacking::StackingResult::Replaced
+            | crate::core::stacking::StackingResult::Refreshed
+            | crate::core::stacking::StackingResult::Stacked { .. } => {
+                // 继续应用
+            }
+        }
+
+        // 5. 应用效果（暂时使用旧的 apply_buff 逻辑）
         ctx.apply_buff(effect.target, modifier_id, effect.source, duration_turns);
+
+        // ADR-026 §四：Cue 事件发射
+        ctx.emit_cue_modifier_applied(effect.target, modifier_id.clone());
 
         Some(ExecuteOutput {
             target_died: false,

@@ -1,7 +1,6 @@
 //! AppPlugin：游戏装配入口
 //!
-//! Layer 1 职责：组装整个游戏，只注册，不含逻辑。
-//! 负责注册 DefaultPlugins、核心/数据层插件、UI/Input、调试工具。
+//! ADR-026：Plugin 注册顺序遵循 DAG 依赖图
 
 use bevy::prelude::*;
 use bevy_inspector_egui::bevy_egui::{EguiGlobalSettings, EguiPlugin};
@@ -13,6 +12,7 @@ use crate::core::ability::AbilityPlugin;
 use crate::core::ai::{AiBehaviorPlugin, AiPlugin};
 use crate::core::attribute::AttributeDefPlugin;
 use crate::core::battle::BattlePlugin;
+#[allow(deprecated)]
 use crate::core::buff::BuffPlugin;
 use crate::core::campaign::CampaignPlugin;
 use crate::core::character::CharacterPlugin;
@@ -35,16 +35,18 @@ use crate::infrastructure::localization::LocalizationPlugin;
 use crate::infrastructure::logging::LogPlugin;
 use crate::infrastructure::pipeline::BattlePipelinePlugin;
 use crate::infrastructure::registry::RegistryPlugin;
+use crate::infrastructure::replay::BattleReplayPlugin;
 use crate::input::InputPlugin;
 use crate::shared::SharedPlugin;
 use crate::ui::UiPlugin;
-
 use crate::debug::DebugPlugin;
 
 /// App 层统一插件：组装游戏所有 Plugin
 ///
-/// 封装了 DefaultPlugins 配置、核心 game logic plugins、Infrastructure、
-/// UI 和 Debug 工具的完整注册流程。
+/// ADR-026 Plugin 注册顺序（DAG，禁止颠倒）：
+/// 1. Registry → 2. Attribute + Tag → 3. Modifier → 4. Effect →
+/// 5. Ability + Trigger + Targeting + Stacking + Execution →
+/// 6. Cue → 7. Pipeline + Replay
 pub struct AppPlugin;
 
 impl Plugin for AppPlugin {
@@ -67,57 +69,31 @@ impl Plugin for AppPlugin {
                     ..default()
                 }),
         )
-        // egui 基础设施（调试面板 / World Inspector 依赖）
-        // 禁止自动挂载 PrimaryEguiContext 到第一个 Camera（相机销毁会带走 egui context）
         .insert_resource(EguiGlobalSettings {
             auto_create_primary_context: false,
             ..default()
         })
         .add_plugins(EguiPlugin::default())
-        // 错误消息通道 + 监控系统（在 Core 插件之前注册，确保错误可被捕获）
         .add_message::<GameErrorMessage>()
         .add_systems(Update, error_monitor::error_monitor)
-        // Shared 层 — 零依赖基础设施（ids, error, events, audit 等）
         .add_plugins(SharedPlugin)
-        // 统一注册中心（ADR-026 §十一，最底层）
+        // ═══ ADR-026 GAS 链 DAG 层序 ═══
         .add_plugins(RegistryPlugin)
-        // 本地化基础设施（语言切换、文本解析）
         .add_plugins(LocalizationPlugin)
-        // Content 层 — 合约声明与加载协调
         .add_plugins(ContentPlugin)
-        // ── ADR-025 七领域 DAG 层序 ──
-        // Layer 1：无依赖的基础类型注册
-        .add_plugins((TagPlugin, TagDefPlugin, AttributeDefPlugin))
-        // Layer 2：依赖 tag + attribute
+        .add_plugins((AttributeDefPlugin, TagPlugin, TagDefPlugin))
         .add_plugins(ModifierRulePlugin)
-        // Layer 3：依赖 modifier + tag
         .add_plugins(EffectPlugin)
-        // Layer 4：依赖 effect（ADR-026 新增 Stacking + Execution + Cue）
-        .add_plugins((StackingPlugin, ExecutionPlugin, CuePlugin))
-        // Pipeline 调度层（整合 GAS 链）
-        .add_plugins(BattlePipelinePlugin)
-        // Layer 5：平行依赖 effect（共 3 个，无相互依赖）
-        .add_plugins((BuffPlugin, TargetingPlugin, TriggerPlugin))
-        // Layer 6：依赖所有下层（tag/modifier/effect/stacking/buff/targeting/trigger）
-        .add_plugins(AbilityPlugin)
-        // Layer 6：非七领域的数据层插件
-        .add_plugins((AiBehaviorPlugin, EquipmentPlugin, InventoryPlugin))
-        // 基础设施层（日志、审计）
+        .add_plugins((StackingPlugin, ExecutionPlugin))
+        .add_plugins((AbilityPlugin, TargetingPlugin, TriggerPlugin))
+        .add_plugins(CuePlugin)
+        .add_plugins((BattlePipelinePlugin, BattleReplayPlugin))
+        // ═══ 非 GAS 链模块 ═══
+        .add_plugins((BuffPlugin, AiBehaviorPlugin, EquipmentPlugin, InventoryPlugin))
         .add_plugins((LogPlugin, AuditPlugin))
-        // 游戏逻辑插件
-        .add_plugins((
-            AssetsPlugin,
-            TurnPlugin,
-            MapPlugin,
-            CharacterPlugin,
-            BattlePlugin,
-            AiPlugin,
-        ))
-        // 战役模块（在 AssetsPlugin 之后，确保 LevelRegistry 已就绪）
+        .add_plugins((AssetsPlugin, TurnPlugin, MapPlugin, CharacterPlugin, BattlePlugin, AiPlugin))
         .add_plugins(CampaignPlugin)
-        // 表现层插件
         .add_plugins((UiPlugin, InputPlugin))
-        // 调试工具
         .add_plugins(DebugPlugin);
     }
 }
