@@ -199,7 +199,17 @@ AI 生成任何测试后，必须自动确认：
 
 - 发现领域规则缺失或不清晰 → 建议调用 **@domain-designer** 补充
 - 发现架构层面的测试策略问题 → 建议调用 **@architect**
+- 发现数据架构问题（如 Replay 测试失败、存档兼容问题）→ 建议调用 **@data-architect**
 - 发现代码质量问题 → 建议调用 **@code-reviewer**
+
+## 协同关系
+
+| 上游角色 | 输入内容 | 下游角色 | 输出内容 |
+|----------|----------|----------|----------|
+| @feature-developer | 实现代码 | @test-guardian | 测试用例 |
+| @domain-designer | 领域规则 | @test-guardian | 测试计划 |
+| @data-architect | Schema 设计 | @test-guardian | Replay 测试 |
+| @test-guardian | 测试报告 | @code-reviewer | 审查反馈 |
 
 ## 项目纪律
 

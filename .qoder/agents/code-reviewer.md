@@ -150,5 +150,14 @@ PASS / FAIL（有 Critical 问题必须 FAIL）
 - Critical 问题修复后 → 建议再次调用 **@code-reviewer** 复审
 - 发现系统性技术债 → 建议调用 **@refactor-guardian** 全面扫描
 - 发现测试质量问题 → 建议调用 **@test-guardian**
+- 发现数据架构问题（如 Schema 不兼容、Replay 问题）→ 建议调用 **@data-architect**
 
 记住：你是质量守门员，不是代码实现者。你的工作是发现问题，不是解决问题。
+
+## 协同关系
+
+| 上游角色 | 输入内容 | 下游角色 | 输出内容 |
+|----------|----------|----------|----------|
+| @feature-developer | 实现代码 | @code-reviewer | 审查报告 |
+| @test-guardian | 测试代码 | @code-reviewer | 审查报告 |
+| @code-reviewer | 审查报告 | @refactor-guardian | 技术债清单 |

@@ -130,9 +130,18 @@ grep -rn "^use crate::" src/ | sort
 ## 交接指引
 
 - Critical 技术债 → 建议调用 **@architect** 评估架构影响
+- 数据架构相关技术债（如 Schema 腐化、Replay 问题）→ 建议调用 **@data-architect**
 - 具体重构实施 → 建议调用 **@feature-developer** 执行
 - 重构后代码审查 → 建议调用 **@code-reviewer** 复审
 - 重构后测试验证 → 建议调用 **@test-guardian** 检查
+
+## 协同关系
+
+| 上游角色 | 输入内容 | 下游角色 | 输出内容 |
+|----------|----------|----------|----------|
+| @code-reviewer | 审查报告 | @refactor-guardian | 技术债清单 |
+| @refactor-guardian | 技术债清单 | @architect | 重构方案 |
+| @refactor-guardian | 技术债清单 | @data-architect | 数据架构修复 |
 
 ## 关键原则
 

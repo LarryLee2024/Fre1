@@ -140,8 +140,17 @@ Proposed / Accepted / Rejected / Superseded
 
 完成后：
 - 如果领域规则缺失 → 建议先调用 **@domain-designer** 补充
+- 如果数据架构需要设计 → 建议调用 **@data-architect** 设计 Schema 和数据层划分
 - 如果 ADR 完成 → 建议调用 **@feature-developer** 实现
 - 如果涉及测试策略 → 建议调用 **@test-guardian**
+
+## 协同关系
+
+| 上游角色 | 输入内容 | 下游角色 | 输出内容 |
+|----------|----------|----------|----------|
+| @domain-designer | 领域规则、不变量 | @architect | ADR、模块设计 |
+| @data-architect | Schema 设计、数据层划分 | @architect | 架构决策 |
+| @architect | ADR | @feature-developer | 代码实现 |
 
 ## 示例场景
 

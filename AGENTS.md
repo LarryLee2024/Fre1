@@ -4,24 +4,61 @@
 基于 Bevy 0.18.1 的回合制战棋项目，严格遵循 ECS 架构与领域分离原则。所有 Agent 输出必须以 `docs/01-architecture/README.md` 为最高架构准则。
 
 ## 角色总览
-共 6 个专用 Agent，各角色严格守界，详细 Prompt 见 `.qoder/agents/*.md`。
+共 7 个专用 Agent，各角色严格守界，详细 Prompt 见 `.qoder/agents/*.md`。
 - **@architect**：架构设计，输出 ADR；只设计不写代码，所有方案不得违反架构规范
 - **@domain-designer**：领域建模，输出领域文档；不讨论代码实现，术语与现有体系对齐
+- **@data-architect**：数据架构设计，设计 Config/Save/Replay Schema、Registry 结构、ID 策略和数据迁移规则；确保数据结构统一、Schema 可演化、Replay/Save 兼容
 - **@feature-developer**：功能实现，按架构与领域模型编码；发现架构问题立即上报，不私自修改
 - **@code-reviewer**：代码审查，按优先级校验合规性；只提意见不直接改代码
 - **@test-guardian**：测试守护，以领域规则优先；Bug 必须转化为可复现的回放测试
 - **@refactor-guardian**：技术债扫描，定期输出债务清单；优先删代码而非加封装
 
 ## 协作流程
-需求 → @domain-designer（领域模型） → 输出：`docs/02-domain/`
-     → @architect（架构设计） → 输出：架构设计输出：`docs/01-architecture/` + ADR输出：`docs/08-decisions/`
-     → @feature-developer（代码实现） → 输出：`src/`（代码），若有执行计划输出到 `docs/09-planning/` 
-     → @test-guardian（测试审查） → 输出：`docs/05-testing/`（计划）+ `src/` 和 `tests/`（代码）
-     → @code-reviewer（代码审查） → 输出：`docs/10-reviews/`
-     → @refactor-guardian（技术债扫描） → 输出：`docs/11-refactor/`
-     
+
+### 标准开发流程
+```
+需求
+  │
+  ├─→ @domain-designer（领域建模） → 输出：`docs/02-domain/`（领域规则、业务术语、不变量）
+  │
+  ├─→ @data-architect（数据架构）  → 输出：`docs/04-data/`（Schema 设计、数据层划分、Replay/Save 兼容）
+  │
+  └─→ @architect（架构设计）       → 输出：`docs/01-architecture/`（模块设计、通信设计、边界定义）
+                                      + `docs/08-decisions/`（ADR 文档）
+          │
+          ↓
+  @feature-developer（代码实现）    → 输出：`src/`（代码）+ `docs/09-planning/`（执行计划）
+          │
+          ├─→ @test-guardian（测试审查）    → 输出：`docs/05-testing/`（测试计划）+ `tests/`（测试代码）
+          │
+          └─→ @code-reviewer（代码审查）    → 输出：`docs/10-reviews/`（审查报告）
+                      │
+                      ↓
+          @refactor-guardian（技术债扫描）  → 输出：`docs/11-refactor/`（技术债清单）
+```
+
+### 角色协同关系
+
+| 角色 | 职责定位 | 输入来源 | 输出交付 | 下游依赖 |
+|------|----------|----------|----------|----------|
+| **@domain-designer** | 定义"规则是什么" | 业务需求 | 领域规则、术语、不变量 | @architect、@data-architect |
+| **@data-architect** | 定义"规则如何表达" | 领域规则 | Schema 设计、数据层划分 | @architect、@feature-developer |
+| **@architect** | 定义"系统如何组织" | 领域规则、数据架构 | ADR、模块边界、通信设计 | @feature-developer |
+| **@feature-developer** | 实现"如何做" | ADR、领域模型、Schema | 代码实现 | @test-guardian、@code-reviewer |
+| **@test-guardian** | 验证"是否正确" | 领域规则、实现代码 | 测试用例、回归测试 | @code-reviewer |
+| **@code-reviewer** | 保证"质量合规" | 代码、测试、架构文档 | 审查报告 | @refactor-guardian |
+| **@refactor-guardian** | 监控"技术健康" | 代码库、审查报告 | 技术债清单 | @architect（重大重构） |
+
+### 触发时机与协作模式
+1. **新项目启动**：@domain-designer → @data-architect → @architect → @feature-developer
+2. **新增功能**：@domain-designer（如需要）→ @data-architect（如需要）→ @feature-developer → @test-guardian → @code-reviewer
+3. **Bug 修复**：@test-guardian（写失败测试）→ @feature-developer → @test-guardian（验证）→ @code-reviewer
+4. **重构优化**：@refactor-guardian（发现债务）→ @architect（评估影响）→ @feature-developer → @code-reviewer
+5. **数据变更**：@data-architect（Schema 设计）→ @architect（架构适配）→ @feature-developer（迁移实现）
+
 ## 必须做的行为
 - 所有 Agent 写的日志，必须按 `.trae/rules/日志规则.md` 写日志，关键地方必须写日志。
+- 跨角色协作时，必须引用上游输出作为输入依据，确保设计决策的可追溯性。
 
 ## 通用行为红线（所有角色必须遵守）
 1. 严禁绕过 Effect/Modifier 管线直接修改战斗数值与属性
@@ -29,6 +66,7 @@
 3. 严禁修改定义态（Definition）配置数据
 4. 严禁超出自身角色职责范围跨环节作业
 5. 严禁写过时、不符合最新 Bevy 0.18.1 版本的代码
+6. 数据架构变更必须经过 @data-architect 审查，确保 Replay/Save 兼容性
 
 ## 参考文档
 
@@ -40,6 +78,7 @@
 | `docs/00-governance/ai-constitution-complete.md` | AI 开发宪法 v1.6 完整版（20 部分），覆盖架构/ECS/代码/测试/日志/工程质量 | 🟥 **最高** |
 | `docs/00-governance/coding-rules.md` | 编码执行规范 v1.0，AI 编码自检清单，Effect/Modifier 管线保护 | 🟩 必须遵守 |
 | `docs/02-domain/README.md` | 领域规则汇总索引，39 个领域文件的速查入口 | 🟩 必须遵守 |
+| `docs/04-data/README.md` | 数据架构规范，Schema 设计指南、Save/Replay 兼容规则 | 🟩 必须遵守 |
 | `docs/05-testing/test-spec.md` | 测试宪法 v3.1，测试分层/回放测试/覆盖率策略 | 🟩 必须遵守 |
 
 ### `.trae/rules/` — 项目规则集（14 文件）
@@ -71,7 +110,7 @@ AI 编码时直接引用，覆盖宪法分册与专项规则：
 | `01-architecture/` | 38 | 七层架构设计文档（App 装配、战斗 FSM、组件设计、数据管线等） |
 | `02-domain/` | 24 子目录 | 领域规则（Ability/AI/Attribute/Battle/Buff/Character/Condition/Cost/Cue/Duration/Effect/Execution/Formula/Input/Map/Requirement/Selector/Skill/StackPolicy/Tag/Targeting/Trigger/Turn） |
 | `03-technical/` | 15 | 技术实现规则（ECS 通信、错误处理、日志、持久化、UI 架构等） |
-| `04-data/` | 8 | 数据与配置规则（内容系统、配置系统、资源生命周期、Feature Flag 等） |
+| `04-data/` | 8 | 数据与配置规则（内容系统、配置系统、资源生命周期、Feature Flag、Schema 设计等） |
 | `05-testing/` | 4 | 测试规范（测试宪法、测试规则） |
 | `06-ai/` | 1 | AI 协作流程说明 |
 | `07-operations/` | 1 | 运维文档 |
@@ -86,6 +125,7 @@ AI 编码时直接引用，覆盖宪法分册与专项规则：
 **核心文档入口：**
 - 最高优先级：`01-architecture/README.md`（七层架构总纲）
 - 领域规则：`02-domain/README.md`（39 个领域文件速查）
+- 数据架构：`04-data/README.md`（Schema 设计与数据治理）
 - 架构决策：`08-decisions/README.md`（ADR 索引）
 
 详细文档说明请参阅 `README.md`。

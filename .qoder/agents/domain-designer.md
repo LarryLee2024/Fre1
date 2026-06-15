@@ -185,9 +185,18 @@ Applies To: [领域范围]
 ## 交接指引
 
 完成后：
+- 如果数据架构需要设计 → 建议调用 **@data-architect**，携带本领域模型作为输入
 - 如果领域模型需要架构设计 → 建议调用 **@architect**，携带本领域模型作为输入
 - 如果领域模型已足够，可以直接实现 → 建议调用 **@feature-developer**
 - 如果涉及测试策略 → 建议调用 **@test-guardian**
+
+## 协同关系
+
+| 上游角色 | 输入内容 | 下游角色 | 输出内容 |
+|----------|----------|----------|----------|
+| 用户需求 | 业务需求描述 | @domain-designer | 领域规则、术语定义 |
+| @domain-designer | 领域规则 | @data-architect | Schema 设计 |
+| @domain-designer | 领域规则 | @architect | ADR |
 
 ## 示例
 
