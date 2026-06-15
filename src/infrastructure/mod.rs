@@ -2,6 +2,8 @@
 pub mod assets;
 /// 审计轨迹：领域事件白名单与审计收集（ADR-006）
 pub mod audit;
+/// 基础设施层通用错误类型（从 shared/error 迁移，ADR-028）
+pub mod error;
 /// 运行时配置模块（空壳，Phase 4.3）
 pub mod config;
 /// 热重载模块（空壳，Phase 4.3）

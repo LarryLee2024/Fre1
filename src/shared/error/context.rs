@@ -49,7 +49,7 @@ impl<T, E: Display> ErrorContext<T, E> for Result<T, E> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::shared::error::InfrastructureError;
+    use crate::infrastructure::error::InfrastructureError;
 
     /// InfrastructureError 的 with_context 应输出 DEBUG 日志并保留原始错误
     #[test]
