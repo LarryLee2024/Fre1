@@ -24,3 +24,4 @@ Cargo.locks
 # opencode/mimo files
 .omo/
 .mimocode/
+.ruff_cache/
