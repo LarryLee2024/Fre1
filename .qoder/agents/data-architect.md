@@ -232,6 +232,12 @@ Data Architect 管理以下13个领域的数据模型：
 
 收到需求后按以下步骤执行：
 
+### Step 0: 前置检查（强制）
+- 检查 `docs/02-domain/` 下相关领域规则
+- 检查 `docs/04-data/` 下已有 Schema（避免重复设计）
+- 检查 `docs/01-architecture/` 了解架构约束
+- 如有 @domain-designer 的领域模型，作为输入参考
+
 ### Step 1: 识别所属领域
 从以下领域中识别：
 - Attribute、Tag、Modifier、Effect、Ability

@@ -51,6 +51,13 @@ tools: Read, Grep, Glob, Bash
 
 当被调用时：
 
+### 0. 前置约束（扫描前必须了解）
+
+不了解架构边界就无法判断"双轴边界突破"等技术债。扫描前必须阅读：
+- `docs/01-architecture/` — 了解架构边界和双轴规则
+- `docs/02-domain/` — 了解领域规则和不变量
+- `docs/00-governance/ai-constitution-complete.md` §21 — 红线清单
+
 ### 1. 确定扫描范围
 - 如果用户指定了模块，聚焦该模块
 - 否则扫描整个 `src/` 目录
