@@ -106,25 +106,25 @@ AI 编码时直接引用，覆盖宪法分册与专项规则：
 详细内容见 `README.md`，以下是概览：
 | 目录 | 文件数 | 说明 |
 |------|--------|------|
-| `00-governance/` | 5 | 治理规则（AI 开发宪法、编码规范、Bevy 参考） |
-| `01-architecture/` | 38 | 七层架构设计文档（App 装配、战斗 FSM、组件设计、数据管线等） |
-| `02-domain/` | 24 子目录 | 领域规则（Ability/AI/Attribute/Battle/Buff/Character/Condition/Cost/Cue/Duration/Effect/Execution/Formula/Input/Map/Requirement/Selector/Skill/StackPolicy/Tag/Targeting/Trigger/Turn） |
-| `03-technical/` | 15 | 技术实现规则（ECS 通信、错误处理、日志、持久化、UI 架构等） |
-| `04-data/` | 8 | 数据与配置规则（内容系统、配置系统、资源生命周期、Feature Flag、Schema 设计等） |
-| `05-testing/` | 4 | 测试规范（测试宪法、测试规则） |
-| `06-ai/` | 1 | AI 协作流程说明 |
-| `07-operations/` | 1 | 运维文档 |
-| `08-decisions/` | 27 | 架构决策记录 |
-| `09-planning/` | 2 | 执行计划 |
-| `10-reviews/` | 1 | 代码审查记录 |
-| `11-refactor/` | 1 | 技术债扫描记录 |
-| `98-roadmap/` | 1 | 项目路线图 |
-| `99-history/` | 2 | 历史归档（含 7 个归档子目录） |
-| `其他/` | 1 | 临时目录（ai_ignore_this_dir） |
+| `00-governance/` | 0 | 治理规则（AI 开发宪法、编码规范、Bevy 参考） |
+| `01-architecture/` | 0 |架构设计文档（ |
+| `02-domain/` | 0 | 领域规则 |
+| `03-technical/` | 0 | 技术实现规则（ECS 通信、错误处理、日志、持久化、UI 架构等） |
+| `04-data/` | 0 | 数据与配置规则（内容系统、配置系统、资源生命周期、Feature Flag、Schema 设计等） |
+| `05-testing/` | 0 | 测试规范（测试宪法、测试规则） |
+| `06-ai/` | 0 | AI 协作流程说明 |
+| `07-operations/` | 0 | 运维文档 |
+| `08-decisions/` | 0 | 架构决策记录 |
+| `09-planning/` | 0 | 执行计划 |
+| `10-reviews/` | 0 | 代码审查记录 |
+| `11-refactor/` | 0 | 技术债扫描记录 |
+| `98-roadmap/` | 0 | 项目路线图 |
+| `99-history/` | 0 | 历史归档（ |
+| `其他/` | 0 | 临时目录 |
 
 **核心文档入口：**
-- 最高优先级：`01-architecture/README.md`（七层架构总纲）
-- 领域规则：`02-domain/README.md`（39 个领域文件速查）
+- 最高优先级：`01-architecture/README.md`（架构总纲）
+- 领域规则：`02-domain/README.md`（领域文件速查）
 - 数据架构：`04-data/README.md`（Schema 设计与数据治理）
 - 架构决策：`08-decisions/README.md`（ADR 索引）
 

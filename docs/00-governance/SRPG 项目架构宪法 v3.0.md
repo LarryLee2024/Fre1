@@ -1,10 +1,10 @@
-# SRPG 项目架构宪法 v3.0
+# SRPG 项目架构宪法 v4.0
 >
 > 融合多轮架构评审共识，适配 Bevy 0.18+ 生态，面向数十万行代码规模的长期运营 SRPG 项目
 > 文档元数据：
 >
 > - id: 01-architecture.layer-contracts
-> - version: 3.0
+> - version: 4.0
 > - status: Proposed
 > - owner: architect
 > - created: 2026-06-14
@@ -12,6 +12,14 @@
 > - tags: architecture, layer, domain, bevy, srpg
 
 本版本整合了分层边界、领域拆分、ECS 适配、治理机制四大维度的全部核心共识，修正了早期版本的依赖矛盾与落地缺陷，既保留 DDD 领域纯度的长期价值，也适配 Bevy 生态的工程现实，可直接作为项目骨架落地。
+
+### 版本升级说明（v3.0 → v4.0）
+
+1. **Core 内部架构升级**：将原5级分层（L0~L4）重构为「**Capabilities 能力层 + Domains 业务域 + Mod API**」双轴结构
+2. **领域数量扩展**：Capabilities 从14个核心领域扩展为15个（新增 GameplayContext 上下文载荷），Domains 从14个业务域扩展为15个（新增 Summon 召唤域）
+3. **内聚优于分层原则**：Capabilities 内部从5层精简为3层（Foundation/Mechanism/Runtime），同一领域的代码不再跨目录拆分
+4. **三层分离原则**：Def（模板）→ Spec（配置）→ Instance（运行时）贯穿能力系统全链路
+5. **Mod API 升级**：重构为 Facade + Gateway 模式，每个 Domain 对应一个 Gateway，对外只暴露业务语义接口
 
 ---
 
@@ -38,7 +46,20 @@
 
 ### 1.3 核心设计思想
 
-摒弃传统「SkillSystem / CombatSystem / UISystem」的系统式目录架构，采用「**6 Layer（技术边界）+ 5级 Domain（业务边界）+ 横切能力治理**」的三维结构，从根源避免后期目录爆炸、边界混乱、依赖蜘蛛网的崩盘式问题。
+摒弃传统「SkillSystem / CombatSystem / UISystem」的系统式目录架构，采用「**6 Layer（技术边界）+ Capabilities/Domains 双轴结构 + 横切能力治理**」的三维结构，从根源避免后期目录爆炸、边界混乱、依赖蜘蛛网的崩盘式问题。
+
+### 1.4 设计原则
+
+| 原则 | 说明 |
+|------|------|
+| **领域优先** | 游戏领域概念（Tag/Attribute/Ability）与架构组件（Container/Manager）严格分离 |
+| **组合优于创建** | 新玩法优先组合已有机制（Cost=Effect, Cooldown=Tag+Effect），不造新系统 |
+| **三层分离** | Def（模板）→ Spec（配置）→ Instance（运行时），贯穿能力系统全链路 |
+| **内聚优于分层** | 同一领域的代码放在一起（内聚），而非按抽象层级拆散到不同目录（分层） |
+| **单向依赖** | Domains → Capabilities → Shared，禁止反向；Domain 间仅通过事件通信 |
+| **数据驱动** | 玩法规则下沉 Domain/rules/，数值配置归 content/，代码只提供机制 |
+| **可换可测** | 每层可独立替换与测试，纯函数规则零 ECS 依赖 |
+| **个人开发友好** | 避免团队级复杂流程，优先轻量方案 |
 
 ---
 
@@ -154,7 +175,7 @@ src/app/
 
 ### Layer 2：Core — 游戏规则核心层
 
-项目的心脏，唯一允许定义游戏规则的层级。
+项目的心脏，唯一允许定义游戏规则的层级。**内部采用「Capabilities 能力层 + Domains 业务域」双轴结构**，兼顾通用能力复用与业务逻辑内聚。
 
 #### 职责边界判断（三问法）
 
@@ -206,7 +227,9 @@ src/shared/
 ├── collections/     # 通用集合扩展
 ├── hashing/         # 哈希工具
 ├── validation/      # 通用校验工具
-└── testing/         # 单元测试基础工具
+├── testing/         # 单元测试基础工具
+├── traits/          # 通用横切抽象（日志、审计、事务等 Trait）
+└── prelude/         # 统一导出
 ```
 
 #### 严格准入三问
@@ -364,49 +387,162 @@ src/tools/
 
 ---
 
-## 第五章 Core 内部五级领域架构
+## 第五章 Core 内部双轴架构（Capabilities + Domains）
 
-Core 内部同样严格遵守单向依赖，禁止下层依赖上层，禁止同层循环调用，从根源避免「领域蜘蛛网」。
+> 核心升级：摒弃单纵向5级分层（L0~L4），采用「**纵向 Capabilities 能力复用 + 横向 Domains 业务内聚**」双轴结构。纵向 Capabilities 提供通用机制，横向 Domains 封装业务规则，既保证能力复用，又实现业务内聚。
 
-### 5.1 层级与依赖规则
+### 5.1 双轴架构总览
 
-| 层级 | 名称 | 包含领域 | 可依赖范围 |
-|------|------|----------|------------|
-| L0 | 原子层 | attribute、tag、modifier、stacking | 无（最底层） |
-| L1 | 能力基础层 | effect、trigger、targeting、cue | L0 全部领域 |
-| L2 | 执行层 | execution、ability、pipeline、registry | L0 + L1 全部领域 |
-| L3 | 游戏实体层 | character、equipment、item、combat、map | L0 + L1 + L2 全部领域 |
-| L4 | 玩法层 | quest、story、faction、progression、ai、decision、replay | L0~L3 全部领域 |
+```
+src/core/
+├── core_plugin.rs              # Core 层总 Plugin，注册所有能力与领域
+│
+├── capabilities/               # 纵向：15个核心能力领域（通用机制骨架，玩法无关）
+│   ├── tag/                    # 标签
+│   ├── attribute/              # 属性
+│   ├── modifier/               # 修改器
+│   ├── aggregator/             # 聚合器
+│   ├── gameplay_context/       # 上下文/载荷
+│   ├── spec/                   # 规格/配置
+│   ├── ability/                # 技能逻辑
+│   ├── trigger/                # 触发器
+│   ├── condition/              # 条件/限制/免疫
+│   ├── targeting/              # 目标选择
+│   ├── execution/              # 执行计算
+│   ├── effect/                 # 效果
+│   ├── stacking/               # 堆叠规则
+│   ├── event/                  # 系统通信
+│   ├── cue/                    # 表现层信号
+│   └── runtime/                # C3：跨领域运行时编排底座
+│
+├── domains/                    # 横向：15个业务子系统（承载全部玩法复杂度）
+│   ├── combat/                 # 战斗
+│   ├── spell/                  # 法术
+│   ├── reaction/               # 反应/援护
+│   ├── progression/            # 成长养成
+│   ├── inventory/              # 背包物品
+│   ├── quest/                  # 任务
+│   ├── narrative/              # 叙事/对话
+│   ├── tactical/               # 战术/网格
+│   ├── terrain/                # 地形
+│   ├── faction/                # 阵营关系
+│   ├── party/                  # 队伍
+│   ├── camp_rest/              # 营地休息
+│   ├── crafting/               # 制作
+│   ├── economy/                # 经济
+│   └── summon/                 # 召唤
+│
+└── mod_api/                    # Mod 稳定 API（Facade + Gateway 模式）
+```
 
-### 5.2 核心设计原则
+#### 核心分工原则
 
-- **Combat 必须是薄层**：战斗不是上帝系统，只是 `Ability + Effect + Execution + Pipeline` 的组合场景，不承载核心规则。
-- **Buff 不独立成领域**：所有 Buff/Debuff/DOT/HOT/护盾/光环，本质都是 Effect 的子类，统一收敛在 effect 领域。
-- **所有能力原子化**：技能、装备、天赋、地形效果，全部复用同一套 Effect + Trigger + Targeting 原子能力。
+| 维度 | 职责定位 | 核心产出 | 稳定性 |
+|------|----------|----------|--------|
+| Capabilities 纵向 | 通用机制与原子能力 | 可复用的系统骨架、数据结构、执行框架 | 极高，极少变更 |
+| Domains 横向 | 特定玩法的规则编排 | 业务逻辑、玩法规则、流程控制 | 中等，随玩法迭代 |
 
-### 5.3 14 核心领域定义
+> 一句话总结：**Capabilities 管「机制」，Domains 管「规则」**。机制是通用的，规则是业务专属的。
 
-| 领域 | 职责 | 层级 |
+### 5.2 Capabilities 内部三层架构（C1/C2/C3）
+
+> 设计思路：将原5层架构（atom/rule/runtime/model/frame）精简为3层，
+> 核心理由是"内聚优于分层"——同一领域的代码应放在一起，而非按抽象层级拆散。
+> 原L0(atom)+L1(rule)的人为分裂导致同一领域代码跨层修改，违反内聚性；
+> 原L3(model)与Domain的components.rs职责重叠，造成数据结构双份维护；
+> 原L4(frame)与Domain的plugin.rs高度重复，增加"放L4还是放Domain"的决策负担。
+
+#### 三层职责划分
+
+| 层 | 名称 | 职责 | 禁止事项 | 对应原5层 |
+|------|------|------|----------|----------|
+| **C1** | Foundation | 纯数据定义、类型枚举、值对象 | 禁止包含任何行为逻辑、系统、ECS组件 | L0 atom |
+| **C2** | Mechanism | 规则组件、查询系统、生命周期管理、ECS组件与System | 禁止包含具体玩法内容 | L1 rule + L2 runtime(部分) |
+| **C3** | Runtime | 跨领域能力的运行时编排底座 | 禁止包含具体业务逻辑 | L2 runtime(部分) + L4 frame(事件总线) |
+
+#### 各能力领域内部结构（遵循 C1→C2 内聚）
+
+```
+capabilities/<domain>/
+├── plugin.rs              # 领域 Plugin（C2）
+├── foundation/            # C1：纯数据定义层
+│   ├── mod.rs
+│   ├── types.rs           # 基础类型与枚举
+│   └── values.rs          # 值对象定义
+├── mechanism/             # C2：规则与系统层
+│   ├── mod.rs
+│   ├── components.rs      # ECS 组件
+│   ├── query.rs           # 查询/匹配/条件逻辑
+│   ├── lifecycle.rs       # 生命周期管理
+│   └── systems/            # Bevy Systems
+│       ├── mod.rs
+│       └── xxx_system.rs
+└── events.rs              # 领域事件（C2）
+```
+
+#### C3 Runtime 独立模块
+
+```
+capabilities/runtime/       # C3：跨领域运行时编排底座
+├── plugin.rs
+├── pipeline/              # 通用执行管线框架
+├── scheduler/             # 时序调度器
+├── registry/              # 统一注册中心
+├── command/               # 通用命令模式框架
+└── replay/                # 回放基础框架
+```
+
+### 5.3 依赖方向规则
+
+```
+# 依赖方向：C3 → C2 → C1 → Shared（严格单向）
+# Domains → Capabilities → Shared（严格单向）
+# Domain 间禁止直接引用，仅通过事件通信
+```
+
+#### C2↔C3 交互判定规则
+
+| 场景 | 归属 | 理由 |
 |------|------|------|
-| Attribute | 基础属性、派生属性、属性计算公式 | L0 |
-| Tag | 统一标签系统，用于分类、条件判断、查询过滤 | L0 |
-| Modifier | 属性修改器（加法/乘法/覆盖） | L0 |
-| Stacking | 效果堆叠规则（层数、持续时间、刷新机制） | L0 |
-| Effect | 效果系统（Buff/Debuff/DOT/HOT/护盾/光环） | L1 |
-| Trigger | 触发器（OnHit/OnDeath/OnMove/OnTurnStart 等） | L1 |
-| Targeting | 目标选择与范围判定 | L1 |
-| Cue | 表现信号系统（连接逻辑与表现的桥梁） | L1 |
-| Execution | 公式执行与效果结算 | L2 |
-| Ability | 技能系统（主动技/战技/奥义/普攻） | L2 |
-| Pipeline | 统一执行管线（技能/效果的流程编排） | L2 |
-| Registry | 统一注册中心（所有内容数据的运行时容器） | L2 |
-| Replay | 确定性回放系统 | L4 |
-| Decision | AI 决策框架 | L4 |
+| 标签同步（Tag→Tag） | C2 tag/systems | 单领域内部逻辑 |
+| 属性聚合（Modifier→Aggregator→Attribute） | C2 各领域 + C3 pipeline | 跨多个领域，需 C3 pipeline 编排 |
+| 技能激活（Condition→Trigger→Ability→Targeting→Execution→Effect） | C3 pipeline | 跨6个领域的链式执行 |
+| 回合调度（TurnScheduler） | C3 scheduler | 跨所有战斗参与者的时序编排 |
+| 堆叠规则检查 | C2 stacking/systems | 单领域内部逻辑 |
 
-### 5.4 跨领域通信规则
+### 5.4 核心设计原则
 
-- 同层/上下层领域交互，优先使用 Observer 局部响应
-- 跨多个领域的全局通知，使用 Message 广播
+- **Capabilities 15领域封顶**：不再增加新能力领域，新机制以子模块形式归入已有领域
+- **组合优于创建**：法力消耗=Attribute(Mana)+Effect(Cost)，冷却=Tag(Cooldown.X)+Effect(Duration)，不造新系统
+- **三层分离**：Def（模板）→ Spec（配置）→ Instance（运行时），贯穿能力系统全链路
+- **Combat 必须是薄层**：战斗不是上帝系统，只是 Ability + Effect + Execution + Pipeline 的组合场景
+- **Buff 不独立成领域**：所有 Buff/Debuff/DOT/HOT/护盾/光环，本质都是 Effect 的子类，统一收敛在 effect 领域
+
+### 5.5 15 核心能力领域定义
+
+| # | 领域 | 职责 | 分组 |
+|---|------|------|------|
+| 1 | Tag | 标签定义、位掩码、层级关系 | 核心基石 |
+| 2 | Attribute | 属性定义、基础值、当前值 | 核心基石 |
+| 3 | Modifier | 修改器定义（Add/Mul/Override） | 核心基石 |
+| 4 | Aggregator | 属性聚合管线（Base→Add→Mul→Override→Clamp→Final） | 核心基石 |
+| 5 | GameplayContext | 统一上下文/载荷，贯穿全链路的数据载体 | 核心基石 |
+| 6 | Spec | 模板→配置→实例三层分离 | 逻辑骨架 |
+| 7 | Ability | 技能逻辑与生命周期 | 逻辑骨架 |
+| 8 | Trigger | 技能激活条件 | 逻辑骨架 |
+| 9 | Condition | 统一条件检查（含免疫/限制/激活条件） | 逻辑骨架 |
+| 10 | Targeting | 目标选择（含 Grid 范围） | 行为表现 |
+| 11 | Execution | 执行计算（伤害/治疗/自定义） | 行为表现 |
+| 12 | Effect | 效果（含 Period/Duration/Instant） | 行为表现 |
+| 13 | Stacking | 堆叠规则 | 行为表现 |
+| 14 | Event | 系统间结构化通信 | 行为表现 |
+| 15 | Cue | 表现层信号（VFX/SFX/动画触发） | 行为表现 |
+
+### 5.6 跨领域通信规则
+
+- 同领域内：优先使用 Observer 局部响应
+- 跨多个能力领域：通过 C3 Runtime pipeline 编排
+- 跨 Domain：使用 Event（Message）广播
 - 🟥 禁止直接 use 其他领域的内部实现类型
 - 🟥 禁止反向依赖（上层领域的类型不得出现在下层领域的接口中）
 
@@ -418,15 +554,37 @@ Modding 不是独立层级，而是贯穿多层的扩展能力，按职责拆分
 
 | 模块 | 归属 | 职责 |
 |------|------|------|
-| `core/mod_api/` | Core 层 | 对外暴露的稳定 Mod 接口，是唯一合法的核心规则访问入口，保证向后兼容 |
+| `core/mod_api/` | Core 层 | 对外暴露的稳定 Mod 接口，Facade + Gateway 模式，唯一合法的核心规则访问入口，保证向后兼容 |
 | `content/mod_support/` | Content 层 | Mod 内容加载、数据覆盖、冲突处理、注册逻辑 |
 | `infrastructure/mod_loader/` | Infrastructure 层 | Mod 文件扫描、沙箱隔离、版本校验、依赖管理 |
 
-### 约束
+### Mod API：Facade + Gateway 模式
 
-- 🟥 Mod 禁止绕过稳定 API 直接访问 Core 内部实现
-- 🟩 Mod 能力与原生内容走同一套 Registry 与执行管线
-- 🟩 API 分级：稳定 API / 实验性 API / 内部 API（Mod 禁止调用）
+```
+src/core/mod_api/
+├── core_facade.rs         # 统一门面，Mod 唯一入口
+├── combat_gateway.rs      # 战斗系统网关
+├── character_gateway.rs   # 角色系统网关
+├── spell_gateway.rs       # 法术系统网关
+├── quest_gateway.rs       # 任务系统网关
+├── party_gateway.rs       # 队伍系统网关
+├── camp_gateway.rs        # 营地系统网关
+├── summon_gateway.rs      # 召唤系统网关
+├── terrain_gateway.rs     # 地形系统网关
+├── craft_gateway.rs       # 制作系统网关
+├── economy_gateway.rs     # 经济系统网关
+├── inventory_gateway.rs   # 物品系统网关
+├── faction_gateway.rs     # 阵营系统网关
+├── progression_gateway.rs # 成长系统网关
+├── narrative_gateway.rs   # 叙事系统网关
+└── registry_gateway.rs    # 注册中心网关
+```
+
+#### 设计原则
+- 🟩 **面向业务暴露**：Mod 作者只需要理解「战斗/技能/角色」等业务概念，不需要了解 Capabilities/Domains 内部分层
+- 🟩 **稳定隔离**：内部重构时，只要保持网关接口不变，Mod 完全不受影响
+- 🟩 **分级授权**：API 分为稳定级、实验级、内部级，Mod 只能调用稳定级与公开实验级
+- 🟥 **绝对禁止**：Mod 绕过网关直接访问 Capabilities 或 Domains 的内部实现
 
 ---
 
@@ -598,6 +756,9 @@ tests/
 8. 🟥 禁止 Shared 层引入任何业务逻辑或业务类型
 9. 🟥 禁止反向依赖与循环依赖
 10. 🟥 禁止硬编码游戏数值与业务内容
+11. 🟥 禁止 Capabilities 层包含具体业务规则，突破机制与业务的边界
+12. 🟥 禁止 Domain 之间直接依赖、直接调用内部实现
+13. 🟥 禁止 Domain 重复实现 Capabilities 已有的通用机制
 
 ---
 
@@ -607,16 +768,18 @@ tests/
 
 每次新增模块/文件必须逐项确认：
 
-- [ ] 明确归属层级与领域
+- [ ] 明确归属层级与领域/Domain
 - [ ] 未依赖禁止的层级与模块
 - [ ] 未包含不属于当前层的逻辑
+- [ ] Capabilities 模块未包含业务规则，Domain 未重复实现通用机制
+- [ ] 未突破 Domain 边界直接依赖其他 Domain
 - [ ] 错误类型定义在对应领域内部
 - [ ] 强类型 ID 放在 `shared/ids/`
 - [ ] 未创建 utils/helpers 垃圾桶文件
 
 ### 14.2 自动化门禁
 
-- 开发期：自定义 Clippy Lint 实时提示跨层依赖违规
+- 开发期：自定义 Clippy Lint 实时提示跨层依赖违规、Domain 边界违规
 - CI 阶段：运行 `dependcheck` 脚本全量扫描，违规直接阻断 PR
 - 规则：架构违规零容忍，不允许「先通过后修复」
 
@@ -629,6 +792,7 @@ tests/
 核心价值在于：
 
 - 技术边界与业务边界双层隔离，从根源避免架构腐化
+- Capabilities/Domains 双轴结构，兼顾能力复用与业务内聚
 - 原子化的 GAS-Lite 设计，支撑 Data Driven 与长期内容迭代
 - 完整的治理与门禁机制，保证规则在多人协作下长期生效
 - 前置的回放、测试、工具设计，匹配长期运营型项目的核心需求
