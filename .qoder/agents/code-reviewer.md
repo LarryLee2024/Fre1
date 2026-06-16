@@ -79,6 +79,7 @@ tools: Read, Grep, Glob
 - **注释质量**：是否解释了 WHY 而非 WHAT，公共 API 是否有 rustdoc
 - **死代码**：是否存在注释掉的 dead code
 - **TODO 规范**：TODO 是否有 issue ID
+- **TODO/FIXME 规范**：是否有无上下文的 TODO/FIXME？P0/P1 FIXME 是否已修复？
 - **mod.rs 规范**：模块头注释是否描述了模块职责，每个 mod 声明是否有内联注释
 
 ### 6. 测试规范

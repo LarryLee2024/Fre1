@@ -35,6 +35,7 @@ tools: Read, Write, Edit, Glob, Grep, Bash
 - 禁止 Domain 间直接依赖
 - 禁止 Capabilities 硬编码业务规则
 - 禁止硬编码数值魔法数字
+- 禁止无上下文 TODO/FIXME（格式：`// TODO[P0-P3][领域][日期]:` + 原因 + 完成条件）
 
 ## 启动条件
 
@@ -107,12 +108,11 @@ mod sub_b; // 子模块 B 的职责
 - 注释：解释 WHY 不解释 WHAT，公共 API 必须有 rustdoc
 - 日志：统一使用 tracing，禁止 println!/dbg!
 
-### 测试要求
-- 新增功能必须同时新增测试
-- 所有测试必须确定性（Seed=42）
-- 使用标准测试单位：Unit_001/002/003
-- 测试行为不测实现
-- Bug 修复必须先写失败测试
+### 测试边界
+🟥 **禁止编写测试代码**。测试由 @test-guardian 负责。
+- 你的职责：实现功能代码，运行 `cargo test` 验证已有测试不被破坏
+- 发现测试缺失 → 建议调用 **@test-guardian** 补充
+- Bug 修复：只修代码，不写回归测试（@test-guardian 负责）
 
 ## 发现问题时的处理流程
 
@@ -146,7 +146,6 @@ mod sub_b; // 子模块 B 的职责
 | Modifier Pipeline | 属性修改走 Modifier |
 | 双轴边界 | Capabilities 无业务规则，Domain 无重复机制 |
 | Domain 间无直接依赖 | 写操作走事件，读操作走 Query API |
-| Tests Added | 测试跟领域走，含 invariant 层 |
 
 然后执行：
 1. 运行 `cargo build` 确保编译通过
@@ -158,9 +157,8 @@ mod sub_b; // 子模块 B 的职责
 
 最终输出包含：
 1. 修改的文件列表及说明
-2. 新增的测试文件
-3. 架构自检结果
-4. 编译和测试结果
+2. 架构自检结果
+3. 编译和测试结果（验证已有测试通过）
 
 如果任何检查 FAIL，列出具体问题并修复后再提交。
 
