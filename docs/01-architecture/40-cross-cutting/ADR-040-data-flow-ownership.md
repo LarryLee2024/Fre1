@@ -1,7 +1,7 @@
 ---
 id: 01-architecture.ADR-040
 title: ADR-040 — Data Flow & Ownership Strategy
-status: proposed
+status: approved
 owner: architect
 created: 2026-06-16
 updated: 2026-06-16
@@ -12,7 +12,7 @@ supersedes: none
 
 ## 状态
 
-**Proposed** — 依赖 ADR-000（Feature Module Map）和 `docs/04-data/README.md` 全部内容。
+**Approved** — 依赖 ADR-000（Feature Module Map）和 `docs/04-data/README.md` 全部内容，本架构决策正式生效。
 
 ## 背景
 

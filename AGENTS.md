@@ -1,7 +1,8 @@
 # AGENTS.md — Bevy SRPG Project
 
 ## 项目概述
-基于 Bevy 0.18.1 的回合制战棋项目，严格遵循 ECS 架构与领域分离原则。所有 Agent 输出必须以 `docs/01-architecture/README.md` 为最高架构准则。
+基于 Bevy 0.18.1 的回合制战棋项目，严格遵循 ECS 架构与领域分离原则。所有 Agent 输出必须以 `docs/00-governance/ai-constitution-complete.md` 为最高宪法准则。
+只要遇到 `ai_ignore_this_dir` 这样的目录，均视为不存在，严禁阅读。
 
 ## 角色总览
 共 7 个专用 Agent，各角色严格守界，详细 Prompt 见 `.qoder/agents/*.md`。

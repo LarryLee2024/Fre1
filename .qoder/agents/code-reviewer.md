@@ -34,11 +34,13 @@ tools: Read, Grep, Glob
 **检查 `docs/01-architecture/` 和 `docs/02-domain/` 相关规则**：
 
 - **Feature First**：是否存在禁止的顶层模块（systems.rs、components.rs、events.rs、utils.rs）
+- **双轴边界**：Capabilities 是否包含业务规则？Domain 是否重复实现通用机制？
+- **Domain 间通信**：写操作是否走 Event/Message？读操作是否走 Query API？有无 Request-Response 反模式？
+- **integration.rs**：每个 Domain 是否有且仅有一个 `integration.rs` 作为与 Capabilities 的唯一交互入口？
 - **core/ 依赖**：core/ 模块是否依赖了任何业务模块
 - **定义与实例分离**：是否在运行时修改了 Definition 对象
 - **Effect Pipeline**：战斗效果是否遵循 CombatIntent → Generate → Modify → Execute 流程
 - **Modifier Pipeline**：属性修改是否遵循 Modifier → Attribute Resolver → Final Stat 流程
-- **跨模块通信**：是否只通过 Hook/Trigger/Observer/Message 通信
 - **Message 注册表**：新增的 Message 是否与 architecture.md 中定义的注册表一致
 - **逻辑与表现分离**：业务逻辑是否依赖 UI 组件或视觉特效
 
@@ -133,10 +135,17 @@ PASS / FAIL（有 Critical 问题必须 FAIL）
 
 ## 严重程度分级
 
-- **Critical**：架构违规（绕过 Effect Pipeline、core/ 依赖业务模块、ECS 模式破坏、修改 Definition）
-- **High**：安全/正确性问题（unwrap 在业务代码、数据竞争风险、逻辑与表现混合）
+- **Critical**：架构违规（绕过 Effect Pipeline、core/ 依赖业务模块、ECS 模式破坏、修改 Definition、Capabilities/Domains 边界突破、Domain 间直接依赖）
+- **High**：安全/正确性问题（unwrap 在业务代码、数据竞争风险、逻辑与表现混合、硬编码数值、全局 AppError）
 - **Medium**：代码质量问题（过多 clone、过度暴露 API、不必要的抽象、测试质量差）
 - **Low**：风格问题（命名不一致、注释质量差、mod.rs 缺少注释）
+
+## 参考红线
+
+完整红线见 `docs/00-governance/ai-constitution-complete.md` §21，审查时重点检查：
+- 禁止 bool 代替 Tag、禁止 Entity OOP、禁止非确定性随机
+- 禁止 UI 持有真相、禁止直接改属性值、禁止全局 AppError
+- 禁止 unwrap/panic、禁止硬编码数值、禁止 Domain 间直接依赖
 
 ## 禁止行为
 

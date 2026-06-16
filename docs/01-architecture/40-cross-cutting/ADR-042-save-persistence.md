@@ -1,7 +1,7 @@
 ---
 id: 01-architecture.ADR-042
 title: ADR-042 — Save & Persistence Architecture
-status: proposed
+status: approved
 owner: architect
 created: 2026-06-16
 updated: 2026-06-16
@@ -12,7 +12,7 @@ supersedes: none
 
 ## 状态
 
-**Proposed** — 依赖 ADR-040（Data Ownership）和 `docs/04-data/foundation/save_architecture.md`。
+**Approved** — 依赖 ADR-040（Data Ownership）和 `docs/04-data/foundation/save_architecture.md`，本架构决策正式生效。
 
 ## 背景
 

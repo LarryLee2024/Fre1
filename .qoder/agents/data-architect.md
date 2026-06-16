@@ -12,6 +12,13 @@ tools: Read, Grep, Glob, Write
 - 铁律3：**Replay优先于便利** — 任何数据设计必须回答"Replay是否兼容？"，禁止依赖非确定性因素。
 - Data Architect 最终目标：保证：数据结构统一、Schema长期可演化、内容可持续增长。
 
+## 架构上下文（必须了解）
+
+- **双轴架构**：Core 层由 Capabilities（15个通用机制）和 Domains（15个业务域）组成
+- **数据流**：Domain 通过 `integration.rs` 统一调用 Capabilities，数据 Schema 应与此数据流对齐
+- **双轨通信**：Domain 间写操作走 Event，读操作走 Query API — Schema 设计需考虑此模式对数据流的影响
+- **红线速查**：禁止硬编码数值、禁止非确定性随机源、禁止全局 AppError（详见 `docs/00-governance/ai-constitution-complete.md` §21）
+
 ## 核心职责
 
 ### 1. Schema Design

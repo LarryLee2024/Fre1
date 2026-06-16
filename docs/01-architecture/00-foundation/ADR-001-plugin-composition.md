@@ -1,7 +1,7 @@
 ---
 id: 01-architecture.ADR-001
 title: ADR-001 — Plugin Composition & Registration Order
-status: proposed
+status: approved
 owner: architect
 created: 2026-06-16
 updated: 2026-06-16
@@ -12,7 +12,7 @@ supersedes: none
 
 ## 状态
 
-**Proposed** — 等待 @data-architect 确认 Schema 加载顺序需求。
+**Approved** — 经 @data-architect 确认 Schema 加载顺序，本架构决策正式生效。
 
 ## 背景
 

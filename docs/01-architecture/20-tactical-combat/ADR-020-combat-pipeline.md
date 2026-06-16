@@ -1,7 +1,7 @@
 ---
 id: 01-architecture.ADR-020
 title: ADR-020 — CombatIntent Pipeline (Damage/Heal)
-status: proposed
+status: approved
 owner: architect
 created: 2026-06-16
 updated: 2026-06-16
@@ -12,7 +12,7 @@ supersedes: none
 
 ## 状态
 
-**Proposed** — 依赖 ADR-010（Ability Pipeline）和 ADR-011（Modifier Pipeline）。
+**Approved** — 依赖 ADR-010（Ability Pipeline）和 ADR-011（Modifier Pipeline），本架构决策正式生效。
 
 ## 背景
 

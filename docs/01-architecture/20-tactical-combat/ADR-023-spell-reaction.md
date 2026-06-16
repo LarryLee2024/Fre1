@@ -1,7 +1,7 @@
 ---
 id: 01-architecture.ADR-023
 title: ADR-023 — Spell & Reaction System Design
-status: proposed
+status: approved
 owner: architect
 created: 2026-06-16
 updated: 2026-06-16
@@ -12,7 +12,7 @@ supersedes: none
 
 ## 状态
 
-**Proposed** — 依赖 ADR-010（Ability Pipeline）、ADR-020（Combat Pipeline）和 ADR-021（Turn State Machine）。
+**Approved** — 依赖 ADR-010（Ability Pipeline）、ADR-020（Combat Pipeline）和 ADR-021（Turn State Machine），本架构决策正式生效。
 
 ## 背景
 

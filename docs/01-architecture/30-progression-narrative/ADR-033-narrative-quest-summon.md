@@ -1,7 +1,7 @@
 ---
 id: 01-architecture.ADR-033
 title: ADR-033 — Narrative & Quest Architecture
-status: proposed
+status: approved
 owner: architect
 created: 2026-06-16
 updated: 2026-06-16
@@ -12,7 +12,7 @@ supersedes: none
 
 ## 状态
 
-**Proposed** — 依赖 ADR-030（Progression/Inventory）和 ADR-020（Combat Pipeline）。
+**Approved** — 依赖 ADR-030（Progression/Inventory）和 ADR-020（Combat Pipeline），本架构决策正式生效。
 
 ## 背景
 

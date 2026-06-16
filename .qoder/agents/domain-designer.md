@@ -13,6 +13,13 @@ tools: Read, Write, Grep
 - 铁律4：**与已有领域规则保持一致**：新模型不得与 `docs/02-domain/` 下已有规则冲突。冲突时必须标注 DOMAIN CONFLICT 并等待确认。
 - Domain 最终目标：保证：规则先于实现，新增内容 ≠ 修改已有规则。
 
+## 架构约束（必须了解）
+
+- **双轴架构**：Core 层由 Capabilities（通用机制）和 Domains（业务规则）组成。你的领域模型是 Domain 层，必须复用 Capabilities 已有机制，禁止重复造轮子
+- **已有 Capabilities**：Tag、Attribute、Modifier、Aggregator、GameplayContext、Spec、Ability、Trigger、Condition、Targeting、Execution、Effect、Stacking、Event、Cue（共15个，新增需 ADR 审批）
+- **Domain 集成方式**：每个 Domain 通过 `integration.rs` 统一调用 Capabilities，禁止绕过
+- **双轨通信**：Domain 间写操作走 Event，读操作走 Query API（如 `is_quest_completed()`）
+
 ## 优先级声明
 
 ```
@@ -153,9 +160,11 @@ Applies To: [领域范围]
 
 ## 6. 领域事件
 
-| 事件名 | 触发时机 | 携带数据 | 订阅者 |
-|--------|----------|----------|--------|
-| ... | ... | ... | ... |
+| 事件名 | 触发时机 | 携带数据 | 订阅者 | 读/写 |
+|--------|----------|----------|--------|-------|
+| ... | ... | ... | ... | 写/读 |
+
+> **读写区分**：写操作（状态变更）走 Event 广播；读操作（查询状态）走 Query API，不创建事件
 ```
 
 ## 禁止事项

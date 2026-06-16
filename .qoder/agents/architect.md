@@ -29,11 +29,12 @@ tools: Read, Grep, Glob, Write
 ### 必须遵守
 
 1. **功能优先**：架构服务于业务功能
-2. **定义与实例分离**：Definition 不可变，Instance 可变
-3. **规则与内容分离**：新内容 = 新 RON 文件，不改逻辑代码
-4. **逻辑与表现分离**：核心逻辑不依赖 UI
-5. **数据驱动优先**：配置驱动行为
-6. **组合优于继承**：ECS 核心思想
+2. **双轴架构**：Capabilities 管机制（玩法无关），Domains 管业务（规则编排），边界不可突破
+3. **定义与实例分离**：Definition 不可变，Instance 可变
+4. **规则与内容分离**：新内容 = 新 RON 文件，不改逻辑代码
+5. **逻辑与表现分离**：核心逻辑不依赖 UI
+6. **数据驱动优先**：配置驱动行为
+7. **组合优于继承**：ECS 核心思想
 
 ### 绝对禁止
 
@@ -97,9 +98,12 @@ Proposed / Accepted / Rejected / Superseded
 - 禁止：[哪些访问路径被禁止]
 
 ## Forbidden（禁止事项）
-[明确列出此架构决策下绝对禁止的行为]
-- 🟥 禁止：[行为] — 理由：[原因]
-- 🟥 禁止：[行为] — 理由：[原因]
+[明确列出此架构决策下绝对禁止的行为，至少覆盖：]
+- 🟥 Capabilities 包含业务规则
+- 🟥 Domain 间直接依赖（写走 Event，读走 Query API）
+- 🟥 Domain 绕过 integration.rs 直接调用 Capabilities 内部
+- 🟥 硬编码数值、全局 AppError、非确定性随机源
+- 🟥 红线清单详见 `docs/00-governance/ai-constitution-complete.md` §21
 
 ## Definition / Instance Design
 - Definition（不可变配置）：[列出 Def 类型]
@@ -120,7 +124,9 @@ Proposed / Accepted / Rejected / Superseded
 
 对照以下清单自检：
 - [ ] 符合 ECS 约束（Entity=ID, Component=数据, System=行为）
-- [ ] 符合 Plugin 注册顺序（Core → Data → Logic → Presentation）
+- [ ] 双轴边界合规：Capabilities 无业务规则，Domain 无重复机制
+- [ ] Domain 间无直接依赖：写操作走 Event，读操作走 Query API
+- [ ] 每个 Domain 有且仅有一个 `integration.rs` 作为 Capabilities 唯一交互入口
 - [ ] 没有创建禁止的模块（components.rs/systems.rs/utils.rs）
 - [ ] Effect/Modifier Pipeline 没有被绕过
 - [ ] Tag Components 优先于 bool 字段

@@ -1,7 +1,7 @@
 ---
 id: 01-architecture.ADR-041
 title: ADR-041 — Replay Determinism Architecture
-status: proposed
+status: approved
 owner: architect
 created: 2026-06-16
 updated: 2026-06-16
@@ -12,7 +12,7 @@ supersedes: none
 
 ## 状态
 
-**Proposed** — 依赖 ADR-002（ECS Communication）、内部管线 ADR（010/011/020）和 `docs/04-data/infrastructure/replay_schema.md`。
+**Approved** — 依赖 ADR-002（ECS Communication）、内部管线 ADR（010/011/020）和 `docs/04-data/infrastructure/replay_schema.md`，本架构决策正式生效。
 
 ## 背景
 

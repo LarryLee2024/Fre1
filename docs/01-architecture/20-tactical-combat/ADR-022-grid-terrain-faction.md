@@ -1,7 +1,7 @@
 ---
 id: 01-architecture.ADR-022
 title: ADR-022 — Grid / Terrain / Faction System Design
-status: proposed
+status: approved
 owner: architect
 created: 2026-06-16
 updated: 2026-06-16
@@ -12,7 +12,7 @@ supersedes: none
 
 ## 状态
 
-**Proposed** — 依赖 ADR-000（Feature Module Map）。
+**Approved** — 依赖 ADR-000（Feature Module Map），本架构决策正式生效。
 
 ## 背景
 

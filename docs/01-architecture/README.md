@@ -588,29 +588,29 @@ src/
 
 ## 9. 架构决策索引
 
-所有 Architecture Decision Record (ADR) 保存在 `docs/08-decisions/`。
+所有 Architecture Decision Record (ADR) 保存在 `docs/01-architecture/` 的子目录中。
 
 | 编号 | 标题 | 状态 | 所属领域 |
 |------|------|------|---------|
-| ADR-000 | Feature 模块划分总图 | ✅ Proposed | Foundation |
-| ADR-001 | Plugin 组合与注册顺序 | ✅ Proposed | Foundation |
-| ADR-002 | ECS 四级通信机制选型 | ✅ Proposed | Foundation |
-| ADR-010 | Ability → Effect 管线架构 | ⬜ Pending | Capability |
-| ADR-011 | Modifier → Attribute 管线架构 | ⬜ Pending | Capability |
-| ADR-012 | Stacking / Trigger / Cue 分离 | ⬜ Pending | Capability |
-| ADR-013 | Registry 与热重载架构 | ⬜ Pending | Capability |
-| ADR-020 | CombatIntent Pipeline 设计 | ⬜ Pending | Combat |
-| ADR-021 | 回合状态机设计 | ⬜ Pending | Combat |
-| ADR-022 | 网格 / 地形 / 阵营系统设计 | ⬜ Pending | Combat |
-| ADR-023 | 法术与反应机制设计 | ⬜ Pending | Combat |
-| ADR-030 | 成长 / 物品系统设计 | ⬜ Pending | Progression |
-| ADR-031 | 队伍与休整系统设计 | ⬜ Pending | Progression |
-| ADR-032 | 经济与制造系统设计 | ⬜ Pending | Progression |
-| ADR-033 | 叙事 / 任务 / 召唤设计 | ⬜ Pending | Progression |
-| ADR-040 | 数据流与所属权策略 | ⬜ Pending | Cross-cutting |
-| ADR-041 | 回放确定性与架构 | ⬜ Pending | Cross-cutting |
-| ADR-042 | 存档持久化策略 | ⬜ Pending | Cross-cutting |
-| ADR-043 | 命令层与输入抽象 | ⬜ Pending | Cross-cutting |
+| ADR-000 | Feature 模块划分总图 | ✅ Approved | Foundation |
+| ADR-001 | Plugin 组合与注册顺序 | ✅ Approved | Foundation |
+| ADR-002 | ECS 四级通信机制选型 | ✅ Approved | Foundation |
+| ADR-010 | Ability → Effect 管线架构 | ✅ Approved | Capability |
+| ADR-011 | Modifier → Attribute 管线架构 | ✅ Approved | Capability |
+| ADR-012 | Stacking / Trigger / Cue 分离 | ✅ Approved | Capability |
+| ADR-013 | Registry 与热重载架构 | ✅ Approved | Capability |
+| ADR-020 | CombatIntent Pipeline 设计 | ✅ Approved | Combat |
+| ADR-021 | 回合状态机设计 | ✅ Approved | Combat |
+| ADR-022 | 网格 / 地形 / 阵营系统设计 | ✅ Approved | Combat |
+| ADR-023 | 法术与反应机制设计 | ✅ Approved | Combat |
+| ADR-030 | 成长 / 物品系统设计 | ✅ Approved | Progression |
+| ADR-031 | 队伍与休整系统设计 | ✅ Approved | Progression |
+| ADR-032 | 经济与制造系统设计 | ✅ Approved | Progression |
+| ADR-033 | 叙事 / 任务 / 召唤设计 | ✅ Approved | Progression |
+| ADR-040 | 数据流与所属权策略 | ✅ Approved | Cross-cutting |
+| ADR-041 | 回放确定性与架构 | ✅ Approved | Cross-cutting |
+| ADR-042 | 存档持久化策略 | ✅ Approved | Cross-cutting |
+| ADR-043 | 命令层与输入抽象 | ✅ Approved | Cross-cutting |
 
 ---
 
@@ -648,25 +648,25 @@ src/
 | 文件 | 状态 | 负责人 | 完成日期 |
 |------|------|--------|----------|
 | `README.md` | ✅ stable | architect | 2026-06-16 |
-| `00-foundation/ADR-000-feature-module-map.md` | ⬜ pending | architect | — |
-| `00-foundation/ADR-001-plugin-composition.md` | ⬜ pending | architect | — |
-| `00-foundation/ADR-002-ecs-communication.md` | ⬜ pending | architect | — |
-| `10-capability-system/ADR-010-ability-pipeline.md` | ⬜ pending | architect | — |
-| `10-capability-system/ADR-011-modifier-pipeline.md` | ⬜ pending | architect | — |
-| `10-capability-system/ADR-012-stacking-trigger-cue.md` | ⬜ pending | architect | — |
-| `10-capability-system/ADR-013-registry-hotreload.md` | ⬜ pending | architect | — |
-| `20-tactical-combat/ADR-020-combat-pipeline.md` | ⬜ pending | architect | — |
-| `20-tactical-combat/ADR-021-turn-state-machine.md` | ⬜ pending | architect | — |
-| `20-tactical-combat/ADR-022-grid-terrain-faction.md` | ⬜ pending | architect | — |
-| `20-tactical-combat/ADR-023-spell-reaction.md` | ⬜ pending | architect | — |
-| `30-progression-narrative/ADR-030-progression-inventory.md` | ⬜ pending | architect | — |
-| `30-progression-narrative/ADR-031-party-camp-rest.md` | ⬜ pending | architect | — |
-| `30-progression-narrative/ADR-032-economy-crafting.md` | ⬜ pending | architect | — |
-| `30-progression-narrative/ADR-033-narrative-quest.md` | ⬜ pending | architect | — |
-| `40-cross-cutting/ADR-040-data-flow-ownership.md` | ⬜ pending | architect | — |
-| `40-cross-cutting/ADR-041-replay-determinism.md` | ⬜ pending | architect | — |
-| `40-cross-cutting/ADR-042-save-persistence.md` | ⬜ pending | architect | — |
-| `40-cross-cutting/ADR-043-command-input.md` | ⬜ pending | architect | — |
+| `00-foundation/ADR-000-feature-module-map.md` | ✅ stable | architect | 2026-06-16 |
+| `00-foundation/ADR-001-plugin-composition.md` | ✅ stable | architect | 2026-06-16 |
+| `00-foundation/ADR-002-ecs-communication.md` | ✅ stable | architect | 2026-06-16 |
+| `10-capability-system/ADR-010-ability-pipeline.md` | ✅ stable | architect | 2026-06-16 |
+| `10-capability-system/ADR-011-modifier-pipeline.md` | ✅ stable | architect | 2026-06-16 |
+| `10-capability-system/ADR-012-stacking-trigger-cue.md` | ✅ stable | architect | 2026-06-16 |
+| `10-capability-system/ADR-013-registry-hotreload.md` | ✅ stable | architect | 2026-06-16 |
+| `20-tactical-combat/ADR-020-combat-pipeline.md` | ✅ stable | architect | 2026-06-16 |
+| `20-tactical-combat/ADR-021-turn-state-machine.md` | ✅ stable | architect | 2026-06-16 |
+| `20-tactical-combat/ADR-022-grid-terrain-faction.md` | ✅ stable | architect | 2026-06-16 |
+| `20-tactical-combat/ADR-023-spell-reaction.md` | ✅ stable | architect | 2026-06-16 |
+| `30-progression-narrative/ADR-030-progression-inventory.md` | ✅ stable | architect | 2026-06-16 |
+| `30-progression-narrative/ADR-031-party-camp-rest.md` | ✅ stable | architect | 2026-06-16 |
+| `30-progression-narrative/ADR-032-economy-crafting.md` | ✅ stable | architect | 2026-06-16 |
+| `30-progression-narrative/ADR-033-narrative-quest-summon.md` | ✅ stable | architect | 2026-06-16 |
+| `40-cross-cutting/ADR-040-data-flow-ownership.md` | ✅ stable | architect | 2026-06-16 |
+| `40-cross-cutting/ADR-041-replay-determinism.md` | ✅ stable | architect | 2026-06-16 |
+| `40-cross-cutting/ADR-042-save-persistence.md` | ✅ stable | architect | 2026-06-16 |
+| `40-cross-cutting/ADR-043-command-input.md` | ✅ stable | architect | 2026-06-16 |
 
 ---
 

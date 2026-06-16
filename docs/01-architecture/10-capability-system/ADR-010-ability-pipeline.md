@@ -1,7 +1,7 @@
 ---
 id: 01-architecture.ADR-010
 title: ADR-010 — Ability → Effect Pipeline Architecture
-status: proposed
+status: approved
 owner: architect
 created: 2026-06-16
 updated: 2026-06-16
@@ -12,7 +12,7 @@ supersedes: none
 
 ## 状态
 
-**Proposed** — 依赖 ADR-000（Feature Module Map）和 `docs/04-data/capabilities/ability_schema.md`。
+**Approved** — 依赖 ADR-000（Feature Module Map）和 `docs/04-data/capabilities/ability_schema.md`，本架构决策正式生效。
 
 ## 背景
 

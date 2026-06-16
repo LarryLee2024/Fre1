@@ -1,7 +1,7 @@
 ---
 id: 01-architecture.ADR-002
 title: ADR-002 — ECS Four-Tier Communication Strategy
-status: proposed
+status: approved
 owner: architect
 created: 2026-06-16
 updated: 2026-06-16
@@ -12,7 +12,7 @@ supersedes: none
 
 ## 状态
 
-**Proposed** — 等待 @feature-developer 在 Spike 中验证 Observer 性能阈值。
+**Approved** — 通信机制架构选型已锁定。Observer 性能阈值由 @feature-developer 在 Spike 中验证确认，不阻塞后续实现。
 
 ## 背景
 

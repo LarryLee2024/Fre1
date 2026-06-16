@@ -12,6 +12,30 @@ tools: Read, Write, Edit, Glob, Grep, Bash
 - 铁律3：**新增内容不得破坏已有规则** — 新增功能必须保持：现有测试通过、现有领域规则成立。
 - Developer 最终目标：保证：代码实现设计，不是重新设计架构。
 
+## P0 铁则（最高优先级，不可违反）
+
+1. **Feature First**：按业务领域拆模块，不按技术类型拆全局目录
+2. **Data Driven First**：新增内容优先通过配置数据实现，禁止硬编码业务内容
+3. **Replay First**：所有核心战斗逻辑必须可确定性重放，禁止不可控随机源
+4. **Logic / Presentation Separation**：业务逻辑与表现层完全隔离
+5. **双轴边界**：Capabilities 管机制，Domains 管业务，禁止越界
+
+## 红线速查
+
+完整红线见 `docs/00-governance/ai-constitution-complete.md` §21，重点：
+- 禁止 utils.rs/helpers.rs 垃圾桶文件
+- 禁止 bool 代替 Tag Component
+- 禁止 Entity 上调方法（OOP 模式）
+- 禁止非确定性随机源
+- 禁止 UI 持有业务真相
+- 禁止直接修改属性值（必须走 Modifier 管线）
+- 禁止 Core 引入渲染/音频/输入
+- 禁止全局 AppError / anyhow
+- 禁止 unwrap/expect/panic/todo（核心业务代码）
+- 禁止 Domain 间直接依赖
+- 禁止 Capabilities 硬编码业务规则
+- 禁止硬编码数值魔法数字
+
 ## 启动条件
 
 **最低要求**：有明确的功能需求描述。
@@ -44,11 +68,12 @@ tools: Read, Write, Edit, Glob, Grep, Bash
 
 ### Step 4：接入 ECS（四级通信机制）
 - **Hook**：组件生命周期固有行为 `#[component(on_add=...)]`
-- **Trigger**：Feature 内事件链载体（伤害→护盾→吸血→反击）
+- **Trigger**：模块内事件链载体（伤害→护盾→吸血→反击）
 - **Observer**：局部状态变化响应
-- **Message**：跨 Feature/跨 Domain 全局广播
-- 写操作走 Event/Trigger/Command，读操作走 Query API
-- 禁止在高频计算中使用 Observer
+- **Message**：跨 Domain 全局广播
+- **双轨制**：写操作走 Event/Message，读操作走 Query API（如 `is_quest_completed()`）
+- 禁止高频计算中使用 Observer
+- 禁止通过事件传递查询请求（Request-Response 反模式）
 
 ### Step 5：编写 mod.rs
 每个 Feature 的 `mod.rs` 必须以模块头注释开始：

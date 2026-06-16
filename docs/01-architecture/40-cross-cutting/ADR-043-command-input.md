@@ -1,7 +1,7 @@
 ---
 id: 01-architecture.ADR-043
 title: ADR-043 — Command Layer & Input Abstraction
-status: proposed
+status: approved
 owner: architect
 created: 2026-06-16
 updated: 2026-06-16
@@ -12,7 +12,7 @@ supersedes: none
 
 ## 状态
 
-**Proposed** — 依赖 ADR-002（ECS Communication）和 ADR-041（Replay Determinism）。
+**Approved** — 依赖 ADR-002（ECS Communication）和 ADR-041（Replay Determinism），本架构决策正式生效。
 
 ## 背景
 

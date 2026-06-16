@@ -1,7 +1,7 @@
 ---
 id: 01-architecture.ADR-000
 title: ADR-000 — Feature Module Map
-status: proposed
+status: approved
 owner: architect
 created: 2026-06-16
 updated: 2026-06-16
@@ -12,7 +12,7 @@ supersedes: none
 
 ## 状态
 
-**Proposed** — 等待 @domain-designer 和 @data-architect 评审确认。
+**Approved** — 经 @domain-designer 和 @data-architect 评审确认，本架构决策正式生效。
 
 ## 背景
 
