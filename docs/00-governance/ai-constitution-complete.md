@@ -6,7 +6,7 @@
 > - status: Proposed
 > - owner: architect
 > - created: 2026-06-14
-> - updated: 2026-06-16（v5.0 + §16.5 TODO/FIXME/HACK 规范）
+> - updated: 2026-06-16（v5.0 + §16.5 TODO/FIXME + §16.6 测试中文命名）
 > - tags: governance, constitution, architecture, bevy, srpg
 > - 效力说明：本宪法对项目所有架构设计、代码编写、AI生成内容具有最高约束力，优先级高于任何通用编程规范、语言习惯或AI默认输出。条款编号永久固定，违反条款即视为不合格输出。
 
@@ -1181,6 +1181,30 @@ tests/
 // TODO: 优化        ← 无优先级、无领域、无日期、无上下文
 // TODO: 重构        ← 不知道什么时候、为什么
 // FIXME            ← 无任何信息
+```
+
+### 16.6 测试命名规范
+- 🟩 测试函数名用**中文**描述预期行为，技术术语如 UI/AI/HP/MP/Buff 等保留英文
+- 🟩 文件名保持英文 snake_case
+
+合法示例：
+```rust
+#[test]
+fn 物理伤害正确应用护甲减免() { ... }
+
+#[test]
+fn Buff到期自动移除() { ... }
+
+#[test]
+fn HP不会低于零() { ... }
+```
+
+非法示例：
+```rust
+#[test]
+fn test_damage() { ... }              // 无业务语义
+#[test]
+fn physical_damage_respects_armor() { ... }  // 应使用中文
 ```
 
 ---

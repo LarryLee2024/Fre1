@@ -83,6 +83,40 @@ Applies To:
 
 ---
 
+# 2.5 测试命名规范
+
+- 测试函数名用**中文**描述预期行为，技术术语如 UI/AI/HP/MP/Buff 等保留英文
+- 文件名保持英文 snake_case
+
+合法示例：
+```rust
+#[test]
+fn 物理伤害正确应用护甲减免() { ... }
+
+#[test]
+fn Buff到期自动移除() { ... }
+
+#[test]
+fn HP不会低于零() { ... }
+
+#[test]
+fn 技能冷却期间无法重复释放() { ... }
+```
+
+非法示例：
+```rust
+#[test]
+fn test_damage() { ... }              // 无业务语义
+
+#[test]
+fn physical_damage_respects_armor() { ... }  // 应使用中文
+
+#[test]
+fn a() { ... }                        // 无意义命名
+```
+
+---
+
 # 3. Testing Philosophy
 测试验证：**Behavior**。而不是：**Implementation**
 正确：`assert_eq!(target.hp, 75)`
