@@ -179,3 +179,15 @@ on_max_action: None
 | 006 | ✅ | Modifier叠加行为由Stacking策略决定，Modifier自身不处理 |
 | 008 | ✅ | 所有堆叠行为统一归属Stacking，不散落在Ability/Effect/Modifier |
 | 010 | ✅ | 堆叠规则确定性，无随机因素 |
+
+---
+
+## 八、代码实现映射
+
+| 概念 | Rust 类型 | 源码路径 | 层级 |
+|------|-----------|----------|------|
+| StackingRuleDef | `enum StackingRuleDef { Replace, RefreshDuration, StackAdd, StackMax { max_stack: u32 } }` | `src/core/stacking/def.rs` | Definition (RON) |
+| StackingRule | `enum StackingRule { Replace, RefreshDuration, StackAdd, StackMax(u32) }` — ADR-026 冻结 4 枚举 | `src/core/stacking/mod.rs` | Definition (Runtime) |
+| StackingResult | `enum StackingResult { NewlyApplied, Replaced, Refreshed, Stacked { new_count }, Ignored { max_reached } }` | `src/core/stacking/mod.rs` | Runtime (Output) |
+
+**ADR-026 冻结**：StackingRule 只有 4 种变体（Replace/RefreshDuration/StackAdd/StackMax），新增类型需 ADR 审批。

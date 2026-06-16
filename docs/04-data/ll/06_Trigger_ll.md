@@ -163,3 +163,16 @@
 | 004 | ✅ | 事件驱动行为归属Trigger领域，Ability不拥有行为 |
 | 005 | ✅ | Trigger触发Effect执行，不直接调用Modifier |
 | 010 | ✅ | 触发链深度限制保证Replay确定性 |
+
+---
+
+## 八、代码实现映射
+
+| 概念 | Rust 类型 | 源码路径 | 层级 |
+|------|-----------|----------|------|
+| Trigger | `enum Trigger { TurnStart, TurnEnd, BeforeAttack, AfterAttack, BeforeDamaged, AfterDamaged, BeforeMove, AfterMove, KillTarget, Death, BattleStart, BattleEnd, OnHeal, OnBuffApplied, OnBuffRemoved, OnRevive }`（15+ 变体） | `src/core/trigger/mod.rs` | Definition |
+| TriggerContext | `TriggerContext { trigger, source_entity, target_entity, damage_dealt, is_critical, chain_depth }` | `src/core/trigger/mod.rs` | Runtime |
+
+**触发链深度限制**：`chain_depth` 字段防止反应技触发无限递归（反应技造成的伤害不再触发新的反应）
+
+**当前实现**：Trigger 系统通过 `enum Trigger` + `TriggerContext` 实现事件分发，与 Battle 事件系统集成

@@ -199,3 +199,22 @@ skill.s_1001.desc = 发射火球，造成{ $multiplier }倍魔法伤害并附加
 | 004 | ⚠️ | 反应技在铃兰中归为技能，但按Data Law应归属Trigger。建议映射为Trigger+Ability |
 | 005 | ✅ | Ability通过Effect列表执行业务，不直接调用Modifier |
 | 007 | ✅ | 冷却回合属于Ability，Duration属于Effect，边界清晰 |
+
+---
+
+## 八、代码实现映射
+
+| 概念 | Rust 类型 | 源码路径 | 层级 |
+|------|-----------|----------|------|
+| SkillDef | `SkillDef { version, id, name, description, name_key, desc_key, cost_mp, range, targeting, effects, tags, conditions, cooldown, priority }` | `src/core/ability/domain/types.rs` | Definition (RON) |
+| SkillData | `SkillData { id, name, description, name_key, desc_key, cost_mp, range, targeting, effects, tags: Vec<GameplayTag>, conditions, cooldown, priority }` | `src/core/ability/domain/types.rs` | Definition (Runtime) |
+| SkillRegistry | `SkillRegistry { skills: HashMap<String, SkillData> }` | `src/core/ability/domain/types.rs` | Definition (Resource) |
+| SkillSlots | `SkillSlots { skill_ids: Vec<String> }` — Component | `src/core/ability/slots.rs` | Instance (Component) |
+| SkillCooldowns | `SkillCooldowns { cooldowns: HashMap<String, u32> }` — Component | `src/core/ability/slots.rs` | Instance (Component) |
+| SkillTargeting | `enum SkillTargeting { SingleEnemy, SingleAlly, SelfOnly, AoeEnemies, AoeAllies, NoTarget }` | `src/core/targeting/mod.rs` | Definition |
+| SkillCondition | `enum SkillCondition { MpCost(i32), RequireTag(GameplayTag), TargetRequireTag(GameplayTag), HpBelow(f32), HpAbove(f32) }` | `src/core/ability/domain/types.rs` | Definition |
+| SkillError | `enum SkillError { SkillNotFound { skill_id }, SkillNotReady { skill_id, reason } }` | `src/core/ability/domain/error.rs` | Error |
+
+**SkillUseError**：`OnCooldown { remaining }` | `InsufficientMp { required, current }` | `MissingTag { tag }` | `TargetMissingTag { tag }` | `HpNotBelow { threshold }` | `HpNotAbove { threshold }`
+
+**RON 配置**：`content/skills/*.ron`（6 个技能文件，单对象格式）

@@ -175,3 +175,22 @@
 | 003 | ✅ | Tag只引用ID，不重复定义 |
 | 006 | ✅ | Tag不含业务逻辑，仅做判定标记 |
 | 010 | ✅ | Tag优先级权重保证控制覆盖的确定性 |
+
+---
+
+## 八、代码实现映射
+
+| 概念 | Rust 类型 | 源码路径 | 层级 |
+|------|-----------|----------|------|
+| TagDef | `TagDef { id, category, priority_weight, dispellable, reflectable, name_key }` | `src/core/tag/def.rs` | Definition (RON) |
+| TagDefinition | `TagDefinition { id: TagId, bitmask: GameplayTag, name_key, category, priority_weight, dispellable, reflectable, mutual_exclusions }` | `src/core/tag/def.rs` | Definition (Runtime) |
+| TagRegistry | `TagRegistry { definitions, bitmask_to_id, mutual_exclusions }` | `src/core/tag/def.rs` | Definition (Resource) |
+| GameplayTag | `GameplayTag(pub u64)` — 5 类位掩码 (Elemental:0-7, Status:8-15, Class:16-23, Equipment:24-31, Mechanism:32-39) | `src/core/tag/mod.rs` | Definition |
+| GameplayTags | `GameplayTags(pub u64)` — Component，方法: has/add/remove/has_any/has_all/matches | `src/core/tag/mod.rs` | Instance (Component) |
+| PersistentTags | `PersistentTags { from_traits: GameplayTags, from_equipment: GameplayTags }` — 多层标签，rebuild 时 OR 合并 | `src/core/tag/mod.rs` | Instance (Component) |
+| TagCategory | `enum TagCategory { Elemental, Status, Class, Equipment, Mechanism }` | `src/core/tag/def.rs` | Definition |
+| ControlLevel | `enum ControlLevel { Soft=1, Hard=2, Full=3 }` | `src/core/tag/control.rs` | Definition |
+| ControlImmunity | `enum ControlImmunity { Immune, Pass, Overridden }` | `src/core/tag/control.rs` | Runtime |
+| ControlHistory | `ControlHistory { entries: Vec<ControlHistoryEntry> }` | `src/core/tag/control.rs` | Runtime |
+
+**RON 配置**：`content/tags/tags.ron`（单文件，31 个 Tag + 9 对互斥关系）

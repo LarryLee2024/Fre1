@@ -145,6 +145,11 @@ Updated: 2026-06-15 — ADR-026 SRPG Lite-GAS 架构对齐：新增 execution/ex
 - 🟩 Cue 位于 GAS 链末端：... → Tag → Cue → Replay
 - 🟩 表现层订阅 Cue 事件，反向零依赖战斗逻辑
 
+**GAS/ 目录**: SRPG-GAS 领域全景，包含 14 个子领域的详细规则文档。
+- 🟩 `GAS/GAS_domain_overview.md` — GAS 领域全景概览（统一术语、架构图、数据流、业务流程、依赖矩阵）
+- 🟩 `GAS/README.md` — GAS 子领域文档索引
+- 🟩 架构设计参阅 `docs/01-architecture/01-battle-gas/gas-architecture.md`
+
 **input_rules.md**: 输入处理领域，管理键盘、鼠标、触摸输入到UiCommand的转换。
 - 🟥 输入处理在 InputSchedule 中执行
 - 🟩 输入转换为 UiCommand Message 传递给Core层

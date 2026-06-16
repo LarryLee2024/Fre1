@@ -198,3 +198,27 @@ attr.a_011.name = 闪避率
 | 002 | ✅ | 属性转换规则在代码中，转换比例在配置中 |
 | 007 | ✅ | Duration不属于Attribute，属于Effect |
 | 010 | ✅ | 数值边界规则保证Replay确定性 |
+
+---
+
+## 八、代码实现映射
+
+| 概念 | Rust 类型 | 源码路径 | 层级 |
+|------|-----------|----------|------|
+| AttributeDef | `AttributeDef { id, name_key, category, default, min, max }` | `src/core/attribute/def.rs` | Definition (RON) |
+| AttributeDefinition | `AttributeDefinition { id: AttributeId, name_key, category, default, min, max }` | `src/core/attribute/def.rs` | Definition (Runtime) |
+| AttributeRegistry | `AttributeRegistry { definitions: HashMap<AttributeId, AttributeDefinition> }` | `src/core/attribute/def.rs` | Definition (Resource) |
+| CoreAttribute | `enum CoreAttribute { PhysAtk, MagicAtk, PhysDef, MagicDef, MaxHp }` | `src/core/attribute/mod.rs` | Definition (Enum) |
+| SecondaryAttribute | `enum SecondaryAttribute { CritRate, CritDmg, MoveRange, AtkRange, HitRate, DodgeRate }` | `src/core/attribute/mod.rs` | Definition (Enum) |
+| Attributes | `Attributes { core: EnumMap, secondary: EnumMap, current_hp, base_values, modifiers }` | `src/core/attribute/mod.rs` | Instance (Component) |
+| ModifierOp | `enum ModifierOp { Add, Multiply }` (Multiply = value/10000) | `src/core/attribute/mod.rs` | Definition |
+| ModifierSource | `ModifierSource(pub u64)` (bit-range: buff/trait/equip/consumable) | `src/core/attribute/mod.rs` | Runtime |
+| AttributeConversion | `AttributeConversion { source, target, ratio, condition }` | `src/core/attribute/conversion.rs` | Definition |
+| ConversionRegistry | `ConversionRegistry { conversions: HashMap<AttributeId, Vec<AttributeConversion>> }` | `src/core/attribute/conversion.rs` | Definition (Resource) |
+
+**数值运算函数**（`src/core/attribute/ops.rs`）：
+- `safe_add`, `safe_sub`, `safe_mul_percent`
+- `apply_add_modifiers`, `apply_mul_modifiers`
+- `clamp_attribute`, `clamp_all_attributes`
+
+**RON 配置**：`content/attributes/attributes.ron`（单文件，11 个属性定义）

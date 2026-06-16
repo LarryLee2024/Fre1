@@ -93,3 +93,14 @@
 |-----|------|------|
 | 003 | ✅ | 目标选择规则通过ID引用，不重复定义 |
 | 010 | ✅ | 目标选择规则确定性，无随机因素 |
+
+---
+
+## 七、代码实现映射
+
+| 概念 | Rust 类型 | 源码路径 | 层级 |
+|------|-----------|----------|------|
+| SkillTargeting | `enum SkillTargeting { SingleEnemy, SingleAlly, SelfOnly, AoeEnemies, AoeAllies, NoTarget }` | `src/core/targeting/mod.rs` | Definition |
+| TargetingContext | `TargetingContext { caster: Entity, ability_id: String, targeting_type: SkillTargeting }` | `src/core/targeting/mod.rs` | Runtime |
+
+**当前实现**：Targeting 作为 `SkillTargeting` 枚举内嵌在 SkillDef 中，尚未独立为单独的 TargetingDef Registry。铃兰参考文档中的 7 种目标类型和位移目标选择规则待后续 ADR-029~035 重构时落地。

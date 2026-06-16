@@ -467,3 +467,26 @@ desc_key ──→ FTL翻译文件                                 ✅ 闭环（
 - 如果需要调整架构边界 → **@architect**
 - 如果需要实现代码 → **@feature-developer**
 - 如果需要测试验证 → **@test-guardian**
+
+---
+
+## 交叉引用索引（v1.0 · 2026-06-16 新增）
+
+本文档为概念层数据关系总览。各领域的代码实现映射详见：
+
+| 文档 | 领域 | 内容 |
+|------|------|------|
+| `01_Attribute_ll.md` | Attribute | 属性 Schema + 代码映射 |
+| `02_Tag_ll.md` | Tag | 标签 Schema + 代码映射 |
+| `03_Modifier_ll.md` | Modifier | 修饰规则 Schema + 代码映射 |
+| `04_Effect_ll.md` | Effect | 效果 Schema + 代码映射 |
+| `05_Ability_ll.md` | Ability | 能力 Schema + 代码映射 |
+| `06_Trigger_ll.md` | Trigger | 触发器 Schema + 代码映射 |
+| `07_Targeting_ll.md` | Targeting | 目标选择 Schema + 代码映射 |
+| `08_Execution_ll.md` | Execution | 执行算式 Schema + 代码映射 |
+| `09_Stacking_ll.md` | Stacking | 堆叠策略 Schema + 代码映射 |
+| `10_Pipeline_Replay_ll.md` | Pipeline + Replay | 管线/回放 Schema + 代码映射 |
+| `11_I18n_ll.md` | I18n | 国际化 Schema + 代码映射 |
+| `12_Cue_ll.md` | Cue | 表现信号 Schema + 代码映射 |
+| `13_Registry_ll.md` | Registry | 12 个 Registry 统一参考 + 校验规则 |
+| `14_DataFlow_ll.md` | Pipeline | 数据流总览 + ID 引用矩阵 + 合规总结 |

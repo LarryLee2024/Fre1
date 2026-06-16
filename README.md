@@ -95,8 +95,19 @@ assets/        # 二进制资源（字体、数据）
 
 docs/
   00-governance/     # 治理规则（AI 开发宪法、编码规范、Bevy 参考）
-  01-architecture/   # 架构设计（README.md 为最高优先级，v4.1）
+  01-architecture/   # 架构设计（README.md 为最高优先级，v4.2）
+    00-overview/           # 架构总纲（8 文件）
+    01-battle-gas/         # 战斗/GAS（4 文件）
+    02-ecs-patterns/       # 组件/ECS 模式（3 文件）
+    03-data-config-asset/  # 数据/配置/资产（9 文件）
+    04-events-logging-error/ # 事件/日志/错误（3 文件）
+    05-ui/                 # UI 架构（1 文件）
+    06-map-pathfinding/    # 地图/寻路（1 文件）
+    07-tools-testing-quality/ # 工具/测试/质量（5 文件）
+    08-i18n-modding-collaboration/ # 国际化/MOD/协作（3 文件）
+    09-infrastructure-migration/   # 基础设施/迁移（1 文件）
   02-domain/         # 领域规则文档（20 个子领域，39 个规则文件）
+    GAS/                   # GAS 领域全景（14 子领域 + 概览文档）
   03-technical/      # 技术实现文档（ECS、通信、性能，14 个文件）
   04-data/           # 数据与配置文档（7 个规则 + 3 个参考数据目录）
   05-testing/        # 测试规范（测试宪法 v3.1）
@@ -118,18 +129,38 @@ tests/         # 集成测试、场景测试、快照测试
 
 | 文件 | 说明 | 优先级 |
 |------|------|--------|
-| `docs/01-architecture/README.md` | 七层架构总纲（v4.1），Feature 边界、ECS 规则、Effect/Modifier 管线 | 🟥 **最高** |
+| `docs/01-architecture/README.md` | 七层架构总纲（v4.2），Feature 边界、ECS 规则、Effect/Modifier 管线 | 🟥 **最高** |
 | `docs/00-governance/ai-constitution-complete.md` | AI 开发宪法 v1.6 完整版（20 部分），覆盖架构/ECS/代码/测试/日志/工程质量 | 🟥 **最高** |
 | `docs/00-governance/coding-rules.md` | 编码执行规范 v1.0，AI 编码自检清单，Effect/Modifier 管线保护 | 🟩 必须遵守 |
 | `docs/02-domain/README.md` | 领域规则汇总索引，39 个领域文件的速查入口 | 🟩 必须遵守 |
 | `docs/04-data/README.md` | 数据架构规范，Schema 设计指南、Save/Replay 兼容规则 | 🟩 必须遵守 |
 | `docs/05-testing/test-spec.md` | 测试宪法 v3.1，测试分层/回放测试/覆盖率策略 | 🟩 必须遵守 |
 
-### `docs/02-domain/` — 领域规则（39 文件）
+### `docs/02-domain/` — 领域规则（39 文件 + GAS 目录）
 
 按领域子目录分组，开发对应功能时直接查阅：
 
-**Core Domain（20 文件）— 核心业务规则**
+**GAS/ 目录 — SRPG-GAS 领域全景（14 子领域 + 概览）**
+
+| 文件 | 关键词 |
+|------|--------|
+| `GAS/GAS_domain_overview.md` | GAS 领域全景：统一术语、架构图、数据流、业务流程、依赖矩阵 |
+| `GAS/ability/ability-rules.md` | Ability 定义、冷却、五阶段释放管线 |
+| `GAS/effect/effect-rules.md` | Effect Pipeline 三步管线（Generate→Modify→Execute） |
+| `GAS/attribute-modifier/attribute-modifier-rules.md` | 属性修饰管线、Modifier Chain、修饰器栈 |
+| `GAS/execution/execution-rules.md` | 执行算式层（trait-based 公式执行） |
+| `GAS/formula/formula-rules.md` | 公式系统（10 种纯函数公式） |
+| `GAS/trigger/trigger-rules.md` | 触发器系统（16 种触发时机、ExecutionStack） |
+| `GAS/tag/tag-rules.md` | GameplayTag 位掩码（37/64 bits、三层标签管理） |
+| `GAS/cue/cue-rules.md` | 表现信号总线（Logic/Presentation 分离） |
+| `GAS/condition/condition-rules.md` | 条件系统（ConditionalEffect、纯函数评估） |
+| `GAS/cost/cost-rules.md` | 消耗系统（8 种消耗类型、先校验后扣除） |
+| `GAS/requirement/requirement-rules.md` | 释放前提（9 种前提类型、纯函数检查） |
+| `GAS/targeting/targeting-rules.md` | 目标选择（8 种目标类型、纯函数解析） |
+| `GAS/duration/duration-rules.md` | 持续策略（7 种 DurationPolicy） |
+| `GAS/stack-policy/stack-policy-rules.md` | 叠层策略（4 种 StackingRule）✅ 已实现 |
+
+**Core Domain — 核心业务规则**
 
 | 文件 | 关键词 |
 |------|--------|
@@ -195,49 +226,22 @@ tests/         # 集成测试、场景测试、快照测试
 | `validation-rules.md` | 数据完整性、配置校验 |
 | `event-audit-rules.md` | 事件审计、双轨制日志 |
 
-### `docs/01-architecture/` — 架构设计（36 文件）
+### `docs/01-architecture/` — 架构设计（38 文件，10 个子目录）
 
-七层架构各领域的详细设计文档（v4.1）：
+七层架构各领域的详细设计文档（v4.2），按类别分组：
 
-| 分组 | 文件 | 核心内容 |
-|------|------|----------|
-| 架构总纲 | `app-bootstrap.md` | App 装配器、状态机、启动/关闭序列 |
-| | `layer-contracts.md` | 七层边界定义、三问判断法 |
-| | `layer-architecture-rules.md` | 分层架构、层间依赖方向 |
-| | `project-structure.md` | 三棵树分离、完整源码/资产/内容树 |
-| | `plugin-design.md` | Plugin 生命周期、声明式注册 |
-| | `plugin-contract-rules.md` | 显式依赖、API 最小化、分层禁令 |
-| | `schedules-design.md` | 自定义 Schedule、SystemSet 排序 |
-| | `infrastructure-design.md` | 20 个 Infrastructure 模块 |
-| | `migration-roadmap.md` | 7 Phase 迁移计划 |
-| 战斗/技能 | `battle-fsm-design.md` | 战斗 FSM、Guard/Action/Effect 三段式 |
-| | `skill-buff-abstraction.md` | Effect Executor 抽象、SRPG Lite-GAS 10 模块对齐 |
-| | `command-bus-design.md` | GameCommand、Memento 撤销 |
-| 角色/属性 | `component-design-rules.md` | 四位一体组件分类、Hook 安全 |
-| | `system-design-rules.md` | Query 参数上限、读写分离 |
-| | `determinism-rules.md` | ChaCha8Rng、整数精度、状态哈希 |
-| 地图/寻路 | `pathfinding-design.md` | PathFinder trait、UnitBlocker |
-| UI | `ui-domain-boundary-rules.md` | 单向数据流、ViewModel、UiCommand |
-| 数据/配置 | `content-pipeline.md` | RON→Def→Data→Registry、LoadingProgress |
-| | `content-data-format.md` | RON 契约、两阶段加载 |
-| | `content-migration-design.md` | 内容格式迁移链 |
-| | `config-system-design.md` | 四层配置、反上帝配置 |
-| | `ids-design.md` | Strong ID newtype、define_id! 宏 |
-| | `asset-organization.md` | 三树分离、Content Packs、外包工作流 |
-| | `asset-lifecycle-rules.md` | Handle 选择、分阶段卸载、内存预算 |
-| | `asset-namespace-design.md` | 命名空间前缀、MOD 隔离 |
-| | `save-migration-rules.md` | 存档 SemVer、三步删除原则 |
-| 事件/日志/错误 | `events-audit-design.md` | 独立 Struct 事件、EventWhitelist |
-| | `logging-design.md` | 领域事件驱动日志、LogObserver |
-| | `error-architecture.md` | 三层错误、失败分类学 |
-| 工具/调试 | `tools-architecture.md` | Tools 二进制、data_validator |
-| | `testing-architecture.md` | 五层测试金字塔、Golden Test |
-| | `validation-rules.md` | 校验检查点、全局不变量 |
-| | `performance-budget.md` | 60fps 帧预算、模块级预算 |
-| | `feature-flag-design.md` | 7 个 Feature Flag、PluginGroup |
-| | `i18n-design.md` | Fluent 国际化、字体回退链 |
-| | `modding-design.md` | MOD 生命周期、分级权限策略 |
-| | `collaboration-model.md` | AI 7-Agent 协作、Handoff 协议 |
+| 子目录 | 文件数 | 覆盖主题 |
+|--------|--------|----------|
+| `00-overview/` | 8 | 架构总纲、七层边界、项目结构、Plugin 设计、Schedule、迁移路线图 |
+| `01-battle-gas/` | 4 | 战斗 FSM、GAS 架构、Skill/Effect 抽象、命令总线 |
+| `02-ecs-patterns/` | 3 | 组件设计、System 设计、确定性规则 |
+| `03-data-config-asset/` | 9 | 内容管线、配置系统、资产组织/生命周期/命名空间、ID 设计、存档迁移 |
+| `04-events-logging-error/` | 3 | 事件审计、日志架构、错误架构 |
+| `05-ui/` | 1 | UI 领域边界、单向数据流 |
+| `06-map-pathfinding/` | 1 | 寻路算法、范围计算 |
+| `07-tools-testing-quality/` | 5 | 工具链、测试金字塔、校验规则、性能预算、Feature Flag |
+| `08-i18n-modding-collaboration/` | 3 | 国际化、MOD 支持、AI 协作模型 |
+| `09-infrastructure-migration/` | 2 | 基础设施模块设计、迁移路线图 |
 
 ### `docs/08-decisions/` — 架构决策记录（35 ADR）
 

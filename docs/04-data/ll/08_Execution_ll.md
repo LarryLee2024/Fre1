@@ -219,3 +219,16 @@
 | 002 | ✅ | 公式在代码中，数值在配置中 |
 | 005 | ✅ | 所有业务结果通过Effect→Execution执行 |
 | 010 | ✅ | 四段式固定管线+数值边界保证Replay确定性 |
+
+---
+
+## 十、代码实现映射
+
+| 概念 | Rust 类型 | 源码路径 | 层级 |
+|------|-----------|----------|------|
+| AttributeSnapshot | `AttributeSnapshot { attack, defense, magic_attack, magic_defense, max_hp, crit_rate, accuracy }` — f32 | `src/core/execution/mod.rs` | Runtime |
+| ExecutionContext | `ExecutionContext { source_entity, target_entity, source_attrs, target_attrs, base_value, modifier_value, stack_count, execution_params, terrain_id, is_skill }` | `src/core/execution/mod.rs` | Runtime |
+| ExecutionResult | `ExecutionResult { value: i32, breakdown: Vec<StepRecord>, is_critical: bool }` | `src/core/execution/mod.rs` | Runtime (Output) |
+| StepRecord | `StepRecord { name: String, input: f32, output: f32 }` — 每步计算记录 | `src/core/execution/mod.rs` | Runtime |
+
+**RON 配置**：`content/executions/executions.ron`（数组格式，3 种执行器：Damage/Heal/Shield）

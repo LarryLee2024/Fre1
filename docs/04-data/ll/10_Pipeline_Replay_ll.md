@@ -195,3 +195,49 @@
 | 004 | ✅ | Pipeline中触发行为通过Trigger执行 |
 | 005 | ✅ | Pipeline中业务执行通过Effect |
 | 010 | ✅ | 固定管线+确定性排序+统一取整+数值边界+触发链限制，全链路保证Replay确定性 |
+
+---
+
+## 八、代码实现映射
+
+### Pipeline 核心类型
+
+| 概念 | Rust 类型 | 源码路径 | 层级 |
+|------|-----------|----------|------|
+| EffectQueue | `EffectQueue { pending: Vec<PendingEffect> }` — Resource | `src/core/effect/types.rs` | Runtime (Resource) |
+| PendingEffect | `PendingEffect { source, target, data, source_tags, terrain_id }` | `src/core/effect/types.rs` | Runtime |
+| EffectResult | `EffectResult { source, target, data }` | `src/core/effect/types.rs` | Runtime (Output) |
+| BattleRecord | `BattleRecord { entries: Vec<BattleEntry>, turn_number }` — Resource | `src/core/battle/record.rs` | Persistence |
+| BattleEntry | `enum BattleEntry { TurnStarted, TurnEnded, DamageApplied, HealApplied, DotApplied, HotApplied, StunApplied, CharacterDied }` | `src/core/battle/record.rs` | Persistence |
+| DamageBreakdown | `DamageBreakdown { base_amount, modified_amount, modifiers: Vec<ModifierEntry>, actual_damage }` | `src/core/battle/record.rs` | Persistence |
+
+### Battle Events（Message）
+
+| Event | 字段 | 源码路径 |
+|-------|------|----------|
+| `DamageApplied` | target, target_name, target_faction, attacker, attacker_name, attacker_faction, amount, is_skill, terrain_label, target_coord, breakdown | `src/core/battle/events.rs` |
+| `HealApplied` | target, target_name, amount | `src/core/battle/events.rs` |
+| `CharacterDied` | entity, name, faction | `src/core/battle/events.rs` |
+| `StunApplied` | target, target_name | `src/core/battle/events.rs` |
+| `DotApplied` | target, target_name, amount, target_coord | `src/core/battle/events.rs` |
+| `HotApplied` | target, target_name, amount | `src/core/battle/events.rs` |
+
+### Replay 系统
+
+| 概念 | Rust 类型 | 源码路径 | 层级 |
+|------|-----------|----------|------|
+| BattleRecord (Replay) | `BattleRecord { seed: u64, turn_count: u32, commands: Vec<CommandEntry> }` | `src/infrastructure/replay/mod.rs` | Persistence |
+| CommandEntry | `CommandEntry { turn, command_type, caster, target, data }` | `src/infrastructure/replay/mod.rs` | Persistence |
+| CommandType | `enum CommandType { UseSkill, Move, Wait, Defend }` | `src/infrastructure/replay/mod.rs` | Persistence |
+| ReplayPlayer | `ReplayPlayer { record, position }` — 方法: next_command, reset, is_finished | `src/infrastructure/replay/mod.rs` | Runtime |
+
+### Battle Error
+
+| 错误码 | 枚举 | 说明 |
+|--------|------|------|
+| B001 | `SkillNotFound { skill_id }` | 技能未找到 |
+| B002 | `TargetNotFound { target }` | 目标未找到 |
+| B003 | `DamageOverflow { damage }` | 伤害溢出 |
+| B004 | `AttackerNotFound { attacker }` | 攻击者未找到 |
+| B005 | `EmptyEffectQueue { pipeline, status }` | 效果队列为空 |
+| B006 | `InvalidCombatIntent { from, target, phase }` | 无效战斗意图 |

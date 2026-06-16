@@ -119,3 +119,22 @@
 | 005 | ✅ | Modifier由Effect产生，不被Ability/Trigger直接调用 |
 | 006 | ✅ | Modifier只改变数值，无事件处理逻辑 |
 | 008 | ✅ | Modifier叠加行为由Stacking策略决定，不自行处理 |
+
+---
+
+## 八、代码实现映射
+
+| 概念 | Rust 类型 | 源码路径 | 层级 |
+|------|-----------|----------|------|
+| ModifierRuleDef | `ModifierRuleDef { version, name, source_tag: String, target_tag: String, effect: ModifierEffectDef }` | `src/core/modifier/types.rs` | Definition (RON) |
+| ModifierRule | `ModifierRule { name, source_tag: GameplayTag, target_tag: GameplayTag, effect: ModifierEffect }` | `src/core/modifier/types.rs` | Definition (Runtime) |
+| ModifierRuleRegistry | `ModifierRuleRegistry { rules: Vec<ModifierRule>, calculators }` | `src/core/modifier/types.rs` | Definition (Resource) |
+| ModifierEffect | `enum ModifierEffect { DamageMultiplier(f32), DamageBonus(i32), HealMultiplier(f32), HealBonus(i32) }` | `src/core/modifier/types.rs` | Definition |
+| ModifierEntry | `ModifierEntry { before: i32, after: i32, rule_name: String }` — 审计追踪 | `src/core/modifier/types.rs` | Runtime |
+
+**核心方法**（`src/core/modifier/types.rs`）：
+- `apply_damage_modifiers()` — 伤害修饰管线
+- `apply_heal_modifiers()` — 治疗修饰管线
+- `with_breakdown` 变体 — 带修饰记录版本
+
+**RON 配置**：`content/modifiers/element_interactions.ron`（数组格式，元素交互规则）
