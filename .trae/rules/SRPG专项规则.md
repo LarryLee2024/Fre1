@@ -2,7 +2,7 @@
 alwaysApply: false
 description: 
 ---
-# Bevy 0.18+ SRPG 架构宪法 v1.6 · SRPG专项篇
+# Bevy 0.18+ SRPG 项目总宪法 v5.0 · SRPG专项篇
 > 定位：战棋游戏业务规则与系统设计规范，负责所有玩法系统的实现标准
 > 适用场景：开发角色、属性、技能、Buff、回合、战斗、存档等核心玩法
 
@@ -10,6 +10,27 @@ description:
 1. 本篇约束所有SRPG业务系统的设计与实现，是玩法开发的统一标准
 2. 所有核心玩法系统必须遵循本篇规范，保证逻辑一致性与可维护性
 3. 条款强制等级与全文一致，违反核心规则的玩法实现视为不合格
+
+---
+
+## 零、Core层双轴架构
+
+Core 层内部采用「**Capabilities 能力层 + Domains 业务域**」双轴结构：
+
+- **Capabilities（纵向）**：15个核心能力领域，提供通用机制骨架，玩法无关
+  - 核心基石：Tag / Attribute / Modifier / Aggregator / GameplayContext
+  - 逻辑骨架：Spec / Ability / Trigger / Condition
+  - 行为表现：Targeting / Execution / Effect / Stacking / Event / Cue
+  - 新增 Capability 必须通过 ADR 审批
+
+- **Domains（横向）**：15个业务子系统，承载全部玩法复杂度
+  - combat / spell / reaction / progression / inventory / quest / narrative
+  - tactical / terrain / faction / party / camp_rest / crafting / economy / summon
+
+- **边界铁则**：
+  - 🟥 Capabilities 只提供机制，不实现业务规则
+  - 🟥 Domains 只编排规则，不重复造机制
+  - 🟥 Domain 之间禁止直接依赖，写操作走事件，读操作走 Query API
 
 ---
 
@@ -125,16 +146,39 @@ description:
 ---
 
 ## 十、测试与确定性
-### 10.1 测试金字塔
-- **单元测试**：验证领域纯函数、核心规则（伤害公式、Buff结算、寻路）
-- **集成测试**：验证完整Feature端到端行为（装备、技能、战斗流程）
-- **回放测试**：通过Battle Replay验证完整战斗场景确定性
 
-### 10.2 测试基础设施
+> **测试跟领域走（Feature First），但不写在源码文件内部。**
+
+### 10.1 领域内聚四层测试
+
+```
+<domain>/
+├── tests/
+│   ├── unit/          # 单元测试：验证领域纯函数、核心规则
+│   ├── integration/   # 集成测试：验证领域内多组件协作
+│   ├── invariant/     # 不变量测试：验证领域不变量（**最高价值**）
+│   └── fixtures/      # 测试数据（Builder模式 / RON文件）
+```
+
+- 🟥 禁止 `#[cfg(test)] mod tests` 内联测试
+- 🟥 禁止将所有测试平铺到根 `tests/unit/`
+- 🟩 根 `tests/` 仅保留跨领域测试（battle_flow / save_load / regression / replay / golden / simulation / performance / e2e）
+
+### 10.2 不变量测试（最高价值）
+
+| 不变量 | 说明 |
+|--------|------|
+| Tag bit唯一 | 同一Tag不能在位掩码中重复设置 |
+| Buff不重复叠加 | 同源同类型Buff不会无限堆叠 |
+| Effect不修改不存在属性 | Effect引用的AttributeId必须已注册 |
+| HP永远>=0 | HP计算结果不能为负 |
+| Modifier不改变基础值 | Modifier只影响聚合后的当前值 |
+
+### 10.3 测试基础设施
 - 🟩 核心测试使用Builder模式构造测试数据（TestCharacterBuilder、TestBattleBuilder）
 - 🟩 稳定输出使用Golden Test金文件对比，版本变更必须显式确认
 
-### 10.3 确定性强制要求
+### 10.4 确定性强制要求
 - 🟩 相同初始状态 + 相同输入 + 相同种子，必须得到完全一致的战斗结果
 - 🟩 核心业务逻辑禁止直接依赖系统时间，必须使用统一GameTime服务
 - 🟩 所有战斗Bug必须通过Battle Replay重现并沉淀为永久测试用例

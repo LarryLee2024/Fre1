@@ -113,16 +113,17 @@ tags:
         "type": "object",
         "required": ["id", "name", "description", "priority"],
         "properties": {
-          "id": { "type": "integer", "minimum": 1, "maximum": 6 },
+          "id": { "type": "integer", "minimum": 1, "maximum": 7 },
           "name": {
             "type": "string",
             "enum": [
+              "Unit Test", "Integration Test", "Invariant Test",
               "Battle Replay Test", "Regression Test", "Edge Case Test",
-              "Unit Test", "Integration Test", "System Test"
+              "System Test"
             ]
           },
           "description": { "type": "string" },
-          "priority": { "type": "integer", "minimum": 1, "maximum": 6 }
+          "priority": { "type": "integer", "minimum": 1, "maximum": 7 }
         }
       }
     },
@@ -339,7 +340,7 @@ tags:
               "All assertions must have explicit expected values",
               "All test cases must have a unique ID",
               "Generate corresponding tests when generating any business code",
-              "Complete the self-check list after generating tests"
+              "Tests must be placed in <domain>/tests/ (Feature First)"
             ]
           }
         }

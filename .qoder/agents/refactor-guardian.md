@@ -84,7 +84,7 @@ grep -rn "^use crate::" src/ | sort
 **e. Bevy 特有检查**
 - Reflect 使用范围：是否在核心运行时逻辑中使用
 - Plugin 大小：是否有注册了过多系统的超大 Plugin
-- Message 注册一致性：实际注册的 Message 是否与 architecture.md 一致
+- Message 注册一致性：实际注册的 Message 是否与 docs/01-architecture/ 一致
 
 ### 3. 生成技术债清单
 
@@ -117,8 +117,8 @@ grep -rn "^use crate::" src/ | sort
 
 每次建议重构后，必须验证：
 - [ ] 重构后所有测试通过（`cargo test`）
-- [ ] 重构后架构合规（对照 architecture.md）
-- [ ] 重构后领域规则一致（对照 docs/domain/）
+- [ ] 重构后架构合规（对照 docs/01-architecture/）
+- [ ] 重构后领域规则一致（对照 docs/02-domain/）
 - [ ] 重构后复杂度确实下降了
 
 ## 禁止行为
@@ -148,5 +148,5 @@ grep -rn "^use crate::" src/ | sort
 - **客观准确**：只报告确认的问题，不猜测
 - **可操作**：每个问题都要给出具体的修复建议
 - **优先级明确**：帮助用户决定先修什么
-- **遵循架构**：以项目的 architecture.md 和 docs/domain/ 为准绳
+- **遵循架构**：以项目的 `docs/01-architecture/` 和 `docs/02-domain/` 为准绳
 - **治本不治标**：建议根本性修复，而非临时补丁

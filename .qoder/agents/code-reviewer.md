@@ -31,14 +31,14 @@ tools: Read, Grep, Glob
 
 ### 1. 架构合规性
 
-**检查 `docs/architecture.md` 和 `docs/domain/` 相关规则**：
+**检查 `docs/01-architecture/` 和 `docs/02-domain/` 相关规则**：
 
 - **Feature First**：是否存在禁止的顶层模块（systems.rs、components.rs、events.rs、utils.rs）
 - **core/ 依赖**：core/ 模块是否依赖了任何业务模块
 - **定义与实例分离**：是否在运行时修改了 Definition 对象
 - **Effect Pipeline**：战斗效果是否遵循 CombatIntent → Generate → Modify → Execute 流程
 - **Modifier Pipeline**：属性修改是否遵循 Modifier → Attribute Resolver → Final Stat 流程
-- **跨模块通信**：是否只通过 Message/Observer/Command 通信
+- **跨模块通信**：是否只通过 Hook/Trigger/Observer/Message 通信
 - **Message 注册表**：新增的 Message 是否与 architecture.md 中定义的注册表一致
 - **逻辑与表现分离**：业务逻辑是否依赖 UI 组件或视觉特效
 
@@ -81,7 +81,7 @@ tools: Read, Grep, Glob
 
 ### 6. 测试规范
 
-- **测试结构**：是否符合 tests/ 目录结构规范
+- **测试结构**：是否符合领域内聚四层结构（unit/integration/invariant/fixtures）
 - **标准测试单元**：是否使用 UnitBuilder（Unit_001/002/003）
 - **确定性**：测试是否确定（随机时使用 Seed=42）
 - **回归测试**：修复 bug 时是否先添加了失败的回归测试
@@ -92,7 +92,7 @@ tools: Read, Grep, Glob
 当被调用时：
 
 1. **识别审查范围**：确定要审查的文件或变更
-2. **阅读相关领域规则**：检查 `docs/domain/` 下相关领域的规则文档
+2. **阅读相关领域规则**：检查 `docs/02-domain/` 下相关领域的规则文档
 3. **按优先级逐项检查**：按照上述清单从高到低优先级审查
 4. **记录问题**：对每个发现的问题，说明：
    - 问题位置（文件:行号）

@@ -1592,48 +1592,84 @@ src/modding/
 
 ## 十四、测试架构
 
+### 核心原则
+
+> **测试跟领域走（Feature First），但不写在源码文件内部。**
+
+- 🟥 禁止 `#[cfg(test)] mod tests` 内联测试（对 AI 上下文污染严重）
+- 🟥 禁止将所有测试平铺到根 `tests/unit/`（后期变成大杂烩）
+- 🟩 测试与被测领域同目录放置，形成 Feature Folder 结构
+- 🟩 根 `tests/` 仅保留跨领域测试（战斗流程、存档、回归、E2E）
+
+### 领域内聚测试结构（四层）
+
+每个领域/能力模块内部自包含测试：
+
+```
+<domain>/
+├── components/
+├── systems/
+├── events/
+├── services/
+├── tests/
+│   ├── unit/                    # 单元测试：验证领域纯函数、核心规则
+│   │   ├── hp_spec.rs
+│   │   ├── level_spec.rs
+│   │   └── ...
+│   ├── integration/             # 集成测试：验证领域内多组件协作
+│   │   ├── character_skill_spec.rs
+│   │   ├── character_buff_spec.rs
+│   │   └── ...
+│   ├── invariant/               # 不变量测试：验证领域不变量（最重要）
+│   │   ├── tag_invariant_spec.rs
+│   │   ├── buff_invariant_spec.rs
+│   │   ├── effect_invariant_spec.rs
+│   │   ├── hp_invariant_spec.rs
+│   │   └── ...
+│   └── fixtures/                # 测试数据
+│       ├── levelup_character.ron
+│       └── ...
+```
+
+### 四层测试定义
+
+| 层 | 名称 | 职责 | 示例 |
+|------|------|------|------|
+| **unit** | 单元测试 | 验证单个函数/纯规则的正确性 | HP 计算、Tag 包含检查、Modifier 优先级排序 |
+| **integration** | 集成测试 | 验证领域内多组件协作 | 角色穿戴装备→Modifier 生效→Attribute 变化 |
+| **invariant** | 不变量测试 | 验证领域不变量（**最核心**） | Tag bit 唯一、Buff 不重复叠加、Effect 不修改不存在属性、HP>=0 |
+| **fixtures** | 测试数据 | Builder 模式构造的测试数据 | RON 格式的角色模板、技能配置、战斗场景 |
+
+### 不变量测试（Invariant Test）— 最高价值
+
+SRPG 架构核心是 Attribute / Tag / Effect / Modifier / Buff / Skill / Turn，这些都有大量**领域不变量**：
+
+| 不变量 | 说明 | 测试文件 |
+|--------|------|----------|
+| Tag bit 唯一 | 同一 Tag 不能在位掩码中重复设置 | `tag_invariant_spec.rs` |
+| Buff 不重复叠加 | 同源同类型 Buff 不会无限堆叠 | `buff_invariant_spec.rs` |
+| Effect 不修改不存在属性 | Effect 引用的 AttributeId 必须已注册 | `effect_invariant_spec.rs` |
+| HP 永远 >= 0 | HP 计算结果不能为负 | `hp_invariant_spec.rs` |
+| Modifier 不改变基础值 | Modifier 只影响聚合后的当前值 | `modifier_invariant_spec.rs` |
+| 回合先攻排序稳定 | 同先攻值的单位顺序确定 | `turn_invariant_spec.rs` |
+| 技能消耗原子性 | 消耗失败时不产生部分效果 | `ability_invariant_spec.rs` |
+
+> 不变量测试的价值远大于普通单元测试，是架构稳定性的最后防线。
+
+### 跨领域测试（根 tests/）
+
+仅保留不属于任何单一领域的跨域测试：
+
 ```
 tests/
-├── unit/                       # 单领域单元测试
-│   ├── attribute_test.rs       # 属性增减/分类/值范围测试
-│   ├── tag_test.rs             # 标签添加/移除/层级推导测试
-│   ├── modifier_test.rs        # 修改器操作类型/优先级/生命周期测试
-│   ├── aggregator_test.rs      # 聚合管线计算正确性测试（Add→Mul→Override→Clamp）
-│   ├── effect_test.rs          # 效果施加/持续/到期/移除测试
-│   ├── ability_test.rs         # 技能激活/取消/冷却测试
-│   ├── spec_test.rs            # Spec 授予/移除/等级变更测试
-│   ├── condition_test.rs       # 条件评估/Tag需求/属性检查测试
-│   ├── stacking_test.rs        # 堆叠规则/溢出处理测试
-│   ├── targeting_test.rs       # 目标选择/网格范围测试
-│   ├── execution_test.rs       # 执行计算/自定义执行测试
-│   ├── gameplay_context_test.rs # 上下文构建/溯源链测试
-│   ├── trigger_test.rs         # 触发条件评估测试
-│   ├── event_test.rs           # 事件发布/订阅/分发测试
-│   ├── cue_test.rs             # 表现信号触发测试
-│   └── ...
-│
-├── integration/                # 跨领域集成测试
-│   ├── combat_flow_test.rs     # 完整战斗流程测试（先攻→行动→伤害→死亡→胜负）
-│   ├── equipment_test.rs       # 装备穿戴→Modifier→Aggregator→Attribute 联动测试
-│   ├── spell_casting_test.rs   # 法术释放→法术位消耗→Effect→伤害 联动测试
-│   ├── reaction_chain_test.rs  # 反应链测试（A攻击B→B反击→C援护）
-│   ├── progression_test.rs     # 升级→属性提升→天赋解锁 联动测试
-│   └── ...
-│
-├── replay/                     # 回放确定性测试
-│   ├── replay_consistency_test.rs  # 同一输入→同一输出（确定性验证）
-│   └── replays/                # 回放测试用例文件
-│
-├── golden/                     # 金文件对比测试
-│   ├── golden_combat_test.rs   # 战斗结果与标准输出对比
-│   └── goldens/                # 标准输出文件
-│
-├── simulation/                 # 战斗模拟与数值平衡测试
-│   ├── balance_simulation.rs   # 数值平衡模拟（1000场战斗→统计胜率分布）
-│   └── ai_simulation.rs        # AI 行为模拟（验证AI决策合理性）
-│
-└── performance/                # 性能回归测试
-    └── combat_benchmark.rs     # 战斗性能基准（100单位战斗帧率/内存占用）
+├── battle_flow/                 # 完整战斗流程（先攻→行动→伤害→死亡→胜负）
+├── save_load/                   # 存档/读档完整性
+├── regression/                  # 回归测试（历史 Bug 复现）
+├── replay/                      # 回放确定性（同一输入→同一输出）
+├── golden/                      # 金文件对比（战斗结果与标准输出）
+├── simulation/                  # 战斗模拟与数值平衡
+├── performance/                 # 性能回归（帧率/内存基准）
+└── e2e/                         # 端到端测试（完整游戏流程）
 ```
 
 ---

@@ -15,13 +15,13 @@ tools: Read, Write, Edit, Glob, Grep, Bash
 ## 启动条件
 
 **最低要求**：有明确的功能需求描述。
-**理想输入**：ADR + 领域模型（docs/domain/） + 测试规范。
+**理想输入**：ADR + 领域模型（docs/02-domain/） + 测试规范。
 
 如果需求不清晰，立即停止并请求澄清。
 
 单人开发模式下，可以从需求描述直接开始，但必须在实现前阅读：
-1. `docs/architecture.md` 相关章节
-2. `docs/domain/` 下相关领域规则
+1. `docs/01-architecture/` 相关章节
+2. `docs/02-domain/` 下相关领域规则
 3. 相关模块的现有代码
 
 ## 开发顺序（严格执行）
@@ -42,10 +42,12 @@ tools: Read, Write, Edit, Glob, Grep, Bash
 - 遵循 Effect Pipeline：CombatIntent → Generate → Modify → Execute
 - 遵循 Modifier Pipeline：Modifier → Attribute Resolver → Final Stat
 
-### Step 4：接入 ECS
-- **Hook**：组件固有行为 `#[component(on_add=...)]`
-- **Observer**：同一 Feature 内局部响应
-- **Message**：跨 Feature 广播
+### Step 4：接入 ECS（四级通信机制）
+- **Hook**：组件生命周期固有行为 `#[component(on_add=...)]`
+- **Trigger**：Feature 内事件链载体（伤害→护盾→吸血→反击）
+- **Observer**：局部状态变化响应
+- **Message**：跨 Feature/跨 Domain 全局广播
+- 写操作走 Event/Trigger/Command，读操作走 Query API
 - 禁止在高频计算中使用 Observer
 
 ### Step 5：编写 mod.rs
@@ -62,7 +64,7 @@ mod sub_b; // 子模块 B 的职责
 
 ### 绝对禁令（违反即不合格）
 - 🟥 禁止修改 ADR 定义的架构边界
-- 🟥 禁止修改领域模型（docs/domain/）
+- 🟥 禁止修改领域模型（docs/02-domain/）
 - 🟥 禁止绕过 Effect Pipeline 直接扣血/加 Buff
 - 🟥 禁止绕过 Modifier Pipeline 直接修改属性
 - 🟥 禁止创建 components.rs/systems.rs/utils.rs 巨文件（Feature 内部除外）
@@ -105,21 +107,21 @@ mod sub_b; // 子模块 B 的职责
 - 发现数据架构问题 → 建议调用 **@data-architect**
 - 发现测试缺失或质量问题 → 建议调用 **@test-guardian**
 
-## 完成前自检
+## 完成前自检（文档参考，不输出到代码）
 
-生成代码后必须输出以下检查结果：
+> 此清单仅作为内部参考，不要求在代码中输出自检结果。
+> 合规检查依赖 CI 门禁（cargo clippy / dependency_checker / 架构扫描）。
 
-```
-Feature First: PASS/FAIL
-Definition/Instance: PASS/FAIL
-Rule/Content: PASS/FAIL
-Effect Pipeline: PASS/FAIL
-Modifier Pipeline: PASS/FAIL
-Architecture Violation: NONE/XXX
-Complexity Increase: NONE/LOW/MEDIUM/HIGH
-Tests Added: YES/NO
-CODE_EXEMPT: NONE/[规则编号]
-```
+| 检查项 | 说明 |
+|--------|------|
+| Feature First | 按业务拆分模块 |
+| Definition/Instance 分离 | 配置与运行时分离 |
+| Rule/Content 分离 | 代码只实现规则 |
+| Effect Pipeline | 效果走统一管线 |
+| Modifier Pipeline | 属性修改走 Modifier |
+| 双轴边界 | Capabilities 无业务规则，Domain 无重复机制 |
+| Domain 间无直接依赖 | 写操作走事件，读操作走 Query API |
+| Tests Added | 测试跟领域走，含 invariant 层 |
 
 然后执行：
 1. 运行 `cargo build` 确保编译通过

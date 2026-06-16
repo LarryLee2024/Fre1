@@ -9,10 +9,10 @@ tags:
   - testing
 ---
 
-# Bevy SRPG Testing Constitution v3.1
-**最终工业级版本 | AI专属 | 与《Bevy SRPG AI开发宪法v1.1》配套执行**
+# Bevy SRPG Testing Constitution v4.0
+**与《SRPG 项目总宪法 v5.0》第十二编配套执行**
 
-Version: 3.1
+Version: 4.0
 Status: Active
 Applies To:
 * All Rust code
@@ -31,6 +31,15 @@ Applies To:
 3. 保证重构安全
 4. 保证AI修改代码时不会破坏既有行为
 5. 提供唯一测试标准
+
+## 1.0 核心原则（宪法 12.2 🟥）
+
+> **测试跟领域走（Feature First），但不写在源码文件内部。**
+
+- 🟥 禁止 `#[cfg(test)] mod tests` 内联测试（对 AI 上下文污染严重）
+- 🟥 禁止将所有测试平铺到根 `tests/unit/`（后期变成大杂烩）
+- 🟩 测试与被测领域同目录放置，形成 Feature Folder 结构
+- 🟩 根 `tests/` 仅保留跨领域测试（战斗流程、存档、回归、E2E）
 
 ## 1.1 Non-goals（绝对不测）
 本规范不包含以下测试，AI绝对禁止生成：
@@ -88,11 +97,14 @@ Applies To:
 ---
 
 # 4. Test Pyramid
-推荐比例：
-- 70% Unit Test
-- 20% Integration Test
-- 8% Replay Test
-- 2% End To End Test
+推荐比例（领域内聚四层 + 跨域测试）：
+- **unit** (单元测试) — 验证单个函数/纯规则的正确性
+- **integration** (集成测试) — 验证领域内多组件协作
+- **invariant** (不变量测试) — 验证领域不变量（**最高价值**）
+- **fixtures** (测试数据) — Builder 模式构造的测试数据
+
+跨域测试（根 tests/）：
+- battle_flow / save_load / regression / replay / golden / simulation / performance / e2e
 
 禁止：
 为了测试而启动完整游戏。
@@ -104,12 +116,13 @@ Applies To:
 ---
 
 # 5. Test Categories
-## Unit Test
+## Unit Test（单元测试）
 目标：验证单一规则。
 特点：
 * 不启动App
 * 不加载Plugin
 * 不依赖资源
+* 位于 `<domain>/tests/unit/`
 
 示例：
 * 伤害公式
@@ -118,19 +131,40 @@ Applies To:
 
 ---
 
-## Integration Test
+## Integration Test（集成测试）
 目标：验证多个模块协作。
 特点：
 * 最小Bevy App
 * 最少Plugin
+* 位于 `<domain>/tests/integration/`
 
 示例：
-Combat + Buff
-Combat + Trait
+* 角色穿戴装备→Modifier→Attribute 联动
+* 技能释放→Effect→Buff 联动
 
 ---
 
-## Replay Test
+## Invariant Test（不变量测试）— 最高价值
+
+验证领域不变量，是架构稳定性的最后防线。
+
+位于 `<domain>/tests/invariant/`。
+
+| 不变量 | 说明 | 测试文件 |
+|--------|------|----------|
+| Tag bit 唯一 | 同一 Tag 不能在位掩码中重复设置 | `tag_invariant_spec.rs` |
+| Buff 不重复叠加 | 同源同类型 Buff 不会无限堆叠 | `buff_invariant_spec.rs` |
+| Effect 不修改不存在属性 | Effect 引用的 AttributeId 必须已注册 | `effect_invariant_spec.rs` |
+| HP 永远 >= 0 | HP 计算结果不能为负 | `hp_invariant_spec.rs` |
+| Modifier 不改变基础值 | Modifier 只影响聚合后的当前值 | `modifier_invariant_spec.rs` |
+| 回合先攻排序稳定 | 同先攻值的单位顺序确定 | `turn_invariant_spec.rs` |
+| 技能消耗原子性 | 消耗失败时不产生部分效果 | `ability_invariant_spec.rs` |
+
+> 不变量测试的价值远大于普通单元测试。
+
+---
+
+## Replay Test（回放测试）
 **项目最高优先级测试**。
 目标：验证完整战斗过程。
 特点：
@@ -142,16 +176,17 @@ Combat + Trait
 
 ---
 
-## Regression Test
+## Regression Test（回归测试）
 所有已修复Bug：**必须**对应回归测试。
 永久保留。
 禁止删除。
 
 ---
 
-## End To End Test
+## End To End Test（端到端测试）
 仅验证核心主流程。
 数量保持最少。
+位于根 `tests/e2e/`。
 
 ---
 
@@ -303,14 +338,23 @@ Replay文件格式：`battle_replays/*.yaml`
 - 测试消息产生
 - 测试最终结果
 
-## 13.1 AI Self-Check（强制执行）
-AI生成任何测试后，必须自动确认以下所有项，并在测试文件开头标注结果：
-✅ 测试行为，不是实现
-✅ 符合领域规则
-✅ 测试是确定性的
-✅ 使用标准测试数据
-✅ 没有测试私有实现
-✅ 没有生成不在范围内的测试
+## 13.1 AI Self-Check（文档参考，不输出到代码）
+
+> **说明**：此清单仅作为 AI 生成测试时的内部参考，不要求在生成的测试文件中输出自检结果。
+> 真正有效的合规检查依赖 CI 门禁（cargo test / clippy），而非 AI 自检。
+
+AI 生成测试前应内部对照：
+
+| 检查项 | 说明 |
+|--------|------|
+| 测试行为，不是实现 | 验证 What，不验证 How |
+| 符合领域规则 | 对照 domain_rules.md |
+| 测试是确定性的 | 固定 Seed，无系统时间依赖 |
+| 使用 Builder 模式构造数据 | 不硬编码业务数值 |
+| 没有测试私有实现 | 只测公共行为和状态变化 |
+| 测试跟领域走 | 放在 `<domain>/tests/` 而非根 `tests/unit/` |
+| 含 invariant 层 | 关键领域必须有不变量测试 |
+| 一个测试只验证一种行为 | 失败时可快速定位 |
 
 ---
 

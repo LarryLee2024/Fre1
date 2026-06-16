@@ -15,8 +15,8 @@ tools: Read, Grep, Glob, Write, Edit
 ## 优先级声明（绝对不可违反）
 
 ```
-Level 1：domain_rules.md / docs/domain/*.md — 定义业务规则（战斗、属性、Buff、回合等）
-Level 2：architecture.md — 定义模块边界和 ECS 规则
+Level 1：docs/02-domain/*.md — 定义业务规则（战斗、属性、Buff、回合等）
+Level 2：docs/01-architecture/ — 定义模块边界和 ECS 规则
 Level 3：test_spec.md — 定义测试规范
 Level 4：existing code — 现有代码实现
 ```
@@ -30,8 +30,8 @@ Level 4：existing code — 现有代码实现
 当测试失败时，严格按以下流程判断：
 
 ```
-Step 1: 检查 docs/domain/ 下相关领域规则文档
-Step 2: 检查 docs/architecture.md
+Step 1: 检查 docs/02-domain/ 下相关领域规则文档
+Step 2: 检查 docs/01-architecture/
 Step 3: 检查测试本身是否符合 test_spec.md
 Step 4: 判断：
   - 测试违反领域规则 → 修改测试（测试本身写错了）
@@ -72,18 +72,61 @@ Replay Test 结构：
 
 **绝对禁止**：先修代码再补测试。
 
-## 测试金字塔
+## 测试架构（领域内聚四层）
 
-| 层级 | 占比 | 内容 | 特点 |
+> **测试跟领域走（Feature First），但不写在源码文件内部。**
+
+```
+<domain>/
+├── tests/
+│   ├── unit/          # 单元测试：验证领域纯函数、核心规则
+│   ├── integration/   # 集成测试：验证领域内多组件协作
+│   ├── invariant/     # 不变量测试：验证领域不变量（**最高价值**）
+│   └── fixtures/      # 测试数据（Builder模式 / RON文件）
+```
+
+| 层 | 名称 | 职责 | 示例 |
 |------|------|------|------|
-| Unit | 70% | Modifier、Damage、Buff、Formula | 不启动 App，纯函数 |
-| Integration | 20% | 装备系统、技能系统、回合系统 | 最小 Bevy App |
-| Replay | 8% | 完整战斗过程重现 | 输入固定，输出固定 |
-| E2E | 2% | 核心主流程 | 数量最少 |
+| **unit** | 单元测试 | 验证单个函数/纯规则的正确性 | HP计算、Tag包含检查、Modifier优先级 |
+| **integration** | 集成测试 | 验证领域内多组件协作 | 装备穿戴→Modifier→Attribute联动 |
+| **invariant** | 不变量测试 | 验证领域不变量（**最高价值**） | Tag bit唯一、Buff不重复叠加、HP>=0 |
+| **fixtures** | 测试数据 | Builder模式构造的测试数据 | RON格式角色模板、技能配置 |
+
+### 不变量测试（最重要）
+
+SRPG 核心架构有大量领域不变量：
+
+| 不变量 | 说明 |
+|--------|------|
+| Tag bit 唯一 | 同一 Tag 不能在位掩码中重复设置 |
+| Buff 不重复叠加 | 同源同类型 Buff 不会无限堆叠 |
+| Effect 不修改不存在属性 | Effect 引用的 AttributeId 必须已注册 |
+| HP 永远 >= 0 | HP 计算结果不能为负 |
+| Modifier 不改变基础值 | Modifier 只影响聚合后的当前值 |
+
+### 跨领域测试（根 tests/）
+
+```
+tests/
+├── battle_flow/     # 完整战斗流程
+├── save_load/       # 存档/读档完整性
+├── regression/      # 回归测试（历史Bug复现）
+├── replay/          # 回放确定性
+├── golden/          # 金文件对比
+├── simulation/      # 战斗模拟与数值平衡
+├── performance/     # 性能回归
+└── e2e/             # 端到端测试
+```
+
+### 禁止事项
+
+- 🟥 禁止 `#[cfg(test)] mod tests` 内联测试
+- 🟥 禁止将所有测试平铺到根 `tests/unit/`
+- 🟩 根 `tests/` 仅保留跨领域测试
 
 ## 标准测试数据
 
-必须使用 `tests/common/fixtures.rs` 中的 `UnitBuilder`：
+必须使用 `<domain>/tests/fixtures/` 中的 Builder 模式：
 
 - **Unit_001**（战士）：HP=100, ATK=30, DEF=10, SPD=10, Range=1
 - **Unit_002**（法师）：HP=80, ATK=40, DEF=5, SPD=12, Range=3
@@ -189,7 +232,7 @@ PASS / FAIL
 AI 生成任何测试后，必须自动确认：
 
 - [ ] ✅ 测试行为，不是实现
-- [ ] ✅ 符合领域规则（已检查 docs/domain/）
+- [ ] ✅ 符合领域规则（已检查 docs/02-domain/）
 - [ ] ✅ 测试是确定性的
 - [ ] ✅ 使用标准测试数据
 - [ ] ✅ 没有测试私有实现
