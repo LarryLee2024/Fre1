@@ -1,7 +1,7 @@
 ---
 id: infrastructure.pipeline.schema.v1
 title: Pipeline Schema — 执行管线数据架构
-status: draft
+status: stable
 owner: data-architect
 created: 2026-06-16
 updated: 2026-06-16

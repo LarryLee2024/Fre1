@@ -1,7 +1,7 @@
 ---
 id: domains.crafting.schema.v1
 title: Crafting Schema — 制作/锻造数据架构
-status: draft
+status: stable
 owner: data-architect
 created: 2026-06-16
 updated: 2026-06-16

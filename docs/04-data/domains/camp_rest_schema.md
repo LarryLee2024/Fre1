@@ -1,7 +1,7 @@
 ---
 id: domains.camp_rest.schema.v1
 title: CampRest Schema — 营地/休息数据架构
-status: draft
+status: stable
 owner: data-architect
 created: 2026-06-16
 updated: 2026-06-16

@@ -204,17 +204,17 @@ pub enum CueMergeStrategy {
 ## Module Design
 
 ```
-src/stacking/
+src/core/capabilities/stacking/
   ├── components.rs      — StackGroup, StackCounter Component
   ├── systems.rs         — on_effect_applied (堆叠检查)
   └── resources.rs       — StackingRuleRegistry
 
-src/trigger/
+src/core/capabilities/trigger/
   ├── components.rs      — TriggerCooldown Component
   ├── resources.rs       — TriggerDefRegistry
   └── systems.rs         — trigger_scanner, on_trigger_activated
 
-src/cue/
+src/core/capabilities/cue/
   ├── components.rs      — CueQueue Resource
   ├── systems.rs         — cue_dispatcher, cue_merger
   └── events.rs          — CueSignal

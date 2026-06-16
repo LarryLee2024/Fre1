@@ -274,14 +274,14 @@ fn track_kill_objectives(
 ## Module Design
 
 ```
-src/narrative/
+src/core/domains/narrative/
   ├── plugin.rs              — NarrativePlugin
   ├── resources.rs           — StoryState, DialogueSession
   ├── systems.rs             — story_trigger_checker, dialogue_runner
   ├── events.rs              — StoryEvent, DialogueStarted, DialogueEnded
   └── api.rs                 — DialogueDef, StoryFlag, ChapterId
 
-src/quest/
+src/core/domains/quest/
   ├── plugin.rs              — QuestPlugin
   ├── components.rs          — QuestInstance
   ├── resources.rs           — QuestLog, QuestTracker

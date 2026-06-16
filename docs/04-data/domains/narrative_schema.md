@@ -1,7 +1,7 @@
 ---
 id: domains.narrative.schema.v1
 title: Narrative Schema — 叙事/对话数据架构
-status: draft
+status: stable
 owner: data-architect
 created: 2026-06-16
 updated: 2026-06-16

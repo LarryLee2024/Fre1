@@ -13,7 +13,7 @@ tags:
 
 # Domain Rules — 领域规则索引
 
-> **架构依据**: `docs/01-architecture/README.md` — 七层架构总纲
+> **架构依据**: `docs/01-architecture/README.md` — DDD三层+横切四层架构总纲
 > **数据映射**: `docs/04-data/README.md` — 数据架构总纲
 
 本文档是 `docs/02-domain/` 下全部 30 个领域规则文件的索引和快速参考。

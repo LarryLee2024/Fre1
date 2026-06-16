@@ -216,7 +216,7 @@ impl Plugin for RegistryPlugin {
 ## Module Design
 
 ```
-src/registry/
+src/infra/registry/
   ├── plugin.rs              — RegistryPlugin
   ├── resources.rs           — DefinitionRegistry, RegistryBucket
   ├── systems.rs             — load_all_definitions, on_asset_changed

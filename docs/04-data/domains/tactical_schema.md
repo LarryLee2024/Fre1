@@ -1,7 +1,7 @@
 ---
 id: domains.tactical.schema.v1
 title: Tactical Schema — 战术空间数据架构
-status: draft
+status: stable
 owner: data-architect
 created: 2026-06-16
 updated: 2026-06-16

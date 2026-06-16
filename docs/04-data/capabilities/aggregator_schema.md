@@ -1,7 +1,7 @@
 ---
 id: capabilities.aggregator.schema.v1
 title: Aggregator Schema — 聚合器数据架构
-status: draft
+status: stable
 owner: data-architect
 created: 2026-06-16
 updated: 2026-06-16

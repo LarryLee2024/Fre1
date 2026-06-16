@@ -1,7 +1,7 @@
 ---
 id: domains.progression.schema.v1
 title: Progression Schema — 成长养成数据架构
-status: draft
+status: stable
 owner: data-architect
 created: 2026-06-16
 updated: 2026-06-16

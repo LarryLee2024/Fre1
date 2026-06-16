@@ -1,7 +1,7 @@
 ---
 id: domains.faction.schema.v1
 title: Faction Schema — 阵营关系数据架构
-status: draft
+status: stable
 owner: data-architect
 created: 2026-06-16
 updated: 2026-06-16

@@ -1,10 +1,16 @@
-# Spell（法术）领域规则 v1.0
-
-Version: 1.0
-Status: Draft
-Applies To: Domains — 战斗核心层
-
 ---
+id: 02-domain.spell
+title: Spell（法术）领域规则 v1.0
+status: stable
+owner: domain-designer
+created: 2026-06-16
+updated: 2026-06-16
+tags:
+  - domain
+  - spell
+  - business-domain
+---
+
 
 ## 1. 统一术语
 

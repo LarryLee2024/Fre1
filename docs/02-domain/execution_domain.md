@@ -1,10 +1,16 @@
-# Execution（执行计算）领域规则 v1.0
-
-Version: 1.0
-Status: Draft
-Applies To: Capabilities — 行为表现层
-
 ---
+id: 02-domain.execution
+title: Execution（执行计算）领域规则 v1.0
+status: stable
+owner: domain-designer
+created: 2026-06-16
+updated: 2026-06-16
+tags:
+  - domain
+  - execution
+  - capabilities
+---
+
 
 ## 1. 统一术语
 

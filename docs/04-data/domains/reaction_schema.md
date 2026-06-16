@@ -1,7 +1,7 @@
 ---
 id: domains.reaction.schema.v1
 title: Reaction Schema — 反应/援护数据架构
-status: draft
+status: stable
 owner: data-architect
 created: 2026-06-16
 updated: 2026-06-16

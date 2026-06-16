@@ -1,7 +1,7 @@
 ---
 id: domains.inventory.schema.v1
 title: Inventory Schema — 背包/物品数据架构
-status: draft
+status: stable
 owner: data-architect
 created: 2026-06-16
 updated: 2026-06-16

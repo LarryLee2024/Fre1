@@ -1,10 +1,16 @@
-# Narrative（叙事/对话）领域规则 v1.0
-
-Version: 1.0
-Status: Draft
-Applies To: Domains — 叙事内容层
-
 ---
+id: 02-domain.narrative
+title: Narrative（叙事/对话）领域规则 v1.0
+status: stable
+owner: domain-designer
+created: 2026-06-16
+updated: 2026-06-16
+tags:
+  - domain
+  - narrative
+  - business-domain
+---
+
 
 ## 1. 统一术语
 

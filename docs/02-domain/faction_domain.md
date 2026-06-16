@@ -1,10 +1,16 @@
-# Faction（阵营关系）领域规则 v1.0
-
-Version: 1.0
-Status: Draft
-Applies To: Domains — 叙事/社交层
-
 ---
+id: 02-domain.faction
+title: Faction（阵营关系）领域规则 v1.0
+status: stable
+owner: domain-designer
+created: 2026-06-16
+updated: 2026-06-16
+tags:
+  - domain
+  - faction
+  - business-domain
+---
+
 
 ## 1. 统一术语
 

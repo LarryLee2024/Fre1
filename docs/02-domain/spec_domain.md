@@ -1,10 +1,16 @@
-# Spec（规格/配置）领域规则 v1.0
-
-Version: 1.0
-Status: Draft
-Applies To: Capabilities — 逻辑骨架层
-
 ---
+id: 02-domain.spec
+title: Spec（规格/配置）领域规则 v1.0
+status: stable
+owner: domain-designer
+created: 2026-06-16
+updated: 2026-06-16
+tags:
+  - domain
+  - spec
+  - capabilities
+---
+
 
 ## 1. 统一术语
 

@@ -1,7 +1,7 @@
 ---
 id: foundation.save-architecture.v1
 title: Save Architecture Deep Dive — 存档架构详述
-status: draft
+status: stable
 owner: data-architect
 created: 2026-06-16
 updated: 2026-06-16

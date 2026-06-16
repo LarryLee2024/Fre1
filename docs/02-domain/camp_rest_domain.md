@@ -1,10 +1,16 @@
-# CampRest（营地/休息）领域规则 v1.0
-
-Version: 1.0
-Status: Draft
-Applies To: Domains — 成长养成层
-
 ---
+id: 02-domain.camp_rest
+title: CampRest（营地/休息）领域规则 v1.0
+status: stable
+owner: domain-designer
+created: 2026-06-16
+updated: 2026-06-16
+tags:
+  - domain
+  - camp-rest
+  - business-domain
+---
+
 
 ## 1. 统一术语
 

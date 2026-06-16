@@ -209,14 +209,14 @@ CampPhase::Leaving
 ## Module Design
 
 ```
-src/party/
+src/core/domains/party/
   ├── plugin.rs              — PartyPlugin
   ├── components.rs          — PartyMember (Component, if needed per-entity)
   ├── resources.rs           — Party Resource
   ├── systems.rs             — add/remove/swap/formation
   └── api.rs                 — Party, FormationType
 
-src/camp_rest/
+src/core/domains/camp_rest/
   ├── plugin.rs              — CampRestPlugin
   ├── resources.rs           — CampState
   ├── systems.rs             — camp_enter, camp_free_roam, apply_rest, camp_leave

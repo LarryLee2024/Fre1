@@ -32,13 +32,13 @@ supersedes: none
 │  Layer 1: Raw Input (硬件原始输入)                            │
 │  ─────────────────────────────────────                       │
 │  键盘/鼠标/手柄/触摸 → 统一 Input 抽象                        │
-│  位置: src/input/                                            │
+│  位置: src/infra/input/                                            │
 ├─────────────────────────────────────────────────────────────┤
 │  Layer 2: Game Command (业务命令)                            │
 │  ─────────────────────────────────────                       │
 │  标准化命令类型：MoveUnit / CastSkill / EndTurn / UseItem    │
 │  不区分命令来源（玩家/AI/Replay 统一）                       │
-│  位置: src/command/ 或分散在各 Feature 的 events.rs          │
+│  位置: src/infra/command/ 或分散在各 Feature 的 events.rs          │
 ├─────────────────────────────────────────────────────────────┤
 │  Layer 3: Execution (命令执行)                               │
 │  ─────────────────────────────────────                       │
@@ -235,13 +235,13 @@ fn record_command_system(
 ## Module Design
 
 ```
-src/input/
+src/infra/input/
   ├── plugin.rs              — InputPlugin
   ├── resources.rs           — InputMap, InputState
   ├── systems.rs             — keyboard_mouse_input, camera_control
   └── api.rs                 — InputAction, InputMap
 
-src/command/  (或在各 Feature 的 events.rs 中定义)
+src/infra/command/  (或在各 Feature 的 events.rs 中定义)
   ├── plugin.rs              — CommandPlugin (可选)
   ├── resources.rs           — CommandQueue
   ├── systems.rs             — command_dispatcher

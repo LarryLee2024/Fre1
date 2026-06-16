@@ -1,6 +1,6 @@
 ---
 id: 01-architecture.README
-title: Architecture Overview — Seven-Layer Architecture
+title: Architecture Overview — DDD Three-Layer + Four Cross-Cutting Layers
 status: stable
 owner: architect
 created: 2026-06-16
@@ -10,11 +10,13 @@ tags:
   - governance
   - module-design
   - ecs
+  - ddd
 ---
 
-# Architecture Overview — Fre SRPG 七层架构总纲
+# Architecture Overview — Fre SRPG DDD三层+横切四层 架构总纲
 
-> **版本**: 4.0 | **角色**: @architect | **宪法优先级**: 🟥 **最高**
+> **版本**: 5.0 | **角色**: @architect | **宪法优先级**: 🟥 **最高**
+> **架构依据**: `docs/00-governance/Fre项目架构设计.md`（DDD三层 + 横切四层模型）
 
 本文档是 Fre 项目架构的最高准则。所有 Feature 边界、ECS 规则、Effect/Modifier 管线、模块间通信以本文档为最终依据。
 
@@ -39,166 +41,193 @@ tags:
 
 ---
 
-## 2. 七层架构总图
+## 2. DDD三层+横切四层 架构总图
 
-Fre 项目按照**垂直分层 + 水平 Feature** 的矩阵式结构组织。七层从底向上堆叠，**禁止上层依赖下层，绝对禁止反向依赖**。
+Fre 项目采用 **DDD 纵向三层 + 横切四层** 的矩阵式结构，源自 `docs/00-governance/Fre项目架构设计.md`。模块组织遵循**内聚优于分层**原则：同一领域的代码放在一起（内聚），而非按抽象层级拆散到不同目录。
 
-```
-┌──────────────────────────────────────────────────────────────────────┐
-│   Layer 7: Infrastructure & Cross-cutting                            │
-│   Registry / Replay / Save / Input / Logging / Error                 │
-│   ──── 依赖: 所有下层 ────────────────────────────────────────────── │
-├──────────────────────────────────────────────────────────────────────┤
-│   Layer 6: Narrative & Content                                       │
-│   Story / Dialogue / Quest / WorldState                              │
-│   ──── 依赖: Layer 2, 4, 5 ──────────────────────────────────────── │
-├──────────────────────────────────────────────────────────────────────┤
-│   Layer 5: Party & Camp                                              │
-│   PartyManagement / Formation / CampRest / Relationship              │
-│   ──── 依赖: Layer 2, 4 ─────────────────────────────────────────── │
-├──────────────────────────────────────────────────────────────────────┤
-│   Layer 4: Progression & Economy                                     │
-│   Leveling / SkillUnlock / Inventory / Economy / Crafting            │
-│   ──── 依赖: Layer 2 ────────────────────────────────────────────── │
-├──────────────────────────────────────────────────────────────────────┤
-│   Layer 3: Combat Execution                                          │
-│   CombatIntent Pipeline / SpellCasting / Reactions / BuffLifecycle   │
-│   ──── 依赖: Layer 2 ────────────────────────────────────────────── │
-├──────────────────────────────────────────────────────────────────────┤
-│   Layer 2: Capability System                                         │
-│   Tag / Attribute / Modifier / Effect / Ability / Cue / Stacking     │
-│   ──── 依赖: Layer 1 ────────────────────────────────────────────── │
-├──────────────────────────────────────────────────────────────────────┤
-│   Layer 1: Tactical Foundation                                       │
-│   Grid/Hex Map / Movement / TurnStateMachine / Faction / Terrain     │
-│   ──── 依赖: 无 ─────────────────────────────────────────────────── │
-└──────────────────────────────────────────────────────────────────────┘
-```
-
-### 2.1 层间依赖铁则
-
-| 规则 | 说明 |
-|------|------|
-| 🟥 禁止 | 下层依赖上层（如 Layer 2 引用 Layer 3 的类型） |
-| 🟥 禁止 | 跨层跳过（如 Layer 1 直接导入 Layer 4） |
-| 🟩 允许 | 上层依赖下层（Layer 5 使用 Layer 2 的 Effect 系统） |
-| 🟩 允许 | 同层跨 Feature 通信（仅通过 Event/Message，禁止直接引用类型） |
-| 🟨 例外 | Infrastructure Layer（Layer 7）对所有层可见，但业务层不依赖其内部实现 |
-
-### 2.2 与宪法三层的关系
-
-宪法（`.trae/rules/架构规则.md`）定义的三层架构（Domain / Application / Presentation）是**运行时视角**，七层架构是**模块组织视角**。两者共存不矛盾：
+### 2.1 DDD 纵向三层
 
 ```
-七层视角（模块组织）         三层视角（运行时职责）
-─────────────────            ─────────────────
-Layer 6, 5, 4                ┌─ Presentation (UI, VFX, SFX, Camera)
-  └─ UI 层                  │
-Layer 3, 4, 5, 6 的 ECS      ├─ Application (ECS Systems, Schedules, States)
-  └─ System 层              │
-Layer 1, 2 的领域逻辑         └─ Domain (Pure Functions, Formulas, Rules)
+┌──────────────────────────────────────────────────────────────┐
+│  L0: Shared（原子层）                                         │
+│  IDs / Error / Math / Random / Time / Collections / Hashing  │
+│  Validation / Testing / Traits / Path                        │
+│  ──── 零业务语义、零技术语义、零框架语义的通用编程原子工具 ──── │
+│  依赖: 无（最底层）                                            │
+├──────────────────────────────────────────────────────────────┤
+│  L1: Core（领域规则层）                                        │
+│  ┌────────────────────────────────────────────────────────┐   │
+│  │  capabilities/ — 15个核心能力领域（通用机制骨架）        │   │
+│  │  Tag / Attribute / Modifier / Aggregator / GameplayCtx  │   │
+│  │  Spec / Condition / Trigger / Ability / Targeting       │   │
+│  │  Execution / Effect / Stacking / Event / Cue            │   │
+│  ├────────────────────────────────────────────────────────┤   │
+│  │  domains/ — 15个业务子系统（全部玩法复杂度）              │   │
+│  │  Tactical / Terrain / Faction / Combat / Spell         │   │
+│  │  Reaction / Progression / Inventory / Party / CampRest  │   │
+│  │  Narrative / Quest / Economy / Crafting / Summon        │   │
+│  └────────────────────────────────────────────────────────┘   │
+│  依赖: Shared（L0）                                           │
+├──────────────────────────────────────────────────────────────┤
+│  L2: Infra（技术实现层）                                       │
+│  Registry / Pipeline / Replay / Save / Input                 │
+│  ──── 渲染/持久化/网络等"脏活" ────────────────────────────── │
+│  依赖: Core（L1）+ Shared（L0）                               │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### 2.2 横切四层
+
+横切层跨越所有纵向三层，提供跨领域的基础设施：
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│  横切1: App（启动装配层 / Composition Root）                   │
+│  唯一知道所有层的入口点。Feature-gated 启动 game/editor/headless │
+│  依赖: 知道所有层                                              │
+├──────────────────────────────────────────────────────────────┤
+│  横切2: Content（内容桥接层 / 数据驱动核心）                    │
+│  从 assets/config/ 加载配置 → 校验 → 注册到 Registry           │
+│  依赖: Core + Infra（只做加载/校验/注册）                      │
+├──────────────────────────────────────────────────────────────┤
+│  横切3: Tools（开发工具层，feature-gated）                      │
+│  Debug 面板 / 性能分析 / 热重载控制台                           │
+│  依赖: 所有层（仅 dev 构建）                                    │
+├──────────────────────────────────────────────────────────────┤
+│  横切4: Modding（Mod 扩展层，跨层聚合）                        │
+│  Mod 加载沙箱 / Mod API 稳定层 / 版本兼容检查                   │
+│  依赖: Mod API（src/core/mod_api/）                           │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### 2.3 依赖方向（严格单向，禁止反向）
+
+```
+Shared ──→ Core ──→ Infra       # 纵向依赖：低层→高层（单向）
+                                        #
+Capabilities ──→ Domains          # Domain 引用 Capabilities（禁止反向）
+  │              │                #
+  │              └──→ 事件通信     # Domains 之间仅通过 Event 通信
+  │                              #
+Domains ──→ Domains               # 禁止直接引用，仅 Event
+  (仅 Event)                      #
+                                        #
+App      ──→ 所有层（唯一 Composition Root）
+Content  ──→ Core + Infra（只做加载/校验/注册）
+Tools    ──→ 所有层（仅 dev）
+Modding  ──→ mod_api（稳定 API 层）
+```
+
+### 2.4 与运行时三层（宪法）的关系
+
+宪法（`.trae/rules/架构规则.md`）定义的 Domain / Application / Presentation 三层是**运行时职责视角**，DDD三层+横切四层是**模块组织视角**。两者共存不矛盾：
+
+```
+DDD三层+横切四层（模块组织）      宪法三层（运行时职责）
+─────────────────────            ─────────────────
+L2 Infra + 横切 Content           ┌─ Presentation (UI, VFX, SFX, Camera)
+L1 Core/Domains 的叙事层         │
+  └─ 数据/UI 层                 │
+L1 Core 的 ECS Systems           ├─ Application (ECS Systems, Schedules, States)
+  └─ System 层                  │
+L1 Core 的 rules/                └─ Domain (Pure Functions, Formulas, Rules)
+L0 Shared                         └─ 计算层
   └─ 计算层
-Layer 7                      跨层基础设施
 ```
 
-> **结论**：Feature 按七层组织，每层内部按 Domain / Application / Presentation 分离。
+> **结论**：模块按 DDD三层+横切四层 组织，每层内部按宪法三层的运行时职责分离代码。
 
 ---
 
-## 3. Feature 模块映射
+## 3. 模块映射
 
-### 3.1 地基层 (Layer 1) — Tactical Foundation
+### 3.1 L0: Shared — 原子层
 
-| Feature 模块 | 对应领域文档 | 对应 Schema |
-|-------------|-------------|-------------|
-| `grid_map` | `tactical_domain.md` | `tactical_schema.md` |
-| `terrain` | `terrain_domain.md` | `terrain_schema.md` |
-| `faction` | `faction_domain.md` | `faction_schema.md` |
-| `turn_phase` | `tactical_domain.md` | `tactical_schema.md` |
+| 模块 | 路径 | 对应领域文档 | 对应 Schema |
+|------|------|-------------|-------------|
+| IDs | `src/shared/ids/` | — | `foundation/id_strategy.md` |
+| Error | `src/shared/error/` | — | — |
+| Math | `src/shared/math/` | — | — |
+| Random | `src/shared/random/` | — | — |
+| Time | `src/shared/time/` | — | — |
+| Collections | `src/shared/collections/` | — | — |
+| Hashing | `src/shared/hashing/` | — | — |
+| Validation | `src/shared/validation/` | — | — |
+| Testing | `src/shared/testing/` | — | — |
+| Traits | `src/shared/traits/` | — | — |
+| Prelude | `src/shared/prelude/` | — | — |
+| Path | `src/shared/path/` | — | — |
 
-**核心职责**：网格/六边形地图、寻路、移动、地形效果、阵营关系、回合阶段状态机。
+**核心职责**：零业务语义、零技术语义的通用编程原子工具。
 
-**ECS 表达**：
-- `GridMap` Resource / `Tile` Entity + Component
-- `TurnPhase` State / `TurnQueue` Resource
-- `Faction` Component (Tag) / `FactionRelation` Resource
+### 3.2 L1: Core — Capabilities（15个核心能力领域）
 
-### 3.2 能力系统层 (Layer 2) — Capability System
+所有能力领域位于 `src/core/capabilities/<domain>/`，每个领域内部按 C1 Foundation → C2 Mechanism → C3 Runtime 自包含组织。
 
-| Feature 模块 | 对应领域文档 | 对应 Schema |
-|-------------|-------------|-------------|
-| `tag` | `tag_domain.md` | `tag_schema.md` |
-| `attribute` | `attribute_domain.md` | `attribute_schema.md` |
-| `modifier` | `modifier_domain.md` | `modifier_schema.md` |
-| `aggregator` | `aggregator_domain.md` | `aggregator_schema.md` |
-| `gameplay_context` | `gameplay_context_domain.md` | `gameplay_context_schema.md` |
-| `spec` | `spec_domain.md` | `spec_schema.md` |
-| `condition` | `condition_domain.md` | `condition_schema.md` |
-| `trigger` | `trigger_domain.md` | `trigger_schema.md` |
-| `ability` | `ability_domain.md` | `ability_schema.md` |
-| `targeting` | `targeting_domain.md` | `targeting_schema.md` |
-| `execution` | `execution_domain.md` | `execution_schema.md` |
-| `effect` | `effect_domain.md` | `effect_schema.md` |
-| `stacking` | `stacking_domain.md` | `stacking_schema.md` |
-| `event` | `event_domain.md` | `event_schema.md` |
-| `cue` | `cue_domain.md` | `cue_schema.md` |
+| 模块 | 领域文档 | 数据 Schema | C1 Foundation | C2 Mechanism |
+|------|---------|------------|--------------|--------------|
+| `tag` | `tag_domain.md` | `capabilities/tag_schema.md` | tag_id, tag_set, tag_hierarchy | components, query, systems |
+| `attribute` | `attribute_domain.md` | `capabilities/attribute_schema.md` | attribute_id, value, category | components, systems |
+| `modifier` | `modifier_domain.md` | `capabilities/modifier_schema.md` | modifier_op, data, scalable_value | components, systems |
+| `aggregator` | `aggregator_domain.md` | `capabilities/aggregator_schema.md` | calc_stage, snapshot | components, calc_pipeline, systems |
+| `gameplay_context` | `gameplay_context_domain.md` | `capabilities/gameplay_context_schema.md` | context_data | components, context_builder, context_chain, systems |
+| `spec` | `spec_domain.md` | `capabilities/spec_schema.md` | ability_spec, effect_spec | components, spec_registry, systems |
+| `condition` | `condition_domain.md` | `capabilities/condition_schema.md` | condition_type, tag_requirement, attribute_check, resource_check | components, systems |
+| `trigger` | `trigger_domain.md` | `capabilities/trigger_schema.md` | trigger_type, trigger_condition | components, systems |
+| `ability` | `ability_domain.md` | `capabilities/ability_schema.md` | ability_state, instance, cost, cooldown | components, ability_task, systems |
+| `targeting` | `targeting_domain.md` | `capabilities/targeting_schema.md` | target_type, target_data | components, selector, grid_targeting, systems |
+| `execution` | `execution_domain.md` | `capabilities/execution_schema.md` | execution_type, context, custom_execution | components, damage/heal_execution, systems |
+| `effect` | `effect_domain.md` | `capabilities/effect_schema.md` | effect_duration, period, modifiers, tags | components, effect_lifecycle, systems |
+| `stacking` | `stacking_domain.md` | `capabilities/stacking_schema.md` | stacking_type, rule, limit | components, systems |
+| `event` | `event_domain.md` | `capabilities/event_schema.md` | gameplay_event, event_type | event_bus, subscription, systems |
+| `cue` | `cue_domain.md` | `capabilities/cue_schema.md` | cue_type, cue_data, cue_tag | components, systems |
+
+**C3 Runtime**（跨领域编排底座）: `src/core/capabilities/runtime/` — pipeline, scheduler, registry, command, replay
 
 **核心职责**：贯穿所有游戏机制的"魔法圈" — 从 Tag 分类到 Effect 执行到 Cue 表现的完整链路。
 
-**ECS 表达**：15 个 Feature 均映射为独立 Plugin + Components + Systems。
+### 3.3 L1: Core — Business Domains（15个业务子系统）
 
-### 3.3 战斗执行层 (Layer 3) — Combat Execution
+所有业务领域位于 `src/core/domains/<domain>/`，标准内部结构：`plugin.rs + components.rs + systems/ + events.rs + error.rs + rules/ + integration.rs`
 
-| Feature 模块 | 对应领域文档 | 对应 Schema |
-|-------------|-------------|-------------|
-| `combat` | `combat_domain.md` | `combat_schema.md` |
-| `spell` | `spell_domain.md` | `spell_schema.md` |
-| `reaction` | `reaction_domain.md` | `reaction_schema.md` |
+| 模块 | 领域文档 | 数据 Schema | 核心职责 |
+|------|---------|------------|---------|
+| `tactical` | `tactical_domain.md` | `domains/tactical_schema.md` | 网格位置、移动、掩体、夹击 |
+| `terrain` | `terrain_domain.md` | `domains/terrain_schema.md` | Tile、表面类型、陷阱、通行性 |
+| `faction` | `faction_domain.md` | `domains/faction_schema.md` | 阵营关系、声望、关系判定 |
+| `combat` | `combat_domain.md` | `domains/combat_schema.md` | 回合流程、先攻、伤害结算、胜负 |
+| `spell` | `spell_domain.md` | `domains/spell_schema.md` | 法术位、专注、豁免、升环 |
+| `reaction` | `reaction_domain.md` | `domains/reaction_schema.md` | 机会攻击、法术反制、护盾、援护 |
+| `progression` | `progression_domain.md` | `domains/progression_schema.md` | 经验、等级、职业、天赋、ASI |
+| `inventory` | `inventory_domain.md` | `domains/inventory_schema.md` | 物品、装备槽位、消耗品、战利品 |
+| `party` | `party_domain.md` | `domains/party_schema.md` | 成员名册、羁绊、阵型、换人 |
+| `camp_rest` | `camp_rest_domain.md` | `domains/camp_rest_schema.md` | 短休、长休、生命骰、营地事件 |
+| `narrative` | `narrative_domain.md` | `domains/narrative_schema.md` | 对话树、StoryFlag、演出 |
+| `quest` | `quest_domain.md` | `domains/quest_schema.md` | 目标追踪、奖励、前置条件 |
+| `economy` | `economy_domain.md` | `domains/economy_schema.md` | 货币、商店、价格、交易 |
+| `crafting` | `crafting_domain.md` | `domains/crafting_schema.md` | 配方、附魔、装备升级 |
+| `summon` | `summon_domain.md` | `domains/summon_schema.md` | 召唤物模板、专注绑定、消失 |
 
-**核心职责**：伤害/治疗计算、法术施放流程、反击/护盾/吸血等反应机制、Buff 生命周期。
+### 3.4 L2: Infra — 技术实现层
 
-### 3.4 成长与经济层 (Layer 4) — Progression & Economy
+基础设施位于 `src/infra/<domain>/`：
 
-| Feature 模块 | 对应领域文档 | 对应 Schema |
-|-------------|-------------|-------------|
-| `progression` | `progression_domain.md` | `progression_schema.md` |
-| `inventory` | `inventory_domain.md` | `inventory_schema.md` |
-| `economy` | `economy_domain.md` | `economy_schema.md` |
-| `crafting` | `crafting_domain.md` | `crafting_schema.md` |
-| `summon` | `summon_domain.md` | `summon_schema.md` |
+| 模块 | 数据 Schema | 核心职责 |
+|------|------------|---------|
+| `registry` | `infrastructure/registry_schema.md` | ID 注册、冲突检测、热重载 |
+| `pipeline` | `infrastructure/pipeline_schema.md` | 通用执行管线引擎 |
+| `replay` | `infrastructure/replay_schema.md` | 命令录制、确定性回放 |
+| `save` | `foundation/save_architecture.md` | 存档序列化、版本迁移 |
+| `input` | — | 输入抽象、命令层 |
 
-**核心职责**：经验升级、技能解锁、物品装备、商店经济、制造系统、召唤物管理。
+### 3.5 横切四层
 
-### 3.5 队伍与休整层 (Layer 5) — Party & Camp
-
-| Feature 模块 | 对应领域文档 | 对应 Schema |
-|-------------|-------------|-------------|
-| `party` | `party_domain.md` | `party_schema.md` |
-| `camp_rest` | `camp_rest_domain.md` | `camp_rest_schema.md` |
-
-**核心职责**：队伍编成、阵型系统、休整/露营、角色间关系。
-
-### 3.6 叙事与内容层 (Layer 6) — Narrative & Content
-
-| Feature 模块 | 对应领域文档 | 对应 Schema |
-|-------------|-------------|-------------|
-| `narrative` | `narrative_domain.md` | `narrative_schema.md` |
-| `quest` | `quest_domain.md` | `quest_schema.md` |
-
-**核心职责**：故事状态机、对话分支、任务追踪与奖励、世界状态标记。
-
-### 3.7 基础设施与横切层 (Layer 7) — Infrastructure & Cross-cutting
-
-| Feature 模块 | 对应领域文档 | 对应 Schema |
-|-------------|-------------|-------------|
-| `registry` | — | `registry_schema.md` |
-| `pipeline` | — | `pipeline_schema.md` |
-| `replay` | — | `replay_schema.md` |
-| `save` | — | `save_architecture.md` |
-| `input` | — | — |
-| `common` | — | — |
-
-**核心职责**：ID 注册与热重载、管线执行引擎、回放系统、存档系统、命令层与输入抽象、通用工具。
+| 层 | 路径 | 核心职责 |
+|----|------|---------|
+| App | `src/app/` | Composition Root，根据 feature flag 启动 game/editor/headless |
+| Content | `src/content/` | 配置加载、校验、注册（assets/config/） |
+| Tools | `src/tools/` (dev feature-gated) | Debug 面板、性能分析、热重载控制台 |
+| Modding | `src/modding/` | Mod 加载沙箱、Mod API 层 |
 
 ---
 
@@ -298,73 +327,130 @@ CombatIntent ──→ Generate ──→ Modify ──→ Execute ──→ Res
 Plugin 按层从底向上注册，确保下层 Asset/Resource 在上层 System 执行前就绪：
 
 ```rust
-// 1. Infrastructure (Layer 7)
-.add_plugins(RegistryPlugin)
-.add_plugins(PipelinePlugin)
-.add_plugins(ReplayPlugin)
-.add_plugins(SavePlugin)
-.add_plugins(InputPlugin)
+// ════════════════════════════════════════════
+// Phase 0: Core Bevy + Shared (L0)
+// ════════════════════════════════════════════
+.add_plugins(DefaultPlugins)
+.add_plugins(shared::SharedPlugin)
 
-// 2. Tactical Foundation (Layer 1)
-.add_plugins(GridMapPlugin)
-.add_plugins(TerrainPlugin)
-.add_plugins(FactionPlugin)
-.add_plugins(TurnPhasePlugin)
+// ════════════════════════════════════════════
+// Phase 1: Capabilities — Foundation (L1 Core)
+// ════════════════════════════════════════════
+.add_plugins(core::capabilities::tag::TagPlugin)
+.add_plugins(core::capabilities::attribute::AttributePlugin)
+.add_plugins(core::capabilities::modifier::ModifierPlugin)
+.add_plugins(core::capabilities::aggregator::AggregatorPlugin)
+.add_plugins(core::capabilities::gameplay_context::GameplayContextPlugin)
 
-// 3. Capability System (Layer 2)
-.add_plugins(TagPlugin)
-.add_plugins(AttributePlugin)
-.add_plugins(ModifierPlugin)
-.add_plugins(AggregatorPlugin)
-.add_plugins(GameplayContextPlugin)
-.add_plugins(SpecPlugin)
-.add_plugins(ConditionPlugin)
-.add_plugins(TriggerPlugin)
-.add_plugins(AbilityPlugin)
-.add_plugins(TargetingPlugin)
-.add_plugins(ExecutionPlugin)
-.add_plugins(EffectPlugin)
-.add_plugins(StackingPlugin)
-.add_plugins(EventPlugin)
-.add_plugins(CuePlugin)
+// ════════════════════════════════════════════
+// Phase 2: Capabilities — Logic Skeleton (L1 Core)
+// ════════════════════════════════════════════
+.add_plugins(core::capabilities::spec::SpecPlugin)
+.add_plugins(core::capabilities::condition::ConditionPlugin)
+.add_plugins(core::capabilities::trigger::TriggerPlugin)
+.add_plugins(core::capabilities::event::EventPlugin)
 
-// 4. Combat Execution (Layer 3)
-.add_plugins(CombatPlugin)
-.add_plugins(SpellPlugin)
-.add_plugins(ReactionPlugin)
+// ════════════════════════════════════════════
+// Phase 3: Capabilities — Behavior (L1 Core)
+// ════════════════════════════════════════════
+.add_plugins(core::capabilities::ability::AbilityPlugin)
+.add_plugins(core::capabilities::targeting::TargetingPlugin)
+.add_plugins(core::capabilities::execution::ExecutionPlugin)
+.add_plugins(core::capabilities::effect::EffectPlugin)
+.add_plugins(core::capabilities::stacking::StackingPlugin)
+.add_plugins(core::capabilities::cue::CuePlugin)
 
-// 5. Progression & Economy (Layer 4)
-.add_plugins(ProgressionPlugin)
-.add_plugins(InventoryPlugin)
-.add_plugins(EconomyPlugin)
-.add_plugins(CraftingPlugin)
-.add_plugins(SummonPlugin)
+// ════════════════════════════════════════════
+// Phase 4: Capabilities — Runtime (L1 Core)
+// ════════════════════════════════════════════
+.add_plugins(core::capabilities::runtime::RuntimePlugin)
 
-// 6. Party & Camp (Layer 5)
-.add_plugins(PartyPlugin)
-.add_plugins(CampRestPlugin)
+// ════════════════════════════════════════════
+// Phase 5: Business Domains — Foundation (L1 Core)
+// ════════════════════════════════════════════
+.add_plugins(core::domains::tactical::TacticalPlugin)
+.add_plugins(core::domains::terrain::TerrainPlugin)
+.add_plugins(core::domains::faction::FactionPlugin)
 
-// 7. Narrative & Content (Layer 6)
-.add_plugins(NarrativePlugin)
-.add_plugins(QuestPlugin)
+// ════════════════════════════════════════════
+// Phase 6: Business Domains — Core (L1 Core)
+// ════════════════════════════════════════════
+.add_plugins(core::domains::combat::CombatPlugin)
+.add_plugins(core::domains::spell::SpellPlugin)
+.add_plugins(core::domains::reaction::ReactionPlugin)
+.add_plugins(core::domains::progression::ProgressionPlugin)
+.add_plugins(core::domains::inventory::InventoryPlugin)
+.add_plugins(core::domains::party::PartyPlugin)
+.add_plugins(core::domains::camp_rest::CampRestPlugin)
+
+// ════════════════════════════════════════════
+// Phase 7: Business Domains — Narrative & Economy (L1 Core)
+// ════════════════════════════════════════════
+.add_plugins(core::domains::narrative::NarrativePlugin)
+.add_plugins(core::domains::quest::QuestPlugin)
+.add_plugins(core::domains::economy::EconomyPlugin)
+.add_plugins(core::domains::crafting::CraftingPlugin)
+.add_plugins(core::domains::summon::SummonPlugin)
+
+// ════════════════════════════════════════════
+// Phase 8: Infrastructure (L2)
+// ════════════════════════════════════════════
+.add_plugins(infra::registry::RegistryPlugin)
+.add_plugins(infra::pipeline::PipelinePlugin)
+.add_plugins(infra::replay::ReplayPlugin)
+.add_plugins(infra::save::SavePlugin)
+.add_plugins(infra::input::InputPlugin)
+
+// ════════════════════════════════════════════
+// Phase 9: Cross-cutting
+// ════════════════════════════════════════════
+.add_plugins(app::AppPlugin)          // Composition Root
+.add_plugins(content::ContentPlugin)  // Data Bridge
+#[cfg(feature = "dev")]
+.add_plugins(tools::DevToolsPlugin)
+.add_plugins(modding::ModdingPlugin)
 ```
 
 ### 6.2 Plugin 内部结构
 
-每个 Feature Plugin 遵循统一结构：
+每个领域模块遵循统一内部结构。Capabilities 使用 C1→C2→C3 三层内聚结构，Business Domains 使用标准 7 文件结构。
+
+**Capabilities 领域结构**（位于 `src/core/capabilities/<domain>/`）：
 
 ```
-src/<feature>/
-├── mod.rs              # pub mod 声明 + re-export
-├── plugin.rs           # Plugin impl (唯一对外入口)
-├── components.rs       # ECS Components
-├── systems.rs          # Systems (内部调度)
-├── events.rs           # Feature 内事件
-├── resources.rs        # Resources（如果适用）
-├── api.rs              # 公开接口/类型（跨 Feature 可见）
-└── internal/
-    ├── mod.rs
-    └── ...             # 内部实现
+capabilities/<domain>/
+├── plugin.rs              # 领域 Plugin（唯一对外入口）
+├── foundation/            # C1：纯数据定义层（无行为逻辑）
+│   ├── mod.rs
+│   ├── types.rs           # 基础类型与枚举
+│   └── values.rs          # 值对象定义
+├── mechanism/             # C2：规则与系统层
+│   ├── mod.rs
+│   ├── components.rs      # ECS 组件
+│   ├── query.rs           # 查询/匹配/条件逻辑
+│   ├── lifecycle.rs       # 生命周期管理
+│   └── systems/           # Bevy Systems
+│       ├── mod.rs
+│       └── xxx_system.rs
+└── events.rs              # 领域事件
+```
+
+**Business Domains 结构**（位于 `src/core/domains/<domain>/`）：
+
+```
+domains/<domain>/
+├── plugin.rs          # 唯一对外入口
+├── components.rs      # ECS Components
+├── systems/           # 业务系统
+│   ├── mod.rs
+│   ├── xxx_system.rs
+│   └── yyy_system.rs
+├── events.rs          # 对外发布的领域事件
+├── error.rs           # 专属错误枚举
+├── rules/             # 纯业务规则（纯函数，零 ECS 依赖）
+│   ├── formulas.rs
+│   └── rules.rs
+└── integration.rs     # 唯一调用 Capabilities 的入口
 ```
 
 - 🟥 Plugin 是唯一对外入口，禁止外部直接访问 `internal/`
@@ -416,83 +502,84 @@ pub enum WhitelistedEvent {
 
 ```
 src/
-├── common/                      # Layer 7 — 通用工具（纯工具，无业务逻辑）
+├── main.rs                   # 程序入口，根据 feature 启动 game/editor/headless
+├── lib.rs                    # 库根，导出各层公共接口
+│
+│                           ┌─ DDD 纵向三层 ─┐
+├── shared/                   # L0：零业务语义的通用工具
 │   ├── mod.rs
-│   └── math.rs
+│   ├── ids/                  # 强类型 ID（UnitId, SkillId, BuffId, ItemId, QuestId）
+│   ├── error/                # 错误上下文工具
+│   ├── math/                 # 纯数学工具（距离/插值/网格坐标）
+│   ├── random/               # 确定性随机数 Trait
+│   ├── time/                 # GameTime, TurnCount
+│   ├── collections/          # 通用集合扩展
+│   ├── hashing/              # 非加密高速哈希
+│   ├── validation/           # 链式校验器
+│   ├── testing/              # 测试构建工具
+│   ├── traits/               # 横切能力抽象（日志/审计/事务）
+│   └── prelude/              # 统一导出
 │
-├── input/                       # Layer 7 — 输入抽象
-│   ├── plugin.rs
-│   ├── components.rs
-│   ├── events.rs
-│   └── api.rs
+├── core/                     # L1：领域规则层
+│   ├── mod.rs
+│   ├── core_plugin.rs        # Core 层总 Plugin
+│   │
+│   ├── capabilities/         # 15个核心能力领域
+│   │   ├── tag/              # 标签体系
+│   │   ├── attribute/        # 属性体系
+│   │   ├── modifier/         # 数值修改器
+│   │   ├── aggregator/       # 属性聚合管线
+│   │   ├── gameplay_context/ # 统一上下文/载荷
+│   │   ├── spec/             # 配置槽位（Def→Instance 桥梁）
+│   │   ├── condition/        # 条件检查（免疫/限制/激活）
+│   │   ├── trigger/          # 技能激活条件
+│   │   ├── ability/          # 技能逻辑与生命周期
+│   │   ├── targeting/        # 目标选择（含 Grid 范围）
+│   │   ├── execution/        # 执行计算（伤害/治疗/自定义）
+│   │   ├── effect/           # 效果（Period/Duration/Instant）
+│   │   ├── stacking/         # 堆叠规则
+│   │   ├── event/            # 系统间结构化通信
+│   │   ├── cue/              # 表现层信号（VFX/SFX/Anim）
+│   │   └── runtime/          # C3：跨领域运行时编排
+│   │       ├── pipeline/
+│   │       ├── scheduler/
+│   │       ├── registry/
+│   │       ├── command/
+│   │       └── replay/
+│   │
+│   ├── domains/              # 15个业务子系统
+│   │   ├── tactical/         # 战术空间（网格/移动/掩体）
+│   │   ├── terrain/          # 地形（毒池/冰面/高地）
+│   │   ├── faction/          # 阵营关系
+│   │   ├── combat/           # 战斗全流程
+│   │   ├── spell/            # 法术系统
+│   │   ├── reaction/         # 反应/援护
+│   │   ├── progression/      # 经验/等级/职业
+│   │   ├── inventory/        # 背包/物品
+│   │   ├── party/            # 队伍/羁绊
+│   │   ├── camp_rest/        # 营地/休息
+│   │   ├── narrative/        # 叙事/对话
+│   │   ├── quest/            # 任务系统
+│   │   ├── economy/          # 经济/商店
+│   │   ├── crafting/         # 制造/附魔
+│   │   └── summon/           # 召唤物管理
+│   │
+│   └── mod_api/              # Mod 稳定 API
 │
-├── registry/                    # Layer 7 — ID 注册与热重载
-│   ├── plugin.rs
-│   ├── components.rs
-│   ├── systems.rs
-│   └── api.rs
-│
-├── pipeline/                    # Layer 7 — 管线执行引擎
-│   ├── plugin.rs
-│   ├── components.rs
-│   ├── systems.rs
-│   └── api.rs
-│
-├── replay/                      # Layer 7 — 回放系统
-│   ├── plugin.rs
-│   ├── components.rs
-│   ├── systems.rs
-│   └── api.rs
-│
-├── save/                        # Layer 7 — 存档系统
-│   ├── plugin.rs
-│   ├── systems.rs
-│   └── api.rs
-│
-├── grid_map/                    # Layer 1 — 网格地图
-├── terrain/                     # Layer 1 — 地形
-├── faction/                     # Layer 1 — 阵营
-├── turn_phase/                  # Layer 1 — 回合阶段
-│
-├── tag/                         # Layer 2 — Tag
-├── attribute/                   # Layer 2 — 属性
-├── modifier/                    # Layer 2 — Modifier
-├── aggregator/                  # Layer 2 — 聚合器
-├── gameplay_context/            # Layer 2 — 上下文
-├── spec/                        # Layer 2 — Spec
-├── condition/                   # Layer 2 — 条件
-├── trigger/                     # Layer 2 — 触发
-├── ability/                     # Layer 2 — 能力
-├── targeting/                   # Layer 2 — 目标选择
-├── execution/                   # Layer 2 — 执行
-├── effect/                      # Layer 2 — 效果
-├── stacking/                    # Layer 2 — 堆叠
-├── event/                       # Layer 2 — 事件
-├── cue/                         # Layer 2 — 表现信号
-│
-├── combat/                      # Layer 3 — 战斗
-├── spell/                       # Layer 3 — 法术
-├── reaction/                    # Layer 3 — 反应
-│
-├── progression/                 # Layer 4 — 成长
-├── inventory/                   # Layer 4 — 物品
-├── economy/                     # Layer 4 — 经济
-├── crafting/                    # Layer 4 — 制造
-├── summon/                      # Layer 4 — 召唤
-│
-├── party/                       # Layer 5 — 队伍
-├── camp_rest/                   # Layer 5 — 休整
-│
-├── narrative/                   # Layer 6 — 叙事
-├── quest/                       # Layer 6 — 任务
-│
-├── ui/                          # Presentation — UI 层
-│   ├── hud/
-│   ├── battle/
-│   ├── menu/
-│   └── common/
-│
-└── lib.rs                       # App 构建 + Plugin 注册
+├── infra/                    # L2：技术实现层
+│   ├── mod.rs
+│   ├── registry/             # ID 注册与热重载
+│   ├── pipeline/             # 管线执行引擎
+│   ├── replay/               # 回放系统
+│   ├── save/                 # 存档系统
+│   └── input/                # 输入抽象
+│                           └─────────────────┘
+│                           ┌─ 横切四层 ─┐
+├── app/                      # 横切1：启动装配层（Composition Root）
+├── content/                  # 横切2：内容桥接层（数据驱动核心）
+├── tools/                    # 横切3：开发工具层（feature-gated）
+└── modding/                  # 横切4：Mod 扩展层（跨层聚合）
+                            └─────────────┘
 ```
 
 > 🟥 **绝对禁止**在 `src/` 下创建 `components.rs`、`systems.rs`、`events.rs` 等全局技术文件。
@@ -533,7 +620,7 @@ src/
 
 - [ ] 符合 Feature First 原则（禁止全局技术目录）
 - [ ] 符合三层运行时分离（Domain / Application / Presentation）
-- [ ] 符合七层层间依赖方向（禁止反向依赖）
+- [ ] 符合 DDD三层+横切四层层间依赖方向（禁止反向依赖：Shared ← Core ← Infra）
 - [ ] Effect Pipeline 没有被绕过
 - [ ] Modifier Pipeline 没有被绕过
 - [ ] 定义了明确的 Forbidden 事项
@@ -548,6 +635,7 @@ src/
 
 | 上游输入 | 位置 | 在本架构中的使用 |
 |---------|------|----------------|
+| 🟥 **架构设计最高依据** | `docs/00-governance/Fre项目架构设计.md` | DDD三层+横切四层模型、目录结构、依赖方向 |
 | 领域规则 | `docs/02-domain/` (30 文件) | 每个 Feature 模块对应一个或多个领域文档 |
 | 数据 Schema | `docs/04-data/` (33+ 文件) | 每个 Feature 的数据结构定义依据 |
 | 架构规则 | `.trae/rules/架构规则.md` | 宪法的 Feature First、三层架构、依赖方向 |

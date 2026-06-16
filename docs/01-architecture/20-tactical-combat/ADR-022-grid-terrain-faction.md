@@ -276,20 +276,20 @@ fn movement_pathfinding(
 ## Module Design
 
 ```
-src/grid_map/
+src/core/domains/tactical/
   ├── plugin.rs              — GridMapPlugin
   ├── components.rs          — TileMarker (条件性实体化)
   ├── resources.rs           — GridMap
   ├── systems.rs             — 网格初始化、坐标转换
   └── api.rs                 — GridPos, 网格查询函数
 
-src/terrain/
+src/core/domains/terrain/
   ├── plugin.rs              — TerrainPlugin
   ├── resources.rs           — TerrainRegistry (Asset 加载后)
   ├── systems.rs             — 地形效果应用
   └── api.rs                 — TerrainDef, MovementCost
 
-src/faction/
+src/core/domains/faction/
   ├── plugin.rs              — FactionPlugin
   ├── components.rs          — Faction (Component, Tag)
   ├── resources.rs           — FactionRelations

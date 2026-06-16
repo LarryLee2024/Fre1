@@ -215,14 +215,14 @@ ability Feature 负责 Ability 注册
 ## Module Design
 
 ```
-src/progression/
+src/core/domains/progression/
   ├── plugin.rs              — ProgressionPlugin
   ├── components.rs          — Experience, ClassComponent
   ├── systems.rs             — add_xp, level_up, skill_unlock
   ├── events.rs              — XpGained, LevelUpEvent, SkillUnlocked
   └── api.rs                 — ProgressionDef, XpCurve
 
-src/inventory/
+src/core/domains/inventory/
   ├── plugin.rs              — InventoryPlugin
   ├── components.rs          — Inventory, Equipment, ItemStack
   ├── systems.rs             — equip, unequip, use_item, pickup_item

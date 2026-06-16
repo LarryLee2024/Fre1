@@ -176,21 +176,21 @@ fn build(&self, app: &mut App) {
 本管线横跨多个 Feature 模块，但管线编排归属 `execution/` 模块：
 
 ```
-src/ability/
+src/core/capabilities/ability/
   ├── components.rs      — AbilitySpec, AbilityInstance
   ├── systems/
   │   ├── validate.rs    — 校验系统
   │   └── pre_cost.rs    — 前置消耗系统
   └── events.rs          — AbilityCastEvent, AbilityCompleteEvent
 
-src/targeting/
+src/core/capabilities/targeting/
   └── systems.rs         — targeting_system
 
-src/execution/
+src/core/capabilities/execution/
   ├── systems.rs         — execute_ability_system (Ability → Effect 转换)
   └── pipelines.rs       — Pipeline 编排（chain 顺序）
 
-src/effect/
+src/core/capabilities/effect/
   ├── components.rs      — EffectInstance, ActiveEffect
   ├── systems/
   │   └── resolve.rs     — resolve_effect_system

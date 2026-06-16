@@ -1,7 +1,7 @@
 ---
 id: domains.economy.schema.v1
 title: Economy Schema — 经济/交易数据架构
-status: draft
+status: stable
 owner: data-architect
 created: 2026-06-16
 updated: 2026-06-16

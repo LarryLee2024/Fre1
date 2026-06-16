@@ -1,7 +1,7 @@
 ---
 id: capabilities.ability.schema.v1
 title: Ability Schema — 技能逻辑数据架构
-status: draft
+status: stable
 owner: data-architect
 created: 2026-06-16
 updated: 2026-06-16

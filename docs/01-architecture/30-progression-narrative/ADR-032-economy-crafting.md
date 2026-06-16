@@ -213,7 +213,7 @@ OnSummonDurationEnd (Observer)
 ## Module Design
 
 ```
-src/economy/
+src/core/domains/economy/
   ├── plugin.rs              — EconomyPlugin
   ├── components.rs          — Wallet
   ├── systems.rs             — buy_item, sell_item, restock_shop
@@ -221,13 +221,13 @@ src/economy/
   ├── events.rs              — ItemPurchased, ItemSold, GoldChanged
   └── api.rs                 — ShopDef, Price, Wallet API
 
-src/crafting/
+src/core/domains/crafting/
   ├── plugin.rs              — CraftingPlugin
   ├── systems.rs             — craft_item, roll_craft_result
   ├── events.rs              — ItemCrafted, CraftFailed
   └── api.rs                 — RecipeDef, CraftCategory
 
-src/summon/
+src/core/domains/summon/
   ├── plugin.rs              — SummonPlugin
   ├── components.rs          — Summoned, SummonDuration, MinionTag
   ├── systems.rs             — summon_minion, despawn_minion

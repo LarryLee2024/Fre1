@@ -270,14 +270,14 @@ BuffTickSystem
 ## Module Design
 
 ```
-src/spell/
+src/core/domains/spell/
   ├── plugin.rs              — SpellPlugin
   ├── components.rs          — SpellInstance, ManaPool (Component)
   ├── systems.rs             — spell_validation, mana_deduction, cast_progress
   ├── events.rs              — SpellCastRequest, SpellCastResult
   └── api.rs                 — SpellDef, SpellSchool
 
-src/reaction/
+src/core/domains/reaction/
   ├── plugin.rs              — ReactionPlugin
   ├── components.rs          — ReactionInstance, ReactionCooldown
   ├── systems.rs             — reaction_scanner, reaction_executor

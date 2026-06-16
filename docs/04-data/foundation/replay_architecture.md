@@ -1,7 +1,7 @@
 ---
 id: foundation.replay-architecture.v1
 title: Replay Architecture Deep Dive — 回放架构详述
-status: draft
+status: stable
 owner: data-architect
 created: 2026-06-16
 updated: 2026-06-16

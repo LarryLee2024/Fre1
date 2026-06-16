@@ -1,10 +1,16 @@
-# Modifier（修改器）领域规则 v1.0
-
-Version: 1.0
-Status: Draft
-Applies To: Capabilities — 核心基石层
-
 ---
+id: 02-domain.modifier
+title: Modifier（修改器）领域规则 v1.0
+status: stable
+owner: domain-designer
+created: 2026-06-16
+updated: 2026-06-16
+tags:
+  - domain
+  - modifier
+  - capabilities
+---
+
 
 ## 1. 统一术语
 

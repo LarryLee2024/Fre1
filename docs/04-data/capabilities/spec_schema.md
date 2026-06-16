@@ -1,7 +1,7 @@
 ---
 id: capabilities.spec.schema.v1
 title: Spec Schema — 规格/配置数据架构
-status: draft
+status: stable
 owner: data-architect
 created: 2026-06-16
 updated: 2026-06-16

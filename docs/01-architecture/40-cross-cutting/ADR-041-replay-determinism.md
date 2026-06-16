@@ -225,7 +225,7 @@ fn guard_external_state(
 ## Module Design
 
 ```
-src/replay/
+src/infra/replay/
   ├── plugin.rs              — ReplayPlugin
   ├── resources.rs           — ReplayRecorder, ReplayPlayer, ReplayModeGuard, DeterministicRng
   ├── systems.rs             — start_recording, finalize_frame, playback_step

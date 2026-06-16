@@ -208,17 +208,17 @@ fn apply_hp_damage(
 ## Module Design
 
 ```
-src/modifier/
+src/core/capabilities/modifier/
   ├── components.rs      — ModifierSet, ModifierEntry, ModifierSource
   ├── systems.rs         — on_apply_modifier, on_remove_modifier
   ├── resources.rs       — ModifierResolver
   └── events.rs          — ModifierChanged, ApplyModifier, RemoveModifier
 
-src/attribute/
+src/core/capabilities/attribute/
   ├── components.rs      — AttributeSet (if runtime overrides needed)
   └── resources.rs       — AttributeResolver
 
-src/aggregator/
+src/core/capabilities/aggregator/
   ├── components.rs      — (策略注册主要走 Res)
   └── resources.rs       — AggregationStrategies
 ```

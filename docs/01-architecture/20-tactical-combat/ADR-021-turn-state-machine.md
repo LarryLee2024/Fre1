@@ -94,7 +94,7 @@ pub enum TurnSubState {
 ### 4. 每个阶段的 System 职责
 
 ```rust
-// src/turn_phase/systems.rs
+// src/core/domains/tactical/systems.rs
 
 /// 进入 TurnStart
 fn on_enter_turn_start(
@@ -251,7 +251,7 @@ TurnSubState::TurnStart (OnEnter)
 ## Module Design
 
 ```
-src/turn_phase/
+src/core/domains/tactical/
   ├── plugin.rs              — TurnPhasePlugin
   ├── components.rs          — ActionPoints, MovementLeft
   ├── resources.rs           — TurnQueue, RoundCounter

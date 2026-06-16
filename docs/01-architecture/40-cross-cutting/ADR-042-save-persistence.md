@@ -195,7 +195,7 @@ Save File (save_*.bin)
 ## Module Design
 
 ```
-src/save/
+src/infra/save/
   ├── plugin.rs              — SavePlugin
   ├── components.rs          — (可能需要)
   ├── resources.rs           — SaveManager, AutoSaveConfig, EntityRemapper

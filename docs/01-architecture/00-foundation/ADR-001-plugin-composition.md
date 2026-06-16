@@ -16,7 +16,7 @@ supersedes: none
 
 ## 背景
 
-Bevy 中 Plugin 是模块化的核心单元。35 个 Feature 需要以正确的顺序注册，确保：
+Bevy 中 Plugin 是模块化的核心单元。30+ 个领域模块需要以正确的顺序注册，确保：
 - Asset（Def）在下游 Systems 执行前加载完成
 - Resource 在依赖它的 Feature 注册前已初始化
 - State 在依赖状态转换的 Systems 注册前就绪
@@ -35,80 +35,87 @@ Bevy 中 Plugin 是模块化的核心单元。35 个 Feature 需要以正确的�
 ```
 App::new()
     // ════════════════════════════════════════════
-    // Phase 0: Core Bevy + Diagnostics
+    // Phase 0: Core Bevy + Shared (L0)
     // ════════════════════════════════════════════
     .add_plugins(DefaultPlugins)
+    .add_plugins(shared::SharedPlugin)
 
     // ════════════════════════════════════════════
-    // Phase 1: Infrastructure (Layer 7)
+    // Phase 1: Capabilities — Foundation (L1 Core)
     // ════════════════════════════════════════════
-    .add_plugins(input::InputPlugin)
-    .add_plugins(common::CommonPlugin)
-    .add_plugins(registry::RegistryPlugin)
-    .add_plugins(pipeline::PipelinePlugin)
-    .add_plugins(replay::ReplayPlugin)
-    .add_plugins(save::SavePlugin)
+    .add_plugins(core::capabilities::tag::TagPlugin)
+    .add_plugins(core::capabilities::attribute::AttributePlugin)
+    .add_plugins(core::capabilities::modifier::ModifierPlugin)
+    .add_plugins(core::capabilities::aggregator::AggregatorPlugin)
+    .add_plugins(core::capabilities::gameplay_context::GameplayContextPlugin)
 
     // ════════════════════════════════════════════
-    // Phase 2: Tactical Foundation (Layer 1)
+    // Phase 2: Capabilities — Logic Skeleton (L1 Core)
     // ════════════════════════════════════════════
-    .add_plugins(grid_map::GridMapPlugin)
-    .add_plugins(terrain::TerrainPlugin)
-    .add_plugins(faction::FactionPlugin)
-    .add_plugins(turn_phase::TurnPhasePlugin)
-    .add_plugins(movement::MovementPlugin)
+    .add_plugins(core::capabilities::spec::SpecPlugin)
+    .add_plugins(core::capabilities::condition::ConditionPlugin)
+    .add_plugins(core::capabilities::trigger::TriggerPlugin)
+    .add_plugins(core::capabilities::event::EventPlugin)
 
     // ════════════════════════════════════════════
-    // Phase 3: Capability System (Layer 2)
+    // Phase 3: Capabilities — Behavior (L1 Core)
     // ════════════════════════════════════════════
-    .add_plugins(tag::TagPlugin)
-    .add_plugins(attribute::AttributePlugin)
-    .add_plugins(modifier::ModifierPlugin)
-    .add_plugins(aggregator::AggregatorPlugin)
-    .add_plugins(gameplay_context::GameplayContextPlugin)
-    .add_plugins(spec::SpecPlugin)
-    .add_plugins(condition::ConditionPlugin)
-    .add_plugins(trigger::TriggerPlugin)
-    .add_plugins(ability::AbilityPlugin)
-    .add_plugins(targeting::TargetingPlugin)
-    .add_plugins(execution::ExecutionPlugin)
-    .add_plugins(effect::EffectPlugin)
-    .add_plugins(stacking::StackingPlugin)
-    .add_plugins(event::EventPlugin)
-    .add_plugins(cue::CuePlugin)
+    .add_plugins(core::capabilities::ability::AbilityPlugin)
+    .add_plugins(core::capabilities::targeting::TargetingPlugin)
+    .add_plugins(core::capabilities::execution::ExecutionPlugin)
+    .add_plugins(core::capabilities::effect::EffectPlugin)
+    .add_plugins(core::capabilities::stacking::StackingPlugin)
+    .add_plugins(core::capabilities::cue::CuePlugin)
 
     // ════════════════════════════════════════════
-    // Phase 4: Combat Execution (Layer 3)
+    // Phase 4: Capabilities — Runtime (L1 Core)
     // ════════════════════════════════════════════
-    .add_plugins(combat::CombatPlugin)
-    .add_plugins(spell::SpellPlugin)
-    .add_plugins(reaction::ReactionPlugin)
+    .add_plugins(core::capabilities::runtime::RuntimePlugin)
 
     // ════════════════════════════════════════════
-    // Phase 5: Progression & Economy (Layer 4)
+    // Phase 5: Business Domains — Foundation (L1 Core)
     // ════════════════════════════════════════════
-    .add_plugins(progression::ProgressionPlugin)
-    .add_plugins(inventory::InventoryPlugin)
-    .add_plugins(economy::EconomyPlugin)
-    .add_plugins(crafting::CraftingPlugin)
-    .add_plugins(summon::SummonPlugin)
+    .add_plugins(core::domains::tactical::TacticalPlugin)
+    .add_plugins(core::domains::terrain::TerrainPlugin)
+    .add_plugins(core::domains::faction::FactionPlugin)
 
     // ════════════════════════════════════════════
-    // Phase 6: Party & Camp (Layer 5)
+    // Phase 6: Business Domains — Core (L1 Core)
     // ════════════════════════════════════════════
-    .add_plugins(party::PartyPlugin)
-    .add_plugins(camp_rest::CampRestPlugin)
+    .add_plugins(core::domains::combat::CombatPlugin)
+    .add_plugins(core::domains::spell::SpellPlugin)
+    .add_plugins(core::domains::reaction::ReactionPlugin)
+    .add_plugins(core::domains::progression::ProgressionPlugin)
+    .add_plugins(core::domains::inventory::InventoryPlugin)
+    .add_plugins(core::domains::party::PartyPlugin)
+    .add_plugins(core::domains::camp_rest::CampRestPlugin)
 
     // ════════════════════════════════════════════
-    // Phase 7: Narrative & Content (Layer 6)
+    // Phase 7: Business Domains — Narrative & Economy (L1 Core)
     // ════════════════════════════════════════════
-    .add_plugins(narrative::NarrativePlugin)
-    .add_plugins(quest::QuestPlugin)
+    .add_plugins(core::domains::narrative::NarrativePlugin)
+    .add_plugins(core::domains::quest::QuestPlugin)
+    .add_plugins(core::domains::economy::EconomyPlugin)
+    .add_plugins(core::domains::crafting::CraftingPlugin)
+    .add_plugins(core::domains::summon::SummonPlugin)
 
     // ════════════════════════════════════════════
-    // Phase 8: UI (Presentation — 特殊处理)
+    // Phase 8: Infrastructure (L2)
     // ════════════════════════════════════════════
-    .add_plugins(ui::UiPlugin)
+    .add_plugins(infra::registry::RegistryPlugin)
+    .add_plugins(infra::pipeline::PipelinePlugin)
+    .add_plugins(infra::replay::ReplayPlugin)
+    .add_plugins(infra::save::SavePlugin)
+    .add_plugins(infra::input::InputPlugin)
+
+    // ════════════════════════════════════════════
+    // Phase 9: Cross-cutting
+    // ════════════════════════════════════════════
+    .add_plugins(app::AppPlugin)
+    .add_plugins(content::ContentPlugin)
+    #[cfg(feature = "dev")]
+    .add_plugins(tools::DevToolsPlugin)
+    .add_plugins(modding::ModdingPlugin)
 ```
 
 ### 2. Plugin 内部结构规范
@@ -177,11 +184,12 @@ pub struct GamePlugins;
 impl PluginGroup for GamePlugins {
     fn build(self) -> bevy::app::PluginGroupBuilder {
         PluginGroupBuilder::start::<Self>()
-            // Phase 1
-            .add(RegistryPlugin)
-            .add(PipelinePlugin)
-            // Phase 2
-            .add(GridMapPlugin)
+            // Phase 1: Capabilities Foundation
+            .add(core::capabilities::tag::TagPlugin)
+            .add(core::capabilities::attribute::AttributePlugin)
+            // Phase 2: Business Domains
+            .add(core::domains::tactical::TacticalPlugin)
+            .add(core::domains::combat::CombatPlugin)
             // ...
     }
 }
@@ -240,14 +248,14 @@ Plugin 是编译时静态结构，不直接涉及运行时数据。本 ADR 不�
 ## 后果
 
 ### 正面
-- 35 个 Plugin 按阶段注册，依赖关系线性清晰
+- 30+ 个 Plugin 按阶段注册，依赖关系线性清晰
 - PluginGroup 机制让上层可以一次注册整个游戏
 - 条件编译天然支持 dev/test 环境
 - Plugin 内部结构统一，代码审查可预期
 
 ### 负面
 - 注册顺序硬编码在 `lib.rs` 中，新 Plugin 需要找到正确 Phase 插入
-- Phase 数量多（8 个），但这是 Feature 数量多的必然结果
+- Phase 数量多（10 个），但这是领域数量多的必然结果
 
 ## 替代方案
 
@@ -260,6 +268,6 @@ Plugin 是编译时静态结构，不直接涉及运行时数据。本 ADR 不�
 ## 评审要点
 
 - [ ] 是否缺少必要的前置 Plugin？
-- [ ] Phase 8 的 UI Plugin 是否确实需要最后注册？
-- [ ] `GamePluginGroup` 是否应该拆分为子 Group（BattleGroup / MetaGroup / UIGroup）？
-- [ ] `registry::RegistryPlugin` 是否应该在所有其他 Plugin 之前加载？
+- [ ] Capabilities Foundation → Logic Skeleton → Behavior → Runtime 的顺序是否合理？
+- [ ] `GamePluginGroup` 是否应该拆分为子 Group（CapabilityGroup / DomainGroup / InfraGroup）？
+- [ ] Infrastructure (L2) 在 Domains 之后注册是否正确（Domains 需先注册 rules，Infra 随后提供管线支持）？

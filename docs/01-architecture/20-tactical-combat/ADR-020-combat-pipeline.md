@@ -298,7 +298,7 @@ impl Plugin for CombatPlugin {
 ## Module Design
 
 ```
-src/combat/
+src/core/domains/combat/
   ├── plugin.rs              — CombatPlugin
   ├── components.rs          — (Combat 专用 Component，如 Invulnerable Tag)
   ├── systems.rs             — 管线阶段 System
