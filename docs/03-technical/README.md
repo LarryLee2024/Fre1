@@ -4,7 +4,7 @@ title: Technical
 status: stable
 owner: feature-developer
 created: 2026-06-14
-updated: 2026-06-15
+updated: 2026-06-16
 tags:
   - technical
 ---
@@ -31,3 +31,5 @@ tags:
 | `localization-rules.md` | 多语言、Fluent（含 I18n 铃兰参考附录） |
 | `shared-layer-rules.md` | Shared 层规则 |
 | `ui-architecture-rules.md` | ViewModel、UiCommand |
+
+共 14 个技术规则文件，覆盖 ECS 通信、错误体系、日志、确定性、回放、MOD、UI 架构、性能预算等技术实现领域。

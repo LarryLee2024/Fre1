@@ -1,14 +1,17 @@
 # Tactical RPG
 
-基于 Bevy 0.18.1 的回合制战棋游戏，采用 ECS 架构与数据驱动设计。
+基于 Bevy 0.18.1 的回合制战棋游戏（SRPG），采用七层 ECS 架构与数据驱动设计，灵感来自 GAS（Game Ability System）。
 
 ## 核心功能
 
 - **回合制战斗**：基于回合阶段状态机（选择 → 行动 → 结算），支持移动、攻击、技能、道具等操作
 - **数据驱动配置**：单位、技能、Buff、地形、特质、AI 行为、关卡均通过 RON 文件配置，无需修改代码即可扩展内容
 - **关卡与胜负条件**：关卡配置包含可组合的胜利/失败条件（全灭、存活回合、击败 Boss、超时等），支持多条件 OR 组合
-- **Effect Pipeline**：战斗效果通过生成 → 修饰 → 执行的管线处理，支持 Trait/Modifier 组合扩展
-- **AI 系统**：数据驱动的 AI 行为配置，支持多种策略模板
+- **Effect Pipeline**：战斗效果通过生成 → 修饰 → 执行的管线处理（GAS 风格），支持 Execution/Modifier/Cue 组合扩展
+- **AI 系统**：数据驱动的 AI 行为配置，支持多种策略模板，与玩家共用 Effect Pipeline
+- **装备与背包**：装备穿脱、物品使用、容器管理、负重系统
+- **MOD 支持**：MOD 加载、沙箱隔离、兼容性校验
+- **国际化**：基于 Fluent 的多语言支持，字体回退链
 - **调试面板**：基于 egui 的运行时调试工具，支持 World Inspector 和状态查看
 
 ## 安装指南
@@ -23,7 +26,7 @@
 ```bash
 # 克隆项目
 git clone <repository-url>
-cd a1
+cd Fre
 
 # 编译运行
 cargo run
@@ -39,10 +42,16 @@ cargo test
 
 ```
 src/
-  core/         # 业务逻辑 — 战斗、技能、Buff、地图、角色、AI、回合、装备、背包、战役
+  app/          # Layer 1: 应用装配与 Plugin 编排
+  core/         # Layer 2: 业务逻辑 — 战斗、技能、Buff、地图、角色、AI、回合、装备、背包、战役
     battle/     # 战斗效果管线（generate → modify → execute）
-    buff/       # Buff/Debuff 系统
-    skill/      # 技能系统
+    buff/       # Buff/Debuff 系统（⚠️ 正在迁移为 Effect + Duration）
+    skill/      # 技能系统（⚠️ 正在迁移为 Ability）
+    ability/    # 能力系统（新增，取代 Skill）
+    effect/     # 效果系统一级领域
+    execution/  # 执行算式层（trait-based 公式执行）
+    cue/        # 表现信号总线（GameplayCue）
+    attribute/  # 属性系统（Primary/Derived 双分层）
     character/  # 单位组件与 Trait 扩展体系
     map/        # 地图、寻路、关卡配置加载
     turn/       # 回合状态机、行动顺序、胜负条件检查
@@ -50,48 +59,55 @@ src/
     equipment/  # 装备系统
     inventory/  # 背包系统
     campaign/   # 战役编排与关卡序列
-  shared/       # 跨层共享类型（强类型 ID、错误工具）
-  infrastructure/ # 基础设施（资源加载、日志）
-  content/      # Content 层统一入口（RON 加载模块）
-  ui/           # 用户界面面板与组件
-  input/        # 输入处理
+    targeting/  # 目标选择（取代 Selector）
+    trigger/    # 触发器系统
+    tag/        # 标签系统（GameplayTag 位掩码）
+    movement/   # 移动系统
+  shared/       # Layer 3: 跨层共享类型（强类型 ID、Registry、错误工具、事件、验证）
+  infrastructure/ # Layer 4: 基础设施（资源加载、日志、本地化、配置、回放、持久化、热重载、审计）
+  content/      # Layer 5: Content 层统一入口（RON 加载模块）
+  modding/      # Layer 6: MOD 支持（加载器、沙箱、校验器）
+  ui/           # 表现层 — 用户界面面板与组件
   debug/        # 调试面板与查看器
-  app/          # 应用装配与 Plugin 编排
+  tools/        # Layer 7: 开发工具（永不发布）
+  input/        # 输入处理
 
 content/       # RON 游戏配置（数据驱动）
   characters/  # 单位模板
   skills/      # 技能定义
   buffs/       # Buff 定义
+  effects/     # 效果定义（含 Duration）
+  executions/  # 执行算式定义
+  cues/        # 表现信号配置
+  attributes/  # 属性定义
+  tags/        # 标签定义
   classes/     # 职业与特质
   terrains/    # 地形类型
   ai_behaviors/ # AI 行为模板
   stages/      # 关卡配置
   campaigns/   # 战役定义
-  definitions/ # 属性与标签定义
   modifiers/   # 修饰规则（元素交互等）
-  equipments/  # 装备定义
-  items/       # 物品定义
+  formulas/    # 公式配置
 
 assets/        # 二进制资源（字体、数据）
   fonts/       # 字体文件
   data/        # 运行时数据
 
 docs/
-  00-governance/     # 治理规则（AI 开发宪法、编码规范）
-  01-architecture/   # 架构设计（README.md 为最高优先级）
-  02-domain/         # 领域规则文档（按子领域分组）
-  03-technical/      # 技术实现文档（ECS、通信、性能）
-  04-data/           # 数据与配置文档
-  05-testing/        # 测试规范
-  06-ai/             # AI 协作流程
-  07-operations/     # 运维文档
-  08-decisions/      # 架构决策记录（ADR）
-  09-planning/       # 执行计划
+  00-governance/     # 治理规则（AI 开发宪法、编码规范、Bevy 参考）
+  01-architecture/   # 架构设计（README.md 为最高优先级，v4.1）
+  02-domain/         # 领域规则文档（20 个子领域，39 个规则文件）
+  03-technical/      # 技术实现文档（ECS、通信、性能，14 个文件）
+  04-data/           # 数据与配置文档（7 个规则 + 3 个参考数据目录）
+  05-testing/        # 测试规范（测试宪法 v3.1）
+  06-ai/             # AI 协作流程（7-Agent 角色定义）
+  07-operations/     # 运维文档（待填充）
+  08-decisions/      # 架构决策记录（35 个 ADR）
+  09-planning/       # 执行计划（4 个文件）
   10-reviews/        # 代码审查记录
   11-refactor/       # 技术债扫描记录
   98-roadmap/        # 项目路线图
   99-history/        # 历史归档
-  其他/              # 临时目录
 
 tests/         # 集成测试、场景测试、快照测试
 ```
@@ -102,82 +118,90 @@ tests/         # 集成测试、场景测试、快照测试
 
 | 文件 | 说明 | 优先级 |
 |------|------|--------|
-| `docs/01-architecture/README.md` | 七层架构总纲（v4.0），Feature 边界、ECS 规则、Effect/Modifier 管线 | 🟥 **最高** |
+| `docs/01-architecture/README.md` | 七层架构总纲（v4.1），Feature 边界、ECS 规则、Effect/Modifier 管线 | 🟥 **最高** |
 | `docs/00-governance/ai-constitution-complete.md` | AI 开发宪法 v1.6 完整版（20 部分），覆盖架构/ECS/代码/测试/日志/工程质量 | 🟥 **最高** |
 | `docs/00-governance/coding-rules.md` | 编码执行规范 v1.0，AI 编码自检清单，Effect/Modifier 管线保护 | 🟩 必须遵守 |
 | `docs/02-domain/README.md` | 领域规则汇总索引，39 个领域文件的速查入口 | 🟩 必须遵守 |
+| `docs/04-data/README.md` | 数据架构规范，Schema 设计指南、Save/Replay 兼容规则 | 🟩 必须遵守 |
 | `docs/05-testing/test-spec.md` | 测试宪法 v3.1，测试分层/回放测试/覆盖率策略 | 🟩 必须遵守 |
 
 ### `docs/02-domain/` — 领域规则（39 文件）
 
 按领域子目录分组，开发对应功能时直接查阅：
 
-**Core Domain（14 文件）— 核心业务规则**
+**Core Domain（20 文件）— 核心业务规则**
 
 | 文件 | 关键词 |
 |------|--------|
 | `battle/battle-rules.md` | 战斗状态机、Effect Pipeline、伤害计算 |
 | `character/character-rules.md` | 角色属性、Faction、UnitSnapshot |
-| `skill/skill-rules.md` | 技能定义、冷却、五阶段释放管线 |
+| `ability/ability-rules.md` | Ability 定义、冷却、五阶段释放管线（取代 Skill） |
+| `effect/effect-rules.md` | 效果系统一级领域（Damage/Heal/ApplyBuff 原子操作） |
+| `execution/execution-rules.md` | 执行算式层（trait-based Damage/Heal/Shield 独立 Executor） |
+| `cue/cue-rules.md` | 表现信号总线（GameplayCue 统一表现事件） |
+| `attribute/attribute-rules.md` | 属性一级领域（Primary/Derived 双分层） |
 | `attribute-modifier/attribute-modifier-rules.md` | Modifier 管线、属性修饰、叠加规则 |
 | `turn/turn-rules.md` | TurnPhase、回合阶段、行动队列 |
-| `trigger/trigger-rules.md` | 触发器、事件链（伤害→护盾→吸血→反击） |
+| `trigger/trigger-rules.md` | 触发器、事件链（ExecutionStack、TriggerRegistry） |
 | `condition/condition-rules.md` | 条件系统、效果判断、运行时条件 |
 | `formula/formula-rules.md` | 公式系统、数值计算、表达式求值 |
-| `selector/selector-rules.md` | 目标选择、AOE、空地选择 |
+| `targeting/targeting-rules.md` | 目标选择、AOE、空地选择（取代 Selector） |
 | `duration/duration-rules.md` | 持续时间（回合/真实时间/永久） |
 | `cost/cost-rules.md` | 消耗系统、资源扣除 |
 | `stack-policy/stack-policy-rules.md` | 堆叠策略、Buff叠加/替换 |
 | `requirement/requirement-rules.md` | 释放前提、技能可用性检查 |
+| `tag/tag-rules.md` | 标签系统（GameplayTag 位掩码、三层标签管理） |
 | `input/input-rules.md` | 输入处理、UiCommand |
+| `skill/skill-rules.md` *(已过时)* | ⚠️ 已被 ability-rules.md 取代 |
+| `buff/buff-rules.md` *(已废弃)* | ⚠️ 被吸收为 Effect + Duration（ADR-026） |
 
-**Infrastructure（7 文件）— 基础设施规则（→ `docs/03-technical/`、`docs/05-testing/`）**
-
-| 文件 | 关键词 |
-|------|--------|
-| `03-technical/error-system-rules.md` | 错误处理、Result 传播、分级 |
-| `03-technical/logging-rules.md` | 日志分级、格式、调试日志 |
-| `03-technical/persistence-rules.md` | 存档格式、版本迁移 |
-| `03-technical/hot-reload-rules.md` | Definition 热更新、战斗中禁止 |
-| `03-technical/determinism-rules.md` | 确定性、多 RNG 流独立 |
-| `03-technical/replay-rules.md` | 战斗回放、Command Stream |
-| `05-testing/testing-rules.md` | 测试金字塔、回放测试 |
-
-**Content/Data（6 文件）— 数据与内容规则（→ `docs/04-data/`）**
+**Infrastructure（7 文件）— 基础设施规则**
 
 | 文件 | 关键词 |
 |------|--------|
-| `04-data/content-system-rules.md` | RON 加载、Registry、Definition 不可变 |
-| `04-data/config-system-rules.md` | 运行时配置、热重载 |
-| `04-data/content-migration-rules.md` | 版本兼容、字段兼容 |
-| `04-data/asset-lifecycle-rules.md` | 资源生命周期、Handle 类型、内存预算 |
-| `04-data/asset-organization-rules.md` | 三树分离、命名空间 |
-| `04-data/feature-flag-rules.md` | Feature Flag、灰度发布 |
+| `error-system-rules.md` | 错误处理、Result 传播、分级 |
+| `logging-rules.md` | 日志分级、格式、调试日志 |
+| `persistence-rules.md` | 存档格式、版本迁移 |
+| `hot-reload-rules.md` | Definition 热更新、战斗中禁止 |
+| `determinism-rules.md` | 确定性、多 RNG 流独立 |
+| `replay-rules.md` | 战斗回放、Command Stream |
+| `testing-rules.md` | 测试金字塔、回放测试 |
+
+**Content/Data（6 文件）— 数据与内容规则**
+
+| 文件 | 关键词 |
+|------|--------|
+| `content-system-rules.md` | RON 加载、Registry、Definition 不可变 |
+| `config-system-rules.md` | 运行时配置、热重载 |
+| `content-migration-rules.md` | 版本兼容、字段兼容 |
+| `asset-lifecycle-rules.md` | 资源生命周期、Handle 类型、内存预算 |
+| `asset-organization-rules.md` | 三树分离、命名空间 |
+| `feature-flag-rules.md` | Feature Flag、灰度发布 |
 
 **Cross-cutting（12 文件）— 横切关注点**
 
 | 文件 | 关键词 |
 |------|--------|
-| `01-architecture/layer-architecture-rules.md` | 分层架构、层间依赖方向 |
-| `03-technical/ecs-communication-rules.md` | Hook/Observer/Message/Trigger |
-| `03-technical/command-bus-rules.md` | UiCommand、命令总线 |
-| `03-technical/shared-layer-rules.md` | Shared 层、公共类型 |
-| `03-technical/modding-system-rules.md` | MOD 加载、资源隔离 |
-| `03-technical/ui-architecture-rules.md` | ViewModel、UiCommand、UI 渲染 |
-| `03-technical/localization-rules.md` | 多语言、Fluent |
-| `02-domain/map/map-terrain-rules.md` | 地图地形、寻路、视野 |
-| `02-domain/ai/ai-rules.md` | AI 行为、策略模板、决策管线 |
-| `03-technical/performance-budget-rules.md` | 帧率目标、内存限制 |
-| `04-data/validation-rules.md` | 数据完整性、配置校验 |
-| `03-technical/event-audit-rules.md` | 事件审计、双轨制日志 |
+| `layer-architecture-rules.md` | 分层架构、层间依赖方向 |
+| `ecs-communication-rules.md` | Hook/Observer/Message/Trigger |
+| `command-bus-rules.md` | UiCommand、命令总线 |
+| `shared-layer-rules.md` | Shared 层、公共类型 |
+| `modding-system-rules.md` | MOD 加载、资源隔离 |
+| `ui-architecture-rules.md` | ViewModel、UiCommand、UI 渲染 |
+| `localization-rules.md` | 多语言、Fluent |
+| `map-terrain-rules.md` | 地图地形、寻路、视野 |
+| `ai-rules.md` | AI 行为、策略模板、决策管线 |
+| `performance-budget-rules.md` | 帧率目标、内存限制 |
+| `validation-rules.md` | 数据完整性、配置校验 |
+| `event-audit-rules.md` | 事件审计、双轨制日志 |
 
-### `docs/01-architecture/` — 架构设计（38 文件）
+### `docs/01-architecture/` — 架构设计（36 文件）
 
-七层架构各领域的详细设计文档：
+七层架构各领域的详细设计文档（v4.1）：
 
 | 分组 | 文件 | 核心内容 |
 |------|------|----------|
-| 🏗️ 架构总纲 | `app-bootstrap.md` | App 装配器、状态机、启动/关闭序列 |
+| 架构总纲 | `app-bootstrap.md` | App 装配器、状态机、启动/关闭序列 |
 | | `layer-contracts.md` | 七层边界定义、三问判断法 |
 | | `layer-architecture-rules.md` | 分层架构、层间依赖方向 |
 | | `project-structure.md` | 三棵树分离、完整源码/资产/内容树 |
@@ -186,15 +210,15 @@ tests/         # 集成测试、场景测试、快照测试
 | | `schedules-design.md` | 自定义 Schedule、SystemSet 排序 |
 | | `infrastructure-design.md` | 20 个 Infrastructure 模块 |
 | | `migration-roadmap.md` | 7 Phase 迁移计划 |
-| ⚔️ 战斗/技能 | `battle-fsm-design.md` | 战斗 FSM、Guard/Action/Effect 三段式 |
-| | `skill-buff-abstraction.md` | Effect Executor 抽象、ActionQueue |
+| 战斗/技能 | `battle-fsm-design.md` | 战斗 FSM、Guard/Action/Effect 三段式 |
+| | `skill-buff-abstraction.md` | Effect Executor 抽象、SRPG Lite-GAS 10 模块对齐 |
 | | `command-bus-design.md` | GameCommand、Memento 撤销 |
-| 🧙 角色/属性 | `component-design-rules.md` | 四位一体组件分类、Hook 安全 |
+| 角色/属性 | `component-design-rules.md` | 四位一体组件分类、Hook 安全 |
 | | `system-design-rules.md` | Query 参数上限、读写分离 |
 | | `determinism-rules.md` | ChaCha8Rng、整数精度、状态哈希 |
-| 🗺️ 地图/寻路 | `pathfinding-design.md` | PathFinder trait、UnitBlocker |
-| 🎨 UI | `ui-domain-boundary-rules.md` | 单向数据流、ViewModel、UiCommand |
-| 📦 数据/配置 | `content-pipeline.md` | RON→Def→Data→Registry、LoadingProgress |
+| 地图/寻路 | `pathfinding-design.md` | PathFinder trait、UnitBlocker |
+| UI | `ui-domain-boundary-rules.md` | 单向数据流、ViewModel、UiCommand |
+| 数据/配置 | `content-pipeline.md` | RON→Def→Data→Registry、LoadingProgress |
 | | `content-data-format.md` | RON 契约、两阶段加载 |
 | | `content-migration-design.md` | 内容格式迁移链 |
 | | `config-system-design.md` | 四层配置、反上帝配置 |
@@ -203,19 +227,19 @@ tests/         # 集成测试、场景测试、快照测试
 | | `asset-lifecycle-rules.md` | Handle 选择、分阶段卸载、内存预算 |
 | | `asset-namespace-design.md` | 命名空间前缀、MOD 隔离 |
 | | `save-migration-rules.md` | 存档 SemVer、三步删除原则 |
-| 📋 事件/日志/错误 | `events-audit-design.md` | 独立 Struct 事件、EventWhitelist |
+| 事件/日志/错误 | `events-audit-design.md` | 独立 Struct 事件、EventWhitelist |
 | | `logging-design.md` | 领域事件驱动日志、LogObserver |
 | | `error-architecture.md` | 三层错误、失败分类学 |
-| 🔧 工具/调试 | `tools-architecture.md` | Tools 二进制、data_validator |
+| 工具/调试 | `tools-architecture.md` | Tools 二进制、data_validator |
 | | `testing-architecture.md` | 五层测试金字塔、Golden Test |
 | | `validation-rules.md` | 校验检查点、全局不变量 |
 | | `performance-budget.md` | 60fps 帧预算、模块级预算 |
 | | `feature-flag-design.md` | 7 个 Feature Flag、PluginGroup |
 | | `i18n-design.md` | Fluent 国际化、字体回退链 |
 | | `modding-design.md` | MOD 生命周期、分级权限策略 |
-| | `collaboration-model.md` | AI 6-Agent 协作、Handoff 协议 |
+| | `collaboration-model.md` | AI 7-Agent 协作、Handoff 协议 |
 
-### `docs/08-decisions/` — 架构决策记录（27 ADR）
+### `docs/08-decisions/` — 架构决策记录（35 ADR）
 
 | 文件 | 主题 |
 |------|------|
@@ -245,6 +269,14 @@ tests/         # 集成测试、场景测试、快照测试
 | `ADR-025-七领域模块化架构设计.md` | 七领域模块化 |
 | `ADR-026-SRPG-Lite-GAS-架构对齐.md` | GAS 架构对齐 |
 | `ADR-027-业务模块执行计划结果.md` | 业务模块执行结果 |
+| `ADR-028-logging-error-architecture-review.md` | 日志与错误架构审查 |
+| `ADR-029-数据模型完全重构总纲.md` | 数据模型完全重构总纲 |
+| `ADR-030-ID系统与Registry基础设施重构.md` | ID 系统与 Registry 重构 |
+| `ADR-031-核心属性与标签系统重构.md` | 属性与标签系统重构 |
+| `ADR-032-Effect管线全链路重构.md` | Effect 管线全链路重构 |
+| `ADR-033-Ability与Trigger系统重构.md` | Ability 与 Trigger 重构 |
+| `ADR-034-Cue与Replay与I18n系统实现.md` | Cue/Replay/I18n 实现 |
+| `ADR-035-模块清理与迁移执行计划.md` | 模块清理与迁移执行 |
 
 ### `docs/09-planning/` — 执行计划
 
@@ -252,6 +284,8 @@ tests/         # 集成测试、场景测试、快照测试
 |------|------|
 | `adr-026-gap-analysis-and-action-plan.md` | ADR-026 Gap 分析与行动计划 |
 | `business-module-execution-plan.md` | 业务模块执行计划 |
+| `adr-029-035-domain-validation.md` | ADR-029~035 领域验证计划 |
+| `adr-029-035-data-architecture.md` | ADR-029~035 数据架构执行计划 |
 
 ### `docs/10-reviews/` — 代码审查记录
 
@@ -261,23 +295,54 @@ tests/         # 集成测试、场景测试、快照测试
 
 ### `docs/11-refactor/` — 技术债扫描记录
 
+> 待首次技术债扫描后填充。
 
 ## 架构原则
 
-项目遵循以下核心架构原则（详见 `docs/architecture.md`）：
+项目遵循以下核心架构原则（详见 `docs/01-architecture/README.md`）：
 
 1. **Definition / Instance 分离**：配置数据（如 UnitTemplate）不可变，运行时实例（如 Unit）可变
 2. **Rule / Content 分离**：检查逻辑是规则，RON 配置是内容
 3. **Logic / Presentation 分离**：业务逻辑在 System 中，UI 层只读取状态
 4. **数据驱动**：游戏内容通过 RON 文件配置，禁止硬编码
+5. **Effect Pipeline**：战斗效果通过 Generate → Modify → Execute 管线处理
+6. **七层架构**：App → Core → Shared → Infrastructure → Content → Modding → Tools
 
 ## AI 辅助开发
 
-项目配备 6 个专用 AI Agent（详见 `AGENTS.md`），遵循严格的协作流程：
+项目配备 7 个专用 AI Agent（详见 `AGENTS.md` 和 `.qoder/agents/`），遵循严格的协作流程：
 
 ```
-需求 → @domain-designer → @architect → @feature-developer → @test-guardian → @code-reviewer
+需求
+  │
+  ├─→ @domain-designer（领域建模）→ @data-architect（数据架构）
+  │
+  └─→ @architect（架构设计）→ ADR
+          │
+          ↓
+  @feature-developer（代码实现）
+          │
+          ├─→ @test-guardian（测试审查）
+          │
+          └─→ @code-reviewer（代码审查）
+                      │
+                      ↓
+          @refactor-guardian（技术债扫描）
 ```
+
+## 技术栈
+
+| 技术 | 版本 | 用途 |
+|------|------|------|
+| Rust | 1.96+ | 编程语言（edition 2024） |
+| Bevy | 0.18.1 | 游戏引擎（ECS） |
+| RON | 0.12.1 | 配置文件格式 |
+| Fluent | 0.17 | 国际化 |
+| tracing | 0.1 | 结构化日志 |
+| thiserror | 2 | 错误派生宏 |
+| bevy-inspector-egui | 0.36 | 调试检查器 |
+| proptest | — | 属性测试（开发依赖） |
+| insta | — | 快照测试（开发依赖） |
 
 ## 注意事项
 
