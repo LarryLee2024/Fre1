@@ -1,10 +1,13 @@
 //! C2: 规则与系统层 — ECS 组件、查询、生命周期、System
 
 mod components;
-pub mod lifecycle;
-pub mod query;
+// [ADR-045] pub(crate) — crate 内共享，测试可访问，外部不可访问
+pub(crate) mod lifecycle;
+#[cfg(test)]
+pub(crate) mod query;
 pub mod systems;
 
 pub use components::*;
 pub use lifecycle::*;
+#[cfg(test)]
 pub use query::*;

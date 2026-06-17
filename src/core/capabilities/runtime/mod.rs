@@ -6,10 +6,11 @@
 //!
 //! 详见 docs/01-architecture/README.md §3.2
 
-pub mod command;
-pub mod pipeline;
+// [ADR-045] pub(crate) — runtime 子模块，crate 内共享，外部不可访问
+pub(crate) mod command;
+pub(crate) mod pipeline;
 mod plugin;
-pub mod registry;
-pub mod replay;
-pub mod scheduler;
+pub(crate) mod registry;
+pub(crate) mod replay;
+pub(crate) mod scheduler;
 pub use plugin::*;

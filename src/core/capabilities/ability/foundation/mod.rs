@@ -1,7 +1,8 @@
 //! C1: 纯数据定义层 — Ability 基础类型、枚举、值对象
 
-pub mod types;
-pub mod values;
+// [ADR-045] pub(crate) — crate 内共享，测试可访问，外部不可访问
+pub(crate) mod types;
+pub(crate) mod values;
 
 pub use types::*;
 pub use values::*;

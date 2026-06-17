@@ -8,8 +8,10 @@
 //! 详见 docs/01-architecture/40-cross-cutting/ADR-041-replay-determinism.md
 
 pub mod events;
-pub mod foundation;
-pub mod mechanism;
+// [ADR-045] pub(crate) — 基础类型，crate 内共享，外部不可访问
+pub(crate) mod foundation;
+// [ADR-045] pub(crate) — 机制实现，crate 内共享，外部不可访问
+pub(crate) mod mechanism;
 
 #[cfg(test)]
 mod tests;

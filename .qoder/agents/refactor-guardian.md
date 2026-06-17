@@ -24,6 +24,7 @@ tools: Read, Grep, Glob, Bash
 - **死 Registry 条目**：Registry 中注册了但从未被引用的条目
 
 ### 2. Bevy SRPG 特有技术债
+- **可见性超标**（ADR-045）：默认 private，能用 `pub(crate)` 就不用 `pub`；某域 `pub` 超 20% 即为边界腐化
 - **过大 Plugin**：单一 Plugin 注册了过多系统（建议按业务拆分）
 - **Reflect 滥用**：Reflect 用于核心运行时逻辑（战斗计算、AI 决策、属性计算等）
 - **Pipeline 绕过**：直接修改属性/HP 而不走 Effect/Modifier Pipeline

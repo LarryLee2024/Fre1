@@ -5,18 +5,32 @@
 //!
 //! 详见 `docs/01-architecture/README.md` §3.1
 
-pub mod collections;
-pub mod error;
-pub mod hashing;
-pub mod ids;
-pub mod math;
-pub mod path;
+// [ADR-045] pub(crate) — 通用集合扩展，crate 内共享
+pub(crate) mod collections;
+// [ADR-045] pub(crate) — 错误上下文工具，crate 内共享
+pub(crate) mod error;
+// [ADR-045] pub(crate) — 非加密高速哈希，crate 内共享
+pub(crate) mod hashing;
+// [ADR-045] pub(crate) — 强类型 ID，crate 内共享
+pub(crate) mod ids;
+// [ADR-045] pub(crate) — 纯数学工具，crate 内共享
+pub(crate) mod math;
+// [ADR-045] pub(crate) — 路径工具，crate 内共享
+pub(crate) mod path;
+// [ADR-045] pub — 统一导出，对外可见
 pub mod prelude;
-pub mod random;
+// [ADR-045] pub(crate) — 确定性随机数，crate 内共享
+pub(crate) mod random;
+// [ADR-045] pub — 插件入口，对外可见
 pub mod shared_plugin;
+// [ADR-045] #[cfg(test)] — 测试构建工具，仅测试可见
+#[cfg(test)]
 pub mod testing;
-pub mod time;
-pub mod traits;
-pub mod validation;
+// [ADR-045] pub(crate) — GameTime, TurnCount，crate 内共享
+pub(crate) mod time;
+// [ADR-045] pub(crate) — 横切能力抽象，crate 内共享
+pub(crate) mod traits;
+// [ADR-045] pub(crate) — 链式校验器，crate 内共享
+pub(crate) mod validation;
 
 pub use shared_plugin::SharedPlugin;

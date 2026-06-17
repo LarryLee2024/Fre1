@@ -1,5 +1,7 @@
 //! Command 值对象：命令队列与历史记录
 
+use bevy::prelude::Resource;
+
 use super::types::{CommandError, CommandSource, GameCommand, RecordedCommand};
 
 /// 命令队列——统一命令入口。
@@ -8,7 +10,7 @@ use super::types::{CommandError, CommandSource, GameCommand, RecordedCommand};
 /// 在 PreUpdate 中执行 drain 并分发。
 ///
 /// 详见 docs/01-architecture/40-cross-cutting/ADR-043-command-input.md §3
-#[derive(Debug, Clone)]
+#[derive(Resource, Debug, Clone)]
 pub struct CommandQueue {
     /// 待处理命令队列（当前帧）
     pending: Vec<GameCommand>,
