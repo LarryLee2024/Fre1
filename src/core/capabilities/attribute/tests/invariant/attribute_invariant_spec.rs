@@ -89,7 +89,11 @@ mod tests {
         let mut reg = AttributeRegistry::default();
         let results = reg.register_batch(attributes_for_unit_001());
         assert!(results.iter().all(|r| r.is_ok()));
-        assert_eq!(reg.definitions.len(), 5);
+        assert!(reg.contains(&AttributeId::new("attr_hp")));
+        assert!(reg.contains(&AttributeId::new("attr_atk")));
+        assert!(reg.contains(&AttributeId::new("attr_def")));
+        assert!(reg.contains(&AttributeId::new("attr_spd")));
+        assert!(reg.contains(&AttributeId::new("attr_range")));
     }
 
     #[test]

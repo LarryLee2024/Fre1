@@ -59,10 +59,12 @@ fn stack_state_member_management() {
     let mut state = StackingState::new(5).unwrap();
     state.add_member("inst_001");
     state.add_member("inst_002");
-    assert_eq!(state.stack_members.len(), 2);
+    assert!(state.stack_members.contains(&"inst_001".to_string()));
+    assert!(state.stack_members.contains(&"inst_002".to_string()));
 
     state.remove_member("inst_001");
-    assert_eq!(state.stack_members.len(), 1);
+    assert!(!state.stack_members.contains(&"inst_001".to_string()));
+    assert!(state.stack_members.contains(&"inst_002".to_string()));
 }
 
 #[test]

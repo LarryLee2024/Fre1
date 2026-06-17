@@ -37,7 +37,7 @@ fn register_primary_attribute_succeeds() {
         vec![],
     );
     assert!(reg.register(def).is_ok());
-    assert_eq!(reg.definitions.len(), 1);
+    assert!(reg.contains(&AttributeId::new("attr_000001")));
 }
 
 #[test]

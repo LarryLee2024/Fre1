@@ -23,7 +23,7 @@ fn register_root_tag_succeeds() {
     let mut hierarchy = TagHierarchy::default();
     let def = make_tag("tag_000001", None, 0, TagNamespace::DamageType, true);
     assert!(hierarchy.register(def).is_ok());
-    assert_eq!(hierarchy.tags.len(), 1);
+    assert!(hierarchy.tags.contains_key(&TagId::new("tag_000001")));
 }
 
 #[test]
@@ -47,7 +47,8 @@ fn register_child_tag_succeeds() {
             false,
         ))
         .unwrap();
-    assert_eq!(hierarchy.tags.len(), 2);
+    assert!(hierarchy.tags.contains_key(&TagId::new("tag_000001")));
+    assert!(hierarchy.tags.contains_key(&TagId::new("tag_000002")));
     assert_eq!(
         hierarchy
             .children
