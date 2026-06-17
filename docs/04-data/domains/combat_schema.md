@@ -4,7 +4,7 @@ title: Combat Schema — 战斗数据架构
 status: stable
 owner: data-architect
 created: 2026-06-16
-updated: 2026-06-16
+updated: 2026-06-18
 layer: instance, persistence
 replay-safe: true
 ---

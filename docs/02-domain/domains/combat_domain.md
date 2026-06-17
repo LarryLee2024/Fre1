@@ -4,7 +4,7 @@ title: Combat（战斗）领域规则 v1.0
 status: stable
 owner: domain-designer
 created: 2026-06-16
-updated: 2026-06-16
+updated: 2026-06-18
 tags:
   - domain
   - combat

@@ -4,7 +4,7 @@ title: ADR-021 — Turn State Machine
 status: approved
 owner: architect
 created: 2026-06-16
-updated: 2026-06-16
+updated: 2026-06-18
 supersedes: none
 ---
 

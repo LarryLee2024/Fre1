@@ -667,7 +667,7 @@ src/
 | `10-capability-system/ADR-012-stacking-trigger-cue.md` | ✅ stable | architect | 2026-06-16 |
 | `10-capability-system/ADR-013-registry-hotreload.md` | ✅ stable | architect | 2026-06-16 |
 | `20-tactical-combat/ADR-020-combat-pipeline.md` | ✅ stable | architect | 2026-06-16 |
-| `20-tactical-combat/ADR-021-turn-state-machine.md` | ✅ stable | architect | 2026-06-16 |
+| `20-tactical-combat/ADR-021-turn-state-machine.md` | ✅ stable | architect | 2026-06-18 |
 | `20-tactical-combat/ADR-022-grid-terrain-faction.md` | ✅ stable | architect | 2026-06-16 |
 | `20-tactical-combat/ADR-023-spell-reaction.md` | ✅ stable | architect | 2026-06-16 |
 | `30-progression-narrative/ADR-030-progression-inventory.md` | ✅ stable | architect | 2026-06-16 |

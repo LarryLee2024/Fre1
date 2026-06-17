@@ -290,7 +290,7 @@ Event         → 所有领域（领域间通信）
 | `domains/tactical_domain.md` | ✅ stable | domain-designer | 2026-06-16 |
 | `domains/terrain_domain.md` | ✅ stable | domain-designer | 2026-06-16 |
 | `domains/faction_domain.md` | ✅ stable | domain-designer | 2026-06-16 |
-| `domains/combat_domain.md` | ✅ stable | domain-designer | 2026-06-16 |
+| `domains/combat_domain.md` | ✅ stable | domain-designer | 2026-06-18 |
 | `domains/spell_domain.md` | ✅ stable | domain-designer | 2026-06-16 |
 | `domains/reaction_domain.md` | ✅ stable | domain-designer | 2026-06-16 |
 | `domains/progression_domain.md` | ✅ stable | domain-designer | 2026-06-16 |
