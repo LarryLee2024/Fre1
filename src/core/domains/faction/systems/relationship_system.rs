@@ -6,7 +6,8 @@
 use bevy::prelude::*;
 
 use crate::core::domains::faction::components::{
-    FactionMembership, FactionRelationTable, RelationshipState, Reputation,
+    FactionId, FactionMembership, FactionRelationTable, FactionRelationType, RelationshipState,
+    Reputation,
 };
 use crate::core::domains::faction::events::RelationshipEvaluated;
 use crate::core::domains::faction::rules::relationship::relationship_between_entities;
@@ -22,11 +23,27 @@ pub struct RelationshipEvalRequest {
     pub target: Entity,
 }
 
+/// 取两个 FactionRelationType 中更敌对（优先级更高）的一个。
+///
+/// 优先级：War > Hostile > Neutral > Allied
+fn stronger_faction_relation(
+    a: FactionRelationType,
+    b: FactionRelationType,
+) -> FactionRelationType {
+    use FactionRelationType::*;
+    match (a, b) {
+        (War, _) | (_, War) => War,
+        (Hostile, _) | (_, Hostile) => Hostile,
+        (Neutral, _) | (_, Neutral) => Neutral,
+        _ => Allied,
+    }
+}
+
 /// 响应关系评估请求，计算综合关系状态。
 pub(crate) fn on_relationship_eval_request(
     trigger: On<RelationshipEvalRequest>,
     query: Query<(&FactionMembership, &Reputation)>,
-    relation_table: Option<Res<FactionRelationTable>>,
+    relation_table: Res<FactionRelationTable>,
     mut commands: Commands,
 ) {
     let req = trigger.event();
@@ -49,30 +66,28 @@ pub(crate) fn on_relationship_eval_request(
         return;
     };
 
-    let default_table = FactionRelationTable::new();
-    let table = relation_table.as_deref().unwrap_or(&default_table);
+    // 遍历主体与目标的所有阵营组合，取关系最强（最敌对）的一个
+    let mut base_relation = FactionRelationType::default();
+    for sf in &subj_membership.factions {
+        for tf in &target_membership.factions {
+            let rel = relation_table.get_relation(sf, tf);
+            base_relation = stronger_faction_relation(base_relation, rel);
+        }
+    }
 
-    let base_relation = subj_membership
-        .factions
-        .iter()
-        .find_map(|sf| {
-            target_membership
-                .factions
-                .iter()
-                .map(|tf| table.get_relation(sf, tf))
-                .next()
-        })
-        .unwrap_or_default();
-
-    let final_state =
-        relationship_between_entities(subj_membership, subj_reputation, target_membership, table);
+    let final_state = relationship_between_entities(
+        subj_membership,
+        subj_reputation,
+        target_membership,
+        &relation_table,
+    );
 
     // 取目标的主要阵营用于事件报告
     let faction_id = target_membership
         .factions
         .first()
         .cloned()
-        .unwrap_or_else(|| crate::core::domains::faction::components::FactionId::new("unknown"));
+        .unwrap_or_else(|| FactionId::new("unknown"));
 
     let rep_level = subj_reputation.level(&faction_id);
 

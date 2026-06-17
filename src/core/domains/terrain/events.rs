@@ -4,6 +4,7 @@
 //!
 //! 事件订阅关系详见 docs/02-domain/domains/terrain_domain.md §6
 
+use crate::infra::registry::DefinitionId;
 use bevy::prelude::*;
 
 use super::components::{SurfaceType, TilePos};
@@ -68,7 +69,5 @@ pub struct TerrainEffectApplied {
     /// 效果所在格子位置
     pub tile: TilePos,
     /// 施加的效果 ID
-    ///
-    /// TODO[P2][Terrain]: 迁移到 DefinitionId（需 DefinitionId 实现 Reflect）
-    pub effect_id: String,
+    pub effect_id: DefinitionId,
 }

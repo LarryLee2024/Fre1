@@ -9,3 +9,6 @@ pub mod fixtures;
 
 pub use deterministic::*;
 pub use fixtures::*;
+
+#[cfg(test)]
+mod tests;

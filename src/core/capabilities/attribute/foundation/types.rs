@@ -1,3 +1,5 @@
+use bevy::prelude::Reflect;
+
 crate::define_string_id! {
     pub AttributeId,
     prefix: "attr",

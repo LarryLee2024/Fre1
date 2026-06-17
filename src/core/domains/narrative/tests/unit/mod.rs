@@ -1,2 +1,2 @@
-// TODO: 添加测试模块
-
+mod narrative_components_test;
+mod narrative_rules_test;

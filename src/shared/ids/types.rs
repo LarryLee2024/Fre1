@@ -1,16 +1,22 @@
 //! 领域 ID 类型（由宏统一生成）
 
+use bevy::prelude::Reflect;
+
 /// String 类型 ID 宏。
 ///
 /// Display 格式: `<prefix>:<value>`（如 `tag:tag_000001`）
 /// Serde 格式: 同时接受 `<prefix>:<value>` 和裸 `<value>`
+///
+/// 注意：调用此宏的模块必须将 `bevy::prelude::Reflect` 引入作用域，
+/// 因为 `#[derive(Reflect)]` 需要在调用方展开。参见 `types.rs` 顶部。
 #[macro_export]
 macro_rules! define_string_id {
     (
         $vis:vis $name:ident,
         prefix: $prefix:expr,
     ) => {
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Reflect)]
+        #[reflect(Hash, PartialEq)]
         $vis struct $name(pub String);
 
         impl $name {

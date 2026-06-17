@@ -2,6 +2,8 @@
 //!
 //! 仅包含纯数据定义，零行为逻辑。
 
+use bevy::prelude::Reflect;
+
 crate::define_string_id! {
     pub TagId,
     prefix: "tag",

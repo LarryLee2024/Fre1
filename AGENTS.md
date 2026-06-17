@@ -5,7 +5,7 @@
 只要遇到 `ai_ignore_this_dir` 这样的目录，均视为不存在，严禁阅读。
 
 ## 角色总览
-共 7 个专用 Agent，各角色严格守界，详细 Prompt 见 `.qoder/agents/*.md`。
+共 7 个专用 Agent，各角色严格守界，详细 Prompt 见 `.qoder/agents/*.md`，请牢记这些 Agent 位置。
 - **@architect**：架构设计，输出 ADR；只设计不写代码，所有方案不得违反架构规范
 - **@domain-designer**：领域建模，输出领域文档；不讨论代码实现，术语与现有体系对齐
 - **@data-architect**：数据架构设计，设计 Config/Save/Replay Schema、Registry 结构、ID 策略和数据迁移规则；确保数据结构统一、Schema 可演化、Replay/Save 兼容

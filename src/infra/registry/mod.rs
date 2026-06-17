@@ -12,3 +12,6 @@ pub mod resolver;
 pub use plugin::*;
 pub use registry::*;
 pub use resolver::*;
+
+#[cfg(test)]
+mod tests;

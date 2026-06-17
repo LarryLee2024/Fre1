@@ -6,6 +6,7 @@
 
 use std::collections::HashSet;
 
+use crate::infra::registry::DefinitionId;
 use bevy::prelude::*;
 
 // ─── 枚举类型 ─────────────────────────────────────────────────────
@@ -215,7 +216,7 @@ impl TileProperties {
     /// 表面类型的遮蔽度影响：
     /// - Burning → 半遮蔽（烟雾）
     /// - Poison → 半遮蔽（毒气）
-    /// - 其他表面 → 沿用 base_passability
+    /// - 其他表面 → 沿用 base_concealment
     ///
     /// 地形类型的遮蔽度影响：
     /// - Bush → 半遮蔽
@@ -298,9 +299,7 @@ pub struct TerrainAttachEffect {
     /// 绑定的格子位置
     pub tile: TilePos,
     /// 引用的 EffectDefId
-    ///
-    /// TODO[P2][Terrain]: 迁移到 DefinitionId（需 DefinitionId 实现 Reflect 或移除 #[reflect(Component)]）
-    pub effect_id: String,
+    pub effect_id: DefinitionId,
     /// 剩余持续时间（回合数），None = 永久
     pub remaining_duration: Option<u32>,
 }

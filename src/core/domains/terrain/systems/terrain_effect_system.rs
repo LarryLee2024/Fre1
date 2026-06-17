@@ -10,6 +10,7 @@ use bevy::prelude::*;
 use crate::core::domains::terrain::components::{SurfaceType, TileProperties};
 use crate::core::domains::terrain::events::{TerrainEffectApplied, TileEntered};
 use crate::core::domains::terrain::resources::TileEntityMap;
+use crate::infra::registry::DefinitionId;
 
 /// 响应 TileEntered 事件，检查格子表面并施加地形效果。
 ///
@@ -45,7 +46,7 @@ pub(crate) fn on_tile_entered(
         commands.trigger(TerrainEffectApplied {
             entity,
             tile: target_tile,
-            effect_id: effect_id.to_string(),
+            effect_id,
         });
     }
 }
@@ -62,11 +63,11 @@ const EFFECT_LAVA: &str = "eff_000003";
 ///
 /// 非所有表面都有地形效果（如 Normal、Ice 等仅影响移动）。
 /// 返回 None 表示无需施加效果。
-fn surface_to_effect_id(surface: SurfaceType) -> Option<&'static str> {
+fn surface_to_effect_id(surface: SurfaceType) -> Option<DefinitionId> {
     match surface {
-        SurfaceType::Poison => Some(EFFECT_POISON),
-        SurfaceType::Burning => Some(EFFECT_BURNING),
-        SurfaceType::Lava => Some(EFFECT_LAVA),
+        SurfaceType::Poison => Some(DefinitionId::new(EFFECT_POISON)),
+        SurfaceType::Burning => Some(DefinitionId::new(EFFECT_BURNING)),
+        SurfaceType::Lava => Some(DefinitionId::new(EFFECT_LAVA)),
         _ => None,
     }
 }

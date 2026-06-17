@@ -92,7 +92,10 @@ pub fn relationship_with_faction(
 /// 关系状态优先级排序（从高到低：War > Hostile > Neutral > Allied）。
 ///
 /// 返回两者中"更强"（更敌对）的关系。
-fn stronger_relationship(a: RelationshipState, b: RelationshipState) -> RelationshipState {
+pub(crate) fn stronger_relationship(
+    a: RelationshipState,
+    b: RelationshipState,
+) -> RelationshipState {
     use RelationshipState::*;
     match (a, b) {
         (War, _) | (_, War) => War,
@@ -111,111 +114,5 @@ fn reputation_level_to_state(
         Hated | Hostile => RelationshipState::Hostile,
         Neutral => RelationshipState::Neutral,
         Friendly | Honored | Revered => RelationshipState::Allied,
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn make_membership(factions: &[&str]) -> FactionMembership {
-        let mut m = FactionMembership::new();
-        for f in factions {
-            m.join(FactionId::new(*f));
-        }
-        m
-    }
-
-    fn make_reputation(entries: &[(&str, i32)]) -> Reputation {
-        let mut r = Reputation::new();
-        for (f, v) in entries {
-            r.set(FactionId::new(*f), *v);
-        }
-        r
-    }
-
-    #[test]
-    fn shared_faction_is_allied() {
-        let table = FactionRelationTable::new();
-        let m1 = make_membership(&["faction_a"]);
-        let m2 = make_membership(&["faction_a"]);
-        let r1 = make_reputation(&[]);
-        let r2 = make_reputation(&[]);
-
-        let state = relationship_between_entities(&m1, &r1, &m2, &table);
-        assert_eq!(state, RelationshipState::Allied);
-    }
-
-    #[test]
-    fn hostile_relation_without_reputation() {
-        let mut table = FactionRelationTable::new();
-        table.set_relation(
-            FactionId::new("faction_a"),
-            FactionId::new("faction_b"),
-            FactionRelationType::Hostile,
-        );
-
-        let m1 = make_membership(&["faction_a"]);
-        let m2 = make_membership(&["faction_b"]);
-        let r1 = make_reputation(&[]);
-
-        let state = relationship_between_entities(&m1, &r1, &m2, &table);
-        assert_eq!(state, RelationshipState::Hostile);
-    }
-
-    #[test]
-    fn revered_reputation_overrides_hostile() {
-        let mut table = FactionRelationTable::new();
-        table.set_relation(
-            FactionId::new("faction_a"),
-            FactionId::new("faction_b"),
-            FactionRelationType::Hostile,
-        );
-
-        let m1 = make_membership(&["faction_a"]);
-        let m2 = make_membership(&["faction_b"]);
-        let r1 = make_reputation(&[("faction_b", 90)]); // Revered
-
-        let state = relationship_between_entities(&m1, &r1, &m2, &table);
-        // Revered 声望使 Hostile 阵营关系缓和为 Neutral
-        assert_eq!(state, RelationshipState::Neutral);
-    }
-
-    #[test]
-    fn war_overrides_everything() {
-        let mut table = FactionRelationTable::new();
-        table.set_relation(
-            FactionId::new("faction_a"),
-            FactionId::new("faction_b"),
-            FactionRelationType::War,
-        );
-
-        let m1 = make_membership(&["faction_a"]);
-        let m2 = make_membership(&["faction_b"]);
-        let r1 = make_reputation(&[("faction_b", 100)]); // Revered
-
-        let state = relationship_between_entities(&m1, &r1, &m2, &table);
-        // War 无视声望
-        assert_eq!(state, RelationshipState::War);
-    }
-
-    #[test]
-    fn no_faction_uses_reputation() {
-        let table = FactionRelationTable::new();
-        let m1 = make_membership(&[]); // 无阵营
-        let m2 = make_membership(&["faction_b"]);
-        let r1 = make_reputation(&[("faction_b", 50)]); // Honored
-
-        let state = relationship_between_entities(&m1, &r1, &m2, &table);
-        assert_eq!(state, RelationshipState::Allied);
-    }
-
-    #[test]
-    fn stronger_relationship_logic() {
-        use RelationshipState::*;
-        assert_eq!(stronger_relationship(War, Allied), War);
-        assert_eq!(stronger_relationship(Hostile, Neutral), Hostile);
-        assert_eq!(stronger_relationship(Neutral, Allied), Neutral);
-        assert_eq!(stronger_relationship(Allied, Allied), Allied);
     }
 }

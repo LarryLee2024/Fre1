@@ -3,9 +3,9 @@
 > 审查人: Sisyphus (@feature-developer 兼 @code-reviewer)
 > 复查人: @test-guardian
 > 日期: 2026-06-17
-> 复查日期: 2026-06-17
+> 复查日期: 2026-06-17（最后一次更新: — 新增 12 个 Registry 测试）
 > 范围: C-3 Registry (infra/registry/*), D-2 Terrain (core/domains/terrain/*), Capabilities Integration (core/domains/tactical/integration/*)
-> 基线: cargo build 0 errors, cargo test 833 passed 0 failed（最终复查）
+> 基线: cargo build 0 errors, cargo test 845 passed 0 failed（最终复查）
 
 ---
 
@@ -13,7 +13,7 @@
 
 | 模块 | 状态 | 关键问题数 | 测试覆盖 |
 |------|------|-----------|---------|
-| C-3 Registry | 🟢 已修复 | 1 个 P3 待定 | ✅ 23 个测试（registry 12 + resolver 11） |
+| C-3 Registry | 🟢 已修复 | 1 个 P3 待定 | ✅ 35 个测试（bucket 12 + resolver 11 + get_str 6 + bucket_isolation 6） |
 | D-2 Terrain | 🟢 已修复 | 1 个 P2 待迁移 | ✅ 16 个新测试（hazard 2 + passability 7 + surface_override 7） |
 | Capabilities Integration | 🟢 已修复 | 2 个 P2 待外部对齐 | ✅ 36+ 测试 |
 
@@ -170,8 +170,8 @@ pub fn get_str(&self, id: &str) -> Option<&T> {
 ## Test Guardian 复查报告
 
 > 复查人: @test-guardian (代入角色)
-> 复查日期: 2026-06-17
-> 基线: cargo build 0 errors, cargo test 826 passed 0 failed
+> 复查日期: 2026-06-17（最后一次更新: — 新增 12 个 Registry 测试，测试从 inline 提取至专用文件）
+> 基线: cargo build 0 errors, cargo test 845 passed 0 failed
 
 ### 编译错误修复
 
@@ -187,18 +187,21 @@ pub fn get_str(&self, id: &str) -> Option<&T> {
 
 #### C-3 Registry — ✅ 有测试
 
-**现状**: `src/infra/registry/registry.rs` 有 12 个 inline 测试（`#[cfg(test)] mod tests`），`resolver.rs` 有 11 个测试。共 23 个测试覆盖 CRUD、版本追踪、ID 分配、校验等核心逻辑。
+**现状**: 测试已按宪法规范从 inline `#[cfg(test)]` 提取至专用文件，共 35 个测试覆盖 CRUD、版本追踪、ID 分配、get_str 检索、桶隔离不变量等核心逻辑。
 
 **测试覆盖**:
 
 | 业务规则 | 测试类型 | 断言目标 | 状态 |
 |----------|----------|----------|------|
-| `get_str` 与 `get` 行为一致 | unit | 相同 ID 返回相同结果 | ✅ 已有 |
-| `insert` 后 `get` 可查 | unit | 写入-读取一致性 | ✅ 已有 |
-| `remove` 后 `get` 返回 None | unit | 删除生效 | ✅ 已有 |
-| `mark_changed` 更新版本号 | unit | 版本号递增 | ✅ 已有 |
-| `DefinitionRegistry` 桶隔离 | invariant | 不同桶 ID 不冲突 | ✅ 已有（resolver 覆盖） |
-| `get_str` 空字符串返回 None | unit | 边界条件 | ✅ 已有 |
+| `insert` / `get` / `remove` CRUD | unit | 写入-读取-删除一致性 | ✅ 12 个测试（registry_bucket_test） |
+| `mark_changed` 更新版本号 | unit | 版本号递增、多个 changed 合并 | ✅ 同上 |
+| ID 分配、校验、生命周期 | unit | ID 格式、RefCount、重用 | ✅ 11 个测试（resolver_test） |
+| `get_str` 与 `get` 行为一致 | unit | 相同 ID 返回相同结果 | ✅ 6 个新测试（get_str_test） |
+| `get_str` 空字符串/不存在 | unit | 边界条件返回 None | ✅ 同上 |
+| `get_str` 多条目/最新值/移除后 | unit | 检索正确性与实时性 | ✅ 同上 |
+| 桶间插入互不影响 | invariant | 不同桶 ID 不冲突 | ✅ 6 个新测试（bucket_isolation_test） |
+| 桶间移除/版本/清空互不影响 | invariant | 桶完全隔离 | ✅ 同上 |
+| 动态 mutable 访问隔离 | invariant | `get_mut` 不影响其他桶 | ✅ 同上 |
 
 #### D-2 Terrain — ✅ 有测试
 
@@ -268,7 +271,7 @@ pub fn get_str(&self, id: &str) -> Option<&T> {
 | Data Law 012 (域间独立) | ✅ | TilePos 与 GridPos 独立，事件驱动通信 |
 | ECS Observer (Bevy 0.18) | ✅ | 使用 `add_observer` + `On<Event>`，无 `add_event` |
 | 无 unsafe/as_any | ✅ | 未发现违规 |
-| **测试架构（领域内聚四层）** | ✅ | Terrain 域 4 层目录结构完整，Registry 有 inline 测试 |
+| **测试架构（领域内聚四层）** | ✅ | Terrain 域 4 层目录结构完整，Registry 测试已提取至 `tests/unit/` + `tests/invariant/` |
 
 ### Test Guardian 结论
 
@@ -276,13 +279,13 @@ pub fn get_str(&self, id: &str) -> Option<&T> {
 
 | 维度 | 评估 |
 |------|------|
-| Registry 测试 | ✅ 23 个测试（registry 12 + resolver 11） |
+| Registry 测试 | ✅ 35 个测试（bucket 12 + resolver 11 + get_str 6 + bucket_isolation 6） |
 | Terrain 测试 | ✅ 16 个新测试（hazard 2 + passability 7 + surface_override 7） |
 | Integration 测试 | ✅ 36+ 测试（8 个文件） |
 | 不变量测试 | ✅ Terrain 3.1/3.3/3.5 已覆盖 |
 | 回归测试 | ✅ 三个模块均有覆盖 |
 
-**已处理项 (10/12)**:
+**已处理项 (12/12)**:
 1. ✅ `matches_tile` stub → 返回 false + 测试
 2. ✅ `surface_to_effect_id` → 常量提取 + DefinitionId 类型迁移
 3. ✅ `surface_recovery_system` → 已从 Update 移除
@@ -293,8 +296,10 @@ pub fn get_str(&self, id: &str) -> Option<&T> {
 8. ✅ `can_move_with_type` Tag 测试 → 已补充 4 个测试
 9. ✅ `SurfaceOverride` 恢复 → 已补充 7 个测试
 10. ✅ `DefinitionRegistry` 字段封装 → 已改为 pub(crate)
+11. ✅ `get_str` 边界与一致性测试 → 已补充 6 个单元测试
+12. ✅ 桶隔离不变量测试 → 已补充 6 个不变量测试
 
-**待处理项 (2/12)**:
+**待处理项**:
 1. ⏳ `TerrainAttachEffect.effect_id` String → DefinitionId（阻塞于 Reflect）
 2. ⏳ `terrain_def_id()` 硬编码 → 待 D-2 域对齐
 
