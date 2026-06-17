@@ -1,7 +1,7 @@
 //! Replay Mechanism — 录制与回放逻辑
 
-pub mod player;
-pub mod recorder;
+pub(crate) mod player;
+pub(crate) mod recorder;
 
 pub use player::{PlaybackSession, fast_forward};
 pub use recorder::{

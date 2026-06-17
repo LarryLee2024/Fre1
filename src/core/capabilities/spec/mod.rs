@@ -12,8 +12,8 @@
 //! 详见 docs/02-domain/spec_domain.md
 
 pub mod events;
-pub mod foundation;
-pub mod mechanism;
+pub(crate) mod foundation;
+pub(crate) mod mechanism;
 
 mod plugin;
 pub use plugin::*;

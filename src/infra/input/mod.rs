@@ -7,10 +7,10 @@
 //! 详见 docs/04-data/infrastructure/input_schema.md
 //! 详见 docs/01-architecture/40-cross-cutting/ADR-043-command-input.md
 
-pub mod action;
+pub(crate) mod action;
 mod plugin;
-pub mod resources;
-pub mod systems;
+pub(crate) mod resources;
+pub(crate) mod systems;
 
 pub use plugin::*;
 

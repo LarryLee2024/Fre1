@@ -4,7 +4,7 @@ title: "技术债清单 — 首次全量扫描"
 status: active
 scanner: refactor-guardian
 created: 2026-06-17
-updated: 2026-06-17
+updated: 2026-06-17 (P0 修复完成)
 scan_scope: src/ (full codebase)
 baseline_warnings: 433
 ---
@@ -21,12 +21,12 @@ baseline_warnings: 433
 
 ## 扫描总览
 
-| 类别 | 数量 | 严重程度 | 可立即修复 |
-|------|------|---------|-----------|
-| **Debt-001~003** 可见性超标 (ADR-045) | 9 处 | **High** | ✅ |
+| 类别 | 数量 | 严重程度 | 状态 |
+|------|------|---------|------|
+| **Debt-001~003** 可见性超标 (ADR-045) | 9 处 | **High** | ✅ 已修复 |
 | **Debt-004** 未使用的 `pub use` 重导出 | 31 个模块 | Low | ❌ 预留 |
-| **Debt-005a** Capabilities 预留 Dead Code | ~350 处 | Low |  ✅预期行为 |
-| **Debt-005b** 真正废弃的 Dead Code | ~50 处 | Medium | ✅ |
+| **Debt-005a** Capabilities 预留 Dead Code | ~350 处 | Low | ❌ 预期行为 |
+| **Debt-005b** 真正废弃的 Dead Code | ~50 处 | Medium | ❌ 待处理 |
 | ~~Debt-006~~ components.rs / systems.rs | 11 处 | ~~N/A~~ | ~~不构成违规~~（已移除） |
 
 ---
@@ -117,10 +117,11 @@ baseline_warnings: 433
 
 ## 修复优先级
 
-| 优先级 | Debt ID | 修复方式 | 估算工作量 | 执行人 |
-|--------|---------|---------|-----------|--------|
-| **P0** | 001, 002, 003 | `pub mod` → `pub(crate) mod` | 30 min | @feature-developer |
-| **P1** | 004, 005a/b | 暂不处理，待域接入后复查 | — | — |
+| 优先级 | Debt ID | 修复方式 | 状态 |
+|--------|---------|---------|------|
+| ~~P0~~ | ~~001, 002, 003~~ | ~~`pub mod` → `pub(crate) mod`~~ | ✅ 已完成 |
+| **P1** | 005b | 删除明确 dead code | 待处理 |
+| **P2** | 004, 005a | 暂不处理，待域接入后复查 | — |
 
 ---
 

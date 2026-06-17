@@ -1,3 +1,3 @@
 //! Bevy Systems — 属性系统
 
-pub mod attribute_system;
+pub(crate) mod attribute_system;

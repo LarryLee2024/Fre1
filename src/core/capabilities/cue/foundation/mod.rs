@@ -1,7 +1,7 @@
 //! Cue Foundation — 表现信号基础类型与值对象
 
-pub mod types;
-pub mod values;
+pub(crate) mod types;
+pub(crate) mod values;
 
 pub use types::{
     AnimationParams, CueData, CueDef, CueError, CueTag, CueType, PopupDirection, PopupParams,

@@ -38,7 +38,7 @@ tags:
 | **Phase C-5 — Save** | 🟡 骨架 | `mod.rs` + 空 `plugin.rs` |
 | **Phase D-2 ~ D-15** | 🟡 骨架 | 14 个 Domain 均为 `mod.rs` + `plugin.rs` + 空 `tests/` |
 | **Phase E ~ H** | 🔴 未开始 | — |
-| **@refactor-guardian 技术债扫描** | ✅ 完成 | `docs/11-refactor/debt-inventory-2026-06-17.md`，7 项债务，P0 可见性修复待执行 |
+| **@refactor-guardian 技术债扫描** | ✅ 完成 | `docs/11-refactor/debt-inventory-2026-06-17.md`，P0 可见性修复已完成，P1 待处理 |
 
 ---
 
@@ -112,10 +112,12 @@ Tactical 的 `integration.rs` 定义了 `MovementType → TagId` 映射，但没
 
 #### 前置文档确认
 
-| 文档 | 位置 | 责任人 |
-|------|------|--------|
-| ADR-013 | `docs/01-architecture/10-capability-system/ADR-013-registry-hotreload.md` | @architect |
-| registry_schema | `docs/04-data/infrastructure/registry_schema.md` | @data-architect |
+| 文档 | 位置 | 责任人 | 状态 |
+|------|------|--------|------|
+| ADR-013 | `docs/01-architecture/10-capability-system/ADR-013-registry-hotreload.md` | @architect | ✅ 已批准 |
+| registry_schema | `docs/04-data/infrastructure/registry_schema.md` | @architect → @data-architect | ✅ v2 已对齐 ADR-013 (Handle 方案，@architect 完成) |
+
+> **schema 对齐说明**: v1 使用直接值存储 (`HashMap<Id, T>`)，v2 迁移至 Handle 间接存储 (`HashMap<Id, Handle<T>>`)，对齐 ADR-013 的两层架构设计。变更内容：Asset 层注册、RegistryBucket 泛型设计、Snapshot 热重载保护、OnDefinitionReloaded 事件。
 
 #### 交付清单
 
@@ -248,7 +250,8 @@ Tactical 的 `integration.rs` 定义了 `MovementType → TagId` 映射，但没
 | D-2 Terrain 地形域 | 7-10 | ~500 | @feature-developer | 2 次会话 | 🔴 未开始 |
 | D-3 ~ D-15 (13 个域) | — | — | — | 待定 | 🔴 未开始 |
 | **@refactor-guardian 技术债扫描** | — | — | @refactor-guardian | ~1 次会话 | ✅ 完成 |
-| **总计（近期）** | **~20** | **~1,500** | **全角色协作** | **~5-7 次会话** | **技术债扫描已完成** |
+| @architect — registry_schema v2 对齐 ADR-013 | 1 文件 | ~180 | @architect | 1 次会话 | ✅ 完成 |
+| **总计（近期）** | **~21** | **~1,680** | **全角色协作** | **~5-7 次会话** | **技术债扫描 + schema 对齐完成** |
 
 ---
 

@@ -78,7 +78,7 @@ tools: Read, Write, Edit, Glob, Grep, Bash
 - 禁止通过事件传递查询请求（Request-Response 反模式）
 
 ### Step 5：编写 mod.rs
-每个 Feature 的 `mod.rs` 必须以模块头注释开始：
+- 每个 Feature 的 `mod.rs` 必须以模块头注释开始：
 ```rust
 /// 模块名称：一句话说明模块职责
 /// 补充说明（可选）
@@ -86,6 +86,7 @@ tools: Read, Write, Edit, Glob, Grep, Bash
 mod sub_a; // 子模块 A 的职责
 mod sub_b; // 子模块 B 的职责
 ```
+- **可见性超标**（ADR-045）：默认 private，能用 `pub(crate)` 就不用 `pub`；某域 `pub` 超 20% 即为边界腐化
 
 ## 必须遵守的架构原则
 

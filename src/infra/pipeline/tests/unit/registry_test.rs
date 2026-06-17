@@ -1,6 +1,4 @@
-use crate::core::capabilities::runtime::pipeline::foundation::{
-    PipelineDefinition, PipelineStage,
-};
+use crate::core::capabilities::runtime::pipeline::foundation::{PipelineDefinition, PipelineStage};
 use crate::infra::pipeline::registry::PipelineRegistry;
 
 #[test]

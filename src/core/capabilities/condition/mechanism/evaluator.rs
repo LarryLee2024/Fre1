@@ -189,15 +189,6 @@ fn evaluate_or(children: &[Condition], context: &ConditionContext) -> ConditionR
 ///
 /// 构建免疫检查条件并评估：目标是否具有 Tag.Immune.{effect_type}。
 /// 免疫条件具有最高优先级（不变量 §3.5）。
-///
-/// # 用法
-/// ```
-/// # use fre::core::capabilities::condition::foundation::ConditionContext;
-/// # use fre::core::capabilities::condition::mechanism::check_immunity;
-/// let ctx = ConditionContext::with_tags(vec!["Immune.Fire".into()]);
-/// let result = check_immunity(&ctx, "Fire");
-/// assert!(!result.is_passed()); // immune → check_immunity returns Failed
-/// ```
 pub fn check_immunity(context: &ConditionContext, effect_type: &str) -> ConditionResult {
     let immune_tag = format!("Immune.{}", effect_type);
 

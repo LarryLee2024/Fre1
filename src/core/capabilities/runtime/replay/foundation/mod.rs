@@ -1,7 +1,7 @@
 //! Replay Foundation — 回放基础类型与值对象
 
-pub mod types;
-pub mod values;
+pub(crate) mod types;
+pub(crate) mod values;
 
 pub use types::{
     AbilityTarget, ReplayCommand, ReplayError, ReplayFrame, ReplayHeader, RngSeeds, RngStream,

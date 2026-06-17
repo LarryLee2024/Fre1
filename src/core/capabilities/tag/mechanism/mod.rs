@@ -5,7 +5,7 @@ mod components;
 pub(crate) mod lifecycle;
 #[cfg(test)]
 pub(crate) mod query;
-pub mod systems;
+pub(crate) mod systems;
 
 pub use components::*;
 pub use lifecycle::*;

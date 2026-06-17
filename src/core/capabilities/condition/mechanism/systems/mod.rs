@@ -1,3 +1,3 @@
 //! Bevy Systems — 条件系统
 
-pub mod condition_system;
+pub(crate) mod condition_system;

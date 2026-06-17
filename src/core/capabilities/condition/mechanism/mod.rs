@@ -2,7 +2,7 @@
 
 mod components;
 mod evaluator;
-pub mod systems;
+pub(crate) mod systems;
 
 pub use components::*;
 pub use evaluator::{check_immunity, evaluate};

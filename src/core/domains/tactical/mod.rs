@@ -13,14 +13,14 @@ mod components;
 mod error;
 // [ADR-045] pub — 领域事件定义，对外可见
 pub mod events;
-// [ADR-045] pub — 域间交互唯一入口，对外可见
-pub mod integration;
+// [ADR-045] pub(crate) — 域间交互入口，crate 内共享
+pub(crate) mod integration;
 // [ADR-045] pub(crate) — 资源，crate 内共享，外部不可访问
 pub(crate) mod resources;
 // [ADR-045] pub(crate) — 业务规则，crate 内共享，外部不可访问
 pub(crate) mod rules;
-// [ADR-045] pub — ECS 系统，对外可见
-pub mod systems;
+// [ADR-045] pub(crate) — ECS 系统，crate 内共享
+pub(crate) mod systems;
 
 #[cfg(test)]
 mod tests;
