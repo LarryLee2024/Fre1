@@ -4,7 +4,7 @@ title: Test Guardian 全量测试审查报告
 status: resolved
 owner: test-guardian
 created: 2026-06-15
-updated: 2026-06-17
+updated: 2026-06-17（@test-guardian 修复 .len() 断言）
 tags:
   - review
   - testing
@@ -297,7 +297,7 @@ assert!(reg.contains(&AttributeId::new("attr_hp")));
 |---|------|----------|------|
 | 3 | effect/lifecycle_test.rs 被压缩为单行 | 重新格式化文件 | ✅ 已修复 |
 | 4 | 编译 warnings（未使用导入/变量） | 清理未使用导入和变量 | ✅ 已修复（测试代码零 warnings） |
-| 5 | 34 处 `.len()` 断言验证实现细节 | 逐个评估，改为业务规则断言 | ⚠️ 待评估 |
+| 5 | 34 处 `.len()` 断言验证实现细节 | 逐个评估，改为业务规则断言 | ✅ 已修复（@test-guardian 2026-06-17 修复 attribute/tag/stacking 断言，其余评估为业务规则断言） |
 | 6 | 部分测试未使用标准 Builder | 用 `AttributeDefBuilder` 等替换自定义 helper | ⚠️ 待修复 |
 | 7 | 领域规则文档未定义测试场景 | **已澄清**：不需要。领域不变量已足够清晰，测试用例推导属 @test-guardian 职责 | ✅ 已澄清（@domain-designer 2026-06-17） |
 
@@ -339,23 +339,23 @@ assert!(reg.contains(&AttributeId::new("attr_hp")));
 8. **✅ 测试命名**：全部英文 snake_case，描述预期业务行为
 9. **✅ 测试代码零 warnings**：清理全部 unused import/variable
 10. **✅ effect/lifecycle_test.rs 格式化**：从单行压缩恢复为正常多行格式
+11. **✅ `.len()` 断言修复**：将验证实现细节的断言改为验证业务规则（attribute/tag/stacking 模块）
 
 ### 待改进（非阻塞）
-1. **⚠️ 34 处 `.len()` 断言**：部分验证实现细节而非业务规则，需逐个评估
-2. **⚠️ 部分测试未使用标准 Builder**：自定义 helper 可替换为共享 Builder
+1. **⚠️ 部分测试未使用标准 Builder**：自定义 helper 可替换为共享 Builder
 
 ### 阻塞项（依赖业务代码实现）
 1. **⏸️ 领域测试**：15 个业务域均为空桩，无业务逻辑可测
 2. **⏸️ 跨领域测试**：无完整战斗流程可测（架构已就绪，@architect 2026-06-17 确认）
 3. **⏸️ Testbed 沙盒**：依赖游戏运行时
 
-**建议**：P0+P1 全部修复，637 个测试全部通过，测试代码零 warnings。剩余 `.len()` 评估和 Builder 替换为非阻塞质量改进。P2 阻塞项随业务代码实现逐步补充，架构层面已就绪无需额外 ADR。
+**建议**：P0+P1 全部修复，637 个测试全部通过，测试代码零 warnings。剩余 Builder 替换为非阻塞质量改进。P2 阻塞项随业务代码实现逐步补充，架构层面已就绪无需额外 ADR。
 
 ---
 
 **审查完成时间**：2026-06-17
 **初次审查时间**：2026-06-15
-**测试通过状态**：516 passed, 0 failed，测试代码零 warnings
+**测试通过状态**：637 passed, 0 failed，测试代码零 warnings
 **下次审查建议**：业务代码实现后全面复查
 
 ---
@@ -407,3 +407,31 @@ assert!(reg.contains(&AttributeId::new("attr_hp")));
 **更新内容**：
 - §6 交接建议表：测试架构项标注为"✅ 已澄清"
 - P2 优先级表：#7 跨领域测试项添加"架构已就绪"标注
+
+### 8.3 @test-guardian 处理结果
+
+**交接项**：§6 "34 处 `.len()` 断言需评估"
+
+**处理结论**：✅ 已修复
+
+**修复内容**：
+1. **attribute/tests/unit/lifecycle_test.rs**：将 `assert_eq!(reg.definitions.len(), 1)` 改为 `assert!(reg.contains(&AttributeId::new("attr_000001")))`
+2. **attribute/tests/invariant/attribute_invariant_spec.rs**：将 `assert_eq!(reg.definitions.len(), 5)` 改为 5 个 `reg.contains()` 断言
+3. **tag/tests/unit/lifecycle_test.rs**：将 `assert_eq!(hierarchy.tags.len(), 1)` 和 `len(), 2` 改为 `hierarchy.tags.contains_key()` 断言
+4. **stacking/tests/unit/values_test.rs**：将 `assert_eq!(state.stack_members.len(), 2)` 和 `len(), 1` 改为 `state.stack_members.contains()` 断言
+
+**评估结论**：其余 30 处 `.len()` 断言经评估为验证业务规则的合理断言，无需修改：
+- `effect/tests/unit/lifecycle_test.rs`：验证"排空/移除/查找后数量正确"（业务规则）
+- `gameplay_context/tests/`：验证"链长度"（业务规则）
+- `aggregator/tests/unit/lifecycle_test.rs`：验证"幂等性/初始化"（业务规则）
+- `ability/tests/unit/lifecycle_test.rs`：验证"消耗项数量"（业务规则）
+- `runtime/command/tests/`：验证"命令队列/历史数量"（业务规则）
+- `runtime/registry/tests/`：验证"注册项数量"（业务规则）
+- `cue/tests/`：验证"触发器数量"（业务规则）
+- `shared/ids/tests/`：验证"ID 长度/映射数量"（业务规则）
+
+**更新内容**：
+- P1 优先级表：#5 `.len()` 断言项标注为"✅ 已修复"
+- §7 结论：添加第11项已完成项
+- §7 待改进：移除 `.len()` 断言项
+- §7 建议：移除 `.len()` 评估提及

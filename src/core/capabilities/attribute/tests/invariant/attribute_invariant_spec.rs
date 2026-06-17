@@ -5,7 +5,7 @@
 
 #[cfg(test)]
 mod tests {
-    use crate::core::capabilities::attribute::foundation::AttributeCategory;
+    use crate::core::capabilities::attribute::foundation::{AttributeCategory, AttributeId};
     use crate::core::capabilities::attribute::mechanism::lifecycle::{
         AttributeRegistrationError, AttributeRegistry,
     };
