@@ -65,11 +65,11 @@ pub fn recording_frame_bookend_system(mut session: ResMut<RecordingSession>) {
 /// 3. 推进到下一帧（更新 RNG 种子）
 /// 4. 如果回放完成，切回正常模式并发送 `ReplayCompleted`
 pub fn playback_frame_bookend_system(
-    mut session: ResMut<PlaybackSession>,
+    mut session_wrapper: ResMut<PlaybackSession>,
     mut mode_guard: ResMut<ReplayModeGuard>,
     mut commands: Commands,
 ) {
-    let Some(ref mut session) = session.0 else {
+    let Some(ref mut session) = session_wrapper.0 else {
         return;
     };
     if !session.player.is_playing || session.is_finished() {
@@ -92,12 +92,14 @@ pub fn playback_frame_bookend_system(
     let has_more = session.advance_frame();
     if !has_more {
         mode_guard.0.is_replay = false;
-        session.stop();
         commands.trigger(ReplayCompleted {
             total_frames: session.total_frames() as u64,
             total_commands: 0,
             has_mismatches: session.has_mismatches(),
         });
+        // 回放完成后清理会话资源
+        drop(session);
+        session_wrapper.0 = None;
     }
 }
 

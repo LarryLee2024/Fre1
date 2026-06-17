@@ -5,7 +5,7 @@
 //! - mark_unit_dead 正确标记
 //! - 不可逆（死后不能复活）
 
-use crate::core::domains::combat::api::mark_unit_dead;
+use crate::core::domains::combat::integration::turn::mark_unit_dead;
 use crate::core::domains::combat::components::{CombatParticipant, TeamId};
 use crate::core::domains::combat::tests::fixtures::combat_fixtures;
 

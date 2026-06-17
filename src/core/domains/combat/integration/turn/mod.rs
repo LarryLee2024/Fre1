@@ -1,7 +1,7 @@
-//! API — Combat 域公开查询接口
+//! Turn Queue Facade — 回合队列的跨域查询接口。
 //!
-//! 供外部在遵守 Data Law 012（域间禁止直接数据引用）的前提下，通过函数调用而非
-//! 直接字段访问来获取 combat 域的状态信息。
+//! 供外部在遵守 Data Law 012（域间禁止直接数据引用）的前提下，
+//! 通过函数调用而非直接字段访问来获取 Combat 域的回合状态信息。
 //!
 //! # 可用 API
 //!
@@ -9,10 +9,11 @@
 //! |------|--------|------|
 //! | `get_current_turn` | `Option<TurnEntry>` | 当前回合的行动单位（克隆值） |
 //! | `get_turn_queue_info` | `TurnQueueInfo` | 回合队列的快照信息 |
+//! | `mark_unit_dead` | — | 标记单位阵亡 |
 
 use bevy::prelude::*;
 
-use super::components::{CombatParticipant, TurnEntry, TurnQueue};
+use crate::core::domains::combat::components::{CombatParticipant, TurnEntry, TurnQueue};
 
 /// 回合队列的快照信息（值类型，不暴露内部引用）。
 #[derive(Debug, Clone, PartialEq)]
@@ -33,13 +34,6 @@ pub fn get_current_turn(turn_queue: &TurnQueue) -> Option<TurnEntry> {
 ///
 /// 由死亡系统（或 HP ≤ 0 时的处理系统）调用。
 /// 胜利条件检查会根据此标记判定团队是否全灭。
-///
-/// 使用方式：
-/// ```ignore
-/// fn death_check(mut participant_query: Query<&mut CombatParticipant>) {
-///     for mut p in &mut participant_query { mark_unit_dead(&mut p); }
-/// }
-/// ```
 pub fn mark_unit_dead(participant: &mut CombatParticipant) {
     participant.is_alive = false;
 }

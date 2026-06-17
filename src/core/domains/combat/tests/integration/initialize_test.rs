@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::core::domains::combat::api::mark_unit_dead;
+use crate::core::domains::combat::integration::turn::mark_unit_dead;
 use crate::core::domains::combat::components::{
     ActionPoints, CombatParticipant, TeamId, TurnEntry, TurnQueue,
 };

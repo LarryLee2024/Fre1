@@ -9,9 +9,8 @@
 //! - `components` — BattlePhase, TurnSubState, TurnQueue, ActionPoints
 //! - `events` — 回合生命周期事件
 //! - `systems` — 回合状态机各阶段 System
-//! - `api` — 公开查询接口
+//! - `integration/` — 跨域访问 ACL（ADR-046）
 
-mod api;
 pub(crate) mod components;
 mod events;
 pub(crate) mod integration;
@@ -21,7 +20,6 @@ mod systems;
 #[cfg(test)]
 mod tests;
 
-pub use api::*;
 pub use components::*;
 pub use events::*;
 pub use plugin::*;

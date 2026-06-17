@@ -9,8 +9,7 @@
 //! |------|------|
 //! | `resources.rs` | Bevy Resource 包装（DeterministicRng, ReplayModeGuard, 会话资源） |
 //! | `systems.rs`   | 录制/回放生命周期 System（帧管理、RNG 同步） |
-//! | `events.rs`    | Infra 层回放事件 re-export |
-//! | `api.rs`       | 对外统一 API re-export |
+//! | `events.rs`    | Infra 层回放事件 |
 //! | `plugin.rs`    | ReplayPlugin 注册入口 |
 //!
 //! ## 使用示例
@@ -41,8 +40,32 @@ mod plugin;
 pub(crate) mod resources;
 pub(crate) mod systems;
 
-mod api;
 mod events;
 
-pub use api::*;
+#[cfg(test)]
+mod tests;
+
+// ── 核心类型 re-export ──
+pub use crate::core::capabilities::runtime::replay::foundation::{
+    AbilityTarget, ReplayCommand, ReplayError, ReplayFrame, ReplayHeader, ReplayLog,
+    ReplayMismatch, ReplayMode, RngSeeds, RngStream,
+};
+
+// ── Infra 资源 re-export ──
+pub use resources::{
+    DeterministicRng, FrameCounter, PlaybackSession, RecordingSession, ReplayModeGuard,
+};
+
+// ── 事件 re-export ──
+pub use events::{
+    RecordingCompleted, RecordingStarted, ReplayCompleted, ReplayFrameProcessed,
+    ReplayMismatchDetected, ReplayStarted,
+};
+
+// ── 机制 re-export ──
+pub use crate::core::capabilities::runtime::replay::mechanism::{
+    PlaybackSession as CorePlaybackSession, RecordingSession as CoreRecordingSession,
+    calculate_frame_checksum, fast_forward, validate_frame_sequence, validate_version,
+};
+
 pub use plugin::*;
