@@ -20,9 +20,9 @@ supersedes: none
 
 ## 引用的领域规则与数据架构
 
-- `docs/02-domain/tactical_domain.md` — Tactical 领域规则
-- `docs/02-domain/terrain_domain.md` — Terrain 领域规则
-- `docs/02-domain/faction_domain.md` — Faction 领域规则
+- `docs/02-domain/domains/tactical_domain.md` — Tactical 领域规则
+- `docs/02-domain/domains/terrain_domain.md` — Terrain 领域规则
+- `docs/02-domain/domains/faction_domain.md` — Faction 领域规则
 - `docs/04-data/domains/tactical_schema.md` — Tactical Schema
 - `docs/04-data/domains/terrain_schema.md` — Terrain Schema
 - `docs/04-data/domains/faction_schema.md` — Faction Schema

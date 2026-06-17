@@ -11,7 +11,7 @@ replay-safe: true
 
 # Attribute Schema — 属性数据架构
 
-> **领域归属**: Capabilities — 核心基石层 | **依赖 Schema**: Tag | **定义依据**: `docs/02-domain/attribute_domain.md`
+> **领域归属**: Capabilities — 核心基石层 | **依赖 Schema**: Tag | **定义依据**: `docs/02-domain/capabilities/attribute_domain.md`
 
 ---
 

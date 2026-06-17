@@ -11,7 +11,7 @@ replay-safe: true
 
 # Terrain Schema — 地形数据架构
 
-> **领域归属**: Domains — 战术空间层 | **依赖 Schema**: Tag, Effect, Event | **定义依据**: `docs/02-domain/terrain_domain.md`
+> **领域归属**: Domains — 战术空间层 | **依赖 Schema**: Tag, Effect, Event | **定义依据**: `docs/02-domain/domains/terrain_domain.md`
 
 ---
 

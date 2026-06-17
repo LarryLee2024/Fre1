@@ -11,7 +11,7 @@ replay-safe: true
 
 # Faction Schema — 阵营关系数据架构
 
-> **领域归属**: Domains — 叙事/社交层 | **依赖 Schema**: Event | **定义依据**: `docs/02-domain/faction_domain.md`
+> **领域归属**: Domains — 叙事/社交层 | **依赖 Schema**: Event | **定义依据**: `docs/02-domain/domains/faction_domain.md`
 
 ---
 

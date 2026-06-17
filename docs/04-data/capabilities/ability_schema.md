@@ -11,7 +11,7 @@ replay-safe: true
 
 # Ability Schema — 技能逻辑数据架构
 
-> **领域归属**: Capabilities — 行为表现层 | **依赖 Schema**: Tag, Attribute, Spec, Condition, Trigger, Targeting, Execution, Effect, GameplayContext | **定义依据**: `docs/02-domain/ability_domain.md`
+> **领域归属**: Capabilities — 行为表现层 | **依赖 Schema**: Tag, Attribute, Spec, Condition, Trigger, Targeting, Execution, Effect, GameplayContext | **定义依据**: `docs/02-domain/capabilities/ability_domain.md`
 
 ---
 

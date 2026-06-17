@@ -11,7 +11,7 @@ replay-safe: true
 
 # Modifier Schema — 修改器数据架构
 
-> **领域归属**: Capabilities — 核心基石层 | **依赖 Schema**: Tag, Attribute | **定义依据**: `docs/02-domain/modifier_domain.md`
+> **领域归属**: Capabilities — 核心基石层 | **依赖 Schema**: Tag, Attribute | **定义依据**: `docs/02-domain/capabilities/modifier_domain.md`
 
 ---
 

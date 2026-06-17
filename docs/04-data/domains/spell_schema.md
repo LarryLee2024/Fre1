@@ -11,7 +11,7 @@ replay-safe: true
 
 # Spell Schema — 法术数据架构
 
-> **领域归属**: Domains — 战斗核心层 | **依赖 Schema**: Ability, Effect, Event, Combat | **定义依据**: `docs/02-domain/spell_domain.md`
+> **领域归属**: Domains — 战斗核心层 | **依赖 Schema**: Ability, Effect, Event, Combat | **定义依据**: `docs/02-domain/domains/spell_domain.md`
 
 ---
 

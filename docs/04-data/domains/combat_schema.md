@@ -11,7 +11,7 @@ replay-safe: true
 
 # Combat Schema — 战斗数据架构
 
-> **领域归属**: Domains — 战斗核心层 | **依赖 Schema**: Tactical, Terrain, Effect, Event, Faction, Execution | **定义依据**: `docs/02-domain/combat_domain.md`
+> **领域归属**: Domains — 战斗核心层 | **依赖 Schema**: Tactical, Terrain, Effect, Event, Faction, Execution | **定义依据**: `docs/02-domain/domains/combat_domain.md`
 
 ---
 

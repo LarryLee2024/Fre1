@@ -11,7 +11,7 @@ replay-safe: false
 
 # Inventory Schema — 背包/物品数据架构
 
-> **领域归属**: Domains — 成长养成层 | **依赖 Schema**: Modifier, Effect, Event, Condition | **定义依据**: `docs/02-domain/inventory_domain.md`
+> **领域归属**: Domains — 成长养成层 | **依赖 Schema**: Modifier, Effect, Event, Condition | **定义依据**: `docs/02-domain/domains/inventory_domain.md`
 
 ---
 

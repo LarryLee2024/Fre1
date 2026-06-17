@@ -20,9 +20,9 @@ supersedes: none
 
 ## 引用的领域规则与数据架构
 
-- `docs/02-domain/economy_domain.md` — Economy 领域规则
-- `docs/02-domain/crafting_domain.md` — Crafting 领域规则
-- `docs/02-domain/summon_domain.md` — Summon 领域规则
+- `docs/02-domain/domains/economy_domain.md` — Economy 领域规则
+- `docs/02-domain/domains/crafting_domain.md` — Crafting 领域规则
+- `docs/02-domain/domains/summon_domain.md` — Summon 领域规则
 - `docs/04-data/domains/economy_schema.md` — Economy Schema
 - `docs/04-data/domains/crafting_schema.md` — Crafting Schema
 - `docs/04-data/domains/summon_schema.md` — Summon Schema

@@ -11,7 +11,7 @@ replay-safe: true
 
 # Trigger Schema — 触发器数据架构
 
-> **领域归属**: Capabilities — 逻辑骨架层 | **依赖 Schema**: Tag, Condition, Event | **定义依据**: `docs/02-domain/trigger_domain.md`
+> **领域归属**: Capabilities — 逻辑骨架层 | **依赖 Schema**: Tag, Condition, Event | **定义依据**: `docs/02-domain/capabilities/trigger_domain.md`
 
 ---
 

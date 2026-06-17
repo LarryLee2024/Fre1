@@ -78,7 +78,7 @@
 | `docs/01-architecture/README.md` | 纵向三层+横切四层架构总纲，Capabilities/Domains 双轴结构、ECS 规则 | 🟥 **最高** |
 | `docs/00-governance/ai-constitution-complete.md` | 项目总宪法 v5.0（21 编），覆盖架构/ECS/代码/测试/日志/工程质量/AI 执行 | 🟥 **最高** |
 | `docs/00-governance/coding-rules.md` | 编码执行规范，Feature First/ECS/Bevy 原生/通信机制 | 🟩 必须遵守 |
-| `docs/02-domain/README.md` | 领域规则汇总索引，领域文件速查入口 | 🟩 必须遵守 |
+| `docs/02-domain/README.md` | 领域规则汇总索引（`capabilities/` + `domains/` 双轴结构） | 🟩 必须遵守 |
 | `docs/04-data/README.md` | 数据架构规范，Schema 设计指南、Save/Replay 兼容规则 | 🟩 必须遵守 |
 | `docs/05-testing/test-spec.md` | 测试宪法 v4.0，领域内聚四层测试/不变量测试/回放测试 | 🟩 必须遵守 |
 
@@ -110,7 +110,7 @@ AI 编码时直接引用，覆盖宪法分册与专项规则：
 |------|--------|------|
 | `00-governance/` | 8 | 治理规则（AI 开发宪法、编码规范、Bevy 参考） |
 | `01-architecture/` | 1 | 架构设计文档 |
-| `02-domain/` | 31 | 领域规则 |
+| `02-domain/` | 31 | 领域规则（`capabilities/` 15 能力机制 + `domains/` 15 业务域） |
 | `03-technical/` | 0 | 技术实现规则（ECS 通信、错误处理、日志、持久化、UI 架构等） |
 | `04-data/` | 1 | 数据与配置规则（内容系统、配置系统、资源生命周期、Feature Flag、Schema 设计等） |
 | `05-testing/` | 4 | 测试规范（测试宪法、测试规则） |

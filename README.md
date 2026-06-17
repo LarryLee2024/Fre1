@@ -71,7 +71,7 @@ Fre/
 |------|--------|------|
 | `00-governance/` | 8 | 治理规则（宪法、编码规范、架构设计） |
 | `01-architecture/` | 1 | 架构设计文档 |
-| `02-domain/` | 31 | 领域规则（战斗、技能、Buff、回合等） |
+| `02-domain/` | 31 | 领域规则（`capabilities/` 15 能力机制 + `domains/` 15 业务域） |
 | `04-data/` | 1 | 数据架构（Schema、Save/Replay 兼容） |
 | `05-testing/` | 4 | 测试规范（测试宪法、测试规则） |
 | `08-decisions/` | 0 | 架构决策记录（ADR） |
@@ -83,7 +83,7 @@ Fre/
 |------|------|--------|
 | `docs/01-architecture/README.md` | 纵向三层+横切四层架构总纲 | 最高 |
 | `docs/00-governance/ai-constitution-complete.md` | 项目总宪法 v5.0（21 编） | 最高 |
-| `docs/02-domain/README.md` | 领域规则索引 | 必须遵守 |
+| `docs/02-domain/README.md` | 领域规则索引（capabilities/ + domains/） | 必须遵守 |
 | `docs/05-testing/test-spec.md` | 测试宪法 v4.0 | 必须遵守 |
 
 ## AI 协作

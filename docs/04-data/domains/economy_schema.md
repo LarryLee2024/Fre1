@@ -11,7 +11,7 @@ replay-safe: false
 
 # Economy Schema — 经济/交易数据架构
 
-> **领域归属**: Domains — 经济系统层 | **依赖 Schema**: Inventory, Faction, Event | **定义依据**: `docs/02-domain/economy_domain.md`
+> **领域归属**: Domains — 经济系统层 | **依赖 Schema**: Inventory, Faction, Event | **定义依据**: `docs/02-domain/domains/economy_domain.md`
 
 ---
 

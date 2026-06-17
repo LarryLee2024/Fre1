@@ -11,7 +11,7 @@ replay-safe: true
 
 # GameplayContext Schema — 游戏上下文数据架构
 
-> **领域归属**: Capabilities — 聚合层 | **依赖 Schema**: Tag, Attribute | **定义依据**: `docs/02-domain/gameplay_context_domain.md`
+> **领域归属**: Capabilities — 聚合层 | **依赖 Schema**: Tag, Attribute | **定义依据**: `docs/02-domain/capabilities/gameplay_context_domain.md`
 
 ---
 

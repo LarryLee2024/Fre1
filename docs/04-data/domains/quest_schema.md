@@ -11,7 +11,7 @@ replay-safe: false
 
 # Quest Schema — 任务数据架构
 
-> **领域归属**: Domains — 叙事内容层 | **依赖 Schema**: Event, Condition, Faction, Progression, Inventory | **定义依据**: `docs/02-domain/quest_domain.md`
+> **领域归属**: Domains — 叙事内容层 | **依赖 Schema**: Event, Condition, Faction, Progression, Inventory | **定义依据**: `docs/02-domain/domains/quest_domain.md`
 
 ---
 

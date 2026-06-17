@@ -11,7 +11,7 @@ replay-safe: true
 
 # Tag Schema — 标签数据架构
 
-> **领域归属**: Capabilities — 核心基石层 | **依赖 Schema**: 无（最底层） | **定义依据**: `docs/02-domain/tag_domain.md`
+> **领域归属**: Capabilities — 核心基石层 | **依赖 Schema**: 无（最底层） | **定义依据**: `docs/02-domain/capabilities/tag_domain.md`
 
 ---
 

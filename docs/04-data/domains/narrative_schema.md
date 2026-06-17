@@ -11,7 +11,7 @@ replay-safe: false
 
 # Narrative Schema — 叙事/对话数据架构
 
-> **领域归属**: Domains — 叙事内容层 | **依赖 Schema**: Condition, Event, Faction, Quest | **定义依据**: `docs/02-domain/narrative_domain.md`
+> **领域归属**: Domains — 叙事内容层 | **依赖 Schema**: Condition, Event, Faction, Quest | **定义依据**: `docs/02-domain/domains/narrative_domain.md`
 
 ---
 

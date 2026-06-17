@@ -11,7 +11,7 @@ replay-safe: true
 
 # Summon Schema — 召唤数据架构
 
-> **领域归属**: Domains — 经济系统层 | **依赖 Schema**: Effect, Combat, Tactical, Event | **定义依据**: `docs/02-domain/summon_domain.md`
+> **领域归属**: Domains — 经济系统层 | **依赖 Schema**: Effect, Combat, Tactical, Event | **定义依据**: `docs/02-domain/domains/summon_domain.md`
 
 ---
 

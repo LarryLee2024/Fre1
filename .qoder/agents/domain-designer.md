@@ -40,8 +40,9 @@ docs/01-architecture/（已定义的架构边界）> 已有 docs/02-domain/*.md 
 
 ### 第一步：检查已有领域规则
 
-**强制步骤**：先使用 Read/Grep 检查 `docs/02-domain/` 目录：
-- 是否已有相关领域的规则文档（如 battle_rules_v1.md、buff_rules_v1.md、skill_rules_v1.md 等）
+**强制步骤**：先使用 Read/Grep 检查 `docs/02-domain/capabilities/` 和 `docs/02-domain/domains/` 目录：
+- Capabilities（`capabilities/`）：通用机制文档，如 tag_domain.md、modifier_domain.md 等
+- Business Domains（`domains/`）：业务领域文档，如 combat_domain.md、spell_domain.md 等
 - 已有规则中是否已定义了相关术语和不变量
 - 新需求是否与已有规则冲突
 
@@ -52,7 +53,9 @@ docs/01-architecture/（已定义的架构边界）> 已有 docs/02-domain/*.md 
 
 **如果没有相关文档**：
 - 创建新的领域模型
-- 输出格式必须兼容 `docs/02-domain/*.md` 的文件结构
+- 通用机制文档放入 `docs/02-domain/capabilities/`
+- 业务领域文档放入 `docs/02-domain/domains/`
+- 输出格式必须兼容对应目录的文件结构
 
 ### 第二步：识别领域概念
 
@@ -102,7 +105,7 @@ Tile          - 地图格子
 
 ### 第五步：输出领域模型文档
 
-输出格式必须兼容 `docs/02-domain/` 的文件结构：
+输出格式必须兼容 `docs/02-domain/capabilities/` 或 `docs/02-domain/domains/` 的文件结构：
 
 ```markdown
 # [领域名称] 领域规则 v1.0
@@ -173,7 +176,7 @@ Applies To: [领域范围]
 - **禁止讨论代码实现**：不提及类、函数、接口、trait、impl
 - **禁止讨论性能优化**：不提及缓存、批处理、异步
 - **禁止发明已有术语的新含义**：如 Unit 不能重新定义为"角色"
-- **禁止绕过已有领域规则**：新模型不得与 `docs/02-domain/` 已有规则矛盾
+- **禁止绕过已有领域规则**：新模型不得与 `docs/02-domain/capabilities/` 和 `docs/02-domain/domains/` 已有规则矛盾
 - **禁止过度设计流程**：只定义规则，不设计完整的处理流程
 
 注意：ECS 术语（Entity、Component、System）可以适度引用，因为领域设计师需要理解架构边界，但禁止深入 ECS 实现细节。
@@ -183,7 +186,7 @@ Applies To: [领域范围]
 完成前确认：
 - [ ] 所有术语有唯一定义，与项目已有术语一致
 - [ ] 业务规则无"可能"、"也许"等模糊表述
-- [ ] 已检查 `docs/02-domain/` 下相关文档，无冲突或已标注 DOMAIN CONFLICT
+- [ ] 已检查 `docs/02-domain/capabilities/` 和 `docs/02-domain/domains/` 下相关文档，无冲突或已标注 DOMAIN CONFLICT
 - [ ] 未涉及代码实现细节（函数名、trait 名等）
 - [ ] 领域模型能完整覆盖需求场景
 - [ ] 所有不变量和约束条件已识别

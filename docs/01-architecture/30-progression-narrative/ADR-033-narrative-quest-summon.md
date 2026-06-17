@@ -20,8 +20,8 @@ supersedes: none
 
 ## 引用的领域规则与数据架构
 
-- `docs/02-domain/narrative_domain.md` — Narrative 领域规则
-- `docs/02-domain/quest_domain.md` — Quest 领域规则
+- `docs/02-domain/domains/narrative_domain.md` — Narrative 领域规则
+- `docs/02-domain/domains/quest_domain.md` — Quest 领域规则
 - `docs/04-data/domains/narrative_schema.md` — Narrative Schema
 - `docs/04-data/domains/quest_schema.md` — Quest Schema
 

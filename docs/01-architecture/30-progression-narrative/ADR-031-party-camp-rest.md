@@ -20,8 +20,8 @@ supersedes: none
 
 ## 引用的领域规则与数据架构
 
-- `docs/02-domain/party_domain.md` — Party 领域规则
-- `docs/02-domain/camp_rest_domain.md` — Camp/Rest 领域规则
+- `docs/02-domain/domains/party_domain.md` — Party 领域规则
+- `docs/02-domain/domains/camp_rest_domain.md` — Camp/Rest 领域规则
 - `docs/04-data/domains/party_schema.md` — Party Schema
 - `docs/04-data/domains/camp_rest_schema.md` — Camp/Rest Schema
 

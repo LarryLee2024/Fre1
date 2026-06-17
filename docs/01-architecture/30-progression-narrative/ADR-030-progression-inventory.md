@@ -20,8 +20,8 @@ supersedes: none
 
 ## 引用的领域规则与数据架构
 
-- `docs/02-domain/progression_domain.md` — Progression 领域规则
-- `docs/02-domain/inventory_domain.md` — Inventory 领域规则
+- `docs/02-domain/domains/progression_domain.md` — Progression 领域规则
+- `docs/02-domain/domains/inventory_domain.md` — Inventory 领域规则
 - `docs/04-data/domains/progression_schema.md` — Progression Schema
 - `docs/04-data/domains/inventory_schema.md` — Inventory Schema
 - `.trae/rules/SRPG专项规则.md` §一（角色分层扩展体系）

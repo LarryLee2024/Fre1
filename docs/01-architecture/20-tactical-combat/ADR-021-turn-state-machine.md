@@ -20,7 +20,7 @@ supersedes: none
 
 ## 引用的领域规则与数据架构
 
-- `docs/02-domain/tactical_domain.md` — Tactical 领域规则
+- `docs/02-domain/domains/tactical_domain.md` — Tactical 领域规则
 - `docs/04-data/domains/tactical_schema.md` — Tactical Schema（回合部分）
 - `.trae/rules/SRPG专项规则.md` §四 — 回合系统规范
 - `.trae/rules/ECS规则.md` §四 — 状态管理使用 Bevy States

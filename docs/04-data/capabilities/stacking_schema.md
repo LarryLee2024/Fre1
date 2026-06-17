@@ -11,7 +11,7 @@ replay-safe: true
 
 # Stacking Schema — 堆叠规则数据架构
 
-> **领域归属**: Capabilities — 行为表现层 | **依赖 Schema**: Effect | **定义依据**: `docs/02-domain/stacking_domain.md`
+> **领域归属**: Capabilities — 行为表现层 | **依赖 Schema**: Effect | **定义依据**: `docs/02-domain/capabilities/stacking_domain.md`
 
 ---
 

@@ -11,7 +11,7 @@ replay-safe: false
 
 # Crafting Schema — 制作/锻造数据架构
 
-> **领域归属**: Domains — 经济系统层 | **依赖 Schema**: Inventory, Modifier, Effect, Event | **定义依据**: `docs/02-domain/crafting_domain.md`
+> **领域归属**: Domains — 经济系统层 | **依赖 Schema**: Inventory, Modifier, Effect, Event | **定义依据**: `docs/02-domain/domains/crafting_domain.md`
 
 ---
 

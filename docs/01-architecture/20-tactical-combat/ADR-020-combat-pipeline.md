@@ -23,9 +23,9 @@ supersedes: none
 
 ## 引用的领域规则与数据架构
 
-- `docs/02-domain/combat_domain.md` — Combat 领域规则
-- `docs/02-domain/spell_domain.md` — Spell 领域规则
-- `docs/02-domain/reaction_domain.md` — Reaction 领域规则
+- `docs/02-domain/domains/combat_domain.md` — Combat 领域规则
+- `docs/02-domain/domains/spell_domain.md` — Spell 领域规则
+- `docs/02-domain/domains/reaction_domain.md` — Reaction 领域规则
 - `docs/04-data/domains/combat_schema.md` — Combat Schema
 - `docs/04-data/domains/spell_schema.md` — Spell Schema
 - `docs/04-data/domains/reaction_schema.md` — Reaction Schema

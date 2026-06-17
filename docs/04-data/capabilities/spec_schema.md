@@ -11,7 +11,7 @@ replay-safe: true
 
 # Spec Schema — 规格/配置数据架构
 
-> **领域归属**: Capabilities — 逻辑骨架层 | **依赖 Schema**: Tag, Attribute | **定义依据**: `docs/02-domain/spec_domain.md`
+> **领域归属**: Capabilities — 逻辑骨架层 | **依赖 Schema**: Tag, Attribute | **定义依据**: `docs/02-domain/capabilities/spec_domain.md`
 
 ---
 

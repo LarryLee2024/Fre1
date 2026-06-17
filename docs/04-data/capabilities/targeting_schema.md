@@ -11,7 +11,7 @@ replay-safe: true
 
 # Targeting Schema — 目标选择数据架构
 
-> **领域归属**: Capabilities — 行为表现层 | **依赖 Schema**: Tag, Condition | **定义依据**: `docs/02-domain/targeting_domain.md`
+> **领域归属**: Capabilities — 行为表现层 | **依赖 Schema**: Tag, Condition | **定义依据**: `docs/02-domain/capabilities/targeting_domain.md`
 
 ---
 

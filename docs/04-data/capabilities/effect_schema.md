@@ -11,7 +11,7 @@ replay-safe: true
 
 # Effect Schema — 效果数据架构
 
-> **领域归属**: Capabilities — 行为表现层 | **依赖 Schema**: Tag, Attribute, Modifier, Spec, Condition, GameplayContext, Execution | **定义依据**: `docs/02-domain/effect_domain.md`
+> **领域归属**: Capabilities — 行为表现层 | **依赖 Schema**: Tag, Attribute, Modifier, Spec, Condition, GameplayContext, Execution | **定义依据**: `docs/02-domain/capabilities/effect_domain.md`
 
 ---
 

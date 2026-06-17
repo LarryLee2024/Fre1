@@ -11,7 +11,7 @@ replay-safe: true
 
 # Condition Schema — 条件/限制数据架构
 
-> **领域归属**: Capabilities — 逻辑骨架层 | **依赖 Schema**: Tag, Attribute | **定义依据**: `docs/02-domain/condition_domain.md`
+> **领域归属**: Capabilities — 逻辑骨架层 | **依赖 Schema**: Tag, Attribute | **定义依据**: `docs/02-domain/capabilities/condition_domain.md`
 
 ---
 

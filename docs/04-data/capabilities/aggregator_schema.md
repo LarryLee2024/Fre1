@@ -11,7 +11,7 @@ replay-safe: true
 
 # Aggregator Schema — 聚合器数据架构
 
-> **领域归属**: Capabilities — 聚合层 | **依赖 Schema**: Attribute, Modifier | **定义依据**: `docs/02-domain/aggregator_domain.md`
+> **领域归属**: Capabilities — 聚合层 | **依赖 Schema**: Attribute, Modifier | **定义依据**: `docs/02-domain/capabilities/aggregator_domain.md`
 
 ---
 

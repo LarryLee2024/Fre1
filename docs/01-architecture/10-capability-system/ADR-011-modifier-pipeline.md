@@ -20,9 +20,9 @@ supersedes: none
 
 ## 引用的领域规则与数据架构
 
-- `docs/02-domain/modifier_domain.md` — Modifier 领域规则
-- `docs/02-domain/attribute_domain.md` — Attribute 领域规则
-- `docs/02-domain/aggregator_domain.md` — Aggregator 领域规则
+- `docs/02-domain/capabilities/modifier_domain.md` — Modifier 领域规则
+- `docs/02-domain/capabilities/attribute_domain.md` — Attribute 领域规则
+- `docs/02-domain/capabilities/aggregator_domain.md` — Aggregator 领域规则
 - `docs/04-data/capabilities/modifier_schema.md` — Modifier Schema
 - `docs/04-data/capabilities/attribute_schema.md` — Attribute Schema
 - `docs/04-data/capabilities/aggregator_schema.md` — Aggregator Schema

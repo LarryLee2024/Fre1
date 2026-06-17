@@ -11,7 +11,7 @@ replay-safe: true
 
 # Reaction Schema — 反应/援护数据架构
 
-> **领域归属**: Domains — 战斗核心层 | **依赖 Schema**: Combat, Tactical, Event | **定义依据**: `docs/02-domain/reaction_domain.md`
+> **领域归属**: Domains — 战斗核心层 | **依赖 Schema**: Combat, Tactical, Event | **定义依据**: `docs/02-domain/domains/reaction_domain.md`
 
 ---
 

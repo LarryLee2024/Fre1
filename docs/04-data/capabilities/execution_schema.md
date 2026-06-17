@@ -11,7 +11,7 @@ replay-safe: true
 
 # Execution Schema — 执行计算数据架构
 
-> **领域归属**: Capabilities — 行为表现层 | **依赖 Schema**: GameplayContext, Attribute, Modifier | **定义依据**: `docs/02-domain/execution_domain.md`
+> **领域归属**: Capabilities — 行为表现层 | **依赖 Schema**: GameplayContext, Attribute, Modifier | **定义依据**: `docs/02-domain/capabilities/execution_domain.md`
 
 ---
 

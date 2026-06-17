@@ -11,7 +11,7 @@ replay-safe: true
 
 # Cue Schema — 表现层信号数据架构
 
-> **领域归属**: Capabilities — 行为表现层 | **依赖 Schema**: GameplayContext | **定义依据**: `docs/02-domain/cue_domain.md`
+> **领域归属**: Capabilities — 行为表现层 | **依赖 Schema**: GameplayContext | **定义依据**: `docs/02-domain/capabilities/cue_domain.md`
 
 ---
 

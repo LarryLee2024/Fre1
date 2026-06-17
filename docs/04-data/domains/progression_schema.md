@@ -11,7 +11,7 @@ replay-safe: false
 
 # Progression Schema — 成长养成数据架构
 
-> **领域归属**: Domains — 成长养成层 | **依赖 Schema**: Attribute, Modifier, Event, Condition, Ability | **定义依据**: `docs/02-domain/progression_domain.md`
+> **领域归属**: Domains — 成长养成层 | **依赖 Schema**: Attribute, Modifier, Event, Condition, Ability | **定义依据**: `docs/02-domain/domains/progression_domain.md`
 
 ---
 

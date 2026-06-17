@@ -11,7 +11,7 @@ replay-safe: true
 
 # Tactical Schema — 战术空间数据架构
 
-> **领域归属**: Domains — 战术空间层 | **依赖 Schema**: Tag, Terrain | **定义依据**: `docs/02-domain/tactical_domain.md`
+> **领域归属**: Domains — 战术空间层 | **依赖 Schema**: Tag, Terrain | **定义依据**: `docs/02-domain/domains/tactical_domain.md`
 
 ---
 

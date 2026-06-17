@@ -11,7 +11,7 @@ replay-safe: false
 
 # Party Schema — 队伍数据架构
 
-> **领域归属**: Domains — 成长养成层 | **依赖 Schema**: Modifier, Event, Combat | **定义依据**: `docs/02-domain/party_domain.md`
+> **领域归属**: Domains — 成长养成层 | **依赖 Schema**: Modifier, Event, Combat | **定义依据**: `docs/02-domain/domains/party_domain.md`
 
 ---
 
