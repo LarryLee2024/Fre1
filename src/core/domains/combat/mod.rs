@@ -14,6 +14,7 @@
 mod api;
 pub(crate) mod components;
 mod events;
+pub(crate) mod integration;
 mod plugin;
 mod systems;
 

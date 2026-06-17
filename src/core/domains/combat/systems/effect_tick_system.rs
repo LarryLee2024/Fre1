@@ -5,19 +5,16 @@
 //! # 架构说明
 //!
 //! Combat (Domain) → Effect (Capability) 方向，符合架构法第 3.2 节 "Domain 引用 Capabilities"。
-//! 当天体效果（Buff/DOT/HOT）的单位回合结束信号 OnTurnEnd 被发射时，
-//! 本 Observer 对所有带有 ActiveEffectContainer 的实体执行：
-//! 1. 效果持续时间递减（tick_durations）
-//! 2. 到期效果状态清理（expire_effects）
+//! 所有 Effect Capabilities 的交互通过 `super::integration::effect/` 模块完成，
+//! 禁止直接 import `ActiveEffectContainer` / `tick_durations` / `expire_effects`。
+//!
+//! 详见 ADR-024。
 
 use bevy::ecs::observer::On;
 use bevy::prelude::*;
 
-use crate::core::capabilities::effect::events::EffectTicked;
-use crate::core::capabilities::effect::foundation::ActiveEffectContainer;
-use crate::core::capabilities::effect::mechanism::{expire_effects, tick_durations};
-use crate::core::domains::combat::components::TurnQueue;
 use crate::core::domains::combat::events::OnTurnEnd;
+use crate::core::domains::combat::integration::effect::EffectTickParam;
 
 /// Observer: OnTurnEnd → 推进所有实体的效果计时。
 ///
@@ -25,47 +22,28 @@ use crate::core::domains::combat::events::OnTurnEnd;
 /// - duration 剩余回合数 -1
 /// - 周期 Tick 检测（到达 interval 时触发 Tick）
 /// - Expiring → Removed 清理
+///
+/// 通过 EffectTickParam（integration/effect/system_param.rs）与 Effect Capability 交互，
+/// 不直接接触 Capabilities 内部类型。
 pub(crate) fn on_turn_end_tick_effects(
     _trigger: On<'_, '_, OnTurnEnd>,
     mut commands: Commands,
-    mut container_query: Query<&mut ActiveEffectContainer>,
-    turn_queue: Res<TurnQueue>,
+    mut effect_tick: EffectTickParam,
 ) {
-    let current_turn = turn_queue.round_number() as u64;
+    let outcomes = effect_tick.tick_all(&mut commands);
 
-    for mut container in container_query.iter_mut() {
-        let result = tick_durations(&mut container, 1, current_turn);
-
-        // 发布 Ticked 事件
-        for instance_id in &result.ticked {
-            if let Some(instance) = container.find_by_id(instance_id) {
-                commands.trigger(EffectTicked {
-                    instance_id: instance.instance_id.clone(),
-                    def_id: instance.def_id.clone(),
-                    target_entity: instance.target_entity.clone(),
-                    tick_number: instance
-                        .tick_state
-                        .as_ref()
-                        .map(|t| t.tick_count)
-                        .unwrap_or(0),
-                    total_ticks: instance.tick_state.as_ref().and_then(|t| t.max_ticks),
-                });
-            }
-        }
-
-        if !result.expired.is_empty() {
+    // 记录 Tick 活动日志
+    for outcome in &outcomes {
+        if !outcome.ticked.is_empty() {
             debug!(
-                "[Combat-Effect] {} effects expired this tick",
-                result.expired.len()
+                "[Combat-Effect] {} effects ticked, {} expired",
+                outcome.ticked.len(),
+                outcome.expired.len()
             );
         }
 
-        for (id, err) in &result.errors {
-            warn!("[Combat-Effect] Tick error for '{}': {}", id, err);
+        if outcome.error_count > 0 {
+            warn!("[Combat-Effect] {} errors during tick", outcome.error_count);
         }
-    }
-
-    for mut container in container_query.iter_mut() {
-        expire_effects(&mut container);
     }
 }

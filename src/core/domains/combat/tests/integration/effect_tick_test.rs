@@ -1,10 +1,10 @@
-//! Integration tests — Combat OnTurnEnd → Effect Tick 集成
+//! Integration tests — Combat OnTurnEnd → Effect Tick 集成 (遗留测试)
 //!
-//! 验证 on_turn_end_tick_effects 的核心逻辑：
-//! - tick_durations 正确递减效果剩余回合
-//! - expire_effects 正确清理到期效果
-//! - 周期 Tick 在 interval 到达时触发
-//! - Infinite 效果不会自然到期
+//! WARNING: 测试 1-8 已由 `integration/effect/facade.rs` 中的 facade 测试替代。
+//! 这些测试直接 import Effect Capabilities 内部类型，违反 ADR-024。
+//! 保留为 #[ignore] 仅作历史参考，新测试应通过 integration 层编写。
+//!
+//! 测试 9 (effect_tick_works_with_turn_queue_info) 保留——TurnQueue 集成仅在 combat 层测试。
 
 use crate::core::capabilities::effect::foundation::{
     ActiveEffectContainer, DurationCalculation, EffectDuration, EffectInstance, EffectPeriod,
@@ -62,125 +62,84 @@ fn make_infinite_effect(id: &str) -> EffectInstance {
     )
 }
 
+#[ignore]
 #[test]
 fn tick_durations_decrements_remaining_turns() {
     let mut container = ActiveEffectContainer::new();
     let effect = make_duration_effect("dur_001", 3);
     let _ = container.effects.push(effect);
-
-    // Manually transition to Active (simulating apply_effect behavior)
     container.effects[0].stage = EffectStage::Active;
-
     let result = tick_durations(&mut container, 1, 1);
-
-    assert_eq!(
-        container.effects[0].remaining_turns, 2,
-        "remaining_turns should decrease by 1"
-    );
-    assert!(result.ticked.is_empty(), "no period, no tick");
-    assert!(result.expired.is_empty(), "not yet expired");
+    assert_eq!(container.effects[0].remaining_turns, 2);
+    assert!(result.ticked.is_empty());
+    assert!(result.expired.is_empty());
 }
 
+#[ignore]
 #[test]
 fn tick_durations_expires_effect_when_duration_depleted() {
     let mut container = ActiveEffectContainer::new();
     let effect = make_duration_effect("dur_002", 1);
     let _ = container.effects.push(effect);
     container.effects[0].stage = EffectStage::Active;
-
     let result = tick_durations(&mut container, 1, 1);
-
-    assert_eq!(container.effects[0].remaining_turns, 0, "duration depleted");
-    assert_eq!(
-        container.effects[0].stage,
-        EffectStage::Expiring,
-        "should transition to Expiring"
-    );
-    assert_eq!(result.expired.len(), 1, "should be marked as expired");
+    assert_eq!(container.effects[0].remaining_turns, 0);
+    assert_eq!(container.effects[0].stage, EffectStage::Expiring);
+    assert_eq!(result.expired.len(), 1);
     assert_eq!(result.expired[0], "dur_002");
 }
 
+#[ignore]
 #[test]
 fn expire_effects_cleans_up_expiring_effects() {
     let mut container = ActiveEffectContainer::new();
     let effect = make_duration_effect("dur_003", 3);
     let _ = container.effects.push(effect);
     container.effects[0].stage = EffectStage::Active;
-
-    // Advance enough turns to expire
     let _ = tick_durations(&mut container, 3, 1);
-    assert_eq!(
-        container.effects[0].stage,
-        EffectStage::Expiring,
-        "should be expiring after full duration"
-    );
-
+    assert_eq!(container.effects[0].stage, EffectStage::Expiring);
     let expired_ids = expire_effects(&mut container);
-    assert!(
-        expired_ids.contains(&"dur_003".to_string()),
-        "should include expired effect"
-    );
-    assert_eq!(
-        container.effects[0].stage,
-        EffectStage::Removed,
-        "effect should be removed"
-    );
+    assert!(expired_ids.contains(&"dur_003".to_string()));
+    assert_eq!(container.effects[0].stage, EffectStage::Removed);
 }
 
+#[ignore]
 #[test]
 fn tick_durations_triggers_periodic_tick_at_interval() {
     let mut container = ActiveEffectContainer::new();
-    // Duration 5 turns, ticks every 2 turns
     let effect = make_periodic_effect("dot_001", 5, 2);
     let _ = container.effects.push(effect);
     container.effects[0].stage = EffectStage::Active;
-
-    // Advance 2 turns → tick fires
     let result = tick_durations(&mut container, 2, 1);
-    assert_eq!(result.ticked.len(), 1, "should trigger periodic tick");
-    assert!(
-        result.ticked.contains(&"dot_001".to_string()),
-        "should include dot_001"
-    );
+    assert_eq!(result.ticked.len(), 1);
+    assert!(result.ticked.contains(&"dot_001".to_string()));
 }
 
+#[ignore]
 #[test]
 fn tick_durations_no_tick_before_interval() {
     let mut container = ActiveEffectContainer::new();
     let effect = make_periodic_effect("dot_002", 5, 3);
     let _ = container.effects.push(effect);
     container.effects[0].stage = EffectStage::Active;
-
-    // Advance 1 turn → not enough for interval
     let result = tick_durations(&mut container, 1, 1);
-    assert!(result.ticked.is_empty(), "no tick before interval");
+    assert!(result.ticked.is_empty());
 }
 
+#[ignore]
 #[test]
 fn infinite_effect_never_expires() {
     let mut container = ActiveEffectContainer::new();
     let effect = make_infinite_effect("inf_001");
     let _ = container.effects.push(effect);
     container.effects[0].stage = EffectStage::Active;
-
-    // Advance 1000 turns
     let result = tick_durations(&mut container, 1000, 1);
-    assert!(
-        result.expired.is_empty(),
-        "infinite effect should never expire"
-    );
-    assert_eq!(
-        container.effects[0].remaining_turns,
-        i64::MAX,
-        "infinite remaining_turns stays MAX"
-    );
-    assert_eq!(
-        container.effects[0].stage,
-        EffectStage::Active,
-        "infinite effect stays Active"
-    );
+    assert!(result.expired.is_empty());
+    assert_eq!(container.effects[0].remaining_turns, i64::MAX);
+    assert_eq!(container.effects[0].stage, EffectStage::Active);
 }
 
+#[ignore]
 #[test]
 fn paused_effect_does_not_tick() {
     let mut container = ActiveEffectContainer::new();
@@ -188,16 +147,13 @@ fn paused_effect_does_not_tick() {
     let _ = container.effects.push(effect);
     container.effects[0].stage = EffectStage::Active;
     container.effects[0].paused = true;
-
     let result = tick_durations(&mut container, 1, 1);
-    assert_eq!(
-        container.effects[0].remaining_turns, 3,
-        "paused effect should not decrease"
-    );
+    assert_eq!(container.effects[0].remaining_turns, 3);
     assert!(result.ticked.is_empty());
     assert!(result.expired.is_empty());
 }
 
+#[ignore]
 #[test]
 fn multiple_effects_tick_independently() {
     let mut container = ActiveEffectContainer::new();
@@ -210,9 +166,7 @@ fn multiple_effects_tick_independently() {
     for i in 0..3 {
         container.effects[i].stage = EffectStage::Active;
     }
-
     let result = tick_durations(&mut container, 2, 1);
-
     assert_eq!(container.effects[0].remaining_turns, 0, "a should expire");
     assert_eq!(
         container.effects[1].remaining_turns, 3,
@@ -223,14 +177,13 @@ fn multiple_effects_tick_independently() {
         i64::MAX,
         "c should still be MAX"
     );
-
-    assert_eq!(result.expired.len(), 1, "only a should expire");
+    assert_eq!(result.expired.len(), 1);
     assert_eq!(result.expired[0], "a");
 }
 
 #[test]
 fn effect_tick_works_with_turn_queue_info() {
-    // Verify the API works alongside effect tick logic
+    // 唯一保留的集成测试——验证 TurnQueue API 与 effect 逻辑的联合使用
     let team_a = TeamId::new("player");
     let entries = vec![
         TurnEntry::new(entity(1), team_a.clone(), 20),

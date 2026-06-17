@@ -12,7 +12,7 @@ supersedes: none
 
 ## Status
 
-**Proposed** — 依赖 ADR-021（Turn State Machine）和 `docs/01-architecture/README.md` §6.2（Business Domain 标准结构），本架构决策待评审后生效。
+**Accepted** — 依赖 ADR-021（Turn State Machine）和 `docs/01-architecture/README.md` §6.2（Business Domain 标准结构），本架构决策自 2026-06-18 起生效。
 
 ## 背景
 

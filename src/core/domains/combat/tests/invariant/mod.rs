@@ -1,2 +1,3 @@
+mod effect_lifecycle_invariant_test;
 mod participant_invariant_test;
 mod turn_invariant_test;

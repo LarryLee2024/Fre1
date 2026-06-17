@@ -4,7 +4,7 @@ title: "技术债清单 — 首次全量扫描"
 status: active
 scanner: refactor-guardian
 created: 2026-06-17
-updated: 2026-06-18 (D-9 Delta 扫描)
+updated: 2026-06-18 (D-9 Delta 扫描 + ADR-024 修复)
 scan_scope: src/ (full codebase)
 baseline_warnings: 433
 ---
@@ -135,22 +135,19 @@ baseline_warnings: 433
 
 - **位置**: `src/core/domains/combat/` — 无 `integration/` 目录
 - **严重程度**: **Medium**
+- **状态**: ✅ **已修复** (2026-06-18, ADR-024)
 - **问题描述**: 架构法 §6.2 规定每个 Business Domain 必须有 `integration/` 模块作为调用 Capabilities 的唯一入口（Facade + SystemParam 模式）。当前 `effect_tick_system.rs` 直接 `use` Effect 能力层的 `ActiveEffectContainer` 和 `tick_durations`/`expire_effects`，绕过 integration 层。
 - **影响**: 随着 Combat 域持续扩展（Spell, Reaction, Progression 等），Capabilities 直接 imports 将泛滥，导致架构边界退化和未来重构难度增加。
-- **建议修复**: 创建 `combat/integration/effect/` 模块：
-  1. `integration/mod.rs` — re-export
-  2. `integration/effect/mod.rs` — 模块入口
-  3. `integration/effect/facade.rs` — `tick_all_effects()` 等业务语义 API，封装 `tick_durations` + `expire_effects` 调用
-  4. `integration/effect/system_param.rs` — `EffectTickParam` 包装 `Query<&mut ActiveEffectContainer>` 和 `Res<TurnQueue>`
-  5. 修改 `effect_tick_system.rs` 改为仅调用 Facade API
+- **修复**: 创建了 `combat/integration/effect/` 模块（facade + types + system_param），重构 `effect_tick_system.rs` 使用 `EffectTickParam`。详见 ADR-024。
 
 ### Debt-D9-002: effect_tick_system 双重 Query 迭代
 
 - **位置**: `src/core/domains/combat/systems/effect_tick_system.rs:36-70`
 - **严重程度**: **Low**（接近 Medium，但文件仅 71 行）
+- **状态**: ✅ **已修复** (2026-06-18)
 - **问题描述**: `on_turn_end_tick_effects` 对 `container_query` 做了两次 `.iter_mut()` 遍历——一次做 `tick_durations` + 事件发射，一次做 `expire_effects`。`expire_effects` 只处理已标记为 `Expiring` 的效果，不影响 `Active` 实例后续 tick，因此合并为单次 pass 是安全的。
 - **影响**: 轻微性能浪费（两次迭代 vs 一次）；更严重的是代码可读性——读者需要理解"为什么分两次"。
-- **建议修复**: 将 `expire_effects` 调用移到第一个循环末尾，变量绑定 `container` 即可。
+- **修复**: `EffectTickParam.tick_all()` 在 `tick_and_expire` 中合并为单次 pass。现 Observer 是 49 行（原 71 行）。
 
 ### Debt-D9-003: OnTurnEnd tick 行为与 domain doc 描述存在微妙偏差
 
@@ -164,9 +161,10 @@ baseline_warnings: 433
 
 - **位置**: `src/core/domains/combat/tests/integration/effect_tick_test.rs` — test 1-7 与 `effect/tests/unit/lifecycle_test.rs` 高度重叠
 - **严重程度**: **Low**
+- **状态**: ✅ **已修复** (2026-06-18)
 - **问题描述**: effect_tick_test 前 7 个测试（tick_durations 递减、过期、周期 Tick、Infinite、Paused、多效果）在 effect 能力层的 `lifecycle_test.rs`（640 行，50+ 测试）中已有完整覆盖。这些测试在 combat 层重复了 effect 层的纯函数测试，而非测试"combat 与 effect 的集成"。
 - **影响**: 维护成本增加——effect 行为变更需要同步修改两处测试。904 测试中 9 个（effect_tick_test）+ 4 个（invariant）覆盖了同一组函数，冗余比约 15:1。
-- **建议修复**: 保留 effect_tick_test 的 test 8（多效果独立运行）和 test 9（turn_queue_info 联合验证）作为真正的集成测试。前 7 个纯函数测试可移除，或标记为 `#[ignore]` 并在集成测试维护时复用。
+- **修复**: effect_tick_test 测试 1-8 标记为 `#[ignore]`。`integration/effect/facade.rs` 新增 22 个 facade 专用测试，覆盖全部 facade 函数。
 
 ### Debt-D9-005: 领域文档日期未完全同步
 
@@ -177,13 +175,14 @@ baseline_warnings: 433
 
 ### D-9 修复优先级
 
-| 优先级 | Debt ID | 修复方式 | 建议执行人 |
-|--------|---------|---------|-----------|
-| **P0** | D9-001 | 创建 integration/effect/ 模块 | @feature-developer |
-| **P1** | D9-002 | 合并单次迭代 | @feature-developer |
-| **P2** | D9-003 | domain doc 对齐 | @domain-designer |
-| **P3** | D9-004, D9-005 | 测试精简 + 日期同步 | @test-guardian |
+| 优先级 | Debt ID | 状态 | 修复方式 | 执行人 |
+|--------|---------|------|---------|--------|
+| **P0** | D9-001 | ✅ 已修复 | 创建 integration/effect/ 模块 (ADR-024) | @feature-developer |
+| **P1** | D9-002 | ✅ 已修复 | 合并为 tick_and_expire 单次 pass | @feature-developer |
+| **P2** | D9-003 | ❌ 保留 | domain doc 对齐（OnTurnEnd tick 频率） | @domain-designer |
+| **P3** | D9-004 | ✅ 已修复 | 测试精简 + facade 测试替代 | @test-guardian |
+| **P3** | D9-005 | ❌ 保留 | 日期同步（README 元数据） | —— |
 
 ---
 
-*D-9 Delta 由 @refactor-guardian 扫描生成，基线 908 tests passed。完整债务清单见首次全量扫描（上方 Debt-001~006）。*
+*D-9 Delta 由 @refactor-guardian 扫描生成。2026-06-18 修复后验证：914 tests passed, 8 ignored, 0 failed, cargo build 0 errors。完整债务清单见首次全量扫描（上方 Debt-001~006）。*

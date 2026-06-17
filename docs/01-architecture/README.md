@@ -4,7 +4,7 @@ title: Architecture Overview — DDD Three-Layer + Four Cross-Cutting Layers
 status: stable
 owner: architect
 created: 2026-06-16
-updated: 2026-06-16
+updated: 2026-06-18
 tags:
   - architecture
   - governance
@@ -611,6 +611,7 @@ src/
 | ADR-021 | 回合状态机设计 | ✅ Approved | Combat |
 | ADR-022 | 网格 / 地形 / 阵营系统设计 | ✅ Approved | Combat |
 | ADR-023 | 法术与反应机制设计 | ✅ Approved | Combat |
+| ADR-024 | Combat 域 integration/ 模块设计 | ✅ Approved | Combat |
 | ADR-030 | 成长 / 物品系统设计 | ✅ Approved | Progression |
 | ADR-031 | 队伍与休整系统设计 | ✅ Approved | Progression |
 | ADR-032 | 经济与制造系统设计 | ✅ Approved | Progression |
@@ -669,6 +670,7 @@ src/
 | `20-tactical-combat/ADR-021-turn-state-machine.md` | ✅ stable | architect | 2026-06-18 |
 | `20-tactical-combat/ADR-022-grid-terrain-faction.md` | ✅ stable | architect | 2026-06-16 |
 | `20-tactical-combat/ADR-023-spell-reaction.md` | ✅ stable | architect | 2026-06-16 |
+| `20-tactical-combat/ADR-024-combat-integration-layer.md` | ✅ stable | architect | 2026-06-18 |
 | `30-progression-narrative/ADR-030-progression-inventory.md` | ✅ stable | architect | 2026-06-16 |
 | `30-progression-narrative/ADR-031-party-camp-rest.md` | ✅ stable | architect | 2026-06-16 |
 | `30-progression-narrative/ADR-032-economy-crafting.md` | ✅ stable | architect | 2026-06-16 |
