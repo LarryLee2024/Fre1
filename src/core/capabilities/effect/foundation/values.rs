@@ -4,6 +4,8 @@
 //!
 //! 详见 docs/04-data/capabilities/effect_schema.md §3。
 
+use bevy::prelude::Component;
+
 use crate::core::capabilities::effect::foundation::types::{
     EffectDuration, EffectPeriod, EffectStage,
 };
@@ -181,7 +183,7 @@ impl EffectInstance {
 /// 活跃效果容器——每个实体的效果管理组件。
 ///
 /// 管理目标实体上所有当前生效的效果。
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Component, Debug, Clone, PartialEq)]
 pub struct ActiveEffectContainer {
     /// 所有活跃的效果实例
     pub effects: Vec<EffectInstance>,

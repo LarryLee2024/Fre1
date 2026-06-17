@@ -280,7 +280,7 @@ fn movement_system(mov: MovementCapabilityParam) {
 
 - 🟥 禁止 Systems 直接 `use` TagSet / AttributeContainer / ModifierContainer 进行字段访问
 - 🟥 禁止在 `integration/` 外部访问 Capabilities 组件的内部字段
-- 🟥 禁止将所有能力域塞入单个 `integration.rs` 文件
+- 🟥 禁止将所有能力域塞入单个 `integration/` 文件
 
 ---
 

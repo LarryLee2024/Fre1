@@ -11,7 +11,7 @@ tags:
 ---
 
 # Bevy SRPG Coding Constitution v1.0
-**工业级AI专属 | 永久架构稳定版 | 与《测试宪法v3.1》配套执行**
+**工业级AI专属 | 永久架构稳定版 | 与《测试宪法v4.0》配套执行**
 
 Version: 1.0
 Status: Active
@@ -23,7 +23,7 @@ Applies To:
 * All AI-generated code
 
 ## 优先级
-architecture.md > domain_rules.md > coding_rules.md
+docs/01-architecture/README.md > docs/02-domain/README.md > coding_rules.md
 
 ---
 
@@ -138,7 +138,7 @@ Entity仅用于引用实体。
 Component只能存储纯数据状态。
 
 禁止：
-* 在Component impl块中实现复杂业务逻辑
+* 在Component impl块中实现任何逻辑
 * Component包含函数指针或闭包
 
 ## System 只存行为
@@ -399,8 +399,8 @@ info!(unit=?entity, damage=amount, "damage applied");
 * 绕过测试
 
 ## 修改前必须检查
-1. 是否违反architecture.md
-2. 是否违反domain_rules.md
+1. 是否违反 `docs/01-architecture/README.md`
+2. 是否违反 `docs/02-domain/` 领域规则
 3. 是否破坏现有测试
 4. 是否增加架构复杂度
 5. 是否存在更简单的方案
@@ -472,23 +472,15 @@ info!(unit=?entity, damage=amount, "damage applied");
 ---
 
 # 19. AI Self Check
-AI生成任何代码后，必须自动完成以下检查并在文件开头标注结果：
-```rust
-// ================================================
-// AI Self Check
-// ================================================
-// Feature First: PASS/FAIL
-// Definition/Instance: PASS/FAIL
-// Rule/Content: PASS/FAIL
-// Effect Pipeline: PASS/FAIL
-// Modifier Pipeline: PASS/FAIL
-// Architecture Violation: NONE/XXX
-// Complexity Increase: NONE/LOW/MEDIUM/HIGH
-// Tests Added: YES/NO
-// ================================================
-// CODE_EXEMPT: NONE/[规则编号]
-// ================================================
-```
+AI生成任何代码后，应自动完成以下检查（内部参考，不要求在代码中输出）：
+- Feature First
+- Definition/Instance 分离
+- Rule/Content 分离
+- Effect Pipeline 合规
+- Modifier Pipeline 合规
+- 无架构违规
+- 复杂度可控
+- 已添加测试（如适用）
 
 ---
 

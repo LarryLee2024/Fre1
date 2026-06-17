@@ -16,7 +16,6 @@ tags:
 # Architecture Overview — Fre SRPG DDD三层+横切四层 架构总纲
 
 > **版本**: 5.0 | **角色**: @architect | **宪法优先级**: 🟥 **最高**
-> **架构依据**: `docs/00-governance/Fre项目架构设计.md`（DDD三层 + 横切四层模型）
 
 本文档是 Fre 项目架构的最高准则。所有 Feature 边界、ECS 规则、Effect/Modifier 管线、模块间通信以本文档为最终依据。
 
@@ -43,7 +42,7 @@ tags:
 
 ## 2. DDD三层+横切四层 架构总图
 
-Fre 项目采用 **DDD 纵向三层 + 横切四层** 的矩阵式结构，源自 `docs/00-governance/Fre项目架构设计.md`。模块组织遵循**内聚优于分层**原则：同一领域的代码放在一起（内聚），而非按抽象层级拆散到不同目录。
+Fre 项目采用 **DDD 纵向三层 + 横切四层** 的矩阵式结构。模块组织遵循**内聚优于分层**原则：同一领域的代码放在一起（内聚），而非按抽象层级拆散到不同目录。
 
 ### 2.1 DDD 纵向三层
 
@@ -92,7 +91,7 @@ Fre 项目采用 **DDD 纵向三层 + 横切四层** 的矩阵式结构，源自
 ├──────────────────────────────────────────────────────────────┤
 │  横切3: Tools（开发工具层，feature-gated）                      │
 │  Debug 面板 / 性能分析 / 热重载控制台                           │
-│  依赖: 所有层（仅 dev 构建）                                    │
+│  依赖: Core + Shared（仅 dev 构建，永不进入发布构建）             │
 ├──────────────────────────────────────────────────────────────┤
 │  横切4: Modding（Mod 扩展层，跨层聚合）                        │
 │  Mod 加载沙箱 / Mod API 稳定层 / 版本兼容检查                   │
@@ -114,13 +113,13 @@ Domains ──→ Domains               # 禁止直接引用，仅 Event
                                         #
 App      ──→ 所有层（唯一 Composition Root）
 Content  ──→ Core + Infra（只做加载/校验/注册）
-Tools    ──→ 所有层（仅 dev）
+Tools    ──→ Core + Shared（仅 dev）
 Modding  ──→ mod_api（稳定 API 层）
 ```
 
-### 2.4 与运行时三层（宪法）的关系
+### 2.4 与运行时三层的关系
 
-宪法（`.trae/rules/架构规则.md`）定义的 Domain / Application / Presentation 三层是**运行时职责视角**，DDD三层+横切四层是**模块组织视角**。两者共存不矛盾：
+本文档定义的 Domain / Application / Presentation 三层是**运行时职责视角**，DDD三层+横切四层是**模块组织视角**。两者共存不矛盾：
 
 ```
 DDD三层+横切四层（模块组织）      宪法三层（运行时职责）
@@ -188,7 +187,7 @@ L0 Shared                         └─ 计算层
 
 ### 3.3 L1: Core — Business Domains（15个业务子系统）
 
-所有业务领域位于 `src/core/domains/<domain>/`，标准内部结构：`plugin.rs + components.rs + systems/ + events.rs + error.rs + rules/ + integration.rs`
+所有业务领域位于 `src/core/domains/<domain>/`，标准内部结构：`plugin.rs + components.rs + systems/ + events.rs + error.rs + rules/ + integration/`
 
 | 模块 | 领域文档 | 数据 Schema | 核心职责 |
 |------|---------|------------|---------|
@@ -646,7 +645,7 @@ src/
 
 | 上游输入 | 位置 | 在本架构中的使用 |
 |---------|------|----------------|
-| 🟥 **架构设计最高依据** | `docs/00-governance/Fre项目架构设计.md` | DDD三层+横切四层模型、目录结构、依赖方向 |
+| 🟥 **架构设计最高依据** | `docs/01-architecture/README.md`（本文档） | DDD三层+横切四层模型、目录结构、依赖方向 |
 | 领域规则 | `docs/02-domain/` (30 文件) | 每个 Feature 模块对应一个或多个领域文档 |
 | 数据 Schema | `docs/04-data/` (33+ 文件) | 每个 Feature 的数据结构定义依据 |
 | 架构规则 | `.trae/rules/架构规则.md` | 宪法的 Feature First、三层架构、依赖方向 |

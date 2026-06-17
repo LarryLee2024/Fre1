@@ -1,7 +1,7 @@
 ---
 id: 05-testing.test-spec
 title: Test Spec
-status: draft
+status: stable
 owner: test-guardian
 created: 2026-06-14
 updated: 2026-06-14
@@ -51,14 +51,14 @@ Applies To:
 - 网络同步测试
 
 本文件不定义业务规则。业务规则定义于：
-* architecture.md
-* domain_rules.md
+* `docs/01-architecture/README.md`
+* `docs/02-domain/` 下各领域规则文件
 
 ---
 
 # 2. Source Of Truth
 规则优先级（绝对不可违反）：
-**Level 1：domain_rules.md**
+**Level 1：`docs/02-domain/` 领域规则**
 定义：
 * 战斗规则
 * 属性规则
@@ -66,7 +66,7 @@ Applies To:
 * 地图规则
 * 回合规则
 
-**Level 2：architecture.md**
+**Level 2：`docs/01-architecture/README.md`**
 定义：
 * 模块边界
 * ECS规则
@@ -79,7 +79,7 @@ Applies To:
 * 测试执行要求
 
 当发生冲突时：
-`domain_rules.md > architecture.md > test_spec.md`
+`docs/02-domain/ > docs/01-architecture/README.md > test_spec.md`
 
 ---
 
@@ -342,8 +342,8 @@ Replay文件格式：`battle_replays/*.yaml`
 
 # 12. AI Decision Rules
 当测试失败时：**严格执行以下流程**。
-- Step 1：检查 domain_rules.md
-- Step 2：检查 architecture.md
+- Step 1：检查 `docs/02-domain/` 领域规则
+- Step 2：检查 `docs/01-architecture/README.md`
 - Step 3：检查测试是否符合本规范
   - 判断：
     - 测试违反领域规则 → 修改测试
@@ -379,7 +379,7 @@ AI 生成测试前应内部对照：
 | 检查项 | 说明 |
 |--------|------|
 | 测试行为，不是实现 | 验证 What，不验证 How |
-| 符合领域规则 | 对照 domain_rules.md |
+| 符合领域规则 | 对照 `docs/02-domain/` |
 | 测试是确定性的 | 固定 Seed，无系统时间依赖 |
 | 使用 Builder 模式构造数据 | 不硬编码业务数值 |
 | 没有测试私有实现 | 只测公共行为和状态变化 |

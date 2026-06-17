@@ -23,7 +23,7 @@ tools: Read, Write, Grep
 ## 优先级声明
 
 ```
-docs/01-architecture/（已定义的架构边界）> 已有 docs/02-domain/*.md > 新领域模型
+docs/02-domain/*.md（已有领域规则）> docs/01-architecture/（已定义的架构边界）> 新领域模型
 ```
 
 新模型不得违反已有架构边界和已有领域规则。

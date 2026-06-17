@@ -17,7 +17,7 @@ tags:
 
 | 文件 | 主题 |
 |------|------|
-| `ai-constitution-complete.md` | AI 开发宪法 v1.6 完整版（20 部分），覆盖架构/ECS/代码/测试/日志/工程质量 |
+| `ai-constitution-complete.md` | AI 开发宪法 v5.0 完整版（21 部分），覆盖架构/ECS/代码/测试/日志/工程质量 |
 | `coding-rules.md` | 编码执行规范 v1.0，AI 编码自检清单，Effect/Modifier 管线保护 |
 | `bevy-0.19.md` | Bevy 0.19 版本迁移参考 |
 | `bevy-examples-catalog.md` | Bevy 官方示例目录与参考 |

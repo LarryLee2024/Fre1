@@ -7,6 +7,7 @@
 use bevy::prelude::*;
 
 use super::components::{ActionPoints, BattlePhase, CombatParticipant, TurnQueue, TurnSubState};
+use super::systems::effect_tick_system::on_turn_end_tick_effects;
 use super::systems::turn_systems::{
     on_enter_battle, on_enter_defeat, on_enter_turn_end, on_enter_turn_settlement,
     on_enter_turn_start, on_enter_victory, on_unit_action_complete, phase_check,
@@ -51,5 +52,7 @@ impl Plugin for CombatPlugin {
         // ── 注册 Observer (Bevy 0.18 Trigger 模式) ──
         // UnitActionComplete → 外部通知行动完成, 进入结算
         app.add_observer(on_unit_action_complete);
+        // OnTurnEnd → 推进 Effect 计时与周期 Tick
+        app.add_observer(on_turn_end_tick_effects);
     }
 }

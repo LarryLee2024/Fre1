@@ -39,8 +39,8 @@ tools: Read, Grep, Glob, Write
 ### 2. Data Modeling
 负责区分四个数据层的边界：
 - **Definition**：静态定义，运行时不可变
+- **Spec**：配置槽位，Definition → Instance 的桥梁，运行时可变
 - **Instance**：实例状态，每个实体一份
-- **Runtime**：运行时状态，临时计算结果
 - **Persistence**：存档状态，需要持久化
 
 禁止跨层污染。
@@ -198,32 +198,38 @@ Effect → Cue → VFX → SFX → UI
 
 ## Domain Ownership
 
-Data Architect 管理以下13个领域的数据模型：
+Data Architect 管理以下领域的数据模型：
 
-### Core Domain
+### Core Domain (15)
 - Attribute
 - Tag
 - Modifier
-- Effect
+- Aggregator
+- GameplayContext
+- Spec
 - Ability
 - Trigger
+- Condition
 - Targeting
 - Execution
+- Effect
 - Stacking
+- Event
 - Cue
 
-### Infrastructure Domain
+### Infrastructure Domain (4)
 - Registry
 - Pipeline
 - Replay
+- Input
 
 ## Required Review Checklist
 
 设计任何Schema时必须检查四个数据层：
 
 1. **Definition Layer**：是否属于静态定义
-2. **Instance Layer**：是否属于实例状态
-3. **Runtime Layer**：是否属于运行时状态
+2. **Spec Layer**：是否属于配置槽位（Definition → Instance 的桥梁）
+3. **Instance Layer**：是否属于实例状态
 4. **Persistence Layer**：是否属于存档状态
 
 禁止跨层污染。
@@ -246,7 +252,7 @@ Data Architect 管理以下13个领域的数据模型：
 
 ### Step 2: 识别数据层
 确定数据归属的层级：
-- Definition、Instance、Runtime、Persistence
+- Definition、Spec、Instance、Persistence
 
 ### Step 3: 设计Schema
 遵循 Data Laws 设计数据结构。
