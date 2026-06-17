@@ -1,0 +1,267 @@
+---
+id: 09-planning.Phase-post-M1-execution-plan
+title: "Phase Post-M1 执行计划 — M1 后未完成任务与下一步行动"
+status: active
+owner: feature-developer
+created: 2026-06-17
+updated: 2026-06-17
+tags:
+  - planning
+  - implementation
+  - post-m1
+  - backlog
+  - phase-c
+  - phase-d
+  - phase-e
+---
+
+# Phase Post-M1 执行计划 — M1 后未完成任务与下一步行动
+
+> **本文档承接 `Phase-C-D-execution-plan.md`**
+> 撰写: Sisyphus | 日期: 2026-06-17
+> 范围: M1 里程碑之后的所有未开始/骨架状态任务
+
+---
+
+## 0. 当前状态摘要（M1 完成后）
+
+| 维度 | 状态 | 详情 |
+|------|------|------|
+| Phase A (Shared) | ✅ 完成 | 1,695 行 |
+| Phase B (Capabilities) | ✅ ≈85% | 21,431 行，已注册但零业务域调用 |
+| Phase C-1 (Pipeline) | ✅ 完成 | ~250 行，3 测试，review PASS |
+| Phase C-2 (Input) | ✅ 完成 | ~356 行，22 测试，review PASS |
+| Phase D-1 (Tactical) | ✅ 完成 | ~782 行，36 测试，review PASS |
+| **M1 里程碑** | ✅ 通过 | 742 lib tests pass |
+| **Phase C-3 — Registry** | 🟡 骨架 | `mod.rs` + 空 `plugin.rs` |
+| **Phase C-4 — Replay** | 🟡 骨架 | `mod.rs` + 空 `plugin.rs` |
+| **Phase C-5 — Save** | 🟡 骨架 | `mod.rs` + 空 `plugin.rs` |
+| **Phase D-2 ~ D-15** | 🟡 骨架 | 14 个 Domain 均为 `mod.rs` + `plugin.rs` + 空 `tests/` |
+| **Phase E ~ H** | 🔴 未开始 | — |
+| **@refactor-guardian 技术债扫描** | ✅ 完成 | `docs/11-refactor/debt-inventory-2026-06-17.md`，7 项债务，P0 可见性修复待执行 |
+
+---
+
+## 1. 核心未解决风险
+
+**Capabilities 系统 21k 行代码从未被任何业务域在运行态调用过。**
+
+Tactical 的 `integration.rs` 定义了 `MovementType → TagId` 映射，但没有任何 System 实际通过 Capabilities 管线做任何事情。这意味着：
+
+- Tag 模块的查询/过滤逻辑未验证
+- Attribute 的读/写/消耗管线未验证
+- Modifier 的应用/聚合/清除逻辑未验证
+- Execution/Effect 的完整管线未验证
+- GameplayContext 的载荷构建/传递未验证
+
+**这是整个项目最大的技术风险。** 如果 Capabilities 存在设计缺陷，越晚发现修复成本越高。
+
+---
+
+## 2. 战略选项分析
+
+| 选项 | 内容 | 工作量 | 风险降低 | 业务价值 | 推荐度 |
+|------|------|--------|---------|---------|-------|
+| **A: Capabilities 集成验证** | 编写 Tactical → Capabilities 集成测试或验证 System，实际调用 Tag/Attribute/Modifier/Execution 管线 | ~1 次会话 | ⭐⭐⭐ 最高 | 低（无用户可见功能） | 🥇 **首选** |
+| **B: C-3 Registry** | 实现 GenericRegistry + 冲突检测，为内容加载做准备 | ~1 次会话 | ⭐（不影响 Capabilities） | 中（基础设施） | 🥉 |
+| **C: D-2 Terrain** | 实现地形系统（自然地形的扩展），会自然用到 Capabilities Modifier | ~2 次会话 | ⭐⭐（间接验证） | 高（直接影响游戏性） | 🥈 |
+| **D: E-1 Combat** | 第一个战斗域，重度依赖 Capabilities | ~3+ 次会话 | ⭐⭐ | 高 | 时机未到 |
+| **E: 技术债清理** | ✅ @refactor-guardian 已扫描完成，输出债务清单 | ~1 次会话 | ⭐（代码健康） | 低 | ✅ 已完成 |
+
+### 2.1 推荐路径
+
+```
+当前 (M1 完成)
+    │
+    ├── ✅ 并行任务 A: @refactor-guardian 技术债扫描（已完成）
+    │   └── 输出: docs/11-refactor/debt-inventory-2026-06-17.md
+    │
+    ├── 🥇 主任务: Capabilities 集成验证 (D-1.5)
+    │   ├── 目标: 构建一个端到端验证，让 Tactical 通过 Capabilities 执行一次完整操作
+    │   ├── 方法: 在 tactical 域新增一个 integration_test System，
+    │   │          或纯测试代码直接调用 Capabilities API
+    │   ├── 验证点: Tag 查询 → Attribute 读取 → Modifier 应用 → Effect 执行
+    │   ├── 退出条件: 验证通过，所有 21k 行 Capabilities 代码至少有一条执行路径经过
+    │   └── 失败预案: 发现缺陷 → 上报 @architect → 生成 ADR 修复 → 重试验证
+    │
+    └── 第二阶段（验证通过后）:
+        ├── D-2 Terrain（第一个自然地形的业务域）
+        └── 或 C-3 Registry（取决于内容加载优先级）
+```
+
+### 2.2 立即行动项
+
+| # | 行动 | 执行人 | 前置 | 建议工期 |
+|---|------|--------|------|---------|
+| 1 | **决定是否采纳此方案** | 项目负责人 | 无 | — |
+| 2 | ~~@refactor-guardian 技术债扫描~~ | ~~@refactor-guardian~~ | ~~决定后立即启动~~ | ✅ 已完成 |
+| 3 | Capabilities 集成验证设计 | @architect + @feature-developer | 方案确定 | ~1 次会话 |
+| 4 | Capabilities 集成验证实现 | @feature-developer | 设计完成 | ~1-2 次会话 |
+| 5 | 验证结果评审 | @code-reviewer | 实现完成 | 1 次评审 |
+
+---
+
+## 3. 未开始任务详情
+
+### 3.1 Phase C-3: Registry 注册中心
+
+> **目标**: 实现 GenericRegistry，为 Content 层配置加载做准备
+> **估算**: ~200 行，3-4 个文件
+> **主要执行者**: @feature-developer
+> **启动时机**: M1 里程碑后，或 D-1 稳定后即可开始
+
+#### 前置文档确认
+
+| 文档 | 位置 | 责任人 |
+|------|------|--------|
+| ADR-013 | `docs/01-architecture/10-capability-system/ADR-013-registry-hotreload.md` | @architect |
+| registry_schema | `docs/04-data/infrastructure/registry_schema.md` | @data-architect |
+
+#### 交付清单
+
+| # | 任务 | 输出文件 | 责任人 |
+|---|------|---------|--------|
+| C3-1 | Registry trait + GenericRegistry | `src/infra/registry/registry.rs` | @feature-developer |
+| C3-2 | RegistryPlugin 更新 | `src/infra/registry/plugin.rs` | @feature-developer |
+| C3-3 | 冲突检测 + ID 分配 | `src/infra/registry/resolver.rs` | @feature-developer |
+| C3-T | 单元测试 | `src/infra/registry/tests/` | @test-guardian |
+| C3-R | 代码审查 | `docs/10-reviews/registry-review.md` | @code-reviewer |
+
+---
+
+### 3.2 Phase C-4: Replay 回放骨架
+
+> **目标**: 实现最小回放系统骨架，支持事件序列记录与重放
+> **当前状态**: 🟡 骨架 — `src/infra/replay/mod.rs` + 空 `plugin.rs`
+> **估算**: ~300 行，4-5 个文件
+> **主要执行者**: @feature-developer + @data-architect（Schema 设计）
+
+#### 前置文档确认
+
+| 文档 | 位置 | 责任人 |
+|------|------|--------|
+| ADR-0xx | 回放系统 ADR（待创建或确认） | @architect |
+| replay_schema | `docs/04-data/infrastructure/replay_schema.md` | @data-architect |
+
+#### 交付清单（初步）
+
+| # | 任务 | 输出文件 | 责任人 |
+|---|------|---------|--------|
+| C4-1 | ReplayEvent 枚举 + 序列化 | `src/infra/replay/event.rs` | @feature-developer |
+| C4-2 | ReplayRecorder Resource | `src/infra/replay/recorder.rs` | @feature-developer |
+| C4-3 | ReplayPlayer（回放播放器） | `src/infra/replay/player.rs` | @feature-developer |
+| C4-4 | ReplayPlugin 注册 | `src/infra/replay/plugin.rs` | @feature-developer |
+| C4-T | 单元测试 | `src/infra/replay/tests/` | @test-guardian |
+| C4-R | 代码审查 | `docs/10-reviews/replay-review.md` | @code-reviewer |
+
+---
+
+### 3.3 Phase C-5: Save 存档骨架
+
+> **目标**: 实现最小存档系统骨架，支持游戏状态序列化与反序列化
+> **当前状态**: 🟡 骨架 — `src/infra/save/mod.rs` + 空 `plugin.rs`
+> **估算**: ~300 行，4-5 个文件
+> **主要执行者**: @feature-developer + @data-architect（Schema 设计）
+
+#### 前置文档确认
+
+| 文档 | 位置 | 责任人 |
+|------|------|--------|
+| ADR-0xx | 存档系统 ADR（待创建或确认） | @architect |
+| save_schema | `docs/04-data/infrastructure/save_schema.md` | @data-architect |
+
+#### 交付清单（初步）
+
+| # | 任务 | 输出文件 | 责任人 |
+|---|------|---------|--------|
+| C5-1 | SaveData / SaveHeader 结构 | `src/infra/save/data.rs` | @feature-developer |
+| C5-2 | SaveManager Resource | `src/infra/save/manager.rs` | @feature-developer |
+| C5-3 | 存档序列化/反序列化 | `src/infra/save/serializer.rs` | @feature-developer |
+| C5-4 | SavePlugin 注册 | `src/infra/save/plugin.rs` | @feature-developer |
+| C5-T | 单元测试 | `src/infra/save/tests/` | @test-guardian |
+| C5-R | 代码审查 | `docs/10-reviews/save-review.md` | @code-reviewer |
+
+---
+
+### 3.4 Phase D-2 ~ D-15: 14 个业务域骨架
+
+> **当前状态**: 🟡 全部骨架 — 每个域仅 `mod.rs` + `plugin.rs` + 空 `tests/`
+> **说明**: 这些域将在 Capabilities 验证完成后，按业务优先级逐个实现
+
+#### 业务域清单
+
+| 编号 | 域 | 说明 | 优先级 | 依赖 |
+|------|-----|------|-------|------|
+| D-2 | **Terrain** 地形 | 地形类型、高度、遮挡、效果 | 🔴 高 | D-1 (Tactical) |
+| D-3 | **Faction** 阵营 | 阵营关系、外交、仇恨列表 | 🟡 中 | D-1 |
+| D-4 | **Unit** 单位 | 单位创建、属性、状态机 | 🔴 高 | D-1, D-3 |
+| D-5 | **Combat** 战斗 | 攻击、防御、伤害计算 | 🔴 高 | D-1, D-4, Capabilities 验证 |
+| D-6 | **Spell** 法术 | 法术释放、效果、冷却 | 🟡 中 | D-4, D-5 |
+| D-7 | **Reaction** 反应 | 反击、触发效果、机会攻击 | 🟡 中 | D-5 |
+| D-8 | **AI** 人工智能 | 敌方决策、寻路、行为树 | 🟡 中 | D-1, D-4 |
+| D-9 | **Turn** 回合 | 回合顺序、行动点、阶段 | 🔴 高 | D-1, D-4 |
+| D-10 | **Item** 物品 | 装备、消耗品、背包 | 🟢 低 | D-4 |
+| D-11 | **Skill** 技能 | 职业技能、专精树 | 🟢 低 | D-4, D-5 |
+| D-12 | **Quest** 任务 | 任务状态、目标、奖励 | 🟢 低 | D-4 |
+| D-13 | **Dialog** 对话 | 对话树、选择分支 | 🟢 低 | D-3 |
+| D-14 | **Economy** 经济 | 货币、商店、交易 | 🟢 低 | D-10 |
+| D-15 | **Progression** 成长 | 经验、等级、解锁 | 🟢 低 | D-4, D-11 |
+
+> **注**: 优先级为初步评估，实际启动顺序需结合具体业务需求和架构评审确定。
+
+---
+
+### 3.5 Phase E ~ H
+
+> **当前状态**: 🔴 未开始
+> **说明**: 这些阶段属于横切层和高级功能，在核心域（D-1 ~ D-9）稳定后再启动
+
+| 阶段 | 说明 | 前置条件 |
+|------|------|---------|
+| Phase E | 内容系统 (Content) | C-3 Registry 完成 + 至少 3 个业务域稳定 |
+| Phase F | 渲染系统 (Rendering) | D-1 Tactical 稳定 + 网格渲染需求明确 |
+| Phase G | 音频系统 (Audio) | F 渲染基础完成 |
+| Phase H | Modding 系统 | E 内容系统完成 |
+
+---
+
+## 4. 风险与缓解
+
+| 风险 | 概率 | 影响 | 缓解措施 | 责任人 |
+|------|------|------|---------|--------|
+| Capabilities 21k 行存在未被发现的架构缺陷 | 中 | **高**（阻塞所有业务域） | Tactical 尽早接入，发现即修复 | @architect + @feature-developer |
+| 14 个业务域全部为空骨架，启动顺序不明确 | 中 | 中 | 按业务优先级表（§3.4）逐步推进 | @architect |
+| Registry/Replay/Save 三个 Infra 模块无设计文档 | 中 | 中 | 启动前确认 ADR 和 Schema 文档 | @data-architect + @architect |
+| 单人瓶颈（所有代码变更经过同一人） | **高** | **高** | 这是一个已知限制 | — |
+| @refactor-guardian 技术债扫描滞后 | 中 | 中 | ✅ 已完成，输出 `docs/11-refactor/debt-inventory-2026-06-17.md` | @refactor-guardian |
+
+---
+
+## 5. 工作量总估（Post-M1）
+
+| 阶段 | 文件数 | 预估行数 | 主要执行者 | 建议工期 | 状态 |
+|------|--------|---------|-----------|---------|------|
+| **Capabilities 集成验证** | 2-3 | ~200 | @feature-developer | 1 次会话 | 🔴 未开始 |
+| C-3 Registry 注册中心 | 3-4 | ~200 | @feature-developer | 1 次会话 | 🔴 未开始 |
+| C-4 Replay 回放骨架 | 4-5 | ~300 | @feature-developer | 1-2 次会话 | 🔴 未开始 |
+| C-5 Save 存档骨架 | 4-5 | ~300 | @feature-developer | 1-2 次会话 | 🔴 未开始 |
+| D-2 Terrain 地形域 | 7-10 | ~500 | @feature-developer | 2 次会话 | 🔴 未开始 |
+| D-3 ~ D-15 (13 个域) | — | — | — | 待定 | 🔴 未开始 |
+| **@refactor-guardian 技术债扫描** | — | — | @refactor-guardian | ~1 次会话 | ✅ 完成 |
+| **总计（近期）** | **~20** | **~1,500** | **全角色协作** | **~5-7 次会话** | **技术债扫描已完成** |
+
+---
+
+## 6. 与上游文档的关联
+
+| 文档 | 关系 | 说明 |
+|------|------|------|
+| `Phase-C-D-execution-plan.md` | 前置/基础 | M1 及之前完成的计划，本文档承接其状态 |
+| `docs/01-architecture/README.md` | 架构约束 | 模块边界、Plugin 注册顺序 |
+| `docs/02-domain/README.md` | 领域规则 | D-2 ~ D-15 各域的规则来源 |
+| `docs/04-data/README.md` | 数据架构 | C-3 ~ C-5 的 Schema 设计依据 |
+| `docs/05-testing/test-spec.md` | 测试规范 | 所有新增代码的测试标准 |
+
+---
+
+*本文档承接 `Phase-C-D-execution-plan.md`，聚焦 M1 里程碑之后的所有未完成任务。原计划的 M1 完成内容请参阅上游文档。*

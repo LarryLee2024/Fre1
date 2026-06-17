@@ -37,9 +37,19 @@ tags:
 |-------|------|------|------|
 | **Phase A** — Shared | ✅ 完成 | 1,695 行 | IDs, Random, Time, Error, Testing 全部就绪 |
 | **Phase B** — Capabilities | ✅ ≈85% | 21,431 行 | Foundation + Mechanism + Events 完整，Plugin 已注册 |
-| **Phase C-1** — Pipeline 最小引擎 | ✅ 完成 | ~250 行 | PipelineRegistry + Plugin + Hooks，3 测试通过 |
-| **Phase D-1** — Tactical 业务域 | ✅ 完成 | ~550 行 | 11 文件，components/resources/events/error/rules/systems/integration 全齐 |
-| **Phase E~H** | 🔴 未开始 | — | — |
+| **Phase C-1** — Pipeline 最小引擎 | ✅ 完成 | ~250 行 | PipelineRegistry + Plugin + Hooks，3 测试 + ✅ review |
+| **Phase C-2** — Input 输入抽象 | ✅ 完成 | ~356 行 | InputAction/InputMap/InputState + 22 测试 + ✅ review |
+| **Phase D-1** — Tactical 业务域 | ✅ 完成 | ~782 行 | 11 源文件 + 4 层测试（36 tests）+ ✅ review |
+| **M1 里程碑** | ✅ 完成 | 742 tests | 全角色评审：3 份 review PASS，零红线 |
+| **Post-M1 任务** | 见下游文档 | — | 详见 `Phase-post-M1-execution-plan.md` |
+
+### 关键发现：M1 后的核心风险
+
+**Capabilities 系统（21k 行）仍未经过任何业务域的运行时验证。**
+
+Tactical 的 `integration.rs` 定义了 MovementType → TagId 的映射，但**没有任何 System 实际调用 Capabilities**。Tactical 的移动验证和网格管理完全是自包含的纯函数 + ECS 组件，没有使用 Tag/Attribute/Modifier/Execution 管线。
+
+这意味着：**M1 验证了"我们能写出一个业务域"，但尚未验证"Capabilities 系统在全栈集成中正常工作"。**
 
 ### 核心洞察
 
@@ -373,35 +383,7 @@ M1 完成后，按 AGENTS.md 流程触发以下评审：
 | 代码质量 | @code-reviewer | `docs/10-reviews/tactical-review.md` |
 | 技术债扫描 | @refactor-guardian | `docs/11-refactor/` 初始债务清单 |
 
----
-
-## 7. Phase C-3 (并行): Registry 注册中心
-
-> **目标**: 实现 GenericRegistry，为 Content 层配置加载做准备
-> **估算**: ~200 行，3-4 个文件
-> **主要执行者**: @feature-developer
-> **启动时机**: M1 里程碑后，或 D-1 稳定后即可开始
-
-### 7.1 前置文档确认
-
-| 文档 | 位置 | 责任人 |
-|------|------|--------|
-| ADR-013 | `docs/01-architecture/10-capability-system/ADR-013-registry-hotreload.md` | @architect |
-| registry_schema | `docs/04-data/infrastructure/registry_schema.md` | @data-architect |
-
-### 7.2 交付清单
-
-| # | 任务 | 输出文件 | 责任人 |
-|---|------|---------|--------|
-| C3-1 | Registry trait + GenericRegistry | `src/infra/registry/registry.rs` | @feature-developer |
-| C3-2 | RegistryPlugin 更新 | `src/infra/registry/plugin.rs` | @feature-developer |
-| C3-3 | 冲突检测 + ID 分配 | `src/infra/registry/resolver.rs` | @feature-developer |
-| C3-T | 单元测试 | `src/infra/registry/tests/` | @test-guardian |
-| C3-R | 代码审查 | `docs/10-reviews/registry-review.md` | @code-reviewer |
-
----
-
-## 8. 风险与缓解
+## 7. 风险与缓解
 
 | 风险 | 概率 | 影响 | 缓解措施 | 责任人 |
 |------|------|------|---------|--------|
@@ -414,7 +396,7 @@ M1 完成后，按 AGENTS.md 流程触发以下评审：
 
 ---
 
-## 9. 工作量总估与时间线
+## 8. 工作量总估与时间线
 
 | 阶段 | 文件数 | 预估行数 | 主要执行者 | 建议工期 | 状态 |
 |------|--------|---------|-----------|---------|------|
@@ -422,8 +404,7 @@ M1 完成后，按 AGENTS.md 流程触发以下评审：
 | D-1 Tactical 业务域 | 11 | ~550 | @feature-developer | 2-3 次编码会话 | ✅ 完成 |
 | C-2 Input 输入抽象 | 5 | ~220 | @feature-developer | 1 次编码会话 | ✅ 完成 |
 | **M1 里程碑** | — | — | **全部角色** | 评审 1 次 | ✅ 完成 |
-| C-3 Registry 注册中心 | 3-4 | ~200 | @feature-developer | 1 次编码会话 | 🔴 未开始 |
-| **总计** | **~25** | **~1,420** | **全角色协作** | **3-5 次编码会话** | **C-1 + C-2 + D-1 完成** |
+| **总计** | **~22** | **~1,220** | **全角色协作** | **3-5 次编码会话** | **C-1 + C-2 + D-1 + M1 完成** |
 
 ### 建议的执行节奏
 
@@ -436,14 +417,11 @@ M1 完成后，按 AGENTS.md 流程触发以下评审：
 第 3 轮  →  C-2 Input 输入抽象（@feature-developer）             ✅ 完成
               
 第 4 轮  →  M1 集成验证 + 全角色评审                            ✅ 完成 (742 tests, 3 reviews PASS)
-
-第 5 轮  →  C-3 Registry（@feature-developer）                  🔴 未开始
-              待 M1 评审反馈处理完毕后启动
 ```
 
 ---
 
-## 10. 附录：角色职责快速参考
+## 9. 附录：角色职责快速参考
 
 引自 `AGENTS.md` 标准协作流程：
 
@@ -474,11 +452,17 @@ M1 完成后，按 AGENTS.md 流程触发以下评审：
 | **@domain-designer** | 确认 Tactical 领域规则；参与 rules/ 纯函数设计 | D1-0, D1-5, D1-6 |
 | **@data-architect** | 确认 Tactical Schema；确认 Input Schema | D1-0b, C2-0 |
 | **@architect** | Pipeline 集成架构评审；Tactical 模块边界确认；ADR-044 确认 | C1-R, D1-R, M1 评审 |
-| **@feature-developer** | **所有编码工作** — Pipeline / Tactical / Input / Registry | C1-1~C1-5, C2-1~C2-3, D1-1~D1-9, C3-1~C3-3 |
-| **@test-guardian** | 每阶段测试编写；领域不变量测试；replay 兼容测试 | C1-T, C2-T, D1-T, C3-T |
-| **@code-reviewer** | 每个交付物审查报告；红线检查 | C1-R, C2-R, D1-R, C3-R |
+| **@feature-developer** | **所有编码工作** — Pipeline / Tactical / Input | C1-1~C1-5, C2-1~C2-3, D1-1~D1-9 |
+| **@test-guardian** | 每阶段测试编写；领域不变量测试 | C1-T, C2-T, D1-T |
+| **@code-reviewer** | 每个交付物审查报告；红线检查 | C1-R, C2-R, D1-R |
 | **@refactor-guardian** | M1 里程碑后技术债扫描 | M1 后评审 |
 
 ---
 
-*本文档基于 `feature-developer-implementation-roadmap.md` 的全量分析，结合作者对代码库的深度审查，按照 AGENTS.md 角色体系编制。*
+> **M1 后未完成任务与下一步行动，请参阅 [`Phase-post-M1-execution-plan.md`](./Phase-post-M1-execution-plan.md)。**
+>
+> 本文档仅记录 Phase C-1 + C-2 + D-1 + M1 的已完成工作。
+
+---
+
+*本文档基于 `feature-developer-implementation-roadmap.md` 的全量分析，结合作者对代码库的深度审查，按照 AGENTS.md 角色体系编制。**

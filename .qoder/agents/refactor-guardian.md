@@ -14,7 +14,12 @@ tools: Read, Grep, Glob, Bash
 
 ## 扫描目标
 
-### 1. Dead Code（死代码）
+### 1. Dead Code（死代码）— 必须区分"预留"与"废弃"
+
+> **核心原则**: 项目处于早期（Capabilities 已建但 Domain 尚未全面接入），大量类型处于"已定义但未被消费"状态是**正常的架构演进路径**，不构成技术债。扫描时必须区分：
+> - **预留 Dead Code**（Low）：Capabilities 骨架中为未来 Domain 准备的类型/枚举变体/方法 — 随域接入自然消除
+> - **废弃 Dead Code**（Medium）：明确无引用、无预留价值的代码 — 应删除
+
 - **未使用的组件**：定义了但从未被任何系统查询的 Component
 - **未使用的系统**：注册了但从未被调用的 System
 - **未使用的事件/Message**：定义了但从未触发或监听的 Event/Message
@@ -43,7 +48,7 @@ tools: Read, Grep, Glob, Bash
 
 ### 4. 结构腐化
 - **超大文件**：单个文件超过 500 行理想值，特别是 >1000 行的文件
-- **禁止的文件名**：`systems.rs`、`components.rs`、`events.rs`、`utils.rs` 作为顶层模块
+- **禁止的文件名**：`utils.rs`、`helpers.rs`、`common.rs` 作为顶层垃圾桶文件（§20.1 红线）；注意：`components.rs` 和 `systems/` 是 §3.4 标准 Domain 结构的一部分，不算违规
 - **模块越界访问**：一个业务模块直接访问另一个模块的内部字段
 - **违反数据流**：直接修改 Definition、绕过 Effect/Modifier Pipeline
 - **mod.rs 与目录不同步**：mod.rs 声明的 mod 与实际文件不匹配
@@ -58,6 +63,8 @@ tools: Read, Grep, Glob, Bash
 - `docs/01-architecture/` — 了解架构边界和双轴规则
 - `docs/02-domain/` — 了解领域规则和不变量
 - `docs/00-governance/ai-constitution-complete.md` §21 — 红线清单
+
+**项目阶段感知**：当前项目处于早期（Capabilities 已建、Domain 刚启动），Dead Code 警告中大部分是"预留"性质（Capabilities 为未来 Domain 准备的类型），不构成技术债。只有明确无引用且无预留价值的代码才标记为 Medium。避免将架构演进路径上的正常状态误报为技术债。
 
 ### 1. 确定扫描范围
 - 如果用户指定了模块，聚焦该模块
