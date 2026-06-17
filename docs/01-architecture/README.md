@@ -611,6 +611,7 @@ src/
 | ADR-041 | 回放确定性与架构 | ✅ Approved | Cross-cutting |
 | ADR-042 | 存档持久化策略 | ✅ Approved | Cross-cutting |
 | ADR-043 | 命令层与输入抽象 | ✅ Approved | Cross-cutting |
+| ADR-044 | Pipeline 引擎架构 | ✅ Approved | Cross-cutting |
 
 ---
 
@@ -667,6 +668,7 @@ src/
 | `40-cross-cutting/ADR-041-replay-determinism.md` | ✅ stable | architect | 2026-06-16 |
 | `40-cross-cutting/ADR-042-save-persistence.md` | ✅ stable | architect | 2026-06-16 |
 | `40-cross-cutting/ADR-043-command-input.md` | ✅ stable | architect | 2026-06-16 |
+| `40-cross-cutting/ADR-044-pipeline-engine.md` | ✅ stable | architect | 2026-06-17 |
 
 ---
 

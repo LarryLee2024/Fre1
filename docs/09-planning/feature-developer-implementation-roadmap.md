@@ -1,4 +1,4 @@
-﻿---
+---
 id: 09-planning.feature-developer-implementation-roadmap
 title: Implementation Roadmap — 基于代码审查的分阶段实施计划
 status: draft
@@ -140,25 +140,17 @@ Phase G (Cross-cutting)    ←── 依赖 Phase B~F
 
 ## Phase 0: 前置文档补齐（[强制] 所有 Phase 的前提）
 
-> **为什么需要 Phase 0**：@feature-developer 的"强制前置文档确认"需要 per-domain 测试计划作为输入。ADR 已在 `docs/01-architecture/` 子目录中就位。
-
-### 0-1: 补齐 per-domain 测试计划
-
-| 项 | 内容 |
-|---|------|
-| **为什么** | @feature-developer 理想输入 = ADR + 领域模型 + Schema + **测试规范**。当前 `docs/05-testing/` 只有总纲，无 per-domain 测试计划 |
-| **做什么** | 为 Phase D~G 涉及的 15 个业务 Domain 编写测试计划（每个 domain 的 4 层测试结构定义） |
-| **交付物** | `docs/05-testing/plans/tactical-test-plan.md` 等 per-domain 测试计划 |
-| **执行 agent** | @test-guardian |
+> **为什么需要 Phase 0**：确保 @feature-developer 启动编码前，核心文档已就位。per-domain 测试计划延迟到 Phase D 开始前由 @test-guardian 补齐。
 
 ### Phase 0 交付清单
 
-| # | 任务 | agent | 交付物 |
-|---|------|-------|--------|
-| 0-1 | 补齐 per-domain 测试计划 | @test-guardian | `docs/05-testing/plans/*.md` |
+Phase 0 当前无阻塞任务。核心 ADR 和 Schema 已全部就位。
 
 **Phase 0 门禁**：
-- [ ] `docs/05-testing/plans/` 存在且包含至少 Phase D 三个 domain 的测试计划
+- [x] `docs/01-architecture/` ADR 全部就位（19 份）
+- [x] `docs/02-domain/` 领域规则全部就位（30 份）
+- [x] `docs/04-data/` 数据 Schema 全部就位（33+ 份）
+- [ ] `docs/05-testing/plans/` per-domain 测试计划 — **延迟到 Phase D 开始前**
 
 **Phase 0 完成后，才可以进入 Phase A。**
 
@@ -242,19 +234,21 @@ Phase G (Cross-cutting)    ←── 依赖 Phase B~F
 
 ### 🟥 前置文档确认（@feature-developer 必读）
 
-| 文档 | 位置 | 涉及任务 |
-|------|------|---------|
-| ADR-010 | `docs/01-architecture/10-capability-system/ADR-010-ability-pipeline.md` | B-1, B-2 (Effect/Ability) |
-| ADR-011 | `docs/01-architecture/10-capability-system/ADR-011-modifier-pipeline.md` | B-1 (Modifier/Attribute) |
-| ADR-012 | `docs/01-architecture/10-capability-system/ADR-012-stacking-trigger-cue.md` | B-3, B-4 |
-| ADR-013 | `docs/01-architecture/10-capability-system/ADR-013-registry-hotreload.md` | B-2 |
-| tag_domain | `docs/02-domain/capabilities/tag_domain.md` | Tag 内部机制确认 |
-| attribute_domain | `docs/02-domain/capabilities/attribute_domain.md` | Attribute Systems |
-| effect_domain | `docs/02-domain/capabilities/effect_domain.md` | EffectPlugin 填充 |
-| tag_schema | `docs/04-data/capabilities/tag_schema.md` | Tag Component 对齐 |
-| effect_schema | `docs/04-data/capabilities/effect_schema.md` | Effect lifecycle 对齐 |
-| coding-rules | `docs/00-governance/coding-rules.md` | 编码规范确认 |
-| ECS 规则 | `.trae/rules/ECS规则.md` | 四级通信机制 |
+**分批确认**：Phase B 开始前确认关键的 3 个 capability（tag/attribute/effect），其余 capability 在实现时按需确认对应 domain + schema。
+
+| 文档 | 位置 | 涉及任务 | 确认时机 |
+|------|------|---------|---------|
+| ADR-010 | `docs/01-architecture/10-capability-system/ADR-010-ability-pipeline.md` | B-1, B-2 | Phase B 开始前 |
+| ADR-011 | `docs/01-architecture/10-capability-system/ADR-011-modifier-pipeline.md` | B-1 | Phase B 开始前 |
+| ADR-012 | `docs/01-architecture/10-capability-system/ADR-012-stacking-trigger-cue.md` | B-3, B-4 | Phase B 开始前 |
+| ADR-013 | `docs/01-architecture/10-capability-system/ADR-013-registry-hotreload.md` | B-2 | Phase B 开始前 |
+| tag_domain | `docs/02-domain/capabilities/tag_domain.md` | Tag 内部机制确认 | Phase B 开始前 |
+| attribute_domain | `docs/02-domain/capabilities/attribute_domain.md` | Attribute Systems | Phase B 开始前 |
+| effect_domain | `docs/02-domain/capabilities/effect_domain.md` | EffectPlugin 填充 | Phase B 开始前 |
+| tag_schema | `docs/04-data/capabilities/tag_schema.md` | Tag Component 对齐 | Phase B 开始前 |
+| effect_schema | `docs/04-data/capabilities/effect_schema.md` | Effect lifecycle 对齐 | Phase B 开始前 |
+| coding-rules | `docs/00-governance/coding-rules.md` | 编码规范确认 | Phase B 开始前 |
+| ECS 规则 | `.trae/rules/ECS规则.md` | 四级通信机制 | Phase B 开始前 |
 
 ### B-1: Systems 填充 — 优先第一批
 
@@ -330,6 +324,7 @@ Phase G (Cross-cutting)    ←── 依赖 Phase B~F
 | ADR-041 | `docs/01-architecture/40-cross-cutting/ADR-041-replay-determinism.md` | C-2 (Replay) |
 | ADR-042 | `docs/01-architecture/40-cross-cutting/ADR-042-save-persistence.md` | C-4 (Save) |
 | ADR-043 | `docs/01-architecture/40-cross-cutting/ADR-043-command-input.md` | C-5 (Input) |
+| ADR-044 | `docs/01-architecture/40-cross-cutting/ADR-044-pipeline-engine.md` | C-1 (Pipeline) |
 | ADR-013 | `docs/01-architecture/10-capability-system/ADR-013-registry-hotreload.md` | C-3 (Registry) |
 | pipeline_schema | `docs/04-data/infrastructure/pipeline_schema.md` | C-1 |
 | replay_schema | `docs/04-data/infrastructure/replay_schema.md` | C-2 |
@@ -380,9 +375,10 @@ Phase G (Cross-cutting)    ←── 依赖 Phase B~F
 | 项 | 内容 |
 |---|------|
 | **为什么** | 命令层基础，连接玩家输入到游戏指令 |
-| **做什么** | 实现 InputCommand trait + CommandDispatcher + ActionQueue |
-| **交付物** | `infra/input/` — InputCommand trait, CommandDispatcher, ActionQueue |
+| **做什么** | 对齐 ADR-043：实现 `GameCommand` 枚举 + `CommandQueue`（Resource）+ `InputMap`（按键绑定配置）+ `InputState`（当前帧输入状态） |
+| **交付物** | `infra/input/` — GameCommand, CommandQueue, InputMap, InputState, PlayerInputSystem |
 | **执行 agent** | @feature-developer |
+| **关键参考** | ADR-043（命令层架构）+ `docs/04-data/infrastructure/input_schema.md`（数据 Schema） |
 
 ### Phase C 交付清单
 
@@ -403,7 +399,7 @@ Phase G (Cross-cutting)    ←── 依赖 Phase B~F
 
 > **目标**: 实现 3 个 Foundation 领域（Tactical / Terrain / Faction）的标准 7 文件结构  
 > **代码依赖**: Phase B (Capabilities) + Phase C (Infra Pipeline, Registry)  
-> **文档依赖**: 以下 3 组文档需逐一确认  
+> **文档依赖**: 以下 3 组文档需逐一确认。**注意**：per-domain 测试计划需在此 Phase 开始前由 @test-guardian 补齐  
 > **验收标准**: 每个 domain 的 7 文件齐全，`cargo test` 通过  
 > **预计工作量**: 每个 domain ~5–8 文件，~400–600 行；共计 ~1500 行
 
@@ -623,10 +619,10 @@ Phase G (Cross-cutting)    ←── 依赖 Phase B~F
 
 | 层 | ADR | 相关文档 |
 |----|-----|---------|
-| Content | — | `docs/04-data/foundation/id_strategy.md`（Registry 集成） |
-| mod_api | — | 无独立 ADR，需 @architect 输出 API 边界 ADR |
-| Tools | — | 无独立 ADR |
-| Modding | — | 无独立 ADR，需 @architect 输出 Mod 架构 ADR |
+| Content | 待 @architect 输出 | `docs/04-data/foundation/id_strategy.md`（Registry 集成） |
+| mod_api | 待 @architect 输出 | API 边界定义 |
+| Tools | 待 @architect 输出 | DevTools 架构 |
+| Modding | 待 @architect 输出 | Mod 加载沙箱架构 |
 
 | # | 任务 | agent | 前置 | 说明 |
 |---|------|-------|------|------|
@@ -756,6 +752,7 @@ Phase 0 ──→ Phase A ──→ Phase B ──→ Phase C ──→ Phase D 
 | ADR-041 | 回放确定性与架构 | ✅ |
 | ADR-042 | 存档持久化策略 | ✅ |
 | ADR-043 | 命令层与输入抽象 | ✅ |
+| ADR-044 | Pipeline 引擎架构 | ✅ |
 ```
 
 ### Per-domain 测试计划需包含的内容
@@ -792,7 +789,7 @@ Phase 0 ──→ Phase A ──→ Phase B ──→ Phase C ──→ Phase D 
 | 文档 | 位置 | 已阅读 | 备注 |
 |------|------|--------|------|
 | ADR-NNN | `docs/01-architecture/.../ADR-NNN-*.md` | ✅/❌ | 关键决策摘要 |
-| xxx_domain.md | `docs/02-domain/xxx_domain.md` | ✅/❌ | 领域规则摘要 |
+| xxx_domain.md | `docs/02-domain/capabilities/xxx_domain.md` 或 `domains/xxx_domain.md` | ✅/❌ | 领域规则摘要 |
 | xxx_schema.md | `docs/04-data/xxx/xxx_schema.md` | ✅/❌ | Schema 结构摘要 |
 
 确认结论：[通过 / 阻塞] — 如阻塞，描述缺失内容及需哪个 agent 补齐。
