@@ -1,3 +1,4 @@
+mod facade_test;
 mod grid_pos_test;
 mod movement_cost_test;
 mod movement_points_test;

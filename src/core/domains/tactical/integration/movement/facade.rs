@@ -18,14 +18,24 @@ const MOVEMENT_COST_MODIFIER_KEY: &str = "movement_cost";
 
 // ─── Tag 查询（封装 TagSet + TagHierarchy） ─────────────────────────
 
+/// 移动类型对应的 TagId 常量。
+///
+/// TODO[P2][Content]: 待内容系统定型后从配置/Registry 加载
+///   这些 Tag ID 当前为占位值，需与 Content 层的 Tag 注册方案对齐。
+const TAG_WALK: &str = "tag_000010";
+const TAG_FLY: &str = "tag_000011";
+const TAG_SWIM: &str = "tag_000012";
+const TAG_CLIMB: &str = "tag_000013";
+const TAG_TELEPORT: &str = "tag_000014";
+
 /// 将 MovementType 映射到 TagId 字符串。
 pub fn movement_type_to_tag(movement_type: MovementType) -> &'static str {
     match movement_type {
-        MovementType::Walk => "tag_000010",
-        MovementType::Fly => "tag_000011",
-        MovementType::Swim => "tag_000012",
-        MovementType::Climb => "tag_000013",
-        MovementType::Teleport => "tag_000014",
+        MovementType::Walk => TAG_WALK,
+        MovementType::Fly => TAG_FLY,
+        MovementType::Swim => TAG_SWIM,
+        MovementType::Climb => TAG_CLIMB,
+        MovementType::Teleport => TAG_TELEPORT,
     }
 }
 

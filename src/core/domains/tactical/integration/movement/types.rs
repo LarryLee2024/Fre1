@@ -19,8 +19,9 @@ impl Default for MP {
 impl MP {
     pub const ZERO: Self = Self(0.0);
 
+    /// 是否为零。负值不计为零（在 MP 语境下负值不应出现）。
     pub fn is_zero(self) -> bool {
-        self.0 <= 0.0
+        self.0 == 0.0
     }
 
     pub fn can_afford(self, cost: MP) -> bool {

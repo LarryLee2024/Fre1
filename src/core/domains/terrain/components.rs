@@ -199,20 +199,35 @@ impl TileProperties {
     }
 
     /// 当前通行性（由 surface 和 terrain_type 共同决定）。
+    ///
+    /// 表面类型的通行性影响：
+    /// - Lava/Water → 不可通行
+    /// - 其他表面 → 沿用 base_passability
     pub fn current_passability(&self) -> Passability {
-        // 表面变化可能影响通行性
         match self.surface {
-            SurfaceType::Lava => Passability::Impassable,
+            SurfaceType::Lava | SurfaceType::Water => Passability::Impassable,
             _ => self.base_passability,
         }
     }
 
     /// 当前遮蔽度（由 surface 和 terrain_type 共同决定）。
+    ///
+    /// 表面类型的遮蔽度影响：
+    /// - Burning → 半遮蔽（烟雾）
+    /// - Poison → 半遮蔽（毒气）
+    /// - 其他表面 → 沿用 base_passability
+    ///
+    /// 地形类型的遮蔽度影响：
+    /// - Bush → 半遮蔽
     pub fn current_concealment(&self) -> Concealment {
-        // 表面变化可能影响遮蔽度
+        // 表面变化优先——燃烧/毒气产生遮蔽
+        match self.surface {
+            SurfaceType::Burning | SurfaceType::Poison => return Concealment::Half,
+            _ => {}
+        }
+        // 地形类型提供遮蔽
         match self.terrain_type {
             TerrainType::Bush => Concealment::Half,
-            TerrainType::Highground => Concealment::None,
             _ => self.base_concealment,
         }
     }
@@ -283,6 +298,8 @@ pub struct TerrainAttachEffect {
     /// 绑定的格子位置
     pub tile: TilePos,
     /// 引用的 EffectDefId
+    ///
+    /// TODO[P2][Terrain]: 迁移到 DefinitionId（需 DefinitionId 实现 Reflect 或移除 #[reflect(Component)]）
     pub effect_id: String,
     /// 剩余持续时间（回合数），None = 永久
     pub remaining_duration: Option<u32>,

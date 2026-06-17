@@ -9,9 +9,9 @@ use std::collections::HashSet;
 
 use bevy::prelude::*;
 
-use crate::core::domains::terrain::components::{HazardTriggeredState, TilePos, TileProperties};
+use crate::core::domains::terrain::components::{HazardTriggeredState, TileProperties};
 use crate::core::domains::terrain::events::{HazardTriggered, TileEntered};
-use crate::core::domains::terrain::resources::HazardZoneRegistry;
+use crate::core::domains::terrain::resources::{HazardZoneRegistry, TileEntityMap};
 
 /// 响应 TileEntered 事件，检查陷阱触发条件。
 ///
@@ -22,9 +22,10 @@ use crate::core::domains::terrain::resources::HazardZoneRegistry;
 /// 4. 发出 HazardTriggered 事件
 pub(crate) fn on_hazard_check(
     trigger: On<TileEntered>,
-    tile_query: Query<(&TilePos, &TileProperties)>,
+    tile_props_query: Query<&TileProperties>,
     hazard_state_query: Query<&HazardTriggeredState>,
     hazard_registry: Option<Res<HazardZoneRegistry>>,
+    tile_map: Res<TileEntityMap>,
     mut commands: Commands,
 ) {
     let event = trigger.event();
@@ -36,12 +37,11 @@ pub(crate) fn on_hazard_check(
         return;
     };
 
-    // 查找目标格子的位置
-    let tile_entity = tile_query
-        .iter()
-        .find(|(pos, _)| pos.is_same_tile(target_tile));
-
-    let Some((_tile_pos, tile_props)) = tile_entity else {
+    // 通过 TileEntityMap 空间索引 O(1) 查找格子属性
+    let Some(tile_props) = tile_map
+        .get(&target_tile)
+        .and_then(|tile_entity| tile_props_query.get(tile_entity).ok())
+    else {
         return;
     };
 

@@ -1,2 +1,2 @@
-// TODO: 添加测试模块
-
+mod hazard_test;
+mod surface_override_test;

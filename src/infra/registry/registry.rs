@@ -168,13 +168,7 @@ impl<T> RegistryBucket<T> {
 
     /// 通过字符串 ID 查询条目（便利方法）。
     pub fn get_str(&self, id: &str) -> Option<&T> {
-        self.items.keys().find_map(|k| {
-            if k.as_str() == id {
-                self.items.get(k)
-            } else {
-                None
-            }
-        })
+        self.items.get(&DefinitionId::new(id))
     }
 
     /// 可变引用查询。
@@ -282,26 +276,26 @@ impl<T> Default for RegistryBucket<T> {
 #[derive(Resource)]
 pub struct DefinitionRegistry {
     // ---- Capabilities (10) ----
-    pub abilities: RegistryBucket<RegistryEntry>,
-    pub effects: RegistryBucket<RegistryEntry>,
-    pub modifiers: RegistryBucket<RegistryEntry>,
-    pub tags: RegistryBucket<RegistryEntry>,
-    pub attributes: RegistryBucket<RegistryEntry>,
-    pub triggers: RegistryBucket<RegistryEntry>,
-    pub cues: RegistryBucket<RegistryEntry>,
-    pub items: RegistryBucket<RegistryEntry>,
-    pub spells: RegistryBucket<RegistryEntry>,
-    pub buffs: RegistryBucket<RegistryEntry>,
+    pub(crate) abilities: RegistryBucket<RegistryEntry>,
+    pub(crate) effects: RegistryBucket<RegistryEntry>,
+    pub(crate) modifiers: RegistryBucket<RegistryEntry>,
+    pub(crate) tags: RegistryBucket<RegistryEntry>,
+    pub(crate) attributes: RegistryBucket<RegistryEntry>,
+    pub(crate) triggers: RegistryBucket<RegistryEntry>,
+    pub(crate) cues: RegistryBucket<RegistryEntry>,
+    pub(crate) items: RegistryBucket<RegistryEntry>,
+    pub(crate) spells: RegistryBucket<RegistryEntry>,
+    pub(crate) buffs: RegistryBucket<RegistryEntry>,
 
     // ---- Domains (5) ----
-    pub factions: RegistryBucket<RegistryEntry>,
-    pub terrains: RegistryBucket<RegistryEntry>,
-    pub recipes: RegistryBucket<RegistryEntry>,
-    pub loot_tables: RegistryBucket<RegistryEntry>,
-    pub quests: RegistryBucket<RegistryEntry>,
+    pub(crate) factions: RegistryBucket<RegistryEntry>,
+    pub(crate) terrains: RegistryBucket<RegistryEntry>,
+    pub(crate) recipes: RegistryBucket<RegistryEntry>,
+    pub(crate) loot_tables: RegistryBucket<RegistryEntry>,
+    pub(crate) quests: RegistryBucket<RegistryEntry>,
 
     /// 自定义扩展桶（Domain 可注册额外的 Def 类型）
-    pub custom: RegistryBucket<RegistryEntry>,
+    pub(crate) custom: RegistryBucket<RegistryEntry>,
 
     /// 上次变更的桶名称（用于事件通知）
     last_changed_bucket: Option<&'static str>,
@@ -467,6 +461,9 @@ pub trait DefinitionType: Sized {
 /// Definition 热重载完成事件。
 ///
 /// 当某桶的 Asset 被重新加载时触发，下游 Observer 可响应刷新。
+///
+/// TODO[P2][Content]: 待 Asset 层定型后注册热重载 Observer
+///   当前事件定义已就绪，但无订阅者（各 Domain 尚未接入 Asset 管线）。
 #[derive(Event)]
 pub struct OnDefinitionReloaded {
     /// 发生变更的桶名称（如 "abilities", "effects"）

@@ -116,6 +116,9 @@ pub(crate) fn on_compute_move(
                 return;
             }
         };
+        // TODO[P2][Integration]: terrain_def_id() 返回 u16 是 Tactical 域独立编号,
+        //   与 D-2 Terrain 的 TerrainType 枚举不对齐。待后续统一时替换为 TerrainType
+        //   或通过 Registry 桶查询实际地形定义。
         let base = rules::movement::movement_cost(tile.terrain_def_id(), mov_type, from, to);
         total_cost += base;
     }

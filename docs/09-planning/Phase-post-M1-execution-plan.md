@@ -4,7 +4,7 @@ title: "Phase Post-M1 执行计划 — M1 后未完成任务与下一步行动"
 status: active
 owner: feature-developer
 created: 2026-06-17
-updated: 2026-06-17 (C-3 ✅ + D-2 ✅)
+updated: 2026-06-17 (C-3 ✅ + D-2 ✅ + D-3 ✅ + D-13 ✅)
 tags:
   - planning
   - implementation
@@ -113,12 +113,12 @@ Tactical 的 `integration.rs` 定义了 `MovementType → TagId` 映射，但没
 | 2 | ~~@refactor-guardian 技术债扫描~~ | ~~@refactor-guardian~~ | ~~决定后立即启动~~ | ✅ 已完成 |
 | 3 | ~~Capabilities 集成验证设计~~ | ~~@architect + @feature-developer~~ | ~~方案确定~~ | ✅ 已完成 |
 | 4 | ~~Capabilities 集成验证实现~~ | ~~@feature-developer~~ | ~~设计完成~~ | ✅ 已完成 |
-| 5 | 验证结果评审 (Capabilities 集成) | @code-reviewer | 实现完成 | 🟡 进行中 |
-| 6 | 测试覆盖 (Capabilities 集成) | @test-guardian | 验证通过 | 🟡 进行中 |
+| 5 | 验证结果评审 (Capabilities 集成) | @code-reviewer | 实现完成 | ✅ 已完成 |
+| 6 | 测试覆盖 (Capabilities 集成) | @test-guardian | 验证通过 | ✅ 已完成 |
 | 7 | ~~C-3 Registry 实现~~ | ~~@feature-developer~~ | ~~C-3 Registry 完成~~ | ✅ 已完成 |
 | 8 | ~~D-2 Terrain 实现~~ | ~~@feature-developer~~ | ~~D-2 Terrain 完成~~ | ✅ 已完成 |
-| 9 | 代码审查 (C-3 Registry + D-2 Terrain) | @code-reviewer | Registry + Terrain 完成 | 🔴 待启动 |
-| 10 | 测试审查 (D-2 Terrain) | @test-guardian | Terrain 完成 | 🔴 待启动 |
+| 9 | 代码审查 (C-3 Registry + D-2 Terrain) | @code-reviewer | Registry + Terrain 完成 | ✅ 已完成 |
+| 10 | 测试审查 (D-2 Terrain) | @test-guardian | Terrain 完成 | ✅ 已完成 |
 
 ---
 
@@ -216,8 +216,8 @@ Tactical 的 `integration.rs` 定义了 `MovementType → TagId` 映射，但没
 | 编号 | 域 | 说明 | 优先级 | 依赖 | 状态 |
 |------|-----|------|-------|------|------|
 | D-2 | **Terrain** 地形 | 地形类型、高度、遮挡、效果 | 🔴 高 | D-1 (Tactical) | ✅ 已完成 |
-| D-3 | **Faction** 阵营 | 阵营关系、外交、仇恨列表 | 🟡 中 | D-1 | 🟡 骨架 |
-| D-4 | **Unit** 单位 | 单位创建、属性、状态机 | 🔴 高 | D-1, D-3 | 🟡 骨架 |
+| D-3 | **Faction** 阵营 | 阵营关系、外交、仇恨列表 | 🟡 中 | D-1 | ✅ 已完成 |
+| D-4 | **Unit** 单位 | 单位创建、属性、状态机 | 🔴 高 | D-1, D-3 | 🟡 骨架（无领域文档） |
 | D-5 | **Combat** 战斗 | 攻击、防御、伤害计算 | 🔴 高 | D-1, D-4, Capabilities 验证 | 🟡 骨架 |
 | D-6 | **Spell** 法术 | 法术释放、效果、冷却 | 🟡 中 | D-4, D-5 | 🟡 骨架 |
 | D-7 | **Reaction** 反应 | 反击、触发效果、机会攻击 | 🟡 中 | D-5 | 🟡 骨架 |
@@ -226,7 +226,7 @@ Tactical 的 `integration.rs` 定义了 `MovementType → TagId` 映射，但没
 | D-10 | **Item** 物品 | 装备、消耗品、背包 | 🟢 低 | D-4 | 🟡 骨架 |
 | D-11 | **Skill** 技能 | 职业技能、专精树 | 🟢 低 | D-4, D-5 | 🟡 骨架 |
 | D-12 | **Quest** 任务 | 任务状态、目标、奖励 | 🟢 低 | D-4 | 🟡 骨架 |
-| D-13 | **Dialog** 对话 | 对话树、选择分支 | 🟢 低 | D-3 | 🟡 骨架 |
+| D-13 | **Narrative** 叙事 | 对话树、选择分支、过场动画 | 🟢 低 | D-3 | ✅ 已完成 |
 | D-14 | **Economy** 经济 | 货币、商店、交易 | 🟢 低 | D-10 | 🟡 骨架 |
 | D-15 | **Progression** 成长 | 经验、等级、解锁 | 🟢 低 | D-4, D-11 | 🟡 骨架 |
 

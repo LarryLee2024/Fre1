@@ -10,9 +10,9 @@ use bevy::prelude::*;
 use super::components::{
     HazardTriggeredState, SurfaceOverride, TerrainAttachEffect, TilePos, TileProperties,
 };
-use super::resources::HazardZoneRegistry;
+use super::resources::{HazardZoneRegistry, TileEntityMap};
 use super::systems::hazard_system::on_hazard_check;
-use super::systems::surface_system::{on_surface_changed, surface_recovery_system};
+use super::systems::surface_system::on_surface_changed;
 use super::systems::terrain_effect_system::on_tile_entered;
 
 pub struct TerrainPlugin;
@@ -28,6 +28,7 @@ impl Plugin for TerrainPlugin {
 
         // ── 初始化 Resource ──
         app.init_resource::<HazardZoneRegistry>();
+        app.init_resource::<TileEntityMap>();
 
         // ── 注册 Observer System ──
         // TileEntered → 地形效果应用
@@ -38,7 +39,12 @@ impl Plugin for TerrainPlugin {
         app.add_observer(on_surface_changed);
 
         // ── 注册常规 System ──
-        // 表面恢复：在 Update 调度中运行
-        app.add_systems(Update, surface_recovery_system);
+        // 空间索引维护：在 PostUpdate 中重建 TilePos → Entity 映射
+        app.add_systems(PostUpdate, TileEntityMap::update);
+
+        // 表面恢复：已从 Update 调度移除
+        // TODO[P2][Terrain]: 待 D-9 Turn 系统实现后接入 OnTurnEnd 事件
+        //   surface_recovery_system 函数已实现（src/.../surface_system.rs），
+        //   当前不注册以防每帧耗尽持续回合。D-9 完成后在此处注册即可。
     }
 }

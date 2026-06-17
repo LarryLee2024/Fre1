@@ -29,10 +29,11 @@ pub(crate) fn on_surface_changed(
     }
 }
 
-/// 逐帧递减 SurfaceOverride 的剩余回合数，到期时恢复原始表面。
+/// 递减 SurfaceOverride 的剩余回合数，到期时恢复原始表面。
 ///
-/// 在每回合结束时或固定间隔调用（通过 GameTime 或回合事件驱动）。
-/// 当前实现：每帧递减（需在适当的调度运行 — 如 TurnEnd 事件触发）。
+/// TODO[P2][Terrain]: 已从 Update 调度移除，待 D-9 Turn 系统实现后通过 OnTurnEnd 驱动
+///   当前仅当显式调用时执行回合递减。在 D-9 完成前，表面覆盖不会自动到期。
+///   届时在 TerrainPlugin 中注册：app.add_systems(Update, surface_recovery_system)
 pub(crate) fn surface_recovery_system(
     mut commands: Commands,
     mut surface_query: Query<(

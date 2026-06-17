@@ -7,8 +7,9 @@
 
 use bevy::prelude::*;
 
-use crate::core::domains::terrain::components::{SurfaceType, TilePos, TileProperties};
+use crate::core::domains::terrain::components::{SurfaceType, TileProperties};
 use crate::core::domains::terrain::events::{TerrainEffectApplied, TileEntered};
+use crate::core::domains::terrain::resources::TileEntityMap;
 
 /// 响应 TileEntered 事件，检查格子表面并施加地形效果。
 ///
@@ -21,18 +22,19 @@ use crate::core::domains::terrain::events::{TerrainEffectApplied, TileEntered};
 /// - Oil → 无直接效果（可被点燃）
 pub(crate) fn on_tile_entered(
     trigger: On<TileEntered>,
-    tile_query: Query<(&TilePos, &TileProperties)>,
+    tile_props_query: Query<&TileProperties>,
+    tile_map: Res<TileEntityMap>,
     mut commands: Commands,
 ) {
     let event = trigger.event();
     let target_tile = event.tile;
     let entity = event.entity;
 
-    // 查找格子实体，检查表面类型
-    let surface_effect = tile_query
-        .iter()
-        .find(|(pos, _)| pos.is_same_tile(target_tile))
-        .and_then(|(_, props)| surface_to_effect_id(props.surface));
+    // 通过 TileEntityMap 空间索引 O(1) 查找格子
+    let surface_effect = tile_map
+        .get(&target_tile)
+        .and_then(|tile_entity| tile_props_query.get(tile_entity).ok())
+        .and_then(|props| surface_to_effect_id(props.surface));
 
     // 如果表面有对应的地形效果，发出 TerrainEffectApplied 事件
     if let Some(effect_id) = surface_effect {
@@ -43,20 +45,28 @@ pub(crate) fn on_tile_entered(
         commands.trigger(TerrainEffectApplied {
             entity,
             tile: target_tile,
-            effect_id,
+            effect_id: effect_id.to_string(),
         });
     }
 }
+
+/// 表面类型到 EffectDefId 的映射常量。
+///
+/// TODO[P2][Terrain]: 待 Registry 内容系统定型后从配置加载
+///   当前为硬编码占位 ID，需与 Effect 领域对齐 ID 分配方案。
+const EFFECT_POISON: &str = "eff_000001";
+const EFFECT_BURNING: &str = "eff_000002";
+const EFFECT_LAVA: &str = "eff_000003";
 
 /// 表面类型到 EffectDefId 的映射。
 ///
 /// 非所有表面都有地形效果（如 Normal、Ice 等仅影响移动）。
 /// 返回 None 表示无需施加效果。
-fn surface_to_effect_id(surface: SurfaceType) -> Option<String> {
+fn surface_to_effect_id(surface: SurfaceType) -> Option<&'static str> {
     match surface {
-        SurfaceType::Poison => Some("eff_000001".to_string()),
-        SurfaceType::Burning => Some("eff_000002".to_string()),
-        SurfaceType::Lava => Some("eff_000003".to_string()),
+        SurfaceType::Poison => Some(EFFECT_POISON),
+        SurfaceType::Burning => Some(EFFECT_BURNING),
+        SurfaceType::Lava => Some(EFFECT_LAVA),
         _ => None,
     }
 }

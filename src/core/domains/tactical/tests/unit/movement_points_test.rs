@@ -1,4 +1,5 @@
 use crate::core::domains::tactical::components::{MovementPoints, MovementType};
+use crate::core::domains::tactical::integration::movement::MP;
 
 #[test]
 fn movement_points_new_sets_current_to_max() {
@@ -63,4 +64,43 @@ fn movement_points_zero_cost_consume_succeeds() {
     let result = mp.consume(0.0);
     assert!(result);
     assert!((mp.current - 5.0).abs() < f32::EPSILON);
+}
+
+// ─── MP (integration newtype) tests ──────────────────────
+
+#[test]
+fn mp_zero_is_zero() {
+    assert!(MP::ZERO.is_zero());
+    assert!(MP(0.0).is_zero());
+}
+
+#[test]
+fn mp_positive_is_not_zero() {
+    assert!(!MP(1.0).is_zero());
+    assert!(!MP(0.1).is_zero());
+}
+
+#[test]
+fn mp_negative_is_not_zero() {
+    assert!(!MP(-1.0).is_zero());
+}
+
+#[test]
+fn mp_can_afford_exact_amount() {
+    assert!(MP(5.0).can_afford(MP(5.0)));
+}
+
+#[test]
+fn mp_can_afford_less_than_available() {
+    assert!(MP(5.0).can_afford(MP(3.0)));
+}
+
+#[test]
+fn mp_cannot_afford_more_than_available() {
+    assert!(!MP(3.0).can_afford(MP(5.0)));
+}
+
+#[test]
+fn mp_cannot_afford_zero_from_zero() {
+    assert!(MP(0.0).can_afford(MP(0.0)));
 }

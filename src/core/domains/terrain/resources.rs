@@ -4,9 +4,11 @@
 //!
 //! 详见 docs/04-data/domains/terrain_schema.md §1.4
 
+use std::collections::HashMap;
+
 use bevy::prelude::*;
 
-use crate::core::domains::terrain::components::{SurfaceType, TileProperties};
+use crate::core::domains::terrain::components::{SurfaceType, TilePos, TileProperties};
 
 /// 陷阱/危险区域定义（Definition 层 — 静态配置，运行时只读）。
 #[derive(Debug, Clone)]
@@ -28,10 +30,12 @@ impl HazardZoneDef {
     ///
     /// 当前简化实现：匹配特定表面类型或标签。
     /// 将来扩展为使用 AreaDefinition 进行位置匹配。
+    /// 检查该陷阱定义是否匹配给定格子的属性。
+    ///
+    /// TODO[P2][Terrain]: 实现 AreaDefinition 区域匹配逻辑
+    ///   当前返回 false（安全默认），待 AreaDefinition 定型后补充完整实现。
     pub fn matches_tile(&self, _props: &TileProperties) -> bool {
-        // 简化：检查触发条件中的表面要求
-        // 完整实现将在迭代中补充 AreaDefinition 区域匹配
-        true
+        false
     }
 }
 
@@ -84,6 +88,34 @@ impl HazardZoneRegistry {
 impl Default for HazardZoneRegistry {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+// ============================================================================
+// TileEntityMap — 空间索引
+// ============================================================================
+
+/// TilePos → Entity 映射（空间索引）。
+///
+/// 提供 O(1) 的 TilePos → Entity 查询，避免在事件处理器中线性扫描所有 TilePos。
+/// 由 `update` system 在 PostUpdate 中维护。
+#[derive(Resource, Default, Debug, Clone)]
+pub struct TileEntityMap {
+    map: HashMap<TilePos, Entity>,
+}
+
+impl TileEntityMap {
+    /// 根据 TilePos 查找对应的 Entity。
+    pub fn get(&self, pos: &TilePos) -> Option<Entity> {
+        self.map.get(pos).copied()
+    }
+
+    /// 更新映射表（在 PostUpdate 中运行）。
+    pub fn update(mut map: ResMut<Self>, tile_query: Query<(Entity, &TilePos)>) {
+        map.map.clear();
+        for (entity, pos) in tile_query.iter() {
+            map.map.insert(*pos, entity);
+        }
     }
 }
 
