@@ -146,7 +146,7 @@ src/infra/pipeline/
   ├── registry.rs            — PipelineRegistry（管线注册中心）
   ├── hooks.rs               — PipelineHook trait + 内置 Hook
   ├── context.rs             — PipelineContext（执行上下文）
-  └── api.rs                 — 公开 API
+  └── integration/           — 跨域访问 ACL（ADR-046）
 ```
 
 ## Communication Design

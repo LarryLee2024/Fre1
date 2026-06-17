@@ -220,14 +220,14 @@ src/core/domains/progression/
   ├── components.rs          — Experience, ClassComponent
   ├── systems.rs             — add_xp, level_up, skill_unlock
   ├── events.rs              — XpGained, LevelUpEvent, SkillUnlocked
-  └── api.rs                 — ProgressionDef, XpCurve
+  └── integration/           — 跨域访问 ACL（ADR-046） ProgressionDef, XpCurve
 
 src/core/domains/inventory/
   ├── plugin.rs              — InventoryPlugin
   ├── components.rs          — Inventory, Equipment, ItemStack
   ├── systems.rs             — equip, unequip, use_item, pickup_item
   ├── events.rs              — ItemUsed, EquipmentChanged
-  └── api.rs                 — ItemDef, EquipSlot
+  └── integration/           — 跨域访问 ACL（ADR-046） ItemDef, EquipSlot
 ```
 
 ## Communication Design

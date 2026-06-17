@@ -174,7 +174,7 @@ infra/<domain>/
 ├── mod.rs
 ├── plugin.rs
 ├── systems.rs
-└── api.rs
+└── integration/       # 跨域访问 ACL（ADR-046）
 ```
 
 ### 可选文件
@@ -190,15 +190,15 @@ infra/<domain>/
 
 - **同 Feature 内部**：Trigger + Observer（事件链）、Changed Filter（状态变化）
 - **跨 Feature 同层**：Message (Event) — 通过 `events.rs` 声明
-- **跨层调用**：上层直接调用下层的 `api.rs` 公开函数
-- **只读跨层查询**：下层的 `api.rs` 暴露 pub Query 函数
+- **跨层调用**：上层通过下层的 `integration/` facade 函数访问（ADR-046）
+- **只读跨层查询**：下层的 `integration/` 暴露 pub facade 函数
 
 详见 ADR-002（ECS 四级通信机制）。
 
 ## 边界定义
 
 ### 允许
-- Layer N 的 Feature 调用 Layer N-1 及以下的 `api.rs` 公开函数
+- Layer N 的 Feature 调用 Layer N-1 及以下的 `integration/` facade 函数（ADR-046）
 - 同层 Feature 之间发送/接收 Event
 - 所有 Feature 读取 Cross-cutting Layer 的公共工具
 

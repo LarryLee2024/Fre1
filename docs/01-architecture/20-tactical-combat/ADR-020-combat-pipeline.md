@@ -303,7 +303,7 @@ src/core/domains/combat/
   ├── components.rs          — (Combat 专用 Component，如 Invulnerable Tag)
   ├── systems.rs             — 管线阶段 System
   ├── events.rs              — CombatIntent, CombatResult, DamageEvent, HealEvent
-  ├── api.rs                 — preview_combat() 公开预览函数
+  ├── integration/           — 跨域访问 ACL（ADR-046，原 api.rs 已迁移）
   ├── resources.rs           — CombatPipeline (管线上下文传递)
   └── internal/
       ├── damage_formula.rs  — 纯函数：伤害公式
@@ -319,7 +319,7 @@ src/core/domains/combat/
 | 管线阶段间 | `CombatPipeline` Resource | combat 内部 |
 | CombatResult → 外部 | Event | combat → 所有订阅者 |
 | 伤害→反应链 | Observer (`on_damage_dealt`) | combat → reaction |
-| 预览 | `api.rs` 公开纯函数 | 外部 → combat |
+| 预览 | `integration/` facade 函数（ADR-046） | 外部 → combat |
 
 ## 边界定义
 

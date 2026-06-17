@@ -4,7 +4,7 @@ title: "Phase Post-M1 执行计划 — M1 后未完成任务与下一步行动"
 status: active
 owner: feature-developer
 created: 2026-06-17
-updated: 2026-06-18 (D-9 ✅ 回合系统 + Effect Tick + 胜利条件 + @test-guardian/@code-reviewer/@refactor-guardian)
+updated: 2026-06-18 (D-9 ✅ 回合系统 + Effect Tick + 胜利条件 + @test-guardian/@code-reviewer/@refactor-guardian + C-4 ✅ Replay 桥接层)
 tags:
   - planning
   - implementation
@@ -35,7 +35,7 @@ tags:
 | **M1 里程碑** | ✅ 通过 | 742 lib tests pass |
 | **Capabilities 集成验证** | ✅ 完成 | Observer System 打通 Tag/Attribute/Modifier 管线，742 tests pass |
 | **Phase C-3 — Registry** | ✅ 完成 | ~750 行，23 测试，build+test PASS |
-| **Phase C-4 — Replay** | 🟡 骨架 | `mod.rs` + 空 `plugin.rs` |
+| **Phase C-4 — Replay** | ✅ 完成 | 桥接层实现：resources/systems/events/api + plugin，5 文件 ~145 行 |
 | **Phase C-5 — Save** | 🟡 骨架 | `mod.rs` + 空 `plugin.rs` |
 | **Phase D-2 — Terrain** | ✅ 完成 | ~700 行，9 测试，build+test PASS |
 | **Phase D-3 ~ D-15** | 🟡 骨架 | 13 个 Domain 均为 `mod.rs` + `plugin.rs` + 空 `tests/` |
@@ -119,6 +119,10 @@ Tactical 的 `integration.rs` 定义了 `MovementType → TagId` 映射，但没
 | 8 | ~~D-2 Terrain 实现~~ | ~~@feature-developer~~ | ~~D-2 Terrain 完成~~ | ✅ 已完成 |
 | 9 | 代码审查 (C-3 Registry + D-2 Terrain) | @code-reviewer | Registry + Terrain 完成 | ✅ 已完成 |
 | 10 | 测试审查 (D-2 Terrain) | @test-guardian | Terrain 完成 | ✅ 已完成 |
+| 11 | ~~C-4 Replay 桥接层实现~~ | ~~@feature-developer~~ | ~~ADR-041 + Core replay 已就绪~~ | ✅ 已完成 |
+| 12 | 测试覆盖 (C-4 Replay 桥接层) | @test-guardian | C-4 实现完成 | ⏳ 待执行 |
+| 13 | 代码审查 (C-4 Replay 桥接层) | @code-reviewer | C-4 测试通过 | ⏳ 待执行 |
+| 14 | 技术债增量扫描 | @refactor-guardian | C-4 审查完成 | ⏳ 待执行 |
 
 ---
 
@@ -152,30 +156,44 @@ Tactical 的 `integration.rs` 定义了 `MovementType → TagId` 映射，但没
 
 ---
 
-### 3.2 Phase C-4: Replay 回放骨架
+### 3.2 Phase C-4: Replay 回放桥接层
 
-> **目标**: 实现最小回放系统骨架，支持事件序列记录与重放
-> **当前状态**: 🟡 骨架 — `src/infra/replay/mod.rs` + 空 `plugin.rs`
-> **估算**: ~300 行，4-5 个文件
-> **主要执行者**: @feature-developer + @data-architect（Schema 设计）
+> **目标**: 将 Core 层 replay 能力（RecordingSession、PlaybackSession、DeterministicRng）桥接到 Bevy ECS
+> **当前状态**: ✅ 已完成 — 5 个文件 ~145 行，cargo check 零错误零警告，914 tests passed
+> **估算**: ~145 行，5 个文件
+> **主要执行者**: @feature-developer
+> **设计依据**: ADR-041（回放确定性与架构）— 已由 @architect 批准
 
 #### 前置文档确认
 
-| 文档 | 位置 | 责任人 |
-|------|------|--------|
-| ADR-0xx | 回放系统 ADR（待创建或确认） | @architect |
-| replay_schema | `docs/04-data/infrastructure/replay_schema.md` | @data-architect |
+| 文档 | 位置 | 责任人 | 状态 |
+|------|------|--------|------|
+| ADR-041 | `docs/01-architecture/40-cross-cutting/ADR-041-replay-determinism.md` | @architect | ✅ 已批准 |
+| replay_schema | `docs/04-data/infrastructure/replay_schema.md` | @data-architect | ✅ 已稳定 |
+| replay_architecture | `docs/04-data/foundation/replay_architecture.md` | @data-architect | ✅ 已稳定 |
+| Core replay 模块 | `src/core/capabilities/runtime/replay/` | @feature-developer | ✅ 已实现（24 tests） |
 
-#### 交付清单（初步）
+#### 架构差异说明（相比初步设计）
 
-| # | 任务 | 输出文件 | 责任人 |
-|---|------|---------|--------|
-| C4-1 | ReplayEvent 枚举 + 序列化 | `src/infra/replay/event.rs` | @feature-developer |
-| C4-2 | ReplayRecorder Resource | `src/infra/replay/recorder.rs` | @feature-developer |
-| C4-3 | ReplayPlayer（回放播放器） | `src/infra/replay/player.rs` | @feature-developer |
-| C4-4 | ReplayPlugin 注册 | `src/infra/replay/plugin.rs` | @feature-developer |
-| C4-T | 单元测试 | `src/infra/replay/tests/` | @test-guardian |
-| C4-R | 代码审查 | `docs/10-reviews/replay-review.md` | @code-reviewer |
+实际实现基于 Capabilities 层已存在的完整 replay 模块（~800 行 + 24 tests），采用**桥接模式**而非重新实现：
+
+| 初步设计 | 实际实现 | 原因 |
+|----------|---------|------|
+| 独立实现 ReplayEvent/Recorder/Player | 包装 Core 层类型为 Bevy Resource | 避免重复实现已存在的能力 |
+| 4 个独立文件（event/recorder/player/plugin） | 4 个功能文件（resources/systems/events/api）+ plugin | 结构更清晰，API 统一出口 |
+| 使用 `add_event` 注册 | Observer-based Events + `commands.trigger()` | 对齐 Bevy 0.18 事件系统 |
+
+#### 交付清单
+
+| # | 任务 | 输出文件 | 责任人 | 状态 |
+|---|------|---------|--------|------|
+| C4-1 | Bevy Resource 包装（DeterministicRng, ReplayModeGuard, 会话资源, FrameCounter） | `src/infra/replay/resources.rs` | @feature-developer | ✅ 完成 |
+| C4-2 | Infra 层事件 re-export | `src/infra/replay/events.rs` | @feature-developer | ✅ 完成 |
+| C4-3 | 录制/回放生命周期 System（帧管理、RNG 同步） | `src/infra/replay/systems.rs` | @feature-developer | ✅ 完成 |
+| C4-4 | 对外统一 re-export（已合并到 mod.rs，ADR-046） | `src/infra/replay/mod.rs` | @feature-developer | ✅ 完成 |
+| C4-5 | ReplayPlugin 注册 + mod 声明 | `src/infra/replay/plugin.rs`, `mod.rs` | @feature-developer | ✅ 完成 |
+| C4-T | 单元/集成测试 | `src/infra/replay/tests/` | @test-guardian | ⏳ 待编写 |
+| C4-R | 代码审查 | `docs/10-reviews/replay-bridge-review.md` | @code-reviewer | ⏳ 待审查 |
 
 ---
 
@@ -266,7 +284,7 @@ Tactical 的 `integration.rs` 定义了 `MovementType → TagId` 映射，但没
 |------|--------|---------|-----------|---------|------|
 | **Capabilities 集成验证** | 4 | ~280 | @feature-developer | 1 次会话 | ✅ 已完成 |
 | C-3 Registry 注册中心 | 3-4 | ~750 | @feature-developer | 1 次会话 | ✅ 已完成 |
-| C-4 Replay 回放骨架 | 4-5 | ~300 | @feature-developer | 1-2 次会话 | 🔴 未开始 |
+| C-4 Replay 回放桥接层 | 5 | ~145 | @feature-developer | 1 次会话 | ✅ 已完成 |
 | C-5 Save 存档骨架 | 4-5 | ~300 | @feature-developer | 1-2 次会话 | 🔴 未开始 |
 | D-2 Terrain 地形域 | ~12 | ~700 | @feature-developer | 2 次会话 | ✅ 已完成 |
 | D-3 ~ D-15 (13 个域) | — | — | — | 待定 | 🔴 未开始 |

@@ -201,7 +201,7 @@ src/infra/save/
   ├── resources.rs           — SaveManager, AutoSaveConfig, EntityRemapper
   ├── systems.rs             — save_game, load_game, auto_save, migrate
   ├── events.rs              — SaveRequest, LoadRequest, SaveCompleted
-  ├── api.rs                 — SaveMetadata, SaveSlot
+  ├── integration/           — 跨域访问 ACL（ADR-046）
   └── internal/
       ├── format.rs          — 二进制格式定义
       ├── serializer.rs      — 序列化/反序列化

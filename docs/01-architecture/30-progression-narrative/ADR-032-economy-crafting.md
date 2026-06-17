@@ -219,20 +219,20 @@ src/core/domains/economy/
   ├── systems.rs             — buy_item, sell_item, restock_shop
   ├── resources.rs           — ShopSession
   ├── events.rs              — ItemPurchased, ItemSold, GoldChanged
-  └── api.rs                 — ShopDef, Price, Wallet API
+  └── integration/           — 跨域访问 ACL（ADR-046） ShopDef, Price, Wallet API
 
 src/core/domains/crafting/
   ├── plugin.rs              — CraftingPlugin
   ├── systems.rs             — craft_item, roll_craft_result
   ├── events.rs              — ItemCrafted, CraftFailed
-  └── api.rs                 — RecipeDef, CraftCategory
+  └── integration/           — 跨域访问 ACL（ADR-046） RecipeDef, CraftCategory
 
 src/core/domains/summon/
   ├── plugin.rs              — SummonPlugin
   ├── components.rs          — Summoned, SummonDuration, MinionTag
   ├── systems.rs             — summon_minion, despawn_minion
   ├── events.rs              — SummonEvent
-  └── api.rs                 — SummonDef, MinionTemplate
+  └── integration/           — 跨域访问 ACL（ADR-046） SummonDef, MinionTemplate
 ```
 
 ## Communication Design

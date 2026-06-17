@@ -260,7 +260,7 @@ src/core/domains/combat/
   │   ├── mod.rs
   │   └── turn_systems.rs    — 各阶段 System + 状态转移
   ├── events.rs              — 回合相关领域事件
-  └── api.rs                 — get_current_turn(), get_turn_queue()
+  └── integration/turn/      — get_current_turn(), get_turn_queue()（ADR-046）
 ```
 
 ## Communication Design

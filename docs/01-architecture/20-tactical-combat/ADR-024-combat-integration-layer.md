@@ -195,7 +195,7 @@ src/core/domains/combat/
   ├── plugin.rs              — 无变更
   ├── components.rs          — 无变更
   ├── events.rs              — 无变更
-  ├── api.rs                 — 无变更
+  ├── integration/turn/      — 跨域查询 facade（ADR-046）
   ├── systems/
   │   ├── mod.rs             — 无变更
   │   ├── turn_systems.rs    — 无变更

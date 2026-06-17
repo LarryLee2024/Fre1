@@ -230,7 +230,7 @@ src/infra/replay/
   ├── resources.rs           — ReplayRecorder, ReplayPlayer, ReplayModeGuard, DeterministicRng
   ├── systems.rs             — start_recording, finalize_frame, playback_step
   ├── events.rs              — ReplayEvent
-  └── api.rs                 — ReplayFrame, RecordedCommand, SyncCheckpoint
+  └── mod.rs                 — re-export（原 api.rs 已合并，ADR-046）
 
 // 确定性 RNG 在 replay Feature 中实现，但被所有 Feature 使用
 ```

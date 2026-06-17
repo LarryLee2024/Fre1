@@ -221,7 +221,7 @@ src/infra/registry/
   ├── resources.rs           — DefinitionRegistry, RegistryBucket
   ├── systems.rs             — load_all_definitions, on_asset_changed
   ├── events.rs              — OnDefinitionReloaded
-  ├── api.rs                 — 公开查询函数
+  ├── integration/           — 跨域访问 ACL（ADR-046） 公开查询函数
   └── internal/
       ├── loader.rs          — RON 加载与解析
       ├── validator.rs       — 定义校验（ID 冲突、引用完整性）

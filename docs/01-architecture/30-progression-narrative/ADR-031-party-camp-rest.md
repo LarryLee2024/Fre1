@@ -214,7 +214,7 @@ src/core/domains/party/
   ├── components.rs          — PartyMember (Component, if needed per-entity)
   ├── resources.rs           — Party Resource
   ├── systems.rs             — add/remove/swap/formation
-  └── api.rs                 — Party, FormationType
+  └── integration/           — 跨域访问 ACL（ADR-046） Party, FormationType
 
 src/core/domains/camp_rest/
   ├── plugin.rs              — CampRestPlugin

@@ -756,7 +756,8 @@ Modding 不是独立层级，而是贯穿多层的扩展能力，按职责拆分
   - 🟥 绝对禁止外部模块直接访问其他 Feature 的 internal 子模块
 - 🟩 **Plugin 是唯一对外入口**
   - 每个 Feature 必须通过 Plugin 对外暴露能力
-  - 推荐每个 Feature 根目录包含 `plugin.rs`（入口）与 `api.rs`（公共类型与接口）
+  - 推荐每个 Feature 根目录包含 `plugin.rs`（入口）与 `integration/`（跨域访问 ACL，ADR-046）
+  - 🟥 禁止新增 `api.rs`，跨域访问统一通过 `integration/`
 - 🟩 **边界优先于目录**：模块边界的清晰度比目录结构更重要
 - 🟩 **跨模块交互规范**
   - 跨模块写操作必须通过 Message、Command、Trigger 三种方式

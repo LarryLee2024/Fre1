@@ -279,7 +279,7 @@ src/core/domains/narrative/
   ├── resources.rs           — StoryState, DialogueSession
   ├── systems.rs             — story_trigger_checker, dialogue_runner
   ├── events.rs              — StoryEvent, DialogueStarted, DialogueEnded
-  └── api.rs                 — DialogueDef, StoryFlag, ChapterId
+  └── integration/           — 跨域访问 ACL（ADR-046） DialogueDef, StoryFlag, ChapterId
 
 src/core/domains/quest/
   ├── plugin.rs              — QuestPlugin
@@ -287,7 +287,7 @@ src/core/domains/quest/
   ├── resources.rs           — QuestLog, QuestTracker
   ├── systems.rs             — quest_acceptor, progress_tracker, reward_dispatcher
   ├── events.rs              — QuestAccepted, QuestProgressed, QuestCompleted, QuestFailed
-  └── api.rs                 — QuestDef, QuestObjective, QuestState
+  └── integration/           — 跨域访问 ACL（ADR-046） QuestDef, QuestObjective, QuestState
 ```
 
 ## Communication Design

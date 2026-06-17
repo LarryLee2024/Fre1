@@ -239,13 +239,13 @@ src/infra/input/
   ├── plugin.rs              — InputPlugin
   ├── resources.rs           — InputMap, InputState
   ├── systems.rs             — keyboard_mouse_input, camera_control
-  └── api.rs                 — InputAction, InputMap
+  └── integration/           — 跨域访问 ACL（ADR-046）
 
 src/infra/command/  (或在各 Feature 的 events.rs 中定义)
   ├── plugin.rs              — CommandPlugin (可选)
   ├── resources.rs           — CommandQueue
   ├── systems.rs             — command_dispatcher
-  └── api.rs                 — GameCommand 枚举
+  └── integration/           — 跨域访问 ACL（ADR-046）
 ```
 
 ## Communication Design

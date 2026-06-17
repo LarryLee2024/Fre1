@@ -275,7 +275,7 @@ src/core/domains/spell/
   ├── components.rs          — SpellInstance, ManaPool (Component)
   ├── systems.rs             — spell_validation, mana_deduction, cast_progress
   ├── events.rs              — SpellCastRequest, SpellCastResult
-  └── api.rs                 — SpellDef, SpellSchool
+  └── integration/           — 跨域访问 ACL（ADR-046） SpellDef, SpellSchool
 
 src/core/domains/reaction/
   ├── plugin.rs              — ReactionPlugin

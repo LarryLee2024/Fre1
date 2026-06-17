@@ -459,8 +459,8 @@ domains/<domain>/
 ```
 
 - 🟥 Plugin 是唯一对外入口，禁止外部直接访问 `internal/`
-- 🟩 对外暴露的 API 集中在 `api.rs`
-- 🟩 `integration/` 是 Domain 调用 Capabilities 的唯一入口，采用 Facade + SystemParam 模式
+- 🟩 `integration/` 是 Domain 唯一对外入口（跨域访问 ACL / Facade / Gateway），采用 Facade + SystemParam 模式
+- 🟥 禁止新增 `api.rs`，跨域访问统一通过 `integration/`（ADR-046）
 - 🟩 Systems 通过 SystemParam + View Types 交互，不知道 Capabilities 内部类型（TagSet / AttributeContainer 等）
 - 🟥 禁止 Systems 直接 import Capabilities 组件类型进行字段访问
 
@@ -482,7 +482,7 @@ domains/<domain>/
 
 - 🟥 **Data Law 012**：Domain 之间禁止直接引用对方的数据结构
 - 🟩 跨域通信仅通过 Event/Message
-- 🟩 只读查询允许通过 `api.rs` 暴露的公开函数
+- 🟩 只读查询通过 `integration/` 暴露的 facade 函数（ADR-046）
 
 ### 7.3 事件白名单管理
 
@@ -622,6 +622,7 @@ src/
 | ADR-043 | 命令层与输入抽象 | ✅ Approved | Cross-cutting |
 | ADR-044 | Pipeline 引擎架构 | ✅ Approved | Cross-cutting |
 | ADR-045 | 模块可见性策略（可见性宪法） | 📋 Proposed | Foundation |
+| ADR-046 | 模块接口模式统一（消除 api.rs） | ✅ Accepted | Foundation |
 
 ---
 
