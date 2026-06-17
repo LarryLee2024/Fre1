@@ -546,7 +546,7 @@ domain_name/
 ├── events.rs          # 本系统对外发布的领域事件
 ├── error.rs           # 本系统专属错误枚举
 ├── rules/             # 纯业务规则（优先纯函数，无 ECS 依赖）
-└── integration.rs     # 集成层：唯一调用 Capabilities 能力的入口
+└── integration/       # 集成层：唯一调用 Capabilities 能力的入口（Facade + SystemParam）
 ```
 
 #### 核心业务域清单（15个）
@@ -570,7 +570,7 @@ domain_name/
 
 #### 设计原则
 - **垂直自治**：每个 Domain 内部包含完整的组件、系统、逻辑、事件
-- **薄集成层**：`integration.rs` 是唯一调用 Capabilities 能力的地方
+- **薄集成层**：`integration/` 是唯一调用 Capabilities 能力的地方，采用 Facade + SystemParam 模式
 - **业务内聚**：同一玩法的所有逻辑全部在一个 Domain 内
 
 ### 3.5 边界铁则（不可突破）
