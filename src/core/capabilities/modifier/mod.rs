@@ -2,9 +2,9 @@
 //!
 //! 详见 docs/02-domain/modifier_domain.md
 
+pub mod events;
 pub mod foundation;
 pub mod mechanism;
-pub mod events;
 
 mod plugin;
 pub use plugin::*;
