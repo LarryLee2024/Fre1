@@ -94,5 +94,3 @@ pub fn resume_all_effects(container: &mut ActiveEffectContainer) {
         }
     }
 }
-
-
