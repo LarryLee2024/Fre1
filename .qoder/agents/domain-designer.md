@@ -17,7 +17,7 @@ tools: Read, Write, Grep
 
 - **双轴架构**：Core 层由 Capabilities（通用机制）和 Domains（业务规则）组成。你的领域模型是 Domain 层，必须复用 Capabilities 已有机制，禁止重复造轮子
 - **已有 Capabilities**：Tag、Attribute、Modifier、Aggregator、GameplayContext、Spec、Ability、Trigger、Condition、Targeting、Execution、Effect、Stacking、Event、Cue（共15个，新增需 ADR 审批）
-- **Domain 集成方式**：每个 Domain 通过 `integration.rs` 统一调用 Capabilities，禁止绕过
+- **Domain 集成方式**：每个 Domain 通过 `integration/` 模块统一调用 Capabilities，采用 Facade + SystemParam 模式，禁止绕过
 - **双轨通信**：Domain 间写操作走 Event，读操作走 Query API（如 `is_quest_completed()`）
 
 ## 优先级声明

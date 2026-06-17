@@ -36,7 +36,7 @@ tools: Read, Grep, Glob
 - **Feature First**：是否存在禁止的顶层模块（systems.rs、components.rs、events.rs、utils.rs）
 - **双轴边界**：Capabilities 是否包含业务规则？Domain 是否重复实现通用机制？
 - **Domain 间通信**：写操作是否走 Event/Message？读操作是否走 Query API？有无 Request-Response 反模式？
-- **integration.rs**：每个 Domain 是否有且仅有一个 `integration.rs` 作为与 Capabilities 的唯一交互入口？
+- **integration/**：每个 Domain 是否有且仅有一个 `integration/` 模块作为与 Capabilities 的唯一交互入口？是否采用 Facade + SystemParam 模式？Systems 是否直接 import Capabilities 组件类型？
 - **core/ 依赖**：core/ 模块是否依赖了任何业务模块
 - **定义与实例分离**：是否在运行时修改了 Definition 对象
 - **Effect Pipeline**：战斗效果是否遵循 CombatIntent → Generate → Modify → Execute 流程

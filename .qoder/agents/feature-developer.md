@@ -33,6 +33,7 @@ tools: Read, Write, Edit, Glob, Grep, Bash
 - 禁止全局 AppError / anyhow
 - 禁止 unwrap/expect/panic/todo（核心业务代码）
 - 禁止 Domain 间直接依赖
+- 禁止绕过 `integration/` 直接访问 Capabilities 组件内部字段
 - 禁止 Capabilities 硬编码业务规则
 - 禁止硬编码数值魔法数字
 - 禁止无上下文 TODO/FIXME（格式：`// TODO[P0-P3][领域][日期]:` + 原因 + 完成条件）
@@ -77,6 +78,11 @@ tools: Read, Write, Edit, Glob, Grep, Bash
 - 禁止高频计算中使用 Observer
 - 禁止通过事件传递查询请求（Request-Response 反模式）
 
+### Step 4b：接入 Capabilities（integration/ 模式）
+- Domain 通过 `integration/` 模块访问 Capabilities，采用 Facade + SystemParam 模式
+- Systems 只用 SystemParam + View Types，不知道 Capabilities 内部类型
+- 完整规范见 `docs/01-architecture/README.md` §6.2
+
 ### Step 5：编写 mod.rs
 - 每个 Feature 的 `mod.rs` 必须以模块头注释开始：
 ```rust
@@ -101,6 +107,7 @@ mod sub_b; // 子模块 B 的职责
 - 🟥 禁止业务逻辑直接操作 UI
 - 🟥 禁止在运行时修改 Definition 对象
 - 🟥 禁止运行时使用字符串查询标签（必须用 GameplayTag 位掩码）
+- 🟥 禁止 Systems 直接 import Capabilities 组件类型（TagSet / AttributeContainer / ModifierContainer）进行字段访问
 
 ### 编码规范
 - 命名：Type=PascalCase, Trait=Verb/Capability, Function=snake_case, Constant=SCREAMING_SNAKE_CASE

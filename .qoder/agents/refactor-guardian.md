@@ -37,7 +37,9 @@ tools: Read, Grep, Glob, Bash
 - **Observer 风暴**：高频逻辑使用 Observer 而非 System
 - **双轴边界突破**：Capabilities 包含业务规则、Domain 重复实现通用机制
 - **Domain 间直接依赖**：直接 use 对方内部类型，未走 Event（写）/Query API（读）
-- **integration.rs 缺失**：Domain 绕过 integration.rs 直接调用 Capabilities 内部
+- **integration/ 缺失**：Domain 绕过 integration/ 直接调用 Capabilities 内部
+- **Capabilities 类型泄漏**（Critical）：Systems 直接 import Capabilities 组件类型（TagSet / AttributeContainer / ModifierContainer）绕过 integration/
+- **integration/ 膨胀**（Medium）：单文件 >500 行未按能力域拆分
 - **硬编码数值**：业务代码中存在魔法数字，应归 content/ 配置
 
 ### 3. 重复代码
@@ -120,7 +122,7 @@ grep -rn "^use crate::" src/ | sort
 ```
 
 严重程度定义：
-- **Critical**：违反架构原则，必须立即修复（如绕过 Pipeline、双轴边界突破、Domain 间直接依赖、integration.rs 缺失）
+- **Critical**：违反架构原则，必须立即修复（如绕过 Pipeline、双轴边界突破、Domain 间直接依赖、integration/ 缺失、Capabilities 类型泄漏）
 - **High**：严重影响可维护性（如 >1000 行文件、大量重复代码、Reflect 滥用、硬编码数值）
 - **Medium**：应当改进（如 500-1000 行文件、小规模重复、过大 Plugin）
 - **Low**：可选优化（如命名不一致、注释缺失、mod.rs 缺注释）

@@ -101,7 +101,7 @@ Proposed / Accepted / Rejected / Superseded
 [明确列出此架构决策下绝对禁止的行为，至少覆盖：]
 - 🟥 Capabilities 包含业务规则
 - 🟥 Domain 间直接依赖（写走 Event，读走 Query API）
-- 🟥 Domain 绕过 integration.rs 直接调用 Capabilities 内部
+- 🟥 Domain 绕过 `integration/` 直接调用 Capabilities 内部
 - 🟥 硬编码数值、全局 AppError、非确定性随机源
 - 🟥 红线清单详见 `docs/00-governance/ai-constitution-complete.md` §21
 
@@ -126,7 +126,7 @@ Proposed / Accepted / Rejected / Superseded
 - [ ] 符合 ECS 约束（Entity=ID, Component=数据, System=行为）
 - [ ] 双轴边界合规：Capabilities 无业务规则，Domain 无重复机制
 - [ ] Domain 间无直接依赖：写操作走 Event，读操作走 Query API
-- [ ] 每个 Domain 有且仅有一个 `integration.rs` 作为 Capabilities 唯一交互入口
+- [ ] 每个 Domain 有且仅有一个 `integration/` 模块作为 Capabilities 唯一交互入口（Facade + SystemParam）
 - [ ] 没有创建禁止的模块（components.rs/systems.rs/utils.rs）
 - [ ] Effect/Modifier Pipeline 没有被绕过
 - [ ] Tag Components 优先于 bool 字段
