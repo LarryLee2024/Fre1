@@ -5,8 +5,10 @@
 //!
 //! 详见 docs/02-domain/domains/terrain_domain.md §5.2
 
+use bevy::ecs::observer::On;
 use bevy::prelude::*;
 
+use crate::core::domains::combat::OnTurnEnd;
 use crate::core::domains::terrain::components::{SurfaceOverride, TilePos, TileProperties};
 use crate::core::domains::terrain::events::SurfaceChanged;
 
@@ -29,12 +31,12 @@ pub(crate) fn on_surface_changed(
     }
 }
 
-/// 递减 SurfaceOverride 的剩余回合数，到期时恢复原始表面。
+/// Observer: OnTurnEnd → 递减 SurfaceOverride 的剩余回合数，到期时恢复原始表面。
 ///
-/// TODO[P2][Terrain]: 已从 Update 调度移除，待 D-9 Turn 系统实现后通过 OnTurnEnd 驱动
-///   当前仅当显式调用时执行回合递减。在 D-9 完成前，表面覆盖不会自动到期。
-///   届时在 TerrainPlugin 中注册：app.add_systems(Update, surface_recovery_system)
-pub(crate) fn surface_recovery_system(
+/// D-9 Turn 系统在每个单位回合结束时触发 OnTurnEnd，本 Observer 响应后对地形
+/// 表面覆盖进行回合计数递减。到期 SurfaceOverride 自动移除，表面恢复原始类型。
+pub(crate) fn on_turn_end_surface_recovery(
+    _trigger: On<'_, '_, OnTurnEnd>,
     mut commands: Commands,
     mut surface_query: Query<(
         Entity,

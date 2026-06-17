@@ -12,6 +12,7 @@ use super::components::{
 };
 use super::resources::{HazardZoneRegistry, TileEntityMap};
 use super::systems::hazard_system::on_hazard_check;
+use super::systems::on_turn_end_surface_recovery;
 use super::systems::surface_system::on_surface_changed;
 use super::systems::terrain_effect_system::on_tile_entered;
 
@@ -42,9 +43,8 @@ impl Plugin for TerrainPlugin {
         // 空间索引维护：在 PostUpdate 中重建 TilePos → Entity 映射
         app.add_systems(PostUpdate, TileEntityMap::update);
 
-        // 表面恢复：已从 Update 调度移除
-        // TODO[P2][Terrain]: 待 D-9 Turn 系统实现后接入 OnTurnEnd 事件
-        //   surface_recovery_system 函数已实现（src/.../surface_system.rs），
-        //   当前不注册以防每帧耗尽持续回合。D-9 完成后在此处注册即可。
+        // ── 注册 Observer ──
+        // OnturnEnd → 表面覆盖回合计数递减
+        app.add_observer(on_turn_end_surface_recovery);
     }
 }

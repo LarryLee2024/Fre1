@@ -20,8 +20,8 @@ supersedes: none
 
 ## 引用的领域规则与数据架构
 
-- `docs/02-domain/domains/tactical_domain.md` — Tactical 领域规则
-- `docs/04-data/domains/tactical_schema.md` — Tactical Schema（回合部分）
+- `docs/02-domain/domains/combat_domain.md` — Combat 领域规则（§2.2 回合行动规则, §5.2 回合流转）
+- `docs/04-data/domains/combat_schema.md` — Combat Schema（CombatState, TurnOrder, ActionPoints）
 - `.trae/rules/SRPG专项规则.md` §四 — 回合系统规范
 - `.trae/rules/ECS规则.md` §四 — 状态管理使用 Bevy States
 
@@ -94,7 +94,7 @@ pub enum TurnSubState {
 ### 4. 每个阶段的 System 职责
 
 ```rust
-// src/core/domains/tactical/systems.rs
+// src/core/domains/combat/systems/turn_systems.rs
 
 /// 进入 TurnStart
 fn on_enter_turn_start(
@@ -250,12 +250,15 @@ TurnSubState::TurnStart (OnEnter)
 
 ## Module Design
 
+> **Note**: Module 重新归属 `combat/`（v5.0 架构总纲明确"回合流程、先攻、伤害结算、胜负"归 Combat 域）。原 ADR 草案指向 `tactical/`，此处修正。
+
 ```
-src/core/domains/tactical/
-  ├── plugin.rs              — TurnPhasePlugin
-  ├── components.rs          — ActionPoints, MovementLeft
-  ├── resources.rs           — TurnQueue, RoundCounter
-  ├── systems.rs             — 各阶段 System + 状态转移
+src/core/domains/combat/
+  ├── plugin.rs              — CombatPlugin（含 TurnPhasePlugin 的子注册）
+  ├── components.rs          — BattlePhase, TurnSubState, TurnQueue, TurnEntry, ActionPoints
+  ├── systems/
+  │   ├── mod.rs
+  │   └── turn_systems.rs    — 各阶段 System + 状态转移
   ├── events.rs              — 回合相关领域事件
   └── api.rs                 — get_current_turn(), get_turn_queue()
 ```
