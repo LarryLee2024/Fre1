@@ -24,8 +24,7 @@
   │
   ├─→ @data-architect（数据架构）  → 输出：`docs/04-data/`（Schema 设计、数据层划分、Replay/Save 兼容）
   │
-  └─→ @architect（架构设计）       → 输出：`docs/01-architecture/`（模块设计、通信设计、边界定义）
-                                      + `docs/08-decisions/`（ADR 文档）
+  └─→ @architect（架构设计）       → 输出：`docs/01-architecture/`（架构总纲 + ADR 决策记录）
           │
           ↓
   @feature-developer（代码实现）    → 输出：`src/`（代码）+ `docs/09-planning/`（执行计划）
@@ -109,14 +108,13 @@ AI 编码时直接引用，覆盖宪法分册与专项规则：
 | 目录 | 文件数 | 说明 |
 |------|--------|------|
 | `00-governance/` | 8 | 治理规则（AI 开发宪法、编码规范、Bevy 参考） |
-| `01-architecture/` | 1 | 架构设计文档 |
+| `01-architecture/` | 18 | 架构设计文档（总纲 + 17 个 ADR 决策记录） |
 | `02-domain/` | 31 | 领域规则（`capabilities/` 15 能力机制 + `domains/` 15 业务域） |
 | `03-technical/` | 0 | 技术实现规则（ECS 通信、错误处理、日志、持久化、UI 架构等） |
 | `04-data/` | 1 | 数据与配置规则（内容系统、配置系统、资源生命周期、Feature Flag、Schema 设计等） |
 | `05-testing/` | 4 | 测试规范（测试宪法、测试规则） |
 | `06-ai/` | 1 | AI 协作流程说明 |
 | `07-operations/` | 1 | 运维文档 |
-| `08-decisions/` | 0 | 架构决策记录 |
 | `09-planning/` | 1 | 执行计划 |
 | `10-reviews/` | 7 | 代码审查记录 |
 | `11-refactor/` | 0 | 技术债扫描记录 |
@@ -125,9 +123,8 @@ AI 编码时直接引用，覆盖宪法分册与专项规则：
 | `其他/` | 0 | 临时目录 |
 
 **核心文档入口：**
-- 最高优先级：`01-architecture/README.md`（架构总纲）
+- 最高优先级：`01-architecture/README.md`（架构总纲 + ADR 索引）
 - 领域规则：`02-domain/README.md`（领域文件速查）
 - 数据架构：`04-data/README.md`（Schema 设计与数据治理）
-- 架构决策：`08-decisions/README.md`（ADR 索引）
 
 详细文档说明请参阅 `README.md`。

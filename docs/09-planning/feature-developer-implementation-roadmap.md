@@ -1,4 +1,4 @@
----
+﻿---
 id: 09-planning.feature-developer-implementation-roadmap
 title: Implementation Roadmap — 基于代码审查的分阶段实施计划
 status: draft
@@ -61,7 +61,7 @@ tags:
 ```
 @domain-designer（领域建模） → 输出：docs/02-domain/
 @data-architect（数据架构）  → 输出：docs/04-data/
-@architect（架构设计）       → 输出：docs/01-architecture/ + docs/08-decisions/（ADR 文档）
+@architect（架构设计）       → 输出：docs/01-architecture/（架构总纲 + ADR 决策记录）
                                         ↓
 @feature-developer（代码实现）→ 输出：src/（代码）+ docs/09-planning/（执行计划）
                                         ↓
@@ -75,8 +75,7 @@ tags:
 |------------------|-----------|------|
 | `docs/02-domain/`（@domain-designer） | ✅ 31 文件，完整 | — |
 | `docs/04-data/`（@data-architect） | ✅ 33+ 文件，完整 | — |
-| `docs/01-architecture/`（@architect 模块设计） | ✅ README + 19 ADR 文件 | — |
-| `docs/08-decisions/`（@architect ADR 文档） | ❌ **目录不存在** | 🟥 @architect 未输出到此目录 |
+| `docs/01-architecture/`（@architect 架构总纲 + ADR） | ✅ README + 19 ADR 文件 | — |
 | `docs/05-testing/` 测试计划（@test-guardian） | ⚠️ 总纲存在，无 per-domain 测试计划 | 🟡 理想输入需补齐 |
 
 ---
@@ -86,7 +85,7 @@ tags:
 ```
 ┌──────────────────────────────────────────────────────────────────┐
 │                     Phase 0: 文档补齐阶段                          │
-│  @architect: 创建 docs/08-decisions/ 并整理 ADR                   │
+│  @architect: 确认 ADR 已就位（docs/01-architecture/ 子目录中）                   │
 │  @test-guardian: 补齐 per-domain 测试计划                        │
 └──────────────────────────────────────────────────────────────────┘
                                 │
@@ -141,20 +140,9 @@ Phase G (Cross-cutting)    ←── 依赖 Phase B~F
 
 ## Phase 0: 前置文档补齐（[强制] 所有 Phase 的前提）
 
-> **为什么需要 Phase 0**：AGENTS.md 标准开发流程要求 @architect 输出 ADR 到 `docs/08-decisions/`，但该目录不存在。所有 ADR 当前分散在 `docs/01-architecture/` 子目录中。不补齐此项，后续 Phase 中 @feature-developer 的"强制前置文档确认"无法成立。
+> **为什么需要 Phase 0**：@feature-developer 的"强制前置文档确认"需要 per-domain 测试计划作为输入。ADR 已在 `docs/01-architecture/` 子目录中就位。
 
-### 0-1: 创建 `docs/08-decisions/` 并整理 ADR
-
-| 项 | 内容 |
-|---|------|
-| **为什么** | AGENTS.md 标准流程定义：@architect 输出 = `docs/01-architecture/`（模块设计）+ `docs/08-decisions/`（ADR 文档）。当前 `08-decisions/` 不存在 |
-| **做什么** | 创建 `docs/08-decisions/README.md`，将 `docs/01-architecture/` 下的 19 个 ADR 索引到此处（复制或建立交叉引用） |
-| **交付物** | `docs/08-decisions/README.md`（ADR 索引清单，标注每个 ADR 对应的原始位置 `01-architecture/*.md`） |
-| **执行 agent** | @architect |
-| **依据** | `.qoder/agents/architect.md` §5: "ADR 可以直接保存到 `docs/08-decisions/` 目录" |
-| **检查方式** | `ls docs/08-decisions/` 应存在且包含 README.md |
-
-### 0-2: 补齐 per-domain 测试计划
+### 0-1: 补齐 per-domain 测试计划
 
 | 项 | 内容 |
 |---|------|
@@ -167,12 +155,9 @@ Phase G (Cross-cutting)    ←── 依赖 Phase B~F
 
 | # | 任务 | agent | 交付物 |
 |---|------|-------|--------|
-| 0-1 | 创建 `docs/08-decisions/` + ADR 索引 | @architect | `docs/08-decisions/README.md` |
-| 0-2 | 补齐 per-domain 测试计划 | @test-guardian | `docs/05-testing/plans/*.md` |
+| 0-1 | 补齐 per-domain 测试计划 | @test-guardian | `docs/05-testing/plans/*.md` |
 
 **Phase 0 门禁**：
-- [ ] `docs/08-decisions/` 目录存在且包含 README.md
-- [ ] README.md 引用了所有 19 个 ADR 并标注了原始位置
 - [ ] `docs/05-testing/plans/` 存在且包含至少 Phase D 三个 domain 的测试计划
 
 **Phase 0 完成后，才可以进入 Phase A。**
@@ -263,9 +248,9 @@ Phase G (Cross-cutting)    ←── 依赖 Phase B~F
 | ADR-011 | `docs/01-architecture/10-capability-system/ADR-011-modifier-pipeline.md` | B-1 (Modifier/Attribute) |
 | ADR-012 | `docs/01-architecture/10-capability-system/ADR-012-stacking-trigger-cue.md` | B-3, B-4 |
 | ADR-013 | `docs/01-architecture/10-capability-system/ADR-013-registry-hotreload.md` | B-2 |
-| tag_domain | `docs/02-domain/tag_domain.md` | Tag 内部机制确认 |
-| attribute_domain | `docs/02-domain/attribute_domain.md` | Attribute Systems |
-| effect_domain | `docs/02-domain/effect_domain.md` | EffectPlugin 填充 |
+| tag_domain | `docs/02-domain/capabilities/tag_domain.md` | Tag 内部机制确认 |
+| attribute_domain | `docs/02-domain/capabilities/attribute_domain.md` | Attribute Systems |
+| effect_domain | `docs/02-domain/capabilities/effect_domain.md` | EffectPlugin 填充 |
 | tag_schema | `docs/04-data/capabilities/tag_schema.md` | Tag Component 对齐 |
 | effect_schema | `docs/04-data/capabilities/effect_schema.md` | Effect lifecycle 对齐 |
 | coding-rules | `docs/00-governance/coding-rules.md` | 编码规范确认 |
@@ -729,7 +714,6 @@ Phase 0 ──→ Phase A ──→ Phase B ──→ Phase C ──→ Phase D 
 
 | 风险 | 概率 | 影响 | 缓解措施 |
 |------|------|------|---------|
-| `docs/08-decisions/` 未及时创建 | 中 | 高（阻塞 Phase 0 门禁） | Phase 0 独立，A 阶段开始前完成即可 |
 | Shared 层实现被延误 | 低 | 高（阻塞 Phase B） | Phase A 每个模块独立实现，可并行 |
 | Capabilities Plugin 注册空但被依赖 | 中 | 中 | B-2 优先处理 Effect + Runtime 两个空 Plugin |
 | Domain 规则确认耗时 | 中 | 中 | 领域规则已在文档中，@domain-designer 只需确认而非重写 |
@@ -739,27 +723,40 @@ Phase 0 ──→ Phase A ──→ Phase B ──→ Phase C ──→ Phase D 
 
 ---
 
-## 附录 A：Phase 0 文档补齐详细说明
+## 附录 A：ADR 索引（`docs/01-architecture/`）
 
-### `docs/08-decisions/` 需包含的内容
-
-当前 ADR 位于 `docs/01-architecture/` 子目录中。@architect 需创建 `docs/08-decisions/` 目录，提供索引 README.md：
+所有 ADR 按领域分类存放在 `docs/01-architecture/` 子目录中：
 
 ```markdown
-# Architecture Decision Records (ADR)
+## Foundation (00-foundation/)
+| ADR-000 | Feature 模块划分总图 | ✅ |
+| ADR-001 | Plugin 组合与注册顺序 | ✅ |
+| ADR-002 | ECS 四级通信机制选型 | ✅ |
 
-> ADR 原始文档保存在 `docs/01-architecture/` 对应子目录中。
-> 本文档为索引，方便快速查阅。
+## Capability System (10-capability-system/)
+| ADR-010 | Ability → Effect 管线架构 | ✅ |
+| ADR-011 | Modifier → Attribute 管线架构 | ✅ |
+| ADR-012 | Stacking / Trigger / Cue 分离 | ✅ |
+| ADR-013 | Registry 与热重载架构 | ✅ |
 
-## Foundation
-| 编号 | 标题 | 位置 | 状态 |
-|------|------|------|------|
-| ADR-000 | Feature 模块划分总图 | `01-architecture/00-foundation/ADR-000-*.md` | ✅ |
-| ADR-001 | Plugin 组合与注册顺序 | `01-architecture/00-foundation/ADR-001-*.md` | ✅ |
-| ... | ... | ... | ... |
+## Tactical Combat (20-tactical-combat/)
+| ADR-020 | CombatIntent Pipeline 设计 | ✅ |
+| ADR-021 | 回合状态机设计 | ✅ |
+| ADR-022 | 网格 / 地形 / 阵营系统设计 | ✅ |
+| ADR-023 | 法术与反应机制设计 | ✅ |
+
+## Progression & Narrative (30-progression-narrative/)
+| ADR-030 | 成长 / 物品系统设计 | ✅ |
+| ADR-031 | 队伍与休整系统设计 | ✅ |
+| ADR-032 | 经济与制造系统设计 | ✅ |
+| ADR-033 | 叙事 / 任务 / 召唤设计 | ✅ |
+
+## Cross-cutting (40-cross-cutting/)
+| ADR-040 | 数据流与所属权策略 | ✅ |
+| ADR-041 | 回放确定性与架构 | ✅ |
+| ADR-042 | 存档持久化策略 | ✅ |
+| ADR-043 | 命令层与输入抽象 | ✅ |
 ```
-
-未来新增 ADR 可以直接保存到 `docs/08-decisions/ADR-NNN-title.md`（参考 `architect.md` §5）。
 
 ### Per-domain 测试计划需包含的内容
 
@@ -807,7 +804,6 @@ Phase 0 ──→ Phase A ──→ Phase B ──→ Phase C ──→ Phase D 
 
 | 活动 | 对应 AGENTS.md 流程 | 执行阶段 |
 |------|-------------------|---------|
-| 创建 ADR 索引 | @architect → 输出到 `docs/08-decisions/` | Phase 0 |
 | 新增领域规则 | @domain-designer → 输出到 `docs/02-domain/` | Phase D 开始前 |
 | 数据架构设计 | @data-architect → 输出到 `docs/04-data/` | Phase D 开始前 |
 | 新增功能（已有领域规则） | 标准开发流程（skip domain-designer） | Phase D~G |

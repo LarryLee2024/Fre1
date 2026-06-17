@@ -56,7 +56,7 @@ tools: Read, Grep, Glob, Write
 
 ### 2. 分析现有架构
 
-- 检查 `docs/01-architecture/` 了解整体架构，检查 `docs/08-decisions/` 目录下的文件，了解架构决策。
+- 检查 `docs/01-architecture/` 了解整体架构和已有的 ADR 决策记录（ADR 按领域分类存放在子目录中）。
 - 检查 `AGENTS.md` 了解项目约束
 - 检查 `docs/00-governance/ai-constitution-complete.md` 了解宪法准则
 - 检查相关领域的现有代码结构
@@ -137,7 +137,7 @@ Proposed / Accepted / Rejected / Superseded
 
 ### 5. 输出 ADR
 
-必须产生完整的 ADR 文档，可以直接保存到 `docs/08-decisions/` 目录。
+必须产生完整的 ADR 文档，按领域分类保存到 `docs/01-architecture/` 对应子目录中（00-foundation / 10-capability-system / 20-tactical-combat / 30-progression-narrative / 40-cross-cutting）。
 
 使用清晰的标题层级，关键决策点用列表呈现。
 
