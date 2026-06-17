@@ -6,7 +6,7 @@
 
 use bevy::prelude::*;
 
-use super::components::{ActionPoints, BattlePhase, TurnQueue, TurnSubState};
+use super::components::{ActionPoints, BattlePhase, CombatParticipant, TurnQueue, TurnSubState};
 use super::systems::turn_systems::{
     on_enter_battle, on_enter_defeat, on_enter_turn_end, on_enter_turn_settlement,
     on_enter_turn_start, on_enter_victory, on_unit_action_complete, phase_check,
@@ -18,6 +18,7 @@ impl Plugin for CombatPlugin {
     fn build(&self, app: &mut App) {
         // ── 注册 Component 类型 ──
         app.register_type::<ActionPoints>();
+        app.register_type::<CombatParticipant>();
 
         // ── 注册 State — TurnSubState 自动随 BattlePhase::Battle 激活 ──
         app.init_state::<BattlePhase>();

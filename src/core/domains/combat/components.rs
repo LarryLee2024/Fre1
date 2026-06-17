@@ -208,6 +208,33 @@ impl TurnEntry {
     }
 }
 
+// ─── 战斗参与者标记 ────────────────────────────────────────────────────
+
+/// 战斗参与者标记与存活状态。
+///
+/// 每个参与战斗的单位都会获得此组件。
+/// `is_alive` 标记用于胜利条件判定（团队全灭检查）。
+///
+/// 详见 combat_domain.md §5.4, combat_schema.md §1.3
+#[derive(Component, Debug, Clone, PartialEq, Reflect)]
+#[reflect(Component)]
+pub struct CombatParticipant {
+    /// 所属队伍
+    pub team_id: TeamId,
+    /// 是否存活
+    pub is_alive: bool,
+}
+
+impl CombatParticipant {
+    /// 创建存活状态的参与者。
+    pub fn alive(team_id: TeamId) -> Self {
+        Self {
+            team_id,
+            is_alive: true,
+        }
+    }
+}
+
 // ─── 行动资源 ─────────────────────────────────────────────────────────
 
 /// 单位在当前回合的行动资源。每轮重置。

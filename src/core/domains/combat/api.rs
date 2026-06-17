@@ -12,7 +12,7 @@
 
 use bevy::prelude::*;
 
-use super::components::{TurnEntry, TurnQueue};
+use super::components::{CombatParticipant, TurnEntry, TurnQueue};
 
 /// 回合队列的快照信息（值类型，不暴露内部引用）。
 #[derive(Debug, Clone, PartialEq)]
@@ -27,6 +27,21 @@ pub struct TurnQueueInfo {
 /// 获取当前行动的单位条目（克隆数据以避免生命周期约束）。
 pub fn get_current_turn(turn_queue: &TurnQueue) -> Option<TurnEntry> {
     turn_queue.current().cloned()
+}
+
+/// 标记某单位的战斗参与者为阵亡。
+///
+/// 由死亡系统（或 HP ≤ 0 时的处理系统）调用。
+/// 胜利条件检查会根据此标记判定团队是否全灭。
+///
+/// 使用方式：
+/// ```ignore
+/// fn death_check(mut participant_query: Query<&mut CombatParticipant>) {
+///     for mut p in &mut participant_query { mark_unit_dead(&mut p); }
+/// }
+/// ```
+pub fn mark_unit_dead(participant: &mut CombatParticipant) {
+    participant.is_alive = false;
 }
 
 /// 获取回合队列的快照信息。

@@ -46,7 +46,7 @@ use bevy::ecs::observer::On;
 use bevy::prelude::*;
 
 use crate::core::domains::combat::components::{
-    ActionPoints, BattlePhase, TeamId, TurnQueue, TurnSubState,
+    ActionPoints, BattlePhase, CombatParticipant, TeamId, TurnEntry, TurnQueue, TurnSubState,
 };
 use crate::core::domains::combat::events::{
     BattleResult, BetweenTurns, OnBattleEnd, OnBattleStart, OnRoundEnd, OnTurnEnd, OnTurnStart,
@@ -219,6 +219,7 @@ pub(crate) fn on_enter_turn_end(
     mut turn_queue: ResMut<TurnQueue>,
     mut battle_phase: ResMut<NextState<BattlePhase>>,
     mut turn_sub_state: ResMut<NextState<TurnSubState>>,
+    combatant_query: Query<&CombatParticipant>,
 ) {
     // 检查战斗结束条件
     if turn_queue.is_empty() {
@@ -255,18 +256,42 @@ pub(crate) fn on_enter_turn_end(
         commands.trigger(OnRoundEnd { round });
     }
 
-    // 检查战斗结束条件（简化版）
-    // TODO[P2][Combat]: 接入 VictoryConditionDef 进行完整判定
-    if turn_queue.is_empty() {
+    // Team elimination victory check — any team with all participants dead loses.
+    let team_status = combatant_query.iter().fold(
+        std::collections::HashMap::<String, (usize, usize)>::new(),
+        |mut acc, participant| {
+            let team = participant.team_id.0.clone();
+            let entry = acc.entry(team).or_insert((0, 0));
+            entry.0 += 1;
+            if participant.is_alive {
+                entry.1 += 1;
+            }
+            acc
+        },
+    );
+
+    let mut alive_teams = Vec::new();
+    let mut dead_teams = Vec::new();
+    for (team, (_total, alive)) in &team_status {
+        if *alive == 0 {
+            dead_teams.push(team.clone());
+        } else {
+            alive_teams.push(team.clone());
+        }
+    }
+
+    if !dead_teams.is_empty() && !alive_teams.is_empty() {
+        info!(
+            "[Combat] Victory check: dead teams={:?}, alive teams={:?}",
+            dead_teams, alive_teams
+        );
         commands.trigger(OnBattleEnd {
             result: BattleResult::Victory,
         });
         battle_phase.set(BattlePhase::Victory);
-        return;
+    } else {
+        turn_sub_state.set(TurnSubState::TurnStart);
     }
-
-    // 继续下一回合
-    turn_sub_state.set(TurnSubState::TurnStart);
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -301,22 +326,29 @@ pub(crate) fn on_enter_defeat(mut commands: Commands) {
 
 /// 初始化回合队列和所有参与者的行动资源。
 ///
-/// 供外部在战斗开始时调用一次。
+/// 在战斗开始时调用一次：
+/// 1. 为每个参与者添加 `ActionPoints` 和 `CombatParticipant` 组件
+/// 2. 将 `TurnQueue` 插入为 Resource
+///
+/// # Panics
+///
+/// 如果 `entries` 为空，则 panic（战斗至少需要 2 方）。
 pub fn initialize_turn_order(
     commands: &mut Commands,
     entries: Vec<(Entity, TeamId, u32)>,
     default_movement: f32,
-) -> TurnQueue {
+) {
     let turn_entries: Vec<_> = entries
         .into_iter()
         .map(|(entity, team_id, initiative)| {
-            // 添加 ActionPoints 组件
-            commands
-                .entity(entity)
-                .insert(ActionPoints::new(default_movement));
-            super::super::components::TurnEntry::new(entity, team_id, initiative)
+            commands.entity(entity).insert((
+                ActionPoints::new(default_movement),
+                CombatParticipant::alive(team_id.clone()),
+            ));
+            TurnEntry::new(entity, team_id, initiative)
         })
         .collect();
 
-    TurnQueue::new(turn_entries)
+    let queue = TurnQueue::new(turn_entries);
+    commands.insert_resource(queue);
 }
