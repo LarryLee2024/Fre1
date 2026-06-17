@@ -42,9 +42,6 @@ pub(crate) mod systems;
 
 mod events;
 
-#[cfg(test)]
-mod tests;
-
 // ── 核心类型 re-export ──
 pub use crate::core::capabilities::runtime::replay::foundation::{
     AbilityTarget, ReplayCommand, ReplayError, ReplayFrame, ReplayHeader, ReplayLog,

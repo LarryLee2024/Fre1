@@ -11,8 +11,8 @@ use crate::core::capabilities::effect::foundation::{
     EffectStage,
 };
 use crate::core::capabilities::effect::mechanism::{expire_effects, tick_durations};
-use crate::core::domains::combat::integration::turn::get_turn_queue_info;
 use crate::core::domains::combat::components::{TeamId, TurnEntry, TurnQueue};
+use crate::core::domains::combat::integration::turn::get_turn_queue_info;
 
 fn entity(id: u32) -> bevy::prelude::Entity {
     bevy::prelude::Entity::from_raw_u32(id).unwrap()
