@@ -1,7 +1,7 @@
 use bevy::prelude::Entity;
 
 use crate::core::capabilities::gameplay_context::foundation::{
-    ContextBuildError, ContextOrigin, ElementType, GameplayContextData, SourceInfo, TargetInfo,
+    ContextBuildError, ContextOrigin, ElementType, SourceInfo, TargetInfo,
 };
 use crate::core::capabilities::gameplay_context::mechanism::ContextBuilder;
 

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::core::capabilities::event::foundation::{
-    DispatchReport, EventPayload, EventPriority, EventTag, GameplayEvent, SubscriberEntry,
+    DispatchReport, EventPayload, EventTag, SubscriberEntry,
 };
 use crate::core::capabilities::event::mechanism::EventBus;
 

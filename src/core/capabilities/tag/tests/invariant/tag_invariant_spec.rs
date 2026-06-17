@@ -5,9 +5,9 @@
 
 #[cfg(test)]
 mod tests {
-    use crate::core::capabilities::tag::foundation::{TagId, TagNamespace, TagDefinition};
+    use crate::core::capabilities::tag::foundation::{TagId, TagNamespace};
     use crate::core::capabilities::tag::mechanism::lifecycle::TagHierarchy;
-    use crate::shared::testing::fixtures::{standard_damage_tags, TagDefBuilder};
+    use crate::shared::testing::fixtures::{TagDefBuilder, standard_damage_tags};
 
     fn make_hierarchy() -> TagHierarchy {
         let mut h = TagHierarchy::default();

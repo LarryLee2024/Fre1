@@ -1,7 +1,7 @@
 use bevy::prelude::Entity;
 
 use crate::core::capabilities::gameplay_context::foundation::{
-    ChainNode, ContextBuildError, ContextChain, ContextOrigin, ElementType, SourceInfo, TargetInfo,
+    ChainNode, ContextBuildError, ContextChain, ContextOrigin, SourceInfo, TargetInfo,
 };
 
 fn test_entity(index: u32) -> Entity {

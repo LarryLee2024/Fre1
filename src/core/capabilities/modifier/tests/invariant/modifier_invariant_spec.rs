@@ -5,12 +5,8 @@
 
 #[cfg(test)]
 mod tests {
-    use crate::core::capabilities::modifier::foundation::{
-        ModifierInstanceId, ModifierOp, ModifierSourceType,
-    };
-    use crate::core::capabilities::modifier::mechanism::lifecycle::{
-        create_modifier, validate_modifier_data,
-    };
+    use crate::core::capabilities::modifier::foundation::{ModifierOp, ModifierSourceType};
+    use crate::core::capabilities::modifier::mechanism::lifecycle::validate_modifier_data;
     use crate::shared::testing::fixtures::ModifierBuilder;
 
     #[test]

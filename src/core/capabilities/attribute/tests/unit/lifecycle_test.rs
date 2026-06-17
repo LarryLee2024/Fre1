@@ -3,7 +3,7 @@ use crate::core::capabilities::attribute::foundation::{
     FormulaType,
 };
 use crate::core::capabilities::attribute::mechanism::lifecycle::{
-    AttributeRegistry, AttributeRegistrationError,
+    AttributeRegistrationError, AttributeRegistry,
 };
 
 fn make_attr(

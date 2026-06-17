@@ -6,12 +6,11 @@
 use crate::core::capabilities::attribute::foundation::{
     AttributeCategory, AttributeDefinition, AttributeId,
 };
-use crate::core::capabilities::effect::foundation::{EffectDuration, EffectInstance, EffectStage};
+use crate::core::capabilities::effect::foundation::{EffectDuration, EffectInstance};
 use crate::core::capabilities::modifier::foundation::{
-    ModifierData, ModifierInstanceId, ModifierOp, ModifierPriority, ModifierSource,
-    ModifierSourceType,
+    ModifierData, ModifierInstanceId, ModifierOp, ModifierSource, ModifierSourceType,
 };
-use crate::core::capabilities::tag::foundation::{BitMask, TagDefinition, TagId, TagNamespace};
+use crate::core::capabilities::tag::foundation::{TagDefinition, TagId, TagNamespace};
 
 // ── 标准测试单位 ─────────────────────────────────────────
 

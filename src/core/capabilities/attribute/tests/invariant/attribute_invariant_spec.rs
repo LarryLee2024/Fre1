@@ -5,11 +5,11 @@
 
 #[cfg(test)]
 mod tests {
-    use crate::core::capabilities::attribute::foundation::{AttributeCategory, AttributeId};
+    use crate::core::capabilities::attribute::foundation::AttributeCategory;
     use crate::core::capabilities::attribute::mechanism::lifecycle::{
-        AttributeRegistry, AttributeRegistrationError,
+        AttributeRegistrationError, AttributeRegistry,
     };
-    use crate::shared::testing::fixtures::{attributes_for_unit_001, AttributeDefBuilder};
+    use crate::shared::testing::fixtures::{AttributeDefBuilder, attributes_for_unit_001};
 
     #[test]
     fn attribute_ids_globally_unique() {

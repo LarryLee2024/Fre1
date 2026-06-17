@@ -11,7 +11,7 @@
 
 #[cfg(test)]
 mod tests {
-    use crate::core::capabilities::ability::foundation::types::{AbilityState, ActivationType};
+    use crate::core::capabilities::ability::foundation::types::ActivationType;
     use crate::core::capabilities::ability::foundation::values::{
         AbilityInstance, ActivationContext, CostEntry,
     };
@@ -94,11 +94,12 @@ mod tests {
 
     #[test]
     fn insufficient_cost_error_contains_required_fields() {
-        let err = crate::core::capabilities::ability::foundation::types::AbilityError::InsufficientCost {
-            resource: "attr_mp".to_string(),
-            required: 50.0,
-            available: 20.0,
-        };
+        let err =
+            crate::core::capabilities::ability::foundation::types::AbilityError::InsufficientCost {
+                resource: "attr_mp".to_string(),
+                required: 50.0,
+                available: 20.0,
+            };
         let msg = format!("{}", err);
         assert!(msg.contains("attr_mp"));
         assert!(msg.contains("50"));

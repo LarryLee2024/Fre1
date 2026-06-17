@@ -12,9 +12,9 @@
 mod tests {
     use crate::core::capabilities::attribute::foundation::{AttributeCategory, AttributeId};
     use crate::core::capabilities::attribute::mechanism::lifecycle::{
-        AttributeRegistry, AttributeRegistrationError,
+        AttributeRegistrationError, AttributeRegistry,
     };
-    use crate::shared::testing::fixtures::{attributes_for_unit_001, AttributeDefBuilder};
+    use crate::shared::testing::fixtures::{AttributeDefBuilder, attributes_for_unit_001};
 
     #[test]
     fn resource_attr_min_cannot_be_negative() {
@@ -48,7 +48,10 @@ mod tests {
     #[test]
     fn hp_attr_min_value_is_zero() {
         let attrs = attributes_for_unit_001();
-        let hp = attrs.iter().find(|a| a.id == AttributeId::new("attr_hp")).unwrap();
+        let hp = attrs
+            .iter()
+            .find(|a| a.id == AttributeId::new("attr_hp"))
+            .unwrap();
         assert_eq!(hp.min_value, 0.0);
         assert_eq!(hp.category, AttributeCategory::Resource);
     }
@@ -56,7 +59,10 @@ mod tests {
     #[test]
     fn hp_attr_max_equals_default() {
         let attrs = attributes_for_unit_001();
-        let hp = attrs.iter().find(|a| a.id == AttributeId::new("attr_hp")).unwrap();
+        let hp = attrs
+            .iter()
+            .find(|a| a.id == AttributeId::new("attr_hp"))
+            .unwrap();
         assert_eq!(hp.default_base_value, 100.0);
         assert_eq!(hp.max_value, 100.0);
     }

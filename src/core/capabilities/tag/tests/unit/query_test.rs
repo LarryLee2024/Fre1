@@ -1,5 +1,5 @@
 use crate::core::capabilities::tag::foundation::{BitMask, TagId, TagQuery, TagQueryMode};
-use crate::core::capabilities::tag::mechanism::query::{evaluate_query, InheritedMaskMap};
+use crate::core::capabilities::tag::mechanism::query::{InheritedMaskMap, evaluate_query};
 
 /// 构建 TagId → 自身位 的精确映射（非层级）
 fn exact_map(pairs: &[(&str, u32)]) -> InheritedMaskMap {

@@ -86,7 +86,7 @@ fn get_total_frame_count() {
 fn multiple_ticks_maintain_phase_order() {
     let mut state = setup_initialized();
 
-    for i in 0..5 {
+    for _i in 0..5 {
         let seq = execute_tick(&mut state).unwrap();
 
         // Phase 顺序校验——每个 TickSequence 应依次经过 PreTick → Tick → PostTick → Idle

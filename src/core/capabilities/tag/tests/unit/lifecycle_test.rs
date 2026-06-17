@@ -1,7 +1,5 @@
-use crate::core::capabilities::tag::foundation::{BitMask, TagDefinition, TagId, TagNamespace};
-use crate::core::capabilities::tag::mechanism::lifecycle::{
-    TagHierarchy, TagRegistrationError,
-};
+use crate::core::capabilities::tag::foundation::{TagDefinition, TagId, TagNamespace};
+use crate::core::capabilities::tag::mechanism::lifecycle::{TagHierarchy, TagRegistrationError};
 
 fn make_tag(
     id: &str,

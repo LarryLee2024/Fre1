@@ -2,7 +2,7 @@ use crate::core::capabilities::modifier::foundation::{
     ModifierInstanceId, ModifierOp, ModifierSource, ModifierSourceType,
 };
 use crate::core::capabilities::modifier::mechanism::lifecycle::{
-    create_modifier, ModifierIdGenerator, ModifierValidationError,
+    ModifierIdGenerator, ModifierValidationError, create_modifier,
 };
 
 #[test]

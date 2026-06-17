@@ -7,9 +7,9 @@
 mod tests {
     use crate::core::capabilities::attribute::foundation::{AttributeCategory, AttributeId};
     use crate::core::capabilities::attribute::mechanism::lifecycle::AttributeRegistry;
-    use crate::core::capabilities::effect::foundation::{EffectDuration, EffectInstance};
     use crate::core::capabilities::effect::foundation::values::ActiveEffectContainer;
-    use crate::shared::testing::fixtures::{attributes_for_unit_001, AttributeDefBuilder};
+    use crate::core::capabilities::effect::foundation::{EffectDuration, EffectInstance};
+    use crate::shared::testing::fixtures::{AttributeDefBuilder, attributes_for_unit_001};
 
     fn make_registry_with_hp() -> AttributeRegistry {
         let mut reg = AttributeRegistry::default();
