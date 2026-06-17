@@ -17,6 +17,34 @@ baseline_warnings: 433 (C-4 infra/replay 增量：0 新增 warning)
 > 参照: `docs/00-governance/ai-constitution-complete.md` v5.0
 > 验证: `cargo test --lib` 742 passed, 0 failed
 
+## 格式规范
+
+每个 Debt 条目必须包含以下字段（Debt Lifecycle）：
+
+```markdown
+## [ID]: [类别] [简短描述]
+- **状态**: Open / Accepted / In Progress / Resolved / WontFix
+- **发现日期**: YYYY-MM-DD
+- **负责人**: @role
+- **关联 ADR**: ADR-XXX（如有）
+- **位置**: file:line
+- **严重程度**: Critical / High / Medium / Low
+- **问题描述**: ...
+- **影响**: ...
+- **建议修复**: ...
+```
+
+**ID 命名规范：**
+
+| 类别 | 前缀 | 示例 |
+|------|------|------|
+| 通用技术债 | `Debt-` | `Debt-001` |
+| 架构漂移 | `Drift-ADR-` | `Drift-ADR-001` |
+| 抽象泄漏 | `Leak-` | `Leak-001` |
+| AI 可维护性 | `Maintain-` | `Maintain-001` |
+| 测试债务 | `TestDebt-` | `TestDebt-001` |
+| 内容债务 | `Content-` | `Content-001` |
+
 ---
 
 ## 扫描总览

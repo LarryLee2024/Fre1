@@ -43,6 +43,8 @@ tools: Read, Grep, Glob
 - **Modifier Pipeline**：属性修改是否遵循 Modifier → Attribute Resolver → Final Stat 流程
 - **Message 注册表**：新增的 Message 是否与 `docs/01-architecture/README.md` 中定义的注册表一致
 - **逻辑与表现分离**：业务逻辑是否依赖 UI 组件或视觉特效
+- **Architecture Drift**：依赖方向是否违反 ADR 定义？是否存在反向依赖？（§18.7.1）
+- **Abstraction Leakage**：是否存在跨域 internal/mechanism/foundation 泄漏？（§18.7.2）
 
 ### 2. ECS 模式检查
 
@@ -81,6 +83,9 @@ tools: Read, Grep, Glob
 - **TODO 规范**：TODO 是否有 issue ID
 - **TODO/FIXME 规范**：是否有无上下文的 TODO/FIXME？P0/P1 FIXME 是否已修复？
 - **mod.rs 规范**：模块头注释是否描述了模块职责，每个 mod 声明是否有内联注释
+- **AI Maintainability**：文件>1500行/函数>100行/match>50arm 是否需要拆分？（§18.7.3）
+- **Test Debt**：新增 Facade/Observer/Event 是否有测试覆盖？（§18.7.4）
+- **Content Debt**：业务数值是否硬编码而非走 content/ 配置？（§18.7.5）
 
 ### 6. 测试规范
 

@@ -1290,6 +1290,39 @@ fn a() { ... }                        // 无意义命名
 5. 架构依赖检查无违规（含层间边界、Capabilities/Domain 边界）
 6. Domain 间直接依赖检测无违规
 
+### 18.7 技术债扫描六大维度
+
+refactor-guardian 必须覆盖以下六个扫描维度（来源：50万行级项目实践评估）：
+
+#### 18.7.1 Architecture Drift（架构漂移）
+- ADR 定义的依赖方向 vs 实际代码依赖方向的偏差
+- 检查：ADR 规定 A→B→C，实际是否出现 C→A 反向依赖
+- 级别：方向违反 → Critical
+
+#### 18.7.2 Abstraction Leakage（抽象泄漏）
+- 跨域访问内部类型，绕过 integration/ 或 Facade 层
+- 检查：`use xxx::mechanism` / `use xxx::internal` / `use xxx::model` 跨域出现
+- 级别：跨域 internal 泄漏 → High
+
+#### 18.7.3 AI Maintainability（AI 可维护性）
+- 文件/函数/match 过大导致 AI 无法完整理解和修改
+- 阈值：文件>1500行=High，>2500行=Critical；函数>100行=High；match>50 arm=High
+- 级别：按阈值分级
+
+#### 18.7.4 Test Debt（测试债务）
+- 核心 Facade、Observer、Event 链缺乏测试覆盖
+- 检查：`integration/facade.rs` 无对应 `tests/`；Observer 无集成测试
+- 级别：核心 Facade 无测试 → High
+
+#### 18.7.5 Content Debt（内容债务）
+- 业务数值硬编码在代码中，应迁移到 `content/` 配置
+- 检查：grep domains/ 中的 `damage=` / `range=` / `cooldown=` 等赋值
+- 级别：硬编码业务数值 → Medium
+
+#### 18.7.6 Debt Lifecycle（技术债生命周期）
+- 所有 Debt 条目必须包含：状态（Open / Accepted / In Progress / Resolved / WontFix）、发现日期、负责人、关联 ADR
+- ID 命名：`Debt-` / `Drift-ADR-` / `Leak-` / `Maintain-` / `TestDebt-` / `Content-`
+
 ---
 
 ## 第十九编 架构治理与演进

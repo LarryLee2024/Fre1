@@ -429,7 +429,35 @@ AI 生成测试前应内部对照：
 
 ---
 
-# 17. Final Principle
+# 17. Test Debt（测试债务）
+
+核心业务代码缺乏测试覆盖的技术债。大型项目后期最隐蔽的风险。
+
+## 17.1 定义
+
+| 维度 | 严重程度 | 说明 |
+|------|----------|------|
+| 核心 Facade 无测试 | High | `integration/` 下的 `facade.rs` 无对应 `tests/` |
+| 新增 Domain 无测试 | High | 新增 domain 目录但 `tests/` 为空或缺失 |
+| Observer 无测试 | Medium | 定义了 Observer 但无集成测试 |
+| Event 链无测试 | Medium | 跨域 Event 触发链无端到端测试 |
+
+## 17.2 检查方法
+
+1. 列出所有 `integration/` 下的 `facade.rs`
+2. 检查对应 `tests/` 目录是否有测试文件
+3. 列出所有 Observer 定义（`app.add_observer`）
+4. 检查是否有对应集成测试
+5. 列出所有跨域 Event 触发链
+6. 检查是否有端到端测试覆盖
+
+## 17.3 输出格式
+
+由 @refactor-guardian 输出，格式：`TestDebt-XXX`
+
+---
+
+# 18. Final Principle
 测试的目标不是证明代码正确。
 测试的目标是证明：
 - 代码仍然符合领域规则。
