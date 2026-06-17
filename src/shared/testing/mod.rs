@@ -7,6 +7,5 @@ pub mod assertions;
 pub mod deterministic;
 pub mod fixtures;
 
-pub use assertions::*;
 pub use deterministic::*;
 pub use fixtures::*;

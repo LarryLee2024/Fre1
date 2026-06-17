@@ -156,7 +156,7 @@ assert!(reg.contains(&AttributeId::new("attr_hp")));
 
 **原问题**：测试使用 `unit_001_xxx` 数字前缀命名。
 
-**现状**：全部 516+ 个测试函数使用英文 snake_case 命名，描述预期业务行为（如 `register_primary_attribute_succeeds`、`duplicate_id_rejected`）。
+**现状**：全部 637 个测试函数使用英文 snake_case 命名，描述预期业务行为（如 `register_primary_attribute_succeeds`、`duplicate_id_rejected`）。
 
 **结论**：✅ 已完成。
 
@@ -315,9 +315,8 @@ assert!(reg.contains(&AttributeId::new("attr_hp")));
 
 | 发现 | 建议调用角色 | 原因 |
 |------|--------------|------|
-| 4 个能力模块测试未接线 | @test-guardian | 需在 mod.rs 添加 `#[cfg(test)] mod tests;`，属于代码修复 |
-| effect/lifecycle_test.rs 格式问题 | @test-guardian | 需重新格式化文件 |
 | 34 处 `.len()` 断言需评估 | @test-guardian | 自身职责，需逐个评估是否验证业务规则 |
+| 部分测试未使用标准 Builder | @test-guardian | 自身职责，需替换为共享 Builder |
 | 领域规则文档未定义测试场景 | @domain-designer | 需补充领域规则的测试用例定义 |
 | 测试架构需要调整 | @architect | 跨领域测试涉及模块边界设计 |
 | 共享层模块缺少测试 | @feature-developer | 需为 shared/ 空桩模块实现功能后补测试 |
@@ -326,33 +325,34 @@ assert!(reg.contains(&AttributeId::new("attr_hp")));
 
 ## 7. 结论
 
-测试基础设施已就绪，全部测试已接线并正常运行。当前代码库 `cargo test` 通过 **580 个测试，0 失败**。
+测试基础设施已就绪，全部测试已接线并正常运行。当前代码库 `cargo test` 通过 **637 个测试，0 失败**，测试代码零 warnings。
 
 ### 已完成（本轮确认）
 1. **✅ 内联测试迁移**：全部测试已从 `#[cfg(test)] mod tests` 提取到独立文件
-2. **✅ 测试接线**：全部 20 个能力模块的 unit + invariant tests 已接线（516→580）
+2. **✅ 测试接线**：全部 20 个能力模块的 unit + invariant tests 已接线（516→637）
 3. **✅ 私有模块测试可见**：使用 `#[cfg(test)] pub mod` 控制生命周期/查询等模块仅测试可见
 4. **✅ shared/testing 模块**：fixtures.rs（395 行）、deterministic.rs（80 行）、assertions.rs（107 行）完整实现
 5. **✅ 不变量测试**：5 个能力的 invariant tests 全部接线（attribute/effect/modifier/tag/ability）
 6. **✅ 共享层测试**：shared/ids（36 测试）+ shared/error（5）+ shared/random（5）+ shared/time（8）
 7. **✅ 目录结构**：80 个能力测试目录 + 60 个领域测试目录 + 8 个跨领域目录 + 5 个 Testbed
 8. **✅ 测试命名**：全部英文 snake_case，描述预期业务行为
+9. **✅ 测试代码零 warnings**：清理全部 unused import/variable
+10. **✅ effect/lifecycle_test.rs 格式化**：从单行压缩恢复为正常多行格式
 
-### 待修复（本轮新发现）
-1. **⚠️ effect/lifecycle_test.rs 格式损坏**：整个文件被压缩为单行，需重新格式化
-2. **⚠️ 34 处 `.len()` 断言**：部分验证实现细节而非业务规则
-3. **⚠️ 编译 warnings**：未使用导入和变量
+### 待改进（非阻塞）
+1. **⚠️ 34 处 `.len()` 断言**：部分验证实现细节而非业务规则，需逐个评估
+2. **⚠️ 部分测试未使用标准 Builder**：自定义 helper 可替换为共享 Builder
 
 ### 阻塞项（依赖业务代码实现）
 1. **⏸️ 领域测试**：15 个业务域均为空桩，无业务逻辑可测
 2. **⏸️ 跨领域测试**：无完整战斗流程可测
 3. **⏸️ Testbed 沙盒**：依赖游戏运行时
 
-**建议**：P0 已全部修复，580 个测试全部通过。优先处理 P1 中的格式化和 warnings 清理。P2 阻塞项随业务代码实现逐步补充。
+**建议**：P0+P1 全部修复，637 个测试全部通过，测试代码零 warnings。剩余 `.len()` 评估和 Builder 替换为非阻塞质量改进。P2 阻塞项随业务代码实现逐步补充。
 
 ---
 
 **审查完成时间**：2026-06-17
 **初次审查时间**：2026-06-15
-**测试通过状态**：580 passed, 0 failed
-**下次审查建议**：P1 修复完成后复查，业务代码实现后全面复查
+**测试通过状态**：637 passed, 0 failed，测试代码零 warnings
+**下次审查建议**：业务代码实现后全面复查

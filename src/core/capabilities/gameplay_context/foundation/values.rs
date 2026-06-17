@@ -2,7 +2,6 @@
 
 use std::sync::atomic::{AtomicU64, Ordering};
 
-use bevy::ecs::entity::EntityIndex;
 use bevy::prelude::Entity;
 
 use crate::core::capabilities::gameplay_context::foundation::types::*;

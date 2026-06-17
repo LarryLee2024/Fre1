@@ -1,7 +1,6 @@
 //! C2: 规则与系统层 — ECS 组件、生命周期、System
 
 mod components;
-#[cfg(test)]
 pub mod lifecycle;
 pub mod systems;
 

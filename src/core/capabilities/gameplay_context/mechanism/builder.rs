@@ -5,8 +5,6 @@
 //! - target.entity 必须有效
 //! - origin 必须有值
 
-use bevy::prelude::Entity;
-
 use crate::core::capabilities::gameplay_context::foundation::{
     ChainNode, ContextBuildError, ContextChain, ContextMetadata, ContextOrigin, ContextStatus,
     ElementType, GameplayContextData, SourceInfo, TargetInfo,
