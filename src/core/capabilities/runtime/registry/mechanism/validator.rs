@@ -64,7 +64,7 @@ pub fn validate_cross_references(registry: &DefRegistry) -> CrossReferenceReport
 /// 从数据字符串中提取可能的 ID 引用。
 ///
 /// 查找形如 `xxx_NNNNNN`（前缀 + 6 位数字）的模式。
-fn extract_id_references(data: &str) -> Vec<String> {
+pub(crate) fn extract_id_references(data: &str) -> Vec<String> {
     let mut refs = Vec::new();
     let known_prefixes = [
         "abl_", "eff_", "trg_", "tag_", "attr_", "cue_", "itm_", "spl_", "qst_", "fct_", "ter_",
@@ -92,77 +92,4 @@ fn extract_id_references(data: &str) -> Vec<String> {
     }
 
     refs
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::core::capabilities::runtime::registry::foundation::RegistryEntry;
-
-    #[test]
-    fn unit_040_validate_valid_format() {
-        assert!(validate_id_format("abl_000001").is_ok());
-        assert!(validate_id_format("eff_000042").is_ok());
-    }
-
-    #[test]
-    fn unit_041_validate_empty_format() {
-        assert!(validate_id_format("").is_err());
-    }
-
-    #[test]
-    fn unit_042_validate_unknown_prefix() {
-        assert!(validate_id_format("xxx_000001").is_err());
-    }
-
-    #[test]
-    fn unit_043_cross_reference_no_broken() {
-        let mut reg = DefRegistry::new();
-        reg.register(RegistryEntry::new(
-            "abl_000001",
-            "Ability",
-            "uses=eff_000001",
-        ))
-        .unwrap();
-        // eff_000001 is not registered, so it's broken
-        let report = validate_cross_references(&reg);
-        assert!(report.has_broken_references());
-    }
-
-    #[test]
-    fn unit_044_cross_reference_all_valid() {
-        let mut reg = DefRegistry::new();
-        reg.register(RegistryEntry::new(
-            "abl_000001",
-            "Ability",
-            "uses=eff_000001",
-        ))
-        .unwrap();
-        reg.register(RegistryEntry::new("eff_000001", "Effect", "type=damage"))
-            .unwrap();
-        let report = validate_cross_references(&reg);
-        assert!(!report.has_broken_references());
-    }
-
-    #[test]
-    fn unit_045_extract_id_references() {
-        let data = "effect=eff_000001,trigger=trg_000042";
-        let refs = extract_id_references(data);
-        assert!(refs.contains(&"eff_000001".to_string()));
-        assert!(refs.contains(&"trg_000042".to_string()));
-    }
-
-    #[test]
-    fn unit_046_extract_id_references_none() {
-        let data = "name=Fireball,damage=50";
-        let refs = extract_id_references(data);
-        assert!(refs.is_empty());
-    }
-
-    #[test]
-    fn unit_047_infer_id_type() {
-        assert_eq!(IdType::from_prefix("abl_"), Some(IdType::Ability));
-        assert_eq!(IdType::from_prefix("eff_"), Some(IdType::Effect));
-        assert_eq!(IdType::from_prefix("sho"), None);
-    }
 }

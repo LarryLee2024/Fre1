@@ -15,8 +15,12 @@ pub(crate) fn on_tag_added(
     hierarchy: Res<TagHierarchy>,
 ) {
     let entity = trigger.entity;
-    let Ok(mut tag_set) = query.get_mut(entity) else { return; };
-    let Some(def) = hierarchy.tags.get(&trigger.event().tag_id) else { return; };
+    let Ok(mut tag_set) = query.get_mut(entity) else {
+        return;
+    };
+    let Some(def) = hierarchy.tags.get(&trigger.event().tag_id) else {
+        return;
+    };
     tag_set.add_tag(def);
 }
 
@@ -27,7 +31,11 @@ pub(crate) fn on_tag_removed(
     hierarchy: Res<TagHierarchy>,
 ) {
     let entity = trigger.entity;
-    let Ok(mut tag_set) = query.get_mut(entity) else { return; };
-    let Some(def) = hierarchy.tags.get(&trigger.event().tag_id) else { return; };
+    let Ok(mut tag_set) = query.get_mut(entity) else {
+        return;
+    };
+    let Some(def) = hierarchy.tags.get(&trigger.event().tag_id) else {
+        return;
+    };
     tag_set.remove_tag(def);
 }

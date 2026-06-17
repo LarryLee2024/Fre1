@@ -13,3 +13,6 @@ pub mod mechanism;
 mod plugin;
 
 pub use plugin::*;
+
+#[cfg(test)]
+mod tests;

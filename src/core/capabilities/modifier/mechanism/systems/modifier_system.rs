@@ -15,7 +15,9 @@ pub(crate) fn on_modifier_applied(
     mut query: Query<&mut ModifierContainer>,
 ) {
     let entity = trigger.entity;
-    let Ok(mut container) = query.get_mut(entity) else { return; };
+    let Ok(mut container) = query.get_mut(entity) else {
+        return;
+    };
     let data = &trigger.event().modifier_data;
 
     // 按 target_attribute 分桶存储
@@ -39,7 +41,9 @@ pub(crate) fn on_modifier_removed(
     mut query: Query<&mut ModifierContainer>,
 ) {
     let entity = trigger.entity;
-    let Ok(mut container) = query.get_mut(entity) else { return; };
+    let Ok(mut container) = query.get_mut(entity) else {
+        return;
+    };
     let data = &trigger.event().modifier_data;
 
     // 从对应分桶中按实例 ID 移除

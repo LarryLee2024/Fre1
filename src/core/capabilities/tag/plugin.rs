@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
-use super::mechanism::systems::tag_system::{on_tag_added, on_tag_removed};
 use super::mechanism::TagHierarchy;
+use super::mechanism::systems::tag_system::{on_tag_added, on_tag_removed};
 
 pub struct TagPlugin;
 

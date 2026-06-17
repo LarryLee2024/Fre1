@@ -258,5 +258,5 @@ define_string_id! {
 
 define_string_id! {
     pub LootTableId,
-    prefix: "oot",
+    prefix: "ltb",
 }

@@ -85,31 +85,28 @@ Applies To:
 
 # 2.5 测试命名规范
 
-- 测试函数名用**中文**描述预期行为，技术术语如 UI/AI/HP/MP/Buff 等保留英文
+- 测试函数名用英文 snake_case 描述预期行为，使用业务术语如 `apply_damage`、`buff_expires`、`hp_never_below_zero`
 - 文件名保持英文 snake_case
 
 合法示例：
 ```rust
 #[test]
-fn 物理伤害正确应用护甲减免() { ... }
+fn damage_applies_armor_reduction_correctly() { ... }
 
 #[test]
-fn Buff到期自动移除() { ... }
+fn buff_removed_on_expiry() { ... }
 
 #[test]
-fn HP不会低于零() { ... }
+fn hp_never_goes_below_zero() { ... }
 
 #[test]
-fn 技能冷却期间无法重复释放() { ... }
+fn skill_on_cooldown_cannot_be_used() { ... }
 ```
 
 非法示例：
 ```rust
 #[test]
 fn test_damage() { ... }              // 无业务语义
-
-#[test]
-fn physical_damage_respects_armor() { ... }  // 应使用中文
 
 #[test]
 fn a() { ... }                        // 无意义命名

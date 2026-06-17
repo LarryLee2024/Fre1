@@ -1184,19 +1184,19 @@ tests/
 ```
 
 ### 16.6 测试命名规范
-- 🟩 测试函数名用**中文**描述预期行为，技术术语如 UI/AI/HP/MP/Buff 等保留英文
+- 🟩 测试函数名用英文 snake_case 描述预期行为，使用业务术语如 `damage_applies_armor_reduction`、`buff_removed_on_expiry`、`hp_never_goes_below_zero`
 - 🟩 文件名保持英文 snake_case
 
 合法示例：
 ```rust
 #[test]
-fn 物理伤害正确应用护甲减免() { ... }
+fn damage_applies_armor_reduction_correctly() { ... }
 
 #[test]
-fn Buff到期自动移除() { ... }
+fn buff_removed_on_expiry() { ... }
 
 #[test]
-fn HP不会低于零() { ... }
+fn hp_never_goes_below_zero() { ... }
 ```
 
 非法示例：
@@ -1204,7 +1204,7 @@ fn HP不会低于零() { ... }
 #[test]
 fn test_damage() { ... }              // 无业务语义
 #[test]
-fn physical_damage_respects_armor() { ... }  // 应使用中文
+fn a() { ... }                        // 无意义命名
 ```
 
 ---

@@ -22,7 +22,9 @@ pub(crate) fn on_tag_changed_by_tag_added(
     mut query: Query<&mut ConditionContainer>,
 ) {
     let entity = trigger.entity;
-    let Ok(mut container) = query.get_mut(entity) else { return; };
+    let Ok(mut container) = query.get_mut(entity) else {
+        return;
+    };
     container.on_tag_changed(&trigger.event().tag_id);
 }
 
@@ -32,7 +34,9 @@ pub(crate) fn on_tag_changed_by_tag_removed(
     mut query: Query<&mut ConditionContainer>,
 ) {
     let entity = trigger.entity;
-    let Ok(mut container) = query.get_mut(entity) else { return; };
+    let Ok(mut container) = query.get_mut(entity) else {
+        return;
+    };
     container.on_tag_changed(&trigger.event().tag_id);
 }
 
@@ -44,6 +48,8 @@ pub(crate) fn on_attribute_changed(
     mut query: Query<&mut ConditionContainer>,
 ) {
     let entity = trigger.entity;
-    let Ok(mut container) = query.get_mut(entity) else { return; };
+    let Ok(mut container) = query.get_mut(entity) else {
+        return;
+    };
     container.on_attribute_changed(&trigger.event().attribute_id);
 }

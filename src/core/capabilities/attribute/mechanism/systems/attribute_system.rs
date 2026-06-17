@@ -17,7 +17,9 @@ pub(crate) fn on_attribute_initialized(
     registry: Res<AttributeRegistry>,
 ) {
     let entity = trigger.entity;
-    let Ok(mut container) = query.get_mut(entity) else { return; };
+    let Ok(mut container) = query.get_mut(entity) else {
+        return;
+    };
 
     for def in registry.definitions.values() {
         // 仅初始化尚未存在的属性（不覆盖已有值）

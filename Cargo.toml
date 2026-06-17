@@ -12,20 +12,17 @@ bevy = { version = "0.18.1", features = [
     "bevy_scene", # DynamicScene / World 快照
 
     # 开发工具
-    "bevy_dev_tools",      # 官方开发工具集
-    "bevy_debug_stepping", # System 单步调试
-    "bevy_remote",         # 运行时远程控制台
-    "track_location",      # 错误追踪 System 来源
-    "file_watcher",        # 资产热重载
+    "bevy_dev_tools", # 官方开发工具集
+    # "bevy_debug_stepping", # System 单步调试
+    "bevy_remote",    # 运行时远程控制台
+    "track_location", # 错误追踪 System 来源
+    "file_watcher",   # 资产热重载
 
     # Reflect 增强
     "reflect_documentation", # 反射文档注释（编辑器基础）
 
     # 相机
     "bevy_camera_controller", # 官方相机控制器
-
-    # 测试
-    "bevy_ci_testing", # CI 测试支持
 ] }
 bevy-inspector-egui = "0.36"
 serde = { version = "1.0", features = ["derive"] }

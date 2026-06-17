@@ -175,7 +175,7 @@ assert_eq!(inventory.len(), 4);
 
 检查每个测试：
 
-- [ ] 测试函数名用中文描述预期行为（技术术语如 UI/AI/HP/MP/Buff 保留英文）
+- [ ] 测试函数名用英文 snake_case 描述预期行为（使用业务术语如 `damage_applies_armor_reduction`）
 - [ ] 断言验证的是业务规则，不是实现细节
 - [ ] 测试名称描述了业务场景，不是技术操作
 - [ ] 测试不依赖内部状态或私有方法

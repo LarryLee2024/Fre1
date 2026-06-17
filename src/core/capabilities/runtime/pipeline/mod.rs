@@ -8,3 +8,6 @@
 pub mod events;
 pub mod foundation;
 pub mod mechanism;
+
+#[cfg(test)]
+mod tests;

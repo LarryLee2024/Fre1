@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
-use super::mechanism::systems::attribute_system::on_attribute_initialized;
 use super::mechanism::AttributeRegistry;
+use super::mechanism::systems::attribute_system::on_attribute_initialized;
 
 pub struct AttributePlugin;
 

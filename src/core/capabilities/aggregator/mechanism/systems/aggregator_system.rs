@@ -6,8 +6,8 @@ use bevy::prelude::*;
 
 use crate::core::capabilities::aggregator::events::AggregateDirty;
 use crate::core::capabilities::aggregator::foundation::{
-    default_stages, CalcPipeline, ModifierEntry as AggregatorModifierEntry,
-    ModifierOp as AggregatorModifierOp,
+    CalcPipeline, ModifierEntry as AggregatorModifierEntry, ModifierOp as AggregatorModifierOp,
+    default_stages,
 };
 use crate::core::capabilities::aggregator::mechanism::pipeline::execute_aggregation;
 use crate::core::capabilities::attribute::foundation::AttributeId;
@@ -38,12 +38,18 @@ pub(crate) fn on_aggregate_dirty(
     let entity = trigger.entity;
     let attr_id_str = &trigger.event().attribute_id;
 
-    let Ok(mut attr_container) = attr_query.get_mut(entity) else { return; };
-    let Ok(mod_container) = mod_query.get(entity) else { return; };
+    let Ok(mut attr_container) = attr_query.get_mut(entity) else {
+        return;
+    };
+    let Ok(mod_container) = mod_query.get(entity) else {
+        return;
+    };
 
     // 查找目标属性的定义（取 base_value）
     let attr_id = AttributeId::new(attr_id_str.as_str());
-    let Some(attr_value) = attr_container.attributes.get(&attr_id) else { return; };
+    let Some(attr_value) = attr_container.attributes.get(&attr_id) else {
+        return;
+    };
     let base_value = attr_value.base_value;
 
     // 收集该属性的所有修改器并转换到 aggregator 域

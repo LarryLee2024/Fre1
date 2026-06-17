@@ -3,4 +3,10 @@
 //! 提供对领域无关的测试辅助函数和 mock 构造器。
 //! 领域内聚测试参见各领域内的 `tests/` 模块。
 
-// TODO: 实现 TestApp / TestWorld 构建器
+pub mod assertions;
+pub mod deterministic;
+pub mod fixtures;
+
+pub use assertions::*;
+pub use deterministic::*;
+pub use fixtures::*;

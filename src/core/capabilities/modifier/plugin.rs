@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
-use super::mechanism::systems::modifier_system::{on_modifier_applied, on_modifier_removed};
 use super::mechanism::ModifierIdGenerator;
+use super::mechanism::systems::modifier_system::{on_modifier_applied, on_modifier_removed};
 
 pub struct ModifierPlugin;
 
