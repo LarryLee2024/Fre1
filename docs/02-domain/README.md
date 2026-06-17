@@ -4,7 +4,7 @@ title: Domain Rules — 领域规则索引
 status: stable
 owner: domain-designer
 created: 2026-06-16
-updated: 2026-06-17
+updated: 2026-06-18
 tags:
   - domain
   - index
@@ -284,7 +284,7 @@ Event         → 所有领域（领域间通信）
 | `capabilities/ability_domain.md` | ✅ stable | domain-designer | 2026-06-16 |
 | `capabilities/targeting_domain.md` | ✅ stable | domain-designer | 2026-06-16 |
 | `capabilities/execution_domain.md` | ✅ stable | domain-designer | 2026-06-16 |
-| `capabilities/effect_domain.md` | ✅ stable | domain-designer | 2026-06-16 |
+| `capabilities/effect_domain.md` | ✅ stable | domain-designer | 2026-06-18 |
 | `capabilities/stacking_domain.md` | ✅ stable | domain-designer | 2026-06-16 |
 | `capabilities/cue_domain.md` | ✅ stable | domain-designer | 2026-06-16 |
 | `domains/tactical_domain.md` | ✅ stable | domain-designer | 2026-06-16 |

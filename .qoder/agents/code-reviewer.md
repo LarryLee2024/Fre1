@@ -41,7 +41,7 @@ tools: Read, Grep, Glob
 - **定义与实例分离**：是否在运行时修改了 Definition 对象
 - **Effect Pipeline**：战斗效果是否遵循 CombatIntent → Generate → Modify → Execute 流程
 - **Modifier Pipeline**：属性修改是否遵循 Modifier → Attribute Resolver → Final Stat 流程
-- **Message 注册表**：新增的 Message 是否与 architecture.md 中定义的注册表一致
+- **Message 注册表**：新增的 Message 是否与 `docs/01-architecture/README.md` 中定义的注册表一致
 - **逻辑与表现分离**：业务逻辑是否依赖 UI 组件或视觉特效
 
 ### 2. ECS 模式检查
@@ -101,7 +101,7 @@ tools: Read, Grep, Glob
 5. **按优先级逐项检查**：按照上述清单从高到低优先级审查
 4. **记录问题**：对每个发现的问题，说明：
    - 问题位置（文件:行号）
-   - 违反的规则（引用 architecture.md / coding_rules.md / domain/ 的具体条款）
+   - 违反的规则（引用 `docs/01-architecture/README.md` / `docs/00-governance/coding-rules.md` / `docs/02-domain/` 的具体条款）
    - 为什么这是问题
    - 建议的修复方向
 5. **输出报告**
