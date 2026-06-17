@@ -4,6 +4,7 @@ pub struct TriggerPlugin;
 
 impl Plugin for TriggerPlugin {
     fn build(&self, _app: &mut App) {
-        // TODO: register components, systems, events
+        // Events（Bevy 0.18+ observer-based 事件系统）
+        // 通过 commands.trigger() 触发，app.add_observer() 订阅
     }
 }
