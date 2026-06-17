@@ -4,7 +4,7 @@ title: "Phase Post-M1 执行计划 — M1 后未完成任务与下一步行动"
 status: active
 owner: feature-developer
 created: 2026-06-17
-updated: 2026-06-18 (D-9 ✅ 回合系统 + Effect Tick + 胜利条件 + @test-guardian/@code-reviewer/@refactor-guardian + C-4 ✅ Replay 桥接层)
+updated: 2026-06-18 (D-9 ✅ + C-4 ✅ Replay 桥接层 + C-5 ✅ Save 桥接层 + 全角色评审)
 tags:
   - planning
   - implementation
@@ -36,7 +36,7 @@ tags:
 | **Capabilities 集成验证** | ✅ 完成 | Observer System 打通 Tag/Attribute/Modifier 管线，742 tests pass |
 | **Phase C-3 — Registry** | ✅ 完成 | ~750 行，23 测试，build+test PASS |
 | **Phase C-4 — Replay** | ✅ 完成 | 桥接层实现：resources/systems/events/api + plugin，5 文件 ~145 行 |
-| **Phase C-5 — Save** | 🟡 骨架 | `mod.rs` + 空 `plugin.rs` |
+| **Phase C-5 — Save** | ✅ 完成 | 桥接层实现：resources/events/systems + plugin + tests，5 文件 ~260 行，19 tests |
 | **Phase D-2 — Terrain** | ✅ 完成 | ~700 行，9 测试，build+test PASS |
 | **Phase D-3 ~ D-15** | 🟡 骨架 | 13 个 Domain 均为 `mod.rs` + `plugin.rs` + 空 `tests/` |
 | **Phase E ~ H** | 🔴 未开始 | — |
@@ -197,30 +197,41 @@ Tactical 的 `integration.rs` 定义了 `MovementType → TagId` 映射，但没
 
 ---
 
-### 3.3 Phase C-5: Save 存档骨架
+### 3.3 Phase C-5: Save 存档桥接层
 
-> **目标**: 实现最小存档系统骨架，支持游戏状态序列化与反序列化
-> **当前状态**: 🟡 骨架 — `src/infra/save/mod.rs` + 空 `plugin.rs`
-> **估算**: ~300 行，4-5 个文件
-> **主要执行者**: @feature-developer + @data-architect（Schema 设计）
+> **目标**: 实现最小存档系统桥接层，提供 Resource/Event/Observer 基础设施
+> **当前状态**: ✅ 已完成 — 5 文件 ~260 行，19 tests，cargo build 零错误零警告
+> **估算**: ~260 行，5 个文件
+> **主要执行者**: @feature-developer
+> **设计依据**: ADR-042（存档持久化策略）— 已由 @architect 批准
 
 #### 前置文档确认
 
-| 文档 | 位置 | 责任人 |
-|------|------|--------|
-| ADR-0xx | 存档系统 ADR（待创建或确认） | @architect |
-| save_schema | `docs/04-data/infrastructure/save_schema.md` | @data-architect |
+| 文档 | 位置 | 责任人 | 状态 |
+|------|------|--------|------|
+| ADR-042 | `docs/01-architecture/40-cross-cutting/ADR-042-save-persistence.md` | @architect | ✅ 已批准 |
+| save_architecture | `docs/04-data/foundation/save_architecture.md` | @data-architect | ✅ 已稳定 |
 
-#### 交付清单（初步）
+#### 架构差异说明
 
-| # | 任务 | 输出文件 | 责任人 |
-|---|------|---------|--------|
-| C5-1 | SaveData / SaveHeader 结构 | `src/infra/save/data.rs` | @feature-developer |
-| C5-2 | SaveManager Resource | `src/infra/save/manager.rs` | @feature-developer |
-| C5-3 | 存档序列化/反序列化 | `src/infra/save/serializer.rs` | @feature-developer |
-| C5-4 | SavePlugin 注册 | `src/infra/save/plugin.rs` | @feature-developer |
-| C5-T | 单元测试 | `src/infra/save/tests/` | @test-guardian |
-| C5-R | 代码审查 | `docs/10-reviews/save-review.md` | @code-reviewer |
+与 C-4 Replay 不同，Save 没有现有的 Core 层模块。采用**直接实现桥接层骨架**策略：
+
+| 初步设计 | 实际实现 | 原因 |
+|----------|---------|------|
+| SaveData / SaveHeader 结构 | `events.rs` 中的 Event 类型 | observer-based 事件驱动 save/load |
+| SaveManager + serializer + migration | `resources.rs` 中 SaveManager + AutoSaveConfig + EntityRemapper | 最小实现，Per-Feature 序列化后续迭代 |
+| Per-Feature SaveLoad trait | Observer pattern (On<SaveRequest> / On<LoadRequest>) | 对齐 Bevy 0.18 事件系统 |
+
+#### 交付清单
+
+| # | 任务 | 输出文件 | 责任人 | 状态 |
+|---|------|---------|--------|------|
+| C5-1 | SaveManager, AutoSaveConfig, EntityRemapper Resource | `src/infra/save/resources.rs` | @feature-developer | ✅ 完成 |
+| C5-2 | SaveRequest, LoadRequest, SaveCompleted, LoadCompleted, SaveError 事件 | `src/infra/save/events.rs` | @feature-developer | ✅ 完成 |
+| C5-3 | on_save_request, on_load_request Observer | `src/infra/save/systems.rs` | @feature-developer | ✅ 完成 |
+| C5-4 | SavePlugin 注册 + mod 声明 | `src/infra/save/plugin.rs`, `mod.rs` | @feature-developer | ✅ 完成 |
+| C5-T | 单元/集成/不变量测试 | `src/infra/save/tests/` | @test-guardian | ✅ 完成 (19 tests) |
+| C5-R | 代码审查 | `docs/10-reviews/save-bridge-review.md` | @code-reviewer | ✅ 完成 (PASS) |
 
 ---
 
@@ -272,7 +283,7 @@ Tactical 的 `integration.rs` 定义了 `MovementType → TagId` 映射，但没
 |------|------|------|---------|--------|
 | Capabilities 21k 行存在未被发现的架构缺陷 | 中 | **高**（阻塞所有业务域） | Tactical 尽早接入，发现即修复 | @architect + @feature-developer |
 | 14 个业务域全部为空骨架，启动顺序不明确 | 中 | 中 | 按业务优先级表（§3.4）逐步推进 | @architect |
-| Registry/Replay/Save 三个 Infra 模块无设计文档 | 中 | 中 | 启动前确认 ADR 和 Schema 文档 | @data-architect + @architect |
+| Save 模块后续 Per-Feature 序列化实现 | 低 | 中 | 桥接层骨架已完成，按需迭代 | @feature-developer |
 | 单人瓶颈（所有代码变更经过同一人） | **高** | **高** | 这是一个已知限制 | — |
 | @refactor-guardian 技术债扫描滞后 | 中 | 中 | ✅ 已完成，输出 `docs/11-refactor/debt-inventory-2026-06-17.md` | @refactor-guardian |
 
@@ -285,12 +296,12 @@ Tactical 的 `integration.rs` 定义了 `MovementType → TagId` 映射，但没
 | **Capabilities 集成验证** | 4 | ~280 | @feature-developer | 1 次会话 | ✅ 已完成 |
 | C-3 Registry 注册中心 | 3-4 | ~750 | @feature-developer | 1 次会话 | ✅ 已完成 |
 | C-4 Replay 回放桥接层 | 5 | ~145 | @feature-developer | 1 次会话 | ✅ 已完成 |
-| C-5 Save 存档骨架 | 4-5 | ~300 | @feature-developer | 1-2 次会话 | 🔴 未开始 |
+| C-5 Save 存档桥接层 | 5 | ~260 | @feature-developer | 1 次会话 | ✅ 已完成 |
 | D-2 Terrain 地形域 | ~12 | ~700 | @feature-developer | 2 次会话 | ✅ 已完成 |
 | D-3 ~ D-15 (13 个域) | — | — | — | 待定 | 🔴 未开始 |
 | **@refactor-guardian 技术债扫描** | — | — | @refactor-guardian | ~1 次会话 | ✅ 完成 |
 | @architect — registry_schema v2 对齐 ADR-013 | 1 文件 | ~180 | @architect | 1 次会话 | ✅ 完成 |
-| **总计（近期）** | **~21** | **~1,680** | **全角色协作** | **~5-7 次会话** | **技术债扫描 + schema 对齐完成** |
+| **总计（近期）** | **~26** | **~1,940** | **全角色协作** | **~6-8 次会话** | **C-4 Replay ✅ + C-5 Save ✅ + 全角色评审 PASS** |
 
 ---
 

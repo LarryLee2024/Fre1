@@ -4,7 +4,7 @@ title: "技术债清单 — 首次全量扫描"
 status: active
 scanner: refactor-guardian
 created: 2026-06-17
-updated: 2026-06-18 (D-9 Delta 扫描 + ADR-024 修复 + C-4 Replay 桥接层扫描)
+updated: 2026-06-18 (D-9 Delta 扫描 + ADR-024 修复 + C-4 Replay 桥接层扫描 + C-5 Save 桥接层扫描)
 scan_scope: src/ (full codebase)
 baseline_warnings: 433 (C-4 infra/replay 增量：0 新增 warning)
 ---
@@ -226,6 +226,21 @@ baseline_warnings: 433 (C-4 infra/replay 增量：0 新增 warning)
 
 **结论**: C-4 Replay 桥接层无新增技术债。5 个实现文件（145 行）+ 7 个测试文件（~250 行）均通过 @code-reviewer 审查。
 
+### C-5 Delta: Save 桥接层扫描
+
+| 检查项 | 结果 | 备注 |
+|--------|------|------|
+| Dead Code (未使用的 pub) | ✅ 零新增 | 所有 re-export 对应预期消费路径 |
+| 可见性超标 (ADR-045) | ✅ 合规 | resources/systems 为 pub(crate)，events 为 private，仅 re-exports 为 pub |
+| 超大文件 (>500 行) | ✅ 无 | 最大文件 ~100 行 |
+| 超大 Plugin | ✅ 合规 | SavePlugin 注册 3 资源 + 2 observer，20 行 |
+| 禁止的文件名 | ✅ 无 | 无 utils.rs / helpers.rs |
+| cargo build 警告 | ✅ 零新增 | 0 save-specific warnings |
+| Bevy 0.18 模式合规 | ✅ 通过 | observer-based events (On<T>), Default traits, app.add_observer |
+| ADR-042 对齐 | ✅ 已确认 | Resource/Event 设计与 ADR §2-3 一致 |
+
+**结论**: C-5 Save 桥接层无新增技术债。5 个实现文件（~260 行）+ 7 个测试文件（~250 行）均通过 @code-reviewer 审查。
+
 ---
 
-*D-9 + C-4 Delias 由 @refactor-guardian 扫描生成。2026-06-18 验证：939 tests passed, 8 ignored, 0 failed, cargo build 0 errors。完整债务清单见首次全量扫描（上方 Debt-001~006）。*
+*D-9 + C-4 + C-5 Deltas 由 @refactor-guardian 扫描生成。2026-06-18 验证：932 tests passed, 8 ignored, 0 failed, cargo build 0 errors。完整债务清单见首次全量扫描（上方 Debt-001~006）。*
