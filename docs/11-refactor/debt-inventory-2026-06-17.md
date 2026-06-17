@@ -4,9 +4,9 @@ title: "技术债清单 — 首次全量扫描"
 status: active
 scanner: refactor-guardian
 created: 2026-06-17
-updated: 2026-06-18 (D-9 Delta 扫描 + ADR-024 修复)
+updated: 2026-06-18 (D-9 Delta 扫描 + ADR-024 修复 + C-4 Replay 桥接层扫描)
 scan_scope: src/ (full codebase)
-baseline_warnings: 433
+baseline_warnings: 433 (C-4 infra/replay 增量：0 新增 warning)
 ---
 
 # 技术债清单 — 首次全量扫描
@@ -183,6 +183,21 @@ baseline_warnings: 433
 | **P3** | D9-004 | ✅ 已修复 | 测试精简 + facade 测试替代 | @test-guardian |
 | **P3** | D9-005 | ❌ 保留 | 日期同步（README 元数据） | —— |
 
+### C-4 Delta: Replay 桥接层扫描
+
+| 检查项 | 结果 | 备注 |
+|--------|------|------|
+| Dead Code (未使用的 pub) | ✅ 零新增 | 所有 re-export 对应实际消费路径 |
+| 可见性超标 (ADR-045) | ✅ 合规 | resources/systems 为 pub(crate)，仅 plugin + re-exports 为 pub |
+| 超大文件 (>500 行) | ✅ 无 | 最大文件 212 行 (recording_lifecycle_test.rs) |
+| 超大 Plugin | ✅ 合规 | ReplayPlugin 注册 5 资源 + 4 系统，66 行 |
+| 禁止的文件名 | ✅ 无 | 无 utils.rs / helpers.rs |
+| cargo build 警告 | ✅ 零新增 | 0 replay-specific warnings |
+| Bevy 0.18 模式合规 | ✅ 通过 | observer-based events, FromWorld/Default, chain() |
+| ADR-041 对齐 | ✅ 已确认 | Resource/System/Event 设计与 ADR §4-5 一致 |
+
+**结论**: C-4 Replay 桥接层无新增技术债。5 个实现文件（145 行）+ 7 个测试文件（~250 行）均通过 @code-reviewer 审查。
+
 ---
 
-*D-9 Delta 由 @refactor-guardian 扫描生成。2026-06-18 修复后验证：914 tests passed, 8 ignored, 0 failed, cargo build 0 errors。完整债务清单见首次全量扫描（上方 Debt-001~006）。*
+*D-9 + C-4 Delias 由 @refactor-guardian 扫描生成。2026-06-18 验证：939 tests passed, 8 ignored, 0 failed, cargo build 0 errors。完整债务清单见首次全量扫描（上方 Debt-001~006）。*
