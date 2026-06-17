@@ -189,12 +189,12 @@ define_string_id! {
 
 define_string_id! {
     pub AbilityId,
-    prefix: "ability",
+    prefix: "abl",
 }
 
 define_string_id! {
     pub TriggerId,
-    prefix: "trig",
+    prefix: "trg",
 }
 
 define_string_id! {
@@ -219,10 +219,44 @@ define_string_id! {
 
 define_string_id! {
     pub ItemId,
-    prefix: "item",
+    prefix: "itm",
 }
 
 define_string_id! {
     pub FactionId,
-    prefix: "faction",
+    prefix: "fct",
+}
+
+// ============================================================================
+// 补充领域 ID 类型（按 id_strategy.md table 新增）
+// ============================================================================
+
+define_string_id! {
+    pub QuestId,
+    prefix: "qst",
+}
+
+define_string_id! {
+    pub SpellId,
+    prefix: "spl",
+}
+
+define_string_id! {
+    pub BuffId,
+    prefix: "buf",
+}
+
+define_string_id! {
+    pub TerrainId,
+    prefix: "ter",
+}
+
+define_string_id! {
+    pub RecipeId,
+    prefix: "rcp",
+}
+
+define_string_id! {
+    pub LootTableId,
+    prefix: "oot",
 }

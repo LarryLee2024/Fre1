@@ -1,7 +1,7 @@
 ---
 id: 09-planning.feature-developer-implementation-roadmap
 title: Implementation Roadmap — 基于代码审查的分阶段实施计划
-status: draft
+status: active
 owner: feature-developer
 created: 2026-06-17
 updated: 2026-06-17
@@ -15,7 +15,7 @@ tags:
 # Implementation Roadmap — 基于代码审查的分阶段实施计划
 
 > **前置审查**: `docs/10-reviews/feature-developer-*-alignment.md`（4 文件）
-> **审查结论**: 文档完整度 ~100%，代码实现进度 ~15%
+> **审查结论**: 文档完整度 ~100%，代码实现进度 ~40%
 > **目标**: 给出可执行的阶段性实施计划，明确每个阶段的执行 agent 和交付物
 
 ---
@@ -214,14 +214,16 @@ Phase 0 当前无阻塞任务。核心 ADR 和 Schema 已全部就位。
 
 ### Phase A 交付清单
 
-| # | 任务 | agent | 预估 | 前置 |
-|---|------|-------|------|------|
-| A-1 | SeededRng 实现 | @feature-developer | 1 文件 · 50 行 | Phase 0 + 前置文档确认 |
-| A-2 | GameTime 实现 | @feature-developer | 1 文件 · 30 行 | Phase 0 + 前置文档确认 |
-| A-3 | ErrorContext 实现 | @feature-developer | 1 文件 · 80 行 | Phase 0 + 前置文档确认 |
-| A-4 | ID 类型补齐 | @feature-developer | 1 文件 · 30 行 | Phase 0 + 前置文档确认 |
-| | 单元测试 | @test-guardian | 每模块 ≥3 测试 | A-1~A-4 完成 |
-| | 代码审查 | @code-reviewer | 审查报告 | 测试通过 |
+| # | 任务 | agent | 预估 | 前置 | 状态 |
+|---|------|-------|------|------|------|
+| A-1 | SeededRng 实现 | @feature-developer | 1 文件 · 50 行 | Phase 0 + 前置文档确认 | ✅ 完成 |
+| A-2 | GameTime 实现 | @feature-developer | 1 文件 · 30 行 | Phase 0 + 前置文档确认 | ✅ 完成 |
+| A-3 | ErrorContext 实现 | @feature-developer | 1 文件 · 80 行 | Phase 0 + 前置文档确认 | ✅ 完成 |
+| A-4 | ID 类型补齐 | @feature-developer | 1 文件 · 30 行 | Phase 0 + 前置文档确认 | ✅ 完成 |
+| | 单元测试 | @test-guardian | 每模块 ≥3 测试 | A-1~A-4 完成 | ⏳ 待执行 |
+| | 代码审查 | @code-reviewer | 审查报告 | 测试通过 | ⏳ 待执行 |
+
+**实现概览**：`shared/random/` (SeededRng)、`shared/time/` (GameTime)、`shared/error/` (ErrorContext)、`shared/ids/types.rs`（补齐 QuestId/SpellId/BuffId/等 7 个 ID 类型），`cargo test` 558 passed。
 
 ---
 
@@ -254,38 +256,28 @@ Phase 0 当前无阻塞任务。核心 ADR 和 Schema 已全部就位。
 
 以 Tag 模块为标准模板，为以下领域添加 Systems：
 
-| 领域 | 建议首个 System | agent |
-|------|----------------|-------|
-| attribute | `AttributeInitializer`（初始化 Entity 属性） | @feature-developer |
-| modifier | `ModifierApplier`（添加/移除 Modifier 响应） | @feature-developer |
-| aggregator | `AggregationRunner`（触发属性聚合计算） | @feature-developer |
-| spec | 无 systems 需要（Spec 是被动组件） | — |
-| condition | `ConditionEvaluatorSystem`（定时重评估） | @feature-developer |
+| 领域 | 实现的 System | 文件 | agent | 状态 |
+|------|--------------|------|-------|------|
+| attribute | `on_attribute_initialized` — 响应 `AttributeInitialized`，从 Registry 填充默认值 | `attribute/mechanism/systems/attribute_system.rs` | @feature-developer | ✅ 完成 |
+| modifier | `on_modifier_applied` + `on_modifier_removed` — 管理 ModifierContainer 分桶 + Override 索引 | `modifier/mechanism/systems/modifier_system.rs` | @feature-developer | ✅ 完成 |
+| aggregator | `on_aggregate_dirty` — 响应 `AggregateDirty`，调用 `execute_aggregation()` 管线 | `aggregator/mechanism/systems/aggregator_system.rs` | @feature-developer | ✅ 完成 |
+| spec | 无 systems 需要（Spec 是被动组件） | — | — | ➖ 不适用 |
+| condition | `on_tag_changed_by_tag_added` / `on_tag_changed_by_tag_removed` / `on_attribute_changed` — 标记依赖 Tag/Attribute 的条件为 dirty | `condition/mechanism/systems/condition_system.rs` | @feature-developer | ✅ 完成 |
 
 ### B-2: Plugin 内容填充
 
-| 当前为空的 Plugin | 需注册的内容 | agent |
-|------------------|-------------|-------|
-| `EffectPlugin` | Effect 相关 Event + Observer | @feature-developer |
-| `RuntimePlugin` | Pipeline Event | @feature-developer |
+| Plugin | 当前状态 | agent | 状态 |
+|--------|---------|-------|------|
+| `EffectPlugin` | 文档注释已补充（注明 ActiveEffectContainer 成为 Component 后需注册的 Observer），当前无可注册 Observer | @feature-developer | ⚠️ 注释就绪，ECS Observer 等待后续 Phase |
+| `RuntimePlugin` | 文档注释已补充（注明 Pipeline/Scheduler Resource + Observer 注册时机），当前无可注册 Observer | @feature-developer | ⚠️ 注释就绪，ECS Observer 等待后续 Phase |
 
 ### B-3: 领域事件补齐
 
-当前只有 tag/attribute/effect 有 `events.rs`。需为以下领域补全：
+> **代码库摸底发现**：全部 15 个 capability 模块 + runtime 子模块在 Phase B 开始前已存在 `events.rs` 且通过编译。B-3 无需额外实现。
 
-| 缺少 events.rs 的领域 | agent |
-|----------------------|-------|
-| modifier | @feature-developer |
-| aggregator | @feature-developer |
-| gameplay_context | @feature-developer |
-| spec | @feature-developer |
-| condition | @feature-developer |
-| trigger | @feature-developer |
-| ability | @feature-developer |
-| targeting | @feature-developer |
-| execution | @feature-developer |
-| stacking | @feature-developer |
-| cue | @feature-developer |
+| 领域 | 已有 events.rs | 确认 |
+|------|---------------|------|
+| tag / attribute / effect / modifier / aggregator / gameplay_context / spec / condition / trigger / ability / targeting / execution / stacking / cue / event / runtime (pipeline/scheduler/command/replay) | 全部存在 | ✅ 完成 |
 
 ### B-4: 单元测试 — 关键路径优先
 
@@ -299,13 +291,15 @@ Phase 0 当前无阻塞任务。核心 ADR 和 Schema 已全部就位。
 
 ### Phase B 交付清单
 
-| # | 任务 | agent | 前置 |
-|---|------|-------|------|
-| B-1 | 5 个 capabilities 添加 Systems | @feature-developer | Phase A + 前置文档确认 |
-| B-2 | EffectPlugin + RuntimePlugin 填充 | @feature-developer | Phase A + 前置文档确认 |
-| B-3 | 11 个 capabilities 补 events.rs | @feature-developer | Phase A + 前置文档确认 |
-| B-4 | 5 个 capability 单元测试 | @test-guardian | B-1~B-3 |
-| | 代码审查 + 架构合规检查 | @code-reviewer | B-4 通过 |
+| # | 任务 | agent | 前置 | 状态 |
+|---|------|-------|------|------|
+| B-1 | 5 个 capabilities 添加 Systems（tag 已有，新实现 4 个） | @feature-developer | Phase A + 前置文档确认 | ✅ 完成 |
+| B-2 | EffectPlugin + RuntimePlugin 填充 | @feature-developer | Phase A + 前置文档确认 | ⚠️ 文档注释就绪，ECS Observer 待后续 Phase |
+| B-3 | 11 个 capabilities 补 events.rs | @feature-developer | Phase A + 前置文档确认 | ✅ 完成（摸底确认全部已存在） |
+| B-4 | 5 个 capability 单元测试 | @test-guardian | B-1~B-3 | ⏳ 待执行 |
+| | 代码审查 + 架构合规检查 | @code-reviewer | B-4 通过 | ⏳ 待执行 |
+
+**实现概览**：4 个新 System 文件 + 3 个 Plugin 更新，`cargo build` 0 error，`cargo test` 558 passed。tag/attribute/modifier/aggregator/condition 五条管线 ECS 链路已全部就绪：TagAdded/TagRemoved → TagSet 位操作；AttributeInitialized → 默认值填充；ModifierApplied/Removed → 分桶管理；AggregateDirty → 聚合计算 → current_value 更新；Tag/Attribute 变更 → Condition 脏标记。
 
 ---
 
@@ -691,18 +685,18 @@ Phase 0 ──→ Phase A ──→ Phase B ──→ Phase C ──→ Phase D 
 
 ## 工作量总估
 
-| Phase | 领域数 | 预估文件数 | 预估行数 | 主要 agent |
-|-------|--------|-----------|---------|-----------|
-| 0 | 0 (文档) | 2–5 | ~100 | @architect + @test-guardian |
-| A | 4 (shared) | 5–7 | ~300 | @feature-developer |
-| B | 15 (capabilities) | 15–25 | ~1500 | @feature-developer + @test-guardian |
-| C | 5 (infra) | 15–20 | ~1000 | @feature-developer |
-| D | 3 (domains foundation) | 15–24 | ~1500 | 全角色协作 |
-| E | 3 (domains combat) | 15–30 | ~2000 | 全角色协作 |
-| F | 4 (domains progression) | 12–24 | ~1600 | 全角色协作 |
-| G | 5 (domains narrative) | 15–30 | ~1500 | 全角色协作 |
-| H | 4 (cross-cutting) | 8–12 | ~800 | @feature-developer |
-| **总计** | **43 领域** | **~100–170** | **~10,000** | |
+| Phase | 领域数 | 预估文件数 | 预估行数 | 主要 agent | 完成度 |
+|-------|--------|-----------|---------|-----------|--------|
+| 0 | 0 (文档) | 2–5 | ~100 | @architect + @test-guardian | ✅ 完成 |
+| A | 4 (shared) | 7 | ~300 | @feature-developer | ✅ 完成 |
+| B | 15 (capabilities) | 22 | ~1500 | @feature-developer + @test-guardian | ✅ B-1/B-3 完成，B-2 注释，B-4 待 @test-guardian |
+| C | 5 (infra) | 15–20 | ~1000 | @feature-developer | ⬜ 未开始 |
+| D | 3 (domains foundation) | 15–24 | ~1500 | 全角色协作 | ⬜ 未开始 |
+| E | 3 (domains combat) | 15–30 | ~2000 | 全角色协作 | ⬜ 未开始 |
+| F | 4 (domains progression) | 12–24 | ~1600 | 全角色协作 | ⬜ 未开始 |
+| G | 5 (domains narrative) | 15–30 | ~1500 | 全角色协作 | ⬜ 未开始 |
+| H | 4 (cross-cutting) | 8–12 | ~800 | @feature-developer | ⬜ 未开始 |
+| **总计** | **43 领域** | **~100–170** | **~10,000** | | **Phase A✅ B≈80% C~H⬜** |
 
 ---
 

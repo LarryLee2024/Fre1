@@ -27,7 +27,6 @@ tags:
 | 文件 | 主题 |
 |------|------|
 | `test-spec.md` | 测试宪法 — 测试分层、回放测试、覆盖率策略 |
-| `test-spec-json.md` | 测试规范 JSON 格式定义（机器可解析） |
 | `testing-rules.md` | 测试金字塔、不变量测试、CI 门禁规则 |
 
 ## 领域内聚测试结构（四层）
@@ -74,7 +73,7 @@ SRPG 核心架构（Attribute / Tag / Effect / Modifier / Buff / Skill / Turn）
 
 ## 跨领域测试（根 tests/）
 
-仅保留不属于任何单一领域的跨域测试：
+仅保留不属于任何单一领域的跨域测试：如：
 
 ```
 tests/

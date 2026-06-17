@@ -34,6 +34,10 @@ thiserror = "2"
 serde_json = "1"
 tracing = "0.1"
 paste = "1"
+
+# 确定性 PRNG（详见 ADR-041）
+rand = "0.10"
+rand_chacha = "0.10"
 enum-map = "2"
 fluent = "0.17"
 fluent-bundle = "0.16"
