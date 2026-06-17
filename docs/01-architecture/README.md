@@ -450,11 +450,20 @@ domains/<domain>/
 ├── rules/             # 纯业务规则（纯函数，零 ECS 依赖）
 │   ├── formulas.rs
 │   └── rules.rs
-└── integration.rs     # 唯一调用 Capabilities 的入口
+└── integration/       # Anti-Corruption Layer（Facade 模式）
+    ├── mod.rs         # re-export 所有子模块
+    └── <capability>/  # 按能力域拆分（movement/, terrain/, targeting/ ...）
+        ├── mod.rs
+        ├── facade.rs      # 业务语义 API（唯一访问 Capabilities 字段的地方）
+        ├── types.rs       # View Types（Tactical 自己的类型，替代裸 Capabilities 类型）
+        └── system_param.rs # Bevy SystemParam（封装 Capabilities 查询依赖）
 ```
 
 - 🟥 Plugin 是唯一对外入口，禁止外部直接访问 `internal/`
 - 🟩 对外暴露的 API 集中在 `api.rs`
+- 🟩 `integration/` 是 Domain 调用 Capabilities 的唯一入口，采用 Facade + SystemParam 模式
+- 🟩 Systems 通过 SystemParam + View Types 交互，不知道 Capabilities 内部类型（TagSet / AttributeContainer 等）
+- 🟥 禁止 Systems 直接 import Capabilities 组件类型进行字段访问
 
 ---
 

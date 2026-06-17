@@ -233,6 +233,57 @@ FlankingDetected / BackstabDetected / CoverEvaluated
 
 ---
 
+## 7. Integration Facade 设计（Anti-Corruption Layer）
+
+Tactical 域与 Capabilities 的交互通过 `integration/` 模块完成，采用 **Facade + SystemParam** 模式。
+
+### 7.1 设计原则
+
+- **Systems 不知道 Capabilities 内部类型**：通过 SystemParam + View Types 交互
+- **Facade 是唯一访问 Capabilities 字段的地方**：当 AttributeContainer / ModifierContainer 内部变化时，只修改 facade.rs
+- **按能力域拆分**：避免单文件膨胀为 God File
+
+### 7.2 模块结构
+
+```
+integration/
+├── mod.rs
+└── movement/
+    ├── mod.rs
+    ├── facade.rs       # 业务语义 API
+    ├── types.rs        # MovementCapabilityView, MP(newtype)
+    └── system_param.rs # MovementCapabilityParam(SystemParam)
+```
+
+### 7.3 View Types
+
+| 类型 | 说明 |
+|------|------|
+| `MP` | 移动力值（newtype，禁止裸 f32） |
+| `MovementCapabilityView` | 移动能力评估报告（can_move, effective_points, max_points, modifier_summary） |
+| `MovementModifierSummary` | 移动修正摘要（flat_bonus, multiplier, total_effect） |
+| `MovementPrerequisiteError` | 移动前提条件错误 |
+| `MovementCostError` | 移动成本错误 |
+
+### 7.4 SystemParam
+
+`MovementCapabilityParam` 封装所有 Capabilities 查询依赖：
+
+```rust
+fn movement_system(mov: MovementCapabilityParam) {
+    let view = mov.build_view(entity, MovementType::Walk);
+    if view.can_move { /* ... */ }
+}
+```
+
+### 7.5 禁止事项
+
+- 🟥 禁止 Systems 直接 `use` TagSet / AttributeContainer / ModifierContainer 进行字段访问
+- 🟥 禁止在 `integration/` 外部访问 Capabilities 组件的内部字段
+- 🟥 禁止将所有能力域塞入单个 `integration.rs` 文件
+
+---
+
 ## 8. 自检清单
 
 - [x] 所有术语有唯一定义，与项目已有术语一致

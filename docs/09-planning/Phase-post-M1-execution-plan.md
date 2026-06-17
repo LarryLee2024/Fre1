@@ -4,7 +4,7 @@ title: "Phase Post-M1 执行计划 — M1 后未完成任务与下一步行动"
 status: active
 owner: feature-developer
 created: 2026-06-17
-updated: 2026-06-17
+updated: 2026-06-17 (C-3 ✅ + D-2 ✅)
 tags:
   - planning
   - implementation
@@ -33,10 +33,12 @@ tags:
 | Phase C-2 (Input) | ✅ 完成 | ~356 行，22 测试，review PASS |
 | Phase D-1 (Tactical) | ✅ 完成 | ~782 行，36 测试，review PASS |
 | **M1 里程碑** | ✅ 通过 | 742 lib tests pass |
-| **Phase C-3 — Registry** | 🟡 骨架 | `mod.rs` + 空 `plugin.rs` |
+| **Capabilities 集成验证** | ✅ 完成 | Observer System 打通 Tag/Attribute/Modifier 管线，742 tests pass |
+| **Phase C-3 — Registry** | ✅ 完成 | ~750 行，23 测试，build+test PASS |
 | **Phase C-4 — Replay** | 🟡 骨架 | `mod.rs` + 空 `plugin.rs` |
 | **Phase C-5 — Save** | 🟡 骨架 | `mod.rs` + 空 `plugin.rs` |
-| **Phase D-2 ~ D-15** | 🟡 骨架 | 14 个 Domain 均为 `mod.rs` + `plugin.rs` + 空 `tests/` |
+| **Phase D-2 — Terrain** | ✅ 完成 | ~700 行，9 测试，build+test PASS |
+| **Phase D-3 ~ D-15** | 🟡 骨架 | 13 个 Domain 均为 `mod.rs` + `plugin.rs` + 空 `tests/` |
 | **Phase E ~ H** | 🔴 未开始 | — |
 | **@refactor-guardian 技术债扫描** | ✅ 完成 | `docs/11-refactor/debt-inventory-2026-06-17.md`，P0 可见性修复已完成，P1 待处理 |
 
@@ -76,17 +78,31 @@ Tactical 的 `integration.rs` 定义了 `MovementType → TagId` 映射，但没
     ├── ✅ 并行任务 A: @refactor-guardian 技术债扫描（已完成）
     │   └── 输出: docs/11-refactor/debt-inventory-2026-06-17.md
     │
-    ├── 🥇 主任务: Capabilities 集成验证 (D-1.5)
-    │   ├── 目标: 构建一个端到端验证，让 Tactical 通过 Capabilities 执行一次完整操作
-    │   ├── 方法: 在 tactical 域新增一个 integration_test System，
-    │   │          或纯测试代码直接调用 Capabilities API
-    │   ├── 验证点: Tag 查询 → Attribute 读取 → Modifier 应用 → Effect 执行
-    │   ├── 退出条件: 验证通过，所有 21k 行 Capabilities 代码至少有一条执行路径经过
-    │   └── 失败预案: 发现缺陷 → 上报 @architect → 生成 ADR 修复 → 重试验证
+    ├── ✅ 已完成: Capabilities 集成验证 (D-1.5)
+    │   ├── 成果: `on_compute_move` Observer System 已实现
+    │   ├── 验证管线: Tag 查询 → Attribute 读取 → Modifier 应用
+    │   ├── 设计模式: `integration.rs` Facade 封装所有 Capabilities 交互
+    │   ├── 退出条件: ✅ 通过 — TagHierarchy + TagSet / AttributeContainer / ModifierContainer 全管线触及
+    │   ├── 代码: 4 files, ~280 行新增 (integration.rs/events.rs/movement_system.rs/plugin.rs)
+    │   └── 下一站: 建议 @code-reviewer 审查 + @test-guardian 补测试
     │
-    └── 第二阶段（验证通过后）:
-        ├── D-2 Terrain（第一个自然地形的业务域）
-        └── 或 C-3 Registry（取决于内容加载优先级）
+    ├── ✅ 已完成: C-3 Registry 注册中心
+    │   ├── 成果: `RegistryBucket<T>` 泛型版本化存储 + `DefinitionRegistry` Resource
+    │   ├── `IdAllocator` 前缀分配/回收复用 + `RegistryValidation` 交叉引用校验
+    │   ├── 代码: 3 files, ~750 行新增 (registry.rs/resolver.rs/plugin.rs)
+    │   └── 退出条件: ✅ 通过 — 774 tests, 0 failed, 0 build errors
+    │
+    ├── ✅ 已完成: D-2 Terrain 地形域
+    │   ├── 成果: TerrainType/Concealment/SurfaceType 枚举 + TileProperties/SurfaceOverride Component
+    │   ├── rules: 移动消耗(6 移动类别×10 地形) + 遮蔽度修正纯函数
+    │   ├── systems: terrain_effect/surface/hazard 三个 Observer System
+    │   ├── 代码: ~12 files, ~700 行新增
+    │   └── 退出条件: ✅ 通过 — 774 tests, 0 failed, 0 build errors
+    │
+    └── 第三阶段（审查通过后）:
+        ├── C-4 Replay（回放系统骨架）
+        ├── C-5 Save（存档系统骨架）
+        └── 或 D-3 ~ D-9（剩余业务域，按优先级）
 ```
 
 ### 2.2 立即行动项
@@ -95,9 +111,14 @@ Tactical 的 `integration.rs` 定义了 `MovementType → TagId` 映射，但没
 |---|------|--------|------|---------|
 | 1 | **决定是否采纳此方案** | 项目负责人 | 无 | — |
 | 2 | ~~@refactor-guardian 技术债扫描~~ | ~~@refactor-guardian~~ | ~~决定后立即启动~~ | ✅ 已完成 |
-| 3 | Capabilities 集成验证设计 | @architect + @feature-developer | 方案确定 | ~1 次会话 |
-| 4 | Capabilities 集成验证实现 | @feature-developer | 设计完成 | ~1-2 次会话 |
-| 5 | 验证结果评审 | @code-reviewer | 实现完成 | 1 次评审 |
+| 3 | ~~Capabilities 集成验证设计~~ | ~~@architect + @feature-developer~~ | ~~方案确定~~ | ✅ 已完成 |
+| 4 | ~~Capabilities 集成验证实现~~ | ~~@feature-developer~~ | ~~设计完成~~ | ✅ 已完成 |
+| 5 | 验证结果评审 (Capabilities 集成) | @code-reviewer | 实现完成 | 🟡 进行中 |
+| 6 | 测试覆盖 (Capabilities 集成) | @test-guardian | 验证通过 | 🟡 进行中 |
+| 7 | ~~C-3 Registry 实现~~ | ~~@feature-developer~~ | ~~C-3 Registry 完成~~ | ✅ 已完成 |
+| 8 | ~~D-2 Terrain 实现~~ | ~~@feature-developer~~ | ~~D-2 Terrain 完成~~ | ✅ 已完成 |
+| 9 | 代码审查 (C-3 Registry + D-2 Terrain) | @code-reviewer | Registry + Terrain 完成 | 🔴 待启动 |
+| 10 | 测试审查 (D-2 Terrain) | @test-guardian | Terrain 完成 | 🔴 待启动 |
 
 ---
 
@@ -106,9 +127,9 @@ Tactical 的 `integration.rs` 定义了 `MovementType → TagId` 映射，但没
 ### 3.1 Phase C-3: Registry 注册中心
 
 > **目标**: 实现 GenericRegistry，为 Content 层配置加载做准备
-> **估算**: ~200 行，3-4 个文件
+> **估算**: ~750 行，3-4 个文件
 > **主要执行者**: @feature-developer
-> **启动时机**: M1 里程碑后，或 D-1 稳定后即可开始
+> **状态**: ✅ 已完成 (build+test PASS, 774 tests)
 
 #### 前置文档确认
 
@@ -185,29 +206,29 @@ Tactical 的 `integration.rs` 定义了 `MovementType → TagId` 映射，但没
 
 ---
 
-### 3.4 Phase D-2 ~ D-15: 14 个业务域骨架
+### 3.4 Phase D-3 ~ D-15: 13 个业务域骨架
 
 > **当前状态**: 🟡 全部骨架 — 每个域仅 `mod.rs` + `plugin.rs` + 空 `tests/`
-> **说明**: 这些域将在 Capabilities 验证完成后，按业务优先级逐个实现
+> **说明**: D-2 Terrain 已完成，剩余 13 个域按业务优先级逐个实现
 
 #### 业务域清单
 
-| 编号 | 域 | 说明 | 优先级 | 依赖 |
-|------|-----|------|-------|------|
-| D-2 | **Terrain** 地形 | 地形类型、高度、遮挡、效果 | 🔴 高 | D-1 (Tactical) |
-| D-3 | **Faction** 阵营 | 阵营关系、外交、仇恨列表 | 🟡 中 | D-1 |
-| D-4 | **Unit** 单位 | 单位创建、属性、状态机 | 🔴 高 | D-1, D-3 |
-| D-5 | **Combat** 战斗 | 攻击、防御、伤害计算 | 🔴 高 | D-1, D-4, Capabilities 验证 |
-| D-6 | **Spell** 法术 | 法术释放、效果、冷却 | 🟡 中 | D-4, D-5 |
-| D-7 | **Reaction** 反应 | 反击、触发效果、机会攻击 | 🟡 中 | D-5 |
-| D-8 | **AI** 人工智能 | 敌方决策、寻路、行为树 | 🟡 中 | D-1, D-4 |
-| D-9 | **Turn** 回合 | 回合顺序、行动点、阶段 | 🔴 高 | D-1, D-4 |
-| D-10 | **Item** 物品 | 装备、消耗品、背包 | 🟢 低 | D-4 |
-| D-11 | **Skill** 技能 | 职业技能、专精树 | 🟢 低 | D-4, D-5 |
-| D-12 | **Quest** 任务 | 任务状态、目标、奖励 | 🟢 低 | D-4 |
-| D-13 | **Dialog** 对话 | 对话树、选择分支 | 🟢 低 | D-3 |
-| D-14 | **Economy** 经济 | 货币、商店、交易 | 🟢 低 | D-10 |
-| D-15 | **Progression** 成长 | 经验、等级、解锁 | 🟢 低 | D-4, D-11 |
+| 编号 | 域 | 说明 | 优先级 | 依赖 | 状态 |
+|------|-----|------|-------|------|------|
+| D-2 | **Terrain** 地形 | 地形类型、高度、遮挡、效果 | 🔴 高 | D-1 (Tactical) | ✅ 已完成 |
+| D-3 | **Faction** 阵营 | 阵营关系、外交、仇恨列表 | 🟡 中 | D-1 | 🟡 骨架 |
+| D-4 | **Unit** 单位 | 单位创建、属性、状态机 | 🔴 高 | D-1, D-3 | 🟡 骨架 |
+| D-5 | **Combat** 战斗 | 攻击、防御、伤害计算 | 🔴 高 | D-1, D-4, Capabilities 验证 | 🟡 骨架 |
+| D-6 | **Spell** 法术 | 法术释放、效果、冷却 | 🟡 中 | D-4, D-5 | 🟡 骨架 |
+| D-7 | **Reaction** 反应 | 反击、触发效果、机会攻击 | 🟡 中 | D-5 | 🟡 骨架 |
+| D-8 | **AI** 人工智能 | 敌方决策、寻路、行为树 | 🟡 中 | D-1, D-4 | 🟡 骨架 |
+| D-9 | **Turn** 回合 | 回合顺序、行动点、阶段 | 🔴 高 | D-1, D-4 | 🟡 骨架 |
+| D-10 | **Item** 物品 | 装备、消耗品、背包 | 🟢 低 | D-4 | 🟡 骨架 |
+| D-11 | **Skill** 技能 | 职业技能、专精树 | 🟢 低 | D-4, D-5 | 🟡 骨架 |
+| D-12 | **Quest** 任务 | 任务状态、目标、奖励 | 🟢 低 | D-4 | 🟡 骨架 |
+| D-13 | **Dialog** 对话 | 对话树、选择分支 | 🟢 低 | D-3 | 🟡 骨架 |
+| D-14 | **Economy** 经济 | 货币、商店、交易 | 🟢 低 | D-10 | 🟡 骨架 |
+| D-15 | **Progression** 成长 | 经验、等级、解锁 | 🟢 低 | D-4, D-11 | 🟡 骨架 |
 
 > **注**: 优先级为初步评估，实际启动顺序需结合具体业务需求和架构评审确定。
 
@@ -243,11 +264,11 @@ Tactical 的 `integration.rs` 定义了 `MovementType → TagId` 映射，但没
 
 | 阶段 | 文件数 | 预估行数 | 主要执行者 | 建议工期 | 状态 |
 |------|--------|---------|-----------|---------|------|
-| **Capabilities 集成验证** | 2-3 | ~200 | @feature-developer | 1 次会话 | 🔴 未开始 |
-| C-3 Registry 注册中心 | 3-4 | ~200 | @feature-developer | 1 次会话 | 🔴 未开始 |
+| **Capabilities 集成验证** | 4 | ~280 | @feature-developer | 1 次会话 | ✅ 已完成 |
+| C-3 Registry 注册中心 | 3-4 | ~750 | @feature-developer | 1 次会话 | ✅ 已完成 |
 | C-4 Replay 回放骨架 | 4-5 | ~300 | @feature-developer | 1-2 次会话 | 🔴 未开始 |
 | C-5 Save 存档骨架 | 4-5 | ~300 | @feature-developer | 1-2 次会话 | 🔴 未开始 |
-| D-2 Terrain 地形域 | 7-10 | ~500 | @feature-developer | 2 次会话 | 🔴 未开始 |
+| D-2 Terrain 地形域 | ~12 | ~700 | @feature-developer | 2 次会话 | ✅ 已完成 |
 | D-3 ~ D-15 (13 个域) | — | — | — | 待定 | 🔴 未开始 |
 | **@refactor-guardian 技术债扫描** | — | — | @refactor-guardian | ~1 次会话 | ✅ 完成 |
 | @architect — registry_schema v2 对齐 ADR-013 | 1 文件 | ~180 | @architect | 1 次会话 | ✅ 完成 |

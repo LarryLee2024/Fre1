@@ -22,3 +22,17 @@ pub struct PositionChanged {
     pub old_pos: GridPos,
     pub new_pos: GridPos,
 }
+
+/// 请求计算移动消耗并执行移动。
+///
+/// Observer 将处理此事件，通过 Capabilities 管线（Tag/Attribute/Modifier）验证移动。
+/// 通过 commands.trigger(ComputeMoveRequest { entity, path, .. }) 触发。
+#[derive(Event, Debug, Clone)]
+pub struct ComputeMoveRequest {
+    /// 移动实体的 Entity
+    pub entity: Entity,
+    /// 移动路径（格子序列，从当前位置开始）
+    pub path: Vec<GridPos>,
+    /// 是否在移动后发出 UnitMoved 事件
+    pub emit_moved_event: bool,
+}

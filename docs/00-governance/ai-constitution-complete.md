@@ -597,7 +597,9 @@ domain_name/
 #### 3.6.1 Domain 调用 Capabilities 的规范
 - 必须通过 Capabilities 各模块的公开 API 调用，禁止直接访问内部实现
 - 业务规则通过「配置注入 + 回调注册」的方式接入通用框架
-- 每个 Domain 必须有且仅有一个集成层（`integration.rs`）作为与 Capabilities 的唯一交互入口
+- 每个 Domain 必须有且仅有一个集成层（`integration/` 模块）作为与 Capabilities 的唯一交互入口
+- 🟥 集成层必须采用 **Facade + SystemParam** 模式：定义 View Types（Domain 自己的类型）+ SystemParam（封装 Capabilities 查询），Systems 不得直接 import Capabilities 组件类型进行字段访问
+- 🟥 集成层按能力域拆分子模块（如 `integration/movement/`, `integration/terrain/`），禁止单文件膨胀为 God File
 
 #### 3.6.2 Domain 间通信规范（双轨制）
 - **写操作 → Event**：状态变更必须通过全局领域事件（Message）广播，禁止直接调用对方方法
