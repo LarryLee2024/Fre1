@@ -774,20 +774,46 @@ capabilities/cue/
 
 ```
 domain_name/
-├── plugin.rs          # 唯一对外入口，注册组件、系统、事件
-├── components.rs      # 本系统专属 ECS 组件（含原 L3 model 的数据模型）
-├── systems/           # 本系统业务系统（按子模块拆分）
+├── mod.rs              # 模块声明 + pub use（可选，视复杂度决定）
+├── plugin.rs           # 唯一对外入口，注册组件、系统、事件
+├── components/         # ECS 组件（按子模块拆分，或 components.rs 单文件）
+│   ├── mod.rs
+│   └── ...
+├── systems/            # 本系统业务系统（按子模块拆分）
 │   ├── mod.rs
 │   ├── xxx_system.rs
 │   └── yyy_system.rs
-├── events.rs          # 本系统对外发布的领域事件
-├── error.rs           # 本系统专属错误枚举
-├── rules/             # 纯业务规则（优先纯函数，无 ECS 依赖）
-│   ├── formulas.rs    # 业务计算公式
-│   └── rules.rs       # 玩法规则判定
-└── integration.rs     # 集成层：唯一调用 Capabilities 能力的入口
-                        # 含原 L4 frame 的玩法编排逻辑
+├── events/             # 领域事件定义（按子模块拆分，或 events.rs 单文件）
+│   ├── mod.rs
+│   └── ...
+├── error/              # 领域错误枚举（按子模块拆分，或 error.rs 单文件）
+│   ├── mod.rs
+│   └── ...
+├── resources/          # 全局 Resource（按子模块拆分，或 resources.rs 单文件，如有）
+│   ├── mod.rs
+│   └── ...
+├── rules/              # 纯业务规则（优先纯函数，无 ECS 依赖）
+│   ├── mod.rs
+│   ├── formulas.rs     # 业务计算公式
+│   └── rules.rs        # 玩法规则判定
+├── integration/        # 集成层：唯一调用 Capabilities 能力的入口（Facade + SystemParam）
+│   ├── mod.rs
+│   └── <capability>/
+│       ├── facade.rs
+│       ├── types.rs
+│       └── system_param.rs
+└── tests/              # 四层测试（unit/integration/invariant/fixtures）
+    ├── mod.rs
+    ├── unit/
+    ├── integration/
+    ├── invariant/
+    └── fixtures/
 ```
+
+**文件 vs 目录决策指南**：
+- `mod.rs` 和 `plugin.rs`：保持为文件（入口点，职责单一）
+- `components/`、`events/`、`error/`、`resources/`：初始可为单文件，组件/事件/错误/资源数 ≥ 5 时升级为目录
+- `rules/`、`systems/`、`integration/`、`tests/`：初始即为目录
 
 **示例：Combat Domain**
 

@@ -540,14 +540,61 @@ capabilities/runtime/       # C3：跨领域运行时编排底座
 #### 标准结构（所有 Domain 必须统一遵循）
 ```
 domain_name/
-├── plugin.rs          # 唯一对外入口，注册组件、系统、事件
-├── components.rs      # 本系统专属 ECS 组件
-├── systems/           # 本系统业务系统（按子模块拆分）
-├── events.rs          # 本系统对外发布的领域事件
-├── error.rs           # 本系统专属错误枚举
-├── rules/             # 纯业务规则（优先纯函数，无 ECS 依赖）
-└── integration/       # 集成层：唯一调用 Capabilities 能力的入口（Facade + SystemParam）
+├── mod.rs              # 模块声明 + pub use（可选，视复杂度决定）
+├── plugin.rs           # 唯一对外入口，注册组件、系统、事件
+├── components/         # ECS 组件（按子模块拆分，或 components.rs 单文件）
+│   ├── mod.rs
+│   └── ...
+├── systems/            # 本系统业务系统（按子模块拆分）
+│   ├── mod.rs
+│   └── ...
+├── events/             # 领域事件定义（按子模块拆分，或 events.rs 单文件）
+│   ├── mod.rs
+│   └── ...
+├── error/              # 领域错误枚举（按子模块拆分，或 error.rs 单文件）
+│   ├── mod.rs
+│   └── ...
+├── resources/          # 全局 Resource（按子模块拆分，或 resources.rs 单文件，如有）
+│   ├── mod.rs
+│   └── ...
+├── rules/              # 纯业务规则（优先纯函数，无 ECS 依赖）
+│   ├── mod.rs
+│   ├── formulas.rs
+│   └── rules.rs
+├── integration/        # 集成层：唯一调用 Capabilities 能力的入口（Facade + SystemParam）
+│   ├── mod.rs
+│   └── <capability>/
+│       ├── facade.rs
+│       ├── types.rs
+│       └── system_param.rs
+└── tests/              # 四层测试（unit/integration/invariant/fixtures）
+    ├── mod.rs
+    ├── unit/
+    ├── integration/
+    ├── invariant/
+    └── fixtures/
 ```
+
+#### 文件 vs 目录决策指南
+
+| 模块 | 初始形态 | 升级为目录的阈值 | 拆分策略 |
+|------|----------|-----------------|----------|
+| **mod.rs** | 文件 | 不升级 | 入口点，保持单一文件 |
+| **plugin.rs** | 文件 | 不升级 | 唯一对外入口，保持单一文件 |
+| **components/** | `components.rs` | 组件数 ≥ 5 个 | 按子领域拆分（如 `health.rs`, `unit.rs`, `equipment.rs`） |
+| **events/** | `events.rs` | 事件数 ≥ 5 个 | 按事件类型拆分（如 `combat_events.rs`, `movement_events.rs`） |
+| **error/** | `error.rs` | 错误变体数 ≥ 10 个 | 按错误来源拆分（如 `combat_error.rs`, `inventory_error.rs`） |
+| **resources/** | `resources.rs` | 资源数 ≥ 3 个 | 按资源职责拆分（如 `combat_state.rs`, `turn_order.rs`） |
+| **rules/** | 目录 | 初始即为目录 | 按规则类型拆分（`formulas.rs`, `rules.rs`, `validators.rs`） |
+| **systems/** | 目录 | 初始即为目录 | 按系统职责拆分（`movement_system.rs`, `combat_system.rs`） |
+| **integration/** | 目录 | 初始即为目录 | 按 Capability 拆分（`movement/`, `targeting/`, `effect/`） |
+| **tests/** | 目录 | 初始即为目录 | 四层测试结构（unit/integration/invariant/fixtures） |
+
+#### 拆分原则
+- 🟩 **单一职责**：每个子模块只负责一个子领域（如 `health.rs` 只管生命值相关组件）
+- 🟩 **渐进式拆分**：初期保持简单（单文件），复杂度增长时再拆分
+- 🟩 **命名一致性**：子模块文件名与内容对应（如 `combat_events.rs` 包含战斗相关事件）
+- 🟩 **mod.rs 聚合**：目录下的 `mod.rs` 负责 re-export 所有子模块的公开类型
 
 #### 核心业务域清单（15个）
 | 业务域 | 职责 | 核心封装内容 |
