@@ -108,4 +108,61 @@ mod tests {
         );
         assert!(result.is_ok());
     }
+
+    // ── 不变量 3.1: 基础值不可变性（运行时） ─────────────────────
+
+    #[test]
+    fn base_value_is_set_at_creation() {
+        let def = AttributeDefBuilder::new("attr_hp")
+            .category(AttributeCategory::Resource)
+            .default_value(100.0)
+            .range(0.0, 100.0)
+            .build();
+        assert_eq!(def.default_base_value, 100.0);
+    }
+
+    #[test]
+    fn attribute_value_base_and_current_separated() {
+        use crate::core::capabilities::attribute::foundation::{AttributeValue, AttributeId};
+
+        let attr = AttributeValue {
+            def_id: AttributeId::new("attr_hp"),
+            base_value: 100.0,
+            current_value: 80.0,
+            aggregator_managed: true,
+        };
+
+        assert_eq!(attr.base_value, 100.0);
+        assert_eq!(attr.current_value, 80.0);
+        assert_ne!(attr.base_value, attr.current_value);
+    }
+
+    // ── 不变量 3.2: 当前值不能越界 ──────────────────────────────
+
+    #[test]
+    fn definition_range_enforced_at_registration() {
+        let mut reg = AttributeRegistry::default();
+        // default_value=150 超出 range [0, 100]，注册失败
+        let result = reg.register(
+            AttributeDefBuilder::new("attr_hp")
+                .category(AttributeCategory::Resource)
+                .default_value(150.0)
+                .range(0.0, 100.0)
+                .build(),
+        );
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn definition_default_within_range_succeeds() {
+        let mut reg = AttributeRegistry::default();
+        let result = reg.register(
+            AttributeDefBuilder::new("attr_hp")
+                .category(AttributeCategory::Resource)
+                .default_value(50.0)
+                .range(0.0, 100.0)
+                .build(),
+        );
+        assert!(result.is_ok());
+    }
 }

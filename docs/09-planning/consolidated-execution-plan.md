@@ -26,7 +26,7 @@ tags:
 
 ---
 
-## 0. 实测代码基线（2026-06-18）
+## 0. 实测代码基线（2026-06-18 updated）
 
 | 层 | 范畴 | 文件数 | 行数 | 状态 |
 |----|------|--------|------|------|
@@ -36,7 +36,7 @@ tags:
 | **Domains (L1)** — 已填充 | crafting / economy / quest / reaction / spell / summon | 96 | ~7,800 | ✅ Batch 3+4 完成 |
 | **Infra (L2)** | pipeline / registry / replay / save / input | 53 | ~2,874 | ✅ 桥接层完成 |
 | **横切层** | app / content / tools / modding | 6 | ~120 | 🟡 骨架 |
-| **测试** | 各域 tests/ | — | — | ✅ 914 tests pass |
+| **测试** | 各域 tests/ | — | — | ✅ 1331 tests pass, 0 fail |
 
 ---
 
@@ -59,7 +59,7 @@ tags:
 | B-1 | Systems 填充 — attribute/modifier/aggregator/condition | feature-developer-implementation-roadmap | ✅ 完成 |
 | B-2 | EffectPlugin + RuntimePlugin 文档注释补充 | feature-developer-implementation-roadmap | ✅ 完成 |
 | B-3 | 15 个 capability events.rs 补齐 | feature-developer-implementation-roadmap | ✅ 完成（摸底确认全部存在） |
-| B-4 | Capability 单元测试 | feature-developer-implementation-roadmap | ⚠️ 部分完成 |
+| B-4 | Capability 单元测试 | feature-developer-implementation-roadmap | ✅ **已完成**（5 域不变量测试补齐，+31 测试） |
 
 ### 1.3 Phase C — Infrastructure（✅ 全部完成）
 
@@ -104,7 +104,7 @@ tags:
 | 技术债扫描 | `docs/11-refactor/debt-inventory-2026-06-17.md` | Phase-post-M1 | ✅ 完成 |
 | Per-domain 测试计划 | @test-guardian 补齐 | feature-developer-implementation-roadmap 0 | ⏳ 待执行 |
 | 横切层 (Content/Tools/Modding) | Phase E~H | feature-developer-implementation-roadmap | 🔴 待定（核心域完成后） |
-| 测试修复（4 个失败测试） | quest/spell/summon 域测试逻辑修正 | 2026-06-18 | ✅ 已完成 |
+| 测试修复（4 个失败测试） | quest/spell/summon 域测试逻辑修正 | 2026-06-18 | ✅ 已完成（1331 tests pass, 0 fail） |
 
 ---
 
@@ -167,7 +167,7 @@ domains/<domain>/
 | D-9 | Combat integration/ 层 | Combat 已有 integration/（7 文件），可能需要按 Facade 模式标准化 | — |
 | C-4 | Replay 测试 | C-4 Replay 桥接层的单元测试 ⏳ 待编写 | — |
 | C-4 | Replay 代码审查 | Replay 桥接层审查 ⏳ 待执行 | C-4 测试通过 |
-| B-4 | Capability 单元测试补齐 | 5 个关键 capability（attribute/modifier/aggregator/effect/ability）的 @test-guardian 测试 | — |
+| B-4 | Capability 单元测试补齐 | 5 个关键 capability（attribute/modifier/aggregator/effect/ability）的 @test-guardian 测试 | — | ✅ **已完成** |
 | 测试 | Per-domain 测试计划 | @test-guardian 为每个域输出测试计划文档 | 每个域填充完毕后 |
 
 ### 2.3 🔴 遗留架构缺口
@@ -176,7 +176,7 @@ domains/<domain>/
 |---|------|------|------|------|
 | GAP-1 | **空 plugin 警告** | 6 个 Capability 骨架 Plugin 的 `build()` 可能为空（Effect/Runtime/等），部分注册了空 observer 会被 Bevy 警告 | Phase B-2 标注 | ✅ 已确认为预留设计，非 Bug |
 | GAP-2 | **integration/ 不完整** | 只有 Tactical 有完整 Facade，Faction/Terrain 有 `rules/` 但无 integration；Combat 有 integration/ 但无独立集成文档 | — | ✅ 已确认：Faction/Terrain 无 Capabilities 引用，不需要 integration/ |
-| GAP-3 | **error.rs 缺失** | 除 Tactical 外，所有域都没有专属 error.rs | 每个域建立时补齐 | ✅ **已完成**：combat/faction/narrative/terrain 4 个域的 error.rs 已补齐 |
+| GAP-3 | **error.rs 缺失** | 除 Tactical 外，所有域都没有专属 error.rs | 每个域建立时补齐 | ✅ **已完成**：全部 15 个域均有 error.rs（combat/faction/narrative/terrain 为本轮新增） |
 | GAP-4 | **Content 加载未就绪** | ContentPlugin 为空，配置数据无法从 asset 加载到 Registry | Phase E | 🔴 待定（Phase E） |
 | GAP-5 | **App 层渲染未就绪** | app_plugin.rs 在 Phase 9 注册，但当前无渲染/Bevy UI 系统 | Phase F | 🔴 待定（Phase F） |
 

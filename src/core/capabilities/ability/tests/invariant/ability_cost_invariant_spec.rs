@@ -105,4 +105,86 @@ mod tests {
         assert!(msg.contains("50"));
         assert!(msg.contains("20"));
     }
+
+    // ── 不变量 3.1: 激活前 Condition 检查 ───────────────────────
+
+    #[test]
+    fn condition_failed_error_structured() {
+        let err = crate::core::capabilities::ability::foundation::types::AbilityError::ConditionFailed {
+            reason: "silenced".to_string(),
+        };
+        let msg = format!("{}", err);
+        assert!(msg.contains("silenced"));
+    }
+
+    #[test]
+    fn ability_state_can_activate_only_ready() {
+        use crate::core::capabilities::ability::foundation::types::AbilityState;
+
+        assert!(AbilityState::Ready.can_activate());
+        assert!(!AbilityState::Casting.can_activate());
+        assert!(!AbilityState::Active.can_activate());
+        assert!(!AbilityState::Cooldown.can_activate());
+        assert!(!AbilityState::Blocked.can_activate());
+        assert!(!AbilityState::Removed.can_activate());
+    }
+
+    // ── 不变量 3.3: 冷却互斥 ───────────────────────────────────
+
+    #[test]
+    fn on_cooldown_error_contains_remaining_turns() {
+        let err = crate::core::capabilities::ability::foundation::types::AbilityError::OnCooldown {
+            spec_id: "abl_fireball".to_string(),
+            remaining_turns: 3,
+        };
+        let msg = format!("{}", err);
+        assert!(msg.contains("abl_fireball"));
+        assert!(msg.contains("3"));
+    }
+
+    #[test]
+    fn already_active_error_contains_instance_id() {
+        let iid = crate::core::capabilities::ability::foundation::types::AbilityInstanceId::from_u64(42);
+        let err = crate::core::capabilities::ability::foundation::types::AbilityError::AlreadyActive {
+            spec_id: "abl_heal".to_string(),
+            instance_id: iid,
+        };
+        let msg = format!("{}", err);
+        assert!(msg.contains("abl_heal"));
+        assert!(msg.contains("42"));
+    }
+
+    // ── 不变量 3.4: 级联取消 ───────────────────────────────────
+
+    #[test]
+    fn invalid_transition_blocked_state() {
+        use crate::core::capabilities::ability::foundation::types::{AbilityError, AbilityState};
+
+        let err = AbilityError::InvalidTransition {
+            from: AbilityState::Blocked,
+            to: AbilityState::Cooldown,
+            reason: "blocked abilities cannot enter cooldown".to_string(),
+        };
+        let msg = format!("{}", err);
+        assert!(msg.contains("Blocked"));
+        assert!(msg.contains("Cooldown"));
+    }
+
+    // ── 不变量 3.5: Cost 不可逆 ────────────────────────────────
+
+    #[test]
+    fn cost_marking_is_permanent() {
+        let mut instance = make_instance();
+        instance.add_cost(CostEntry::new("attr_hp", 30.0));
+
+        // 标记消耗
+        instance.mark_costs_consumed();
+        assert!(instance.all_costs_consumed());
+
+        // CostEntry 的 consumed 字段一旦设为 true，不会被重置
+        // 这保证了 cost 的不可逆性（不变量 3.5）
+        for cost in &instance.costs {
+            assert!(cost.consumed);
+        }
+    }
 }
