@@ -20,48 +20,38 @@ pub fn reset_reactions_on_turn_start(mut query: Query<&mut ReactionState>) {
 
 /// 处理反应队列中的条目。
 ///
-/// 从全局反应队列中取出待处理的条目，检查其可用性，
-/// 通过 commands.trigger 发布 ReactionTriggered 事件供下游决策。
+/// 从全局反应队列中取出下一个待处理的条目，检查其可用性：
+/// - 如果可用，发布 ReactionTriggered 事件供下游决策，然后返回（一次只处理一个）
+/// - 如果不可用，跳过此条目，继续查找下一个
 pub fn process_reaction_queue(
     mut commands: Commands,
     mut queue: ResMut<GlobalReactionQueue>,
     query: Query<&ReactionState>,
 ) {
-    // 遍历队列中所有待处理的条目，跳过已耗尽的反应者
-    loop {
-        let (reactor, reaction_type, priority, has_pending) = {
-            if queue.queue.is_finished() {
-                break;
-            }
-            let entry = match queue.queue.next_pending() {
-                Some(e) => e,
-                None => break,
-            };
-            (
-                entry.reactor,
-                entry.reaction_type.clone(),
-                entry.priority,
-                true,
-            )
+    while !queue.queue.is_finished() {
+        // 查找下一个 Pending 条目
+        let entry = match queue.queue.next_pending() {
+            Some(e) => e.clone(),
+            None => break,
         };
 
-        // 检查触发者是否仍可用反应（跳出闭包，不再借用 queue）
-        match query.get(reactor) {
-            Ok(state) if state.can_react() => {
-                let ctx = format!("{:?} 触发 {:?}", reactor, reaction_type);
+        // 检查触发者是否仍可用反应
+        if let Ok(state) = query.get(entry.reactor) {
+            if state.can_react() {
+                // 可用 → 触发事件，一次只处理一个反应
+                let ctx = format!("{:?} 触发 {:?}", entry.reactor, entry.reaction_type);
                 commands.trigger(ReactionTriggered {
-                    reactor,
-                    reaction_type,
-                    priority,
+                    reactor: entry.reactor,
+                    reaction_type: entry.reaction_type,
+                    priority: entry.priority,
                     context: ctx,
                 });
                 return;
             }
-            _ => {
-                // 无法反应 → 跳过此条目
-                queue.queue.cancel_current();
-            }
         }
+
+        // 不可用 → 跳过此条目，继续查找下一个
+        queue.queue.cancel_current();
     }
 }
 

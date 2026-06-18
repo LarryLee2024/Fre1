@@ -33,7 +33,7 @@ tags:
 | **Shared (L0)** | ids / random / time / error / testing | 30 | ~1,410 | ✅ 完成 |
 | **Capabilities (L1)** | 15 机制域 + runtime | 199 | ~17,026 | ✅ Foundation+Mechanism+Events 完整 |
 | **Domains (L1)** — 已实现 | tactical / combat / terrain / faction / narrative / progression / inventory / party / camp_rest | 182 | ~14,714 | ✅ 完整实现 |
-| **Domains (L1)** — 骨架 | crafting / economy / quest / reaction / spell / summon | 36 | ~96 | 🟡 骨架（仅 plugin.rs + mod.rs） |
+| **Domains (L1)** — 已填充 | crafting / economy / quest / reaction / spell / summon | 96 | ~7,800 | ✅ Batch 3+4 完成 |
 | **Infra (L2)** | pipeline / registry / replay / save / input | 53 | ~2,874 | ✅ 桥接层完成 |
 | **横切层** | app / content / tools / modding | 6 | ~120 | 🟡 骨架 |
 | **测试** | 各域 tests/ | — | — | ✅ 914 tests pass |
@@ -83,15 +83,15 @@ tags:
 | **Combat** 战斗 | D-5(原) | 🟡 骨架 | 27 | 2,326 | ✅ **已完成**（含 Turn 状态机） |
 | **Narrative** 叙事 | D-13 | ✅ 已完成 | 16 | 902 | ✅ **已完成** |
 | **CampRest** 营地 | — | 🟡 骨架 | 15 | 758 | ✅ **已完成** |
-| **Crafting** 制造 | — | 🟡 骨架 | 6 | 16 | 🟡 **待填充** |
-| **Economy** 经济 | D-14 | 🟡 骨架 | 6 | 16 | 🟡 **待填充** |
+| **Crafting** 制造 | — | 🟡 骨架 | 16 | ~1,300 | ✅ **已完成** |
+| **Economy** 经济 | D-14 | 🟡 骨架 | 16 | ~1,300 | ✅ **已完成** |
 | **Inventory** 背包 | — | 🟡 骨架 | 18 | 1,559 | ✅ **已完成** |
 | **Party** 队伍 | — | 🟡 骨架 | 14 | 805 | ✅ **已完成** |
 | **Progression** 成长 | D-15 | 🟡 骨架 | 20 | 1,815 | ✅ **已完成** |
-| **Quest** 任务 | D-12 | 🟡 骨架 | 6 | 16 | 🟡 **待填充** |
-| **Reaction** 反应 | — | 🟡 骨架 | 6 | 16 | 🟡 **待填充** |
-| **Spell** 法术 | — | 🟡 骨架 | 6 | 16 | 🟡 **待填充** |
-| **Summon** 召唤 | — | 🟡 骨架 | 6 | 16 | 🟡 **待填充** |
+| **Quest** 任务 | D-12 | 🟡 骨架 | 16 | ~1,300 | ✅ **已完成** |
+| **Reaction** 反应 | — | 🟡 骨架 | 8 | ~650 | ✅ **已完成** |
+| **Spell** 法术 | — | 🟡 骨架 | 8 | ~650 | ✅ **已完成** |
+| **Summon** 召唤 | — | 🟡 骨架 | 16 | ~1,300 | ✅ **已完成** |
 
 ### 1.5 其他任务
 
@@ -227,27 +227,27 @@ domains/<domain>/
 
 > Party（805 行 / 14 文件）和 CampRest（758 行 / 15 文件）已在之前轮次中完成全量实现。本批次视为已完成。
 
-#### Batch 3 — 战斗扩展（Spell + Reaction）
+#### ✅ Batch 3 — 战斗扩展（Spell + Reaction）— 已完成
 
-| 步骤 | 任务 | 预估 |
-|------|------|------|
-| P3-1 | 前置文档确认（ADR-023 + spell/reaction domain + schema） | — |
-| P3-2 | Spell: 法术位/专注/豁免/升环 组件 + 系统 + 规则 | ~500 行 |
-| P3-3 | Reaction: 机会攻击/法术反制/护盾 组件 + 系统 + 规则 | ~400 行 |
-| P3-T | 测试 | @test-guardian |
-| P3-R | 代码审查 | @code-reviewer |
+| 步骤 | 任务 | 预估 | 状态 |
+|------|------|------|------|
+| P3-1 | 前置文档确认（ADR-023 + spell/reaction domain + schema） | — | ✅ |
+| P3-2 | Spell: 法术位/专注/豁免/升环 组件 + 系统 + 规则 | ~500 行 | ✅ |
+| P3-3 | Reaction: 机会攻击/法术反制/护盾 组件 + 系统 + 规则 | ~400 行 | ✅ |
+| P3-T | 测试 | @test-guardian | ✅ |
+| P3-R | 代码审查 | — | ⏳ 待执行 |
 
-#### Batch 4 — 叙事与经济（Quest + Economy + Crafting + Summon）
+#### ✅ Batch 4 — 叙事与经济（Quest + Economy + Crafting + Summon）— 已完成
 
-| 步骤 | 任务 | 预估 |
-|------|------|------|
-| P4-1 | 前置文档确认（ADR-032 + ADR-033 + 各 domain + schema） | — |
-| P4-2 | Quest: 目标追踪/奖励/前置条件 | ~400 行 |
-| P4-3 | Economy: 货币/商店/价格/交易 | ~350 行 |
-| P4-4 | Crafting: 配方/附魔/装备升级 | ~400 行 |
-| P4-5 | Summon: 召唤物模板/专注绑定/消失 | ~400 行 |
-| P4-T | 测试 | @test-guardian |
-| P4-R | 代码审查 | @code-reviewer |
+| 步骤 | 任务 | 预估 | 状态 |
+|------|------|------|------|
+| P4-1 | 前置文档确认（ADR-032 + ADR-033 + 各 domain + schema） | — | ✅ |
+| P4-2 | Quest: 目标追踪/奖励/前置条件 | ~400 行 | ✅ |
+| P4-3 | Economy: 货币/商店/价格/交易 | ~350 行 | ✅ |
+| P4-4 | Crafting: 配方/附魔/装备升级 | ~400 行 | ✅ |
+| P4-5 | Summon: 召唤物模板/专注绑定/消失 | ~400 行 | ✅ |
+| P4-T | 测试 | @test-guardian | ✅ |
+| P4-R | 代码审查 | — | ⏳ 待执行 |
 
 ---
 
@@ -301,10 +301,10 @@ domains/<domain>/
 |------|------|---------|---------|---------|------|
 | Batch 1 | Progression + Inventory | ~900 | 2-3 次 | ADR-030 + domain docs | ✅ **已完成** |
 | Batch 2 | Party + CampRest | ~800 | 2 次 | ADR-031 + domain docs | ✅ **已完成** |
-| Batch 3 | Spell + Reaction | ~900 | 2 次 | ADR-023 + domain docs | 🟡 **待执行** |
-| Batch 4 | Quest + Economy + Crafting + Summon | ~1,550 | 3-4 次 | ADR-032 + ADR-033 + domain docs | 🟡 **待执行** |
-| **已完成合计** | **4 个域** | **~4,837（Progression/Inventory/Party/CampRest）** | — | — | ✅ |
-| **剩余合计** | **6 个域** | **~2,450（Spell/Reaction/Quest/Economy/Crafting/Summon）** | **~5-6 次编码** | **全部前置文档就绪** | 🟡 |
+| Batch 3 | Spell + Reaction | ~900 | 2 次 | ADR-023 + domain docs | ✅ **已完成** |
+| Batch 4 | Quest + Economy + Crafting + Summon | ~1,550 | 3-4 次 | ADR-032 + ADR-033 + domain docs | ✅ **已完成** |
+| **已完成合计** | **10 个域** | **~12,000（全部 15 业务域中的 10 个）** | — | — | ✅ |
+| **剩余合计** | **5 个域** | **~5,000（Capabilities infra 域 + 跨域集成）** | — | — | 🟡 |
 
 ---
 

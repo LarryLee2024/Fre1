@@ -1,4 +1,6 @@
-# 代码审查报告 — C-3 Registry + D-2 Terrain + Capabilities Integration
+# 代码审查报告 — C-3 Registry + D-2 Terrain + Capabilities Integration (⚠️-待@feature-developer 完成)
+
+⚠️-待@feature-developer 完成 (P2 deferred: TerrainAttachEffect.effect_id, terrain_def_id())
 
 > 审查人: Sisyphus (@feature-developer 兼 @code-reviewer)
 > 复查人: @test-guardian
