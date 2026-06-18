@@ -32,8 +32,8 @@ tags:
 |----|------|--------|------|------|
 | **Shared (L0)** | ids / random / time / error / testing | 30 | ~1,410 | ✅ 完成 |
 | **Capabilities (L1)** | 15 机制域 + runtime | 199 | ~17,026 | ✅ Foundation+Mechanism+Events 完整 |
-| **Domains (L1)** — 已实现 | tactical / combat / terrain / faction / narrative | 115 | ~7,777 | ✅ 完整实现 |
-| **Domains (L1)** — 骨架 | camp_rest / crafting / economy / inventory / party / progression / quest / reaction / spell / summon | 60 | ~160 | 🟡 骨架（仅 plugin.rs + mod.rs） |
+| **Domains (L1)** — 已实现 | tactical / combat / terrain / faction / narrative / progression / inventory / party / camp_rest | 182 | ~14,714 | ✅ 完整实现 |
+| **Domains (L1)** — 骨架 | crafting / economy / quest / reaction / spell / summon | 36 | ~96 | 🟡 骨架（仅 plugin.rs + mod.rs） |
 | **Infra (L2)** | pipeline / registry / replay / save / input | 53 | ~2,874 | ✅ 桥接层完成 |
 | **横切层** | app / content / tools / modding | 6 | ~120 | 🟡 骨架 |
 | **测试** | 各域 tests/ | — | — | ✅ 914 tests pass |
@@ -82,12 +82,12 @@ tags:
 | **Faction** 阵营 | D-3 | ✅ 已完成 | 18 | 1,097 | ✅ **已完成** |
 | **Combat** 战斗 | D-5(原) | 🟡 骨架 | 27 | 2,326 | ✅ **已完成**（含 Turn 状态机） |
 | **Narrative** 叙事 | D-13 | ✅ 已完成 | 16 | 902 | ✅ **已完成** |
-| **CampRest** 营地 | — | 🟡 骨架 | 6 | 16 | 🟡 **待填充** |
+| **CampRest** 营地 | — | 🟡 骨架 | 15 | 758 | ✅ **已完成** |
 | **Crafting** 制造 | — | 🟡 骨架 | 6 | 16 | 🟡 **待填充** |
 | **Economy** 经济 | D-14 | 🟡 骨架 | 6 | 16 | 🟡 **待填充** |
-| **Inventory** 背包 | — | 🟡 骨架 | 6 | 16 | 🟡 **待填充** |
-| **Party** 队伍 | — | 🟡 骨架 | 6 | 16 | 🟡 **待填充** |
-| **Progression** 成长 | D-15 | 🟡 骨架 | 6 | 16 | 🟡 **待填充** |
+| **Inventory** 背包 | — | 🟡 骨架 | 18 | 1,559 | ✅ **已完成** |
+| **Party** 队伍 | — | 🟡 骨架 | 14 | 805 | ✅ **已完成** |
+| **Progression** 成长 | D-15 | 🟡 骨架 | 20 | 1,815 | ✅ **已完成** |
 | **Quest** 任务 | D-12 | 🟡 骨架 | 6 | 16 | 🟡 **待填充** |
 | **Reaction** 反应 | — | 🟡 骨架 | 6 | 16 | 🟡 **待填充** |
 | **Spell** 法术 | — | 🟡 骨架 | 6 | 16 | 🟡 **待填充** |
@@ -111,7 +111,9 @@ tags:
 
 ### 2.1 🔴 高优先级 — 骨架域填充（路径 B）
 
-10 个业务域当前只有 `mod.rs` + `plugin.rs`（各约 16 行），需要按照已完成的 **Terrain** 或 **Faction** 为标准模板填充。
+6 个业务域（crafting / economy / quest / reaction / spell / summon）当前只有 `mod.rs` + `plugin.rs`（各约 16 行），需要按照已完成的 **Terrain** 或 **Faction** 为标准模板填充。
+
+> **注**：Progression、Inventory、Party、CampRest 已在之前轮次中完成全量实现，从骨架域列表中移除。
 
 **参考标准**：一个完整的 Business Domain 应有 ~18-22 文件，含以下结构：
 
@@ -149,16 +151,12 @@ domains/<domain>/
 
 | 顺序 | 域 | 前置依赖 | 预估工作量 | 说明 |
 |------|-----|---------|-----------|------|
-| **1** | **Progression** 成长 | Attribute + Event | ~500 行 | 经验/等级/职业/天赋/ASI，这是养成系统的基础 |
-| **2** | **Inventory** 背包 | Condition + Effect + Modifier + Event | ~500 行 | 物品/装备槽位/消耗品/战利品 |
-| **3** | **Party** 队伍 | Event + Modifier | ~400 行 | 成员名册/羁绊/阵型/换人 |
-| **4** | **CampRest** 营地 | Event + Effect + Combat | ~400 行 | 短休/长休/生命骰/营地事件 |
-| **5** | **Spell** 法术 | Ability + Effect + Combat | ~500 行 | 法术位/专注/豁免/升环 |
-| **6** | **Reaction** 反应 | Trigger + Event + Combat | ~400 行 | 机会攻击/法术反制/护盾/援护 |
-| **7** | **Quest** 任务 | Event + Condition + Inventory | ~400 行 | 目标追踪/奖励/前置条件 |
-| **8** | **Economy** 经济 | Event + Faction | ~350 行 | 货币/商店/价格/交易 |
-| **9** | **Crafting** 制造 | Effect + Modifier + Inventory | ~400 行 | 配方/附魔/装备升级 |
-| **10** | **Summon** 召唤 | Effect + Condition + Event + Combat | ~400 行 | 召唤物模板/专注绑定/消失 |
+| **1** | **Spell** 法术 | Ability + Effect + Combat | ~500 行 | 法术位/专注/豁免/升环 |
+| **2** | **Reaction** 反应 | Trigger + Event + Combat | ~400 行 | 机会攻击/法术反制/护盾/援护 |
+| **3** | **Quest** 任务 | Event + Condition + Inventory | ~400 行 | 目标追踪/奖励/前置条件 |
+| **4** | **Economy** 经济 | Event + Faction | ~350 行 | 货币/商店/价格/交易 |
+| **5** | **Crafting** 制造 | Effect + Modifier + Inventory | ~400 行 | 配方/附魔/装备升级 |
+| **6** | **Summon** 召唤 | Effect + Condition + Event + Combat | ~400 行 | 召唤物模板/专注绑定/消失 |
 
 ### 2.2 🟡 中优先级 — 补齐与增强
 
@@ -196,7 +194,7 @@ domains/<domain>/
 
 ### 3.1 执行原则
 
-1. **自底向上**：按依赖关系逐个填充，Progression 优先（被 Inventory/Party/Quest 依赖）
+1. **自底向上**：按依赖关系逐个填充，Spell 优先（6 个骨架域按 3.3 分步执行表顺序）
 2. **以 Terrain/Faction 为模板**：参照已完成的 ~18 文件结构，每个域约 400-500 行
 3. **每个域自包含**：完成后 `cargo build` + `cargo test` 无回归
 4. **角色协作**：@feature-developer 主编码，@test-guardian 补测试，@code-reviewer 审代码
@@ -221,31 +219,13 @@ domains/<domain>/
 
 ### 3.3 分步执行表
 
-#### Batch 1 — 养成基础（Progression + Inventory）
+#### ✅ Batch 1 — 养成基础（Progression + Inventory）— 已完成
 
-| 步骤 | 任务 | 输出 | 预估 |
-|------|------|------|------|
-| P1-1 | 前置文档确认（ADR-030 + progression/inventory domain + schema） | — | — |
-| P1-2 | Progression: `components.rs` — 经验/等级/职业/天赋/ASI 组件 | ~80 行 | 1 次 |
-| P1-3 | Progression: `events.rs` — LeveledUp, ExperienceGained, ClassChanged | ~40 行 | 同上 |
-| P1-4 | Progression: `error.rs` — ProgressionError 枚举 | ~30 行 | 同上 |
-| P1-5 | Progression: `rules/formulas.rs` — 升级经验公式、属性成长 | ~80 行 | 同上 |
-| P1-6 | Progression: `rules/rules.rs` — 职业解锁、天赋激活规则 | ~60 行 | 同上 |
-| P1-7 | Progression: `systems/` — 经验结算、等级晋升 system | ~80 行 | 同上 |
-| P1-8 | Progression: `plugin.rs` 更新 | ~30 行 | 同上 |
-| P1-9 | Progression: 四层测试（unit/integration/invariant/fixtures） | @test-guardian | 后续 |
-| P1-10 | **重复以上步骤 1-9 于 Inventory 域**（物品/装备/消耗品） | ~400 行 | 2 次 |
-| P1-R | 代码审查 | @code-reviewer | — |
+> Progression（1,815 行 / 20 文件）和 Inventory（1,559 行 / 18 文件）已在之前轮次中完成全量实现。本批次视为已完成。
 
-#### Batch 2 — 队伍与休整（Party + CampRest）
+#### ✅ Batch 2 — 队伍与休整（Party + CampRest）— 已完成
 
-| 步骤 | 任务 | 预估 |
-|------|------|------|
-| P2-1 | 前置文档确认（ADR-031 + party/camp_rest domain + schema） | — |
-| P2-2 | Party: components + events + error + rules + systems + plugin | ~400 行 |
-| P2-3 | CampRest: components + events + error + rules + systems + plugin | ~400 行 |
-| P2-T | 测试 | @test-guardian |
-| P2-R | 代码审查 | @code-reviewer |
+> Party（805 行 / 14 文件）和 CampRest（758 行 / 15 文件）已在之前轮次中完成全量实现。本批次视为已完成。
 
 #### Batch 3 — 战斗扩展（Spell + Reaction）
 
@@ -317,13 +297,14 @@ domains/<domain>/
 
 ## 5. 工作量汇总
 
-| 批次 | 内容 | 预估行数 | 编码轮次 | 前置依赖 |
-|------|------|---------|---------|---------|
-| Batch 1 | Progression + Inventory | ~900 | 2-3 次 | ADR-030 + domain docs |
-| Batch 2 | Party + CampRest | ~800 | 2 次 | ADR-031 + domain docs |
-| Batch 3 | Spell + Reaction | ~900 | 2 次 | ADR-023 + domain docs |
-| Batch 4 | Quest + Economy + Crafting + Summon | ~1,550 | 3-4 次 | ADR-032 + ADR-033 + domain docs |
-| **总计** | **10 个域** | **~4,150** | **~10 次编码** | **全部前置文档就绪** |
+| 批次 | 内容 | 预估行数 | 编码轮次 | 前置依赖 | 状态 |
+|------|------|---------|---------|---------|------|
+| Batch 1 | Progression + Inventory | ~900 | 2-3 次 | ADR-030 + domain docs | ✅ **已完成** |
+| Batch 2 | Party + CampRest | ~800 | 2 次 | ADR-031 + domain docs | ✅ **已完成** |
+| Batch 3 | Spell + Reaction | ~900 | 2 次 | ADR-023 + domain docs | 🟡 **待执行** |
+| Batch 4 | Quest + Economy + Crafting + Summon | ~1,550 | 3-4 次 | ADR-032 + ADR-033 + domain docs | 🟡 **待执行** |
+| **已完成合计** | **4 个域** | **~4,837（Progression/Inventory/Party/CampRest）** | — | — | ✅ |
+| **剩余合计** | **6 个域** | **~2,450（Spell/Reaction/Quest/Economy/Crafting/Summon）** | **~5-6 次编码** | **全部前置文档就绪** | 🟡 |
 
 ---
 
@@ -333,7 +314,7 @@ domains/<domain>/
 |------|------|------|---------|
 | Capabilities 系统存在未被发现的架构缺陷 | 中 | 高 | 每个新域都会自然验证 Capabilities；发现即调用 @architect |
 | Spell/Reaction 依赖 Combat 但 Combat 未完成 | 低 | 高 | Combat 已实现 2,326 行含 Turn 状态机，但 Effect Pipeline 未全链路验证 |
-| 单人编码瓶颈 | 高 | 高 | 10 个域按顺序进行，暂无可避免 |
+| 单人编码瓶颈 | 中 | 中 | 剩余 6 个骨架域按顺序进行，暂无可避免 |
 | Domain 规则文档与代码实现有偏差 | 低 | 中 | 严格前置文档确认流程 |
 | 测试滞后 | 中 | 中 | 每个批次完成后 @test-guardian 补测试，不留债 |
 
