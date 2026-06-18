@@ -12,7 +12,7 @@ use bevy::prelude::*;
 
 use crate::core::capabilities::runtime::replay::mechanism::calculate_frame_checksum;
 
-use super::events::{ReplayCompleted, ReplayFrameProcessed};
+use super::events::{ReplayCompleted, ReplayFrameProcessed, ReplayMismatchDetected};
 use super::resources::{
     DeterministicRng, FrameCounter, PlaybackSession, RecordingSession, ReplayModeGuard,
 };
@@ -76,8 +76,21 @@ pub fn playback_frame_bookend_system(
         return;
     }
 
-    // 验证当前帧
-    let _ = session.verify_current_frame();
+    // 验证当前帧（不变量: 校验和一致性）
+    if let Err(e) = session.verify_current_frame() {
+        let fnum = session.current_frame_number().unwrap_or(0);
+        let expected = session
+            .player
+            .frames
+            .get(fnum as usize)
+            .and_then(|f| f.checksum)
+            .unwrap_or(0);
+        commands.trigger(ReplayMismatchDetected {
+            frame: fnum,
+            expected_checksum: expected,
+            actual_checksum: 0, // verify_current_frame failed, actual checksum unknown
+        });
+    }
 
     // 发送帧处理事件
     if let Some(fnum) = session.current_frame_number() {
@@ -91,10 +104,16 @@ pub fn playback_frame_bookend_system(
     // 推进到下一帧
     let has_more = session.advance_frame();
     if !has_more {
+        let total_cmds: u64 = session
+            .player
+            .frames
+            .iter()
+            .map(|f| f.commands.len() as u64)
+            .sum();
         mode_guard.0.is_replay = false;
         commands.trigger(ReplayCompleted {
             total_frames: session.total_frames() as u64,
-            total_commands: 0,
+            total_commands: total_cmds,
             has_mismatches: session.has_mismatches(),
         });
         // 回放完成后清理会话资源

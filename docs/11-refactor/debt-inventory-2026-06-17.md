@@ -124,22 +124,22 @@ baseline_warnings: 433 (C-4 infra/replay 增量：0 新增 warning)
 - **说明**: Capabilities 系统（21k 行）已完整实现但尚无业务域消费。大量类型/枚举变体/字段/函数处于"已定义但未使用"状态——这是**正常的架构演进路径**，不是技术债。宪法 §1.3 区分了 🟥 绝对禁止、🟩 必须遵守、🟨 优先选择、🟦 最佳实践。Dead code 属于"可优化但非违规"范畴。
 - **建议**: 暂不处理。待业务域接入后自然消除。
 
-### 5b. 真正废弃的 Dead Code（Low — 预期行为）
+### 5b. 真正废弃的 Dead Code（已清理）
 
-- **严重程度**: Low
-- **数量**: ~50 处
-- **TOP 文件**:
+- **严重程度**: Medium → ✅ Resolved
+- **数量**: ~13 处已删除（2026-06-18 清理）
+- **清理内容**:
 
-  | 文件 | 警告数 | 问题 |
-  |------|--------|------|
-  | `src/shared/ids/types.rs` | 36 | `define_string_id!` 宏生成的 ID 类型未被使用（ModifierId, EffectId 等 17 个） |
-  | `src/core/capabilities/ability/mechanism/lifecycle.rs` | 15 | 整个 ability lifecycle 文件（15 个函数）从未被任何系统调用 |
-  | `src/core/capabilities/effect/mechanism/lifecycle.rs` | 12 | `can_apply` 等函数未使用 |
-  | `src/core/capabilities/event/mechanism/bus.rs` | 5 | `filter_subscribers_by_tag`、`create_event_id` 未使用 |
-  | `src/core/domains/tactical/tests/fixtures/tactical_fixtures.rs` | 6 | 所有 fixture 函数均未被测试引用 |
-  | `src/core/domains/tactical/components.rs` | 2 | `Facing::new`、`HexDirection::ALL/delta` 未使用 |
+  | 文件 | 删除内容 | 类型判定 |
+  |------|---------|---------|
+  | `src/core/domains/tactical/tests/fixtures/tactical_fixtures.rs` | 整个文件（69 行，9 符号） | ✅ 真正废弃 |
+  | `src/core/capabilities/event/mechanism/bus.rs` | `filter_subscribers_by_tag`、`create_event_id` | ✅ 真正废弃 |
+  | `src/core/domains/tactical/components.rs` | `Facing::new`、`HexDirection::ALL`、`delta()` | ✅ 真正废弃 |
+  | `src/shared/ids/types.rs` | ❌ 保留 | 🟡 预留 — Phase E content 时需要 |
+  | `src/core/capabilities/ability/mechanism/lifecycle.rs` | ❌ 保留 | 🟡 预留 — Capability scaffolding |
+  | `src/core/capabilities/effect/mechanism/lifecycle.rs` | ❌ 保留（`can_apply` 已确认 预留 placeholder） | 🟡 预留 — Capability scaffolding |
 
-- **建议**: 这些是明确的 dead code，应在后续重构中删除。
+- **说明**: 通过 @architect 评估将原 ~50 处分为"真正废弃"（~13 处）和"预留"（Capability 骨架代码 + ID 类型，待域接入后自然消除）。真正废弃代码已删除。基线 warnings 从 631 降至 621。
 
 ---
 
@@ -148,7 +148,7 @@ baseline_warnings: 433 (C-4 infra/replay 增量：0 新增 warning)
 | 优先级 | Debt ID | 修复方式 | 状态 |
 |--------|---------|---------|------|
 | ~~P0~~ | ~~001, 002, 003~~ | ~~`pub mod` → `pub(crate) mod`~~ | ✅ 已完成 |
-| **P1** | 005b | 删除明确 dead code | 待处理 |
+| **P1** | 005b | 删除明确 dead code | ✅ 已完成（2026-06-18, cargo build 621 warnings） |
 | **P2** | 004, 005a | 暂不处理，待域接入后复查 | — |
 
 ---

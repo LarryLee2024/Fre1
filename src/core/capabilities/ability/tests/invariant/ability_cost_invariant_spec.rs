@@ -110,9 +110,10 @@ mod tests {
 
     #[test]
     fn condition_failed_error_structured() {
-        let err = crate::core::capabilities::ability::foundation::types::AbilityError::ConditionFailed {
-            reason: "silenced".to_string(),
-        };
+        let err =
+            crate::core::capabilities::ability::foundation::types::AbilityError::ConditionFailed {
+                reason: "silenced".to_string(),
+            };
         let msg = format!("{}", err);
         assert!(msg.contains("silenced"));
     }
@@ -144,11 +145,13 @@ mod tests {
 
     #[test]
     fn already_active_error_contains_instance_id() {
-        let iid = crate::core::capabilities::ability::foundation::types::AbilityInstanceId::from_u64(42);
-        let err = crate::core::capabilities::ability::foundation::types::AbilityError::AlreadyActive {
-            spec_id: "abl_heal".to_string(),
-            instance_id: iid,
-        };
+        let iid =
+            crate::core::capabilities::ability::foundation::types::AbilityInstanceId::from_u64(42);
+        let err =
+            crate::core::capabilities::ability::foundation::types::AbilityError::AlreadyActive {
+                spec_id: "abl_heal".to_string(),
+                instance_id: iid,
+            };
         let msg = format!("{}", err);
         assert!(msg.contains("abl_heal"));
         assert!(msg.contains("42"));

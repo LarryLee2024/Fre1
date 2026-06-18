@@ -79,7 +79,8 @@ mod tests {
             "target_001",
             EffectDuration::HasDuration {
                 turns: 5,
-                calculation: crate::core::capabilities::effect::foundation::DurationCalculation::Fixed,
+                calculation:
+                    crate::core::capabilities::effect::foundation::DurationCalculation::Fixed,
             },
             1,
         );
@@ -127,7 +128,8 @@ mod tests {
             "target_001",
             EffectDuration::HasDuration {
                 turns: 3,
-                calculation: crate::core::capabilities::effect::foundation::DurationCalculation::Fixed,
+                calculation:
+                    crate::core::capabilities::effect::foundation::DurationCalculation::Fixed,
             },
             1,
         )
@@ -162,7 +164,8 @@ mod tests {
             "target_001",
             EffectDuration::HasDuration {
                 turns: 3,
-                calculation: crate::core::capabilities::effect::foundation::DurationCalculation::Fixed,
+                calculation:
+                    crate::core::capabilities::effect::foundation::DurationCalculation::Fixed,
             },
             1,
         );
@@ -174,7 +177,8 @@ mod tests {
             "target_001",
             EffectDuration::HasDuration {
                 turns: 3,
-                calculation: crate::core::capabilities::effect::foundation::DurationCalculation::Fixed,
+                calculation:
+                    crate::core::capabilities::effect::foundation::DurationCalculation::Fixed,
             },
             1,
         );
@@ -193,7 +197,8 @@ mod tests {
             "target_001",
             EffectDuration::HasDuration {
                 turns: 3,
-                calculation: crate::core::capabilities::effect::foundation::DurationCalculation::Fixed,
+                calculation:
+                    crate::core::capabilities::effect::foundation::DurationCalculation::Fixed,
             },
             1,
         );
@@ -205,7 +210,8 @@ mod tests {
             "target_001",
             EffectDuration::HasDuration {
                 turns: 3,
-                calculation: crate::core::capabilities::effect::foundation::DurationCalculation::Fixed,
+                calculation:
+                    crate::core::capabilities::effect::foundation::DurationCalculation::Fixed,
             },
             1,
         );
@@ -226,7 +232,8 @@ mod tests {
             "target_001",
             EffectDuration::HasDuration {
                 turns: 5,
-                calculation: crate::core::capabilities::effect::foundation::DurationCalculation::Fixed,
+                calculation:
+                    crate::core::capabilities::effect::foundation::DurationCalculation::Fixed,
             },
             1,
         )

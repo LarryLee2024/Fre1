@@ -130,12 +130,6 @@ pub struct Facing {
     pub direction: HexDirection,
 }
 
-impl Facing {
-    pub fn new(direction: HexDirection) -> Self {
-        Self { direction }
-    }
-}
-
 /// 六边形方向
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect)]
 pub enum HexDirection {
@@ -147,19 +141,4 @@ pub enum HexDirection {
     NW,
 }
 
-impl HexDirection {
-    /// 所有方向的数组。
-    pub const ALL: [Self; 6] = [Self::N, Self::NE, Self::SE, Self::S, Self::SW, Self::NW];
-
-    /// 方向向量（轴向坐标）。
-    pub fn delta(&self) -> (i32, i32) {
-        match self {
-            Self::N => (0, -1),
-            Self::NE => (1, -1),
-            Self::SE => (1, 0),
-            Self::S => (0, 1),
-            Self::SW => (-1, 1),
-            Self::NW => (-1, 0),
-        }
-    }
-}
+// HexDirection 方法：预留 — ALL 和 delta() 待面向系统接入后添加

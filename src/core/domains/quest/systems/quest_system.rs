@@ -11,12 +11,6 @@ use super::super::events::{
 };
 use super::super::rules::can_turn_in;
 
-/// 接受任务 — 骨架函数，待后续接入。
-pub fn accept_quest(_commands: Commands, _query: Query<&mut QuestLog>) {
-    // 简化实现：此 Observer 由外部系统通过 commands.trigger 调用
-    // 实际的任务接受逻辑在 Observer 中处理
-}
-
 /// 监听任务接受请求的 Observer。
 pub fn on_accept_quest_request(_trigger: On<QuestAccepted>, mut query: Query<&mut QuestLog>) {
     let event = _trigger.event();

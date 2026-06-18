@@ -623,6 +623,7 @@ src/
 | ADR-044 | Pipeline 引擎架构 | ✅ Approved | Cross-cutting |
 | ADR-045 | 模块可见性策略（可见性宪法） | 📋 Proposed | Foundation |
 | ADR-046 | 模块接口模式统一（消除 api.rs） | ✅ Accepted | Foundation |
+| ADR-047 | Content 加载管线架构 | ✅ Approved | Cross-cutting |
 
 ---
 
@@ -682,6 +683,7 @@ src/
 | `40-cross-cutting/ADR-043-command-input.md` | ✅ stable | architect | 2026-06-16 |
 | `40-cross-cutting/ADR-044-pipeline-engine.md` | ✅ stable | architect | 2026-06-17 |
 | `00-foundation/ADR-045-module-visibility-strategy.md` | 📋 Proposed | architect | 2026-06-17 |
+| `40-cross-cutting/ADR-047-content-loading-pipeline.md` | ✅ stable | architect | 2026-06-18 |
 
 ---
 

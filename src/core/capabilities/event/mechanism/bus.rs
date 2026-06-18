@@ -200,21 +200,5 @@ impl Default for EventBus {
 }
 
 // ── 纯函数辅助 ──────────────────────────────────────────────
-
-/// 按标签过滤订阅者（纯函数）。
-pub fn filter_subscribers_by_tag<'a>(
-    subscribers: &'a [SubscriberEntry],
-    tag: &EventTag,
-) -> Vec<&'a SubscriberEntry> {
-    subscribers
-        .iter()
-        .filter(|s| s.tags.contains(tag))
-        .collect()
-}
-
-/// 创建事件 ID（确定性自增）。
-pub fn create_event_id(counter: &mut u64) -> String {
-    let id = *counter;
-    *counter += 1;
-    format!("evt_{:010}", id)
-}
+// 当前无纯函数辅助 —— filter_subscribers_by_tag 和 create_event_id
+// 在之前的轮次中已删除（无调用者，Dead Code 清理）。

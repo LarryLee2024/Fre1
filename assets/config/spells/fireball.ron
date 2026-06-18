@@ -1,0 +1,22 @@
+(
+    id: "spl_000001",
+    name_key: "spell.fireball.name",
+    desc_key: "spell.fireball.desc",
+    level: L3,
+    casting_time: Action,
+    components: (
+        verbal: true,
+        somatic: true,
+        material: Some((
+            description: "spell.fireball.material",
+            consumed: false,
+            cost_gold: None,
+        )),
+    ),
+    range: Ranged(base: 150, max: None),
+    duration: Instant,
+    requires_concentration: false,
+    saving_throw: Some(Dexterity),
+    can_upcast: true,
+    effects: [],
+)

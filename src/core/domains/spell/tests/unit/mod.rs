@@ -7,7 +7,6 @@
 // rules.rs — check_spell_known
 // ============================================================================
 
-#[cfg(test)]
 mod check_spell_known_tests {
     use crate::core::domains::spell::components::SpellDefId;
     use crate::core::domains::spell::rules::check_spell_known;
@@ -31,7 +30,6 @@ mod check_spell_known_tests {
 // rules.rs — check_spell_prepared
 // ============================================================================
 
-#[cfg(test)]
 mod check_spell_prepared_tests {
     use crate::core::domains::spell::components::SpellDefId;
     use crate::core::domains::spell::rules::check_spell_prepared;
@@ -55,7 +53,6 @@ mod check_spell_prepared_tests {
 // rules.rs — check_components
 // ============================================================================
 
-#[cfg(test)]
 mod check_components_tests {
     use crate::core::domains::spell::components::SpellComponents;
     use crate::core::domains::spell::error::SpellError;
@@ -98,7 +95,6 @@ mod check_components_tests {
 // rules.rs — check_slot_available
 // ============================================================================
 
-#[cfg(test)]
 mod check_slot_available_tests {
     use crate::core::domains::spell::components::{
         SpellDefId, SpellLevel, SpellSlotEntry, SpellSlotPool,
@@ -142,7 +138,6 @@ mod check_slot_available_tests {
 // rules.rs — check_concentration
 // ============================================================================
 
-#[cfg(test)]
 mod check_concentration_tests {
     use crate::core::domains::spell::components::{Concentration, SpellDefId};
     use crate::core::domains::spell::error::SpellError;
@@ -169,7 +164,6 @@ mod check_concentration_tests {
 // rules.rs — check_upcast
 // ============================================================================
 
-#[cfg(test)]
 mod check_upcast_tests {
     use crate::core::domains::spell::components::{
         CastingTime, SpellComponents, SpellDef, SpellDefId, SpellDuration, SpellLevel, SpellRange,
@@ -223,7 +217,6 @@ mod check_upcast_tests {
 // rules.rs — concentration_save
 // ============================================================================
 
-#[cfg(test)]
 mod concentration_save_tests {
     use crate::core::domains::spell::components::{Concentration, SpellDefId};
     use crate::core::domains::spell::rules::concentration_save;
@@ -260,7 +253,6 @@ mod concentration_save_tests {
 // rules.rs — resolve_save
 // ============================================================================
 
-#[cfg(test)]
 mod resolve_save_tests {
     use crate::core::domains::spell::components::SaveResult;
     use crate::core::domains::spell::rules::resolve_save;
@@ -290,7 +282,6 @@ mod resolve_save_tests {
 // formulas.rs — calc_save_dc
 // ============================================================================
 
-#[cfg(test)]
 mod calc_save_dc_tests {
     use crate::core::domains::spell::rules::calc_save_dc;
 
@@ -314,7 +305,6 @@ mod calc_save_dc_tests {
 // formulas.rs — calc_concentration_dc
 // ============================================================================
 
-#[cfg(test)]
 mod calc_concentration_dc_tests {
     use crate::core::domains::spell::rules::calc_concentration_dc;
 
@@ -338,7 +328,6 @@ mod calc_concentration_dc_tests {
 // formulas.rs — calc_upcast_bonus
 // ============================================================================
 
-#[cfg(test)]
 mod calc_upcast_bonus_tests {
     use crate::core::domains::spell::rules::calc_upcast_bonus;
 
@@ -362,7 +351,6 @@ mod calc_upcast_bonus_tests {
 // formulas.rs — proficiency_bonus_for_level
 // ============================================================================
 
-#[cfg(test)]
 mod proficiency_bonus_tests {
     use crate::core::domains::spell::rules::proficiency_bonus_for_level;
 

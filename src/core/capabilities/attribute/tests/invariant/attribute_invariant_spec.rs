@@ -123,7 +123,7 @@ mod tests {
 
     #[test]
     fn attribute_value_base_and_current_separated() {
-        use crate::core::capabilities::attribute::foundation::{AttributeValue, AttributeId};
+        use crate::core::capabilities::attribute::foundation::{AttributeId, AttributeValue};
 
         let attr = AttributeValue {
             def_id: AttributeId::new("attr_hp"),

@@ -66,3 +66,6 @@ pub use crate::core::capabilities::runtime::replay::mechanism::{
 };
 
 pub use plugin::*;
+
+#[cfg(test)]
+mod tests;

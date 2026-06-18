@@ -5,11 +5,12 @@
 //! 详见 docs/04-data/domains/spell_schema.md
 
 use bevy::prelude::*;
+use serde::{Deserialize, Serialize};
 
 // ─── ID 类型 ──────────────────────────────────────────────────────
 
 /// 法术定义标识符（前缀: `spl_`）。
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Reflect)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Reflect)]
 pub struct SpellDefId(pub String);
 
 impl SpellDefId {
@@ -43,7 +44,7 @@ impl From<&str> for SpellDefId {
 // ─── 值类型 ────────────────────────────────────────────────────────
 
 /// 法术环阶（0 = 戏法, 1-9 = 法术环阶）。
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Reflect)]
 pub enum SpellLevel {
     Cantrip,
     L1,
@@ -99,7 +100,7 @@ impl Default for SpellLevel {
 }
 
 /// 施法时间类型。
-#[derive(Debug, Clone, PartialEq, Reflect)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Reflect)]
 pub enum CastingTime {
     /// 1 个标准动作。
     Action,
@@ -112,7 +113,7 @@ pub enum CastingTime {
 }
 
 /// 施法组件需求。
-#[derive(Debug, Clone, PartialEq, Reflect)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Reflect)]
 pub struct SpellComponents {
     /// 需要语言成分（沉默时不可施法）。
     pub verbal: bool,
@@ -123,7 +124,7 @@ pub struct SpellComponents {
 }
 
 /// 材料成分定义。
-#[derive(Debug, Clone, PartialEq, Reflect)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Reflect)]
 pub struct MaterialComponent {
     /// 材料描述本地化 Key。
     pub description: String,
@@ -134,7 +135,7 @@ pub struct MaterialComponent {
 }
 
 /// 法术射程。
-#[derive(Debug, Clone, PartialEq, Reflect)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Reflect)]
 pub enum SpellRange {
     Self_,
     Touch,
@@ -147,14 +148,14 @@ pub enum SpellRange {
 }
 
 /// 范围中心点。
-#[derive(Debug, Clone, PartialEq, Reflect)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Reflect)]
 pub enum RangeCenter {
     Self_,
     Point,
 }
 
 /// 法术持续时间。
-#[derive(Debug, Clone, PartialEq, Reflect)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Reflect)]
 pub enum SpellDuration {
     /// 瞬时生效。
     Instant,
@@ -167,7 +168,7 @@ pub enum SpellDuration {
 }
 
 /// 法术豁免类型。
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Reflect)]
 pub enum SaveType {
     Strength,
     Dexterity,
@@ -194,7 +195,7 @@ pub enum SaveResult {
 ///
 /// Spell 是 Ability 的子类型，复用 Ability 生命周期。
 /// 详见 ADR-023 §1.1
-#[derive(Debug, Clone, Reflect)]
+#[derive(Debug, Clone, Asset, Serialize, Deserialize, Reflect)]
 pub struct SpellDef {
     /// 法术唯一标识（前缀: `spl_`）。
     pub id: SpellDefId,

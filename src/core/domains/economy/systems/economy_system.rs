@@ -5,7 +5,7 @@
 
 use bevy::prelude::*;
 
-use super::super::components::{Price, ShopInstance, SupplyDemand, Wallet};
+use super::super::components::{CurrencyType, Price, ShopInstance, SupplyDemand, Wallet};
 use super::super::events::{
     CurrencyChanged, PriceBreakdown, TransactionCompleted, TransactionType,
 };
@@ -16,8 +16,6 @@ use super::super::rules::{calc_buy_price, calc_sell_price, update_supply_demand}
 pub fn on_purchase_request(
     _trigger: On<TransactionCompleted>,
     mut wallet_query: Query<&mut Wallet>,
-    mut shop_query: Query<&mut ShopInstance>,
-    economy_config: Res<EconomyConfig>,
     mut commands: Commands,
 ) {
     let event = _trigger.event();
@@ -67,8 +65,6 @@ pub fn on_purchase_request(
 pub fn on_sell_request(
     _trigger: On<TransactionCompleted>,
     mut wallet_query: Query<&mut Wallet>,
-    mut shop_query: Query<&mut ShopInstance>,
-    economy_config: Res<EconomyConfig>,
     mut commands: Commands,
 ) {
     let event = _trigger.event();
@@ -100,5 +96,3 @@ pub fn on_sell_request(
         });
     }
 }
-
-use super::super::components::CurrencyType;

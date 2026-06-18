@@ -5,10 +5,13 @@
 //! 详见 docs/02-domain/cue_domain.md §1、§3。
 //! 详见 docs/04-data/capabilities/cue_schema.md §3。
 
+use bevy::prelude::*;
+use serde::{Deserialize, Serialize};
+
 /// 表现信号类型枚举。
 ///
 /// 决定信号在 Infra 表现层由哪个子系统处理。
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Reflect)]
 pub enum CueType {
     /// 视觉特效（粒子/光效/拖尾/爆炸）
     VFX(VFXParams),
@@ -36,7 +39,7 @@ impl CueType {
 }
 
 /// VFX 视觉特效参数。
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Reflect)]
 pub struct VFXParams {
     /// 特效资源 Key
     pub effect_key: String,
@@ -85,7 +88,7 @@ impl VFXParams {
 }
 
 /// SFX 音效参数。
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Reflect)]
 pub struct SFXParams {
     /// 音效资源 Key
     pub sound_key: String,
@@ -123,7 +126,7 @@ impl SFXParams {
 }
 
 /// 动画参数。
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Reflect)]
 pub struct AnimationParams {
     /// 动画名称
     pub animation_name: String,
@@ -148,7 +151,7 @@ impl AnimationParams {
 }
 
 /// 屏幕震动参数。
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Reflect)]
 pub struct ShakeParams {
     /// 振幅
     pub intensity: f32,
@@ -170,7 +173,7 @@ impl ShakeParams {
 }
 
 /// 震动衰减曲线。
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Reflect)]
 pub enum ShakeFalloff {
     Linear,
     Exponential,
@@ -178,7 +181,7 @@ pub enum ShakeFalloff {
 }
 
 /// UI 浮动文字参数。
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Reflect)]
 pub struct PopupParams {
     /// 本地化 Key
     pub text_key: String,
@@ -206,7 +209,7 @@ impl PopupParams {
 }
 
 /// Popup 浮动方向。
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Reflect)]
 pub enum PopupDirection {
     Up,
     Down,
@@ -218,7 +221,7 @@ pub enum PopupDirection {
 /// 触发时机标签。
 ///
 /// 标记信号在效果生命周期的哪个阶段触发。
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Reflect)]
 pub enum CueTag {
     /// 效果/技能被应用时触发
     OnApply,
@@ -246,7 +249,7 @@ impl CueTag {
 }
 
 /// Cue 信号定义（Definition 层）。
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Asset, Serialize, Deserialize, Reflect)]
 pub struct CueDef {
     /// 信号唯一标识
     pub id: String,

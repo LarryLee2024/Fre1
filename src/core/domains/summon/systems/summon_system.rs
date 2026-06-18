@@ -50,11 +50,5 @@ pub fn on_summon_expired(
     }
 }
 
-// /// 处理召唤者死亡 — 级联消失所有召唤物。
-// /// TODO: 待 UnitDied 事件接入后实现
-// pub fn on_caster_died(...) {
-//     // 完整实现需要：
-//     // 1. 监听 UnitDied 事件
-//     // 2. 查找该 Entity 的所有 SummonBond
-//     // 3. 对每个召唤物触发 SummonExpired
-// }
+// TODO(on_caster_died): 召唤者死亡级联消失 — 已记录至 docs/09-planning/ 跟踪项
+// 实现要点: 监听 UnitDied → 查找 SummonBond → 逐个触发 SummonExpired
