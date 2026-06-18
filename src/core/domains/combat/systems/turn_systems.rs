@@ -10,15 +10,17 @@
 use bevy::ecs::observer::On;
 use bevy::prelude::*;
 
-use crate::core::capabilities::ability::mechanism::ActiveAbilityContainer;
-use crate::core::capabilities::trigger::foundation::TriggerType;
-use crate::core::capabilities::trigger::mechanism::TriggerContainer;
 use crate::core::domains::combat::components::{
     ActionPoints, CombatParticipant, TeamId, TurnEntry, TurnQueue,
 };
 use crate::core::domains::combat::events::{
     BattleResult, OnBattleEnd, OnBattleStart, OnTurnEnd, OnTurnStart,
 };
+use crate::core::domains::combat::integration::ability::CombatAbilityFacade;
+use crate::core::domains::combat::integration::ability::CombatAbilityParam;
+use crate::core::domains::combat::integration::trigger::CombatTriggerFacade;
+use crate::core::domains::combat::integration::trigger::CombatTriggerParam;
+use crate::core::domains::combat::integration::trigger::CombatTriggerType;
 
 // ═══════════════════════════════════════════════════════════════════════
 // BattlePhase 生命周期
@@ -41,19 +43,16 @@ pub(crate) fn on_enter_battle(mut commands: Commands) {
 /// - 共享冷却（tick_shared_cooldowns）
 pub(crate) fn on_turn_end_tick_ability_cooldowns(
     trigger: On<'_, '_, OnTurnEnd>,
-    mut ability_query: Query<&mut ActiveAbilityContainer>,
+    mut ability_param: CombatAbilityParam,
 ) {
     let unit = trigger.event().unit;
-    if let Ok(mut container) = ability_query.get_mut(unit) {
-        let expired = container.tick_all_cooldowns();
-        container.tick_shared_cooldowns();
-        if !expired.is_empty() {
-            debug!(
-                "[Combat-Ability] {} ability cooldown(s) expired for unit {:?}",
-                expired.len(),
-                unit
-            );
-        }
+    let expired = ability_param.tick_cooldowns_for_unit(unit);
+    if !expired.is_empty() {
+        debug!(
+            "[Combat-Ability] {} ability cooldown(s) expired for unit {:?}",
+            expired.len(),
+            unit
+        );
     }
 }
 
@@ -67,33 +66,17 @@ pub(crate) fn on_turn_end_tick_ability_cooldowns(
 /// 后续将通过 CombatTriggerFacade 分发到目标 Ability 激活。
 pub(crate) fn on_turn_start_evaluate_triggers(
     trigger: On<'_, '_, OnTurnStart>,
-    mut trigger_query: Query<&mut TriggerContainer>,
+    mut trigger_param: CombatTriggerParam,
 ) {
     let unit = trigger.event().unit;
-    if let Ok(mut container) = trigger_query.get_mut(unit) {
-        let ready_ids: Vec<String> = container
-            .find_ready(&TriggerType::OnTurnStart)
-            .into_iter()
-            .map(|entry| entry.id.clone())
-            .collect();
-
-        if !ready_ids.is_empty() {
-            debug!(
-                "[Combat-Trigger] {} OnTurnStart trigger(s) ready for unit {:?}: {:?}",
-                ready_ids.len(),
-                unit,
-                ready_ids
-            );
-            // Record fired triggers and reset turn counts
-            for id in &ready_ids {
-                if let Some(entry) = container.get_mut(id) {
-                    entry.record_trigger();
-                }
-            }
-        }
-
-        // Always reset trigger turn counters at start of unit's turn
-        container.reset_turn_counts();
+    let ready_ids = trigger_param.evaluate_and_consume(unit, CombatTriggerType::TurnStarted);
+    if !ready_ids.is_empty() {
+        debug!(
+            "[Combat-Trigger] {} OnTurnStart trigger(s) ready for unit {:?}: {:?}",
+            ready_ids.len(),
+            unit,
+            ready_ids
+        );
     }
 }
 
@@ -137,8 +120,8 @@ pub fn initialize_turn_order(
             commands.entity(entity).insert((
                 ActionPoints::new(default_movement),
                 CombatParticipant::alive(team_id.clone()),
-                ActiveAbilityContainer::empty(),
-                TriggerContainer::empty(),
+                CombatAbilityFacade::empty_container(),
+                CombatTriggerFacade::empty_container(),
             ));
             TurnEntry::new(entity, team_id, initiative)
         })

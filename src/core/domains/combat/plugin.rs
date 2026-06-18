@@ -21,7 +21,7 @@ use super::systems::turn_systems::{
     on_turn_start_evaluate_triggers,
 };
 use crate::core::capabilities::event::mechanism::EventBus;
-use crate::infra::pipeline::PipelineRegistry;
+use crate::core::capabilities::runtime::pipeline::registry::PipelineRegistry;
 
 pub struct CombatPlugin;
 

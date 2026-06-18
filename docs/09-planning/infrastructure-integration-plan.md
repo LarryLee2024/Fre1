@@ -120,25 +120,23 @@ tags:
 
 ---
 
-### 1.4 `shared::error::ErrorContext` — 错误上下文
+### 1.4 `shared::error::ErrorContext` — 错误上下文 ✅
 
-**现状**: 定义了错误追踪上下文，但无消费者。
+**现状**: 已接入 `infra::pipeline` 的 `StepResult::Failure` 和 `infra::save` 的 `SaveError`。
 
 **接入策略**: 接入到所有可能失败的跨域操作。
 
-| 接入点 | 用途 | 优先级 |
-|--------|------|--------|
-| `infra::pipeline` 执行失败 | Pipeline 执行失败时附加上下文 | P1 |
-| `infra::save` 读写失败 | 存档操作失败时附加上下文 | P1 |
-| `combat` Effect 应用失败 | Effect 被免疫/抵抗时记录原因 | P2 |
-| `spell` 施法失败 | SpellCastRequest 被拒绝时记录原因 | P2 |
+| 接入点 | 用途 | 优先级 | 状态 |
+|--------|------|--------|------|
+| `infra::pipeline` 执行失败 | Pipeline 执行失败时附加上下文 | P1 | ✅ |
+| `infra::save` 读写失败 | 存档操作失败时附加上下文 | P1 | ✅ |
+| `combat` Effect 应用失败 | Effect 被免疫/抵抗时记录原因 | P2 | ⏳ |
+| `spell` 施法失败 | SpellCastRequest 被拒绝时记录原因 | P2 | ⏳ |
 
 **执行步骤**:
-1. 在 `infra::pipeline` 的 `StepResult::Failed` 中携带 `ErrorContext`
-2. 在 `infra::save` 的 `SaveError` 事件中携带 `ErrorContext`
-3. 在 combat/spell 的错误事件中携带 `ErrorContext`
-
-**预计工作量**: ~0.5 天
+1. ✅ 在 `infra::pipeline` 的 `StepResult::Failure` 中携带 `ErrorContext`
+2. ✅ 在 `infra::save` 的 `SaveError` 事件中携带 `ErrorContext`
+3. ⏳ 在 combat/spell 的错误事件中携带 `ErrorContext`（P2 待执行）
 
 ---
 
@@ -418,7 +416,7 @@ Phase G (音频/UI 后):
 | **P0** | ability/condition/trigger/event → combat | ✅ 已完成 | 无 |
 | **P0** | replay → combat 录制/回放 | ⏳ 待执行（依赖 P0 capability） | P0 capability |
 | **P0** | content: 其他 Def 类型 Asset 化 | 2 天 | 无 |
-| **P1** | ErrorContext → pipeline/save | 0.5 天 | 无 |
+| **P1** | ErrorContext → pipeline/save | 0.5 天 | 无 | ✅ |
 | **P1** | targeting/execution/gameplay_context/aggregator → combat | ✅ 已完成 | P0 capability |
 | **P1** | pipeline → combat 流程 (CombatPipelineDriver) | ✅ 已完成 | P0 capability |
 | **P1** | save → combat/party/progression | 3 天 | shared::ids |

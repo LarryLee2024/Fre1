@@ -4,7 +4,9 @@
 //! 用于战斗事件（TurnStarted, DamageTaken 等）的触发器分发。
 
 use crate::core::capabilities::trigger::foundation::{TriggerEntry, TriggerType};
-use crate::core::capabilities::trigger::mechanism::{TriggerEvalResult, can_trigger};
+use crate::core::capabilities::trigger::mechanism::{
+    TriggerContainer, TriggerEvalResult, can_trigger,
+};
 
 // ─── 战斗触发器类型 ────────────────────────────────────────────────
 
@@ -80,5 +82,10 @@ impl CombatTriggerFacade {
         target_ability_def_id: &str,
     ) -> TriggerEntry {
         TriggerEntry::new(id, trigger_type.to_trigger_type(), target_ability_def_id)
+    }
+
+    /// 创建一个空的触发器容器（用于组件插入）。
+    pub fn empty_container() -> TriggerContainer {
+        TriggerContainer::empty()
     }
 }

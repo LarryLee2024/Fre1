@@ -21,6 +21,11 @@ use crate::core::capabilities::ability::mechanism::{
 pub struct CombatAbilityFacade;
 
 impl CombatAbilityFacade {
+    /// 创建一个空的活跃技能容器（用于组件插入）。
+    pub fn empty_container() -> ActiveAbilityContainer {
+        ActiveAbilityContainer::empty()
+    }
+
     /// 尝试激活一个战斗技能。
     pub fn try_activate_ability(
         container: &mut ActiveAbilityContainer,
@@ -91,5 +96,16 @@ impl<'w, 's> CombatAbilityParam<'w, 's> {
             frame,
             costs,
         )
+    }
+
+    /// 推进指定实体的所有冷却（技能冷却 + 共享冷却）。
+    ///
+    /// 返回本回合到期的技能 spec_id 列表。
+    pub fn tick_cooldowns_for_unit(&mut self, entity: Entity) -> Vec<String> {
+        if let Ok(mut container) = self.containers.get_mut(entity) {
+            CombatAbilityFacade::tick_all_cooldowns(&mut container)
+        } else {
+            Vec::new()
+        }
     }
 }

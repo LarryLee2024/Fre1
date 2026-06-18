@@ -36,7 +36,7 @@ tags:
 | **Domains (L1)** — 已填充 | crafting / economy / quest / reaction / spell / summon | 96 | ~7,800 | ✅ Batch 3+4 完成 |
 | **Infra (L2)** | pipeline / registry / replay / save / input | 53 | ~2,874 | ✅ 桥接层完成 |
 | **横切层** | app / content / tools / modding | 11 | ~560 | 🟡 内容层实现中 |
-| **测试** | 各域 tests/ | — | — | ✅ 1402 tests pass, 0 fail |
+| **测试** | 各域 tests/ | — | — | ✅ 1451 tests pass, 0 fail |
 
 ---
 
@@ -113,6 +113,9 @@ tags:
 | Phase E 加载模块骨架 | loading/（definition_type/discovery/ron_loader/errors） | 2026-06-18 | ✅ 已完成 |
 | Phase E ContentPlugin | SpellDef/CueDef Asset 注册 + RonAssetLoader + 同步加载 + 校验 + 存储（1408 tests, 0 fail） | 2026-06-18 | ✅ 已完成 |
 | Phase E CueDef Extension | CueDef TypePath + DefinitionType impl + LoadedCueDefs Resource + 同步加载 dispatch + 4 validation tests + CueDef RON loading test | 2026-06-18 | ✅ 已完成 |
+| Phase F Pipeline→Combat | PipelineRegistry 迁移至 core + 字段封装 + ID 常量 + 步骤函数提取 + 74 个 pipeline 测试 | 2026-06-19 | ✅ 已完成 |
+| 代码审查归档 | 5 份审查报告全部 PASS 后移入 ai_ignore_this_dir/ | 2026-06-19 | ✅ 已完成 |
+| 测试迁移 | 业务代码内联测试迁移至 tests/ 子目录（24 个测试从 7 个文件迁移） | 2026-06-19 | ✅ 已完成 |
 
 ---
 

@@ -5,10 +5,12 @@
 //! 详见 docs/02-domain/targeting_domain.md §1、§2。
 //! 详见 docs/04-data/capabilities/targeting_schema.md §3。
 
+use serde::{Deserialize, Serialize};
+
 /// 目标类别枚举，定义技能可以选择何种目标。
 ///
 /// 与 TargetShape 组合使用构成完整的目标选择规则。
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum TargetType {
     /// 自身（施法者）
     Self_,
@@ -45,7 +47,7 @@ impl TargetType {
 }
 
 /// 目标范围形状枚举，定义技能的影响区域形状。
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum TargetShape {
     /// 单体（单一目标）
     Single,
@@ -216,7 +218,7 @@ impl TargetShape {
 }
 
 /// 优先级排序规则（多个可选目标时的自动选择）。
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum PriorityRule {
     /// 最近优先
     Nearest,

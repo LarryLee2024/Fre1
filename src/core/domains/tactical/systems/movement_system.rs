@@ -10,13 +10,10 @@
 
 use bevy::prelude::*;
 
-use crate::core::capabilities::attribute::mechanism::AttributeContainer;
-use crate::core::capabilities::modifier::mechanism::ModifierContainer;
-use crate::core::capabilities::tag::mechanism::{TagHierarchy, TagSet};
 use crate::core::domains::tactical::components::{GridPos, MovementPoints, MovementType};
 use crate::core::domains::tactical::error::TacticalError;
 use crate::core::domains::tactical::events::ComputeMoveRequest;
-use crate::core::domains::tactical::integration::movement::{MP, facade};
+use crate::core::domains::tactical::integration::movement::{MP, MovementCapabilityParam};
 use crate::core::domains::tactical::resources::GridMap;
 use crate::core::domains::tactical::rules;
 
@@ -31,8 +28,7 @@ pub(crate) fn on_compute_move(
     trigger: On<ComputeMoveRequest>,
     mut commands: Commands,
     mut tac_query: Query<(&mut MovementPoints, &mut GridPos)>,
-    cap_query: Query<(&TagSet, &AttributeContainer, &ModifierContainer)>,
-    tag_hierarchy: Res<TagHierarchy>,
+    mov: MovementCapabilityParam,
     grid_map: Res<GridMap>,
 ) {
     let entity = trigger.event().entity;
@@ -58,31 +54,24 @@ pub(crate) fn on_compute_move(
     };
     let mov_type = mp.movement_type;
 
-    let Ok((tag_set, attrs, mods)) = cap_query.get(entity) else {
-        warn!(
-            "ComputeMoveRequest entity {} missing capabilities components",
-            entity
-        );
-        commands.trigger(TacticalError::InvalidGridPosition);
-        return;
+    // ── 步骤 1+2: 通过 MovementCapabilityParam 构建移动能力视图 ──
+    let view = match mov.build_view(entity, mov_type) {
+        Ok(v) => v,
+        Err(_) => {
+            warn!("Entity {} missing movement capabilities", entity);
+            commands.trigger(TacticalError::InvalidGridPosition);
+            return;
+        }
     };
 
-    // ── 步骤 1: Tag 管线验证 ──
-    if !facade::has_movement_tag(tag_set, &tag_hierarchy, mov_type) {
+    if !view.can_move {
         warn!("Entity {} has no movement tag for {:?}", entity, mov_type);
         commands.trigger(TacticalError::InvalidGridPosition);
         return;
     }
     info!(
-        "[Capabilities Integration] ✅ Tag pipeline: movement tag resolved for {:?}",
-        mov_type
-    );
-
-    // ── 步骤 2: 构建移动能力视图 ──
-    let view = facade::build_movement_view(tag_set, &tag_hierarchy, attrs, mods, mov_type);
-    info!(
-        "[Capabilities Integration] ✅ Attribute+Modifier pipeline: effective={}, max={}, modifier_effect={}",
-        view.effective_points, view.max_points, view.modifier_summary.total_effect
+        "[Capabilities Integration] ✅ Movement capability view: can_move={}, effective={}, max={}",
+        view.can_move, view.effective_points, view.max_points
     );
 
     // ── 步骤 3: 计算路径成本 ──

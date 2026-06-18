@@ -4,6 +4,10 @@
 //!
 //! 详见 docs/04-data/capabilities/targeting_schema.md §3。
 
+use bevy::asset::Asset;
+use bevy::reflect::TypePath;
+use serde::{Deserialize, Serialize};
+
 use crate::core::capabilities::targeting::foundation::types::{
     PriorityRule, TargetShape, TargetType, TargetingError,
 };
@@ -11,7 +15,7 @@ use crate::core::capabilities::targeting::foundation::types::{
 /// 目标选择定义——技能/效果的目标选择完整配置。
 ///
 /// 通常嵌入在 AbilityDef 中。
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Asset, Serialize, Deserialize, TypePath)]
 pub struct TargetingDef {
     /// 目标类别
     pub target_type: TargetType,
