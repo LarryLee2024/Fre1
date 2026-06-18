@@ -36,16 +36,26 @@ mod tests {
         let def: SpellDef =
             ron::from_str(&content).expect("fireball.ron should deserialize to SpellDef");
 
-        // Check key fields
         assert_eq!(def.id.as_str(), "spl_000001");
         assert_eq!(def.name_key, "spell.fireball.name");
         assert_eq!(def.desc_key, "spell.fireball.desc");
+        assert!(def.validate().is_ok());
+    }
 
-        // Validation should pass
-        assert!(
-            def.validate().is_ok(),
-            "fireball.ron should pass validation"
-        );
+    #[test]
+    fn fireball_explosion_cue_ron_deserializes_and_validates() {
+        use crate::content::loading::DefinitionType;
+        use crate::core::capabilities::cue::foundation::CueDef;
+
+        let path = Path::new("assets/config/cues/fireball_explosion.ron");
+        let content = std::fs::read_to_string(path).expect("fireball_explosion.ron should exist");
+        let def: CueDef =
+            ron::from_str(&content).expect("fireball_explosion.ron should deserialize to CueDef");
+
+        assert_eq!(def.id, "cue_fireball_explosion");
+        assert_eq!(def.cue_tag.name(), "OnApply");
+        assert!(!def.critical);
+        assert!(def.validate().is_ok());
     }
 
     #[test]

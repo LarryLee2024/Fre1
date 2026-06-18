@@ -4,10 +4,12 @@
 //!
 //! 详见 docs/04-data/capabilities/execution_schema.md §3。
 
+use serde::{Deserialize, Serialize};
+
 use crate::core::capabilities::execution::foundation::types::{ExecutionType, ScalableValue};
 
 /// 伤害计算参数。
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct DamageParams {
     /// 伤害公式 ID（指向 Domains/rules/ 中的具体公式）
     pub formula_id: String,
@@ -88,7 +90,7 @@ impl DamageParams {
 }
 
 /// 治疗计算参数。
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct HealParams {
     /// 治疗公式 ID
     pub formula_id: String,
@@ -125,7 +127,7 @@ impl HealParams {
 }
 
 /// 骰子定义。
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct DiceDef {
     /// 骰子个数
     pub count: u8,
@@ -165,7 +167,7 @@ impl DiceDef {
 }
 
 /// 属性修正定义——指定从哪个属性读取修正值及系数。
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct AttributeModifierDef {
     /// 用于修正的属性标识
     pub source_attribute: String,

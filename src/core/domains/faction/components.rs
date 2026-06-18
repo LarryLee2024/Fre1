@@ -11,39 +11,8 @@ use bevy::prelude::*;
 
 /// 阵营标识符。
 ///
-/// 当前使用 String，内容系统接入后可通过 Registry 的 DefinitionId 桥接。
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Reflect)]
-pub struct FactionId(pub String);
-
-impl FactionId {
-    /// 从字符串创建 FactionId。
-    pub fn new(id: impl Into<String>) -> Self {
-        Self(id.into())
-    }
-
-    /// 返回内部字符串引用。
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
-}
-
-impl std::fmt::Display for FactionId {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl From<String> for FactionId {
-    fn from(s: String) -> Self {
-        Self(s)
-    }
-}
-
-impl From<&str> for FactionId {
-    fn from(s: &str) -> Self {
-        Self(s.to_string())
-    }
-}
+/// 统一使用 shared::ids::FactionId（前缀: `fct_`）。
+pub use crate::shared::ids::FactionId;
 
 // ─── 枚举类型 ─────────────────────────────────────────────────────
 

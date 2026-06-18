@@ -59,26 +59,9 @@ pub enum TurnSubState {
 
 /// 简单的队伍/阵营标识符。
 ///
-/// 在 combat 域内自包含，避免跨域直接引用 `FactionId`（Data Law 012）。
-/// 外部通过 integration layer 映射。
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Reflect)]
-pub struct TeamId(pub String);
-
-impl TeamId {
-    pub fn new(id: impl Into<String>) -> Self {
-        Self(id.into())
-    }
-
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
-}
-
-impl std::fmt::Display for TeamId {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.0.fmt(f)
-    }
-}
+/// 统一使用 shared::ids::TeamId（前缀: `team_`）。
+/// 外部通过 integration layer 映射到 FactionId。
+pub use crate::shared::ids::TeamId;
 
 // ─── 回合队列 ─────────────────────────────────────────────────────────
 

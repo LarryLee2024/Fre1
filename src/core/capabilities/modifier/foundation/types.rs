@@ -1,7 +1,9 @@
 crate::define_numeric_id!(ModifierInstanceId);
 
+use serde::{Deserialize, Serialize};
+
 /// 修改器运算类型。
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ModifierOp {
     Add,
     Multiply,

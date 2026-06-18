@@ -10,36 +10,9 @@ use serde::{Deserialize, Serialize};
 // ─── ID 类型 ──────────────────────────────────────────────────────
 
 /// 法术定义标识符（前缀: `spl_`）。
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Reflect)]
-pub struct SpellDefId(pub String);
-
-impl SpellDefId {
-    pub fn new(id: impl Into<String>) -> Self {
-        Self(id.into())
-    }
-
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
-}
-
-impl std::fmt::Display for SpellDefId {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl From<String> for SpellDefId {
-    fn from(s: String) -> Self {
-        Self(s)
-    }
-}
-
-impl From<&str> for SpellDefId {
-    fn from(s: &str) -> Self {
-        Self(s.to_string())
-    }
-}
+///
+/// 统一使用 shared::ids::SpellId。
+pub use crate::shared::ids::SpellId as SpellDefId;
 
 // ─── 值类型 ────────────────────────────────────────────────────────
 

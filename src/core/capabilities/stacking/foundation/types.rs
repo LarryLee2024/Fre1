@@ -5,10 +5,12 @@
 //! 详见 docs/02-domain/stacking_domain.md §1、§3。
 //! 详见 docs/04-data/capabilities/stacking_schema.md §3。
 
+use serde::{Deserialize, Serialize};
+
 /// 堆叠类型枚举，定义效果叠加的基本策略。
 ///
 /// 决定当同一效果的第二个实例到达时应如何处理。
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum StackingType {
     /// 不堆叠——新实例被忽略，保持原状态。
     /// 适用：同一 Buff 第二次施加（如"庇护术"不可叠加）。
@@ -44,7 +46,7 @@ impl StackingType {
 /// 堆叠配置（Definition 层）。
 ///
 /// 定义堆叠策略的完整参数，嵌入在 EffectDef 中。
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct StackingConfig {
     /// 堆叠策略
     pub stacking_type: StackingType,
@@ -122,7 +124,7 @@ impl Default for StackingConfig {
 }
 
 /// 堆叠上限溢出处理行为。
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum OverflowBehavior {
     /// 丢弃新到达的层数，保持原状态
     IgnoreNew,

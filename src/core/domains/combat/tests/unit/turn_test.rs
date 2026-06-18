@@ -25,9 +25,9 @@ fn team_id_new_creates_from_string() {
 }
 
 #[test]
-fn team_id_display_shows_inner_value() {
+fn team_id_display_shows_prefixed_value() {
     let id = TeamId::new("enemy");
-    assert_eq!(format!("{id}"), "enemy");
+    assert_eq!(format!("{id}"), "team:enemy");
 }
 
 #[test]

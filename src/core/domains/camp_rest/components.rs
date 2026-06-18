@@ -8,37 +8,10 @@ use bevy::prelude::*;
 
 // ─── ID 类型 ──────────────────────────────────────────────────────
 
-/// 营地事件模板标识符。
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Reflect)]
-pub struct CampEventId(pub String);
-
-impl CampEventId {
-    pub fn new(id: impl Into<String>) -> Self {
-        Self(id.into())
-    }
-
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
-}
-
-impl std::fmt::Display for CampEventId {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl From<String> for CampEventId {
-    fn from(s: String) -> Self {
-        Self(s)
-    }
-}
-
-impl From<&str> for CampEventId {
-    fn from(s: &str) -> Self {
-        Self(s.to_string())
-    }
-}
+/// 营地事件模板标识符（前缀: `cmp_`）。
+///
+/// 统一使用 shared::ids::CampEventId。
+pub use crate::shared::ids::CampEventId;
 
 // ─── 值类型 ────────────────────────────────────────────────────────
 

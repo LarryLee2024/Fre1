@@ -5,10 +5,12 @@
 //! 详见 docs/02-domain/effect_domain.md §1、§3。
 //! 详见 docs/04-data/capabilities/effect_schema.md §3。
 
+use serde::{Deserialize, Serialize};
+
 /// 效果生命周期阶段（四阶段状态机）。
 ///
 /// 转换规则见 docs/02-domain/effect_domain.md §2。
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum EffectStage {
     /// 施加阶段——检查条件，初始化
     Applying,
@@ -43,7 +45,7 @@ impl EffectStage {
 }
 
 /// 效果持续时间类型。
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum EffectDuration {
     /// 瞬时效果（立即执行，无持续阶段）
     Instant,
@@ -91,7 +93,7 @@ impl EffectDuration {
 }
 
 /// 持续时间计算方式。
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum DurationCalculation {
     /// 固定值
     Fixed,
@@ -135,7 +137,7 @@ impl DurationCalculation {
 }
 
 /// 效果周期 Tick 定义。
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct EffectPeriod {
     /// 间隔回合数（V6: ≥ 1）
     pub interval_turns: u32,
@@ -179,7 +181,7 @@ impl EffectPeriod {
 }
 
 /// 效果分类。
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum EffectCategory {
     /// 增益
     Buff,
@@ -219,7 +221,7 @@ impl EffectCategory {
 }
 
 /// 效果移除原因。
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum RemovalReason {
     /// 持续时间耗尽
     Expired,

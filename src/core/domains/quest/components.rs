@@ -9,36 +9,9 @@ use bevy::prelude::*;
 // ─── ID 类型 ──────────────────────────────────────────────────────
 
 /// 任务定义标识符（前缀: `qst_`）。
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Reflect)]
-pub struct QuestDefId(pub String);
-
-impl QuestDefId {
-    pub fn new(id: impl Into<String>) -> Self {
-        Self(id.into())
-    }
-
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
-}
-
-impl std::fmt::Display for QuestDefId {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl From<String> for QuestDefId {
-    fn from(s: String) -> Self {
-        Self(s)
-    }
-}
-
-impl From<&str> for QuestDefId {
-    fn from(s: &str) -> Self {
-        Self(s.to_string())
-    }
-}
+///
+/// 统一使用 shared::ids::QuestId。
+pub use crate::shared::ids::QuestId as QuestDefId;
 
 /// 目标唯一标识符（任务内唯一）。
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Reflect)]

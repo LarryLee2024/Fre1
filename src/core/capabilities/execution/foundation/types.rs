@@ -5,13 +5,15 @@
 //! 详见 docs/02-domain/execution_domain.md §1、§3。
 //! 详见 docs/04-data/capabilities/execution_schema.md §3。
 
+use serde::{Deserialize, Serialize};
+
 use crate::core::capabilities::execution::foundation::values::DamageParams;
 use crate::core::capabilities::execution::foundation::values::HealParams;
 
 /// 执行计算类型枚举，定义计算的业务类别。
 ///
 /// 分为两大类：内置计算（Damage/Heal/DirectAttributeMod）和扩展计算（Custom）。
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum ExecutionType {
     /// 伤害计算
     Damage(DamageParams),
@@ -51,7 +53,7 @@ impl ExecutionType {
 }
 
 /// 直接属性修改操作枚举。
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum DirectOp {
     /// 设置为固定值
     Set,
@@ -64,7 +66,7 @@ pub enum DirectOp {
 }
 
 /// 可缩放值类型，定义可以随等级/属性缩放的值。
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum ScalableValue {
     /// 固定值
     Fixed(f32),
@@ -93,7 +95,7 @@ impl ScalableValue {
 }
 
 /// 自定义执行引用——指向 Domains 注册的自定义计算逻辑。
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct CustomExecutionRef {
     /// 自定义执行 ID（对应 CustomExecutionRegistry 中的注册项）
     pub execution_id: String,

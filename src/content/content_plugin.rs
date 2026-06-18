@@ -9,6 +9,8 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 use super::loading::{ContentFile, DefinitionType, RonAssetLoader, discover_ron_files};
+use crate::core::capabilities::cue::foundation::CueDef;
+use crate::core::capabilities::effect::foundation::EffectDef;
 use crate::core::domains::spell::SpellDef;
 
 /// 内容加载状态 Resource。
@@ -33,6 +35,24 @@ pub struct LoadedSpellDefs {
     pub errors: Vec<(PathBuf, String)>,
 }
 
+/// 已加载的 Cue 信号定义集合 Resource。
+#[derive(Resource, Debug, Default)]
+pub struct LoadedCueDefs {
+    /// 成功加载并校验通过的 Cue 定义。
+    pub defs: Vec<CueDef>,
+    /// 加载或校验失败的文件（路径 + 错误信息）。
+    pub errors: Vec<(PathBuf, String)>,
+}
+
+/// 已加载的效果定义集合 Resource。
+#[derive(Resource, Debug, Default)]
+pub struct LoadedEffectDefs {
+    /// 成功加载并校验通过的效果定义。
+    pub defs: Vec<EffectDef>,
+    /// 加载或校验失败的文件（路径 + 错误信息）。
+    pub errors: Vec<(PathBuf, String)>,
+}
+
 /// ContentPlugin — 内容桥接层插件。
 ///
 /// 职责：
@@ -48,11 +68,17 @@ impl Plugin for ContentPlugin {
     fn build(&self, app: &mut App) {
         // ── 注册 Asset 类型和加载器 ──
         app.init_asset::<SpellDef>()
-            .init_asset_loader::<RonAssetLoader<SpellDef>>();
+            .init_asset_loader::<RonAssetLoader<SpellDef>>()
+            .init_asset::<CueDef>()
+            .init_asset_loader::<RonAssetLoader<CueDef>>()
+            .init_asset::<EffectDef>()
+            .init_asset_loader::<RonAssetLoader<EffectDef>>();
 
         // ── 初始化 Resources ──
         app.init_resource::<ContentState>()
-            .init_resource::<LoadedSpellDefs>();
+            .init_resource::<LoadedSpellDefs>()
+            .init_resource::<LoadedCueDefs>()
+            .init_resource::<LoadedEffectDefs>();
 
         // ── 启动时加载所有配置内容 ──
         app.add_systems(Startup, load_all_content);
@@ -64,7 +90,12 @@ impl Plugin for ContentPlugin {
 /// 扫描 assets/config/ 目录，发现所有 .ron 文件，
 /// 按桶分类并记录到 ContentState。
 /// 对已知 Definition 类型执行同步加载、反序列化和校验。
-fn load_all_content(mut state: ResMut<ContentState>, mut spells: ResMut<LoadedSpellDefs>) {
+fn load_all_content(
+    mut state: ResMut<ContentState>,
+    mut spells: ResMut<LoadedSpellDefs>,
+    mut cues: ResMut<LoadedCueDefs>,
+    mut effects: ResMut<LoadedEffectDefs>,
+) {
     let config_root = std::path::Path::new("assets/config");
 
     // 1. 发现所有 RON 文件
@@ -82,6 +113,8 @@ fn load_all_content(mut state: ResMut<ContentState>, mut spells: ResMut<LoadedSp
     for file in &state.discovered_files {
         match file.bucket_name.as_str() {
             "spells" => load_spell_def(&mut spells, file),
+            "cues" => load_cue_def(&mut cues, file),
+            "effects" => load_effect_def(&mut effects, file),
             other => {
                 info!("[Content] Unknown bucket '{}', skipping", other);
             }
@@ -105,9 +138,11 @@ fn load_all_content(mut state: ResMut<ContentState>, mut spells: ResMut<LoadedSp
         }
     }
     info!(
-        "[Content] Loaded {} spell def(s), {} error(s)",
+        "[Content] Loaded {} spell def(s), {} cue def(s), {} effect def(s), {} error(s)",
         spells.defs.len(),
-        spells.errors.len()
+        cues.defs.len(),
+        effects.defs.len(),
+        spells.errors.len() + cues.errors.len() + effects.errors.len(),
     );
 }
 
@@ -140,6 +175,70 @@ fn load_spell_def(spells: &mut ResMut<LoadedSpellDefs>, file: &ContentFile) {
 
     info!("[Content] Loaded spell '{}' (id: {})", def.name_key, def.id);
     spells.defs.push(def);
+}
+
+/// 从 RON 文件同步加载一个 CueDef。
+fn load_cue_def(cues: &mut ResMut<LoadedCueDefs>, file: &ContentFile) {
+    let content = match std::fs::read_to_string(&file.path) {
+        Ok(c) => c,
+        Err(e) => {
+            let msg = format!("failed to read file: {}", e);
+            cues.errors.push((file.path.clone(), msg));
+            return;
+        }
+    };
+
+    let def: CueDef = match ron::from_str(&content) {
+        Ok(d) => d,
+        Err(e) => {
+            let msg = format!("failed to deserialize RON: {}", e);
+            cues.errors.push((file.path.clone(), msg));
+            return;
+        }
+    };
+
+    // 校验（通过 DefinitionType trait）
+    if let Err(e) = def.validate() {
+        let msg = format!("validation failed: {}", e);
+        cues.errors.push((file.path.clone(), msg));
+        return;
+    }
+
+    info!("[Content] Loaded cue '{}'", def.id);
+    cues.defs.push(def);
+}
+
+/// 从 RON 文件同步加载一个 EffectDef。
+fn load_effect_def(effects: &mut ResMut<LoadedEffectDefs>, file: &ContentFile) {
+    let content = match std::fs::read_to_string(&file.path) {
+        Ok(c) => c,
+        Err(e) => {
+            let msg = format!("failed to read file: {}", e);
+            effects.errors.push((file.path.clone(), msg));
+            return;
+        }
+    };
+
+    let def: EffectDef = match ron::from_str(&content) {
+        Ok(d) => d,
+        Err(e) => {
+            let msg = format!("failed to deserialize RON: {}", e);
+            effects.errors.push((file.path.clone(), msg));
+            return;
+        }
+    };
+
+    if let Err(e) = def.validate() {
+        let msg = format!("validation failed: {}", e);
+        effects.errors.push((file.path.clone(), msg));
+        return;
+    }
+
+    info!(
+        "[Content] Loaded effect '{}' (id: {})",
+        def.name_key, def.id
+    );
+    effects.defs.push(def);
 }
 
 #[cfg(test)]

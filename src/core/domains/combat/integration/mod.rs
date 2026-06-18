@@ -4,7 +4,11 @@
 //! 按能力域拆分为子模块，避免 God File 膨胀：
 //!
 //! - `effect/` — 效果能力（Effect）—— Effect Tick、效果查询
-//! - 未来：`execution/`、`targeting/`、`condition/`、`event/`
+//! - `ability/` — 技能能力（Ability）—— 技能激活、冷却管理
+//! - `condition/` — 条件能力（Condition）—— 免疫检查、施法条件
+//! - `trigger/` — 触发器能力（Trigger）—— 战斗事件触发器评估
+//! - `event/` — 事件能力（Event）—— EventBus 统一事件分发
+//! - `turn/` — 回合管理
 //!
 //! # 设计原则
 //!
@@ -20,5 +24,9 @@
 //!
 //! 🟥 禁止任何 Systems 直接 import Capabilities 组件类型进行字段访问。
 
+pub mod ability;
+pub mod condition;
 pub mod effect;
+pub mod event;
+pub mod trigger;
 pub mod turn;

@@ -8,23 +8,15 @@
 //! # 核心类型
 //! - [`GameTime`]: (frame, turn) 二元组，标记游戏中每一个时间点
 
+use bevy::prelude::*;
+
 /// 游戏内时间，基于帧计数和回合计数。
 ///
 /// 确定性时间系统，不依赖系统时钟。
 /// (frame, turn) 二元组标记游戏中的每一个时间点。
 ///
-/// # 使用
-///
-/// ```ignore
-/// use fre_shared::time::GameTime;
-///
-/// let mut t = GameTime::new();
-/// t.advance_frame();           // F1_T0
-/// t.advance_turn();            // F1_T1
-/// assert_eq!(t.frame(), 1);
-/// assert_eq!(t.turn(), 1);
-/// ```
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+/// 作为 Resource 注册到 App，所有需要时间感知的系统通过 `Res<GameTime>` 访问。
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Resource)]
 pub struct GameTime {
     frame: u64,
     turn: u64,

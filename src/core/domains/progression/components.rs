@@ -10,105 +10,20 @@ use bevy::prelude::*;
 
 // ─── ID 类型 ──────────────────────────────────────────────────────
 
-/// 职业标识符。
+/// 职业标识符（前缀: `cls_`）。
 ///
-/// 使用 String，内容系统接入后可通过 Registry 的 DefinitionId 桥接。
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Reflect)]
-pub struct ClassId(pub String);
+/// 统一使用 shared::ids::ClassId。
+pub use crate::shared::ids::ClassId;
 
-impl ClassId {
-    /// 从字符串创建 ClassId。
-    pub fn new(id: impl Into<String>) -> Self {
-        Self(id.into())
-    }
+/// 天赋标识符（前缀: `tal_`）。
+///
+/// 统一使用 shared::ids::TalentId。
+pub use crate::shared::ids::TalentId;
 
-    /// 返回内部字符串引用。
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
-}
-
-impl std::fmt::Display for ClassId {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl From<String> for ClassId {
-    fn from(s: String) -> Self {
-        Self(s)
-    }
-}
-
-impl From<&str> for ClassId {
-    fn from(s: &str) -> Self {
-        Self(s.to_string())
-    }
-}
-
-/// 天赋标识符。
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Reflect)]
-pub struct TalentId(pub String);
-
-impl TalentId {
-    pub fn new(id: impl Into<String>) -> Self {
-        Self(id.into())
-    }
-
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
-}
-
-impl std::fmt::Display for TalentId {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl From<String> for TalentId {
-    fn from(s: String) -> Self {
-        Self(s)
-    }
-}
-
-impl From<&str> for TalentId {
-    fn from(s: &str) -> Self {
-        Self(s.to_string())
-    }
-}
-
-/// 子职标识符。
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Reflect)]
-pub struct SubclassId(pub String);
-
-impl SubclassId {
-    pub fn new(id: impl Into<String>) -> Self {
-        Self(id.into())
-    }
-
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
-}
-
-impl std::fmt::Display for SubclassId {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl From<String> for SubclassId {
-    fn from(s: String) -> Self {
-        Self(s)
-    }
-}
-
-impl From<&str> for SubclassId {
-    fn from(s: &str) -> Self {
-        Self(s.to_string())
-    }
-}
+/// 子职标识符（前缀: `sub_`）。
+///
+/// 统一使用 shared::ids::SubclassId。
+pub use crate::shared::ids::SubclassId;
 
 // ─── 辅助数据类型 ──────────────────────────────────────────────────
 

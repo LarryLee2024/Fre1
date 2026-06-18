@@ -266,3 +266,38 @@ define_string_id! {
     pub LootTableId,
     prefix: "ltb",
 }
+
+define_string_id! {
+    pub TeamId,
+    prefix: "team",
+}
+
+define_string_id! {
+    pub ClassId,
+    prefix: "cls",
+}
+
+define_string_id! {
+    pub TalentId,
+    prefix: "tal",
+}
+
+define_string_id! {
+    pub SubclassId,
+    prefix: "sub",
+}
+
+define_string_id! {
+    pub BondDefId,
+    prefix: "bnd",
+}
+
+define_string_id! {
+    pub FormationDefId,
+    prefix: "fmd",
+}
+
+define_string_id! {
+    pub CampEventId,
+    prefix: "cmp",
+}

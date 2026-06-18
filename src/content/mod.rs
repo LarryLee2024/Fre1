@@ -9,7 +9,9 @@ mod content_plugin;
 pub mod def_impls;
 pub mod loading;
 
-pub use content_plugin::{ContentPlugin, ContentState, LoadedSpellDefs};
+pub use content_plugin::{
+    ContentPlugin, ContentState, LoadedCueDefs, LoadedEffectDefs, LoadedSpellDefs,
+};
 pub use loading::{ConfigError, ContentFile, DefinitionType, ValidationError};
 
 #[cfg(test)]
