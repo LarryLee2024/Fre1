@@ -44,21 +44,30 @@ pub fn on_apply_enchantment(
             return;
         }
 
-        // 2. 检查互斥规则
-        if let Some(new_enchant_def) = enchant_registry.get(&event.new_enchantment) {
-            let all_defs: Vec<_> = enchant_registry.defs.values().cloned().collect();
-            if let Some(conflict_index) =
-                check_enchant_exclusivity(new_enchant_def, &slot.active_enchants, &all_defs)
-            {
-                let conflict_id = slot.active_enchants[conflict_index].clone();
-                commands.trigger(CraftingFailed {
-                    entity: event.entity,
-                    recipe_id: event.new_enchantment.clone(),
-                    fail_reason: format!("与已有附魔 '{}' 互斥", conflict_id),
-                    materials_lost: vec![],
-                });
-                return;
-            }
+        // 2. 检查附魔定义是否存在
+        let Some(new_enchant_def) = enchant_registry.get(&event.new_enchantment) else {
+            commands.trigger(CraftingFailed {
+                entity: event.entity,
+                recipe_id: event.new_enchantment.clone(),
+                fail_reason: "附魔定义不存在".to_string(),
+                materials_lost: vec![],
+            });
+            return;
+        };
+
+        // 3. 检查互斥规则
+        let all_defs: Vec<_> = enchant_registry.defs.values().cloned().collect();
+        if let Some(conflict_index) =
+            check_enchant_exclusivity(new_enchant_def, &slot.active_enchants, &all_defs)
+        {
+            let conflict_id = slot.active_enchants[conflict_index].clone();
+            commands.trigger(CraftingFailed {
+                entity: event.entity,
+                recipe_id: event.new_enchantment.clone(),
+                fail_reason: format!("与已有附魔 '{}' 互斥", conflict_id),
+                materials_lost: vec![],
+            });
+            return;
         }
 
         // 3. 应用附魔

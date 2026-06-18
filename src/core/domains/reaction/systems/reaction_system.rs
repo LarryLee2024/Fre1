@@ -27,27 +27,41 @@ pub fn process_reaction_queue(
     mut queue: ResMut<GlobalReactionQueue>,
     query: Query<&ReactionState>,
 ) {
-    if queue.queue.is_finished() {
-        return;
-    }
+    // 遍历队列中所有待处理的条目，跳过已耗尽的反应者
+    loop {
+        let (reactor, reaction_type, priority, has_pending) = {
+            if queue.queue.is_finished() {
+                break;
+            }
+            let entry = match queue.queue.next_pending() {
+                Some(e) => e,
+                None => break,
+            };
+            (
+                entry.reactor,
+                entry.reaction_type.clone(),
+                entry.priority,
+                true,
+            )
+        };
 
-    // 查找下一个待处理的条目
-    while let Some(entry) = queue.queue.next_pending() {
-        // 检查触发者是否仍可用反应
-        if let Ok(state) = query.get(entry.reactor) {
-            if state.can_react() {
+        // 检查触发者是否仍可用反应（跳出闭包，不再借用 queue）
+        match query.get(reactor) {
+            Ok(state) if state.can_react() => {
+                let ctx = format!("{:?} 触发 {:?}", reactor, reaction_type);
                 commands.trigger(ReactionTriggered {
-                    reactor: entry.reactor,
-                    reaction_type: entry.reaction_type.clone(),
-                    priority: entry.priority,
-                    context: format!("{:?} 触发 {:?}", entry.reactor, entry.reaction_type),
+                    reactor,
+                    reaction_type,
+                    priority,
+                    context: ctx,
                 });
-                // 一次只处理一个反应条目，等待下游决策后再处理下一个
                 return;
             }
+            _ => {
+                // 无法反应 → 跳过此条目
+                queue.queue.cancel_current();
+            }
         }
-        // 无法反应 → 跳过此条目
-        queue.queue.cancel_current();
     }
 }
 

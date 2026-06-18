@@ -79,7 +79,8 @@ impl Wallet {
             let amount = self.currencies.get(currency).copied().unwrap_or(0);
             let can_use = amount * base;
             if can_use >= remaining {
-                let deduct_amount = remaining / base;
+                // 向上取整确保扣款彻底
+                let deduct_amount = (remaining + base - 1) / base;
                 if let Some(balance) = self.currencies.get_mut(currency) {
                     *balance -= deduct_amount;
                 }
@@ -99,7 +100,8 @@ impl Wallet {
                     let base = currency.base_value();
                     let can_use = *amount * base;
                     if can_use >= remaining {
-                        let deduct_amount = remaining / base;
+                        // 向上取整确保扣款彻底
+                        let deduct_amount = (remaining + base - 1) / base;
                         *amount -= deduct_amount;
                         remaining = 0;
                         break;
