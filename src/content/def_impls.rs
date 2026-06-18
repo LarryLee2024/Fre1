@@ -186,6 +186,7 @@ mod tests {
         assert_eq!(<CueDef as DefinitionType>::EXTENSION, "ron");
     }
 
+    use crate::core::capabilities::effect::foundation::def::{ModifierConfig, ModifierValue};
     use crate::core::capabilities::stacking::foundation::StackingConfig;
 
     fn sample_effect_def() -> EffectDef {

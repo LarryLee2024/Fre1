@@ -10,8 +10,10 @@ use super::components::{ActionPoints, BattlePhase, CombatParticipant, TurnQueue,
 use super::systems::effect_tick_system::on_turn_end_tick_effects;
 use super::systems::turn_systems::{
     on_enter_battle, on_enter_defeat, on_enter_turn_end, on_enter_turn_settlement,
-    on_enter_turn_start, on_enter_victory, on_unit_action_complete, phase_check,
+    on_enter_turn_start, on_enter_victory, on_turn_end_tick_ability_cooldowns,
+    on_turn_start_evaluate_triggers, on_unit_action_complete, phase_check,
 };
+use crate::core::capabilities::event::mechanism::EventBus;
 
 pub struct CombatPlugin;
 
@@ -27,6 +29,7 @@ impl Plugin for CombatPlugin {
 
         // ── 初始化 Resource ──
         app.init_resource::<TurnQueue>();
+        app.init_resource::<EventBus>();
 
         // ── 注册 BattlePhase 生命周期 System ──
         app.add_systems(OnEnter(BattlePhase::Battle), on_enter_battle);
@@ -54,5 +57,9 @@ impl Plugin for CombatPlugin {
         app.add_observer(on_unit_action_complete);
         // OnTurnEnd → 推进 Effect 计时与周期 Tick
         app.add_observer(on_turn_end_tick_effects);
+        // OnTurnEnd → 推进 Ability 冷却计时
+        app.add_observer(on_turn_end_tick_ability_cooldowns);
+        // OnTurnStart → 评估单位触发器
+        app.add_observer(on_turn_start_evaluate_triggers);
     }
 }

@@ -4,9 +4,9 @@
 //! 用于效果应用前的前置校验。
 
 use crate::core::capabilities::condition::foundation::{
-    Condition, ConditionContext, ConditionResult,
+    Condition, ConditionContext, ConditionResult, TagRequirementMode,
 };
-use crate::core::capabilities::condition::mechanism::evaluator::{check_immunity, evaluate};
+use crate::core::capabilities::condition::mechanism::{check_immunity, evaluate};
 
 // ─── Facade ────────────────────────────────────────────────────────
 
@@ -15,8 +15,6 @@ pub struct CombatConditionFacade;
 
 impl CombatConditionFacade {
     /// 检查目标是否对指定效果类型免疫。
-    ///
-    /// 免疫条件具有最高优先级（不变量 §3.5）。
     pub fn check_effect_immunity(context: &ConditionContext, effect_type: &str) -> ConditionResult {
         check_immunity(context, effect_type)
     }
@@ -30,17 +28,13 @@ impl CombatConditionFacade {
     }
 
     /// 检查施法者是否满足施法条件（沉默、束缚等）。
-    ///
-    /// 常用条件组合：
-    /// - Not(TagRequirement("Silenced")) — 未被沉默
-    /// - Not(TagRequirement("Paralyzed")) — 未被束缚
     pub fn check_casting_conditions(
         context: &ConditionContext,
         additional: &[Condition],
     ) -> ConditionResult {
         // 基础检查：未被沉默
         let silence_check = Condition::TagRequirement {
-            mode: crate::core::capabilities::condition::foundation::TagRequirementMode::Not,
+            mode: TagRequirementMode::Not,
             tag_id: "Silenced".to_string(),
         };
         let result = evaluate(&silence_check, context);
@@ -50,7 +44,7 @@ impl CombatConditionFacade {
 
         // 基础检查：未被束缚
         let paralyze_check = Condition::TagRequirement {
-            mode: crate::core::capabilities::condition::foundation::TagRequirementMode::Not,
+            mode: TagRequirementMode::Not,
             tag_id: "Paralyzed".to_string(),
         };
         let result = evaluate(&paralyze_check, context);

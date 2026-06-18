@@ -5,10 +5,8 @@
 
 use bevy::prelude::*;
 
-use crate::core::capabilities::event::foundation::types::{
-    EventPayload, EventPriority, EventTag, GameplayEvent,
-};
-use crate::core::capabilities::event::mechanism::bus::EventBus;
+use crate::core::capabilities::event::foundation::{EventPayload, EventPriority, EventTag};
+use crate::core::capabilities::event::mechanism::EventBus;
 
 // ─── 战斗事件标签 ──────────────────────────────────────────────────
 

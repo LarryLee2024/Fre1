@@ -3,10 +3,9 @@
 //! 封装 trigger capability 的触发器评估，
 //! 用于战斗事件（TurnStarted, DamageTaken 等）的触发器分发。
 
-use crate::core::capabilities::trigger::foundation::types::{TriggerCondition, TriggerType};
-use crate::core::capabilities::trigger::foundation::values::{TriggerContext, TriggerEntry};
-use crate::core::capabilities::trigger::mechanism::evaluator::{
-    TriggerEvalResult, evaluate_trigger,
+use crate::core::capabilities::trigger::foundation::{TriggerCondition, TriggerEntry, TriggerType};
+use crate::core::capabilities::trigger::mechanism::{
+    TriggerContext, TriggerEvalResult, can_trigger,
 };
 
 // ─── 战斗触发器类型 ────────────────────────────────────────────────
@@ -19,8 +18,8 @@ pub enum CombatTriggerType {
     TurnEnded,
     /// 受到伤害
     DamageTaken,
-    /// 造成伤害
-    DamageDealt,
+    /// 造成伤害（攻击）
+    Attack,
     /// 生命值低于阈值
     HealthBelow(f32),
     /// 击杀敌人
@@ -33,10 +32,10 @@ impl CombatTriggerType {
         match self {
             CombatTriggerType::TurnStarted => TriggerType::OnTurnStart,
             CombatTriggerType::TurnEnded => TriggerType::OnTurnEnd,
-            CombatTriggerType::DamageTaken => TriggerType::OnDamageTaken,
-            CombatTriggerType::DamageDealt => TriggerType::OnDamageDealt,
-            CombatTriggerType::HealthBelow(_) => TriggerType::Custom("HealthBelow".to_string()),
-            CombatTriggerType::Kill => TriggerType::Custom("Kill".to_string()),
+            CombatTriggerType::DamageTaken => TriggerType::OnDamaged,
+            CombatTriggerType::Attack => TriggerType::OnAttack,
+            CombatTriggerType::HealthBelow(_) => TriggerType::OnConditionMet,
+            CombatTriggerType::Kill => TriggerType::OnDeath,
         }
     }
 }
@@ -47,6 +46,11 @@ impl CombatTriggerType {
 pub struct CombatTriggerFacade;
 
 impl CombatTriggerFacade {
+    /// 评估一个触发器是否可以触发。
+    pub fn can_trigger_check(entry: &TriggerEntry, context: &TriggerContext) -> TriggerEvalResult {
+        can_trigger(entry, context)
+    }
+
     /// 评估一组触发器，返回已就绪的触发器列表。
     pub fn evaluate_triggers(
         entries: &[TriggerEntry],
@@ -57,12 +61,7 @@ impl CombatTriggerFacade {
         entries
             .iter()
             .filter(|entry| entry.trigger_type == tt)
-            .filter(|entry| {
-                matches!(
-                    evaluate_trigger(entry, context),
-                    TriggerEvalResult::Ready(_)
-                )
-            })
+            .filter(|entry| matches!(can_trigger(entry, context), TriggerEvalResult::Ready(_)))
             .cloned()
             .collect()
     }
@@ -71,15 +70,9 @@ impl CombatTriggerFacade {
     pub fn create_trigger_entry(
         id: &str,
         trigger_type: CombatTriggerType,
-        conditions: Vec<TriggerCondition>,
+        target_ability_def_id: &str,
     ) -> TriggerEntry {
-        TriggerEntry {
-            id: id.to_string(),
-            trigger_type: trigger_type.to_trigger_type(),
-            conditions,
-            cooldown_turns: 0,
-            allow_concurrent: false,
-        }
+        TriggerEntry::new(id, trigger_type.to_trigger_type(), target_ability_def_id)
     }
 }
 
@@ -95,7 +88,7 @@ mod tests {
         );
         assert_eq!(
             CombatTriggerType::DamageTaken.to_trigger_type(),
-            TriggerType::OnDamageTaken
+            TriggerType::OnDamaged
         );
     }
 }
