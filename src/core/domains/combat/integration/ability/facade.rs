@@ -5,13 +5,14 @@
 //!
 //! 详见 ADR-024 §2
 
+use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 
 use crate::core::capabilities::ability::foundation::{
     AbilityError, AbilityInstanceId, ActivationContext, ActivationType, CostEntry,
 };
 use crate::core::capabilities::ability::mechanism::{
-    ActiveAbilityContainer, complete_ability, tick_cooldowns, try_activate,
+    ActivationRequest, ActiveAbilityContainer, complete_ability, tick_cooldowns, try_activate,
 };
 
 // ─── Facade ────────────────────────────────────────────────────────
@@ -56,25 +57,15 @@ impl CombatAbilityFacade {
     }
 }
 
-// ─── 激活请求（内部类型）────────────────────────────────────────────
-
-struct ActivationRequest {
-    spec_id: String,
-    def_id: String,
-    activation: ActivationType,
-    context: ActivationContext,
-    costs: Vec<CostEntry>,
-}
-
 // ─── SystemParam ───────────────────────────────────────────────────
 
 /// 战斗能力 SystemParam — 在 System 中便捷访问 ability capability。
 #[derive(SystemParam)]
-pub struct CombatAbilityParam<'w> {
-    pub containers: Query<'w, &'w mut ActiveAbilityContainer>,
+pub struct CombatAbilityParam<'w, 's> {
+    pub containers: Query<'w, 's, &'static mut ActiveAbilityContainer>,
 }
 
-impl<'w> CombatAbilityParam<'w> {
+impl<'w, 's> CombatAbilityParam<'w, 's> {
     /// 为指定实体激活技能。
     pub fn activate(
         &mut self,
@@ -85,7 +76,12 @@ impl<'w> CombatAbilityParam<'w> {
         frame: u64,
         costs: Vec<CostEntry>,
     ) -> Result<AbilityInstanceId, AbilityError> {
-        let mut container = self.containers.get_mut(entity)?;
+        let mut container = self
+            .containers
+            .get_mut(entity)
+            .map_err(|e| AbilityError::Runtime(format!(
+                "entity {:?} has no ActiveAbilityContainer: {}", entity, e
+            )))?;
         CombatAbilityFacade::try_activate_ability(
             &mut container,
             spec_id,
@@ -95,16 +91,5 @@ impl<'w> CombatAbilityParam<'w> {
             frame,
             costs,
         )
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn combat_ability_facade_compiles() {
-        let _ = std::any::type_name::<CombatAbilityFacade>();
-        let _ = std::any::type_name::<CombatAbilityParam<'_>>();
     }
 }

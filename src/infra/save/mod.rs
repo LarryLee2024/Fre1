@@ -16,7 +16,6 @@ pub(crate) mod systems;
 mod events;
 
 #[cfg(test)]
-#[cfg(test)]
 mod tests;
 
 pub use events::{

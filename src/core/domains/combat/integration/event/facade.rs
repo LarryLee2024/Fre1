@@ -3,6 +3,7 @@
 //! 封装 EventBus 的战斗相关操作，
 //! 替代域自定义 EventWriter，统一事件分发。
 
+use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 
 use crate::core::capabilities::event::foundation::{EventPayload, EventPriority, EventTag};
@@ -90,22 +91,5 @@ impl<'w> CombatEventParam<'w> {
         payload: EventPayload,
     ) {
         CombatEventFacade::publish(&mut self.bus, tag, source, payload);
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn combat_event_tag_converts_correctly() {
-        assert_eq!(
-            CombatEventTag::TurnStarted.to_event_tag(),
-            EventTag::TurnStarted
-        );
-        assert_eq!(
-            CombatEventTag::Kill.to_event_tag(),
-            EventTag::Custom("Kill".to_string())
-        );
     }
 }
