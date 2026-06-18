@@ -312,17 +312,16 @@ impl Inventory {
     }
 
     /// 计算可堆叠到已有物品的数量（自动上限 99）。
-    fn stackable_to_existing(&self, template_id: &str, quantity: u32) -> (u32, u32) {
+    fn stackable_to_existing(&self, template_id: &str, quantity: u32) -> u32 {
         for existing in self.items.iter() {
             if existing.template_id == template_id {
                 let space = 99u32.saturating_sub(existing.quantity);
                 if space > 0 {
-                    let to_add = space.min(quantity);
-                    return (to_add, space);
+                    return space.min(quantity);
                 }
             }
         }
-        (0, 0)
+        0
     }
 
     /// 添加物品到背包（自动堆叠合并）。
@@ -336,7 +335,7 @@ impl Inventory {
 
         // 尝试堆叠到已有物品
         if item.is_stackable() && item.quantity > 0 {
-            let (to_add, _) = self.stackable_to_existing(&item.template_id, item.quantity);
+            let to_add = self.stackable_to_existing(&item.template_id, item.quantity);
             if to_add > 0 {
                 for existing in self.items.iter_mut() {
                     if existing.template_id == item.template_id {
