@@ -17,59 +17,63 @@ scope: ErrorContext 接入审查 + 架构依赖扫描
 
 ## 扫描结果总览
 
-| 类别 | 严重程度 | 数量 | 编号 |
-|------|----------|------|------|
-| 架构漂移 | High | 1 | Drift-ADR-002 |
-| 抽象泄漏 | Critical | 2 | Leak-003, Leak-004 |
-| 内容债务 | Medium | 1 | Content-002 |
-| 测试债务 | Medium | 1 | TestDebt-002 |
-| AI 可维护性 | None | 0 | — |
-| 超大文件 | None | 0 | — |
+| 类别 | 严重程度 | 数量 | 编号 | 状态 |
+|------|----------|------|------|------|
+| 架构漂移 | High | 1 | Drift-ADR-002 | ⏳ Open |
+| 抽象泄漏 | Critical | 2 | Leak-003, Leak-004 | ✅ Resolved |
+| 内容债务 | Medium | 1 | Content-002 | ⏳ Open |
+| 测试债务 | Medium, Low | 2 | TestDebt-002, TestDebt-003 | ⏳ Open |
+| AI 可维护性 | None | 0 | — | ✅ |
+| 超大文件 | None | 0 | — | ✅ |
 
 ---
 
 ## Debt-019: [Drift-ADR-002] camp_rest 系统反向依赖 Infra 层
 
-- **状态**: Open
+- **状态**: 💡 Fix Planned (2026-06-20)
 - **发现日期**: 2026-06-19
-- **负责人**: @architect
+- **负责人**: @architect → @feature-developer
 - **关联 ADR**: ADR-001 (依赖方向), ADR-041 (Replay)
 - **位置**: `src/core/domains/camp_rest/systems/camp_rest_system.rs:12`
 - **严重程度**: **High**
 - **问题描述**: `CampRestSystem` 直接 `use crate::infra::replay::resources::FrameCounter`。Core(L1) 模块反向依赖 Infra(L2)，违反 ADR 定义的 Shared ← Core ← Infrastructure 依赖方向。
 - **影响**: Core 层代码依赖 Infra 实现细节，部署时 Core 无法独立复用；依赖方向检查工具产生误报。
-- **建议修复**: `FrameCounter` 应通过 Core 层的 `runtime::replay` facade 暴露一个 read-only 的 GameFrame Resource，或 camp_rest 改为通过 Observer 监听 replay 事件而非直接引入 Resource。
+- **架构评估**: 
+  - `FrameCounter` 是一个简单的 u64 包装 Resource，每帧在 PreUpdate 递增。
+  - `shared::time::GameTime` (L0, Shared) 已存在，自 P0 接入（§1.3）已在 SharedPlugin 中注册并每帧推进。
+  - `GameTime.frame()` 与 `FrameCounter.0` 语义等价（同为 PreUpdate 递增的单调帧计数）。
+  - `RestState.last_long_rest_frame` 字段注释（第 96 行）已注明为 "GameTime 帧计数"。
+  - camp_rest 使用 FrameCounter 的唯一位置是 `handle_long_rest_complete` 中记录长休完成帧。
+- **建议修复**: 将 camp_rest 中对 `Res<FrameCounter>` 的依赖替换为 `Res<GameTime>`。`FrameCounter` 保留在 `infra::replay` 中供回放基础设施自用。此方案零新增类型、零新增模块、零架构变更，仅修复现存依赖方向违规。
 
 ---
 
 ## Debt-020: [Leak-003] turn_systems.rs 绕过 Combat integration/ 层
 
-- **状态**: Open
+- **状态**: ✅ Resolved (2026-06-20)
 - **发现日期**: 2026-06-19
-- **负责人**: @architect
+- **修复日期**: 2026-06-20
+- **负责人**: @feature-developer
 - **关联 ADR**: ADR-006 (Capabilities/Domains 双轴), ADR-021 (Combat)
-- **位置**: `src/core/domains/combat/systems/turn_systems.rs:13-15`
-- **严重程度**: **Critical**
-- **问题描述**: `turn_systems.rs` 直接从 `capabilities::ability::mechanism::ActiveAbilityContainer` 和 `capabilities::trigger::mechanism::TriggerContainer` 导入类型。根据架构规则 (ADR-006 §6.2)，Domain 必须通过 `integration/` 模块（Facade + SystemParam）访问 Capabilities。
-- **影响**: integration/ 层被绕过，后续修改 Capabilities 内部类型将直接影响 Domain 代码；Facade 的抽象价值丧失。
-- **建议修复**: `turn_systems.rs` 应通过 `combat::integration::ability::CombatAbilityFacade` 和 `combat::integration::trigger::CombatTriggerFacade` 访问。具体来说：
-  1. 在 `combat::integration::ability` 中新增 `tick_cooldowns_for_unit(unit: Entity, ability_query: &mut Query<&mut ActiveAbilityContainer>)` facade 函数
-  2. 在 `combat::integration::trigger` 中新增 `evaluate_triggers_for_unit(unit: Entity, trigger_type: TriggerType, trigger_query: &mut Query<&TriggerContainer>)` facade 函数
-  3. `turn_systems.rs` 改为调用这些 facade 函数
+- **修复内容**: 
+  - 新建 `combat/integration/trigger/system_param.rs` — CombatTriggerParam
+  - 新增 `CombatAbilityParam::tick_cooldowns_for_unit()`, `CombatAbilityFacade::empty_container()`
+  - 新增 `CombatTriggerFacade::empty_container()`
+  - `turn_systems.rs` 移除所有 cap 类型直接导入，改用 facade params
 
 ---
 
 ## Debt-021: [Leak-004] movement_system.rs 绕过 Tactical integration/ 层
 
-- **状态**: Open
+- **状态**: ✅ Resolved (2026-06-20)
 - **发现日期**: 2026-06-19
-- **负责人**: @architect
+- **修复日期**: 2026-06-20
+- **负责人**: @feature-developer
 - **关联 ADR**: ADR-006 (Capabilities/Domains 双轴)
-- **位置**: `src/core/domains/tactical/systems/movement_system.rs:13-15`
-- **严重程度**: **Critical**
-- **问题描述**: `movement_system.rs` 直接导入 `AttributeContainer`, `ModifierContainer`, `TagHierarchy`, `TagSet` — 而 `tactical::integration::movement` 已经定义了 `MovementCapabilityParam` SystemParam 作为 facade。System 绕过了自己的 integration/ 层。
-- **影响**: integration/ 层抽象被绕过，Capabilities 内部类型变更会直接破坏 tactial domain。
-- **建议修复**: `movement_system.rs` 应使用 `MovementCapabilityParam`（已存在）替代直接访问 Capabilities 内部类型。检查 `MovementCapabilityParam` 是否暴露了当前 system 所需的所有 API，如缺失则补充。
+- **修复内容**: 
+  - 移除 `AttributeContainer`, `ModifierContainer`, `TagHierarchy`, `TagSet` 直接导入
+  - 将 `Query<...>` + `Res<TagHierarchy>` 替换为 `MovementCapabilityParam`
+  - 函数体内改用 `mov.build_view()` / `view.can_move` 访问能力数据
 
 ---
 
@@ -96,6 +100,19 @@ scope: ErrorContext 接入审查 + 架构依赖扫描
 - **严重程度**: Medium
 - **问题描述**: combat 的 `integration/` 下有 8 个 facade（ability, aggregator, condition, effect, event, execution, gameplay_context, targeting, trigger），但部分 facade 测试不完整。`effect` facade 的测试在 `tests/mod.rs` 而非独立的 `tests/facade_test.rs`，不一致。
 - **建议修复**: 统一 facade 测试模式，确保每个 facade 有独立的 `tests/facade_test.rs`，并覆盖主线流程。
+
+---
+
+## Debt-024: [TestDebt-003] movement facade 测试位于 Domain 级 tests/unit/ 而非 integration/movement/tests/
+
+- **状态**: Open
+- **发现日期**: 2026-06-20
+- **负责人**: @test-guardian
+- **严重程度**: Low
+- **位置**: `src/core/domains/tactical/tests/unit/facade_test.rs` (当前位置) → 应迁至 `src/core/domains/tactical/integration/movement/tests/facade_test.rs`
+- **问题描述**: tactical 域的 movement facade 测试 (`facade_test.rs`, `movement_cost_test.rs`, `movement_points_test.rs`) 位于 `tactical/tests/unit/` 下，而非按照 ADR-046 标准的 `integration/movement/tests/facade_test.rs`。其他 integration facade（如 combat 域的 trigger facade）已将测试放在 `integration/{name}/tests/` 下，存在结构不一致。
+- **影响**: 测试不跟随 facade 走，迁移/重构时需要额外搜索；新开发者容易混淆测试组织方式。
+- **建议修复**: 将 `tactical/tests/unit/facade_test.rs` 等 3 个相关测试文件移至 `tactical/integration/movement/tests/` 下，调整 mod.rs 导入路径，确保 cargo test 无回归。
 
 ---
 
@@ -132,14 +149,14 @@ scope: ErrorContext 接入审查 + 架构依赖扫描
 
 | 严重程度 | 数量 | 编号 |
 |---------|------|------|
-| **Critical** | 2 | Leak-003, Leak-004 |
+| **Critical** | 0| — (均已修复) |
 | **High** | 1 | Drift-ADR-002 |
 | **Medium** | 2 | Content-002, TestDebt-002 |
-| Low | 0 | — |
-| **总计** | **5** | |
+| Low | 1 | TestDebt-003 |
+| **总计** | **4** | |
 
 ### 修复优先级建议
 
-1. **P0**: Leak-003, Leak-004 — integration/ 层是 Domain 与 Capabilities 间的强制边界，绕过使整个架构模式失效。修复后再开发 combat 域新功能。
-2. **P1**: Drift-ADR-002 — Core→Infra 反向依赖破坏分层架构。
-3. **P2**: TestDebt-002, Content-002 — 渐进式改进。
+1. **P1**: Drift-ADR-002 — Core→Infra 反向依赖破坏分层架构。唯一剩余的 High 级别问题。需 @architect 评估修复方案。
+2. **P2**: Content-002, TestDebt-002 — 渐进式改进，可随功能开发同时处理。
+3. **P3**: TestDebt-003 — Low 级别，测试目录结构一致性，可在重构时顺带修复。

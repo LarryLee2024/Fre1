@@ -4,7 +4,10 @@
 //! 详见 docs/02-domain/domains/quest_domain.md
 //! 详见 docs/04-data/domains/quest_schema.md
 
+use bevy::asset::Asset;
 use bevy::prelude::*;
+use bevy::reflect::TypePath;
+use serde::{Deserialize, Serialize};
 
 // ─── ID 类型 ──────────────────────────────────────────────────────
 
@@ -14,13 +17,13 @@ use bevy::prelude::*;
 pub use crate::shared::ids::QuestId as QuestDefId;
 
 /// 目标唯一标识符（任务内唯一）。
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Reflect)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Reflect, Serialize, Deserialize)]
 pub struct ObjectiveId(pub String);
 
 // ─── 值类型 ────────────────────────────────────────────────────────
 
 /// 任务生命周期状态。
-#[derive(Debug, Clone, PartialEq, Eq, Reflect)]
+#[derive(Debug, Clone, PartialEq, Eq, Reflect, Serialize, Deserialize)]
 pub enum QuestState {
     /// 前置条件未满足，不可接取。
     Unavailable,
@@ -35,7 +38,7 @@ pub enum QuestState {
 }
 
 /// 任务类型。
-#[derive(Debug, Clone, PartialEq, Eq, Reflect)]
+#[derive(Debug, Clone, PartialEq, Eq, Reflect, Serialize, Deserialize)]
 pub enum QuestType {
     /// 主线任务。
     Main,
@@ -50,7 +53,7 @@ pub enum QuestType {
 }
 
 /// 目标类型。
-#[derive(Debug, Clone, PartialEq, Reflect)]
+#[derive(Debug, Clone, PartialEq, Reflect, Serialize, Deserialize)]
 pub enum ObjectiveType {
     /// 击杀特定类型敌人。
     Kill { enemy_tags: Vec<String> },
@@ -75,7 +78,7 @@ pub enum ObjectiveType {
 }
 
 /// 奖励解锁类型。
-#[derive(Debug, Clone, PartialEq, Eq, Reflect)]
+#[derive(Debug, Clone, PartialEq, Eq, Reflect, Serialize, Deserialize)]
 pub enum UnlockType {
     /// 解锁新任务。
     Quest,
@@ -90,7 +93,7 @@ pub enum UnlockType {
 // ─── Definition 层结构 ──────────────────────────────────────────
 
 /// 任务前置条件。
-#[derive(Debug, Clone, PartialEq, Reflect)]
+#[derive(Debug, Clone, PartialEq, Reflect, Serialize, Deserialize)]
 pub enum PrereqType {
     /// 最低等级要求。
     Level { min_level: u32 },
@@ -103,7 +106,7 @@ pub enum PrereqType {
 }
 
 /// 任务前置条件。
-#[derive(Debug, Clone, PartialEq, Reflect)]
+#[derive(Debug, Clone, PartialEq, Reflect, Serialize, Deserialize)]
 pub struct QuestPrereq {
     pub prereq_type: PrereqType,
     /// 直接指定的前置任务。
@@ -111,7 +114,7 @@ pub struct QuestPrereq {
 }
 
 /// 目标定义。
-#[derive(Debug, Clone, PartialEq, Reflect)]
+#[derive(Debug, Clone, PartialEq, Reflect, Serialize, Deserialize)]
 pub struct ObjectiveDef {
     /// 目标 ID。
     pub id: ObjectiveId,
@@ -126,7 +129,7 @@ pub struct ObjectiveDef {
 }
 
 /// 任务奖励定义。
-#[derive(Debug, Clone, PartialEq, Reflect)]
+#[derive(Debug, Clone, PartialEq, Reflect, Serialize, Deserialize)]
 pub struct QuestRewardDef {
     /// 经验奖励。
     pub xp_reward: u64,
@@ -140,26 +143,26 @@ pub struct QuestRewardDef {
     pub unlocks: Vec<UnlockReward>,
 }
 
-#[derive(Debug, Clone, PartialEq, Reflect)]
+#[derive(Debug, Clone, PartialEq, Reflect, Serialize, Deserialize)]
 pub struct ItemReward {
     pub item_id: String,
     pub quantity: u32,
 }
 
-#[derive(Debug, Clone, PartialEq, Reflect)]
+#[derive(Debug, Clone, PartialEq, Reflect, Serialize, Deserialize)]
 pub struct ReputationReward {
     pub faction_id: String,
     pub amount: i32,
 }
 
-#[derive(Debug, Clone, PartialEq, Reflect)]
+#[derive(Debug, Clone, PartialEq, Reflect, Serialize, Deserialize)]
 pub struct UnlockReward {
     pub unlock_type: UnlockType,
     pub unlock_id: String,
 }
 
 /// 任务静态定义（Definition 层）。
-#[derive(Debug, Clone, Reflect)]
+#[derive(Debug, Clone, Asset, Serialize, Deserialize, TypePath, Reflect)]
 pub struct QuestDef {
     pub id: QuestDefId,
     pub name_key: String,

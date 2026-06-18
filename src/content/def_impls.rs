@@ -8,6 +8,7 @@
 use crate::content::loading::{DefinitionType, ValidationError, validate_id_format};
 use crate::core::capabilities::cue::foundation::CueDef;
 use crate::core::capabilities::effect::foundation::EffectDef;
+use crate::core::domains::quest::QuestDef;
 use crate::core::domains::spell::SpellDef;
 
 impl DefinitionType for SpellDef {
@@ -67,6 +68,33 @@ impl DefinitionType for EffectDef {
         if self.desc_key.is_empty() {
             return Err(ValidationError::MissingField {
                 field: "desc_key".to_string(),
+            });
+        }
+
+        Ok(())
+    }
+}
+
+impl DefinitionType for QuestDef {
+    const BUCKET_NAME: &'static str = "quests";
+    const EXTENSION: &'static str = "ron";
+
+    fn validate(&self) -> Result<(), ValidationError> {
+        validate_id_format(self.id.as_str(), "qst_")?;
+
+        if self.name_key.is_empty() {
+            return Err(ValidationError::MissingField {
+                field: "name_key".to_string(),
+            });
+        }
+        if self.desc_key.is_empty() {
+            return Err(ValidationError::MissingField {
+                field: "desc_key".to_string(),
+            });
+        }
+        if self.objectives.is_empty() {
+            return Err(ValidationError::MissingField {
+                field: "objectives".to_string(),
             });
         }
 
