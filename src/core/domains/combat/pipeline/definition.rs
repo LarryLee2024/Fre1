@@ -7,11 +7,14 @@ use crate::core::capabilities::runtime::pipeline::foundation::{
     FailureStrategy, PipelineDefinition, PipelineStage, PipelineStep,
 };
 
+/// 战斗回合管线的唯一标识。
+pub const COMBAT_TURN_PIPELINE_ID: &str = "combat.turn";
+
 /// 创建战斗回合管线定义。
 ///
 /// 五个阶段对应战斗单位一次完整回合的生命周期。
 pub fn build_turn_pipeline() -> PipelineDefinition {
-    PipelineDefinition::new("combat.turn")
+    PipelineDefinition::new(COMBAT_TURN_PIPELINE_ID)
         .stage(
             PipelineStage::new("turn_start")
                 .step(PipelineStep::System("turn_start".to_string()))

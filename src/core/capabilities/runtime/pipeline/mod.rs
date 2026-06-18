@@ -8,8 +8,12 @@
 pub mod events;
 // [ADR-045] pub(crate) — 基础类型，crate 内共享，外部不可访问
 pub(crate) mod foundation;
+// [ADR-045] pub(crate) — Hook 机制，crate 内共享
+pub(crate) mod hooks;
 // [ADR-045] pub(crate) — 机制实现，crate 内共享，外部不可访问
 pub(crate) mod mechanism;
+// [ADR-045] pub(crate) — 管线注册中心，crate 内共享
+pub(crate) mod registry;
 
 #[cfg(test)]
 mod tests;

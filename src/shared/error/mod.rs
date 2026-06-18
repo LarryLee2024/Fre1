@@ -26,7 +26,7 @@ use std::fmt;
 ///     Ok(())
 /// }
 /// ```
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ErrorContext<E> {
     /// 来源领域标识（如 "combat"、"inventory"）
     pub domain: &'static str,

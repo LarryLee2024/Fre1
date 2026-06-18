@@ -15,10 +15,10 @@
 mod plugin;
 pub use plugin::*;
 
-mod registry;
-pub use registry::*;
-
 pub(crate) mod hooks;
+
+// ── Re-export PipelineRegistry from core ──
+pub use crate::core::capabilities::runtime::pipeline::registry::PipelineRegistry;
 
 // ── Re-export core pipeline types for external consumption ──
 pub use crate::core::capabilities::runtime::pipeline::events::{

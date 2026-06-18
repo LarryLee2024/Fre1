@@ -1,5 +1,5 @@
 use crate::core::capabilities::runtime::pipeline::foundation::{PipelineDefinition, PipelineStage};
-use crate::infra::pipeline::registry::PipelineRegistry;
+use crate::core::capabilities::runtime::pipeline::registry::PipelineRegistry;
 
 #[test]
 fn test_empty_registry() {

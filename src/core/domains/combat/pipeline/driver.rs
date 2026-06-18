@@ -14,11 +14,12 @@ use bevy::prelude::*;
 use crate::core::capabilities::runtime::pipeline::foundation::{
     PipelineContext, PipelineDefinition, PipelineState,
 };
-use crate::infra::pipeline::PipelineRegistry;
+use crate::core::capabilities::runtime::pipeline::registry::PipelineRegistry;
 
+use super::definition::COMBAT_TURN_PIPELINE_ID;
 use super::steps::{
-    step_phase_check, step_turn_end, step_turn_settlement, step_turn_start,
-    step_unit_action, PhaseCheckResult, TurnEndResult,
+    PhaseCheckResult, TurnEndResult, step_phase_check, step_turn_end, step_turn_settlement,
+    step_turn_start, step_unit_action,
 };
 use crate::core::domains::combat::components::{
     ActionPoints, BattlePhase, CombatParticipant, TurnQueue,
@@ -29,9 +30,9 @@ use crate::core::domains::combat::events::UnitActionComplete;
 #[derive(Resource)]
 pub struct CombatPipelineDriver {
     /// 当前执行中的管线状态
-    pub state: PipelineState,
+    state: PipelineState,
     /// 是否暂停（等待 UnitAction 完成）
-    pub paused: bool,
+    paused: bool,
 }
 
 impl CombatPipelineDriver {
@@ -39,10 +40,10 @@ impl CombatPipelineDriver {
     pub fn new() -> Self {
         Self {
             state: PipelineState {
-                pipeline_id: "combat.turn".to_string(),
+                pipeline_id: COMBAT_TURN_PIPELINE_ID.to_string(),
                 current_stage_index: 0,
                 current_step_index: 0,
-                context: PipelineContext::new("combat.turn"),
+                context: PipelineContext::new(COMBAT_TURN_PIPELINE_ID),
                 completed: false,
             },
             paused: false,
@@ -61,6 +62,16 @@ impl CombatPipelineDriver {
     /// 检查驾驶员是否在活跃驱动中。
     pub fn is_driving(&self) -> bool {
         !self.state.completed && !self.paused
+    }
+
+    /// 检查驾驶员是否暂停（等待外部输入）。
+    pub fn is_paused(&self) -> bool {
+        self.paused
+    }
+
+    /// 获取当前管线 ID。
+    pub fn pipeline_id(&self) -> &str {
+        &self.state.pipeline_id
     }
 }
 

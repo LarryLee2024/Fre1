@@ -5,6 +5,14 @@ status: active
 owner: feature-developer
 created: 2026-06-18
 updated: 2026-06-20
+
+> **Phase pipeline→combat review + test coverage**: ✅ Complete (2026-06-20)
+> - H1: PipelineRegistry moved to core — dependency direction restored
+> - M2: CombatPipelineDriver fields made private
+> - M3: COMBAT_TURN_PIPELINE_ID constant eliminated duplication
+> - M4: check_team_elimination extracted as standalone function
+> - Test: 6 unit tests for pipeline_def, 14 integration tests for pipeline_step
+> - All 1451 tests pass
 tags:
   - planning
   - infrastructure
@@ -412,7 +420,7 @@ Phase G (音频/UI 后):
 | **P0** | content: 其他 Def 类型 Asset 化 | 2 天 | 无 |
 | **P1** | ErrorContext → pipeline/save | 0.5 天 | 无 |
 | **P1** | targeting/execution/gameplay_context/aggregator → combat | ✅ 已完成 | P0 capability |
-| **P1** | pipeline → combat 流程 | 2 天 | P0 capability |
+| **P1** | pipeline → combat 流程 (CombatPipelineDriver) | ✅ 已完成 | P0 capability |
 | **P1** | save → combat/party/progression | 3 天 | shared::ids |
 | **P1** | input → tactical/combat | 1 天 | 无 |
 | **P1** | content: 完整 RON 配置 + hot-reload | 2 天 | P0 content |

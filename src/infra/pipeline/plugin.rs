@@ -6,7 +6,7 @@
 
 use bevy::prelude::*;
 
-use super::registry::PipelineRegistry;
+use crate::core::capabilities::runtime::pipeline::registry::PipelineRegistry;
 
 pub struct PipelinePlugin;
 

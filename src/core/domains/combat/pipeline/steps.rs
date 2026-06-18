@@ -5,9 +5,7 @@
 
 use bevy::prelude::*;
 
-use crate::core::domains::combat::components::{
-    ActionPoints, CombatParticipant, TurnQueue,
-};
+use crate::core::domains::combat::components::{ActionPoints, CombatParticipant, TurnQueue};
 use crate::core::domains::combat::events::{
     BattleResult, BetweenTurns, OnBattleEnd, OnRoundEnd, OnTurnEnd, OnTurnStart,
 };
@@ -50,6 +48,7 @@ pub(crate) fn step_turn_start(
 // ═══════════════════════════════════════════════════════════════════════
 
 /// PhaseCheck 判定结果。
+#[derive(Debug, PartialEq, Eq)]
 pub(crate) enum PhaseCheckResult {
     /// 单位有可用行动，应进入 UnitAction 等待输入
     HasActions,
@@ -137,6 +136,7 @@ pub(crate) fn step_turn_settlement(commands: &mut Commands, turn_queue: &TurnQue
 // ═══════════════════════════════════════════════════════════════════════
 
 /// TurnEnd 步骤执行结果。
+#[derive(Debug, PartialEq, Eq)]
 pub(crate) enum TurnEndResult {
     /// 战斗结束（一方全灭）
     BattleOver,
@@ -185,7 +185,23 @@ pub(crate) fn step_turn_end(
         commands.trigger(OnRoundEnd { round });
     }
 
-    // Team elimination victory check — any team with all participants dead loses.
+    // 胜负判定 — 检查是否仅剩 ≤1 个队伍存活
+    if check_team_elimination(combatant_query) {
+        info!("[Combat] Victory check: battle over (≤1 team(s) alive)");
+        commands.trigger(OnBattleEnd {
+            result: BattleResult::Victory,
+        });
+        TurnEndResult::BattleOver
+    } else {
+        TurnEndResult::Continue
+    }
+}
+
+/// 检查是否满足队伍全灭胜利条件。
+///
+/// 遍历所有 CombatParticipant，统计各队伍的总数和存活数。
+/// 如果活跃队伍数 ≤1，返回 true（战斗结束）。
+pub(crate) fn check_team_elimination(combatant_query: &Query<&CombatParticipant>) -> bool {
     let team_status = combatant_query.iter().fold(
         std::collections::HashMap::<String, (usize, usize)>::new(),
         |mut acc, participant| {
@@ -199,23 +215,10 @@ pub(crate) fn step_turn_end(
         },
     );
 
-    let mut alive_teams = 0;
-    for (_team, (_total, alive)) in &team_status {
-        if *alive > 0 {
-            alive_teams += 1;
-        }
-    }
+    let alive_teams = team_status
+        .values()
+        .filter(|(_total, alive)| *alive > 0)
+        .count();
 
-    if alive_teams <= 1 {
-        info!(
-            "[Combat] Victory check: only {} team(s) alive, battle over",
-            alive_teams
-        );
-        commands.trigger(OnBattleEnd {
-            result: BattleResult::Victory,
-        });
-        TurnEndResult::BattleOver
-    } else {
-        TurnEndResult::Continue
-    }
+    alive_teams <= 1
 }

@@ -6,6 +6,8 @@
 
 use std::collections::HashMap;
 
+use crate::shared::error::ErrorContext;
+
 /// 管线的执行阶段。
 #[derive(Debug, Clone, PartialEq)]
 pub struct PipelineStage {
@@ -108,8 +110,8 @@ impl FailureStrategy {
 pub enum StepResult {
     /// 成功
     Success,
-    /// 失败带错误信息
-    Failure(String),
+    /// 失败带领域错误上下文
+    Failure(ErrorContext<String>),
     /// 跳过（阶段被标记为可跳过且未执行）
     Skipped,
 }

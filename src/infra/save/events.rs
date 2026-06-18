@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+use crate::shared::error::ErrorContext;
+
 /// 保存请求 — 触发后将当前游戏状态保存到指定路径。
 #[derive(Event, Debug, Clone)]
 pub struct SaveRequest {
@@ -42,7 +44,7 @@ pub struct LoadCompleted {
 /// 存档操作错误。
 #[derive(Event, Debug, Clone)]
 pub struct SaveError {
-    pub message: String,
+    pub error_context: ErrorContext<String>,
     pub operation: SaveOperation,
 }
 

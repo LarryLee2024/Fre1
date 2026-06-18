@@ -3,6 +3,7 @@ use crate::core::capabilities::runtime::pipeline::foundation::{
     PipelineStep, StepResult,
 };
 use crate::core::capabilities::runtime::pipeline::mechanism::executor::*;
+use crate::shared::error::ErrorContext;
 
 /// 模拟执行器：检查步骤名称并返回成功。
 fn mock_success_executor(
@@ -20,7 +21,11 @@ fn mock_selective_executor(
     _stage_name: &str,
 ) -> StepResult {
     if step_name == "fail_step" {
-        StepResult::Failure("intentional failure".into())
+        StepResult::Failure(ErrorContext {
+            domain: "test",
+            source: "intentional failure".into(),
+            context: None,
+        })
     } else {
         StepResult::Success
     }
@@ -165,7 +170,11 @@ fn execute_conditional_branch() {
         } else if step_name == "apply_shield" {
             StepResult::Success
         } else {
-            StepResult::Failure("unexpected".into())
+            StepResult::Failure(ErrorContext {
+                domain: "test",
+                source: "unexpected".into(),
+                context: None,
+            })
         }
     }
 

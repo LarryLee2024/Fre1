@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+use crate::shared::error::ErrorContext;
+
 use super::events::{
     LoadCompleted, LoadRequest, SaveCompleted, SaveError, SaveOperation, SaveRequest,
 };
@@ -47,7 +49,11 @@ pub fn on_load_request(
     if !std::path::Path::new(&path).exists() {
         tracing::error!("[SavePlugin] save file not found: {}", path);
         commands.trigger(SaveError {
-            message: format!("save file not found: {}", path),
+            error_context: ErrorContext {
+                domain: "save",
+                source: format!("save file not found: {}", path),
+                context: None,
+            },
             operation: SaveOperation::Load,
         });
         return;

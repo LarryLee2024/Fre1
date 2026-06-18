@@ -158,7 +158,7 @@ fn execute_atomic_step(
 
         match result {
             StepResult::Success => return Ok(StepResult::Success),
-            StepResult::Failure(ref msg) => {
+            StepResult::Failure(ref err_ctx) => {
                 if attempt + 1 < max_attempts {
                     // Retry: 继续下一次尝试
                     continue;
@@ -169,17 +169,17 @@ fn execute_atomic_step(
                         return Err(PipelineError::StepFailed {
                             stage: stage.name.clone(),
                             step: step_name.into(),
-                            detail: msg.clone(),
+                            detail: err_ctx.source.clone(),
                         });
                     }
                     FailureStrategy::SkipAndContinue => {
-                        return Ok(StepResult::Failure(msg.clone()));
+                        return Ok(StepResult::Failure(err_ctx.clone()));
                     }
                     FailureStrategy::Retry { .. } => {
                         return Err(PipelineError::StepFailed {
                             stage: stage.name.clone(),
                             step: step_name.into(),
-                            detail: format!("all retries exhausted: {}", msg),
+                            detail: format!("all retries exhausted: {}", err_ctx.source),
                         });
                     }
                 }

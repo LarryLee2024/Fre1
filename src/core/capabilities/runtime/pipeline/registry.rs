@@ -11,8 +11,7 @@ use std::collections::HashMap;
 
 use bevy::prelude::Resource;
 
-use crate::core::capabilities::runtime::pipeline::foundation::PipelineDefinition;
-
+use super::foundation::PipelineDefinition;
 use super::hooks::PipelineHook;
 
 /// 管线注册中心 — ECS Resource
