@@ -244,3 +244,43 @@ baseline_warnings: 433 (C-4 infra/replay 增量：0 新增 warning)
 ---
 
 *D-9 + C-4 + C-5 Deltas 由 @refactor-guardian 扫描生成。2026-06-18 验证：932 tests passed, 8 ignored, 0 failed, cargo build 0 errors。完整债务清单见首次全量扫描（上方 Debt-001~006）。*
+
+---
+
+### B-1 Delta: Progression & Inventory 域测试覆盖扫描
+
+| 检查项 | 结果 | 备注 |
+|--------|------|------|
+| Dead Code (未使用的 pub) | ✅ 零新增 | 所有新 pub 函数均有测试消费 |
+| 可见性超标 (ADR-045) | ✅ 合规 | tests 模块为 `#[cfg(test)]`，不侵入生产代码 |
+| 超大文件 (>500 行) | ✅ 无 | 最大测试文件 components_test.rs ~100 行 |
+| 禁止的文件名 | ✅ 无 | 无 utils.rs / helpers.rs |
+| cargo build 警告 | ✅ 零新增 | 新代码未引入新 warning |
+| Bevy 0.18 模式合规 | ✅ 通过 | observer-based events, reflect Components, Default traits |
+| 测试接线完整 | ✅ 已确认 | unit/invariant/integration 三层 + fixtures 预留 |
+| Bug 修复数 | 4 个 | B1-B4 均在修复当天验证，全部通过 |
+
+**发现并修复的 Bug**（4 个，均已 resolved）：
+
+| ID | 类别 | 位置 | 描述 | 严重程度 |
+|----|------|------|------|----------|
+| B1 | 索引错误 (off-by-one) | `progression/rules/formulas.rs: xp_to_next_level` | `idx = current_level` 应为 `current_level - 1`，导致 1→2 级消耗计算为 600 XP（应为 300） | High |
+| B2 | 索引错误 (off-by-one) | `progression/components.rs: LevelProgressionTable::xp_for_level` | `idx = level` 应为 `level - 1`，导致 `xp_for_level(2)` 返回 900（应为 300） | High |
+| B3 | 资源初始化错误 | `progression/components.rs: LevelProgressionTable` | `#[derive(Default)]` 与固有 `fn default()` 冲突，`init_resource` 创建全零实例 | High |
+| B4 | 重量/数量逻辑错误 | `inventory/components.rs: Inventory::add_item` | 新格子路径未乘以 quantity 导致重量偏小；未对 quantity 上限 99 | Medium |
+
+**新增 TestDebt**（本轮未修复，建议后续处理）：
+
+- **TestDebt-B-001**: `tests/fixtures/` 在 progression 和 inventory 域中为空。建议填充共享辅助函数（如 `make_entity_with_xp(xp, level)`、`make_potion(qty)`）减少测试代码重复。
+  - **严重程度**: Low
+  - **建议修复**: 填充 `tests/fixtures/mod.rs`
+
+- **TestDebt-B-002**: `Inventory::stackable_to_existing()` 返回 tuple `(u32, u32)`，其中第二元素 `space` 在 `add_item` 中未使用。
+  - **严重程度**: Low
+  - **建议修复**: 简化为只返回 `to_add`
+
+- **TestDebt-B-003**: `Inventory::add_item` 的堆叠合并只匹配第一个同模板物品。若存在多个同模板堆叠（如两堆 potion），只合入第一个。
+  - **严重程度**: Low
+  - **建议修复**: 遍历所有匹配堆叠，依次合并剩余数量
+
+**结论**: B-1 批次引入 4 个 High 级别 Bug（均已修复）+ 3 个 Low 级别 TestDebt（建议后续处理）。新测试 182 个已覆盖 3 层测试模型，1120 tests passed, 0 failed。全量验证通过后债务净减少。*2026-06-18 验证：1120 tests passed, 8 ignored, 0 failed, cargo build 0 errors。*

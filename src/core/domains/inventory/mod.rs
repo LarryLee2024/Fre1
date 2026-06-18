@@ -18,4 +18,5 @@ pub(crate) mod rules;
 // [ADR-045] pub(crate) — ECS 系统，crate 内共享
 pub(crate) mod systems;
 
-// Tests are in tests/ directory (domain-level integration tests)
+#[cfg(test)]
+mod tests;

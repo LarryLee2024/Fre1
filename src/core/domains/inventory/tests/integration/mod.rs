@@ -1,2 +1,1 @@
-// TODO: 添加测试模块
-
+mod inventory_plugin_test;

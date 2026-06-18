@@ -34,10 +34,10 @@ pub(crate) const MAX_LEVEL: u32 = 20;
 /// 升到下一级所需的额外经验值。
 /// 如果已是满级，返回 0。
 pub fn xp_to_next_level(current_level: u32) -> u64 {
-    if current_level >= MAX_LEVEL {
+    if current_level >= MAX_LEVEL || current_level == 0 {
         return 0;
     }
-    let idx = current_level as usize;
+    let idx = (current_level - 1) as usize;
     if idx < DEFAULT_XP_THRESHOLDS.len() - 1 {
         DEFAULT_XP_THRESHOLDS[idx + 1] - DEFAULT_XP_THRESHOLDS[idx]
     } else {

@@ -296,16 +296,38 @@ impl Inventory {
             return false;
         }
 
-        // 检查负重
-        if self.total_weight + item_weight > self.max_weight {
+        // 检查负重：item_weight 是每单位重量，需要乘以数量
+        let total_item_weight = if needs_new_slot && item.quantity > 1 {
+            item_weight * item.quantity as f32
+        } else {
+            // 堆叠合并场景: can_hold 后实际添加量由 add_item 决定，保守用单重
+            // 实际调用侧会再次检查
+            item_weight
+        };
+        if self.total_weight + total_item_weight > self.max_weight {
             return false;
         }
 
         true
     }
 
+    /// 计算可堆叠到已有物品的数量（自动上限 99）。
+    fn stackable_to_existing(&self, template_id: &str, quantity: u32) -> (u32, u32) {
+        for existing in self.items.iter() {
+            if existing.template_id == template_id {
+                let space = 99u32.saturating_sub(existing.quantity);
+                if space > 0 {
+                    let to_add = space.min(quantity);
+                    return (to_add, space);
+                }
+            }
+        }
+        (0, 0)
+    }
+
     /// 添加物品到背包（自动堆叠合并）。
     ///
+    /// `weight` 是每单位重量（磅）。自动将数量上限限制为 99。
     /// 返回实际添加的数量。
     pub fn add_item(&mut self, item: ItemInstance, weight: f32) -> u32 {
         if !self.can_hold(&item, weight) {
@@ -314,23 +336,26 @@ impl Inventory {
 
         // 尝试堆叠到已有物品
         if item.is_stackable() && item.quantity > 0 {
-            for existing in self.items.iter_mut() {
-                if existing.template_id == item.template_id {
-                    let space = 99u32.saturating_sub(existing.quantity);
-                    if space > 0 {
-                        let to_add = space.min(item.quantity);
+            let (to_add, _) = self.stackable_to_existing(&item.template_id, item.quantity);
+            if to_add > 0 {
+                for existing in self.items.iter_mut() {
+                    if existing.template_id == item.template_id {
                         existing.quantity += to_add;
-                        self.total_weight += weight * to_add as f32;
-                        return to_add;
+                        break;
                     }
                 }
+                self.total_weight += weight * to_add as f32;
+                return to_add;
             }
         }
 
-        // 需要新格子
-        self.items.push(item);
-        self.total_weight += weight;
-        1
+        // 需要新格子：数量上限 99，重量按实际数量计算
+        let mut new_item = item;
+        let actual_qty = new_item.quantity.min(99);
+        new_item.quantity = actual_qty;
+        self.total_weight += weight * actual_qty as f32;
+        self.items.push(new_item);
+        actual_qty
     }
 
     /// 从背包移除物品。

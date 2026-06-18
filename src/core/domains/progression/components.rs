@@ -390,7 +390,6 @@ pub struct ProgressionMarker;
 // ─── 资源 ─────────────────────────────────────────────────────────
 
 /// 等级成长配置表（Resource）。
-#[derive(Default)]
 ///
 /// 定义经验曲线、熟练加值和 ASI 时机。
 /// 当前使用默认的 D&D 5e 经验表，内容系统接入后可替换为配置加载。
@@ -408,12 +407,12 @@ pub struct LevelProgressionTable {
     pub asi_levels: Vec<u32>,
 }
 
-impl LevelProgressionTable {
+impl Default for LevelProgressionTable {
     /// 创建默认的 D&D 5e 等级表。
-    pub fn default() -> Self {
+    fn default() -> Self {
         Self {
             max_level: 20,
-            // D&D 5e 累计经验阈值（索引 0 = 到 2 级需要 300 XP）
+            // D&D 5e 累计经验阈值（索引 0 = 1 级 0 XP, 索引 1 = 2 级 300 XP, ...）
             exp_thresholds: vec![
                 0, 300, 900, 2700, 6500, 14000, 23000, 34000, 48000, 64000, 85000, 100000, 120000,
                 140000, 165000, 195000, 225000, 265000, 305000, 355000,
@@ -424,15 +423,22 @@ impl LevelProgressionTable {
             asi_levels: vec![4, 8, 12, 16, 19],
         }
     }
+}
 
+impl LevelProgressionTable {
     /// 获取指定等级所需的累计经验值。
     ///
+    /// level=1 返回 0（起始值），level=2 返回 300（D&D 5e 标准）。
     /// 如果 level >= max_level，返回 u64::MAX（无需经验）。
+    /// 如果 level == 0，返回 0。
     pub fn xp_for_level(&self, level: u32) -> u64 {
         if level >= self.max_level {
             return u64::MAX;
         }
-        let idx = level as usize;
+        if level == 0 {
+            return 0;
+        }
+        let idx = (level - 1) as usize;
         if idx < self.exp_thresholds.len() {
             self.exp_thresholds[idx]
         } else {
