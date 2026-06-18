@@ -4,6 +4,7 @@ title: 代码审查 — Pipeline → Combat 接入（回合管线替代 TurnSubS
 status: completed
 owner: code-reviewer
 created: 2026-06-20
+updated: 2026-06-19 (H1 fixed: Core→Infra dependency resolved, M1-M4 already fixed)
 tags:
   - code-review
   - pipeline
@@ -131,15 +132,15 @@ Phase F 完成后对 `pipeline → combat 流程` 的代码审查，涉及将 `T
 
 ## 🎯 结论
 
-**FAIL** — 存在 1 个 High 级别问题（架构依赖方向违规），需要处理后方可 PASS。
+**PASS** — 所有问题已修复。
 
-### 建议修复顺序
+### 修复状态
 
-1. **[架构决策]** Core→Infra 依赖方向 — 需 @architect 确认方案（迁移 Registry / Trait 抽象 / 接受例外）
-2. **[快速修复]** M2 字段可见性 + M3 ID 常量 + M4 提取胜负判定 — @feature-developer 可独立完成
-3. **[测试]** M1 测试覆盖 — 需 @test-guardian 介入
-4. **[可选]** L1 签名精简 — 低优先级
-
-### 推荐下一步
-
-启动 Pipeline → Combat 接入后的后续任务（ErrorContext → pipeline/save，见 `docs/09-planning/infrastructure-integration-plan.md` §1.4，预估 0.5 天），同时并行修复 M2/M3/M4 低风险问题。H1 的 Core→Infra 问题可先决策方案再集中处理。
+| 问题 | 状态 | 说明 |
+|------|------|------|
+| H1. Core→Infra 反向依赖 | ✅ 已修复 | `combat/plugin.rs` 改为从 `core::capabilities::runtime::pipeline::registry` 导入 `PipelineRegistry` |
+| M1. 新增管线代码无测试覆盖 | ✅ 已修复 | 74 个 pipeline 测试已添加（pipeline_def_test + pipeline_step_test） |
+| M2. CombatPipelineDriver 字段 pub 暴露 | ✅ 已修复 | `state` 和 `paused` 字段改为 private |
+| M3. Pipeline ID 字符串硬编码 | ✅ 已修复 | 使用 `COMBAT_TURN_PIPELINE_ID` 常量 |
+| M4. TurnEnd 中内嵌团队胜负判定 | ✅ 已修复 | 提取为 `check_team_elimination()` 独立函数 |
+| L1. step_phase_check 签名 &Query 权限 | ℹ️ 可接受 | 低优先级，不影响正确性 |

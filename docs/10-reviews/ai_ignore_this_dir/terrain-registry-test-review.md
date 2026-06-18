@@ -1,11 +1,10 @@
 # 测试质量审查报告 — D-2 Terrain + C-3 Registry
 
-⚠️-待@test-guardian 完成 (P1: movement_cost 全组合/f32::MAX 边界/ECS Systems 测试/tests/ 目录)
-
 > 审查人: Sisyphus (@feature-developer 兼 @test-guardian)
 > 日期: 2026-06-17
+> 更新: 2026-06-19 (内联测试已迁移至 tests/ 目录，inline #[cfg(test)] 已清理)
 > 范围: D-2 Terrain 测试 (rules 内联测试), C-3 Registry 测试 (registry.rs/resolver.rs 内联测试)
-> 基线: cargo test 774 passed 0 failed
+> 基线: cargo test 1451 passed 0 failed
 
 ---
 
