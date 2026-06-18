@@ -84,6 +84,7 @@ pub fn check_components(
 pub fn check_slot_available(
     slot_pool: &SpellSlotPool,
     level: SpellLevel,
+    spell_id: &SpellDefId,
 ) -> Result<(), SpellError> {
     let level_num = level.as_u8();
     if level_num == 0 {
@@ -93,7 +94,7 @@ pub fn check_slot_available(
         Ok(())
     } else {
         Err(SpellError::InsufficientSlots {
-            spell_id: SpellDefId::new("unknown"),
+            spell_id: spell_id.clone(),
             required_level: level_num,
         })
     }
@@ -104,7 +105,7 @@ pub fn check_slot_available(
 /// 不变量 3.2：同一时间最多只能维持一个专注法术。
 pub fn check_concentration(
     current_concentration: Option<&Concentration>,
-    new_spell_id: &SpellDefId,
+    _new_spell_id: &SpellDefId,
 ) -> Result<(), SpellError> {
     if let Some(conc) = current_concentration {
         Err(SpellError::AlreadyConcentrating {
@@ -146,7 +147,7 @@ pub fn check_upcast(spell_def: &SpellDef, target_level: SpellLevel) -> Result<()
 /// # 返回值
 /// `(bool, u32)` — (是否维持专注, 本次检定的 DC)
 pub fn concentration_save(
-    concentration: &Concentration,
+    _concentration: &Concentration,
     damage: u32,
     con_save_roll: i32,
 ) -> (bool, u32) {

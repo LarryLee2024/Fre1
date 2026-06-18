@@ -198,10 +198,11 @@ impl ReactionQueue {
         self.entries.insert(pos, entry);
     }
 
-    /// 获取下一个待处理的反应条目。
+    /// 获取下一个待处理的反应条目（从 current_index 开始向后查找）。
     pub fn next_pending(&self) -> Option<&ReactionEntry> {
         self.entries
             .iter()
+            .skip(self.current_index)
             .find(|e| e.status == ReactionEntryStatus::Pending)
     }
 

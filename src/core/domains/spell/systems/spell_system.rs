@@ -12,21 +12,27 @@ use crate::core::domains::spell::events::{
     CastOutcome, ConcentrationBreakReason, ConcentrationBroken, SpellCastRequest, SpellCastResult,
     SpellSlotChanged,
 };
-use crate::core::domains::spell::rules::check_slot_available;
+use crate::core::domains::spell::rules::{
+    check_concentration, check_slot_available, check_spell_known,
+};
 
 /// 处理施法请求：校验 → 执行 / 拒绝。
 ///
 /// 监听 SpellCastRequest 事件，进行前置校验：
-/// 1. 法术是否已准备
-/// 2. 法术位是否充足
-/// 3. 专注冲突检查
+/// 1. 法术是否已习得
+/// 2. 法术是否已准备（戏法除外）
+/// 3. 法术位是否充足
+/// 4. 专注冲突检查
+///
+/// TODO: 待 SpellDefRegistry 就绪后，补充 check_upcast 校验。
+/// TODO: 待 SpellComponents 校验所需的状态组件（can_speak, has_free_hand, has_focus）就绪后，
+///       补充 check_components 校验。
 pub fn on_spell_cast_request(
     _trigger: On<SpellCastRequest>,
     mut commands: Commands,
     spellbook_query: Query<&Spellbook>,
     mut slot_pool_query: Query<&mut SpellSlotPool>,
     concentration_query: Query<&Concentration>,
-    config: Res<SpellConfig>,
 ) {
     let request = _trigger.event();
 
@@ -48,62 +54,84 @@ pub fn on_spell_cast_request(
         }
     };
 
-    // 2. 检查法术是否已准备
-    if !spellbook.has_prepared(&request.spell_id) {
-        // 戏法不需要准备（假设所有已知的戏法都可施放）
-        if !spellbook.knows(&request.spell_id) {
-            let cast_level = request
-                .upcast_level
-                .unwrap_or(crate::core::domains::spell::components::SpellLevel::Cantrip);
-            commands.trigger(SpellCastResult {
-                caster: request.caster,
-                spell_id: request.spell_id.clone(),
-                effective_level: cast_level,
-                result: CastOutcome::Failed {
-                    reason: "法术未准备".to_string(),
-                },
-            });
-            return;
-        }
+    // 2. 检查法术是否已习得
+    if check_spell_known(&spellbook.known_spells, &request.spell_id).is_err() {
+        let cast_level = request
+            .upcast_level
+            .unwrap_or(crate::core::domains::spell::components::SpellLevel::Cantrip);
+        commands.trigger(SpellCastResult {
+            caster: request.caster,
+            spell_id: request.spell_id.clone(),
+            effective_level: cast_level,
+            result: CastOutcome::Failed {
+                reason: "法术未习得".to_string(),
+            },
+        });
+        return;
     }
 
-    // 3. 检查法术位
+    // 3. 检查法术是否已准备（戏法不需要准备）
     let cast_level = request
         .upcast_level
         .unwrap_or(crate::core::domains::spell::components::SpellLevel::Cantrip);
 
-    if cast_level.as_u8() > 0 {
-        if let Ok(mut slot_pool) = slot_pool_query.get_mut(request.caster) {
-            if check_slot_available(&slot_pool, cast_level).is_ok() {
-                // 消耗法术位
-                slot_pool.consume(cast_level);
-                commands.trigger(SpellSlotChanged {
-                    entity: request.caster,
-                    level: cast_level,
-                    remaining: slot_pool.remaining(cast_level),
-                    total: slot_pool
-                        .slots_by_level
-                        .get((cast_level.as_u8().saturating_sub(1)) as usize)
-                        .map_or(0, |e| e.total),
-                    source: "spell_cast".to_string(),
-                });
-            }
+    if cast_level.as_u8() > 0 && !spellbook.has_prepared(&request.spell_id) {
+        commands.trigger(SpellCastResult {
+            caster: request.caster,
+            spell_id: request.spell_id.clone(),
+            effective_level: cast_level,
+            result: CastOutcome::Failed {
+                reason: "法术未准备".to_string(),
+            },
+        });
+        return;
+    }
+
+    // 4. 检查专注冲突
+    if let Ok(concentration) = concentration_query.get(request.caster) {
+        if check_concentration(Some(concentration), &request.spell_id).is_err() {
+            // 施放新专注法术时会自动解除旧专注，不阻止施法
+            commands.trigger(ConcentrationBroken {
+                entity: request.caster,
+                spell_id: concentration.spell_id.clone(),
+                reason: ConcentrationBreakReason::ReplacedByNewSpell {
+                    new_spell_id: request.spell_id.clone(),
+                },
+            });
+            commands.entity(request.caster).remove::<Concentration>();
         }
     }
 
-    // 4. 检查专注冲突 — 施放新专注法术时会自动解除旧专注
-    if let Ok(concentration) = concentration_query.get(request.caster) {
-        commands.trigger(ConcentrationBroken {
-            entity: request.caster,
-            spell_id: concentration.spell_id.clone(),
-            reason: ConcentrationBreakReason::ReplacedByNewSpell {
-                new_spell_id: request.spell_id.clone(),
-            },
-        });
-        commands.entity(request.caster).remove::<Concentration>();
+    // 5. 检查法术位
+    if cast_level.as_u8() > 0 {
+        if let Ok(mut slot_pool) = slot_pool_query.get_mut(request.caster) {
+            if check_slot_available(&slot_pool, cast_level, &request.spell_id).is_err() {
+                commands.trigger(SpellCastResult {
+                    caster: request.caster,
+                    spell_id: request.spell_id.clone(),
+                    effective_level: cast_level,
+                    result: CastOutcome::Failed {
+                        reason: "法术位不足".to_string(),
+                    },
+                });
+                return;
+            }
+            // 消耗法术位
+            slot_pool.consume(cast_level);
+            commands.trigger(SpellSlotChanged {
+                entity: request.caster,
+                level: cast_level,
+                remaining: slot_pool.remaining(cast_level),
+                total: slot_pool
+                    .slots_by_level
+                    .get((cast_level.as_u8().saturating_sub(1)) as usize)
+                    .map_or(0, |e| e.total),
+                source: "spell_cast".to_string(),
+            });
+        }
     }
 
-    // 5. 施法成功
+    // 6. 施法成功
     commands.trigger(SpellCastResult {
         caster: request.caster,
         spell_id: request.spell_id.clone(),

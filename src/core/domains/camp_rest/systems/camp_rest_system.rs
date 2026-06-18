@@ -9,6 +9,7 @@ use crate::core::domains::camp_rest::events::{
     LongRestCompleted, LongRestInterrupted, ShortRestCompleted,
 };
 use crate::core::domains::camp_rest::rules::can_trigger_camp_event;
+use crate::infra::replay::resources::FrameCounter;
 
 /// 短休完成处理 System。
 ///
@@ -40,16 +41,17 @@ pub fn handle_long_rest_complete(
     trigger: On<LongRestCompleted>,
     mut pool_query: Query<&mut HitDicePool>,
     mut rest_query: Query<&mut RestState>,
+    frame_counter: Res<FrameCounter>,
 ) {
     for entity in &trigger.event().entities {
         // 恢复生命骰（不变量 3.4）
         if let Ok(mut pool) = pool_query.get_mut(*entity) {
-            let max = pool.max;
-            pool.recover_for_long_rest(max);
+            pool.recover_for_long_rest();
         }
 
-        // 重置休息状态，记录上次长休时间
+        // 记录上次长休时间，然后重置休息状态
         if let Ok(mut rest) = rest_query.get_mut(*entity) {
+            rest.last_long_rest_frame = Some(frame_counter.0);
             rest.reset();
         }
     }

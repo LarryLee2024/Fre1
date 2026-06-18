@@ -17,3 +17,6 @@ pub use error::*;
 pub use events::*;
 pub use plugin::*;
 pub use resources::*;
+
+#[cfg(test)]
+mod tests;
