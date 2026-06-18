@@ -129,3 +129,101 @@ AI 编码时直接引用，覆盖宪法分册与专项规则：
 - 数据架构：`04-data/README.md`（Schema 设计与数据治理）
 
 详细文档说明请参阅 `README.md`。
+
+
+<!-- TOOL_PRIORITY_START -->
+## Tool Priority
+Always prefer the highest-level source available.
+1. `CodeGraph` → code relationships, symbols, call chains
+2. `Repomix` → architecture, repository overview
+3. `Context7` → external library documentation
+4. `Git` → history, rationale, regressions
+5. `Filesystem` → implementation details
+Never start implementation before consulting the highest-priority relevant source.
+<!-- TOOL_PRIORITY_END -->
+
+<!-- CODEGRAPH_START -->
+## CodeGraph
+If a `.codegraph/` directory exists, use CodeGraph before grep, find, or reading files.
+Use it for:
+* Symbol lookup
+* Call chains
+* Dependency tracing
+* Impact analysis
+CodeGraph is the source of truth for code relationships.
+<!-- CODEGRAPH_END -->
+
+<!-- REPOMIX_START -->
+## Repomix
+If a `repomix-output.xml` exists, read it before exploring the repository.
+Use it for:
+* Architecture review
+* Directory structure
+* Module boundaries
+* Plugin discovery
+* Project onboarding
+Do not read large numbers of files before reviewing Repomix.
+Repomix is the source of truth for repository structure.
+<!-- REPOMIX_END -->
+
+<!-- CONTEXT7_START -->
+## Context7
+For external libraries and frameworks, consult Context7 before relying on memory.
+Use it for:
+* API references
+* Version-specific behavior
+* Best practices
+* Migration guidance
+Never assume APIs for the project's framework version.
+Documentation is the source of truth for external dependencies.
+<!-- CONTEXT7_END -->
+
+<!-- GIT_START -->
+## Git
+Use Git before making assumptions about why code exists.
+Use it for:
+* Recent changes
+* Regression analysis
+* Historical context
+* Refactor safety checks
+Always review relevant diffs before modifying existing code.
+Git history is the source of truth for project evolution.
+<!-- GIT_END -->
+
+<!-- FILESYSTEM_START -->
+## Filesystem
+Use filesystem exploration only after higher-level sources have been consulted.
+Use it for:
+* Reading implementations
+* Finding reusable code
+* Creating or editing files
+Before creating new code:
+1. Search existing implementations.
+2. Reuse existing abstractions.
+3. Follow established project patterns.
+Prefer consistency over novelty.
+<!-- FILESYSTEM_END -->
+
+<!-- THINKING_START -->
+## Sequential Thinking
+For any task estimated above 30 minutes of engineering work, think before coding.
+Required workflow:
+1. Understand
+2. Analyze
+3. Design
+4. Validate
+5. Implement
+Before implementation, explicitly identify:
+* Goal
+* Constraints
+* Existing systems
+* Risks
+* Alternatives
+Never:
+* Code before understanding architecture.
+* Refactor before impact analysis.
+* Introduce new systems without evaluating reuse.
+* Change public APIs without considering downstream effects.
+Reasoning first.
+Implementation second.
+<!-- THINKING_END -->
