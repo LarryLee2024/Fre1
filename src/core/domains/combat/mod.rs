@@ -6,15 +6,17 @@
 //! # 模块结构
 //!
 //! - `plugin` — CombatPlugin（唯一对外入口）
-//! - `components` — BattlePhase, TurnSubState, TurnQueue, ActionPoints
+//! - `components` — BattlePhase, TurnQueue, ActionPoints
 //! - `events` — 回合生命周期事件
-//! - `systems` — 回合状态机各阶段 System
+//! - `systems` — 战斗生命周期系统 + Observer
+//! - `pipeline/` — 回合流程管线（替代原 TurnSubState 状态机）
 //! - `integration/` — 跨域访问 ACL（ADR-046）
 
 pub(crate) mod components;
 pub(crate) mod error;
 mod events;
 pub(crate) mod integration;
+pub(crate) mod pipeline;
 mod plugin;
 mod systems;
 

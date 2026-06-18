@@ -6,7 +6,7 @@
 use bevy::prelude::Entity;
 
 use crate::core::domains::combat::components::{
-    ActionPoints, BattlePhase, TeamId, TurnEntry, TurnQueue, TurnSubState,
+    ActionPoints, BattlePhase, TeamId, TurnEntry, TurnQueue,
 };
 
 /// 创建指定索引的测试实体。
@@ -40,7 +40,7 @@ fn team_id_equality_works() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// BattlePhase / TurnSubState
+// BattlePhase
 // ═══════════════════════════════════════════════════════════════════════
 
 #[test]
@@ -58,23 +58,6 @@ fn battle_phase_variants_are_distinct() {
     ];
     // 通过长度确认没有重复变体被折叠
     assert_eq!(phases.len(), 4);
-}
-
-#[test]
-fn turn_sub_state_default_is_turn_start() {
-    assert_eq!(TurnSubState::default(), TurnSubState::TurnStart);
-}
-
-#[test]
-fn turn_sub_state_has_five_phases() {
-    let states = [
-        TurnSubState::TurnStart,
-        TurnSubState::PhaseCheck,
-        TurnSubState::UnitAction,
-        TurnSubState::TurnSettlement,
-        TurnSubState::TurnEnd,
-    ];
-    assert_eq!(states.len(), 5);
 }
 
 // ═══════════════════════════════════════════════════════════════════════

@@ -1,17 +1,18 @@
 //! ECS Components — 战斗领域核心组件
 //!
-//! 定义回合状态机、行动资源等 ECS 组件与资源。
+//! 定义宏观战斗阶段、回合队列、行动资源等 ECS 组件与资源。
+//! 回合内流程由 `pipeline::CombatPipelineDriver` 驱动，替代原 TurnSubState 状态机。
 //! 详见 ADR-021, docs/02-domain/domains/combat_domain.md, docs/04-data/domains/combat_schema.md
 //!
 //! # 状态层次
 //!
 //! ```text
-//! BattlePhase (States)              TurnSubState (SubStates, source=BattlePhase::Battle)
-//! ──────────────                     ─────────────────────────────────────────────────
-//! Preparation                        (no substate — 战前部署)
-//! Battle                            TurnStart → PhaseCheck → UnitAction → TurnSettlement → TurnEnd
-//! Victory                            (no substate)
-//! Defeat                             (no substate)
+//! BattlePhase (States)
+//! ──────────────
+//! Preparation   — 战前部署
+//! Battle        — 战斗中（由 CombatPipelineDriver 驱动回合循环）
+//! Victory       — 胜利
+//! Defeat        — 失败
 //! ```
 
 use bevy::prelude::*;
@@ -21,12 +22,13 @@ use bevy::prelude::*;
 /// 宏观战斗阶段。
 ///
 /// 使用 Bevy States 实现，驱动战斗全生命周期。
+/// 回合内流程由 `pipeline::CombatPipelineDriver` 驱动。
 #[derive(States, Clone, Eq, PartialEq, Hash, Debug, Default)]
 pub enum BattlePhase {
     /// 战前部署（编队、先攻检定）。默认起始状态。
     #[default]
     Preparation,
-    /// 战斗中（回合循环）。此时 TurnSubState 活跃。
+    /// 战斗中（回合循环）。
     Battle,
     /// 胜利。
     Victory,
@@ -34,26 +36,7 @@ pub enum BattlePhase {
     Defeat,
 }
 
-// ─── 内层回合子状态 ───────────────────────────────────────────────────
 
-/// 回合内子状态 — 仅在 BattlePhase::Battle 时活跃。
-///
-/// 五个标准化阶段，覆盖回合从开始到结束的全流程：
-/// 1. TurnStart      — 发放行动资源, 触发 OnTurnStart
-/// 2. PhaseCheck     — 判定单位可执行行动
-/// 3. UnitAction     — 等待玩家/AI 行动完成
-/// 4. TurnSettlement — 结算 Buff Tick, 触发 OnTurnEnd
-/// 5. TurnEnd        — 切换下一个单位/队伍
-#[derive(SubStates, Clone, Eq, PartialEq, Hash, Debug, Default)]
-#[source(BattlePhase = BattlePhase::Battle)]
-pub enum TurnSubState {
-    #[default]
-    TurnStart,
-    PhaseCheck,
-    UnitAction,
-    TurnSettlement,
-    TurnEnd,
-}
 
 // ─── 队伍标识 ─────────────────────────────────────────────────────────
 
