@@ -77,8 +77,7 @@ fn duration_effect_remaining_turns_non_negative() {
         "target_001",
         EffectDuration::HasDuration {
             turns: 5,
-            calculation:
-                crate::core::capabilities::effect::foundation::DurationCalculation::Fixed,
+            calculation: crate::core::capabilities::effect::foundation::DurationCalculation::Fixed,
         },
         1,
     );
@@ -126,8 +125,7 @@ fn effect_tracks_modifier_count_for_rollback() {
         "target_001",
         EffectDuration::HasDuration {
             turns: 3,
-            calculation:
-                crate::core::capabilities::effect::foundation::DurationCalculation::Fixed,
+            calculation: crate::core::capabilities::effect::foundation::DurationCalculation::Fixed,
         },
         1,
     )
@@ -162,8 +160,7 @@ fn duplicate_effect_detection_by_def_and_source() {
         "target_001",
         EffectDuration::HasDuration {
             turns: 3,
-            calculation:
-                crate::core::capabilities::effect::foundation::DurationCalculation::Fixed,
+            calculation: crate::core::capabilities::effect::foundation::DurationCalculation::Fixed,
         },
         1,
     );
@@ -175,8 +172,7 @@ fn duplicate_effect_detection_by_def_and_source() {
         "target_001",
         EffectDuration::HasDuration {
             turns: 3,
-            calculation:
-                crate::core::capabilities::effect::foundation::DurationCalculation::Fixed,
+            calculation: crate::core::capabilities::effect::foundation::DurationCalculation::Fixed,
         },
         1,
     );
@@ -195,8 +191,7 @@ fn different_source_allows_same_effect() {
         "target_001",
         EffectDuration::HasDuration {
             turns: 3,
-            calculation:
-                crate::core::capabilities::effect::foundation::DurationCalculation::Fixed,
+            calculation: crate::core::capabilities::effect::foundation::DurationCalculation::Fixed,
         },
         1,
     );
@@ -208,8 +203,7 @@ fn different_source_allows_same_effect() {
         "target_001",
         EffectDuration::HasDuration {
             turns: 3,
-            calculation:
-                crate::core::capabilities::effect::foundation::DurationCalculation::Fixed,
+            calculation: crate::core::capabilities::effect::foundation::DurationCalculation::Fixed,
         },
         1,
     );
@@ -230,8 +224,7 @@ fn effect_only_describes_modifiers_not_applies() {
         "target_001",
         EffectDuration::HasDuration {
             turns: 5,
-            calculation:
-                crate::core::capabilities::effect::foundation::DurationCalculation::Fixed,
+            calculation: crate::core::capabilities::effect::foundation::DurationCalculation::Fixed,
         },
         1,
     )

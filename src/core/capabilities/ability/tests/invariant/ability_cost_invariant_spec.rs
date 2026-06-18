@@ -141,11 +141,10 @@ fn on_cooldown_error_contains_remaining_turns() {
 fn already_active_error_contains_instance_id() {
     let iid =
         crate::core::capabilities::ability::foundation::types::AbilityInstanceId::from_u64(42);
-    let err =
-        crate::core::capabilities::ability::foundation::types::AbilityError::AlreadyActive {
-            spec_id: "abl_heal".to_string(),
-            instance_id: iid,
-        };
+    let err = crate::core::capabilities::ability::foundation::types::AbilityError::AlreadyActive {
+        spec_id: "abl_heal".to_string(),
+        instance_id: iid,
+    };
     let msg = format!("{}", err);
     assert!(msg.contains("abl_heal"));
     assert!(msg.contains("42"));

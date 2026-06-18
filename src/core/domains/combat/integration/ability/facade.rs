@@ -76,12 +76,12 @@ impl<'w, 's> CombatAbilityParam<'w, 's> {
         frame: u64,
         costs: Vec<CostEntry>,
     ) -> Result<AbilityInstanceId, AbilityError> {
-        let mut container = self
-            .containers
-            .get_mut(entity)
-            .map_err(|e| AbilityError::Runtime(format!(
-                "entity {:?} has no ActiveAbilityContainer: {}", entity, e
-            )))?;
+        let mut container = self.containers.get_mut(entity).map_err(|e| {
+            AbilityError::Runtime(format!(
+                "entity {:?} has no ActiveAbilityContainer: {}",
+                entity, e
+            ))
+        })?;
         CombatAbilityFacade::try_activate_ability(
             &mut container,
             spec_id,
