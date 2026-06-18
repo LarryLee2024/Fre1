@@ -10,6 +10,7 @@ use crate::core::domains::summon::rules::{
     has_free_summon_slot, is_caster_alive, is_position_valid,
     should_expire_on_concentration_broken,
 };
+use bevy::prelude::Entity;
 
 // ============================================================================
 // Position Validation
@@ -57,7 +58,7 @@ fn fresh_manager_has_free_slot() {
 #[test]
 fn full_manager_no_free_slot() {
     let mut manager = SummonSlotManager::new(1);
-    manager.active_summons.push(Entity::from_raw(1));
+    manager.active_summons.push(Entity::PLACEHOLDER);
     assert!(!has_free_summon_slot(&manager));
 }
 
@@ -87,7 +88,7 @@ fn summon_from_non_summoner_allowed() {
 #[test]
 fn summon_from_summon_is_forbidden() {
     let bond = SummonBond {
-        caster: Entity::from_raw(1),
+        caster: Entity::PLACEHOLDER,
         template_id: "sum_test".into(),
         ai_mode: SummonAIMode::Autonomous,
         summoned_at: 0.0,

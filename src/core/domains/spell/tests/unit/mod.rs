@@ -100,7 +100,9 @@ mod check_components_tests {
 
 #[cfg(test)]
 mod check_slot_available_tests {
-    use crate::core::domains::spell::components::{SpellLevel, SpellSlotEntry, SpellSlotPool};
+    use crate::core::domains::spell::components::{
+        SpellDefId, SpellLevel, SpellSlotEntry, SpellSlotPool,
+    };
     use crate::core::domains::spell::rules::check_slot_available;
 
     fn pool_with_level(total: u32, used: u32) -> SpellSlotPool {
@@ -116,20 +118,23 @@ mod check_slot_available_tests {
     #[test]
     fn sufficient_slots_returns_ok() {
         let pool = pool_with_level(2, 0);
-        assert!(check_slot_available(&pool, SpellLevel::L1).is_ok());
+        assert!(check_slot_available(&pool, SpellLevel::L1, &SpellDefId::new("spl_test")).is_ok());
     }
 
     #[test]
     fn insufficient_slots_returns_error() {
         let pool = pool_with_level(1, 1);
-        let result = check_slot_available(&pool, SpellLevel::L1);
+        let result = check_slot_available(&pool, SpellLevel::L1, &SpellDefId::new("spl_test"));
         assert!(result.is_err());
     }
 
     #[test]
     fn cantrip_never_requires_slots() {
         let pool = pool_with_level(0, 0);
-        assert!(check_slot_available(&pool, SpellLevel::Cantrip).is_ok());
+        assert!(
+            check_slot_available(&pool, SpellLevel::Cantrip, &SpellDefId::new("spl_cantrip"))
+                .is_ok()
+        );
     }
 }
 

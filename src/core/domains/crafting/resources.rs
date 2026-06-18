@@ -1,6 +1,9 @@
 //! 制作/锻造领域 — 资源配置
 
 use bevy::prelude::*;
+use std::collections::HashMap;
+
+use super::components::EnchantmentDef;
 
 /// 制作系统配置。
 #[derive(Debug, Clone, Resource)]
@@ -20,5 +23,33 @@ impl Default for CraftingConfig {
             fail_material_retention: 0.5,
             max_concurrent_crafts: 1,
         }
+    }
+}
+
+/// 附魔定义注册表。
+#[derive(Debug, Clone, Resource)]
+pub struct EnchantmentDefRegistry {
+    pub defs: HashMap<String, EnchantmentDef>,
+}
+
+impl EnchantmentDefRegistry {
+    pub fn new() -> Self {
+        Self {
+            defs: HashMap::new(),
+        }
+    }
+
+    pub fn register(&mut self, def: EnchantmentDef) {
+        self.defs.insert(def.id.clone(), def);
+    }
+
+    pub fn get(&self, id: &str) -> Option<&EnchantmentDef> {
+        self.defs.get(id)
+    }
+}
+
+impl Default for EnchantmentDefRegistry {
+    fn default() -> Self {
+        Self::new()
     }
 }

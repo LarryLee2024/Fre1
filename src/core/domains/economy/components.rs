@@ -45,26 +45,73 @@ impl Wallet {
         }
     }
 
-    /// 检查是否能支付给定价格。
+    /// 检查是否能支付给定价格（支持多货币换算）。
     pub fn can_afford(&self, price: &Price) -> bool {
-        self.currencies
-            .get(&CurrencyType::Gold)
-            .copied()
-            .unwrap_or(0)
-            >= price.final_price()
+        let cost_in_copper = price.final_price() * CurrencyType::Gold.base_value();
+        let total_copper: u64 = self
+            .currencies
+            .iter()
+            .map(|(currency, amount)| amount * currency.base_value())
+            .sum();
+        total_copper >= cost_in_copper
     }
 
-    /// 扣款。返回是否成功。
+    /// 扣款（优先扣除金币，不足时按换算比例扣其他货币）。返回是否成功。
     pub fn deduct(&mut self, price: &Price) -> bool {
-        let cost = price.final_price();
-        let gold = self.currencies.get_mut(&CurrencyType::Gold);
-        match gold {
-            Some(g) if *g >= cost => {
-                *g -= cost;
-                true
-            }
-            _ => false,
+        if !self.can_afford(price) {
+            return false;
         }
+
+        let mut remaining = price.final_price() * CurrencyType::Gold.base_value();
+
+        // 按优先级扣款：金币 > 银币 > 铜币
+        let priority = [
+            CurrencyType::Gold,
+            CurrencyType::Silver,
+            CurrencyType::Copper,
+        ];
+
+        for currency in &priority {
+            if remaining == 0 {
+                break;
+            }
+            let base = currency.base_value();
+            let amount = self.currencies.get(currency).copied().unwrap_or(0);
+            let can_use = amount * base;
+            if can_use >= remaining {
+                let deduct_amount = remaining / base;
+                if let Some(balance) = self.currencies.get_mut(currency) {
+                    *balance -= deduct_amount;
+                }
+                remaining = 0;
+            } else {
+                if let Some(balance) = self.currencies.get_mut(currency) {
+                    *balance = 0;
+                }
+                remaining -= can_use;
+            }
+        }
+
+        // 处理特殊货币
+        if remaining > 0 {
+            for (currency, amount) in self.currencies.iter_mut() {
+                if matches!(currency, CurrencyType::Special(_)) {
+                    let base = currency.base_value();
+                    let can_use = *amount * base;
+                    if can_use >= remaining {
+                        let deduct_amount = remaining / base;
+                        *amount -= deduct_amount;
+                        remaining = 0;
+                        break;
+                    } else {
+                        *amount = 0;
+                        remaining -= can_use;
+                    }
+                }
+            }
+        }
+
+        remaining == 0
     }
 
     /// 增加指定货币数量。

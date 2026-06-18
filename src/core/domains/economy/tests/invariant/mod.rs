@@ -15,7 +15,11 @@ fn wallet_balance_never_negative() {
     let price = Price::new(200);
     let result = wallet.deduct(&price);
     assert!(!result, "deduct should fail when insufficient");
-    assert_eq!(*wallet.currencies.get(&CurrencyType::Gold).unwrap(), 100, "balance unchanged");
+    assert_eq!(
+        *wallet.currencies.get(&CurrencyType::Gold).unwrap(),
+        100,
+        "balance unchanged"
+    );
 }
 
 /// 不变量 3.1（退化测试）：空钱包 deduct 不应 panic 或产生负数。
@@ -42,13 +46,20 @@ fn price_deterministic_repeatable() {
         supply_modifier: 1.5,
         stolen_modifier: 1.0,
     };
-    assert_eq!(p1.final_price(), p2.final_price(), "same inputs must produce same price");
+    assert_eq!(
+        p1.final_price(),
+        p2.final_price(),
+        "same inputs must produce same price"
+    );
 }
 
 /// 不变量 3.5：Hated 声望不可交易。
 #[test]
 fn hated_reputation_blocks_all_trade() {
-    assert!(!can_trade_with_reputation("Hated"), "Hated faction cannot trade");
+    assert!(
+        !can_trade_with_reputation("Hated"),
+        "Hated faction cannot trade"
+    );
 }
 
 /// 衍生不变量：Price 永不为负。
@@ -63,5 +74,8 @@ fn price_never_negative() {
         supply_modifier: 0.0,
         stolen_modifier: 0.0,
     };
-    assert!(p2.final_price() >= 0, "even zero modifiers should not produce negative price");
+    assert!(
+        p2.final_price() >= 0,
+        "even zero modifiers should not produce negative price"
+    );
 }

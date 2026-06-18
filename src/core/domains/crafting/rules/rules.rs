@@ -37,9 +37,14 @@ pub fn check_station_match(recipe: &RecipeDef, actual_station: CraftingStation) 
 }
 
 /// 检查技能是否满足。
-pub fn check_skill_requirement(recipe: &RecipeDef, skill_bonus: i32) -> bool {
+///
+/// 技能检定：d20 + skill_bonus >= DC
+pub fn check_skill_requirement(recipe: &RecipeDef, skill_bonus: i32, die_result: i32) -> bool {
     match &recipe.skill_requirement {
-        Some(req) => skill_bonus >= 0, // 简化：有技能即可，完整实现需 d20 + bonus >= DC
+        Some(req) => {
+            let total = die_result + skill_bonus;
+            total >= req.dc as i32
+        }
         None => true,
     }
 }

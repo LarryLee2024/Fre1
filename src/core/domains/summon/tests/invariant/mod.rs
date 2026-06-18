@@ -4,8 +4,7 @@
 
 use crate::core::domains::summon::components::{SummonBond, SummonSlotManager};
 use crate::core::domains::summon::rules::{
-    can_create_summon_from_summon, can_summon_from_summon, has_free_summon_slot,
-    is_caster_alive, is_position_valid,
+    can_summon_from_summon, has_free_summon_slot, is_caster_alive, is_position_valid,
 };
 
 /// 不变量 3.1：召唤者生死约束 — 召唤者死亡时召唤物应不可继续存在。
@@ -19,26 +18,39 @@ fn caster_dead_invalidates_summon() {
 #[test]
 fn only_one_concentration_summon_allowed() {
     use crate::core::domains::summon::rules::can_create_concentration_summon;
-    assert!(!can_create_concentration_summon(true), "already concentrating → reject");
+    assert!(
+        !can_create_concentration_summon(true),
+        "already concentrating → reject"
+    );
 }
 
 /// 不变量 3.5：占位不冲突 — 召唤物出生位置必须可通行且无占用。
 #[test]
 fn occupied_position_rejected() {
-    assert!(!is_position_valid(0, 0, true, true), "occupied position rejected");
+    assert!(
+        !is_position_valid(0, 0, true, true),
+        "occupied position rejected"
+    );
 }
 
 #[test]
 fn impassable_position_rejected() {
-    assert!(!is_position_valid(0, 0, false, false), "impassable position rejected");
+    assert!(
+        !is_position_valid(0, 0, false, false),
+        "impassable position rejected"
+    );
 }
 
 /// 衍生不变量：active_summons 长度不得超过 max_slots。
 #[test]
 fn summon_slot_count_never_exceeds_max() {
     let mut manager = SummonSlotManager::new(2);
-    manager.active_summons.push(bevy::prelude::Entity::from_raw(1));
-    manager.active_summons.push(bevy::prelude::Entity::from_raw(2));
+    manager
+        .active_summons
+        .push(bevy::prelude::Entity::PLACEHOLDER);
+    manager
+        .active_summons
+        .push(bevy::prelude::Entity::PLACEHOLDER);
     // full: 和 max 相等
     assert!(!has_free_summon_slot(&manager));
 }
@@ -61,11 +73,13 @@ fn no_bond_from_non_summon() {
 #[test]
 fn nested_summon_from_summon_blocked() {
     let bond = SummonBond {
-        caster: bevy::prelude::Entity::from_raw(1),
+        caster: bevy::prelude::Entity::PLACEHOLDER,
         template_id: "sum_pet".into(),
         ai_mode: crate::core::domains::summon::components::SummonAIMode::Autonomous,
         summoned_at: 0.0,
     };
-    assert!(!can_summon_from_summon(Some(&bond), false),
-        "summon entity should not be able to summon");
+    assert!(
+        !can_summon_from_summon(Some(&bond), false),
+        "summon entity should not be able to summon"
+    );
 }

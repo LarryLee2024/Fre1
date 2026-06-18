@@ -6,7 +6,9 @@ use crate::core::domains::crafting::components::{
     CraftType, CraftingStation, EnchantmentDef, EnchantmentSlot, MaterialCost, RecipeDef,
     SkillRequirement, UpgradeLevel,
 };
-use crate::core::domains::crafting::rules::{check_materials_available, check_upgrade_limit, has_free_enchantment_slot};
+use crate::core::domains::crafting::rules::{
+    check_materials_available, check_upgrade_limit, has_free_enchantment_slot,
+};
 
 /// 不变量 3.3：附魔槽位上限制 — active_enchants 长度不得超过 max_slots。
 #[test]
@@ -27,7 +29,10 @@ fn upgrade_level_never_exceeds_max() {
         max: 3,
         level_modifiers: vec![],
     };
-    assert!(!check_upgrade_limit(&level), "current == max should block upgrade");
+    assert!(
+        !check_upgrade_limit(&level),
+        "current == max should block upgrade"
+    );
 }
 
 /// 不变量 3.4：fresh upgrade 允许增长。
@@ -45,9 +50,10 @@ fn exact_materials_satisfies_invariant() {
         name_key: "recipe.invariant.name".into(),
         station: CraftingStation::Forge,
         skill_requirement: None,
-        materials: vec![
-            MaterialCost { item_id: "itm_iron".into(), quantity: 3 },
-        ],
+        materials: vec![MaterialCost {
+            item_id: "itm_iron".into(),
+            quantity: 3,
+        }],
         output: crate::core::domains::crafting::components::CraftOutput {
             item_id: "itm_sword".into(),
             quantity: 1,
@@ -60,8 +66,10 @@ fn exact_materials_satisfies_invariant() {
         "itm_iron" => 3, // exact match
         _ => 0,
     };
-    assert!(check_materials_available(&recipe, &inventory).is_ok(),
-        "exact material count should satisfy requirement");
+    assert!(
+        check_materials_available(&recipe, &inventory).is_ok(),
+        "exact material count should satisfy requirement"
+    );
 }
 
 /// 不变量 3.5：互斥词条防冲突 — 同类型附魔应替换。
@@ -77,6 +85,13 @@ fn exclusive_enchantment_replaces_old() {
     // 添加互斥词条 → 应替换 "enc_fire"
     slot.active_enchants.clear();
     slot.active_enchants.push("enc_frost".into());
-    assert_eq!(slot.active_enchants.len(), 1, "replacement should keep slot count at 1");
-    assert_eq!(slot.active_enchants[0], "enc_frost", "new enchant should replace old");
+    assert_eq!(
+        slot.active_enchants.len(),
+        1,
+        "replacement should keep slot count at 1"
+    );
+    assert_eq!(
+        slot.active_enchants[0], "enc_frost",
+        "new enchant should replace old"
+    );
 }

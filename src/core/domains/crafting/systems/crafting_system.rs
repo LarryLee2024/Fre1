@@ -7,10 +7,10 @@ use bevy::prelude::*;
 
 use super::super::components::{CraftingStation, EnchantmentSlot, RecipeDef, UpgradeLevel};
 use super::super::events::{CraftingFailed, EnchantmentApplied, ItemCrafted, ItemUpgraded};
-use super::super::resources::CraftingConfig;
+use super::super::resources::{CraftingConfig, EnchantmentDefRegistry};
 use super::super::rules::{
-    check_materials_available, check_station_match, check_upgrade_limit, has_free_enchantment_slot,
-    perform_skill_check,
+    check_enchant_exclusivity, check_materials_available, check_station_match, check_upgrade_limit,
+    has_free_enchantment_slot, perform_skill_check,
 };
 
 /// 处理制作请求。
@@ -28,10 +28,12 @@ pub fn on_craft_item(
 pub fn on_apply_enchantment(
     _trigger: On<EnchantmentApplied>,
     mut slot_query: Query<&mut EnchantmentSlot>,
+    enchant_registry: Res<EnchantmentDefRegistry>,
     mut commands: Commands,
 ) {
     let event = _trigger.event();
     if let Ok(mut slot) = slot_query.get_mut(event.entity) {
+        // 1. 检查槽位是否已满
         if !has_free_enchantment_slot(&slot) {
             commands.trigger(CraftingFailed {
                 entity: event.entity,
@@ -41,6 +43,25 @@ pub fn on_apply_enchantment(
             });
             return;
         }
+
+        // 2. 检查互斥规则
+        if let Some(new_enchant_def) = enchant_registry.get(&event.new_enchantment) {
+            let all_defs: Vec<_> = enchant_registry.defs.values().cloned().collect();
+            if let Some(conflict_index) =
+                check_enchant_exclusivity(new_enchant_def, &slot.active_enchants, &all_defs)
+            {
+                let conflict_id = slot.active_enchants[conflict_index].clone();
+                commands.trigger(CraftingFailed {
+                    entity: event.entity,
+                    recipe_id: event.new_enchantment.clone(),
+                    fail_reason: format!("与已有附魔 '{}' 互斥", conflict_id),
+                    materials_lost: vec![],
+                });
+                return;
+            }
+        }
+
+        // 3. 应用附魔
         slot.active_enchants.push(event.new_enchantment.clone());
     }
 }
