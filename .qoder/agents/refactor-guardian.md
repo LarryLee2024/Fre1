@@ -237,7 +237,7 @@ grep -rn "^use crate::" src/ | sort
 ## 重构后验证
 
 每次建议重构后，必须验证：
-- [ ] 重构后所有测试通过（`cargo test`）
+- [ ] 重构后所有测试通过（`cargo nextest run`）
 - [ ] 重构后架构合规（对照 docs/01-architecture/）
 - [ ] 重构后领域规则一致（对照 docs/02-domain/）
 - [ ] 重构后复杂度确实下降了

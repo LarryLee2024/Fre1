@@ -73,7 +73,7 @@ tags:
 | C-T | Infra 层测试 | — | ✅ 完成 |
 | C-R | 代码审查 | — | ✅ 完成 |
 
-### 1.4 Phase D — Business Domains（部分完成）
+### 1.4 Phase D — Business Domains（✅ 全部 15 域完成）
 
 | 域 | 规划编号 | 原始状态 | 实测文件数 | 实测行数 | 归档状态 |
 |----|---------|---------|-----------|---------|---------|
@@ -104,14 +104,15 @@ tags:
 | 技术债扫描 | `docs/11-refactor/debt-inventory-2026-06-17.md` | Phase-post-M1 | ✅ 完成 |
 | Per-domain 测试计划 | @test-guardian 补齐 | feature-developer-implementation-roadmap 0 | ⏳ 待执行 |
 | 横切层 (Content/Tools/Modding) | Phase E~H | feature-developer-implementation-roadmap | 🔴 待定（核心域完成后） |
+| 测试修复（4 个失败测试） | quest/spell/summon 域测试逻辑修正 | 2026-06-18 | ✅ 已完成 |
 
 ---
 
 ## 2. 未完成任务清单（提炼自全部规划）
 
-### 2.1 🔴 高优先级 — 骨架域填充（路径 B）
+### 2.1 ✅ 已完成 — 骨架域填充（路径 B）
 
-6 个业务域（crafting / economy / quest / reaction / spell / summon）当前只有 `mod.rs` + `plugin.rs`（各约 16 行），需要按照已完成的 **Terrain** 或 **Faction** 为标准模板填充。
+6 个业务域（crafting / economy / quest / reaction / spell / summon）已全部完成全量实现，包括完整的 components/rules/systems/events/errors + 单元/集成/不变量测试 + 代码审查。
 
 > **注**：Progression、Inventory、Party、CampRest 已在之前轮次中完成全量实现，从骨架域列表中移除。
 
@@ -171,13 +172,13 @@ domains/<domain>/
 
 ### 2.3 🔴 遗留架构缺口
 
-| # | 缺口 | 说明 | 位置 |
-|---|------|------|------|
-| GAP-1 | **空 plugin 警告** | 6 个 Capability 骨架 Plugin 的 `build()` 可能为空（Effect/Runtime/等），部分注册了空 observer 会被 Bevy 警告 | Phase B-2 标注 |
-| GAP-2 | **integration/ 不完整** | 只有 Tactical 有完整 Facade，Faction/Terrain 有 `rules/` 但无 integration；Combat 有 integration/ 但无独立集成文档 | — |
-| GAP-3 | **error.rs 缺失** | 除 Tactical 外，所有域都没有专属 error.rs | 每个域建立时补齐 |
-| GAP-4 | **Content 加载未就绪** | ContentPlugin 为空，配置数据无法从 asset 加载到 Registry | Phase E |
-| GAP-5 | **App 层渲染未就绪** | app_plugin.rs 在 Phase 9 注册，但当前无渲染/Bevy UI 系统 | Phase F |
+| # | 缺口 | 说明 | 位置 | 状态 |
+|---|------|------|------|------|
+| GAP-1 | **空 plugin 警告** | 6 个 Capability 骨架 Plugin 的 `build()` 可能为空（Effect/Runtime/等），部分注册了空 observer 会被 Bevy 警告 | Phase B-2 标注 | ✅ 已确认为预留设计，非 Bug |
+| GAP-2 | **integration/ 不完整** | 只有 Tactical 有完整 Facade，Faction/Terrain 有 `rules/` 但无 integration；Combat 有 integration/ 但无独立集成文档 | — | ✅ 已确认：Faction/Terrain 无 Capabilities 引用，不需要 integration/ |
+| GAP-3 | **error.rs 缺失** | 除 Tactical 外，所有域都没有专属 error.rs | 每个域建立时补齐 | ✅ **已完成**：combat/faction/narrative/terrain 4 个域的 error.rs 已补齐 |
+| GAP-4 | **Content 加载未就绪** | ContentPlugin 为空，配置数据无法从 asset 加载到 Registry | Phase E | 🔴 待定（Phase E） |
+| GAP-5 | **App 层渲染未就绪** | app_plugin.rs 在 Phase 9 注册，但当前无渲染/Bevy UI 系统 | Phase F | 🔴 待定（Phase F） |
 
 ### 2.4 🔴 远期（核心域完成后）
 
@@ -235,7 +236,7 @@ domains/<domain>/
 | P3-2 | Spell: 法术位/专注/豁免/升环 组件 + 系统 + 规则 | ~500 行 | ✅ |
 | P3-3 | Reaction: 机会攻击/法术反制/护盾 组件 + 系统 + 规则 | ~400 行 | ✅ |
 | P3-T | 测试 | @test-guardian | ✅ |
-| P3-R | 代码审查 | — | ⏳ 待执行 |
+| P3-R | 代码审查 | — | ✅ 已完成（详见 `docs/10-reviews/code-review-batch3-4-2026-06-18.md`） |
 
 #### ✅ Batch 4 — 叙事与经济（Quest + Economy + Crafting + Summon）— 已完成
 
@@ -247,7 +248,7 @@ domains/<domain>/
 | P4-4 | Crafting: 配方/附魔/装备升级 | ~400 行 | ✅ |
 | P4-5 | Summon: 召唤物模板/专注绑定/消失 | ~400 行 | ✅ |
 | P4-T | 测试 | @test-guardian | ✅ |
-| P4-R | 代码审查 | — | ⏳ 待执行 |
+| P4-R | 代码审查 | — | ✅ 已完成（详见 `docs/10-reviews/code-review-batch3-4-2026-06-18.md`） |
 
 ---
 

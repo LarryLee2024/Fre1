@@ -56,6 +56,7 @@
 - 所有 Agent 写的日志，必须按 `.trae/rules/日志规则.md` 写日志，关键地方必须写日志。
 - 跨角色协作时，必须引用上游输出作为输入依据，确保设计决策的可追溯性。
 - `@feature-developer` 在代码中写 `// TODO: `，要严格遵守 TODO规范
+- 必须用 `cargo nextest run` 替代 `cargo test` 做测试
 
 <!-- ENGINEERING_PRINCIPLES_START -->
 ## Engineering Principles

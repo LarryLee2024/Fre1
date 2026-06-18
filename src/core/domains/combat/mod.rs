@@ -12,6 +12,7 @@
 //! - `integration/` — 跨域访问 ACL（ADR-046）
 
 pub(crate) mod components;
+pub(crate) mod error;
 mod events;
 pub(crate) mod integration;
 mod plugin;
@@ -21,5 +22,6 @@ mod systems;
 mod tests;
 
 pub use components::*;
+pub use error::*;
 pub use events::*;
 pub use plugin::*;

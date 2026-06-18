@@ -118,7 +118,7 @@ fn non_concentration_summon_does_not_expire() {
 
 #[test]
 fn create_summon_all_conditions_met() {
-    let template = make_test_template(true);
+    let template = make_test_template(false);
     let manager = SummonSlotManager::new(3);
 
     let result = can_create_summon(
@@ -127,7 +127,7 @@ fn create_summon_all_conditions_met() {
         true,  // position passable
         false, // position not occupied
         None,  // not a summon itself
-        false,
+        true,  // allow nested (non-summon caster)
     );
     assert!(result.is_ok());
 }

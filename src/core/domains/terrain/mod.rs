@@ -10,6 +10,8 @@ pub use plugin::*;
 
 // [ADR-045] private — 业务组件，仅当前模块可见
 mod components;
+// [ADR-045] pub(crate) — 领域错误枚举，crate 内共享
+pub(crate) mod error;
 // [ADR-045] private — 资源，仅当前模块可见
 mod resources;
 // [ADR-045] pub — 领域事件定义，对外可见
@@ -18,6 +20,8 @@ pub mod events;
 pub(crate) mod rules;
 // [ADR-045] pub(crate) — ECS 系统，crate 内共享
 pub(crate) mod systems;
+
+pub use error::*;
 
 #[cfg(test)]
 mod tests;

@@ -119,7 +119,7 @@ mod sub_b; // 子模块 B 的职责
 
 ### 测试边界
 🟥 **禁止编写测试代码**。测试由 @test-guardian 负责。
-- 你的职责：实现功能代码，运行 `cargo test` 验证已有测试不被破坏
+- 你的职责：实现功能代码，运行 `cargo nextest run` 验证已有测试不被破坏
 - 发现测试缺失 → 建议调用 **@test-guardian** 补充
 - Bug 修复：只修代码，不写回归测试（@test-guardian 负责）
 
@@ -158,7 +158,7 @@ mod sub_b; // 子模块 B 的职责
 
 然后执行：
 1. 运行 `cargo build` 确保编译通过
-2. 运行 `cargo test` 确保测试通过
+2. 运行 `cargo nextest run` 确保测试通过
 3. 检查命名、可见性、错误处理、死代码、重复代码
 4. 检查 mod.rs 是否与目录同步（Mod Sync Rule）
 

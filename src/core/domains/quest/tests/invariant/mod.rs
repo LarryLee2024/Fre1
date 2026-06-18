@@ -69,7 +69,7 @@ fn exclusive_quests_cannot_overlap() {
     entry_a.state = QuestState::Active;
     quest_log.entries.push(entry_a);
 
-    let exclusive_with = vec![QuestDefId::new("qst_000001")];
+    let exclusive_with = vec![QuestDefId::new("qst_invariant")];
     let result = check_exclusivity(&QuestDefId::new("qst_000002"), &exclusive_with, &quest_log);
     assert!(result.is_err(), "exclusive quest should conflict");
 }

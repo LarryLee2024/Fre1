@@ -159,8 +159,8 @@ fn exclusive_quest_active_returns_error() {
     exclusive_entry.state = QuestState::Active;
     quest_log.entries.push(exclusive_entry);
 
-    let exclusive_with = vec![QuestDefId::new("qst_000002")];
-    let result = check_exclusivity(&QuestDefId::new("qst_000001"), &exclusive_with, &quest_log);
+    let exclusive_with = vec![QuestDefId::new("qst_000001")];
+    let result = check_exclusivity(&QuestDefId::new("qst_000002"), &exclusive_with, &quest_log);
     assert!(result.is_err());
 }
 

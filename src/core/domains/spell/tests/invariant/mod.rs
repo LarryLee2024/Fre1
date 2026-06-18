@@ -52,12 +52,12 @@ fn concentration_unique() {
 fn components_must_be_checked() {
     let comp = SpellComponents {
         verbal: true,
-        somatic: false,
+        somatic: true,
         material: None,
     };
     assert!(
         check_components(&comp, true, false, false).is_err(),
-        "silenced + verbal component → fail"
+        "somatic + no free hand → fail"
     );
 }
 
