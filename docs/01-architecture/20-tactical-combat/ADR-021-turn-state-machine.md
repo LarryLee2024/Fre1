@@ -6,13 +6,16 @@ owner: architect
 created: 2026-06-16
 updated: 2026-06-18
 supersedes: none
+partially-superseded-by: ADR-050 (BattlePhase 注册方式从独立 States 转为 SubState，绑定到 GameState::Combat；枚举值 Preparation/Battle/Victory/Defeat 保持不变)
 ---
 
 # ADR-021: 回合状态机设计
 
 ## 状态
 
-**Approved** — 依赖 ADR-000（Feature Module Map）和 `docs/04-data/domains/tactical_schema.md`，本架构决策正式生效。
+**Approved**（部分被 ADR-050 取代）— 依赖 ADR-000（Feature Module Map）和 `docs/04-data/domains/tactical_schema.md`，本架构决策正式生效。
+
+> ⚠️ **ADR-050 变更说明**：BattlePhase 从独立 `States` 转为 `GameState::Combat` 的 `SubStates`。枚举值（Preparation/Battle/Victory/Defeat）保持不变，回合内流程仍由 `CombatPipelineDriver` 驱动。详见 ADR-050 §2。
 
 ## 背景
 

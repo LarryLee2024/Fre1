@@ -23,9 +23,9 @@ Cargo.locks
 .idea/ 
 # opencode/mimo files
 .omo/
-.mimocode/
 .ruff_cache/
 .codegraph/
 repomix-output.xml
 
 **/*.fresave
+**/node_modules/**

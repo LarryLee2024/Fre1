@@ -13,7 +13,16 @@
 6. 数据架构变更必须经过 @data-architect 审查，确保 Replay/Save 兼容性
 
 ## 角色总览
-共 7 个专用 Agent，各角色严格守界，详细 Prompt 见 `.qoder/agents/*.md`，请牢记这些 Agent 位置。
+
+共 7 个专用 Agent，各角色严格守界。Agent 定义以双目录维护，格式不同但内容同步：
+
+| 目录 | 目标工具 | 格式特点 |
+|------|---------|---------|
+| `.qoder/agents/*.md` | **OpenCode**（Sisyphus） | 原始 frontmatter（`name` + `tools: Read, Grep, Write`） |
+| `.mimocode/agents/*.md` | **MiMo Code** | MiMo 兼容 frontmatter（`mode: subagent` + YAML `tools:` 字典） |
+
+调用方式因工具而异（见下方"调用方式"章节），但 agent 行为完全一致。
+
 - **@architect**：架构设计，输出 ADR；只设计不写代码，所有方案不得违反架构规范
 - **@domain-designer**：领域建模，输出领域文档；不讨论代码实现，术语与现有体系对齐
 - **@data-architect**：数据架构设计，设计 Config/Save/Replay Schema、Registry 结构、ID 策略和数据迁移规则；确保数据结构统一、Schema 可演化、Replay/Save 兼容
@@ -21,6 +30,41 @@
 - **@code-reviewer**：代码审查，按优先级校验合规性；只提意见不直接改代码
 - **@test-guardian**：测试守护，以领域规则优先；Bug 必须转化为可复现的回放测试
 - **@refactor-guardian**：技术债扫描（六大维度：架构漂移/抽象泄漏/AI可维护性/测试债务/内容债务/生命周期管理），定期输出债务清单；优先删代码而非加封装
+
+## 调用方式
+
+各 AI 工具通过不同机制调用这些 agent，以下分别说明。
+
+### MiMo Code — `actor` 工具
+
+主 agent 通过 `actor` 工具调用子 agent，`subagent_type` 取 `.mimocode/agents/*.md` 文件名（去 `.md`）。
+
+**可用 subagent_type**：architect, domain-designer, data-architect, feature-developer, code-reviewer, test-guardian, refactor-guardian, explore, general
+
+**调用模式**：
+- `spawn`：后台执行，立即返回 actor_id，结果通过 notification 投递
+- `run`：阻塞执行，结果内联返回
+- `wait`：等待 spawn 的子 agent 完成
+
+**并行调度**：单条消息内发多个 `actor({ action: "spawn", ... })` 调用，子 agent 并发执行。
+
+**prompt 构造**：读取对应 `.mimocode/agents/*.md` 的 `---` 之后内容作为系统提示词前缀，拼接具体任务描述。
+
+### OpenCode / Sisyphus — `task()` 映射
+
+OpenCode（Sisyphus）则是通过 `task()` 函数调用，category 映射规则如下：
+
+| 角色 | task() 调用方式 | 说明 |
+|------|---------------|------|
+| @architect | `task(category="unspecified-high", prompt="<agent prompt + 具体任务>")` | 复杂架构推理，完整推理能力 |
+| @domain-designer | `task(category="unspecified-high", prompt="<agent prompt + 具体任务>")` | 领域建模分析 |
+| @data-architect | `task(category="unspecified-high", prompt="<agent prompt + 具体任务>")` | Schema 设计 |
+| @feature-developer | `task(category="deep", prompt="<agent prompt + 具体任务>")` | 需要 bash/write/edit 的编码工作 |
+| @code-reviewer | `task(category="quick", prompt="<agent prompt + 具体任务>")` | 只读分析，无需写权限 |
+| @test-guardian | `task(category="unspecified-high", prompt="<agent prompt + 具体任务>")` | 需要 write 权限的测试编写 |
+| @refactor-guardian | `task(category="unspecified-high", prompt="<agent prompt + 具体任务>")` | 代码扫描分析 |
+
+`<agent prompt>` 即 `.qoder/agents/*.md` 中 `---` 之后的全部内容（系统提示词）。Sisyphus 在执行任务前读取对应文件并将 prompt 注入 `task()`。
 
 ## 协作流程
 
