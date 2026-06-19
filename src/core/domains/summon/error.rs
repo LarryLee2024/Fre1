@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use thiserror::Error;
 
 /// 召唤领域错误。
-#[derive(Debug, Clone, Event, Error)]
+#[derive(Debug, Clone, PartialEq, Event, Error)]
 pub enum SummonError {
     /// 召唤位置不可用
     #[error("invalid summon position: {reason}")]

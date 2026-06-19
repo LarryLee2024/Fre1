@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use thiserror::Error;
 
 /// 制作领域错误。
-#[derive(Debug, Clone, Event, Error)]
+#[derive(Debug, Clone, PartialEq, Event, Error)]
 pub enum CraftingError {
     /// 材料不足
     #[error("insufficient materials for recipe '{recipe_id}': missing '{missing_item}'")]

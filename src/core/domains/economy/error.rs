@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use thiserror::Error;
 
 /// 经济领域错误。
-#[derive(Debug, Clone, Event, Error)]
+#[derive(Debug, Clone, PartialEq, Event, Error)]
 pub enum EconomyError {
     /// 钱包余额不足
     #[error("insufficient funds: required={required}, available={available}")]
