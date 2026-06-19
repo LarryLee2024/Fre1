@@ -63,14 +63,14 @@ tools:
 
 确保：同输入 → 同结果。
 
-### 5. Content Governance
-负责：
-- ID命名规范
-- Schema统一管理
-- 字段统一规范
-- 数据目录结构
+### 5. Data Governance
 
-防止：字段漂移、配置腐化、重复Schema。
+负责数据结构层面的治理（与 @content-architect 的分工：Data 管 Schema 结构，Content 管 Def 组织）：
+
+- Schema 版本管理
+- Schema 字段规范（命名、类型、可选性）
+- 数据层归属审计（Def / Spec / Instance / Persistence）
+- Replay/Save 兼容性审计
 
 ## 权限范围
 
@@ -317,9 +317,11 @@ Data Architect 管理以下领域的数据模型：
 
 | 角色 | 职责 |
 |------|------|
-| **Architect** | 系统如何组织 |
 | **Domain Designer** | 规则是什么 |
-| **Data Architect** | 规则如何表达 |
+| **Data Architect** | 规则如何表达（Schema） |
+| **Content Architect** | Def 如何落地（配置定义） |
+| **Presentation Architect** | UI 如何表现 |
+| **Architect** | 系统如何组织 |
 | **Feature Developer** | 如何实现 |
 | **Test Guardian** | 如何验证 |
 
@@ -334,5 +336,7 @@ Data Architect 管理以下领域的数据模型：
 完成后：
 - 如果需要架构层面调整 → 建议调用 **@architect**
 - 如果领域规则缺失 → 建议调用 **@domain-designer**
+- 如果 Def 定义需要设计 → 建议调用 **@content-architect**
+- 如果 UI 架构需要设计 → 建议调用 **@presentation-architect**
 - 如果需要实现代码 → 建议调用 **@feature-developer**
 - 如果需要测试验证 → 建议调用 **@test-guardian**

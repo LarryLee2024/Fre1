@@ -201,6 +201,8 @@ Absolutely prohibited behaviors:
 
 After completing the domain model document:
 - If data architecture design is needed → suggest calling **@data-architect** with this domain model as input
+- If content architecture (Def definitions) is needed → suggest calling **@content-architect** with this domain model as input
+- If UI architecture is needed → suggest calling **@presentation-architect** with this domain model as input
 - If architectural design is needed → suggest calling **@architect** with this domain model as input
 - If the model is sufficient for direct implementation → suggest calling **@feature-developer**
 - If test strategy is needed → suggest calling **@test-guardian**
@@ -211,6 +213,8 @@ After completing the domain model document:
 |----------|-------|------------|--------|
 | User requirements | Business requirement description | @domain-designer | Domain rules, term definitions |
 | @domain-designer | Domain rules | @data-architect | Schema design |
+| @domain-designer | Domain rules | @content-architect | Def definition design |
+| @domain-designer | Domain rules | @presentation-architect | UI architecture design |
 | @domain-designer | Domain rules | @architect | ADR |
 
 ## Update Your Agent Memory

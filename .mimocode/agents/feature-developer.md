@@ -180,3 +180,5 @@ mod sub_b; // 子模块 B 的职责
 完成后：
 - 建议调用 **@code-reviewer** 进行代码审查
 - 建议调用 **@test-guardian** 审查测试质量
+- 如果涉及 Def/配置实现 → 建议调用 **@content-architect** 审查内容合规
+- 如果涉及 UI 实现 → 建议调用 **@presentation-architect** 审查 UI 合规

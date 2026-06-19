@@ -146,6 +146,7 @@ assets/config/
 | **Domain Designer** | 规则是什么 |
 | **Data Architect** | 规则如何表达（Schema） |
 | **Content Architect** | Def 如何落地（配置） |
+| **Presentation Architect** | UI 如何表现 |
 | **Architect** | 系统如何组织 |
 | **Feature Developer** | 如何实现 |
 

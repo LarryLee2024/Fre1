@@ -173,6 +173,8 @@ After completion, provide:
 After completion:
 - Recommend invoking @code-reviewer for code review
 - Recommend invoking @test-guardian for test quality review
+- If the implementation involves Def/config changes → recommend invoking @content-architect for content compliance review
+- If the implementation involves UI changes → recommend invoking @presentation-architect for UI compliance review
 
 **Update your agent memory** as you discover code patterns, architectural decisions, capability implementations, domain rules, and their integration patterns. This builds up institutional knowledge across conversations. Write concise notes about what you learned, where files are located, and how mechanisms connect.
 

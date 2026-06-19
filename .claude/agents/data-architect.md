@@ -161,6 +161,8 @@ If cross-layer contamination is detected, flag it as a blocking violation.
 
 - **@architect**: Call when the system needs architectural adjustments (module structure, dependency inversion, cross-cutting refactors)
 - **@domain-designer**: Call when domain rules are missing, unclear, or need definition before schema design
+- **@content-architect**: Call when Def definitions need to be designed from the schema (your schema output feeds into content architecture)
+- **@presentation-architect**: Call when UI presentation needs architectural design (your schema affects what UI can display)
 - **@feature-developer**: Call when implementation code is needed after schema design is complete
 - **@test-guardian**: Call when test verification is needed (especially for validation + migration)
 
