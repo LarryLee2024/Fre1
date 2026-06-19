@@ -5,21 +5,21 @@
 
 use bevy::prelude::*;
 
-use super::super::components::{CraftingStation, EnchantmentSlot, RecipeDef, UpgradeLevel};
+use super::super::components::{EnchantmentSlot, UpgradeLevel};
 use super::super::events::{CraftingFailed, EnchantmentApplied, ItemCrafted, ItemUpgraded};
 use super::super::resources::{CraftingConfig, EnchantmentDefRegistry};
 use super::super::rules::{
-    check_enchant_exclusivity, check_materials_available, check_station_match, check_upgrade_limit,
-    has_free_enchantment_slot, perform_skill_check,
+    check_enchant_exclusivity, check_upgrade_limit,
+    has_free_enchantment_slot,
 };
 
 /// 处理制作请求。
 pub fn on_craft_item(
     _trigger: On<ItemCrafted>,
-    config: Res<CraftingConfig>,
-    mut commands: Commands,
+    _config: Res<CraftingConfig>,
+    _commands: Commands,
 ) {
-    let event = _trigger.event();
+    let _event = _trigger.event();
     // 简化实现：触发制作完成事件
     // 完整实现需检查材料、站台、技能，消耗材料，产生产出
 }
@@ -92,7 +92,7 @@ pub fn on_upgrade_item(
             });
             return;
         }
-        let old_level = level.current;
+        let _old_level = level.current;
         level.current += 1;
         // ItemUpgraded 已由外部触发
     }

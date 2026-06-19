@@ -1,6 +1,6 @@
 use crate::core::domains::faction::components::{
     FactionId, FactionMembership, FactionRelationTable, FactionRelationType, RelationshipState,
-    Reputation, ReputationLevel,
+    Reputation,
 };
 use crate::core::domains::faction::rules::relationship::relationship_between_entities;
 use crate::core::domains::faction::rules::relationship::stronger_relationship;
@@ -27,7 +27,7 @@ fn shared_faction_is_allied() {
     let m1 = make_membership(&["faction_a"]);
     let m2 = make_membership(&["faction_a"]);
     let r1 = make_reputation(&[]);
-    let r2 = make_reputation(&[]);
+    let _r2 = make_reputation(&[]);
 
     let state = relationship_between_entities(&m1, &r1, &m2, &table);
     assert_eq!(state, RelationshipState::Allied);

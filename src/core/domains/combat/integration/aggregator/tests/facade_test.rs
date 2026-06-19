@@ -1,6 +1,6 @@
 //! CombatAggregatorFacade 测试
 
-use crate::core::capabilities::aggregator::foundation::{ModifierEntry, ModifierOp};
+use crate::core::capabilities::aggregator::foundation::ModifierOp;
 use crate::core::domains::combat::integration::aggregator::CombatAggregatorFacade;
 
 #[test]

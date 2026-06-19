@@ -1,10 +1,7 @@
 use crate::core::domains::tactical::components::{GridPos, MovementPoints, MovementType};
 use crate::core::domains::tactical::error::TacticalError;
-use crate::core::domains::tactical::integration::movement::MP;
 use crate::core::domains::tactical::resources::{GridLayout, GridMap, TileData, TileFlags};
-use crate::core::domains::tactical::systems::movement_system::{
-    MoveResult, validate_and_execute_move,
-};
+use crate::core::domains::tactical::systems::movement_system::validate_and_execute_move;
 
 fn make_default_grid() -> GridMap {
     GridMap::new(10, 10, GridLayout::Square)

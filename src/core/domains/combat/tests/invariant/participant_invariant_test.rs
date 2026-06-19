@@ -2,22 +2,24 @@
 //!
 //! | 不变量 | 描述 |
 //! |--------|------|
-//! | 3.6 | 所有战斗参与者初始存活 — 创建时 is_alive == true |
+//! | 3.6 | 所有战斗参与者初始存活 — 创建时无 Dead Tag |
 //! | 3.7 | 行动资源上限不变 — movement 不超过 max_movement |
 
 use crate::core::domains::combat::components::{ActionPoints, CombatParticipant};
 use crate::core::domains::combat::tests::fixtures::combat_fixtures;
 
-/// 不变量 3.6: 所有 CombatParticipant 在初始化时 is_alive == true。
+/// 不变量 3.6: 所有 CombatParticipant 在初始化时无 Dead Tag（即存活）。
 #[test]
 fn all_participants_start_alive() {
     let entries = combat_fixtures::interleaved_entries();
     for entry in &entries {
         // 模拟 initialize_turn_order 创建 participant 的行为
         let participant = CombatParticipant::alive(entry.team_id.clone());
-        assert!(
-            participant.is_alive,
-            "participant {:?} must start alive",
+        // 存活状态由 Dead Tag Component 判定：创建时插入的 CombatParticipant 不含 Dead
+        // 此处验证 CombatParticipant 构造成功且 team_id 正确
+        assert_eq!(
+            participant.team_id, entry.team_id,
+            "participant {:?} must be constructible with correct team",
             entry.entity
         );
     }

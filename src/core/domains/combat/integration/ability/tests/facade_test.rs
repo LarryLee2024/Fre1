@@ -5,7 +5,6 @@
 use bevy::prelude::Entity;
 
 use crate::core::capabilities::ability::foundation::{AbilityError, CostEntry};
-use crate::core::capabilities::ability::mechanism::ActiveAbilityContainer;
 use crate::core::domains::combat::integration::ability::CombatAbilityFacade;
 
 #[test]

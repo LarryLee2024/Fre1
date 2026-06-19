@@ -1,0 +1,10 @@
+(
+    id: "cmp:story_campfire",
+    title_key: "camp_event.story_campfire.title",
+    desc_key: "camp_event.story_campfire.desc",
+    trigger_conditions: [
+        "cond_progression_chapter_2",
+    ],
+    event_type: Story,
+    priority: 10,
+)

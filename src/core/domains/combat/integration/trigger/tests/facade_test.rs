@@ -2,8 +2,8 @@
 //!
 //! 验证触发器 facade 的条目创建、触发评估、批量评估、空容器创建。
 
-use crate::core::capabilities::trigger::foundation::{TriggerCondition, TriggerEntry, TriggerType};
-use crate::core::capabilities::trigger::mechanism::{TriggerContainer, TriggerEvalResult};
+use crate::core::capabilities::trigger::foundation::{TriggerCondition, TriggerType};
+use crate::core::capabilities::trigger::mechanism::TriggerEvalResult;
 use crate::core::domains::combat::integration::trigger::{CombatTriggerFacade, CombatTriggerType};
 
 #[test]

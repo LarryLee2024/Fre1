@@ -77,7 +77,7 @@ pub fn playback_frame_bookend_system(
     }
 
     // 验证当前帧（不变量: 校验和一致性）
-    if let Err(e) = session.verify_current_frame() {
+    if let Err(_e) = session.verify_current_frame() {
         let fnum = session.current_frame_number().unwrap_or(0);
         let expected = session
             .player

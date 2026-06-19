@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use crate::core::domains::combat::components::{
-    ActionPoints, CombatParticipant, TeamId, TurnEntry, TurnQueue,
+    ActionPoints, CombatParticipant, Dead, TeamId, TurnEntry, TurnQueue,
 };
 use crate::core::domains::combat::integration::turn::mark_unit_dead;
 use crate::core::domains::combat::systems::turn_systems::initialize_turn_order;
@@ -54,24 +54,35 @@ fn initialize_turn_order_creates_components_and_turn_queue() {
         assert!((ap.max_movement - 6.0).abs() < f32::EPSILON);
     }
 
-    // CombatParticipant on each entity
-    let participants: Vec<&CombatParticipant> =
-        world.query::<&CombatParticipant>().iter(&world).collect();
+    // CombatParticipant on each entity — all alive (no Dead tag)
+    let mut query = world.query::<(&CombatParticipant, Entity)>();
+    let participants: Vec<_> = query.iter(&world).collect();
     assert_eq!(participants.len(), 3);
-    for p in &participants {
-        assert!(p.is_alive, "all participants start alive");
+    for (p, e) in &participants {
+        assert!(
+            !world.entity(*e).contains::<Dead>(),
+            "all participants must start alive (no Dead tag)"
+        );
+        let _ = p; // suppress unused variable
     }
 }
 
 #[test]
-fn mark_unit_dead_sets_is_alive_false() {
-    let mut participant = CombatParticipant::alive(TeamId::new("test"));
-    assert!(participant.is_alive);
+fn mark_unit_dead_inserts_dead_tag() {
+    let mut world = World::new();
+    let entity = world
+        .spawn(CombatParticipant::alive(TeamId::new("test")))
+        .id();
 
-    mark_unit_dead(&mut participant);
+    assert!(!world.entity(entity).contains::<Dead>());
+
+    let mut commands = world.commands();
+    mark_unit_dead(&mut commands, entity);
+    world.flush();
+
     assert!(
-        !participant.is_alive,
-        "unit should be dead after mark_unit_dead"
+        world.entity(entity).contains::<Dead>(),
+        "entity should have Dead tag after mark_unit_dead"
     );
 }
 

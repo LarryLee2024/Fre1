@@ -6,7 +6,9 @@
 
 use std::collections::HashMap;
 
+use bevy::asset::Asset;
 use bevy::prelude::*;
+use serde::{Deserialize, Serialize};
 
 // ─── ID 类型 ──────────────────────────────────────────────────────
 
@@ -72,7 +74,7 @@ impl Default for FormationType {
 }
 
 /// 羁绊匹配模式。
-#[derive(Debug, Clone, PartialEq, Reflect)]
+#[derive(Debug, Clone, PartialEq, Reflect, Serialize, Deserialize)]
 pub enum BondMatchMode {
     /// 同时满足所有条件。
     All,
@@ -81,9 +83,10 @@ pub enum BondMatchMode {
 }
 
 /// 羁绊条件要求。
-#[derive(Debug, Clone, PartialEq, Reflect)]
+#[derive(Debug, Clone, PartialEq, Reflect, Serialize, Deserialize)]
 pub struct BondRequirement {
-    /// 特定角色 Entity（可选）。
+    /// 特定角色 ID（可选，config 中为字符串，运行时 resolve 为 Entity）。
+    #[serde(skip)]
     pub specific_entity: Option<Entity>,
     /// 需要的标签列表（可选）。
     pub required_tags: Vec<String>,
@@ -94,7 +97,7 @@ pub struct BondRequirement {
 /// 羁绊模板定义（Definition 层）。
 ///
 /// 描述特定角色组合的羁绊条件和效果。
-#[derive(Debug, Clone, Reflect)]
+#[derive(Debug, Clone, Asset, Reflect, Serialize, Deserialize)]
 pub struct BondDef {
     /// 羁绊唯一标识。
     pub id: BondDefId,

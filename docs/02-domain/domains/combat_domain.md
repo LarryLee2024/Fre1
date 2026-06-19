@@ -1,10 +1,10 @@
 ---
 id: 02-domain.combat
-title: Combat（战斗）领域规则 v1.0
+title: Combat（战斗）领域规则 v1.1
 status: stable
 owner: domain-designer
 created: 2026-06-16
-updated: 2026-06-18
+updated: 2026-06-19
 tags:
   - domain
   - combat
@@ -19,6 +19,7 @@ tags:
 | CombatState | 战斗整体状态机，定义战斗从开始到结束的全流程阶段 | 负责：战斗宏观阶段的流转；不负责：单个单位的回合管理 |
 | TurnOrder | 先攻排序队列，决定单位在战斗中的行动顺序 | 负责：先攻值的计算与排序；不负责：先攻检定的具体公式 |
 | CombatParticipant | 战斗参与者标记，标识哪些单位正在参与当前战斗 | 负责：参与者的注册与移除；不负责：参与者的战斗行为 |
+| Dead | 阵亡标记 Tag Component，实体获得此 Tag 表示已在战斗中死亡 | 负责：标识死亡状态；不负责：死亡处理逻辑 |
 | InitiativeValue | 先攻值，决定单位在回合顺序中的位置 | 负责：先攻值的表示；不负责：先攻值的变化 |
 | DamageResult | 伤害结算结果，包含最终伤害数值和命中/暴击/免疫等标志 | 负责：伤害结算的输出封装；不负责：伤害计算的过程 |
 | VictoryCondition | 胜负判定条件，定义战斗结束的条件 | 负责：胜负条件的定义与检查；不负责：战斗结束后的处理 |

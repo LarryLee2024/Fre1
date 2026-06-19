@@ -12,6 +12,7 @@
 pub mod capabilities;
 pub mod core_plugin;
 pub mod domains;
+pub mod events;
 pub mod mod_api;
 
 pub use core_plugin::CorePlugin;

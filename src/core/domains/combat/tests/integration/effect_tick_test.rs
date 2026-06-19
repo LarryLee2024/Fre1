@@ -67,7 +67,7 @@ fn make_infinite_effect(id: &str) -> EffectInstance {
 fn tick_durations_decrements_remaining_turns() {
     let mut container = ActiveEffectContainer::new();
     let effect = make_duration_effect("dur_001", 3);
-    let _ = container.effects.push(effect);
+    container.effects.push(effect);
     container.effects[0].stage = EffectStage::Active;
     let result = tick_durations(&mut container, 1, 1);
     assert_eq!(container.effects[0].remaining_turns, 2);
@@ -80,7 +80,7 @@ fn tick_durations_decrements_remaining_turns() {
 fn tick_durations_expires_effect_when_duration_depleted() {
     let mut container = ActiveEffectContainer::new();
     let effect = make_duration_effect("dur_002", 1);
-    let _ = container.effects.push(effect);
+    container.effects.push(effect);
     container.effects[0].stage = EffectStage::Active;
     let result = tick_durations(&mut container, 1, 1);
     assert_eq!(container.effects[0].remaining_turns, 0);
@@ -94,7 +94,7 @@ fn tick_durations_expires_effect_when_duration_depleted() {
 fn expire_effects_cleans_up_expiring_effects() {
     let mut container = ActiveEffectContainer::new();
     let effect = make_duration_effect("dur_003", 3);
-    let _ = container.effects.push(effect);
+    container.effects.push(effect);
     container.effects[0].stage = EffectStage::Active;
     let _ = tick_durations(&mut container, 3, 1);
     assert_eq!(container.effects[0].stage, EffectStage::Expiring);
@@ -108,7 +108,7 @@ fn expire_effects_cleans_up_expiring_effects() {
 fn tick_durations_triggers_periodic_tick_at_interval() {
     let mut container = ActiveEffectContainer::new();
     let effect = make_periodic_effect("dot_001", 5, 2);
-    let _ = container.effects.push(effect);
+    container.effects.push(effect);
     container.effects[0].stage = EffectStage::Active;
     let result = tick_durations(&mut container, 2, 1);
     assert_eq!(result.ticked.len(), 1);
@@ -120,7 +120,7 @@ fn tick_durations_triggers_periodic_tick_at_interval() {
 fn tick_durations_no_tick_before_interval() {
     let mut container = ActiveEffectContainer::new();
     let effect = make_periodic_effect("dot_002", 5, 3);
-    let _ = container.effects.push(effect);
+    container.effects.push(effect);
     container.effects[0].stage = EffectStage::Active;
     let result = tick_durations(&mut container, 1, 1);
     assert!(result.ticked.is_empty());
@@ -131,7 +131,7 @@ fn tick_durations_no_tick_before_interval() {
 fn infinite_effect_never_expires() {
     let mut container = ActiveEffectContainer::new();
     let effect = make_infinite_effect("inf_001");
-    let _ = container.effects.push(effect);
+    container.effects.push(effect);
     container.effects[0].stage = EffectStage::Active;
     let result = tick_durations(&mut container, 1000, 1);
     assert!(result.expired.is_empty());
@@ -144,7 +144,7 @@ fn infinite_effect_never_expires() {
 fn paused_effect_does_not_tick() {
     let mut container = ActiveEffectContainer::new();
     let effect = make_duration_effect("paused_001", 3);
-    let _ = container.effects.push(effect);
+    container.effects.push(effect);
     container.effects[0].stage = EffectStage::Active;
     container.effects[0].paused = true;
     let result = tick_durations(&mut container, 1, 1);
@@ -160,9 +160,9 @@ fn multiple_effects_tick_independently() {
     let e1 = make_duration_effect("a", 2);
     let e2 = make_duration_effect("b", 5);
     let e3 = make_infinite_effect("c");
-    let _ = container.effects.push(e1);
-    let _ = container.effects.push(e2);
-    let _ = container.effects.push(e3);
+    container.effects.push(e1);
+    container.effects.push(e2);
+    container.effects.push(e3);
     for i in 0..3 {
         container.effects[i].stage = EffectStage::Active;
     }

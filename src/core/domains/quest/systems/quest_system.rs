@@ -15,7 +15,7 @@ use super::super::rules::can_turn_in;
 pub fn on_accept_quest_request(_trigger: On<QuestAccepted>, mut query: Query<&mut QuestLog>) {
     let event = _trigger.event();
     if let Ok(mut quest_log) = query.get_mut(event.entity) {
-        let entry = QuestEntry::new(event.quest_id.clone(), event.objectives.clone());
+        let _entry = QuestEntry::new(event.quest_id.clone(), event.objectives.clone());
         if let Some(existing) = quest_log.get_entry_mut(&event.quest_id) {
             existing.state = QuestState::Active;
         } else {

@@ -23,6 +23,7 @@ pub struct CorePlugin;
 
 impl Plugin for CorePlugin {
     fn build(&self, app: &mut App) {
+        // 跨域共享事件通过 #[derive(Event)] 自动注册，无需手动 add_event
         // Capabilities — Foundation
         app.add_plugins(TagPlugin)
             .add_plugins(AttributePlugin)

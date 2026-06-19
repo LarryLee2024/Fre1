@@ -8,8 +8,8 @@
 use bevy::prelude::*;
 
 use super::components::{FactionMembership, FactionRelationTable, KeyCharacter, Reputation};
-use super::systems::relationship_system::{RelationshipEvalRequest, on_relationship_eval_request};
-use super::systems::reputation_system::{ReputationChangeRequest, on_reputation_change_request};
+use super::systems::relationship_system::on_relationship_eval_request;
+use super::systems::reputation_system::on_reputation_change_request;
 
 pub struct FactionPlugin;
 

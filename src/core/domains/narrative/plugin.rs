@@ -9,10 +9,10 @@ use super::components::{
     CutsceneState, DialogueHistory, DialogueState, DialogueTreeRegistry, StoryFlags,
 };
 use super::systems::cutscene_system::{
-    CutsceneStartRequest, cutscene_progress_system, on_cutscene_start,
+    cutscene_progress_system, on_cutscene_start,
 };
 use super::systems::dialogue_system::{
-    ChoiceSelectRequest, DialogueStartRequest, on_choice_select, on_dialogue_start,
+    on_choice_select, on_dialogue_start,
 };
 use super::systems::story_flag_system::on_story_flag_set;
 

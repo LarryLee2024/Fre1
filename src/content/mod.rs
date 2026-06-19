@@ -7,6 +7,7 @@
 
 mod content_plugin;
 pub mod def_impls;
+pub mod hot_reload;
 pub mod loading;
 
 pub use content_plugin::{
@@ -14,6 +15,7 @@ pub use content_plugin::{
     LoadedQuestDefs, LoadedRecipeDefs, LoadedShopDefs, LoadedSpellDefs, LoadedTagDefs,
     LoadedTargetingDefs,
 };
+pub use hot_reload::ContentHotReloadState;
 pub use loading::{ConfigError, ContentFile, DefinitionType, ValidationError};
 
 #[cfg(test)]

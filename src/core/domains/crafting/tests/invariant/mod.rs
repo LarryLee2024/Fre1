@@ -3,7 +3,7 @@
 //! 验证 docs/02-domain/domains/crafting_domain.md §3 定义的不变量。
 
 use crate::core::domains::crafting::components::{
-    CraftType, CraftingStation, EnchantmentDef, EnchantmentSlot, MaterialCost, RecipeDef,
+    CraftType, CraftingStation, EnchantmentSlot, MaterialCost, RecipeDef,
     SkillRequirement, UpgradeLevel,
 };
 use crate::core::domains::crafting::rules::{

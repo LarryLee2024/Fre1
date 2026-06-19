@@ -4,6 +4,7 @@
 //! 详见 `docs/01-architecture/README.md` §6.1
 
 use crate::core::CorePlugin;
+use crate::core::domains::combat::integration::replay::CombatReplayBridgePlugin;
 use crate::infra::{
     input::InputPlugin, pipeline::PipelinePlugin, registry::RegistryPlugin, replay::ReplayPlugin,
     save::SavePlugin,
@@ -36,6 +37,9 @@ impl Plugin for AppPlugin {
             .add_plugins(ReplayPlugin)
             .add_plugins(SavePlugin)
             .add_plugins(InputPlugin);
+
+        // ── Replay→Combat 桥接层（必须在 CombatPlugin + ReplayPlugin 之后注册）──
+        app.add_plugins(CombatReplayBridgePlugin);
 
         // ════════════════════════════════════════════
         // Phase 9: Cross-cutting

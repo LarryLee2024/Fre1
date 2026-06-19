@@ -10,7 +10,7 @@
 
 use bevy::prelude::*;
 
-use crate::core::domains::tactical::components::{GridPos, MovementPoints, MovementType};
+use crate::core::domains::tactical::components::{GridPos, MovementPoints};
 use crate::core::domains::tactical::error::TacticalError;
 use crate::core::domains::tactical::events::ComputeMoveRequest;
 use crate::core::domains::tactical::integration::movement::{MP, MovementCapabilityParam};

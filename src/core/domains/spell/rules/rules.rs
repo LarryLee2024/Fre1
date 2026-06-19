@@ -7,7 +7,7 @@ use bevy::prelude::*;
 
 use super::formulas::calc_concentration_dc;
 use crate::core::domains::spell::components::{
-    Concentration, SaveResult, SaveType, SpellComponents, SpellDef, SpellDefId, SpellLevel,
+    Concentration, SaveResult, SpellComponents, SpellDef, SpellDefId, SpellLevel,
     SpellSlotPool,
 };
 use crate::core::domains::spell::error::SpellError;

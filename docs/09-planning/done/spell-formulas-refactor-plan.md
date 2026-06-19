@@ -1,7 +1,7 @@
 ---
 id: 09-planning.spell-formulas-refactor-plan
 title: Spell Formulas 纯函数重构计划
-status: active
+status: done
 owner: feature-developer
 created: 2026-06-20
 scope: spell/rules/formulas.rs 冗余消除与参数化
@@ -46,5 +46,7 @@ scope: spell/rules/formulas.rs 冗余消除与参数化
 
 ## 3. 验证标准
 
-- [ ] `cargo nextest run` 1513/1513 passed
-- [ ] 无新编译错误/警告
+- [x] `cargo nextest run` 1513/1513 passed
+- [x] 无新编译错误/警告
+
+> **完成日期**: 2026-06-20 — 两项重构均已在代码中实现

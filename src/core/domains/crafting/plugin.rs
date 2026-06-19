@@ -6,7 +6,6 @@
 use bevy::prelude::*;
 
 use super::components::{EnchantmentSlot, UpgradeLevel};
-use super::events::{CraftingFailed, EnchantmentApplied, ItemCrafted, ItemUpgraded};
 use super::resources::CraftingConfig;
 use super::systems::{on_apply_enchantment, on_craft_item, on_upgrade_item};
 

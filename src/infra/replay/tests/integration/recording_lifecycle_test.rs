@@ -2,11 +2,11 @@ use bevy::app::App;
 use bevy::prelude::*;
 
 use crate::core::capabilities::runtime::replay::foundation::{
-    ReplayCommand, ReplayHeader, RngSeeds,
+    ReplayCommand, ReplayHeader,
 };
 use crate::core::capabilities::runtime::replay::mechanism::RecordingSession as CoreRecordingSession;
 use crate::infra::replay::plugin::ReplayPlugin;
-use crate::infra::replay::resources::{FrameCounter, RecordingSession};
+use crate::infra::replay::resources::RecordingSession;
 
 /// 录制模式：启动录制后 RecordingSession 变为 Some，可录制命令。
 #[test]

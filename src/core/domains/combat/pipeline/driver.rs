@@ -22,7 +22,7 @@ use super::steps::{
     step_turn_start, step_unit_action,
 };
 use crate::core::domains::combat::components::{
-    ActionPoints, BattlePhase, CombatParticipant, TurnQueue,
+    ActionPoints, BattlePhase, CombatParticipant, Dead, TurnQueue,
 };
 use crate::core::domains::combat::events::UnitActionComplete;
 
@@ -73,6 +73,11 @@ impl CombatPipelineDriver {
     pub fn pipeline_id(&self) -> &str {
         &self.state.pipeline_id
     }
+
+    #[cfg(test)]
+    pub(crate) fn force_pause(&mut self) {
+        self.paused = true;
+    }
 }
 
 impl Default for CombatPipelineDriver {
@@ -96,6 +101,7 @@ pub(crate) fn combat_pipeline_driver(
     mut commands: Commands,
     mut ap_query: Query<&mut ActionPoints>,
     combatant_query: Query<&CombatParticipant>,
+    dead_query: Query<&CombatParticipant, With<Dead>>,
     mut battle_phase: ResMut<NextState<BattlePhase>>,
 ) {
     // 不活跃或暂停时跳过
@@ -181,7 +187,12 @@ pub(crate) fn combat_pipeline_driver(
         }
 
         "turn_end" => {
-            let result = step_turn_end(&mut commands, &mut turn_queue, &combatant_query);
+            let result = step_turn_end(
+                &mut commands,
+                &mut turn_queue,
+                &combatant_query,
+                &dead_query,
+            );
             match result {
                 TurnEndResult::BattleOver => {
                     battle_phase.set(BattlePhase::Victory);

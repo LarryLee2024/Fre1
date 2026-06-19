@@ -105,7 +105,7 @@ macro_rules! define_string_id {
             }
         }
 
-        impl crate::shared::ids::StrongId for $name {
+        impl $crate::shared::ids::StrongId for $name {
             fn prefix() -> &'static str {
                 $prefix
             }

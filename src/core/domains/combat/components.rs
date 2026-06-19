@@ -174,10 +174,20 @@ impl TurnEntry {
 
 // ─── 战斗参与者标记 ────────────────────────────────────────────────────
 
-/// 战斗参与者标记与存活状态。
+/// 阵亡标记 Tag Component。
+///
+/// 实体获得此 Tag 表示已在战斗中死亡。
+/// 使用 Tag Component 替代 `is_alive: bool`，符合 ECS 宪法 §6.1。
+///
+/// 详见 combat_domain.md §5.4
+#[derive(Component, Debug, Clone, PartialEq, Reflect)]
+#[reflect(Component)]
+pub struct Dead;
+
+/// 战斗参与者标记。
 ///
 /// 每个参与战斗的单位都会获得此组件。
-/// `is_alive` 标记用于胜利条件判定（团队全灭检查）。
+/// 存活状态通过 `Dead` Tag Component 判定（Without<Dead> = 存活）。
 ///
 /// 详见 combat_domain.md §5.4, combat_schema.md §1.3
 #[derive(Component, Debug, Clone, PartialEq, Reflect)]
@@ -185,17 +195,12 @@ impl TurnEntry {
 pub struct CombatParticipant {
     /// 所属队伍
     pub team_id: TeamId,
-    /// 是否存活
-    pub is_alive: bool,
 }
 
 impl CombatParticipant {
     /// 创建存活状态的参与者。
     pub fn alive(team_id: TeamId) -> Self {
-        Self {
-            team_id,
-            is_alive: true,
-        }
+        Self { team_id }
     }
 }
 

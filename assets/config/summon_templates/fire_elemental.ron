@@ -1,0 +1,20 @@
+(
+    id: "smt_fire_elemental",
+    name_key: "summon.fire_elemental.name",
+    base_attributes: [
+        ("attr:hp", 80.0),
+        ("attr:attack", 14.0),
+        ("attr:defense", 10.0),
+        ("attr:speed", 6.0),
+    ],
+    tags: ["tag:elemental", "tag:fire"],
+    abilities: ["abl_burn", "abl_fire_shield"],
+    modifiers: ["mod_fire_immunity"],
+    grid_size: Medium,
+    default_ai_mode: Autonomous,
+    summon_cost: (
+        ability_id: Some("abl_summon_fire_elemental"),
+        spell_level: Some(3),
+        requires_concentration: true,
+    ),
+)

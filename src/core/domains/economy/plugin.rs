@@ -6,7 +6,6 @@
 use bevy::prelude::*;
 
 use super::components::{ShopInstance, Wallet};
-use super::events::{CurrencyChanged, TransactionCompleted};
 use super::resources::EconomyConfig;
 use super::systems::{on_purchase_request, on_sell_request};
 

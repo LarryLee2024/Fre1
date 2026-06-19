@@ -1,0 +1,7 @@
+(
+    id: "enc_flame_weapon",
+    name_key: "enchantment.flame_weapon.name",
+    modifier_id: "mod_flame_damage",
+    exclusive_group: Some("elemental_weapon"),
+    slot_type: Weapon(max_slots: 1),
+)

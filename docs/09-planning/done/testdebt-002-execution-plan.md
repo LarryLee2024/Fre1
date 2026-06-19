@@ -1,7 +1,7 @@
 ---
 id: 09-planning.testdebt-002-execution-plan
 title: TestDebt-002 执行计划 — combat integration facade 测试补全
-status: active
+status: done
 owner: test-guardian
 created: 2026-06-20
 scope: combat/integration/ 下 facade 测试标准化与覆盖补全
@@ -74,11 +74,13 @@ integration/{name}/tests/
 
 ## 3. 验证标准
 
-- [ ] `cargo nextest run` 全部通过（基准 1485/1485）
-- [ ] 新增测试不得降低现有测试通过率
-- [ ] effect 迁移后测试数量不变（验证零回归）
-- [ ] 每个 facade_test.rs 文件头添加模块文档注释
-- [ ] 遵循 `docs/05-testing/test-spec.md` 测试规范
+- [x] `cargo nextest run` 全部通过（基准 1485/1485）
+- [x] 新增测试不得降低现有测试通过率
+- [x] effect 迁移后测试数量不变（验证零回归）
+- [x] 每个 facade_test.rs 文件头添加模块文档注释
+- [x] 遵循 `docs/05-testing/test-spec.md` 测试规范
+
+> **完成日期**: 2026-06-20 — 4 个 Task 全部完成，effect/ability/trigger/event facade 测试均已就位
 
 ---
 

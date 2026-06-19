@@ -77,7 +77,7 @@ pub struct RecipeDef {
 // ─── 附魔槽位类型 ─────────────────────────────────────────────
 
 /// 附魔槽位类型。
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect, Serialize, Deserialize)]
 pub enum EnchantmentSlotType {
     Weapon { max_slots: u32 },
     Armor { max_slots: u32 },
@@ -87,7 +87,7 @@ pub enum EnchantmentSlotType {
 // ─── 附魔定义 ──────────────────────────────────────────────────
 
 /// 附魔定义。
-#[derive(Debug, Clone, Reflect)]
+#[derive(Debug, Clone, Asset, Reflect, Serialize, Deserialize)]
 pub struct EnchantmentDef {
     pub id: String,
     pub name_key: String,

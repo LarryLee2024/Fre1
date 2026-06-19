@@ -1,10 +1,10 @@
 ---
 id: 02-domain.terrain
-title: Terrain（地形）领域规则 v1.0
+title: Terrain（地形）领域规则 v1.1
 status: stable
 owner: domain-designer
 created: 2026-06-16
-updated: 2026-06-16
+updated: 2026-06-19
 tags:
   - domain
   - terrain

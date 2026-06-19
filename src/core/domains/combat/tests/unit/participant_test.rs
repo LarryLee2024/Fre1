@@ -1,18 +1,25 @@
 //! Unit tests — CombatParticipant 与 mark_unit_dead API
 //!
 //! 验证 CombatParticipant 组件的生命周期：
-//! - 创建时存活
-//! - mark_unit_dead 正确标记
+//! - 创建时存活（无 Dead Tag）
+//! - mark_unit_dead 正确插入 Dead Tag
 //! - 不可逆（死后不能复活）
 
-use crate::core::domains::combat::components::{CombatParticipant, TeamId};
+use bevy::prelude::*;
+
+use crate::core::domains::combat::components::{CombatParticipant, Dead};
 use crate::core::domains::combat::integration::turn::mark_unit_dead;
 use crate::core::domains::combat::tests::fixtures::combat_fixtures;
 
 #[test]
 fn participant_starts_alive() {
-    let p = CombatParticipant::alive(combat_fixtures::player_team());
-    assert!(p.is_alive, "participant must start alive");
+    let mut world = World::new();
+    let entity = world.spawn(CombatParticipant::alive(combat_fixtures::player_team())).id();
+    assert!(
+        !world.entity(entity).contains::<Dead>(),
+        "participant must not have Dead tag initially"
+    );
+    let p = world.entity(entity).get::<CombatParticipant>().unwrap();
     assert_eq!(p.team_id, combat_fixtures::player_team());
 }
 
@@ -23,24 +30,50 @@ fn participant_team_is_preserved() {
 }
 
 #[test]
-fn mark_unit_dead_changes_is_alive() {
-    let mut p = combat_fixtures::alive_participant(combat_fixtures::player_team());
-    mark_unit_dead(&mut p);
-    assert!(!p.is_alive, "participant must be dead after mark_unit_dead");
+fn mark_unit_dead_inserts_dead_tag() {
+    let mut world = World::new();
+    let entity = world.spawn(CombatParticipant::alive(combat_fixtures::player_team())).id();
+
+    let mut commands = world.commands();
+    mark_unit_dead(&mut commands, entity);
+    world.flush();
+
+    assert!(
+        world.entity(entity).contains::<Dead>(),
+        "entity must have Dead tag after mark_unit_dead"
+    );
 }
 
 #[test]
 fn mark_unit_dead_is_idempotent() {
-    let mut p = combat_fixtures::alive_participant(combat_fixtures::player_team());
-    mark_unit_dead(&mut p);
-    mark_unit_dead(&mut p); // second call should not panic
-    assert!(!p.is_alive, "still dead after second call");
+    let mut world = World::new();
+    let entity = world.spawn(CombatParticipant::alive(combat_fixtures::player_team())).id();
+
+    let mut commands = world.commands();
+    mark_unit_dead(&mut commands, entity);
+    mark_unit_dead(&mut commands, entity); // second call should not panic
+    world.flush();
+
+    assert!(
+        world.entity(entity).contains::<Dead>(),
+        "still has Dead tag after second call"
+    );
 }
 
 #[test]
-fn dead_participant_start_dead() {
-    let p = combat_fixtures::dead_participant(combat_fixtures::enemy_team());
-    assert!(!p.is_alive, "dead_participant should start dead");
+fn dead_participant_has_dead_tag() {
+    let mut world = World::new();
+    let entity = world
+        .spawn((
+            combat_fixtures::dead_participant(combat_fixtures::enemy_team()),
+            Dead,
+        ))
+        .id();
+
+    assert!(
+        world.entity(entity).contains::<Dead>(),
+        "dead_participant should have Dead tag"
+    );
 }
 
 #[test]

@@ -7,7 +7,6 @@
 use bevy::prelude::*;
 
 use super::components::{Facing, GridPos, MovementPoints};
-use super::events::ComputeMoveRequest;
 use super::systems::grid_system::initialize_default_grid;
 use super::systems::movement_system::on_compute_move;
 

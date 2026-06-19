@@ -2,7 +2,7 @@ use bevy::ecs::system::SystemState;
 use bevy::prelude::*;
 
 use crate::core::domains::combat::components::{
-    ActionPoints, CombatParticipant, TeamId, TurnEntry, TurnQueue,
+    ActionPoints, CombatParticipant, Dead, TeamId, TurnEntry, TurnQueue,
 };
 use crate::core::domains::combat::pipeline::steps::{
     PhaseCheckResult, TurnEndResult, check_team_elimination, step_phase_check, step_turn_end,
@@ -177,10 +177,14 @@ fn turn_end_advances_to_next_unit() {
     let mut turn_queue = TurnQueue::new(entries);
     let initial_index = turn_queue.current_index();
 
-    let mut ss: SystemState<(Commands, Query<&CombatParticipant>)> = SystemState::new(&mut world);
+    let mut ss: SystemState<(
+        Commands,
+        Query<&CombatParticipant>,
+        Query<&CombatParticipant, With<Dead>>,
+    )> = SystemState::new(&mut world);
     let result = {
-        let (mut commands, combatant_query) = ss.get_mut(&mut world);
-        step_turn_end(&mut commands, &mut turn_queue, &combatant_query)
+        let (mut commands, combatant_query, dead_query) = ss.get_mut(&mut world);
+        step_turn_end(&mut commands, &mut turn_queue, &combatant_query, &dead_query)
     };
     ss.apply(&mut world);
 
@@ -197,10 +201,14 @@ fn turn_end_empty_queue_returns_battle_over() {
     let mut world = World::new();
     let mut turn_queue = TurnQueue::new(vec![]);
 
-    let mut ss: SystemState<(Commands, Query<&CombatParticipant>)> = SystemState::new(&mut world);
+    let mut ss: SystemState<(
+        Commands,
+        Query<&CombatParticipant>,
+        Query<&CombatParticipant, With<Dead>>,
+    )> = SystemState::new(&mut world);
     let result = {
-        let (mut commands, combatant_query) = ss.get_mut(&mut world);
-        step_turn_end(&mut commands, &mut turn_queue, &combatant_query)
+        let (mut commands, combatant_query, dead_query) = ss.get_mut(&mut world);
+        step_turn_end(&mut commands, &mut turn_queue, &combatant_query, &dead_query)
     };
 
     assert_eq!(result, TurnEndResult::BattleOver);
@@ -221,10 +229,14 @@ fn turn_end_triggers_team_switch_event() {
     ];
     let mut turn_queue = TurnQueue::new(entries);
 
-    let mut ss: SystemState<(Commands, Query<&CombatParticipant>)> = SystemState::new(&mut world);
+    let mut ss: SystemState<(
+        Commands,
+        Query<&CombatParticipant>,
+        Query<&CombatParticipant, With<Dead>>,
+    )> = SystemState::new(&mut world);
     let result = {
-        let (mut commands, combatant_query) = ss.get_mut(&mut world);
-        step_turn_end(&mut commands, &mut turn_queue, &combatant_query)
+        let (mut commands, combatant_query, dead_query) = ss.get_mut(&mut world);
+        step_turn_end(&mut commands, &mut turn_queue, &combatant_query, &dead_query)
     };
     ss.apply(&mut world);
 
@@ -243,11 +255,14 @@ fn team_elimination_all_teams_alive_returns_false() {
     world.spawn(CombatParticipant::alive(make_player_team()));
     world.spawn(CombatParticipant::alive(make_enemy_team()));
 
-    let mut ss: SystemState<Query<&CombatParticipant>> = SystemState::new(&mut world);
-    let query = ss.get_mut(&mut world);
+    let mut ss: SystemState<(
+        Query<&CombatParticipant>,
+        Query<&CombatParticipant, With<Dead>>,
+    )> = SystemState::new(&mut world);
+    let (query, dead_query) = ss.get_mut(&mut world);
 
     assert!(
-        !check_team_elimination(&query),
+        !check_team_elimination(&query, &dead_query),
         "battle should continue when all teams alive"
     );
 }
@@ -258,17 +273,18 @@ fn team_elimination_one_team_wiped_returns_true() {
     // Player team: 2 alive
     world.spawn(CombatParticipant::alive(make_player_team()));
     world.spawn(CombatParticipant::alive(make_player_team()));
-    // Enemy team: both dead
-    let mut dead_enemy = CombatParticipant::alive(make_enemy_team());
-    dead_enemy.is_alive = false;
-    world.spawn(dead_enemy.clone());
-    world.spawn(dead_enemy);
+    // Enemy team: both dead (spawn with Dead tag)
+    world.spawn((CombatParticipant::alive(make_enemy_team()), Dead));
+    world.spawn((CombatParticipant::alive(make_enemy_team()), Dead));
 
-    let mut ss: SystemState<Query<&CombatParticipant>> = SystemState::new(&mut world);
-    let query = ss.get_mut(&mut world);
+    let mut ss: SystemState<(
+        Query<&CombatParticipant>,
+        Query<&CombatParticipant, With<Dead>>,
+    )> = SystemState::new(&mut world);
+    let (query, dead_query) = ss.get_mut(&mut world);
 
     assert!(
-        check_team_elimination(&query),
+        check_team_elimination(&query, &dead_query),
         "battle should end when one team is wiped"
     );
 }
@@ -276,18 +292,17 @@ fn team_elimination_one_team_wiped_returns_true() {
 #[test]
 fn team_elimination_all_dead_returns_true() {
     let mut world = World::new();
-    let mut p1 = CombatParticipant::alive(make_player_team());
-    p1.is_alive = false;
-    world.spawn(p1);
-    let mut e1 = CombatParticipant::alive(make_enemy_team());
-    e1.is_alive = false;
-    world.spawn(e1);
+    world.spawn((CombatParticipant::alive(make_player_team()), Dead));
+    world.spawn((CombatParticipant::alive(make_enemy_team()), Dead));
 
-    let mut ss: SystemState<Query<&CombatParticipant>> = SystemState::new(&mut world);
-    let query = ss.get_mut(&mut world);
+    let mut ss: SystemState<(
+        Query<&CombatParticipant>,
+        Query<&CombatParticipant, With<Dead>>,
+    )> = SystemState::new(&mut world);
+    let (query, dead_query) = ss.get_mut(&mut world);
 
     assert!(
-        check_team_elimination(&query),
+        check_team_elimination(&query, &dead_query),
         "battle should end when all teams are dead"
     );
 }
@@ -298,11 +313,14 @@ fn team_elimination_single_team_alive_returns_true() {
     world.spawn(CombatParticipant::alive(make_player_team()));
     world.spawn(CombatParticipant::alive(make_player_team()));
 
-    let mut ss: SystemState<Query<&CombatParticipant>> = SystemState::new(&mut world);
-    let query = ss.get_mut(&mut world);
+    let mut ss: SystemState<(
+        Query<&CombatParticipant>,
+        Query<&CombatParticipant, With<Dead>>,
+    )> = SystemState::new(&mut world);
+    let (query, dead_query) = ss.get_mut(&mut world);
 
     assert!(
-        check_team_elimination(&query),
+        check_team_elimination(&query, &dead_query),
         "battle should end with only one team"
     );
 }
@@ -311,11 +329,14 @@ fn team_elimination_single_team_alive_returns_true() {
 fn team_elimination_empty_query_returns_true() {
     let mut world = World::new();
 
-    let mut ss: SystemState<Query<&CombatParticipant>> = SystemState::new(&mut world);
-    let query = ss.get_mut(&mut world);
+    let mut ss: SystemState<(
+        Query<&CombatParticipant>,
+        Query<&CombatParticipant, With<Dead>>,
+    )> = SystemState::new(&mut world);
+    let (query, dead_query) = ss.get_mut(&mut world);
 
     assert!(
-        check_team_elimination(&query),
+        check_team_elimination(&query, &dead_query),
         "empty battlefield means battle over"
     );
 }

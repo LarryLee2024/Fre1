@@ -5,7 +5,7 @@
 
 use bevy::prelude::*;
 
-use super::components::{ObjectiveDef, QuestDefId, QuestRewardDef, QuestState};
+use super::components::{ObjectiveDef, QuestDefId, QuestRewardDef};
 
 /// 任务接受事件。
 #[derive(Event, Debug, Clone, PartialEq)]

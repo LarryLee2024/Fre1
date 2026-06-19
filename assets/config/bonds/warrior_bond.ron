@@ -1,0 +1,21 @@
+(
+    id: "bnd:warrior_bond",
+    name_key: "bond.warrior_bond.name",
+    desc_key: "bond.warrior_bond.desc",
+    required_members: [
+        (
+            required_tags: ["tag:warrior"],
+            match_mode: Any,
+        ),
+        (
+            required_tags: ["tag:warrior"],
+            match_mode: Any,
+        ),
+    ],
+    level_effects: {
+        1: ["mod_bond_001"],
+        2: ["mod_bond_001", "mod_bond_002"],
+        3: ["mod_bond_001", "mod_bond_002", "mod_bond_003"],
+    },
+    max_level: 3,
+)

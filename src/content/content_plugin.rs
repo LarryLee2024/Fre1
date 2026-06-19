@@ -8,17 +8,22 @@ use bevy::prelude::*;
 use std::collections::HashMap;
 use std::path::PathBuf;
 
+use super::hot_reload::{ContentHotReloadState, hot_reload_content_system, init_hot_reload_state};
 use super::loading::{ContentFile, DefinitionType, RonAssetLoader, discover_ron_files};
 use crate::core::capabilities::attribute::foundation::AttributeDefinition;
 use crate::core::capabilities::cue::foundation::CueDef;
 use crate::core::capabilities::effect::foundation::EffectDef;
 use crate::core::capabilities::tag::foundation::TagDefinition;
 use crate::core::capabilities::targeting::foundation::TargetingDef;
+use crate::core::domains::camp_rest::CampEventDef;
+use crate::core::domains::crafting::EnchantmentDef;
 use crate::core::domains::crafting::RecipeDef;
 use crate::core::domains::economy::ShopDef;
+use crate::core::domains::party::BondDef;
 use crate::core::domains::progression::LevelProgressionTable;
 use crate::core::domains::quest::QuestDef;
 use crate::core::domains::spell::{SpellConfig, SpellDef};
+use crate::core::domains::summon::SummonTemplateDef;
 
 /// 内容加载状态 Resource。
 ///
@@ -134,6 +139,34 @@ pub struct LoadedAttributeDefs {
     pub errors: Vec<(PathBuf, String)>,
 }
 
+/// 已加载的召唤模板定义集合 Resource。
+#[derive(Resource, Debug, Default)]
+pub struct LoadedSummonTemplateDefs {
+    pub defs: Vec<SummonTemplateDef>,
+    pub errors: Vec<(PathBuf, String)>,
+}
+
+/// 已加载的营地事件定义集合 Resource。
+#[derive(Resource, Debug, Default)]
+pub struct LoadedCampEventDefs {
+    pub defs: Vec<CampEventDef>,
+    pub errors: Vec<(PathBuf, String)>,
+}
+
+/// 已加载的羁绊定义集合 Resource。
+#[derive(Resource, Debug, Default)]
+pub struct LoadedBondDefs {
+    pub defs: Vec<BondDef>,
+    pub errors: Vec<(PathBuf, String)>,
+}
+
+/// 已加载的附魔定义集合 Resource。
+#[derive(Resource, Debug, Default)]
+pub struct LoadedEnchantmentDefs {
+    pub defs: Vec<EnchantmentDef>,
+    pub errors: Vec<(PathBuf, String)>,
+}
+
 /// ContentPlugin — 内容桥接层插件。
 ///
 /// 职责：
@@ -165,7 +198,15 @@ impl Plugin for ContentPlugin {
             .init_asset::<TagDefinition>()
             .init_asset_loader::<RonAssetLoader<TagDefinition>>()
             .init_asset::<AttributeDefinition>()
-            .init_asset_loader::<RonAssetLoader<AttributeDefinition>>();
+            .init_asset_loader::<RonAssetLoader<AttributeDefinition>>()
+            .init_asset::<SummonTemplateDef>()
+            .init_asset_loader::<RonAssetLoader<SummonTemplateDef>>()
+            .init_asset::<CampEventDef>()
+            .init_asset_loader::<RonAssetLoader<CampEventDef>>()
+            .init_asset::<BondDef>()
+            .init_asset_loader::<RonAssetLoader<BondDef>>()
+            .init_asset::<EnchantmentDef>()
+            .init_asset_loader::<RonAssetLoader<EnchantmentDef>>();
 
         // ── 初始化 Resources ──
         app.init_resource::<ContentState>()
@@ -178,10 +219,24 @@ impl Plugin for ContentPlugin {
             .init_resource::<LoadedShopDefs>()
             .init_resource::<LoadedTargetingDefs>()
             .init_resource::<LoadedTagDefs>()
-            .init_resource::<LoadedAttributeDefs>();
+            .init_resource::<LoadedAttributeDefs>()
+            .init_resource::<LoadedSummonTemplateDefs>()
+            .init_resource::<LoadedCampEventDefs>()
+            .init_resource::<LoadedBondDefs>()
+            .init_resource::<LoadedEnchantmentDefs>();
+
+        // ── 热重载资源 ──
+        app.init_resource::<ContentHotReloadState>();
 
         // ── 启动时加载所有配置内容 ──
         app.add_systems(Startup, load_all_content);
+
+        // ── 热重载系统（初始化 mtime 后启动定期扫描）──
+        app.add_systems(Startup, init_hot_reload_state.after(load_all_content));
+        app.add_systems(
+            Update,
+            hot_reload_content_system.after(init_hot_reload_state),
+        );
     }
 }
 
@@ -202,6 +257,10 @@ fn load_all_content(
     mut targeting: ResMut<LoadedTargetingDefs>,
     mut tags: ResMut<LoadedTagDefs>,
     mut attributes: ResMut<LoadedAttributeDefs>,
+    mut summon_templates: ResMut<LoadedSummonTemplateDefs>,
+    mut camp_events: ResMut<LoadedCampEventDefs>,
+    mut bonds: ResMut<LoadedBondDefs>,
+    mut enchantments: ResMut<LoadedEnchantmentDefs>,
     mut spell_config: ResMut<SpellConfig>,
 ) {
     let config_root = std::path::Path::new("assets/config");
@@ -229,6 +288,10 @@ fn load_all_content(
             "targeting" => load_targeting_def(&mut targeting, file),
             "tags" => load_tag_def(&mut tags, file),
             "attributes" => load_attribute_def(&mut attributes, file),
+            "summon_templates" => load_summon_template_def(&mut summon_templates, file),
+            "camp_events" => load_camp_event_def(&mut camp_events, file),
+            "bonds" => load_bond_def(&mut bonds, file),
+            "enchantments" => load_enchantment_def(&mut enchantments, file),
             "spell_config" => load_spell_config(&mut spell_config, file),
             other => {
                 info!("[Content] Unknown bucket '{}', skipping", other);
@@ -249,7 +312,11 @@ fn load_all_content(
         + shops.defs.len()
         + targeting.defs.len()
         + tags.defs.len()
-        + attributes.defs.len();
+        + attributes.defs.len()
+        + summon_templates.defs.len()
+        + camp_events.defs.len()
+        + bonds.defs.len()
+        + enchantments.defs.len();
     let total_errors = spells.errors.len()
         + cues.errors.len()
         + effects.errors.len()
@@ -258,7 +325,11 @@ fn load_all_content(
         + shops.errors.len()
         + targeting.errors.len()
         + tags.errors.len()
-        + attributes.errors.len();
+        + attributes.errors.len()
+        + summon_templates.errors.len()
+        + camp_events.errors.len()
+        + bonds.errors.len()
+        + enchantments.errors.len();
 
     let mut all_errors: Vec<(PathBuf, String)> = Vec::new();
     all_errors.extend(spells.errors.iter().cloned());
@@ -270,6 +341,10 @@ fn load_all_content(
     all_errors.extend(targeting.errors.iter().cloned());
     all_errors.extend(tags.errors.iter().cloned());
     all_errors.extend(attributes.errors.iter().cloned());
+    all_errors.extend(summon_templates.errors.iter().cloned());
+    all_errors.extend(camp_events.errors.iter().cloned());
+    all_errors.extend(bonds.errors.iter().cloned());
+    all_errors.extend(enchantments.errors.iter().cloned());
 
     let mut bucket_stats: HashMap<String, BucketLoadStats> = HashMap::new();
     for (bucket, count) in &buckets {
@@ -303,7 +378,7 @@ fn load_all_content(
         }
     }
     info!(
-        "[Content] Loaded {} spell(s), {} cue(s), {} effect(s), {} quest(s), {} recipe(s), {} shop(s), {} targeting(s), {} tag(s), {} attribute(s), {} error(s)",
+        "[Content] Loaded {} spell(s), {} cue(s), {} effect(s), {} quest(s), {} recipe(s), {} shop(s), {} targeting(s), {} tag(s), {} attribute(s), {} summon(s), {} camp_event(s), {} bond(s), {} enchantment(s), {} error(s)",
         spells.defs.len(),
         cues.defs.len(),
         effects.defs.len(),
@@ -313,6 +388,10 @@ fn load_all_content(
         targeting.defs.len(),
         tags.defs.len(),
         attributes.defs.len(),
+        summon_templates.defs.len(),
+        camp_events.defs.len(),
+        bonds.defs.len(),
+        enchantments.defs.len(),
         spells.errors.len()
             + cues.errors.len()
             + effects.errors.len()
@@ -321,7 +400,11 @@ fn load_all_content(
             + shops.errors.len()
             + targeting.errors.len()
             + tags.errors.len()
-            + attributes.errors.len(),
+            + attributes.errors.len()
+            + summon_templates.errors.len()
+            + camp_events.errors.len()
+            + bonds.errors.len()
+            + enchantments.errors.len(),
     );
 }
 
@@ -613,6 +696,135 @@ fn load_attribute_def(attributes: &mut ResMut<LoadedAttributeDefs>, file: &Conte
         def.category
     );
     attributes.defs.push(def);
+}
+
+/// 从 RON 文件同步加载一个 SummonTemplateDef。
+fn load_summon_template_def(templates: &mut ResMut<LoadedSummonTemplateDefs>, file: &ContentFile) {
+    let content = match std::fs::read_to_string(&file.path) {
+        Ok(c) => c,
+        Err(e) => {
+            let msg = format!("failed to read file: {}", e);
+            templates.errors.push((file.path.clone(), msg));
+            return;
+        }
+    };
+
+    let def: SummonTemplateDef = match ron::from_str(&content) {
+        Ok(d) => d,
+        Err(e) => {
+            let msg = format!("failed to deserialize RON: {}", e);
+            templates.errors.push((file.path.clone(), msg));
+            return;
+        }
+    };
+
+    if let Err(e) = def.validate() {
+        let msg = format!("validation failed: {}", e);
+        templates.errors.push((file.path.clone(), msg));
+        return;
+    }
+
+    info!(
+        "[Content] Loaded summon template '{}' (id: {})",
+        def.name_key, def.id
+    );
+    templates.defs.push(def);
+}
+
+/// 从 RON 文件同步加载一个 CampEventDef。
+fn load_camp_event_def(events: &mut ResMut<LoadedCampEventDefs>, file: &ContentFile) {
+    let content = match std::fs::read_to_string(&file.path) {
+        Ok(c) => c,
+        Err(e) => {
+            let msg = format!("failed to read file: {}", e);
+            events.errors.push((file.path.clone(), msg));
+            return;
+        }
+    };
+
+    let def: CampEventDef = match ron::from_str(&content) {
+        Ok(d) => d,
+        Err(e) => {
+            let msg = format!("failed to deserialize RON: {}", e);
+            events.errors.push((file.path.clone(), msg));
+            return;
+        }
+    };
+
+    if let Err(e) = def.validate() {
+        let msg = format!("validation failed: {}", e);
+        events.errors.push((file.path.clone(), msg));
+        return;
+    }
+
+    info!(
+        "[Content] Loaded camp event '{}' (id: {})",
+        def.title_key, def.id
+    );
+    events.defs.push(def);
+}
+
+/// 从 RON 文件同步加载一个 BondDef。
+fn load_bond_def(bonds: &mut ResMut<LoadedBondDefs>, file: &ContentFile) {
+    let content = match std::fs::read_to_string(&file.path) {
+        Ok(c) => c,
+        Err(e) => {
+            let msg = format!("failed to read file: {}", e);
+            bonds.errors.push((file.path.clone(), msg));
+            return;
+        }
+    };
+
+    let def: BondDef = match ron::from_str(&content) {
+        Ok(d) => d,
+        Err(e) => {
+            let msg = format!("failed to deserialize RON: {}", e);
+            bonds.errors.push((file.path.clone(), msg));
+            return;
+        }
+    };
+
+    if let Err(e) = def.validate() {
+        let msg = format!("validation failed: {}", e);
+        bonds.errors.push((file.path.clone(), msg));
+        return;
+    }
+
+    info!("[Content] Loaded bond '{}' (id: {})", def.name_key, def.id);
+    bonds.defs.push(def);
+}
+
+/// 从 RON 文件同步加载一个 EnchantmentDef。
+fn load_enchantment_def(enchantments: &mut ResMut<LoadedEnchantmentDefs>, file: &ContentFile) {
+    let content = match std::fs::read_to_string(&file.path) {
+        Ok(c) => c,
+        Err(e) => {
+            let msg = format!("failed to read file: {}", e);
+            enchantments.errors.push((file.path.clone(), msg));
+            return;
+        }
+    };
+
+    let def: EnchantmentDef = match ron::from_str(&content) {
+        Ok(d) => d,
+        Err(e) => {
+            let msg = format!("failed to deserialize RON: {}", e);
+            enchantments.errors.push((file.path.clone(), msg));
+            return;
+        }
+    };
+
+    if let Err(e) = def.validate() {
+        let msg = format!("validation failed: {}", e);
+        enchantments.errors.push((file.path.clone(), msg));
+        return;
+    }
+
+    info!(
+        "[Content] Loaded enchantment '{}' (id: {})",
+        def.name_key, def.id
+    );
+    enchantments.defs.push(def);
 }
 
 /// 从 RON 文件同步加载 LevelProgressionTable。

@@ -6,7 +6,6 @@
 
 use bevy::asset::Asset;
 use bevy::prelude::*;
-use bevy::reflect::TypePath;
 use serde::{Deserialize, Serialize};
 
 // ─── ID 类型 ──────────────────────────────────────────────────────

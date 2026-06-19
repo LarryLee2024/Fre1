@@ -62,20 +62,21 @@ fn hated_reputation_blocks_all_trade() {
     );
 }
 
-/// 衍生不变量：Price 永不为负。
+/// 衍生不变量：Price 非零 base 产生非零价格。
 #[test]
-fn price_never_negative() {
-    let p = Price::new(1);
-    assert!(p.final_price() >= 0, "final price must be non-negative");
+fn price_nonzero_base_produces_nonzero_price() {
+    let p = Price::new(100);
+    assert!(p.final_price() > 0, "price with nonzero base must be nonzero");
 
     let p2 = Price {
         base: 0,
-        reputation_modifier: 0.0,
-        supply_modifier: 0.0,
-        stolen_modifier: 0.0,
+        reputation_modifier: 1.0,
+        supply_modifier: 1.0,
+        stolen_modifier: 1.0,
     };
-    assert!(
-        p2.final_price() >= 0,
-        "even zero modifiers should not produce negative price"
+    assert_eq!(
+        p2.final_price(),
+        0,
+        "price with zero base and neutral modifiers must be zero"
     );
 }

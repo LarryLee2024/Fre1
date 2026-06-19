@@ -13,7 +13,7 @@
 
 use bevy::prelude::*;
 
-use crate::core::domains::combat::components::{CombatParticipant, TurnEntry, TurnQueue};
+use crate::core::domains::combat::components::{Dead, TurnEntry, TurnQueue};
 
 /// 回合队列的快照信息（值类型，不暴露内部引用）。
 #[derive(Debug, Clone, PartialEq)]
@@ -30,12 +30,13 @@ pub fn get_current_turn(turn_queue: &TurnQueue) -> Option<TurnEntry> {
     turn_queue.current().cloned()
 }
 
-/// 标记某单位的战斗参与者为阵亡。
+/// 标记某单位为阵亡。
 ///
+/// 通过在 Entity 上插入 `Dead` Tag Component 实现。
 /// 由死亡系统（或 HP ≤ 0 时的处理系统）调用。
-/// 胜利条件检查会根据此标记判定团队是否全灭。
-pub fn mark_unit_dead(participant: &mut CombatParticipant) {
-    participant.is_alive = false;
+/// 胜利条件检查会根据 `Without<Dead>` 过滤器判定团队是否全灭。
+pub fn mark_unit_dead(commands: &mut Commands, entity: Entity) {
+    commands.entity(entity).insert(Dead);
 }
 
 /// 获取回合队列的快照信息。

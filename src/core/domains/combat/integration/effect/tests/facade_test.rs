@@ -60,7 +60,7 @@ fn make_infinite_effect(id: &str) -> EffectInstance {
 fn push_active(container: &mut ActiveEffectContainer, effect: EffectInstance) {
     let mut e = effect;
     e.stage = EffectStage::Active;
-    let _ = container.effects.push(e);
+    container.effects.push(e);
 }
 
 #[test]

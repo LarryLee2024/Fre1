@@ -36,12 +36,9 @@ pub fn alive_participant(team: TeamId) -> CombatParticipant {
     CombatParticipant::alive(team)
 }
 
-/// 创建一个已阵亡的 CombatParticipant。
+/// 创建一个 CombatParticipant（"死亡"状态由 Dead Tag Component 标记，不由组件字段决定）。
 pub fn dead_participant(team: TeamId) -> CombatParticipant {
-    CombatParticipant {
-        team_id: team,
-        is_alive: false,
-    }
+    CombatParticipant::alive(team)
 }
 
 /// 标准混合两队的回合条目（先攻从高到低）。

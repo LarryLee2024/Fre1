@@ -6,7 +6,7 @@ use crate::core::domains::quest::components::{
     ObjectiveDef, ObjectiveId, ObjectiveType, QuestDefId, QuestEntry, QuestLog, QuestState,
 };
 use crate::core::domains::quest::rules::{
-    are_all_objectives_completed, can_abandon_quest, can_transition, check_exclusivity,
+    can_abandon_quest, can_transition, check_exclusivity,
     check_progress_monotonic, is_reward_already_granted,
 };
 

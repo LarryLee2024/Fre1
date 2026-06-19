@@ -5,12 +5,11 @@
 
 use bevy::prelude::*;
 
-use super::super::components::{CurrencyType, Price, ShopInstance, SupplyDemand, Wallet};
+use super::super::components::{CurrencyType, Price, Wallet};
 use super::super::events::{
-    CurrencyChanged, PriceBreakdown, TransactionCompleted, TransactionType,
+    CurrencyChanged, TransactionCompleted, TransactionType,
 };
-use super::super::resources::EconomyConfig;
-use super::super::rules::{calc_buy_price, calc_sell_price, update_supply_demand};
+
 
 /// 处理购买请求。
 pub fn on_purchase_request(

@@ -4,7 +4,9 @@
 //! 详见 docs/02-domain/domains/camp_rest_domain.md
 //! 详见 docs/04-data/domains/camp_rest_schema.md
 
+use bevy::asset::Asset;
 use bevy::prelude::*;
+use serde::{Deserialize, Serialize};
 
 // ─── ID 类型 ──────────────────────────────────────────────────────
 
@@ -65,7 +67,7 @@ impl DiceType {
 }
 
 /// 营地事件类型。
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Reflect)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Reflect, Serialize, Deserialize)]
 pub enum CampEventType {
     /// 剧情推进。
     Story,
@@ -209,11 +211,11 @@ impl HitDicePool {
 }
 
 /// 营地 NPC 组件（Instance 层）。
+///
+/// 组件的存在即表示 NPC 在营地中，无需额外 bool 标记。
 #[derive(Component, Debug, Clone, PartialEq, Reflect)]
 #[reflect(Component)]
 pub struct CampNPC {
-    /// 当前是否在营地中。
-    pub is_at_camp: bool,
     /// 可用对话选项列表（由 Narrative 领域提供）。
     pub available_dialogues: Vec<String>,
 }
@@ -221,7 +223,6 @@ pub struct CampNPC {
 impl CampNPC {
     pub fn new() -> Self {
         Self {
-            is_at_camp: false,
             available_dialogues: Vec::new(),
         }
     }
@@ -234,7 +235,7 @@ impl Default for CampNPC {
 }
 
 /// 营地事件模板定义（Definition 层）。
-#[derive(Debug, Clone, Reflect)]
+#[derive(Debug, Clone, Asset, Reflect, Serialize, Deserialize)]
 pub struct CampEventDef {
     /// 营地事件唯一标识。
     pub id: CampEventId,

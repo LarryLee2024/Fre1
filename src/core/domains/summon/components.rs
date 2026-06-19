@@ -3,12 +3,14 @@
 //! 详见 docs/02-domain/domains/summon_domain.md
 //! Schema: docs/04-data/domains/summon_schema.md
 
+use bevy::asset::Asset;
 use bevy::prelude::*;
+use serde::{Deserialize, Serialize};
 
 // ─── 召唤物网格大小 ────────────────────────────────────────────
 
 /// 召唤物占用的网格大小。
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect, Serialize, Deserialize)]
 pub enum GridSize {
     Small,
     Medium,
@@ -19,7 +21,7 @@ pub enum GridSize {
 // ─── 召唤物 AI 模式 ───────────────────────────────────────────
 
 /// 召唤物 AI 模式。
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect, Serialize, Deserialize)]
 pub enum SummonAIMode {
     Autonomous,
     Follow,
@@ -30,7 +32,7 @@ pub enum SummonAIMode {
 // ─── 召唤消耗 ──────────────────────────────────────────────────
 
 /// 召唤消耗。
-#[derive(Debug, Clone, Reflect)]
+#[derive(Debug, Clone, Reflect, Serialize, Deserialize)]
 pub struct SummonCost {
     pub ability_id: Option<String>,
     pub spell_level: Option<u32>,
@@ -40,7 +42,7 @@ pub struct SummonCost {
 // ─── 召唤物模板定义 ───────────────────────────────────────────
 
 /// 召唤物模板定义。运行时只读。
-#[derive(Debug, Clone, Reflect)]
+#[derive(Debug, Clone, Asset, Reflect, Serialize, Deserialize)]
 pub struct SummonTemplateDef {
     pub id: String,
     pub name_key: String,
@@ -97,7 +99,7 @@ impl SummonSlotManager {
 // ─── 持续时间类型 ─────────────────────────────────────────────
 
 /// 召唤持续时间类型。
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect, Serialize, Deserialize)]
 pub enum SummonDurationType {
     Concentration,
     Timed { max_turns: u32 },

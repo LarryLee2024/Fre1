@@ -4,7 +4,7 @@
 //! 详见 docs/02-domain/domains/faction_domain.md §1, §3
 
 use crate::core::domains::faction::components::{
-    FactionRelationType, KeyCharacter, RelationshipState, ReputationLevel,
+    FactionRelationType, RelationshipState, ReputationLevel,
 };
 
 /// 声望值边界。

@@ -6,7 +6,7 @@
 use bevy::prelude::*;
 
 use crate::core::domains::narrative::components::{
-    ChoiceOption, DialogueHistory, DialogueNodeDef, DialoguePhase, DialogueState,
+    ChoiceOption, DialogueHistory, DialogueState,
     DialogueTreeRegistry, StoryFlags,
 };
 use crate::core::domains::narrative::events::{ChoiceMade, DialogueStarted, StoryFlagSet};
@@ -37,7 +37,7 @@ pub(crate) fn on_dialogue_start(
     trigger: On<DialogueStartRequest>,
     tree_registry: Option<Res<DialogueTreeRegistry>>,
     mut history: Option<ResMut<DialogueHistory>>,
-    mut flag_query: Query<&mut StoryFlags>,
+    flag_query: Query<&mut StoryFlags>,
     mut commands: Commands,
 ) {
     let req = trigger.event();

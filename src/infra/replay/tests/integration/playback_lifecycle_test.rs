@@ -2,7 +2,7 @@ use bevy::app::App;
 use bevy::prelude::*;
 
 use crate::core::capabilities::runtime::replay::foundation::{
-    DeterministicRng as CoreDeterministicRng, ReplayMode, ReplayModeGuard as CoreReplayModeGuard,
+    ReplayMode, ReplayModeGuard as CoreReplayModeGuard,
 };
 use crate::core::capabilities::runtime::replay::foundation::{
     ReplayCommand, ReplayFrame, ReplayHeader, ReplayLog,
@@ -11,7 +11,7 @@ use crate::core::capabilities::runtime::replay::mechanism::{
     PlaybackSession as CorePlaybackSession, calculate_frame_checksum,
 };
 use crate::infra::replay::plugin::ReplayPlugin;
-use crate::infra::replay::resources::{DeterministicRng, PlaybackSession, ReplayModeGuard};
+use crate::infra::replay::resources::{PlaybackSession, ReplayModeGuard};
 
 /// 构建一个测试用的回放日志（2 帧，每帧 1 个命令）。
 fn build_test_replay_log() -> ReplayLog {

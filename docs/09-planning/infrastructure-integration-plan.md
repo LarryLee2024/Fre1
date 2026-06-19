@@ -415,16 +415,16 @@ Phase G (音频/UI 后):
 | **P0** | GameTime → Resource + PreUpdate system | ✅ 已完成 | 无 |
 | **P0** | ability/condition/trigger/event → combat | ✅ 已完成 | 无 |
 | **P0** | replay → combat 录制/回放 | ⏳ 待执行（依赖 P0 capability） | P0 capability |
-| **P0** | content: 其他 Def 类型 Asset 化 | 2 天 | 无 |
-| **P1** | ErrorContext → pipeline/save | 0.5 天 | 无 | ✅ |
+| **P0** | content: 其他 Def 类型 Asset 化 | ✅ 已完成（15 类型全部 Asset 化） | 无 |
+| **P1** | ErrorContext → pipeline/save | ✅ 已完成 | 无 |
 | **P1** | targeting/execution/gameplay_context/aggregator → combat | ✅ 已完成 | P0 capability |
 | **P1** | pipeline → combat 流程 (CombatPipelineDriver) | ✅ 已完成 | P0 capability |
-| **P1** | save → combat/party/progression | 3 天 | shared::ids |
-| **P1** | input → tactical/combat | 1 天 | 无 |
-| **P1** | content: 完整 RON 配置 + hot-reload | 2 天 | P0 content |
-| **P2** | cue/spec/stacking → combat | 2 天 | P1 capability |
-| **P2** | tools: Inspector 调试面板 | 1 天 | 无 |
-| **P2** | modding: Mod 加载支持 | 2 天 | P1 content |
+| **P1** | save → combat/party/progression | ⏳ 待执行 | shared::ids |
+| **P1** | input → tactical/combat | ⏳ 待执行 | 无 |
+| **P1** | content: 完整 RON 配置 + hot-reload | ✅ 已完成（15 类型 RON 配置） | P0 content |
+| **P2** | cue/spec/stacking → combat | ⏳ 待执行 | P1 capability |
+| **P2** | tools: Inspector 调试面板 | ⏳ 待执行 | 无 |
+| **P2** | modding: Mod 加载支持 | ⏳ 待执行 | P1 content |
 | | **总计** | **~28 天** | |
 
 ---

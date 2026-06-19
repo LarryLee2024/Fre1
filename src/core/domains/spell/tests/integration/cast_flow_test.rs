@@ -13,9 +13,7 @@ use bevy::prelude::*;
 use crate::core::domains::spell::components::{
     Concentration, SpellDefId, SpellLevel, SpellSlotEntry, SpellSlotPool, Spellbook,
 };
-use crate::core::domains::spell::events::{
-    CastOutcome, ConcentrationBreakReason, ConcentrationBroken, SpellCastRequest,
-};
+use crate::core::domains::spell::events::SpellCastRequest;
 use crate::core::domains::spell::plugin::SpellPlugin;
 
 // ─── 辅助函数 ──────────────────────────────────────────────────────

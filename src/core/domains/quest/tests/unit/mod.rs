@@ -146,7 +146,7 @@ fn active_quest_reward_not_granted() {
 
 #[test]
 fn no_exclusive_conflict() {
-    let mut quest_log = QuestLog::new();
+    let quest_log = QuestLog::new();
     let exclusive_with = vec![QuestDefId::new("qst_000002")];
     let result = check_exclusivity(&QuestDefId::new("qst_000001"), &exclusive_with, &quest_log);
     assert!(result.is_ok());

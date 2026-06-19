@@ -10,7 +10,7 @@ use bevy::prelude::*;
 use crate::core::domains::reaction::components::{
     ReactionEntry, ReactionEntryStatus, ReactionQueue, ReactionState, ReactionType,
 };
-use crate::core::domains::reaction::events::{OpportunityAttackExecuted, ReactionTriggered};
+use crate::core::domains::reaction::events::OpportunityAttackExecuted;
 use crate::core::domains::reaction::plugin::ReactionPlugin;
 use crate::core::domains::reaction::resources::GlobalReactionQueue;
 use crate::core::domains::reaction::systems::process_reaction_queue;
@@ -228,7 +228,7 @@ fn finished_queue_cleaned_up_at_frame_end() {
     app.add_plugins(ReactionPlugin);
 
     // 创建一个已经完成的队列
-    let mut queue = ReactionQueue::new();
+    let queue = ReactionQueue::new();
     // 没有待处理条目的空队列 = is_finished
     app.world_mut()
         .insert_resource(GlobalReactionQueue { queue });

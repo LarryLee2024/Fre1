@@ -4,7 +4,7 @@
 //! 详见 docs/02-domain/domains/crafting_domain.md §5
 
 use super::super::components::{
-    CraftOutput, CraftingStation, EnchantmentDef, EnchantmentSlot, MaterialCost, RecipeDef,
+    CraftingStation, EnchantmentDef, EnchantmentSlot, MaterialCost, RecipeDef,
     UpgradeLevel,
 };
 
@@ -91,7 +91,7 @@ pub fn check_upgrade_limit(level: &UpgradeLevel) -> bool {
 // ─── 制作结果规则 ──────────────────────────────────────────────
 
 /// 技能检定。
-pub fn perform_skill_check(skill_bonus: i32, dc: u32, die_max: u32) -> bool {
+pub fn perform_skill_check(skill_bonus: i32, _dc: u32, _die_max: u32) -> bool {
     // 简化实现：使用 skill_bonus 判断（完整实现需要 RNG）
     skill_bonus > 0
 }

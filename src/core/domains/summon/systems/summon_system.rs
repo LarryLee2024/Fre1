@@ -5,8 +5,8 @@
 
 use bevy::prelude::*;
 
-use super::super::components::{SummonAIMode, SummonBond, SummonSlotManager};
-use super::super::events::{SummonCreated, SummonExpireReason, SummonExpired, SummonSlotChanged};
+use super::super::components::SummonSlotManager;
+use super::super::events::{SummonCreated, SummonExpired, SummonSlotChanged};
 use super::super::resources::SummonConfig;
 use super::super::rules::has_free_summon_slot;
 
@@ -14,7 +14,7 @@ use super::super::rules::has_free_summon_slot;
 pub fn on_summon_created(
     _trigger: On<SummonCreated>,
     mut slot_query: Query<&mut SummonSlotManager>,
-    config: Res<SummonConfig>,
+    _config: Res<SummonConfig>,
     mut commands: Commands,
 ) {
     let event = _trigger.event();

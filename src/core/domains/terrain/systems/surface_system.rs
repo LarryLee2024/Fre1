@@ -8,7 +8,7 @@
 use bevy::ecs::observer::On;
 use bevy::prelude::*;
 
-use crate::core::domains::combat::OnTurnEnd;
+use crate::core::events::TurnEnded;
 use crate::core::domains::terrain::components::{SurfaceOverride, TilePos, TileProperties};
 use crate::core::domains::terrain::events::SurfaceChanged;
 
@@ -36,7 +36,7 @@ pub(crate) fn on_surface_changed(
 /// D-9 Turn 系统在每个单位回合结束时触发 OnTurnEnd，本 Observer 响应后对地形
 /// 表面覆盖进行回合计数递减。到期 SurfaceOverride 自动移除，表面恢复原始类型。
 pub(crate) fn on_turn_end_surface_recovery(
-    _trigger: On<'_, '_, OnTurnEnd>,
+    _trigger: On<'_, '_, TurnEnded>,
     mut commands: Commands,
     mut surface_query: Query<(
         Entity,

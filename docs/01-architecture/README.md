@@ -531,6 +531,7 @@ src/
 ├── core/                     # L1：领域规则层
 │   ├── mod.rs
 │   ├── core_plugin.rs        # Core 层总 Plugin
+│   ├── events.rs             # 跨域共享事件（TurnEnded, BattleStarted 等）
 │   │
 │   ├── capabilities/         # 15个核心能力领域
 │   │   ├── tag/              # 标签体系
@@ -684,6 +685,7 @@ src/
 | `40-cross-cutting/ADR-044-pipeline-engine.md` | ✅ stable | architect | 2026-06-17 |
 | `00-foundation/ADR-045-module-visibility-strategy.md` | 📋 Proposed | architect | 2026-06-17 |
 | `40-cross-cutting/ADR-047-content-loading-pipeline.md` | ✅ stable | architect | 2026-06-18 |
+| `40-cross-cutting/ADR-049-shared-cross-domain-events.md` | ✅ stable | architect | 2026-06-19 |
 
 ---
 

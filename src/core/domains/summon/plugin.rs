@@ -6,7 +6,6 @@
 use bevy::prelude::*;
 
 use super::components::{SummonBond, SummonSlotManager};
-use super::events::{SummonCreated, SummonExpired, SummonSlotChanged};
 use super::resources::SummonConfig;
 use super::systems::{on_summon_created, on_summon_expired};
 

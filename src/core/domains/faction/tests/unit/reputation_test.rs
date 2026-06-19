@@ -1,5 +1,5 @@
 use crate::core::domains::faction::components::{
-    FactionId, FactionRelationType, RelationshipState, ReputationLevel,
+    FactionRelationType, RelationshipState, ReputationLevel,
 };
 use crate::core::domains::faction::rules::reputation::{
     apply_reputation_change, check_level_change, clamp_reputation, evaluate_relationship,

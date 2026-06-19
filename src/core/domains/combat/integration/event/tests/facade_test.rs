@@ -2,7 +2,7 @@
 //!
 //! 验证事件 facade 的事件发布、优先级发布、枚举标签映射。
 
-use crate::core::capabilities::event::foundation::{EventPayload, EventPriority, EventTag};
+use crate::core::capabilities::event::foundation::{EventPayload, EventTag};
 use crate::core::capabilities::event::mechanism::EventBus;
 use crate::core::domains::combat::integration::event::{CombatEventFacade, CombatEventTag};
 

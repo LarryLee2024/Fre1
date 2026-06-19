@@ -5,10 +5,11 @@
 
 use bevy::prelude::*;
 
-use crate::core::domains::combat::components::{ActionPoints, CombatParticipant, TurnQueue};
+use crate::core::domains::combat::components::{ActionPoints, CombatParticipant, Dead, TurnQueue};
 use crate::core::domains::combat::events::{
     BattleResult, BetweenTurns, OnBattleEnd, OnRoundEnd, OnTurnEnd, OnTurnStart,
 };
+use crate::core::events::TurnEnded;
 
 // ═══════════════════════════════════════════════════════════════════════
 // Step 1: TurnStart
@@ -125,6 +126,11 @@ pub(crate) fn step_turn_settlement(commands: &mut Commands, turn_queue: &TurnQue
         unit: current.entity,
     });
 
+    // 发射全局 TurnEnded 事件（供其他 Domain 订阅，避免跨域直接依赖）
+    commands.trigger(TurnEnded {
+        unit: current.entity,
+    });
+
     debug!(
         "[Combat] TurnSettlement: unit={:?} settlement complete",
         current.entity
@@ -151,6 +157,7 @@ pub(crate) fn step_turn_end(
     commands: &mut Commands,
     turn_queue: &mut TurnQueue,
     combatant_query: &Query<&CombatParticipant>,
+    dead_query: &Query<&CombatParticipant, With<Dead>>,
 ) -> TurnEndResult {
     if turn_queue.is_empty() {
         warn!("[Combat] TurnEnd: empty turn queue, ending battle");
@@ -186,7 +193,7 @@ pub(crate) fn step_turn_end(
     }
 
     // 胜负判定 — 检查是否仅剩 ≤1 个队伍存活
-    if check_team_elimination(combatant_query) {
+    if check_team_elimination(combatant_query, dead_query) {
         info!("[Combat] Victory check: battle over (≤1 team(s) alive)");
         commands.trigger(OnBattleEnd {
             result: BattleResult::Victory,
@@ -201,24 +208,29 @@ pub(crate) fn step_turn_end(
 ///
 /// 遍历所有 CombatParticipant，统计各队伍的总数和存活数。
 /// 如果活跃队伍数 ≤1，返回 true（战斗结束）。
-pub(crate) fn check_team_elimination(combatant_query: &Query<&CombatParticipant>) -> bool {
-    let team_status = combatant_query.iter().fold(
-        std::collections::HashMap::<String, (usize, usize)>::new(),
-        |mut acc, participant| {
-            let team = participant.team_id.0.clone();
-            let entry = acc.entry(team).or_insert((0, 0));
-            entry.0 += 1;
-            if participant.is_alive {
-                entry.1 += 1;
-            }
-            acc
-        },
-    );
+/// 检查是否有一方队伍被全灭。
+///
+/// 通过 `Without<Dead>` 过滤器判定存活单位，而非检查 `is_alive` 字段。
+pub(crate) fn check_team_elimination(
+    all_query: &Query<&CombatParticipant>,
+    dead_query: &Query<&CombatParticipant, With<Dead>>,
+) -> bool {
+    let mut team_total = std::collections::HashMap::<String, usize>::new();
+    let mut team_alive = std::collections::HashMap::<String, usize>::new();
 
-    let alive_teams = team_status
-        .values()
-        .filter(|(_total, alive)| *alive > 0)
-        .count();
+    for participant in all_query.iter() {
+        let team = participant.team_id.0.clone();
+        *team_total.entry(team.clone()).or_insert(0) += 1;
+        *team_alive.entry(team).or_insert(0) += 1;
+    }
 
+    for participant in dead_query.iter() {
+        let team = participant.team_id.0.clone();
+        if let Some(alive) = team_alive.get_mut(&team) {
+            *alive = alive.saturating_sub(1);
+        }
+    }
+
+    let alive_teams = team_alive.values().filter(|&&count| count > 0).count();
     alive_teams <= 1
 }

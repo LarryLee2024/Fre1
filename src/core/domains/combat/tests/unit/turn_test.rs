@@ -163,7 +163,7 @@ fn action_points_is_idle_has_movement_is_not_idle() {
 
 #[test]
 fn action_points_is_idle_has_action_is_not_idle() {
-    let mut ap = ActionPoints::new(0.0);
+    let ap = ActionPoints::new(0.0);
     // standard_action 仍可用
     assert!(!ap.is_idle(), "has standard action = not idle");
 }
