@@ -368,7 +368,7 @@ pub enum SlotChangeSource {
 // ─── Resources ─────────────────────────────────────────────────────
 
 /// 法术系统配置 Resource。
-#[derive(Resource, Debug, Clone, Reflect)]
+#[derive(Resource, Debug, Clone, Reflect, Deserialize)]
 #[reflect(Resource)]
 pub struct SpellConfig {
     /// 专注打断检定 DC 的基础值（取 max(10, 伤害/2)）。

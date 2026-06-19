@@ -18,7 +18,7 @@ use crate::core::domains::crafting::RecipeDef;
 use crate::core::domains::economy::ShopDef;
 use crate::core::domains::progression::LevelProgressionTable;
 use crate::core::domains::quest::QuestDef;
-use crate::core::domains::spell::SpellDef;
+use crate::core::domains::spell::{SpellConfig, SpellDef};
 
 /// 内容加载状态 Resource。
 ///
@@ -202,6 +202,7 @@ fn load_all_content(
     mut targeting: ResMut<LoadedTargetingDefs>,
     mut tags: ResMut<LoadedTagDefs>,
     mut attributes: ResMut<LoadedAttributeDefs>,
+    mut spell_config: ResMut<SpellConfig>,
 ) {
     let config_root = std::path::Path::new("assets/config");
 
@@ -228,6 +229,7 @@ fn load_all_content(
             "targeting" => load_targeting_def(&mut targeting, file),
             "tags" => load_tag_def(&mut tags, file),
             "attributes" => load_attribute_def(&mut attributes, file),
+            "spell_config" => load_spell_config(&mut spell_config, file),
             other => {
                 info!("[Content] Unknown bucket '{}', skipping", other);
             }
@@ -638,5 +640,30 @@ fn load_progression_balance(balance: &mut ResMut<LevelProgressionTable>, file: &
     info!(
         "[Content] Loaded progression balance table (max_level: {})",
         balance.max_level
+    );
+}
+
+/// 从 RON 文件同步加载 SpellConfig。
+fn load_spell_config(config: &mut ResMut<SpellConfig>, file: &ContentFile) {
+    let content = match std::fs::read_to_string(&file.path) {
+        Ok(c) => c,
+        Err(e) => {
+            warn!("[Content] Failed to read spell config file: {}", e);
+            return;
+        }
+    };
+
+    let cfg: SpellConfig = match ron::from_str(&content) {
+        Ok(c) => c,
+        Err(e) => {
+            warn!("[Content] Failed to deserialize spell config RON: {}", e);
+            return;
+        }
+    };
+
+    **config = cfg;
+    info!(
+        "[Content] Loaded spell config (concentration_base_dc: {}, max_concentration: {})",
+        config.concentration_base_dc, config.max_concentration
     );
 }

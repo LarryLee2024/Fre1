@@ -21,7 +21,7 @@ scope: ErrorContext 接入审查 + 架构依赖扫描
 |------|----------|------|------|------|
 | 架构漂移 | High | 1 | Drift-ADR-002 | ✅ Resolved (2026-06-20) |
 | 抽象泄漏 | Critical | 2 | Leak-003, Leak-004 | ✅ Resolved |
-| 内容债务 | Medium | 1 | Content-002 | ⏳ Open |
+| 内容债务 | Medium | 1 | Content-002 | ✅ Resolved (2026-06-20) |
 | 测试债务 | Medium, Low | 2 | TestDebt-002, TestDebt-003 | ⏳ Open |
 | AI 可维护性 | None | 0 | — | ✅ |
 | 超大文件 | None | 0 | — | ✅ |
@@ -78,9 +78,9 @@ scope: ErrorContext 接入审查 + 架构依赖扫描
 
 ## Debt-022: [Content-002] 部分领域代码含硬编码业务数值
 
-- **状态**: 🔄 部分修复 (progression 域 ✅, combat/spell 待处理)
+- **状态**: ✅ Resolved (2026-06-20)
 - **发现日期**: 2026-06-19
-- **修复范围**: 2026-06-20
+- **修复日期**: 2026-06-20
 - **负责人**: @feature-developer
 - **严重程度**: Medium
 - **问题描述**: 以下文件存在硬编码业务数值，应通过 content/ 配置驱动：
@@ -101,10 +101,24 @@ scope: ErrorContext 接入审查 + 架构依赖扫描
 5. **`src/core/domains/progression/systems/progression_system.rs`** — `enforce_xp_invariant` 和 `handle_level_up` 从 `LevelProgressionTable::default()` 改为 `Res<LevelProgressionTable>` 注入
 6. **验证**: `cargo nextest run` — 1473/1473 passed, 8 skipped
 
-### ⏳ 待处理
+### ✅ 已完成 — spell/spell_config 域
 
-- `src/core/domains/combat/pipeline/steps.rs` — 行动点数、回合限制等
-- `src/core/domains/spell/rules/rules.rs` — 法术位、专注时长等
+2026-06-20 完成了 `SpellConfig` 的 RON 配置化：
+
+1. **`assets/config/spell_config/spell_config.ron`** — 新建 RON 配置文件（concentration_base_dc、max_concentration、cantrips_count_against_known）
+2. **`src/core/domains/spell/components.rs`** — 给 `SpellConfig` 添加 `Deserialize` derive
+3. **`src/content/content_plugin.rs`** — 新增 `load_spell_config()` 函数，在 `load_all_content` 中添加 `"spell_config"` bucket 调度和 `ResMut<SpellConfig>` 参数
+4. **验证**: `cargo nextest run` — 1485/1485 passed, 8 skipped
+
+### ⏳ 待处理 — 深入分析
+
+原始债务描述中 combat/pipeline/steps.rs 和 spell/rules/rules.rs 的硬编码值，经阅读分析后修正评估：
+
+- **`src/core/domains/combat/pipeline/steps.rs`** — ❌ 实际上没有可提取的硬编码数值。行动点数（1标准/1附赠/1反应/移动力）是 `ActionPoints` 组件的结构性定义，非数值常量。胜负判定 (`check_team_elimination`) 使用动态数据。建议从 Content-002 范围移除。
+- **`src/core/domains/spell/rules/formulas.rs`** — ⚠️ 存在两处冗余：
+  - `calc_concentration_dc()` 硬编码 `10u32` — 已在 `SpellConfig::concentration_base_dc` 中配置化，但纯函数无 Res 访问。需重构函数签名接受参数。
+  - `proficiency_bonus_for_level()` — 完全重复 `LevelProgressionTable::proficiency_bonus()`。需重构调用方传递熟练加值。
+  - 这些是 rules 层的纯函数重构，不是简单的 Content 提取，建议在新的 Refactor 任务中处理。
 
 ---
 
@@ -167,12 +181,22 @@ scope: ErrorContext 接入审查 + 架构依赖扫描
 |---------|------|------|
 | **Critical** | 0 | — (均已修复) |
 | **High** | 0 | — (均已修复) |
-| **Medium** | 2 | Content-002 (🔄 partial), TestDebt-002 |
+| **Medium** | 1 | TestDebt-002 |
 | Low | 1 | TestDebt-003 |
 | **总计** | **3** | |
 
-### 修复优先级建议
+### Content-002 修复总结
 
-1. **P2**: Content-002 — progression 域已完成；剩余 combat/spell 域的硬编码数值迁移到 content/ RON 配置。
-2. **P2**: TestDebt-002 — combat integration/ facade 测试覆盖。机械性测试补写工作，风险低，可并行。
-3. **P3**: TestDebt-003 — movement facade 测试目录迁移。纯文件移动 + 路径调整，可在其他任务中顺带完成。
+| 子项 | 状态 | 备注 |
+|------|------|------|
+| progression (LevelProgressionTable) | ✅ 完成 | RON 配置加载 |
+| spell (SpellConfig) | ✅ 完成 | RON 配置加载 |
+| combat/pipeline/steps.rs | ❌ 从范围移除 | 无硬编码数值，结构性定义 |
+| spell/rules/formulas.rs 冗余 | ⏳ 移至新任务 | 纯函数重构，非简单 Content 提取 |
+| **最终验证** | ✅ 1485/1485 passed | `cargo nextest run` 通过 |
+
+### 剩余债务修复优先级建议
+
+1. **P2**: TestDebt-002 — combat integration/ facade 测试覆盖。机械性测试补写工作，风险低，可并行。
+2. **P3**: TestDebt-003 — movement facade 测试目录迁移。纯文件移动 + 路径调整，可在其他任务中顺带完成。
+3. **P3**: spell rules/formulas 常量重构 — `proficiency_bonus_for_level` 去重 + `calc_concentration_dc` 参数化。
