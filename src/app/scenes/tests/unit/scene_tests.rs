@@ -146,7 +146,7 @@ fn transition_queue_only_executes_last() {
 // Then:  OnEnter(Combat) 应创建了新的 SceneRoot 实体
 //
 // 注：cleanup_scene 使用 deferred commands (commands.entity().despawn())，
-//     Bevy 0.18 中系统级 CommandQueue 的 flush 时机由 apply_deferred 控制，
+//     Bevy 0.19 中系统级 CommandQueue 的 flush 时机由 apply_deferred 控制，
 //     在测试中可能无法精确控制。因此测试验证核心业务行为：
 //     状态切换后 OnEnter 成功创建了新的 SceneRoot。
 #[test]

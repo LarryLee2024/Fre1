@@ -24,7 +24,7 @@ use super::components::TeamId;
 ///
 /// Trigger 事件，通过 `commands.trigger(OnTurnStart { unit })` 发射。
 /// 订阅者：Buff（"每回合开始时"）、被动技能、UI 高亮。
-#[derive(Event, Debug, Clone, PartialEq)]
+#[derive(Event, Debug, Clone, PartialEq, Reflect)]
 pub struct OnTurnStart {
     /// 当前回合的单位
     pub unit: Entity,
@@ -34,7 +34,7 @@ pub struct OnTurnStart {
 ///
 /// Trigger 事件，在 TurnSettlement 阶段发射。
 /// 订阅者：Buff（"每回合结束时"）、DOT、冷却推进。
-#[derive(Event, Debug, Clone, PartialEq)]
+#[derive(Event, Debug, Clone, PartialEq, Reflect)]
 pub struct OnTurnEnd {
     /// 当前回合的单位
     pub unit: Entity,
@@ -44,7 +44,7 @@ pub struct OnTurnEnd {
 ///
 /// 普通 Event，由 UnitAction 阶段的 System 消费。
 /// 战斗系统（Ability/Execution）在行动完成后发射此事件。
-#[derive(Event, Debug, Clone, PartialEq)]
+#[derive(Event, Debug, Clone, PartialEq, Reflect)]
 pub struct UnitActionComplete {
     /// 完成行动的单位
     pub unit: Entity,
@@ -56,7 +56,7 @@ pub struct UnitActionComplete {
 ///
 /// TurnEnd 阶段检测到队伍切换时发射。
 /// 订阅者：领域效果、环境效果、UI 更新。
-#[derive(Event, Debug, Clone, PartialEq)]
+#[derive(Event, Debug, Clone, PartialEq, Reflect)]
 pub struct BetweenTurns {
     /// 当前行动队伍
     pub team: TeamId,
@@ -66,7 +66,7 @@ pub struct BetweenTurns {
 ///
 /// Trigger 事件。
 /// 订阅者：全局结算、召唤物消失、全局效果 Tick。
-#[derive(Event, Debug, Clone, PartialEq)]
+#[derive(Event, Debug, Clone, PartialEq, Reflect)]
 pub struct OnRoundEnd {
     /// 已完成的轮数
     pub round: u32,
@@ -78,11 +78,11 @@ pub struct OnRoundEnd {
 ///
 /// Trigger 事件。
 /// 订阅者：初始化战斗相关系统、UI 切换到战斗界面。
-#[derive(Event, Debug, Clone, PartialEq)]
+#[derive(Event, Debug, Clone, PartialEq, Reflect)]
 pub struct OnBattleStart;
 
 /// 战斗结束结果。
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Reflect)]
 pub enum BattleResult {
     Victory,
     Defeat,
@@ -92,7 +92,7 @@ pub enum BattleResult {
 ///
 /// Trigger 事件。
 /// 订阅者：经验结算、战利品、回放结束。
-#[derive(Event, Debug, Clone, PartialEq)]
+#[derive(Event, Debug, Clone, PartialEq, Reflect)]
 pub struct OnBattleEnd {
     /// 战斗结果
     pub result: BattleResult,

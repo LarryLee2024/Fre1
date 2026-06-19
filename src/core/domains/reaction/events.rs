@@ -11,7 +11,7 @@ use super::components::ReactionType;
 /// 反应触发事件。
 ///
 /// 当反应满足触发条件时发布，通知 UI/AI 进行决策。
-#[derive(Event, Debug, Clone, PartialEq)]
+#[derive(Event, Debug, Clone, PartialEq, Reflect)]
 pub struct ReactionTriggered {
     /// 将执行反应的实体。
     pub reactor: Entity,
@@ -26,7 +26,7 @@ pub struct ReactionTriggered {
 /// 反应已执行事件。
 ///
 /// 反应执行完毕后发布，通知 Combat 继续原流程。
-#[derive(Event, Debug, Clone, PartialEq)]
+#[derive(Event, Debug, Clone, PartialEq, Reflect)]
 pub struct ReactionExecuted {
     /// 执行反应的实体。
     pub reactor: Entity,
@@ -39,7 +39,7 @@ pub struct ReactionExecuted {
 /// 反应被拒绝事件。
 ///
 /// 当单位选择不使用反应时发布。
-#[derive(Event, Debug, Clone, PartialEq)]
+#[derive(Event, Debug, Clone, PartialEq, Reflect)]
 pub struct ReactionDeclined {
     /// 拒绝反应的实体。
     pub reactor: Entity,
@@ -50,7 +50,7 @@ pub struct ReactionDeclined {
 }
 
 /// 机会攻击已执行事件。
-#[derive(Event, Debug, Clone, PartialEq)]
+#[derive(Event, Debug, Clone, PartialEq, Reflect)]
 pub struct OpportunityAttackExecuted {
     /// 攻击者实体。
     pub attacker: Entity,
@@ -65,7 +65,7 @@ pub struct OpportunityAttackExecuted {
 }
 
 /// 法术反制已执行事件。
-#[derive(Event, Debug, Clone, PartialEq)]
+#[derive(Event, Debug, Clone, PartialEq, Reflect)]
 pub struct CounterspellExecuted {
     /// 反制者实体。
     pub counterer: Entity,
@@ -84,7 +84,7 @@ pub struct CounterspellExecuted {
 }
 
 /// 护盾术已使用事件。
-#[derive(Event, Debug, Clone, PartialEq)]
+#[derive(Event, Debug, Clone, PartialEq, Reflect)]
 pub struct ShieldUsed {
     /// 施放护盾术的实体。
     pub caster: Entity,
@@ -97,7 +97,7 @@ pub struct ShieldUsed {
 }
 
 /// 援护格挡已使用事件。
-#[derive(Event, Debug, Clone, PartialEq)]
+#[derive(Event, Debug, Clone, PartialEq, Reflect)]
 pub struct GuardianUsed {
     /// 援护者实体。
     pub guardian: Entity,

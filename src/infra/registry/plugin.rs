@@ -18,7 +18,7 @@ pub struct RegistryPlugin;
 
 impl Plugin for RegistryPlugin {
     fn build(&self, app: &mut App) {
-        // 事件自动注册（Bevy 0.18+ observer-based，无需 add_event）
+        // 事件自动注册（Bevy 0.19+ observer-based，无需 add_event）
         app
             // 初始化空的 DefinitionRegistry
             .init_resource::<DefinitionRegistry>();

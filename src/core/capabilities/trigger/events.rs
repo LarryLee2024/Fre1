@@ -1,7 +1,7 @@
 //! Trigger 领域事件
 //!
 //! 定义触发器生命周期中的核心事件。
-//! Bevy 0.18+ 使用 observer-based 事件系统，通过 commands.trigger() 触发。
+//! Bevy 0.19+ 使用 observer-based 事件系统，通过 commands.trigger() 触发。
 //!
 //! 详见 docs/02-domain/capabilities/trigger_domain.md §6。
 

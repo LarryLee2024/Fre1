@@ -1,7 +1,7 @@
 # AGENTS.md — Bevy SRPG Project
 
 ## 项目概述
-基于 Bevy 0.18.1 的回合制战棋项目，严格遵循 ECS 架构与领域分离原则。所有 Agent 输出必须以 `docs/00-governance/ai-constitution-complete.md` 为最高宪法准则。
+基于 Bevy 0.19 的回合制战棋项目，严格遵循 ECS 架构与领域分离原则。所有 Agent 输出必须以 `docs/00-governance/ai-constitution-complete.md` 为最高宪法准则。
 只要遇到 `ai_ignore_this_dir` 这样的目录，除非我主动提到你们的文件，否则均视为不存在，严禁阅读。
 
 ## 通用行为红线（所有角色必须遵守）
@@ -9,7 +9,7 @@
 2. 严禁突破模块边界、违反 ECS 架构模式
 3. 严禁修改定义态（Definition）配置数据
 4. 严禁超出自身角色职责范围跨环节作业，`@feature-developer` 严禁写单元测试代码
-5. 严禁写过时、不符合最新 Bevy 0.18.1 版本的代码
+5. 严禁写过时、不符合最新 Bevy 0.19 版本的代码
 6. 数据架构变更必须经过 @data-architect 审查，确保 Replay/Save 兼容性
 
 ## 角色总览

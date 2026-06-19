@@ -5,12 +5,19 @@
 //!
 //! 详见 `docs/01-architecture/README.md` §3.5
 
+use bevy::dev_tools::diagnostics_overlay::{
+    DiagnosticsOverlay, DiagnosticsOverlayPlugin,
+};
 use bevy::prelude::*;
 
 pub struct DevToolsPlugin;
 
 impl Plugin for DevToolsPlugin {
-    fn build(&self, _app: &mut App) {
-        // TODO: register debug panels, inspector, dev console
+    fn build(&self, app: &mut App) {
+        app.add_plugins(DiagnosticsOverlayPlugin::default());
+
+        app.add_systems(Startup, |mut commands: Commands| {
+            commands.spawn(DiagnosticsOverlay::fps());
+        });
     }
 }

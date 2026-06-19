@@ -11,7 +11,7 @@ use bevy::prelude::*;
 /// 订阅者：
 /// - UI：打开对话界面/显示 NPC 头像和文本
 /// - Quest：检查是否有对话相关的任务
-#[derive(Event, Debug, Clone)]
+#[derive(Event, Debug, Clone, Reflect)]
 pub struct DialogueStarted {
     /// 启动对话的实体
     pub entity: Entity,
@@ -32,7 +32,7 @@ pub struct DialogueStarted {
 /// - Quest：接受新任务或推进已有任务
 /// - Faction：更新声望
 /// - UI：推进对话到下一节点
-#[derive(Event, Debug, Clone)]
+#[derive(Event, Debug, Clone, Reflect)]
 pub struct ChoiceMade {
     /// 做出选择的实体
     pub entity: Entity,
@@ -50,7 +50,7 @@ pub struct ChoiceMade {
 /// - Narrative：解锁新的对话分支/节点
 /// - Quest：检查任务条件的满足状态
 /// - UI：显示状态变化通知
-#[derive(Event, Debug, Clone)]
+#[derive(Event, Debug, Clone, Reflect)]
 pub struct StoryFlagSet {
     /// 触发设置的实体
     pub entity: Entity,
@@ -67,7 +67,7 @@ pub struct StoryFlagSet {
 /// 订阅者：
 /// - UI：切换播放模式/隐藏 HUD
 /// - Cue：过场音效
-#[derive(Event, Debug, Clone)]
+#[derive(Event, Debug, Clone, Reflect)]
 pub struct CutsceneStarted {
     /// 演出 ID
     pub cutscene_id: String,
@@ -81,7 +81,7 @@ pub struct CutsceneStarted {
 ///
 /// 订阅者：
 /// - UI：恢复 HUD/交互模式
-#[derive(Event, Debug, Clone)]
+#[derive(Event, Debug, Clone, Reflect)]
 pub struct CutsceneEnded {
     /// 演出 ID
     pub cutscene_id: String,

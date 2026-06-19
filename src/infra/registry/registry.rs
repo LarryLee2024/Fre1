@@ -415,7 +415,7 @@ pub trait DefinitionType: Sized {
 ///
 /// TODO[P2][Content]: 待 Asset 层定型后注册热重载 Observer
 ///   当前事件定义已就绪，但无订阅者（各 Domain 尚未接入 Asset 管线）。
-#[derive(Event)]
+#[derive(Event, Debug, Clone, Reflect)]
 pub struct OnDefinitionReloaded {
     /// 发生变更的桶名称（如 "abilities", "effects"）
     pub bucket_name: &'static str,

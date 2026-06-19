@@ -9,7 +9,7 @@ impl Plugin for SpecPlugin {
         // Resource: SpecRegistry（Def→Spec 工厂转换）
         app.insert_resource(SpecRegistry::default());
 
-        // Events（Bevy 0.18+ observer-based 事件，无需 add_event）
+        // Events（Bevy 0.19+ observer-based 事件，无需 add_event）
         // 通过 commands.trigger() 触发，app.add_observer() 订阅
     }
 }

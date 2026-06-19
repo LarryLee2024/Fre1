@@ -1,12 +1,12 @@
-# Fre — Bevy 0.18+ SRPG 项目
+# Fre — Bevy 0.19+ SRPG 项目
 
-> 基于 Bevy 0.18.1 的回合制战棋（SRPG）项目，采用 DDD 领域驱动设计 + GAS-Lite 能力系统。
+> 基于 Bevy 0.19 的回合制战棋（SRPG）项目，采用 DDD 领域驱动设计 + GAS-Lite 能力系统。
 
 ## 项目概况
 
 | 项 | 值 |
 |------|------|
-| 引擎 | Bevy 0.18.1 |
+| 引擎 | Bevy 0.19 |
 | 品类 | 单机回合制战棋 SRPG |
 | 语言 | Rust 2024 Edition |
 | 架构 | DDD 纵向三层 + 横切四层，Core 层 Capabilities/Domains 双轴结构 |

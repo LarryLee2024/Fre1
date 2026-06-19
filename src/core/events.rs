@@ -19,7 +19,7 @@ use bevy::prelude::*;
 ///
 /// **发射方**: combat pipeline (TurnSettlement 阶段)
 /// **消费方**: terrain (表面恢复)、effect (DOT tick)、其他需要回合感知的 Domain
-#[derive(Event, Debug, Clone, PartialEq)]
+#[derive(Event, Debug, Clone, PartialEq, Reflect)]
 pub struct TurnEnded {
     /// 结束回合的单位
     pub unit: Entity,
@@ -31,7 +31,7 @@ pub struct TurnEnded {
 ///
 /// **发射方**: combat pipeline (Initiative 阶段)
 /// **消费方**: 任何需要在回合开始时触发逻辑的 Domain
-#[derive(Event, Debug, Clone, PartialEq)]
+#[derive(Event, Debug, Clone, PartialEq, Reflect)]
 pub struct TurnStarted {
     /// 开始回合的单位
     pub unit: Entity,
@@ -41,14 +41,14 @@ pub struct TurnStarted {
 ///
 /// **发射方**: combat battle_start_system
 /// **消费方**: 任何需要在战斗开始时初始化的 Domain
-#[derive(Event, Debug, Clone, PartialEq)]
+#[derive(Event, Debug, Clone, PartialEq, Reflect)]
 pub struct BattleStarted;
 
 /// 全局战斗结束事件。
 ///
 /// **发射方**: combat victory_system
 /// **消费方**: 任何需要在战斗结束时结算的 Domain
-#[derive(Event, Debug, Clone, PartialEq)]
+#[derive(Event, Debug, Clone, PartialEq, Reflect)]
 pub struct BattleEnded {
     /// 战斗结果：true = 胜利，false = 失败
     pub victory: bool,

@@ -10,5 +10,6 @@ use bevy::prelude::*;
 /// 每个 GameState 的 OnEnter 系统应生成一个带 `SceneRoot` 的根实体，
 /// 该场景下的所有 UI/Entity 作为其子级。
 /// OnExit 时 `cleanup_scene` 通过此组件递归 despawn 整个场景子树。
-#[derive(Component)]
+#[derive(Component, Reflect)]
+#[reflect(Component)]
 pub struct SceneRoot;

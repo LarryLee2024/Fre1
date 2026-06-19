@@ -34,7 +34,7 @@ pub enum TransactionType {
 }
 
 /// 价格变化事件。
-#[derive(Debug, Clone, Event)]
+#[derive(Debug, Clone, Event, Reflect)]
 pub struct PriceChanged {
     pub shop_id: String,
     pub item_id: String,
@@ -44,7 +44,7 @@ pub struct PriceChanged {
 }
 
 /// 货币变化事件。
-#[derive(Debug, Clone, Event)]
+#[derive(Debug, Clone, Event, Reflect)]
 pub struct CurrencyChanged {
     pub entity: Entity,
     pub currency_type: String,

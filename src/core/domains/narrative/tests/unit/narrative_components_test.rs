@@ -33,16 +33,11 @@ fn dialogue_state_advance() {
 }
 
 #[test]
-fn cutscene_tick_and_finish() {
-    let mut cs = CutsceneState::new("cs_intro", 5.0, vec![]);
+fn cutscene_initial_state() {
+    let cs = CutsceneState::new("cs_intro", 5.0, vec![]);
     assert_eq!(cs.phase, CutscenePhase::Playing);
-
-    cs.tick(3.0);
-    assert_eq!(cs.elapsed, 3.0);
-    assert_eq!(cs.phase, CutscenePhase::Playing);
-
-    cs.tick(2.5);
-    assert_eq!(cs.phase, CutscenePhase::Finished);
+    assert_eq!(cs.duration, 5.0);
+    assert_eq!(cs.elapsed, 0.0);
 }
 
 #[test]

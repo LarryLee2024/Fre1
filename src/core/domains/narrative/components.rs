@@ -261,14 +261,6 @@ impl CutsceneState {
         }
     }
 
-    /// 前进到下一帧。
-    pub fn tick(&mut self, delta: f32) {
-        self.elapsed += delta;
-        if self.elapsed >= self.duration {
-            self.phase = CutscenePhase::Finished;
-        }
-    }
-
     /// 暂停演出。
     pub fn pause(&mut self) {
         if self.phase == CutscenePhase::Playing {

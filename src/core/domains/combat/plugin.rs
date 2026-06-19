@@ -60,7 +60,7 @@ impl Plugin for CombatPlugin {
             combat_input_system.run_if(in_state(GameState::Combat)),
         );
 
-        // ── 注册 Observer (Bevy 0.18 Trigger 模式) ──
+        // ── 注册 Observer (Bevy 0.19 Trigger 模式) ──
         // UnitActionComplete → 恢复驾驶员，跳转到 TurnSettlement
         app.add_observer(on_unit_action_complete);
         // OnTurnEnd → 推进 Effect 计时与周期 Tick
