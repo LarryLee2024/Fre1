@@ -103,11 +103,9 @@ impl FileSink {
     /// 轮转日志文件：重命名当前文件 → 写入新文件。
     fn rotate(config: &FileSinkConfig, current_path: &PathBuf) -> std::io::Result<File> {
         // 清理最旧的文件
-        let rotated_path = config.dir.join(format!(
-            "{}.{}.jsonl",
-            config.prefix,
-            chrono_now()
-        ));
+        let rotated_path = config
+            .dir
+            .join(format!("{}.{}.jsonl", config.prefix, chrono_now()));
         fs::rename(current_path, &rotated_path)?;
 
         // 限制保留文件数
@@ -139,7 +137,10 @@ fn cleanup_old_files(config: &FileSinkConfig) {
         for entry in dir.flatten() {
             let name = entry.file_name();
             let name_str = name.to_string_lossy();
-            if name_str.starts_with(&config.prefix) && name_str.ends_with(".jsonl") && name_str.contains('.') {
+            if name_str.starts_with(&config.prefix)
+                && name_str.ends_with(".jsonl")
+                && name_str.contains('.')
+            {
                 entries.push(entry.path());
             }
         }
@@ -154,12 +155,7 @@ fn cleanup_old_files(config: &FileSinkConfig) {
 }
 
 /// 将结构化日志事件格式化为 JSON 字符串。
-pub fn format_json(
-    code: &str,
-    event: &str,
-    level: &str,
-    fields: &[(&str, &str)],
-) -> String {
+pub fn format_json(code: &str, event: &str, level: &str, fields: &[(&str, &str)]) -> String {
     let mut map = serde_json::Map::new();
     map.insert("timestamp".into(), chrono_now().into());
     map.insert("level".into(), level.into());

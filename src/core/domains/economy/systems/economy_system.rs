@@ -6,7 +6,9 @@
 use bevy::prelude::*;
 
 use super::super::components::{CurrencyType, Price, Wallet};
-use super::super::events::{CurrencyChanged, PriceBreakdown, TransactionCompleted, TransactionType};
+use super::super::events::{
+    CurrencyChanged, PriceBreakdown, TransactionCompleted, TransactionType,
+};
 
 /// 处理购买请求。
 pub fn on_purchase_request(

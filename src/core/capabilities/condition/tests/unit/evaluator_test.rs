@@ -8,11 +8,21 @@ use crate::core::capabilities::condition::foundation::{
 };
 use crate::core::capabilities::condition::mechanism::{check_immunity, evaluate};
 
-fn assert_passed(cond: &Condition, ctx: &ConditionContext, entity: Entity, commands: &mut Commands) {
+fn assert_passed(
+    cond: &Condition,
+    ctx: &ConditionContext,
+    entity: Entity,
+    commands: &mut Commands,
+) {
     assert!(evaluate(cond, ctx, entity, commands).is_passed());
 }
 
-fn assert_failed(cond: &Condition, ctx: &ConditionContext, entity: Entity, commands: &mut Commands) {
+fn assert_failed(
+    cond: &Condition,
+    ctx: &ConditionContext,
+    entity: Entity,
+    commands: &mut Commands,
+) {
     assert!(!evaluate(cond, ctx, entity, commands).is_passed());
 }
 

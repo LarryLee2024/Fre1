@@ -119,7 +119,13 @@ fn no_condition_always_passes() {
     let entity = world.spawn_empty().id();
     let mut commands = world.commands();
     let entry = TriggerEntry::new("trig_001", TriggerType::OnTurnStart, "abl_000001");
-    let result = can_trigger(&entry, &TriggerType::OnTurnStart, None, entity, &mut commands);
+    let result = can_trigger(
+        &entry,
+        &TriggerType::OnTurnStart,
+        None,
+        entity,
+        &mut commands,
+    );
     assert!(matches!(result, TriggerEvalResult::Ready(_)));
 }
 

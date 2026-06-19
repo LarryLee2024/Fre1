@@ -50,7 +50,13 @@ fn can_trigger_check_passes_when_type_matches() {
         CombatTriggerType::TurnStarted,
         "def_buff",
     );
-    let result = CombatTriggerFacade::can_trigger_check(&entry, &TriggerType::OnTurnStart, None, entity, &mut commands);
+    let result = CombatTriggerFacade::can_trigger_check(
+        &entry,
+        &TriggerType::OnTurnStart,
+        None,
+        entity,
+        &mut commands,
+    );
     assert!(matches!(result, TriggerEvalResult::Ready(_)));
 }
 
@@ -64,7 +70,13 @@ fn can_trigger_check_fails_when_type_mismatches() {
         CombatTriggerType::TurnStarted,
         "def_buff",
     );
-    let result = CombatTriggerFacade::can_trigger_check(&entry, &TriggerType::OnDamaged, None, entity, &mut commands);
+    let result = CombatTriggerFacade::can_trigger_check(
+        &entry,
+        &TriggerType::OnDamaged,
+        None,
+        entity,
+        &mut commands,
+    );
     assert!(matches!(result, TriggerEvalResult::Blocked(_)));
 }
 
@@ -91,8 +103,13 @@ fn evaluate_triggers_filters_by_type() {
         ),
     ];
 
-    let ready =
-        CombatTriggerFacade::evaluate_triggers(&entries, CombatTriggerType::TurnStarted, None, entity, &mut commands);
+    let ready = CombatTriggerFacade::evaluate_triggers(
+        &entries,
+        CombatTriggerType::TurnStarted,
+        None,
+        entity,
+        &mut commands,
+    );
     assert_eq!(ready.len(), 1);
     assert_eq!(ready[0].id, "trg_001");
 }
@@ -108,8 +125,13 @@ fn evaluate_triggers_returns_empty_when_no_match() {
         "def_retaliate",
     )];
 
-    let ready =
-        CombatTriggerFacade::evaluate_triggers(&entries, CombatTriggerType::TurnStarted, None, entity, &mut commands);
+    let ready = CombatTriggerFacade::evaluate_triggers(
+        &entries,
+        CombatTriggerType::TurnStarted,
+        None,
+        entity,
+        &mut commands,
+    );
     assert!(ready.is_empty());
 }
 

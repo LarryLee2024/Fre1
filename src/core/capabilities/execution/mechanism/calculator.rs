@@ -33,7 +33,10 @@ use crate::core::capabilities::execution::foundation::{
 /// - ExecutionError::FormulaNotFound: formula_id 未注册
 /// - ExecutionError::ContextMissing: 必要上下文缺失
 /// - ExecutionError::InvalidResult: 计算结果数值非法
-pub fn execute(ctx: &ExecutionContext, commands: &mut Commands) -> Result<ExecutionResult, ExecutionError> {
+pub fn execute(
+    ctx: &ExecutionContext,
+    commands: &mut Commands,
+) -> Result<ExecutionResult, ExecutionError> {
     let exec_type_name = ctx.execution_type.name().to_string();
     let src = ctx.source_entity.clone();
     let tgt = ctx.target_entity.clone();

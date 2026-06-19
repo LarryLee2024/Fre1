@@ -36,22 +36,22 @@ fn register_child_tag_succeeds() {
     let mut commands = world.commands();
     let mut hierarchy = TagHierarchy::default();
     hierarchy
-        .register(make_tag(
-            "tag_000001",
-            None,
-            0,
-            TagNamespace::DamageType,
-            true,
-        ), &mut commands)
+        .register(
+            make_tag("tag_000001", None, 0, TagNamespace::DamageType, true),
+            &mut commands,
+        )
         .unwrap();
     hierarchy
-        .register(make_tag(
-            "tag_000002",
-            Some("tag_000001"),
-            1,
-            TagNamespace::DamageType,
-            false,
-        ), &mut commands)
+        .register(
+            make_tag(
+                "tag_000002",
+                Some("tag_000001"),
+                1,
+                TagNamespace::DamageType,
+                false,
+            ),
+            &mut commands,
+        )
         .unwrap();
     assert!(hierarchy.tags.contains_key(&TagId::new("tag_000001")));
     assert!(hierarchy.tags.contains_key(&TagId::new("tag_000002")));
@@ -71,21 +71,15 @@ fn duplicate_id_rejected() {
     let mut commands = world.commands();
     let mut hierarchy = TagHierarchy::default();
     hierarchy
-        .register(make_tag(
-            "tag_000001",
-            None,
-            0,
-            TagNamespace::DamageType,
-            true,
-        ), &mut commands)
+        .register(
+            make_tag("tag_000001", None, 0, TagNamespace::DamageType, true),
+            &mut commands,
+        )
         .unwrap();
-    let result = hierarchy.register(make_tag(
-        "tag_000001",
-        None,
-        1,
-        TagNamespace::DamageType,
-        true,
-    ), &mut commands);
+    let result = hierarchy.register(
+        make_tag("tag_000001", None, 1, TagNamespace::DamageType, true),
+        &mut commands,
+    );
     assert!(matches!(result, Err(TagRegistrationError::DuplicateId(_))));
 }
 
@@ -94,13 +88,16 @@ fn parent_not_found_rejected() {
     let mut world = World::new();
     let mut commands = world.commands();
     let mut hierarchy = TagHierarchy::default();
-    let result = hierarchy.register(make_tag(
-        "tag_000001",
-        Some("tag_999999"),
-        0,
-        TagNamespace::DamageType,
-        false,
-    ), &mut commands);
+    let result = hierarchy.register(
+        make_tag(
+            "tag_000001",
+            Some("tag_999999"),
+            0,
+            TagNamespace::DamageType,
+            false,
+        ),
+        &mut commands,
+    );
     assert!(matches!(
         result,
         Err(TagRegistrationError::ParentNotFound(_))
@@ -113,38 +110,44 @@ fn circular_dependency_not_rejected() {
     let mut commands = world.commands();
     let mut hierarchy = TagHierarchy::default();
     hierarchy
-        .register(make_tag(
-            "tag_000001",
-            None,
-            0,
-            TagNamespace::DamageType,
-            true,
-        ), &mut commands)
+        .register(
+            make_tag("tag_000001", None, 0, TagNamespace::DamageType, true),
+            &mut commands,
+        )
         .unwrap();
     hierarchy
-        .register(make_tag(
-            "tag_000002",
-            Some("tag_000001"),
-            1,
+        .register(
+            make_tag(
+                "tag_000002",
+                Some("tag_000001"),
+                1,
+                TagNamespace::DamageType,
+                false,
+            ),
+            &mut commands,
+        )
+        .unwrap();
+    let result = hierarchy.register(
+        make_tag(
+            "tag_000003",
+            Some("tag_000002"),
+            2,
             TagNamespace::DamageType,
             false,
-        ), &mut commands)
-        .unwrap();
-    let result = hierarchy.register(make_tag(
-        "tag_000003",
-        Some("tag_000002"),
-        2,
-        TagNamespace::DamageType,
-        false,
-    ), &mut commands);
+        ),
+        &mut commands,
+    );
     assert!(result.is_ok());
-    let result = hierarchy.register(make_tag(
-        "tag_000004",
-        Some("tag_000002"),
-        3,
-        TagNamespace::DamageType,
-        false,
-    ), &mut commands);
+    let result = hierarchy.register(
+        make_tag(
+            "tag_000004",
+            Some("tag_000002"),
+            3,
+            TagNamespace::DamageType,
+            false,
+        ),
+        &mut commands,
+    );
     assert!(result.is_ok());
 }
 
@@ -154,22 +157,22 @@ fn inherited_mask_contains_child_tag() {
     let mut commands = world.commands();
     let mut hierarchy = TagHierarchy::default();
     hierarchy
-        .register(make_tag(
-            "tag_000001",
-            None,
-            0,
-            TagNamespace::DamageType,
-            true,
-        ), &mut commands)
+        .register(
+            make_tag("tag_000001", None, 0, TagNamespace::DamageType, true),
+            &mut commands,
+        )
         .unwrap();
     hierarchy
-        .register(make_tag(
-            "tag_000002",
-            Some("tag_000001"),
-            1,
-            TagNamespace::DamageType,
-            false,
-        ), &mut commands)
+        .register(
+            make_tag(
+                "tag_000002",
+                Some("tag_000001"),
+                1,
+                TagNamespace::DamageType,
+                false,
+            ),
+            &mut commands,
+        )
         .unwrap();
     let mask = hierarchy.inherited_mask(&TagId::new("tag_000001"));
     assert!(mask & (1 << 0) != 0);

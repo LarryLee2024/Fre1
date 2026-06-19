@@ -44,10 +44,7 @@ pub(crate) fn on_attribute_initialized(
 /// 为实体初始化属性并触发 AttributeInitialized 事件。
 ///
 /// 外部调用方在确保实体拥有 AttributeContainer 组件后调用此函数。
-pub(crate) fn initialize_attributes(
-    mut commands: Commands,
-    entity: Entity,
-) {
+pub(crate) fn initialize_attributes(mut commands: Commands, entity: Entity) {
     commands.trigger(AttributeInitialized { entity });
 }
 

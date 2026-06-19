@@ -12,8 +12,8 @@ use super::metrics::{self, MetricsCollector};
 use super::observers::{
     ability_logger, battle_logger, camp_rest_logger, content_logger, crafting_logger,
     economy_logger, effect_logger, faction_logger, inventory_logger, narrative_logger,
-    party_logger, progression_logger, quest_logger, reaction_logger, spell_logger,
-    summon_logger, tactical_logger, terrain_logger, turn_logger,
+    party_logger, progression_logger, quest_logger, reaction_logger, spell_logger, summon_logger,
+    tactical_logger, terrain_logger, turn_logger,
 };
 
 /// 日志基础设施 Plugin。
@@ -140,9 +140,6 @@ impl Plugin for LoggingPlugin {
         // ── CNT: Content（内容基础设施）──
         app.add_observer(content_logger::on_definition_reloaded);
 
-        tracing::info!(
-            "[LoggingPlugin] initialized (Metrics + {} observers)",
-            56
-        );
+        tracing::info!("[LoggingPlugin] initialized (Metrics + {} observers)", 56);
     }
 }

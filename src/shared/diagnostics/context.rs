@@ -90,10 +90,7 @@ impl DiagnosticContext {
     /// 输出 INFO 级别结构化日志，自动携带诊断上下文。
     #[track_caller]
     pub fn log_info(&self, code: LogCode, event: &'static str) {
-        let mut fields = vec![
-            format!("code = {:?}", code),
-            format!("event = {:?}", event),
-        ];
+        let mut fields = vec![format!("code = {:?}", code), format!("event = {:?}", event)];
         if let Some(ref corr) = self.correlation {
             fields.push(format!("correlation = {:?}", corr));
         }

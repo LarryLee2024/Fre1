@@ -25,7 +25,14 @@ fn select_targets_returns_error_on_empty_candidates() {
     let mut commands = _world.commands();
     let def = CombatTargetingFacade::single_target_def(Some(5.0));
     let context = CombatTargetingFacade::create_target_context("caster_1", "faction_a", 1);
-    let result = CombatTargetingFacade::select_targets(&def, vec![], context, entity, "abl_test", &mut commands);
+    let result = CombatTargetingFacade::select_targets(
+        &def,
+        vec![],
+        context,
+        entity,
+        "abl_test",
+        &mut commands,
+    );
     assert!(matches!(result, Err(TargetingError::NoValidTargets { .. })));
 }
 
@@ -43,7 +50,14 @@ fn select_targets_filters_by_faction() {
             .with_alive(true),
     ];
     let context = CombatTargetingFacade::create_target_context("caster_1", "faction_a", 1);
-    let result = CombatTargetingFacade::select_targets(&def, candidates, context, entity, "abl_test", &mut commands);
+    let result = CombatTargetingFacade::select_targets(
+        &def,
+        candidates,
+        context,
+        entity,
+        "abl_test",
+        &mut commands,
+    );
     assert!(result.is_ok());
     let data = result.unwrap();
     assert_eq!(data.target_count(), 1);

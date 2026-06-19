@@ -24,7 +24,10 @@ impl CombatExecutionFacade {
     /// # Errors
     /// - `ExecutionError::ContextMissing` — 上下文数据不完整
     /// - `ExecutionError::UnsupportedExecutionType` — 不支持的执行类型
-    pub fn execute(ctx: &ExecutionContext, commands: &mut Commands) -> Result<ExecutionResult, ExecutionError> {
+    pub fn execute(
+        ctx: &ExecutionContext,
+        commands: &mut Commands,
+    ) -> Result<ExecutionResult, ExecutionError> {
         execute(ctx, commands)
     }
 

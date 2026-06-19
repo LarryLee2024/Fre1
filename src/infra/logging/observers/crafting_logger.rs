@@ -4,7 +4,9 @@
 
 use bevy::prelude::*;
 
-use crate::core::domains::crafting::events::{CraftingFailed, EnchantmentApplied, ItemCrafted, ItemUpgraded};
+use crate::core::domains::crafting::events::{
+    CraftingFailed, EnchantmentApplied, ItemCrafted, ItemUpgraded,
+};
 use crate::infra::logging::metrics;
 use crate::shared::diagnostics::LogCode;
 

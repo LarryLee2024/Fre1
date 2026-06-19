@@ -14,7 +14,13 @@ fn publish_adds_to_pending_queue() {
     let mut commands = world.commands();
     let mut bus = EventBus::new();
     let payload = EventPayload::from_source("unit_001");
-    CombatEventFacade::publish(&mut bus, CombatEventTag::TurnStarted, "system", payload, &mut commands);
+    CombatEventFacade::publish(
+        &mut bus,
+        CombatEventTag::TurnStarted,
+        "system",
+        payload,
+        &mut commands,
+    );
     assert_eq!(bus.pending_count(), 1);
 }
 
@@ -24,7 +30,13 @@ fn publish_with_priority_adds_to_pending_queue() {
     let mut commands = world.commands();
     let mut bus = EventBus::new();
     let payload = EventPayload::from_source("unit_001");
-    CombatEventFacade::publish_priority(&mut bus, CombatEventTag::DamageDealt, "system", payload, &mut commands);
+    CombatEventFacade::publish_priority(
+        &mut bus,
+        CombatEventTag::DamageDealt,
+        "system",
+        payload,
+        &mut commands,
+    );
     assert_eq!(bus.pending_count(), 1);
 }
 
@@ -36,8 +48,20 @@ fn publish_multiple_events_accumulate() {
     let payload1 = EventPayload::from_source("unit_001");
     let payload2 = EventPayload::from_source("unit_002");
 
-    CombatEventFacade::publish(&mut bus, CombatEventTag::TurnStarted, "system", payload1, &mut commands);
-    CombatEventFacade::publish(&mut bus, CombatEventTag::TurnEnded, "system", payload2, &mut commands);
+    CombatEventFacade::publish(
+        &mut bus,
+        CombatEventTag::TurnStarted,
+        "system",
+        payload1,
+        &mut commands,
+    );
+    CombatEventFacade::publish(
+        &mut bus,
+        CombatEventTag::TurnEnded,
+        "system",
+        payload2,
+        &mut commands,
+    );
 
     assert_eq!(bus.pending_count(), 2);
 }
@@ -51,7 +75,13 @@ fn publish_with_payload_carries_data() {
         .with_value("damage", 50.0)
         .with_target("unit_002");
 
-    CombatEventFacade::publish(&mut bus, CombatEventTag::DamageDealt, "system", payload, &mut commands);
+    CombatEventFacade::publish(
+        &mut bus,
+        CombatEventTag::DamageDealt,
+        "system",
+        payload,
+        &mut commands,
+    );
 
     // Verify by dispatching and checking — for now, just verify it enqueues
     assert_eq!(bus.pending_count(), 1);

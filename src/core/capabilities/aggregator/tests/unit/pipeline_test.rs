@@ -218,8 +218,18 @@ fn clamp_override_uses_custom_range() {
     let mut pipeline = default_pipeline_for("attr_000001");
     pipeline.clamp_override = Some((5.0, 50.0));
     let modifiers = vec![make_entry(ModifierOp::Add, 200.0, 50, "attr_000001")];
-    let result =
-        execute_aggregation("attr_000001", 10.0, &modifiers, &pipeline, 0.0, 100.0, 1, entity, &mut commands).unwrap();
+    let result = execute_aggregation(
+        "attr_000001",
+        10.0,
+        &modifiers,
+        &pipeline,
+        0.0,
+        100.0,
+        1,
+        entity,
+        &mut commands,
+    )
+    .unwrap();
     // clamp_override (5, 50) overrides min=0, max=100
     assert_eq!(result.final_value, 50.0);
 }
@@ -231,7 +241,17 @@ fn invalid_clamp_range_returns_error() {
     let mut commands = world.commands();
     let mut pipeline = default_pipeline_for("attr_000001");
     pipeline.clamp_override = Some((100.0, 0.0));
-    let result = execute_aggregation("attr_000001", 10.0, &[], &pipeline, 0.0, 100.0, 1, entity, &mut commands);
+    let result = execute_aggregation(
+        "attr_000001",
+        10.0,
+        &[],
+        &pipeline,
+        0.0,
+        100.0,
+        1,
+        entity,
+        &mut commands,
+    );
     assert!(matches!(
         result,
         Err(PipelineError::InvalidClampBounds { .. })
@@ -321,8 +341,18 @@ fn descending_priority_ordering() {
         make_entry(ModifierOp::Override, 10.0, 10, "attr_000001"),
         make_entry(ModifierOp::Override, 99.0, 99, "attr_000001"),
     ];
-    let result =
-        execute_aggregation("attr_000001", 5.0, &modifiers, &pipeline, 0.0, 100.0, 1, entity, &mut commands).unwrap();
+    let result = execute_aggregation(
+        "attr_000001",
+        5.0,
+        &modifiers,
+        &pipeline,
+        0.0,
+        100.0,
+        1,
+        entity,
+        &mut commands,
+    )
+    .unwrap();
     // descending = true: higher value = more priority -> 99 wins
     assert_eq!(result.final_value, 99.0);
 }

@@ -117,7 +117,10 @@ fn cue_def_to_data(
 ///
 /// 当前为核心层占位——实际分发由 Infra 表现层实现。
 /// 此函数验证 Cue 数据合法性并返回分发目标信息。
-pub fn dispatch_cue(cue_data: &CueData, commands: &mut Commands) -> Result<DispatchTarget, CueError> {
+pub fn dispatch_cue(
+    cue_data: &CueData,
+    commands: &mut Commands,
+) -> Result<DispatchTarget, CueError> {
     // 不变量 3.1: Cue 是只读信号——本函数不修改任何状态
     // 不变量 3.4: 检查 Cue 是否禁用（由调用方在 collect_cues 中处理）
 

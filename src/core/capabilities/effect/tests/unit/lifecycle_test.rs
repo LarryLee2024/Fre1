@@ -358,7 +358,12 @@ fn remove_by_id_success() {
     let mut container = make_test_container();
     let effect = make_duration_effect("test", 3);
     let _ = apply_effect(&mut container, effect, &mut commands);
-    let removed = remove_effect_by_id(&mut container, "test", &RemovalReason::Dispelled, &mut commands);
+    let removed = remove_effect_by_id(
+        &mut container,
+        "test",
+        &RemovalReason::Dispelled,
+        &mut commands,
+    );
     assert!(removed.is_ok());
     assert_eq!(container.count(), 0);
 }
@@ -368,7 +373,12 @@ fn remove_by_id_not_found() {
     let mut world = World::new();
     let mut commands = world.commands();
     let mut container = make_test_container();
-    let result = remove_effect_by_id(&mut container, "nonexistent", &RemovalReason::Manual, &mut commands);
+    let result = remove_effect_by_id(
+        &mut container,
+        "nonexistent",
+        &RemovalReason::Manual,
+        &mut commands,
+    );
     assert!(result.is_err());
 }
 
@@ -380,7 +390,12 @@ fn remove_undispellable_rejected() {
     let mut effect = make_duration_effect("test", 3);
     effect.dispellable = false;
     let _ = apply_effect(&mut container, effect, &mut commands);
-    let result = remove_effect_by_id(&mut container, "test", &RemovalReason::Dispelled, &mut commands);
+    let result = remove_effect_by_id(
+        &mut container,
+        "test",
+        &RemovalReason::Dispelled,
+        &mut commands,
+    );
     assert!(result.is_err());
 }
 
@@ -392,7 +407,12 @@ fn remove_undispellable_allowed_when_forced() {
     let mut effect = make_duration_effect("test", 3);
     effect.dispellable = false;
     let _ = apply_effect(&mut container, effect, &mut commands);
-    let result = remove_effect_by_id(&mut container, "test", &RemovalReason::Forced, &mut commands);
+    let result = remove_effect_by_id(
+        &mut container,
+        "test",
+        &RemovalReason::Forced,
+        &mut commands,
+    );
     assert!(result.is_ok());
 }
 
@@ -413,8 +433,12 @@ fn remove_by_source() {
         1,
     );
     let _ = apply_effect(&mut container, b, &mut commands);
-    let removed =
-        remove_effects_by_source(&mut container, "caster_001", &RemovalReason::SourceDied, &mut commands);
+    let removed = remove_effects_by_source(
+        &mut container,
+        "caster_001",
+        &RemovalReason::SourceDied,
+        &mut commands,
+    );
     assert_eq!(removed.len(), 1);
     assert_eq!(container.count(), 1);
 }
@@ -429,7 +453,12 @@ fn remove_by_def() {
     let mut b = make_duration_effect("b", 3);
     b.source_entity = "caster_002".into();
     let _ = apply_effect(&mut container, b, &mut commands);
-    let removed = remove_effects_by_def(&mut container, "eff_poison", &RemovalReason::Manual, &mut commands);
+    let removed = remove_effects_by_def(
+        &mut container,
+        "eff_poison",
+        &RemovalReason::Manual,
+        &mut commands,
+    );
     assert_eq!(removed.len(), 2);
     assert_eq!(container.count(), 0);
 }

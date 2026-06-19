@@ -13,10 +13,7 @@ use super::super::rules::{
 };
 
 /// 处理制作请求。
-pub fn on_craft_item(
-    _trigger: On<ItemCrafted>,
-    _config: Res<CraftingConfig>,
-) {
+pub fn on_craft_item(_trigger: On<ItemCrafted>, _config: Res<CraftingConfig>) {
     let _event = _trigger.event();
     // 简化实现：触发制作完成事件
     // 完整实现需检查材料、站台、技能，消耗材料，产生产出

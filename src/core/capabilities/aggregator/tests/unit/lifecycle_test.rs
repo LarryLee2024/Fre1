@@ -12,7 +12,14 @@ fn mark_dirty_adds_successfully() {
     let entity = world.spawn_empty().id();
     let mut commands = world.commands();
     let mut state = AggregatorState::empty();
-    mark_dirty(&mut state, "attr_000001", "mod_000001", 1, entity, &mut commands);
+    mark_dirty(
+        &mut state,
+        "attr_000001",
+        "mod_000001",
+        1,
+        entity,
+        &mut commands,
+    );
     assert!(state.is_dirty("attr_000001"));
     assert_eq!(state.last_aggregation_frame, 1);
 }
@@ -23,8 +30,22 @@ fn mark_dirty_idempotent() {
     let entity = world.spawn_empty().id();
     let mut commands = world.commands();
     let mut state = AggregatorState::empty();
-    mark_dirty(&mut state, "attr_000001", "mod_000001", 1, entity, &mut commands);
-    mark_dirty(&mut state, "attr_000001", "mod_000002", 2, entity, &mut commands);
+    mark_dirty(
+        &mut state,
+        "attr_000001",
+        "mod_000001",
+        1,
+        entity,
+        &mut commands,
+    );
+    mark_dirty(
+        &mut state,
+        "attr_000001",
+        "mod_000002",
+        2,
+        entity,
+        &mut commands,
+    );
     // still dirty, one entry
     assert_eq!(state.dirty_attributes.len(), 1);
 }
@@ -35,7 +56,14 @@ fn clear_dirty_succeeds() {
     let entity = world.spawn_empty().id();
     let mut commands = world.commands();
     let mut state = AggregatorState::empty();
-    mark_dirty(&mut state, "attr_000001", "mod_000001", 1, entity, &mut commands);
+    mark_dirty(
+        &mut state,
+        "attr_000001",
+        "mod_000001",
+        1,
+        entity,
+        &mut commands,
+    );
     clear_dirty(&mut state, "attr_000001");
     assert!(!state.is_dirty("attr_000001"));
 }
@@ -70,7 +98,14 @@ fn aggregation_complete_updates_cache() {
     let entity = world.spawn_empty().id();
     let mut commands = world.commands();
     let mut state = AggregatorState::empty();
-    mark_dirty(&mut state, "attr_000001", "mod_000001", 1, entity, &mut commands);
+    mark_dirty(
+        &mut state,
+        "attr_000001",
+        "mod_000001",
+        1,
+        entity,
+        &mut commands,
+    );
     let result = AggregationResult::new("attr_000001".to_string(), 10.0, 25.0, 1);
     on_aggregation_complete(&mut state, &result);
     assert!(!state.is_dirty("attr_000001"));

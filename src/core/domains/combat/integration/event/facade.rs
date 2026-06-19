@@ -72,7 +72,13 @@ impl CombatEventFacade {
         payload: EventPayload,
         commands: &mut Commands,
     ) {
-        bus.publish_with_priority(tag.to_event_tag(), source, payload, EventPriority::High, commands);
+        bus.publish_with_priority(
+            tag.to_event_tag(),
+            source,
+            payload,
+            EventPriority::High,
+            commands,
+        );
     }
 }
 

@@ -14,7 +14,8 @@ fn immunity_check_passed_when_no_immune_tag() {
         tag_ids: Some(vec!["Fire".to_string()]),
         attribute_values: HashMap::new(),
     };
-    let result = CombatConditionFacade::check_effect_immunity(&context, "Fire", entity, &mut commands);
+    let result =
+        CombatConditionFacade::check_effect_immunity(&context, "Fire", entity, &mut commands);
     assert!(result.is_passed());
 }
 
@@ -27,6 +28,7 @@ fn immunity_check_failed_when_immune_tag_present() {
         tag_ids: Some(vec!["Immune.Fire".to_string()]),
         attribute_values: HashMap::new(),
     };
-    let result = CombatConditionFacade::check_effect_immunity(&context, "Fire", entity, &mut commands);
+    let result =
+        CombatConditionFacade::check_effect_immunity(&context, "Fire", entity, &mut commands);
     assert!(!result.is_passed());
 }

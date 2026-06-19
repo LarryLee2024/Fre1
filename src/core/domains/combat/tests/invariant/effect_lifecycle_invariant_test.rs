@@ -42,7 +42,11 @@ fn make_infinite_effect(id: &str, source: &str) -> EffectInstance {
     )
 }
 
-fn apply_and_activate(container: &mut ActiveEffectContainer, effect: EffectInstance, commands: &mut Commands) {
+fn apply_and_activate(
+    container: &mut ActiveEffectContainer,
+    effect: EffectInstance,
+    commands: &mut Commands,
+) {
     let _ = apply_effect(container, effect, commands);
 }
 
@@ -64,7 +68,11 @@ fn remaining_turns_never_negative() {
         make_duration_effect("b", "eff_b", 1, "src_b"),
         &mut commands,
     );
-    apply_and_activate(&mut container, make_infinite_effect("c", "src_c"), &mut commands);
+    apply_and_activate(
+        &mut container,
+        make_infinite_effect("c", "src_c"),
+        &mut commands,
+    );
 
     let _ = tick_durations(&mut container, 100, 1, &mut commands);
 
@@ -94,7 +102,11 @@ fn expire_effects_clears_all_expiring() {
         make_duration_effect("b", "eff_b", 5, "src_b"),
         &mut commands,
     );
-    apply_and_activate(&mut container, make_infinite_effect("c", "src_c"), &mut commands);
+    apply_and_activate(
+        &mut container,
+        make_infinite_effect("c", "src_c"),
+        &mut commands,
+    );
 
     let _ = tick_durations(&mut container, 3, 1, &mut commands);
     let _ = expire_effects(&mut container);

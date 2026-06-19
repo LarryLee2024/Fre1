@@ -2,8 +2,8 @@
 
 use std::collections::{HashMap, HashSet};
 
-use crate::core::capabilities::tag::foundation::{BitMask, TagDefinition, TagId};
 use crate::core::capabilities::tag::events::TagHierarchyChanged;
+use crate::core::capabilities::tag::foundation::{BitMask, TagDefinition, TagId};
 use bevy::prelude::*;
 
 /// 全局标签层级树（Resource）。

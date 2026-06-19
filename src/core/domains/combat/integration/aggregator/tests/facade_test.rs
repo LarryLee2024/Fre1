@@ -31,8 +31,14 @@ fn execute_default_aggregation_additive() {
             "phys_atk".to_string(),
         ),
     ];
-    let result =
-        CombatAggregatorFacade::execute_default_aggregation("phys_atk", 100.0, &modifiers, 0, entity, &mut commands);
+    let result = CombatAggregatorFacade::execute_default_aggregation(
+        "phys_atk",
+        100.0,
+        &modifiers,
+        0,
+        entity,
+        &mut commands,
+    );
     assert!(result.is_ok());
     let agg = result.unwrap();
     assert!((agg.final_value - 115.0).abs() < 0.001);
@@ -56,7 +62,14 @@ fn execute_aggregation_no_modifiers() {
     let mut world = World::new();
     let entity = world.spawn_empty().id();
     let mut commands = world.commands();
-    let result = CombatAggregatorFacade::execute_default_aggregation("speed", 50.0, &[], 0, entity, &mut commands);
+    let result = CombatAggregatorFacade::execute_default_aggregation(
+        "speed",
+        50.0,
+        &[],
+        0,
+        entity,
+        &mut commands,
+    );
     assert!(result.is_ok());
     let agg = result.unwrap();
     assert!((agg.final_value - 50.0).abs() < 0.001);

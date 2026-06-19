@@ -10,8 +10,7 @@ use crate::core::domains::party::events::{
     BondActivated, BondDeactivated, MemberJoined, MemberRemoved, MemberSwapped,
 };
 use crate::core::domains::party::rules::{
-    add_member_to_party, check_bond_activation, remove_member_from_party,
-    swap_active_with_reserve,
+    add_member_to_party, check_bond_activation, remove_member_from_party, swap_active_with_reserve,
 };
 
 /// 响应成员加入事件：评估羁绊状态。

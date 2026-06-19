@@ -9,7 +9,9 @@ use std::collections::HashMap;
 
 use bevy::prelude::*;
 
-use crate::core::capabilities::spec::events::{SpecGranted, SpecLevelChanged, SpecRemovalReason, SpecRemoved};
+use crate::core::capabilities::spec::events::{
+    SpecGranted, SpecLevelChanged, SpecRemovalReason, SpecRemoved,
+};
 use crate::core::capabilities::spec::foundation::{
     AbilitySpec, EffectSource, EffectSpec, SpecError, SpecId, SpecRegistryConfig, SpecType,
 };

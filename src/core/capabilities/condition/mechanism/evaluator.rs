@@ -7,7 +7,9 @@
 
 use bevy::prelude::*;
 
-use crate::core::capabilities::condition::events::{ConditionFailed, ConditionPassed, ImmunityTriggered};
+use crate::core::capabilities::condition::events::{
+    ConditionFailed, ConditionPassed, ImmunityTriggered,
+};
 use crate::core::capabilities::condition::foundation::{
     Condition, ConditionContext, ConditionResult, TagRequirementMode,
 };
@@ -36,7 +38,14 @@ pub fn evaluate(
             attribute_id,
             operator,
             threshold,
-        } => evaluate_attribute_check(attribute_id, *operator, *threshold, context, entity, commands),
+        } => evaluate_attribute_check(
+            attribute_id,
+            *operator,
+            *threshold,
+            context,
+            entity,
+            commands,
+        ),
         Condition::ResourceCheck {
             resource_id,
             required_amount,
@@ -155,7 +164,10 @@ fn evaluate_attribute_check(
             commands.trigger(ConditionPassed {
                 entity,
                 condition_id: attribute_id.to_string(),
-                result_data: format!("attribute check passed (value={}, operator={:?}, threshold={})", value, operator, threshold),
+                result_data: format!(
+                    "attribute check passed (value={}, operator={:?}, threshold={})",
+                    value, operator, threshold
+                ),
             });
         }
         ConditionResult::Failed { reason } => {
@@ -205,7 +217,10 @@ fn evaluate_resource_check(
             commands.trigger(ConditionPassed {
                 entity,
                 condition_id: resource_id.to_string(),
-                result_data: format!("resource check passed (value={}, required={})", value, required_amount),
+                result_data: format!(
+                    "resource check passed (value={}, required={})",
+                    value, required_amount
+                ),
             });
         }
         ConditionResult::Failed { reason } => {
@@ -223,7 +238,12 @@ fn evaluate_resource_check(
 /// 评估 AND 组合条件。
 ///
 /// 领域规则 §5.2.1：短路评估——任一失败立即返回 Failed。
-fn evaluate_and(children: &[Condition], context: &ConditionContext, entity: Entity, commands: &mut Commands) -> ConditionResult {
+fn evaluate_and(
+    children: &[Condition],
+    context: &ConditionContext,
+    entity: Entity,
+    commands: &mut Commands,
+) -> ConditionResult {
     if children.is_empty() {
         // 空 AND 视为通过（数学惯例）
         return ConditionResult::passed();
@@ -241,7 +261,12 @@ fn evaluate_and(children: &[Condition], context: &ConditionContext, entity: Enti
 /// 评估 OR 组合条件。
 ///
 /// 领域规则 §5.2.2：短路评估——任一通过立即返回 Passed。
-fn evaluate_or(children: &[Condition], context: &ConditionContext, entity: Entity, commands: &mut Commands) -> ConditionResult {
+fn evaluate_or(
+    children: &[Condition],
+    context: &ConditionContext,
+    entity: Entity,
+    commands: &mut Commands,
+) -> ConditionResult {
     if children.is_empty() {
         // 空 OR 视为不通过
         return ConditionResult::failed("empty OR group has no passing condition");

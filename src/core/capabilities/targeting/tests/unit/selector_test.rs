@@ -161,7 +161,8 @@ fn nearest_priority_sort_correct() {
     let candidates = make_candidates();
     let context = make_context();
 
-    let result = select_targets(&def, candidates, context, entity, "abl_test", &mut commands).unwrap();
+    let result =
+        select_targets(&def, candidates, context, entity, "abl_test", &mut commands).unwrap();
     assert!(!result.entities.is_empty());
     assert_eq!(result.entities[0].entity_id, "enemy_001");
 }
@@ -176,7 +177,8 @@ fn farthest_priority_sort_correct() {
     let candidates = make_candidates();
     let context = make_context();
 
-    let result = select_targets(&def, candidates, context, entity, "abl_test", &mut commands).unwrap();
+    let result =
+        select_targets(&def, candidates, context, entity, "abl_test", &mut commands).unwrap();
     assert!(!result.entities.is_empty());
     assert_eq!(result.entities[0].distance, 6.0);
 }
@@ -189,7 +191,8 @@ fn select_single_target_succeeds() {
     let candidates = make_candidates();
     let context = make_context();
 
-    let result = select_targets(&def, candidates, context, entity, "abl_test", &mut commands).unwrap();
+    let result =
+        select_targets(&def, candidates, context, entity, "abl_test", &mut commands).unwrap();
     assert!(result.has_valid_targets);
     assert_eq!(result.target_count(), 1);
 }
@@ -208,7 +211,8 @@ fn select_multiple_targets_succeeds() {
     let candidates = make_candidates();
     let context = make_context();
 
-    let result = select_targets(&def, candidates, context, entity, "abl_test", &mut commands).unwrap();
+    let result =
+        select_targets(&def, candidates, context, entity, "abl_test", &mut commands).unwrap();
     assert!(result.has_valid_targets);
     assert_eq!(result.target_count(), 2);
 }
@@ -239,7 +243,8 @@ fn truncates_target_count_by_limit() {
     let candidates = make_candidates();
     let context = make_context();
 
-    let result = select_targets(&def, candidates, context, entity, "abl_test", &mut commands).unwrap();
+    let result =
+        select_targets(&def, candidates, context, entity, "abl_test", &mut commands).unwrap();
     assert_eq!(result.target_count(), 1);
 }
 
@@ -251,7 +256,15 @@ fn selected_target_carries_context_data() {
     let candidates = make_candidates();
     let context = make_context();
 
-    let result = select_targets(&def, candidates, context.clone(), entity, "abl_test", &mut commands).unwrap();
+    let result = select_targets(
+        &def,
+        candidates,
+        context.clone(),
+        entity,
+        "abl_test",
+        &mut commands,
+    )
+    .unwrap();
     assert_eq!(result.context.caster_entity, context.caster_entity);
     assert_eq!(result.context.frame, 1);
 }
@@ -275,7 +288,8 @@ fn lowest_hp_priority_sort_correct() {
     .unwrap()
     .with_priority_rule(PriorityRule::LowestHealth);
 
-    let result = select_targets(&def, candidates, context, entity, "abl_test", &mut commands).unwrap();
+    let result =
+        select_targets(&def, candidates, context, entity, "abl_test", &mut commands).unwrap();
     assert_eq!(result.target_count(), 2);
     assert_eq!(result.entities[0].entity_id, "enemy_002");
 }

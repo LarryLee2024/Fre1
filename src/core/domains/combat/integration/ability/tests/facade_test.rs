@@ -75,10 +75,7 @@ fn try_activate_ability_fails_when_already_active() {
         &mut commands,
     );
     assert!(second.is_err());
-    assert!(matches!(
-        second,
-        Err(AbilityError::AlreadyActive { .. })
-    ));
+    assert!(matches!(second, Err(AbilityError::AlreadyActive { .. })));
 }
 
 #[test]
