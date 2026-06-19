@@ -27,7 +27,7 @@ fn phase_check_empty_queue_returns_idle() {
     let mut world = World::new();
 
     let mut ss: SystemState<Query<&mut ActionPoints>> = SystemState::new(&mut world);
-    let ap_query = ss.get_mut(&mut world);
+    let ap_query = ss.get_mut(&mut world).unwrap();
 
     let result = step_phase_check(&turn_queue, &ap_query);
     assert_eq!(result, PhaseCheckResult::Idle);
@@ -40,7 +40,7 @@ fn phase_check_unit_with_actions_returns_has_actions() {
     let turn_queue = TurnQueue::new(vec![TurnEntry::new(e, make_player_team(), 20)]);
 
     let mut ss: SystemState<Query<&mut ActionPoints>> = SystemState::new(&mut world);
-    let ap_query = ss.get_mut(&mut world);
+    let ap_query = ss.get_mut(&mut world).unwrap();
 
     let result = step_phase_check(&turn_queue, &ap_query);
     assert_eq!(result, PhaseCheckResult::HasActions);
@@ -56,7 +56,7 @@ fn phase_check_unit_idle_when_no_actions_and_no_movement() {
     let turn_queue = TurnQueue::new(vec![TurnEntry::new(e, make_player_team(), 20)]);
 
     let mut ss: SystemState<Query<&mut ActionPoints>> = SystemState::new(&mut world);
-    let ap_query = ss.get_mut(&mut world);
+    let ap_query = ss.get_mut(&mut world).unwrap();
 
     let result = step_phase_check(&turn_queue, &ap_query);
     assert_eq!(result, PhaseCheckResult::Idle);
@@ -73,7 +73,7 @@ fn phase_check_unit_with_only_movement_is_not_idle() {
     let turn_queue = TurnQueue::new(vec![TurnEntry::new(e, make_player_team(), 20)]);
 
     let mut ss: SystemState<Query<&mut ActionPoints>> = SystemState::new(&mut world);
-    let ap_query = ss.get_mut(&mut world);
+    let ap_query = ss.get_mut(&mut world).unwrap();
 
     let result = step_phase_check(&turn_queue, &ap_query);
     assert_eq!(
@@ -91,7 +91,7 @@ fn phase_check_unit_without_ap_component_returns_idle() {
     let turn_queue = TurnQueue::new(vec![TurnEntry::new(e, make_player_team(), 20)]);
 
     let mut ss: SystemState<Query<&mut ActionPoints>> = SystemState::new(&mut world);
-    let ap_query = ss.get_mut(&mut world);
+    let ap_query = ss.get_mut(&mut world).unwrap();
 
     let result = step_phase_check(&turn_queue, &ap_query);
     assert_eq!(result, PhaseCheckResult::Idle);
@@ -112,7 +112,7 @@ fn turn_start_resets_action_points() {
 
     let mut ss: SystemState<(Commands, Query<&mut ActionPoints>)> = SystemState::new(&mut world);
     {
-        let (mut commands, mut ap_query) = ss.get_mut(&mut world);
+        let (mut commands, mut ap_query) = ss.get_mut(&mut world).unwrap();
         step_turn_start(&mut commands, &turn_queue, &mut ap_query);
     }
     ss.apply(&mut world);
@@ -137,7 +137,7 @@ fn turn_start_does_not_panic_on_empty_queue() {
 
     let mut ss: SystemState<(Commands, Query<&mut ActionPoints>)> = SystemState::new(&mut world);
     {
-        let (mut commands, mut ap_query) = ss.get_mut(&mut world);
+        let (mut commands, mut ap_query) = ss.get_mut(&mut world).unwrap();
         // Should not panic
         step_turn_start(&mut commands, &turn_queue, &mut ap_query);
     }
@@ -151,7 +151,7 @@ fn turn_start_does_not_panic_on_missing_ap_component() {
 
     let mut ss: SystemState<(Commands, Query<&mut ActionPoints>)> = SystemState::new(&mut world);
     {
-        let (mut commands, mut ap_query) = ss.get_mut(&mut world);
+        let (mut commands, mut ap_query) = ss.get_mut(&mut world).unwrap();
         // Should not panic, just warn
         step_turn_start(&mut commands, &turn_queue, &mut ap_query);
     }
@@ -183,7 +183,7 @@ fn turn_end_advances_to_next_unit() {
         Query<&CombatParticipant, With<Dead>>,
     )> = SystemState::new(&mut world);
     let result = {
-        let (mut commands, combatant_query, dead_query) = ss.get_mut(&mut world);
+        let (mut commands, combatant_query, dead_query) = ss.get_mut(&mut world).unwrap();
         step_turn_end(
             &mut commands,
             &mut turn_queue,
@@ -212,7 +212,7 @@ fn turn_end_empty_queue_returns_battle_over() {
         Query<&CombatParticipant, With<Dead>>,
     )> = SystemState::new(&mut world);
     let result = {
-        let (mut commands, combatant_query, dead_query) = ss.get_mut(&mut world);
+        let (mut commands, combatant_query, dead_query) = ss.get_mut(&mut world).unwrap();
         step_turn_end(
             &mut commands,
             &mut turn_queue,
@@ -245,7 +245,7 @@ fn turn_end_triggers_team_switch_event() {
         Query<&CombatParticipant, With<Dead>>,
     )> = SystemState::new(&mut world);
     let result = {
-        let (mut commands, combatant_query, dead_query) = ss.get_mut(&mut world);
+        let (mut commands, combatant_query, dead_query) = ss.get_mut(&mut world).unwrap();
         step_turn_end(
             &mut commands,
             &mut turn_queue,
@@ -274,7 +274,7 @@ fn team_elimination_all_teams_alive_returns_false() {
         Query<&CombatParticipant>,
         Query<&CombatParticipant, With<Dead>>,
     )> = SystemState::new(&mut world);
-    let (query, dead_query) = ss.get_mut(&mut world);
+    let (query, dead_query) = ss.get_mut(&mut world).unwrap();
 
     assert!(
         !check_team_elimination(&query, &dead_query),
@@ -296,7 +296,7 @@ fn team_elimination_one_team_wiped_returns_true() {
         Query<&CombatParticipant>,
         Query<&CombatParticipant, With<Dead>>,
     )> = SystemState::new(&mut world);
-    let (query, dead_query) = ss.get_mut(&mut world);
+    let (query, dead_query) = ss.get_mut(&mut world).unwrap();
 
     assert!(
         check_team_elimination(&query, &dead_query),
@@ -314,7 +314,7 @@ fn team_elimination_all_dead_returns_true() {
         Query<&CombatParticipant>,
         Query<&CombatParticipant, With<Dead>>,
     )> = SystemState::new(&mut world);
-    let (query, dead_query) = ss.get_mut(&mut world);
+    let (query, dead_query) = ss.get_mut(&mut world).unwrap();
 
     assert!(
         check_team_elimination(&query, &dead_query),
@@ -332,7 +332,7 @@ fn team_elimination_single_team_alive_returns_true() {
         Query<&CombatParticipant>,
         Query<&CombatParticipant, With<Dead>>,
     )> = SystemState::new(&mut world);
-    let (query, dead_query) = ss.get_mut(&mut world);
+    let (query, dead_query) = ss.get_mut(&mut world).unwrap();
 
     assert!(
         check_team_elimination(&query, &dead_query),
@@ -348,7 +348,7 @@ fn team_elimination_empty_query_returns_true() {
         Query<&CombatParticipant>,
         Query<&CombatParticipant, With<Dead>>,
     )> = SystemState::new(&mut world);
-    let (query, dead_query) = ss.get_mut(&mut world);
+    let (query, dead_query) = ss.get_mut(&mut world).unwrap();
 
     assert!(
         check_team_elimination(&query, &dead_query),

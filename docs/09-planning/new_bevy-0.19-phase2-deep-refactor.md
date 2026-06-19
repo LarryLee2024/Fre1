@@ -1,5 +1,7 @@
 # Phase 2：深度架构重构
 
+> **状态**: 🔴 已被 `bevy-0.19-migration-v3-aggressive.md` v3.1 吸收
+>
 > 前置条件：Phase 1 全面升级 + 全特性采用完成
 > 目标：架构对齐 0.19 范式，不是修修补补而是根本性重构
 > 前置文档：`new_bevy-0.19-migration-master-plan.md`

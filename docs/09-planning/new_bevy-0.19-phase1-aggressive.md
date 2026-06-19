@@ -1,5 +1,7 @@
 # Phase 1：全面升级 + 全特性采用
 
+> **状态**: 🔴 已被 `bevy-0.19-migration-v3-aggressive.md` v3.1 吸收
+>
 > 策略：激进重构，不计代价，一步到位
 > 不是"先兼容再升级"，而是直接升级到 0.19 并同时采用所有新特性
 > 前置文档：`new_bevy-0.19-migration-master-plan.md`

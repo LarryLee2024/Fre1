@@ -8,12 +8,12 @@
 
 ## 行前准备（Day 1，所有 Agent 共用）
 
-- [ ] Cargo.toml: `bevy = "0.18.1"` → `bevy = "0.19"`
-- [ ] `cargo fix --edition --allow-no-vcs` 运行
-- [ ] `cargo check 2>&1 | tee build_errors.log` 运行并保存
-- [ ] `src/main.rs` 确认 `fn main() -> AppExit` 签名兼容
-- [ ] `bevy-inspector-egui` 版本兼容检查
-- [ ] `cargo build --features dev` 确认 dev 模式下编译
+- [x] Cargo.toml: `bevy = "0.18.1"` → `bevy = "0.19"`
+- [-] `cargo fix --edition --allow-no-vcs` 运行（项目已使用 `edition = "2024"`，无需 fix）
+- [-] `cargo check 2>&1 | tee build_errors.log` 运行并保存（已在 0.19.0-rc.3 下编译通过）
+- [x] `src/main.rs` 确认 `fn main() -> AppExit` 签名兼容
+- [x] `bevy-inspector-egui` 版本兼容检查（已从 Cargo.toml 移除，改用 DiagnosticsOverlay）
+- [-] `cargo build --features dev` 确认 dev 模式下编译（已在 0.19.0-rc.3 下通过）
 
 ---
 

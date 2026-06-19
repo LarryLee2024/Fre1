@@ -291,14 +291,14 @@ grep -rn "#\[derive(Resource)\]" src/ --include="*.rs"
 
 ## 6. Phase B + C 准出条件
 
-- [ ] 全部 UI 代码已 BSN 化
-- [ ] 全部 `#[derive(Bundle)]` 已替换为工厂函数（或标记 `#[deprecated]`）
+- [-] 全部 UI 代码已 BSN 化（单组件场景无增益，复杂 UI 时再引入）
+- [x] 全部 `#[derive(Bundle)]` 已替换为工厂函数（或标记 `#[deprecated]`）
 - [ ] 5 个核心 Resource 已迁移到 Singleton Entity Component
 - [ ] 4 种核心关系已使用 Relationship
 - [ ] User Settings 三组定义 + init_settings 完成
-- [ ] DiagnosticsOverlay 注册（dev 模式）
-- [ ] `font_size: f32` 全部替换为 `FontSize::Px`
-- [ ] `Input<T>` 全部替换为 `ButtonInput<T>`
+- [x] DiagnosticsOverlay 注册（dev 模式）
+- [-] `font_size: f32` 全部替换为 `FontSize::Px`（领域配置字段，非 Bevy API）
+- [x] `Input<T>` 全部替换为 `ButtonInput<T>`
 - [ ] `cargo nextest run` 全部通过
 - [ ] `cargo clippy -- -D warnings` 零警告
 
