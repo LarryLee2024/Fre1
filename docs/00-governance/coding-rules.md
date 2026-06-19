@@ -361,6 +361,19 @@ Reflect **仅属于工具链层**，不属于游戏逻辑层。
 正确：`format!("skill_id={} not found", skill_id)`
 错误：`"failed"`
 
+## thiserror 使用规范
+所有领域错误枚举必须使用 `thiserror` 派生 `Error` trait：
+```rust
+#[derive(Debug, Clone, PartialEq, thiserror::Error)]
+pub enum XxxError {
+    #[error("xxx not found: {id}")]
+    NotFound { id: String },
+}
+```
+* 禁止手写 `impl Display for XxxError`（用 `#[error("...")]` 替代）
+* 每个变体必须有 `#[error("...")]` 属性，描述包含关键上下文字段
+* 规则失败（如"背包满"）与领域错误（如"配置不存在"）必须区分，规则失败禁止用 Result::Err 返回
+
 ---
 
 # 14. Logging
