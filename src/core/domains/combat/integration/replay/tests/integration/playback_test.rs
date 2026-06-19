@@ -15,6 +15,7 @@ use std::sync::{
 
 use bevy::prelude::*;
 
+use crate::core::capabilities::runtime::pipeline::registry::PipelineRegistry;
 use crate::core::capabilities::runtime::replay::foundation::{
     ReplayCommand, ReplayHeader, ReplayLog, ReplayMode, ReplayModeGuard as CoreReplayModeGuard,
 };
@@ -25,7 +26,6 @@ use crate::core::domains::combat::integration::replay::playback::dispatch_combat
 use crate::core::domains::combat::integration::replay::registry::{
     BattleUnitId, BattleUnitRegistry,
 };
-use crate::core::capabilities::runtime::pipeline::registry::PipelineRegistry;
 use crate::core::domains::combat::pipeline::driver::CombatPipelineDriver;
 use crate::infra::replay::resources::{PlaybackSession, ReplayModeGuard};
 

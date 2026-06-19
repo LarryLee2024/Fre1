@@ -15,6 +15,7 @@ use crate::core::domains::spell::components::{
 };
 use crate::core::domains::spell::events::SpellCastRequest;
 use crate::core::domains::spell::plugin::SpellPlugin;
+use crate::app::scenes::{GameState, ScenePlugin};
 
 // ─── 辅助函数 ──────────────────────────────────────────────────────
 
@@ -80,6 +81,17 @@ fn remaining_slots(world: &World, entity: Entity, level: SpellLevel) -> u32 {
 /// 检查实体是否含有 Concentration 组件。
 fn has_concentration(world: &World, entity: Entity) -> bool {
     world.get::<Concentration>(entity).is_some()
+}
+
+/// 构建含 ScenePlugin + GameState::Combat 的测试 App。
+/// tick_concentration_duration 仅在 GameState::Combat 时运行（Phase E-3 栅栏）。
+fn build_combat_test_app() -> App {
+    let mut app = App::new();
+    app.add_plugins((MinimalPlugins, bevy::state::app::StatesPlugin, ScenePlugin, SpellPlugin));
+    app.world_mut().resource_mut::<NextState<GameState>>().set(GameState::Combat);
+    app.update();
+    app.world_mut().flush();
+    app
 }
 
 // ─── 施法成功：法术位消耗 ────────────────────────────────────────
@@ -372,8 +384,7 @@ fn new_concentration_spell_breaks_old_concentration() {
 
 #[test]
 fn concentration_ticks_each_turn() {
-    let mut app = App::new();
-    app.add_plugins(SpellPlugin);
+    let mut app = build_combat_test_app();
 
     let caster = spawn_concentrating_caster(
         app.world_mut(),
@@ -403,8 +414,7 @@ fn concentration_ticks_each_turn() {
 
 #[test]
 fn concentration_expires_when_duration_reached() {
-    let mut app = App::new();
-    app.add_plugins(SpellPlugin);
+    let mut app = build_combat_test_app();
 
     let caster = spawn_concentrating_caster(
         app.world_mut(),

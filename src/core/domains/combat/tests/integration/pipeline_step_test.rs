@@ -184,7 +184,12 @@ fn turn_end_advances_to_next_unit() {
     )> = SystemState::new(&mut world);
     let result = {
         let (mut commands, combatant_query, dead_query) = ss.get_mut(&mut world);
-        step_turn_end(&mut commands, &mut turn_queue, &combatant_query, &dead_query)
+        step_turn_end(
+            &mut commands,
+            &mut turn_queue,
+            &combatant_query,
+            &dead_query,
+        )
     };
     ss.apply(&mut world);
 
@@ -208,7 +213,12 @@ fn turn_end_empty_queue_returns_battle_over() {
     )> = SystemState::new(&mut world);
     let result = {
         let (mut commands, combatant_query, dead_query) = ss.get_mut(&mut world);
-        step_turn_end(&mut commands, &mut turn_queue, &combatant_query, &dead_query)
+        step_turn_end(
+            &mut commands,
+            &mut turn_queue,
+            &combatant_query,
+            &dead_query,
+        )
     };
 
     assert_eq!(result, TurnEndResult::BattleOver);
@@ -236,7 +246,12 @@ fn turn_end_triggers_team_switch_event() {
     )> = SystemState::new(&mut world);
     let result = {
         let (mut commands, combatant_query, dead_query) = ss.get_mut(&mut world);
-        step_turn_end(&mut commands, &mut turn_queue, &combatant_query, &dead_query)
+        step_turn_end(
+            &mut commands,
+            &mut turn_queue,
+            &combatant_query,
+            &dead_query,
+        )
     };
     ss.apply(&mut world);
 

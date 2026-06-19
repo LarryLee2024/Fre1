@@ -11,6 +11,8 @@ pub use plugin::*;
 mod components;
 // [ADR-045] pub(crate) — 领域错误定义，crate 内共享
 pub(crate) mod error;
+// [ADR-045] pub(crate) — 业务规则失败定义，crate 内共享
+pub(crate) mod failure;
 // [ADR-045] pub(crate) — 领域事件定义，crate 内共享
 pub(crate) mod events;
 // [ADR-045] pub(crate) — 资源定义，crate 内共享
@@ -22,8 +24,8 @@ pub(crate) mod systems;
 
 // ── Re-exports for external consumers (content layer + tests) ──
 pub(crate) use components::{
-    CastingTime, MaterialComponent, SaveType, SpellComponents, SpellConfig,
-    SpellDef, SpellDefId, SpellDuration, SpellLevel, SpellRange,
+    CastingTime, MaterialComponent, SaveType, SpellComponents, SpellConfig, SpellDef, SpellDefId,
+    SpellDuration, SpellLevel, SpellRange,
 };
 
 #[cfg(test)]

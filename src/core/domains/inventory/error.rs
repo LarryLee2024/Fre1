@@ -13,7 +13,9 @@ pub enum InventoryError {
     #[error("规则失败: inventory full: max_slots={max_slots}")]
     InventoryFull { max_slots: u32 },
     /// 规则失败：超过负重上限。
-    #[error("规则失败: exceeds weight limit: current={current_weight}, max={max_weight}, item={item_weight}")]
+    #[error(
+        "规则失败: exceeds weight limit: current={current_weight}, max={max_weight}, item={item_weight}"
+    )]
     ExceedsWeightLimit {
         current_weight: f32,
         max_weight: f32,
@@ -29,7 +31,9 @@ pub enum InventoryError {
     #[error("item not found: {item_template_id}")]
     ItemNotFound { item_template_id: String },
     /// 物品数量不足。
-    #[error("insufficient quantity of '{item_template_id}': current={current}, requested={requested}")]
+    #[error(
+        "insufficient quantity of '{item_template_id}': current={current}, requested={requested}"
+    )]
     InsufficientQuantity {
         item_template_id: String,
         current: u32,

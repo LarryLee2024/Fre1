@@ -5,9 +5,7 @@
 
 use bevy::prelude::*;
 
-use crate::core::domains::spell::components::{
-    Concentration, SpellSlotPool, Spellbook,
-};
+use crate::core::domains::spell::components::{Concentration, SpellSlotPool, Spellbook};
 use crate::core::domains::spell::events::{
     CastOutcome, ConcentrationBreakReason, ConcentrationBroken, SpellCastRequest, SpellCastResult,
     SpellSlotChanged,

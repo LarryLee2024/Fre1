@@ -14,7 +14,9 @@ use crate::core::domains::combat::tests::fixtures::combat_fixtures;
 #[test]
 fn participant_starts_alive() {
     let mut world = World::new();
-    let entity = world.spawn(CombatParticipant::alive(combat_fixtures::player_team())).id();
+    let entity = world
+        .spawn(CombatParticipant::alive(combat_fixtures::player_team()))
+        .id();
     assert!(
         !world.entity(entity).contains::<Dead>(),
         "participant must not have Dead tag initially"
@@ -32,7 +34,9 @@ fn participant_team_is_preserved() {
 #[test]
 fn mark_unit_dead_inserts_dead_tag() {
     let mut world = World::new();
-    let entity = world.spawn(CombatParticipant::alive(combat_fixtures::player_team())).id();
+    let entity = world
+        .spawn(CombatParticipant::alive(combat_fixtures::player_team()))
+        .id();
 
     let mut commands = world.commands();
     mark_unit_dead(&mut commands, entity);
@@ -47,7 +51,9 @@ fn mark_unit_dead_inserts_dead_tag() {
 #[test]
 fn mark_unit_dead_is_idempotent() {
     let mut world = World::new();
-    let entity = world.spawn(CombatParticipant::alive(combat_fixtures::player_team())).id();
+    let entity = world
+        .spawn(CombatParticipant::alive(combat_fixtures::player_team()))
+        .id();
 
     let mut commands = world.commands();
     mark_unit_dead(&mut commands, entity);

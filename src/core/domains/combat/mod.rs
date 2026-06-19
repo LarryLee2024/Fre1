@@ -15,6 +15,7 @@
 pub(crate) mod components;
 pub(crate) mod error;
 mod events;
+pub(crate) mod failure;
 pub(crate) mod integration;
 pub(crate) mod pipeline;
 mod plugin;
@@ -26,4 +27,5 @@ mod tests;
 pub use components::*;
 pub use error::*;
 pub use events::*;
+pub use failure::*;
 pub use plugin::*;
