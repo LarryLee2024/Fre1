@@ -182,10 +182,8 @@ pub fn hot_reload_content_system(
                     reloaded = true;
                 }
             }
-            "spell_config" => {
-                if reload_single_spell_config(&mut spell_config, file) {
-                    reloaded = true;
-                }
+            "spell_config" if reload_single_spell_config(&mut spell_config, file) => {
+                reloaded = true;
             }
             _ => {}
         }

@@ -123,14 +123,14 @@ pub fn can_abandon_quest(is_critical: bool) -> bool {
 /// - Active -> Failed
 /// - Failed -> Available (重置)
 pub fn can_transition(current: &QuestState, target: &QuestState) -> bool {
-    match (current, target) {
-        (QuestState::Unavailable, QuestState::Available) => true,
-        (QuestState::Available, QuestState::Active) => true,
-        (QuestState::Active, QuestState::Completed) => true,
-        (QuestState::Active, QuestState::Failed) => true,
-        (QuestState::Failed, QuestState::Available) => true,
-        _ => false,
-    }
+    matches!(
+        (current, target),
+        (QuestState::Unavailable, QuestState::Available)
+            | (QuestState::Available, QuestState::Active)
+            | (QuestState::Active, QuestState::Completed)
+            | (QuestState::Active, QuestState::Failed)
+            | (QuestState::Failed, QuestState::Available)
+    )
 }
 
 // ─── 进度计算 ────────────────────────────────────────────────────

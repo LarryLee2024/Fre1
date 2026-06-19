@@ -112,7 +112,7 @@ impl LocalizationDatabase {
     }
 
     /// 带缓存的 resolve — 推荐 UI 系统使用
-    pub fn resolve_cached<'a>(
+    pub fn resolve_cached(
         &self,
         key: &str,
         params: &[(&str, &str)],
