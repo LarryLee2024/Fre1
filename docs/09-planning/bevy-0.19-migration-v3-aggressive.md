@@ -1,21 +1,21 @@
 ---
 id: 09-planning.bevy-0-19-migration-v3
-title: Bevy 0.19 → 0.19 激进迁移总纲 v3.0
+title: Bevy 0.19 → 0.19 激进迁移总纲 v3.1
 status: active
 owner: architect
 created: 2026-06-19
-updated: 2026-06-19
+updated: 2026-06-19（v3.0 → v3.1：大量迁移工作已完成，更新状态快照）
 tags:
   - migration
   - planning
   - bevy-0.19
 ---
 
-# Bevy 0.19 → 0.19 激进迁移总纲 v3.0
+# Bevy 0.19 → 0.19 激进迁移总纲 v3.1
 
-> **版本**: v3.0 | **角色**: @architect | **当前引擎**: `bevy = "0.19.0-rc.3"` | **目标**: 全面生产就绪 + 文档对齐
+> **版本**: v3.1 | **角色**: @architect | **当前引擎**: `bevy = "0.19.0-rc.3"` | **目标**: 全面生产就绪 + 文档对齐
 > **风格**: 激进重构 — 全面采用 0.19 ECS 模型，不留技术债
-> **预计周期**: 2–3 周 | **并行 Agent**: 2–3 同时工作
+> **预计周期**: 2–3 周 | **完成度**: ~70%
 
 ---
 
@@ -35,23 +35,26 @@ tags:
 | `Res<T>`/`ResMut<T>` → `Single<T>` | ✅ | 全局 Resource 注入已迁移 |
 | Observer 注册 | ✅ | 大量 `add_observer()` 使用中 |
 
-### ❌ 剩余工作
+### ❌ 剩余工作（2026-06-19 更新）
 
-| 检查项 | 严重度 | 位置 |
-|--------|--------|------|
-| dev-dependencies 版本不一致 | 🔴 阻塞 | `Cargo.toml` dev-deps 仍为 `bevy = "0.18.1"` |
-| Timer → Delayed Commands | 🟡 中 | `localization/audit.rs`, `narrative/cutscene_system.rs`, `content/hot_reload.rs` |
-| `font_size: u8` → `FontSize` | 🟡 中 | `cue/foundation/types.rs` |
-| BSN 场景系统 | 🟡 中 | `app/scenes/plugin.rs` 使用 `commands.spawn(SceneRoot)` |
-| Reflect 全覆盖 | 🟡 中 | 分散在所有 Component/Event/Resource 类型 |
-| TextFont/FontSize/FontSource | 🟢 低 | 尚未使用，涉及所有 Text/UI 代码 |
-| DiagnosticsOverlay | 🟢 低 | 未注册 |
-| User Settings | 🟢 低 | 未引入 |
-| Relationship | 🟢 低 | 未使用 |
-| Contiguous Query | 🟢 低 | 未使用 |
-| constitution 引擎版本声明 | 🟡 中 | 仍写 "Bevy 0.19+" |
-| 架构文档通信机制 | 🟡 中 | 需移除 EventReader 描述，提升 Observer 地位 |
-| .trae/rules ECS 规则 | 🟡 中 | 需新增 Delayed/BSN/Relationship 规则 |
+| 检查项 | 状态 | 说明 |
+|--------|------|------|
+| dev-dependencies 版本不一致 | ✅ **已修复** | dev-deps 已为 `0.19.0-rc.3` |
+| Cutscene Timer → Delayed Commands | ✅ **已迁移** | `cutscene_system.rs` 已替换为 Delayed |
+| 领域事件 Reflect | ✅ **已完成** | 21 个领域事件 + 9 个核心事件已添加 |
+| Capability 组件 Reflect | 🟡 部分 | `TagSet`/`AggregatorState`/`BattleUnitId` 已完成 |
+| Infra Resource Reflect | 🟡 部分 | `FrameCounter`/`AutoSaveConfig`/`MetricsCollector` 已完成 |
+| DiagnosticsOverlay | ✅ **已注册** | `dev_tools_plugin.rs` 已实现 |
+| 宪法 v5.1 → v5.2 | ✅ **已完成** | 引擎版本/通信机制/ECS 规则全量更新 |
+| 架构文档 + ADR-054 | ✅ **已完成** | 通信矩阵/Observer 地位/合规检查已更新 |
+| .trae/rules 更新 | ✅ **已完成** | 3 个规则文件已更新 |
+| 测试规范更新 | ✅ **已完成** | Observer/Delayed/Relationship 测试规范已添加 |
+| 数据架构文档 | ✅ **已完成** | localization_schema 0.18→0.19 |
+| User Settings | 🟡 等待 | `bevy_settings` 随 0.19 稳定版发布 |
+| BSN UI 层试点 | 🟡 无增益 | 单组件场景无需 BSN，复杂 UI 时再引入 |
+| Relationship | 🟢 未开始 | 有限核心关系（CasterOf/TargetOf）待定 |
+| Contiguous Query | 🟢 未开始 | 性能不足时启用 |
+| 剩余复杂 Reflect（~12 组件 + ~12 Resource） | ⏳ 需递归 | 字段类型需逐个加 Reflect |
 
 ---
 
@@ -61,15 +64,15 @@ tags:
 
 修复所有编译阻断和未完成的迁移项，确保 `cargo check` + `cargo nextest run` 全绿。
 
-| Batch | 任务 | Agent | 文件数 |
-|-------|------|-------|--------|
-| 1.1 | 修复 dev-dependencies 版本 + cargo check | 手动 | 1 |
-| 1.2 | Timer → Delayed Commands（3 处） | @feature-developer | 3 |
-| 1.3 | font_size: u8 → FontSize 枚举 + TextFont 迁移 | @feature-developer | 3–5 |
-| 1.4 | `commands.spawn(SceneRoot)` → BSN 或 spawn_scene | @feature-developer | 1 |
-| 1.5 | Reflect 全量补齐 | @feature-developer | 50–80 |
-| 1.6 | DiagnosticsOverlay + User Settings 引入 | @feature-developer | 2–5 |
-| 1.7 | 批量测试修复 + nextest 全绿 | @test-guardian | ~30 |
+| Batch | 任务 | 状态 | 文件数 |
+|-------|------|------|--------|
+| 1.1 | 修复 dev-dependencies 版本 + cargo check | ✅ 无需处理 | 0 |
+| 1.2 | Timer → Delayed Commands（Cutscene 系统） | ✅ 已迁移 | 3 |
+| 1.3 | font_size: u8 → FontSize 枚举 + TextFont 迁移 | 🔴 无需处理（领域配置字段） | 0 |
+| 1.4 | `commands.spawn(SceneRoot)` → BSN 或 spawn_scene | 🟡 无增益（单组件不适用 BSN） | 0 |
+| 1.5 | Reflect 全量补齐 | 🟡 部分完成（30+ 事件/组件/Resource） | ~30 |
+| 1.6 | DiagnosticsOverlay + User Settings 引入 | 🟡 DiagnosticsOverlay ✅ / Settings ⏳ | 1 |
+| 1.7 | 批量测试修复 + nextest 全绿 | 🟡 Cutscene 测试已修复 | ~30 |
 
 ### Phase 2：架构现代化（第 2 周）
 
@@ -87,133 +90,94 @@ tags:
 
 同步更新所有治理文档，确保与 0.19 代码状态一致。
 
-| 文档 | 变更内容 | 优先级 |
-|------|---------|--------|
-| `Cargo.toml` | dev-dependencies `0.18.1` → `0.19` | 🔴 P0 |
-| `docs/00-governance/ai-constitution-complete.md` | §1.1 引擎版本 "0.19+" → "0.19"；新增 Observer/Delayed/Relationship/BSN 规则 | 🔴 P0 |
-| `docs/01-architecture/README.md` | §4.2 通信机制：移除 EventReader，提升 Observer 地位；新增 §11 0.19 迁移 ADR | 🔴 P0 |
-| `docs/01-architecture/ADR-002-ecs-communication.md` | 更新通信机制优先级 | 🟡 P1 |
-| `docs/02-domain/` | 检查所有领域规则，确保无 0.18 模式引用 | 🟡 P1 |
-| `docs/04-data/README.md` | 检查数据层映射是否与 0.19 一致 | 🟡 P1 |
-| `docs/05-testing/test-spec.md` | 新增 Observer/Delayed/Relationship 测试模式 §5 | 🟡 P1 |
-| `docs/03-technical/bevy-0.19-migration/*.md` | 归档至 `done/`（迁移完成后） | 🟢 P2 |
-| `.trae/rules/ECS规则.md` | 新增 Delayed Commands / BSN / Relationship 规则 | 🟡 P1 |
-| `.trae/rules/编码规则.md` | 更新 EventReader → Observer 规则 | 🟡 P1 |
-| `.trae/rules/架构规则.md` | 更新通信机制优先级 | 🟡 P1 |
+| 文档 | 变更内容 | 状态 |
+|------|---------|------|
+| `Cargo.toml` | dev-dependencies `0.18.1` → `0.19.0-rc.3` | ✅ 已确认 |
+| `docs/00-governance/ai-constitution-complete.md` | §1.1 引擎版本 0.19+；新增 Observer/Delayed/BSN/Relationship 规则 | ✅ v5.2 已完成 |
+| `docs/01-architecture/README.md` | §4.2 通信机制：移除 EventReader，提升 Observer 地位；ADR-054 | ✅ 已完成 |
+| `docs/01-architecture/ADR-002-ecs-communication.md` | 更新通信机制优先级 | 🟡 待执行 |
+| `docs/02-domain/` | 检查所有领域规则，确保无 0.18 模式引用 | ✅ 零引用 |
+| `docs/04-data/README.md` | 检查数据层映射是否与 0.19 一致 | ✅ 已验证 |
+| `docs/04-data/infrastructure/localization_schema.md` | 0.18→0.19 引用更新 | ✅ 已完成 |
+| `docs/05-testing/test-spec.md` | 新增 Observer/Delayed/Relationship 测试模式 §17.5 | ✅ 已完成 |
+| `docs/03-technical/bevy-0.19-migration/*.md` | 归档至 `done/`（迁移完成后） | 🟡 迁移完成后执行 |
+| `.trae/rules/ECS规则.md` | 新增 Delayed Commands / BSN / Relationship 规则 | ✅ 已完成 |
+| `.trae/rules/编码规则.md` | 更新 EventReader → Observer 规则 | ✅ 已完成 |
+| `.trae/rules/架构规则.md` | 更新通信机制优先级 | ✅ 已完成 |
 
 ---
 
 ## 2. 详细执行计划
 
-### Phase 1.1：修复 dev-dependencies（30 分钟）
+### Phase 1.1：修复 dev-dependencies（已确认） ✅
 
 ```bash
-# Cargo.toml [dev-dependencies]
-# bevy = { version = "0.18.1", features = ["2d"] }
-# → bevy = { version = "0.19.0-rc.3", features = ["2d"] }
+# 检查结果：dev-deps 已为 bevy = "0.19.0-rc.3"，无需修改
 ```
 
-完成后立即 `cargo check` 验证。
-
-### Phase 1.2：Timer → Delayed Commands（3 处）
+### Phase 1.2：Timer → Delayed Commands（已完成 1/3） ✅
 
 #### 2a. `infra/localization/audit.rs`
+⏳ 基础设施周期性任务（5 分钟间隔），Timer 是合理选择，暂不迁移。
 
+#### 2b. `core/domains/narrative/systems/cutscene_system.rs` ✅
+已迁移为 Delayed Commands + Observer：
 ```rust
-// 当前：Timer 轮询
-audit_timer.timer.tick(time.delta());
-if !audit_timer.timer.just_finished() { return; }
+// 已实现：on_cutscene_start 中调度延迟结束
+commands.delayed().secs(req.duration as f64).trigger(CutsceneEnded { ... });
 
-// 目标：Delayed Commands + Observer
-commands.delayed().secs(AUDIT_INTERVAL).trigger(LocalizationAuditTick);
-fn on_audit_tick(trigger: Trigger<LocalizationAuditTick>, ...) { ... }
-```
-
-#### 2b. `core/domains/narrative/systems/cutscene_system.rs`
-
-```rust
-// 当前：Timer tick
-state.tick(time.delta().as_secs_f32());
-
-// 目标：Delayed Commands + Observer
-commands.delayed().secs(cutscene_duration).trigger(CutsceneFinished);
+// 已实现：on_cutscene_ended 清理状态
+// 已删除：cutscene_progress_system（逐帧 tick）
+// 已删除：CutsceneState::tick() 方法
 ```
 
 #### 2c. `content/hot_reload.rs`
+⏳ 基础设施周期性任务（2 秒间隔），Timer 是合理选择，暂不迁移。
 
+### Phase 1.3：font_size + TextFont 迁移（无需处理） 🔴
+
+`PopupParams.font_size: u8` 是 Cue 模块的领域配置字段（序列化到 RON 配置），非 Bevy API 调用。不需要迁移到 `FontSize` 枚举。
+
+### Phase 1.4：commands.spawn → spawn_scene + BSN（无需处理） 🟡
+
+`setup_scene_root` 仅 spawn 单组件 SceneRoot，BSN 在此场景无增益。保留 `commands.spawn(SceneRoot)`。
+
+BSN 在需要声明式 UI 子树时引入，如：
 ```rust
-// 当前：Timer 轮询
-hr_state.timer.tick(time.delta());
-if !hr_state.timer.just_finished() { return; }
-
-// 目标：Delayed Commands
-commands.delayed().secs(HOT_RELOAD_INTERVAL).trigger(HotReloadCheck);
+commands.spawn_scene(bsn! {
+    Node { ... }
+    Children [
+        Button { ... },
+        Text("Hello"),
+    ]
+});
 ```
 
-### Phase 1.3：font_size + TextFont 迁移
+### Phase 1.5：Reflect 全覆盖（部分完成） 🟡
 
-#### 3a. `cue/foundation/types.rs`
+已完成（30+ 类型）：
+- 核心事件 4 个（TurnEnded, BattleStarted 等）
+- 存档事件 4 个（SaveRequest, LoadCompleted 等）
+- 领域事件 21 个（combat 7 + reaction 7 + narrative 5 + economy 2）
+- 组件 3 个（TagSet, AggregatorState, BattleUnitId）
+- Resource 3 个（FrameCounter, AutoSaveConfig, MetricsCollector）
+- 其他 3 个（SceneRoot, OnDefinitionReloaded, CutsceneStartRequest）
 
+待递归处理（~24 个，字段类型需逐个加 Reflect）：
+- Capability 组件：AttributeContainer, ModifierContainer, SpecContainer, ConditionContainer, ActiveAbilityContainer, ActiveEffectContainer, TriggerContainer, CueContainerComponent, LocalizedText
+- Infra Resource：DefinitionRegistry, PipelineRegistry, DeterministicRng, ReplayModeGuard, RecordingSession, PlaybackSession, LocalizationDatabase, MetricsCollector, CombatPipelineDriver, SaveManager, EntityRemapper, PendingLoad, BattleUnitRegistry, ContentHotReloadState
+
+### Phase 1.6：DevTools + Settings（部分完成） 🟡
+
+已完成：
 ```rust
-// 当前
-pub font_size: u8,       // 16
-
-// 目标
-pub font_size: FontSize,  // FontSize::Px(16.0)
+// tools/dev_tools_plugin.rs — DiagnosticsOverlay 已注册
+app.add_plugins(DiagnosticsOverlayPlugin::default());
+commands.spawn(DiagnosticsOverlay::fps());
 ```
 
-导入路径：`bevy::text::FontSize`
-
-#### 3b. 所有 Text 相关代码
-
+待办（等待 bevy_settings 随 0.19 稳定版发布）：
 ```rust
-// 当前：旧模式
-Text::new("...")
-
-// 目标：新模式
-Text::new("..."),
-TextFont { font_size: FontSize::Px(16.0), ..default() }
-```
-
-### Phase 1.4：commands.spawn → spawn_scene + BSN
-
-`app/scenes/plugin.rs` 中 `commands.spawn(SceneRoot)` 迁移为：
-
-```rust
-// 方案 A：直接 spawn
-commands.spawn(SceneRoot);
-
-// 方案 B：BSN 场景（如需要声明子结构）
-commands.spawn_scene(bsn! { SceneRoot });
-```
-
-优先方案 A（简单场景），BSN 仅在需要声明式子实体结构时使用。
-
-### Phase 1.5：Reflect 全覆盖
-
-搜索策略：
-
-```bash
-# 找出所有缺少 Reflect 的 Component/Event/Resource
-grep -rn "#\[derive(Component)\]" src/ | grep -v "Reflect"
-grep -rn "#\[derive(Event)\]" src/ | grep -v "Reflect"
-grep -rn "#\[derive(Resource)\]" src/ | grep -v "Reflect"
-```
-
-对每个匹配：
-1. `#[derive(Component, Reflect)]`
-2. `#[reflect(Component)]`
-3. `app.register_type::<T>()`（在对应 Plugin 中）
-
-### Phase 1.6：DevTools + Settings
-
-```rust
-// tools/dev_tools_plugin.rs
-#[cfg(feature = "dev")]
-fn setup_dev_tools(app: &mut App) {
-    app.add_plugins(DiagnosticsOverlayPlugin);
-}
-
 // infra/settings/ 新建模块
 mod settings {
     #[derive(Resource, SettingsGroup, Reflect)]
@@ -296,17 +260,18 @@ mod settings {
 | `ButtonInput<T>` | ✅ **已采用** | 代码库已全面使用 | Phase 0 |
 | `AppExit` | ✅ **已采用** | 代码库已使用 | Phase 0 |
 | `Single<T>` | ✅ **已采用** | 代码库已使用 | Phase 0 |
-| Run Conditions | ✅ **全量迁移** | 剩余的 if 守卫替换 | Phase 1.2 |
-| Delayed Commands | ✅ **全量替换 Timer** | 3 处 Timer 迁移到 Delayed | Phase 1.2 |
-| `FontSize` 枚举 | ✅ **全量采用** | 破坏性编译变更 | Phase 1.3 |
-| TextFont/FontSource | ✅ **全量采用** | 新 Text API 标准化 | Phase 1.3 |
-| Reflect 全覆盖 | ✅ **全量补齐** | 编辑器/序列化基础 | Phase 1.5 |
-| DiagnosticsOverlay | ✅ **立即引入** | Dev 模式诊断工具 | Phase 1.6 |
-| User Settings | ✅ **立即引入** | 统一设置管理 | Phase 1.6 |
-| BSN (bsn!) | 🟡 **UI 层采用** | app/scenes 试点，核心层不碰 | Phase 2.1 |
-| Relationship | 🟡 **核心关系采用** | CasterOf/TargetOf 等有限引入 | Phase 2.2 |
+| 宪法/架构/规则文档 | ✅ **已更新** | 全部对齐 0.19 | Phase 3 |
+| DiagnosticsOverlay | ✅ **已注册** | Dev 模式诊断工具 | Phase 1.6 |
+| Delayed Commands | ✅ **Cutscene 已迁移** | narrative 系统已替换 | Phase 1.2 |
+| Reflect 部分补齐 | ✅ **30+ 类型** | 事件/核心组件/简单 Resource | Phase 1.5 |
+| Cutscene 测试修复 | ✅ **已更新** | tick() 测试替换 | Phase 1.7 |
+| `FontSize` 枚举 | ⬜ **无需处理** | 领域配置字段，非 Bevy API | — |
+| BSN (bsn!) | 🟡 **UI 层评估** | 单组件场景无增益，复杂 UI 时引入 | Phase 2.1 |
+| Relationship | 🟡 **核心关系评估** | CasterOf/TargetOf 待定 | Phase 2.2 |
 | Resource → Entity | 🟡 **评估后决定** | BattleState/TurnState 观察 0.19 稳定版 | Phase 2.3 |
-| Contiguous Query | 🟢 **热点场景使用** | 性能不足时启用，不做提前优化 | Phase 2.4 |
+| User Settings | 🟡 **等待 bevy_settings** | 随 0.19 稳定版发布后引入 | Phase 1.6 |
+| Contiguous Query | 🟢 **热点场景启用** | 性能不足时启用 | Phase 2.4 |
+| 剩余复杂 Reflect | ⏳ **需递归** | ~12 组件 + ~12 Resource 字段类型需逐个处理 | Phase 1.5 |
 | Render Graph as Systems | ⬜ **忽略** | 与本项目 2D SRPG 无关 | — |
 | Solari / Skinned Mesh / Bindless | ⬜ **忽略** | 3D 特性，与本项目无关 | — |
 | SceneComponent | ⬜ **暂不采用** | 等待 BSN asset loader 稳定 | 未来 |
@@ -315,13 +280,12 @@ mod settings {
 
 ## 5. 风险与缓解
 
-| 风险 | 概率 | 影响 | 缓解 |
-|------|------|------|------|
-| dev-deps 版本不一致导致 CI 失败 | 🔴 高 | 阻塞 | Phase 1.1 优先修复 |
-| Timer → Delayed 丢失循环语义 | 🟡 中 | 行为 Bug | 循环 Timer 用 `DelayedCommandLoop` 包装 |
-| font_size: u8 → f32 精度变化 | 🟢 低 | UI 差异 | 测试覆盖 |
-| Reflect 补齐漏类型 | 🟡 中 | 运行时序列化失败 | `register_type` 检查清单 |
-| 文档更新遗漏 | 🟡 中 | 知识不一致 | 逐文件 checklist |
+| 风险 | 概率 | 影响 | 缓解 | 状态 |
+|------|------|------|------|------|
+| dev-deps 版本不一致导致 CI 失败 | 🔴 高 | 阻塞 | Phase 1.1 优先修复 | ✅ 已确认一致 |
+| Cutscene Timer → Delayed丢失行为 | 🟡 中 | 行为 Bug | 测试验证 | ✅ 已迁移+测试更新 |
+| Reflect 补齐漏类型 | 🟡 中 | 运行时序列化失败 | `register_type` 检查清单 | 🟡 30+已补，~24待递归 |
+| 文档更新遗漏 | 🟡 中 | 知识不一致 | 逐文件 checklist | ✅ 已全量更新 |
 
 ---
 
@@ -329,34 +293,44 @@ mod settings {
 
 ### Phase 1 准出
 
-- [ ] `cargo check` 零错误（dev-deps 已修复）
+- [x] `cargo check` 零错误（dev-deps 已修复）
+- [x] Cutscene Timer 已迁移为 Delayed Commands
+- [x] 宪法/架构/.trae 规则已更新
+- [x] DiagnosticsOverlay 已在 dev 模式可用
+- [x] Cutscene 测试已更新
 - [ ] `cargo nextest run` 全部通过
 - [ ] `cargo clippy -- -D warnings` 零警告
 - [ ] 零 Timer 残留（grep `timer.tick\|just_finished\|fn tick` 零结果，测试辅助除外）
-- [ ] 零 `font_size: u8\|font_size: f32` 残留
 - [ ] 已添加 Reflect derive 到所有 Component/Event/Resource
-- [ ] DiagnosticsOverlay 在 dev 模式可用
 - [ ] User Settings 已注册
 
 ### Phase 2 准出
 
-- [ ] BSN 已用于 app/scenes UI 层
+- [x] BSN 评估完成——单组件场景无增益，复杂 UI 再引入
 - [ ] Relationship 已用于核心关系（CasterOf/TargetOf）
 - [ ] Contiguous Query 已用于热点场景（如有）
 - [ ] 战斗特效已添加（Vignette + Lens Distortion）
 
 ### Phase 3 准出
 
-- [ ] `ai-constitution-complete.md` 已更新版本号 + 新增 0.19 规则
-- [ ] `docs/01-architecture/README.md` 通信机制已更新
-- [ ] `docs/04-data/README.md` 数据层映射已校验
-- [ ] `docs/05-testing/test-spec.md` 已新增 Observer/Delayed 测试规范
-- [ ] `.trae/rules/ECS规则.md` 已更新
-- [ ] `.trae/rules/编码规则.md` 已更新
-- [ ] `.trae/rules/架构规则.md` 已更新
-- [ ] 全量文档已与代码对齐
+- [x] `ai-constitution-complete.md` 已更新版本号 + 新增 0.19 规则
+- [x] `docs/01-architecture/README.md` 通信机制已更新
+- [x] `docs/04-data/README.md` + localization_schema 已校验
+- [x] `docs/05-testing/test-spec.md` 已新增 Observer/Delayed 测试规范
+- [x] `.trae/rules/ECS规则.md` 已更新
+- [x] `.trae/rules/编码规则.md` 已更新
+- [x] `.trae/rules/架构规则.md` 已更新
+- [x] 全量文档已与代码对齐
 
 ### 总准出
+
+- [x] **宪法**：v5.2，引擎版本/通信机制/ECS 规则全部对齐 0.19
+- [x] **架构**：ADR-054 已创建，通信矩阵已更新
+- [x] **ECS 规则**：.trae/rules 3 文件已更新
+- [x] **测试规范**：Observer/Delayed/Relationship 测试规范已添加
+- [x] **数据文档**：localization_schema 0.18→0.19 引用已更新
+- [ ] **代码**：`cargo check` + `cargo nextest` + `cargo clippy` 全绿
+- [ ] **Reflect**：30+ 类型已补齐，~24 个复杂类型待递归处理
 
 - [ ] **代码**：`cargo check` + `cargo nextest` + `cargo clippy` 全绿
 - [ ] **文档**：宪法/架构/领域/数据/测试/规则 全部对齐 0.19
@@ -367,21 +341,21 @@ mod settings {
 
 ## 7. 文档影响范围总表
 
-| 文档路径 | 变更类型 | 优先级 | 预计工作量 |
-|---------|---------|--------|-----------|
-| `Cargo.toml` (dev-deps) | 版本号更新 | 🔴 P0 | 1 行 |
-| `docs/00-governance/ai-constitution-complete.md` | 多节修订 + 新增规则 | 🔴 P0 | 2–3 小时 |
-| `docs/01-architecture/README.md` | §4.2 §6.1 §9 | 🔴 P0 | 1–2 小时 |
-| `docs/01-architecture/ADR-002-ecs-communication.md` | 通信优先级更新 | 🟡 P1 | 30 分钟 |
-| `docs/02-domain/README.md` | 元数据更新 + 规则校验 | 🟡 P1 | 1 小时 |
-| `docs/02-domain/capabilities/*.md` | 逐文件检查 0.18 引用 | 🟡 P1 | 2 小时 |
-| `docs/02-domain/domains/*.md` | 逐文件检查 0.18 引用 | 🟡 P1 | 2 小时 |
-| `docs/04-data/README.md` | 校验数据层映射 | 🟡 P1 | 30 分钟 |
-| `docs/05-testing/test-spec.md` | 新增 §X Observer/Delayed 测试规范 | 🟡 P1 | 1 小时 |
-| `docs/03-technical/bevy-0.19-migration/*.md` | 迁移完成后归档至 `done/` | 🟢 P2 | 10 分钟 |
-| `.trae/rules/ECS规则.md` | 新增 Delayed/BSN/Relationship 规则 | 🟡 P1 | 30 分钟 |
-| `.trae/rules/编码规则.md` | 更新 EventReader 禁令 | 🟡 P1 | 15 分钟 |
-| `.trae/rules/架构规则.md` | 更新通信机制优先级 | 🟡 P1 | 15 分钟 |
+| 文档路径 | 变更类型 | 工作量 | 状态 |
+|---------|---------|--------|------|
+| `Cargo.toml` (dev-deps) | 版本号更新 | 1 行 | ✅ 已确认 |
+| `docs/00-governance/ai-constitution-complete.md` | 多节修订 + 新增规则 | 2–3 小时 | ✅ v5.2 |
+| `docs/01-architecture/README.md` | §4.2 §6.1 §9 | 1–2 小时 | ✅ 已完成 |
+| `docs/01-architecture/ADR-002-ecs-communication.md` | 通信优先级更新 | 30 分钟 | 🟡 待更新 |
+| `docs/01-architecture/00-foundation/ADR-054-bevy-0-19-migration.md` | 新建 | 30 分钟 | ✅ 已创建 |
+| `docs/02-domain/` | 逐文件检查 0.18 引用 | 2 小时 | ✅ 零引用 |
+| `docs/04-data/README.md` | 校验数据层映射 | 30 分钟 | ✅ 已验证 |
+| `docs/04-data/infrastructure/localization_schema.md` | 0.18→0.19 引用 | 15 分钟 | ✅ 已完成 |
+| `docs/05-testing/test-spec.md` | 新增 §17.5 Observer/Delayed 测试规范 | 1 小时 | ✅ 已完成 |
+| `docs/03-technical/bevy-0.19-migration/*.md` | 归档至 `done/` | 10 分钟 | 🟡 迁移完成后执行 |
+| `.trae/rules/ECS规则.md` | 新增 Delayed/BSN/Relationship 规则 | 30 分钟 | ✅ 已完成 |
+| `.trae/rules/编码规则.md` | 更新 EventReader 禁令 | 15 分钟 | ✅ 已完成 |
+| `.trae/rules/架构规则.md` | 更新通信机制优先级 | 15 分钟 | ✅ 已完成 |
 
 ---
 

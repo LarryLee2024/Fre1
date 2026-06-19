@@ -7,6 +7,7 @@
 
 use bevy::prelude::*;
 
+use super::components::SceneRoot;
 use super::state::{GameState, TransitionRequest};
 
 /// 状态转移请求队列 — 唯一的 NextState 调用入口。

@@ -90,7 +90,8 @@ impl Default for PlaybackSession {
 ///
 /// 用于录制时计算帧序号，和回放时追踪进度。
 /// 帧序号对应游戏逻辑更新周期，而非渲染帧率。
-#[derive(Resource)]
+#[derive(Resource, Reflect)]
+#[reflect(Resource)]
 pub struct FrameCounter(pub u64);
 
 impl Default for FrameCounter {

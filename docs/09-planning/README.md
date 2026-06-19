@@ -38,7 +38,7 @@
 
 | 文档 | 状态 | 说明 |
 |------|------|------|
-| `bevy-0.19-migration-v3-aggressive.md` | ✅ v3.0 激进 | 基于实际代码扫描的精准方案，2–3 周 + 文档全面对齐 |
+| `bevy-0.19-migration-v3-aggressive.md` | ✅ v3.1 活跃 | 已完成 ~70%：宪法/架构/规则文档全部对齐，Cutscene Delayed 迁移完成，30+ 类型 Reflect，DiagnosticsOverlay 注册。剩余深层 Reflect 递归 + User Settings 等待 0.19 稳定版 |
 
 ### 已归档（旧版迁移方案）
 

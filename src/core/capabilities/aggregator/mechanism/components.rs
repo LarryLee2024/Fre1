@@ -7,7 +7,8 @@ use bevy::prelude::*;
 /// 挂载在实体上的聚合状态组件。
 ///
 /// 缓存当前聚合结果并跟踪需要重算的脏属性。
-#[derive(Component, Debug, Clone)]
+#[derive(Component, Debug, Clone, Reflect)]
+#[reflect(Component)]
 pub struct AggregatorState {
     /// 属性标识符 → 缓存的聚合最终值
     pub cached_values: HashMap<String, f32>,

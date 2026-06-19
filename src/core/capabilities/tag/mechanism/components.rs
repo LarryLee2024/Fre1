@@ -7,7 +7,8 @@ use bevy::prelude::*;
 ///
 /// 使用位掩码实现 O(1) 包含检查。
 /// 内部缓存了标签 ID 列表用于枚举场景，bits 变化时失效。
-#[derive(Component, Debug, Clone)]
+#[derive(Component, Debug, Clone, Reflect)]
+#[reflect(Component)]
 pub struct TagSet {
     /// 位掩码：实体当前持有的所有标签
     pub bits: BitMask,

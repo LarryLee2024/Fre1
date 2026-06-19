@@ -25,7 +25,8 @@ use crate::core::domains::combat::components::CombatParticipant;
 /// 战场单位标识 Component。
 ///
 /// 挂在每个参与战斗的实体上，提供 Entity 到稳定 String ID 的 O(1) 转换。
-#[derive(Component, Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Component, Debug, Clone, PartialEq, Eq, Hash, Reflect)]
+#[reflect(Component)]
 pub struct BattleUnitId(pub String);
 
 impl BattleUnitId {

@@ -52,7 +52,8 @@ fn drain() -> HashMap<LogCode, u64> {
 /// 度量收集器 Bevy Resource。
 ///
 /// 定期从全局计数器取增量，输出 DEBUG 摘要日志。
-#[derive(Resource)]
+#[derive(Resource, Reflect)]
+#[reflect(Resource)]
 pub struct MetricsCollector {
     last_summary_frame: u64,
     lifetime_total: u64,

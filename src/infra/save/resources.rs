@@ -43,7 +43,8 @@ impl Default for SaveManager {
 }
 
 /// 自动保存配置。
-#[derive(Resource)]
+#[derive(Resource, Reflect)]
+#[reflect(Resource)]
 pub struct AutoSaveConfig {
     pub enabled: bool,
     pub interval_minutes: u32,

@@ -35,7 +35,7 @@ pub(crate) fn on_cutscene_start(trigger: On<CutsceneStartRequest>, mut commands:
     // 使用 Delayed Commands 替代逐帧 tick：duration 秒后自动触发结束
     commands
         .delayed()
-        .secs(req.duration as f64)
+        .secs(req.duration)
         .trigger(CutsceneEnded {
             cutscene_id: req.cutscene_id.clone(),
         });
