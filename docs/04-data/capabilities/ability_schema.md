@@ -4,7 +4,7 @@ title: Ability Schema — 技能逻辑数据架构
 status: stable
 owner: data-architect
 created: 2026-06-16
-updated: 2026-06-16
+updated: 2026-06-20
 layer: definition, instance
 replay-safe: true
 ---
@@ -51,11 +51,12 @@ struct AbilityDef {
     /// 技能描述本地化 Key
     desc_key: LocalizationKey,
 
-    /// 技能分类
-    category: AbilityCategory,
-
-    /// 激活类型
-    activation: ActivationType,
+    /// 能力类型（合并 AbilityCategory + ActivationType）
+    ///
+    /// 来源：Content 层设计 `docs/03-content/definitions/ability-def.md`
+    /// Schema 原 `category` + `activation` 分离方案合并为单一枚举，
+    /// 减少枚举层级，让 AbilityType 同时表达"大类"和"激活方式"。
+    ability_type: AbilityType,
 
     /// 资源消耗列表
     costs: Vec<CostDef>,
@@ -69,8 +70,12 @@ struct AbilityDef {
     /// 效果链——技能执行时按顺序产生的效果
     effects: Vec<EffectApplication>,
 
-    /// 激活条件（可选）
-    activation_condition: Option<Condition>,
+    /// 激活条件列表——所有条件必须满足才能激活（AND 语义）
+    ///
+    /// ConditionId 引用 ConditionDef（Content 层设计）
+    /// Content 使用 Vec<ConditionId> 而非 Option<Condition>：
+    /// 支持多个条件的 AND 检查，且统一使用 ConditionDef 引用。
+    activation_conditions: Vec<ConditionId>,
 
     /// 技能等级参数（每级的数值变化）
     level_scaling: Option<LevelScaling>,
@@ -88,28 +93,37 @@ struct AbilityDef {
     metadata: AbilityMetadata,
 }
 
-enum AbilityCategory {
-    /// 主动技能
-    Active,
-    /// 被动技能（常驻效果，不需要激活）
+/// 能力类型
+///
+/// 合并 AbilityCategory + ActivationType，减少枚举层级。
+/// 来源：Content 层设计 `docs/03-content/definitions/ability-def.md` §2
+enum AbilityType {
+    /// 主动技能——需要玩家手动激活
+    Active {
+        /// 施法方式
+        activation: ActivationType,
+    },
+    /// 被动技能——常驻效果，无需激活，没有 Cost/Cooldown
     Passive,
-    /// 反应技能（回合外触发）
-    Reaction,
-    /// 内在能力（种族/职业自带，不可移除）
+    /// 反应技能——回合外自动响应触发事件
+    Reaction {
+        /// 响应方式
+        activation: ActivationType,
+    },
+    /// 内在能力——种族/职业自带，不可移除，不可遗忘
     Innate,
 }
 
+/// 激活方式
 enum ActivationType {
     /// 瞬发（无施法时间，立即生效）
     Instant,
     /// 需要施法时间（帧数）
     CastTime { frames: u64 },
-    /// 需要保持专注
+    /// 需要保持专注（被打断则失效）
     Concentration,
-    /// 需要蓄力（可中断）
+    /// 需要蓄力（可中断，蓄力越久效果越强）
     Charge { max_charge_frames: u64 },
-    /// 反应动作（回合外）
-    Reaction,
 }
 
 struct AbilityMetadata {
@@ -189,7 +203,9 @@ struct EffectApplication {
     targeting_override: Option<TargetingDef>,
 
     /// 该效果的应用条件（可选，在效果链中独立判断）
-    condition: Option<Condition>,
+    ///
+    /// ConditionId 引用 ConditionDef（Content 层设计）
+    condition: Option<ConditionId>,
 
     /// 执行延迟（帧数，效果链中延迟执行本效果）
     delay_frames: Option<u64>,
@@ -322,8 +338,9 @@ AbilityDefConfig:
     - id: "abl_000001"
       name_key: "ability.abl_000001.name"
       desc_key: "ability.abl_000001.desc"
-      category: Active
-      activation: Instant
+      ability_type: Active(
+          activation: Instant,
+      )
       max_level: 5
 
       costs:
@@ -353,10 +370,7 @@ AbilityDefConfig:
                 per_level: 2.0
 
         - effect_def_id: "eff_000002"         # 灼烧 DOT
-          condition:
-            TagRequirement:
-              mode: HasNone
-              target_tags: ["tag_000030"]    # Tag.Immune.Fire
+          condition: "cond:no_fire_immunity"   # ConditionId 引用 ConditionDef（Content 层设计）
 
       level_scaling:
         damage_per_level:
@@ -420,7 +434,7 @@ struct InstanceSnapshot {
 
 | 依赖方向 | 依赖 Schema | 说明 |
 |----------|------------|------|
-| 依赖 | → ConditionSchema | activation_condition, EffectApplication.condition |
+| 依赖 | → ConditionSchema | activation_conditions, EffectApplication.condition |
 | 依赖 | → SpecSchema | AbilityInstance.spec_id |
 | 依赖 | → TargetingSchema | AbilityDef.targeting 引用 TargetType/Shape |
 | 依赖 | → ExecutionSchema | 效果链间接通过 Execution 执行计算 |
@@ -460,7 +474,7 @@ struct InstanceSnapshot {
 | 场景 | 兼容性 | 版本策略 |
 |------|--------|----------|
 | 基础存档 | 🟩 | Save v1: 存活跃实例 + 冷却状态 |
-| 新增 AbilityCategory | 🟩 前向兼容 | 枚举新 variant，旧存档缺省判断 |
+| 新增 AbilityType variant | 🟩 前向兼容 | 枚举新 variant，旧存档缺省判断 |
 | 效果链变化 | 🟨 存档时无效 | 存档不存效果链执行进展（已执行到第几步），只存 created_at_frame |
 | LevelScaling 变化 | 🟩 运行时重算 | 读档后等级→值按新规则重算 |
 

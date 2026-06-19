@@ -4,7 +4,7 @@ title: Faction Schema — 阵营关系数据架构
 status: stable
 owner: data-architect
 created: 2026-06-16
-updated: 2026-06-16
+updated: 2026-06-20
 layer: definition, instance, persistence
 replay-safe: true
 ---
@@ -23,19 +23,19 @@ replay-safe: true
 /// 阵营/势力的静态定义。运行时只读。
 struct FactionDef {
     /// 阵营唯一标识（前缀: `fct_`）
-    id: FactionDefId,
+    id: FactionId,
 
     /// 阵营名称本地化 Key
     name_key: LocalizationKey,
 
     /// 阵营描述本地化 Key
-    desc_key: LocalizationKey,
+    description_key: LocalizationKey,
 
     /// 阵营类型
     faction_type: FactionType,
 
-    /// 基础阵营关系（与哪些阵营默认 Ally / Hostile）
-    base_relations: HashMap<FactionDefId, FactionRelation>,
+    /// 默认态度——当未定义特定关系时使用的基线态度
+    default_attitude: FactionAttitude,
 
     /// 是否为关键/剧情阵营（禁止声望降至敌对阈值以下）
     is_critical: bool,
@@ -48,12 +48,28 @@ enum FactionType {
     Quest,        // 任务相关特定势力
     Temporary,    // 临时同盟（剧情中短暂结盟）
 }
+
+/// 默认态度——当无特定关系定义时的基线态度
+///
+/// 来源：Content 层设计（`docs/03-content/definitions/vocabulary/faction-def.md`）
+/// Schema 原 `base_relations` 违反 L0 同层引用规则，已移除。
+enum FactionAttitude {
+    Friendly,     // 默认友好（玩家阵营之间）
+    Neutral,      // 默认中立（大多数中立 NPC）
+    Hostile,      // 默认敌对（怪物阵营）
+}
 ```
 
-### 1.2 FactionRelation（Definition 层）
+### 1.2 FactionRelation（L3 Gameplay 层）
 
 ```rust
 /// 两个阵营之间的固有关系。运行时罕见变更，修改需要外交事件。
+///
+/// 注意：此枚举不再嵌入 FactionDef（L0），因为 L0 禁止同层引用。
+/// FactionRelation 仅在 L3 Gameplay 层的 FactionRelationshipMatrix 中使用。
+/// FactionDef 通过 `default_attitude`（FactionAttitude）声明基线态度，
+/// 具体阵营间关系矩阵由 L3 层定义。
+/// 来源：`docs/03-content/definitions/vocabulary/faction-def.md` §6
 enum FactionRelation {
     Ally,     // 盟友 — 默认友好
     Neutral,  // 中立 — 无特殊关系
@@ -68,10 +84,10 @@ enum FactionRelation {
 /// 角色（Entity）所属的阵营列表。一个角色可以属于多个阵营。
 struct FactionMembership {
     /// 所属阵营 ID 列表
-    factions: Vec<FactionDefId>,
+    factions: Vec<FactionId>,
 
     /// 主要阵营（用于 UI 显示、默认关系判定）
-    primary_faction: FactionDefId,
+    primary_faction: FactionId,
 }
 ```
 
@@ -82,7 +98,7 @@ struct FactionMembership {
 /// 取值 [-100, +100]，持久化保存。
 struct Reputation {
     /// 目标阵营
-    faction_id: FactionDefId,
+    faction_id: FactionId,
 
     /// 当前声望值
     value: i32,
@@ -151,7 +167,7 @@ struct FactionState {
     reputations: Vec<(EntityId, Reputation)>,
 
     /// 阵营间关系变更记录（如果有运行时外交事件）
-    relation_overrides: Vec<(FactionDefId, FactionDefId, FactionRelation)>,
+    relation_overrides: Vec<(FactionId, FactionId, FactionRelation)>,
 }
 ```
 
@@ -161,7 +177,7 @@ struct FactionState {
 
 | Layer | Structures | 说明 |
 |-------|-----------|------|
-| **Definition** | `FactionDef`, `FactionRelation`, `ReputationLevel` | 阵营定义、关系枚举、声望等级为静态配置 |
+| **Definition** | `FactionDef`, `FactionAttitude`, `ReputationLevel` | 阵营定义、默认态度、声望等级为静态配置 |
 | **Spec** | — | Faction 无 Spec 层；声望阈值映射为纯规则（代码） |
 | **Instance** | `FactionMembership`, `Reputation`, `RelationshipState` | 角色归属与声望运行时数据；RelationshipState 为瞬时计算 |
 | **Persistence** | `FactionState` | 声望值和运行时关系变更持久化 |
@@ -191,7 +207,7 @@ struct FactionState {
 ### Save
 
 - `FactionState` 持久化所有实体的声望数据
-- relation_overrides 只保存运行时发生变更的关系，基础关系从 FactionDef.base_relations 重建
+- relation_overrides 只保存运行时发生变更的关系，基线态度（default_attitude）从 FactionDef 读取
 - change_log 可选持久化（调试用），生产环境可限制最近 10 条或完全丢弃
 
 ---
@@ -202,7 +218,7 @@ struct FactionState {
 |------|------|----------|
 | 声望范围 | Reputation.value 必须在 [-100, 100] | clamp 到边界，记录警告 |
 | 等级连续性 | 声望等级不可跳过中间等级（如 Neutral → Honored） | 运行时断言 |
-| 关系对称性 | FactionRelation 必须双向对称 | Schema 校验拒绝 |
+| 默认态度有效 | FactionDef.default_attitude 必须是 FactionAttitude 的合法变体 | Schema 校验拒绝 |
 | 关键角色保护 | is_critical=true 的阵营声望不能降至 Hostile 以下 | 运行时断言 |
 | 变更有因 | ReputationChange 必须携带 reason | Schema 校验拒绝 |
 
@@ -212,7 +228,7 @@ struct FactionState {
 
 - ✅ **Data Law 001 (Def-Instance分离)**: FactionDef 为纯 Definition，Reputation 为 Instance，FactionState 为 Persistence
 - ✅ **Data Law 002 (Rule-Content分离)**: 声望阈值映射（-100~-51 → Hated 等）属于代码规则，不嵌入配置
-- ✅ **Data Law 003 (配置只引用ID)**: FactionMembership 和 Reputation 引用 FactionDefId
+- ✅ **Data Law 003 (配置只引用ID)**: FactionMembership 和 Reputation 引用 FactionId
 - ✅ **Data Law 010 (Replay优先)**: 声望变更由有因事件驱动，回放时逐条重放 ReputationChange
 - ✅ **Data Law 011 (Schema版本化)**: FactionState 携带版本号，change_log 字段可演化为可选
 - ✅ **Data Law 012 (域间禁止直接数据引用)**: Faction 通过 Event 对外发布声望/关系变更，消费方通过 Event 订阅

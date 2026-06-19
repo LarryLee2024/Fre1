@@ -670,7 +670,7 @@ src/
 | ADR-053 | Localization 基础设施架构（Fluent + Key 代码生成 + 三级回退） | ✅ Proposed | Cross-cutting |
 | ADR-054 | Bevy 0.19 迁移决策（Observer 优先 / Delayed Commands / BSN 范围 / Relationship） | ✅ Accepted | Foundation |
 | ADR-055 | UI 表现层架构（Projection 防火墙 / 单向数据流 / Widget Contract） | ✅ Accepted | Cross-cutting |
-| ADR-056 | 7→9 Agent 升级与三级治理体系（Content/Presentation Architect 新增、Architect 角色重定义、协作流程重构） | 📋 Proposed | Foundation |
+| ADR-056 | 7→9 Agent 升级与三级治理体系（Content/Presentation Architect 新增、Architect 角色重定义、协作流程重构） | ✅ Accepted | Foundation |
 
 ---
 
@@ -745,7 +745,7 @@ src/
 | `40-cross-cutting/ADR-053-localization-architecture.md` | ✅ accepted | architect | 2026-06-19 |
 | `00-foundation/ADR-054-bevy-0-19-migration.md` | ✅ accepted | architect | 2026-06-19 |
 | `40-cross-cutting/ADR-055-ui-presentation-architecture.md` | ✅ accepted | presentation-architect | 2026-06-20 |
-| `00-foundation/ADR-056-agent-governance.md` | 📋 proposed | architect | 2026-06-20 |
+| `00-foundation/ADR-056-agent-governance.md` | ✅ accepted | architect | 2026-06-20 |
 
 ---
 

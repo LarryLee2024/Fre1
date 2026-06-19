@@ -18,7 +18,7 @@ fn make_periodic_effect(id: &str, turns: u32, interval: u32) -> EffectInstance {
     EffectInstance::new(
         id,
         "eff_dot",
-        "Damage",
+        vec![],
         "caster_001",
         "target_001",
         crate::core::capabilities::effect::foundation::EffectDuration::HasDuration {

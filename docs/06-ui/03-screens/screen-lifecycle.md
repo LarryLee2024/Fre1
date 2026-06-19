@@ -85,47 +85,47 @@ Destroyed（已销毁）
 
 **规则 R-SCR-01：Screen 只做组合，不直接拼 Node**
 
-```rust
-// 正确
-fn battle_screen() -> impl Scene {
-    bsn! {
-        BattleScreen
-        Children [
-            TopBar,
-            TurnBar,
-            CharacterPanel,
-            SkillPanel,
-            ActionMenu,
-        ]
-    }
-}
+```pseudocode
+// ✅ 正确：Screen 通过 Factory 函数组合 Widget
+fn spawn_battle_screen(commands, vm_store):
+    screen_root = commands.spawn((
+        BattleScreen,
+        Node { fullscreen },
+    ))
+    // 通过 WidgetFactory 创建子 Widget 并挂到 Screen Root 下
+    commands.entity(screen_root).add_children(&[
+        TopBar::create(commands, &vm_store.top_bar),
+        TurnBar::create(commands, &vm_store.turn_order),
+        CharacterPanel::create(commands, &vm_store.characters),
+        SkillPanel::create(commands, &vm_store.skills),
+        ActionMenu::create(commands, &vm_store.actions),
+    ])
 
 // ❌ 禁止：Screen 中直接写 Node/BackgroundColor/Interaction
 fn battle_screen(mut commands: Commands) {
     commands.spawn((
         Node { .. },
         BackgroundColor(Color::BLACK),
-        // 不应在 Screen 中出现的布局原语
-    ));
+    ))
 }
 ```
 
 **规则 R-SCR-02：Screen 使用 WidgetFactory 组合 Widget**
 
-```rust
-// 所有 Widget 通过 WidgetFactory trait 组合
-fn battle_screen() -> impl Scene {
-    bsn! {
-        BattleScreen
-        Children [
-            TopBar::create_root(),
-            TurnBar::create_root(),
-            CharacterPanel::create_root(),
-            SkillPanel::create_root(),
-            ActionMenu::create_root(),
-        ]
-    }
-}
+```pseudocode
+// ✅ 正确：所有 Widget 通过 WidgetFactory trait 组合
+// WidgetFactory::create 接受 Commands + ViewModel，返回 Entity
+fn spawn_battle_screen(commands, vm_store):
+    screen_root = commands.spawn(BattleScreen)
+    turn_order_bar  = TurnOrderBar::create(commands, &vm_store.turn_order)
+    battle_hud      = BattleHud::create(commands, &vm_store.battle_hud)
+    character_panel = CharacterPanel::create(commands, &vm_store.characters)
+    skill_panel     = SkillPanel::create(commands, &vm_store.skills)
+    action_menu     = ActionMenu::create(commands, &vm_store.actions)
+    commands.entity(screen_root).add_children(&[
+        turn_order_bar, battle_hud, character_panel,
+        skill_panel, action_menu,
+    ])
 ```
 
 **规则 R-SCR-03：Screen 是 Navigation 的最小单元**

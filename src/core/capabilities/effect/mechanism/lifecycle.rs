@@ -13,7 +13,9 @@
 
 use bevy::prelude::*;
 
-use crate::core::capabilities::effect::events::{EffectApplied, EffectRemoved, EffectTicked};
+use crate::core::capabilities::effect::events::{
+    EffectApplied, EffectImmunityTriggered, EffectRemoved, EffectTicked,
+};
 use crate::core::capabilities::effect::foundation::{
     ActiveEffectContainer, EffectDuration, EffectError, EffectInstance, EffectStage, RemovalReason,
 };
@@ -96,6 +98,7 @@ impl TickResult {
 pub fn apply_effect(
     container: &mut ActiveEffectContainer,
     instance: EffectInstance,
+    ignored_tags: Option<&[String]>,
     commands: &mut Commands,
 ) -> ApplyResult {
     let def_id = instance.def_id.clone();
@@ -121,17 +124,17 @@ pub fn apply_effect(
 
     // 不变量 3.2: 免疫检查 — 检查目标是否拥有 ignored_tags 中的任意标签
     // ignored_tags 来自 EffectDef，表示目标不能拥有的标签（否则效果应用失败）
-    if let Some(ref ignored_tags) = instance.ignored_tags {
-        if !ignored_tags.is_empty() {
+    if let Some(immune_tags) = ignored_tags {
+        if !immune_tags.is_empty() {
             // 检查目标的 tags 是否包含 ignored_tags 中的任意一个
-            let target_has_immune = ignored_tags.iter().any(|immune_tag| {
+            let target_has_immune = immune_tags.iter().any(|immune_tag| {
                 instance.tags.iter().any(|t| t == immune_tag)
                     || container.effects.iter().any(|e| {
                         e.stage.is_active() && e.tags.iter().any(|t| t == immune_tag)
                     })
             });
             if target_has_immune {
-                let immune_tag = ignored_tags
+                let immune_tag = immune_tags
                     .iter()
                     .find(|tag| {
                         instance.tags.iter().any(|t| t == *tag)
@@ -148,7 +151,7 @@ pub fn apply_effect(
                 });
                 return ApplyResult::failure(EffectError::ImmunityBlocked {
                     def_id,
-                    immune_tag: ignored_tags.join(", "),
+                    immune_tag: immune_tags.join(", "),
                 });
             }
         }

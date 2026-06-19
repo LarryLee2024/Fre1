@@ -35,7 +35,7 @@ fn effect_container_rejects_missing_source() {
     let effect = EffectInstance::new(
         "eff_001",
         "eff_test",
-        "Buff",
+        vec![],
         "",
         "target_001",
         EffectDuration::Instant,
@@ -72,7 +72,7 @@ fn duration_effect_remaining_turns_non_negative() {
     let effect = EffectInstance::new(
         "eff_001",
         "eff_test",
-        "Buff",
+        vec![],
         "source_001",
         "target_001",
         EffectDuration::HasDuration {
@@ -90,7 +90,7 @@ fn instant_effect_remaining_turns_is_zero() {
     let effect = EffectInstance::new(
         "eff_002",
         "eff_instant",
-        "Damage",
+        vec![],
         "source_001",
         "target_001",
         EffectDuration::Instant,
@@ -104,7 +104,7 @@ fn infinite_effect_remaining_turns_max() {
     let effect = EffectInstance::new(
         "eff_003",
         "eff_aura",
-        "Buff",
+        vec![],
         "source_001",
         "target_001",
         EffectDuration::Infinite,
@@ -120,7 +120,7 @@ fn effect_tracks_modifier_count_for_rollback() {
     let effect = EffectInstance::new(
         "eff_004",
         "eff_buff",
-        "Buff",
+        vec![],
         "source_001",
         "target_001",
         EffectDuration::HasDuration {
@@ -139,7 +139,7 @@ fn effect_without_modifiers_has_zero_count() {
     let effect = EffectInstance::new(
         "eff_005",
         "eff_nobuff",
-        "Damage",
+        vec![],
         "source_001",
         "target_001",
         EffectDuration::Instant,
@@ -155,7 +155,7 @@ fn duplicate_effect_detection_by_def_and_source() {
     let effect_a = EffectInstance::new(
         "eff_006",
         "eff_poison",
-        "Debuff",
+        vec![],
         "source_001",
         "target_001",
         EffectDuration::HasDuration {
@@ -167,7 +167,7 @@ fn duplicate_effect_detection_by_def_and_source() {
     let effect_b = EffectInstance::new(
         "eff_007",
         "eff_poison",
-        "Debuff",
+        vec![],
         "source_001",
         "target_001",
         EffectDuration::HasDuration {
@@ -186,7 +186,7 @@ fn different_source_allows_same_effect() {
     let effect_a = EffectInstance::new(
         "eff_008",
         "eff_haste",
-        "Buff",
+        vec![],
         "source_001",
         "target_001",
         EffectDuration::HasDuration {
@@ -198,7 +198,7 @@ fn different_source_allows_same_effect() {
     let effect_b = EffectInstance::new(
         "eff_009",
         "eff_haste",
-        "Buff",
+        vec![],
         "source_002",
         "target_001",
         EffectDuration::HasDuration {
@@ -219,7 +219,7 @@ fn effect_only_describes_modifiers_not_applies() {
     let effect = EffectInstance::new(
         "eff_010",
         "eff_test",
-        "Buff",
+        vec![],
         "source_001",
         "target_001",
         EffectDuration::HasDuration {

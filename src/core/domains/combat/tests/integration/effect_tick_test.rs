@@ -24,7 +24,7 @@ fn make_duration_effect(id: &str, turns: u32) -> EffectInstance {
     EffectInstance::new(
         id,
         "eff_poison",
-        "Debuff",
+        vec![],
         "caster_001",
         "target_001",
         EffectDuration::HasDuration {
@@ -40,7 +40,7 @@ fn make_periodic_effect(id: &str, turns: u32, interval: u32) -> EffectInstance {
     EffectInstance::new(
         id,
         "eff_dot",
-        "Damage",
+        vec![],
         "caster_001",
         "target_001",
         EffectDuration::HasDuration {
@@ -56,7 +56,7 @@ fn make_infinite_effect(id: &str) -> EffectInstance {
     EffectInstance::new(
         id,
         "eff_aura",
-        "Buff",
+        vec![],
         "caster_001",
         "target_001",
         EffectDuration::Infinite,

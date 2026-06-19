@@ -1,7 +1,7 @@
 ---
 id: 01-architecture.00-foundation.ADR-056
 title: "ADR-056: 7→9 Agent 升级与三级治理体系"
-status: proposed
+status: accepted
 owner: architect
 created: 2026-06-20
 tags:

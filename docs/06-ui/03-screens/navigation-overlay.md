@@ -57,6 +57,14 @@ UiRoot
 
 （引用：ADR-055 §6 — UI Root 分层；domain rules §INV-UI-006 — Overlay 独立于 Screen）
 
+### 2.3 INV-UI-006 例外：DamageTextOverlay
+
+DamageTextOverlay（战斗伤害数字浮层）是 INV-UI-006 的显式例外。该 Overlay 挂在 BattleScreen 的 ScreenLayer 下，而非占用独立 Root 层。
+
+**理由**：战斗伤害数字是 BattleScreen 场景特有的表现元素，生命周期天然与战斗绑定——每次战斗创建一个新的 DamageTextOverlay 实例并绑定到当前 BattleScreen，避免增加独立层带来的额外清理逻辑。
+
+**约束条件**：详见 architecture.md §6.6。
+
 ---
 
 ## 3. ScreenStack 导航栈

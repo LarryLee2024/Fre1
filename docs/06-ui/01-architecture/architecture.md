@@ -337,7 +337,7 @@ Domain 触发 Cue → CueTriggered Event → UI Observer（damage_text.rs）→ 
 
 ### 5.5 与 ADR-050（GameState）的对接
 
-GameState 与 UI Screen 的完整映射表参见 `screen-widget.md §4`（Screen ↔ GameState 映射表）。
+GameState 与 UI Screen 的完整映射表参见 `screen-lifecycle.md §4`（Screen ↔ GameState 映射表）。
 
 关键规则：
 - `ScreenLayer` 的内容由 `OnEnter(GameState::X)` 驱动 spawn
@@ -401,6 +401,16 @@ Screen 只做组合，不直接拼 Node。布局细节属于 Widget 内部。
 违反任何一条，50 万行后 UI 必然成为最大技术债。
 
 （引用：ADR-055 §5 — UI 宪法级规则；§14 — 四条铁律；domain rules §INV-UI-009 — 四条铁律精简版）
+
+### 6.6 INV-UI-006 例外声明：DamageTextOverlay
+
+| 例外项 | 说明 |
+|--------|------|
+| 违反的不变量 | INV-UI-006（Overlay 必须有独立 Root 节点，Screen 销毁不影响 Overlay） |
+| 违反的条款 | 本文件 §6.5 铁律第 1 条（Overlay 不挂在 Screen 下） |
+| 例外对象 | DamageTextOverlay |
+| 例外理由 | 战斗伤害数字是 BattleScreen 场景特有的表现元素（非全局 Overlay），其生命周期天然与战斗绑定：战斗结束（BattleScreen 销毁）时伤害数字必须同时消失。若将其放在独立层，需要在 OnExit(Combat) 中额外清理，增加维护复杂度。例外仅适用于纯粹的、无交互的、场景绑定的动画浮层。 |
+| 约束条件 | (1) 仅限 DamageTextOverlay，不扩展至其他 Overlay 类型；(2) DamageText 无交互事件（不可点击），不产生 UiAction；(3) 必须在 architecture.md、navigation-overlay.md 和 overlays.md 中显式记录此项例外 |
 
 ---
 

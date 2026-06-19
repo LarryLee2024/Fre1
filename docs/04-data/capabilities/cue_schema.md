@@ -4,7 +4,7 @@ title: Cue Schema — 表现信号数据架构
 status: stable
 owner: data-architect
 created: 2026-06-16
-updated: 2026-06-16
+updated: 2026-06-20
 layer: definition
 replay-safe: true
 ---
@@ -60,7 +60,9 @@ struct CueDef {
     interruptible: bool,
 
     /// 条件（可选，条件满足时才触发此 Cue）
-    condition: Option<Condition>,
+    ///
+    /// ConditionId 引用 ConditionDef（Content 层设计）
+    condition: Option<ConditionId>,
 
     /// 关键信号（必须被播放，不可丢弃）
     critical: bool,

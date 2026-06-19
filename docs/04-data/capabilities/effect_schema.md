@@ -4,7 +4,7 @@ title: Effect Schema — 效果数据架构
 status: stable
 owner: data-architect
 created: 2026-06-16
-updated: 2026-06-28
+updated: 2026-06-20
 layer: definition, instance
 replay-safe: true
 ---
@@ -81,7 +81,9 @@ struct EffectDef {
     remove_effects_with_tags: Option<Vec<TagId>>,
 
     /// 应用条件（可选，满足此条件效果才能应用）
-    application_condition: Option<Condition>,
+    ///
+    /// ConditionId 引用 ConditionDef（Content 层设计）
+    application_condition: Option<ConditionId>,
 
     /// 效果叠加策略（默认不堆叠）
     stacking: StackingConfig,

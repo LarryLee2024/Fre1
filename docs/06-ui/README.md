@@ -73,12 +73,12 @@ Screen / Widget (表现层)          ── Bevy UI 渲染
 │   ├── application-layer.md            ── UI 应用层（UiIntent/UiCommand/UiEvent + 完整映射链）
 │   └── implementation-patterns.md      ── 实现模式（Widget/Screen/ViewModel/Overlay 的 Bevy ECS 骨架）
 ├── 02-design-system/
-│   ├── widget-atoms.md                 ── 原子组件契约详细设计（Button/ProgressBar/Text/Panel 等，源自 widget-contracts.md）
+│   ├── widget-atoms.md                 ── 原子组件契约详细设计（Button/ProgressBar/Text/Panel 等，源自 widget-atoms.md）
 │   ├── widget-composites.md            ── 复合组件详细设计（Molecule/Organism，本次新增）
 │   ├── theme-localization.md           ── 主题与本地化（StyleToken、Theme、UiTextKey）
 │   └── focus-binding.md                ── 焦点导航与数据绑定（Focusable/FocusGroup/Dirty<T>/UiBinding）
 ├── 03-screens/
-│   ├── screen-lifecycle.md             ── Screen 与 Widget 生命周期（生命周期状态机、Contract、组合规则，源自 screen-widget.md）
+│   ├── screen-lifecycle.md             ── Screen 与 Widget 生命周期（生命周期状态机、Contract、组合规则，源自 screen-lifecycle.md）
 │   ├── screens.md                      ── Screen 详细设计（Battle/MainMenu/Inventory/Shop/Settings/SaveLoad）
 │   ├── navigation-overlay.md           ── 导航与浮层（ScreenStack、Overlay 分层、Focus 系统）
 │   └── overlays.md                     ── Overlay 详细设计（Tooltip/DamageText/Notification/Loading/Debug）
@@ -129,10 +129,10 @@ Screen / Widget (表现层)          ── Bevy UI 渲染
 | 通信机制 | architecture.md §5 | 已覆盖 |
 | 宪法级规则 | architecture.md §6 | 已覆盖 |
 | Plugin 注册 | architecture.md §8 | 已覆盖 |
-| Screen 生命周期 | screen-widget.md §2 | 已覆盖 |
-| Widget 生命周期 | screen-widget.md §3 | 已覆盖 |
-| Widget Contract | screen-widget.md §3.4 | 已覆盖 |
-| GameState 映射 | screen-widget.md §4 | 已覆盖 |
+| Screen 生命周期 | screen-lifecycle.md §2 | 已覆盖 |
+| Widget 生命周期 | screen-lifecycle.md §3 | 已覆盖 |
+| Widget Contract | screen-lifecycle.md §3.4 | 已覆盖 |
+| GameState 映射 | screen-lifecycle.md §4 | 已覆盖 |
 | Projection 防火墙 | projection-viewmodel.md §2 | 已覆盖 |
 | ViewModel 规范 | projection-viewmodel.md §3 | 已覆盖 |
 | Dirty<T> 机制 | projection-viewmodel.md §4 | 已覆盖 |
@@ -149,16 +149,16 @@ Screen / Widget (表现层)          ── Bevy UI 渲染
 | Localization 规范 | theme-localization.md §4 | 已覆盖 |
 | UiSettings 持久化 | theme-localization.md §5 | 已覆盖 |
 | UI 状态分级 | architecture.md §7 | 已覆盖 |
-| Screen 状态机 (6 状态) | screen-widget.md §2.2-§2.3 | 已覆盖 |
+| Screen 状态机 (6 状态) | screen-lifecycle.md §2.2-§2.3 | 已覆盖 |
 | Invariants (9 条) | 分布在各文档对应章节 | 已覆盖 |
 | Forbidden (11 条) | 分布在各文档对应章节 | 已覆盖 |
 | 流程定义 (11 个) | 分布在各文档对应章节 | 已覆盖 |
 | UiTextKey 命名规范 | theme-localization.md §4.2 | 已覆盖 |
 | UiSettings 验证规则 | theme-localization.md §5.3 | 已覆盖 |
 | Reflect 注册要求 | projection-viewmodel.md §4.3 | 已覆盖 |
-| Schema 治理 | screen-widget.md §3.4.3 | 已覆盖 |
+| Schema 治理 | screen-lifecycle.md §3.4.3 | 已覆盖 |
 | WidgetFactory | architecture.md §9 | 已覆盖 |
-| Widget Contract 详细设计（每个 Widget 的 Props/Events/State） | widget-contracts.md | 已覆盖 |
+| Widget Contract 详细设计（每个 Widget 的 Props/Events/State） | widget-atoms.md | 已覆盖 |
 | Screen 详细设计（Layout/ViewModel/Command 完整清单） | screens.md | 已覆盖 |
 | Overlay 详细设计（层级/数据源/生命周期/交互） | overlays.md | 已覆盖 |
 | UiIntent → UiCommand → GameCommand 映射链 | application-layer.md | 已覆盖 |

@@ -5,7 +5,7 @@
 //! 所有"结果"（伤害、治疗、Buff、Debuff）最终表现为 Effect。
 //!
 //! 分层结构：
-//! - foundation/: 纯数据类型（EffectStage, EffectDuration, EffectPeriod, EffectCategory, EffectInstance）
+//! - foundation/: 纯数据类型（EffectStage, EffectDuration, EffectPeriod, EffectInstance）
 //! - mechanism/:  生命周期管理（Lifecycle: 施加→持续/Tick→到期→移除）
 //! - events/:     领域事件（EffectApplied, EffectRemoved, EffectTicked, EffectImmunityTriggered）
 //!

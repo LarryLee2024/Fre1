@@ -101,6 +101,8 @@ Overlay 设计遵循以下原则：
 
 ### 3.2 层级
 
+> 🟥 **例外警告**：DamageTextOverlay 挂在 ScreenLayer 下，违反了 INV-UI-006（Overlay 必须有独立 Root 节点）。这是一项经架构评审批准的显式例外，详见 architecture.md §6.6。
+
 | 属性 | 值 |
 |------|------|
 | 层级名称 | ScreenLayer（与 BattleScreen 同层，但 Z 排序更高） |

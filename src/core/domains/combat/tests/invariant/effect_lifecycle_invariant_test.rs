@@ -19,7 +19,7 @@ fn make_duration_effect(id: &str, def_id: &str, turns: u32, source: &str) -> Eff
     EffectInstance::new(
         id,
         def_id,
-        "Debuff",
+        vec![],
         source,
         "target_001",
         EffectDuration::HasDuration {
@@ -34,7 +34,7 @@ fn make_infinite_effect(id: &str, source: &str) -> EffectInstance {
     EffectInstance::new(
         id,
         "eff_aura",
-        "Buff",
+        vec![],
         source,
         "target_001",
         EffectDuration::Infinite,
@@ -47,7 +47,7 @@ fn apply_and_activate(
     effect: EffectInstance,
     commands: &mut Commands,
 ) {
-    let _ = apply_effect(container, effect, commands);
+    let _ = apply_effect(container, effect, None, commands);
 }
 
 // -- Invariants ------------------------------------------------------------

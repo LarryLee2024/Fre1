@@ -142,7 +142,7 @@ fn sample_effect_def() -> EffectDef {
         remove_effects_with_tags: None,
         application_condition: None,
         stacking: StackingConfig::none(),
-        effect_category: EffectCategory::Damage,
+        effect_tags: vec!["Status.Damage".to_string()],
         execution: None,
         cues: vec![],
         visible: true,

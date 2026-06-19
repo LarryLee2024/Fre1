@@ -257,13 +257,201 @@ struct SkillSlotVm {
 
 ---
 
-## 4. Dirty<T> 脏标记机制
+## 4. 复合级 ViewModel
 
-### 4.1 设计目的
+复合组件（Molecules / Organisms，定义于 widget-composites.md）消费的 ViewModel 分为两类：
+
+1. **独立定义**：复合组件独有的 ViewModel，不对应 UiStore 中的独立字段（作为父级 ViewModel 的嵌套字段存在）
+2. **派生自基础 VM**：复合组件直接使用 UiStore 中已有的基础 ViewModel，不额外命名（引用：widget-composites.md §1.2 — 复合组件与 ViewModel 的对应关系）
+
+### 4.1 Molecule 级 ViewModel
+
+Molecule 级 ViewModel 均为独立定义，作为 Organism 或 Screen ViewModel 的嵌套字段。
+
+#### SkillSlotVm
+
+| 属性 | 值 |
+|------|----|
+| **来源** | widget-composites.md §2.1 SkillSlot |
+| **定义方式** | 独立定义 |
+| **说明** | 技能快捷栏中单个技能槽位的数据，包含技能 ID、名称、图标、冷却、AP/MP 消耗和交互状态 |
+| **字段概要** | 参见 widget-composites.md §2.1 Props 表：skill_id, name_key, icon_key, cooldown_remaining, cooldown_total, ap_cost, mp_cost, enabled, is_selected |
+| **使用场景** | 作为 SkillPanelVm 的 skills 字段成员 |
+
+#### CharacterPortraitVm
+
+| 属性 | 值 |
+|------|----|
+| **来源** | widget-composites.md §2.2 CharacterPortrait |
+| **定义方式** | 独立定义 |
+| **说明** | 角色头像区域数据，包含角色 ID、名称、头像资源、HP 状态、状态效果图标和选中状态 |
+| **字段概要** | 参见 widget-composites.md §2.2 Props 表：character_id, name_key, portrait_key, hp_current, hp_max, status_icons, is_active_turn, is_selected |
+| **使用场景** | 作为 CharacterStatusPanelVm 的子组件，也直接用于 DialoguePanel |
+
+#### InventoryItemRowVm
+
+| 属性 | 值 |
+|------|----|
+| **来源** | widget-composites.md §2.3 InventoryItemRow |
+| **定义方式** | 独立定义 |
+| **说明** | 背包/商店中单行物品条目数据，包含物品 ID、名称、图标、数量、稀有度、操作类型和选中状态 |
+| **字段概要** | 参见 widget-composites.md §2.3 Props 表：item_id, name_key, icon_key, quantity, rarity, action_type, is_selected, price |
+| **使用场景** | 作为 InventoryVm 的 items 字段成员 |
+
+#### QuestEntryVm
+
+| 属性 | 值 |
+|------|----|
+| **来源** | widget-composites.md §2.4 QuestEntry |
+| **定义方式** | 独立定义 |
+| **说明** | 任务日志中单个任务条目数据，包含任务 ID、标题、描述、进度、奖励、状态和展开状态 |
+| **字段概要** | 参见 widget-composites.md §2.4 Props 表：quest_id, title_key, description_key, progress_current, progress_total, rewards_key, status, is_expanded |
+| **使用场景** | 作为 QuestLogVm 的 quests 字段成员 |
+
+#### DialogueChoiceVm
+
+| 属性 | 值 |
+|------|----|
+| **来源** | widget-composites.md §2.5 DialogueChoice |
+| **定义方式** | 独立定义 |
+| **说明** | 对话系统中单个选项数据，包含选项 ID、文本、选中状态、可用性和不可选原因 |
+| **字段概要** | 参见 widget-composites.md §2.5 Props 表：choice_id, text_key, text_params, is_selected, is_available, requirement_hint |
+| **使用场景** | 作为 DialoguePanelVm 的 choices 字段成员 |
+
+#### ShopItemCardVm
+
+| 属性 | 值 |
+|------|----|
+| **来源** | widget-composites.md §2.6 ShopItemCard |
+| **定义方式** | 独立定义 |
+| **说明** | 商店中单个商品卡片数据，包含商品 ID、图标、名称、价格、折扣、库存和购买能力 |
+| **字段概要** | 参见 widget-composites.md §2.6 Props 表：item_id, item_icon, item_name_key, price, original_price, stock, stock_max, player_can_afford, discount_pct |
+| **使用场景** | 作为 ShopPanelVm 的 items 字段成员 |
+
+#### BuffVm
+
+| 属性 | 值 |
+|------|----|
+| **来源** | widget-composites.md §2.7 BuffIcon |
+| **定义方式** | 独立定义 |
+| **说明** | Buff/Debuff 状态图标数据，包含效果 ID、图标、类型（增益/减益）、剩余回合、名称、描述和叠层数 |
+| **字段概要** | 参见 widget-composites.md §2.7 Props 表：buff_id, icon_key, is_debuff, remaining_turns, max_turns, name_key, description_key, stack_count |
+| **使用场景** | 作为 CharacterPanelVm / CharacterStatusPanelVm 的 buffs 字段成员 |
+
+#### TurnIndicatorVm
+
+| 属性 | 值 |
+|------|----|
+| **来源** | widget-composites.md §2.8 TurnIndicator |
+| **定义方式** | 独立定义 |
+| **说明** | 回合顺序指示器中单个角色条目数据，包含角色 ID、头像、名称、活跃状态、AP 和阵营 |
+| **字段概要** | 参见 widget-composites.md §2.8 Props 表：character_id, portrait_key, name_key, is_active, is_next, ap_remaining, ap_max, faction |
+| **使用场景** | 作为 TurnOrderBarVm 的 turn_order 字段成员 |
+
+### 4.2 Organism 级 ViewModel
+
+Organism 级 ViewModel 部分对已存在的基础 ViewModel（参见 §3.4），部分为新增独立定义。
+
+#### SkillPanelVm
+
+| 属性 | 值 |
+|------|----|
+| **来源** | widget-composites.md §3.1 SkillPanel |
+| **定义方式** | 派生自基础 VM（已在 §3.4 定义） |
+| **说明** | 技能面板数据，与 §3.4 SkillPanelVm 同一份定义。UiStore.skill_panel 同时作为数据存储和复合组件输入源 |
+| **字段概要** | 参见 §3.4 SkillPanelVm 字段表及 widget-composites.md §3.1 Props 表 |
+
+#### CharacterStatusPanelVm
+
+| 属性 | 值 |
+|------|----|
+| **来源** | widget-composites.md §3.2 CharacterStatusPanel |
+| **定义方式** | 独立定义（UiStore 新增字段） |
+| **说明** | 角色状态面板数据，集中显示角色完整状态（HP/MP/AP/Buff），包含 CharacterPortrait 和 BuffIcon 子级数据 |
+| **字段概要** | 参见 widget-composites.md §3.2 Props 表（character_id, name_key, portrait_key, hp/mp/ap 字段, buffs, status_text, is_enemy, is_active） |
+
+#### BattleHudVm
+
+| 属性 | 值 |
+|------|----|
+| **来源** | widget-composites.md §3.3 BattleHud |
+| **定义方式** | 派生自基础 VM（已在 §3.4 定义） |
+| **说明** | 战斗 HUD 数据，与 §3.4 BattleHudVm 同一份定义。UiStore.battle_hud 同时作为数据存储和复合组件输入源 |
+| **字段概要** | 参见 §3.4 BattleHudVm 字段表及 widget-composites.md §3.3 Props 表 |
+
+#### TurnOrderBarVm
+
+| 属性 | 值 |
+|------|----|
+| **来源** | widget-composites.md §3.4 TurnOrderBar |
+| **定义方式** | 独立定义（UiStore 新增字段或作为 BattleHudVm 的嵌套字段） |
+| **说明** | 回合顺序条数据，包含按行动顺序排列的角色指示器列表和当前回合信息 |
+| **字段概要** | 参见 widget-composites.md §3.4 Props 表（turn_order: Vec<TurnIndicatorVm>, is_player_turn, current_turn_index） |
+
+#### InventoryGridVm — 已合并至 InventoryVm
+
+| 属性 | 值 |
+|------|----|
+| **来源** | widget-composites.md §3.5 InventoryGrid |
+| **定义方式** | 已合并至 InventoryVm（参见 §3.4），不额外命名 |
+| **说明** | 依据"UiStore 字段名 = 复合组件输入源"策略（参见 §4.3），不额外定义 InventoryGridVm。InventoryVm（§3.4）直接作为 InventoryGrid 的数据输入源。UiStore.inventory 的 items 字段使用 InventoryItemRowVm 类型 |
+| **字段概要** | 参见 §3.4 InventoryVm 字段表及 widget-composites.md §3.5 Props 表 |
+
+#### QuestLogVm
+
+| 属性 | 值 |
+|------|----|
+| **来源** | widget-composites.md §3.6 QuestLog |
+| **定义方式** | 派生自基础 VM（已在 §3.4 定义） |
+| **说明** | 任务日志数据，与 §3.4 QuestLogVm 同一份定义。UiStore.quest_log 同时作为数据存储和复合组件输入源 |
+| **字段概要** | 参见 §3.4 QuestLogVm 字段表及 widget-composites.md §3.6 Props 表 |
+
+#### DialoguePanelVm
+
+| 属性 | 值 |
+|------|----|
+| **来源** | widget-composites.md §3.7 DialoguePanel |
+| **定义方式** | 独立定义（UiStore 新增字段） |
+| **说明** | 对话系统面板数据，包含说话者信息、对话文本、选项列表和打字动画状态 |
+| **字段概要** | 参见 widget-composites.md §3.7 Props 表（dialogue_id, speaker: CharacterPortraitVm, dialogue_text_key, choices: Vec<DialogueChoiceVm>, is_typing, typing_progress, is_skippable, auto_advance） |
+
+#### ShopPanelVm
+
+| 属性 | 值 |
+|------|----|
+| **来源** | widget-composites.md §3.8 ShopPanel |
+| **定义方式** | 独立定义（对应 UiStore.shop，即 §3.4 ShopVm） |
+| **说明** | 商店交易面板数据。ShopPanelVm 与 ShopVm（§3.4）共享同一数据源，UiStore.shop 直接作为 ShopPanel 的输入源。命名上统一为 ShopPanelVm 以反映其复合组件身份 |
+| **字段概要** | 参见 §3.4 ShopVm 字段表及 widget-composites.md §3.8 Props 表 |
+
+### 4.3 命名统一说明
+
+> **BattleHudVm 和 QuestLogVm 的双身份**
+>
+> BattleHudVm 和 QuestLogVm 同时在 §3.4（基础 ViewModel 清单）和 widget-composites.md（复合组件定义）中出现。这是设计意图，不是冲突——它们"既是基础 VM，也是复合组件的 ViewModel"：
+>
+> - **基础 VM 身份**：在 UiStore 中独立存储（`UiStore.battle_hud`、`UiStore.quest_log`），由 Projection 直接更新
+> - **复合组件身份**：作为 BattleHud（widget-composites.md §3.3）和 QuestLog（widget-composites.md §3.6）的唯一 ViewModel 输入源
+>
+> 这意味着 BattleHudVm 和 QuestLogVm 的数据字段必须同时满足两个身份的需求。如果复合组件需要额外的展示字段，应当合并到基础 VM 中，而不是创建第二个版本。
+
+> **UiStore 字段名 = 复合组件输入源策略**
+>
+> 对于 InventoryVm（§3.4），UiStore 中已有同名字段 `UiStore.inventory`，其数据形状覆盖 InventoryGrid（widget-composites.md §3.5）的需求，因此不额外创建 InventoryGridVm。InventoryVm 直接作为 InventoryGrid 的输入源。
+>
+> 同理，ShopVm（§3.4）直接作为 ShopPanel（widget-composites.md §3.8）的输入源，在复合组件上下文中被称为 ShopPanelVm。
+>
+> 这条策略保证了 UiStore 不膨胀——Organism 的 ViewModel 优先复用已有基础 VM，只有当 Organism 的需求超出基础 VM 形状时才新增独立字段。
+
+---
+
+## 5. Dirty<T> 脏标记机制
+
+### 5.1 设计目的
 
 Widget 只在数据变化时刷新，避免每帧全量遍历所有 Widget。
 
-### 4.2 机制设计
+### 5.2 机制设计
 
 ```rust
 #[derive(Component, Reflect, Default)]
@@ -284,7 +472,7 @@ impl<T: Reflect + Default> Dirty<T> {
 3. 脏则刷新 Widget 渲染，否者跳过
 4. `consume()` 自动清除脏标记，保证每帧最多刷新一次
 
-### 4.3 注册要求
+### 5.3 注册要求
 
 每个 ViewModel 类型的 `Dirty<T>` 必须在 UiPlugin 中注册：
 
@@ -294,7 +482,7 @@ app.register_type::<Dirty<CharacterPanelVm>>();
 // ... 每个 ViewModel 类型
 ```
 
-### 4.4 使用约束
+### 5.4 使用约束
 
 - Projection 更新 ViewModel 后必须 `mark_dirty()`
 - Widget 只在 `consume() == true` 时执行刷新逻辑
@@ -305,13 +493,13 @@ app.register_type::<Dirty<CharacterPanelVm>>();
 
 ---
 
-## 5. UiStore 统一容器设计
+## 6. UiStore 统一容器设计
 
-### 5.1 设计目的
+### 6.1 设计目的
 
 UiStore 是类似 Redux Store 的统一状态容器，所有 ViewModel 集中管理，Projection 更新此容器，Widget 从此容器读取。
 
-### 5.2 结构设计
+### 6.2 结构设计
 
 ```rust
 #[derive(Resource, Reflect, Default)]
@@ -327,7 +515,7 @@ pub struct UiStore {
 }
 ```
 
-### 5.3 设计决策
+### 6.3 设计决策
 
 | 决策 | 选择 | 理由 |
 |------|------|------|
@@ -336,7 +524,7 @@ pub struct UiStore {
 | 队列容器 | Vec（非专用队列） | 保持 Reflect 兼容性 |
 | 更新方式 | 直接字段赋值（非 Diff） | 简单直接，Dirty 标记额外管理 |
 
-### 5.4 未来扩展点
+### 6.4 未来扩展点
 
 | 扩展点 | UiStore 新增字段 |
 |--------|----------------|
@@ -350,7 +538,7 @@ pub struct UiStore {
 
 ---
 
-## 6. Domain Event → Projection 映射表
+## 7. Domain Event → Projection 映射表
 
 | Domain Event | Projection | ViewModel 更新 |
 |-------------|-----------|---------------|
@@ -370,9 +558,9 @@ pub struct UiStore {
 
 ---
 
-## 7. Projection 与 Content 数据流
+## 8. Projection 与 Content 数据流
 
-### 7.1 数据流路径
+### 8.1 数据流路径
 
 ```
 Content (assets/config/*.ron)
@@ -384,7 +572,7 @@ ViewModel (UiStore)
 Widget
 ```
 
-### 7.2 合法模式：Projection 查询 Def
+### 8.2 合法模式：Projection 查询 Def
 
 ```rust
 // 允许：Projection 读取 DefRegistry，写入 UiStore
@@ -400,7 +588,7 @@ fn project_skill_info(
 }
 ```
 
-### 7.3 禁止模式：Widget 直接读 Def
+### 8.3 禁止模式：Widget 直接读 Def
 
 ```rust
 // ❌ Widget 直接读 Def
@@ -410,7 +598,7 @@ fn update_skill_icon(defs: Res<DefRegistry<SpellDef>>) { ... }
 fn load_skill_icon(assets: Res<AssetServer>) { ... }
 ```
 
-### 7.4 Modding 数据流
+### 8.4 Modding 数据流
 
 ```
 Mod → Content → DefRegistry → Projection → ViewModel → Widget
@@ -422,7 +610,7 @@ Mod → Content → DefRegistry → Projection → ViewModel → Widget
 
 ---
 
-## 8. UiBinding 反 Marker 模式
+## 9. UiBinding 反 Marker 模式
 
 为了应对 50 万行代码规模，禁止为每个 UI 元素创建独立 Marker 结构体：
 
@@ -453,7 +641,7 @@ pub enum UiBinding {
 
 ---
 
-## 9. ViewModel 的 Replay/Save 策略
+## 10. ViewModel 的 Replay/Save 策略
 
 | 维度 | 策略 |
 |------|------|
@@ -466,7 +654,7 @@ pub enum UiBinding {
 
 ---
 
-## 10. 验证规则
+## 11. 验证规则
 
 | # | 规则 | 触发时机 | 校验逻辑 |
 |---|------|----------|----------|

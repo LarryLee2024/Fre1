@@ -80,8 +80,18 @@ pub struct EffectDef {
     /// 效果需要的标签（目标必须拥有效果才能生效）
     pub required_tags: Option<Vec<TagId>>,
 
+    /// 目标不能拥有的标签（否则效果应用失败，用于免疫检查）
+    ///
+    /// 来源：Data Schema `docs/04-data/capabilities/effect_schema.md` §3.1
+    pub ignored_tags: Option<Vec<TagId>>,
+
     /// 效果移除时清理的标签
     pub removed_tags: Option<Vec<TagId>>,
+
+    /// 应用此效果时，移除目标上具有这些标签的其他效果
+    ///
+    /// 来源：Data Schema `docs/04-data/capabilities/effect_schema.md` §3.1
+    pub remove_effects_with_tags: Option<Vec<TagId>>,
 
     // ── 条件与执行 ──
     /// 应用条件（可选，满足此条件效果才能应用）
@@ -288,7 +298,9 @@ EffectDefPlugin::build
 | V14 | `cues[].cue_def_id` 已注册 | 在 DefRegistry<CueDef> 中存在 |
 | V15 | `granted_tags` 中的每个 TagId 已注册 | 在 DefRegistry<TagDef> 中存在 |
 | V16 | `required_tags` 中的每个 TagId 已注册 | 在 DefRegistry<TagDef> 中存在 |
-| V17 | `removed_tags` 中的每个 TagId 已注册 | 在 DefRegistry<TagDef> 中存在 |
+| V17 | `ignored_tags` 中的每个 TagId 已注册 | 在 DefRegistry<TagDef> 中存在 |
+| V18 | `removed_tags` 中的每个 TagId 已注册 | 在 DefRegistry<TagDef> 中存在 |
+| V19 | `remove_effects_with_tags` 中的每个 TagId 已注册 | 在 DefRegistry<TagDef> 中存在 |
 
 ### 4.3 互斥字段校验
 

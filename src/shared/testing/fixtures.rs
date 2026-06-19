@@ -252,7 +252,7 @@ impl ModifierBuilder {
 pub struct EffectBuilder {
     instance_id: String,
     def_id: String,
-    category: String,
+    tags: Vec<String>,
     source: String,
     target: String,
     duration: EffectDuration,
@@ -269,7 +269,7 @@ impl EffectBuilder {
         Self {
             instance_id: format!("eff_{}", &def_id_str),
             def_id: def_id_str,
-            category: "Buff".to_string(),
+            tags: vec![],
             source: source.into(),
             target: target.into(),
             duration: EffectDuration::Instant,
@@ -282,8 +282,8 @@ impl EffectBuilder {
         self
     }
 
-    pub fn category(mut self, cat: impl Into<String>) -> Self {
-        self.category = cat.into();
+    pub fn tags(mut self, tags: Vec<String>) -> Self {
+        self.tags = tags;
         self
     }
 
@@ -301,7 +301,7 @@ impl EffectBuilder {
         EffectInstance::new(
             &self.instance_id,
             &self.def_id,
-            &self.category,
+            self.tags,
             &self.source,
             &self.target,
             self.duration,

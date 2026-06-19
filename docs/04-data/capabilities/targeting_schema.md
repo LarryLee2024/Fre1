@@ -4,7 +4,7 @@ title: Targeting Schema — 目标选择数据架构
 status: stable
 owner: data-architect
 created: 2026-06-16
-updated: 2026-06-16
+updated: 2026-06-20
 layer: definition, runtime
 replay-safe: true
 ---
@@ -61,10 +61,14 @@ struct TargetingDef {
     include_self: bool,
 
     /// 排除条件（满足此条件的目标不被选中）
-    exclude_condition: Option<Condition>,
+    ///
+    /// ConditionId 引用 ConditionDef（Content 层设计）
+    exclude_condition: Option<ConditionId>,
 
     /// 附加过滤条件（只选中满足此条件的目标）
-    filter_condition: Option<Condition>,
+    ///
+    /// ConditionId 引用 ConditionDef（Content 层设计）
+    filter_condition: Option<ConditionId>,
 
     /// 是否需要视野
     require_los: bool,

@@ -4,7 +4,7 @@ title: Trigger Schema — 触发器数据架构
 status: stable
 owner: data-architect
 created: 2026-06-16
-updated: 2026-06-16
+updated: 2026-06-20
 layer: definition
 replay-safe: true
 ---
@@ -50,7 +50,9 @@ struct TriggerDef {
     trigger_type: TriggerType,
 
     /// 触发条件（附加过滤条件，可选）
-    condition: Option<Condition>,
+    ///
+    /// ConditionId 引用 ConditionDef（Content 层设计）
+    condition: Option<ConditionId>,
 
     /// 目标技能（触发器满足时激活哪个技能）
     target_ability: AbilityDefId,

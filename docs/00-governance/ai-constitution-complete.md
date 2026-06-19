@@ -1,12 +1,12 @@
-# Bevy 0.19+ SRPG 项目总宪法 v5.2（完整版）
+# Bevy 0.19+ SRPG 项目总宪法 v5.3（完整版）
 > 文档元数据
 > - id: 00-governance.project-constitution-complete
 > - title: SRPG 项目总宪法（架构 + 开发 + AI 执行）
-> - version: 5.2
+> - version: 5.3
 > - status: Proposed
 > - owner: architect
 > - created: 2026-06-14
-> - updated: 2026-06-19（v5.2 + Bevy 0.19 基线升级：Observer 优先、Delayed Commands、BSN 规则、Relationship 规则）
+> - updated: 2026-06-20（v5.3 + Agent 三级治理体系 + BSN 作用域限制 + Factory 方案 + Content 平台宪法）
 > - tags: governance, constitution, architecture, bevy, srpg
 > - 效力说明：本宪法对项目所有架构设计、代码编写、AI生成内容具有最高约束力，优先级高于任何通用编程规范、语言习惯或AI默认输出。条款编号永久固定，违反条款即视为不合格输出。
 
@@ -1588,8 +1588,22 @@ AI 生成代码前应内部对照以下要点：
 
 ## 附则
 ### 修订说明
-- 本宪法版本：v5.2（Bevy 0.19+）
-- 发布日期：2026-06-19
+- 本宪法版本：v5.3（Bevy 0.19+）
+- 发布日期：2026-06-20
+- 核心升级（v5.2 → v5.3）：
+  1. **Agent 三级治理体系**
+     - §第九编（UI 系统宪法）新增 BSN 作用域限制 + Factory 方案
+     - 新增 §第九编 BSN 规则：`src/app/scenes/` ✅ / `src/ui/screens/` 🟥 / `src/ui/widgets/` 🟥
+     - 新增 §第九编 Factory 规则：所有 Screen/Widget 必须通过 Factory 构建
+     - ADR-056 将 Agent 体系从 7 个扩展为 9 个，三级分治（S 架构委员会/A 工程委员会/B 执行层）
+  2. **Content 平台宪法化**
+     - 5 层内容分层（L0 Vocabulary / L1 Capability / L2 Entity / L3 Gameplay / L4 World）
+     - Content Layering 原则：高层可引用低层，低层不可引用高层
+     - Content = 游戏数据库，非配置文件集合
+  3. **UI 架构宪法化**
+     - BSN 规则从"禁止 BSN"升级为"限制 BSN 的作用域和职责"
+     - Factory 方案：`spawn_xxx(commands, props)` 或 `XxxFactory`
+     - Widget Contract、Projection 防火墙、Dirty<T> 机制的宪法约束
 - 核心升级（v5.1 → v5.2）：
   1. **Bevy 0.19 基线升级**
      - §1.1 引擎版本从"0.19+"更新为"0.19+"

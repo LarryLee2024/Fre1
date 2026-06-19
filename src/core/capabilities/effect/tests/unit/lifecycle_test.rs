@@ -18,7 +18,7 @@ fn make_instant_effect(id: &str) -> EffectInstance {
     EffectInstance::new(
         id,
         "eff_damage",
-        "Damage",
+        vec![],
         "caster_001",
         "target_001",
         EffectDuration::Instant,
@@ -55,7 +55,7 @@ fn apply_instant_effect_success() {
     let mut commands = world.commands();
     let mut container = make_test_container();
     let effect = make_instant_effect("inst_001");
-    let result = apply_effect(&mut container, effect, &mut commands);
+    let result = apply_effect(&mut container, effect, None, &mut commands);
     assert!(result.success);
     assert_eq!(container.count(), 0);
 }
@@ -66,7 +66,7 @@ fn apply_duration_effect_success() {
     let mut commands = world.commands();
     let mut container = make_test_container();
     let effect = make_duration_effect("dur_001", 3);
-    let result = apply_effect(&mut container, effect, &mut commands);
+    let result = apply_effect(&mut container, effect, None, &mut commands);
     assert!(result.success);
     assert_eq!(container.count(), 1);
 }
@@ -77,7 +77,7 @@ fn apply_infinite_effect_success() {
     let mut commands = world.commands();
     let mut container = make_test_container();
     let effect = make_infinite_effect("inf_001");
-    let result = apply_effect(&mut container, effect, &mut commands);
+    let result = apply_effect(&mut container, effect, None, &mut commands);
     assert!(result.success);
     assert_eq!(container.count(), 1);
 }
@@ -88,10 +88,10 @@ fn apply_duplicate_effect_rejected() {
     let mut commands = world.commands();
     let mut container = make_test_container();
     let effect = make_duration_effect("dup_001", 3);
-    let first = apply_effect(&mut container, effect, &mut commands);
+    let first = apply_effect(&mut container, effect, None, &mut commands);
     assert!(first.success);
     let second = make_duration_effect("dup_002", 3);
-    let result = apply_effect(&mut container, second, &mut commands);
+    let result = apply_effect(&mut container, second, None, &mut commands);
     assert!(!result.success);
     assert!(matches!(
         result.error,
@@ -107,13 +107,13 @@ fn apply_effect_missing_source_rejected() {
     let effect = EffectInstance::new(
         "no_source",
         "eff_test",
-        "Test",
+        vec![],
         "",
         "target_001",
         EffectDuration::Instant,
         1,
     );
-    let result = apply_effect(&mut container, effect, &mut commands);
+    let result = apply_effect(&mut container, effect, None, &mut commands);
     assert!(!result.success);
     assert!(matches!(result.error, Some(EffectError::MissingSource(_))));
 }
@@ -124,17 +124,17 @@ fn apply_effect_slot_limit() {
     let mut commands = world.commands();
     let mut container = ActiveEffectContainer::new().with_max_effects(1);
     let first = make_duration_effect("first", 3);
-    let _ = apply_effect(&mut container, first, &mut commands);
+    let _ = apply_effect(&mut container, first, None, &mut commands);
     let second = EffectInstance::new(
         "second",
         "eff_other",
-        "Buff",
+        vec![],
         "caster_002",
         "target_001",
         EffectDuration::Infinite,
         1,
     );
-    let result = apply_effect(&mut container, second, &mut commands);
+    let result = apply_effect(&mut container, second, None, &mut commands);
     assert!(!result.success);
     assert!(matches!(
         result.error,
@@ -148,17 +148,17 @@ fn apply_multiple_different_effects_ok() {
     let mut commands = world.commands();
     let mut container = make_test_container();
     let a = make_duration_effect("a", 3);
-    assert!(apply_effect(&mut container, a, &mut commands).success);
+    assert!(apply_effect(&mut container, a, None, &mut commands).success);
     let b = EffectInstance::new(
         "b",
         "eff_other",
-        "Buff",
+        vec![],
         "caster_002",
         "target_001",
         EffectDuration::Infinite,
         1,
     );
-    assert!(apply_effect(&mut container, b, &mut commands).success);
+    assert!(apply_effect(&mut container, b, None, &mut commands).success);
     assert_eq!(container.count(), 2);
 }
 
@@ -216,7 +216,7 @@ fn tick_duration_reduces_remaining_turns() {
     let mut commands = world.commands();
     let mut container = make_test_container();
     let effect = make_duration_effect("test", 3);
-    let _ = apply_effect(&mut container, effect, &mut commands);
+    let _ = apply_effect(&mut container, effect, None, &mut commands);
     let result = tick_durations(&mut container, 1, 2, &mut commands);
     let instance = container.find_by_id("test").unwrap();
     assert_eq!(instance.remaining_turns, 2);
@@ -230,7 +230,7 @@ fn tick_duration_to_zero_triggers_expiring() {
     let mut commands = world.commands();
     let mut container = make_test_container();
     let effect = make_duration_effect("test", 2);
-    let _ = apply_effect(&mut container, effect, &mut commands);
+    let _ = apply_effect(&mut container, effect, None, &mut commands);
     tick_durations(&mut container, 2, 2, &mut commands);
     let instance = container.find_by_id("test").unwrap();
     assert_eq!(instance.stage, EffectStage::Expiring);
@@ -243,7 +243,7 @@ fn tick_duration_beyond_zero_clamps() {
     let mut commands = world.commands();
     let mut container = make_test_container();
     let effect = make_duration_effect("test", 1);
-    let _ = apply_effect(&mut container, effect, &mut commands);
+    let _ = apply_effect(&mut container, effect, None, &mut commands);
     tick_durations(&mut container, 5, 2, &mut commands);
     let instance = container.find_by_id("test").unwrap();
     assert_eq!(instance.remaining_turns, 0);
@@ -256,7 +256,7 @@ fn tick_infinite_does_not_expire() {
     let mut commands = world.commands();
     let mut container = make_test_container();
     let effect = make_infinite_effect("test");
-    let _ = apply_effect(&mut container, effect, &mut commands);
+    let _ = apply_effect(&mut container, effect, None, &mut commands);
     tick_durations(&mut container, 100, 2, &mut commands);
     let instance = container.find_by_id("test").unwrap();
     assert_eq!(instance.stage, EffectStage::Active);
@@ -269,7 +269,7 @@ fn tick_paused_effect_skipped() {
     let mut container = make_test_container();
     let mut effect = make_duration_effect("test", 3);
     effect.paused = true;
-    let _ = apply_effect(&mut container, effect, &mut commands);
+    let _ = apply_effect(&mut container, effect, None, &mut commands);
     tick_durations(&mut container, 2, 2, &mut commands);
     let instance = container.find_by_id("test").unwrap();
     assert_eq!(instance.remaining_turns, 3);
@@ -284,7 +284,7 @@ fn periodic_tick_triggers() {
     let mut container = make_test_container();
     let period = EffectPeriod::new(1).unwrap();
     let effect = make_duration_effect("dot", 5).with_period(period);
-    let _ = apply_effect(&mut container, effect, &mut commands);
+    let _ = apply_effect(&mut container, effect, None, &mut commands);
     let result = tick_durations(&mut container, 1, 2, &mut commands);
     assert!(result.ticked.contains(&"dot".to_string()));
 }
@@ -296,7 +296,7 @@ fn periodic_tick_not_at_wrong_interval() {
     let mut container = make_test_container();
     let period = EffectPeriod::new(2).unwrap();
     let effect = make_duration_effect("dot", 5).with_period(period);
-    let _ = apply_effect(&mut container, effect, &mut commands);
+    let _ = apply_effect(&mut container, effect, None, &mut commands);
     let result = tick_durations(&mut container, 1, 2, &mut commands);
     assert!(result.ticked.is_empty());
 }
@@ -308,7 +308,7 @@ fn periodic_tick_max_ticks() {
     let mut container = make_test_container();
     let period = EffectPeriod::new(1).unwrap().with_max_ticks(2).unwrap();
     let effect = make_duration_effect("dot", 10).with_period(period);
-    let _ = apply_effect(&mut container, effect, &mut commands);
+    let _ = apply_effect(&mut container, effect, None, &mut commands);
     let r1 = tick_durations(&mut container, 1, 2, &mut commands);
     assert_eq!(r1.ticked.len(), 1);
     let r2 = tick_durations(&mut container, 1, 3, &mut commands);
@@ -325,7 +325,7 @@ fn expire_effects_moves_to_removed() {
     let mut commands = world.commands();
     let mut container = make_test_container();
     let effect = make_duration_effect("test", 1);
-    let _ = apply_effect(&mut container, effect, &mut commands);
+    let _ = apply_effect(&mut container, effect, None, &mut commands);
     tick_durations(&mut container, 1, 2, &mut commands);
     let expired = expire_effects(&mut container);
     assert_eq!(expired.len(), 1);
@@ -339,10 +339,10 @@ fn expire_only_expiring_effects() {
     let mut world = World::new();
     let mut commands = world.commands();
     let mut container = make_test_container();
-    let _ = apply_effect(&mut container, make_duration_effect("a", 3), &mut commands);
+    let _ = apply_effect(&mut container, make_duration_effect("a", 3), None, &mut commands);
     let mut b = make_duration_effect("b", 1);
     b.source_entity = "caster_002".into();
-    let _ = apply_effect(&mut container, b, &mut commands);
+    let _ = apply_effect(&mut container, b, None, &mut commands);
     tick_durations(&mut container, 1, 2, &mut commands);
     let expired = expire_effects(&mut container);
     assert_eq!(expired.len(), 1);
@@ -357,7 +357,7 @@ fn remove_by_id_success() {
     let mut commands = world.commands();
     let mut container = make_test_container();
     let effect = make_duration_effect("test", 3);
-    let _ = apply_effect(&mut container, effect, &mut commands);
+    let _ = apply_effect(&mut container, effect, None, &mut commands);
     let removed = remove_effect_by_id(
         &mut container,
         "test",
@@ -389,7 +389,7 @@ fn remove_undispellable_rejected() {
     let mut container = make_test_container();
     let mut effect = make_duration_effect("test", 3);
     effect.dispellable = false;
-    let _ = apply_effect(&mut container, effect, &mut commands);
+    let _ = apply_effect(&mut container, effect, None, &mut commands);
     let result = remove_effect_by_id(
         &mut container,
         "test",
@@ -406,7 +406,7 @@ fn remove_undispellable_allowed_when_forced() {
     let mut container = make_test_container();
     let mut effect = make_duration_effect("test", 3);
     effect.dispellable = false;
-    let _ = apply_effect(&mut container, effect, &mut commands);
+    let _ = apply_effect(&mut container, effect, None, &mut commands);
     let result = remove_effect_by_id(
         &mut container,
         "test",
@@ -422,17 +422,17 @@ fn remove_by_source() {
     let mut commands = world.commands();
     let mut container = make_test_container();
     let a = make_duration_effect("a", 3);
-    let _ = apply_effect(&mut container, a, &mut commands);
+    let _ = apply_effect(&mut container, a, None, &mut commands);
     let b = EffectInstance::new(
         "b",
         "eff_other",
-        "Buff",
+        vec![],
         "caster_002",
         "target_001",
         EffectDuration::Infinite,
         1,
     );
-    let _ = apply_effect(&mut container, b, &mut commands);
+    let _ = apply_effect(&mut container, b, None, &mut commands);
     let removed = remove_effects_by_source(
         &mut container,
         "caster_001",
@@ -449,10 +449,10 @@ fn remove_by_def() {
     let mut commands = world.commands();
     let mut container = make_test_container();
     let a = make_duration_effect("a", 3);
-    let _ = apply_effect(&mut container, a, &mut commands);
+    let _ = apply_effect(&mut container, a, None, &mut commands);
     let mut b = make_duration_effect("b", 3);
     b.source_entity = "caster_002".into();
-    let _ = apply_effect(&mut container, b, &mut commands);
+    let _ = apply_effect(&mut container, b, None, &mut commands);
     let removed = remove_effects_by_def(
         &mut container,
         "eff_poison",
@@ -471,7 +471,7 @@ fn container_find_by_def() {
     let mut commands = world.commands();
     let mut container = make_test_container();
     let a = make_duration_effect("a", 3);
-    let _ = apply_effect(&mut container, a, &mut commands);
+    let _ = apply_effect(&mut container, a, None, &mut commands);
     let found = container.find_by_def("eff_poison");
     assert_eq!(found.len(), 1);
 }
@@ -481,7 +481,7 @@ fn container_find_by_source() {
     let mut world = World::new();
     let mut commands = world.commands();
     let mut container = make_test_container();
-    let _ = apply_effect(&mut container, make_duration_effect("a", 3), &mut commands);
+    let _ = apply_effect(&mut container, make_duration_effect("a", 3), None, &mut commands);
     let found = container.find_by_source("caster_001");
     assert_eq!(found.len(), 1);
 }
@@ -499,7 +499,7 @@ fn container_get_tickable() {
     let mut container = make_test_container();
     let period = EffectPeriod::new(1).unwrap();
     let effect = make_duration_effect("dot", 5).with_period(period);
-    let _ = apply_effect(&mut container, effect, &mut commands);
+    let _ = apply_effect(&mut container, effect, None, &mut commands);
     let tickable = container.get_tickable();
     assert_eq!(tickable.len(), 1);
 }
@@ -509,7 +509,7 @@ fn container_has_duplicate() {
     let mut world = World::new();
     let mut commands = world.commands();
     let mut container = make_test_container();
-    let _ = apply_effect(&mut container, make_duration_effect("a", 3), &mut commands);
+    let _ = apply_effect(&mut container, make_duration_effect("a", 3), None, &mut commands);
     assert!(container.has_duplicate("eff_poison", "caster_001"));
     assert!(!container.has_duplicate("eff_other", "caster_001"));
 }
