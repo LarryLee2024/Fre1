@@ -32,8 +32,9 @@ impl Plugin for CombatPlugin {
         app.register_type::<ActionPoints>();
         app.register_type::<CombatParticipant>();
 
-        // ── 注册 State — 仅保留宏观 BattlePhase ──
-        app.init_state::<BattlePhase>();
+        // ── BattlePhase 已转为 SubState，由 GameState::Combat 自动激活 ──
+        // 不再需要显式 init_state，SubStates derive 自动处理注册。
+        // 详见 ADR-050 §2。
 
         // ── 初始化 Resource ──
         app.init_resource::<TurnQueue>();

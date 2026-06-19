@@ -6,5 +6,6 @@
 //! 详见 `docs/01-architecture/README.md` §3.5
 
 pub mod app_plugin;
+pub mod scenes;
 
 pub use app_plugin::AppPlugin;

@@ -9,7 +9,9 @@ use crate::infra::{
     input::InputPlugin, pipeline::PipelinePlugin, registry::RegistryPlugin, replay::ReplayPlugin,
     save::SavePlugin,
 };
-use crate::{content::ContentPlugin, modding::ModdingPlugin, shared::SharedPlugin};
+use crate::{
+    app::scenes::ScenePlugin, content::ContentPlugin, modding::ModdingPlugin, shared::SharedPlugin,
+};
 use bevy::prelude::*;
 
 #[cfg(feature = "dev")]
@@ -42,7 +44,14 @@ impl Plugin for AppPlugin {
         app.add_plugins(CombatReplayBridgePlugin);
 
         // ════════════════════════════════════════════
-        // Phase 9: Cross-cutting
+        // Phase 9: Game State Management
+        // ════════════════════════════════════════════
+        // GameState 注册 + StateTransitionQueue + ScenePlugin。
+        // 详见 ADR-050。
+        app.add_plugins(ScenePlugin);
+
+        // ════════════════════════════════════════════
+        // Phase 10: Cross-cutting
         // ════════════════════════════════════════════
         app.add_plugins(ContentPlugin).add_plugins(ModdingPlugin);
 
