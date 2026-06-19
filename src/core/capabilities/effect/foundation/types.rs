@@ -5,12 +5,13 @@
 //! 详见 docs/02-domain/capabilities/effect_domain.md §1、§3。
 //! 详见 docs/04-data/capabilities/effect_schema.md §3。
 
+use bevy::prelude::Reflect;
 use serde::{Deserialize, Serialize};
 
 /// 效果生命周期阶段（四阶段状态机）。
 ///
 /// 转换规则见 docs/02-domain/capabilities/effect_domain.md §2。
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Reflect)]
 pub enum EffectStage {
     /// 施加阶段——检查条件，初始化
     Applying,
@@ -45,7 +46,7 @@ impl EffectStage {
 }
 
 /// 效果持续时间类型。
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Reflect)]
 pub enum EffectDuration {
     /// 瞬时效果（立即执行，无持续阶段）
     Instant,
@@ -93,7 +94,7 @@ impl EffectDuration {
 }
 
 /// 持续时间计算方式。
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Reflect)]
 pub enum DurationCalculation {
     /// 固定值
     Fixed,
@@ -137,7 +138,7 @@ impl DurationCalculation {
 }
 
 /// 效果周期 Tick 定义。
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Reflect)]
 pub struct EffectPeriod {
     /// 间隔回合数（V6: ≥ 1）
     pub interval_turns: u32,

@@ -119,10 +119,12 @@ macro_rules! define_string_id {
 /// u64 类型实例 ID 宏。
 ///
 /// 用于运行时分配的实例唯一标识（如 ModifierInstanceId）。
+///
+/// 注意：调用此宏的模块必须将 `bevy::prelude::Reflect` 引入作用域。
 #[macro_export]
 macro_rules! define_numeric_id {
     ($name:ident) => {
-        #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Reflect)]
         pub struct $name(pub u64);
 
         impl $name {

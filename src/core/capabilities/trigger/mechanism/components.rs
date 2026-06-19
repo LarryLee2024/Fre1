@@ -12,7 +12,8 @@ use crate::core::capabilities::trigger::foundation::{TriggerEntry, TriggerType};
 ///
 /// 管理实体的所有触发器实例，支持按 ID 或按类型查询。
 /// 触发器注册（register）和移除（remove）流程由外部系统编排。
-#[derive(Component, Debug, Clone)]
+#[derive(Component, Debug, Clone, Reflect)]
+#[reflect(Component)]
 pub struct TriggerContainer {
     /// trigger_id → TriggerEntry
     pub triggers: HashMap<String, TriggerEntry>,

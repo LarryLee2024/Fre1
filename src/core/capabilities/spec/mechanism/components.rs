@@ -16,7 +16,8 @@ use crate::core::capabilities::spec::foundation::{AbilitySpec, EffectSpec, SpecI
 ///
 /// 管理实体的所有 AbilitySpec 和 EffectSpec 实例，维护 def_id → spec_id 的
 /// 快速索引以支持 O(1) 重复检测（不变量 V3）。
-#[derive(Component, Debug, Clone)]
+#[derive(Component, Debug, Clone, Reflect)]
+#[reflect(Component)]
 pub struct SpecContainer {
     /// 所有 AbilitySpec（keyed by spec_id）
     pub abilities: HashMap<SpecId, AbilitySpec>,

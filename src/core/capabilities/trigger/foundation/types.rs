@@ -2,10 +2,12 @@
 
 use std::collections::HashMap;
 
+use bevy::prelude::Reflect;
+
 /// 触发类型枚举。
 ///
 /// 每个变体对应一类事件源。OnCustom 供 Domain 注册自定义触发类型。
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Reflect)]
 pub enum TriggerType {
     /// 标签被授予时触发
     OnTagAdded,
@@ -56,7 +58,7 @@ impl TriggerType {
 /// 触发频率状态。
 ///
 /// 管理单回合内的触发次数限制（不变量 §3.3）。
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Reflect)]
 pub struct TriggerFrequency {
     /// 每回合最大触发次数（0 = 无限制）
     pub max_per_turn: u32,

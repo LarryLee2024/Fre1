@@ -1,5 +1,7 @@
 //! Trigger 值对象定义
 
+use bevy::prelude::Reflect;
+
 use crate::core::capabilities::trigger::foundation::types::{
     TriggerFrequency, TriggerParams, TriggerType,
 };
@@ -8,7 +10,7 @@ use crate::core::capabilities::trigger::foundation::types::{
 ///
 /// 定义触发器被激活前必须满足的额外条件。
 /// 简单条件使用 `condition_id` 委托 Condition 领域；额外参数通过 `params` 传入。
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Reflect)]
 pub struct TriggerCondition {
     /// 委托给 Condition 领域的条件 ID（None = 无条件）
     pub condition_id: Option<String>,
@@ -37,7 +39,7 @@ impl TriggerCondition {
 /// 触发器条目——完整的触发器定义。
 ///
 /// 定义了"什么条件下（TriggerType + TriggerCondition）激活什么技能（target_ability_def_id）"。
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Reflect)]
 pub struct TriggerEntry {
     /// 触发器唯一标识
     pub id: String,

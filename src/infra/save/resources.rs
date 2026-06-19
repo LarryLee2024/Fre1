@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use bevy::prelude::*;
 
 /// 存档元数据（玩家可见）。
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Reflect)]
 pub struct SaveMetadata {
     pub label: String,
     pub location: String,
@@ -23,7 +23,8 @@ impl Default for SaveMetadata {
 }
 
 /// 存档管理器 — 当前存档会话状态。
-#[derive(Resource)]
+#[derive(Resource, Reflect)]
+#[reflect(Resource)]
 pub struct SaveManager {
     pub current_save_path: Option<PathBuf>,
     pub metadata: SaveMetadata,
@@ -68,11 +69,12 @@ impl Default for AutoSaveConfig {
 }
 
 /// 持久化 Entity ID — 存档中使用的稳定 ID。
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect)]
 pub struct PersistentEntityId(pub u64);
 
 /// Entity 重映射表 — 存档 ↔ 运行时的双向映射。
-#[derive(Resource)]
+#[derive(Resource, Reflect)]
+#[reflect(Resource)]
 pub struct EntityRemapper {
     pub persistent_to_entity: Vec<(PersistentEntityId, Entity)>,
     next_id: u64,

@@ -5,9 +5,7 @@
 //!
 //! 详见 `docs/01-architecture/README.md` §3.5
 
-use bevy::dev_tools::diagnostics_overlay::{
-    DiagnosticsOverlay, DiagnosticsOverlayPlugin,
-};
+use bevy::dev_tools::diagnostics_overlay::{DiagnosticsOverlay, DiagnosticsOverlayPlugin};
 use bevy::prelude::*;
 
 pub struct DevToolsPlugin;

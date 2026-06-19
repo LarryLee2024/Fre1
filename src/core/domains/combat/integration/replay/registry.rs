@@ -45,7 +45,8 @@ impl Borrow<str> for BattleUnitId {
 /// 战场单位注册表 Resource。
 ///
 /// 提供双向查询：Entity → BattleUnitId 和 BattleUnitId → Entity。
-#[derive(Resource, Debug, Default)]
+#[derive(Resource, Debug, Default, Reflect)]
+#[reflect(Resource)]
 pub struct BattleUnitRegistry {
     /// Entity → BattleUnitId 正向映射
     entity_to_id: HashMap<Entity, BattleUnitId>,

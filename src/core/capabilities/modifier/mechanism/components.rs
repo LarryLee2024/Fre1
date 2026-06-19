@@ -5,7 +5,8 @@ use bevy::prelude::*;
 use crate::core::capabilities::modifier::foundation::{ModifierData, ModifierInstanceId};
 
 /// 实体上的活跃修改器容器。
-#[derive(Component, Debug, Clone)]
+#[derive(Component, Debug, Clone, Reflect)]
+#[reflect(Component)]
 pub struct ModifierContainer {
     pub modifiers: HashMap<String, Vec<ModifierData>>,
     pub override_index: HashMap<String, ModifierInstanceId>,

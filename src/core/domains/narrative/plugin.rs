@@ -8,7 +8,7 @@ use bevy::prelude::*;
 use super::components::{
     CutsceneState, DialogueHistory, DialogueState, DialogueTreeRegistry, StoryFlags,
 };
-use super::systems::cutscene_system::{on_cutscene_start, on_cutscene_ended};
+use super::systems::cutscene_system::{on_cutscene_ended, on_cutscene_start};
 use super::systems::dialogue_system::{on_choice_select, on_dialogue_start};
 use super::systems::story_flag_system::on_story_flag_set;
 use crate::app::scenes::GameState;

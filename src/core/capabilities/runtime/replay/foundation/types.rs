@@ -4,8 +4,10 @@
 //!
 //! 详见 docs/04-data/infrastructure/replay_schema.md
 
+use bevy::prelude::Reflect;
+
 /// 回放帧——单帧的命令集合 + 种子信息。
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Reflect)]
 pub struct ReplayFrame {
     /// 帧序号（从 0 开始）
     pub frame_number: u64,
@@ -47,7 +49,7 @@ impl ReplayFrame {
 /// 原子命令——回放的最小可录制单元。
 ///
 /// 详见 replay_schema.md §3.4
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Reflect)]
 pub enum ReplayCommand {
     /// 单位移动
     UnitMove {
@@ -132,7 +134,7 @@ impl ReplayCommand {
 }
 
 /// 技能目标类型。
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Reflect)]
 pub enum AbilityTarget {
     /// 单体目标
     Single(String),
@@ -143,7 +145,7 @@ pub enum AbilityTarget {
 }
 
 /// RNG 流——用途独立的随机数流。
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect)]
 pub enum RngStream {
     /// 战斗（命中/暴击/伤害浮动）
     Combat,
@@ -173,7 +175,7 @@ impl RngStream {
 }
 
 /// RNG 种子集合——每个流独立种子。
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Reflect)]
 pub struct RngSeeds {
     /// 战斗种子
     pub combat_seed: u64,
@@ -228,7 +230,7 @@ impl RngSeeds {
 }
 
 /// 回放头信息——回放日志元数据。
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Reflect)]
 pub struct ReplayHeader {
     /// Schema 版本
     pub schema_version: u32,
@@ -274,7 +276,7 @@ impl ReplayHeader {
 }
 
 /// 回放领域错误。
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Reflect)]
 pub enum ReplayError {
     /// 版本不兼容
     VersionMismatch { expected: u32, actual: u32 },

@@ -5,7 +5,8 @@ use bevy::prelude::*;
 use crate::core::capabilities::attribute::foundation::{AttributeId, AttributeValue};
 
 /// 实体上的属性容器。
-#[derive(Component, Debug, Clone)]
+#[derive(Component, Debug, Clone, Reflect)]
+#[reflect(Component)]
 pub struct AttributeContainer {
     pub attributes: HashMap<AttributeId, AttributeValue>,
     pub derived_cache: HashMap<AttributeId, f32>,

@@ -10,7 +10,8 @@ use bevy::prelude::*;
 ///
 /// 管理该实体关联的所有 Cue 信号，按触发时机分类。
 /// 当 Effect/Ability 生命周期到达对应阶段时，从此组件查询应触发的 Cue。
-#[derive(Component, Debug, Clone, PartialEq)]
+#[derive(Component, Debug, Clone, PartialEq, Reflect)]
+#[reflect(Component)]
 pub struct CueContainerComponent {
     /// 内部的 Cue 容器
     pub container: CueContainer,

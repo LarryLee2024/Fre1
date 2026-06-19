@@ -26,7 +26,8 @@ use crate::core::capabilities::runtime::replay::mechanism::{
 /// 回放模式下：RNG 种子由回放日志驱动，通过 `rng_sync_system` 保持同步。
 ///
 /// 详见 ADR-041 §3.2
-#[derive(Resource)]
+#[derive(Resource, Reflect)]
+#[reflect(Resource)]
 pub struct DeterministicRng(pub CoreDeterministicRng);
 
 impl FromWorld for DeterministicRng {
@@ -41,7 +42,8 @@ impl FromWorld for DeterministicRng {
 /// 各系统应通过 `guard.0.is_replay` 判断当前模式并采取对应行为。
 ///
 /// 详见 ADR-041 §6
-#[derive(Resource)]
+#[derive(Resource, Reflect)]
+#[reflect(Resource)]
 pub struct ReplayModeGuard(pub CoreReplayModeGuard);
 
 impl Default for ReplayModeGuard {

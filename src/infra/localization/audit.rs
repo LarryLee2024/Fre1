@@ -12,7 +12,8 @@ use super::database::LocalizationDatabase;
 const AUDIT_INTERVAL_SECONDS: f64 = 300.0; // 每 5 分钟
 
 /// 运行时计时器资源
-#[derive(Resource)]
+#[derive(Resource, Reflect)]
+#[reflect(Resource)]
 pub struct AuditTimer {
     timer: Timer,
 }

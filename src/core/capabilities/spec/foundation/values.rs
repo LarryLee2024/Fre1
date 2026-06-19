@@ -2,10 +2,12 @@
 
 use std::collections::HashMap;
 
+use bevy::prelude::Reflect;
+
 use crate::core::capabilities::spec::foundation::types::{EnhancementId, SpecId};
 
 /// 消耗覆盖定义。
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Reflect)]
 pub struct CostOverride {
     /// 替代的消耗属性 ID
     pub resource_attribute: String,
@@ -14,7 +16,7 @@ pub struct CostOverride {
 }
 
 /// 角色身上的技能配置实例。
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Reflect)]
 pub struct AbilitySpec {
     /// Spec 唯一标识
     pub spec_id: SpecId,
@@ -60,7 +62,7 @@ impl AbilitySpec {
 }
 
 /// 效果的来源信息。
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Reflect)]
 pub struct EffectSource {
     /// 来源实体（字符串 ID，因为跨领域传递）
     pub source_entity: String,
@@ -71,7 +73,7 @@ pub struct EffectSource {
 }
 
 /// 效果属性快照。
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Reflect)]
 pub struct EffectSnapshot {
     /// 快照时的施法者属性值
     pub caster_attributes: HashMap<String, f32>,
@@ -93,7 +95,7 @@ impl EffectSnapshot {
 }
 
 /// 角色身上的效果配置实例。
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Reflect)]
 pub struct EffectSpec {
     /// Spec 唯一标识
     pub spec_id: SpecId,

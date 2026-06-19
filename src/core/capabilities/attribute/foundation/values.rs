@@ -1,4 +1,5 @@
 use bevy::asset::Asset;
+use bevy::prelude::Reflect;
 use bevy::reflect::TypePath;
 use serde::{Deserialize, Serialize};
 
@@ -17,7 +18,7 @@ pub struct AttributeDefinition {
 }
 
 /// 属性的运行时数值。
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Reflect)]
 pub struct AttributeValue {
     pub def_id: AttributeId,
     pub base_value: f32,

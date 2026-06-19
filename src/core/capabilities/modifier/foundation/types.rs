@@ -1,9 +1,11 @@
+use bevy::prelude::Reflect;
+
 crate::define_numeric_id!(ModifierInstanceId);
 
 use serde::{Deserialize, Serialize};
 
 /// 修改器运算类型。
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Reflect)]
 pub enum ModifierOp {
     Add,
     Multiply,
@@ -14,7 +16,7 @@ pub enum ModifierOp {
 pub type ModifierPriority = u8;
 
 /// 修改器来源类型。
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Reflect)]
 pub enum ModifierSourceType {
     Buff,
     Equipment,

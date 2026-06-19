@@ -4,14 +4,14 @@
 //!
 //! 详见 docs/04-data/capabilities/effect_schema.md §3。
 
-use bevy::prelude::Component;
+use bevy::prelude::*;
 
 use crate::core::capabilities::effect::foundation::types::{
     EffectDuration, EffectPeriod, EffectStage,
 };
 
 /// 周期 Tick 状态——追踪持续性效果的周期性触发进度。
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Reflect)]
 pub struct TickState {
     /// 已触发的 Tick 次数
     pub tick_count: u32,
@@ -63,7 +63,7 @@ impl TickState {
 }
 
 /// 效果运行时实例——单个 Effect 在实体上的运行时快照。
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Reflect)]
 pub struct EffectInstance {
     /// 实例唯一标识
     pub instance_id: String,
@@ -183,7 +183,8 @@ impl EffectInstance {
 /// 活跃效果容器——每个实体的效果管理组件。
 ///
 /// 管理目标实体上所有当前生效的效果。
-#[derive(Component, Debug, Clone, PartialEq)]
+#[derive(Component, Debug, Clone, PartialEq, Reflect)]
+#[reflect(Component)]
 pub struct ActiveEffectContainer {
     /// 所有活跃的效果实例
     pub effects: Vec<EffectInstance>,

@@ -2,10 +2,12 @@
 //!
 //! 定义 Cue 绑定注册表——实体上管理的表现信号集合。
 
+use bevy::prelude::Reflect;
+
 use super::types::CueDef;
 
 /// Cue 绑定——记录一个 Cue 定义与实体的关联。
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Reflect)]
 pub struct CueBinding {
     /// Cue 定义
     pub cue_def: CueDef,
@@ -27,7 +29,7 @@ impl CueBinding {
 ///
 /// 实体可以有多个 Cue（不同触发时机、不同类型的表现）。
 /// 不变量 3.4: 所有 Cue 可被独立禁用。
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Reflect)]
 pub struct CueContainer {
     /// 已注册的 Cue 绑定列表
     pub bindings: Vec<CueBinding>,

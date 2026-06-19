@@ -1,11 +1,12 @@
 //! Replay 值对象：录制器、播放器、确定性 RNG、验证器
 
+use bevy::prelude::Reflect;
 use std::collections::HashMap;
 
 use super::types::{ReplayCommand, ReplayFrame, ReplayHeader, RngSeeds, RngStream};
 
 /// 完整的回放日志。
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Reflect)]
 pub struct ReplayLog {
     /// 头部元数据
     pub header: ReplayHeader,
@@ -69,7 +70,7 @@ impl ReplayMode {
 /// 所有业务随机操作通过此资源进行，确保回放确定性。
 ///
 /// 详见 ADR-041 §3
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Reflect)]
 pub struct DeterministicRng {
     /// 各流当前种子
     seeds: RngSeeds,
@@ -444,7 +445,7 @@ impl Default for ReplayValidator {
 }
 
 /// 回放模式守卫——标记当前是否在回放模式。
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Reflect)]
 pub struct ReplayModeGuard {
     /// 是否处于回放模式
     pub is_replay: bool,

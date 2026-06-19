@@ -12,7 +12,7 @@ use bevy::prelude::*;
 use super::error::{LocError, LocaleId};
 
 /// 解析后的 Pattern，含原始文本和预提取的变量名列表
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Reflect)]
 pub struct Pattern {
     /// 原始模式文本（带 {$var} 占位符）
     pub template: String,
@@ -21,7 +21,8 @@ pub struct Pattern {
 }
 
 /// 核心 Localization 数据库，全局唯一 ECS Resource
-#[derive(Resource)]
+#[derive(Resource, Reflect)]
+#[reflect(Resource)]
 pub struct LocalizationDatabase {
     /// 当前 locale
     current_locale: LocaleId,
