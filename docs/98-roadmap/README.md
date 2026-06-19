@@ -15,7 +15,7 @@ tags:
 
 ## 迁移路线
 
-当前项目已从扁平结构迁移到七层架构，7 Phase 迁移路径详见 `docs/01-architecture/migration-roadmap.md`。
+当前项目已从扁平结构迁移到七层架构，详见 `docs/01-architecture/README.md`。
 
 ## 当前阶段
 

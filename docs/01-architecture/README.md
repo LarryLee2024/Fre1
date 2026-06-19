@@ -683,7 +683,7 @@ src/
 | `40-cross-cutting/ADR-042-save-persistence.md` | ✅ stable | architect | 2026-06-16 |
 | `40-cross-cutting/ADR-043-command-input.md` | ✅ stable | architect | 2026-06-16 |
 | `40-cross-cutting/ADR-044-pipeline-engine.md` | ✅ stable | architect | 2026-06-17 |
-| `00-foundation/ADR-045-module-visibility-strategy.md` | 📋 Proposed | architect | 2026-06-17 |
+| `00-foundation/ADR-045-module-visibility-strategy.md` | ✅  stable | architect | 2026-06-17 |
 | `40-cross-cutting/ADR-047-content-loading-pipeline.md` | ✅ stable | architect | 2026-06-18 |
 | `40-cross-cutting/ADR-049-shared-cross-domain-events.md` | ✅ stable | architect | 2026-06-19 |
 

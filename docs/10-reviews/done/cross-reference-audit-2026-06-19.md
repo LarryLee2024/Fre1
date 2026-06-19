@@ -8,13 +8,15 @@
 
 ## Summary
 
-| 严重度 | 数量 | 说明 |
-|--------|------|------|
-| CRITICAL | 17 | 源码 doc comment 引用路径错误（capability domain docs） |
-| HIGH | 1 | 源码引用了错误位置的架构文档 |
-| MEDIUM | 60+ | 文档间交叉引用指向已迁移的旧路径 |
-| LOW | 0 | 无断裂 mod 声明 |
-| INFO | 2 | Content/Infra 层引用 domains（设计如此） |
+| 严重度 | 数量 | 状态 | 说明 |
+|--------|------|------|------|
+| CRITICAL | 43文件 | ✅ FIXED | 源码 doc comment 引用路径错误（capability domain docs） |
+| HIGH | 1 | ✅ FIXED | 源码引用了错误位置的架构文档 |
+| MEDIUM | 3处 | ✅ FIXED | 文档间交叉引用指向已迁移的旧路径 |
+| LOW | 0 | PASS | 无断裂 mod 声明 |
+| INFO | 2 | BY DESIGN | Content/Infra 层引用 domains（设计如此） |
+
+> 注：MEDIUM 原始 60+ 处引用中，绝大部分位于 `docs/ai_ignore_this_dir/`（按 AGENTS.md 规则视为不存在），无需修复。
 
 ---
 

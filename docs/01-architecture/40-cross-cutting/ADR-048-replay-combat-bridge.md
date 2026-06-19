@@ -18,7 +18,7 @@ Replay 系统（`infra::replay` + `core::capabilities::runtime::replay`）已实
 
 - `docs/01-architecture/README.md` §6.2 — integration/ 模式（Facade + SystemParam）
 - `docs/01-architecture/40-cross-cutting/ADR-047-content-loading-pipeline.md` — Content 管线
-- `docs/01-architecture/20-tactical-combat/ADR-021-combat-domain.md` — 战斗域架构
+- `docs/01-architecture/20-tactical-combat/ADR-021-turn-state-machine.md` — 战斗域架构
 - `docs/02-domain/domains/combat_domain.md` — 战斗领域规则
 - `docs/02-domain/domains/replay_domain.md` — 回放领域规则（注：当前无此文档，本 ADR 涵盖 replay 域与 combat 域的接口契约）
 
