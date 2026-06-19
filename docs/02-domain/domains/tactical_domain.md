@@ -16,7 +16,7 @@ tags:
 
 | 术语 | 定义 | 职责边界 |
 |------|------|----------|
-| GridPosition | 战场网格坐标，定义单位在战场上的空间位置 | 负责：网格坐标的表示与转换；不负责：通行性/地形代价计算 |
+| GridPosition | 战场网格坐标，定义单位在战场上的空间位置 | 负责：网格坐标的表示与转换，领域的 LocalizationKey（name_key/desc_key）；不负责：通行性/地形代价计算 |
 | MovementPoints | 行动力，定义单位在当前回合/行动中的移动能力 | 负责：行动力的当前值/最大值/已消耗管理；不负责：行动力的消耗计算 |
 | Facing | 单位朝向，影响背刺/夹击等战术判定 | 负责：朝向的维护与查询；不负责：朝向变化的条件判定 |
 | FlankingState | 夹击状态，检测两个友方单位是否从对侧夹击一个敌方单位 | 负责：夹击的几何判定；不负责：夹击的效果计算（归 Combat 领域） |
@@ -134,6 +134,7 @@ CurrentFacing（恢复可转向）
 - 🟥 禁止：Tactical 领域修改单位的属性值 — 理由：属性修改通过 Modifier 管线，不走空间判定
 - 🟥 禁止：移动过程中无视格子的通行性 — 理由：所有移动必须校验目标格的通行性（由 Terrain 领域提供）
 - 🟥 禁止：单位在未消耗行动力的情况下移动 — 理由：任何格子的移动必须消耗对应的行动力
+- 🟥 禁止：TacticalDef 中直接存储用户可见文本的自然语言 — 理由：必须使用 name_key/desc_key: LocalizationKey 引用。违反宪法 §22 Localization First。
 
 ---
 
@@ -235,6 +236,7 @@ FlankingDetected / BackstabDetected / CoverEvaluated
 - ✅ 职责明确：Tactical 只做空间判定，不做数值计算（Combat 的职责）。夹击判定 vs 夹击加成分离清晰
 - ✅ 空间与数值分离：所有"判定"归 Tactical，所有"加成"归 Combat，防止领域膨胀
 - ✅ 协作紧密：Tactical 的输出（FlankingState/BackstabState/CoverState/HighgroundState）是 Combat 伤害/命中计算的直接输入
+- ✅ LocalizationKey：本领域涉及的用户可见文本使用 LocalizationKey 而非硬编码文本（宪法 §22）
 
 ---
 

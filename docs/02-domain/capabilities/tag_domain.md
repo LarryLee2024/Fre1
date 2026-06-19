@@ -4,7 +4,7 @@ title: Tag（标签）领域规则 v1.0
 status: stable
 owner: domain-designer
 created: 2026-06-16
-updated: 2026-06-16
+updated: 2026-06-19
 tags:
   - domain
   - tag
@@ -16,7 +16,7 @@ tags:
 
 | 术语 | 定义 | 职责边界 |
 |------|------|----------|
-| Tag | 具有层级关系的标签标识，通过位掩码实现 O(1) 包含检查 | 负责：标签唯一标识与层级关系；不负责：标签的业务含义 |
+| Tag | 具有层级关系的标签标识，通过位掩码实现 O(1) 包含检查 | 负责：标签唯一标识与层级关系，标签的 LocalizationKey（name_key/desc_key）；不负责：标签的业务含义 |
 | TagId | 标签的唯一标识符，强类型 | 负责：标签身份的唯一定义；不负责：描述标签含义 |
 | TagSet | 标签的集合表示，支持位掩码运算 | 负责：标签集合的高效存储与查询；不负责：标签的层级推导 |
 | TagHierarchy | 标签之间的父子层级关系（父标签自动包含子标签） | 负责：层级树的构建与维护；不负责：业务逻辑中的标签使用 |
@@ -131,6 +131,7 @@ Tag.Root
 - 🟥 禁止：标签跨域引用（如 DamageType 下放 Faction 标签） — 理由：破坏命名空间一致性，导致信息查询混乱
 - 🟥 禁止：用标签承载数据（如标签名中编码数值信息） — 理由：标签只做标识分类，数据应放在 Attribute 中
 - 🟥 禁止：直接移除有子标签的父标签 — 理由：移除父标签必须连带移除所有子标签，或先迁移子标签到新父标签
+- 🟥 禁止：TagDef 中直接存储用户可见文本的自然语言 — 理由：必须使用 name_key/desc_key: LocalizationKey 引用。违反宪法 §22 Localization First。
 
 ---
 
@@ -214,6 +215,7 @@ TagAdded/TagRemoved
 - ✅ 术语一致：TagId、TagSet、TagHierarchy、TagQuery 与架构文档第六节完全一致
 - ✅ 职责明确：Tag 只做标识与分类，不涉及业务逻辑，不越界到 Condition/Effect 领域
 - ✅ ECS 边界：GameTagContainer 是 ECS Component，但其规则（标签生命周期/层级同步）属于机制层 C2，非 ECS 实现细节
+- ✅ LocalizationKey：Tag 使用 LocalizationKey 而非硬编码文本（宪法 §22）
 
 ---
 

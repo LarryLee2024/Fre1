@@ -4,7 +4,7 @@ title: Faction（阵营关系）领域规则 v1.0
 status: stable
 owner: domain-designer
 created: 2026-06-16
-updated: 2026-06-16
+updated: 2026-06-19
 tags:
   - domain
   - faction
@@ -16,7 +16,7 @@ tags:
 
 | 术语 | 定义 | 职责边界 |
 |------|------|----------|
-| Faction | 阵营/势力，定义一个具有共同利益或立场的群体 | 负责：阵营的定义与归属管理；不负责：阵营间的动态关系 |
+| Faction | 阵营/势力，定义一个具有共同利益或立场的群体 | 负责：阵营的定义与归属管理，Faction 的 LocalizationKey（name_key/desc_key）；不负责：阵营间的动态关系 |
 | FactionMembership | 角色所属的阵营列表，一个角色可以属于多个阵营 | 负责：角色与阵营的关联管理；不负责：阵营间的关系判定 |
 | Reputation | 角色在某个阵营中的声望值，反映该阵营对该角色的好感度 | 负责：声望数值的维护；不负责：声望阈值的业务影响 |
 | ReputationLevel | 声望等级分段，将数值声望映射为业务层面的关系等级 | 负责：数值→等级的转换规则；不负责：等级的具体效果 |
@@ -134,6 +134,7 @@ FactionRelation
 - 🟥 禁止：声望值通过非行为方式变化（如时间推移自动变化） — 理由：所有声望变化必须有玩家/事件触发的明确原因
 - 🟥 禁止：阵营间关系在运行时被频繁切换 — 理由：FactionRelation 是相对稳定的设定，频繁切换破坏世界观一致性
 - 🟥 禁止：Faction 领域直接修改交易价格或对话选项 — 理由：价格归 Economy 领域，对话归 Narrative 领域，Faction 只提供声望数据
+- 🟥 禁止：FactionDef 中直接存储用户可见文本的自然语言 — 理由：必须使用 name_key/desc_key: LocalizationKey 引用。违反宪法 §22 Localization First。
 
 ---
 
@@ -212,6 +213,7 @@ FactionRelationChanged
 - ✅ 职责明确：Faction 只做"声望/关系管理"，不做"价格计算"（Economy）、"对话过滤"（Narrative）、"战斗 AI"（AI 系统）
 - ✅ 轻依赖：Faction 是叙事层中的轻量领域，依赖链短（仅依赖 Event），适合提前设计
 - ✅ 声望作为跨系统数据桥梁：Narrative（对话分支）、Economy（价格折扣）、Quest（任务条件）都消费声望数据
+- ✅ LocalizationKey：本领域涉及的用户可见文本使用 LocalizationKey 而非硬编码文本（宪法 §22）
 
 ---
 

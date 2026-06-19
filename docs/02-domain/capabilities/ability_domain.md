@@ -4,7 +4,7 @@ title: Ability（技能逻辑）领域规则 v1.0
 status: stable
 owner: domain-designer
 created: 2026-06-16
-updated: 2026-06-16
+updated: 2026-06-19
 tags:
   - domain
   - ability
@@ -16,7 +16,7 @@ tags:
 
 | 术语 | 定义 | 职责边界 |
 |------|------|----------|
-| Ability | 可主动或被触发激活的游戏能力，是技能系统的执行核心 | 负责：技能的生命周期管理（激活→执行→完成→冷却）；不负责：技能定义模板 |
+| Ability | 可主动或被触发激活的游戏能力，是技能系统的执行核心 | 负责：技能的生命周期管理（激活→执行→完成→冷却），技能的 LocalizationKey（name_key/desc_key）；不负责：技能定义模板 |
 | AbilityState | 技能运行时状态枚举，描述技能当前所处的生命周期阶段 | 负责：状态定义与转换规则；不负责：状态转换的业务触发 |
 | AbilityInstance | 技能激活后的运行时实例，携带激活时的完整上下文 | 负责：单次技能执行的运行态数据；不负责：技能的配置数据 |
 | Cost | 技能激活的资源消耗描述，复用 Modifier 机制实现 | 负责：消耗的计算规则（不造 CostSystem）；不负责：消耗的检查 |
@@ -133,6 +133,7 @@ Blocked（被封锁——因沉默/眩晕等无法使用，独立于主流程的
 - 🟥 禁止：激活流程中跳过 Condition 检查 — 理由：激活条件的检查是强制性的，跳过会导致免疫/限制类效果失效
 - 🟥 禁止：在 Ability 领域内部实现"法力消耗"或"冷却"的专用系统 — 理由：必须复用 Effect/Modifier/Attribute/Tag 组合，不造新系统
 - 🟥 禁止：一个技能同时处于多个 AbilityInstance 运行状态（除非有瞬发/多重施法标签） — 理由：默认情况下一个技能同时只能有一个活跃实例
+- 🟥 禁止：AbilityDef 中直接存储技能名称/描述的自然语言文本 — 理由：必须使用 name_key/desc_key: LocalizationKey 引用。违反宪法 §22 Localization First。
 
 ---
 
@@ -234,6 +235,7 @@ AbilityCooldownStarted
 - ✅ 术语一致：AbilityState、AbilityInstance、Cost、Cooldown 与架构文档第六节完全一致
 - ✅ 组合优于创建：Cost 复用 Effect，Cooldown 复用 Tag+Effect，未造新系统
 - ✅ 职责明确：Ability 只做"生命周期编排"，不执行计算（Execution）、不选目标（Targeting）、不管理持续性效果（Effect）
+- ✅ LocalizationKey：Ability 的 name_key/desc_key 使用 LocalizationKey 而非硬编码文本（宪法 §22）
 
 ---
 

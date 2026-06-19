@@ -4,7 +4,7 @@ title: Inventory（背包/物品）领域规则 v1.0
 status: stable
 owner: domain-designer
 created: 2026-06-16
-updated: 2026-06-16
+updated: 2026-06-19
 tags:
   - domain
   - inventory
@@ -16,7 +16,7 @@ tags:
 
 | 术语 | 定义 | 职责边界 |
 |------|------|----------|
-| Inventory | 背包/库存，管理角色持有的所有物品集合 | 负责：物品的增删查改与堆叠合并；不负责：物品的使用逻辑 |
+| Inventory | 背包/库存，管理角色持有的所有物品集合 | 负责：物品的增删查改与堆叠合并，Inventory 的 LocalizationKey（name_key/desc_key）；不负责：物品的使用逻辑 |
 | EquipmentSlots | 装备槽位，定义角色身上各部位的装备位 | 负责：槽位规则（装备位数量/类型/兼容性）；不负责：装备的属性修改 |
 | ItemInstance | 物品实例，物品在背包中的具体存在（含附魔/耐久/自定义属性） | 负责：物品实例数据的存储；不负责：物品的模板定义 |
 | Equipment | 可穿戴的装备物品，穿戴时提供 Modifier 或特殊能力 | 负责：装备定义与穿戴规则；不负责：装备对属性的影响（归 Modifier 管线） |
@@ -135,6 +135,7 @@ InInventory（在背包中）
 - 🟥 禁止：同一角色同时装备同名唯一装备（Legendary 唯一装备） — 理由：唯一装备只能存在一件
 - 🟥 禁止：消耗品使用后效果未生效但物品已被消耗 — 理由：效果必须确认生效后才消耗物品
 - 🟥 禁止：从背包移除已穿戴装备时不同步卸下 — 理由：移除背包中的装备应自动执行卸下流程
+- 🟥 禁止：InventoryDef 中直接存储用户可见文本的自然语言 — 理由：必须使用 name_key/desc_key: LocalizationKey 引用。违反宪法 §22 Localization First。
 
 ---
 
@@ -242,6 +243,7 @@ ItemUsed
 - ✅ 条件检查复用 Condition 领域：穿戴条件统一走条件检查
 - ✅ 消耗品效果通过 Effect 领域：不另建使用效果系统
 - ✅ 物品来源多样性：Loot/Quest/Crafting/Economy 均可产生物品
+- ✅ LocalizationKey：本领域涉及的用户可见文本使用 LocalizationKey 而非硬编码文本（宪法 §22）
 
 ---
 

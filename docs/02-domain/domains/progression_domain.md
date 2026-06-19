@@ -16,7 +16,7 @@ tags:
 
 | 术语 | 定义 | 职责边界 |
 |------|------|----------|
-| Experience | 经验值，通过战斗/任务/探索获得的角色成长点数 | 负责：经验的获取与累计；不负责：经验的消耗（等级提升自动消耗） |
+| Experience | 经验值，通过战斗/任务/探索获得的角色成长点数 | 负责：经验的获取与累计，Progression 的 LocalizationKey（name_key/desc_key）；不负责：经验的消耗（等级提升自动消耗） |
 | Level | 角色等级，反映角色的整体实力水平 | 负责：等级的定义与管理；不负责：等级带来的具体能力提升 |
 | ClassLevel | 职业等级映射，记录角色在各职业上的等级分布（多职） | 负责：多职业等级的分别管理；不负责：职业特性的解锁 |
 | TalentTree | 天赋树，记录角色在各个天赋上的解锁状态 | 负责：天赋的解锁状态管理；不负责：天赋的具体效果 |
@@ -152,6 +152,7 @@ Unlocked（已解锁/生效中）
 - 🟥 禁止：降级（等级逆向变化） — 理由：D&D 5e 无降级机制，等级只升不降
 - 🟥 禁止：同一职业选择多个子职 — 理由：子职是职业分支，唯一选择
 - 🟥 禁止：跳过前置条件解锁天赋 — 理由：天赋树的可选性依赖前置条件完整性
+- 🟥 禁止：ProgressionDef 中直接存储用户可见文本的自然语言 — 理由：必须使用 name_key/desc_key: LocalizationKey 引用。违反宪法 §22 Localization First。
 
 ---
 
@@ -269,6 +270,7 @@ ASICompleted
 - ✅ 多职业规则：ClassLevels 组件分别记录各职业等级，熟练加值按总等级计算
 - ✅ 属性提升通过 Modifier 管线：ASI 修改 BaseValue 后经 Aggregator 重算，不 bypass
 - ✅ 天赋通过 Condition 做前置检查，解锁后注册 Ability/Modifier
+- ✅ LocalizationKey：本领域涉及的用户可见文本使用 LocalizationKey 而非硬编码文本（宪法 §22）
 
 ---
 

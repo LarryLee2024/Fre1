@@ -4,7 +4,7 @@ title: Execution（执行计算）领域规则 v1.0
 status: stable
 owner: domain-designer
 created: 2026-06-16
-updated: 2026-06-16
+updated: 2026-06-19
 tags:
   - domain
   - execution
@@ -16,7 +16,7 @@ tags:
 
 | 术语 | 定义 | 职责边界 |
 |------|------|----------|
-| Execution | 技能/效果执行计算的核心，负责将技能描述转化为实际数值变化 | 负责：执行计算的调度与分发；不负责：技能的生命周期管理 |
+| Execution | 技能/效果执行计算的核心，负责将技能描述转化为实际数值变化 | 负责：执行计算的调度与分发，Execution 的 LocalizationKey（name_key/desc_key）；不负责：技能的生命周期管理 |
 | ExecutionType | 执行计算类型枚举，定义计算的业务类别 | 负责：计算分类（Damage/Heal/Custom）；不负责：具体的计算公式 |
 | ExecutionContext | 执行计算上下文，从 GameplayContext 派生，携带计算所需的全部输入 | 负责：提供计算需要的所有数据（来源属性/目标属性/技能参数/环境因素）；不负责：计算结果的存储 |
 | DamageExecution | 伤害计算执行，调用领域伤害公式计算最终伤害值 | 负责：伤害公式的调用与参数传递；不负责：伤害公式本身（归 Domains/rules/formulas.rs） |
@@ -126,6 +126,7 @@ EffectCreated（效果已产生——移交 Effect 领域）
 - 🟥 禁止：跳过 Execution 直接修改目标属性值 — 理由：所有伤害/治疗等数值变更必须经过 Execution 计算，确保可追踪性
 - 🟥 禁止：在 ExecutionContext 中混入计算无关的数据（如 UI 状态） — 理由：上下文应保持纯净，只包含计算所需数据
 - 🟥 禁止：Execution 产生副作用（如直接播放音效、修改界面） — 理由：副作用归 Cue 领域，Execution 只做数值计算
+- 🟥 禁止：ExecutionDef 中直接存储用户可见文本的自然语言文本 — 理由：必须使用 name_key/desc_key: LocalizationKey 引用。违反宪法 §22 Localization First。
 
 ---
 
@@ -215,6 +216,7 @@ ExecutionFailed
 - ✅ 术语一致：ExecutionType、ExecutionContext、DamageExecution、HealExecution、CustomExecution 与架构文档第六节完全一致
 - ✅ 公式分离：所有业务公式归 Domains/rules/，Execution 只做调度分发，符合架构文档"数据驱动"原则
 - ✅ 职责明确：Execution 只做"计算"，不做"生命周期"（Ability）、不做"效果管理"（Effect）
+- ✅ LocalizationKey：Execution 使用 LocalizationKey 而非硬编码文本（宪法 §22）
 
 ---
 

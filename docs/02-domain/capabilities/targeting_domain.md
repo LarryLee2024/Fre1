@@ -4,7 +4,7 @@ title: Targeting（目标选择）领域规则 v1.0
 status: stable
 owner: domain-designer
 created: 2026-06-16
-updated: 2026-06-16
+updated: 2026-06-19
 tags:
   - domain
   - targeting
@@ -16,7 +16,7 @@ tags:
 
 | 术语 | 定义 | 职责边界 |
 |------|------|----------|
-| Targeting | 目标选择机制，定义技能/效果作用于哪些目标及如何筛选 | 负责：合法目标的筛选规则；不负责：目标选择后的效果执行 |
+| Targeting | 目标选择机制，定义技能/效果作用于哪些目标及如何筛选 | 负责：合法目标的筛选规则，Targeting 的 LocalizationKey（name_key/desc_key）；不负责：目标选择后的效果执行 |
 | TargetType | 目标类型枚举，定义技能可以选择的何种目标 | 负责：目标类别（Self/Ally/Enemy/Dead/Any）的定义；不负责：范围形状 |
 | TargetShape | 目标范围形状枚举，定义技能的影响区域形状 | 负责：范围形状（Single/Area/Line/Cone/Chain/Burst）的定义；不负责：范围内的目标筛选逻辑 |
 | TargetData | 目标选择的结果数据，包含选中的实体列表、位置列表和上下文信息 | 负责：封装选择结果供下游消费；不负责：选择过程 |
@@ -123,6 +123,7 @@ Selecting（筛选中）
 - 🟥 禁止：TargetType 和 TargetShape 互相覆盖语义（如用 Enemy+Ally 组合替代 Any） — 理由：语义不清晰导致目标选择规则不可预测
 - 🟥 禁止：目标选择逻辑中嵌入业务计算（如"选择血量最低的敌人"应是 Selector 优先级规则的一部分） — 理由：目标选择只做筛选，不做业务决策
 - 🟥 禁止：选择不存在或已销毁的实体作为目标 — 理由：目标选择前必须校验实体存在性
+- 🟥 禁止：TargetingDef 中直接存储用户可见文本的自然语言文本 — 理由：必须使用 name_key/desc_key: LocalizationKey 引用。违反宪法 §22 Localization First。
 
 ---
 
@@ -202,6 +203,7 @@ NoValidTarget
 - ✅ 术语一致：TargetType、TargetShape、TargetData、Selector、GridTargeting 与架构文档第六节完全一致
 - ✅ 网格支持：GridTargeting 明确支持六角/四角网格的 SRPG 核心需求
 - ✅ 职责明确：Targeting 只做"目标筛选与校验"，不执行"技能效果"（Execution）、不"选择目标后做什么"（Ability）
+- ✅ LocalizationKey：Targeting 使用 LocalizationKey 而非硬编码文本（宪法 §22）
 
 ---
 

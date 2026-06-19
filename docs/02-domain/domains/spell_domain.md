@@ -4,7 +4,7 @@ title: Spell（法术）领域规则 v1.0
 status: stable
 owner: domain-designer
 created: 2026-06-16
-updated: 2026-06-16
+updated: 2026-06-19
 tags:
   - domain
   - spell
@@ -16,7 +16,7 @@ tags:
 
 | 术语 | 定义 | 职责边界 |
 |------|------|----------|
-| Spell | 法术，一种特殊的需消耗法术位释放的能力 | 负责：法术的施放条件与流程；不负责：法术的技能效果（归 Ability 领域） |
+| Spell | 法术，一种特殊的需消耗法术位释放的能力 | 负责：法术的施放条件与流程，Spell 的 LocalizationKey（name_key/desc_key）；不负责：法术的技能效果（归 Ability 领域） |
 | SpellSlot | 法术位，记录各环级法术位的总数与已用量 | 负责：法术位的消耗与恢复管理；不负责：法术位的获取（归 Progression 领域） |
 | Concentration | 专注状态，施法者正在维持一个需要专注的法术 | 负责：专注的建立、维持与打断；不负责：专注法术的具体效果 |
 | Spellbook | 法术书/法术列表，记录角色已知和已准备的法术 | 负责：法术的已知/已准备管理；不负责：法术的施放流程 |
@@ -157,6 +157,7 @@ Prepared（已准备——可随时施放）
 - 🟥 禁止：同一角色同时维持多个专注法术 — 理由：专注唯一性是 D&D 5e 的核心规则之一
 - 🟥 禁止：跳过法术组件检查的施法（除非法术声明"无需组件"） — 理由：组件是施法的基础约束
 - 🟥 禁止：非施法者职业施放法术（除非通过魔法物品/卷轴/种族能力） — 理由：职业决定施法能力
+- 🟥 禁止：SpellDef 中直接存储用户可见文本的自然语言 — 理由：必须使用 name_key/desc_key: LocalizationKey 引用。违反宪法 §22 Localization First。
 
 ---
 
@@ -262,6 +263,7 @@ ConcentrationBroken
 - ✅ 施法流程复用 Ability 领域：Spell 复用 Ability 的生命周期（消耗激活→执行→完成），不另建施法引擎
 - ✅ 专注规则对齐 D&D 5e：唯一专注 + 受伤时体质豁免检定 DC = max(10, 伤害/2)
 - ✅ 不造新系统：法术位是资源属性（Attribute），专注是状态标签（Tag+Condition），均复用 Capabilities
+- ✅ LocalizationKey：本领域涉及的用户可见文本使用 LocalizationKey 而非硬编码文本（宪法 §22）
 
 ---
 

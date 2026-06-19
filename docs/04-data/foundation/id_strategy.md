@@ -4,7 +4,7 @@ title: ID Strategy Deep Dive — 标识符策略详述
 status: stable
 owner: data-architect
 created: 2026-06-16
-updated: 2026-06-16
+updated: 2026-06-19
 layer: definition
 replay-safe: true
 ---
@@ -230,30 +230,35 @@ AbilityDef (
 | `.flavor` | 风味文本 | 否 | 256 |
 | `.tooltip` | 工具提示 | 否 | 256 |
 
-### 5.3 本地化文件组织
+### 5.4 本地化文件组织
 
 ```
 assets/
   localization/
-    en/
-      ability.ftl        # ability.* 命名空间的本地化
-      effect.ftl
-      tag.ftl
-      item.ftl
-      ...
-    zh/
-      ability.ftl
-      effect.ftl
-      ...
+    en-US/
+      core.ftl           # L0: 系统核心文本
+      ui.ftl             # L1: UI 界面文本
+      ability.ftl        # L2: 技能/能力名称与描述
+      buff.ftl           # L2: Buff/Debuff 名称与描述
+      item.ftl           # L2: 物品名称与描述
+      quest.ftl          # L2: 任务名称与描述
+      gameplay.ftl       # L2: 玩法文本
+      tutorial.ftl       # L3: 教程文本
+      story/             # L3: 剧情对话
+    zh-CN/               # 同上结构
+    ja-JP/               # 同上结构
+    zz-ZZ/               # Fake Locale（硬编码文本检测）
 ```
 
 使用 Fluent (`ftl`) 格式，支持复数、变量插值：
 
 ```
-# assets/localization/en/ability.ftl
-ability_abl_000042_name = Fireball
-ability_abl_000042_desc = A blazing sphere of fire erupts, dealing {$damage} fire damage.
+# assets/localization/en-US/ability.ftl
+-ability-abl-000042-name = Fireball
+    .desc = A blazing sphere of fire erupts, dealing {$damage} fire damage.
 ```
+
+Fluent 的 message ID 使用连字符替换点分式中的点（`.` → `-`）满足 FTL 语法要求。
 
 ---
 
@@ -314,6 +319,7 @@ ability_abl_000042_desc = A blazing sphere of fire erupts, dealing {$damage} fir
 | `item_schema.md` | `itm_` | Item ID 被 Inventory/Crafting/Economy/Quest 引用 |
 | `quest_schema.md` | `qst_` | Quest ID 被 Narrative/CampEvent 引用 |
 | `faction_schema.md` | `fct_` | Faction ID 被 Shop/Economy 引用 |
+| `localization_schema.md` | —（无独立 ID 前缀） | LocalizationKey 复用各领域的 Definition ID（abl_000042 / eff_000001 等），在前者基础上拼接 namespace 和 suffix |
 
 ---
 

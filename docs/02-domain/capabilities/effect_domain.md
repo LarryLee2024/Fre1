@@ -4,7 +4,7 @@ title: Effect（效果）领域规则 v1.0
 status: stable
 owner: domain-designer
 created: 2026-06-16
-updated: 2026-06-18
+updated: 2026-06-19
 tags:
   - domain
   - effect
@@ -16,7 +16,7 @@ tags:
 
 | 术语 | 定义 | 职责边界 |
 |------|------|----------|
-| Effect | 对目标产生持续性或即时性影响的游戏效果，是技能作用结果的核心载体 | 负责：效果的全生命周期管理；不负责：效果的定义模板 |
+| Effect | 对目标产生持续性或即时性影响的游戏效果，是技能作用结果的核心载体 | 负责：效果的全生命周期管理；包含 name_key: LocalizationKey（效果显示名称）、desc_key: LocalizationKey（效果描述）；不负责：效果的定义模板 |
 | EffectDuration | 效果的持续时间定义，分为瞬时/持续/无限三种类型 | 负责：持续时间分类与计算；不负责：到期后的自动处理 |
 | EffectPeriod | 效果的周期 Tick 定义，控制持续效果的触发间隔 | 负责：周期性效果的触发频率；不负责：每次 Tick 的具体效果 |
 | EffectModifier | 效果携带的一组 Modifier，在效果应用时注册到目标属性 | 负责：效果对目标属性的影响描述；不负责：Modifier 的实际应用 |
@@ -137,6 +137,7 @@ Applying（施加阶段——检查条件，初始化）
 - 🟥 禁止：Duration 类 Effect 永不过期（除非声明为 Infinite 类型） — 理由：Duration 效果必须有明确的到期时间
 - 🟥 禁止：Effect 移除后 Modifier 残留 — 理由：移除时必须完全回退所有 Modifier
 - 🟥 禁止：Effect 在 Active 阶段被再次应用时绕过 Stacking 规则 — 理由：叠加规则归 Stacking 领域，Effect 领域不处理叠加决策
+- 🟥 禁止：EffectDef 中直接存储效果名称/描述的自然语言文本 — 理由：必须使用 name_key/desc_key: LocalizationKey 引用
 
 ---
 
@@ -235,6 +236,7 @@ EffectRemoved
 - ✅ 术语一致：EffectDuration、EffectPeriod、EffectModifier、EffectTags、EffectLifecycle 与架构文档第六节完全一致
 - ✅ 不造新系统：光环 = Targeting(Area) + Effect(Infinite)，DoT/HoT = Effect(Duration + Period)，统一复用 Effect 机制
 - ✅ 职责明确：Effect 只做"生命周期管理"，不做"叠加规则"（Stacking）、不做"属性修改"（Modifier + Aggregator）
+- ✅ LocalizationKey：Effect 的 name_key/desc_key 使用 LocalizationKey 而非硬编码文本（宪法 §22）
 
 ---
 

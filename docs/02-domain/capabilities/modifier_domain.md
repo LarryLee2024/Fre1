@@ -4,7 +4,7 @@ title: Modifier（修改器）领域规则 v1.0
 status: stable
 owner: domain-designer
 created: 2026-06-16
-updated: 2026-06-16
+updated: 2026-06-19
 tags:
   - domain
   - modifier
@@ -16,7 +16,7 @@ tags:
 
 | 术语 | 定义 | 职责边界 |
 |------|------|----------|
-| Modifier | 对目标属性执行算术运算的修改描述，是属性变更的最小原子单元 | 负责：定义如何修改一个属性的运算规则；不负责：属性的聚合计算顺序 |
+| Modifier | 对目标属性执行算术运算的修改描述，是属性变更的最小原子单元 | 负责：定义如何修改一个属性的运算规则，Modifier 的 LocalizationKey（name_key/desc_key）；不负责：属性的聚合计算顺序 |
 | ModifierOp | 修改器运算类型枚举，决定修改器如何影响目标属性值 | 负责：运算类型（Add/Multiply/Override）的定义；不负责：运算的优先级排列 |
 | ModifierData | 修改器的数据载体，包含运算类型、目标属性、幅度值、优先级 | 负责：携带一次修改所需的全部信息；不负责：修改器来源及上下文 |
 | ModifierPriority | 修改器执行优先级，决定同类型修改器的执行顺序 | 负责：同一运算类型内修改器的顺序控制；不负责：不同运算类型的执行次序 |
@@ -121,6 +121,7 @@ Reverted（已回退）
 - 🟥 禁止：同一 Modifier 同时影响多个属性 — 理由：一个 Modifier 只描述对一个属性的修改，多属性影响应由多个 Modifier 组合实现
 - 🟥 禁止：运行时动态修改 Active 状态 Modifier 的数值 — 理由：修改器效力在应用时确定（快照原则），如需变更应移除旧 Modifier 并注册新实例
 - 🟥 禁止：Modifier 引用自身来源形成循环依赖 — 理由：如 Modifier 来源于 Buff A，Buff A 又依赖该 Modifier 的生效结果，形成依赖循环
+- 🟥 禁止：ModifierDef 中直接存储用户可见文本的自然语言 — 理由：必须使用 name_key/desc_key: LocalizationKey 引用。违反宪法 §22 Localization First。
 
 ---
 
@@ -205,6 +206,7 @@ ModifierRemoved
 - ✅ 职责明确：Modifier 只描述"如何修改"，不执行修改（Aggregator 的职责）、不判断修改条件（Condition 的职责）
 - ✅ 与 Attribute 领域对齐：Modifier 引用 attribute_id 作为目标，Attribute 领域提供属性的存在性校验
 - ✅ 不造新系统：为复用性，Modifier 设计为通用描述语言——法力消耗 = Attribute(Mana) + Modifier(Add, -20)，冷却 = Tag(Cooldown) + Effect(Duration)，不需要独立的 CostSystem/CooldownSystem
+- ✅ LocalizationKey：Modifier 使用 LocalizationKey 而非硬编码文本（宪法 §22）
 
 ---
 

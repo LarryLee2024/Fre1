@@ -4,7 +4,7 @@ title: Spec（规格/配置）领域规则 v1.0
 status: stable
 owner: domain-designer
 created: 2026-06-16
-updated: 2026-06-16
+updated: 2026-06-19
 tags:
   - domain
   - spec
@@ -17,7 +17,7 @@ tags:
 | 术语 | 定义 | 职责边界 |
 |------|------|----------|
 | Def（Definition） | 模板定义层，内容配置文件中定义的不可变数据模板 | 负责：提供能力的原始定义（如 Fireball 的伤害骰/范围/等级）；不负责：角色身上该能力的具体配置 |
-| Spec（Specification） | 配置层，角色/实体身上的能力配置实例，在 Def 基础上叠加角色定制数据 | 负责：承载 Def 在特定实体上的定制数据（等级/强化/冷却缩减）；不负责：能力的运行时执行状态 |
+| Spec（Specification） | 配置层，角色/实体身上的能力配置实例，在 Def 基础上叠加角色定制数据 | 负责：承载 Def 在特定实体上的定制数据（等级/强化/冷却缩减），Spec 的 LocalizationKey（name_key/desc_key）；不负责：能力的运行时执行状态 |
 | Instance（Runtime Instance） | 运行时实例层，激活中的能力/效果的运行态数据 | 负责：承载运行时状态（当前冷却进度/施法进度/持续效果倒计时）；不负责：能力的定义与配置 |
 | AbilitySpec | 角色身上的技能配置实例，包含技能等级、输入绑定、冷却覆盖等定制数据 | 负责：技能在角色维度的个性化配置；不负责：技能的运行状态 |
 | EffectSpec | 效果应用后的实例，包含效果来源、持续时间、堆叠计数等运行时数据 | 负责：效果在目标身上的个性化实例；不负责：效果的定义模板 |
@@ -144,6 +144,7 @@ Removed（已移除）
 - 🟥 禁止：跳过 Spec 层直接由 Def 创建 Instance — 理由：跳过 Spec 层会丢失角色维度的定制数据（等级/强化/冷却缩减）
 - 🟥 禁止：同一实体的同一 AbilityDef 生成多个 AbilitySpec — 理由：一个实体对一个技能只能有一个配置实例（堆叠等特殊规则归 Stacking 领域）
 - 🟥 禁止：Spec 直接持有运行时状态（如冷却进度条） — 理由：运行状态归 Instance 层，Spec 只做配置
+- 🟥 禁止：SpecDef 中直接存储用户可见文本的自然语言 — 理由：必须使用 name_key/desc_key: LocalizationKey 引用。违反宪法 §22 Localization First。
 
 ---
 
@@ -237,6 +238,7 @@ SpecLevelChanged
 - ✅ 三层分离：Def（content/schema/）→ Spec（core/capabilities/spec/）→ Instance（core/capabilities/ability/ + core/capabilities/effect/），严格遵循架构文档的三层分离原则
 - ✅ 职责明确：Spec 只做"配置"，不做"运行"（Ability/Effect 领域的职责），不做"定义"（Content 层的职责）
 - ✅ 解决核心问题：区分了"技能定义"和"角色身上的技能配置"——同一火球术在不同角色身上可以有不同等级
+- ✅ LocalizationKey：Spec 使用 LocalizationKey 而非硬编码文本（宪法 §22）
 
 ---
 

@@ -16,7 +16,7 @@ tags:
 
 | 术语 | 定义 | 职责边界 |
 |------|------|----------|
-| Recipe | 配方，定义制作所需材料、工艺和产出 | 负责：配方数据的定义（材料/工具/技能要求）；不负责：制作流程的执行 |
+| Recipe | 配方，定义制作所需材料、工艺和产出 | 负责：配方数据的定义（材料/工具/技能要求），Crafting 的 LocalizationKey（name_key/desc_key）；不负责：制作流程的执行 |
 | CraftingStation | 制作台，不同类型的制作设施（锻造台/附魔台/炼金台） | 负责：制作台的类型定义与使用许可；不负责：制作的工序 |
 | Enchantment | 附魔/词条，额外的魔法效果附加到装备上 | 负责：附魔的定义与规则；不负责：附魔效果的数值实现（归 Modifier 管线） |
 | Material | 材料/原料，制作消耗的资源 | 负责：材料的分类与定义；不负责：材料的来源（采集/掉落/购买） |
@@ -150,6 +150,7 @@ Crafted（制作完成——物品已产出）
 - 🟥 禁止：制作直接产出 Modifier 或 Effect — 理由：制作产出的是物品（ItemInstance），物品的 Modifier/Effect 由装备/使用流程触发
 - 🟥 禁止：制作过程中消耗背包中不存在的材料 — 理由：材料必须在开始制作时从背包移除
 - 🟥 禁止：跳过制作时间直接获得成品 — 理由：制作时间是游戏体验的一部分（除非有"立即完成"的特殊能力）
+- 🟥 禁止：CraftingDef 中直接存储用户可见文本的自然语言 — 理由：必须使用 name_key/desc_key: LocalizationKey 引用。违反宪法 §22 Localization First。
 
 ---
 
@@ -243,6 +244,7 @@ ItemUpgraded
 - ✅ 制作产出通过 Inventory 进入背包：不 bypass 背包系统
 - ✅ 附魔/升级通过 Modifier 管线：装备属性变化走 Modifier→Aggregator，不走 bypass
 - ✅ 有失败机制：技能检定失败导致部分材料损失，增加制作深度
+- ✅ LocalizationKey：本领域涉及的用户可见文本使用 LocalizationKey 而非硬编码文本（宪法 §22）
 
 ---
 

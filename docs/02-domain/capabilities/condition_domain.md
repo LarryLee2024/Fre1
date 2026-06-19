@@ -4,7 +4,7 @@ title: Condition（条件/限制/免疫）领域规则 v1.0
 status: stable
 owner: domain-designer
 created: 2026-06-16
-updated: 2026-06-16
+updated: 2026-06-19
 tags:
   - domain
   - condition
@@ -16,7 +16,7 @@ tags:
 
 | 术语 | 定义 | 职责边界 |
 |------|------|----------|
-| Condition | 统一的业务条件检查单元，判断某个条件是否满足 | 负责：条件评估的统一入口，返回 Pass/Fail；不负责：条件不满足时的回退逻辑 |
+| Condition | 统一的业务条件检查单元，判断某个条件是否满足 | 负责：条件评估的统一入口，返回 Pass/Fail，Condition 的 LocalizationKey（name_key/desc_key）；不负责：条件不满足时的回退逻辑 |
 | ConditionType | 条件类型枚举，定义条件检查的类别 | 负责：条件分类（TagRequirement/AttributeCheck/ResourceCheck/Custom）；不负责：各条件类型的内部逻辑 |
 | TagRequirement | 基于标签的条件检查，判断实体是否拥有/不拥有特定标签 | 负责：标签存在性、排除性、任意匹配检查；不负责：标签的业务含义 |
 | AttributeCheck | 基于属性阈值的条件检查，判断属性值是否达到要求 | 负责：属性值数值门槛检查；不负责：属性值的计算逻辑 |
@@ -119,6 +119,7 @@ Evaluating（评估中）
 - 🟥 禁止：条件承载业务"处理逻辑"（如条件不满足时回退到另一种效果） — 理由：条件只做"通过/不通过"判断，回退逻辑归入调用方
 - 🟥 禁止：将免疫逻辑分散到各个 Domain 中 — 理由：免疫统一归 Condition 领域处理（使用 Tag.Immune.X + TagRequirement(Not)），防止各 Domain 各自实现免疫检查
 - 🟥 禁止：条件依赖运行时 ECS 状态以外的环境变量（如时间戳/随机数） — 理由：条件评估必须是确定性的，依赖环境变量会破坏重现性
+- 🟥 禁止：ConditionDef 中直接存储用户可见文本的自然语言 — 理由：必须使用 name_key/desc_key: LocalizationKey 引用。违反宪法 §22 Localization First。
 
 ---
 
@@ -209,6 +210,7 @@ ImmunityTriggered
 - ✅ 职责明确：Condition 只做"条件判断"，不做"能力激活"（Ability）、"效果施加"（Effect）
 - ✅ 免疫统一归入 Condition：免疫 = Tag(Immune.X) + Condition(TagRequirement Not)，避免了独立的 ImmunitySystem
 - ✅ Condition 统一了三个场景：技能激活条件、装备穿戴限制、效果免疫检查——Same Engine, Different Configs
+- ✅ LocalizationKey：Condition 使用 LocalizationKey 而非硬编码文本（宪法 §22）
 
 ---
 

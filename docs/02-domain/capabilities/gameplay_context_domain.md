@@ -4,7 +4,7 @@ title: GameplayContext（游戏上下文/载荷）领域规则 v1.0
 status: stable
 owner: domain-designer
 created: 2026-06-16
-updated: 2026-06-16
+updated: 2026-06-19
 tags:
   - domain
   - gameplay-context
@@ -16,7 +16,7 @@ tags:
 
 | 术语 | 定义 | 职责边界 |
 |------|------|----------|
-| GameplayContext | 跨系统传递的统一数据载体，封装一次游戏行为的所有相关数据 | 负责：承载行为来源、目标、能力、环境等全维度数据；不负责：数据的业务含义解释 |
+| GameplayContext | 跨系统传递的统一数据载体，封装一次游戏行为的所有相关数据 | 负责：承载行为来源、目标、能力、环境等全维度数据，GameplayContext 的 LocalizationKey（name_key/desc_key）；不负责：数据的业务含义解释 |
 | GameplayContextData | 上下文数据的结构化内容，包含 source/target/ability/weapon/element 等字段 | 负责：结构化存储行为上下文的所有字段；不负责：字段的校验规则 |
 | SourceInfo | 行为的发起者信息（实体 Id、阵营、位置） | 负责：标识"谁发起了这个行为"；不负责：发起者的属性状态 |
 | TargetInfo | 行为的目标者信息（实体 Id、阵营、位置、是否有效） | 负责：标识"这个行为施加给谁"；不负责：目标选择逻辑 |
@@ -125,6 +125,7 @@ Archived（已归档）
 - 🟥 禁止：跳过 ContextBuilder 直接创建 GameplayContext — 理由：Builder 是唯一合法的构建入口，确保必填字段校验不被绕过
 - 🟥 禁止：GameplayContext 携带系统的内部状态（如 ECS World 引用） — 理由：上下文是纯数据载体，不应引用任何系统对象
 - 🟥 禁止：在溯源链中篡改上游节点数据 — 理由：每个节点在加入链时即固定，修改上游节点破坏溯源完整性
+- 🟥 禁止：GameplayContextDef 中直接存储用户可见文本的自然语言 — 理由：必须使用 name_key/desc_key: LocalizationKey 引用。违反宪法 §22 Localization First。
 
 ---
 
@@ -197,6 +198,7 @@ ContextConsumed
 - ✅ 职责明确：GameplayContext 只做"数据载体"，不做"计算"（Executor）、"判断"（Condition）、"通知"（Event）
 - ✅ 解决痛点：统一载体避免了架构文档所述"每个 Event 重复定义 source/target/ability 字段"的膨胀问题
 - ✅ 循环防护：ContextChain 的环路检测 + 链长上限双重保护，防止反击/连锁/伤害转移的无限循环
+- ✅ LocalizationKey：GameplayContext 使用 LocalizationKey 而非硬编码文本（宪法 §22）
 
 ---
 

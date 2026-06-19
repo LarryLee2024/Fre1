@@ -16,7 +16,7 @@ tags:
 
 | 术语 | 定义 | 职责边界 |
 |------|------|----------|
-| CombatState | 战斗整体状态机，定义战斗从开始到结束的全流程阶段 | 负责：战斗宏观阶段的流转；不负责：单个单位的回合管理 |
+| CombatState | 战斗整体状态机，定义战斗从开始到结束的全流程阶段 | 负责：战斗宏观阶段的流转，Combat 的 LocalizationKey（name_key/desc_key）；不负责：单个单位的回合管理 |
 | TurnOrder | 先攻排序队列，决定单位在战斗中的行动顺序 | 负责：先攻值的计算与排序；不负责：先攻检定的具体公式 |
 | CombatParticipant | 战斗参与者标记，标识哪些单位正在参与当前战斗 | 负责：参与者的注册与移除；不负责：参与者的战斗行为 |
 | Dead | 阵亡标记 Tag Component，实体获得此 Tag 表示已在战斗中死亡 | 负责：标识死亡状态；不负责：死亡处理逻辑 |
@@ -167,6 +167,7 @@ RoundStart（下一回合开始）
 - 🟥 禁止：跳过先攻排序让单位"立即行动" — 理由：所有战斗行为必须按先攻顺序进行
 - 🟥 禁止：战斗中对同一伤害进行多次结算（如同时走 Combat 伤害流程和直接扣血） — 理由：同一伤害只能结算一次
 - 🟥 禁止：战斗结束后仍保留战斗状态组件 — 理由：战斗结束应清理所有 CombatParticipant/TurnOrder 等战斗组件
+- 🟥 禁止：CombatDef 中直接存储用户可见文本的自然语言 — 理由：必须使用 name_key/desc_key: LocalizationKey 引用。违反宪法 §22 Localization First。
 
 ---
 
@@ -324,6 +325,7 @@ UnitDied
 - ✅ 不造新系统：Combat 通过调用 Capabilities（Ability/Effect/Execution/Condition/Event）实现所有战斗机制
 - ✅ 回合流程清晰：RoundStart → UnitTurn × N → RoundEnd 的循环结构，符合 SRPG 标准战斗模式
 - ✅ 伤害结算经过 Reaction 拦截点，为 Reaction 领域提供触发时机
+- ✅ LocalizationKey：本领域涉及的用户可见文本使用 LocalizationKey 而非硬编码文本（宪法 §22）
 
 ---
 

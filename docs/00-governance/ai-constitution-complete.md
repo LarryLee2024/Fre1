@@ -1,12 +1,12 @@
-# Bevy 0.18+ SRPG 项目总宪法 v5.0（完整版）
+# Bevy 0.18+ SRPG 项目总宪法 v5.1（完整版）
 > 文档元数据
 > - id: 00-governance.project-constitution-complete
 > - title: SRPG 项目总宪法（架构 + 开发 + AI 执行）
-> - version: 5.0
+> - version: 5.1
 > - status: Proposed
 > - owner: architect
 > - created: 2026-06-14
-> - updated: 2026-06-16（v5.0 + §16.5 TODO/FIXME + §16.6 测试中文命名）
+> - updated: 2026-06-19（v5.1 + §1.5 P0铁则第7条 + §21 红线第18条 + §22 Localization 专项规则）
 > - tags: governance, constitution, architecture, bevy, srpg
 > - 效力说明：本宪法对项目所有架构设计、代码编写、AI生成内容具有最高约束力，优先级高于任何通用编程规范、语言习惯或AI默认输出。条款编号永久固定，违反条款即视为不合格输出。
 
@@ -52,6 +52,7 @@
 4. **Logic / Presentation Separation**：业务逻辑与视觉表现彻底解耦，禁止混写
 5. **Composition Over Inheritance**：所有差异化通过原子能力组合实现，禁止继承式设计
 6. **Capabilities/Domains 双轴架构原则**：Core 层采用「纵向 Capabilities 通用机制复用 + 横向 Domains 业务内聚」双轴结构，禁止单维度无限分层
+7. **Localization First**：所有用户可见文本禁止直接进入 Rust 代码，必须通过 LocalizationKey 引用；Def 只存 name_key/desc_key 等 Key，不存任何自然语言文本；Replay/Event/BattleLog 只存 Key + 参数，不存最终翻译文本；存档禁止保存翻译结果，只存 ID/Key
 
 ---
 
@@ -1271,7 +1272,7 @@ fn a() { ... }                        // 无意义命名
 
 ### 17.2 扩展预留规范
 - 🟨 Mod 支持预留：核心系统预留轻量扩展点，不提前实现完整 Mod 框架
-- 🟨 国际化预留：禁止在代码、配置中硬编码玩家可见文本，所有文本统一通过本地化资源管理
+- 🟩 国际化强制：代码中绝对禁止出现用户可见的硬编码文本，所有用户可见文本必须通过 LocalizationKey + Fluent (.ftl) 文件管理；Def 只存 name_key/desc_key 等 Key 引用，不存直接文本；Replay/BattleLog/Event 只存 Key+参数，不保存最终翻译结果
 - 🟨 遥测预留：核心领域事件设计时考虑数据埋点需求，不提前实现完整遥测系统
 
 ---
@@ -1430,6 +1431,7 @@ refactor-guardian 必须覆盖以下六个扫描维度（来源：50万行级项
 24. 未经授权创建新 Feature、修改公共 API
 25. 在 Capabilities 层硬编码业务规则，破坏机制与业务的边界
 26. Domain 之间直接 `use` 对方内部类型，绕过双轨通信（写操作走事件，读操作走 Query API）
+27. 代码中硬编码用户可见文本字符串（中文/英文/日文等），未使用 LocalizationKey 引用本地化资源
 
 ### 20.2 AI 代码自检清单（文档参考，不输出到代码）
 
@@ -1473,6 +1475,7 @@ AI 生成代码前应内部对照以下要点：
 8. 🟩 Capabilities/Domains 双轴架构原则：Capabilities 管机制，Domains 管业务，边界不可突破
 9. 🟥 测试与确定性优先：Battle Replay + 自动化测试，核心战斗必须可重现
 10. 🟥 组合绝对优先：所有差异化通过组件、Trait、Modifier 组合实现
+11. 🟥 Localization First：所有用户可见文本必须通过 LocalizationKey 引用，禁止任何用户可见文本硬编码在 Rust 代码中；Def 只存 name_key/desc_key 不存直接文本；存档/Replay/Event 只存 Key+参数，不存翻译结果
 
 ---
 
@@ -1494,13 +1497,77 @@ AI 生成代码前应内部对照以下要点：
 15. 🟥 禁止 Capabilities 层包含具体业务规则，突破机制与业务的边界
 16. 🟥 禁止 Domain 之间直接依赖、直接调用内部实现
 17. 🟥 禁止 Domain 重复实现 Capabilities 已有的通用机制
+18. 🟥 禁止在 Rust 代码中硬编码任何用户可见文本（技能名称、描述、对话、UI 标签、错误提示等），所有用户可见文本必须通过 LocalizationKey 从外部本地化文件引用
+
+---
+
+## 第二十二编 Localization（国际化）专项规则
+
+### 22.1 核心原则（P0 级）
+
+| # | 规则 | 等级 | 说明 |
+|---|------|------|------|
+| 22.1.1 | **代码中绝对禁止出现用户可见文本** | 🟥 | 代码中只允许出现 LocalizationKey，不允许出现任何中文/英文/日文等用户可见自然语言文本 |
+| 22.1.2 | **Def 只存 LocalizationKey** | 🟥 | AbilityDef、EffectDef、ItemDef、QuestDef 等所有 Definition 类型的文本字段必须使用 name_key/desc_key/text_key，禁止直接存储用户可见字符串 |
+| 22.1.3 | **Replay/Event 只存 Key+参数** | 🟥 | BattleLog、领域事件、回放帧中禁止保存最终翻译文本，必须使用 Key + 结构化参数，确保语言切换时正确渲染 |
+| 22.1.4 | **存档禁止保存翻译文本** | 🟥 | 存档中只能存储 ID/Key，禁止保存任何翻译结果，确保切语言、更新翻译、Mod 覆盖全部安全 |
+| 22.1.5 | **Localization 属于 Infrastructure 层** | 🟩 | Localization 是全局基础设施，不属于 UI 层，不属于 Capabilities 能力层。所有用户可见文本的唯一下游 |
+
+### 22.2 LocalizationKey 规范
+
+| # | 规则 | 等级 | 说明 |
+|---|------|------|------|
+| 22.2.1 | **Key 格式** | 🟩 | `LocalizationKey ::= <namespace> "." <scope> "." <id> "." <suffix>` |
+| 22.2.2 | **Key 使用无语义 ID** | 🟩 | 优先使用 `ability.abl_000042.name` 而非 `ability.fireball.name`，避免业务重命名导致 Key 失效 |
+| 22.2.3 | **Key 必须稳定** | 🟩 | Key 一旦分配永久有效，删除时标记 deprecated，不重新分配 |
+| 22.2.4 | **命名空间分层** | 🟩 | L0 Core（系统文本）→ L1 UI（界面文本）→ L2 Gameplay（玩法文本）→ L3 Story（剧情文本），生命周期从稳定到高频变化 |
+| 22.2.5 | **必须使用 Fluent (.ftl) 格式** | 🟨 | 优先使用 Fluent (.ftl) 作为本地化文件格式，利用其变量插值、复数规则、性别支持能力 |
+| 22.2.6 | **禁止手写复数逻辑** | 🟥 | 复数规则必须交给 Fluent 内置复数系统处理，禁止在代码中手写 if-en/other 等复数判断 |
+
+### 22.3 基础设施与工具
+
+| # | 规则 | 等级 | 说明 |
+|---|------|------|------|
+| 22.3.1 | **LocalizationPlugin** | 🟩 | 必须建立 `LocalizationPlugin` 统一管理本地化生命周期，注册在 Content Plugin 之后、UI Plugin 之前 |
+| 22.3.2 | **LocalizationKey 自动生成 Rust 常量** | 🟩 | 必须通过 build.rs 从 .ftl 文件自动生成 Rust 常量模块（如 `loc::ability::abl_000042::NAME`），提供编译期 Key 检查 |
+| 22.3.3 | **启动时完整性校验** | 🟩 | 启动时必须对所有已注册的 LocalizationKey 进行完整性检查，缺失 Key 直接阻止启动 |
+| 22.3.4 | **Fake Locale (zz-ZZ)** | 🟨 | 必须建立 zz-ZZ 伪语言 locale 用于检测硬编码文本，通过 feature flag 启用 |
+| 22.3.5 | **三级回退链** | 🟩 | `{locale}` → `en-US` → `raw_key` 三级回退，禁止直接显示 [Missing Localization] |
+| 22.3.6 | **热加载支持** | 🟨 | 修改 .ftl 文件必须热加载生效，无需重启游戏 |
+| 22.3.7 | **LocalizedTextCache** | 🟨 | 运行时必须使用缓存避免每帧查询 LocalizationDatabase，语言切换时清空重建 |
+| 22.3.8 | **Mod 覆盖链** | 🟩 | 支持 Base Game → DLC → Mod 三级本地化覆盖链 |
+| 22.3.9 | **文本长度预算** | 🟨 | UI 设计必须为多语言预留扩展空间（建议 30%~50%），CI 自动检查超长文本 |
+
+### 22.4 CI 与审计
+
+| # | 规则 | 等级 | 说明 |
+|---|------|------|------|
+| 22.4.1 | **CI Localization 检查** | 🟩 | CI 必须包含缺失 Key、重复 Key、未引用 Key、参数不匹配、文本长度超限等本地化检查 |
+| 22.4.2 | **翻译覆盖率报告** | 🟩 | 必须定期生成按分类（UI/Gameplay/Quest/Story/Tutorial）的翻译覆盖率报告 |
+| 22.4.3 | **废弃 Key 管理** | 🟩 | 支持 deprecated Key 标记，审计输出废弃 Key 列表供清理 |
+| 22.4.4 | **术语库（Glossary）** | 🟨 | 必须建立项目术语库，确保术语翻译全项目一致 |
+
+### 22.5 语音预留
+
+| # | 规则 | 等级 | 说明 |
+|---|------|------|------|
+| 22.5.1 | **文本设计预留语音** | 🟨 | 对话数据设计时预留 voice_key/subtitle 字段，即使当前不做配音 |
+| 22.5.2 | **Key 体系支持语音扩展** | 🟩 | `story.ch01.dlg_001` 天然支持 text/voice/subtitle 三层扩展 |
 
 ---
 
 ## 附则
 ### 修订说明
-- 本宪法版本：v5.0（Bevy 0.18+）
-- 发布日期：2026-06-16
+- 本宪法版本：v5.1（Bevy 0.18+）
+- 发布日期：2026-06-19
+- 核心升级（v4.1 → v5.0）：
+  5. **Localization 国际化专项规则新增**
+     - §1.5 P0 顶层铁则新增第7条 Localization First
+     - §21 红线禁止事项新增第18条 禁止硬编码用户可见文本
+     - §20.1 AI 反模式黑名单新增第27条 硬编码文本违规项
+     - §20.4 AI 最高优先级执行条款新增第11条 Localization First
+     - §17.2 扩展预留国际化条款从🟨升级为🟩
+     - **新增 §22 第二十二编 Localization 专项规则**（22.1~22.5，共 5 节 22 条规则）
 - 核心升级（v4.1 → v5.0）：
   1. **Core 内部架构对齐**
      - 将 Layers（L0~L4）5级分层重构为 Capabilities（15个能力领域）+ Domains（15个业务域）+ Mod API 双轴结构

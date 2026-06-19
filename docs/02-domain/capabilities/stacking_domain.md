@@ -4,7 +4,7 @@ title: Stacking（堆叠规则）领域规则 v1.0
 status: stable
 owner: domain-designer
 created: 2026-06-16
-updated: 2026-06-16
+updated: 2026-06-19
 tags:
   - domain
   - stacking
@@ -16,7 +16,7 @@ tags:
 
 | 术语 | 定义 | 职责边界 |
 |------|------|----------|
-| Stacking | 同一效果多次作用时的叠加规则定义与控制 | 负责：效果叠加的策略（是否可叠、如何叠加、叠加上限）；不负责：效果的创建与移除 |
+| Stacking | 同一效果多次作用时的叠加规则定义与控制 | 负责：效果叠加的策略（是否可叠、如何叠加、叠加上限），Stacking 的 LocalizationKey（name_key/desc_key）；不负责：效果的创建与移除 |
 | StackingType | 堆叠类型枚举，定义效果叠加的基本策略 | 负责：堆叠策略分类；不负责：策略的具体参数 |
 | StackingRule | 堆叠规则的详细定义，包含同源/异源识别逻辑以及分组条件 | 负责：细化堆叠规则的触发条件；不负责：堆叠计数的维护 |
 | StackingLimit | 堆叠上限与超出上限时的处理策略 | 负责：最大堆叠数定义和溢出行为；不负责：堆叠层数变化时的业务逻辑 |
@@ -157,6 +157,7 @@ Stacking Decision（堆叠判定中）
 - 🟥 禁止：不同 EffectDefId 的效果被强制合并堆叠 — 理由：堆叠只在同类效果间发生，异类效果各自独立
 - 🟥 禁止：堆叠判定依赖运行时状态（如当前帧数/随机数） — 理由：堆叠规则必须是确定性的，依赖运行时状态导致回放不一致
 - 🟥 禁止：堆叠层数可以无限增长（无上限设置） — 理由：必须始终有 StackingLimit 的限制
+- 🟥 禁止：StackingDef 中直接存储用户可见文本的自然语言文本 — 理由：必须使用 name_key/desc_key: LocalizationKey 引用。违反宪法 §22 Localization First。
 
 ---
 
@@ -260,6 +261,7 @@ StackOverflow
 - ✅ 术语一致：StackingType、StackingRule、StackingLimit、StackingState 与架构文档第六节完全一致
 - ✅ 职责明确：Stacking 只做"叠加规则判定"，不做"效果生命周期"（Effect）、不做"属性修改"（Modifier + Aggregator）
 - ✅ 重复保护：不变量 3.1（层数上限）+ 3.2（不同 EffectDef 不堆叠）+ 3.5（层数变化触发重算）三重保护确保堆叠安全
+- ✅ LocalizationKey：Stacking 使用 LocalizationKey 而非硬编码文本（宪法 §22）
 
 ---
 

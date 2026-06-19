@@ -4,7 +4,7 @@ title: Attribute（属性）领域规则 v1.0
 status: stable
 owner: domain-designer
 created: 2026-06-16
-updated: 2026-06-16
+updated: 2026-06-19
 tags:
   - domain
   - attribute
@@ -16,7 +16,7 @@ tags:
 
 | 术语 | 定义 | 职责边界 |
 |------|------|----------|
-| Attribute | 实体的可量化数值属性，具有基础值与当前值分离的机制 | 负责：属性的定义、数值存储与变更通知；不负责：数值的计算逻辑 |
+| Attribute | 实体的可量化数值属性，具有基础值与当前值分离的机制 | 负责：属性的定义、数值存储与变更通知，属性的 LocalizationKey（name_key/desc_key）；不负责：数值的计算逻辑 |
 | AttributeId | 属性的唯一标识符，强类型 | 负责：属性身份的唯一定义；不负责：属性的业务含义或数值范围 |
 | AttributeValue | 属性的数值表示，分为 base（基础值）和 current（当前值） | 负责：基础值与当前值的分离存储；不负责：值的合法性校验 |
 | BaseValue | 属性的基础值，不受临时修改影响，是"干净"的起点值 | 负责：提供属性计算的起点；不负责：实时数值的表示 |
@@ -122,6 +122,7 @@ BaseValue（恢复/重置到基础值起点）
 - 🟥 禁止：属性值和标签混合（如用 Tag 携带属性数值） — 理由：违反标签的职责边界，标签只做标识不做数据
 - 🟥 禁止：同一 AttributeId 在不同实体上具有不同的基础定义 — 理由：AttributeId 必须全局一致，角色间差异体现在 BaseValue 的数值上而非定义上
 - 🟥 禁止：运行时动态注册新 AttributeId — 理由：所有属性定义应在内容加载阶段完成，运行时只做数值变更
+- 🟥 禁止：AttributeDef 中直接存储用户可见文本的自然语言 — 理由：必须使用 name_key/desc_key: LocalizationKey 引用。违反宪法 §22 Localization First。
 
 ---
 
@@ -215,6 +216,7 @@ SnapshotTaken
 - ✅ 职责明确：Attribute 只定义"有什么属性、值是多少"，不涉及"值如何计算"（Aggregator 的职责）、"值如何被改变"（Modifier 的职责）
 - ✅ 三层分离：属性定义（content/ 中的 AttributeDef）→ Spec 层（AttributeSpec，角色的属性配置）→ Instance 层（AttributeContainer，运行时的属性值），与 Spec 领域衔接
 - ✅ 数据驱动：属性定义下沉到 content/schema/attribute_def.rs 作为配置数据，领域规则只规定属性的行为约束
+- ✅ LocalizationKey：Attribute 使用 LocalizationKey 而非硬编码文本（宪法 §22）
 
 ---
 

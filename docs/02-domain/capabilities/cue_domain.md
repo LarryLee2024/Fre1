@@ -4,7 +4,7 @@ title: Cue（表现层信号）领域规则 v1.0
 status: stable
 owner: domain-designer
 created: 2026-06-16
-updated: 2026-06-16
+updated: 2026-06-19
 tags:
   - domain
   - cue
@@ -16,7 +16,7 @@ tags:
 
 | 术语 | 定义 | 职责边界 |
 |------|------|----------|
-| Cue | 表现层触发信号，逻辑层通知表现层"该播放什么"的桥梁 | 负责：信号的定义、分类与分发到 Infra 表现层；不负责：信号的实际表现执行 |
+| Cue | 表现层触发信号，逻辑层通知表现层"该播放什么"的桥梁 | 负责：信号的定义、分类与分发到 Infra 表现层，Cue 的 LocalizationKey（name_key/desc_key）；不负责：信号的实际表现执行 |
 | CueType | 表现信号类型枚举，定义信号的表现类别 | 负责：信号分类（VFX/SFX/Animation/Shake/Popup）；不负责：信号的具体参数 |
 | CueData | 表现信号的数据载体，包含信号标识、上下文和参数 | 负责：携带表现层执行所需的信息；不负责：表现层的执行方式 |
 | CueTag | 信号关联的业务时机标签，标记信号在效果生命周期的哪个阶段触发 | 负责：触发时机标识（OnApply/OnRemove/OnTick）；不负责：触发时机的判断逻辑 |
@@ -147,6 +147,7 @@ Consumed（消耗完毕——表现层反馈已执行）
 - 🟥 禁止：逻辑层直接调用表现层 API 播放特效/音效 — 理由：必须通过 Cue 事件解耦，禁止逻辑层直接依赖表现层
 - 🟥 禁止：Cue 携带过大的数据载荷（如完整纹理/音频数据） — 理由：CueData 是轻量信号，重资源通过 asset 系统加载
 - 🟥 禁止：玩家输入/UI 操作通过 Cue 影响逻辑层 — 理由：输入应走 Input→Command 路径，不经过 Cue
+- 🟥 禁止：CueDef 中直接存储用户可见文本的自然语言文本 — 理由：必须使用 name_key/desc_key: LocalizationKey 引用。违反宪法 §22 Localization First。
 
 ---
 
@@ -218,6 +219,7 @@ CueTriggered（由 EventBus 分发）
 - ✅ 表现解耦：Cue 是逻辑层（Core）与表现层（Infra/presentation/）之间的唯一桥梁，Core 不直接调用表现层 API
 - ✅ 可选机制：Cue 可被独立禁用，支持无头模式/性能模式
 - ✅ 职责明确：Cue 只做"信号"，不做"表现执行"（Infra 的职责）、不做"事件通信"（Event 的职责）
+- ✅ LocalizationKey：Cue 使用 LocalizationKey 而非硬编码文本（宪法 §22）
 
 ---
 

@@ -4,7 +4,7 @@ title: Domain Rules — 领域规则索引
 status: stable
 owner: domain-designer
 created: 2026-06-16
-updated: 2026-06-18
+updated: 2026-06-19
 tags:
   - domain
   - index
@@ -313,3 +313,14 @@ Event         → 所有领域（领域间通信）
 | **@data-architect** | 定义"规则如何表达"——将领域规则映射为 Schema |
 | **@feature-developer** | 实现——将领域规则转为 Rust 代码 |
 | **@test-guardian** | 验证——确保实现符合领域不变量 |
+
+---
+
+## 8. Localization 约束
+
+所有涉及用户可见文本的领域规则必须遵守以下约束：
+
+- 用户可见文本（名称、描述、风味文本、工具提示等）必须使用 LocalizationKey
+- Schema 中的文本字段使用 `name_key: LocalizationKey`、`desc_key: LocalizationKey` 格式
+- LocalizationKey 格式：`<namespace>.<scope>.<id>.<suffix>`（详见 `docs/04-data/README.md` §3.2）
+- 禁止在 Definition 中直接存储自然语言文本

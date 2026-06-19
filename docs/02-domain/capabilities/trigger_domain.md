@@ -4,7 +4,7 @@ title: Trigger（触发器）领域规则 v1.0
 status: stable
 owner: domain-designer
 created: 2026-06-16
-updated: 2026-06-16
+updated: 2026-06-19
 tags:
   - domain
   - trigger
@@ -16,7 +16,7 @@ tags:
 
 | 术语 | 定义 | 职责边界 |
 |------|------|----------|
-| Trigger | 技能激活的条件描述，定义"什么条件下可以激活什么技能" | 负责：条件→技能的映射关系定义；不负责：条件的具体评估逻辑 |
+| Trigger | 技能激活的条件描述，定义"什么条件下可以激活什么技能" | 负责：条件→技能的映射关系定义，Trigger 的 LocalizationKey（name_key/desc_key）；不负责：条件的具体评估逻辑 |
 | TriggerType | 触发类型枚举，定义触发条件的事件类别 | 负责：触发条件分类；不负责：触发后的行为 |
 | TriggerCondition | 触发条件的具体定义，包含触发类型和附加参数 | 负责：触发条件的结构化描述；不负责：触发条件的评估执行 |
 | TriggerContainer | 挂载在实体上的触发器容器，管理所有注册的触发器 | 负责：触发器的注册/移除/查询管理；不负责：触发器的实际触发评估 |
@@ -147,6 +147,7 @@ Removed（已移除）
 - 🟥 禁止：同一 Trigger 同时关联多个 Activation 技能路径 — 理由：一个 Trigger 对应一个目标 Ability，多路径应注册多个 Trigger 实例
 - 🟥 禁止：TriggerCondition 中包含随机判定 — 理由：触发条件的确定性影响游戏回放一致性，随机判定应在 Ability 的 Execution 阶段进行
 - 🟥 禁止：触发器监听自身触发的技能所产生的事件 — 理由：防止触发器监听到自己触发的事件而无限循环（如"攻击→触发连击→连击是攻击→再次触发连击"）
+- 🟥 禁止：TriggerDef 中直接存储用户可见文本的自然语言文本 — 理由：必须使用 name_key/desc_key: LocalizationKey 引用。违反宪法 §22 Localization First。
 
 ---
 
@@ -238,6 +239,7 @@ Removed（已移除）
 - ✅ 职责明确：Trigger 只做"检测→通知"，不执行技能逻辑（Ability 的职责）、不做条件评估（Condition 的职责，TriggerCondition 可委托 Condition 领域）
 - ✅ 与 Event 分离：架构文档第六节中 Trigger vs Event 的详细区分得到严格遵守——Trigger 解决"何时激活技能"、Event 解决"系统间通信"
 - ✅ 频率控制：架构文档中反击、连锁等依赖 Trigger 的场景，通过触发频率上限避免无限激活
+- ✅ LocalizationKey：Trigger 使用 LocalizationKey 而非硬编码文本（宪法 §22）
 
 ---
 

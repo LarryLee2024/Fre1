@@ -4,7 +4,7 @@ title: Aggregator（聚合器）领域规则 v1.0
 status: stable
 owner: domain-designer
 created: 2026-06-16
-updated: 2026-06-16
+updated: 2026-06-19
 tags:
   - domain
   - aggregator
@@ -16,7 +16,7 @@ tags:
 
 | 术语 | 定义 | 职责边界 |
 |------|------|----------|
-| Aggregator | 属性聚合管线，将 Attribute 的 BaseValue 与所有活跃 Modifier 按规则计算为 FinalValue | 负责：属性值的聚合计算流程编排；不负责：单个 Modifier 的创建与管理 |
+| Aggregator | 属性聚合管线，将 Attribute 的 BaseValue 与所有活跃 Modifier 按规则计算为 FinalValue | 负责：属性值的聚合计算流程编排，Aggregator 的 LocalizationKey（name_key/desc_key）；不负责：单个 Modifier 的创建与管理 |
 | CalcStage | 计算阶段，定义 Modifier 运算类型的执行顺序 | 负责：运算阶段的划分（Add→Multiply→Override→Clamp）与顺序保证；不负责：各阶段内部 Modifier 的优先级排序 |
 | CalcPipeline | 完整属性计算管线，从 BaseValue 到 FinalValue 的完整变换链路 | 负责：多阶段运算的串联执行；不负责：计算结果的持久化 |
 | AggregationSnapshot | 聚合快照，记录某一时刻所有属性的聚合状态 | 负责：提供可恢复的状态记录；不负责：快照间的差异计算 |
@@ -124,6 +124,7 @@ Clean（缓存有效）
 - 🟥 禁止：Override Modifier 在 Add/Multiply 阶段参与计算 — 理由：Override 是独立阶段，不在前两阶段参与任何运算
 - 🟥 禁止：Clamp 阶段的边界值为可变值（依赖运行时动态数据） — 理由：MinValue/MaxValue 应在属性定义时确定，运行时 Clamp 边界不应依赖实时属性值
 - 🟥 禁止：聚合器感知 Modifier 的业务来源 — 理由：Aggregator 只按运算类型和优先级处理 Modifier，不区分"来自 Buff 还是来自装备"
+- 🟥 禁止：AggregatorDef 中直接存储用户可见文本的自然语言 — 理由：必须使用 name_key/desc_key: LocalizationKey 引用。违反宪法 §22 Localization First。
 
 ---
 
@@ -221,6 +222,7 @@ AggregationComplete（由 Aggregator 发布）
 - ✅ 职责明确：Aggregator 只编排"计算顺序"，不创建 Modifier（Modifier 的职责）、不存储属性值（Attribute 的职责）
 - ✅ 管线顺序与 GAS 对齐：Base→Add→Multiply→Override→Clamp 与 FAttributeAggregator 的设计一致
 - ✅ 回放友好：确定性的计算管线保证同一输入产生同一输出，快照机制支持回滚
+- ✅ LocalizationKey：Aggregator 使用 LocalizationKey 而非硬编码文本（宪法 §22）
 
 ---
 
