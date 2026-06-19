@@ -102,26 +102,31 @@ ObjectiveType
 ### 3.1 任务前置链完整性
 - **条件**：任何任务被接受前
 - **不变量**：任务的所有 QuestPrerequisite（前置任务/等级/阵营声望）必须全部满足
+- **违反后果类型**：🔴 规则失败
 - **违反后果**：玩家接到本不应可接的任务
 
 ### 3.2 目标进度不可倒退
 - **条件**：任何 ObjectiveProgress 更新时
 - **不变量**：目标进度只增不减（击杀数不会减少，收集数不会减少）
+- **违反后果类型**：🔴 程序错误
 - **违反后果**：进度倒退导致任务完成窗口被关闭
 
 ### 3.3 奖励不可重复发放
 - **条件**：任务奖励发放时
 - **不变量**：每个任务完成后只发放一次奖励，禁止重复领取
+- **违反后果类型**：🔴 规则失败
 - **违反后果**：玩家重复完成任务获得多次奖励
 
 ### 3.4 任务互斥性
 - **条件**：互斥任务同时激活时
 - **不变量**：互斥的两个任务（如"加入 A 阵营"和"加入 B 阵营"）不能同时处于 Active 状态
+- **违反后果类型**：🔴 规则失败
 - **违反后果**：玩家同时接受互斥任务导致冲突
 
 ### 3.5 关键任务保护
 - **条件**：主线/关键任务相关时
 - **不变量**：标记为"关键"的任务不可被放弃或失败（必须完成才能推进主线）
+- **违反后果类型**：🔴 规则失败
 - **违反后果**：主线任务被放弃导致剧情无法推进
 
 ---
@@ -149,7 +154,7 @@ ObjectiveType
   6. 注册目标的进度监听（订阅相关领域事件）
   7. 发布 QuestAccepted 事件
 - **输出**：QuestAccepted 事件
-- **失败处理**：前置条件不满足时拒绝接受
+- **失败处理**：前置条件不满足时拒绝接受 → 这是**规则失败**（预期业务分支，任务前置条件未满足）
 
 ### 5.2 目标进度更新
 
@@ -163,7 +168,7 @@ ObjectiveType
   6. 如果所有 Objective 都完成，标记 Quest 为"可交付"
   7. 发布 ObjectiveCompleted 事件（可选，单个目标完成时）
 - **输出**：ObjectiveProgress 更新通知（内部），ObjectiveCompleted 事件（单个目标完成时）
-- **失败处理**：进度更新异常时记录警告，不影响后续更新
+- **失败处理**：进度更新异常时记录警告，不影响后续更新 → 这是**程序错误**（系统异常，进度数据不一致应记 Bug）
 
 ### 5.3 任务交付
 
@@ -179,7 +184,7 @@ ObjectiveType
   4. 如果有关联的后续任务，将其前置条件标记为满足
   5. 发布 QuestTurnedIn 事件
 - **输出**：QuestTurnedIn 事件（奖励明细列表）
-- **失败处理**：任务尚未可交付时交付失败
+- **失败处理**：任务尚未可交付时交付失败 → 这是**规则失败**（预期业务分支，任务目标未全部完成）
 
 ---
 
@@ -187,11 +192,11 @@ ObjectiveType
 
 | 事件名 | 触发时机 | 携带数据 | 订阅者 |
 |--------|----------|----------|--------|
-| QuestAccepted | 任务被接受时 | entity_id, quest_id, objectives[ ]（初始进度） | Quest（开始追踪）、UI（添加到任务日志） |
-| ObjectiveCompleted | 单个目标完成时 | entity_id, quest_id, objective_id, objective_type | Quest（检查是否所有目标完成）、UI（显示目标完成通知） |
-| QuestTurnedIn | 任务交付完成时 | entity_id, quest_id, rewards[ ]（经验/物品/声望/解锁） | Progression（发放经验）、Inventory（添加物品）、Faction（更新声望）、UI（显示奖励） |
-| QuestFailed | 任务失败时 | entity_id, quest_id, fail_reason | Quest（清理追踪）、UI（显示任务失败） |
-| QuestProgressUpdated | 任务进度变化时 | entity_id, quest_id, objective_id, old_progress, new_progress, target | UI（更新任务日志进度显示） |
+| QuestAccepted | 任务被接受时 | entity_id, quest_id, objectives[ ]（初始进度） | Quest（开始追踪）、UI（添加到任务日志）、日志（LogCode: QST001） |
+| ObjectiveCompleted | 单个目标完成时 | entity_id, quest_id, objective_id, objective_type | Quest（检查是否所有目标完成）、UI（显示目标完成通知）、日志（LogCode: QST002） |
+| QuestTurnedIn | 任务交付完成时 | entity_id, quest_id, rewards[ ]（经验/物品/声望/解锁） | Progression（发放经验）、Inventory（添加物品）、Faction（更新声望）、UI（显示奖励）、日志（LogCode: QST003） |
+| QuestFailed | 任务失败时 | entity_id, quest_id, fail_reason | Quest（清理追踪）、UI（显示任务失败）、日志（LogCode: QST004） |
+| QuestProgressUpdated | 任务进度变化时 | entity_id, quest_id, objective_id, old_progress, new_progress, target | UI（更新任务日志进度显示）、日志（LogCode: QST005） |
 
 ### 事件订阅关系图
 

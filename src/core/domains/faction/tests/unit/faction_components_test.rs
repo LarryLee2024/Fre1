@@ -1,5 +1,6 @@
 use crate::core::domains::faction::components::{
-    FactionId, FactionMembership, FactionRelationTable, FactionRelationType, Reputation, ReputationLevel,
+    FactionId, FactionMembership, FactionRelationTable, FactionRelationType, Reputation,
+    ReputationLevel,
 };
 
 #[test]

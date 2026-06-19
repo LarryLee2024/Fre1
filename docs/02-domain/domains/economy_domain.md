@@ -4,7 +4,7 @@ title: Economy（经济/交易）领域规则 v1.0
 status: stable
 owner: domain-designer
 created: 2026-06-16
-updated: 2026-06-16
+updated: 2026-06-19
 tags:
   - domain
   - economy
@@ -102,26 +102,31 @@ TransactionComplete（交易完成——货币与物品更新完毕）
 ### 3.1 货币非负
 - **条件**：任何货币变更后
 - **不变量**：所有货币类型的持有量 >= 0
+- **违反后果类型**：🔴 程序错误
 - **违反后果**：负货币（负债）破坏经济体系
 
 ### 3.2 交易物存在性
 - **条件**：任何交易确认前
 - **不变量**：购买时商店必须有库存；出售时背包必须有该物品
+- **违反后果类型**：🔴 规则失败
 - **违反后果**：交易了不存在的物品
 
 ### 3.3 价格计算确定性
 - **条件**：相同条件下的同一物品
 - **不变量**：相同条件下（声望/供需/折扣）同一物品的价格必须一致
+- **违反后果类型**：🔴 程序错误
 - **违反后果**：同一物品在相同条件下价格波动
 
 ### 3.4 商店补货周期
 - **条件**：商店库存管理时
 - **不变量**：商店物品在补货周期内不刷新；补货周期到达时按规则恢复库存
+- **违反后果类型**：🔴 程序错误
 - **违反后果**：商店频繁/不规律补货破坏经济预期
 
 ### 3.5 赃物标记不可清除
 - **条件**：赃物交易时
 - **不变量**：被标记为"赃物"的物品在被卖给正常商人时自动触发特殊对话，卖给黑市商人时半价，赃物标记不会被游戏内常规方式清除
+- **违反后果类型**：🔴 规则失败
 - **违反后果**：赃物混入正常交易渠道
 
 ---
@@ -150,7 +155,7 @@ TransactionComplete（交易完成——货币与物品更新完毕）
   8. 如有需要，更新商店的供需系数
   9. 发布 TransactionCompleted 事件
 - **输出**：TransactionCompleted 事件（买家、物品、数量、总价、折扣明细）
-- **失败处理**：库存不足/钱包不足/背包满时交易失败
+- **失败处理**：库存不足/钱包不足/背包满时交易失败 → 这是**规则失败**（预期业务分支，交易条件不满足）
 
 ### 5.2 出售
 
@@ -164,7 +169,7 @@ TransactionComplete（交易完成——货币与物品更新完毕）
   6. 物品加入商店库存（或根据商店类型，部分商人拒收赃物）
   7. 发布 TransactionCompleted 事件
 - **输出**：TransactionCompleted 事件（卖家、物品、数量、所得金额、折扣明细）
-- **失败处理**：物品不存在/商人拒收时交易失败
+- **失败处理**：物品不存在/商人拒收时交易失败 → 这是**规则失败**（预期业务分支，出售物品不存在或商人拒绝收购）
 
 ### 5.3 商店补货
 
@@ -178,7 +183,7 @@ TransactionComplete（交易完成——货币与物品更新完毕）
   3. 更新供需系数
   4. 发布 PriceChanged 事件（如果价格有变化）
 - **输出**：PriceChanged 事件（物品、旧价、新价、变化原因）
-- **失败处理**：补货周期未到时不执行补货
+- **失败处理**：补货周期未到时不执行补货 → 这是**规则失败**（预期业务分支，补货遵循定时周期）
 
 ---
 
@@ -186,9 +191,9 @@ TransactionComplete（交易完成——货币与物品更新完毕）
 
 | 事件名 | 触发时机 | 携带数据 | 订阅者 |
 |--------|----------|----------|--------|
-| TransactionCompleted | 交易完成时 | entity_id, shop_id, item_id, quantity, total_price, price_breakdown, transaction_type（buy/sell） | Inventory（确认物品已增减）、Wallet（确认货币已变更）、UI（更新商店/钱包界面） |
-| PriceChanged | 商店价格变化时 | shop_id, item_id, old_price, new_price, reason（补货/供需/事件） | UI（更新商店价格显示）、日志 |
-| CurrencyChanged | 角色货币变化时 | entity_id, currency_type, old_amount, new_amount, delta, reason | UI（更新钱包显示） |
+| TransactionCompleted | 交易完成时 | entity_id, shop_id, item_id, quantity, total_price, price_breakdown, transaction_type（buy/sell） | Inventory（确认物品已增减）、Wallet（确认货币已变更）、UI（更新商店/钱包界面）、日志（LogCode: ECO001） |
+| PriceChanged | 商店价格变化时 | shop_id, item_id, old_price, new_price, reason（补货/供需/事件） | UI（更新商店价格显示）、日志（LogCode: ECO002） |
+| CurrencyChanged | 角色货币变化时 | entity_id, currency_type, old_amount, new_amount, delta, reason | UI（更新钱包显示）、日志（LogCode: ECO003） |
 
 ### 事件订阅关系图
 

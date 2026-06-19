@@ -6,6 +6,7 @@
 mod components;
 mod error;
 mod events;
+mod failure;
 mod plugin;
 mod resources;
 mod rules;

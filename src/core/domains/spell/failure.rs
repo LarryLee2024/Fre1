@@ -1,7 +1,7 @@
 //! 规则失败 — Spell 域业务规则不满足结果。
 //!
-//! 与 `SpellError`（程序错误）不同，这些是正常业务结果，不应通过 `Err` 返回。
-//! 详见 docs/02-domain/domains/spell_domain.md §4
+//! 这些是正常业务结果（非程序错误），通过函数返回值传递。
+//! 详见 ADR-051
 
 use crate::shared::traits::RuleFailure;
 use thiserror::Error;

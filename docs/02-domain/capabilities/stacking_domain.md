@@ -227,7 +227,7 @@ Stacking Decision（堆叠判定中）
 | StackRemoved | 堆叠层数减少时 | entity_id, effect_spec_id, old_stack, new_stack, reason | Modifier（移除层数相关 Modifier）、UI（更新层数显示） |
 | StackRefreshed | 堆叠持续时间刷新时 | entity_id, effect_spec_id, new_duration, old_duration | UI（更新持续时间显示） |
 | StackReplaced | 堆叠被新实例替换时 | entity_id, effect_spec_id, old_source, new_source | Modifier（重新注册 Modifier）、UI（更新效果信息） |
-| StackOverflow | 堆叠达到上限触发溢出时 | entity_id, effect_spec_id, current_stack, limit, overflow_action | 日志、平衡分析工具 |
+| StackOverflow | 堆叠达到上限触发溢出时 | entity_id, effect_spec_id, current_stack, limit, overflow_action | 日志（LogCode: EFF008）、平衡分析工具 |
 
 ### 事件订阅关系图
 

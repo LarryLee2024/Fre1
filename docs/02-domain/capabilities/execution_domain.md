@@ -187,9 +187,9 @@ EffectCreated（效果已产生——移交 Effect 领域）
 
 | 事件名 | 触发时机 | 携带数据 | 订阅者 |
 |--------|----------|----------|--------|
-| ExecutionCompleted | 执行计算完成时 | execution_type, context, result, formula_trace | Ability（继续后续流程）、Effect（创建效果实例）、日志 |
-| ExecutionFailed | 执行计算失败时 | execution_type, context, fail_reason | Ability（技能执行失败）、日志 |
-| CustomExecutionRegistered | 自定义执行注册时 | execution_id, description | 注册中心、调试工具 |
+| ExecutionCompleted | 执行计算完成时 | execution_type, context, result, formula_trace | Ability（继续后续流程）、Effect（创建效果实例）、日志（LogCode: EFF005） |
+| ExecutionFailed | 执行计算失败时 | execution_type, context, fail_reason | Ability（技能执行失败）、日志（LogCode: EFF006） |
+| CustomExecutionRegistered | 自定义执行注册时 | execution_id, description | 注册中心、调试工具、日志（LogCode: EFF007） |
 
 ### 事件订阅关系图
 

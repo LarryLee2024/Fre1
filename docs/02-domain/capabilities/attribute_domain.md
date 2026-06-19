@@ -180,10 +180,10 @@ BaseValue（恢复/重置到基础值起点）
 
 | 事件名 | 触发时机 | 携带数据 | 订阅者 |
 |--------|----------|----------|--------|
-| AttributeChanged | 属性 CurrentValue 发生变更时 | entity_id, attribute_id, old_value, new_value, source_context | Aggregator（触发下游派生属性重算）、UI（数据绑定更新）、Effect（检查 Effect 条件变化） |
-| AttributeInitialized | 实体完成属性初始化时 | entity_id, attribute_list (attribute_id → initial_value) | Progression（检查是否需基于属性计算派生值） |
-| SnapshotTaken | 属性快照拍摄完成时 | entity_id, snapshot_id, timestamp | 回放系统、回滚系统 |
-| AttributeClamped | 属性值被 clamp 到边界时 | entity_id, attribute_id, attempted_value, clamped_value | 日志、调试工具 |
+| AttributeChanged | 属性 CurrentValue 发生变更时 | entity_id, attribute_id, old_value, new_value, source_context | Aggregator（触发下游派生属性重算）、UI（数据绑定更新）、Effect（检查 Effect 条件变化）、日志（LogCode: AGG005） |
+| AttributeInitialized | 实体完成属性初始化时 | entity_id, attribute_list (attribute_id → initial_value) | Progression（检查是否需基于属性计算派生值）、日志（LogCode: AGG006） |
+| SnapshotTaken | 属性快照拍摄完成时 | entity_id, snapshot_id, timestamp | 回放系统、回滚系统、日志（LogCode: AGG007） |
+| AttributeClamped | 属性值被 clamp 到边界时 | entity_id, attribute_id, attempted_value, clamped_value | 日志（LogCode: AGG008）、调试工具 |
 
 ### 事件订阅关系图
 

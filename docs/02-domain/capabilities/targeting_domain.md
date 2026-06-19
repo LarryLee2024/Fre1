@@ -174,10 +174,10 @@ Selecting（筛选中）
 
 | 事件名 | 触发时机 | 携带数据 | 订阅者 |
 |--------|----------|----------|--------|
-| TargetSelected | 目标选择完成时 | entity_id（施法者）, target_data, ability_id | Ability（继续执行流程）、UI（高亮目标） |
-| TargetChanged | 目标选择被玩家/系统修改时 | entity_id, old_target_data, new_target_data | Ability（更新 Execution 目标） |
-| NoValidTarget | 没有合法目标时 | entity_id, ability_id, fail_reason | Ability（技能激活失败处理）、UI（提示无合法目标） |
-| TargetValidated | 单个目标通过校验时（调试用） | entity_id（目标）, validator_result | 调试工具 |
+| TargetSelected | 目标选择完成时 | entity_id（施法者）, target_data, ability_id | Ability（继续执行流程）、UI（高亮目标）、日志（LogCode: CNT015） |
+| TargetChanged | 目标选择被玩家/系统修改时 | entity_id, old_target_data, new_target_data | Ability（更新 Execution 目标）、日志（LogCode: CNT016） |
+| NoValidTarget | 没有合法目标时 | entity_id, ability_id, fail_reason | Ability（技能激活失败处理）、UI（提示无合法目标）、日志（LogCode: CNT017） |
+| TargetValidated | 单个目标通过校验时（调试用） | entity_id（目标）, validator_result | 调试工具、日志（LogCode: CNT018） |
 
 ### 事件订阅关系图
 

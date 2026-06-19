@@ -99,26 +99,31 @@ FactionRelation
 ### 3.1 声望值范围
 - **条件**：任何声望变更时
 - **不变量**：声望值必须在 [-100, +100] 范围内
+- **违反后果类型**：🔴 规则失败
 - **违反后果**：超出范围的值被 clamp 到边界
 
 ### 3.2 声望变化有因
 - **条件**：任何声望增减时
 - **不变量**：每次声望变化必须有明确原因（击杀敌对成员/完成任务/对话选择/偷窃行为）
+- **违反后果类型**：🔴 程序错误
 - **违反后果**：无缘由的声望变化导致玩家无法理解关系变化原因
 
 ### 3.3 关系对称性
 - **条件**：阵营间 FactionRelation 定义时
 - **不变量**：FactionRelation 是双向对称的（A 与 B 为盟友 = B 与 A 也为盟友）
+- **违反后果类型**：🔴 程序错误
 - **违反后果**：关系不对称导致不同视角看到的状态不一致
 
 ### 3.4 声望阈值不可跳过
 - **条件**：声望等级跨越时
 - **不变量**：声望等级必须逐级跨越，不可跳过中间等级（如从中立直接跳到崇敬）
+- **违反后果类型**：🔴 规则失败
 - **违反后果**：跳过中间等级导致对应的解锁内容（对话/折扣/任务）被错过
 
 ### 3.5 最低声望保护
 - **条件**：关键/剧情角色（如队友）的声望变动时
 - **不变量**：关键角色的声望不能降到导致其永久敌对/离开队伍的阈值以下（除非剧情允许）
+- **违反后果类型**：🔴 规则失败
 - **违反后果**：关键角色因声望过低而永久离开，导致剧情无法推进
 
 ---
@@ -145,7 +150,7 @@ FactionRelation
   5. 更新声望值
   6. 如果声望等级变化，发布相关通知
 - **输出**：声誉变更确认，ReputationChanged 事件
-- **失败处理**：声望越界时 clamp，记录越界警告
+- **失败处理**：声望越界时 clamp，记录越界警告 → 这是**规则失败**（预期业务分支，声望值被 clamp 到合法范围）
 
 ### 5.2 关系判定
 
@@ -156,7 +161,7 @@ FactionRelation
   3. 根据 FactionRelation 基础 + Reputation 修正综合判定 RelationshipState
   4. 返回最终关系
 - **输出**：RelationshipState（盟友/中立/敌对/战争）
-- **失败处理**：角色或阵营不存在时返回"中立"
+- **失败处理**：角色或阵营不存在时返回"中立" → 这是**程序错误**（系统异常，数据缺失应记 Bug）
 
 ### 5.3 阵营关系变更（外交事件）
 
@@ -167,7 +172,7 @@ FactionRelation
   3. 更新 FactionRelation
   4. 发布 FactionRelationChanged 事件
 - **输出**：关系变更确认，FactionRelationChanged 事件
-- **失败处理**：触发条件不满足时变更被拒绝
+- **失败处理**：触发条件不满足时变更被拒绝 → 这是**规则失败**（预期业务分支，外交变更需要满足条件）
 
 ---
 
@@ -175,10 +180,10 @@ FactionRelation
 
 | 事件名 | 触发时机 | 携带数据 | 订阅者 |
 |--------|----------|----------|--------|
-| ReputationChanged | 角色在某阵营的声望变化时 | entity_id, faction_id, old_value, new_value, new_level, reason | Narrative（更新对话选项）、Economy（更新价格折扣）、Quest（检查任务条件）、UI（显示声望变化通知） |
-| FactionRelationChanged | 两个阵营间的关系变化时 | faction_a, faction_b, old_relation, new_relation, cause | Combat（更新战场敌对关系）、Narrative（更新剧情走向）、Faction（通知阵营成员） |
-| ReputationLevelUp | 声望等级提升时 | entity_id, faction_id, old_level, new_level | Narrative（解锁新对话）、Quest（解锁新任务）、UI（显示达成的消息） |
-| RelationshipEvaluated | 关系判定完成时（调试用） | entity_id, target_id, base_relation, reputation_modifier, final_state | 调试工具、UI（关系面板） |
+| ReputationChanged | 角色在某阵营的声望变化时 | entity_id, faction_id, old_value, new_value, new_level, reason | Narrative（更新对话选项）、Economy（更新价格折扣）、Quest（检查任务条件）、UI（显示声望变化通知）、日志（LogCode: FAC001） |
+| FactionRelationChanged | 两个阵营间的关系变化时 | faction_a, faction_b, old_relation, new_relation, cause | Combat（更新战场敌对关系）、Narrative（更新剧情走向）、Faction（通知阵营成员）、日志（LogCode: FAC002） |
+| ReputationLevelUp | 声望等级提升时 | entity_id, faction_id, old_level, new_level | Narrative（解锁新对话）、Quest（解锁新任务）、UI（显示达成的消息）、日志（LogCode: FAC003） |
+| RelationshipEvaluated | 关系判定完成时（调试用） | entity_id, target_id, base_relation, reputation_modifier, final_state | 调试工具、UI（关系面板）、日志（LogCode: FAC004） |
 
 ### 事件订阅关系图
 

@@ -132,27 +132,32 @@ RoundStart（下一回合开始）
 ### 3.1 CombatIntent 是唯一攻击入口
 - **条件**：任何攻击/伤害行为发生时
 - **不变量**：所有伤害必须通过 CombatIntent（战斗意图）进入结算流程，禁止绕过 Combat 直接伤害目标
-- **违反后果**：绕过 CombatIntent 的伤害无法被反应/援护/减伤等机制拦截
+- **违反后果类型**：🔴 程序错误
+- **违反后果**：绕过 CombatIntent 的伤害无法被反应/援护/减伤等机制拦截，属系统 Bug
 
 ### 3.2 回合严格交替
 - **条件**：战斗中
 - **不变量**：单位必须按先攻顺序依次行动，禁止跳过或重新排序
-- **违反后果**：回合顺序错乱导致反应/冷却/效果时机失控
+- **违反后果类型**：🔴 程序错误
+- **违反后果**：回合顺序错乱导致反应/冷却/效果时机失控，属系统 Bug
 
 ### 3.3 先攻排序不变性
 - **条件**：战斗开始后
 - **不变量**：先攻排序在战斗过程中不变（除非有特殊能力声明"重roll先攻"）
-- **违反后果**：先攻变化导致回合顺序不确定
+- **违反后果类型**：🔴 程序错误
+- **违反后果**：先攻变化导致回合顺序不确定，属系统 Bug
 
 ### 3.4 一回合只能有一个行动态单位
 - **条件**：任何时刻
 - **不变量**：同一时刻最多只有一个单位处于"行动中"状态
-- **违反后果**：多个单位同时行动导致战斗状态冲突
+- **违反后果类型**：🔴 程序错误
+- **违反后果**：多个单位同时行动导致战斗状态冲突，属系统 Bug
 
 ### 3.5 战斗结束不可逆
 - **条件**：CombatState 进入 Ended 后
 - **不变量**：已结束的战斗不可重新进入（数据归档，仅可回放查看）
-- **违反后果**：已结束的战斗被重新激活导致状态不一致
+- **违反后果类型**：🔴 程序错误
+- **违反后果**：已结束的战斗被重新激活导致状态不一致，属系统 Bug
 
 ---
 
@@ -178,7 +183,7 @@ RoundStart（下一回合开始）
   5. 从先攻最高者开始第一回合
   6. 发布 CombatStarted 事件
 - **输出**：CombatStarted 事件（参与单位、先攻排序、地图信息）
-- **失败处理**：参与单位少于 2 方时战斗无法开始
+- **失败处理**：参与单位少于 2 方时战斗无法开始 → 这是**规则失败**（预期业务分支，战斗编队不满足最低要求）
 
 ### 5.2 回合流转
 
@@ -199,7 +204,7 @@ RoundStart（下一回合开始）
      c. 发布 RoundStart 事件
   7. 检查 VictoryCondition（不变量 3.5）
 - **输出**：TurnEnd / RoundEnd / RoundStart / TurnBegin 事件序列
-- **失败处理**：单位行动后状态异常（如行动中掉线），跳过该单位继续
+- **失败处理**：单位行动后状态异常（如行动中掉线），跳过该单位继续 → 这是**规则失败**（预期业务分支，异常单位不阻塞战斗流程）
 
 ### 5.3 伤害结算
 
@@ -222,7 +227,7 @@ RoundStart（下一回合开始）
      c. 发布 DamageDealt 事件
   8. 检查是否有反击/后续触发
 - **输出**：DamageResult（最终伤害、命中/暴击/免疫标志、计算明细）
-- **失败处理**：CombatIntent 被反应拦截时，伤害不结算
+- **失败处理**：CombatIntent 被反应拦截时，伤害不结算 → 这是**规则失败**（预期业务分支，反应机制是战斗的正常组成部分）
 
 ### 5.4 胜负判定
 
@@ -238,7 +243,7 @@ RoundStart（下一回合开始）
      c. 设置 CombatState = Ended
      d. 发布 CombatEnded 事件（含胜负结果、存活单位、统计数据）
 - **输出**：CombatEnded 事件
-- **失败处理**：胜负条件同时满足（如双方最后单位同归于尽）→ 平局
+- **失败处理**：胜负条件同时满足（如双方最后单位同归于尽）→ 平局 → 这是**规则失败**（预期业务分支，平局是战斗的合法结局之一）
 
 ---
 
@@ -246,14 +251,14 @@ RoundStart（下一回合开始）
 
 | 事件名 | 触发时机 | 携带数据 | 订阅者 |
 |--------|----------|----------|--------|
-| CombatStarted | 战斗开始时 | participants[ ], turn_order, map_id, combat_id | 所有 Domain（初始化战斗状态）、UI（切换到战斗界面） |
-| TurnBegin | 某单位的回合开始时 | entity_id, turn_number, action_points, movement_points | Ability（重置技能冷却状态）、Terrain（回合开始地形效果）、Trigger（回合开始触发器） |
-| TurnEnd | 某单位的回合结束时 | entity_id, turn_number, action_summary | Effect（推进回合类效果）、Cooldown（推进冷却） |
-| RoundStart | 新的一轮开始时 | round_number, turn_order_snapshot | 所有持续效果系统 |
-| RoundEnd | 一轮结束时 | round_number, participants_state | Effect（持续效果的 Tick） |
-| DamageDealt | 伤害结算完成时 | attacker, target, damage_result, context | UI（显示伤害数字）、Trigger（受伤触发器）、Reaction（反击检测） |
-| CombatEnded | 战斗结束时 | combat_id, winner, survivors[ ], stats（总回合数/总伤害/击杀数） | Progression（发放经验）、Quest（检查战斗任务）、Party（更新队伍状态） |
-| UnitDied | 单位死亡时 | entity_id, killer_id, death_reason, position | Tactical（移除战场单位）、Trigger（死亡触发器）、Quest（检查任务进度） |
+| CombatStarted | 战斗开始时 | participants[ ], turn_order, map_id, combat_id | 所有 Domain（初始化战斗状态）、UI（切换到战斗界面）、日志（LogCode: BAT001） |
+| TurnBegin | 某单位的回合开始时 | entity_id, turn_number, action_points, movement_points | Ability（重置技能冷却状态）、Terrain（回合开始地形效果）、Trigger（回合开始触发器）、日志（LogCode: BAT005） |
+| TurnEnd | 某单位的回合结束时 | entity_id, turn_number, action_summary | Effect（推进回合类效果）、Cooldown（推进冷却）、日志（LogCode: BAT006） |
+| RoundStart | 新的一轮开始时 | round_number, turn_order_snapshot | 所有持续效果系统、日志（LogCode: BAT003） |
+| RoundEnd | 一轮结束时 | round_number, participants_state | Effect（持续效果的 Tick）、日志（LogCode: BAT004） |
+| DamageDealt | 伤害结算完成时 | attacker, target, damage_result, context | UI（显示伤害数字）、Trigger（受伤触发器）、Reaction（反击检测）、日志（LogCode: BAT007） |
+| CombatEnded | 战斗结束时 | combat_id, winner, survivors[ ], stats（总回合数/总伤害/击杀数） | Progression（发放经验）、Quest（检查战斗任务）、Party（更新队伍状态）、日志（LogCode: BAT002） |
+| UnitDied | 单位死亡时 | entity_id, killer_id, death_reason, position | Tactical（移除战场单位）、Trigger（死亡触发器）、Quest（检查任务进度）、日志（LogCode: BAT008） |
 
 ### 事件订阅关系图
 

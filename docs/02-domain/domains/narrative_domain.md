@@ -85,26 +85,31 @@ End（对话结束——记录选择，触发事件）
 ### 3.1 对话树无环
 - **条件**：对话树定义时
 - **不变量**：对话树的节点之间不得形成循环引用（玩家无法通过对话选项回到已经过的节点）
+- **违反后果类型**：🔴 程序错误
 - **违反后果**：对话陷入死循环，玩家永远无法退出
 
 ### 3.2 分支条件可预测
 - **条件**：对话分支过滤时
 - **不变量**：相同状态下，同一对话分支的条件判定结果必须一致（确定性）
+- **违反后果类型**：🔴 程序错误
 - **违反后果**：同一存档加载后对话选项不同，玩家困惑
 
 ### 3.3 故事标记只增不减
 - **条件**：任何 StoryFlag 设置时
 - **不变量**：StoryFlag 一旦设置为 true/某个值，不可被恢复为 false/其他值（仅可通过新剧情线覆盖）
+- **违反后果类型**：🔴 规则失败
 - **违反后果**：关键剧情选择可被撤销，叙事一致性被破坏
 
 ### 3.4 对话不可跳过（首次/关键对话）
 - **条件**：关键剧情对话/首次对话时
 - **不变量**：标记为"重要"的对话不可被跳过，玩家必须阅读/选择
+- **违反后果类型**：🔴 规则失败
 - **违反后果**：玩家跳过了理解后续剧情所必需的信息
 
 ### 3.5 多分支互斥性
 - **条件**：对话分支展示时
 - **不变量**：同一节点的多个分支选项中，互斥条件的分支只能出现一个（如"救 A"和"救 B"不同时出现）
+- **违反后果类型**：🔴 程序错误
 - **违反后果**：玩家看到两个互斥条件选项，选择逻辑混乱
 
 ---
@@ -132,7 +137,7 @@ End（对话结束——记录选择，触发事件）
   6. 展示可选分支（过滤不可见分支）
   7. 发布 DialogueStarted 事件
 - **输出**：DialogueStarted 事件
-- **失败处理**：入口节点触发条件不满足时对话不可用
+- **失败处理**：入口节点触发条件不满足时对话不可用 → 这是**规则失败**（预期业务分支，对话需要满足触发条件）
 
 ### 5.2 分支选择
 
@@ -148,7 +153,7 @@ End（对话结束——记录选择，触发事件）
   4. 跳转到分支指向的下一节点（如节点存在）或结束对话
   5. 发布 ChoiceMade 事件
 - **输出**：ChoiceMade 事件（选择的分支、设置的 StoryFlag、触发的副作用）
-- **失败处理**：分支 ID 无效时对话不跳转，停留在当前节点
+- **失败处理**：分支 ID 无效时对话不跳转，停留在当前节点 → 这是**程序错误**（系统异常，UI 不应提供无效选项，分支 ID 异常应记 Bug）
 
 ### 5.3 对话结束
 
@@ -166,11 +171,11 @@ End（对话结束——记录选择，触发事件）
 
 | 事件名 | 触发时机 | 携带数据 | 订阅者 |
 |--------|----------|----------|--------|
-| DialogueStarted | 对话开始时 | npc_id, dialogue_tree_id, entry_node_id, available_choices[ ] | UI（打开对话界面）、Quest（检查对话相关任务） |
-| ChoiceMade | 玩家选择分支时 | entity_id, dialogue_id, choice_id, story_flags_set[ ], side_effects[ ] | Quest（接受/推进任务）、Faction（声望变化）、StoryFlag（记录选择）、UI（推进对话） |
-| StoryFlagSet | 故事标记被设置时 | entity_id, flag_id, value, source（对话/任务/事件） | Quest（检查任务条件）、Narrative（解锁新对话分支）、UI（显示状态变化） |
-| CutsceneStarted | 过场动画开始时 | cutscene_id, duration, participants[ ] | UI（切换播放模式/隐藏 HUD）、Cue（过场音效） |
-| CutsceneEnded | 过场动画结束时 | cutscene_id | UI（恢复 HUD/交互模式） |
+| DialogueStarted | 对话开始时 | npc_id, dialogue_tree_id, entry_node_id, available_choices[ ] | UI（打开对话界面）、Quest（检查对话相关任务）、日志（LogCode: NAR001） |
+| ChoiceMade | 玩家选择分支时 | entity_id, dialogue_id, choice_id, story_flags_set[ ], side_effects[ ] | Quest（接受/推进任务）、Faction（声望变化）、StoryFlag（记录选择）、UI（推进对话）、日志（LogCode: NAR002） |
+| StoryFlagSet | 故事标记被设置时 | entity_id, flag_id, value, source（对话/任务/事件） | Quest（检查任务条件）、Narrative（解锁新对话分支）、UI（显示状态变化）、日志（LogCode: NAR003） |
+| CutsceneStarted | 过场动画开始时 | cutscene_id, duration, participants[ ] | UI（切换播放模式/隐藏 HUD）、Cue（过场音效）、日志（LogCode: NAR004） |
+| CutsceneEnded | 过场动画结束时 | cutscene_id | UI（恢复 HUD/交互模式）、日志（LogCode: NAR005） |
 
 ### 事件订阅关系图
 

@@ -22,7 +22,7 @@ pub(crate) fn step_turn_start(
     ap_query: &mut Query<&mut ActionPoints>,
 ) {
     let Some(current) = turn_queue.current() else {
-        warn!("[Combat] TurnStart: empty turn queue, skipping");
+        debug!("[Combat] TurnStart: empty turn queue, skipping");
         return;
     };
 
@@ -65,7 +65,7 @@ pub(crate) fn step_phase_check(
     ap_query: &Query<&mut ActionPoints>,
 ) -> PhaseCheckResult {
     let Some(current) = turn_queue.current() else {
-        warn!("[Combat] PhaseCheck: empty turn queue, skipping");
+        debug!("[Combat] PhaseCheck: empty turn queue, skipping");
         return PhaseCheckResult::Idle;
     };
 
@@ -117,7 +117,7 @@ pub(crate) fn step_unit_action(_commands: &mut Commands, turn_queue: &TurnQueue)
 /// TurnSettlement 步骤：触发 OnTurnEnd 领域事件。
 pub(crate) fn step_turn_settlement(commands: &mut Commands, turn_queue: &TurnQueue) {
     let Some(current) = turn_queue.current() else {
-        warn!("[Combat] TurnSettlement: empty turn queue, skipping");
+        debug!("[Combat] TurnSettlement: empty turn queue, skipping");
         return;
     };
 
@@ -160,7 +160,7 @@ pub(crate) fn step_turn_end(
     dead_query: &Query<&CombatParticipant, With<Dead>>,
 ) -> TurnEndResult {
     if turn_queue.is_empty() {
-        warn!("[Combat] TurnEnd: empty turn queue, ending battle");
+        debug!("[Combat] TurnEnd: empty turn queue, ending battle");
         return TurnEndResult::BattleOver;
     }
 
@@ -194,7 +194,7 @@ pub(crate) fn step_turn_end(
 
     // 胜负判定 — 检查是否仅剩 ≤1 个队伍存活
     if check_team_elimination(combatant_query, dead_query) {
-        info!("[Combat] Victory check: battle over (≤1 team(s) alive)");
+        debug!("[Combat] Victory check: battle over (≤1 team(s) alive)");
         commands.trigger(OnBattleEnd {
             result: BattleResult::Victory,
         });

@@ -4,8 +4,7 @@
 //! 详见 docs/02-domain/domains/faction_domain.md §5.2
 
 use crate::core::domains::faction::components::{
-    FactionId, FactionMembership, FactionRelationTable, RelationshipState,
-    Reputation,
+    FactionId, FactionMembership, FactionRelationTable, RelationshipState, Reputation,
 };
 use crate::core::domains::faction::rules::reputation::evaluate_relationship;
 

@@ -4,7 +4,7 @@ title: Progression（成长养成）领域规则 v1.0
 status: stable
 owner: domain-designer
 created: 2026-06-16
-updated: 2026-06-16
+updated: 2026-06-19
 tags:
   - domain
   - progression
@@ -117,26 +117,31 @@ Unlocked（已解锁/生效中）
 ### 3.1 等级上限
 - **条件**：任何角色升级时
 - **不变量**：角色总等级不得超过 20
+- **违反后果类型**：🔴 规则失败
 - **违反后果**：超出 20 级时经验继续累计但不再升级（D&D 5e 上限规则）
 
 ### 3.2 经验不可消耗
 - **条件**：任何经验变更时
 - **不变量**：经验值只增不减（且仅通过升级"消耗"——即经验条扣除升级所需量）
+- **违反后果类型**：🔴 程序错误
 - **违反后果**：经验被扣除导致降级，违反 D&D 5e 无降级规则
 
 ### 3.3 天赋前置链完整性
 - **条件**：任何天赋解锁时
 - **不变量**：天赋的前置条件（等级/属性/前置天赋）必须全部满足
+- **违反后果类型**：🔴 规则失败
 - **违反后果**：跳跃解锁天赋导致天赋树结构被破坏
 
 ### 3.4 子职选择的唯一性
 - **条件**：子职选择时
 - **不变量**：同一职业只能选择一个子职，选择后不可更改
+- **违反后果类型**：🔴 规则失败
 - **违反后果**：同一职业选择多个子职导致特性冲突
 
 ### 3.5 ASI 时机不可跳过
 - **条件**：角色到达 ASI 等级（4/8/12/16/19）时
 - **不变量**：每次到达 ASI 等级时，角色必须分配属性提升或选择专长，不可跳过
+- **违反后果类型**：🔴 规则失败
 - **违反后果**：跳过 ASI 导致角色属性低于预期
 
 ---
@@ -161,7 +166,7 @@ Unlocked（已解锁/生效中）
   3. 检查是否达到升级所需经验
   4. 如果达到升级经验，触发升级流程
 - **输出**：ExperienceGained 事件
-- **失败处理**：已满级时经验不增加（可记录溢出但不影响）
+- **失败处理**：已满级时经验不增加（可记录溢出但不影响） → 这是**规则失败**（预期业务分支，角色已达等级上限）
 
 ### 5.2 升级
 
@@ -180,7 +185,7 @@ Unlocked（已解锁/生效中）
   7. 检查是否有可解锁的天赋 → 通知天赋选择
   8. 发布 LevelUp 事件
 - **输出**：LevelUp 事件（新等级、获得的特性、属性变化摘要）
-- **失败处理**：升级所需经验不足时拒绝升级
+- **失败处理**：升级所需经验不足时拒绝升级 → 这是**规则失败**（预期业务分支，经验未达升级阈值）
 
 ### 5.3 属性提升（ASI）
 
@@ -193,7 +198,7 @@ Unlocked（已解锁/生效中）
   5. 确保所有属性不超过 20（D&D 5e 属性上限）
   6. 发布 ASICompleted 事件
 - **输出**：ASICompleted 事件（选择结果）
-- **失败处理**：属性值已到 20 上限时不能继续提升
+- **失败处理**：属性值已到 20 上限时不能继续提升 → 这是**规则失败**（预期业务分支，属性已达 D&D 5e 上限）
 
 ### 5.4 天赋解锁
 
@@ -204,7 +209,7 @@ Unlocked（已解锁/生效中）
   3. 应用天赋效果（通常为被动 Modifier 或新 Ability）
   4. 发布 TalentUnlocked 事件
 - **输出**：TalentUnlocked 事件
-- **失败处理**：前置条件不满足时解锁失败
+- **失败处理**：前置条件不满足时解锁失败 → 这是**规则失败**（预期业务分支，天赋前置条件未满足）
 
 ---
 
@@ -212,12 +217,12 @@ Unlocked（已解锁/生效中）
 
 | 事件名 | 触发时机 | 携带数据 | 订阅者 |
 |--------|----------|----------|--------|
-| ExperienceGained | 角色获得经验时 | entity_id, amount, source, total_xp | UI（显示经验获取动画）、Progression（检查是否可升级） |
-| LevelUp | 角色升级时 | entity_id, old_level, new_level, class_gained, features[ ] | Attribute（升级带来的属性变化）、UI（升级动画/选择界面） |
-| TalentUnlocked | 天赋解锁时 | entity_id, talent_id, tier | Ability（注册天赋相关能力）、UI（天赋树更新） |
-| SubclassChosen | 子职选择时 | entity_id, class_id, subclass_id | Spell（更新法术列表）、Ability（注册子职能力） |
-| ASICompleted | 属性提升完成时 | entity_id, level, choices（提高的属性/选取的专长） | Attribute（修改 BaseValue）、UI（属性变化显示） |
-| ClassGained | 获得新职业等级时 | entity_id, class_id, new_level, features | Spell（更新法术位/已知法术） |
+| ExperienceGained | 角色获得经验时 | entity_id, amount, source, total_xp | UI（显示经验获取动画）、Progression（检查是否可升级）、日志（LogCode: PRG001） |
+| LevelUp | 角色升级时 | entity_id, old_level, new_level, class_gained, features[ ] | Attribute（升级带来的属性变化）、UI（升级动画/选择界面）、日志（LogCode: PRG002） |
+| TalentUnlocked | 天赋解锁时 | entity_id, talent_id, tier | Ability（注册天赋相关能力）、UI（天赋树更新）、日志（LogCode: PRG003） |
+| SubclassChosen | 子职选择时 | entity_id, class_id, subclass_id | Spell（更新法术列表）、Ability（注册子职能力）、日志（LogCode: PRG004） |
+| ASICompleted | 属性提升完成时 | entity_id, level, choices（提高的属性/选取的专长） | Attribute（修改 BaseValue）、UI（属性变化显示）、日志（LogCode: PRG005） |
+| ClassGained | 获得新职业等级时 | entity_id, class_id, new_level, features | Spell（更新法术位/已知法术）、日志（LogCode: PRG006） |
 
 ### 事件订阅关系图
 

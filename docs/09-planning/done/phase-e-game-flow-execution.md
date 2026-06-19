@@ -1,9 +1,10 @@
 ---
 id: 09-planning.phase-e
 title: Phase E — Game Flow Integration Execution Plan
-status: active
+status: done
 owner: feature-developer
 created: 2026-06-19
+completed: 2026-06-25
 based-on: ADR-050 (Game State Machine & Scene Architecture)
 ---
 
@@ -20,10 +21,10 @@ Phase E 将项目从"域系统独立运行"升级为"GameState 驱动的游戏�
 
 | 阶段 | 内容 | 文件数 | 涉及编译器 |
 |------|------|--------|-----------|
-| E-1 | scenes/ 基础框架（新增 ~5 文件） | +5 | rustc + test |
+| E-1 | scenes/ 基础框架（新增 ~5 文件） | +5 | rustc + test ✅ |
 | E-2 | BattlePhase SubState 迁移 | 改 2 文件 | rustc + test ✅ |
 | E-3 | 域系统 run_if 栅栏 + 场景桩 | 改 ~8 文件 | rustc + test ✅ |
-| E-4 | 流程验证 + 测试 | 0 改 | test |
+| E-4 | 流程验证 + 测试 | 0 改 | test ✅ |
 
 ---
 

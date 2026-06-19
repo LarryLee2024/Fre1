@@ -202,10 +202,10 @@ Removed（已移除）
 
 | 事件名 | 触发时机 | 携带数据 | 订阅者 |
 |--------|----------|----------|--------|
-| SpecGranted | Spec 成功授予到实体时 | entity_id, spec_type（ability/effect）, spec_id, def_id | Ability（注册可激活技能列表）、UI（更新技能栏） |
-| SpecRemoved | Spec 从实体移除时 | entity_id, spec_id, reason（manual/expired/replaced） | Ability（清理关联）、UI（更新技能栏） |
-| SpecLevelChanged | AbilitySpec 等级变更时 | entity_id, spec_id, old_level, new_level | Ability（更新能力参数）、Progression（确认升级效果） |
-| SpecSnapshotTaken | EffectSpec 快照属性值时 | entity_id, spec_id, snapshot_data | 回放系统、回滚系统 |
+| SpecGranted | Spec 成功授予到实体时 | entity_id, spec_type（ability/effect）, spec_id, def_id | Ability（注册可激活技能列表）、UI（更新技能栏）、日志（LogCode: CNT005） |
+| SpecRemoved | Spec 从实体移除时 | entity_id, spec_id, reason（manual/expired/replaced） | Ability（清理关联）、UI（更新技能栏）、日志（LogCode: CNT006） |
+| SpecLevelChanged | AbilitySpec 等级变更时 | entity_id, spec_id, old_level, new_level | Ability（更新能力参数）、Progression（确认升级效果）、日志（LogCode: CNT007） |
+| SpecSnapshotTaken | EffectSpec 快照属性值时 | entity_id, spec_id, snapshot_data | 回放系统、回滚系统、日志（LogCode: CNT008） |
 
 ### 事件订阅关系图
 

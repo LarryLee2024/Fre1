@@ -95,26 +95,31 @@ Modified（表面被改变）
 - **条件**：所有移动/路径计算时
 - **不变量**：Terrain 提供的通行性数据必须与地图配置一致，运行时不可被移动逻辑修改
 - **违反后果**：移动逻辑自行修改通行性导致地图数据不一致
+- **违反后果类型**：🔴 程序错误
 
 ### 3.2 地形效果绑定格子
 - **条件**：TerrainEffect 被触发时
 - **不变量**：每个地形效果必须绑定到具体的 Tile（格子）上，不绑定到单位
 - **违反后果**：地形效果跟随单位移动（应通过 Effect 领域实现，而非 Terrain）
+- **违反后果类型**：🔴 程序错误
 
 ### 3.3 表面变化可逆
 - **条件**：任何表面类型变化时
 - **不变量**：每个表面变化必须有对应的恢复机制（到期恢复/驱散恢复）
 - **违反后果**：表面变化永久化，地图状态被不可逆修改
+- **违反后果类型**：🔴 程序错误
 
 ### 3.4 高度数据一致性
 - **条件**：地图网格构建时
 - **不变量**：相邻格的高度差不得超过预设的最大值（防止悬崖/不合理地形）
 - **违反后果**：高度差过大的相邻格导致寻路/移动异常
+- **违反后果类型**：🔴 程序错误
 
 ### 3.5 陷阱触发可预期
 - **条件**：HazardZone 定义时
 - **不变量**：每个陷阱必须有明确的触发条件、影响范围和触发后的效果定义
 - **违反后果**：触发条件模糊导致陷阱被多次触发或从不触发
+- **违反后果类型**：🔴 程序错误
 
 ---
 
@@ -139,7 +144,7 @@ Modified（表面被改变）
   4. 如果有 HazardZone 触发条件满足，触发陷阱
   5. 更新单位位置到目标格
 - **输出**：TerrainEffect 触发事件（如有）
-- **失败处理**：通行性检查不通过时进入被阻止
+- **失败处理**：通行性检查不通过时进入被阻止 → 这是**程序错误**（通行性数据不一致属于地图配置问题，应记 Bug）
 
 ### 5.2 表面变化（地形交互）
 
@@ -151,7 +156,7 @@ Modified（表面被改变）
   4. 如果有对应的 TerrainEffect，注册到格子
   5. 设置到期恢复定时器
 - **输出**：SurfaceChanged 事件
-- **失败处理**：互斥表面类型冲突时变化失败
+- **失败处理**：互斥表面类型冲突时变化失败 → 这是**程序错误**（互斥检查应在调用前由调用方保证，属于数据/配置问题，应记 Bug）
 
 ### 5.3 陷阱触发
 
@@ -161,7 +166,7 @@ Modified（表面被改变）
   2. 如果触发条件满足，执行陷阱效果（调用 Execution 或 Effect 领域）
   3. 如果陷阱为消耗型（如一次性的捕兽夹），触发后标记为已消耗
 - **输出**：HazardTriggered 事件（包含伤害/效果数据）
-- **失败处理**：触发条件不满足时陷阱不触发
+- **失败处理**：触发条件不满足时陷阱不触发 → 这是**规则失败**（预期业务分支，陷阱触发机制的正常流程，触发条件未满足是合法结果）
 
 ---
 
@@ -169,10 +174,10 @@ Modified（表面被改变）
 
 | 事件名 | 触发时机 | 携带数据 | 订阅者 |
 |--------|----------|----------|--------|
-| TileEntered | 单位进入格子时 | entity_id, tile_pos, tile_properties, surface_type | Effect（施加地形效果）、Tactical（更新位置） |
-| SurfaceChanged | 格子表面类型变化时 | tile_pos, old_surface, new_surface, duration | Terrain（更新显示）、Cue（表面变化特效） |
-| HazardTriggered | 陷阱触发时 | tile_pos, target_id, hazard_id, damage/effect | Combat（处理伤害）、Effect（施加效果）、日志 |
-| TerrainEffectApplied | 地形效果施加时 | entity_id, tile_pos, effect_id | UI（显示地形状态图标） |
+| TileEntered | 单位进入格子时 | entity_id, tile_pos, tile_properties, surface_type | Effect（施加地形效果）、Tactical（更新位置）、日志（LogCode: TER001） |
+| SurfaceChanged | 格子表面类型变化时 | tile_pos, old_surface, new_surface, duration | Terrain（更新显示）、Cue（表面变化特效）、日志（LogCode: TER002） |
+| HazardTriggered | 陷阱触发时 | tile_pos, target_id, hazard_id, damage/effect | Combat（处理伤害）、Effect（施加效果）、日志（LogCode: TER003） |
+| TerrainEffectApplied | 地形效果施加时 | entity_id, tile_pos, effect_id | UI（显示地形状态图标）、日志（LogCode: TER004） |
 
 ### 事件订阅关系图
 

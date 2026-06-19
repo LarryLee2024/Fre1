@@ -32,5 +32,7 @@ pub(crate) mod time;
 pub(crate) mod traits;
 // [ADR-045] pub(crate) — 链式校验器，crate 内共享
 pub(crate) mod validation;
+// [ADR-045] pub(crate) — 日志诊断基础设施，crate 内共享
+pub(crate) mod diagnostics;
 
 pub use shared_plugin::SharedPlugin;

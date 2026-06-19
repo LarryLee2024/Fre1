@@ -169,10 +169,10 @@ Archived（已归档）
 
 | 事件名 | 触发时机 | 携带数据 | 订阅者 |
 |--------|----------|----------|--------|
-| ContextCreated | 上下文构建完成时 | context_id, origin_type, source_id, target_id | 日志、调试工具 |
-| ContextConsumed | 上下文生命周期结束时 | context_id, chain_length, total_time | 日志分析器、性能监控 |
-| ContextCycleDetected | 溯源链检测到循环时 | context_id, cycle_node, chain_snapshot | 循环保护系统、告警 |
-| ContextValidationFailed | 上下文构建校验失败时 | builder_state, missing_fields | 日志、开发调试 |
+| ContextCreated | 上下文构建完成时 | context_id, origin_type, source_id, target_id | 日志（LogCode: CNT001）、调试工具 |
+| ContextConsumed | 上下文生命周期结束时 | context_id, chain_length, total_time | 日志分析器、性能监控、日志（LogCode: CNT002） |
+| ContextCycleDetected | 溯源链检测到循环时 | context_id, cycle_node, chain_snapshot | 循环保护系统、告警、日志（LogCode: CNT003） |
+| ContextValidationFailed | 上下文构建校验失败时 | builder_state, missing_fields | 日志（LogCode: CNT004）、开发调试 |
 
 ### 事件订阅关系图
 

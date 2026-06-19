@@ -218,6 +218,7 @@ L0 Shared                         └─ 计算层
 | `replay` | `infrastructure/replay_schema.md` | 命令录制、确定性回放 |
 | `save` | `foundation/save_architecture.md` | 存档序列化、版本迁移 |
 | `input` | — | 输入抽象、命令层 |
+| `logging` | `infrastructure/logging_schema.md` | 领域事件驱动日志、LogObserver、LogCode |
 
 ### 3.5 横切四层
 
@@ -633,6 +634,7 @@ src/
 | ADR-046 | 模块接口模式统一（消除 api.rs） | ✅ Accepted | Foundation |
 | ADR-047 | Content 加载管线架构 | ✅ Approved | Cross-cutting |
 | ADR-050 | 游戏状态机与场景架构 | ✅ Accepted | Foundation |
+| ADR-051 | Error/Failure 分离架构（规则失败与程序错误严格区分） | ✅ Accepted | Cross-cutting |
 
 ---
 
@@ -695,6 +697,7 @@ src/
 | `40-cross-cutting/ADR-047-content-loading-pipeline.md` | ✅ stable | architect | 2026-06-18 |
 | `40-cross-cutting/ADR-049-shared-cross-domain-events.md` | ✅ stable | architect | 2026-06-19 |
 | `00-foundation/ADR-050-game-state-machine.md` | ✅ accepted | architect | 2026-06-19 |
+| `40-cross-cutting/ADR-051-error-failure-separation.md` | ✅ accepted | architect | 2026-06-19 |
 
 ---
 

@@ -186,10 +186,10 @@ Clean（缓存有效）
 
 | 事件名 | 触发时机 | 携带数据 | 订阅者 |
 |--------|----------|----------|--------|
-| AggregationComplete | 属性聚合计算完成时 | entity_id, attribute_id, final_value, calc_stage_trace（调试用） | Attribute（更新 CurrentValue）、UI（刷新显示）、Condition（检查属性阈值变更） |
-| AggregateDirty | 属性被标记为需要重算时 | entity_id, attribute_id, trigger_source（哪个 Modifier 变更导致的） | 调度系统（安排下一帧重算） |
-| SnapshotCreated | 快照拍摄完成时 | entity_id, snapshot_id, attribute_count, timestamp | 回放系统、回滚系统 |
-| PipelineCycleDetected | 检测到聚合闭环时（如 A→B→A 循环） | cycle_chain: [attribute_id1, attribute_id2, attribute_id1] | 日志、架构检查工具 |
+| AggregationComplete | 属性聚合计算完成时 | entity_id, attribute_id, final_value, calc_stage_trace（调试用） | Attribute（更新 CurrentValue）、UI（刷新显示）、Condition（检查属性阈值变更）、日志（LogCode: AGG001） |
+| AggregateDirty | 属性被标记为需要重算时 | entity_id, attribute_id, trigger_source（哪个 Modifier 变更导致的） | 调度系统（安排下一帧重算）、日志（LogCode: AGG002） |
+| SnapshotCreated | 快照拍摄完成时 | entity_id, snapshot_id, attribute_count, timestamp | 回放系统、回滚系统、日志（LogCode: AGG003） |
+| PipelineCycleDetected | 检测到聚合闭环时（如 A→B→A 循环） | cycle_chain: [attribute_id1, attribute_id2, attribute_id1] | 日志（LogCode: AGG004）、架构检查工具 |
 
 ### 事件订阅关系图
 

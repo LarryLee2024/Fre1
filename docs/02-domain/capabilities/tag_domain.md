@@ -190,10 +190,10 @@ Tag.Root
 
 | 事件名 | 触发时机 | 携带数据 | 订阅者 |
 |--------|----------|----------|--------|
-| TagAdded | 标签被授予实体时 | entity_id, tag_id, source_context | Condition（条件检查）、Trigger（触发检测）、Event（事件路由） |
-| TagRemoved | 标签从实体移除时 | entity_id, tag_id, source_context | Condition、Trigger |
-| TagHierarchyChanged | 标签层级结构发生变更时（仅开发期/内容加载期） | parent_tag_id, affected_child_ids | Tag 同步系统、内容校验器 |
-| TagQueryEvaluated | TagQuery 条件评估完成时（调试用，仅 dev-tools） | query_type, target_tags, result | 日志分析器、调试工具 |
+| TagAdded | 标签被授予实体时 | entity_id, tag_id, source_context | Condition（条件检查）、Trigger（触发检测）、Event（事件路由）、日志（LogCode: TAG001） |
+| TagRemoved | 标签从实体移除时 | entity_id, tag_id, source_context | Condition、Trigger、日志（LogCode: TAG002） |
+| TagHierarchyChanged | 标签层级结构发生变更时（仅开发期/内容加载期） | parent_tag_id, affected_child_ids | Tag 同步系统、内容校验器、日志（LogCode: TAG003） |
+| TagQueryEvaluated | TagQuery 条件评估完成时（调试用，仅 dev-tools） | query_type, target_tags, result | 日志分析器、调试工具、日志（LogCode: TAG004） |
 
 ### 事件订阅关系图
 

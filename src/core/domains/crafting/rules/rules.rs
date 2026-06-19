@@ -4,8 +4,7 @@
 //! 详见 docs/02-domain/domains/crafting_domain.md §5
 
 use super::super::components::{
-    CraftingStation, EnchantmentDef, EnchantmentSlot, MaterialCost, RecipeDef,
-    UpgradeLevel,
+    CraftingStation, EnchantmentDef, EnchantmentSlot, MaterialCost, RecipeDef, UpgradeLevel,
 };
 
 // ─── 配方检查规则 ──────────────────────────────────────────────

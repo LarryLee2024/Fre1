@@ -196,10 +196,10 @@ Applying（施加阶段——检查条件，初始化）
 
 | 事件名 | 触发时机 | 携带数据 | 订阅者 |
 |--------|----------|----------|--------|
-| EffectApplied | 效果成功施加时 | entity_id, effect_spec_id, effect_type, duration_type, source_context | UI（显示 Buff 图标）、Modifier（注册修改器）、Cue（特效触发） |
-| EffectRemoved | 效果移除时 | entity_id, effect_spec_id, reason（expired/dispelled/manual） | UI（移除 Buff 图标）、Modifier（回退修改器）、Cue（移除特效） |
-| EffectTicked | 周期效果 Tick 时 | entity_id, effect_spec_id, tick_number, total_ticks, tick_result | Execution（结算 Tick 伤害/治疗）、日志、Cue（Tick 特效） |
-| EffectImmunityTriggered | 效果因免疫被阻止时 | entity_id, effect_spec_id, immune_tag | Cue（显示 IMMUNE 文字）、日志 |
+| EffectApplied | 效果成功施加时 | entity_id, effect_spec_id, effect_type, duration_type, source_context | UI（显示 Buff 图标）、Modifier（注册修改器）、Cue（特效触发）、日志（LogCode: EFF001） |
+| EffectRemoved | 效果移除时 | entity_id, effect_spec_id, reason（expired/dispelled/manual） | UI（移除 Buff 图标）、Modifier（回退修改器）、Cue（移除特效）、日志（LogCode: EFF002） |
+| EffectTicked | 周期效果 Tick 时 | entity_id, effect_spec_id, tick_number, total_ticks, tick_result | Execution（结算 Tick 伤害/治疗）、日志（LogCode: EFF003）、Cue（Tick 特效） |
+| EffectImmunityTriggered | 效果因免疫被阻止时 | entity_id, effect_spec_id, immune_tag | Cue（显示 IMMUNE 文字）、日志（LogCode: EFF004） |
 
 ### 事件订阅关系图
 

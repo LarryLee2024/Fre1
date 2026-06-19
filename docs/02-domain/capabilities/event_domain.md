@@ -196,10 +196,10 @@ Consumed（事件消费完毕）
 
 | 事件名 | 触发时机 | 携带数据 | 订阅者 |
 |--------|----------|----------|--------|
-| EventPublished | 事件被发布到 EventBus 时（调试用，仅 dev-tools） | event_tag, source, priority, timestamp | 日志、调试工具 |
-| EventDelivered | 事件成功投递到订阅者时（调试用，仅 dev-tools） | event_tag, subscriber_id, latency | 日志分析器、性能监控 |
-| EventDeliveryFailed | 事件投递到订阅者失败时（用于监控告警） | event_tag, subscriber_id, error_message | 日志、告警系统 |
-| EventCycleDetected | 检测到事件循环触发时（严重告警） | event_tag, cycle_depth, chain_trace | 架构检查工具、开发告警 |
+| EventPublished | 事件被发布到 EventBus 时（调试用，仅 dev-tools） | event_tag, source, priority, timestamp | 日志（LogCode: CNT025）、调试工具 |
+| EventDelivered | 事件成功投递到订阅者时（调试用，仅 dev-tools） | event_tag, subscriber_id, latency | 日志分析器、性能监控、日志（LogCode: CNT026） |
+| EventDeliveryFailed | 事件投递到订阅者失败时（用于监控告警） | event_tag, subscriber_id, error_message | 日志（LogCode: CNT027）、告警系统 |
+| EventCycleDetected | 检测到事件循环触发时（严重告警） | event_tag, cycle_depth, chain_trace | 架构检查工具、开发告警、日志（LogCode: CNT028） |
 
 ### 事件分发架构图
 

@@ -18,6 +18,7 @@
     ├── spell-formulas-refactor-plan.md # 法术公式重构
     ├── testdebt-002-execution-plan.md  # 测试债务修复计划
     └── doc-conflict-evaluation.md     # 文档冲突修复记录
+    └── phase-e-game-flow-execution.md  # Phase E 游戏流程集成（全部完成）
 ```
 
 ## 规划文档生命周期
@@ -29,4 +30,5 @@
 ## 状态说明
 
 - `done/` 中的所有文档均已全部完成
-- 当前无活跃规划文档
+- 当前活跃规划：`logging-architecture-plan.md`（日志架构实施）
+- Phase E（游戏流程集成）已于 2026-06-25 完成并归档

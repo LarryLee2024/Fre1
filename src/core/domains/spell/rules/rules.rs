@@ -9,7 +9,7 @@ use super::formulas::calc_concentration_dc;
 use crate::core::domains::spell::components::{
     Concentration, SaveResult, SpellComponents, SpellDef, SpellDefId, SpellLevel, SpellSlotPool,
 };
-use crate::core::domains::spell::error::SpellError;
+use crate::core::domains::spell::failure::SpellFailure;
 
 // ─── 施法前置校验 ──────────────────────────────────────────────────
 
@@ -17,11 +17,11 @@ use crate::core::domains::spell::error::SpellError;
 pub fn check_spell_known(
     known_spells: &[SpellDefId],
     spell_id: &SpellDefId,
-) -> Result<(), SpellError> {
+) -> Result<(), SpellFailure> {
     if known_spells.contains(spell_id) {
         Ok(())
     } else {
-        Err(SpellError::SpellNotKnown {
+        Err(SpellFailure::NotKnown {
             spell_id: spell_id.clone(),
         })
     }
@@ -31,11 +31,11 @@ pub fn check_spell_known(
 pub fn check_spell_prepared(
     prepared_spells: &[SpellDefId],
     spell_id: &SpellDefId,
-) -> Result<(), SpellError> {
+) -> Result<(), SpellFailure> {
     if prepared_spells.contains(spell_id) {
         Ok(())
     } else {
-        Err(SpellError::SpellNotPrepared {
+        Err(SpellFailure::NotPrepared {
             spell_id: spell_id.clone(),
         })
     }
@@ -58,18 +58,18 @@ pub fn check_components(
     can_speak: bool,
     has_free_hand: bool,
     has_focus: bool,
-) -> Result<(), SpellError> {
+) -> Result<(), SpellFailure> {
     if components.verbal && !can_speak {
-        return Err(SpellError::Silenced);
+        return Err(SpellFailure::Silenced);
     }
     if components.somatic && !has_free_hand {
-        return Err(SpellError::Restrained);
+        return Err(SpellFailure::Restrained);
     }
     if let Some(material) = &components.material {
         if !has_focus && material.cost_gold.unwrap_or(0) == 0 {
             // 无消耗材料可通过法器替代
         } else if !has_focus {
-            return Err(SpellError::MissingMaterial {
+            return Err(SpellFailure::MissingMaterial {
                 description: material.description.clone(),
             });
         }
@@ -84,7 +84,7 @@ pub fn check_slot_available(
     slot_pool: &SpellSlotPool,
     level: SpellLevel,
     spell_id: &SpellDefId,
-) -> Result<(), SpellError> {
+) -> Result<(), SpellFailure> {
     let level_num = level.as_u8();
     if level_num == 0 {
         return Ok(()); // 戏法不消耗法术位
@@ -92,7 +92,7 @@ pub fn check_slot_available(
     if slot_pool.remaining(level) > 0 {
         Ok(())
     } else {
-        Err(SpellError::InsufficientSlots {
+        Err(SpellFailure::InsufficientSlots {
             spell_id: spell_id.clone(),
             required_level: level_num,
         })
@@ -105,9 +105,9 @@ pub fn check_slot_available(
 pub fn check_concentration(
     current_concentration: Option<&Concentration>,
     _new_spell_id: &SpellDefId,
-) -> Result<(), SpellError> {
+) -> Result<(), SpellFailure> {
     if let Some(conc) = current_concentration {
-        Err(SpellError::AlreadyConcentrating {
+        Err(SpellFailure::AlreadyConcentrating {
             current_spell: conc.spell_id.clone(),
         })
     } else {
@@ -116,15 +116,15 @@ pub fn check_concentration(
 }
 
 /// 检查升环施法是否合法。
-pub fn check_upcast(spell_def: &SpellDef, target_level: SpellLevel) -> Result<(), SpellError> {
+pub fn check_upcast(spell_def: &SpellDef, target_level: SpellLevel) -> Result<(), SpellFailure> {
     if !spell_def.can_upcast {
-        return Err(SpellError::InvalidUpcast {
+        return Err(SpellFailure::InvalidUpcast {
             spell_id: spell_def.id.clone(),
             target_level: target_level.as_u8(),
         });
     }
     if target_level.as_u8() <= spell_def.level.as_u8() {
-        return Err(SpellError::InvalidUpcast {
+        return Err(SpellFailure::InvalidUpcast {
             spell_id: spell_def.id.clone(),
             target_level: target_level.as_u8(),
         });

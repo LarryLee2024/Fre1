@@ -101,7 +101,7 @@ OpenCode（Sisyphus）则是通过 `task()` 函数调用，category 映射规则
 - 跨角色协作时，必须引用上游输出作为输入依据，确保设计决策的可追溯性。
 - `@feature-developer` 在代码中写 `// TODO: `，要严格遵守 TODO规范
 - 必须用 `cargo nextest run` 替代 `cargo test` 做测试
-- 所有 Agent 做完任务，一定要更新之前依据的相关文件（如plan、review、refactor、test等）的完成状态
+- 所有 Agent 做完任务，一定要更新之前依据的相关文件（如plan、review、refactor、test等）的完成状态，以及各涉及文件目录下的README.md文件
 
 <!-- ENGINEERING_PRINCIPLES_START -->
 ## Engineering Principles

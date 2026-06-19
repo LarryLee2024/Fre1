@@ -6,8 +6,8 @@
 use crate::core::CorePlugin;
 use crate::core::domains::combat::integration::replay::CombatReplayBridgePlugin;
 use crate::infra::{
-    input::InputPlugin, pipeline::PipelinePlugin, registry::RegistryPlugin, replay::ReplayPlugin,
-    save::SavePlugin,
+    input::InputPlugin, logging::LoggingPlugin, pipeline::PipelinePlugin,
+    registry::RegistryPlugin, replay::ReplayPlugin, save::SavePlugin,
 };
 use crate::{
     app::scenes::ScenePlugin, content::ContentPlugin, modding::ModdingPlugin, shared::SharedPlugin,
@@ -38,7 +38,8 @@ impl Plugin for AppPlugin {
             .add_plugins(PipelinePlugin)
             .add_plugins(ReplayPlugin)
             .add_plugins(SavePlugin)
-            .add_plugins(InputPlugin);
+            .add_plugins(InputPlugin)
+            .add_plugins(LoggingPlugin);
 
         // ── Replay→Combat 桥接层（必须在 CombatPlugin + ReplayPlugin 之后注册）──
         app.add_plugins(CombatReplayBridgePlugin);

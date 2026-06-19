@@ -72,17 +72,11 @@ pub(crate) fn tactical_input_system(
     }
 
     if moved {
-        info!(
-            "[TacticalInput] Cursor moved to {:?}",
-            cursor.position
-        );
+        info!("[TacticalInput] Cursor moved to {:?}", cursor.position);
     }
 
     if input_state.just_pressed(InputAction::Select) {
-        info!(
-            "[TacticalInput] Select at {:?}",
-            cursor.position
-        );
+        info!("[TacticalInput] Select at {:?}", cursor.position);
     }
 
     if input_state.just_pressed(InputAction::Cancel) {

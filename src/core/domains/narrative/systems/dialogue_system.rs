@@ -6,8 +6,7 @@
 use bevy::prelude::*;
 
 use crate::core::domains::narrative::components::{
-    ChoiceOption, DialogueHistory, DialogueState,
-    DialogueTreeRegistry, StoryFlags,
+    ChoiceOption, DialogueHistory, DialogueState, DialogueTreeRegistry, StoryFlags,
 };
 use crate::core::domains::narrative::events::{ChoiceMade, DialogueStarted, StoryFlagSet};
 use crate::core::domains::narrative::rules::filter_visible_choices;

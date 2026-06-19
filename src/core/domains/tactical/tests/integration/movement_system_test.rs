@@ -1,5 +1,5 @@
 use crate::core::domains::tactical::components::{GridPos, MovementPoints, MovementType};
-use crate::core::domains::tactical::error::TacticalError;
+use crate::core::domains::tactical::failure::TacticalFailure;
 use crate::core::domains::tactical::resources::{GridLayout, GridMap, TileData, TileFlags};
 use crate::core::domains::tactical::systems::movement_system::validate_and_execute_move;
 
@@ -47,7 +47,7 @@ fn validate_and_execute_move_out_of_bounds_returns_error() {
         &mut pos,
     );
 
-    assert!(matches!(result, Err(TacticalError::OutOfBounds)));
+    assert!(matches!(result, Err(TacticalFailure::OutOfBounds)));
     assert_eq!(
         pos,
         GridPos::new(0, 0),
@@ -73,7 +73,7 @@ fn validate_and_execute_move_blocked_tile_returns_error() {
         &mut pos,
     );
 
-    assert!(matches!(result, Err(TacticalError::TileNotPassable)));
+    assert!(matches!(result, Err(TacticalFailure::TileNotPassable)));
     assert_eq!(
         pos,
         GridPos::new(0, 0),
@@ -97,7 +97,7 @@ fn validate_and_execute_move_insufficient_mp_returns_error() {
 
     assert!(matches!(
         result,
-        Err(TacticalError::InsufficientMovementPoints {
+        Err(TacticalFailure::InsufficientMovementPoints {
             required: 5.0,
             available: 2.0
         })

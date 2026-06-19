@@ -4,7 +4,7 @@ title: Summon（召唤）领域规则 v1.0
 status: stable
 owner: domain-designer
 created: 2026-06-16
-updated: 2026-06-16
+updated: 2026-06-19
 tags:
   - domain
   - summon
@@ -103,26 +103,31 @@ Expired（已消失——Entity 清理）
 ### 3.1 召唤者生死约束
 - **条件**：召唤物活跃时
 - **不变量**：召唤者死亡时，所有由该召唤者创建的召唤物必须立即消失
+- **违反后果类型**：🔴 规则失败
 - **违反后果**：召唤者在召唤物之前死亡后，召唤物仍存在于战场
 
 ### 3.2 专注召唤唯一性
 - **条件**：施法者维持专注召唤时
 - **不变量**：一个施法者同时只能维持一个需要专注的召唤物（Spell 领域的专注规则）
+- **违反后果类型**：🔴 规则失败
 - **违反后果**：多个专注召唤同时存在，违反专注唯一性
 
 ### 3.3 召唤物行动权
 - **条件**：战斗中召唤物行动时
 - **不变量**：召唤物拥有独立的行动回合（在召唤者的先攻位置附近行动），不由召唤者代行
+- **违反后果类型**：🔴 规则失败
 - **违反后果**：召唤物不消耗额外行动资源但有独立行动权——这是召唤的价值
 
 ### 3.4 召唤物模板一致性
 - **条件**：召唤物被创建时
 - **不变量**：召唤物的属性/能力必须基于一个已注册的模板（召唤物 Def）
+- **违反后果类型**：🔴 程序错误
 - **违反后果**：无模板的召唤物属性异常
 
 ### 3.5 占位不冲突
 - **条件**：召唤物被召唤到战场时
 - **不变量**：召唤物出生位置/占用的格子必须是可通行的且没有被其他单位占用
+- **违反后果类型**：🔴 规则失败
 - **违反后果**：召唤物与其他单位重叠
 
 ---
@@ -153,7 +158,7 @@ Expired（已消失——Entity 清理）
   5. 注册为 CombatParticipant（如在战斗中）
   6. 发布 SummonCreated 事件
 - **输出**：SummonCreated 事件（召唤者、召唤物 Entity、模板、位置）
-- **失败处理**：位置不合法/专注冲突/数量已达上限时创建失败
+- **失败处理**：位置不合法/专注冲突/数量已达上限时创建失败 → 这是**规则失败**（预期业务分支，召唤条件不满足）
 
 ### 5.2 召唤物消失
 
@@ -172,7 +177,7 @@ Expired（已消失——Entity 清理）
   6. 释放召唤者的召唤槽位
   7. 发布 SummonExpired 事件
 - **输出**：SummonExpired 事件（召唤者、召唤物、消失原因）
-- **失败处理**：召唤物已消失时忽略（幂等）
+- **失败处理**：召唤物已消失时忽略（幂等） → 这是**规则失败**（预期业务分支，幂等处理避免重复消失）
 
 ### 5.3 召唤物控制
 
@@ -183,7 +188,7 @@ Expired（已消失——Entity 清理）
   3. 召唤物执行指令
   4. 如果无指令且 AI 模式为自主，SummonAI 自动决策
 - **输出**：指令执行结果
-- **失败处理**：指令不被 AI 模式允许/召唤者无控制权时忽略
+- **失败处理**：指令不被 AI 模式允许/召唤者无控制权时忽略 → 这是**规则失败**（预期业务分支，召唤物遵循 AI 模式约束）
 
 ---
 
@@ -191,10 +196,10 @@ Expired（已消失——Entity 清理）
 
 | 事件名 | 触发时机 | 携带数据 | 订阅者 |
 |--------|----------|----------|--------|
-| SummonCreated | 召唤物被创建时 | caster_id, summon_entity_id, template_id, position, duration_type | Combat（注册参与者）、Tactical（更新占位）、UI（显示召唤物） |
-| SummonExpired | 召唤物消失时 | caster_id, summon_entity_id, reason（expired/concentration_broken/caster_died/killed/dismissed） | Combat（移除参与者）、Tactical（释放格子）、UI（移除召唤物界面） |
-| SummonCommand | 召唤物接受指令时 | caster_id, summon_entity_id, command_type（attack/move/ability/follow/auto） | UI（更新召唤物行为指示） |
-| SummonSlotChanged | 召唤者的召唤占用变化时 | caster_id, summon_slots_used, summon_slots_max | Condition（检查召唤数量限制） |
+| SummonCreated | 召唤物被创建时 | caster_id, summon_entity_id, template_id, position, duration_type | Combat（注册参与者）、Tactical（更新占位）、UI（显示召唤物）、日志（LogCode: SUM001） |
+| SummonExpired | 召唤物消失时 | caster_id, summon_entity_id, reason（expired/concentration_broken/caster_died/killed/dismissed） | Combat（移除参与者）、Tactical（释放格子）、UI（移除召唤物界面）、日志（LogCode: SUM002） |
+| SummonCommand | 召唤物接受指令时 | caster_id, summon_entity_id, command_type（attack/move/ability/follow/auto） | UI（更新召唤物行为指示）、日志（LogCode: SUM003） |
+| SummonSlotChanged | 召唤者的召唤占用变化时 | caster_id, summon_slots_used, summon_slots_max | Condition（检查召唤数量限制）、日志（LogCode: SUM004） |
 
 ### 事件订阅关系图
 

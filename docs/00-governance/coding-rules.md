@@ -380,11 +380,45 @@ pub enum XxxError {
 * 统一使用`tracing`库
 * **绝对禁止**：使用`println!`或`dbg!`
 * 所有日志必须是结构化的
+* **绝对禁止**：领域层直接调用`info!`/`warn!`输出业务事件（必须走领域事件链路 → LogObserver）
+* **绝对禁止**：循环/迭代器内部输出 INFO 级别日志
+* **绝对禁止**：Release 版本每帧系统输出 INFO/DEBUG
+* ERROR 预算 = 0：出现`error!`就是 Bug，必须修复
+* 所有 INFO 日志必须携带 `code = ?LogCode::XXX` 字段
+* 日志 `target` 必须与所属模块名一致
 
 正确：
 ```rust
-info!(unit=?entity, damage=amount, "damage applied");
+// 领域层：发事件，不写日志
+commands.trigger(SkillCastStarted { caster, skill });
+
+// 基础设施层：LogObserver 监听事件，生成日志
+fn on_skill_cast(trigger: Trigger<SkillCastStarted>) {
+    let e = trigger.event();
+    info!(
+        code = ?LogCode::ABL001,
+        caster = ?e.caster,
+        skill = ?e.skill,
+        "skill_cast"
+    );
+}
 ```
+
+错误：
+```rust
+// ❌ 领域层直接写日志
+info!("释放技能");  // 违反 §11.4
+
+// ❌ 非结构化日志
+info!("角色{}释放{}", actor, skill);  // 必须用结构化字段
+
+// ❌ 循环内日志
+for entity in query.iter() {
+    warn!("missing buff");  // 必须用 warn_once!
+}
+```
+
+详见 `docs/01-architecture/40-cross-cutting/ADR-052-logging-architecture.md`
 
 ---
 

@@ -193,10 +193,10 @@ Blocked（被封锁——因沉默/眩晕等无法使用，独立于主流程的
 
 | 事件名 | 触发时机 | 携带数据 | 订阅者 |
 |--------|----------|----------|--------|
-| AbilityActivated | 技能成功激活时 | entity_id, ability_spec_id, instance_id, context | Trigger（屏蔽自身触发）、UI（技能冷却/施法条显示） |
-| AbilityCompleted | 技能执行完毕时 | entity_id, ability_spec_id, instance_id, result | Trigger（释放频率限制位）、Progression（技能使用经验） |
-| AbilityCancelled | 技能被取消/打断时 | entity_id, ability_spec_id, instance_id, reason | Trigger（释放频率限制位） |
-| AbilityCooldownStarted | 冷却开始时 | entity_id, ability_spec_id, cooldown_duration | UI（显示冷却倒计时） |
+| AbilityActivated | 技能成功激活时 | entity_id, ability_spec_id, instance_id, context | Trigger（屏蔽自身触发）、UI（技能冷却/施法条显示）、日志（LogCode: ABL001） |
+| AbilityCompleted | 技能执行完毕时 | entity_id, ability_spec_id, instance_id, result | Trigger（释放频率限制位）、Progression（技能使用经验）、日志（LogCode: ABL002） |
+| AbilityCancelled | 技能被取消/打断时 | entity_id, ability_spec_id, instance_id, reason | Trigger（释放频率限制位）、日志（LogCode: ABL003） |
+| AbilityCooldownStarted | 冷却开始时 | entity_id, ability_spec_id, cooldown_duration | UI（显示冷却倒计时）、日志（LogCode: ABL004） |
 
 ### 事件订阅关系图
 

@@ -55,7 +55,7 @@ mod check_spell_prepared_tests {
 
 mod check_components_tests {
     use crate::core::domains::spell::components::SpellComponents;
-    use crate::core::domains::spell::error::SpellError;
+    use crate::core::domains::spell::failure::SpellFailure;
     use crate::core::domains::spell::rules::check_components;
 
     #[test]
@@ -76,7 +76,7 @@ mod check_components_tests {
             material: None,
         };
         let result = check_components(&components, false, true, false);
-        assert_eq!(result.unwrap_err(), SpellError::Silenced);
+        assert_eq!(result.unwrap_err(), SpellFailure::Silenced);
     }
 
     #[test]
@@ -87,7 +87,7 @@ mod check_components_tests {
             material: None,
         };
         let result = check_components(&components, true, false, false);
-        assert_eq!(result.unwrap_err(), SpellError::Restrained);
+        assert_eq!(result.unwrap_err(), SpellFailure::Restrained);
     }
 }
 
@@ -140,7 +140,6 @@ mod check_slot_available_tests {
 
 mod check_concentration_tests {
     use crate::core::domains::spell::components::{Concentration, SpellDefId};
-    use crate::core::domains::spell::error::SpellError;
     use crate::core::domains::spell::rules::check_concentration;
 
     fn make_concentration() -> Concentration {

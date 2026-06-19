@@ -173,10 +173,10 @@ Evaluating（评估中）
 
 | 事件名 | 触发时机 | 携带数据 | 订阅者 |
 |--------|----------|----------|--------|
-| ConditionPassed | 条件评估通过时 | entity_id, condition_id, condition_type, result_data | Ability（允许继续激活）、Equipment（允许穿戴） |
-| ConditionFailed | 条件评估不通过时 | entity_id, condition_id, condition_type, fail_reason | Ability（阻止激活，显示失败原因）、UI（显示提示） |
-| ImmunityTriggered | 免疫条件生效时 | entity_id, target_effect_type, immune_tag_id | Cue（显示免疫文字弹跳）、日志 |
-| ConditionSubscribed | 条件进入等待变化订阅状态时 | entity_id, condition_id, subscribed_events | 调试工具、条件可视化 |
+| ConditionPassed | 条件评估通过时 | entity_id, condition_id, condition_type, result_data | Ability（允许继续激活）、Equipment（允许穿戴）、日志（LogCode: CNT011） |
+| ConditionFailed | 条件评估不通过时 | entity_id, condition_id, condition_type, fail_reason | Ability（阻止激活，显示失败原因）、UI（显示提示）、日志（LogCode: CNT012） |
+| ImmunityTriggered | 免疫条件生效时 | entity_id, target_effect_type, immune_tag_id | Cue（显示免疫文字弹跳）、日志（LogCode: CNT013） |
+| ConditionSubscribed | 条件进入等待变化订阅状态时 | entity_id, condition_id, subscribed_events | 调试工具、条件可视化、日志（LogCode: CNT014） |
 
 ### 事件订阅关系图
 

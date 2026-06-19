@@ -9,16 +9,11 @@ use super::super::components::{EnchantmentSlot, UpgradeLevel};
 use super::super::events::{CraftingFailed, EnchantmentApplied, ItemCrafted, ItemUpgraded};
 use super::super::resources::{CraftingConfig, EnchantmentDefRegistry};
 use super::super::rules::{
-    check_enchant_exclusivity, check_upgrade_limit,
-    has_free_enchantment_slot,
+    check_enchant_exclusivity, check_upgrade_limit, has_free_enchantment_slot,
 };
 
 /// 处理制作请求。
-pub fn on_craft_item(
-    _trigger: On<ItemCrafted>,
-    _config: Res<CraftingConfig>,
-    _commands: Commands,
-) {
+pub fn on_craft_item(_trigger: On<ItemCrafted>, _config: Res<CraftingConfig>, _commands: Commands) {
     let _event = _trigger.event();
     // 简化实现：触发制作完成事件
     // 完整实现需检查材料、站台、技能，消耗材料，产生产出

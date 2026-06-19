@@ -66,7 +66,10 @@ fn hated_reputation_blocks_all_trade() {
 #[test]
 fn price_nonzero_base_produces_nonzero_price() {
     let p = Price::new(100);
-    assert!(p.final_price() > 0, "price with nonzero base must be nonzero");
+    assert!(
+        p.final_price() > 0,
+        "price with nonzero base must be nonzero"
+    );
 
     let p2 = Price {
         base: 0,

@@ -176,10 +176,10 @@ Reverted（已回退）
 
 | 事件名 | 触发时机 | 携带数据 | 订阅者 |
 |--------|----------|----------|--------|
-| ModifierApplied | 修改器成功注册到容器时 | entity_id, modifier_data, source_context | Aggregator（触发重算）、Effect（追踪效果状态）、Stacking（堆叠计数更新） |
-| ModifierRemoved | 修改器从容器移除时 | entity_id, modifier_data, reason（expired/dispelled/manual） | Aggregator（触发重算）、Effect（效果到期处理） |
-| ModifierSuppressed | Override 类型修改器因更高优先级被抑制时 | entity_id, suppressed_modifier, dominant_modifier | 日志、调试工具 |
-| ModifierStaleDetected | 检测到与当前属性快照不一致的修改器时 | entity_id, modifier_data, expected_value, actual_value | 回滚系统、完整性校验 |
+| ModifierApplied | 修改器成功注册到容器时 | entity_id, modifier_data, source_context | Aggregator（触发重算）、Effect（追踪效果状态）、Stacking（堆叠计数更新）、日志（LogCode: MOD001） |
+| ModifierRemoved | 修改器从容器移除时 | entity_id, modifier_data, reason（expired/dispelled/manual） | Aggregator（触发重算）、Effect（效果到期处理）、日志（LogCode: MOD002） |
+| ModifierSuppressed | Override 类型修改器因更高优先级被抑制时 | entity_id, suppressed_modifier, dominant_modifier | 日志（LogCode: MOD003）、调试工具 |
+| ModifierStaleDetected | 检测到与当前属性快照不一致的修改器时 | entity_id, modifier_data, expected_value, actual_value | 回滚系统、完整性校验、日志（LogCode: MOD004） |
 
 ### 事件订阅关系图
 

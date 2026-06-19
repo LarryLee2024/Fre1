@@ -194,8 +194,8 @@ Consumed（消耗完毕——表现层反馈已执行）
 
 | 事件名 | 触发时机 | 携带数据 | 订阅者 |
 |--------|----------|----------|--------|
-| CueTriggered | Cue 触发条件满足时 | cue_type, cue_id, cue_tag, context_data, parameters | Infra 全表现层（VFX/SFX/Animation/UI） |
-| CueSuppressed | Cue 因被禁用/性能限制被跳过时 | cue_id, cue_type, reason（disabled/performance/distance） | 日志、性能监控 |
+| CueTriggered | Cue 触发条件满足时 | cue_type, cue_id, cue_tag, context_data, parameters | Infra 全表现层（VFX/SFX/Animation/UI）、日志（LogCode: CNT009） |
+| CueSuppressed | Cue 因被禁用/性能限制被跳过时 | cue_id, cue_type, reason（disabled/performance/distance） | 日志（LogCode: CNT010）、性能监控 |
 
 ### CueTriggered 事件分发图
 

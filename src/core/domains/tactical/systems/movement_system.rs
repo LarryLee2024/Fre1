@@ -11,8 +11,8 @@
 use bevy::prelude::*;
 
 use crate::core::domains::tactical::components::{GridPos, MovementPoints};
-use crate::core::domains::tactical::error::TacticalError;
 use crate::core::domains::tactical::events::ComputeMoveRequest;
+use crate::core::domains::tactical::failure::TacticalFailure;
 use crate::core::domains::tactical::integration::movement::{MP, MovementCapabilityParam};
 use crate::core::domains::tactical::resources::GridMap;
 use crate::core::domains::tactical::rules;
@@ -40,7 +40,6 @@ pub(crate) fn on_compute_move(
             "ComputeMoveRequest path too short: {} positions",
             path.len()
         );
-        commands.trigger(TacticalError::InvalidGridPosition);
         return;
     }
 
@@ -49,7 +48,6 @@ pub(crate) fn on_compute_move(
             "ComputeMoveRequest entity {} missing tactical components",
             entity
         );
-        commands.trigger(TacticalError::InvalidGridPosition);
         return;
     };
     let mov_type = mp.movement_type;
@@ -59,14 +57,12 @@ pub(crate) fn on_compute_move(
         Ok(v) => v,
         Err(_) => {
             warn!("Entity {} missing movement capabilities", entity);
-            commands.trigger(TacticalError::InvalidGridPosition);
             return;
         }
     };
 
     if !view.can_move {
         warn!("Entity {} has no movement tag for {:?}", entity, mov_type);
-        commands.trigger(TacticalError::InvalidGridPosition);
         return;
     }
     info!(
@@ -78,19 +74,16 @@ pub(crate) fn on_compute_move(
     let target = path[path.len() - 1];
 
     if !grid_map.in_bounds(target) {
-        commands.trigger(TacticalError::OutOfBounds);
         return;
     }
 
     let target_tile = match grid_map.get_tile(target) {
         Some(tile) => tile,
         None => {
-            commands.trigger(TacticalError::InvalidGridPosition);
             return;
         }
     };
     if !target_tile.is_passable() {
-        commands.trigger(TacticalError::TileNotPassable);
         return;
     }
 
@@ -101,7 +94,6 @@ pub(crate) fn on_compute_move(
         let tile = match grid_map.get_tile(to) {
             Some(t) => t,
             None => {
-                commands.trigger(TacticalError::InvalidGridPosition);
                 return;
             }
         };
@@ -116,10 +108,6 @@ pub(crate) fn on_compute_move(
 
     // ── 步骤 4: 执行移动 ──
     if total_cost > mp.current {
-        commands.trigger(TacticalError::InsufficientMovementPoints {
-            required: total_cost,
-            available: mp.current,
-        });
         return;
     }
 
@@ -150,23 +138,23 @@ pub fn validate_and_execute_move(
     grid: &GridMap,
     mp: &mut MovementPoints,
     pos: &mut GridPos,
-) -> Result<MoveResult, TacticalError> {
+) -> Result<MoveResult, TacticalFailure> {
     if !grid.in_bounds(target) {
-        return Err(TacticalError::OutOfBounds);
+        return Err(TacticalFailure::OutOfBounds);
     }
 
     let tile = grid
         .get_tile(target)
-        .ok_or(TacticalError::InvalidGridPosition)?;
+        .ok_or(TacticalFailure::InvalidGridPosition)?;
     if !tile.is_passable() {
-        return Err(TacticalError::TileNotPassable);
+        return Err(TacticalFailure::TileNotPassable);
     }
 
     let distance = pos.manhattan_distance(target) as f32;
     let cost = distance;
 
     if cost > mp.current {
-        return Err(TacticalError::InsufficientMovementPoints {
+        return Err(TacticalFailure::InsufficientMovementPoints {
             required: cost,
             available: mp.current,
         });

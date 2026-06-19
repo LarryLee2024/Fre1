@@ -4,7 +4,7 @@ title: CampRest（营地/休息）领域规则 v1.0
 status: stable
 owner: domain-designer
 created: 2026-06-16
-updated: 2026-06-16
+updated: 2026-06-19
 tags:
   - domain
   - camp-rest
@@ -108,26 +108,31 @@ LongRestComplete（长休完成）
 ### 3.1 长休频率限制
 - **条件**：任何长休开始时
 - **不变量**：每 24 小时最多只能进行 1 次长休
+- **违反后果类型**：🔴 规则失败
 - **违反后果**：过于频繁的长休使游戏失去资源管理策略
 
 ### 3.2 短休安全要求
 - **条件**：短休开始时
 - **不变量**：短休需要在安全区域或非战斗状态下进行
+- **违反后果类型**：🔴 规则失败
 - **违反后果**：战斗中的短休违反 D&D 5e 规则
 
 ### 3.3 长休安全要求
 - **条件**：长休开始时
 - **不变量**：长休需要在安全区域进行（有营地/安全的避难所）
+- **违反后果类型**：🔴 规则失败
 - **违反后果**：在危险区域的"长休"无法获得充足休息效果
 
 ### 3.4 生命骰上限
 - **条件**：长休恢复生命骰时
 - **不变量**：生命骰的恢复上限为角色等级的一半（向下取整），已有生命骰数不得超过总等级数
+- **违反后果类型**：🔴 规则失败
 - **违反后果**：生命骰无限积累破坏恢复资源平衡
 
 ### 3.5 长休中断可导致休息失败
 - **条件**：长休期间遭遇战斗/干扰时
 - **不变量**：如果长休中断累计超过 1 小时，本次长休不获得任何效果，不消耗长休次数
+- **违反后果类型**：🔴 程序错误
 - **违反后果**：中断后仍获得长休效果
 
 ---
@@ -155,7 +160,7 @@ LongRestComplete（长休完成）
   3. 恢复所有标记为"短休恢复"的能力
   4. 发布 ShortRestCompleted 事件
 - **输出**：ShortRestCompleted 事件（消耗的生命骰数、HP 恢复量、恢复的能力列表）
-- **失败处理**：非安全区域时短休失败
+- **失败处理**：非安全区域时短休失败 → 这是**规则失败**（预期业务分支，短休需要安全环境）
 
 ### 5.2 长休
 
@@ -179,7 +184,7 @@ LongRestComplete（长休完成）
      d. 所有声明"长休恢复"的能力重置
   7. 发布 LongRestCompleted 事件
 - **输出**：LongRestCompleted 事件（恢复量明细、触发的营地事件）
-- **失败处理**：不安全区域/24 小时内已长休/睡眠中断超过 1 小时均导致长休失败
+- **失败处理**：不安全区域/24 小时内已长休/睡眠中断超过 1 小时均导致长休失败 → 这是**规则失败**（预期业务分支，长休条件不满足或受到干扰）
 
 ### 5.3 营地事件触发
 
@@ -193,7 +198,7 @@ LongRestComplete（长休完成）
      b. 如需要玩家选择，提供选项
      c. 根据选择影响后续剧情/属性/关系
 - **输出**：CampEventTriggered 事件（事件 Id、类型、参与者、选择结果）
-- **失败处理**：无满足条件的事件时不触发
+- **失败处理**：无满足条件的事件时不触发 → 这是**规则失败**（预期业务分支，非每次长休都有营地事件）
 
 ---
 
@@ -201,11 +206,11 @@ LongRestComplete（长休完成）
 
 | 事件名 | 触发时机 | 携带数据 | 订阅者 |
 |--------|----------|----------|--------|
-| ShortRestCompleted | 短休完成时 | entity[ ], hit_dice_used, hp_healed, abilities_restored[ ] | Ability（重置短休能力）、UI（显示短休结果）、日志 |
-| LongRestStarted | 长休开始时 | entity[ ], camp_location | Narrative（准备营地事件）、NPC（激活营地 NPC） |
-| LongRestCompleted | 长休完成时 | entity[ ], hp_restored, spell_slots_restored, hit_dice_restored, events_triggered[ ] | Spell（法术位恢复）、Ability（重置所有能力）、UI（显示长休结果）、Cue（日出/恢复特效） |
-| LongRestInterrupted | 长休被中断时 | entity[ ], interruption_source（战斗/环境）, cumulative_interrupt_time | Combat（如中断原因为战斗）、UI（显示中断警告） |
-| CampEventTriggered | 营地事件触发时 | event_id, event_type, participants[ ], choices_available[ ] | Narrative（推动剧情）、Quest（检查任务进度）、UI（显示事件界面） |
+| ShortRestCompleted | 短休完成时 | entity[ ], hit_dice_used, hp_healed, abilities_restored[ ] | Ability（重置短休能力）、UI（显示短休结果）、日志（LogCode: CNR001） |
+| LongRestStarted | 长休开始时 | entity[ ], camp_location | Narrative（准备营地事件）、NPC（激活营地 NPC）、日志（LogCode: CNR002） |
+| LongRestCompleted | 长休完成时 | entity[ ], hp_restored, spell_slots_restored, hit_dice_restored, events_triggered[ ] | Spell（法术位恢复）、Ability（重置所有能力）、UI（显示长休结果）、Cue（日出/恢复特效）、日志（LogCode: CNR003） |
+| LongRestInterrupted | 长休被中断时 | entity[ ], interruption_source（战斗/环境）, cumulative_interrupt_time | Combat（如中断原因为战斗）、UI（显示中断警告）、日志（LogCode: CNR004） |
+| CampEventTriggered | 营地事件触发时 | event_id, event_type, participants[ ], choices_available[ ] | Narrative（推动剧情）、Quest（检查任务进度）、UI（显示事件界面）、日志（LogCode: CNR005） |
 
 ### 事件订阅关系图
 

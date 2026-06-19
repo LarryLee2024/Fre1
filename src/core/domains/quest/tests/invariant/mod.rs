@@ -6,8 +6,8 @@ use crate::core::domains::quest::components::{
     ObjectiveDef, ObjectiveId, ObjectiveType, QuestDefId, QuestEntry, QuestLog, QuestState,
 };
 use crate::core::domains::quest::rules::{
-    can_abandon_quest, can_transition, check_exclusivity,
-    check_progress_monotonic, is_reward_already_granted,
+    can_abandon_quest, can_transition, check_exclusivity, check_progress_monotonic,
+    is_reward_already_granted,
 };
 
 /// 不变量 3.2：目标进度不可倒退。

@@ -201,10 +201,10 @@ Removed（已移除）
 
 | 事件名 | 触发时机 | 携带数据 | 订阅者 |
 |--------|----------|----------|--------|
-| TriggerFired | 触发条件满足，Trigger 被激活时 | entity_id, trigger_id, trigger_type, context（TriggerContext）, target_ability_id | Ability（创建技能实例）、日志 |
-| TriggerRegistered | 触发器注册到实体时 | entity_id, trigger_id, trigger_type, target_ability_id | 日志、调试工具 |
-| TriggerRemoved | 触发器从实体移除时 | entity_id, trigger_id, reason | Ability（清理关联） |
-| TriggerSuppressed | 触发器因频率限制被抑制时 | entity_id, trigger_id, current_count, max_count | 日志、平衡分析工具 |
+| TriggerFired | 触发条件满足，Trigger 被激活时 | entity_id, trigger_id, trigger_type, context（TriggerContext）, target_ability_id | Ability（创建技能实例）、日志（LogCode: TRG001） |
+| TriggerRegistered | 触发器注册到实体时 | entity_id, trigger_id, trigger_type, target_ability_id | 日志（LogCode: TRG002）、调试工具 |
+| TriggerRemoved | 触发器从实体移除时 | entity_id, trigger_id, reason | Ability（清理关联）、日志（LogCode: TRG003） |
+| TriggerSuppressed | 触发器因频率限制被抑制时 | entity_id, trigger_id, current_count, max_count | 日志（LogCode: TRG004）、平衡分析工具 |
 
 ### 事件处理流程——从触发到激活的完整链路
 

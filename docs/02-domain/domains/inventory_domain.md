@@ -100,26 +100,31 @@ InInventory（在背包中）
 ### 3.1 槽位独占性
 - **条件**：任何装备穿戴时
 - **不变量**：每个 EquipmentSlot 同一时间只能穿戴一件装备
-- **违反后果**：多个装备挤在同一个槽位
+- **违反后果类型**：🔴 规则失败
+- **违反后果**：多个装备挤在同一个槽位，系统应拒绝穿戴
 
 ### 3.2 双手武器占双槽
 - **条件**：装备双手武器时
 - **不变量**：双手武器同时占用 MainHand + OffHand，副手槽位在装备期间不可用
+- **违反后果类型**：🔴 规则失败
 - **违反后果**：双手武器+盾牌同时装备，违反 D&D 5e 规则
 
 ### 3.3 装备条件前置检查
 - **条件**：任何装备穿戴前
 - **不变量**：必须检查穿戴条件（等级/属性/职业/阵营）——使用 Condition 领域
+- **违反后果类型**：🔴 规则失败
 - **违反后果**：不满足条件的装备被穿戴，角色属性异常
 
 ### 3.4 物品堆叠上限
 - **条件**：物品入背包时
 - **不变量**：可堆叠物品的单格数量不得超过最大堆叠数（默认 99）
+- **违反后果类型**：🔴 规则失败
 - **违反后果**：堆叠数超限导致物品丢失
 
 ### 3.5 装备重量负重限制
 - **条件**：角色获得/装备物品时
 - **不变量**：角色携带的总重量不得超过最大负重（力量 × 15 磅）
+- **违反后果类型**：🔴 规则失败
 - **违反后果**：超重导致移动速度降低等负面效果
 
 ---
@@ -147,7 +152,8 @@ InInventory（在背包中）
   4. 添加物品到背包
   5. 发布 ItemAcquired 事件
 - **输出**：ItemAcquired 事件
-- **失败处理**：背包满/超重时物品无法获得
+- **失败处理**：背包满/超重时物品无法获得 → 这是**规则失败**（预期业务分支，玩家应清理背包或扩容后再试）
+- **程序错误**：ItemTemplate/ItemInstance 在数据层不存在时 → 这是**程序错误**（系统异常，应记 Bug）
 
 ### 5.2 装备穿戴
 
@@ -162,7 +168,8 @@ InInventory（在背包中）
   5. 注册装备的 Modifier 到 ModifierContainer
   6. 发布 EquipmentChanged 事件
 - **输出**：EquipmentChanged 事件
-- **失败处理**：条件不满足/槽位被占（非替换）时穿戴失败
+- **失败处理**：条件不满足/槽位被占（非替换）时穿戴失败 → 这是**规则失败**（预期业务分支，玩家需满足条件或更换装备）
+- **程序错误**：背包中找不到指定装备物品时 → 这是**程序错误**（系统异常，应记 Bug）
 
 ### 5.3 装备卸下
 
@@ -174,7 +181,8 @@ InInventory（在背包中）
   4. 检查总重量
   5. 发布 EquipmentChanged 事件
 - **输出**：EquipmentChanged 事件
-- **失败处理**：背包满时无法卸下（需先腾出空间）
+- **失败处理**：背包满时无法卸下（需先腾出空间） → 这是**规则失败**（预期业务分支，玩家应先清理背包）
+- **程序错误**：EquipmentSlot 中找不到已装备物品记录时 → 这是**程序错误**（系统异常，应记 Bug）
 
 ### 5.4 物品使用（消耗品）
 
@@ -186,7 +194,8 @@ InInventory（在背包中）
   4. 如果数量归零，从背包移除物品
   5. 发布 ItemUsed 事件
 - **输出**：ItemUsed 事件
-- **失败处理**：条件不满足时使用失败，物品不消耗
+- **失败处理**：条件不满足时使用失败，物品不消耗 → 这是**规则失败**（预期业务分支，玩家需满足使用条件）
+- **程序错误**：背包中找不到指定消耗品时 → 这是**程序错误**（系统异常，应记 Bug）
 
 ---
 
@@ -194,11 +203,11 @@ InInventory（在背包中）
 
 | 事件名 | 触发时机 | 携带数据 | 订阅者 |
 |--------|----------|----------|--------|
-| ItemAcquired | 物品进入背包时 | entity_id, item_instance_id, item_template_id, quantity, source | UI（更新背包显示）、Quest（检查物品收集任务） |
-| ItemUsed | 消耗品使用完成时 | entity_id, item_instance_id, quantity_consumed, remaining, effect_result | UI（更新背包数量）、Effect（执行消耗品效果） |
-| EquipmentChanged | 装备穿戴/卸下时 | entity_id, slot, old_item（可为空）, new_item（可为空） | Modifier（注册/移除装备 Modifier）、Attribute（触发属性重算）、UI（更新角色装备显示） |
-| ItemRemoved | 物品从背包移除时 | entity_id, item_instance_id, reason（使用/丢弃/交易/摧毁） | UI（更新背包显示） |
-| LootGenerated | 战利品生成时 | source（击杀/开箱等）, loot_table_id, items_generated[ ] | Inventory（添加物品到背包）、UI（显示战利品界面） |
+| ItemAcquired | 物品进入背包时 | entity_id, item_instance_id, item_template_id, quantity, source | UI（更新背包显示）、Quest（检查物品收集任务）、日志（LogCode: INV001） |
+| ItemUsed | 消耗品使用完成时 | entity_id, item_instance_id, quantity_consumed, remaining, effect_result | UI（更新背包数量）、Effect（执行消耗品效果）、日志（LogCode: INV002） |
+| EquipmentChanged | 装备穿戴/卸下时 | entity_id, slot, old_item（可为空）, new_item（可为空） | Modifier（注册/移除装备 Modifier）、Attribute（触发属性重算）、UI（更新角色装备显示）、日志（LogCode: INV003） |
+| ItemRemoved | 物品从背包移除时 | entity_id, item_instance_id, reason（使用/丢弃/交易/摧毁） | UI（更新背包显示）、日志（LogCode: INV004） |
+| LootGenerated | 战利品生成时 | source（击杀/开箱等）, loot_table_id, items_generated[ ] | Inventory（添加物品到背包）、UI（显示战利品界面）、日志（LogCode: INV005） |
 
 ### 事件订阅关系图
 

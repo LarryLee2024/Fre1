@@ -4,7 +4,7 @@ title: Tactical（战术/网格）领域规则 v1.0
 status: stable
 owner: domain-designer
 created: 2026-06-16
-updated: 2026-06-16
+updated: 2026-06-19
 tags:
   - domain
   - tactical
@@ -99,26 +99,31 @@ CurrentFacing（恢复可转向）
 ### 3.1 单位不可重叠
 - **条件**：任何移动或单位放置时
 - **不变量**：同一格内最多只能有一个单位（特殊规则如"堆叠"需显式声明）
+- **违反后果类型**：🔴 规则失败
 - **违反后果**：单位重叠导致选择/目标判定/碰撞检测异常
 
 ### 3.2 行动力非负
 - **条件**：任何移动消耗后
 - **不变量**：MovementPoints 当前值 >= 0，消耗超过剩余值时禁止移动
+- **违反后果类型**：🔴 规则失败
 - **违反后果**：行动力负值导致单位可以无限移动
 
 ### 3.3 路径连贯性
 - **条件**：单位沿路径移动时
 - **不变量**：路径中相邻格必须在网格上相邻（四连通或六连通，取决于地图类型）
+- **违反后果类型**：🔴 程序错误
 - **违反后果**：路径中存在跳跃格，单位"瞬移"越过中间格子
 
 ### 3.4 朝向与移动方向一致
 - **条件**：单位完成移动后
 - **不变量**：移动后单位的朝向必须更新为最后移动方向（除非被控制效果锁定朝向）
+- **违反后果类型**：🔴 程序错误
 - **违反后果**：移动后面朝错误方向，背刺/夹击判定失准
 
 ### 3.5 判定数据的帧一致性
 - **条件**：单次战术判定（夹击/背刺/掩体）过程中
 - **不变量**：判定使用的所有空间数据（位置/朝向/高度）必须来自同一时刻的快照
+- **违反后果类型**：🔴 程序错误
 - **违反后果**：判定数据跨帧导致结果不一致（如判定夹击时一方已移动）
 
 ---
@@ -149,7 +154,7 @@ CurrentFacing（恢复可转向）
   6. 更新朝向为最后移动方向
   7. 发布 UnitMoved 事件
 - **输出**：移动完成确认，UnitMoved 事件
-- **失败处理**：行动力不足或路径受阻时移动失败，单位位置不变
+- **失败处理**：行动力不足或路径受阻时移动失败，单位位置不变 → 这是**规则失败**（预期业务分支，移动资源或通行条件不满足）
 
 ### 5.2 夹击判定
 
@@ -160,7 +165,7 @@ CurrentFacing（恢复可转向）
   3. 如果角度差接近 180°（在阈值范围内，如 ±30°），判定为夹击
   4. 发布 FlankingDetected 事件
 - **输出**：FlankingState（是否夹击、参与夹击的单位列表）
-- **失败处理**：角度差超出阈值时返回"非夹击"状态
+- **失败处理**：角度差超出阈值时返回"非夹击"状态 → 这是**规则失败**（预期业务分支，非所有位置关系都构成夹击）
 
 ### 5.3 背刺判定
 
@@ -170,7 +175,7 @@ CurrentFacing（恢复可转向）
   2. 计算攻击者位置相对于目标朝向的方向
   3. 如果攻击者在目标的背面方向（180° ± 45°），判定为背刺
 - **输出**：BackstabState（是否背刺）
-- **失败处理**：目标朝向未知时默认判定为非背刺
+- **失败处理**：目标朝向未知时默认判定为非背刺 → 这是**程序错误**（系统异常，朝向数据缺失应记 Bug）
 
 ### 5.4 掩体判定
 
@@ -180,7 +185,7 @@ CurrentFacing（恢复可转向）
   2. 检测视线线上是否有障碍物格子（由 Terrain 领域提供）
   3. 根据障碍物覆盖程度判定掩体等级（无掩体/半掩/全掩）
 - **输出**：CoverState（无掩体/半掩/四分之三掩）
-- **失败处理**：视线计算异常时默认返回"无掩体"
+- **失败处理**：视线计算异常时默认返回"无掩体" → 这是**程序错误**（系统异常，视线计算失败应记 Bug）
 
 ### 5.5 高地判定
 
@@ -190,7 +195,7 @@ CurrentFacing（恢复可转向）
   2. 计算高度差
   3. 如果高度差 >= 2（层），判定为单位 A 有高地优势
 - **输出**：HighgroundState（谁有高地优势、高度差数值）
-- **失败处理**：高度数据缺失时返回"无高地差异"
+- **失败处理**：高度数据缺失时返回"无高地差异" → 这是**程序错误**（系统异常，高度数据缺失应记 Bug）
 
 ---
 
@@ -198,11 +203,11 @@ CurrentFacing（恢复可转向）
 
 | 事件名 | 触发时机 | 携带数据 | 订阅者 |
 |--------|----------|----------|--------|
-| UnitMoved | 单位完成移动时 | entity_id, from_position, to_position, path, remaining_mp | Combat（更新战斗范围）、Terrain（触发地形效果）、Trigger（触发移动相关触发器） |
-| FlankingDetected | 夹击判定完成时 | target_id, flankers[2], angle | Combat（应用夹击加成）、UI（显示夹击指示器） |
-| BackstabDetected | 背刺判定完成时 | attacker_id, target_id, position_relation | Combat（应用背刺加成）、UI（显示背刺指示） |
-| CoverEvaluated | 掩体判定完成时 | target_id, cover_level（None/Half/ThreeQuarter） | Combat（应用掩体 AC 加成）、UI（显示掩体图标） |
-| PositionChanged | 单位位置变更时（每格移动时） | entity_id, old_pos, new_pos | Tactical（更新战场布局）、Targeting（更新射程范围） |
+| UnitMoved | 单位完成移动时 | entity_id, from_position, to_position, path, remaining_mp | Combat（更新战斗范围）、Terrain（触发地形效果）、Trigger（触发移动相关触发器）、日志（LogCode: TAC001） |
+| FlankingDetected | 夹击判定完成时 | target_id, flankers[2], angle | Combat（应用夹击加成）、UI（显示夹击指示器）、日志（LogCode: TAC002） |
+| BackstabDetected | 背刺判定完成时 | attacker_id, target_id, position_relation | Combat（应用背刺加成）、UI（显示背刺指示）、日志（LogCode: TAC003） |
+| CoverEvaluated | 掩体判定完成时 | target_id, cover_level（None/Half/ThreeQuarter） | Combat（应用掩体 AC 加成）、UI（显示掩体图标）、日志（LogCode: TAC004） |
+| PositionChanged | 单位位置变更时（每格移动时） | entity_id, old_pos, new_pos | Tactical（更新战场布局）、Targeting（更新射程范围）、日志（LogCode: TAC005） |
 
 ### 事件订阅关系图
 

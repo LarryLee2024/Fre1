@@ -4,7 +4,7 @@ title: Party（队伍）领域规则 v1.0
 status: stable
 owner: domain-designer
 created: 2026-06-16
-updated: 2026-06-16
+updated: 2026-06-19
 tags:
   - domain
   - party
@@ -93,26 +93,31 @@ Camp（营地模式——可自由调整队伍配置）
 ### 3.1 战斗人数上限
 - **条件**：任何战斗开始时
 - **不变量**：战斗中活跃成员不得超过 4 人
+- **违反后果类型**：🔴 规则失败
 - **违反后果**：超过上限导致战场拥挤/性能问题
 
 ### 3.2 队伍总人数上限
 - **条件**：新成员加入时
 - **不变量**：队伍总人数（活跃+预备）不得超过上限（默认 12 人）
+- **违反后果类型**：🔴 规则失败
 - **违反后果**：无限扩大队伍导致管理复杂
 
 ### 3.3 战斗换人限制
 - **条件**：战斗中换人
 - **不变量**：战斗中换人消耗 1 行动力，每回合最多 1 次
+- **违反后果类型**：🔴 规则失败
 - **违反后果**：无限制换人破坏战斗策略性
 
 ### 3.4 羁绊条件实时评估
 - **条件**：队伍成员变化时
 - **不变量**：羁绊激活状态必须在队伍成员变化时实时重新评估
+- **违反后果类型**：🔴 程序错误
 - **违反后果**：成员替换后旧羁绊还在生效/新羁绊未激活
 
 ### 3.5 羁绊唯一性
 - **条件**：羁绊定义时
 - **不变量**：同一角色不能同时激活多个相同类型的羁绊
+- **违反后果类型**：🔴 规则失败
 - **违反后果**：角色"左脚踏右船"，羁绊重叠导致加成混乱
 
 ---
@@ -139,7 +144,7 @@ Camp（营地模式——可自由调整队伍配置）
   5. 重新评估羁绊状态（不变量 3.4）
   6. 发布 MemberJoined / MemberRemoved 事件
 - **输出**：成员变更事件
-- **失败处理**：人数已达上限时加入失败
+- **失败处理**：人数已达上限时加入失败 → 这是**规则失败**（预期业务分支，队伍名额已满需先移除成员）
 
 ### 5.2 战斗换人
 
@@ -153,7 +158,7 @@ Camp（营地模式——可自由调整队伍配置）
   6. 重新评估羁绊状态
   7. 发布 MemberSwapped 事件
 - **输出**：MemberSwapped 事件
-- **失败处理**：行动力不足/本回合已换人时换人失败
+- **失败处理**：行动力不足/本回合已换人时换人失败 → 这是**规则失败**（预期业务分支，换人需消耗行动力且受每回合次数限制）
 
 ### 5.3 羁绊激活
 
@@ -165,7 +170,7 @@ Camp（营地模式——可自由调整队伍配置）
   4. 不再满足条件 → 解除羁绊 → 移除 Modifier
   5. 发布 BondActivated / BondDeactivated 事件
 - **输出**：羁绊状态变化事件
-- **失败处理**：羁绊条件检查失败不下激活
+- **失败处理**：羁绊条件检查失败不下激活 → 这是**规则失败**（预期业务分支，条件不满足时不激活羁绊）
 
 ---
 
@@ -173,11 +178,11 @@ Camp（营地模式——可自由调整队伍配置）
 
 | 事件名 | 触发时机 | 携带数据 | 订阅者 |
 |--------|----------|----------|--------|
-| MemberJoined | 新成员加入队伍时 | party_id, entity_id, role（active/reserve） | UI（更新队伍界面）、Party（重新评估羁绊） |
-| MemberRemoved | 成员离开队伍时 | party_id, entity_id, reason | Party（重新评估羁绊）、Quest（检查任务条件） |
-| MemberSwapped | 战斗中换人时 | party_id, outgoing_id, incoming_id | Combat（更新参与者）、Party（重新评估羁绊）、UI（换人动画） |
-| BondActivated | 羁绊激活时 | party_id, bond_id, members[ ], effect_description | Modifier（应用羁绊加成）、UI（显示羁绊激活通知） |
-| BondDeactivated | 羁绊解除时 | party_id, bond_id, reason（成员变化/等级不足） | Modifier（移除羁绊加成）、UI（显示羁绊解除通知） |
+| MemberJoined | 新成员加入队伍时 | party_id, entity_id, role（active/reserve） | UI（更新队伍界面）、Party（重新评估羁绊）、日志（LogCode: PRY001） |
+| MemberRemoved | 成员离开队伍时 | party_id, entity_id, reason | Party（重新评估羁绊）、Quest（检查任务条件）、日志（LogCode: PRY002） |
+| MemberSwapped | 战斗中换人时 | party_id, outgoing_id, incoming_id | Combat（更新参与者）、Party（重新评估羁绊）、UI（换人动画）、日志（LogCode: PRY003） |
+| BondActivated | 羁绊激活时 | party_id, bond_id, members[ ], effect_description | Modifier（应用羁绊加成）、UI（显示羁绊激活通知）、日志（LogCode: PRY004） |
+| BondDeactivated | 羁绊解除时 | party_id, bond_id, reason（成员变化/等级不足） | Modifier（移除羁绊加成）、UI（显示羁绊解除通知）、日志（LogCode: PRY005） |
 
 ### 事件订阅关系图
 
