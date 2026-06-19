@@ -8,11 +8,7 @@
 09-planning/
 ├── README.md                          # 本文件
 │
-├── bevy-0.19-migration-plan-overview.md     # Bevy 迁移总纲 v2.0（激进：5周+4-6 Agent并行）
-├── bevy-0.19-migration-compatible.md        # Phase A：核心系统并行重写（Observer/Delayed 全面接管）
-├── bevy-0.19-migration-features.md          # Phase B+C：架构现代化+收尾（BSN/Resource→Entity/Relationship）
-├── bevy-0.19-migration-future.md            # Post-Migration：迁移完成后的架构展望与维护规则
-├── bevy-0.19-migration-domain-checklist.md  # 各领域迁移检查清单（134 项，激进版）
+├── bevy-0.19-migration-v3-aggressive.md     # Bevy 迁移总纲 v3.0（激进：基于实际代码扫描的精准方案）
 │
 └── done/                              # 已完成的规划
     ├── consolidated-execution-plan.md # 全规划整合 + 骨架域填充路线图（所有 Batch 1-4 + Phase E/F ✅）
@@ -42,11 +38,14 @@
 
 | 文档 | 状态 | 说明 |
 |------|------|------|
-| `bevy-0.19-migration-plan-overview.md` | 🔴 激进 v2.0 | 全面采用 0.19 ECS 模型，3 阶段并行，4–6 Agent，5 周 |
-| `bevy-0.19-migration-compatible.md` | 🔴 激进 v2.0 | Phase A：Observer/Delayed 全面接管，~210 文件并行重写 |
-| `bevy-0.19-migration-features.md` | 🔴 激进 v2.0 | Phase B+C：BSN/Resource→Entity/Relationship/性能 |
-| `bevy-0.19-migration-future.md` | 🔴 激进 v2.0 | 迁移完成后的架构展望 + 5 条宪法级新规则 |
-| `bevy-0.19-migration-domain-checklist.md` | 🔴 激进 v2.0 | 134 项检查清单，4 阶段分区 |
+| `bevy-0.19-migration-v3-aggressive.md` | ✅ v3.0 激进 | 基于实际代码扫描的精准方案，2–3 周 + 文档全面对齐 |
+
+### 已归档（旧版迁移方案）
+
+旧 v1.0–v2.0 迁移方案（位于 `ignore_this_dir/`）已被 v3.0 取代：
+- 实际代码扫描发现大量迁移工作已在 `0.19.0-rc.3` 使用过程中完成
+- v3.0 基于当前实际状态，聚焦剩余工作 + 文档对齐
+- 旧方案不再维护
 
 ### 已完成归档
 
