@@ -1,7 +1,7 @@
 //! Cue 领域事件
 //!
 //! 定义表现信号的触发事件。
-//! 遵循 docs/02-domain/cue_domain.md §6 的事件定义。
+//! 遵循 docs/02-domain/capabilities/cue_domain.md §6 的事件定义。
 //!
 //! 事件订阅关系：
 //! - CueTriggered → Infra 全表现层（VFX/SFX/Animation/UI）

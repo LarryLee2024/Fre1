@@ -9,7 +9,7 @@
 //! - mechanism/:  ECS 组件（SpecContainer）+ 生命周期管理（SpecRegistry）
 //! - events/:     领域事件（SpecGranted, SpecRemoved, etc.）
 //!
-//! 详见 docs/02-domain/spec_domain.md
+//! 详见 docs/02-domain/capabilities/spec_domain.md
 
 pub mod events;
 pub(crate) mod foundation;

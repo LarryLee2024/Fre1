@@ -2,7 +2,7 @@
 //!
 //! 定义表现信号的类型、参数、触发时机以及领域错误。
 //!
-//! 详见 docs/02-domain/cue_domain.md §1、§3。
+//! 详见 docs/02-domain/capabilities/cue_domain.md §1、§3。
 //! 详见 docs/04-data/capabilities/cue_schema.md §3。
 
 use bevy::prelude::*;

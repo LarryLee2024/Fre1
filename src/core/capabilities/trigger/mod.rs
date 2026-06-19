@@ -8,7 +8,7 @@
 //! - mechanism/:  ECS 组件（TriggerContainer）+ 评估器（can_trigger）
 //! - events/:     领域事件（TriggerFired, TriggerRegistered, etc.）
 //!
-//! 详见 docs/02-domain/trigger_domain.md
+//! 详见 docs/02-domain/capabilities/trigger_domain.md
 
 pub mod events;
 // [ADR-045] pub(crate) — 基础类型，crate 内共享，外部不可访问

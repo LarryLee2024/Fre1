@@ -1,7 +1,7 @@
 //! Stacking 领域事件
 //!
 //! 定义堆叠生命周期各阶段的事件。
-//! 遵循 docs/02-domain/stacking_domain.md §6 的事件定义。
+//! 遵循 docs/02-domain/capabilities/stacking_domain.md §6 的事件定义。
 //!
 //! 事件订阅关系：
 //! - StackAdded / StackRemoved → Modifier（重新计算层数相关 Modifier）

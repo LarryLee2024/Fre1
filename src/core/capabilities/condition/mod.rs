@@ -8,7 +8,7 @@
 //! - mechanism/:  ECS 组件（ConditionContainer）+ 评估器（evaluate）
 //! - events/:     领域事件（ConditionPassed, ConditionFailed, ImmunityTriggered）
 //!
-//! 详见 docs/02-domain/condition_domain.md
+//! 详见 docs/02-domain/capabilities/condition_domain.md
 
 pub mod events;
 // [ADR-045] pub(crate) — 基础类型，crate 内共享，外部不可访问

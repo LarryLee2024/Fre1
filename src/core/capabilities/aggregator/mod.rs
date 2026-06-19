@@ -3,7 +3,7 @@
 //! 将 Attribute 的 BaseValue 与所有活跃 Modifier 按规则计算为 FinalValue。
 //! 四阶段管线: Add → Multiply → Override → Clamp
 //!
-//! 详见 docs/02-domain/aggregator_domain.md
+//! 详见 docs/02-domain/capabilities/aggregator_domain.md
 
 pub mod events;
 // [ADR-045] pub(crate) — 基础类型，crate 内共享，外部不可访问

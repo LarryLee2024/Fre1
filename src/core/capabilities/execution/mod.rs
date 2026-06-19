@@ -13,7 +13,7 @@
 //! - 负责：计算调度与分发、上下文准备、结果封装
 //! - 不负责：业务公式实现（归 Domains/rules/）、技能生命周期（Ability）、效果管理（Effect）
 //!
-//! 详见 docs/02-domain/execution_domain.md
+//! 详见 docs/02-domain/capabilities/execution_domain.md
 //! 详见 docs/04-data/capabilities/execution_schema.md
 
 pub mod events;

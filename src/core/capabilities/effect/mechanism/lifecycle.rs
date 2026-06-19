@@ -1,7 +1,7 @@
 //! Effect Lifecycle — 效果生命周期管理
 //!
 //! 提供效果从施加到移除的完整生命周期管理纯函数。
-//! 遵循 docs/02-domain/effect_domain.md §2、§5 的流程定义。
+//! 遵循 docs/02-domain/capabilities/effect_domain.md §2、§5 的流程定义。
 //!
 //! 核心函数：
 //! - apply_effect() — 效果施加：检查条件 → 检查重复 → 注册到容器
@@ -79,7 +79,7 @@ impl TickResult {
 
 /// 执行效果施加流程。
 ///
-/// 流程（docs/02-domain/effect_domain.md §5.1）：
+/// 流程（docs/02-domain/capabilities/effect_domain.md §5.1）：
 /// 1. 检查目标是否已有同源效果（不变量 3.5）
 /// 2. 检查免疫条件（不变量 3.2，占位）
 /// 3. 条件通过后，初始化效果并加入容器

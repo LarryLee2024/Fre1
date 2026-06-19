@@ -3,7 +3,7 @@
 //! 将 CueTriggered 事件按 CueType 路由到 Infra 表现层对应子系统。
 //! 当前为核心层纯逻辑，实际表现层处理在 Infra 实现。
 //!
-//! 详见 docs/02-domain/cue_domain.md §5。
+//! 详见 docs/02-domain/capabilities/cue_domain.md §5。
 
 use crate::core::capabilities::cue::foundation::{
     CueContainer, CueData, CueDef, CueError, CueTag, CueType,
@@ -74,7 +74,7 @@ impl DispatchResult {
 ///
 /// 从 CueContainer 中查找匹配 CueTag 的 CueDef，转为 CueData。
 ///
-/// # 流程 (per docs/02-domain/cue_domain.md §5.1)
+/// # 流程 (per docs/02-domain/capabilities/cue_domain.md §5.1)
 /// 1. 检查 Cue 是否被禁用（不变量 3.4）
 /// 2. 创建 CueData 实例
 /// 3. 校验 CueData（不变量 3.5: 不包含业务敏感信息）

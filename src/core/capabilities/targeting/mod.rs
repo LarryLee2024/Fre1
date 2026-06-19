@@ -12,7 +12,7 @@
 //! - 负责：合法目标的筛选规则、目标数据封装
 //! - 不负责：目标选择后的效果执行（Execution）、网格地形数据（Tactical）
 //!
-//! 详见 docs/02-domain/targeting_domain.md
+//! 详见 docs/02-domain/capabilities/targeting_domain.md
 
 pub mod events;
 // [ADR-045] pub(crate) — 基础类型，crate 内共享，外部不可访问

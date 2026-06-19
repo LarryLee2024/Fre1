@@ -4,7 +4,7 @@
 //!
 //! 事件订阅关系详见 docs/02-domain/domains/terrain_domain.md §6
 
-use crate::infra::registry::DefinitionId;
+use crate::shared::ids::DefinitionId;
 use bevy::prelude::*;
 
 use super::components::{SurfaceType, TilePos};

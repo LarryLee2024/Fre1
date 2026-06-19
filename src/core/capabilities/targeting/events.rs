@@ -3,7 +3,7 @@
 //! 定义目标选择生命周期中的核心事件。
 //! Bevy 0.18+ 使用 observer-based 事件系统，通过 commands.trigger() 触发。
 //!
-//! 详见 docs/02-domain/targeting_domain.md §6。
+//! 详见 docs/02-domain/capabilities/targeting_domain.md §6。
 
 use bevy::prelude::*;
 

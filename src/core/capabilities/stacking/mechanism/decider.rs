@@ -3,7 +3,7 @@
 //! 提供纯粹的堆叠决策函数，判断当同一效果的第二个实例到达时应如何处理。
 //! 此模块不依赖 ECS 或 Effect 类型，仅使用 Stacking 自有类型。
 //!
-//! 详见 docs/02-domain/stacking_domain.md §5。
+//! 详见 docs/02-domain/capabilities/stacking_domain.md §5。
 //! 详见 docs/04-data/capabilities/stacking_schema.md §3.5。
 
 use crate::core::capabilities::stacking::foundation::{
@@ -49,7 +49,7 @@ impl StackingSubject {
 
 /// 检查两个效果是否属于同一堆叠。
 ///
-/// 判定逻辑（per docs/02-domain/stacking_domain.md §1）：
+/// 判定逻辑（per docs/02-domain/capabilities/stacking_domain.md §1）：
 /// Step 1: 检查 EffectDefId —— 不同 → NoMatch
 /// Step 2: 检查 SourceEntity
 ///   - 同源 → FullMatch
@@ -63,7 +63,7 @@ pub fn match_identity(existing_def_id: &str, incoming_def_id: &str) -> bool {
 /// 当已有实例存在且 `match_identity` 返回 true 时调用。
 /// 根据 StackingConfig 的 stacking_type 返回对应的决策。
 ///
-/// # 流程 (per docs/02-domain/stacking_domain.md §5.1)
+/// # 流程 (per docs/02-domain/capabilities/stacking_domain.md §5.1)
 /// 1. 根据 StackingType 选择策略
 /// 2. None → Reject（忽略新实例）
 /// 3. Aggregate → Accumulate（层数叠加，受 max_stacks 限制）

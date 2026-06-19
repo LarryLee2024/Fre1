@@ -8,58 +8,8 @@
 use bevy::prelude::*;
 use std::collections::HashMap;
 
-// ============================================================================
-// DefinitionId
-// ============================================================================
-
-/// Definition 标识符。
-///
-/// 格式: `{prefix}_{digits}`（如 `abl_000001`, `eff_000042`）
-/// 由 IdAllocator 生成，也可从配置直接指定。
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Reflect)]
-#[reflect(Hash, PartialEq)]
-pub struct DefinitionId(pub String);
-
-impl DefinitionId {
-    /// 从字符串创建 DefinitionId。
-    pub fn new(id: impl Into<String>) -> Self {
-        Self(id.into())
-    }
-
-    /// 返回内部字符串引用。
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
-
-    /// 消耗自身，返回内部字符串。
-    pub fn into_inner(self) -> String {
-        self.0
-    }
-}
-
-impl std::fmt::Display for DefinitionId {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl From<String> for DefinitionId {
-    fn from(s: String) -> Self {
-        Self(s)
-    }
-}
-
-impl From<&str> for DefinitionId {
-    fn from(s: &str) -> Self {
-        Self(s.to_string())
-    }
-}
-
-impl AsRef<str> for DefinitionId {
-    fn as_ref(&self) -> &str {
-        &self.0
-    }
-}
+// Re-export from shared::ids where DefinitionId now lives (ADR-046 compliance)
+pub use crate::shared::ids::DefinitionId;
 
 // ============================================================================
 // RegistryEntry

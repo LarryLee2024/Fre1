@@ -6,7 +6,7 @@
 //! 评估是惰性的——标记 dirty 后，下次查询条件结果时会自动触发重新评估。
 //! 这是 ECS 层到条件领域规则的桥梁（领域规则 §5）。
 //!
-//! 详见 docs/02-domain/condition_domain.md §5。
+//! 详见 docs/02-domain/capabilities/condition_domain.md §5。
 
 use bevy::prelude::*;
 

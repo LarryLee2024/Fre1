@@ -6,7 +6,7 @@
 
 use std::collections::HashSet;
 
-use crate::infra::registry::DefinitionId;
+use crate::shared::ids::DefinitionId;
 use bevy::prelude::*;
 
 // ─── 枚举类型 ─────────────────────────────────────────────────────

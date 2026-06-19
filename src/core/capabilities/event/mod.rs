@@ -8,7 +8,7 @@
 //! - mechanism/:  EventBus 全局 Resource（订阅管理、事件分发）
 //! - events/:     监控调试事件（EventPublished, EventDelivered, etc.）
 //!
-//! 详见 docs/02-domain/event_domain.md
+//! 详见 docs/02-domain/capabilities/event_domain.md
 
 pub mod events;
 // [ADR-045] pub(crate) — 基础类型，crate 内共享，外部不可访问

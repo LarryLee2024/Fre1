@@ -2,7 +2,7 @@
 //!
 //! 定义技能生命周期状态、分类、激活类型以及领域错误。
 //!
-//! 详见 docs/02-domain/ability_domain.md §1、§2。
+//! 详见 docs/02-domain/capabilities/ability_domain.md §1、§2。
 //! 详见 docs/04-data/capabilities/ability_schema.md §3。
 
 use core::sync::atomic::{AtomicU64, Ordering};
@@ -11,7 +11,7 @@ static NEXT_INSTANCE_ID: AtomicU64 = AtomicU64::new(1);
 
 /// 技能运行时阶段（状态机），定义技能当前所处的生命周期位置。
 ///
-/// 状态转换图见 docs/02-domain/ability_domain.md §1。
+/// 状态转换图见 docs/02-domain/capabilities/ability_domain.md §1。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum AbilityState {
     /// 就绪——可激活

@@ -1,7 +1,7 @@
 //! Ability 生命周期管理
 //!
 //! 纯函数式实现技能激活、状态转换、取消打断、冷却管理的完整流程。
-//! 遵循 docs/02-domain/ability_domain.md §5（流程定义）中的约束。
+//! 遵循 docs/02-domain/capabilities/ability_domain.md §5（流程定义）中的约束。
 //!
 //! 核心流程：
 //! 1. try_activate() — 条件检查 → 消耗 → 创建实例
@@ -38,7 +38,7 @@ pub struct ActivationRequest {
 
 /// 尝试激活一个技能。
 ///
-/// 完整流程（docs/02-domain/ability_domain.md §5.1）：
+/// 完整流程（docs/02-domain/capabilities/ability_domain.md §5.1）：
 /// 1. 检查技能是否在冷却中（不变量 3.3）
 /// 2. 检查是否有同 Spec 的活跃实例（不变量 V5）
 /// 3. 创建 AbilityInstance
@@ -102,7 +102,7 @@ pub fn try_activate(
 
 /// 执行合法的状态转换。
 ///
-/// 校验规则（docs/02-domain/ability_domain.md §1，状态转换表）：
+/// 校验规则（docs/02-domain/capabilities/ability_domain.md §1，状态转换表）：
 /// - Ready → Casting/Active: 激活流程通过
 /// - Casting → Active: 施法完成
 /// - Casting → Ready: 施法被打断/取消
@@ -171,7 +171,7 @@ fn validate_transition(from: AbilityState, to: AbilityState) -> Result<(), Abili
 
 /// 取消/打断一个技能。
 ///
-/// 流程（docs/02-domain/ability_domain.md §5.3）：
+/// 流程（docs/02-domain/capabilities/ability_domain.md §5.3）：
 /// - Casting 阶段: 打点 → 回到 Ready（Cost 回退由外部负责）
 /// - Active 阶段: 标记为 Removed
 ///
@@ -215,7 +215,7 @@ pub fn cancel_ability(
 
 /// 标记技能执行完毕，进入冷却阶段。
 ///
-/// 流程（docs/02-domain/ability_domain.md §5.2）：
+/// 流程（docs/02-domain/capabilities/ability_domain.md §5.2）：
 /// 1. 校验状态为 Active
 /// 2. 移除实例（执行完毕）
 /// 3. 创建冷却条目
@@ -305,7 +305,7 @@ pub fn start_multiple_cooldowns(
 
 /// 应用封锁效果（沉默/眩晕/石化等）。
 ///
-/// 流程（docs/02-domain/ability_domain.md §1，Blocked 状态）：
+/// 流程（docs/02-domain/capabilities/ability_domain.md §1，Blocked 状态）：
 /// 1. 找到所有活跃实例
 /// 2. 记录每个实例的当前状态（用于恢复）
 /// 3. 将实例状态设为 Blocked

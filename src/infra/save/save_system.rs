@@ -1,12 +1,8 @@
 use bevy::prelude::*;
 
-use crate::core::domains::combat::{
-    ActionPoints, BattlePhase, CombatParticipant, Dead, TurnQueue,
-};
+use crate::core::domains::combat::{ActionPoints, BattlePhase, CombatParticipant, Dead, TurnQueue};
 use crate::core::domains::party::{ActiveBond, BondState, Party, PartyMember};
-use crate::core::domains::progression::{
-    ClassLevels, Experience, SubclassChoice, TalentTree,
-};
+use crate::core::domains::progression::{ClassLevels, Experience, SubclassChoice, TalentTree};
 
 use super::events::{SaveCompleted, SaveRequest};
 use super::resources::{EntityRemapper, SaveManager};
@@ -79,7 +75,6 @@ pub fn save_world_system(
         });
     }
 
-    let entries = turn_queue.as_ref().map(|t| t.entries());
     let phase_str = match battle_phase.as_ref().map(|bp| bp.get()) {
         Some(BattlePhase::Preparation) => "Preparation",
         Some(BattlePhase::Battle) => "Battle",
@@ -154,9 +149,7 @@ pub fn save_world_system(
         .unwrap_or_default();
 
     let mut prog_data = Vec::new();
-    for (entity, xp, class_levels, talent_tree, subclass_choice) in
-        progression_entities.iter()
-    {
+    for (entity, xp, class_levels, talent_tree, subclass_choice) in progression_entities.iter() {
         let pid = if let Some((existing_pid, _)) = entity_remapper
             .persistent_to_entity
             .iter()
@@ -196,16 +189,9 @@ pub fn save_world_system(
             },
             talent_tree: TalentTreeData {
                 unlocked_talents: talent_tree
-                    .map(|t| {
-                        t.unlocked_talents
-                            .iter()
-                            .map(|id| id.to_string())
-                            .collect()
-                    })
+                    .map(|t| t.unlocked_talents.iter().map(|id| id.to_string()).collect())
                     .unwrap_or_default(),
-                available_points: talent_tree
-                    .map(|t| t.available_points)
-                    .unwrap_or(0),
+                available_points: talent_tree.map(|t| t.available_points).unwrap_or(0),
             },
             subclass_choices,
         });
@@ -226,7 +212,15 @@ pub fn save_world_system(
             participants: combat_entities,
         },
         party: PartySaveData {
-            formation: party.as_ref().map_or_else(|| format!("{:?}", crate::core::domains::party::FormationType::default()), |p| format!("{:?}", p.formation)),
+            formation: party.as_ref().map_or_else(
+                || {
+                    format!(
+                        "{:?}",
+                        crate::core::domains::party::FormationType::default()
+                    )
+                },
+                |p| format!("{:?}", p.formation),
+            ),
             max_active: party.as_ref().map_or(4, |p| p.max_active),
             max_total: party.as_ref().map_or(12, |p| p.max_total),
             active_members,
@@ -244,8 +238,8 @@ pub fn save_world_system(
                 tracing::error!("[SaveSystem] failed to write save file: {}", e);
                 return;
             }
-            let entity_count = world_data.combat.participants.len()
-                + world_data.progression.entities.len();
+            let entity_count =
+                world_data.combat.participants.len() + world_data.progression.entities.len();
             tracing::info!(
                 "[SaveSystem] save completed: path={}, entities={}",
                 path,

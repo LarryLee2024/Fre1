@@ -3,7 +3,7 @@
 //! Event 领域自身的事件仅用于调试和监控（避免业务循环），
 //! 仅在 dev-tools 模式下生效。
 //!
-//! 详见 docs/02-domain/event_domain.md §6。
+//! 详见 docs/02-domain/capabilities/event_domain.md §6。
 
 use bevy::prelude::*;
 

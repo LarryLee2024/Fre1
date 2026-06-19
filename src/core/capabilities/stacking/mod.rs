@@ -4,7 +4,7 @@
 //! - 四种堆叠类型：None / Aggregate / RefreshDuration / Replace
 //! - 同源/异源识别 + 溢出处理
 //!
-//! 详见 docs/02-domain/stacking_domain.md
+//! 详见 docs/02-domain/capabilities/stacking_domain.md
 
 pub mod events;
 // [ADR-045] pub(crate) — 基础类型，crate 内共享，外部不可访问

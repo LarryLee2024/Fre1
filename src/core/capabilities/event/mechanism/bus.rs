@@ -3,7 +3,7 @@
 //! 负责接收事件并分发给所有匹配的订阅者。
 //! 提供双阶段发布-分发模型：先入队，后批量分发。
 //!
-//! 详见 docs/02-domain/event_domain.md §5.1-5.5。
+//! 详见 docs/02-domain/capabilities/event_domain.md §5.1-5.5。
 
 use std::collections::HashMap;
 

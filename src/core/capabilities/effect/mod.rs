@@ -13,7 +13,7 @@
 //! - 负责：效果生命周期管理（Applying→Active→Expiring→Removed）、周期 Tick、容器管理
 //! - 不负责：叠加规则（Stacking）、属性修改（Modifier + Aggregator）、执行计算（Execution）
 //!
-//! 详见 docs/02-domain/effect_domain.md
+//! 详见 docs/02-domain/capabilities/effect_domain.md
 //! 详见 docs/04-data/capabilities/effect_schema.md
 
 pub mod events;

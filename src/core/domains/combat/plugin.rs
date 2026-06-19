@@ -11,6 +11,7 @@
 use bevy::prelude::*;
 
 use super::components::{ActionPoints, BattlePhase, CombatParticipant, TurnQueue};
+use super::integration::event::EventBus;
 use super::pipeline::definition::build_turn_pipeline;
 use super::pipeline::driver::{
     CombatPipelineDriver, combat_pipeline_driver, on_unit_action_complete,
@@ -21,7 +22,6 @@ use super::systems::turn_systems::{
     on_enter_battle, on_enter_defeat, on_enter_victory, on_turn_end_tick_ability_cooldowns,
     on_turn_start_evaluate_triggers,
 };
-use crate::core::capabilities::event::mechanism::EventBus;
 use crate::core::capabilities::runtime::pipeline::registry::PipelineRegistry;
 
 pub struct CombatPlugin;

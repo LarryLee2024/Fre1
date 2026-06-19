@@ -2,14 +2,14 @@
 //!
 //! 定义效果生命周期阶段、持续时间类型、周期参数、效果分类以及领域错误。
 //!
-//! 详见 docs/02-domain/effect_domain.md §1、§3。
+//! 详见 docs/02-domain/capabilities/effect_domain.md §1、§3。
 //! 详见 docs/04-data/capabilities/effect_schema.md §3。
 
 use serde::{Deserialize, Serialize};
 
 /// 效果生命周期阶段（四阶段状态机）。
 ///
-/// 转换规则见 docs/02-domain/effect_domain.md §2。
+/// 转换规则见 docs/02-domain/capabilities/effect_domain.md §2。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum EffectStage {
     /// 施加阶段——检查条件，初始化

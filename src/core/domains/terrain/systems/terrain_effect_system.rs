@@ -10,7 +10,7 @@ use bevy::prelude::*;
 use crate::core::domains::terrain::components::{SurfaceType, TileProperties};
 use crate::core::domains::terrain::events::{TerrainEffectApplied, TileEntered};
 use crate::core::domains::terrain::resources::TileEntityMap;
-use crate::infra::registry::DefinitionId;
+use crate::shared::ids::DefinitionId;
 
 /// 响应 TileEntered 事件，检查格子表面并施加地形效果。
 ///

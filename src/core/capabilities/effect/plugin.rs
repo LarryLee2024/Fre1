@@ -15,7 +15,7 @@ impl Plugin for EffectPlugin {
         //   3. app.add_observer(on_effect_removed)    — 从容器中移除 EffectInstance
         //   4. app.add_observer(on_effect_ticked)     — 处理 Tick 变更
         //
-        // 详见 docs/02-domain/effect_domain.md
+        // 详见 docs/02-domain/capabilities/effect_domain.md
         // 详见 docs/04-data/capabilities/effect_schema.md
     }
 }

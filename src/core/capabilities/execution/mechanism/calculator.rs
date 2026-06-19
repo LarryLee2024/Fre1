@@ -1,7 +1,7 @@
 //! Execution Calculator — 执行计算调度器
 //!
 //! 提供执行计算的核心调度逻辑，按 ExecutionType 分发到对应计算路由。
-//! 遵循 docs/02-domain/execution_domain.md §5 的流程定义。
+//! 遵循 docs/02-domain/capabilities/execution_domain.md §5 的流程定义。
 //!
 //! 核心函数：
 //! - execute() — 主入口：按 ExecutionType 分发计算
@@ -20,7 +20,7 @@ use crate::core::capabilities::execution::foundation::{
 
 /// 执行完整计算流程。
 ///
-/// 流程（docs/02-domain/execution_domain.md §5.1）：
+/// 流程（docs/02-domain/capabilities/execution_domain.md §5.1）：
 /// 1. 按 ExecutionType 分发到对应计算路由
 /// 2. 公式执行计算，返回结果
 /// 3. 验证结果数值范围（不变量 3.4）
@@ -54,7 +54,7 @@ pub fn execute(ctx: &ExecutionContext) -> Result<ExecutionResult, ExecutionError
 /// 当前为占位实现——实际公式由 Domains/rules/damage_formula.rs 提供。
 /// 此函数仅做参数准备和结果封装。
 ///
-/// 计算过程（docs/02-domain/execution_domain.md §5.2）：
+/// 计算过程（docs/02-domain/capabilities/execution_domain.md §5.2）：
 /// 1. 读取来源攻击属性
 /// 2. 计算基础骰面值（占位：取平均值）
 /// 3. 计算固定加值
@@ -137,7 +137,7 @@ fn execute_damage(
 ///
 /// 当前为占位实现——实际公式由 Domains/rules/heal_formula.rs 提供。
 ///
-/// 计算过程（docs/02-domain/execution_domain.md §5.3）：
+/// 计算过程（docs/02-domain/capabilities/execution_domain.md §5.3）：
 /// 1. 读取治疗属性修正
 /// 2. 计算基础治疗量
 /// 3. 汇总最终治疗值

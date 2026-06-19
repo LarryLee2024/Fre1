@@ -2,7 +2,7 @@
 //!
 //! 定义执行计算类型、直接操作类型以及领域错误。
 //!
-//! 详见 docs/02-domain/execution_domain.md §1、§3。
+//! 详见 docs/02-domain/capabilities/execution_domain.md §1、§3。
 //! 详见 docs/04-data/capabilities/execution_schema.md §3。
 
 use serde::{Deserialize, Serialize};

@@ -1,6 +1,6 @@
 //! attribute — 属性能力领域
 //!
-//! 详见 docs/02-domain/attribute_domain.md
+//! 详见 docs/02-domain/capabilities/attribute_domain.md
 
 pub mod events;
 // [ADR-045] pub(crate) — 基础类型，crate 内共享，外部不可访问

@@ -3,7 +3,7 @@
 //! 纯函数条件评估，无副作用（领域规则 §3.1 不变量）。
 //! 递归遍历 Condition 树，对叶子节点分发到对应检查逻辑。
 //!
-//! 详见 docs/02-domain/condition_domain.md §5.1-5.3。
+//! 详见 docs/02-domain/capabilities/condition_domain.md §5.1-5.3。
 
 use crate::core::capabilities::condition::foundation::{
     Condition, ConditionContext, ConditionResult, TagRequirementMode,

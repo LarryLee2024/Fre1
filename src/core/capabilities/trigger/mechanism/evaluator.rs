@@ -3,7 +3,7 @@
 //! 纯函数触发器评估与触发逻辑（无副作用）。
 //! 遵循领域规则 §5.2：检查频率限制 → 检查触发条件 → 创建 TriggerContext。
 //!
-//! 详见 docs/02-domain/trigger_domain.md §5.2-5.4。
+//! 详见 docs/02-domain/capabilities/trigger_domain.md §5.2-5.4。
 
 use crate::core::capabilities::trigger::foundation::{
     TriggerEntry, TriggerFrequency, TriggerParams, TriggerType,

@@ -12,7 +12,7 @@
 //! - 负责：技能的生命周期管理（激活→执行→完成→冷却）
 //! - 不负责：技能定义模板（Spec）、执行计算（Execution）、目标选择（Targeting）
 //!
-//! 详见 docs/02-domain/ability_domain.md
+//! 详见 docs/02-domain/capabilities/ability_domain.md
 
 pub mod events;
 // [ADR-045] pub(crate) — 基础类型，crate 内共享，外部不可访问

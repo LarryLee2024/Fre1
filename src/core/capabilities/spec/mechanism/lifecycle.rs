@@ -3,7 +3,7 @@
 //! SpecRegistry Resource 管理已注册的 Def 元数据，并提供 Def→Spec 的工厂转换
 //! 以及 Spec 生命周期操作的纯函数（授予、移除、等级变更）。
 //!
-//! 详见 docs/02-domain/spec_domain.md §5（流程定义）。
+//! 详见 docs/02-domain/capabilities/spec_domain.md §5（流程定义）。
 
 use std::collections::HashMap;
 

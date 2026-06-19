@@ -1,7 +1,7 @@
 //! Targeting Selector — 目标选择与校验纯函数
 //!
 //! 提供目标筛选、合法性校验、优先级排序和最终选择的核心逻辑。
-//! 遵循 docs/02-domain/targeting_domain.md §5 的流程定义。
+//! 遵循 docs/02-domain/capabilities/targeting_domain.md §5 的流程定义。
 //!
 //! 核心函数：
 //! - select_targets() — 主入口：筛选 → 校验 → 排序 → 截断
@@ -95,7 +95,7 @@ impl CandidateTarget {
 
 /// 执行完整的目标选择流程。
 ///
-/// 流程（docs/02-domain/targeting_domain.md §5.1）：
+/// 流程（docs/02-domain/capabilities/targeting_domain.md §5.1）：
 /// 1. 根据 TargetType 筛选候选目标池
 /// 2. 根据 TargetShape 计算影响范围
 /// 3. 对候选目标执行合法性校验

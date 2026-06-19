@@ -2,7 +2,7 @@
 //!
 //! 定义目标类别、范围形状、优先级规则以及领域错误。
 //!
-//! 详见 docs/02-domain/targeting_domain.md §1、§2。
+//! 详见 docs/02-domain/capabilities/targeting_domain.md §1、§2。
 //! 详见 docs/04-data/capabilities/targeting_schema.md §3。
 
 use serde::{Deserialize, Serialize};

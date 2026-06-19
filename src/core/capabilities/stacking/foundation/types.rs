@@ -2,7 +2,7 @@
 //!
 //! 定义堆叠策略类型、堆叠标识判定、堆叠决策结果以及领域错误。
 //!
-//! 详见 docs/02-domain/stacking_domain.md §1、§3。
+//! 详见 docs/02-domain/capabilities/stacking_domain.md §1、§3。
 //! 详见 docs/04-data/capabilities/stacking_schema.md §3。
 
 use serde::{Deserialize, Serialize};
