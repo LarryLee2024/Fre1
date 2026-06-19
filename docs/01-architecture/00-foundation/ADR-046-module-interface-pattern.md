@@ -125,4 +125,4 @@ domain/
 ## 参考
 
 - `docs/其他/2.md` — 模块接口模式分析
-- `docs/01-architecture/00-foundation/ADR-003-module-visibility-strategy.md` — 可见性策略（ADR-045）
+- `docs/01-architecture/00-foundation/ADR-045-module-visibility-strategy.md` — 可见性策略（ADR-045）
