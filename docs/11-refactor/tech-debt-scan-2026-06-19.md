@@ -22,7 +22,7 @@ scope: ErrorContext 接入审查 + 架构依赖扫描
 | 架构漂移 | High | 1 | Drift-ADR-002 | ✅ Resolved (2026-06-20) |
 | 抽象泄漏 | Critical | 2 | Leak-003, Leak-004 | ✅ Resolved |
 | 内容债务 | Medium | 1 | Content-002 | ✅ Resolved (2026-06-20) |
-| 测试债务 | Medium, Low | 2 | TestDebt-002, TestDebt-003 | TestDebt-002 ✅ Resolved, TestDebt-003 ⏳ Open |
+| 测试债务 | Medium, Low | 2 | TestDebt-002, TestDebt-003 | ✅ Resolved (2026-06-20) |
 | AI 可维护性 | None | 0 | — | ✅ |
 | 超大文件 | None | 0 | — | ✅ |
 
@@ -147,14 +147,27 @@ scope: ErrorContext 接入审查 + 架构依赖扫描
 
 ## Debt-024: [TestDebt-003] movement facade 测试位于 Domain 级 tests/unit/ 而非 integration/movement/tests/
 
-- **状态**: Open
+- **状态**: ✅ Resolved (2026-06-20)
 - **发现日期**: 2026-06-20
+- **修复日期**: 2026-06-20
 - **负责人**: @test-guardian
 - **严重程度**: Low
-- **位置**: `src/core/domains/tactical/tests/unit/facade_test.rs` (当前位置) → 应迁至 `src/core/domains/tactical/integration/movement/tests/facade_test.rs`
-- **问题描述**: tactical 域的 movement facade 测试 (`facade_test.rs`, `movement_cost_test.rs`, `movement_points_test.rs`) 位于 `tactical/tests/unit/` 下，而非按照 ADR-046 标准的 `integration/movement/tests/facade_test.rs`。其他 integration facade（如 combat 域的 trigger facade）已将测试放在 `integration/{name}/tests/` 下，存在结构不一致。
+- **位置**: `src/core/domains/tactical/tests/unit/facade_test.rs` → `src/core/domains/tactical/integration/movement/tests/facade_test.rs`
+- **问题描述**: tactical 域的 movement facade 测试 (`facade_test.rs`, `movement_cost_test.rs`, `movement_points_test.rs`) 位于 `tactical/tests/unit/` 下，而非按照 ADR-046 标准的 `integration/movement/tests/`。其他 integration facade（如 combat 域的 trigger facade）已将测试放在 `integration/{name}/tests/` 下，存在结构不一致。
 - **影响**: 测试不跟随 facade 走，迁移/重构时需要额外搜索；新开发者容易混淆测试组织方式。
-- **建议修复**: 将 `tactical/tests/unit/facade_test.rs` 等 3 个相关测试文件移至 `tactical/integration/movement/tests/` 下，调整 mod.rs 导入路径，确保 cargo test 无回归。
+
+### 修复内容
+
+| 文件 | 旧位置 | 新位置 |
+|------|--------|--------|
+| facade_test.rs | `tactical/tests/unit/` | `tactical/integration/movement/tests/` |
+| movement_cost_test.rs | `tactical/tests/unit/` | `tactical/integration/movement/tests/` |
+| movement_points_test.rs | `tactical/tests/unit/` | `tactical/integration/movement/tests/` |
+
+- `tactical/integration/movement/mod.rs` 新增 `#[cfg(test)] mod tests;`
+- `tactical/integration/movement/tests/mod.rs` 新建（标准模式）
+- `tactical/tests/unit/mod.rs` 移除已迁移的 3 个 mod 声明
+- **验证**: `cargo nextest run` — 1513/1513 passed, 8 skipped
 
 ---
 
@@ -194,7 +207,7 @@ scope: ErrorContext 接入审查 + 架构依赖扫描
 | **Critical** | 0 | — (均已修复) |
 | **High** | 0 | — (均已修复) |
 | **Medium** | 0 | — (均已修复) |
-| Low | 1 | TestDebt-003 |
+| Low | 0 | — (均已修复) |
 | **总计** | **3** | |
 
 ### Content-002 修复总结
@@ -209,5 +222,4 @@ scope: ErrorContext 接入审查 + 架构依赖扫描
 
 ### 剩余债务修复优先级建议
 
-1. **P3**: TestDebt-003 — movement facade 测试目录迁移。纯文件移动 + 路径调整，可在其他任务中顺带完成。
-2. **P3**: spell rules/formulas 常量重构 — `proficiency_bonus_for_level` 去重 + `calc_concentration_dc` 参数化。
+1. **P3**: spell rules/formulas 常量重构 — `proficiency_bonus_for_level` 去重 + `calc_concentration_dc` 参数化。纯函数签名变更，风险低。

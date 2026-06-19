@@ -7,3 +7,6 @@ pub mod types;
 pub use facade::*;
 pub use system_param::MovementCapabilityParam;
 pub use types::*;
+
+#[cfg(test)]
+mod tests;
