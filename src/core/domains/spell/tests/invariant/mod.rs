@@ -88,12 +88,16 @@ fn upcast_not_allowed_rejected() {
     );
 }
 
-/// 不变量 3.5：专注打断 DC = max(10, damage/2)。
+/// 不变量 3.5：专注打断 DC = max(base_dc, damage/2)。
 #[test]
 fn concentration_dc_formula() {
-    assert_eq!(calc_concentration_dc(4), 10, "low damage → min DC 10");
-    assert_eq!(calc_concentration_dc(30), 15, "high damage → DC = damage/2");
-    assert_eq!(calc_concentration_dc(0), 10, "zero damage → min DC 10");
+    assert_eq!(calc_concentration_dc(4, 10), 10, "low damage → min DC 10");
+    assert_eq!(
+        calc_concentration_dc(30, 10),
+        15,
+        "high damage → DC = damage/2"
+    );
+    assert_eq!(calc_concentration_dc(0, 10), 10, "zero damage → min DC 10");
 }
 
 /// 不变量 3.5：专注打断检定 — 高 roll 通过，低 roll 失败。
@@ -104,11 +108,11 @@ fn concentration_save_consistent() {
         10,
         2,
     );
-    let (saved, dc) = concentration_save(&conc, 10, 15);
+    let (saved, dc) = concentration_save(&conc, 10, 15, 10);
     assert!(saved);
     assert_eq!(dc, 10);
 
-    let (failed, _) = concentration_save(&conc, 30, 3);
+    let (failed, _) = concentration_save(&conc, 30, 3, 10);
     assert!(!failed);
 }
 

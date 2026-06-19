@@ -24,17 +24,19 @@ pub fn calc_save_dc(proficiency_bonus: i32, casting_modifier: i32, other_bonuses
 /// 计算专注打断检定 DC。
 ///
 /// # 公式
-/// `DC = max(10, floor(伤害 / 2))`
+/// `DC = max(base_dc, floor(伤害 / 2))`
 ///
-/// D&D 5e 规则：每次受到伤害均需进行体质豁免，DC = max(10, 所受伤害的一半)。
+/// D&D 5e 规则：每次受到伤害均需进行体质豁免，DC = max(base_dc, 所受伤害的一半)。
+/// `base_dc` 默认值为 10，可通过 `SpellConfig::concentration_base_dc` 配置覆盖。
 ///
 /// # 参数
 /// - `damage`: 受到的伤害值
+/// - `base_dc`: 专注打断的基础 DC（通常从 SpellConfig 读取）
 ///
 /// # 返回值
 /// 专注打断 DC。
-pub fn calc_concentration_dc(damage: u32) -> u32 {
-    (10u32).max(damage / 2)
+pub fn calc_concentration_dc(damage: u32, base_dc: u32) -> u32 {
+    base_dc.max(damage / 2)
 }
 
 /// 计算升环施法时的额外效果数值。
@@ -60,22 +62,14 @@ pub fn calc_upcast_bonus(base_level: u8, upcast_level: u8, per_level_bonus: i32)
 
 // ─── 熟练加值表 ──────────────────────────────────────────────────
 
-/// 根据角色等级获取熟练加值（D&D 5e 标准表）。
+/// 根据角色等级获取熟练加值。
 ///
-/// | 等级范围 | 熟练加值 |
-/// |----------|---------|
-/// | 1-4      | +2      |
-/// | 5-8      | +3      |
-/// | 9-12     | +4      |
-/// | 13-16    | +5      |
-/// | 17-20    | +6      |
+/// 委托给 `LevelProgressionTable::proficiency_bonus` 查表（1-20 级），
+/// 越界时返回默认值 +2，消除与 progression 域的硬编码重复。
 pub fn proficiency_bonus_for_level(level: u8) -> i32 {
     match level {
-        1..=4 => 2,
-        5..=8 => 3,
-        9..=12 => 4,
-        13..=16 => 5,
-        17..=20 => 6,
-        _ => 2, // 默认 1 级
+        1..=20 => crate::core::domains::progression::LevelProgressionTable::default()
+            .proficiency_bonus(level as u32),
+        _ => 2,
     }
 }

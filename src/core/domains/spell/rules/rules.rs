@@ -137,12 +137,13 @@ pub fn check_upcast(spell_def: &SpellDef, target_level: SpellLevel) -> Result<()
 
 /// 专注打断检定。
 ///
-/// 不变量 3.5：专注打断检定 DC = max(10, 所受伤害的一半)。
+/// 不变量 3.5：专注打断检定 DC = max(base_dc, 所受伤害的一半)。
 ///
 /// # 参数
 /// - `concentration`: 当前专注状态
 /// - `damage`: 受到的伤害值
 /// - `con_save_roll`: 体质豁免检定的骰子结果（d20 + 体质调整值）
+/// - `base_dc`: 专注打断基础 DC（通常从 SpellConfig::concentration_base_dc 读取）
 ///
 /// # 返回值
 /// `(bool, u32)` — (是否维持专注, 本次检定的 DC)
@@ -150,8 +151,9 @@ pub fn concentration_save(
     _concentration: &Concentration,
     damage: u32,
     con_save_roll: i32,
+    base_dc: u32,
 ) -> (bool, u32) {
-    let dc = calc_concentration_dc(damage);
+    let dc = calc_concentration_dc(damage, base_dc);
     let saved = con_save_roll >= dc as i32;
     (saved, dc)
 }

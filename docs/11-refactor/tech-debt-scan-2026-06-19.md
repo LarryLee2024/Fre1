@@ -220,6 +220,35 @@ scope: ErrorContext 接入审查 + 架构依赖扫描
 | spell/rules/formulas.rs 冗余 | ⏳ 移至新任务 | 纯函数重构，非简单 Content 提取 |
 | **最终验证** | ✅ 1485/1485 passed | `cargo nextest run` 通过 |
 
-### 剩余债务修复优先级建议
+## Debt-025: [Refactor] spell rules/formulas 冗余与硬编码
 
-1. **P3**: spell rules/formulas 常量重构 — `proficiency_bonus_for_level` 去重 + `calc_concentration_dc` 参数化。纯函数签名变更，风险低。
+- **状态**: ✅ Resolved (2026-06-20)
+- **发现日期**: 2026-06-19
+- **修复日期**: 2026-06-20
+- **负责人**: @feature-developer
+- **严重程度**: Low
+- **问题描述**: `spell/rules/formulas.rs` 存在两处问题：
+  1. `proficiency_bonus_for_level()` 硬编码 D&D 5e 熟练加值表，与 `LevelProgressionTable::proficiency_bonus()` 完全重复
+  2. `calc_concentration_dc()` 硬编码 `10u32`，而 `SpellConfig::concentration_base_dc` 已 RON 配置化
+
+### 修复内容
+
+| 函数 | 之前 | 之后 |
+|------|------|------|
+| `proficiency_bonus_for_level` | 硬编码 match (1-20 级 + 越界默认 2) | 1-20 级委托 `LevelProgressionTable::proficiency_bonus()` 查表，越界保留默认 2 |
+| `calc_concentration_dc` | `fn(damage) -> u32` 硬编码 10 | `fn(damage, base_dc) -> u32` 参数化 |
+| `concentration_save` | `fn(..., damage, roll)` | `fn(..., damage, roll, base_dc)` 透传 |
+
+- **验证**: `cargo nextest run` — 1513/1513 passed, 8 skipped
+
+---
+
+## 📋 当前债务汇总（2026-06-20 更新）
+
+| 严重程度 | 数量 | 编号 | 状态 |
+|---------|------|------|------|
+| **Critical** | 0 | — | ✅ |
+| **High** | 0 | — | ✅ |
+| **Medium** | 0 | — | ✅ |
+| Low | 0 | — | ✅ |
+| **总计** | **0** | — | **全部修复** |

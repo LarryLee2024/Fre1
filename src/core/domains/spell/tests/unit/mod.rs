@@ -228,7 +228,7 @@ mod concentration_save_tests {
     #[test]
     fn save_succeeds_with_high_roll() {
         let conc = make_concentration();
-        let (saved, dc) = concentration_save(&conc, 10, 15);
+        let (saved, dc) = concentration_save(&conc, 10, 15, 10);
         assert!(saved);
         assert_eq!(dc, 10);
     }
@@ -236,7 +236,7 @@ mod concentration_save_tests {
     #[test]
     fn save_fails_with_low_roll() {
         let conc = make_concentration();
-        let (saved, dc) = concentration_save(&conc, 30, 5);
+        let (saved, dc) = concentration_save(&conc, 30, 5, 10);
         assert!(!saved);
         assert_eq!(dc, 15);
     }
@@ -244,7 +244,7 @@ mod concentration_save_tests {
     #[test]
     fn dc_has_minimum_of_10() {
         let conc = make_concentration();
-        let (_saved, dc) = concentration_save(&conc, 2, 10);
+        let (_saved, dc) = concentration_save(&conc, 2, 10, 10);
         assert_eq!(dc, 10);
     }
 }
@@ -310,17 +310,17 @@ mod calc_concentration_dc_tests {
 
     #[test]
     fn low_damage_uses_minimum() {
-        assert_eq!(calc_concentration_dc(4), 10);
+        assert_eq!(calc_concentration_dc(4, 10), 10);
     }
 
     #[test]
     fn high_damage_increases_dc() {
-        assert_eq!(calc_concentration_dc(30), 15);
+        assert_eq!(calc_concentration_dc(30, 10), 15);
     }
 
     #[test]
     fn zero_damage_uses_minimum() {
-        assert_eq!(calc_concentration_dc(0), 10);
+        assert_eq!(calc_concentration_dc(0, 10), 10);
     }
 }
 
