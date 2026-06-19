@@ -27,3 +27,5 @@ Cargo.locks
 .ruff_cache/
 .codegraph/
 repomix-output.xml
+
+**/*.fresave

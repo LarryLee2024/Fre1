@@ -57,7 +57,6 @@
 - 跨角色协作时，必须引用上游输出作为输入依据，确保设计决策的可追溯性。
 - `@feature-developer` 在代码中写 `// TODO: `，要严格遵守 TODO规范
 - 必须用 `cargo nextest run` 替代 `cargo test` 做测试
-- 任何人行动结束时，都要在根目录 运行 `repomix` 输出 `repomix-output.xml`
 
 <!-- ENGINEERING_PRINCIPLES_START -->
 ## Engineering Principles
@@ -108,9 +107,10 @@ CodeGraph is the source of truth for code relationships.
 <!-- REPOMIX_START -->
 ## Repomix
 If a `repomix-output.xml` exists, read it before exploring the repository.
+任何人在使用前，都必须在根目录 运行 `repomix` 输出最新的 `repomix-output.xml`
 Use it for:
 * Architecture review
-* Directory structure
+* Directory structureßß
 * Module boundaries
 * Plugin discovery
 * Project onboarding
