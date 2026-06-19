@@ -22,7 +22,7 @@ scope: ErrorContext 接入审查 + 架构依赖扫描
 | 架构漂移 | High | 1 | Drift-ADR-002 | ✅ Resolved (2026-06-20) |
 | 抽象泄漏 | Critical | 2 | Leak-003, Leak-004 | ✅ Resolved |
 | 内容债务 | Medium | 1 | Content-002 | ✅ Resolved (2026-06-20) |
-| 测试债务 | Medium, Low | 2 | TestDebt-002, TestDebt-003 | ⏳ Open |
+| 测试债务 | Medium, Low | 2 | TestDebt-002, TestDebt-003 | TestDebt-002 ✅ Resolved, TestDebt-003 ⏳ Open |
 | AI 可维护性 | None | 0 | — | ✅ |
 | 超大文件 | None | 0 | — | ✅ |
 
@@ -124,12 +124,24 @@ scope: ErrorContext 接入审查 + 架构依赖扫描
 
 ## Debt-023: [TestDebt-002] combat integration/ facade 测试不完整
 
-- **状态**: Open
+- **状态**: ✅ Resolved (2026-06-20)
 - **发现日期**: 2026-06-19
+- **修复日期**: 2026-06-20
 - **负责人**: @test-guardian
 - **严重程度**: Medium
-- **问题描述**: combat 的 `integration/` 下有 8 个 facade（ability, aggregator, condition, effect, event, execution, gameplay_context, targeting, trigger），但部分 facade 测试不完整。`effect` facade 的测试在 `tests/mod.rs` 而非独立的 `tests/facade_test.rs`，不一致。
-- **建议修复**: 统一 facade 测试模式，确保每个 facade 有独立的 `tests/facade_test.rs`，并覆盖主线流程。
+- **问题描述**: combat 的 `integration/` 下有 8 个 facade（ability, aggregator, condition, effect, event, execution, gameplay_context, targeting, trigger），但部分 facade 测试不完整。`effect` facade 的测试在 `tests/mod.rs` 而非独立的 `tests/facade_test.rs`，不一致。ability/trigger/event 的 facade_test.rs 仅为桩测试。
+
+### 修复内容
+
+| Facade | 之前 | 之后 | 变更 |
+|--------|------|------|------|
+| effect | 12 tests 在 mod.rs，无 facade_test.rs | 14 tests 在 facade_test.rs，mod.rs 仅声明 | 结构迁移 |
+| ability | 1 编译测试 | 9 tests (容器/激活/冷却全流程) | +8 |
+| trigger | 2 枚举转换测试 | 10 tests (创建/评估/条件/批量) | +8 |
+| event | 2 枚举转换测试 | 12 tests (发布/优先级/枚举映射) | +10 |
+| **合计** | — | **45 tests** (9 facade) | **+26** |
+
+- **验证**: `cargo nextest run` — 1513/1513 passed, 8 skipped
 
 ---
 
@@ -181,7 +193,7 @@ scope: ErrorContext 接入审查 + 架构依赖扫描
 |---------|------|------|
 | **Critical** | 0 | — (均已修复) |
 | **High** | 0 | — (均已修复) |
-| **Medium** | 1 | TestDebt-002 |
+| **Medium** | 0 | — (均已修复) |
 | Low | 1 | TestDebt-003 |
 | **总计** | **3** | |
 
@@ -197,6 +209,5 @@ scope: ErrorContext 接入审查 + 架构依赖扫描
 
 ### 剩余债务修复优先级建议
 
-1. **P2**: TestDebt-002 — combat integration/ facade 测试覆盖。机械性测试补写工作，风险低，可并行。
-2. **P3**: TestDebt-003 — movement facade 测试目录迁移。纯文件移动 + 路径调整，可在其他任务中顺带完成。
-3. **P3**: spell rules/formulas 常量重构 — `proficiency_bonus_for_level` 去重 + `calc_concentration_dc` 参数化。
+1. **P3**: TestDebt-003 — movement facade 测试目录迁移。纯文件移动 + 路径调整，可在其他任务中顺带完成。
+2. **P3**: spell rules/formulas 常量重构 — `proficiency_bonus_for_level` 去重 + `calc_concentration_dc` 参数化。
