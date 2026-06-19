@@ -73,7 +73,9 @@ combat/
 |------|---------|
 | 架构决策、模块边界划分 | `docs/01-architecture/README.md` + 相关 ADR |
 | 领域建模、业务规则 | `docs/02-domain/README.md` + 对应领域规则文件 |
+| Def Schema、配置定义 | `docs/03-content/README.md` + 对应 Def 定义 |
 | 数据 Schema、Save/Replay 兼容 | `docs/04-data/README.md` + 对应 Schema 文件 |
+| UI/表现层架构 | `docs/06-ui/README.md` + ADR-055 |
 | 写测试 | `docs/05-testing/test-spec.md`（四层测试规则） |
 | Bug 修复 | 先写失败测试 → 修复 → 验证 |
 | 不确定架构约束 | `.trae/rules/架构规则.md` + `.trae/rules/AI协作规则.md` |
@@ -93,14 +95,21 @@ CodeGraph → Repomix → Context7 → Git → Filesystem
 
 ## Agent Delegation
 
-这个项目有 7 个专用 Agent（详见 AGENTS.md），遇到下面情况优先派 agent 而非自己干：
+这个项目有 9 个专用 Agent（3 级分治，详见 AGENTS.md），遇到下面情况优先派 agent 而非自己干：
 
-- **架构设计** → `@chief-architect`（输出 ADR，不写代码）
+**Tier S — 架构委员会（战略层）**
+- **架构设计/系统集成** → `@architect`（输出 ADR，协调各架构师输入）
 - **领域建模** → `@domain-designer`（输出领域规则文档，不讨论实现）
 - **数据 Schema** → `@data-architect`（确保 Replay/Save 兼容）
-- **功能实现** → `@srpg-feature-developer`（按架构编码，不写测试）
+- **内容架构（Def/Registry/Validation）** → `@content-architect`（确保配置可加载可校验）
+- **UI/表现层架构** → `@presentation-architect`（设计 Projection/ViewModel/Widget）
+
+**Tier A — 工程委员会（治理层）**
 - **代码审查** → `@code-reviewer`（只审查不修改）
 - **测试编写/审查** → `@test-guardian`（领域规则优先）
+
+**Tier B — 执行层**
+- **功能实现** → `@feature-developer`（按架构编码，不写测试）
 - **技术债扫描** → `@refactor-guardian`（优先删代码而非加封装）
 
 简单任务自己干，复杂或跨领域的任务派 agent。
@@ -118,10 +127,13 @@ CodeGraph → Repomix → Context7 → Git → Filesystem
 | File | Why |
 |------|-----|
 | `docs/00-governance/ai-constitution-complete.md` | 总宪法 21 编，最高约束力 |
-| `docs/01-architecture/README.md` | 架构总纲 + 18 ADR 索引 |
+| `docs/01-architecture/README.md` | 架构总纲 + ADR 索引 |
 | `docs/02-domain/README.md` | Capabilities 15 + Domains 15 领域规则索引 |
+| `docs/03-content/README.md` | 内容架构索引（Def Schema / Registry / Validation） |
+| `docs/04-data/README.md` | 数据架构规范 |
 | `docs/05-testing/test-spec.md` | 测试宪法 v4.0 |
-| `AGENTS.md` | Agent 角色定义 + 协作流程 |
+| `docs/06-ui/README.md` | UI/表现层架构索引（Projection / ViewModel / Widget） |
+| `AGENTS.md` | 9 Agent 角色定义 + 三级分治协作流程 |
 | `.trae/rules/` | 15 个编码规则（架构/ECS/错误/日志/审查等） |
 
 Note: `docs/` 下有 `ai_ignore_this_dir/` 目录，除非用户主动提起，否则视为不存在、不读。

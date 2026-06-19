@@ -643,7 +643,7 @@ src/
 | ADR-051 | Error/Failure 分离架构（规则失败与程序错误严格区分） | ✅ Accepted | Cross-cutting |
 | ADR-053 | Localization 基础设施架构（Fluent + Key 代码生成 + 三级回退） | ✅ Proposed | Cross-cutting |
 | ADR-054 | Bevy 0.19 迁移决策（Observer 优先 / Delayed Commands / BSN 范围 / Relationship） | ✅ Accepted | Foundation |
-| ADR-055 | UI 表现层架构（Projection 防火墙 / 单向数据流 / Widget Contract） | 📋 Proposed | Cross-cutting |
+| ADR-055 | UI 表现层架构（Projection 防火墙 / 单向数据流 / Widget Contract） | ✅ Accepted | Cross-cutting |
 
 ---
 
@@ -658,6 +658,8 @@ src/
 - [ ] Modifier Pipeline 没有被绕过
 - [ ] 定义了明确的 Forbidden 事项
 - [ ] 引用了上游领域规则和数据 Schema
+- [ ] 检查了内容架构（`docs/03-content/`）确保 Def 设计一致
+- [ ] 检查了 UI 表现层架构（`docs/06-ui/`）确保 UI 解耦
 - [ ] Plugin 注册顺序符合层次要求
 - [ ] 通信机制选择符合四级通信规范
 - [ ] 符合 Data Law（`docs/04-data/README.md` 第 5 节）
@@ -673,7 +675,9 @@ src/
 |---------|------|----------------|
 | 🟥 **架构设计最高依据** | `docs/01-architecture/README.md`（本文档） | DDD三层+横切四层模型、目录结构、依赖方向 |
 | 领域规则 | `docs/02-domain/` (30 文件) | 每个 Feature 模块对应一个或多个领域文档 |
+| 内容架构（Def 定义） | `docs/03-content/` | Def Schema、Registry、Validation 设计依据 |
 | 数据 Schema | `docs/04-data/` (33+ 文件) | 每个 Feature 的数据结构定义依据 |
+| UI 表现层架构 | `docs/06-ui/` | Projection/ViewModel/Screen/Widget 架构依据 |
 | 架构规则 | `.trae/rules/架构规则.md` | 宪法的 Feature First、三层架构、依赖方向 |
 | ECS 规则 | `.trae/rules/ECS规则.md` | 四级通信机制、Schedule 权责 |
 | SRPG 规则 | `.trae/rules/SRPG专项规则.md` | 战斗管线、回合状态机、Buff 生命周期 |
@@ -713,7 +717,7 @@ src/
 | `40-cross-cutting/ADR-051-error-failure-separation.md` | ✅ accepted | architect | 2026-06-19 |
 | `40-cross-cutting/ADR-053-localization-architecture.md` | ✅ accepted | architect | 2026-06-19 |
 | `00-foundation/ADR-054-bevy-0-19-migration.md` | ✅ accepted | architect | 2026-06-19 |
-| `40-cross-cutting/ADR-055-ui-presentation-architecture.md` | 📋 proposed | architect | 2026-06-19 |
+| `40-cross-cutting/ADR-055-ui-presentation-architecture.md` | ✅ accepted | presentation-architect | 2026-06-20 |
 
 ---
 

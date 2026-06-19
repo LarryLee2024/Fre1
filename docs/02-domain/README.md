@@ -15,6 +15,8 @@ tags:
 
 > **架构依据**: `docs/01-architecture/README.md` — DDD三层+横切四层架构总纲
 > **数据映射**: `docs/04-data/README.md` — 数据架构总纲
+> **内容映射**: `docs/03-content/README.md` — 内容架构总纲（Def Schema 映射到领域规则）
+> **UI 表现映射**: `docs/06-ui/README.md` — UI/表现层架构总纲（领域规则驱动 UI 设计）
 
 本文档是 `docs/02-domain/` 下全部 31 个领域规则文件的索引和快速参考。
 

@@ -11,10 +11,69 @@
 4. 严禁超出自身角色职责范围跨环节作业，`@feature-developer` 严禁写单元测试代码
 5. 严禁写过时、不符合最新 Bevy 0.19 版本的代码
 6. 数据架构变更必须经过 @data-architect 审查，确保 Replay/Save 兼容性
+7. 内容架构变更（Def Schema / Registry / Validation / Localization Key）必须经过 @content-architect 审查
+8. UI 架构变更（Projection / ViewModel / Screen / Widget Contract）必须经过 @presentation-architect 审查
 
-## 角色总览
+## Agent 分级体系（Tier S / A / B）
 
-共 7 个专用 Agent，各角色严格守界。Agent 定义以双目录维护，格式不同但内容同步：
+为管理 9 个 Agent 的协作复杂度，引入三级分治体系：
+
+```
+Tier S: 架构委员会（Architecture Board）      ── 战略层：定义规则与边界
+Tier A: 工程委员会（Engineering Board）        ── 治理层：确保合规与质量
+Tier B: 执行层（Implementation）              ── 战术层：按规则交付
+```
+
+### Tier S — 架构委员会（战略层）
+
+4 个战略角色，共同构成 Architecture Board。分工明确不重叠：
+
+| Agent | 职责 | 输入 | 输出 | 关键文档 |
+|-------|------|------|------|---------|
+| **@domain-designer** | 定义"规则是什么"—业务术语、不变量、状态机、流程 | 需求 | `docs/02-domain/` | 领域规则文档 |
+| **@data-architect** | 定义"规则如何表达"—Schema、数据层划分、Replay/Save兼容 | Domain | `docs/04-data/` | Schema + Data Laws |
+| **@content-architect** | 定义"Def 如何落地"—Def Schema、Registry、Validation、Asset、Localization | Domain + Data | `docs/03-content/` | Def 定义 + Registry |
+| **@presentation-architect** | 定义"UI 如何表现"—Projection、ViewModel、Screen、Widget、Navigation | Domain | `docs/06-ui/` | UI 架构文档 |
+
+**协作顺序（固定不串位）**：
+
+```
+需求
+ │
+ ├─→ @domain-designer     ← 第一步：定义领域规则
+ │
+ ├─→ @data-architect      ← 第二步：设计数据 Schema
+ │
+ ├─→ @content-architect   ← 第三步：设计 Def 落地（依赖 Schema）
+ │
+ └─→ @presentation-architect ← 第四步：设计 UI 表现（依赖领域规则）
+         │
+         ▼
+  @architect（首席架构）    ← 第五步：系统集成与模块边界
+```
+
+### Tier A — 工程委员会（治理层）
+
+3 个治理角色，负责质量把关：
+
+| Agent | 职责 | 审查时机 |
+|-------|------|---------|
+| **@data-architect**（Tier S → Tier A 双角色） | 数据合规审查 | Schema 变更 / 迁移 |
+| **@code-reviewer** | 代码合规审查 | PR 提交 |
+| **@test-guardian** | 测试合规审查 | 功能完成 |
+
+### Tier B — 执行层
+
+2 个执行角色，只交付不决策：
+
+| Agent | 职责 | 输出 |
+|-------|------|------|
+| **@feature-developer** | 按架构与领域模型编码 | `src/` 代码 |
+| **@refactor-guardian** | 技术债扫描与清理 | `docs/11-refactor/` 债务清单 |
+
+## 角色总览（9 个专用 Agent）
+
+各角色严格守界。Agent 定义以双目录维护，格式不同但内容同步：
 
 | 目录 | 目标工具 | 格式特点 |
 |------|---------|---------|
@@ -23,12 +82,24 @@
 
 调用方式因工具而异（见下方"调用方式"章节），但 agent 行为完全一致。
 
-- **@architect**：架构设计，输出 ADR；只设计不写代码，所有方案不得违反架构规范
-- **@domain-designer**：领域建模，输出领域文档；不讨论代码实现，术语与现有体系对齐
+### Agents By Tier
+
+**Tier S — 架构委员会（Architecture Board）**
+
+- **@domain-designer**：领域建模，输出领域规则文档；不讨论代码实现，术语与现有体系对齐
 - **@data-architect**：数据架构设计，设计 Config/Save/Replay Schema、Registry 结构、ID 策略和数据迁移规则；确保数据结构统一、Schema 可演化、Replay/Save 兼容
-- **@feature-developer**：功能实现，按架构与领域模型编码；发现架构问题立即上报，不私自修改；严禁写单元测试代码
+- **@content-architect**：内容架构设计，设计 Def Schema、Registry、Validation、Dependency Graph、Localization Key、Asset 目录结构；将领域规则和数据 Schema 落地为可加载的配置定义系统。输入：02-domain（领域规则）+ 04-data（数据 Schema）；输出：03-content/
+- **@presentation-architect**：UI/表现层架构设计，设计 Projection/ViewModel/Screen/Widget 分层方案、导航系统、UI 状态管理、Widget Contract。输入：02-domain（领域规则）；输出：docs/06-ui/
+- **@architect**：首席架构师（系统集成），负责模块边界、依赖方向、Plugin 结构、ADR 决策记录、跨系统集成方案。**不再直接设计 Schema、UI、Content**，而是协调四个专业架构师的输出进行集成
+
+**Tier A — 工程委员会（Engineering Board）**
+
 - **@code-reviewer**：代码审查，按优先级校验合规性；只提意见不直接改代码
 - **@test-guardian**：测试守护，以领域规则优先；Bug 必须转化为可复现的回放测试
+
+**Tier B — 执行层**
+
+- **@feature-developer**：功能实现，按架构与领域模型编码；发现架构问题立即上报，不私自修改；严禁写单元测试代码
 - **@refactor-guardian**：技术债扫描（六大维度：架构漂移/抽象泄漏/AI可维护性/测试债务/内容债务/生命周期管理），定期输出债务清单；优先删代码而非加封装
 
 ## 调用方式
@@ -39,7 +110,7 @@
 
 主 agent 通过 `actor` 工具调用子 agent，`subagent_type` 取 `.mimocode/agents/*.md` 文件名（去 `.md`）。
 
-**可用 subagent_type**：architect, domain-designer, data-architect, feature-developer, code-reviewer, test-guardian, refactor-guardian, explore, general
+**可用 subagent_type**：architect, domain-designer, data-architect, content-architect, presentation-architect, feature-developer, code-reviewer, test-guardian, refactor-guardian, explore, general
 
 **调用模式**：
 - `spawn`：后台执行，立即返回 actor_id，结果通过 notification 投递
@@ -59,6 +130,8 @@ OpenCode（Sisyphus）则是通过 `task()` 函数调用，category 映射规则
 | @architect | `task(category="unspecified-high", prompt="<agent prompt + 具体任务>")` | 复杂架构推理，完整推理能力 |
 | @domain-designer | `task(category="unspecified-high", prompt="<agent prompt + 具体任务>")` | 领域建模分析 |
 | @data-architect | `task(category="unspecified-high", prompt="<agent prompt + 具体任务>")` | Schema 设计 |
+| @content-architect | `task(category="unspecified-high", prompt="<agent prompt + 具体任务>")` | 内容架构设计 |
+| @presentation-architect | `task(category="unspecified-high", prompt="<agent prompt + 具体任务>")` | UI 架构设计 |
 | @feature-developer | `task(category="deep", prompt="<agent prompt + 具体任务>")` | 需要 bash/write/edit 的编码工作 |
 | @code-reviewer | `task(category="quick", prompt="<agent prompt + 具体任务>")` | 只读分析，无需写权限 |
 | @test-guardian | `task(category="unspecified-high", prompt="<agent prompt + 具体任务>")` | 需要 write 权限的测试编写 |
@@ -68,33 +141,83 @@ OpenCode（Sisyphus）则是通过 `task()` 函数调用，category 映射规则
 
 ## 协作流程
 
-### 标准开发流程
+### 标准开发流程（升级版）
+
 ```
 需求
-  │
-  ├─→ @domain-designer（领域建模） → 输出：`docs/02-domain/`（领域规则、业务术语、不变量）
-  │
-  ├─→ @data-architect（数据架构）  → 输出：`docs/04-data/`（Schema 设计、数据层划分、Replay/Save 兼容）
-  │
-  └─→ @architect（架构设计）       → 输出：`docs/01-architecture/`（架构总纲 + ADR 决策记录）
+ │
+ ├─→ @domain-designer（领域建模）
+ │     输出：docs/02-domain/（领域规则、业务术语、不变量）
+ │
+ ├─→ @data-architect（数据架构）
+ │     输出：docs/04-data/（Schema 设计、数据层划分、Replay/Save 兼容）
+ │
+ ├─→ @content-architect（内容架构）          ← NEW
+ │     输入：Domain Rules + Data Schema
+ │     输出：docs/03-content/（Def Schema、Registry、Validation、Localization）
+ │
+ ├─→ @presentation-architect（UI 架构）       ← NEW
+ │     输入：Domain Rules
+ │     输出：docs/06-ui/（Projection、ViewModel、Screen、Widget、Navigation）
+ │
+ └─→ @architect（首席架构 / 系统集成）
+       输入：Domain + Data + Content + Presentation
+       输出：docs/01-architecture/（ADR、分层方案、Plugin 方案、集成方案）
           │
-          ↓
-  @feature-developer（代码实现）    → 输出：`src/`（代码）+ `docs/09-planning/`（执行计划）
+          ▼
+  @feature-developer（代码实现）
+    消费：01 Architecture + 02 Domain + 03 Content + 04 Data + 06 UI
+    输出：src/（代码）+ docs/09-planning/（执行计划）
           │
-          ├─→ @test-guardian（测试审查）    → 输出：`docs/05-testing/`（测试计划）+ `tests/`（测试代码）
-          │
-          └─→ @code-reviewer（代码审查）    → 输出：`docs/10-reviews/`（审查报告）
-                      │
-                      ↓
-          @refactor-guardian（技术债扫描）  → 输出：`docs/11-refactor/`（技术债清单）
+   ┌──────┼──────────────┐
+   ▼      ▼              ▼
+ @test-guardian      @code-reviewer
+ (测试验证)           (代码审查)
+   │                   │
+   │    @content-architect (内容审查)     ← NEW
+   │    @presentation-architect (UI审查)  ← NEW
+   │                   │
+   └───────┼───────────┘
+           ▼
+  @refactor-guardian（技术债扫描）
+    输出：docs/11-refactor/（技术债清单）
 ```
 
 ### 触发时机与协作模式
-1. **新项目启动**：@domain-designer → @data-architect → @architect → @feature-developer
-2. **新增功能**：@domain-designer（如需要）→ @data-architect（如需要）→ @feature-developer → @test-guardian → @code-reviewer
-3. **Bug 修复**：@test-guardian（写失败测试）→ @feature-developer → @test-guardian（验证）→ @code-reviewer
-4. **重构优化**：@refactor-guardian（发现债务）→ @architect（评估影响）→ @feature-developer → @code-reviewer
-5. **数据变更**：@data-architect（Schema 设计）→ @architect（架构适配）→ @feature-developer（迁移实现）
+
+| 场景 | 流程 | 说明 |
+|------|------|------|
+| **新项目 / 新功能** | Domain → Data → Content → Presentation → Architect → Developer → Test → Review | 完整流程 |
+| **纯数据变更** | Data → Architect → Developer | 不涉及领域规则变更 |
+| **纯内容变更** | Content → Developer | 不涉及领域规则和数据 Schema 变更 |
+| **纯 UI 变更** | Presentation → Developer | 不涉及领域规则变更 |
+| **Bug 修复** | Test（写失败测试）→ Developer → Test（验证）→ Code Review | 快速通道 |
+| **重构优化** | Refactor Guardian（发现债务）→ Architect（评估）→ Developer → Code Review | 需架构评估 |
+| **数据迁移** | Data Architect（Schema）+ Content Architect（Def 适配）→ Architect（架构适配）→ Developer（迁移实现） | 数据+内容双审查 |
+
+### 设计输入依赖图
+
+```
+Feature Developer 消费的全部输入：
+
+┌─────────────────────────────────────────────────────────┐
+│                     Feature Developer                     │
+├─────────────────────────────────────────────────────────┤
+│  01 Architecture   02 Domain   03 Content   04 Data   06 UI  │
+│  (模块边界)       (业务规则)   (Def 定义)    (Schema)   (UI 架构)│
+└─────────────────────────────────────────────────────────┘
+```
+
+### Review 流程升级
+
+代码审查不再是单一维度，而是多维审查：
+
+| 审查类型 | 负责 Agent | 审查内容 |
+|---------|-----------|---------|
+| 代码质量 | @code-reviewer | 编码规范、性能、安全 |
+| 测试覆盖 | @test-guardian | 领域不变量、边界条件 |
+| 内容合规 | @content-architect（副角色） | Def 设计是否合理、Localization 是否规范 |
+| UI 合规 | @presentation-architect（副角色） | ViewModel 是否正确、Projection 是否存在 |
 
 ## 必须做的行为
 - 所有 Agent 写的日志，必须按 `.trae/rules/日志规则.md` 写日志，关键地方必须写日志。
@@ -155,7 +278,7 @@ If a `repomix-output.xml` exists, read it before exploring the repository.
 任何人在使用前，都必须在根目录 运行 `repomix` 输出最新的 `repomix-output.xml`
 Use it for:
 * Architecture review
-* Directory structureßß
+* Directory structure
 * Module boundaries
 * Plugin discovery
 * Project onboarding
@@ -229,8 +352,10 @@ Implementation second.
 1. `docs/00-governance/ai-constitution-complete.md` — 项目总宪法 v5.0
 2. `docs/01-architecture/README.md` — 架构总纲 + ADR 索引
 3. `docs/02-domain/README.md` — 领域规则索引
-4. `docs/04-data/README.md` — 数据架构规范
-5. `docs/05-testing/test-spec.md` — 测试宪法 v4.0
+4. `docs/03-content/README.md` — 内容架构索引（Def Schema / Registry / Validation）
+5. `docs/04-data/README.md` — 数据架构规范
+6. `docs/05-testing/test-spec.md` — 测试宪法 v4.0
+7. `docs/06-ui/README.md` — UI/表现层架构索引（Projection / ViewModel / Widget）
 
 ## Rules
 Primary Rule Source: `.trae/rules/`
