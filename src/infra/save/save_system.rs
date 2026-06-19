@@ -1,0 +1,248 @@
+use bevy::prelude::*;
+
+use crate::core::domains::combat::{
+    ActionPoints, BattlePhase, CombatParticipant, Dead, TurnQueue,
+};
+use crate::core::domains::party::{ActiveBond, BondState, Party, PartyMember};
+use crate::core::domains::progression::{
+    ClassLevels, Experience, SubclassChoice, TalentTree,
+};
+
+use super::events::{SaveCompleted, SaveRequest};
+use super::resources::{EntityRemapper, SaveManager};
+use super::save_data::*;
+
+pub fn save_world_system(
+    trigger: On<SaveRequest>,
+    save_manager: Res<SaveManager>,
+    mut entity_remapper: ResMut<EntityRemapper>,
+    combat_participants: Query<(
+        Entity,
+        &CombatParticipant,
+        Option<&Dead>,
+        Option<&ActionPoints>,
+    )>,
+    progression_entities: Query<(
+        Entity,
+        &Experience,
+        &ClassLevels,
+        Option<&TalentTree>,
+        Option<&SubclassChoice>,
+    )>,
+    battle_phase: Res<State<BattlePhase>>,
+    turn_queue: Res<TurnQueue>,
+    party: Res<Party>,
+    bond_state: Res<BondState>,
+    mut commands: Commands,
+) {
+    let request = trigger.event();
+    let path = request
+        .path
+        .clone()
+        .or_else(|| {
+            save_manager
+                .current_save_path
+                .as_ref()
+                .map(|p| p.to_string_lossy().to_string())
+        })
+        .unwrap_or_else(|| "save_001.fresave".to_string());
+
+    if let Some(label) = &request.label {
+        tracing::info!("[SaveSystem] saving with label: {}", label);
+    }
+
+    entity_remapper.clear();
+
+    let mut combat_entities = Vec::new();
+    for (entity, participant, dead, action_points) in combat_participants.iter() {
+        let pid = entity_remapper.assign(entity);
+        let entry = turn_queue
+            .entries()
+            .iter()
+            .find(|e| e.entity == entity);
+        let initiative = entry.map(|e| e.initiative).unwrap_or(0);
+
+        combat_entities.push(CombatEntityData {
+            persistent_id: pid.0,
+            team_id: participant.team_id.to_string(),
+            initiative,
+            is_dead: dead.is_some(),
+            action_points: action_points.map(|ap| ActionPointsData {
+                standard_action: ap.standard_action,
+                bonus_action: ap.bonus_action,
+                reaction: ap.reaction,
+                movement: ap.movement,
+                max_movement: ap.max_movement,
+            }),
+        });
+    }
+
+    let phase_str = match battle_phase.get() {
+        BattlePhase::Preparation => "Preparation",
+        BattlePhase::Battle => "Battle",
+        BattlePhase::Victory => "Victory",
+        BattlePhase::Defeat => "Defeat",
+    }
+    .to_string();
+
+    let active_members: Vec<PartyMemberSaveData> = party
+        .members
+        .iter()
+        .filter_map(|m| {
+            entity_remapper
+                .persistent_to_entity
+                .iter()
+                .find(|(_, e)| *e == m.entity)
+                .map(|(pid, _)| PartyMemberSaveData {
+                    persistent_id: pid.0,
+                    slot_index: m.slot_index,
+                    is_active: m.is_active,
+                })
+        })
+        .collect();
+
+    let reserve_members: Vec<u64> = party
+        .reserve_members
+        .iter()
+        .filter_map(|e| {
+            entity_remapper
+                .persistent_to_entity
+                .iter()
+                .find(|(_, ent)| *ent == *e)
+                .map(|(pid, _)| pid.0)
+        })
+        .collect();
+
+    let active_bonds: Vec<ActiveBondSaveData> = bond_state
+        .active_bonds
+        .iter()
+        .filter_map(|bond| {
+            let participant_ids: Vec<u64> = bond
+                .participants
+                .iter()
+                .filter_map(|e| {
+                    entity_remapper
+                        .persistent_to_entity
+                        .iter()
+                        .find(|(_, ent)| *ent == *e)
+                        .map(|(pid, _)| pid.0)
+                })
+                .collect();
+            Some(ActiveBondSaveData {
+                bond_id: bond.bond_id.to_string(),
+                level: bond.level,
+                participant_ids,
+                accumulated_battles: bond.accumulated_battles,
+            })
+        })
+        .collect();
+
+    let mut prog_data = Vec::new();
+    for (entity, xp, class_levels, talent_tree, subclass_choice) in
+        progression_entities.iter()
+    {
+        let pid = if let Some((existing_pid, _)) = entity_remapper
+            .persistent_to_entity
+            .iter()
+            .find(|(_, e)| *e == entity)
+        {
+            *existing_pid
+        } else {
+            entity_remapper.assign(entity)
+        };
+
+        let subclass_choices: Vec<(String, String)> = subclass_choice
+            .map(|sc| {
+                sc.choices
+                    .iter()
+                    .map(|(k, v)| (k.to_string(), v.to_string()))
+                    .collect()
+            })
+            .unwrap_or_default();
+
+        prog_data.push(ProgressionEntityData {
+            persistent_id: pid.0,
+            experience: ExperienceData {
+                current_xp: xp.current_xp,
+                level: xp.level,
+                total_xp_earned: xp.total_xp_earned,
+                is_max_level: xp.is_max_level,
+            },
+            class_levels: ClassLevelsData {
+                entries: class_levels
+                    .entries
+                    .iter()
+                    .map(|e| ClassLevelEntryData {
+                        class_id: e.class_id.to_string(),
+                        level: e.level,
+                    })
+                    .collect(),
+            },
+            talent_tree: TalentTreeData {
+                unlocked_talents: talent_tree
+                    .map(|t| {
+                        t.unlocked_talents
+                            .iter()
+                            .map(|id| id.to_string())
+                            .collect()
+                    })
+                    .unwrap_or_default(),
+                available_points: talent_tree
+                    .map(|t| t.available_points)
+                    .unwrap_or(0),
+            },
+            subclass_choices,
+        });
+    }
+
+    let world_data = WorldSaveData {
+        save_version: save_manager.save_version,
+        metadata: SaveMetadataData {
+            label: save_manager.metadata.label.clone(),
+            location: save_manager.metadata.location.clone(),
+            playtime_seconds: save_manager.metadata.playtime_seconds,
+            player_level: save_manager.metadata.player_level,
+        },
+        combat: CombatSaveData {
+            phase: phase_str,
+            round_number: turn_queue.round_number(),
+            current_index: turn_queue.current_index(),
+            participants: combat_entities,
+        },
+        party: PartySaveData {
+            formation: format!("{:?}", party.formation),
+            max_active: party.max_active,
+            max_total: party.max_total,
+            active_members,
+            reserve_members,
+            active_bonds,
+        },
+        progression: ProgressionSaveData {
+            entities: prog_data,
+        },
+    };
+
+    match serde_json::to_string_pretty(&world_data) {
+        Ok(json) => {
+            if let Err(e) = std::fs::write(&path, &json) {
+                tracing::error!("[SaveSystem] failed to write save file: {}", e);
+                return;
+            }
+            let entity_count = world_data.combat.participants.len()
+                + world_data.progression.entities.len();
+            tracing::info!(
+                "[SaveSystem] save completed: path={}, entities={}",
+                path,
+                entity_count
+            );
+            commands.trigger(SaveCompleted {
+                path,
+                entity_count: entity_count as u32,
+                success: true,
+            });
+        }
+        Err(e) => {
+            tracing::error!("[SaveSystem] serialization failed: {}", e);
+        }
+    }
+}

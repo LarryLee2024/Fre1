@@ -3,15 +3,16 @@
 //! 提供存档系统的 ECS 基础设施：
 //! - Resource: SaveManager, AutoSaveConfig, EntityRemapper
 //! - Events: SaveRequest, LoadRequest, SaveCompleted, LoadCompleted
-//! - Observer: on_save_request, on_load_request
-//!
-//! 当前为最小实现（桥接层骨架），后续迭代接入 Per-Feature 序列化。
+//! - Systems: save_world_system, on_load_request, process_pending_load
 //!
 //! 详见 ADR-042
 
 mod plugin;
 pub(crate) mod resources;
 pub(crate) mod systems;
+pub(crate) mod save_data;
+pub(crate) mod save_system;
+pub(crate) mod load_system;
 
 mod events;
 

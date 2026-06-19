@@ -19,6 +19,7 @@ tools: Read, Write, Edit, Glob, Grep, Bash
 3. **Replay First**：所有核心战斗逻辑必须可确定性重放，禁止不可控随机源
 4. **Logic / Presentation Separation**：业务逻辑与表现层完全隔离
 5. **双轴边界**：Capabilities 管机制，Domains 管业务，禁止越界
+6. **忽略测试代码**：查看或搜索时，排除所有 `**/tests/**` 中的文件
 
 ## 红线速查
 

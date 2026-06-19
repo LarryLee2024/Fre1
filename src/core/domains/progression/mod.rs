@@ -9,6 +9,10 @@ pub use plugin::*;
 
 // [ADR-045] private — 业务组件，仅当前模块可见
 mod components;
+pub use components::{
+    ClassId, ClassLevelEntry, ClassLevels, Experience, ProgressionMarker, SubclassChoice,
+    SubclassId, TalentId, TalentTree,
+};
 // [ADR-045] pub(crate) — 领域错误定义，crate 内共享
 pub(crate) mod error;
 // [ADR-045] pub(crate) — 领域事件定义，crate 内共享

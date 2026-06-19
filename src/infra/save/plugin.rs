@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
-use super::systems::{on_load_request, on_save_request};
+use super::load_system::{on_load_request, process_pending_load};
+use super::save_system::save_world_system;
 
 pub struct SavePlugin;
 
@@ -10,9 +11,11 @@ impl Plugin for SavePlugin {
         app.init_resource::<super::resources::AutoSaveConfig>();
         app.init_resource::<super::resources::EntityRemapper>();
 
-        app.add_observer(on_save_request);
+        app.add_observer(save_world_system);
         app.add_observer(on_load_request);
 
-        tracing::info!("[SavePlugin] initialized (resources, observers)");
+        app.add_systems(Update, process_pending_load);
+
+        tracing::info!("[SavePlugin] initialized (resources, observers, systems)");
     }
 }
