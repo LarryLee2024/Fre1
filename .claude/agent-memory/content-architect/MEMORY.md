@@ -1,0 +1,3 @@
+- [L0 Vocabulary Layer Design](l0-vocabulary-layer-design.md) — 6 Vocabulary Def types (TagDef/AttributeDef/DamageTypeDef/FactionDef/ElementDef/StatusCategoryDef), TagCategory three-way split, L0 same-layer reference prohibition, deferred relational design patterns
+- [L1 Capability Definition Design](l1-capability-definition-design.md) — Ten Content Def types for L1 Capability layer: schemas, registries, validation, and examples bridging Data Schema to Bevy Assets
+- [L2 Entity Layer Design](l2-entity-definitions.md) — Six Entity Def types (CharacterDef, MonsterDef, ItemDef, EquipmentDef, ConsumableDef, SummonDef) with CreatureBase/ItemBase patterns, forward references, and validation rules
