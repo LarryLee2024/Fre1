@@ -99,7 +99,7 @@ impl Plugin for LocalizationPlugin {
         #[cfg(not(target_arch = "wasm32"))]
         {
             let watcher = super::loader::create_locale_watcher();
-            app.insert_non_send_resource(watcher);
+            app.insert_non_send(watcher);
             app.add_systems(Update, super::loader::hot_reload_system);
         }
     }

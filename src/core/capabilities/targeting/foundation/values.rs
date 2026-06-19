@@ -85,14 +85,14 @@ impl TargetingDef {
 
     /// 设置最小射程，同时校验 (V3: min_range ≤ range)。
     pub fn with_min_range(mut self, min: f32) -> Result<Self, TargetingError> {
-        if let Some(max) = self.range {
-            if min > max {
-                return Err(TargetingError::InvalidRange {
-                    min: Some(min),
-                    max: self.range,
-                    detail: format!("min_range {} > range {}", min, max),
-                });
-            }
+        if let Some(max) = self.range
+            && min > max
+        {
+            return Err(TargetingError::InvalidRange {
+                min: Some(min),
+                max: self.range,
+                detail: format!("min_range {} > range {}", min, max),
+            });
         }
         self.min_range = Some(min);
         Ok(self)

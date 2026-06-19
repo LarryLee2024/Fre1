@@ -87,7 +87,7 @@ impl ScalableValue {
         match self {
             Self::Fixed(value) => *value,
             Self::PerLevel { base, per_level } => {
-                let levels_above_base = if level > 1 { level - 1 } else { 0 };
+                let levels_above_base = level.saturating_sub(1);
                 base + per_level * levels_above_base as f32
             }
         }

@@ -158,16 +158,14 @@ impl EffectInstance {
     /// - Active → Removed（被驱散/移除）
     /// - Expiring → Removed
     pub fn transition_to(&mut self, next: EffectStage) -> Result<(), super::types::EffectError> {
-        let valid = match (self.stage, next) {
-            (EffectStage::Applying, EffectStage::Active) => true,
-            (EffectStage::Applying, EffectStage::Removed) => true,
-            (EffectStage::Active, EffectStage::Expiring) => true,
-            (EffectStage::Active, EffectStage::Removed) => true,
-            (EffectStage::Expiring, EffectStage::Removed) => true,
-            _ => false,
-        };
-
-        if !valid {
+        if !matches!(
+            (self.stage, next),
+            (EffectStage::Applying, EffectStage::Active)
+                | (EffectStage::Applying, EffectStage::Removed)
+                | (EffectStage::Active, EffectStage::Expiring)
+                | (EffectStage::Active, EffectStage::Removed)
+                | (EffectStage::Expiring, EffectStage::Removed)
+        ) {
             return Err(super::types::EffectError::InvalidStageTransition {
                 from: self.stage,
                 to: next,

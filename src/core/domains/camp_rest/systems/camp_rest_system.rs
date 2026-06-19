@@ -85,13 +85,7 @@ pub fn process_camp_events(rest_query: Query<&RestState>) {
 }
 
 /// 营地事件注册 Resource（占位）。
-#[derive(Resource, Debug, Clone)]
+#[derive(Resource, Debug, Clone, Default)]
 pub struct CampEventRegistry {
     pub events: Vec<CampEventDef>,
-}
-
-impl Default for CampEventRegistry {
-    fn default() -> Self {
-        Self { events: Vec::new() }
-    }
 }

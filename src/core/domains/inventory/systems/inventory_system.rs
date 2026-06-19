@@ -109,20 +109,20 @@ pub(crate) fn on_equip_item(
     }
 
     // 如果是卸下（new_item 为空，old_item 有值）
-    if ev.new_item_template_id.is_none() {
-        if let Some(ref old_template_id) = ev.old_item_template_id {
-            let old_item = equipment.unequip(ev.slot);
-            if let Some(item) = old_item {
-                inventory.add_item(item, 1.0);
-                tracing::trace!(
-                    event = "inventory.equipment_changed.unequipped",
-                    entity = ?ev.entity,
-                    slot = ?ev.slot,
-                    item = %old_template_id,
-                    "Equipment unequipped: entity={:?}, slot={:?}, item={}",
-                    ev.entity, ev.slot, old_template_id
-                );
-            }
+    if ev.new_item_template_id.is_none()
+        && let Some(ref old_template_id) = ev.old_item_template_id
+    {
+        let old_item = equipment.unequip(ev.slot);
+        if let Some(item) = old_item {
+            inventory.add_item(item, 1.0);
+            tracing::trace!(
+                event = "inventory.equipment_changed.unequipped",
+                entity = ?ev.entity,
+                slot = ?ev.slot,
+                item = %old_template_id,
+                "Equipment unequipped: entity={:?}, slot={:?}, item={}",
+                ev.entity, ev.slot, old_template_id
+            );
         }
     }
 }

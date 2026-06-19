@@ -46,10 +46,10 @@ pub(crate) fn start_recording_on_battle_begin(
     rng: Option<Res<DeterministicRng>>,
 ) {
     // 如果已经有录制会话，跳过
-    if let Some(session) = recording {
-        if session.0.is_some() {
-            return;
-        }
+    if let Some(session) = recording
+        && session.0.is_some()
+    {
+        return;
     }
 
     // 构建 BattleUnitRegistry

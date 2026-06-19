@@ -61,7 +61,7 @@ pub(crate) fn on_dialogue_start(
     // 获取实体的 StoryFlag
     let flags = flag_query.get(req.entity).ok();
     let choices = match flags {
-        Some(ref f) => filter_visible_choices(entry, f),
+        Some(f) => filter_visible_choices(entry, f),
         None => entry
             .choices
             .iter()
@@ -178,7 +178,7 @@ pub(crate) fn on_choice_select(
                 .map(|next_node| {
                     let flags = flag_query.get(entity).ok();
                     match flags {
-                        Some(ref f) => filter_visible_choices(next_node, f),
+                        Some(f) => filter_visible_choices(next_node, f),
                         None => next_node
                             .choices
                             .iter()

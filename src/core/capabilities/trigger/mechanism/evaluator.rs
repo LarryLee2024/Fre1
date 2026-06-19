@@ -107,15 +107,11 @@ pub fn can_trigger(
     }
 
     // 3. 条件检查（委托 Condition 领域）
-    if let Some(cond_id) = &entry.condition.condition_id {
-        if let Some(check) = condition_check {
-            if !check(cond_id) {
-                return TriggerEvalResult::Blocked(format!(
-                    "trigger condition '{}' not met",
-                    cond_id
-                ));
-            }
-        }
+    if let Some(cond_id) = &entry.condition.condition_id
+        && let Some(check) = condition_check
+        && !check(cond_id)
+    {
+        return TriggerEvalResult::Blocked(format!("trigger condition '{}' not met", cond_id));
     }
 
     let ctx = TriggerContext {

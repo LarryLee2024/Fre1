@@ -18,8 +18,9 @@ use crate::shared::localization_key::LocalizationKey;
 // ─── 值类型 ────────────────────────────────────────────────────────
 
 /// 法术环阶（0 = 戏法, 1-9 = 法术环阶）。
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Reflect)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Reflect, Default)]
 pub enum SpellLevel {
+    #[default]
     Cantrip,
     L1,
     L2,
@@ -64,12 +65,6 @@ impl SpellLevel {
             9 => Some(SpellLevel::L9),
             _ => None,
         }
-    }
-}
-
-impl Default for SpellLevel {
-    fn default() -> Self {
-        SpellLevel::Cantrip
     }
 }
 
@@ -254,11 +249,11 @@ impl SpellSlotPool {
     /// 返回是否成功消耗。
     pub fn consume(&mut self, level: SpellLevel) -> bool {
         let idx = (level.as_u8().saturating_sub(1)) as usize;
-        if let Some(entry) = self.slots_by_level.get_mut(idx) {
-            if entry.has_available() {
-                entry.used += 1;
-                return true;
-            }
+        if let Some(entry) = self.slots_by_level.get_mut(idx)
+            && entry.has_available()
+        {
+            entry.used += 1;
+            return true;
         }
         false
     }

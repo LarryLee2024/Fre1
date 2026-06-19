@@ -61,25 +61,25 @@ pub fn parse_ftl(content: &str) -> HashMap<String, Pattern> {
             current_id = Some(key);
         }
         // Attribute: .xxx = value
-        else if let Some(caps) = attr_re.captures(line) {
-            if let Some(ref base_key) = current_id {
-                let attr_name = caps.get(1).unwrap().as_str();
-                let value = caps.get(2).unwrap().as_str().trim();
-                let key = format!("{}.{}", base_key, attr_name);
+        else if let Some(caps) = attr_re.captures(line)
+            && let Some(ref base_key) = current_id
+        {
+            let attr_name = caps.get(1).unwrap().as_str();
+            let value = caps.get(2).unwrap().as_str().trim();
+            let key = format!("{}.{}", base_key, attr_name);
 
-                let vars: Vec<String> = var_re
-                    .captures_iter(value)
-                    .map(|c| c[1].to_string())
-                    .collect();
+            let vars: Vec<String> = var_re
+                .captures_iter(value)
+                .map(|c| c[1].to_string())
+                .collect();
 
-                result.insert(
-                    key,
-                    Pattern {
-                        template: value.to_string(),
-                        variables: vars,
-                    },
-                );
-            }
+            result.insert(
+                key,
+                Pattern {
+                    template: value.to_string(),
+                    variables: vars,
+                },
+            );
         }
     }
 
@@ -227,34 +227,34 @@ pub fn hot_reload_system(
         };
 
         for path in &paths {
-            if let Some(ext) = path.extension() {
-                if ext == "ftl" {
-                    let Some((locale, _)) = watcher
-                        .locale_dirs
-                        .iter()
-                        .find(|(_, dir)| path.starts_with(dir))
-                    else {
-                        continue;
-                    };
+            if let Some(ext) = path.extension()
+                && ext == "ftl"
+            {
+                let Some((locale, _)) = watcher
+                    .locale_dirs
+                    .iter()
+                    .find(|(_, dir)| path.starts_with(dir))
+                else {
+                    continue;
+                };
 
-                    let Ok(content) = std::fs::read_to_string(path) else {
-                        continue;
-                    };
-                    if content.trim().is_empty() {
-                        continue;
-                    }
-
-                    let patterns = parse_ftl(&content);
-                    let count = patterns.len();
-                    db.load_patterns(locale, patterns);
-
-                    info!(
-                        "[Localization] Hot-reloaded {} patterns from {:?}",
-                        count, path
-                    );
-
-                    cache.clear();
+                let Ok(content) = std::fs::read_to_string(path) else {
+                    continue;
+                };
+                if content.trim().is_empty() {
+                    continue;
                 }
+
+                let patterns = parse_ftl(&content);
+                let count = patterns.len();
+                db.load_patterns(locale, patterns);
+
+                info!(
+                    "[Localization] Hot-reloaded {} patterns from {:?}",
+                    count, path
+                );
+
+                cache.clear();
             }
         }
     }

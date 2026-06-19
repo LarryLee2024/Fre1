@@ -201,10 +201,10 @@ pub fn check_bond_activation(
             .iter()
             .filter(|m| {
                 // 检查特定实体匹配
-                if let Some(specific) = requirement.specific_entity {
-                    if m.entity == specific {
-                        return true;
-                    }
+                if let Some(specific) = requirement.specific_entity
+                    && m.entity == specific
+                {
+                    return true;
                 }
                 false
             })

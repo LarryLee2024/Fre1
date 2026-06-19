@@ -79,10 +79,10 @@ pub fn hot_reload_content_system(
     // 构建当前文件的 mtime 映射
     let mut current_mtimes: HashMap<PathBuf, SystemTime> = HashMap::new();
     for file in &files {
-        if let Ok(metadata) = std::fs::metadata(&file.path) {
-            if let Ok(mtime) = metadata.modified() {
-                current_mtimes.insert(file.path.clone(), mtime);
-            }
+        if let Ok(metadata) = std::fs::metadata(&file.path)
+            && let Ok(mtime) = metadata.modified()
+        {
+            current_mtimes.insert(file.path.clone(), mtime);
         }
     }
 
@@ -209,10 +209,10 @@ pub fn init_hot_reload_state(mut hr_state: ResMut<ContentHotReloadState>) {
     let files = discover_ron_files(config_root);
 
     for file in &files {
-        if let Ok(metadata) = std::fs::metadata(&file.path) {
-            if let Ok(mtime) = metadata.modified() {
-                hr_state.file_mtimes.insert(file.path.clone(), mtime);
-            }
+        if let Ok(metadata) = std::fs::metadata(&file.path)
+            && let Ok(mtime) = metadata.modified()
+        {
+            hr_state.file_mtimes.insert(file.path.clone(), mtime);
         }
     }
 

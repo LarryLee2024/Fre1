@@ -34,7 +34,7 @@ pub(crate) fn combat_input_system(
         return;
     };
 
-    let Ok(mut ap) = action_points_q.get_mut(current_entry.entity) else {
+    let Ok(_ap) = action_points_q.get_mut(current_entry.entity) else {
         return;
     };
 

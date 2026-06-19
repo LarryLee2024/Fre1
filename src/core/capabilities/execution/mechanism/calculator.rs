@@ -124,11 +124,7 @@ fn execute_damage(
 
     // 1. 读取来源属性
     let attr_mod_value = if let Some(ref modifier) = params.attribute_modifier {
-        let attrs = if modifier.use_base {
-            &ctx.source_attributes
-        } else {
-            &ctx.source_attributes
-        };
+        let attrs = &ctx.source_attributes;
         let value = modifier.calculate(attrs);
         trace = trace.with_input(&modifier.source_attribute, value);
         value

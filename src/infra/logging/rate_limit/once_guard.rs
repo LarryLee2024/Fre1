@@ -21,6 +21,12 @@ pub struct OnceGuard {
     fired: AtomicBool,
 }
 
+impl Default for OnceGuard {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl OnceGuard {
     /// 创建新的守卫实例。
     pub const fn new() -> Self {

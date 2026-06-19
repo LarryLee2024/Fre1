@@ -44,13 +44,8 @@ impl FromWorld for DeterministicRng {
 /// 详见 ADR-041 §6
 #[derive(Resource, Reflect)]
 #[reflect(Resource)]
+#[derive(Default)]
 pub struct ReplayModeGuard(pub CoreReplayModeGuard);
-
-impl Default for ReplayModeGuard {
-    fn default() -> Self {
-        Self(CoreReplayModeGuard::normal())
-    }
-}
 
 // ════════════════════════════════════════════
 // 会话资源（None = 不在对应模式）
@@ -61,28 +56,16 @@ impl Default for ReplayModeGuard {
 /// 外部系统通过 `RecordingSession::start()` 初始化并开始录制，
 /// 通过 `RecordingSession::stop()` 结束录制并获取 ReplayLog。
 /// `recording_frame_bookend_system` 自动处理帧边界。
-#[derive(Resource)]
+#[derive(Resource, Default)]
 pub struct RecordingSession(pub Option<CoreRecordingSession>);
-
-impl Default for RecordingSession {
-    fn default() -> Self {
-        Self(None)
-    }
-}
 
 /// 回放会话资源 — Some 表示正在回放，None 表示不在回放模式。
 ///
 /// 外部系统通过 `PlaybackSession::load()` + `PlaybackSession::start()` 初始化，
 /// `playback_frame_bookend_system` 自动处理帧推进。
 /// 各业务系统通过 `current_commands()` 读取当前帧命令。
-#[derive(Resource)]
+#[derive(Resource, Default)]
 pub struct PlaybackSession(pub Option<CorePlaybackSession>);
-
-impl Default for PlaybackSession {
-    fn default() -> Self {
-        Self(None)
-    }
-}
 
 // ════════════════════════════════════════════
 // 辅助资源
@@ -94,10 +77,5 @@ impl Default for PlaybackSession {
 /// 帧序号对应游戏逻辑更新周期，而非渲染帧率。
 #[derive(Resource, Reflect)]
 #[reflect(Resource)]
+#[derive(Default)]
 pub struct FrameCounter(pub u64);
-
-impl Default for FrameCounter {
-    fn default() -> Self {
-        Self(0)
-    }
-}

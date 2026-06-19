@@ -26,9 +26,10 @@ use crate::shared::localization_key::LocalizationKey;
 // ─── 值类型 ────────────────────────────────────────────────────────
 
 /// 阵型枚举。
-#[derive(Debug, Clone, PartialEq, Reflect)]
+#[derive(Debug, Clone, PartialEq, Reflect, Default)]
 pub enum FormationType {
     /// 一字排开（默认）。
+    #[default]
     Line,
     /// 前 3 后 2。
     Vanguard,
@@ -65,12 +66,6 @@ impl FormationType {
             ],
             FormationType::Custom(offsets) => offsets.clone(),
         }
-    }
-}
-
-impl Default for FormationType {
-    fn default() -> Self {
-        FormationType::Line
     }
 }
 

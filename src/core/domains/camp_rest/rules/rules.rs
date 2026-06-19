@@ -84,7 +84,7 @@ pub fn apply_short_rest_healing(
     let total_healing_raw = hp_per_die * dice_to_spend;
     let actual_healing = total_healing_raw.min(max_heal);
     let dice_needed = if hp_per_die > 0 {
-        (actual_healing + hp_per_die - 1) / hp_per_die
+        actual_healing.div_ceil(hp_per_die)
     } else {
         0
     };

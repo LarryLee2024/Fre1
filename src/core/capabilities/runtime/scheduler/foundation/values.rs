@@ -130,7 +130,7 @@ impl TimeScale {
     /// 创建时间缩放因子。
     pub fn new(multiplier: f32) -> Self {
         Self {
-            multiplier: multiplier.max(0.1).min(10.0),
+            multiplier: multiplier.clamp(0.1, 10.0),
         }
     }
 

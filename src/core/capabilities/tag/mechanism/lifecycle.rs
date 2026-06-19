@@ -9,7 +9,7 @@ use bevy::prelude::*;
 /// 全局标签层级树（Resource）。
 ///
 /// 在内容加载阶段构建，运行时只读。
-#[derive(Resource, Debug, Clone)]
+#[derive(Resource, Debug, Clone, Default)]
 pub struct TagHierarchy {
     /// 所有已注册标签的完整映射
     pub tags: HashMap<TagId, TagDefinition>,
@@ -19,17 +19,6 @@ pub struct TagHierarchy {
     pub inherited_masks: HashMap<TagId, BitMask>,
     /// 所有抽象标签集合
     pub abstract_tags: HashSet<TagId>,
-}
-
-impl Default for TagHierarchy {
-    fn default() -> Self {
-        Self {
-            tags: HashMap::new(),
-            children: HashMap::new(),
-            inherited_masks: HashMap::new(),
-            abstract_tags: HashSet::new(),
-        }
-    }
 }
 
 /// 标签注册错误

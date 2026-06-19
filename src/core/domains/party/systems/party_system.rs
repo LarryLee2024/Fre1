@@ -77,9 +77,8 @@ pub fn on_member_removed(
         if bond.participants.contains(&removed_entity) {
             // 检查移除后是否仍满足条件
             let bond_def = bond_state.defs.get(&bond.bond_id);
-            let still_valid = bond_def.map_or(false, |def| {
-                check_bond_activation(def, &party.members).is_some()
-            });
+            let still_valid =
+                bond_def.is_some_and(|def| check_bond_activation(def, &party.members).is_some());
 
             if !still_valid {
                 to_remove.push(idx);

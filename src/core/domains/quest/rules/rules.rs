@@ -89,10 +89,11 @@ pub fn check_exclusivity(
     quest_log: &QuestLog,
 ) -> Result<(), QuestDefId> {
     for exclusive_id in exclusive_with {
-        if let Some(entry) = quest_log.get_entry(exclusive_id) {
-            if entry.state == QuestState::Active && *exclusive_id != *quest_id {
-                return Err(exclusive_id.clone());
-            }
+        if let Some(entry) = quest_log.get_entry(exclusive_id)
+            && entry.state == QuestState::Active
+            && *exclusive_id != *quest_id
+        {
+            return Err(exclusive_id.clone());
         }
     }
     Ok(())

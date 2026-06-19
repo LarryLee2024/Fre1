@@ -3,19 +3,10 @@ use bevy::prelude::*;
 use crate::shared::error::ErrorContext;
 
 /// 保存请求 — 触发后将当前游戏状态保存到指定路径。
-#[derive(Event, Debug, Clone, Reflect)]
+#[derive(Event, Debug, Clone, Reflect, Default)]
 pub struct SaveRequest {
     pub path: Option<String>,
     pub label: Option<String>,
-}
-
-impl Default for SaveRequest {
-    fn default() -> Self {
-        Self {
-            path: None,
-            label: None,
-        }
-    }
 }
 
 /// 加载请求 — 从指定路径加载存档。

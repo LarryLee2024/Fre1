@@ -208,35 +208,35 @@ impl ReactionQueue {
 
     /// 标记当前条目为已接受。
     pub fn accept_current(&mut self) -> bool {
-        if let Some(entry) = self.entries.get_mut(self.current_index) {
-            if entry.status == ReactionEntryStatus::Pending {
-                entry.status = ReactionEntryStatus::Accepted;
-                return true;
-            }
+        if let Some(entry) = self.entries.get_mut(self.current_index)
+            && entry.status == ReactionEntryStatus::Pending
+        {
+            entry.status = ReactionEntryStatus::Accepted;
+            return true;
         }
         false
     }
 
     /// 标记当前条目为已拒绝。
     pub fn decline_current(&mut self) -> bool {
-        if let Some(entry) = self.entries.get_mut(self.current_index) {
-            if entry.status == ReactionEntryStatus::Pending {
-                entry.status = ReactionEntryStatus::Declined;
-                self.current_index += 1;
-                return true;
-            }
+        if let Some(entry) = self.entries.get_mut(self.current_index)
+            && entry.status == ReactionEntryStatus::Pending
+        {
+            entry.status = ReactionEntryStatus::Declined;
+            self.current_index += 1;
+            return true;
         }
         false
     }
 
     /// 标记当前条目为已执行。
     pub fn mark_executed(&mut self) -> bool {
-        if let Some(entry) = self.entries.get_mut(self.current_index) {
-            if entry.status == ReactionEntryStatus::Accepted {
-                entry.status = ReactionEntryStatus::Executed;
-                self.current_index += 1;
-                return true;
-            }
+        if let Some(entry) = self.entries.get_mut(self.current_index)
+            && entry.status == ReactionEntryStatus::Accepted
+        {
+            entry.status = ReactionEntryStatus::Executed;
+            self.current_index += 1;
+            return true;
         }
         false
     }

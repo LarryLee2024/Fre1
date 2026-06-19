@@ -311,7 +311,7 @@ impl Default for AbilityExecutionParams {
 }
 
 /// 环境参数。
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct EnvironmentParams {
     /// 是否在高地
     pub is_high_ground: bool,
@@ -321,17 +321,6 @@ pub struct EnvironmentParams {
     pub is_flanked: bool,
     /// 当前回合数
     pub current_turn: u32,
-}
-
-impl Default for EnvironmentParams {
-    fn default() -> Self {
-        Self {
-            is_high_ground: false,
-            has_cover: false,
-            is_flanked: false,
-            current_turn: 0,
-        }
-    }
 }
 
 /// 执行计算的结果。

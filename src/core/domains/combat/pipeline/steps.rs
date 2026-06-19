@@ -181,10 +181,8 @@ pub(crate) fn step_turn_end(
     );
 
     // 如果切换队伍 → 发射 BetweenTurns
-    if changed_team {
-        if let Some(team) = prev_team {
-            commands.trigger(BetweenTurns { team });
-        }
+    if changed_team && let Some(team) = prev_team {
+        commands.trigger(BetweenTurns { team });
     }
 
     // 如果所有队伍完成一轮 → 发射 OnRoundEnd

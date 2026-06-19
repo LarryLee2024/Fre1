@@ -96,13 +96,13 @@ pub(crate) fn dispatch_combat_replay_commands(
         };
 
         // Try to match this command's unit to the current TurnQueue unit
-        if let Some(mapped_entity) = registry.get_entity_by_str(cmd_unit_id) {
-            if *mapped_entity == current_unit {
-                // 找到匹配命令！推进到下一帧 & 触发恢复
-                let _ = &mut playback.0.as_mut().unwrap().advance_frame();
-                commands.trigger(UnitActionComplete { unit: current_unit });
-                return;
-            }
+        if let Some(mapped_entity) = registry.get_entity_by_str(cmd_unit_id)
+            && *mapped_entity == current_unit
+        {
+            // 找到匹配命令！推进到下一帧 & 触发恢复
+            let _ = &mut playback.0.as_mut().unwrap().advance_frame();
+            commands.trigger(UnitActionComplete { unit: current_unit });
+            return;
         }
     }
 }

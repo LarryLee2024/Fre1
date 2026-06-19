@@ -5,6 +5,7 @@
 //! 详见 docs/04-data/domains/progression_schema.md
 
 use std::collections::HashMap;
+use std::collections::hash_map::Entry;
 
 use bevy::prelude::*;
 use serde::Deserialize;
@@ -272,14 +273,16 @@ impl SubclassChoice {
     ///
     /// 返回 `Ok(())` 或 `Err` 如果该职业已有子职。
     pub fn choose(&mut self, class_id: ClassId, subclass_id: SubclassId) -> Result<(), String> {
-        if self.choices.contains_key(&class_id) {
-            Err(format!(
+        match self.choices.entry(class_id) {
+            Entry::Occupied(entry) => Err(format!(
                 "Class {:?} already has subclass {:?}",
-                class_id, self.choices[&class_id]
-            ))
-        } else {
-            self.choices.insert(class_id, subclass_id);
-            Ok(())
+                entry.key(),
+                entry.get()
+            )),
+            Entry::Vacant(entry) => {
+                entry.insert(subclass_id);
+                Ok(())
+            }
         }
     }
 

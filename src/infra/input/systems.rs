@@ -46,20 +46,17 @@ pub fn collect_input_actions(
 
     // 采集鼠标按键
     for (button, action) in &input_map.mouse {
-        if mouse_buttons.pressed(*button) {
-            if !input_state.pressed_actions.contains(action) {
-                input_state.pressed_actions.push(*action);
-            }
+        if mouse_buttons.pressed(*button) && !input_state.pressed_actions.contains(action) {
+            input_state.pressed_actions.push(*action);
         }
-        if mouse_buttons.just_pressed(*button) {
-            if !input_state.just_pressed_actions.contains(action) {
-                input_state.just_pressed_actions.push(*action);
-            }
+        if mouse_buttons.just_pressed(*button) && !input_state.just_pressed_actions.contains(action)
+        {
+            input_state.just_pressed_actions.push(*action);
         }
-        if mouse_buttons.just_released(*button) {
-            if !input_state.just_released_actions.contains(action) {
-                input_state.just_released_actions.push(*action);
-            }
+        if mouse_buttons.just_released(*button)
+            && !input_state.just_released_actions.contains(action)
+        {
+            input_state.just_released_actions.push(*action);
         }
     }
 

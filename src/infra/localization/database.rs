@@ -100,10 +100,10 @@ impl LocalizationDatabase {
         }
 
         // Step 2: Fallback 到 en-US
-        if current != "en-US" {
-            if let Some(pattern) = self.get_pattern("en-US", key) {
-                return Ok(self.format_pattern(pattern, params));
-            }
+        if current != "en-US"
+            && let Some(pattern) = self.get_pattern("en-US", key)
+        {
+            return Ok(self.format_pattern(pattern, params));
         }
 
         // Step 3: 兜底 — 返回 key 本身

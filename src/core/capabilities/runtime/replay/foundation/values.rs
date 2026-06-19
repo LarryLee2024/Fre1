@@ -241,7 +241,7 @@ impl ReplayRecorder {
 
     /// 是否为检查点帧（需要记录校验和）。
     pub fn is_checkpoint_frame(&self, frame_number: u64) -> bool {
-        self.checkpoint_interval > 0 && frame_number % self.checkpoint_interval as u64 == 0
+        self.checkpoint_interval > 0 && frame_number.is_multiple_of(self.checkpoint_interval as u64)
     }
 
     /// 设置当前帧的校验和。

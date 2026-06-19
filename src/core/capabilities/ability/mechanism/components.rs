@@ -140,9 +140,7 @@ impl ActiveAbilityContainer {
 
     /// 检查指定 spec_id 是否在冷却中。
     pub fn is_on_cooldown(&self, spec_id: &str) -> bool {
-        self.cooldowns
-            .get(spec_id)
-            .map_or(false, |c| !c.is_expired())
+        self.cooldowns.get(spec_id).is_some_and(|c| !c.is_expired())
     }
 
     /// 获取指定 spec_id 的剩余冷却回合数。

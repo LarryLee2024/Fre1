@@ -112,5 +112,5 @@ fn turn_queue_entries_is_read_only() {
     let entries = q.entries();
     // entries 为 &[TurnEntry]，只读
     let _ = entries.len(); // 仅编译验证，entries 为不可变引用
-    assert!(entries.len() > 0);
+    assert!(!entries.is_empty());
 }

@@ -15,7 +15,7 @@ use super::super::components::DiceType;
 /// 每个生命骰恢复的 HP 量（1d[type] + 体质调整值）。
 pub fn hit_dice_healing_per_die(dice_type: DiceType, constitution_modifier: i32) -> u32 {
     let base = dice_type.max_value();
-    let avg = (base + 1) / 2; // 平均值（取整）
+    let avg = base.div_ceil(2); // 平均值（取整）
     // 使用平均值而非随机值（确定性实现）
     let healing = avg.saturating_add_signed(constitution_modifier);
     healing.max(1) // 至少恢复 1 HP
@@ -31,7 +31,7 @@ pub fn hit_dice_healing_per_die(dice_type: DiceType, constitution_modifier: i32)
 /// # 返回值
 /// 长休后可拥有的最大生命骰数量。
 pub fn max_hit_dice_after_long_rest(character_level: u32) -> u32 {
-    (character_level + 1) / 2 // ceil(level / 2)
+    character_level.div_ceil(2) // ceil(level / 2)
 }
 
 /// 长休恢复全部 HP（简化函数）。

@@ -183,14 +183,14 @@ impl GridMap {
             }
 
             for neighbor in self.neighbors_4(pos) {
-                if let Some(idx) = self.index(neighbor) {
-                    if !visited[idx] {
-                        visited[idx] = true;
-                        let tile = &self.tiles[idx];
-                        if tile.is_passable() {
-                            result.push(neighbor);
-                            queue.push_back((neighbor, dist + 1));
-                        }
+                if let Some(idx) = self.index(neighbor)
+                    && !visited[idx]
+                {
+                    visited[idx] = true;
+                    let tile = &self.tiles[idx];
+                    if tile.is_passable() {
+                        result.push(neighbor);
+                        queue.push_back((neighbor, dist + 1));
                     }
                 }
             }

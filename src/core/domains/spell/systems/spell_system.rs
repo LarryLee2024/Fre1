@@ -86,47 +86,47 @@ pub fn on_spell_cast_request(
     }
 
     // 4. 检查专注冲突
-    if let Ok(concentration) = concentration_query.get(request.caster) {
-        if check_concentration(Some(concentration), &request.spell_id).is_err() {
-            // 施放新专注法术时会自动解除旧专注，不阻止施法
-            commands.trigger(ConcentrationBroken {
-                entity: request.caster,
-                spell_id: concentration.spell_id.clone(),
-                reason: ConcentrationBreakReason::ReplacedByNewSpell {
-                    new_spell_id: request.spell_id.clone(),
-                },
-            });
-            commands.entity(request.caster).remove::<Concentration>();
-        }
+    if let Ok(concentration) = concentration_query.get(request.caster)
+        && check_concentration(Some(concentration), &request.spell_id).is_err()
+    {
+        // 施放新专注法术时会自动解除旧专注，不阻止施法
+        commands.trigger(ConcentrationBroken {
+            entity: request.caster,
+            spell_id: concentration.spell_id.clone(),
+            reason: ConcentrationBreakReason::ReplacedByNewSpell {
+                new_spell_id: request.spell_id.clone(),
+            },
+        });
+        commands.entity(request.caster).remove::<Concentration>();
     }
 
     // 5. 检查法术位
-    if cast_level.as_u8() > 0 {
-        if let Ok(mut slot_pool) = slot_pool_query.get_mut(request.caster) {
-            if check_slot_available(&slot_pool, cast_level, &request.spell_id).is_err() {
-                commands.trigger(SpellCastResult {
-                    caster: request.caster,
-                    spell_id: request.spell_id.clone(),
-                    effective_level: cast_level,
-                    result: CastOutcome::Failed {
-                        reason: "法术位不足".to_string(),
-                    },
-                });
-                return;
-            }
-            // 消耗法术位
-            slot_pool.consume(cast_level);
-            commands.trigger(SpellSlotChanged {
-                entity: request.caster,
-                level: cast_level,
-                remaining: slot_pool.remaining(cast_level),
-                total: slot_pool
-                    .slots_by_level
-                    .get((cast_level.as_u8().saturating_sub(1)) as usize)
-                    .map_or(0, |e| e.total),
-                source: "spell_cast".to_string(),
+    if cast_level.as_u8() > 0
+        && let Ok(mut slot_pool) = slot_pool_query.get_mut(request.caster)
+    {
+        if check_slot_available(&slot_pool, cast_level, &request.spell_id).is_err() {
+            commands.trigger(SpellCastResult {
+                caster: request.caster,
+                spell_id: request.spell_id.clone(),
+                effective_level: cast_level,
+                result: CastOutcome::Failed {
+                    reason: "法术位不足".to_string(),
+                },
             });
+            return;
         }
+        // 消耗法术位
+        slot_pool.consume(cast_level);
+        commands.trigger(SpellSlotChanged {
+            entity: request.caster,
+            level: cast_level,
+            remaining: slot_pool.remaining(cast_level),
+            total: slot_pool
+                .slots_by_level
+                .get((cast_level.as_u8().saturating_sub(1)) as usize)
+                .map_or(0, |e| e.total),
+            source: "spell_cast".to_string(),
+        });
     }
 
     // 6. 施法成功

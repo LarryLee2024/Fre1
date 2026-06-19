@@ -74,10 +74,10 @@ pub fn validate_no_cycles(
         stack.insert(current.to_string());
 
         for (from, to) in edges {
-            if *from == current {
-                if let Some(next) = to {
-                    dfs(next, edges, visited, stack)?;
-                }
+            if *from == current
+                && let Some(next) = to
+            {
+                dfs(next, edges, visited, stack)?;
             }
         }
 

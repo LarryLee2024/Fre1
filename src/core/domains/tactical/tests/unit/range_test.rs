@@ -111,7 +111,7 @@ fn attack_range_minimal() {
     for pos in &range {
         let dist = center.chebyshev_distance(*pos);
         assert!(
-            dist >= 1 && dist <= 2,
+            (1..=2).contains(&dist),
             "position {:?} at distance {} outside [1,2]",
             pos,
             dist
@@ -142,7 +142,7 @@ fn attack_range_long_range() {
     for pos in &range {
         let dist = center.chebyshev_distance(*pos);
         assert!(
-            dist >= 3 && dist <= 5,
+            (3..=5).contains(&dist),
             "position {:?} at distance {} outside [3,5]",
             pos,
             dist

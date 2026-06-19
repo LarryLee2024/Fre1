@@ -33,31 +33,31 @@ pub fn on_advance_objective(
     mut query: Query<&mut QuestLog>,
 ) {
     let event = _trigger.event();
-    if let Ok(mut quest_log) = query.get_mut(event.entity) {
-        if let Some(entry) = quest_log.get_entry_mut(&event.quest_id) {
-            if entry.state != QuestState::Active {
-                return;
+    if let Ok(mut quest_log) = query.get_mut(event.entity)
+        && let Some(entry) = quest_log.get_entry_mut(&event.quest_id)
+    {
+        if entry.state != QuestState::Active {
+            return;
+        }
+        if let Some(progress) = entry
+            .objective_progress
+            .iter_mut()
+            .find(|p| p.objective_id.0 == event.objective_id)
+        {
+            let just_completed =
+                progress.advance(event.new_progress.saturating_sub(event.old_progress));
+
+            if just_completed {
+                commands.trigger(ObjectiveCompleted {
+                    entity: event.entity,
+                    quest_id: event.quest_id.clone(),
+                    objective_id: event.objective_id.clone(),
+                    objective_type: "objective".to_string(),
+                });
             }
-            if let Some(progress) = entry
-                .objective_progress
-                .iter_mut()
-                .find(|p| p.objective_id.0 == event.objective_id)
-            {
-                let just_completed =
-                    progress.advance(event.new_progress.saturating_sub(event.old_progress));
 
-                if just_completed {
-                    commands.trigger(ObjectiveCompleted {
-                        entity: event.entity,
-                        quest_id: event.quest_id.clone(),
-                        objective_id: event.objective_id.clone(),
-                        objective_type: "objective".to_string(),
-                    });
-                }
-
-                if entry.all_objectives_completed() {
-                    // 标记任务为可交付（仍处于 Active，但可交付）
-                }
+            if entry.all_objectives_completed() {
+                // 标记任务为可交付（仍处于 Active，但可交付）
             }
         }
     }
@@ -66,24 +66,24 @@ pub fn on_advance_objective(
 /// 交付任务 — 发放奖励并标记完成。
 pub fn on_turn_in_quest(_trigger: On<QuestTurnedIn>, mut query: Query<&mut QuestLog>) {
     let event = _trigger.event();
-    if let Ok(mut quest_log) = query.get_mut(event.entity) {
-        if let Some(entry) = quest_log.get_entry_mut(&event.quest_id) {
-            if !can_turn_in(entry) {
-                return;
-            }
-            entry.state = QuestState::Completed;
-            quest_log.completed_count += 1;
+    if let Ok(mut quest_log) = query.get_mut(event.entity)
+        && let Some(entry) = quest_log.get_entry_mut(&event.quest_id)
+    {
+        if !can_turn_in(entry) {
+            return;
         }
+        entry.state = QuestState::Completed;
+        quest_log.completed_count += 1;
     }
 }
 
 /// 处理任务失败。
 pub fn on_quest_failed(_trigger: On<QuestFailed>, mut query: Query<&mut QuestLog>) {
     let event = _trigger.event();
-    if let Ok(mut quest_log) = query.get_mut(event.entity) {
-        if let Some(entry) = quest_log.get_entry_mut(&event.quest_id) {
-            entry.state = QuestState::Failed;
-            entry.fail_reason = Some(event.fail_reason.clone());
-        }
+    if let Ok(mut quest_log) = query.get_mut(event.entity)
+        && let Some(entry) = quest_log.get_entry_mut(&event.quest_id)
+    {
+        entry.state = QuestState::Failed;
+        entry.fail_reason = Some(event.fail_reason.clone());
     }
 }

@@ -123,7 +123,7 @@ impl DurationCalculation {
         match self {
             Self::Fixed => 0, // Fixed 本身没有值，turns 在 EffectDuration 中指定
             Self::PerLevel { base, per_level } => {
-                let levels_above_base = if level > 1 { level - 1 } else { 0 };
+                let levels_above_base = level.saturating_sub(1);
                 base + per_level * levels_above_base
             }
             Self::AttributeBased {

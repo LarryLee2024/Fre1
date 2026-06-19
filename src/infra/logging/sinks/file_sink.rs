@@ -86,11 +86,11 @@ impl FileSink {
         let mut writer = self.writer.lock().expect("FileSink lock poisoned");
         let line_len = json_line.len() as u64 + 1; // +1 for newline
 
-        if writer.bytes_written + line_len > self.config.max_bytes {
-            if let Ok(rotated) = Self::rotate(&self.config, &writer.path) {
-                writer.file = rotated;
-                writer.bytes_written = 0;
-            }
+        if writer.bytes_written + line_len > self.config.max_bytes
+            && let Ok(rotated) = Self::rotate(&self.config, &writer.path)
+        {
+            writer.file = rotated;
+            writer.bytes_written = 0;
         }
 
         if let Err(e) = writeln!(writer.file, "{}", json_line) {

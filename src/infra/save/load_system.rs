@@ -23,7 +23,7 @@ pub(crate) struct PendingLoad {
 
 pub fn on_load_request(
     trigger: On<LoadRequest>,
-    mut save_manager: ResMut<SaveManager>,
+    _save_manager: ResMut<SaveManager>,
     mut commands: Commands,
 ) {
     let path = trigger.event().path.clone();
@@ -90,12 +90,12 @@ pub(crate) fn process_pending_load(
     pending: Option<ResMut<PendingLoad>>,
     mut save_manager: ResMut<SaveManager>,
     mut entity_remapper: ResMut<EntityRemapper>,
-    mut party: Option<ResMut<Party>>,
-    mut bond_state: Option<ResMut<BondState>>,
-    mut turn_queue: Option<ResMut<TurnQueue>>,
+    party: Option<ResMut<Party>>,
+    bond_state: Option<ResMut<BondState>>,
+    turn_queue: Option<ResMut<TurnQueue>>,
     battle_phase: Option<ResMut<State<BattlePhase>>>,
 ) {
-    let Some(mut pending) = pending else {
+    let Some(pending) = pending else {
         return;
     };
 
@@ -196,18 +196,18 @@ pub(crate) fn process_pending_load(
                 .party
                 .active_bonds
                 .iter()
-                .filter_map(|bond_data| {
+                .map(|bond_data| {
                     let participants: Vec<Entity> = bond_data
                         .participant_ids
                         .iter()
                         .filter_map(|pid| entity_remapper.lookup(PersistentEntityId(*pid)))
                         .collect();
-                    Some(ActiveBond {
+                    ActiveBond {
                         bond_id: crate::shared::ids::BondDefId::new(&bond_data.bond_id),
                         level: bond_data.level,
                         participants,
                         accumulated_battles: bond_data.accumulated_battles,
-                    })
+                    }
                 })
                 .collect(),
             defs: HashMap::new(),
@@ -247,7 +247,7 @@ pub(crate) fn process_pending_load(
             .talent_tree
             .unlocked_talents
             .iter()
-            .map(|t| TalentId::new(t))
+            .map(TalentId::new)
             .collect();
 
         commands.entity(entity).insert((

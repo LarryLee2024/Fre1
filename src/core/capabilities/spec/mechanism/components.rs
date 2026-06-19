@@ -84,10 +84,10 @@ impl SpecContainer {
     pub fn remove_ability(&mut self, spec_id: &SpecId) -> Option<AbilitySpec> {
         if let Some(spec) = self.abilities.remove(spec_id) {
             // 清理反向索引：只有当前 def 指向该 spec_id 时才移除
-            if let Some(idx_spec_id) = self.ability_by_def.get(&spec.def_id) {
-                if idx_spec_id == spec_id {
-                    self.ability_by_def.remove(&spec.def_id);
-                }
+            if let Some(idx_spec_id) = self.ability_by_def.get(&spec.def_id)
+                && idx_spec_id == spec_id
+            {
+                self.ability_by_def.remove(&spec.def_id);
             }
             return Some(spec);
         }

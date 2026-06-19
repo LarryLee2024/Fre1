@@ -211,7 +211,7 @@ fn cycle_detection_stops_at_limit() {
 
     let report = bus.dispatch_pending(&mut commands);
     assert!(report.cycle_interrupted);
-    assert!(report.total <= 5 * 1);
+    assert!(report.total <= 5);
 }
 
 // ── Subscribe/unsubscribe ──────────────────────────────
@@ -220,7 +220,7 @@ fn cycle_detection_stops_at_limit() {
 fn unsubscribe_removes_subscriber() {
     let mut world = World::new();
     let _entity = world.spawn_empty().id();
-    let mut commands = world.commands();
+    let _commands = world.commands();
     let mut bus = EventBus::new();
     bus.subscribe(SubscriberEntry {
         id: "test_sub".into(),
@@ -237,7 +237,7 @@ fn unsubscribe_removes_subscriber() {
 fn unsubscribe_idempotent() {
     let mut world = World::new();
     let _entity = world.spawn_empty().id();
-    let mut commands = world.commands();
+    let _commands = world.commands();
     let mut bus = EventBus::new();
     bus.unsubscribe("nonexistent_sub");
     assert_eq!(bus.total_subscribers(), 0);
@@ -339,7 +339,7 @@ fn report_with_error_fails() {
 fn reset_cycle_counters() {
     let mut world = World::new();
     let _entity = world.spawn_empty().id();
-    let mut commands = world.commands();
+    let _commands = world.commands();
     let mut bus = EventBus::new();
     // TODO: cycle_counters 是私有字段，无法直接验证重置结果
     // 需要 @feature-developer 暴露 pub fn cycle_count(&self, tag: &EventTag) -> u32

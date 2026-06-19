@@ -54,18 +54,10 @@ fn drain() -> HashMap<LogCode, u64> {
 /// 定期从全局计数器取增量，输出 DEBUG 摘要日志。
 #[derive(Resource, Reflect)]
 #[reflect(Resource)]
+#[derive(Default)]
 pub struct MetricsCollector {
     last_summary_frame: u64,
     lifetime_total: u64,
-}
-
-impl Default for MetricsCollector {
-    fn default() -> Self {
-        Self {
-            last_summary_frame: 0,
-            lifetime_total: 0,
-        }
-    }
 }
 
 impl MetricsCollector {
@@ -113,7 +105,7 @@ impl MetricsCollector {
 
 /// 每 60 帧输出一次度量摘要。
 pub fn metrics_flush_system(mut collector: ResMut<MetricsCollector>, frame: Res<FrameCounter>) {
-    if frame.0 % 60 == 0 {
+    if frame.0.is_multiple_of(60) {
         collector.flush_summary(frame.0);
     }
 }

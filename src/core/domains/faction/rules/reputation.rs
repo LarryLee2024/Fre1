@@ -124,18 +124,16 @@ pub fn evaluate_relationship(
     reputation_level: ReputationLevel,
 ) -> RelationshipState {
     // 声望 >= +50 时，即使阵营关系为 Hostile，个体也不被主动攻击
-    if reputation_level == ReputationLevel::Honored || reputation_level == ReputationLevel::Revered
+    if (reputation_level == ReputationLevel::Honored
+        || reputation_level == ReputationLevel::Revered)
+        && base_relation == FactionRelationType::Hostile
     {
-        if base_relation == FactionRelationType::Hostile {
-            return RelationshipState::Neutral;
-        }
+        return RelationshipState::Neutral;
     }
 
     // 声望 <= -50 时，即使阵营关系为 Allied，个体也无法交易/对话
-    if reputation_level == ReputationLevel::Hated {
-        if base_relation == FactionRelationType::Allied {
-            return RelationshipState::Hostile;
-        }
+    if reputation_level == ReputationLevel::Hated && base_relation == FactionRelationType::Allied {
+        return RelationshipState::Hostile;
     }
 
     // 阵营关系为 War 时，无视声望

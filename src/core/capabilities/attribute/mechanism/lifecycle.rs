@@ -8,19 +8,10 @@ use crate::core::capabilities::attribute::foundation::{
 
 /// 全局属性注册表（Resource）。
 /// 在内容加载阶段构建，运行时只读。
-#[derive(Resource, Debug, Clone)]
+#[derive(Resource, Debug, Clone, Default)]
 pub struct AttributeRegistry {
     pub definitions: HashMap<AttributeId, AttributeDefinition>,
     pub formulas: HashMap<AttributeId, DerivedFormula>,
-}
-
-impl Default for AttributeRegistry {
-    fn default() -> Self {
-        Self {
-            definitions: HashMap::new(),
-            formulas: HashMap::new(),
-        }
-    }
 }
 
 /// 属性注册错误。
@@ -123,12 +114,12 @@ impl AttributeRegistry {
         }
 
         // V4: 无循环引用（限制在 Derived 类别）
-        if def.category == AttributeCategory::Derived {
-            if self.would_create_cycle(&def.id, &def.derived_dependencies) {
-                return Err(AttributeRegistrationError::DerivedCircularDependency(
-                    def.id,
-                ));
-            }
+        if def.category == AttributeCategory::Derived
+            && self.would_create_cycle(&def.id, &def.derived_dependencies)
+        {
+            return Err(AttributeRegistrationError::DerivedCircularDependency(
+                def.id,
+            ));
         }
 
         let id = def.id.clone();

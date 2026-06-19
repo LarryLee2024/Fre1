@@ -52,10 +52,10 @@ pub(crate) fn on_turn_end_surface_recovery(
 ) {
     for (entity, mut override_, mut props, tile_pos) in surface_query.iter_mut() {
         // 定时恢复：递减剩余回合
-        if let Some(ref mut remaining) = override_.remaining_duration {
-            if *remaining > 0 {
-                *remaining -= 1;
-            }
+        if let Some(ref mut remaining) = override_.remaining_duration
+            && *remaining > 0
+        {
+            *remaining -= 1;
         }
 
         // 检查是否到期（剩余回合为 0 或已过期）

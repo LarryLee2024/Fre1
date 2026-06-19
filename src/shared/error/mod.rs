@@ -4,7 +4,7 @@
 //! 详见 `docs/00-governance/coding-rules.md` §错误处理
 //!
 //! # 核心类型
-//! - [`ErrorContext<E>`]: 带领域标签的错误包装
+//! - [`ErrorContext<E>`][]: 带领域标签的错误包装
 //! - [`ContextExt`]: 为 `Result<T, E>` 提供 `.domain()` / `.with_context()` 扩展
 
 use std::error::Error;

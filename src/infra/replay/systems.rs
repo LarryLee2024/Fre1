@@ -47,7 +47,7 @@ pub fn recording_frame_bookend_system(mut session: ResMut<RecordingSession>) {
         .recorder
         .current_frame
         .as_ref()
-        .map(|f| calculate_frame_checksum(f))
+        .map(calculate_frame_checksum)
         .unwrap_or(0);
 
     session.finalize_frame(checksum);
@@ -117,7 +117,7 @@ pub fn playback_frame_bookend_system(
             has_mismatches: session.has_mismatches(),
         });
         // 回放完成后清理会话资源
-        drop(session);
+        let _ = session;
         session_wrapper.0 = None;
     }
 }

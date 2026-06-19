@@ -47,7 +47,7 @@ fn rng_gen_range_within_bounds() {
     for _ in 0..1000 {
         let val = rng.gen_range(RngStream::Combat, 5, 10);
         assert!(
-            val >= 5 && val < 10,
+            (5..10).contains(&val),
             "gen_range(5,10) = {} should be in [5,10)",
             val
         );

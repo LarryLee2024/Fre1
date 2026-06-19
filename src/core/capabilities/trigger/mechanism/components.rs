@@ -47,12 +47,12 @@ impl TriggerContainer {
     ///
     /// 自动清理 by_type 索引。幂等——不存在的 ID 静默忽略。
     pub fn remove(&mut self, trigger_id: &str) {
-        if let Some(entry) = self.triggers.remove(trigger_id) {
-            if let Some(ids) = self.by_type.get_mut(&entry.trigger_type) {
-                ids.retain(|id| id != trigger_id);
-                if ids.is_empty() {
-                    self.by_type.remove(&entry.trigger_type);
-                }
+        if let Some(entry) = self.triggers.remove(trigger_id)
+            && let Some(ids) = self.by_type.get_mut(&entry.trigger_type)
+        {
+            ids.retain(|id| id != trigger_id);
+            if ids.is_empty() {
+                self.by_type.remove(&entry.trigger_type);
             }
         }
     }

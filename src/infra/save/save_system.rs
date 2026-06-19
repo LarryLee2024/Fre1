@@ -4,6 +4,15 @@ use crate::core::domains::combat::{ActionPoints, BattlePhase, CombatParticipant,
 use crate::core::domains::party::{ActiveBond, BondState, Party, PartyMember};
 use crate::core::domains::progression::{ClassLevels, Experience, SubclassChoice, TalentTree};
 
+/// Query type for progression entities — factored out to satisfy clippy::type_complexity.
+type ProgressionEntityQuery = (
+    Entity,
+    &'static Experience,
+    &'static ClassLevels,
+    Option<&'static TalentTree>,
+    Option<&'static SubclassChoice>,
+);
+
 use super::events::{SaveCompleted, SaveRequest};
 use super::resources::{EntityRemapper, SaveManager};
 use super::save_data::*;
@@ -18,13 +27,7 @@ pub fn save_world_system(
         Option<&Dead>,
         Option<&ActionPoints>,
     )>,
-    progression_entities: Query<(
-        Entity,
-        &Experience,
-        &ClassLevels,
-        Option<&TalentTree>,
-        Option<&SubclassChoice>,
-    )>,
+    progression_entities: Query<ProgressionEntityQuery>,
     battle_phase: Option<Res<State<BattlePhase>>>,
     turn_queue: Option<Res<TurnQueue>>,
     party: Option<Res<Party>>,
@@ -125,7 +128,7 @@ pub fn save_world_system(
         .map(|bs| {
             bs.active_bonds
                 .iter()
-                .filter_map(|bond| {
+                .map(|bond| {
                     let participant_ids: Vec<u64> = bond
                         .participants
                         .iter()
@@ -137,12 +140,12 @@ pub fn save_world_system(
                                 .map(|(pid, _)| pid.0)
                         })
                         .collect();
-                    Some(ActiveBondSaveData {
+                    ActiveBondSaveData {
                         bond_id: bond.bond_id.to_string(),
                         level: bond.level,
                         participant_ids,
                         accumulated_battles: bond.accumulated_battles,
-                    })
+                    }
                 })
                 .collect()
         })

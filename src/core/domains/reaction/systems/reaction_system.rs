@@ -40,18 +40,18 @@ pub fn process_reaction_queue(
         };
 
         // 检查触发者是否仍可用反应
-        if let Ok(state) = query.get(entry.reactor) {
-            if state.can_react() {
-                // 可用 → 触发事件，一次只处理一个反应
-                let ctx = format!("{:?} 触发 {:?}", entry.reactor, entry.reaction_type);
-                commands.trigger(ReactionTriggered {
-                    reactor: entry.reactor,
-                    reaction_type: entry.reaction_type,
-                    priority: entry.priority,
-                    context: ctx,
-                });
-                return;
-            }
+        if let Ok(state) = query.get(entry.reactor)
+            && state.can_react()
+        {
+            // 可用 → 触发事件，一次只处理一个反应
+            let ctx = format!("{:?} 触发 {:?}", entry.reactor, entry.reaction_type);
+            commands.trigger(ReactionTriggered {
+                reactor: entry.reactor,
+                reaction_type: entry.reaction_type,
+                priority: entry.priority,
+                context: ctx,
+            });
+            return;
         }
 
         // 不可用 → 跳过此条目，继续查找下一个

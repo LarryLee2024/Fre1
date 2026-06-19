@@ -82,7 +82,7 @@ impl Wallet {
             let can_use = amount * base;
             if can_use >= remaining {
                 // 向上取整确保扣款彻底
-                let deduct_amount = (remaining + base - 1) / base;
+                let deduct_amount = remaining.div_ceil(base);
                 if let Some(balance) = self.currencies.get_mut(currency) {
                     *balance -= deduct_amount;
                 }
@@ -103,7 +103,7 @@ impl Wallet {
                     let can_use = *amount * base;
                     if can_use >= remaining {
                         // 向上取整确保扣款彻底
-                        let deduct_amount = (remaining + base - 1) / base;
+                        let deduct_amount = remaining.div_ceil(base);
                         *amount -= deduct_amount;
                         remaining = 0;
                         break;
@@ -252,7 +252,7 @@ impl ShopInstance {
     /// 检查指定物品是否有足够库存。
     pub fn has_enough_stock(&self, item_id: &str, quantity: u32) -> bool {
         match self.current_stock.get(item_id) {
-            Some(&qty) if qty == -1 => true, // 无限
+            Some(-1) => true, // 无限
             Some(&qty) => qty >= quantity as i32,
             None => false,
         }
@@ -260,10 +260,10 @@ impl ShopInstance {
 
     /// 移除库存。
     pub fn remove_stock(&mut self, item_id: &str, quantity: u32) {
-        if let Some(stock) = self.current_stock.get_mut(item_id) {
-            if *stock > 0 {
-                *stock = stock.saturating_sub(quantity as i32);
-            }
+        if let Some(stock) = self.current_stock.get_mut(item_id)
+            && *stock > 0
+        {
+            *stock = stock.saturating_sub(quantity as i32);
         }
     }
 

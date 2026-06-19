@@ -210,10 +210,8 @@ pub fn filter_by_type<'a>(
         .iter()
         .filter(|c| {
             // 死亡实体过滤
-            if !c.alive && !def.allow_dead_targets {
-                if !matches!(def.target_type, TargetType::Dead) {
-                    return false;
-                }
+            if !c.alive && !def.allow_dead_targets && !matches!(def.target_type, TargetType::Dead) {
+                return false;
             }
 
             // 施法者自身过滤
@@ -253,22 +251,22 @@ pub fn filter_by_type<'a>(
 /// 注意：由于网格/阵营系统尚未实现，部分校验使用占位逻辑。
 pub fn validate_candidate(def: &TargetingDef, candidate: &CandidateTarget) -> ValidationResult {
     // 射程校验（不变量 3.2）
-    if let Some(max_range) = def.range {
-        if candidate.distance > max_range {
-            return ValidationResult::fail(format!(
-                "distance {} exceeds max range {}",
-                candidate.distance, max_range
-            ));
-        }
+    if let Some(max_range) = def.range
+        && candidate.distance > max_range
+    {
+        return ValidationResult::fail(format!(
+            "distance {} exceeds max range {}",
+            candidate.distance, max_range
+        ));
     }
 
-    if let Some(min_range) = def.min_range {
-        if candidate.distance < min_range {
-            return ValidationResult::fail(format!(
-                "distance {} is below min range {}",
-                candidate.distance, min_range
-            ));
-        }
+    if let Some(min_range) = def.min_range
+        && candidate.distance < min_range
+    {
+        return ValidationResult::fail(format!(
+            "distance {} is below min range {}",
+            candidate.distance, min_range
+        ));
     }
 
     ValidationResult::Pass
@@ -283,7 +281,7 @@ pub fn validate_candidate(def: &TargetingDef, candidate: &CandidateTarget) -> Va
 /// 使用稳定的比较排序，同优先级保持原始顺序。
 pub fn apply_priority(
     rule: &PriorityRule,
-    targets: &mut Vec<EntityTarget>,
+    targets: &mut [EntityTarget],
     candidates: &[&CandidateTarget],
 ) {
     // 建立 entity_id → CandidateTarget 的映射
@@ -377,14 +375,14 @@ pub fn validate_targeting_def(def: &TargetingDef) -> Result<(), TargetingError> 
     }
 
     // V3: min_range ≤ range
-    if let (Some(min), Some(max)) = (def.min_range, def.range) {
-        if min > max {
-            return Err(TargetingError::InvalidRange {
-                min: Some(min),
-                max: Some(max),
-                detail: format!("min_range {} > range {}", min, max),
-            });
-        }
+    if let (Some(min), Some(max)) = (def.min_range, def.range)
+        && min > max
+    {
+        return Err(TargetingError::InvalidRange {
+            min: Some(min),
+            max: Some(max),
+            detail: format!("min_range {} > range {}", min, max),
+        });
     }
 
     // V4: Single 形状时 max_targets = 1

@@ -195,7 +195,7 @@ impl HitDicePool {
     /// 恢复量为 max(当前, ceil(等级/2))，但不超过 max。
     /// 不变量 3.4。
     pub fn recover_for_long_rest(&mut self) {
-        let max_after_rest = (self.max + 1) / 2; // ceil(level/2)，max 等于角色等级
+        let max_after_rest = self.max.div_ceil(2); // ceil(level/2)，max 等于角色等级
         let recover_to = max_after_rest.min(self.max);
         if self.current < recover_to {
             self.current = recover_to;

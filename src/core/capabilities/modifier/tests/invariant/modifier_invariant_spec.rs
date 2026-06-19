@@ -113,7 +113,7 @@ fn same_source_same_attr_same_op_detected() {
 
 #[test]
 fn priority_ordering_deterministic() {
-    let mut mods = vec![
+    let mut mods = [
         ModifierBuilder::new("attr_atk", 10.0).priority(30).build(),
         ModifierBuilder::new("attr_atk", 20.0).priority(10).build(),
         ModifierBuilder::new("attr_atk", 30.0).priority(50).build(),

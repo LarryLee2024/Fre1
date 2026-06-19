@@ -60,24 +60,19 @@ impl EventTag {
 /// 事件分发优先级。
 ///
 /// 高优先级事件先于低优先级事件分发（不变量 §3.3）。
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Default)]
 pub enum EventPriority {
     /// 最高优先级（最先分发）
     Highest,
     /// 高优先级
     High,
     /// 正常优先级（默认）
+    #[default]
     Normal,
     /// 低优先级
     Low,
     /// 最低优先级（最后分发）
     Lowest,
-}
-
-impl Default for EventPriority {
-    fn default() -> Self {
-        Self::Normal
-    }
 }
 
 /// 事件循环保护限制。

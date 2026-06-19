@@ -215,24 +215,23 @@ pub fn tick_durations(
         }
 
         // 处理周期 Tick
-        if effect.stage == EffectStage::Active {
-            if let Some(ref mut tick_state) = effect.tick_state {
-                if tick_state.advance(turns_elapsed) {
-                    let instance_id = effect.instance_id.clone();
-                    let def_id = effect.def_id.clone();
-                    let target_entity = effect.target_entity.clone();
-                    let tick_number = tick_state.tick_count;
-                    let total_ticks = tick_state.max_ticks;
-                    result.ticked.push(instance_id.clone());
-                    commands.trigger(EffectTicked {
-                        instance_id,
-                        def_id,
-                        target_entity,
-                        tick_number,
-                        total_ticks,
-                    });
-                }
-            }
+        if effect.stage == EffectStage::Active
+            && let Some(ref mut tick_state) = effect.tick_state
+            && tick_state.advance(turns_elapsed)
+        {
+            let instance_id = effect.instance_id.clone();
+            let def_id = effect.def_id.clone();
+            let target_entity = effect.target_entity.clone();
+            let tick_number = tick_state.tick_count;
+            let total_ticks = tick_state.max_ticks;
+            result.ticked.push(instance_id.clone());
+            commands.trigger(EffectTicked {
+                instance_id,
+                def_id,
+                target_entity,
+                tick_number,
+                total_ticks,
+            });
         }
     }
 

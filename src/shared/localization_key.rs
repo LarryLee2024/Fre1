@@ -20,6 +20,7 @@ use std::ops::Deref;
 /// - `Deref<Target=str>` 使其在大多数场景可替代 `&str`
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
+#[derive(Default)]
 pub struct LocalizationKey(pub String);
 
 impl LocalizationKey {
@@ -75,11 +76,5 @@ impl PartialEq<str> for LocalizationKey {
 impl PartialEq<&str> for LocalizationKey {
     fn eq(&self, other: &&str) -> bool {
         self.0 == *other
-    }
-}
-
-impl Default for LocalizationKey {
-    fn default() -> Self {
-        Self(String::new())
     }
 }

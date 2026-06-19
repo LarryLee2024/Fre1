@@ -151,13 +151,13 @@ pub fn validate_no_duplicate_ability(
     container: &SpecContainer,
     def_id: &str,
 ) -> Result<(), SpecError> {
-    if container.has_ability_for_def(def_id) {
-        if let Some(existing_id) = container.find_ability_by_def(def_id) {
-            return Err(SpecError::DuplicateSpec {
-                def_id: def_id.to_string(),
-                spec_id: existing_id.to_string(),
-            });
-        }
+    if container.has_ability_for_def(def_id)
+        && let Some(existing_id) = container.find_ability_by_def(def_id)
+    {
+        return Err(SpecError::DuplicateSpec {
+            def_id: def_id.to_string(),
+            spec_id: existing_id.to_string(),
+        });
     }
     Ok(())
 }

@@ -69,12 +69,11 @@ pub fn check_enchant_exclusivity(
         return None; // 无互斥组
     };
     for (i, existing_id) in existing_enchants.iter().enumerate() {
-        if let Some(existing_ench) = enchantment_defs.iter().find(|e| e.id == *existing_id) {
-            if let Some(ref existing_group) = existing_ench.exclusive_group {
-                if existing_group == new_group {
-                    return Some(i); // 返回互斥词条的位置
-                }
-            }
+        if let Some(existing_ench) = enchantment_defs.iter().find(|e| e.id == *existing_id)
+            && let Some(ref existing_group) = existing_ench.exclusive_group
+            && existing_group == new_group
+        {
+            return Some(i); // 返回互斥词条的位置
         }
     }
     None

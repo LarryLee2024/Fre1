@@ -168,7 +168,7 @@ impl EventBus {
 
         // 取出所有待分发事件并按优先级排序
         let mut events = std::mem::take(&mut self.pending_events);
-        events.sort_by(|a, b| a.priority.cmp(&b.priority));
+        events.sort_by_key(|a| a.priority);
 
         let mut report = DispatchReport::default();
 
