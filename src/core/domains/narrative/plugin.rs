@@ -8,13 +8,10 @@ use bevy::prelude::*;
 use super::components::{
     CutsceneState, DialogueHistory, DialogueState, DialogueTreeRegistry, StoryFlags,
 };
-use super::systems::cutscene_system::{
-    cutscene_progress_system, on_cutscene_start,
-};
-use super::systems::dialogue_system::{
-    on_choice_select, on_dialogue_start,
-};
+use super::systems::cutscene_system::{cutscene_progress_system, on_cutscene_start};
+use super::systems::dialogue_system::{on_choice_select, on_dialogue_start};
 use super::systems::story_flag_system::on_story_flag_set;
+use crate::app::scenes::GameState;
 
 pub struct NarrativePlugin;
 
@@ -36,6 +33,9 @@ impl Plugin for NarrativePlugin {
         app.add_observer(on_cutscene_start);
 
         // ── 注册常规 System ──
-        app.add_systems(Update, cutscene_progress_system);
+        app.add_systems(
+            Update,
+            cutscene_progress_system.run_if(in_state(GameState::TacticalMap)),
+        );
     }
 }

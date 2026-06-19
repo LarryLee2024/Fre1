@@ -3,30 +3,13 @@
 //! 验证效果 facade 的读写操作：活跃效果查询、计时推进、到期清理、暂停恢复。
 
 use crate::core::capabilities::effect::foundation::{
-    ActiveEffectContainer, DurationCalculation, EffectDuration, EffectInstance, EffectPeriod,
-    EffectStage,
+    ActiveEffectContainer, EffectInstance, EffectPeriod, EffectStage,
+};
+use crate::core::capabilities::effect::tests::fixtures::{
+    make_duration_effect, make_infinite_effect, make_test_container,
 };
 
 use crate::core::domains::combat::integration::effect::facade::*;
-
-fn make_test_container() -> ActiveEffectContainer {
-    ActiveEffectContainer::new()
-}
-
-fn make_duration_effect(id: &str, turns: u32) -> EffectInstance {
-    EffectInstance::new(
-        id,
-        "eff_poison",
-        "Debuff",
-        "caster_001",
-        "target_001",
-        EffectDuration::HasDuration {
-            turns,
-            calculation: DurationCalculation::Fixed,
-        },
-        1,
-    )
-}
 
 fn make_periodic_effect(id: &str, turns: u32, interval: u32) -> EffectInstance {
     let period = EffectPeriod::new(interval).unwrap();
@@ -36,25 +19,13 @@ fn make_periodic_effect(id: &str, turns: u32, interval: u32) -> EffectInstance {
         "Damage",
         "caster_001",
         "target_001",
-        EffectDuration::HasDuration {
+        crate::core::capabilities::effect::foundation::EffectDuration::HasDuration {
             turns,
-            calculation: DurationCalculation::Fixed,
+            calculation: crate::core::capabilities::effect::foundation::DurationCalculation::Fixed,
         },
         1,
     )
     .with_period(period)
-}
-
-fn make_infinite_effect(id: &str) -> EffectInstance {
-    EffectInstance::new(
-        id,
-        "eff_aura",
-        "Buff",
-        "caster_001",
-        "target_001",
-        EffectDuration::Infinite,
-        1,
-    )
 }
 
 fn push_active(container: &mut ActiveEffectContainer, effect: EffectInstance) {

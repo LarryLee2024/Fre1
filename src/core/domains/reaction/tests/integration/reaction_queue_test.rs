@@ -6,7 +6,9 @@
 //! - on_opportunity_attack_executed: 机会攻击执行链路
 
 use bevy::prelude::*;
+use bevy::state::app::StatesPlugin;
 
+use crate::app::scenes::{GameState, ScenePlugin};
 use crate::core::domains::reaction::components::{
     ReactionEntry, ReactionEntryStatus, ReactionQueue, ReactionState, ReactionType,
 };
@@ -43,7 +45,12 @@ fn setup_reaction_queue(world: &mut World, entries: Vec<ReactionEntry>) {
 #[test]
 fn reset_reactions_makes_all_reactors_available() {
     let mut app = App::new();
-    app.add_plugins(ReactionPlugin);
+    app.add_plugins((StatesPlugin, ScenePlugin, ReactionPlugin));
+
+    // 设置游戏状态为 Combat，使 reset_reactions_on_turn_start 生效
+    app.world_mut()
+        .resource_mut::<NextState<GameState>>()
+        .set(GameState::Combat);
 
     // 创建两个已使用反应的实体
     let e1 = spawn_reactor(app.world_mut(), false); // used
@@ -65,7 +72,12 @@ fn reset_reactions_makes_all_reactors_available() {
 #[test]
 fn extra_reactions_also_reset_on_turn_start() {
     let mut app = App::new();
-    app.add_plugins(ReactionPlugin);
+    app.add_plugins((StatesPlugin, ScenePlugin, ReactionPlugin));
+
+    // 设置游戏状态为 Combat，使 reset_reactions_on_turn_start 生效
+    app.world_mut()
+        .resource_mut::<NextState<GameState>>()
+        .set(GameState::Combat);
 
     let e = app
         .world_mut()

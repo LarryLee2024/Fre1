@@ -252,61 +252,40 @@ impl RemovalReason {
 }
 
 /// Effect 领域错误。
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, thiserror::Error)]
 pub enum EffectError {
     /// 来源缺失（不变量 3.1）
+    #[error("missing source: {0}")]
     MissingSource(String),
     /// 目标缺失
+    #[error("missing target: {0}")]
     MissingTarget(String),
     /// 目标已有同源效果（不变量 3.5）
+    #[error("duplicate effect '{def_id}': {detail}")]
     DuplicateEffect { def_id: String, detail: String },
     /// 免疫阻止（不变量 3.2）
+    #[error("effect '{def_id}' blocked by immunity '{immune_tag}'")]
     ImmunityBlocked { def_id: String, immune_tag: String },
     /// 条件不满足（不变量 3.2）
+    #[error("condition not met: {0}")]
     ConditionNotMet(String),
     /// 效果未找到
+    #[error("effect '{0}' not found")]
     EffectNotFound(String),
     /// 周期参数非法（V6）
+    #[error("invalid period: {0}")]
     InvalidPeriod(String),
     /// 阶段转换非法
+    #[error("invalid transition {from:?} → {to:?}: {detail}")]
     InvalidStageTransition {
         from: EffectStage,
         to: EffectStage,
         detail: String,
     },
     /// 效果槽位已满
+    #[error("effect slot limit reached ({current} / {max})")]
     SlotLimitReached { current: u32, max: u32 },
     /// 通用运行时错误
+    #[error("runtime error: {0}")]
     Runtime(String),
 }
-
-impl std::fmt::Display for EffectError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::MissingSource(msg) => write!(f, "missing source: {}", msg),
-            Self::MissingTarget(msg) => write!(f, "missing target: {}", msg),
-            Self::DuplicateEffect { def_id, detail } => {
-                write!(f, "duplicate effect '{}': {}", def_id, detail)
-            }
-            Self::ImmunityBlocked { def_id, immune_tag } => {
-                write!(
-                    f,
-                    "effect '{}' blocked by immunity '{}'",
-                    def_id, immune_tag
-                )
-            }
-            Self::ConditionNotMet(msg) => write!(f, "condition not met: {}", msg),
-            Self::EffectNotFound(id) => write!(f, "effect '{}' not found", id),
-            Self::InvalidPeriod(msg) => write!(f, "invalid period: {}", msg),
-            Self::InvalidStageTransition { from, to, detail } => {
-                write!(f, "invalid transition {:?} → {:?}: {}", from, to, detail)
-            }
-            Self::SlotLimitReached { current, max } => {
-                write!(f, "effect slot limit reached ({} / {})", current, max)
-            }
-            Self::Runtime(msg) => write!(f, "runtime error: {}", msg),
-        }
-    }
-}
-
-impl std::error::Error for EffectError {}

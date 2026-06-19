@@ -7,6 +7,9 @@ pub mod plugin;
 pub mod queue;
 pub mod state;
 
+#[cfg(test)]
+mod tests;
+
 pub use components::SceneRoot;
 pub use plugin::ScenePlugin;
 pub use queue::StateTransitionQueue;

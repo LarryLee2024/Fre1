@@ -2,7 +2,7 @@
 
 ## 项目概述
 基于 Bevy 0.18.1 的回合制战棋项目，严格遵循 ECS 架构与领域分离原则。所有 Agent 输出必须以 `docs/00-governance/ai-constitution-complete.md` 为最高宪法准则。
-只要遇到 `ai_ignore_this_dir` 这样的目录，均视为不存在，严禁阅读。
+只要遇到 `ai_ignore_this_dir` 这样的目录，除非我主动提到你们的文件，否则均视为不存在，严禁阅读。
 
 ## 通用行为红线（所有角色必须遵守）
 1. 严禁绕过 Effect/Modifier 管线直接修改战斗数值与属性
@@ -104,7 +104,7 @@ OpenCode（Sisyphus）则是通过 `task()` 函数调用，category 映射规则
 - 所有 Agent 做完任务，一定要更新之前依据的相关文件（如plan、review、refactor、test等）的完成状态
 
 <!-- ENGINEERING_PRINCIPLES_START -->
-## Engineering Principlesß
+## Engineering Principles
 
 ### Simplicity First
 Prefer the simplest solution that satisfies the requirements.

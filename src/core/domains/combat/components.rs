@@ -17,6 +17,8 @@
 
 use bevy::prelude::*;
 
+use crate::app::scenes::GameState;
+
 // ─── 外层宏观状态 ─────────────────────────────────────────────────────
 
 /// 宏观战斗阶段 — GameState::Combat 的 SubState。
@@ -27,7 +29,7 @@ use bevy::prelude::*;
 ///
 /// 详见 ADR-050 §2: BattlePhase 转为 SubState。
 #[derive(SubStates, Clone, Eq, PartialEq, Hash, Debug, Default)]
-#[source(GameState = crate::app::scenes::GameState::Combat)]
+#[source(GameState = GameState::Combat)]
 pub enum BattlePhase {
     /// 战前部署（编队、先攻检定）。默认起始状态。
     #[default]

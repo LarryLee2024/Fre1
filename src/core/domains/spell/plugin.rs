@@ -9,6 +9,7 @@ use bevy::prelude::*;
 
 use super::components::{Concentration, SpellConfig, SpellSlotPool, Spellbook};
 use super::systems::{on_spell_cast_request, tick_concentration_duration};
+use crate::app::scenes::GameState;
 
 pub struct SpellPlugin;
 
@@ -26,6 +27,9 @@ impl Plugin for SpellPlugin {
         app.add_observer(on_spell_cast_request);
 
         // ── 注册 Update System ──
-        app.add_systems(Update, tick_concentration_duration);
+        app.add_systems(
+            Update,
+            tick_concentration_duration.run_if(in_state(GameState::Combat)),
+        );
     }
 }

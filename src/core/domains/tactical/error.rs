@@ -3,44 +3,27 @@
 //! 遵循宪法 §8：分领域错误枚举，禁止全局 AppError。
 
 use bevy::prelude::*;
+use thiserror::Error;
 
 /// Tactical 领域错误。
-#[derive(Debug, Clone, PartialEq, Event)]
+#[derive(Debug, Clone, PartialEq, Event, Error)]
 pub enum TacticalError {
     /// 目标位置在网格外
+    #[error("position is out of grid bounds")]
     OutOfBounds,
     /// 目标位置不可通行
+    #[error("target tile is not passable")]
     TileNotPassable,
     /// 目标位置已被占用
+    #[error("target tile is occupied by another unit")]
     TileOccupied,
     /// 移动力不足
+    #[error("insufficient MP: required={required}, available={available}")]
     InsufficientMovementPoints { required: f32, available: f32 },
     /// 路径不可达
+    #[error("path to target not found")]
     PathNotFound,
     /// 无效的网格坐标
+    #[error("invalid grid position")]
     InvalidGridPosition,
 }
-
-impl std::fmt::Display for TacticalError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::OutOfBounds => write!(f, "position is out of grid bounds"),
-            Self::TileNotPassable => write!(f, "target tile is not passable"),
-            Self::TileOccupied => write!(f, "target tile is occupied by another unit"),
-            Self::InsufficientMovementPoints {
-                required,
-                available,
-            } => {
-                write!(
-                    f,
-                    "insufficient MP: required={}, available={}",
-                    required, available
-                )
-            }
-            Self::PathNotFound => write!(f, "path to target not found"),
-            Self::InvalidGridPosition => write!(f, "invalid grid position"),
-        }
-    }
-}
-
-impl std::error::Error for TacticalError {}

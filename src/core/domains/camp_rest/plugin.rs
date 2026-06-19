@@ -12,6 +12,7 @@ use super::systems::{
     CampEventRegistry, handle_long_rest_complete, handle_long_rest_interrupted,
     handle_short_rest_complete, process_camp_events,
 };
+use crate::app::scenes::GameState;
 
 pub struct CampRestPlugin;
 
@@ -31,6 +32,9 @@ impl Plugin for CampRestPlugin {
         app.add_observer(handle_long_rest_interrupted);
 
         // ── 注册普通 System ──
-        app.add_systems(Update, process_camp_events);
+        app.add_systems(
+            Update,
+            process_camp_events.run_if(in_state(GameState::CampRest)),
+        );
     }
 }

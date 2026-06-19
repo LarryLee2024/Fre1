@@ -6,6 +6,9 @@ use crate::core::capabilities::effect::mechanism::lifecycle::{
     ApplyResult, apply_effect, expire_effects, remove_effect_by_id, remove_effects_by_def,
     remove_effects_by_source, tick_durations,
 };
+use crate::core::capabilities::effect::tests::fixtures::{
+    make_duration_effect, make_infinite_effect, make_test_container,
+};
 
 // -- Helpers ---------------------------------------------------------------
 
@@ -19,37 +22,6 @@ fn make_instant_effect(id: &str) -> EffectInstance {
         EffectDuration::Instant,
         1,
     )
-}
-
-fn make_duration_effect(id: &str, turns: u32) -> EffectInstance {
-    EffectInstance::new(
-        id,
-        "eff_poison",
-        "Debuff",
-        "caster_001",
-        "target_001",
-        EffectDuration::HasDuration {
-            turns,
-            calculation: DurationCalculation::Fixed,
-        },
-        1,
-    )
-}
-
-fn make_infinite_effect(id: &str) -> EffectInstance {
-    EffectInstance::new(
-        id,
-        "eff_aura",
-        "Buff",
-        "caster_001",
-        "target_001",
-        EffectDuration::Infinite,
-        1,
-    )
-}
-
-fn make_container() -> ActiveEffectContainer {
-    ActiveEffectContainer::new()
 }
 
 // -- EffectInstance creation -----------------------------------------------
@@ -79,7 +51,7 @@ fn infinite_effect_starts_applying() {
 
 #[test]
 fn apply_instant_effect_success() {
-    let mut container = make_container();
+    let mut container = make_test_container();
     let effect = make_instant_effect("inst_001");
     let result = apply_effect(&mut container, effect);
     assert!(result.success);
@@ -88,7 +60,7 @@ fn apply_instant_effect_success() {
 
 #[test]
 fn apply_duration_effect_success() {
-    let mut container = make_container();
+    let mut container = make_test_container();
     let effect = make_duration_effect("dur_001", 3);
     let result = apply_effect(&mut container, effect);
     assert!(result.success);
@@ -97,7 +69,7 @@ fn apply_duration_effect_success() {
 
 #[test]
 fn apply_infinite_effect_success() {
-    let mut container = make_container();
+    let mut container = make_test_container();
     let effect = make_infinite_effect("inf_001");
     let result = apply_effect(&mut container, effect);
     assert!(result.success);
@@ -106,7 +78,7 @@ fn apply_infinite_effect_success() {
 
 #[test]
 fn apply_duplicate_effect_rejected() {
-    let mut container = make_container();
+    let mut container = make_test_container();
     let effect = make_duration_effect("dup_001", 3);
     let first = apply_effect(&mut container, effect);
     assert!(first.success);
@@ -121,7 +93,7 @@ fn apply_duplicate_effect_rejected() {
 
 #[test]
 fn apply_effect_missing_source_rejected() {
-    let mut container = make_container();
+    let mut container = make_test_container();
     let effect = EffectInstance::new(
         "no_source",
         "eff_test",
@@ -160,7 +132,7 @@ fn apply_effect_slot_limit() {
 
 #[test]
 fn apply_multiple_different_effects_ok() {
-    let mut container = make_container();
+    let mut container = make_test_container();
     let a = make_duration_effect("a", 3);
     assert!(apply_effect(&mut container, a).success);
     let b = EffectInstance::new(
@@ -226,7 +198,7 @@ fn invalid_transition_removed_to_any() {
 
 #[test]
 fn tick_duration_reduces_remaining_turns() {
-    let mut container = make_container();
+    let mut container = make_test_container();
     let effect = make_duration_effect("test", 3);
     let _ = apply_effect(&mut container, effect);
     let result = tick_durations(&mut container, 1, 2);
@@ -238,7 +210,7 @@ fn tick_duration_reduces_remaining_turns() {
 
 #[test]
 fn tick_duration_to_zero_triggers_expiring() {
-    let mut container = make_container();
+    let mut container = make_test_container();
     let effect = make_duration_effect("test", 2);
     let _ = apply_effect(&mut container, effect);
     tick_durations(&mut container, 2, 2);
@@ -249,7 +221,7 @@ fn tick_duration_to_zero_triggers_expiring() {
 
 #[test]
 fn tick_duration_beyond_zero_clamps() {
-    let mut container = make_container();
+    let mut container = make_test_container();
     let effect = make_duration_effect("test", 1);
     let _ = apply_effect(&mut container, effect);
     tick_durations(&mut container, 5, 2);
@@ -260,7 +232,7 @@ fn tick_duration_beyond_zero_clamps() {
 
 #[test]
 fn tick_infinite_does_not_expire() {
-    let mut container = make_container();
+    let mut container = make_test_container();
     let effect = make_infinite_effect("test");
     let _ = apply_effect(&mut container, effect);
     tick_durations(&mut container, 100, 2);
@@ -270,7 +242,7 @@ fn tick_infinite_does_not_expire() {
 
 #[test]
 fn tick_paused_effect_skipped() {
-    let mut container = make_container();
+    let mut container = make_test_container();
     let mut effect = make_duration_effect("test", 3);
     effect.paused = true;
     let _ = apply_effect(&mut container, effect);
@@ -283,7 +255,7 @@ fn tick_paused_effect_skipped() {
 
 #[test]
 fn periodic_tick_triggers() {
-    let mut container = make_container();
+    let mut container = make_test_container();
     let period = EffectPeriod::new(1).unwrap();
     let effect = make_duration_effect("dot", 5).with_period(period);
     let _ = apply_effect(&mut container, effect);
@@ -293,7 +265,7 @@ fn periodic_tick_triggers() {
 
 #[test]
 fn periodic_tick_not_at_wrong_interval() {
-    let mut container = make_container();
+    let mut container = make_test_container();
     let period = EffectPeriod::new(2).unwrap();
     let effect = make_duration_effect("dot", 5).with_period(period);
     let _ = apply_effect(&mut container, effect);
@@ -303,7 +275,7 @@ fn periodic_tick_not_at_wrong_interval() {
 
 #[test]
 fn periodic_tick_max_ticks() {
-    let mut container = make_container();
+    let mut container = make_test_container();
     let period = EffectPeriod::new(1).unwrap().with_max_ticks(2).unwrap();
     let effect = make_duration_effect("dot", 10).with_period(period);
     let _ = apply_effect(&mut container, effect);
@@ -319,7 +291,7 @@ fn periodic_tick_max_ticks() {
 
 #[test]
 fn expire_effects_moves_to_removed() {
-    let mut container = make_container();
+    let mut container = make_test_container();
     let effect = make_duration_effect("test", 1);
     let _ = apply_effect(&mut container, effect);
     tick_durations(&mut container, 1, 2);
@@ -332,7 +304,7 @@ fn expire_effects_moves_to_removed() {
 
 #[test]
 fn expire_only_expiring_effects() {
-    let mut container = make_container();
+    let mut container = make_test_container();
     let _ = apply_effect(&mut container, make_duration_effect("a", 3));
     let mut b = make_duration_effect("b", 1);
     b.source_entity = "caster_002".into();
@@ -347,7 +319,7 @@ fn expire_only_expiring_effects() {
 
 #[test]
 fn remove_by_id_success() {
-    let mut container = make_container();
+    let mut container = make_test_container();
     let effect = make_duration_effect("test", 3);
     let _ = apply_effect(&mut container, effect);
     let removed = remove_effect_by_id(&mut container, "test", &RemovalReason::Dispelled);
@@ -357,14 +329,14 @@ fn remove_by_id_success() {
 
 #[test]
 fn remove_by_id_not_found() {
-    let mut container = make_container();
+    let mut container = make_test_container();
     let result = remove_effect_by_id(&mut container, "nonexistent", &RemovalReason::Manual);
     assert!(result.is_err());
 }
 
 #[test]
 fn remove_undispellable_rejected() {
-    let mut container = make_container();
+    let mut container = make_test_container();
     let mut effect = make_duration_effect("test", 3);
     effect.dispellable = false;
     let _ = apply_effect(&mut container, effect);
@@ -374,7 +346,7 @@ fn remove_undispellable_rejected() {
 
 #[test]
 fn remove_undispellable_allowed_when_forced() {
-    let mut container = make_container();
+    let mut container = make_test_container();
     let mut effect = make_duration_effect("test", 3);
     effect.dispellable = false;
     let _ = apply_effect(&mut container, effect);
@@ -384,7 +356,7 @@ fn remove_undispellable_allowed_when_forced() {
 
 #[test]
 fn remove_by_source() {
-    let mut container = make_container();
+    let mut container = make_test_container();
     let a = make_duration_effect("a", 3);
     let _ = apply_effect(&mut container, a);
     let b = EffectInstance::new(
@@ -405,7 +377,7 @@ fn remove_by_source() {
 
 #[test]
 fn remove_by_def() {
-    let mut container = make_container();
+    let mut container = make_test_container();
     let a = make_duration_effect("a", 3);
     let _ = apply_effect(&mut container, a);
     let mut b = make_duration_effect("b", 3);
@@ -420,7 +392,7 @@ fn remove_by_def() {
 
 #[test]
 fn container_find_by_def() {
-    let mut container = make_container();
+    let mut container = make_test_container();
     let a = make_duration_effect("a", 3);
     let _ = apply_effect(&mut container, a);
     let found = container.find_by_def("eff_poison");
@@ -429,7 +401,7 @@ fn container_find_by_def() {
 
 #[test]
 fn container_find_by_source() {
-    let mut container = make_container();
+    let mut container = make_test_container();
     let _ = apply_effect(&mut container, make_duration_effect("a", 3));
     let found = container.find_by_source("caster_001");
     assert_eq!(found.len(), 1);
@@ -437,13 +409,13 @@ fn container_find_by_source() {
 
 #[test]
 fn container_is_empty() {
-    let container = make_container();
+    let container = make_test_container();
     assert!(container.is_empty());
 }
 
 #[test]
 fn container_get_tickable() {
-    let mut container = make_container();
+    let mut container = make_test_container();
     let period = EffectPeriod::new(1).unwrap();
     let effect = make_duration_effect("dot", 5).with_period(period);
     let _ = apply_effect(&mut container, effect);
@@ -453,7 +425,7 @@ fn container_get_tickable() {
 
 #[test]
 fn container_has_duplicate() {
-    let mut container = make_container();
+    let mut container = make_test_container();
     let _ = apply_effect(&mut container, make_duration_effect("a", 3));
     assert!(container.has_duplicate("eff_poison", "caster_001"));
     assert!(!container.has_duplicate("eff_other", "caster_001"));

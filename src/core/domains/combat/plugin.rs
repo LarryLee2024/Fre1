@@ -22,6 +22,7 @@ use super::systems::turn_systems::{
     on_enter_battle, on_enter_defeat, on_enter_victory, on_turn_end_tick_ability_cooldowns,
     on_turn_start_evaluate_triggers,
 };
+use crate::app::scenes::GameState;
 use crate::core::capabilities::runtime::pipeline::registry::PipelineRegistry;
 
 pub struct CombatPlugin;
@@ -47,11 +48,17 @@ impl Plugin for CombatPlugin {
         app.add_systems(OnEnter(BattlePhase::Defeat), on_enter_defeat);
 
         // ── 注册 Pipeline 驾驶员 Update System ──
-        app.add_systems(Update, combat_pipeline_driver);
+        app.add_systems(
+            Update,
+            combat_pipeline_driver.run_if(in_state(GameState::Combat)),
+        );
 
         // ── Input System ──
         app.init_resource::<PlayerTurnState>();
-        app.add_systems(Update, combat_input_system);
+        app.add_systems(
+            Update,
+            combat_input_system.run_if(in_state(GameState::Combat)),
+        );
 
         // ── 注册 Observer (Bevy 0.18 Trigger 模式) ──
         // UnitActionComplete → 恢复驾驶员，跳转到 TurnSettlement

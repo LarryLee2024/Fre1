@@ -26,4 +26,4 @@ mod plugin;
 pub use plugin::*;
 
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;

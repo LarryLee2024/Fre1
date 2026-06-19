@@ -15,6 +15,7 @@ use super::systems::hazard_system::on_hazard_check;
 use super::systems::on_turn_end_surface_recovery;
 use super::systems::surface_system::on_surface_changed;
 use super::systems::terrain_effect_system::on_tile_entered;
+use crate::app::scenes::GameState;
 
 pub struct TerrainPlugin;
 
@@ -41,7 +42,10 @@ impl Plugin for TerrainPlugin {
 
         // ── 注册常规 System ──
         // 空间索引维护：在 PostUpdate 中重建 TilePos → Entity 映射
-        app.add_systems(PostUpdate, TileEntityMap::update);
+        app.add_systems(
+            PostUpdate,
+            TileEntityMap::update.run_if(in_state(GameState::TacticalMap)),
+        );
 
         // ── 注册 Observer ──
         // OnturnEnd → 表面覆盖回合计数递减

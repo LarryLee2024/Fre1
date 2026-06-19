@@ -4,57 +4,27 @@
 //! 详见 docs/02-domain/domains/terrain_domain.md §4
 
 use bevy::prelude::*;
+use thiserror::Error;
 
 /// 地形系统错误。
-#[derive(Debug, Clone, PartialEq, Event)]
+#[derive(Debug, Clone, PartialEq, Event, Error)]
 pub enum TerrainError {
     /// 格子坐标超出地图范围。
+    #[error("tile coordinates out of bounds: ({x}, {y})")]
     OutOfBounds { x: i32, y: i32 },
     /// 格子不可通行。
+    #[error("tile not passable at ({x}, {y})")]
     TileNotPassable { x: i32, y: i32 },
     /// 互斥表面类型冲突（如冰面和灼烧不可共存）。
+    #[error("conflicting surface types cannot coexist on same tile")]
     ConflictingSurfaceType,
     /// 相邻格高度差超过允许的最大值。
+    #[error("height difference exceeded: max_allowed={max_allowed}, actual={actual}")]
     HeightDifferenceExceeded { max_allowed: i32, actual: i32 },
     /// 陷阱缺少必要的触发条件或效果定义。
+    #[error("hazard zone missing required trigger or effect definition")]
     InvalidHazardDefinition,
     /// 格子 ID 未注册。
+    #[error("tile not found at ({x}, {y})")]
     TileNotFound { x: i32, y: i32 },
 }
-
-impl std::fmt::Display for TerrainError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::OutOfBounds { x, y } => {
-                write!(f, "tile coordinates out of bounds: ({}, {})", x, y)
-            }
-            Self::TileNotPassable { x, y } => {
-                write!(f, "tile is not passable at ({}, {})", x, y)
-            }
-            Self::ConflictingSurfaceType => {
-                write!(f, "conflicting surface types cannot coexist on same tile")
-            }
-            Self::HeightDifferenceExceeded {
-                max_allowed,
-                actual,
-            } => {
-                write!(
-                    f,
-                    "height difference between adjacent tiles exceeded: max={}, actual={}",
-                    max_allowed, actual
-                )
-            }
-            Self::InvalidHazardDefinition => {
-                write!(
-                    f,
-                    "hazard zone missing required trigger or effect definition"
-                )
-            }
-            Self::TileNotFound { x, y } => {
-                write!(f, "tile not found at ({}, {})", x, y)
-            }
-        }
-    }
-}
-
-impl std::error::Error for TerrainError {}

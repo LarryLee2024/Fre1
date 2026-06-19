@@ -13,6 +13,7 @@ use super::systems::{
     cleanup_reaction_queue, on_opportunity_attack_executed, process_reaction_queue,
     reset_reactions_on_turn_start,
 };
+use crate::app::scenes::GameState;
 
 pub struct ReactionPlugin;
 
@@ -29,8 +30,17 @@ impl Plugin for ReactionPlugin {
         app.add_observer(on_opportunity_attack_executed);
 
         // ── 注册 Update System ──
-        app.add_systems(First, reset_reactions_on_turn_start);
-        app.add_systems(Update, process_reaction_queue);
-        app.add_systems(Last, cleanup_reaction_queue);
+        app.add_systems(
+            First,
+            reset_reactions_on_turn_start.run_if(in_state(GameState::Combat)),
+        );
+        app.add_systems(
+            Update,
+            process_reaction_queue.run_if(in_state(GameState::Combat)),
+        );
+        app.add_systems(
+            Last,
+            cleanup_reaction_queue.run_if(in_state(GameState::Combat)),
+        );
     }
 }
