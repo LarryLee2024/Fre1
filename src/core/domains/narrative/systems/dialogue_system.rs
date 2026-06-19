@@ -81,11 +81,6 @@ pub(crate) fn on_dialogue_start(
         0.0,
     ));
 
-    info!(
-        "[Narrative] Dialogue started: entity={:?}, tree={}, node={}",
-        req.entity, req.tree_id, entry.id
-    );
-
     // 发布事件
     commands.trigger(DialogueStarted {
         entity: req.entity,
@@ -193,11 +188,6 @@ pub(crate) fn on_choice_select(
             commands.entity(entity).remove::<DialogueState>();
         }
     }
-
-    info!(
-        "[Narrative] Choice made: entity={:?}, choice={}, next={:?}",
-        entity, req.choice_id, choice.next_node_id
-    );
 
     commands.trigger(ChoiceMade {
         entity,

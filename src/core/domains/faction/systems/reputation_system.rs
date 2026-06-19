@@ -50,12 +50,6 @@ pub(crate) fn on_reputation_change_request(
 
     // 关键角色保护检查
     let Some(new_value) = safe_reputation_change(current, req.delta, is_key) else {
-        info!(
-            "[Faction] Reputation change blocked for key character {:?}: {} → {} (would violate minimum protection)",
-            entity,
-            current,
-            current + req.delta
-        );
         return;
     };
 
@@ -63,11 +57,6 @@ pub(crate) fn on_reputation_change_request(
     reputation.values.insert(faction.clone(), new_value);
 
     let new_level = ReputationLevel::from_value(new_value);
-
-    info!(
-        "[Faction] Reputation changed: entity={:?}, faction={}, {} → {} (level: {:?}), reason: {}",
-        entity, faction, current, new_value, new_level, req.reason
-    );
 
     // 发布 ReputationChanged 事件
     commands.trigger(ReputationChanged {
@@ -81,10 +70,6 @@ pub(crate) fn on_reputation_change_request(
 
     // 检查是否跨越等级
     if let Some((old_level, new_level)) = check_level_change(current, new_value) {
-        info!(
-            "[Faction] Reputation level up: entity={:?}, faction={:?}, {:?} → {:?}",
-            entity, faction, old_level, new_level
-        );
         commands.trigger(ReputationLevelUp {
             entity,
             faction_id: faction,

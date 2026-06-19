@@ -72,14 +72,14 @@ pub(crate) fn tactical_input_system(
     }
 
     if moved {
-        info!("[TacticalInput] Cursor moved to {:?}", cursor.position);
+        tracing::trace!(event = "tactical_input.cursor_move", pos = ?cursor.position);
     }
 
     if input_state.just_pressed(InputAction::Select) {
-        info!("[TacticalInput] Select at {:?}", cursor.position);
+        tracing::trace!(event = "tactical_input.select", pos = ?cursor.position);
     }
 
     if input_state.just_pressed(InputAction::Cancel) {
-        info!("[TacticalInput] Cancel");
+        tracing::trace!(event = "tactical_input.cancel");
     }
 }

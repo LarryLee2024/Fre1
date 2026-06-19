@@ -18,6 +18,8 @@ mod resources;
 pub mod events;
 // [ADR-045] pub(crate) — 业务规则，crate 内共享，外部不可访问
 pub(crate) mod rules;
+// [ADR-045] pub(crate) — 规则失败类型，crate 内共享
+pub(crate) mod failure;
 // [ADR-045] pub(crate) — ECS 系统，crate 内共享
 pub(crate) mod systems;
 

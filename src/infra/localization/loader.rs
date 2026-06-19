@@ -61,7 +61,7 @@ pub fn parse_ftl(content: &str) -> HashMap<String, Pattern> {
             current_id = Some(key);
         }
         // Attribute: .xxx = value
-        else if let Some(caps) = attr_re.captures(trimmed) {
+        else if let Some(caps) = attr_re.captures(line) {
             if let Some(ref base_key) = current_id {
                 let attr_name = caps.get(1).unwrap().as_str();
                 let value = caps.get(2).unwrap().as_str().trim();
@@ -271,7 +271,7 @@ mod tests {
 -core-yes = Yes
 -core-no = No
 
--ability-abl-000042-name = Fireball
+-ability-abl_000042-name = Fireball
     .desc = Deals {$damage} fire damage
 "#;
         let map = parse_ftl(content);
@@ -282,11 +282,11 @@ mod tests {
             "Fireball"
         );
         assert_eq!(
-            map.get("ability.abl_000042.desc").unwrap().template,
+            map.get("ability.abl_000042.name.desc").unwrap().template,
             "Deals {$damage} fire damage"
         );
         assert_eq!(
-            map.get("ability.abl_000042.desc").unwrap().variables,
+            map.get("ability.abl_000042.name.desc").unwrap().variables,
             vec!["damage"]
         );
     }
@@ -306,7 +306,7 @@ mod tests {
     #[test]
     fn test_parse_multiple_variables() {
         let content = r#"
--battle-damage-dealt = {$source} dealt {$damage} damage to {$target}
+-battle-damage_dealt = {$source} dealt {$damage} damage to {$target}
 "#;
         let map = parse_ftl(content);
         let pattern = map.get("battle.damage_dealt").unwrap();

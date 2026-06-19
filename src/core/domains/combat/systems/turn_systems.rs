@@ -29,7 +29,6 @@ use crate::core::domains::combat::integration::trigger::CombatTriggerType;
 /// 进入 BattlePhase::Battle 时触发 OnBattleStart 并启动回合管线。
 pub(crate) fn on_enter_battle(mut commands: Commands) {
     commands.trigger(OnBattleStart);
-    info!("[Combat] Battle started");
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -85,7 +84,6 @@ pub(crate) fn on_enter_victory(mut commands: Commands) {
     commands.trigger(OnBattleEnd {
         result: BattleResult::Victory,
     });
-    info!("[Combat] Victory!");
 }
 
 /// 进入 BattlePhase::Defeat 时触发 OnBattleEnd。
@@ -93,7 +91,6 @@ pub(crate) fn on_enter_defeat(mut commands: Commands) {
     commands.trigger(OnBattleEnd {
         result: BattleResult::Defeat,
     });
-    info!("[Combat] Defeat!");
 }
 
 // ═══════════════════════════════════════════════════════════════════════

@@ -9,6 +9,7 @@
 ├── README.md                          # 本文件
 └── done/                              # 已完成的规划
     ├── consolidated-execution-plan.md # 全规划整合 + 骨架域填充路线图（所有 Batch 1-4 + Phase E/F ✅）
+    ├── localization-implementation-plan.md # 国际化基础设施实施计划（全部阶段 ✅）
     ├── infrastructure-integration-plan.md # 基础设施接入规划（所有 P0/P1 项 ✅）
     ├── feature-developer-implementation-roadmap.md # 原路线图（Phase A~H）
     ├── Phase-C-D-execution-plan.md    # M1 之前的并行执行计划
@@ -30,5 +31,6 @@
 ## 状态说明
 
 - `done/` 中的所有文档均已全部完成
-- 当前活跃规划：`logging-architecture-plan.md`（日志架构实施）
+- 所有活跃规划文档已全部完成并归档
 - Phase E（游戏流程集成）已于 2026-06-25 完成并归档
+- Localization 基础设施实施已于 2026-06-19 完成并归档

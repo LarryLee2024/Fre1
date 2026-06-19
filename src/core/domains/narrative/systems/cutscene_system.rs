@@ -28,11 +28,6 @@ pub(crate) fn on_cutscene_start(trigger: On<CutsceneStartRequest>, mut commands:
         duration: req.duration,
         participants: req.participants.clone(),
     });
-
-    info!(
-        "[Narrative] Cutscene started: id={}, duration={}",
-        req.cutscene_id, req.duration
-    );
 }
 
 /// 逐帧更新演出进度。
@@ -51,7 +46,6 @@ pub(crate) fn cutscene_progress_system(
         state.tick(time.delta().as_secs_f32());
 
         if state.phase == CutscenePhase::Finished {
-            info!("[Narrative] Cutscene finished: id={}", state.cutscene_id);
             commands.trigger(CutsceneEnded {
                 cutscene_id: state.cutscene_id.clone(),
             });

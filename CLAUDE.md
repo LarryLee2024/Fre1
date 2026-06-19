@@ -122,3 +122,22 @@ CodeGraph → Repomix → Context7 → Git → Filesystem
 | `.trae/rules/` | 15 个编码规则（架构/ECS/错误/日志/审查等） |
 
 Note: `docs/` 下有 `ai_ignore_this_dir/` 目录，除非用户主动提起，否则视为不存在、不读。
+
+## Document Lifecycle Management
+
+After processing content related to docs in `docs/09-planning/`, `docs/10-reviews/`, or `docs/11-refactor/`, I must automatically:
+
+1. **Update status markers** in the relevant doc file:
+   - `✅` = completed
+   - `❌` = not done / missing
+   - `🟡` = in progress / wip
+   - Update frontmatter `status:` field if present
+
+2. **Archive when complete**: When ALL items in a doc are `✅`, move the file to its `done/` subdirectory:
+   - `docs/09-planning/done/`
+   - `docs/10-reviews/done/`
+   - `docs/11-refactor/done/`
+
+3. **Update README.md** in the parent directory to reflect the change (list active docs, remove archived ones).
+
+This must be done automatically in the same session — no reminders or prompts needed.

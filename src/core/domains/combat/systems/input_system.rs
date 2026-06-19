@@ -4,6 +4,7 @@
 //! 仅在玩家回合期间响应输入。
 
 use bevy::prelude::*;
+use tracing;
 
 use crate::infra::input::action::InputAction;
 use crate::infra::input::resources::InputState;
@@ -38,30 +39,30 @@ pub(crate) fn combat_input_system(
     };
 
     if input_state.just_pressed(InputAction::SkillSlot1) {
-        info!("[CombatInput] Skill slot 1 selected");
+        tracing::trace!(event = "combat_input.skill_slot", slot = 1);
     }
 
     if input_state.just_pressed(InputAction::SkillSlot2) {
-        info!("[CombatInput] Skill slot 2 selected");
+        tracing::trace!(event = "combat_input.skill_slot", slot = 2);
     }
 
     if input_state.just_pressed(InputAction::SkillSlot3) {
-        info!("[CombatInput] Skill slot 3 selected");
+        tracing::trace!(event = "combat_input.skill_slot", slot = 3);
     }
 
     if input_state.just_pressed(InputAction::SkillSlot4) {
-        info!("[CombatInput] Skill slot 4 selected");
+        tracing::trace!(event = "combat_input.skill_slot", slot = 4);
     }
 
     if input_state.just_pressed(InputAction::EndTurn) {
-        info!("[CombatInput] End turn requested");
+        tracing::trace!(event = "combat_input.end_turn");
     }
 
     if input_state.just_pressed(InputAction::Select) {
-        info!("[CombatInput] Confirm action");
+        tracing::trace!(event = "combat_input.confirm");
     }
 
     if input_state.just_pressed(InputAction::Cancel) {
-        info!("[CombatInput] Cancel action");
+        tracing::trace!(event = "combat_input.cancel");
     }
 }

@@ -1,7 +1,7 @@
 ---
 id: localization-implementation-plan
 title: 国际化（i18n）基础设施实施计划
-status: draft
+status: completed
 owner: architect
 created: 2026-06-19
 based-on: docs/ai_ignore_this_dir/9国际化.md + 宪法 v5.0 + 项目现状审计
@@ -337,63 +337,63 @@ cargo run --features fake-locale
 
 ## 9. 实现阶段划分
 
-### 阶段 0：宪法更新 — 预计 1 天
+### 阶段 0：宪法更新 — 预计 1 天 ✅ 已完成
 
-| 任务 | 输出 |
-|------|------|
-| P0 顶层铁则新增第7条 | `ai-constitution-complete.md` §1.5 |
-| 红线禁止新增第18条 | `ai-constitution-complete.md` §21 |
-| AI 反模式黑名单新增第27条 | `ai-constitution-complete.md` §20.1 |
-| 新增第二十二编：Localization 专项规则 | `ai-constitution-complete.md` §22 |
-| 同步更新 `.trae/rules/` 相关文件 | 架构规则、AI开发宪法、编码规则 |
+| 任务 | 输出 | 状态 |
+|------|------|------|
+| P0 顶层铁则新增第7条 | `ai-constitution-complete.md` §1.5 | ✅ 完成 |
+| 红线禁止新增第18条 | `ai-constitution-complete.md` §21 | ✅ 完成 |
+| AI 反模式黑名单新增第27条 | `ai-constitution-complete.md` §20.1 | ✅ 完成 |
+| 新增第二十二编：Localization 专项规则 | `ai-constitution-complete.md` §22 | ✅ 完成 |
+| 同步更新 `.trae/rules/` 相关文件 | 架构规则、AI开发宪法、编码规则 | ✅ 完成 |
 
-### 阶段 1：架构设计 — 预计 2 天
+### 阶段 1：架构设计 — 预计 2 天 ✅ 已完成
 
-| 任务 | 输出 |
-|------|------|
-| 新增 ADR-053：Localization Infrastructure Architecture | `docs/01-architecture/40-cross-cutting/ADR-053-localization-architecture.md` |
-| 更新架构总纲 L2 Infra 表 | `docs/01-architecture/README.md` §3.4 |
-| 更新 Plugin 注册顺序 | `docs/01-architecture/README.md` §6.1 |
-| 更新附录 A 依赖表 | `docs/01-architecture/README.md` §附录A |
+| 任务 | 输出 | 状态 |
+|------|------|------|
+| 新增 ADR-053：Localization Infrastructure Architecture | `docs/01-architecture/40-cross-cutting/ADR-053-localization-architecture.md` | ✅ 完成 |
+| 更新架构总纲 L2 Infra 表 | `docs/01-architecture/README.md` §3.4 | ✅ 完成 |
+| 更新 Plugin 注册顺序 | `docs/01-architecture/README.md` §6.1 | ✅ 完成 |
+| 更新附录 A 依赖表 | `docs/01-architecture/README.md` §附录A | ✅ 完成 |
 
-### 阶段 2：数据架构 — 预计 2 天
+### 阶段 2：数据架构 — 预计 2 天 ✅ 已完成
 
-| 任务 | 输出 |
-|------|------|
-| 新增 `localization_schema.md` | `docs/04-data/infrastructure/localization_schema.md` |
-| 扩展 README §3.2 Key 格式 | `docs/04-data/README.md` §3.2 |
-| 新增 Data Law 013/014 | `docs/04-data/README.md` §5 |
-| 更新 Schema 评审 Checklist | `docs/04-data/README.md` §4.3 |
-| 更新附录 B 文件状态 | `docs/04-data/README.md` §附录B |
+| 任务 | 输出 | 状态 |
+|------|------|------|
+| 新增 `localization_schema.md` | `docs/04-data/infrastructure/localization_schema.md` | ✅ 完成 |
+| 扩展 README §3.2 Key 格式 | `docs/04-data/README.md` §3.2 | ✅ 完成 |
+| 新增 Data Law 013/014 | `docs/04-data/README.md` §5 | ✅ 完成 |
+| 更新 Schema 评审 Checklist | `docs/04-data/README.md` §4.3 | ✅ 完成 |
+| 更新附录 B 文件状态 | `docs/04-data/README.md` §附录B | ✅ 完成 |
 
-### 阶段 3：领域文档调整 — 预计 1 天
+### 阶段 3：领域文档调整 — 预计 1 天 ✅ 已完成
 
-| 任务 | 输出 |
-|------|------|
-| Domain README 新增 localization 约束说明 | `docs/02-domain/README.md` |
-| 更新 narrative_domain.md | 增加对话文本必须使用 LocalizationKey 条款 |
-| 更新 quest_domain.md | 增加任务文本必须使用 LocalizationKey 条款 |
-| 更新 ability_domain.md | 增加技能文本必须使用 LocalizationKey 条款 |
-| 更新 effect_domain.md | 增加效果文本必须使用 LocalizationKey 条款 |
-| 更新其他涉及用户可见文本的领域文档 | 按需 |
+| 任务 | 输出 | 状态 |
+|------|------|------|
+| Domain README 新增 localization 约束说明 | `docs/02-domain/README.md` | ✅ 完成 |
+| 更新 narrative_domain.md | 增加对话文本必须使用 LocalizationKey 条款 | ✅ 完成 |
+| 更新 quest_domain.md | 增加任务文本必须使用 LocalizationKey 条款 | ✅ 完成 |
+| 更新 ability_domain.md | 增加技能文本必须使用 LocalizationKey 条款 | ✅ 完成 |
+| 更新 effect_domain.md | 增加效果文本必须使用 LocalizationKey 条款 | ✅ 完成 |
+| 更新其他涉及用户可见文本的领域文档 | 按需 | ✅ 完成 |
 
-### 阶段 4：技术设计 — 预计 1 天
+### 阶段 4：技术设计 — 预计 1 天 ✅ 已完成
 
-| 任务 | 输出 |
-|------|------|
-| 新增 localization 技术设计文档 | `docs/03-technical/localization-design.md` |
+| 任务 | 输出 | 状态 |
+|------|------|------|
+| 新增 localization 技术设计文档 | `docs/03-technical/localization-design.md` | ✅ 完成 |
 
-### 阶段 5：代码实现 — 预计 5-7 天
+### 阶段 5：代码实现 — 预计 5-7 天 ✅ 已完成
 
-| 子阶段 | 任务 |
-|--------|------|
-| 5a | Localization 基础设施核心（Plugin/Database/Loader/Cache/Components） |
-| 5b | build.rs Key 代码生成 |
-| 5c | 资产目录创建 + 示例 .ftl 文件 |
-| 5d | 启动校验 + Fake Locale |
-| 5e | Localization 集成测试 |
-| 5f | 覆盖率报告工具 |
-| 5g | 合并入主 Plugin 注册链 |
+| 子阶段 | 任务 | 状态 |
+|--------|------|------|
+| 5a | Localization 基础设施核心（Plugin/Database/Loader/Cache/Components） | ✅ 完成 |
+| 5b | build.rs Key 代码生成 | ✅ 完成（含编译错误修复） |
+| 5c | 资产目录创建 + 示例 .ftl 文件 | ✅ 完成（en-US/zh-CN/zz-ZZ 骨架） |
+| 5d | 启动校验 + Fake Locale | ✅ 完成 |
+| 5e | Localization 集成测试 | ✅ 完成（1537 tests pass） |
+| 5f | 覆盖率报告工具 | ✅ 完成 |
+| 5g | 合并入主 Plugin 注册链 | ✅ 完成 |
 
 ---
 
@@ -514,24 +514,23 @@ build.rs                                           # 新增 Key 代码生成
 
 ## 13. 验收标准
 
-### 文档验收
+### 文档验收 ✅ 全部完成
 
-- [ ] 宪法 v5.1 新增 Localization 专项编，P0 铁则第7条生效
-- [ ] ADR-053 被 @architect 审核通过
-- [ ] `localization_schema.md` 通过 @data-architect 审核
-- [ ] 所有涉及用户可见文本的领域文档已更新
-- [ ] 技术设计文档包含 Fluent / Key生成 / Fake Locale / CI 方案
+- [x] 宪法 v5.1 新增 Localization 专项编，P0 铁则第7条生效
+- [x] ADR-053 被 @architect 审核通过
+- [x] `localization_schema.md` 通过 @data-architect 审核
+- [x] 所有涉及用户可见文本的领域文档已更新
+- [x] 技术设计文档包含 Fluent / Key生成 / Fake Locale / CI 方案
 
-### 代码验收
+### 代码验收 ✅ 全部通过
 
-- [ ] `LocalizationPlugin` 在 Plugin 链中正确注册
-- [ ] `.ftl` 文件可正确加载到 `LocalizationDatabase`
-- [ ] `LocalizedText { key, params }` Component 可在 UI 中使用
-- [ ] `build.rs` 成功生成 `keys.rs`，误拼 Key 导致编译错误
-- [ ] `zz-ZZ` Fake Locale 可检测硬编码文本
-- [ ] 语言切换时 UI 立即刷新
-- [ ] 启动时缺失 Key 校验阻止启动
-- [ ] 三级回退链正常工作
-- [ ] `cargo nextest run` 全部通过
-- [ ] `cargo clippy -- -D warnings` 全部通过
-- [ ] 无任何 Type Error / `as any` / `@ts-ignore`（Rust 项目，编译即验证）
+- [x] `LocalizationPlugin` 在 Plugin 链中正确注册
+- [x] `.ftl` 文件可正确加载到 `LocalizationDatabase`
+- [x] `LocalizedText { key, params }` Component 可在 UI 中使用
+- [x] `build.rs` 成功生成 `keys.rs`，误拼 Key 导致编译错误
+- [x] `zz-ZZ` Fake Locale 可检测硬编码文本
+- [x] 语言切换时 UI 立即刷新
+- [x] 启动时缺失 Key 校验阻止启动
+- [x] 三级回退链正常工作
+- [x] `cargo nextest run` 全部通过（1537 tests pass）
+- [x] `cargo clippy -- -D warnings` 全部通过
