@@ -69,8 +69,8 @@ pub struct EffectInstance {
     pub instance_id: String,
     /// EffectDef ID
     pub def_id: String,
-    /// 效果分类
-    pub category: String,
+    /// 效果分类标签（从 EffectDef.effect_tags 复制）
+    pub tags: Vec<String>,
     /// 当前阶段
     pub stage: EffectStage,
     /// 来源实体标识（不变量 3.1）
@@ -100,7 +100,7 @@ impl EffectInstance {
     pub fn new(
         instance_id: impl Into<String>,
         def_id: impl Into<String>,
-        category: impl Into<String>,
+        tags: Vec<String>,
         source_entity: impl Into<String>,
         target_entity: impl Into<String>,
         duration: EffectDuration,
@@ -110,7 +110,7 @@ impl EffectInstance {
         Self {
             instance_id: instance_id.into(),
             def_id: def_id.into(),
-            category: category.into(),
+            tags,
             stage: EffectStage::Applying,
             source_entity: source_entity.into(),
             target_entity: target_entity.into(),

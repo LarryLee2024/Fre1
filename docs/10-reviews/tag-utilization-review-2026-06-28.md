@@ -1,496 +1,489 @@
 ---
 id: 10-reviews.tag-utilization-review
-title: Tag 系统利用率审查报告 — 从"有标签系统"到"万物皆标签"
-status: partially-executed
+title: Tag 系统重构方案 — 五层架构下的 Tag 定位与重构路径
+status: active
 owner: architect
 created: 2026-06-28
-executed_at: 2026-06-28
+updated: 2026-06-28
 reviewed_documents:
-  - docs/01-architecture/README.md
+  - docs/ai_ignore_this_dir/12tag.md（最佳实践参考）
   - docs/02-domain/capabilities/tag_domain.md
   - docs/04-data/capabilities/tag_schema.md
-  - docs/03-content/README.md
-  - src/core/capabilities/tag/foundation/types.rs
-  - src/core/capabilities/tag/foundation/values.rs
-  - src/core/capabilities/tag/mechanism/components.rs
-  - src/core/capabilities/tag/mechanism/query.rs
-  - src/core/capabilities/tag/mechanism/lifecycle.rs
-  - src/core/capabilities/tag/events.rs
-  - src/core/capabilities/tag/plugin.rs
-reference_standard: Unreal Engine GameplayTag System（GAS）
+  - docs/01-architecture/README.md
+  - src/core/capabilities/tag/
+  - src/core/capabilities/condition/
+  - src/core/capabilities/effect/foundation/def.rs
+reference_standard: 五层架构（Type→Tag→Query→Rule→Content）
+target_scale: 50万行代码 SRPG
 ---
 
-# Tag 系统利用率审查报告
+# Tag 系统重构方案 — 五层架构下的 Tag 定位与重构路径
 
-> **评审角色**: Architect（首席架构师）
-> **核心问题**: UE 给人一种「万物皆可标签配置」的感觉，Fre 的标签利用程度如何？是否有改进空间？
-> **评审日期**: 2026-06-28
+> **核心问题**: Tag 在 50 万行 SRPG 中应该扮演什么角色？
+> **关键结论**: Tag 不是"万物皆标签"的万能胶水，而是五层架构中的**语义层**——与 Type System（规则层）、Query System（筛选层）、Rule System（逻辑层）、Content System（配置层）协同工作。
 
 ---
 
-## 0. 评审总评
+## 0. 哲学纠偏：为什么"万物皆标签"是错误的
 
-**总体评级**: 🟡 B-（设计优秀，利用率严重不足）
+### 0.1 旧审查报告的问题
 
-| 维度 | 评级 | 说明 |
-|------|------|------|
-| Tag 基础设施设计 | 🟢 A | 位掩码 O(1) 检查、层级继承、命名空间、TagQuery、事件，体系完整 |
-| Tag 实现质量 | 🟢 A | 18 个源文件，注册校验、继承掩码计算、TagsAdded/Removed 事件，有单测+不变量测试 |
-| Tag 在核心管线中的嵌入 | 🟡 C+ | Condition 系统响应 TagAdded/TagRemoved，Movement Facade 有 Map → TagId，其他领域零使用 |
-| Tag 作为通用分类语言的渗透度 | 🔴 D | 43 处 enum 分类替代了本应由 Tag 承担的职责。Tag 系统被"架空" |
-| 与 UE GAS Tag 哲学的对齐度 | 🟡 C- | 基础设施接近，但使用模式完全不同——UE 是"一切皆标签"，Fre 是"有一个标签系统" |
+旧报告（§2）提出"43 处 enum 分类应迁移为 Tag"，这犯了一个根本性错误：
 
----
+> 把 Tag 当成了"领域建模工具"，而非"表达层工具"。
 
-## 1. 现有 Tag 基础设施评分
+### 0.2 12tag.md 的核心洞察
 
-### 1.1 设计完整性
+最佳实践文档（`docs/ai_ignore_this_dir/12tag.md`）明确指出：
 
 ```
-现有能力                               UE GameplayTags 对比
-────────────────────────────────────   ────────────────────────────────
-✅ TagHierarchy（层级树+继承掩码）       ✅ FGameplayTag::RequestGameplayTag
-✅ TagSet（位掩码 ECS Component）        ✅ FGameplayTagContainer（bitmask）
-✅ TagQuery（Any/All/None）              ✅ FGameplayTagQuery（任何/全部/无）
-✅ TagAdded/TagRemoved 事件              ✅ FGameplayTagCountChangedEvent
-✅ TagNamespace 枚举                      ✅ No native namespace（约定前缀）
-✅ TagId（强类型 string ID）              ✅ FName（底层是 ID+string）
-✅ BitMask = u128（128 个位）             ✅ GameplayTag 无位限制（hash-based）
-✅ Content Asset（TagDefinition）         ✅ GameplayTagTable（ini 配置）
-✅ 注册校验（循环/唯一/命名空间）         ✅ 注册时校验
-❌ 无 GrantedTags/RequiredTags/IgnoreTags ✅ GameplayEffect 内置
-❌ 无 AbilityTags/CancelBlockTags         ✅ GameplayAbility 内置
-❌ 无 Tag 驱动的条件查询系统              ✅ 多系统原生支持
+Tag 不是 DamageType（那是 Type）
+Tag 不是 BuffId（那是 Identity）
+Tag 不是 WeaponType（那是 Type）
+
+Tag 表达的是：Attribute（属性）、Semantic（语义）、Relationship（关系）
 ```
 
-**结论**: 基础设施接近 UE 水准，但**消费侧是空的**——没有 Effect/Ability/Item 等类型天然携带 TagSet 做过滤。
+**Tag 只回答"是不是"，不能回答"多少"。**
 
-### 1.2 代码实现质量
+### 0.3 五层架构模型
 
-| 文件 | 行数 | 质量 |
-|------|------|------|
-| `foundation/types.rs` | 48 | ✅ TagId 强类型 + TagNamespace enum + TagQueryMode |
-| `foundation/values.rs` | 40 | ✅ TagDefinition Asset + TagQuery + BitMask |
-| `mechanism/components.rs` | 80 | ✅ TagSet Component, O(1) 位操作 |
-| `mechanism/query.rs` | 68 | ✅ 纯函数 evaluate_query, Any/All/None |
-| `mechanism/lifecycle.rs` | 185 | ✅ TagHierarchy Resource, 5 项注册校验 |
-| `events.rs` | 28 | ✅ TagAdded, TagRemoved, TagHierarchyChanged |
-| `mechanism/systems/tag_system.rs` | 待确认 | ✅ Observer 响应标签变更 |
-| `tests/unit/lifecycle_test.rs` | 有 | ✅ 注册流程测试 |
-| `tests/unit/query_test.rs` | 有 | ✅ 查询逻辑测试 |
-| `tests/invariant/tag_invariant_spec.rs` | 有 | ✅ 不变量测试 |
+面向 50 万行 SRPG，正确的架构是：
 
-**结论**: 实现质量高，注册校验（5 项）、层级掩码继承、惰性缓存等设计到位。
+```
+Type System（世界真相）     ← DamageType, UnitClass, AbilityId（强类型）
+       ↓
+Tag System（世界语义）      ← Boss, Undead, Flying（语义描述）
+       ↓
+Query System（筛选语言）    ← TargetQuery, Condition（统一查询）
+       ↓
+Rule System（规则引擎）     ← Condition → Effect（数据驱动规则）
+       ↓
+Content System（配置层）    ← RON/YAML, Mod（内容驱动）
+```
+
+### 0.4 五层职责边界
+
+| 层 | 职责 | 例子 | 谁修改 |
+|----|------|------|--------|
+| **Type System** | 世界运行规律，参与规则计算 | `DamageType::Fire`, `AbilityState::Casting` | 程序员（编译期） |
+| **Tag System** | 世界语义描述，不影响核心规则 | `Enemy.Boss`, `Ability.Fire`, `Terrain.Water` | 内容团队（运行时） |
+| **Query System** | 统一筛选语言，跨系统查询 | `TagQuery(Any, [Fire, Ice])`, `Condition::TagMatch` | 配置（Def） |
+| **Rule System** | 数据驱动规则，Condition → Effect | `Rule { condition, effect }` | 配置（Def） |
+| **Content System** | 内容配置，Mod 扩展 | RON 文件, YAML 配置 | 内容团队 |
 
 ---
 
-## 2. 核心发现：43 处 enum 分类 vs Tag 系统的差距
+## 1. 现状分析
 
-这是本报告最关键的发现。对 `src/` 全局搜索发现 **43 处 enum 分类**，分布于 31 个源文件中。这些 enum 承担的本质工作正是 Tag 系统设计的本职工作——分类与标识。
+### 1.1 Tag 基础设施（A 级）
 
-### 2.1 应优先迁移的 enum（纯分类，无业务逻辑）
+现有 Tag 系统实现质量高：
 
-这些 enum 仅做分类/标记，无状态机转换、无数据携带、无计算逻辑，是 Tag 的天然替代对象：
+| 能力 | 状态 | 说明 |
+|------|------|------|
+| TagHierarchy（层级树+继承掩码） | ✅ 完整 | 位掩码 O(1) 检查 |
+| TagSet（ECS Component） | ✅ 完整 | u128 位掩码，支持 128 个标签 |
+| TagQuery（Any/All/None） | ✅ 完整 | 层级继承查询 |
+| TagAdded/TagRemoved 事件 | ✅ 完整 | Observer 驱动 |
+| TagNamespace（25 个命名空间） | ✅ 完整 | 含本轮新增 |
+| 注册校验（5 项） | ✅ 完整 | 循环/唯一/命名空间 |
 
-| 领域 | Enum | 变体 | 对应 TagNamespace |
-|------|------|------|-------------------|
-| effect | `EffectCategory` | Buff/Debuff/Damage/Heal/Shield/Control/Terrain/Summon/Custom | `TagNamespace::StatusEffect` |
-| ability | `AbilityCategory` | 待确认 | `TagNamespace::SkillType` |
-| ability | `ActivationType` | 待确认 | `TagNamespace::SkillType` |
-| targeting | `TargetType` | 待确认 | 新增 `TargetingType` |
-| execution | `ExecutionType` | 待确认 | 新增 `ExecutionType` |
-| cue | `CueType` | 待确认 | 新增 `CueType` |
-| trigger | `TriggerType` | 待确认 | 新增 `TriggerType` |
-| inventory | `ItemType` | 待确认 | `TagNamespace::ItemCategory` |
-| inventory | `WeaponCategory` | 待确认 | `TagNamespace::WeaponCategory` |
-| inventory | `ArmorCategory` | 待确认 | `TagNamespace::ArmorCategory` |
-| inventory | `EquipSlot` | 待确认 | `TagNamespace::EquipmentSlot` |
-| quest | `QuestType` | 待确认 | `TagNamespace::QuestTag` |
-| quest | `ObjectiveType` | 待确认 | `TagNamespace::QuestTag` |
-| quest | `UnlockType` | 待确认 | `TagNamespace::QuestTag` |
-| quest | `PrereqType` | 待确认 | `TagNamespace::QuestTag` |
-| reaction | `ReactionType` | 待确认 | 新增 `ReactionType` |
-| spell | `SaveType` | 待确认 | 新增 `SpellSchool`？ |
-| terrain | `SurfaceType` | 待确认 | `TagNamespace::TerrainType` |
-| terrain | `TerrainType` | 待确认 | `TagNamespace::TerrainType` |
-| crafting | `CraftType` | 待确认 | 新增 `CraftingType` |
-| crafting | `EnchantmentSlotType` | 待确认 | 新增 `CraftingType` |
-| faction | `FactionRelationType` | 待确认 | `TagNamespace::Faction` |
-| combat | `CombatTriggerType` | 待确认 | 新增 `CombatState` |
-| economy | `CurrencyType` | 待确认 | 新增 `EconomyType` |
-| party | `FormationType` | 待确认 | 新增 `PartyType` |
-| progression | 关联枚举 | 待确认 | `TagNamespace::SkillType` 等 |
-| camp_rest | `RestType`, `DiceType`, `CampEventType` | 待确认 | 新增 `CampRestType` |
+### 1.2 Tag 利用率（D 级 — 架空状态）
 
-**初步估算**: 20-25 个 enum 是纯分类的迁移候选。
+**核心问题**: Tag 基础设施是 A 级，但利用率是 D 级。
 
-### 2.2 不应迁移的 enum（含状态机/计算/数据）
+**实际消费者（仅 3 处）**:
+1. `condition/` — `TagRequirement` + `TagMatch` 条件检查
+2. `effect/def.rs` — `granted_tags` / `required_tags` / `ignored_tags` 字段
+3. `movement/facade.rs` — `MovementType → TagId` 映射
 
-这些 enum 携带行为逻辑或状态转移，不适合用 Tag 替代：
+**未被 Tag 化的分类 enum（30+ 处）**:
+- `EffectCategory`, `AbilityCategory`, `ActivationType`
+- `QuestType`, `ObjectiveType`, `TerrainType`, `SurfaceType`
+- `SpellLevel`, `CastingTime`, `SpellRange`, `SpellDuration`, `SaveType`
+- `FormationType`, `CurrencyType`, `RestType`
+- 等等
+
+### 1.3 错误的旧方案
+
+旧报告建议"把 43 个 enum 全部迁移到 Tag"，这是**错误的**。
+
+**原因**:
+
+| 错误假设 | 正确理解 |
+|---------|---------|
+| "enum 分类 = Tag 的职责" | enum 分类可能是 Type System 的职责（参与规则计算） |
+| "Tag 是万能的" | Tag 只是语义层，不能替代类型系统 |
+| "越多 Tag 越好" | 过多 Tag 会导致"debug 地狱"和语义膨胀 |
+
+---
+
+## 2. 正确的重构方向：五层落地
+
+### 2.1 Type System 层 — 保留哪些 Enum
+
+**原则**: 参与规则计算、影响核心逻辑、频繁重构的 enum **必须保留为强类型**。
+
+**保留为 Type 的 enum**:
 
 | Enum | 理由 |
 |------|------|
-| `EffectStage` | 四阶段状态机（Applying→Active→Expiring→Removed），含生命周期转换规则 |
-| `EffectDuration` | 携带数据（turns, calculation 字段），不是分类 |
-| `DurationCalculation` | 包含计算逻辑（Fixed/PerLevel/AttributeBased），是 Formula |
-| `RemovalReason` | 事件原因枚举，携带上下文 |
-| `StackingType` | 决定行为逻辑（完全叠/部分叠/不叠） |
-| `ModifierSourceType` | 运行时溯源追踪 |
-| `EffectError` | 错误处理 |
-| `MovementType` | ✅ 已经在 facade 层有 `→ TagId` 映射，是正确桥接模式 |
+| `DamageType` | 参与伤害公式计算（火抗、冰抗等） |
+| `EffectStage` | 四阶段状态机，生命周期转换规则 |
+| `EffectDuration` | 携带数据（turns, calculation） |
+| `AbilityState` | 技能生命周期状态机 |
+| `ActivationType` | 影响施法流程逻辑 |
+| `MovementType` | 参与移动规则计算（已有 → TagId 桥接） |
+| `TerrainType` | 参与地形移动代价计算 |
+| `Passability` | 参与路径规划规则 |
 | `FormulaType` | 计算逻辑 |
-| `SpecType` | 行为区分 |
-| `ElementType` | 可能是 Tag 也可能保留（看上下文） |
-| `TransactionType` | 事件分类（buy/sell/repair）可迁移也可保留 |
+| `ModifierOp` | 数值修改操作 |
+| `StackingType` | 叠加行为逻辑 |
 
-### 2.3 4 个 Marker Component 的 Tag 化潜力
+### 2.2 Tag System 层 — 新增哪些 Tag
 
-```rust
-// 当前：4 个独立 Component，每个单位结构体
-pub struct PartyMarker;          // components.rs:251
-pub struct ProgressionMarker;    // components.rs:307
-pub struct InventoryMarker;      // components.rs:518
-pub struct CampRestMarker;       // components.rs:259
-```
+**原则**: 语义描述、内容驱动、多领域引用的分类 **应该用 Tag**。
 
-这些 Marker 可被**一个统一的 TagSet 替代**：
+**应该 Tag 化的分类**:
 
-```rust
-// 替代方案：Entity 携带 TagSet { bits: DOMAIN_TAG }
-// query: With<DomainTag>  →  query: With<TagSet>(filter by bit)
-// query: With<PartyMarker> →  query: With<TagSet>.filter(|t: &TagSet| t.has_tag("tag_domain_party"))
-```
+| 当前 Enum | Tag 化方向 | TagNamespace |
+|-----------|-----------|-------------|
+| `EffectCategory` | `Effect.Category.Buff` 等 | `StatusEffect` |
+| `QuestType` | `Quest.Type.Main` 等 | `QuestTag` |
+| `ObjectiveType`（部分） | `Quest.Objective.Kill` 等 | `QuestTag` |
+| `SpellSchool`（隐含） | `Ability.School.Fire` 等 | `SpellSchool` |
+| Marker Components | `Domain.Party` 等 | `Domain`（新增） |
+| 事件分类 | `Event.DamageDealt` 等 | `EventType`（新增） |
 
-但要注意：`With<PartyMarker>` 的 Archetype 过滤效率可能高于位掩码检查。Archetype 过滤是 Bevy 内部做了优化的路径。
+**不应该 Tag 化的分类（保留为 Type）**:
 
----
-
-## 3. UE 对比分析：为什么 UE 给人"万物皆标签"的感觉
-
-### 3.1 UE GameplayTag 的核心模式
-
-在 UE GAS 中，Tag 不是"可选的分类工具"——它是**整个能力系统的骨架语言**：
-
-```
-GameplayAbility:
-  ├── AbilityTags           → 标识自身类型（如 "Ability.Combat.Fireball"）
-  ├── CancelAbilitiesWithTag → 被激活时取消哪些标签的能力
-  ├── BlockAbilitiesWithTag  → 激活期间阻断哪些标签的能力
-  └── ActivationOwnedTags    → 激活期间授予自身的标签
-
-GameplayEffect:
-  ├── GrantedTags           → 应用时授予目标的标签
-  ├── RequiredTags           → 目标必须有的标签
-  ├── IgnoreTags             → 目标必须没有的标签
-  ├── OngoingTagRequirements → 持续期条件检查
-  └── RemoveGameplayEffectsWithTag → 应用时移除哪些标签的效果
-
-GameplayCue:
-  └── GameplayCueTag         → 通过 Tag 匹配表现逻辑（非硬编码枚举）
-
-GameplayTagQuery:
-  ├── TagQuery ← 嵌入 Ability/Effect/Cue/Animation 的条件系统
-  └── 支持任何/全部/无 + 层级继承
-```
-
-### 3.2 Fre 当前的差距
-
-```
-UE GAS                               Fre
-────────────────────────────         ────────────────────────────────
-Ability.AbilityTags                  无（Ability 无 Tag 分类）
-Ability.CancelByTag                  无
-Ability.BlockByTag                   无
-Effect.GrantedTags                   无（EffectDef 无此字段）
-Effect.RequiredTags                  无
-Effect.IgnoreTags                    无
-Cue.CueTag                           有 CueType enum（应改为 Tag）
-TagQuery 嵌入条件系统                Condition 系统通过 TagAdded 事件响应（✅ 正确模式）
-Tag 驱动的效果移除                   无
-Tag 驱动的动画匹配                   N/A（尚无动画系统）
-```
-
-**关键差距**: 不是 Tag 基础设施不够，而是**没有一个消费侧的模式**。UE 每个 Effect/Ability/Cue 天然带 Tag 字段，而 Fre 的对应 Def 没有。
-
-### 3.3 "万物皆标签"的本质
-
-UE 的"万物皆标签"不是指字面上把所有东西都变成 Tag，而是：
-
-1. **Tag 是跨系统的通用查询语言**——不要为每个维度的分类造一种新的 enum
-2. **Tag 是可组合的**——一个 Entity 可以同时有 Faction.Monster + DamageType.Fire + Status.Burning
-3. **Tag 是数据驱动的**——新增分类不需要改代码
-4. **Tag 的查询是统一入口**——TagQuery 是唯一的"检查是否有 X 属性"的入口
-
-Fre 在这四个维度都有差距。
-
----
-
-## 4. 具体改进建议（按优先级）
-
-### P0 — 高价值低风险（可立即执行）
-
-#### 4.1 TagNamespace 补充缺失的命名空间
-
-当前 `TagNamespace` 枚举已定义 17 个变体，但对照 43 个 enum 分类，至少缺：
-
-| 缺失的 Namespace | 对应领域 |
-|------------------|---------|
-| `TargetingType` | targeting |
-| `ExecutionType` | execution |
-| `CueType` | cue |
-| `TriggerType` | trigger, reaction |
-| `CraftingType` | crafting |
-| `RestType` | camp_rest |
-| `EconomyType` | economy |
-| `PartyType` | party |
-| `ProgressionType` | progression |
-| `CombatType` | combat |
-
-#### 4.2 EffectDef 增加 Tag 过滤字段（量最大的单步改进）
-
-参考 UE 的 GameplayEffect，在 EffectDef（`src/core/capabilities/effect/foundation/values.rs`）增加：
-
-```rust
-pub struct EffectDef {
-    // ... 现有字段
-
-    /// 此 Effect 被应用时授予目标的标签
-    pub granted_tags: Vec<TagId>,
-    /// 目标必须包含的标签（否则应用失败）
-    pub required_tags: Vec<TagId>,
-    /// 目标不能包含的标签（否则应用失败）
-    pub ignored_tags: Vec<TagId>,
-    /// 以此 Effect 替换具有这些标签的其他 Effect
-    pub remove_effects_with_tags: Vec<TagId>,
-}
-```
-
-这直接解锁了：
-- "火焰免疫实体不受火焰伤害"（免疫检查 + IgnoreTags）
-- "中毒状态下治疗效果减半"（RequiredTags + Modifier）
-- "隐身状态不可被单体技能选中"（RequiredTags + Targeting）
-
-#### 4.3 AbilityDef 增加 Tag 字段
-
-```rust
-pub struct AbilityDef {
-    // ... 现有字段
-    pub ability_tags: Vec<TagId>,
-    pub cancel_abilities_with_tags: Vec<TagId>,
-    pub block_abilities_with_tags: Vec<TagId>,
-    pub activation_owned_tags: Vec<TagId>,
-}
-```
-
-### P1 — 中等价值中等风险（需架构评审）
-
-#### 4.4 EffectCategory 的 Tag 化
-
-`EffectCategory`（8 个变体 + Custom）是最自然的 Tag 化候选——它已经是纯分类，而且 `TagNamespace::StatusEffect` 已经存在：
-
-```rust
-// 当前
-pub enum EffectCategory { Buff, Debuff, Damage, Heal, Shield, Control, Terrain, Summon, Custom(String) }
-
-// 目标：EffectCategory 查询改为通过 TagQuery：
-// "这个 Effect 是增益吗？" → hierarchy.inherited_mask("tag_effect_buff")
-// "这个 Effect 是伤害吗？" → hierarchy.inherited_mask("tag_effect_damage")
-```
-
-#### 4.5 统一的 TagSet 替代 4 个 Marker Component
-
-```rust
-// 当前
-Query<Entity, With<PartyMarker>>
-Query<Entity, With<InventoryMarker>>
-
-// 目标
-Query<Entity, With<TagSet>>  // filter further by tag bit
-```
-
-**注意**: 需要验证性能影响。`With<PartyMarker>` 使用 Bevy Archetype 过滤（O(1)），`has_tag(&hierarchy, "tag_domain_party")` 是位操作（也 O(1)）。差异不大，但 Archetype 过滤在调度器层面更早剔除 Entity。
-
-### P2 — 高价值高风险（需大量重构）
-
-#### 4.6 按域分批迁移 20+ 个 enum 到 Tag
-
-建议分批进行，每批一个领域：
-
-| 批次 | 领域 | 涉及 enum | 风险 |
-|------|------|-----------|------|
-| Batch 1 | effect | EffectCategory | 低 — 纯分类，无行为逻辑 |
-| Batch 2 | inventory | ItemType, WeaponCategory, ArmorCategory, EquipSlot | 低 — Def Schema 变更影响内容配置 |
-| Batch 3 | quest | QuestType, ObjectiveType, UnlockType, PrereqType | 中 — 条件系统依赖 |
-| Batch 4 | cue | CueType | 低 — Cue 触发改 Tag 匹配 |
-| Batch 5 | crafting | CraftType, EnchantmentSlotType | 低 |
-| Batch 6 | terrain | SurfaceType, TerrainType | 中 — MovementCost 系统依赖 |
-| Batch 7 | ability/spell | AbilityCategory, ActivationType, TriggerType | 高 — Ability 管线核心 |
-| Batch 8 | targeting/execution | TargetType, ExecutionType | 高 — 核心逻辑 |
-
-#### 4.7 TagQuery 嵌入 Condition 系统
-
-当前 `ConditionContainer` 已响应 `TagAdded`/`TagRemoved` 事件，但 Condition 本身的条件类型仍然是 enum 驱动的。可增加 `TagCondition` 变体：
-
-```rust
-pub enum ConditionType {
-    // ... 现有
-    TagMatch(TagQuery),  // 新增：直接用 TagQuery
-}
-```
-
----
-
-## 5. 利弊分析：为什么不能"一股脑全改成 Tag"
-
-### 5.1 Tag 的优势
-
-| 优势 | 说明 |
+| Enum | 理由 |
 |------|------|
-| **数据驱动** | 新增分类只需改 RON 配置，不修改 Rust 代码 |
-| **层级查询** | `DamageType.Elemental` 自动匹配 `Fire/Cold/Lightning/Acid` |
-| **可组合多维度** | 一个 Entity 可同时持有多个命名空间的标签 |
-| **统一查询语言** | TagQuery 是唯一的分类检查入口 |
-| **Mod 友好** | Mod 可注册新 Tag，无需修改核心 Rust 代码 |
-| **事件驱动** | TagAdded/Removed 自动通知 Condition/Trigger 系统 |
+| `SpellLevel` | 参与法术位消耗计算 |
+| `CastingTime` | 影响行动顺序逻辑 |
+| `SaveType` | 参与豁免检定计算 |
+| `CurrencyType` | 参与经济计算 |
+| `FormationType` | 影响阵型规则 |
 
-### 5.2 Tag 的劣势
+### 2.3 Tag 命名空间重构
 
-| 劣势 | 说明 |
-|------|------|
-| **失去编译期检查** | `MovementType::Walk` 是编译期保证的，`"tag_000010"` 是运行时 |
-| **位掩码上限** | 128 位 → 最多 128 个独立标签。大型项目可能需要 256+ |
-| **查询复杂度** | `entity has MovementType::Walk`（Archetype 过滤）vs `entity.tag_set.has_bit(10)`（位操作），性能相近 |
-| **重构工具差** | 改 enum 名 → 编译器全量提示。改 Tag path → 必须查配置 |
-| **过度抽象风险** | 如果 enum 只在 1 处使用且无层级需求，Tag 带来了额外的间接性 |
+当前 25 个 TagNamespace 过于碎片化。按 12tag.md 建议，应精简为 **10-15 个顶级命名空间**：
 
-### 5.3 决策矩阵
+```
+当前（25 个）                        目标（12 个）
+──────────────────────              ──────────────────────
+DamageType                    →     Damage.*
+StatusEffect                  →     Status.*
+SkillType                     →     Ability.*
+EquipmentSlot                 →     Equipment.*
+EquipmentCategory             →     Equipment.*
+WeaponCategory                →     Equipment.*
+ArmorCategory                 →     Equipment.*
+ItemCategory                  →     Item.*
+Faction                       →     Faction.*
+CombatState                   →     Combat.*
+MovementType                  →     （保留为 Type，不 Tag 化）
+TerrainType                   →     Terrain.*
+BuffCategory                  →     Status.*
+Immune                        →     Status.*
+Cooldown                      →     （保留为运行时机制）
+SpellSchool                   →     Ability.*
+QuestTag                      →     Quest.*
+DialogueTag                   →     Dialogue.*
+TargetingType                 →     Ability.*
+ExecutionType                 →     Ability.*
+CueType                       →     Cue.*
+TriggerType                   →     Trigger.*
+CraftingType                  →     Crafting.*
+RestType                      →     Camp.*
+EconomyType                   →     Economy.*
+PartyType                     →     Party.*
+ProgressionType               →     Progression.*
+Custom(String)                →     Custom(String)
+```
 
-| 是否迁移 | 判断条件 |
-|---------|---------|
-| ✅ **应该迁移** | 纯分类 + 多个领域引用 + 可能有层级需求 (EffectCategory, ItemType) |
-| ❌ **应该保留** | 含状态机、数据携带、计算逻辑、错误类型 (EffectStage, EffectDuration, RemovalReason) |
-| 🤷 **按需决定** | 只在领域内部使用 + 变体少 + 无层级需求 → 保留 enum，等"三次再抽象" |
+### 2.4 Query System 层 — TagQuery 嵌入内容
 
-### 5.4 务实建议
+**已完成**: `Condition::TagMatch` 支持 `TagQuery`（Any/All/None + 层级继承）。
 
-不追求"全部 Tag 化"。核心原则：
+**待做**: 将 TagQuery 嵌入所有 Def 类型，实现 UE GAS 模式：
 
-1. **不改也能跑**：现有 enum 是可工作的，Tag 化是架构优化而非 Bug 修复
-2. **EffectDef 的 Tag 字段（P0）**是最大的痛点——**这是真正的功能缺失**，不只是架构审美
-3. **EffectCategory → Tag** 是第二优先级——减少"一个系统两套分类"的认知负荷
-4. **20+ 纯分类 enum 的迁移**是长期工程，建议每次在相关领域重构时"顺手"做
-5. **Marker Component → TagSet** 值得做——减少 4 个 Archetype 是好事，但不是紧迫的
+```
+EffectDef:
+  ├── granted_tags         → 应用时授予
+  ├── required_tags        → 目标必须有
+  ├── ignored_tags         → 目标不能有（免疫）
+  ├── removed_tags         → 移除时清理
+  └── remove_effects_with_tags → 替换效果
+
+AbilityDef（待创建）:
+  ├── ability_tags         → 标识自身类型
+  ├── cancel_by_tags       → 激活时取消
+  ├── block_by_tags        → 激活期间阻断
+  └── activation_owned_tags → 激活时授予
+
+ItemDef:
+  ├── item_tags            → 物品分类（Weapon/Armor/Consumable）
+  └── required_tags        → 使用条件
+
+QuestDef:
+  ├── quest_tags           → 任务分类（Main/Side/Faction）
+  └── condition_tags       → 触发条件
+```
+
+### 2.5 Rule System 层 — 新建
+
+**当前缺失**: 没有独立的 Rule System。规则逻辑散落在各系统中。
+
+**目标架构**:
+
+```rust
+/// 数据驱动规则（Definition 层）
+pub struct RuleDef {
+    /// 规则 ID
+    pub id: String,
+    /// 触发条件（TagQuery + Condition）
+    pub condition: Condition,
+    /// 规则效果（Modifier / Tag 操作 / 事件触发）
+    pub effect: RuleEffect,
+    /// 优先级
+    pub priority: u32,
+}
+
+pub enum RuleEffect {
+    /// 数值修改
+    Modifier(ModifierConfig),
+    /// 标签授予/移除
+    TagOperation { grant: Vec<TagId>, remove: Vec<TagId> },
+    /// 事件触发
+    EventTrigger(String),
+    /// 效果应用
+    EffectApply { effect_id: String },
+}
+```
+
+**统一规则引擎**:
+
+```rust
+pub fn evaluate_rules(
+    rules: &[RuleDef],
+    context: &ConditionContext,
+    entity: Entity,
+    commands: &mut Commands,
+) -> Vec<RuleEffect> {
+    rules.iter()
+        .filter(|rule| evaluate(&rule.condition, context, entity, commands).is_passed())
+        .map(|rule| rule.effect.clone())
+        .collect()
+}
+```
+
+### 2.6 Content System 层 — RON 配置驱动
+
+```
+assets/config/
+├── tags/                    ← TagDefinition RON 文件
+│   ├── ability.ron          ← Ability.* 标签定义
+│   ├── status.ron           ← Status.* 标签定义
+│   ├── faction.ron          ← Faction.* 标签定义
+│   └── ...
+├── effects/                 ← EffectDef RON 文件（含 Tag 字段）
+├── abilities/               ← AbilityDef RON 文件（含 Tag 字段）
+├── rules/                   ← RuleDef RON 文件（新增）
+└── ...
+```
 
 ---
 
-## 6. 领域规则更新建议
+## 3. 重构路径（按优先级）
 
-### 6.1 `tag_domain.md` 建议补充
+### Phase 1: Tag 命名空间重构（低风险）
 
-当前领域规则定义了标签的注册/查询/授予/移除流程，但缺少：
+| 任务 | 说明 | 工作量 |
+|------|------|--------|
+| 重命名 TagNamespace | 25 → 12 个顶级命名空间 | 2 天 |
+| 更新 TagDefinition RON | 所有 tag RON 文件路径更新 | 1 天 |
+| 更新引用方 | 所有 `TagNamespace::Xxx` 引用更新 | 0.5 天 |
 
-| 缺少内容 | 补充建议 |
-|---------|---------|
-| Tag 在 Effect/Ability 中的使用模式 | 新增 §"5.5 Effect Tag 过滤" 和 §"5.6 Ability Tag 过滤" |
-| Tag 与 Condition 系统的集成模式 | 新增 §"5.7 TagQuery in Condition" |
-| 优先使用 Tag 替代 enum 分类的指导原则 | 新增 §"9. Tag vs Enum 决策指南" |
+### Phase 2: Tag 嵌入 Def（中风险）
 
-### 6.2 建议新增的决策指南
+| 任务 | 说明 | 工作量 |
+|------|------|--------|
+| AbilityDef 创建 | 新增 AbilityDef + Tag 字段 | 3 天 |
+| EffectDef Tag 字段完善 | 已完成（ignored_tags, remove_effects_with_tags） | ✅ |
+| ItemDef Tag 字段 | 物品分类 Tag | 1 天 |
+| QuestDef Tag 字段 | 任务分类 Tag | 1 天 |
+| SpellDef Tag 字段 | 法术分类 Tag | 1 天 |
 
-在 `tag_domain.md` 中新增一个快速决策表：
+### Phase 3: EffectCategory Tag 化（中风险）
+
+| 任务 | 说明 | 工作量 |
+|------|------|--------|
+| EffectCategory → Tag | 将 EffectCategory 替换为 Tag 查询 | 2 天 |
+| 免疫系统实现 | 基于 ignored_tags 的免疫检查 | 2 天 |
+| 测试更新 | 所有 EffectCategory 引用更新 | 1 天 |
+
+### Phase 4: Rule System 建设（高风险）
+
+| 任务 | 说明 | 工作量 |
+|------|------|--------|
+| RuleDef 定义 | 数据驱动规则结构 | 2 天 |
+| RuleEngine | 统一规则评估引擎 | 3 天 |
+| Condition → Rule 桥接 | 现有 Condition 系统集成 | 2 天 |
+| 内容配置 | RuleDef RON 文件 | 2 天 |
+
+### Phase 5: Marker Component 统一（低风险）
+
+| 任务 | 说明 | 工作量 |
+|------|------|--------|
+| 4 个 Marker → TagSet | PartyMarker 等替换为 TagSet | 1 天 |
+| 性能验证 | Archetype 过滤 vs 位掩码 | 0.5 天 |
+
+---
+
+## 4. Tag 治理规范（面向 50 万行）
+
+### 4.1 Tag 生命周期
 
 ```
-Tag 还是 Enum？决策指南：
+提案 → 审核 → 注册 → 使用 → 引用统计 → 废弃 → 删除
+```
 
-这是一个分类维度吗？→ Tag
-这是一个状态机吗？  → Enum
-这是一个数据载体吗？→ Struct
-这是一个计算逻辑吗？→ Function/Formula
-这是一个错误类型吗？→ Enum（Error）
+### 4.2 Tag 文档要求
 
-分类维度的判断：
-□ 多个领域需要引用它？→ Tag
-□ 可能有层级/继承关系？→ Tag
-□ Mod 需要扩展它？→ Tag
-□ 内容团队需要配置它？→ Tag
-□ 仅在单领域内部使用？→ Enum 可保留
-□ 变体 ≤ 3 且稳定不变？→ Enum 可保留
-□ 编译期安全检查更重要？→ Enum 可保留
+每个 Tag 必须有 YAML 描述：
+
+```yaml
+Enemy.Boss:
+  description: |
+    用于标记 Boss 单位。
+    不保证具有特殊数值。
+    不用于伤害计算。
+    可用于目标筛选、UI展示、成就统计。
+  level: L2    # L1=Core / L2=Gameplay / L3=Content / L4=Temporary
+  deprecated: false
+  replacement: null
+```
+
+### 4.3 Tag 引用统计
+
+```rust
+tag_registry.find_references("Enemy.Boss")
+// → 技能引用: 53, Buff引用: 12, 任务引用: 4, AI引用: 8
+```
+
+### 4.4 Tag 废弃机制
+
+```yaml
+Enemy.Monster:
+  deprecated: true
+  replacement: Enemy.Beast
+  deprecated_at: "2026-06-28"
+```
+
+### 4.5 Tag 数量控制
+
+| 级别 | 数量上限 | 说明 |
+|------|---------|------|
+| L1 Core Tag | < 100 | 极少修改，几十年不动 |
+| L2 Gameplay Tag | < 500 | 玩法层，变化较少 |
+| L3 Content Tag | < 1000 | 内容层，变化频繁 |
+| L4 Temporary Tag | 无限制 | 活动/实验，可删除 |
+| **总计** | **< 1500** | 超过需架构评审 |
+
+---
+
+## 5. Tag vs Type 决策指南（修正版）
+
+### 核心原则
+
+> **参与规则计算的东西，必须强类型。**
+> **用于筛选/分类/内容驱动的东西，可以用 Tag。**
+
+### 决策矩阵
+
+| 问题 | 答案 |
+|------|------|
+| 会参与数值计算吗？ | → **Type**（enum） |
+| 会影响核心规则吗？ | → **Type**（enum） |
+| 会被频繁重构吗？ | → **Type**（enum） |
+| 编译期必须保证正确？ | → **Type**（enum） |
+| 用于筛选/分类？ | → **Tag** |
+| 不影响核心规则正确性？ | → **Tag** |
+| 可以容忍"写错名字"？ | → **Tag** |
+| 内容团队需要配置？ | → **Tag** |
+| Mod 需要扩展？ | → **Tag** |
+
+### 速查表
+
+```
+DamageType     → Type（参与伤害公式）
+UnitClass      → Type（影响职业规则）
+AbilityState   → Type（状态机）
+EffectStage    → Type（状态机）
+MovementType   → Type（参与移动规则）
+TerrainType    → Type（参与地形计算）
+
+Boss           → Tag（语义描述）
+Undead         → Tag（语义描述）
+Flying         → Tag（语义描述）
+Fire           → Tag（Ability.Fire = 火焰主题技能）
+Healing        → Tag（Ability.Healing = 治疗主题）
+MainHand       → Tag（Equipment.Slot.MainHand）
+```
+
+---
+
+## 6. 与 UE GAS 的正确对齐
+
+UE GAS 的"万物皆标签"不是指把所有东西都变成 Tag，而是：
+
+1. **Tag 是跨系统的通用查询语言** — 不要为每个维度造一种新的 enum
+2. **Tag 是可组合的** — 一个 Entity 可同时有多个命名空间的标签
+3. **Tag 是数据驱动的** — 新增分类不需要改代码
+4. **Tag 的查询是统一入口** — TagQuery 是唯一的"检查是否有 X 属性"的入口
+
+**但 UE 同时也有强类型系统** — `EGameplayAbilitySpec`, `FGameplayEffectSpec` 等都是强类型结构。
+
+**正确的对齐方式**:
+```
+UE GAS                          Fre（目标）
+──────────────                  ──────────────
+FGameplayTag                    TagId + TagSet
+FGameplayTagQuery               TagQuery + Condition
+FGameplayAbilitySpec            AbilitySpec（强类型）
+FGameplayEffectSpec             EffectSpec（强类型）
+AbilityTags                     ability_tags: Vec<TagId>
+GrantedTags                     granted_tags: Vec<TagId>
 ```
 
 ---
 
 ## 7. 结论
 
-### 7.1 现状总结
+### 7.1 核心结论
 
-**Tag 基础设施**: A 级。18 个文件、位掩码 O(1)、层级继承、命名空间、查询评估、事件通知、注册校验，体系完整且实现到位。
+**Tag 不是万能胶水。** 在 50 万行 SRPG 中，Tag 的最大价值不是替代类型系统，而是成为整个项目共享的"语义词典"。当 Character、Ability、Buff、AI、Quest、UI、Story 都说同一种 Tag 语言时，项目规模越大，它的价值越高。
 
-**Tag 利用率**: D 级。43 处 enum 分类"架空"了 Tag 系统。Tag 系统实际只在 tactical/movement/facade 和 condition/condition_system 两处被消费。其他所有领域都用自己的 enum 做分类。
+### 7.2 行动优先级
 
-**核心矛盾**: 架构文档说 Tag 是"整个数据宇宙的通用底层语言"，但代码里 Tag 只是一个"可选的分类工具"。
+| 优先级 | 行动 | 工作量 | 状态 |
+|--------|------|--------|------|
+| **P0** | Tag 命名空间重构（25 → 12） | 3.5 天 | ✅ 完成 |
+| **P0** | AbilityDef 创建 + Tag 字段 | 3 天 | ✅ 完成 |
+| **P1** | EffectCategory Tag 化 | 5 天 | 待执行 |
+| **P1** | Rule System 建设 | 9 天 | 待执行 |
+| **P2** | Marker Component → TagSet | 1.5 天 | 待执行 |
+| **长期** | Tag 治理规范（引用统计/废弃/文档） | 持续 | 待执行 |
 
-### 7.2 与 UE 的核心差距
+### 7.3 一句话总结
 
-UE GameplayTag 的哲学和我们架构设计宣示的哲学高度一致——Tag 是跨系统的通用分类语言。但 UE 在消费侧（Effect/Ability/Cue 的 Tag 字段）做了强制要求，而我们没有。**我们的 Tag 系统是一个"造好了但没人住的房子"。**
-
-### 7.3 行动建议
-
-| 优先级 | 行动 | 预估工作量 |
-|--------|------|-----------|
-| **P0** | EffectDef 增加 granted_tags/required_tags/ignored_tags | 1 天（Schema + 逻辑 + 测试） |
-| **P0** | AbilityDef 增加 ability_tags/blocked_by_tags | 0.5 天 |
-| **P0** | 补充 TagNamespace 缺失变体 | 0.1 天 |
-| **P1** | EffectCategory → TagNamespace::StatusEffect | 2 天（加上所有消费方改动+测试） |
-| **P1** | Marker Component → TagSet 统一方案设计与评估 | 0.5 天（需性能验证） |
-| **P2** | 按域分批迁移 20+ 纯分类 enum | 5-10 天（分 8 批次） |
-| **P2** | TagQuery 嵌入 Condition 系统 | 1 天 |
-| **长期** | 制定"分类优先用 Tag"的编码规范 | 0.5 天（更新 AI 规则 + 宪法） |
-
-**总体建议**: P0 立即执行（这是真正的功能缺失），P1 在下个迭代评估，P2 随领域重构渐进完成。不追求一步到位的"全 Tag 化"。
-
----
-
-## 8. 附录：数据来源
-
-| 来源 | 文件 | 关键数据 |
-|------|------|---------|
-| Tag 基础设施 | `src/core/capabilities/tag/` | 18 个文件，完整实现 |
-| Tag 消费者 | `src/core/domains/tactical/integration/movement/facade.rs` | MovementType → TagId 映射 |
-| Tag 消费者 | `src/core/capabilities/condition/mechanism/systems/condition_system.rs` | TagAdded/TagRemoved 监听 |
-| Enum 分类清单 | 43 处 enum，31 个文件 | 全部列于 §2.1 |
-| Marker Component | `src/core/domains/{party,progression,inventory,camp_rest}/components.rs` | 4 个 Marker |
-| UE GameplayTag | GAS 公开文档 | 对比分析列于 §3 |
-| 架构设计意图 | `docs/02-domain/capabilities/tag_domain.md` | Tag = 通用底层语言 |
-| Schema 设计 | `docs/04-data/capabilities/tag_schema.md` | Layer Analysis, Validation |
+> ❌ 不要"万物 tag 化"
+> ✔ 应该是"核心强类型 + 外围 tag 化 + 内容驱动补充"
 
 ---
 
 > **评审人**: Architect
-> **下次评审触发条件**: EffectDef 完成 Tag 字段扩展后，或新的 enum 分类被引入时
-
----
-
-## 9. 执行记录（2026-06-28）
-
-### 已完成
-
-| 优先级 | 行动 | 状态 | 变更文件 |
-|--------|------|------|---------|
-| P0 | TagNamespace 补充 9 个变体（TargetingType/ExecutionType/CueType/TriggerType/CraftingType/RestType/EconomyType/PartyType/ProgressionType） | ✅ 完成 | `tag/foundation/types.rs` |
-| P0 | EffectDef 增加 ignored_tags + remove_effects_with_tags 字段 | ✅ 完成 | `effect/foundation/def.rs`, `content/tests/unit/def_impls_test.rs` |
-| P2 | Condition 系统新增 TagMatch 变体（支持 TagQuery 多标签+层级匹配） | ✅ 完成 | `condition/foundation/values.rs`, `condition/mechanism/evaluator.rs`, `condition/mechanism/components.rs`, `tag/mechanism/mod.rs` |
-| 长期 | tag_domain.md 补充 §5.5-5.7 + §9 Tag vs Enum 决策指南 | ✅ 完成 | `docs/02-domain/capabilities/tag_domain.md` |
-
-### 评估后决定暂缓
-
-| 优先级 | 行动 | 理由 |
-|--------|------|------|
-| P0 | AbilityDef 增加 Tag 字段 | AbilityDef 不存在于代码库（仅有 AbilitySpec），需单独架构决策 |
-| P1 | EffectCategory → Tag 化 | EffectCategory 当前无业务逻辑消费，免疫检查仅为注释占位，在 Effect 免疫系统实现时一并迁移 |
-| P1 | Marker Component → TagSet 统一 | 需 Bevy archetype 过滤性能验证，标记为后续评估 |
-
-### 编译与测试
-
-- `cargo check`: ✅ 通过
-- `cargo nextest run`: ✅ 1530 tests passed, 8 skipped
+> **参考来源**: `docs/ai_ignore_this_dir/12tag.md`（最佳实践）
+> **下次评审触发条件**: Phase 1 完成后，或 Tag 数量超过 100 个时

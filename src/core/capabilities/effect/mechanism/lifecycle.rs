@@ -119,14 +119,40 @@ pub fn apply_effect(
         });
     }
 
-    // 不变量 3.2: 免疫检查（占位）
-    // 实际实现应检查目标标签是否为 Tag.Immune.{EffectCategory}
-    // 占位阶段跳过——当检测到免疫时应：
-    // commands.trigger(EffectImmunityTriggered {
-    //     def_id: def_id.clone(),
-    //     target_entity: instance.target_entity.clone(),
-    //     immune_tag: format!("Immune.{}", instance.category),
-    // });
+    // 不变量 3.2: 免疫检查 — 检查目标是否拥有 ignored_tags 中的任意标签
+    // ignored_tags 来自 EffectDef，表示目标不能拥有的标签（否则效果应用失败）
+    if let Some(ref ignored_tags) = instance.ignored_tags {
+        if !ignored_tags.is_empty() {
+            // 检查目标的 tags 是否包含 ignored_tags 中的任意一个
+            let target_has_immune = ignored_tags.iter().any(|immune_tag| {
+                instance.tags.iter().any(|t| t == immune_tag)
+                    || container.effects.iter().any(|e| {
+                        e.stage.is_active() && e.tags.iter().any(|t| t == immune_tag)
+                    })
+            });
+            if target_has_immune {
+                let immune_tag = ignored_tags
+                    .iter()
+                    .find(|tag| {
+                        instance.tags.iter().any(|t| t == *tag)
+                            || container.effects.iter().any(|e| {
+                                e.stage.is_active() && e.tags.iter().any(|t| t == *tag)
+                            })
+                    })
+                    .cloned()
+                    .unwrap_or_default();
+                commands.trigger(EffectImmunityTriggered {
+                    def_id: def_id.clone(),
+                    target_entity: instance.target_entity.clone(),
+                    immune_tag,
+                });
+                return ApplyResult::failure(EffectError::ImmunityBlocked {
+                    def_id,
+                    immune_tag: ignored_tags.join(", "),
+                });
+            }
+        }
+    }
 
     // 槽位检查
     if container.is_full() {
@@ -151,16 +177,16 @@ pub fn apply_effect(
 
     let instance_id = instance.instance_id.clone();
     let def_id = instance.def_id.clone();
-    let category = instance.category.clone();
     let source_entity = instance.source_entity.clone();
     let target_entity = instance.target_entity.clone();
     let duration_type = instance.duration.name().to_string();
+    let tags = instance.tags.clone();
     container.effects.push(instance);
 
     commands.trigger(EffectApplied {
         instance_id: instance_id.clone(),
         def_id,
-        category,
+        tags,
         source_entity,
         target_entity,
         duration_type,
@@ -375,19 +401,25 @@ pub fn can_apply(
     _container: &ActiveEffectContainer,
     _def_id: &str,
     _target_tags: &[String],
+    _ignored_tags: Option<&[String]>,
     _commands: &mut Commands,
 ) -> Result<(), EffectError> {
-    // 占位：默认允许施加
-    // 实际实现应：
-    // 1. 检查 target_tags 是否包含 Tag.Immune.{category}
-    //    若检测到免疫标签，应：
-    //    _commands.trigger(EffectImmunityTriggered {
-    //        def_id: _def_id.to_string(),
-    //        target_entity: "...".to_string(),
-    //        immune_tag: format!("Immune.{}", category),
-    //    });
-    //    return Err(EffectError::ImmunityBlocked { def_id: _def_id.to_string(), immune_tag });
-    // 2. 检查 application_condition
+    // 免疫检查：检查目标是否拥有 ignored_tags 中的任意标签
+    if let Some(ignored) = _ignored_tags {
+        for immune_tag in ignored {
+            if _target_tags.iter().any(|t| t == immune_tag) {
+                _commands.trigger(EffectImmunityTriggered {
+                    def_id: _def_id.to_string(),
+                    target_entity: "...".to_string(),
+                    immune_tag: immune_tag.clone(),
+                });
+                return Err(EffectError::ImmunityBlocked {
+                    def_id: _def_id.to_string(),
+                    immune_tag: immune_tag.clone(),
+                });
+            }
+        }
+    }
     Ok(())
 }
 

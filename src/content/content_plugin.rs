@@ -11,6 +11,7 @@ use std::path::PathBuf;
 use super::hot_reload::{ContentHotReloadState, hot_reload_content_system, init_hot_reload_state};
 use super::loading::{ContentFile, DefinitionType, RonAssetLoader, discover_ron_files};
 use crate::core::capabilities::attribute::foundation::AttributeDefinition;
+use crate::core::capabilities::ability::foundation::AbilityDef;
 use crate::core::capabilities::cue::foundation::CueDef;
 use crate::core::capabilities::effect::foundation::EffectDef;
 use crate::core::capabilities::tag::foundation::TagDefinition;
@@ -87,6 +88,15 @@ pub struct LoadedCueDefs {
 pub struct LoadedEffectDefs {
     /// 成功加载并校验通过的效果定义。
     pub defs: Vec<EffectDef>,
+    /// 加载或校验失败的文件（路径 + 错误信息）。
+    pub errors: Vec<(PathBuf, String)>,
+}
+
+/// 已加载的技能定义集合 Resource。
+#[derive(Resource, Debug, Default)]
+pub struct LoadedAbilityDefs {
+    /// 成功加载并校验通过的技能定义。
+    pub defs: Vec<AbilityDef>,
     /// 加载或校验失败的文件（路径 + 错误信息）。
     pub errors: Vec<(PathBuf, String)>,
 }
@@ -206,7 +216,9 @@ impl Plugin for ContentPlugin {
             .init_asset::<BondDef>()
             .init_asset_loader::<RonAssetLoader<BondDef>>()
             .init_asset::<EnchantmentDef>()
-            .init_asset_loader::<RonAssetLoader<EnchantmentDef>>();
+            .init_asset_loader::<RonAssetLoader<EnchantmentDef>>()
+            .init_asset::<AbilityDef>()
+            .init_asset_loader::<RonAssetLoader<AbilityDef>>();
 
         // ── 初始化 Resources ──
         app.init_resource::<ContentState>()
@@ -214,6 +226,7 @@ impl Plugin for ContentPlugin {
             .init_resource::<LoadedSpellDefs>()
             .init_resource::<LoadedCueDefs>()
             .init_resource::<LoadedEffectDefs>()
+            .init_resource::<LoadedAbilityDefs>()
             .init_resource::<LoadedQuestDefs>()
             .init_resource::<LoadedRecipeDefs>()
             .init_resource::<LoadedShopDefs>()
@@ -501,6 +514,39 @@ fn load_effect_def(effects: &mut ResMut<LoadedEffectDefs>, file: &ContentFile) {
         def.name_key, def.id
     );
     effects.defs.push(def);
+}
+
+/// 从 RON 文件同步加载一个 AbilityDef。
+fn load_ability_def(abilities: &mut ResMut<LoadedAbilityDefs>, file: &ContentFile) {
+    let content = match std::fs::read_to_string(&file.path) {
+        Ok(c) => c,
+        Err(e) => {
+            let msg = format!("failed to read file: {}", e);
+            abilities.errors.push((file.path.clone(), msg));
+            return;
+        }
+    };
+
+    let def: AbilityDef = match ron::from_str(&content) {
+        Ok(d) => d,
+        Err(e) => {
+            let msg = format!("failed to deserialize RON: {}", e);
+            abilities.errors.push((file.path.clone(), msg));
+            return;
+        }
+    };
+
+    if let Err(e) = def.validate() {
+        let msg = format!("validation failed: {}", e);
+        abilities.errors.push((file.path.clone(), msg));
+        return;
+    }
+
+    info!(
+        "[Content] Loaded ability '{}' (id: {})",
+        def.name_key, def.id
+    );
+    abilities.defs.push(def);
 }
 
 /// 从 RON 文件同步加载一个 QuestDef。

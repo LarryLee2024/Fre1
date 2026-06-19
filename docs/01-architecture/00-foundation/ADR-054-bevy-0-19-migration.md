@@ -71,11 +71,19 @@ tags:
 - **保留 Timer**：基础设施周期性任务（热重载/审计）、可暂停的长周期 Buff
 - **理由**：消除样板代码，声明式生命周期
 
-### DR-003: BSN 仅 UI 层
+### DR-003: BSN 作用域限制
 
-- **决策**：`bsn!{}` 宏仅限 `src/app/scenes/` UI 层使用
-- **核心玩法层**：使用 `spawn_*()` 工厂函数
-- **理由**：BSN API 可能变动，核心层行为逻辑不适合声明式描述
+- **决策**：BSN 仅允许用于声明式静态场景，禁止用于可复用 Widget 和 Screen
+- **允许范围**：
+  - `src/app/scenes/` ✅ — Composition Root，一次性装配
+  - Editor Prototype ✅ — 快速原型
+  - Debug UI ✅ — 工具不涉及业务
+- **禁止范围**：
+  - `src/ui/screens/` 🟥 — 禁止 BSN，Screen 有复杂生命周期
+  - `src/ui/widgets/` 🟥 — 禁止 BSN，Widget 需要 Factory 契约
+- **替代方案**：所有 Screen/Widget 通过 Factory 构建（`spawn_xxx(commands, props)` 或 `XxxFactory`），Factory 是 UI 的唯一构建入口
+- **BSN 使用约束**：BSN 内容必须保持无状态、无逻辑、无业务语义
+- **理由**：BSN API 可能变动；BSN 树结构隐藏边界，AI 易在其中塞入状态和逻辑；Factory 模式天然形成 Widget Contract 边界，更利于测试、复用、AI 独立生成
 
 ### DR-004: Relationship 有限采用
 

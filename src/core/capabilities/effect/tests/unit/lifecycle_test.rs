@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use crate::core::capabilities::effect::foundation::{
-    ActiveEffectContainer, DurationCalculation, EffectCategory, EffectDuration, EffectError,
+    ActiveEffectContainer, DurationCalculation, EffectDuration, EffectError,
     EffectInstance, EffectPeriod, EffectStage, RemovalReason, TickState,
 };
 use crate::core::capabilities::effect::mechanism::lifecycle::{
@@ -644,15 +644,6 @@ fn removal_reason_name() {
     assert_eq!(RemovalReason::Expired.name(), "Expired");
     assert_eq!(RemovalReason::Dispelled.name(), "Dispelled");
     assert_eq!(RemovalReason::SourceDied.name(), "SourceDied");
-}
-
-// -- EffectCategory --------------------------------------------------------
-
-#[test]
-fn category_name() {
-    assert_eq!(EffectCategory::Buff.name(), "Buff");
-    assert_eq!(EffectCategory::Debuff.name(), "Debuff");
-    assert_eq!(EffectCategory::Custom("test".into()).name(), "test");
 }
 
 // -- EffectInstance builder ------------------------------------------------

@@ -12,44 +12,33 @@ crate::define_string_id! {
 
 /// 标签命名空间枚举。
 /// 用于强制命名空间一致性，禁止跨域引用。
+/// 顶级命名空间控制在 12 个以内，新增需架构评审。
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum TagNamespace {
-    DamageType,
-    StatusEffect,
-    SkillType,
-    EquipmentSlot,
-    EquipmentCategory,
-    WeaponCategory,
-    ArmorCategory,
-    ItemCategory,
+    /// 角色/单位分类（Human, Elf, Boss, Undead 等）
+    Character,
+    /// 技能/能力分类（Fire, Healing, Active, Passive 等）
+    Ability,
+    /// 状态/增减益/免疫分类（Poisoned, Burning, Immune.Fire 等）
+    Status,
+    /// 装备分类（Weapon, Armor, Slot 等）
+    Equipment,
+    /// 物品分类（Consumable, QuestItem 等）
+    Item,
+    /// 伤害类型分类（Physical, Fire, Ice 等）
+    Damage,
+    /// 地形分类（Water, Lava, Forest 等）
+    Terrain,
+    /// 阵营分类（Player, Enemy, Neutral 等）
     Faction,
-    CombatState,
-    MovementType,
-    TerrainType,
-    BuffCategory,
-    Immune,
-    Cooldown,
-    SpellSchool,
-    QuestTag,
-    DialogueTag,
-    /// 目标选择类型（单体/范围/自身等）
-    TargetingType,
-    /// 执行计算类型（伤害/治疗/自定义等）
-    ExecutionType,
-    /// 表现信号类型（Cue 分类）
-    CueType,
-    /// 触发条件类型（Trigger/Reaction 分类）
-    TriggerType,
-    /// 制作/附魔类型
-    CraftingType,
-    /// 营地休息类型
-    RestType,
-    /// 经济/货币类型
-    EconomyType,
-    /// 队伍/阵型类型
-    PartyType,
-    /// 进度/成长类型
-    ProgressionType,
+    /// 任务分类（Main, Side, Faction 等）
+    Quest,
+    /// 战斗状态分类（InCombat, OutOfCombat 等）
+    Combat,
+    /// 触发条件分类（OnDamaged, OnHealed 等）
+    Trigger,
+    /// 表现信号分类（OnApply, OnTick 等）
+    Cue,
     /// 允许扩展的命名空间，但必须注册
     Custom(String),
 }

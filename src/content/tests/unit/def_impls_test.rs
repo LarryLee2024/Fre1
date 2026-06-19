@@ -1,4 +1,5 @@
 use crate::content::loading::DefinitionType;
+use crate::core::capabilities::ability::foundation::AbilityDef;
 use crate::core::capabilities::attribute::foundation::*;
 use crate::core::capabilities::cue::foundation::*;
 use crate::core::capabilities::effect::foundation::*;
@@ -188,6 +189,61 @@ fn effect_def_without_digit_suffix_fails() {
 fn effect_def_definition_type_constants() {
     assert_eq!(<EffectDef as DefinitionType>::BUCKET_NAME, "effects");
     assert_eq!(<EffectDef as DefinitionType>::EXTENSION, "ron");
+}
+
+fn sample_ability_def() -> AbilityDef {
+    AbilityDef {
+        id: "abl_000001".to_string(),
+        name_key: LocalizationKey::new("ability.abl_000001.name"),
+        desc_key: LocalizationKey::new("ability.abl_000001.desc"),
+        icon_key: None,
+        ability_tags: vec!["Ability.Type.Active".to_string()],
+        cancel_by_tags: vec![],
+        block_by_tags: vec![],
+        activation_owned_tags: vec![],
+        effect_ids: vec![],
+        cooldown_turns: 0,
+        shared_cooldown_group: None,
+        costs: vec![],
+        max_level: 1,
+        passive: false,
+        interruptible: true,
+        cast_time_frames: 0,
+        visible: true,
+    }
+}
+
+#[test]
+fn valid_ability_def_passes_validation() {
+    let def = sample_ability_def();
+    assert!(def.validate().is_ok());
+}
+
+#[test]
+fn ability_def_with_empty_name_fails() {
+    let mut def = sample_ability_def();
+    def.name_key = "".into();
+    assert!(def.validate().is_err());
+}
+
+#[test]
+fn ability_def_with_empty_desc_fails() {
+    let mut def = sample_ability_def();
+    def.desc_key = "".into();
+    assert!(def.validate().is_err());
+}
+
+#[test]
+fn ability_def_wrong_prefix_fails() {
+    let mut def = sample_ability_def();
+    def.id = "eff_000001".to_string();
+    assert!(def.validate().is_err());
+}
+
+#[test]
+fn ability_def_definition_type_constants() {
+    assert_eq!(<AbilityDef as DefinitionType>::BUCKET_NAME, "abilities");
+    assert_eq!(<AbilityDef as DefinitionType>::EXTENSION, "ron");
 }
 
 fn sample_quest() -> QuestDef {
@@ -494,7 +550,7 @@ fn sample_tag() -> TagDefinition {
         parent_id: None,
         bit_index: 0,
         is_abstract: false,
-        namespace: TagNamespace::DamageType,
+        namespace: TagNamespace::Damage,
     }
 }
 
@@ -526,7 +582,7 @@ fn tag_ron_deserializes_and_validates() {
 
     assert_eq!(def.id.as_str(), "fire");
     assert_eq!(def.path, "DamageType.Elemental.Fire");
-    assert_eq!(def.namespace, TagNamespace::DamageType);
+    assert_eq!(def.namespace, TagNamespace::Damage);
     assert!(!def.is_abstract);
     assert!(def.validate().is_ok());
 }

@@ -227,3 +227,1257 @@ Content (json / yaml / script)
 
 只要你说一句：
 “帮我做 SRPG 的 tag / enum / effect 三层架构设计”
+
+如果目标是：
+
+* 单人开发
+* 50万行以上代码
+* Bevy ECS
+* SRPG（铃兰之剑 + 博德3）
+* 运营10年以上
+* AI Agent长期参与开发
+
+那么我认为最终形态不是：
+
+```text
+Tag
+```
+
+也不是：
+
+```text
+Enum
+```
+
+而是：
+
+```text
+Type System
+     ↓
+Tag System
+     ↓
+Query System
+     ↓
+Rule System
+     ↓
+Content System
+```
+
+这五层。
+
+很多项目只做到前两层。
+
+真正几十万行以上项目会做到第五层。
+
+---
+
+# 第一层：Type System（世界真相）
+
+这是整个项目最核心的一层。
+
+这里定义：
+
+```rust
+DamageType
+UnitClass
+Faction
+TerrainType
+AbilityId
+BuffId
+StatusId
+```
+
+例如：
+
+```rust
+enum DamageType {
+    Physical,
+    Fire,
+    Ice,
+    Lightning,
+}
+```
+
+---
+
+注意：
+
+这里不是分类。
+
+这里是：
+
+```text
+世界运行规律
+```
+
+---
+
+例如：
+
+火伤就是火伤。
+
+不允许：
+
+```rust
+tag = "damage.fire"
+```
+
+代替。
+
+因为：
+
+```rust
+match damage_type {
+    Fire => ...
+}
+```
+
+永远比：
+
+```rust
+if has_tag("damage.fire")
+```
+
+更安全。
+
+---
+
+大型项目原则：
+
+> 参与规则计算的东西，必须强类型。
+
+---
+
+# 第二层：Tag System（世界语义）
+
+Tag不是真相。
+
+Tag是描述。
+
+例如：
+
+```text
+Undead
+Human
+Boss
+Elite
+Flying
+Mechanical
+Summon
+```
+
+这些不是规则。
+
+而是语义。
+
+---
+
+例如：
+
+```text
+Boss
+```
+
+本身没有任何逻辑。
+
+但是：
+
+```text
+Boss
+```
+
+会被：
+
+* 技能
+* UI
+* AI
+* 掉落
+
+引用。
+
+---
+
+因此：
+
+```rust
+TagSet
+```
+
+非常合理。
+
+---
+
+例如：
+
+```rust
+unit.tags = {
+    Boss,
+    Undead,
+    Flying,
+}
+```
+
+---
+
+注意：
+
+这里不要使用字符串。
+
+应该：
+
+```rust
+TagId
+```
+
+或者：
+
+```rust
+GameplayTag
+```
+
+---
+
+类似：
+
+```rust
+u32
+```
+
+intern池。
+
+---
+
+不要：
+
+```rust
+HashSet<String>
+```
+
+否则以后必死。
+
+---
+
+# 第三层：Query System（真正强大的地方）
+
+很多人停在Tag。
+
+UE真正厉害的地方其实是：
+
+Query。
+
+---
+
+例如：
+
+```text
+所有 Undead
+```
+
+```text
+所有 Flying
+```
+
+```text
+所有 Boss
+```
+
+很简单。
+
+---
+
+但大型项目需要：
+
+```text
+所有 Flying 且 Undead
+```
+
+---
+
+或者：
+
+```text
+所有 Boss
+且
+等级 > 30
+且
+当前生命 < 50%
+```
+
+---
+
+于是产生：
+
+```rust
+TargetQuery
+```
+
+---
+
+例如：
+
+```rust
+And(
+    HasTag(Boss),
+    HpLessThan(0.5),
+    LevelGreaterThan(30),
+)
+```
+
+---
+
+然后：
+
+```rust
+skill.target_filter
+```
+
+直接引用。
+
+---
+
+你会发现：
+
+这里已经接近GAS。
+
+---
+
+# 第四层：Rule System（规则层）
+
+这是绝大多数项目缺失的层。
+
+---
+
+很多项目：
+
+```rust
+if target.has_tag(Boss) {
+    damage *= 2;
+}
+```
+
+到处都是。
+
+---
+
+几年后：
+
+```text
+Boss
+Elite
+MiniBoss
+WorldBoss
+RaidBoss
+StoryBoss
+```
+
+开始爆炸。
+
+---
+
+正确做法：
+
+```rust
+Rule
+```
+
+独立存在。
+
+---
+
+例如：
+
+```rust
+struct Rule {
+    condition: Query,
+    effect: Modifier,
+}
+```
+
+---
+
+配置：
+
+```yaml
+condition:
+  has_tag: Boss
+
+effect:
+  damage_multiplier: 2
+```
+
+---
+
+系统统一执行：
+
+```rust
+RuleEngine
+```
+
+---
+
+于是：
+
+技能系统
+
+Buff系统
+
+装备系统
+
+地图系统
+
+全部统一。
+
+---
+
+# 第五层：Content System（最终形态）
+
+这里才是博德3最强的地方。
+
+---
+
+内容人员不会写：
+
+```rust
+Fire
+```
+
+---
+
+他们写：
+
+```yaml
+id: fireball
+
+tags:
+  - Skill
+  - Fire
+  - Magic
+  - AoE
+
+effects:
+  - damage:
+      type: Fire
+      value: 100
+```
+
+---
+
+注意：
+
+这里出现了：
+
+```yaml
+Fire
+```
+
+Tag
+
+和
+
+```yaml
+type: Fire
+```
+
+Type
+
+同时存在。
+
+---
+
+很多新人会觉得重复。
+
+实际上：
+
+完全不同。
+
+---
+
+Tag：
+
+```yaml
+Fire
+```
+
+表示：
+
+```text
+这是火焰主题技能
+```
+
+---
+
+Type：
+
+```yaml
+Fire
+```
+
+表示：
+
+```text
+伤害计算走火抗性
+```
+
+---
+
+这是两套系统。
+
+---
+
+# 你的项目推荐架构
+
+我会这样设计：
+
+```text
+Core
+│
+├── Type System
+│     DamageType
+│     AbilityType
+│     BuffType
+│     TerrainType
+│
+├── Tag System
+│     GameplayTag
+│     TagRegistry
+│     TagSet
+│
+├── Query System
+│     QueryExpr
+│     QueryEvaluator
+│
+├── Rule System
+│     Rule
+│     RuleEngine
+│     Modifier
+│
+└── Content System
+      Config
+      YAML
+      JSON
+      Mod
+```
+
+形成：
+
+```text
+Type
+ ↓
+Tag
+ ↓
+Query
+ ↓
+Rule
+ ↓
+Content
+```
+
+---
+
+# 如果是50万行SRPG，我会进一步升级
+
+做成类似下面的结构：
+
+```text
+character-domain
+ability-domain
+effect-domain
+buff-domain
+combat-domain
+ai-domain
+equipment-domain
+quest-domain
+```
+
+所有领域共享：
+
+```text
+GameplayTag
+QueryExpr
+RuleEngine
+```
+
+而不是每个领域自己发明：
+
+```rust
+is_boss()
+is_flying()
+is_undead()
+```
+
+这种API。
+
+因为当代码量达到20万行以后，你会发现：
+
+> 不是技能系统在膨胀，而是“判断条件”在膨胀。
+
+真正的大项目核心资产往往不是 Ability、Buff、Effect。
+
+而是：
+
+```text
+Tag System
++
+Query System
++
+Rule Engine
+```
+
+这三个东西。
+
+它们最后会成为整个游戏的“领域语言（DSL）”。
+
+而你的技能、Buff、装备、AI、地图机制、任务条件、成就系统，本质上都只是在消费这套 DSL。这样到了 50 万行代码规模，系统数量翻十倍，复杂度通常只增长 2~3 倍，而不是指数爆炸。
+如果只讨论 **Tag System 本身**，我的结论是：
+
+> 大型项目里，Tag 不是一个工具，而是一门语言（Ubiquitous Language）。
+
+很多项目的问题不是 Tag 太少，而是：
+
+```text
+前期没规划
+↓
+每个系统自己发明Tag
+↓
+几年后出现几千个Tag
+↓
+没人知道哪些还能删
+↓
+AI也不敢改
+↓
+Tag体系失控
+```
+
+对于你这种目标 50 万行代码的 SRPG，我会把 Tag 当成一个独立领域（Domain）来设计。
+
+---
+
+# 一、先明确 Tag 不是什么
+
+Tag 不是：
+
+```rust
+enum DamageType
+```
+
+Tag 不是：
+
+```rust
+BuffId
+```
+
+Tag 不是：
+
+```rust
+AbilityId
+```
+
+Tag 不是：
+
+```rust
+WeaponType
+```
+
+---
+
+这些都是：
+
+```text
+Identity（身份）
+```
+
+或者：
+
+```text
+Type（类型）
+```
+
+---
+
+Tag表达的是：
+
+```text
+Attribute（属性）
+Semantic（语义）
+Relationship（关系）
+```
+
+---
+
+例如：
+
+```text
+Character.Human
+Character.Female
+
+Ability.Fire
+Ability.Magic
+
+Enemy.Boss
+Enemy.Undead
+
+Terrain.Water
+```
+
+---
+
+# 二、Tag 必须有层级
+
+这是第一条铁律。
+
+不要：
+
+```text
+Boss
+Undead
+Fire
+Magic
+Flying
+```
+
+---
+
+必须：
+
+```text
+Character.Human
+Character.Elf
+
+Enemy.Boss
+Enemy.Undead
+
+Ability.Fire
+Ability.Ice
+
+Terrain.Water
+Terrain.Lava
+```
+
+---
+
+否则几年后：
+
+```text
+Fire
+```
+
+到底是：
+
+```text
+火属性单位
+```
+
+还是：
+
+```text
+火属性技能
+```
+
+没人知道。
+
+---
+
+# 三、Tag 命名空间必须固定
+
+我会在项目启动第一天就固定：
+
+```text
+Character.*
+Enemy.*
+Ability.*
+Buff.*
+Status.*
+Equipment.*
+Item.*
+Terrain.*
+Quest.*
+Faction.*
+AI.*
+UI.*
+Story.*
+Event.*
+```
+
+---
+
+以后禁止新增一级分类。
+
+例如：
+
+错误：
+
+```text
+Skill.*
+```
+
+正确：
+
+```text
+Ability.*
+```
+
+---
+
+否则几年后：
+
+```text
+Skill.Fire
+Ability.Fire
+```
+
+同时存在。
+
+直接灾难。
+
+---
+
+# 四、Tag 不允许表达状态
+
+这是大型项目最容易犯的错误。
+
+错误：
+
+```text
+Character.Dead
+Character.Poisoned
+Character.Stunned
+```
+
+---
+
+因为：
+
+```text
+Dead
+Poisoned
+Stunned
+```
+
+是动态状态。
+
+---
+
+应该：
+
+```rust
+Dead
+Poisoned
+Stunned
+```
+
+作为 ECS Component。
+
+---
+
+Tag 应该描述：
+
+```text
+长期不变语义
+```
+
+例如：
+
+```text
+Enemy.Undead
+Enemy.Boss
+Character.Human
+```
+
+---
+
+这是终身不变的。
+
+---
+
+# 五、Tag 不允许携带数据
+
+错误：
+
+```text
+Damage.100
+Damage.200
+```
+
+错误：
+
+```text
+Level.30
+```
+
+错误：
+
+```text
+Cooldown.3
+```
+
+---
+
+Tag只能回答：
+
+```text
+是不是？
+```
+
+不能回答：
+
+```text
+多少？
+```
+
+---
+
+例如：
+
+正确：
+
+```text
+Ability.Fire
+```
+
+错误：
+
+```text
+Ability.FireDamage100
+```
+
+---
+
+# 六、Tag 要分层级别
+
+我一般分四层。
+
+---
+
+## L1 Core Tag
+
+极少修改。
+
+```text
+Character.*
+Enemy.*
+Ability.*
+Terrain.*
+```
+
+---
+
+几十年不动。
+
+---
+
+## L2 Gameplay Tag
+
+玩法层。
+
+```text
+Enemy.Boss
+Enemy.Elite
+
+Ability.Fire
+Ability.Healing
+```
+
+---
+
+变化较少。
+
+---
+
+## L3 Content Tag
+
+内容层。
+
+```text
+Story.Chapter1
+Story.Chapter2
+
+Quest.Main
+Quest.Side
+```
+
+---
+
+变化频繁。
+
+---
+
+## L4 Temporary Tag
+
+活动或实验。
+
+```text
+Event.SpringFestival
+```
+
+---
+
+可以删除。
+
+---
+
+# 七、Tag Registry 必须存在
+
+不要允许：
+
+```rust
+add_tag("Enemy.Boss")
+```
+
+---
+
+必须：
+
+```rust
+TagRegistry
+```
+
+统一注册。
+
+---
+
+例如：
+
+```rust
+Enemy.Boss
+```
+
+只有一个定义来源。
+
+---
+
+这样AI才能查到：
+
+```text
+定义
+引用
+父节点
+子节点
+```
+
+---
+
+# 八、支持 Parent Query
+
+这是UE最强的地方之一。
+
+例如：
+
+```text
+Ability.Fire.Fireball
+```
+
+继承：
+
+```text
+Ability.Fire
+```
+
+继承：
+
+```text
+Ability
+```
+
+---
+
+查询：
+
+```rust
+has_tag("Ability.Fire")
+```
+
+返回：
+
+```text
+Fireball
+FlameStrike
+Meteor
+```
+
+全部匹配。
+
+---
+
+这比枚举强很多。
+
+---
+
+# 九、Tag 不参与核心规则
+
+这是最重要的原则。
+
+不要：
+
+```rust
+if target.has_tag(Boss)
+```
+
+决定：
+
+```text
+暴击公式
+伤害公式
+行动公式
+```
+
+---
+
+因为：
+
+Tag是内容层。
+
+公式是规则层。
+
+---
+
+正确：
+
+```rust
+BossTrait
+```
+
+决定规则。
+
+---
+
+Tag只是：
+
+```text
+被Rule引用
+```
+
+---
+
+# 十、Tag 必须支持引用统计
+
+大型项目一定要做：
+
+```rust
+tag_registry.find_references()
+```
+
+---
+
+否则几年后：
+
+```text
+Enemy.Undead
+```
+
+有没有人用？
+
+不知道。
+
+---
+
+应该能查：
+
+```text
+技能引用: 53
+Buff引用: 12
+任务引用: 4
+AI引用: 8
+```
+
+---
+
+# 十一、Tag 要支持废弃机制
+
+不要直接删。
+
+---
+
+例如：
+
+```text
+Enemy.Monster
+```
+
+改成：
+
+```text
+Enemy.Beast
+```
+
+---
+
+应该：
+
+```rust
+deprecated = true
+
+replacement = Enemy.Beast
+```
+
+---
+
+AI 和工具链自动提示。
+
+---
+
+# 十二、AI时代最重要的一条
+
+Tag 必须有文档描述
+
+不要：
+
+```text
+Enemy.Boss
+```
+
+---
+
+而是：
+
+```yaml
+Enemy.Boss:
+  description: |
+    用于标记Boss单位。
+    不保证具有特殊数值。
+    不用于伤害计算。
+    可用于目标筛选、UI展示、成就统计。
+```
+
+---
+
+因为未来真正使用 Tag 最多的：
+
+不是程序员。
+
+而是：
+
+```text
+AI Agent
+```
+
+---
+
+# 最终推荐（50万行SRPG）
+
+我会控制在：
+
+```text
+一级分类      10~15个
+
+总Tag数量     500~1500
+
+核心Tag       <200
+
+玩法Tag       <500
+
+内容Tag       <1000
+```
+
+并且强制遵守：
+
+```text
+Type 管规则
+Tag 管语义
+Query 管筛选
+Rule 管逻辑
+Content 管配置
+```
+
+如果只能给大型项目留一个经验教训，那就是：
+
+> 不要把 Tag 当万能胶水。Tag 系统最大的价值不是替代类型系统，而是成为整个项目共享的“语义词典”。当 Character、Ability、Buff、AI、Quest、UI、Story 都说同一种 Tag 语言时，项目规模越大，它的价值越高。反过来，一旦让 Tag 承担类型、状态、数值和规则，项目越大，失控得越快。

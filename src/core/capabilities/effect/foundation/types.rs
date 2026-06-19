@@ -181,46 +181,6 @@ impl EffectPeriod {
     }
 }
 
-/// 效果分类。
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum EffectCategory {
-    /// 增益
-    Buff,
-    /// 减益
-    Debuff,
-    /// 伤害
-    Damage,
-    /// 治疗
-    Heal,
-    /// 护盾
-    Shield,
-    /// 控制（眩晕、沉默）
-    Control,
-    /// 地形变化
-    Terrain,
-    /// 召唤
-    Summon,
-    /// 自定义
-    Custom(String),
-}
-
-impl EffectCategory {
-    /// 返回分类名称。
-    pub fn name(&self) -> &str {
-        match self {
-            Self::Buff => "Buff",
-            Self::Debuff => "Debuff",
-            Self::Damage => "Damage",
-            Self::Heal => "Heal",
-            Self::Shield => "Shield",
-            Self::Control => "Control",
-            Self::Terrain => "Terrain",
-            Self::Summon => "Summon",
-            Self::Custom(id) => id.as_str(),
-        }
-    }
-}
-
 /// 效果移除原因。
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum RemovalReason {

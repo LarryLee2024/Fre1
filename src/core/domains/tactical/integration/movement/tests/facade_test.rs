@@ -14,7 +14,7 @@ fn make_hierarchy_with_walk() -> TagHierarchy {
         parent_id: None,
         bit_index: 10,
         is_abstract: false,
-        namespace: TagNamespace::MovementType,
+        namespace: TagNamespace::Custom("Movement".to_string()),
     };
     hierarchy.tags.insert(tag_id, def);
     hierarchy

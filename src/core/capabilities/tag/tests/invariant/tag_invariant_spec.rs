@@ -58,7 +58,7 @@ fn duplicate_same_id_tag_rejected() {
     let mut world = World::new();
     let mut commands = world.commands();
     let mut hierarchy = TagHierarchy::default();
-    let tag = TagDefBuilder::new("tag_test_dup", TagNamespace::DamageType)
+    let tag = TagDefBuilder::new("tag_test_dup", TagNamespace::Damage)
         .bit_index(0)
         .build();
     assert!(hierarchy.register(tag.clone(), &mut commands).is_ok());

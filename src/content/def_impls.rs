@@ -7,6 +7,7 @@
 
 use crate::content::loading::{DefinitionType, ValidationError, validate_id_format};
 use crate::core::capabilities::attribute::foundation::AttributeDefinition;
+use crate::core::capabilities::ability::foundation::AbilityDef;
 use crate::core::capabilities::cue::foundation::CueDef;
 use crate::core::capabilities::effect::foundation::EffectDef;
 use crate::core::capabilities::tag::foundation::TagDefinition;
@@ -68,6 +69,28 @@ impl DefinitionType for EffectDef {
 
     fn validate(&self) -> Result<(), ValidationError> {
         validate_id_format(&self.id, "eff_")?;
+
+        if self.name_key.is_empty() {
+            return Err(ValidationError::MissingField {
+                field: "name_key".to_string(),
+            });
+        }
+        if self.desc_key.is_empty() {
+            return Err(ValidationError::MissingField {
+                field: "desc_key".to_string(),
+            });
+        }
+
+        Ok(())
+    }
+}
+
+impl DefinitionType for AbilityDef {
+    const BUCKET_NAME: &'static str = "abilities";
+    const EXTENSION: &'static str = "ron";
+
+    fn validate(&self) -> Result<(), ValidationError> {
+        validate_id_format(&self.id, "abl_")?;
 
         if self.name_key.is_empty() {
             return Err(ValidationError::MissingField {

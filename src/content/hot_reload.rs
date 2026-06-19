@@ -8,6 +8,7 @@ use std::time::SystemTime;
 use super::content_plugin::*;
 use super::loading::{ContentFile, DefinitionType, discover_ron_files};
 use crate::core::capabilities::attribute::foundation::AttributeDefinition;
+use crate::core::capabilities::ability::foundation::AbilityDef;
 use crate::core::capabilities::cue::foundation::CueDef;
 use crate::core::capabilities::effect::foundation::EffectDef;
 use crate::core::capabilities::tag::foundation::TagDefinition;
@@ -313,6 +314,38 @@ fn reload_single_effect(effects: &mut ResMut<LoadedEffectDefs>, file: &ContentFi
         def.name_key, def.id
     );
     effects.defs.push(def);
+    true
+}
+
+fn reload_single_ability(abilities: &mut ResMut<LoadedAbilityDefs>, file: &ContentFile) -> bool {
+    let content = match std::fs::read_to_string(&file.path) {
+        Ok(c) => c,
+        Err(e) => {
+            warn!("[HotReload] Failed to read {}: {}", file.path.display(), e);
+            return false;
+        }
+    };
+    let def: AbilityDef = match ron::from_str(&content) {
+        Ok(d) => d,
+        Err(e) => {
+            warn!("[HotReload] Failed to parse {}: {}", file.path.display(), e);
+            return false;
+        }
+    };
+    if let Err(e) = def.validate() {
+        warn!(
+            "[HotReload] Validation failed for {}: {}",
+            file.path.display(),
+            e
+        );
+        return false;
+    }
+    abilities.defs.retain(|d| d.id != def.id);
+    info!(
+        "[HotReload] Reloaded ability '{}' (id: {})",
+        def.name_key, def.id
+    );
+    abilities.defs.push(def);
     true
 }
 

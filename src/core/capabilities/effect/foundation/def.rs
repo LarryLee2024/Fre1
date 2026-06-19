@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::core::capabilities::cue::foundation::CueTag;
 use crate::core::capabilities::effect::foundation::types::{
-    EffectCategory, EffectDuration, EffectPeriod,
+    EffectDuration, EffectPeriod,
 };
 use crate::core::capabilities::execution::foundation::ExecutionType;
 use crate::core::capabilities::modifier::foundation::ModifierOp;
@@ -70,8 +70,9 @@ pub struct EffectDef {
     #[serde(default)]
     pub stacking: StackingConfig,
 
-    /// 效果类型分类
-    pub effect_category: EffectCategory,
+    /// 效果分类标签（如 "Status.Buff", "Status.Damage" 等，使用 TagNamespace::Status 命名空间）
+    #[serde(default)]
+    pub effect_tags: Vec<String>,
 
     /// 关联的执行计算（可选，Instant 类效果需要）
     pub execution: Option<ExecutionConfig>,

@@ -41,7 +41,7 @@ pub fn movement_type_to_tag(movement_type: MovementType) -> &'static str {
 
 /// 获取 MovementType 对应的 TagNamespace。
 pub fn movement_type_namespace(_movement_type: MovementType) -> TagNamespace {
-    TagNamespace::MovementType
+    TagNamespace::Custom("Movement".to_string())
 }
 
 /// 从 TagHierarchy 解析出 MovementType 对应的 TagDefinition。

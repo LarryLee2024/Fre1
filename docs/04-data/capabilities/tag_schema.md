@@ -12,6 +12,7 @@ replay-safe: true
 # Tag Schema — 标签数据架构
 
 > **领域归属**: Capabilities — 核心基石层 | **依赖 Schema**: 无（最底层） | **定义依据**: `docs/02-domain/capabilities/tag_domain.md`
+> **哲学定位**: Tag 是五层架构中的**语义层**（Type→Tag→Query→Rule→Content）。Tag 描述语义，不参与规则计算。
 
 ---
 
@@ -19,7 +20,7 @@ replay-safe: true
 
 | 数据类别 | 归属层 | 说明 |
 |----------|--------|------|
-| `TagDefinition` | Definition | 标签的静态定义（ID、父标签、路径名） |
+| `TagDefinition` | Definition | 标签的静态定义（ID、父标签、路径名、文档描述） |
 | `TagHierarchy` | Definition | 层级树结构（全局唯一） |
 | `TagSet` | Instance | 实体当前持有的标签集（位掩码） |
 | `TagQuery` | Definition | 查询条件定义（Any/All/None 模式） |
@@ -28,11 +29,12 @@ replay-safe: true
 
 ## 2. Problem
 
-Tag 系统是整个数据宇宙的「通用底层语言」——所有领域（Condition、Trigger、Effect、Combat 等）都依赖标签做分类、查询和条件匹配。Schema 必须解决：
+Tag 系统是五层架构中的语义层——为所有领域提供统一的语义描述与分类筛选能力。Schema 必须解决：
 - 标签 ID 的跨文件唯一引用
 - 层级树的高效查询（父→子包含关系）
 - 位掩码 ID 的全局分配与冲突检测
 - Definition 层与 Instance 层的清晰分离
+- Tag 与 Type 的职责边界（Tag 不参与规则计算）
 
 ---
 
@@ -71,35 +73,21 @@ struct TagDefinition {
 
 ```rust
 /// 标签命名空间枚举，用于强制命名空间一致性（Data Law: 禁止跨域引用）
+/// 顶级命名空间控制在 12 个以内，新增需架构评审。
 enum TagNamespace {
-    DamageType,
-    StatusEffect,
-    SkillType,
-    EquipmentSlot,
-    EquipmentCategory,
-    WeaponCategory,
-    ArmorCategory,
-    ItemCategory,
-    Faction,
-    CombatState,
-    MovementType,
-    TerrainType,
-    BuffCategory,
-    Immune,
-    Cooldown,
-    SpellSchool,
-    QuestTag,
-    DialogueTag,
-    TargetingType,     // 目标选择类型
-    ExecutionType,     // 执行计算类型
-    CueType,           // 表现信号类型
-    TriggerType,       // 触发条件类型
-    CraftingType,      // 制作/附魔类型
-    RestType,          // 营地休息类型
-    EconomyType,       // 经济/货币类型
-    PartyType,         // 队伍/阵型类型
-    ProgressionType,   // 进度/成长类型
-    Custom(String),    // 允许扩展，但必须注册
+    Character,      // 角色/单位分类
+    Ability,        // 技能/能力分类
+    Status,         // 状态/增减益/免疫分类
+    Equipment,      // 装备分类
+    Item,           // 物品分类
+    Damage,         // 伤害类型分类
+    Terrain,        // 地形分类
+    Faction,        // 阵营分类
+    Quest,          // 任务分类
+    Combat,         // 战斗状态分类
+    Trigger,        // 触发条件分类
+    Cue,            // 表现信号分类
+    Custom(String), // 允许扩展，但必须注册
 }
 ```
 
@@ -251,6 +239,54 @@ TagRegistrationRequest:
 | V5 | 叶节点不可抽象 | 配置加载 | 无子标签的标签 is_abstract 必须为 false |
 | V6 | 位索引不重复 | Registry 分配 | 每个 TagId 分配到唯一的 bit_index |
 | V7 | TagQuery 引用存在 | AbilityDef 加载 | query.target_tags 中所有 TagId 已注册 |
+| V8 | Tag 不参与规则计算 | 代码审查 | Tag 只用于语义描述和分类筛选，不用于伤害公式、行动逻辑等核心规则 |
+| V9 | Tag 不表达动态状态 | 代码审查 | 动态状态（Dead, Stunned）使用 ECS Component，不用 Tag |
+| V10 | 顶级命名空间 ≤ 12 | 配置加载 | 新增顶级 Namespace 需架构评审 |
+
+---
+
+## 7. Tag Governance（面向 50 万行）
+
+### 7.1 Tag 生命周期
+
+```
+提案 → 审核 → 注册 → 使用 → 引用统计 → 废弃 → 删除
+```
+
+### 7.2 Tag 文档要求
+
+每个 Tag 必须有 YAML 描述（AI Agent 可读）：
+
+```yaml
+Enemy.Boss:
+  description: |
+    用于标记 Boss 单位。
+    不保证具有特殊数值。
+    不用于伤害计算。
+    可用于目标筛选、UI展示、成就统计。
+  level: L2    # L1=Core / L2=Gameplay / L3=Content / L4=Temporary
+  deprecated: false
+  replacement: null
+```
+
+### 7.3 Tag 数量控制
+
+| 级别 | 数量上限 | 说明 |
+|------|---------|------|
+| L1 Core Tag | < 100 | 极少修改，几十年不动 |
+| L2 Gameplay Tag | < 500 | 玩法层，变化较少 |
+| L3 Content Tag | < 1000 | 内容层，变化频繁 |
+| L4 Temporary Tag | 无限制 | 活动/实验，可删除 |
+| **总计** | **< 1500** | 超过需架构评审 |
+
+### 7.4 Tag 废弃机制
+
+```yaml
+Enemy.Monster:
+  deprecated: true
+  replacement: Enemy.Beast
+  deprecated_at: "2026-06-28"
+```
 
 ---
 

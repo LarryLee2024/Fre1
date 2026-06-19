@@ -53,6 +53,7 @@
 5. **Composition Over Inheritance**：所有差异化通过原子能力组合实现，禁止继承式设计
 6. **Capabilities/Domains 双轴架构原则**：Core 层采用「纵向 Capabilities 通用机制复用 + 横向 Domains 业务内聚」双轴结构，禁止单维度无限分层
 7. **Localization First**：所有用户可见文本禁止直接进入 Rust 代码，必须通过 LocalizationKey 引用；Def 只存 name_key/desc_key 等 Key，不存任何自然语言文本；Replay/Event/BattleLog 只存 Key + 参数，不存最终翻译文本；存档禁止保存翻译结果，只存 ID/Key
+8. **五层能力架构（Type→Tag→Query→Rule→Content）**：游戏逻辑遵循五层分工——Type System 管规则（强类型参与计算）、Tag System 管语义（描述性标签不影响规则）、Query System 管筛选（统一查询入口）、Rule System 管逻辑（数据驱动规则）、Content System 管配置（RON/YAML/Mod）。参与规则计算的东西必须强类型（Type），用于筛选分类内容驱动的东西用 Tag
 
 ---
 
@@ -731,6 +732,10 @@ Modding 不是独立层级，而是贯穿多层的扩展能力，按职责拆分
     - 合法：`Dead`、`Frozen`、`Stunned`
     - 非法：`is_dead: bool`、`is_frozen: bool`
   - 配置字段、临时计算值、非实体级状态允许使用 bool 类型
+  - ⚠️ **重要区分**：此处的 "Tag Component"（ECS 单元结构体标记）≠ "Tag System"（语义标签系统）。两者是不同的概念：
+    - **Tag Component** = ECS 模式 `struct Dead;`，用于标记实体状态，参与 Archetype 过滤
+    - **Tag System** = `TagSet { bits: u128 }` + `TagHierarchy`，用于语义分类（Enemy.Boss, Ability.Fire），不参与规则计算
+    - 详见 `docs/02-domain/capabilities/tag_domain.md` §9 "Tag vs Type 决策指南"
 - 🟨 **从属关系使用官方 Relationship**
   - 实体间从属关系优先使用 Bevy 官方 `Relationship` 机制实现
   - 适用场景：CasterOf、TargetOf、SummonedBy、OwnerOf 等实体间关系
@@ -937,6 +942,16 @@ Modding 不是独立层级，而是贯穿多层的扩展能力，按职责拆分
 - 🟩 **临时状态隔离**
   - 选中单位、悬停格子、技能预览等 UI 交互状态，属于表现层临时状态
   - 绝对禁止混入业务事实状态，不参与存档、不进入回放
+- 🟩 **BSN 作用域限制**（依据 ADR-054 DR-003 + ADR-056 DR-008）
+  - 🟩 BSN 仅允许用于：`src/app/scenes/`（Composition Root）、Editor Prototype、Debug UI
+  - 🟩 BSN 使用范围中的内容必须保持无状态、无逻辑、无业务语义
+  - 🟥 `src/ui/screens/` 禁止直接使用 BSN 构建 Screen
+  - 🟥 `src/ui/widgets/` 禁止直接使用 BSN 构建 Widget
+- 🟩 **Widget/Screen Factory 方案**
+  - 🟩 所有 Screen/Widget 必须通过 Factory 构建：`spawn_xxx(commands, props)` 或 `XxxFactory`
+  - 🟩 Factory 是 UI 的唯一构建入口
+  - 🟩 Factory 输入仅限：Props、ViewModel、Theme；禁止直接读取 Domain
+  - 🟩 Factory 必须满足：可测试、可复用、可审查、可被 AI 独立生成
 
 ---
 
@@ -1509,6 +1524,10 @@ AI 生成代码前应内部对照以下要点：
 16. 🟥 禁止 Domain 之间直接依赖、直接调用内部实现
 17. 🟥 禁止 Domain 重复实现 Capabilities 已有的通用机制
 18. 🟥 禁止在 Rust 代码中硬编码任何用户可见文本（技能名称、描述、对话、UI 标签、错误提示等），所有用户可见文本必须通过 LocalizationKey 从外部本地化文件引用
+19. 🟥 禁止用 Tag 替代参与规则计算的 Type — `if target.has_tag("boss")` 决定伤害公式是错误的，应使用强类型（DamageType::Fire）。Tag 只做语义描述，不参与规则计算
+20. 🟥 禁止用 Tag 表达动态状态 — `Character.Dead`、`Character.Stunned` 应使用 ECS Component（struct Dead;），不用 Tag System（TagSet）。Tag 描述长期不变语义（Enemy.Boss, Character.Human）
+21. 🟥 禁止 Tag 命名空间随意新增 — 顶级命名空间控制在 12 个以内，新增需架构评审。否则几年后 Skill.Fire 和 Ability.Fire 同时存在，直接灾难
+22. 🟥 禁止 Tag 承载数据 — Tag 只回答"是不是"，不能回答"多少"。`Damage.100`、`Level.30`、`Cooldown.3` 均为非法 Tag
 
 ---
 
@@ -1579,9 +1598,10 @@ AI 生成代码前应内部对照以下要点：
      - §6.3 四级通信机制更新：Observer 从"局部状态变化响应"提升为"跨领域通信首选机制"
      - §6.4 新增 Delayed Commands 规则、Observer run_if 支持
      - §6.1 细化 Relationship 使用场景和不适用场景
-  2. **新增 BSN 规则**
-     - BSN 使用范围：UI 层默认使用，核心玩法层使用工厂函数
-     - BSN 禁止：描述业务逻辑、引用 System/Observer
+  2. **更新 BSN 规则**
+     - BSN 作用域限制：`src/app/scenes/` ✅ / `src/ui/screens/` 🟥 / `src/ui/widgets/` 🟥
+     - BSN 使用范围中的内容必须保持无状态、无逻辑、无业务语义
+     - 新增 Factory 方案：所有 Screen/Widget 必须通过 Factory 构建，Factory 是 UI 的唯一构建入口
   3. **新增 Reflect 规则**
      - 所有 Component/Event/Resource 类型必须 derive Reflect
 - 核心升级（v5.0 → v5.1）：

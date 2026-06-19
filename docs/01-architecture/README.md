@@ -99,7 +99,33 @@ Fre 项目采用 **DDD 纵向三层 + 横切四层** 的矩阵式结构。模块
 └──────────────────────────────────────────────────────────────┘
 ```
 
-### 2.3 依赖方向（严格单向，禁止反向）
+### 2.3 五层能力架构（Tag/Query/Rule 定位）
+
+在 DDD 三层 + 横切四层的骨架之上，游戏逻辑遵循**五层能力架构**：
+
+```
+Type System（世界真相）     ← DamageType, UnitClass, AbilityId（强类型，参与规则计算）
+       ↓
+Tag System（世界语义）      ← Boss, Undead, Flying（语义描述，不影响规则）
+       ↓
+Query System（筛选语言）    ← TagQuery, Condition（统一查询入口）
+       ↓
+Rule System（规则引擎）     ← Condition → Effect（数据驱动规则）
+       ↓
+Content System（配置层）    ← RON/YAML, Mod（内容驱动）
+```
+
+| 层 | 职责 | 例子 | 谁修改 |
+|----|------|------|--------|
+| **Type System** | 世界运行规律，参与规则计算 | `DamageType::Fire`, `AbilityState::Casting` | 程序员（编译期） |
+| **Tag System** | 世界语义描述，不影响核心规则 | `Enemy.Boss`, `Ability.Fire`, `Terrain.Water` | 内容团队（运行时） |
+| **Query System** | 统一筛选语言，跨系统查询 | `TagQuery(Any, [Fire, Ice])`, `Condition::TagMatch` | 配置（Def） |
+| **Rule System** | 数据驱动规则，Condition → Effect | `Rule { condition, effect }` | 配置（Def） |
+| **Content System** | 内容配置，Mod 扩展 | RON 文件, YAML 配置 | 内容团队 |
+
+**关键约束**: Tag 不参与规则计算（Type System 的职责），Tag 只做语义描述。
+
+### 2.4 依赖方向（严格单向，禁止反向）
 
 ```
 Shared ──→ Core ──→ Infra       # 纵向依赖：低层→高层（单向）

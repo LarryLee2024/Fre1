@@ -16,8 +16,8 @@ pub struct EffectApplied {
     pub instance_id: String,
     /// EffectDef ID
     pub def_id: String,
-    /// 效果分类
-    pub category: String,
+    /// 效果分类标签
+    pub tags: Vec<String>,
     /// 来源实体
     pub source_entity: String,
     /// 目标实体

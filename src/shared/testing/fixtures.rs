@@ -371,22 +371,22 @@ impl TagDefBuilder {
 /// 构造标准伤害类型 Tag 层级。
 pub fn standard_damage_tags() -> Vec<TagDefinition> {
     vec![
-        TagDefBuilder::new("tag_dmg_elemental", TagNamespace::DamageType)
+        TagDefBuilder::new("tag_dmg_elemental", TagNamespace::Damage)
             .path("DamageType.Elemental")
             .bit_index(0)
             .abstract_(true)
             .build(),
-        TagDefBuilder::new("tag_dmg_fire", TagNamespace::DamageType)
+        TagDefBuilder::new("tag_dmg_fire", TagNamespace::Damage)
             .path("DamageType.Elemental.Fire")
             .parent("tag_dmg_elemental")
             .bit_index(1)
             .build(),
-        TagDefBuilder::new("tag_dmg_ice", TagNamespace::DamageType)
+        TagDefBuilder::new("tag_dmg_ice", TagNamespace::Damage)
             .path("DamageType.Elemental.Ice")
             .parent("tag_dmg_elemental")
             .bit_index(2)
             .build(),
-        TagDefBuilder::new("tag_dmg_phys", TagNamespace::DamageType)
+        TagDefBuilder::new("tag_dmg_phys", TagNamespace::Damage)
             .path("DamageType.Physical")
             .bit_index(3)
             .build(),
