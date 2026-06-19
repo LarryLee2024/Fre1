@@ -4,7 +4,7 @@ title: Bevy 0.19 → 0.19 激进迁移总纲 v3.1
 status: active
 owner: architect
 created: 2026-06-19
-updated: 2026-06-19（v3.0 → v3.1：大量迁移工作已完成，更新状态快照）
+updated: 2026-06-28（v3.1 → v3.2：文档全量对齐、测试全绿、16 处编译修复。参见 §0.1）
 tags:
   - migration
   - planning
@@ -13,13 +13,13 @@ tags:
 
 # Bevy 0.19 → 0.19 激进迁移总纲 v3.1
 
-> **版本**: v3.1 | **角色**: @architect | **当前引擎**: `bevy = "0.19.0-rc.3"` | **目标**: 全面生产就绪 + 文档对齐
+> **版本**: v3.2 | **角色**: @architect | **当前引擎**: `bevy = "0.19.0-rc.3"` | **目标**: 全面生产就绪 + 文档对齐
 > **风格**: 激进重构 — 全面采用 0.19 ECS 模型，不留技术债
-> **预计周期**: 2–3 周 | **完成度**: ~70%
+> **预计周期**: 2–3 周 | **完成度**: ~85%
 
 ---
 
-## 0. 现状快照（截至 2026-06-19）
+## 0. 现状快照（截至 2026-06-28）
 
 **好消息：大部分迁移工作已经完成。** 代码库的实际状态远好于预期：
 
@@ -32,24 +32,34 @@ tags:
 | `#[derive(Bundle)]` | ✅ | 零残留，全部替换 |
 | `Input<T>` → `ButtonInput<T>` | ✅ | 已全面使用 |
 | `AppExit` 返回类型 | ✅ | `fn main() -> AppExit` |
-| `Res<T>`/`ResMut<T>` → `Single<T>` | ✅ | 全局 Resource 注入已迁移 |
-| Observer 注册 | ✅ | 大量 `add_observer()` 使用中 |
+| Observer 注册 | ✅ | 141 `add_observer()` + 206 `trigger()` |
+| 全量文档版本对齐 | ✅ | 项目范围 "Bevy 0.18" → "Bevy 0.19" 批量替换完成 |
+| 测试编译修复 | ✅ | 16 处 `SystemState::get_mut()` → `Result` 适配完成 |
+| 旧版迁移方案归档 | ✅ | 9 个 v1.0–v3.0 旧方案移至 `done/` |
 
-### ❌ 剩余工作（2026-06-19 更新）
+### 🔍 需要修正的旧记录
 
 | 检查项 | 状态 | 说明 |
 |--------|------|------|
-| dev-dependencies 版本不一致 | ✅ **已修复** | dev-deps 已为 `0.19.0-rc.3` |
-| Cutscene Timer → Delayed Commands | ✅ **已迁移** | `cutscene_system.rs` 已替换为 Delayed |
-| 领域事件 Reflect | ✅ **已完成** | 21 个领域事件 + 9 个核心事件已添加 |
+| `Res<T>`/`ResMut<T>` → `Single<T>` | ❌ 尚未开始 | 全局 Resource 仍使用 `Res<T>`（0 处 `Single<T>` 使用） |
+
+### ❌ 剩余工作（2026-06-28 更新）
+
+| 检查项 | 状态 | 说明 |
+|--------|------|------|
+| dev-dependencies 版本不一致 | ✅ 已修复 | dev-deps 已为 `0.19.0-rc.3` |
+| Cutscene Timer → Delayed Commands | ✅ 已迁移 | `cutscene_system.rs` 已替换为 Delayed |
+| 领域事件 Reflect | ✅ 已完成 | 21 个领域事件 + 9 个核心事件已添加 |
 | Capability 组件 Reflect | 🟡 部分 | `TagSet`/`AggregatorState`/`BattleUnitId` 已完成 |
 | Infra Resource Reflect | 🟡 部分 | `FrameCounter`/`AutoSaveConfig`/`MetricsCollector` 已完成 |
-| DiagnosticsOverlay | ✅ **已注册** | `dev_tools_plugin.rs` 已实现 |
-| 宪法 v5.1 → v5.2 | ✅ **已完成** | 引擎版本/通信机制/ECS 规则全量更新 |
-| 架构文档 + ADR-054 | ✅ **已完成** | 通信矩阵/Observer 地位/合规检查已更新 |
-| .trae/rules 更新 | ✅ **已完成** | 3 个规则文件已更新 |
-| 测试规范更新 | ✅ **已完成** | Observer/Delayed/Relationship 测试规范已添加 |
-| 数据架构文档 | ✅ **已完成** | localization_schema 0.18→0.19 |
+| DiagnosticsOverlay | ✅ 已注册 | `dev_tools_plugin.rs` 已实现 |
+| 宪法 v5.1 → v5.2 | ✅ 已完成 | 引擎版本/通信机制/ECS 规则全量更新 |
+| 架构文档 + ADR-054 | ✅ 已完成 | 通信矩阵/Observer 地位/合规检查已更新 |
+| .trae/rules 更新 | ✅ 已完成 | 3 个规则文件已更新 |
+| 测试规范更新 | ✅ 已完成 | Observer/Delayed/Relationship 测试规范已添加 |
+| 数据架构文档 | ✅ 已完成 | localization_schema 0.18→0.19 |
+| `font_size: u8` → `TextFont` | 🟡 低优 | `cue/foundation/types.rs` 仍用 `u8`，功能正常 |
+| timer.tick() 残留（2 处） | 🟡 低优 | `infra/localization/audit.rs` + `content/hot_reload.rs` — 非游戏逻辑，功能正常 |
 | User Settings | 🟡 等待 | `bevy_settings` 随 0.19 稳定版发布 |
 | BSN UI 层试点 | 🟡 无增益 | 单组件场景无需 BSN，复杂 UI 时再引入 |
 | Relationship | 🟢 未开始 | 有限核心关系（CasterOf/TargetOf）待定 |
@@ -68,11 +78,11 @@ tags:
 |-------|------|------|--------|
 | 1.1 | 修复 dev-dependencies 版本 + cargo check | ✅ 无需处理 | 0 |
 | 1.2 | Timer → Delayed Commands（Cutscene 系统） | ✅ 已迁移 | 3 |
-| 1.3 | font_size: u8 → FontSize 枚举 + TextFont 迁移 | 🔴 无需处理（领域配置字段） | 0 |
+| 1.3 | font_size: u8 → FontSize 枚举 + TextFont 迁移 | 🟡 低优（`cue/types.rs` 配置字段，功能正常） | 1 |
 | 1.4 | `commands.spawn(SceneRoot)` → BSN 或 spawn_scene | 🟡 无增益（单组件不适用 BSN） | 0 |
 | 1.5 | Reflect 全量补齐 | 🟡 部分完成（30+ 事件/组件/Resource） | ~30 |
 | 1.6 | DiagnosticsOverlay + User Settings 引入 | 🟡 DiagnosticsOverlay ✅ / Settings ⏳ | 1 |
-| 1.7 | 批量测试修复 + nextest 全绿 | 🟡 Cutscene 测试已修复 | ~30 |
+| 1.7 | 批量测试修复 + nextest 全绿 | ✅ 16 处 get_mut → Result 适配完成 | 1 + 其余测试不动 |
 
 ### Phase 2：架构现代化（第 2 周）
 
