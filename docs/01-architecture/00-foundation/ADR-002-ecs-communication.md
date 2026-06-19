@@ -4,7 +4,7 @@ title: ADR-002 — ECS Four-Tier Communication Strategy
 status: approved
 owner: architect
 created: 2026-06-16
-updated: 2026-06-16
+updated: 2026-06-28（v2 — 通信优先级更新：Observer 优先，EventWriter/EventReader 禁止）
 supersedes: none
 ---
 
@@ -12,7 +12,7 @@ supersedes: none
 
 ## 状态
 
-**Approved** — 通信机制架构选型已锁定。Observer 性能阈值由 @feature-developer 在 Spike 中验证确认，不阻塞后续实现。
+**Approved (v2)** — 通信机制架构选型已锁定。v2 更新：Observer 提升为跨域通信首选机制，EventWriter/EventReader 禁止在新建代码中使用。
 
 ## 背景
 
@@ -38,8 +38,8 @@ Bevy 0.19+ 提供多级通信原语：Hook（Component 生命周期）、Trigger
 | 同 Feature 内多段响应链 | **Trigger** (`commands.trigger()`) | Message | Trigger 轻量，天然绑定触发 Entity，Observer 在同一 World 内响应 |
 | Component 值变化 → 表现更新 | **Changed Filter** | Observer | Changed 零分配，适合 UI 刷新、视觉同步 |
 | Component 变化 → 其他逻辑响应 | **Observer** (`on_event`) | Hook | Observer 可以承载逻辑，适合血量变化触发 Buff 检测 |
-| 跨 Feature 业务通知 | **Message** (`EventWriter/EventReader`) | 直接类型引用 | `events.rs` 声明 → 发送方不知接收方，完全解耦 |
-| 领域事件（业务事实源） | **Message + WhiteList** | Trigger | 领域事件需要跨域可达、可录制、可回放 |
+| 跨 Feature 业务通知 | **Observer** (`trigger(T)` + `On<T>`) | EventWriter/EventReader | `events.rs` 声明 → 发送方 `trigger(T)`，接收方 `On<T>` Observer 响应 |
+| 领域事件（业务事实源） | **Observer + WhiteList** | EventWriter/EventReader | 领域事件使用 `trigger(T)` 发送，Observer 接收，支持录制与回放 |
 | 全局状态流转 | **State** (`States`/`SubStates`) | 手写枚举 | 官方 State 支持 OnEnter/OnExit，自带调度隔离 |
 | 高频属性刷新（每帧） | **System + Changed** | Observer | Observer 在高频场景有调度开销 |
 | 战斗事件链（伤害→护盾→吸血） | **Trigger** | 嵌套 Message | Trigger 绑定实体链，Observer 按顺序消费 |
@@ -61,12 +61,12 @@ Component 生命周期事件？
      │
      ▼
 跨 Feature 通知？
-├─ 是 → 业务事实/需要录制？ → Message (WhiteList)
+├─ 是 → 业务事实/需要录制？ → Observer (trigger + On<T>)
 ├─ 是 → 只需当前帧？ → Event with Reader
 └─ 否
      │
      ▼
-    直接 System 查询即可
+     直接 System 查询即可
 ```
 
 ### 3. 事件白名单管理
@@ -96,8 +96,9 @@ pub enum DomainEvent {
 
 **规则**：
 - 🟩 白名单事件必须通过 `info!(event = ?evt)` 输出结构化日志
-- 🟩 白名单事件优先通过 Event 发送，禁用 Trigger（Trigger 绑定 Entity 不足以表达跨域事件）
+- 🟩 白名单事件使用 `trigger(T)` + `On<T>` Observer 模式（优先于旧 EventWriter/EventReader）
 - 🟥 禁止为临时副作用随意新增白名单事件
+- 🟥 禁止新代码使用 `EventWriter<T>` / `EventReader<T>` 模式
 
 ### 4. 通信安全策略
 
@@ -112,15 +113,13 @@ fn on_combat_hit(
     // 反击触发 ← Observer
 }
 
-// 跨 Feature：使用 Event（完全解耦）
+// 跨 Feature：使用 Observer（解耦，支持回放）
 fn on_unit_died(
-    mut events: EventReader<DomainEvent>,
-    mut quest_events: EventWriter<QuestCheckEvent>,
+    trigger: Trigger<DomainEvent>,
+    mut commands: Commands,
 ) {
-    for event in events.read() {
-        if let DomainEvent::UnitDied { entity, .. } = event {
-            quest_events.send(QuestCheckEvent::new(*entity));
-        }
+    if let DomainEvent::UnitDied { entity, .. } = trigger.event() {
+        commands.trigger(QuestCheckEvent::new(*entity));
     }
 }
 
@@ -153,7 +152,7 @@ src/event/  (Layer 2)
 
 ### 允许
 - 同 Feature 内任意使用 Trigger + Observer
-- 跨 Feature 使用 Event（白名单登记）
+- 跨 Feature 使用 Observer（`trigger(T)` + `On<T>`，白名单登记）
 - Feature 内部 System 之间使用直接函数调用（非事件化）
 - 表现层使用 Changed Filter 监听业务状态
 
@@ -169,10 +168,10 @@ src/event/  (Layer 2)
 | 禁止行为 | 理由 | 替代方案 |
 |---------|------|---------|
 | 用 Message 模拟同 Feature 函数调用 | 全局耦合，性能浪费 | Trigger 或直接调用 |
+| 新代码使用 `EventWriter<T>` / `EventReader<T>` | 违反 Observer 优先策略 | `trigger(T)` + `On<T>` Observer |
 | 用 Observer 做每帧更新 | Observer 调度开销大 | `Changed` Filter + System |
 | 白名单事件不记日志 | 违反可观测性规范 | `info!(event = ?evt)` |
 | 事件无递归深度限制 | 可能无限循环 | 设置 `MAX_OBSERVER_DEPTH` 常量 |
-| 跨 Feature 用 Trigger | Trigger 绑定触发 Entity 不适配跨域场景 | Event |
 
 ## Definition / Instance Design
 
