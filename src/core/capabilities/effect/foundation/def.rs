@@ -52,8 +52,16 @@ pub struct EffectDef {
     /// 效果需要的标签（目标必须拥有效果才能生效）
     pub required_tags: Option<Vec<String>>,
 
+    /// 目标不能拥有的标签（否则效果应用失败，用于免疫检查）
+    #[serde(default)]
+    pub ignored_tags: Option<Vec<String>>,
+
     /// 效果移除时清理的标签
     pub removed_tags: Option<Vec<String>>,
+
+    /// 应用此效果时，移除目标上具有这些标签的其他效果
+    #[serde(default)]
+    pub remove_effects_with_tags: Option<Vec<String>>,
 
     /// 应用条件 ID（指向 ConditionRegistry）
     pub application_condition: Option<String>,

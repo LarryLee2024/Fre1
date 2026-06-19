@@ -9,6 +9,8 @@ use std::collections::HashMap;
 use crate::core::capabilities::condition::foundation::types::{
     ComparisonOp, CustomConditionId, TagRequirementMode,
 };
+use crate::core::capabilities::tag::foundation::BitMask;
+use crate::core::capabilities::tag::mechanism::query::InheritedMaskMap;
 
 /// 条件树节点——递归枚举直接建模条件组合。
 ///
@@ -30,6 +32,11 @@ pub enum Condition {
         mode: TagRequirementMode,
         /// 目标标签 ID
         tag_id: String,
+    },
+    /// 基于 TagQuery 的多标签匹配（支持 Any/All/None + 层级继承）。
+    TagMatch {
+        /// 查询条件
+        query: crate::core::capabilities::tag::foundation::TagQuery,
     },
     /// 基于属性阈值的数值检查。
     AttributeCheck {
@@ -89,6 +96,10 @@ pub struct ConditionContext {
     /// 实体当前持有的标签 ID 列表。
     /// None 表示无法访问标签信息（标记为不通过）。
     pub tag_ids: Option<Vec<String>>,
+    /// 实体当前的标签位掩码（用于 TagQuery 评估）。
+    pub tag_bits: BitMask,
+    /// TagId → BitMask 映射（由 TagHierarchy 维护）。
+    pub tag_masks: Option<InheritedMaskMap>,
     /// 实体当前属性值（attribute_id → value）。
     pub attribute_values: HashMap<String, f32>,
 }
@@ -98,6 +109,8 @@ impl ConditionContext {
     pub fn empty() -> Self {
         Self {
             tag_ids: None,
+            tag_bits: 0,
+            tag_masks: None,
             attribute_values: HashMap::new(),
         }
     }
@@ -106,6 +119,8 @@ impl ConditionContext {
     pub fn with_attributes(values: HashMap<String, f32>) -> Self {
         Self {
             tag_ids: None,
+            tag_bits: 0,
+            tag_masks: None,
             attribute_values: values,
         }
     }
@@ -114,6 +129,18 @@ impl ConditionContext {
     pub fn with_tags(tag_ids: Vec<String>) -> Self {
         Self {
             tag_ids: Some(tag_ids),
+            tag_bits: 0,
+            tag_masks: None,
+            attribute_values: HashMap::new(),
+        }
+    }
+
+    /// 创建带位掩码标签的上下文（用于 TagQuery 评估）。
+    pub fn with_tag_bits(tag_bits: BitMask, tag_masks: InheritedMaskMap) -> Self {
+        Self {
+            tag_ids: None,
+            tag_bits,
+            tag_masks: Some(tag_masks),
             attribute_values: HashMap::new(),
         }
     }

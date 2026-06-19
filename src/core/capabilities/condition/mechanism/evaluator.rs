@@ -13,6 +13,7 @@ use crate::core::capabilities::condition::events::{
 use crate::core::capabilities::condition::foundation::{
     Condition, ConditionContext, ConditionResult, TagRequirementMode,
 };
+use crate::core::capabilities::tag::mechanism::query::evaluate_query;
 
 /// 评估单个条件。
 ///
@@ -34,6 +35,7 @@ pub fn evaluate(
         Condition::TagRequirement { mode, tag_id } => {
             evaluate_tag_requirement(*mode, tag_id, context, entity, commands)
         }
+        Condition::TagMatch { query } => evaluate_tag_match(query, context, entity, commands),
         Condition::AttributeCheck {
             attribute_id,
             operator,
@@ -120,6 +122,59 @@ fn evaluate_tag_requirement(
             commands.trigger(ConditionFailed {
                 entity,
                 condition_id: tag_id.to_string(),
+                fail_reason: reason.clone(),
+            });
+        }
+    }
+
+    result
+}
+
+/// 评估 TagMatch 条件。
+///
+/// 使用 TagQuery 的 Any/All/None 模式 + 层级继承进行多标签匹配。
+fn evaluate_tag_match(
+    query: &crate::core::capabilities::tag::foundation::TagQuery,
+    context: &ConditionContext,
+    entity: Entity,
+    commands: &mut Commands,
+) -> ConditionResult {
+    let tag_masks = match &context.tag_masks {
+        Some(masks) => masks,
+        None => {
+            return ConditionResult::failed("tag_masks unavailable for TagMatch evaluation");
+        }
+    };
+
+    let matched = evaluate_query(query, context.tag_bits, tag_masks);
+    let tag_desc = format!(
+        "TagQuery({:?}, {:?})",
+        query.mode,
+        query
+            .target_tags
+            .iter()
+            .map(|t| t.as_str())
+            .collect::<Vec<_>>()
+    );
+
+    let result = if matched {
+        ConditionResult::passed()
+    } else {
+        ConditionResult::failed(format!("TagMatch {} not satisfied", tag_desc))
+    };
+
+    match &result {
+        ConditionResult::Passed => {
+            commands.trigger(ConditionPassed {
+                entity,
+                condition_id: tag_desc.clone(),
+                result_data: format!("TagMatch {:?} passed", query.mode),
+            });
+        }
+        ConditionResult::Failed { reason } => {
+            commands.trigger(ConditionFailed {
+                entity,
+                condition_id: tag_desc.clone(),
                 fail_reason: reason.clone(),
             });
         }

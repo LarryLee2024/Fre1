@@ -171,7 +171,7 @@ L0 Shared                         └─ 计算层
 | `aggregator` | `aggregator_domain.md` | `capabilities/aggregator_schema.md` | calc_stage, snapshot | components, calc_pipeline, systems |
 | `gameplay_context` | `gameplay_context_domain.md` | `capabilities/gameplay_context_schema.md` | context_data | components, context_builder, context_chain, systems |
 | `spec` | `spec_domain.md` | `capabilities/spec_schema.md` | ability_spec, effect_spec | components, spec_registry, systems |
-| `condition` | `condition_domain.md` | `capabilities/condition_schema.md` | condition_type, tag_requirement, attribute_check, resource_check | components, systems |
+| `condition` | `condition_domain.md` | `capabilities/condition_schema.md` | condition_type, tag_requirement, tag_match, attribute_check, resource_check | components, systems |
 | `trigger` | `trigger_domain.md` | `capabilities/trigger_schema.md` | trigger_type, trigger_condition | components, systems |
 | `ability` | `ability_domain.md` | `capabilities/ability_schema.md` | ability_state, instance, cost, cooldown | components, ability_task, systems |
 | `targeting` | `targeting_domain.md` | `capabilities/targeting_schema.md` | target_type, target_data | components, selector, grid_targeting, systems |

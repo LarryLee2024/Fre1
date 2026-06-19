@@ -4,7 +4,7 @@ title: Effect Schema — 效果数据架构
 status: stable
 owner: data-architect
 created: 2026-06-16
-updated: 2026-06-16
+updated: 2026-06-28
 layer: definition, instance
 replay-safe: true
 ---
@@ -71,8 +71,14 @@ struct EffectDef {
     /// 效果需要的标签（目标必须拥有效果才能生效）
     required_tags: Option<Vec<TagId>>,
 
+    /// 目标不能拥有的标签（否则效果应用失败，用于免疫检查）
+    ignored_tags: Option<Vec<TagId>>,
+
     /// 效果移除时清理的标签
     removed_tags: Option<Vec<TagId>>,
+
+    /// 应用此效果时，移除目标上具有这些标签的其他效果
+    remove_effects_with_tags: Option<Vec<TagId>>,
 
     /// 应用条件（可选，满足此条件效果才能应用）
     application_condition: Option<Condition>,
@@ -408,7 +414,7 @@ struct EffectInstanceSnapshot {
 |----------|------------|------|
 | 依赖 | → ExecutionSchema | period.tick_execution, execution |
 | 依赖 | → ModifierSchema | modifiers 引用 ModifierConfig |
-| 依赖 | → TagSchema | granted_tags, required_tags |
+| 依赖 | → TagSchema | granted_tags, required_tags, ignored_tags, removed_tags, remove_effects_with_tags |
 | 依赖 | → ConditionSchema | application_condition |
 | 依赖 | → StackingSchema | stacking 配置 |
 | 依赖 | → CueSchema | cues 引用 CueDefId |

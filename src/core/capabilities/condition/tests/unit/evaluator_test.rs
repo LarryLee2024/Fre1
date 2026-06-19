@@ -340,6 +340,8 @@ fn nested_and_or_combination_fails() {
         attrs.insert("dex".into(), 14.0);
         ConditionContext {
             tag_ids: Some(vec![]),
+            tag_bits: 0,
+            tag_masks: None,
             attribute_values: attrs,
         }
     };

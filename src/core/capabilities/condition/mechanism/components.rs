@@ -108,6 +108,11 @@ impl ConditionContainer {
             Condition::TagRequirement { tag_id, .. } => {
                 info.tag_ids.push(tag_id.clone());
             }
+            Condition::TagMatch { query } => {
+                for tag_id in &query.target_tags {
+                    info.tag_ids.push(tag_id.as_str().to_string());
+                }
+            }
             Condition::AttributeCheck { attribute_id, .. } => {
                 info.attribute_ids.push(attribute_id.clone());
             }

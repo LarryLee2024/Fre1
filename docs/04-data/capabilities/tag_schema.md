@@ -4,7 +4,7 @@ title: Tag Schema — 标签数据架构
 status: stable
 owner: data-architect
 created: 2026-06-16
-updated: 2026-06-16
+updated: 2026-06-28
 layer: definition
 replay-safe: true
 ---
@@ -90,6 +90,15 @@ enum TagNamespace {
     SpellSchool,
     QuestTag,
     DialogueTag,
+    TargetingType,     // 目标选择类型
+    ExecutionType,     // 执行计算类型
+    CueType,           // 表现信号类型
+    TriggerType,       // 触发条件类型
+    CraftingType,      // 制作/附魔类型
+    RestType,          // 营地休息类型
+    EconomyType,       // 经济/货币类型
+    PartyType,         // 队伍/阵型类型
+    ProgressionType,   // 进度/成长类型
     Custom(String),    // 允许扩展，但必须注册
 }
 ```

@@ -32,6 +32,24 @@ pub enum TagNamespace {
     SpellSchool,
     QuestTag,
     DialogueTag,
+    /// 目标选择类型（单体/范围/自身等）
+    TargetingType,
+    /// 执行计算类型（伤害/治疗/自定义等）
+    ExecutionType,
+    /// 表现信号类型（Cue 分类）
+    CueType,
+    /// 触发条件类型（Trigger/Reaction 分类）
+    TriggerType,
+    /// 制作/附魔类型
+    CraftingType,
+    /// 营地休息类型
+    RestType,
+    /// 经济/货币类型
+    EconomyType,
+    /// 队伍/阵型类型
+    PartyType,
+    /// 进度/成长类型
+    ProgressionType,
     /// 允许扩展的命名空间，但必须注册
     Custom(String),
 }

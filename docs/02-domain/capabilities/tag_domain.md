@@ -1,10 +1,10 @@
 ---
 id: 02-domain.tag
-title: Tag（标签）领域规则 v1.0
+title: Tag（标签）领域规则 v1.1
 status: stable
 owner: domain-designer
 created: 2026-06-16
-updated: 2026-06-19
+updated: 2026-06-28
 tags:
   - domain
   - tag
@@ -184,6 +184,65 @@ Tag.Root
   4. 查询时，父标签的位掩码自动覆盖所有子标签
 - **输出**：隐式层级状态更新
 - **失败处理**：同步过程中数据不一致时触发完整重扫（Recalculation），保证最终一致性
+
+### 5.5 Effect Tag 过滤
+
+EffectDef 通过 Tag 字段实现条件过滤，参考 UE GameplayEffect 模式：
+
+- **granted_tags**：Effect 应用时授予目标实体的标签（如 `tag_status_burning`）
+- **required_tags**：目标必须拥有的标签，否则 Effect 应用失败（如治疗效果要求目标未死亡）
+- **ignored_tags**：目标不能拥有的标签，否则 Effect 应用失败（用于免疫检查，如火焰免疫实体不受火焰伤害）
+- **removed_tags**：Effect 移除时清理的标签
+- **remove_effects_with_tags**：应用此 Effect 时，移除目标上具有这些标签的其他效果（如解毒剂移除所有 poison 标签的效果）
+
+### 5.6 Ability Tag 过滤
+
+Ability 通过 Tag 字段实现能力分类与交互控制（参考 UE GameplayAbility）：
+
+- **ability_tags**：标识 Ability 自身类型（如 `tag_skill_type.fireball`）
+- **cancel_abilities_with_tags**：激活时取消具有这些标签的其他 Ability
+- **block_abilities_with_tags**：激活期间阻断具有这些标签的 Ability
+- **activation_owned_tags**：激活期间授予自身的标签
+
+### 5.7 TagQuery in Condition
+
+Condition 系统通过 `TagMatch` 变体直接使用 `TagQuery` 进行多标签匹配：
+
+- **TagRequirement**：单标签检查（Has/Not），基于字符串比较
+- **TagMatch**：多标签 + 层级继承检查，基于位掩码 O(1) 评估
+
+评估时需要 `ConditionContext` 提供 `tag_bits`（实体的标签位掩码）和 `tag_masks`（TagId → BitMask 映射）。
+
+---
+
+## 9. Tag vs Enum 决策指南
+
+分类维度应优先使用 Tag 而非 Enum。判断标准：
+
+| 是否迁移 | 判断条件 |
+|---------|---------|
+| **应该迁移（Tag）** | 纯分类 + 多领域引用 + 可能有层级需求 |
+| **应该保留（Enum）** | 含状态机、数据携带、计算逻辑、错误类型 |
+| **按需决定** | 仅单领域内部使用 + 变体少 + 无层级需求 → 保留 Enum，等"三次再抽象" |
+
+### 快速决策表
+
+```
+这是一个分类维度吗？→ Tag
+这是一个状态机吗？  → Enum
+这是一个数据载体吗？→ Struct
+这是一个计算逻辑吗？→ Function/Formula
+这是一个错误类型吗？→ Enum（Error）
+
+分类维度的判断：
+□ 多个领域需要引用它？→ Tag
+□ 可能有层级/继承关系？→ Tag
+□ Mod 需要扩展它？→ Tag
+□ 内容团队需要配置它？→ Tag
+□ 仅在单领域内部使用？→ Enum 可保留
+□ 变体 ≤ 3 且稳定不变？→ Enum 可保留
+□ 编译期安全检查更重要？→ Enum 可保留
+```
 
 ---
 

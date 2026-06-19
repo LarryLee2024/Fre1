@@ -1,10 +1,10 @@
 ---
 id: 02-domain.condition
-title: Condition（条件/限制/免疫）领域规则 v1.0
+title: Condition（条件/限制/免疫）领域规则 v1.1
 status: stable
 owner: domain-designer
 created: 2026-06-16
-updated: 2026-06-19
+updated: 2026-06-28
 tags:
   - domain
   - condition
@@ -17,8 +17,9 @@ tags:
 | 术语 | 定义 | 职责边界 |
 |------|------|----------|
 | Condition | 统一的业务条件检查单元，判断某个条件是否满足 | 负责：条件评估的统一入口，返回 Pass/Fail，Condition 的 LocalizationKey（name_key/desc_key）；不负责：条件不满足时的回退逻辑 |
-| ConditionType | 条件类型枚举，定义条件检查的类别 | 负责：条件分类（TagRequirement/AttributeCheck/ResourceCheck/Custom）；不负责：各条件类型的内部逻辑 |
-| TagRequirement | 基于标签的条件检查，判断实体是否拥有/不拥有特定标签 | 负责：标签存在性、排除性、任意匹配检查；不负责：标签的业务含义 |
+| ConditionType | 条件类型枚举，定义条件检查的类别 | 负责：条件分类（TagRequirement/TagMatch/AttributeCheck/ResourceCheck/Custom）；不负责：各条件类型的内部逻辑 |
+| TagRequirement | 基于标签的条件检查，判断实体是否拥有/不拥有特定标签 | 负责：单标签存在性、排除性检查；不负责：标签的业务含义 |
+| TagMatch | 基于 TagQuery 的多标签匹配，支持 Any/All/None + 层级继承 | 负责：多标签组合查询与层级继承匹配；不负责：标签的业务含义 |
 | AttributeCheck | 基于属性阈值的条件检查，判断属性值是否达到要求 | 负责：属性值数值门槛检查；不负责：属性值的计算逻辑 |
 | ResourceCheck | 基于资源充足性的条件检查，判断是否有足够资源执行操作 | 负责：资源量 >= 消耗量的检查；不负责：资源的消耗执行 |
 | ConditionGroup | 条件组合，支持 AND/OR/NOT 逻辑运算组合多个条件 | 负责：多个条件的逻辑编排；不负责：单个条件的评估 |
