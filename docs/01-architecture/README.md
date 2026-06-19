@@ -643,6 +643,7 @@ src/
 | ADR-051 | Error/Failure 分离架构（规则失败与程序错误严格区分） | ✅ Accepted | Cross-cutting |
 | ADR-053 | Localization 基础设施架构（Fluent + Key 代码生成 + 三级回退） | ✅ Proposed | Cross-cutting |
 | ADR-054 | Bevy 0.19 迁移决策（Observer 优先 / Delayed Commands / BSN 范围 / Relationship） | ✅ Accepted | Foundation |
+| ADR-055 | UI 表现层架构（Projection 防火墙 / 单向数据流 / Widget Contract） | 📋 Proposed | Cross-cutting |
 
 ---
 
@@ -712,6 +713,7 @@ src/
 | `40-cross-cutting/ADR-051-error-failure-separation.md` | ✅ accepted | architect | 2026-06-19 |
 | `40-cross-cutting/ADR-053-localization-architecture.md` | ✅ accepted | architect | 2026-06-19 |
 | `00-foundation/ADR-054-bevy-0-19-migration.md` | ✅ accepted | architect | 2026-06-19 |
+| `40-cross-cutting/ADR-055-ui-presentation-architecture.md` | 📋 proposed | architect | 2026-06-19 |
 
 ---
 

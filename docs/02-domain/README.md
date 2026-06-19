@@ -16,7 +16,7 @@ tags:
 > **架构依据**: `docs/01-architecture/README.md` — DDD三层+横切四层架构总纲
 > **数据映射**: `docs/04-data/README.md` — 数据架构总纲
 
-本文档是 `docs/02-domain/` 下全部 30 个领域规则文件的索引和快速参考。
+本文档是 `docs/02-domain/` 下全部 31 个领域规则文件的索引和快速参考。
 
 ---
 
@@ -25,7 +25,7 @@ tags:
 ```
 02-domain/
 ├── README.md              ← 本文件（索引）
-├── capabilities/          ← 能力系统（15 个通用机制）
+├── capabilities/          ← 能力系统（15 个通用机制）+ 1 个表现层规则
 │   ├── tag_domain.md
 │   ├── attribute_domain.md
 │   ├── modifier_domain.md
@@ -40,7 +40,8 @@ tags:
 │   ├── execution_domain.md
 │   ├── effect_domain.md
 │   ├── stacking_domain.md
-│   └── cue_domain.md
+│   ├── cue_domain.md
+│   └── ui-presentation.md
 └── domains/               ← 业务领域（15 个业务规则）
     ├── tactical_domain.md
     ├── terrain_domain.md
@@ -63,7 +64,7 @@ tags:
 
 ## 2. 领域分类
 
-30 个领域分为两大类：**Capabilities**（能力系统，15 个）和 **Business Domains**（业务领域，15 个）。
+31 个领域分为两大类：**Capabilities**（能力系统，15 个）、**Presentation**（表现层规则，1 个）和 **Business Domains**（业务领域，15 个）。
 
 ### 2.1 Capabilities — 能力系统（15）
 
@@ -106,6 +107,14 @@ tags:
 | 14 | `capabilities/stacking_domain.md` | 行为表现 | 堆叠——同类型效果的叠加规则 |
 | 15 | `capabilities/cue_domain.md` | 行为表现 | 表现信号——Effect → VFX/SFX/UI 的桥梁 |
 
+### 2.1a Presentation — 表现层规则（1）
+
+> 注意：UI 表现层不是业务领域，而是 Presentation Layer（L3）的架构规则文档化。
+
+| # | 文件路径 | 层 | 职责摘要 |
+|---|---------|-----|---------|
+| 16 | `capabilities/ui-presentation.md` | Presentation (L3) | UI 表现层——ViewModel/Projection/Widget/Screen 的行为约束与不变量 |
+
 ### 2.2 Business Domains — 业务领域（15）
 
 业务领域实现具体的游戏功能，分层依赖 Capabilities：
@@ -131,21 +140,21 @@ Economy Layer (经济系统)
 
 | # | 文件路径 | 层 | 职责摘要 |
 |---|---------|-----|---------|
-| 16 | `domains/tactical_domain.md` | Foundation | 战术空间——网格位置、移动、掩体、夹击 |
-| 17 | `domains/terrain_domain.md` | Foundation | 地形——Tile、表面类型、陷阱、通行性 |
-| 18 | `domains/faction_domain.md` | Foundation | 阵营关系——阵营定义、声望、关系判定 |
-| 19 | `domains/combat_domain.md` | Core | 战斗——回合流程、先攻、伤害结算、胜负 |
-| 20 | `domains/spell_domain.md` | Core | 法术——法术位、专注、豁免、升环 |
-| 21 | `domains/reaction_domain.md` | Core | 反应——机会攻击、法术反制、护盾、援护 |
-| 22 | `domains/progression_domain.md` | Core | 成长——经验、等级、职业、天赋、ASI |
-| 23 | `domains/inventory_domain.md` | Core | 背包——物品、装备槽位、消耗品、战利品 |
-| 24 | `domains/party_domain.md` | Core | 队伍——成员名册、羁绊、阵型、换人 |
-| 25 | `domains/camp_rest_domain.md` | Core | 营地/休息——短休、长休、生命骰、营地事件 |
-| 26 | `domains/narrative_domain.md` | Narrative | 叙事——对话树、StoryFlag、演出 |
-| 27 | `domains/quest_domain.md` | Narrative | 任务——目标追踪、奖励、前置条件 |
-| 28 | `domains/economy_domain.md` | Economy | 经济——货币、商店、价格、交易 |
-| 29 | `domains/crafting_domain.md` | Economy | 制作——配方、附魔、装备升级 |
-| 30 | `domains/summon_domain.md` | Economy | 召唤——召唤物模板、专注绑定、消失 |
+| 17 | `domains/tactical_domain.md` | Foundation | 战术空间——网格位置、移动、掩体、夹击 |
+| 18 | `domains/terrain_domain.md` | Foundation | 地形——Tile、表面类型、陷阱、通行性 |
+| 19 | `domains/faction_domain.md` | Foundation | 阵营关系——阵营定义、声望、关系判定 |
+| 20 | `domains/combat_domain.md` | Core | 战斗——回合流程、先攻、伤害结算、胜负 |
+| 21 | `domains/spell_domain.md` | Core | 法术——法术位、专注、豁免、升环 |
+| 22 | `domains/reaction_domain.md` | Core | 反应——机会攻击、法术反制、护盾、援护 |
+| 23 | `domains/progression_domain.md` | Core | 成长——经验、等级、职业、天赋、ASI |
+| 24 | `domains/inventory_domain.md` | Core | 背包——物品、装备槽位、消耗品、战利品 |
+| 25 | `domains/party_domain.md` | Core | 队伍——成员名册、羁绊、阵型、换人 |
+| 26 | `domains/camp_rest_domain.md` | Core | 营地/休息——短休、长休、生命骰、营地事件 |
+| 27 | `domains/narrative_domain.md` | Narrative | 叙事——对话树、StoryFlag、演出 |
+| 28 | `domains/quest_domain.md` | Narrative | 任务——目标追踪、奖励、前置条件 |
+| 29 | `domains/economy_domain.md` | Economy | 经济——货币、商店、价格、交易 |
+| 30 | `domains/crafting_domain.md` | Economy | 制作——配方、附魔、装备升级 |
+| 31 | `domains/summon_domain.md` | Economy | 召唤——召唤物模板、专注绑定、消失 |
 
 ---
 
@@ -249,6 +258,7 @@ Event         → 所有领域（领域间通信）
 | `capabilities/stacking_domain.md` | `capabilities/stacking_schema.md` |
 | `capabilities/event_domain.md` | `capabilities/event_schema.md` |
 | `capabilities/cue_domain.md` | `capabilities/cue_schema.md` |
+| `capabilities/ui-presentation.md` | `capabilities/ui_presentation_schema.md` |
 | `domains/tactical_domain.md` | `domains/tactical_schema.md` |
 | `domains/terrain_domain.md` | `domains/terrain_schema.md` |
 | `domains/faction_domain.md` | `domains/faction_schema.md` |
@@ -292,6 +302,7 @@ Event         → 所有领域（领域间通信）
 | `capabilities/effect_domain.md` | ✅ stable | domain-designer | 2026-06-19 |
 | `capabilities/stacking_domain.md` | ✅ stable | domain-designer | 2026-06-19 |
 | `capabilities/cue_domain.md` | ✅ stable | domain-designer | 2026-06-19 |
+| `capabilities/ui-presentation.md` | 🟡 draft | domain-designer | 2026-06-19 |
 | `domains/tactical_domain.md` | ✅ stable | domain-designer | 2026-06-19 |
 | `domains/terrain_domain.md` | ✅ stable | domain-designer | 2026-06-19 |
 | `domains/faction_domain.md` | ✅ stable | domain-designer | 2026-06-19 |

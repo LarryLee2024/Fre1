@@ -1,6 +1,6 @@
 ---
 id: 09-planning.bevy-0-19-migration-v3
-title: Bevy 0.19 → 0.19 激进迁移总纲 v3.1
+title: Bevy 0.19 → 0.19 激进迁移总纲 v3.3
 status: active
 owner: architect
 created: 2026-06-19
@@ -327,6 +327,7 @@ mod settings {
 - [x] `docs/01-architecture/README.md` 通信机制已更新
 - [x] `docs/04-data/README.md` + localization_schema 已校验
 - [x] `docs/05-testing/test-spec.md` 已新增 Observer/Delayed 测试规范
+- [x] `docs/03-technical/bevy-0.19-migration/` → `docs/09-planning/done/` 已归档
 - [x] `.trae/rules/ECS规则.md` 已更新
 - [x] `.trae/rules/编码规则.md` 已更新
 - [x] `.trae/rules/架构规则.md` 已更新
@@ -362,7 +363,7 @@ mod settings {
 | `docs/04-data/README.md` | 校验数据层映射 | 30 分钟 | ✅ 已验证 |
 | `docs/04-data/infrastructure/localization_schema.md` | 0.18→0.19 引用 | 15 分钟 | ✅ 已完成 |
 | `docs/05-testing/test-spec.md` | 新增 §17.5 Observer/Delayed 测试规范 | 1 小时 | ✅ 已完成 |
-| `docs/03-technical/bevy-0.19-migration/*.md` | 归档至 `done/` | 10 分钟 | 🟡 迁移完成后执行 |
+| `docs/03-technical/bevy-0.19-migration/*.md` | 归档至 `done/` | 10 分钟 | ✅ 已归档 |
 | `.trae/rules/ECS规则.md` | 新增 Delayed/BSN/Relationship 规则 | 30 分钟 | ✅ 已完成 |
 | `.trae/rules/编码规则.md` | 更新 EventReader 禁令 | 15 分钟 | ✅ 已完成 |
 | `.trae/rules/架构规则.md` | 更新通信机制优先级 | 15 分钟 | ✅ 已完成 |

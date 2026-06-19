@@ -52,6 +52,22 @@
 | `new_bevy-0.19-phase1-aggressive.md` | v3.0 Phase 1 | 被 v3.1 吸收 |
 | `new_bevy-0.19-phase2-deep-refactor.md` | v3.0 Phase 2 | 被 v3.1 吸收 |
 
+以下 11 篇 Bevy 0.19 迁移技术知识库文档已归档至 `done/`（`docs/03-technical/bevy-0.19-migration/` → `docs/09-planning/done/`）：
+
+| 文档 | 说明 |
+|------|------|
+| `00-migration-overview.md` | 迁移总览 |
+| `01-bsn-scene-system.md` | BSN 场景系统 |
+| `02-observer-enhancements.md` | Observer 增强 |
+| `03-delayed-commands.md` | Delayed Commands |
+| `04-resources-as-components.md` | Resource → Entity |
+| `05-contiguous-query.md` | Contiguous Query |
+| `06-user-settings.md` | User Settings |
+| `07-text-and-ui.md` | 文本与 UI |
+| `08-rendering-and-devtools.md` | 渲染与 DevTools |
+| `09-asset-system.md` | 资产系统 |
+| `10-srpg-architecture-impact.md` | SRPG 架构影响 |
+
 ### 其他已完成归档
 
 - `done/` 中其余规划文档均已全部完成
