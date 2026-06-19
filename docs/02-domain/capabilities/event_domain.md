@@ -4,7 +4,7 @@ title: Event（事件）领域规则 v1.0
 status: stable
 owner: domain-designer
 created: 2026-06-16
-updated: 2026-06-16
+updated: 2026-06-19
 tags:
   - domain
   - event
@@ -16,7 +16,7 @@ tags:
 
 | 术语 | 定义 | 职责边界 |
 |------|------|----------|
-| GameplayEvent | 系统间传递结构化数据的统一事件载体，是 Domain 间通信的唯一通道 | 负责：携带事件标签、上下文和数值载荷；不负责：事件的触发条件评估 |
+| GameplayEvent | 系统间传递结构化数据的统一事件载体，是 Domain 间通信的唯一通道 | 负责：携带事件标签、上下文和数值载荷，事件定义中用户可见文本的 LocalizationKey（name_key/desc_key）；不负责：事件的触发条件评估 |
 | EventTag | 事件类型的标识标签，用于事件路由和订阅匹配 | 负责：事件分类与路由寻址；不负责：事件载荷数据的结构 |
 | EventBus | 全局事件路由基础设施，负责接收事件并分发给所有订阅者 | 负责：事件的接收、过滤、分发；不负责：事件的业务含义 |
 | EventSubscription | 事件订阅关系，定义谁对哪些事件感兴趣以及如何处理 | 负责：订阅关系的注册/注销管理；不负责：订阅者的具体处理逻辑 |
@@ -128,6 +128,7 @@ Consumed（事件消费完毕）
 - 🟥 禁止：将 Event 作为"返回值"使用（发出事件后等待另一系统的同步结果） — 理由：事件是单向通知，不是 RPC；需要结果反馈应使用 Command 模式
 - 🟥 禁止：在单个事件分发周期内同步等待 — 理由：事件是异步机制，同步等待会导致死锁
 - 🟥 禁止：用 Event 替代 Trigger 做技能激活条件判断 — 理由：职责分离——Event 做通知，Trigger 做条件检测
+- 🟥 禁止：事件定义中直接存储用户可见文本的自然语言 — 理由：如果事件需要显示名称/描述，必须使用 name_key/desc_key: LocalizationKey 引用。违反宪法 §22 Localization First。
 
 ---
 
@@ -224,6 +225,7 @@ Consumed（事件消费完毕）
 - ✅ 职责明确：Event 只做"通知与分发"，不做"条件检测"（Trigger 的职责）、不做"表现触发"（Cue 的职责）
 - ✅ 与 Trigger 分离：Event 解决"系统间通信"，Trigger 解决"技能激活条件"，两者在架构文档中的区分得到严格遵守
 - ✅ Domain 间通信：Event 是 Domain 间通信的唯一通道，符合架构文档第七节"Domain 间禁止直接引用"的铁律
+- ✅ LocalizationKey：事件定义涉及的用户可见文本使用 LocalizationKey 而非硬编码文本（宪法 §22）
 
 ---
 

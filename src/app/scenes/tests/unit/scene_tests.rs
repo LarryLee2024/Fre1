@@ -16,7 +16,9 @@
 use bevy::prelude::*;
 use bevy::state::app::StatesPlugin;
 
-use crate::app::scenes::{GameState, OverlayState, SceneRoot, ScenePlugin, StateTransitionQueue, TransitionRequest};
+use crate::app::scenes::{
+    GameState, OverlayState, ScenePlugin, SceneRoot, StateTransitionQueue, TransitionRequest,
+};
 use crate::core::domains::combat::components::BattlePhase;
 
 // ─── 辅助函数 ──────────────────────────────────────────────────────
@@ -68,11 +70,11 @@ fn game_state_starts_at_main_menu() {
 #[test]
 fn battle_phase_accessible_in_combat() {
     let mut app = build_combat_test_app();
-    
+
     set_game_state(&mut app, GameState::Combat);
     app.update();
     app.world_mut().flush();
-    
+
     let state = app.world().resource::<State<BattlePhase>>();
     assert_eq!(*state.get(), BattlePhase::Preparation);
 }
@@ -85,7 +87,7 @@ fn battle_phase_accessible_in_combat() {
 #[test]
 fn battle_phase_invalid_outside_combat() {
     let mut app = build_combat_test_app();
-    
+
     set_game_state(&mut app, GameState::Combat);
     app.update();
     app.world_mut().flush();
@@ -93,14 +95,14 @@ fn battle_phase_invalid_outside_combat() {
         let state = app.world().resource::<State<BattlePhase>>();
         assert_eq!(*state.get(), BattlePhase::Preparation);
     }
-    
+
     set_game_state(&mut app, GameState::MainMenu);
     app.update();
     app.world_mut().flush();
-    
+
     let gs = app.world().resource::<State<GameState>>();
     assert_eq!(*gs.get(), GameState::MainMenu);
-    
+
     let bp = app.world().get_resource::<State<BattlePhase>>();
     match bp {
         None => {}
@@ -122,17 +124,17 @@ fn battle_phase_invalid_outside_combat() {
 #[test]
 fn transition_queue_only_executes_last() {
     let mut app = build_test_app();
-    
+
     {
         let mut queue = app.world_mut().resource_mut::<StateTransitionQueue>();
         queue.push(TransitionRequest::Change(GameState::TacticalMap));
         queue.push(TransitionRequest::Change(GameState::Combat));
     }
-    
+
     app.update();
     app.update();
     app.world_mut().flush();
-    
+
     let state = app.world().resource::<State<GameState>>();
     assert_eq!(*state.get(), GameState::Combat);
 }
@@ -150,26 +152,29 @@ fn transition_queue_only_executes_last() {
 #[test]
 fn cleanup_scene_desawns_all_scene_roots() {
     let mut app = build_test_app();
-    
+
     // 初始状态是 MainMenu，触发一次 update 确保 OnEnter(MainMenu) 执行
     app.update();
     app.world_mut().flush();
-    
+
     let initial_count = count_scene_roots(app.world_mut());
     assert_eq!(initial_count, 1, "MainMenu 应生成一个 SceneRoot");
-    
+
     // 切换到 Combat
     set_game_state(&mut app, GameState::Combat);
     app.update();
     app.world_mut().flush();
-    
+
     // 验证状态已切换
     let gs = app.world().resource::<State<GameState>>();
     assert_eq!(*gs.get(), GameState::Combat, "GameState 应已切换到 Combat");
-    
+
     // 核心验证：OnEnter(Combat) 应创建了新的 SceneRoot
     let final_count = count_scene_roots(app.world_mut());
-    assert!(final_count >= 1, "切换到 Combat 后应至少有一个 SceneRoot（OnEnter 应已触发）");
+    assert!(
+        final_count >= 1,
+        "切换到 Combat 后应至少有一个 SceneRoot（OnEnter 应已触发）"
+    );
 }
 
 // ─── Test 6: overlay_state_defaults_to_none ────────────────────────

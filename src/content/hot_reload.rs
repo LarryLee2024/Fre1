@@ -90,7 +90,10 @@ pub fn hot_reload_content_system(
     let changed: Vec<&ContentFile> = files
         .iter()
         .filter(|f| {
-            match (hr_state.file_mtimes.get(&f.path), current_mtimes.get(&f.path)) {
+            match (
+                hr_state.file_mtimes.get(&f.path),
+                current_mtimes.get(&f.path),
+            ) {
                 (Some(old), Some(new)) => old != new,
                 (None, Some(_)) => true, // 新文件
                 _ => false,
@@ -196,17 +199,12 @@ pub fn hot_reload_content_system(
     hr_state.last_reload_count = reload_count;
 
     if reload_count > 0 {
-        info!(
-            "[HotReload] Successfully reloaded {} file(s)",
-            reload_count
-        );
+        info!("[HotReload] Successfully reloaded {} file(s)", reload_count);
     }
 }
 
 /// 初始化热重载状态（填充初始 mtime）。
-pub fn init_hot_reload_state(
-    mut hr_state: ResMut<ContentHotReloadState>,
-) {
+pub fn init_hot_reload_state(mut hr_state: ResMut<ContentHotReloadState>) {
     let config_root = std::path::Path::new("assets/config");
     let files = discover_ron_files(config_root);
 
@@ -237,11 +235,7 @@ fn reload_single_spell(spells: &mut ResMut<LoadedSpellDefs>, file: &ContentFile)
     let def: SpellDef = match ron::from_str(&content) {
         Ok(d) => d,
         Err(e) => {
-            warn!(
-                "[HotReload] Failed to parse {}: {}",
-                file.path.display(),
-                e
-            );
+            warn!("[HotReload] Failed to parse {}: {}", file.path.display(), e);
             return false;
         }
     };
@@ -257,8 +251,7 @@ fn reload_single_spell(spells: &mut ResMut<LoadedSpellDefs>, file: &ContentFile)
     spells.defs.retain(|d| d.id != def.id);
     info!(
         "[HotReload] Reloaded spell '{}' (id: {})",
-        def.name_key,
-        def.id
+        def.name_key, def.id
     );
     spells.defs.push(def);
     true
@@ -275,11 +268,7 @@ fn reload_single_cue(cues: &mut ResMut<LoadedCueDefs>, file: &ContentFile) -> bo
     let def: CueDef = match ron::from_str(&content) {
         Ok(d) => d,
         Err(e) => {
-            warn!(
-                "[HotReload] Failed to parse {}: {}",
-                file.path.display(),
-                e
-            );
+            warn!("[HotReload] Failed to parse {}: {}", file.path.display(), e);
             return false;
         }
     };
@@ -308,11 +297,7 @@ fn reload_single_effect(effects: &mut ResMut<LoadedEffectDefs>, file: &ContentFi
     let def: EffectDef = match ron::from_str(&content) {
         Ok(d) => d,
         Err(e) => {
-            warn!(
-                "[HotReload] Failed to parse {}: {}",
-                file.path.display(),
-                e
-            );
+            warn!("[HotReload] Failed to parse {}: {}", file.path.display(), e);
             return false;
         }
     };
@@ -327,8 +312,7 @@ fn reload_single_effect(effects: &mut ResMut<LoadedEffectDefs>, file: &ContentFi
     effects.defs.retain(|d| d.id != def.id);
     info!(
         "[HotReload] Reloaded effect '{}' (id: {})",
-        def.name_key,
-        def.id
+        def.name_key, def.id
     );
     effects.defs.push(def);
     true
@@ -345,11 +329,7 @@ fn reload_single_quest(quests: &mut ResMut<LoadedQuestDefs>, file: &ContentFile)
     let def: QuestDef = match ron::from_str(&content) {
         Ok(d) => d,
         Err(e) => {
-            warn!(
-                "[HotReload] Failed to parse {}: {}",
-                file.path.display(),
-                e
-            );
+            warn!("[HotReload] Failed to parse {}: {}", file.path.display(), e);
             return false;
         }
     };
@@ -364,8 +344,7 @@ fn reload_single_quest(quests: &mut ResMut<LoadedQuestDefs>, file: &ContentFile)
     quests.defs.retain(|d| d.id != def.id);
     info!(
         "[HotReload] Reloaded quest '{}' (id: {})",
-        def.name_key,
-        def.id
+        def.name_key, def.id
     );
     quests.defs.push(def);
     true
@@ -382,11 +361,7 @@ fn reload_single_recipe(recipes: &mut ResMut<LoadedRecipeDefs>, file: &ContentFi
     let def: RecipeDef = match ron::from_str(&content) {
         Ok(d) => d,
         Err(e) => {
-            warn!(
-                "[HotReload] Failed to parse {}: {}",
-                file.path.display(),
-                e
-            );
+            warn!("[HotReload] Failed to parse {}: {}", file.path.display(), e);
             return false;
         }
     };
@@ -401,8 +376,7 @@ fn reload_single_recipe(recipes: &mut ResMut<LoadedRecipeDefs>, file: &ContentFi
     recipes.defs.retain(|d| d.id != def.id);
     info!(
         "[HotReload] Reloaded recipe '{}' (id: {})",
-        def.name_key,
-        def.id
+        def.name_key, def.id
     );
     recipes.defs.push(def);
     true
@@ -419,11 +393,7 @@ fn reload_single_shop(shops: &mut ResMut<LoadedShopDefs>, file: &ContentFile) ->
     let def: ShopDef = match ron::from_str(&content) {
         Ok(d) => d,
         Err(e) => {
-            warn!(
-                "[HotReload] Failed to parse {}: {}",
-                file.path.display(),
-                e
-            );
+            warn!("[HotReload] Failed to parse {}: {}", file.path.display(), e);
             return false;
         }
     };
@@ -438,14 +408,16 @@ fn reload_single_shop(shops: &mut ResMut<LoadedShopDefs>, file: &ContentFile) ->
     shops.defs.retain(|d| d.id != def.id);
     info!(
         "[HotReload] Reloaded shop '{}' (id: {})",
-        def.name_key,
-        def.id
+        def.name_key, def.id
     );
     shops.defs.push(def);
     true
 }
 
-fn reload_single_targeting(targeting: &mut ResMut<LoadedTargetingDefs>, file: &ContentFile) -> bool {
+fn reload_single_targeting(
+    targeting: &mut ResMut<LoadedTargetingDefs>,
+    file: &ContentFile,
+) -> bool {
     let content = match std::fs::read_to_string(&file.path) {
         Ok(c) => c,
         Err(e) => {
@@ -456,11 +428,7 @@ fn reload_single_targeting(targeting: &mut ResMut<LoadedTargetingDefs>, file: &C
     let def: TargetingDef = match ron::from_str(&content) {
         Ok(d) => d,
         Err(e) => {
-            warn!(
-                "[HotReload] Failed to parse {}: {}",
-                file.path.display(),
-                e
-            );
+            warn!("[HotReload] Failed to parse {}: {}", file.path.display(), e);
             return false;
         }
     };
@@ -492,11 +460,7 @@ fn reload_single_tag(tags: &mut ResMut<LoadedTagDefs>, file: &ContentFile) -> bo
     let def: TagDefinition = match ron::from_str(&content) {
         Ok(d) => d,
         Err(e) => {
-            warn!(
-                "[HotReload] Failed to parse {}: {}",
-                file.path.display(),
-                e
-            );
+            warn!("[HotReload] Failed to parse {}: {}", file.path.display(), e);
             return false;
         }
     };
@@ -532,11 +496,7 @@ fn reload_single_attribute(
     let def: AttributeDefinition = match ron::from_str(&content) {
         Ok(d) => d,
         Err(e) => {
-            warn!(
-                "[HotReload] Failed to parse {}: {}",
-                file.path.display(),
-                e
-            );
+            warn!("[HotReload] Failed to parse {}: {}", file.path.display(), e);
             return false;
         }
     };
@@ -572,11 +532,7 @@ fn reload_single_summon_template(
     let def: SummonTemplateDef = match ron::from_str(&content) {
         Ok(d) => d,
         Err(e) => {
-            warn!(
-                "[HotReload] Failed to parse {}: {}",
-                file.path.display(),
-                e
-            );
+            warn!("[HotReload] Failed to parse {}: {}", file.path.display(), e);
             return false;
         }
     };
@@ -591,17 +547,13 @@ fn reload_single_summon_template(
     templates.defs.retain(|d| d.id != def.id);
     info!(
         "[HotReload] Reloaded summon template '{}' (id: {})",
-        def.name_key,
-        def.id
+        def.name_key, def.id
     );
     templates.defs.push(def);
     true
 }
 
-fn reload_single_camp_event(
-    events: &mut ResMut<LoadedCampEventDefs>,
-    file: &ContentFile,
-) -> bool {
+fn reload_single_camp_event(events: &mut ResMut<LoadedCampEventDefs>, file: &ContentFile) -> bool {
     let content = match std::fs::read_to_string(&file.path) {
         Ok(c) => c,
         Err(e) => {
@@ -612,11 +564,7 @@ fn reload_single_camp_event(
     let def: CampEventDef = match ron::from_str(&content) {
         Ok(d) => d,
         Err(e) => {
-            warn!(
-                "[HotReload] Failed to parse {}: {}",
-                file.path.display(),
-                e
-            );
+            warn!("[HotReload] Failed to parse {}: {}", file.path.display(), e);
             return false;
         }
     };
@@ -631,8 +579,7 @@ fn reload_single_camp_event(
     events.defs.retain(|d| d.id != def.id);
     info!(
         "[HotReload] Reloaded camp event '{}' (id: {})",
-        def.title_key,
-        def.id
+        def.title_key, def.id
     );
     events.defs.push(def);
     true
@@ -649,11 +596,7 @@ fn reload_single_bond(bonds: &mut ResMut<LoadedBondDefs>, file: &ContentFile) ->
     let def: BondDef = match ron::from_str(&content) {
         Ok(d) => d,
         Err(e) => {
-            warn!(
-                "[HotReload] Failed to parse {}: {}",
-                file.path.display(),
-                e
-            );
+            warn!("[HotReload] Failed to parse {}: {}", file.path.display(), e);
             return false;
         }
     };
@@ -668,8 +611,7 @@ fn reload_single_bond(bonds: &mut ResMut<LoadedBondDefs>, file: &ContentFile) ->
     bonds.defs.retain(|d| d.id != def.id);
     info!(
         "[HotReload] Reloaded bond '{}' (id: {})",
-        def.name_key,
-        def.id
+        def.name_key, def.id
     );
     bonds.defs.push(def);
     true
@@ -689,11 +631,7 @@ fn reload_single_enchantment(
     let def: EnchantmentDef = match ron::from_str(&content) {
         Ok(d) => d,
         Err(e) => {
-            warn!(
-                "[HotReload] Failed to parse {}: {}",
-                file.path.display(),
-                e
-            );
+            warn!("[HotReload] Failed to parse {}: {}", file.path.display(), e);
             return false;
         }
     };
@@ -708,8 +646,7 @@ fn reload_single_enchantment(
     enchantments.defs.retain(|d| d.id != def.id);
     info!(
         "[HotReload] Reloaded enchantment '{}' (id: {})",
-        def.name_key,
-        def.id
+        def.name_key, def.id
     );
     enchantments.defs.push(def);
     true
@@ -726,19 +663,14 @@ fn reload_single_spell_config(config: &mut ResMut<SpellConfig>, file: &ContentFi
     let cfg: SpellConfig = match ron::from_str(&content) {
         Ok(c) => c,
         Err(e) => {
-            warn!(
-                "[HotReload] Failed to parse {}: {}",
-                file.path.display(),
-                e
-            );
+            warn!("[HotReload] Failed to parse {}: {}", file.path.display(), e);
             return false;
         }
     };
     **config = cfg;
     info!(
         "[HotReload] Reloaded spell config (concentration_base_dc: {}, max_concentration: {})",
-        config.concentration_base_dc,
-        config.max_concentration
+        config.concentration_base_dc, config.max_concentration
     );
     true
 }

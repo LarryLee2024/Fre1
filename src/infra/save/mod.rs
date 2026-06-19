@@ -7,12 +7,12 @@
 //!
 //! 详见 ADR-042
 
+pub(crate) mod load_system;
 mod plugin;
 pub(crate) mod resources;
-pub(crate) mod systems;
 pub(crate) mod save_data;
 pub(crate) mod save_system;
-pub(crate) mod load_system;
+pub(crate) mod systems;
 
 mod events;
 

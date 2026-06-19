@@ -225,28 +225,22 @@ pub(crate) fn process_pending_load(
             .map(|e| e.class_id.clone())
             .collect();
 
-        let entries: Vec<crate::core::domains::progression::ClassLevelEntry> =
-            prog_entity
-                .class_levels
-                .entries
-                .iter()
-                .map(|e| {
-                    crate::core::domains::progression::ClassLevelEntry::new(
-                        ClassId::new(&e.class_id),
-                        e.level,
-                    )
-                })
-                .collect();
+        let entries: Vec<crate::core::domains::progression::ClassLevelEntry> = prog_entity
+            .class_levels
+            .entries
+            .iter()
+            .map(|e| {
+                crate::core::domains::progression::ClassLevelEntry::new(
+                    ClassId::new(&e.class_id),
+                    e.level,
+                )
+            })
+            .collect();
 
         let subclass_choices: HashMap<ClassId, SubclassId> = prog_entity
             .subclass_choices
             .iter()
-            .map(|(k, v)| {
-                (
-                    ClassId::new(k),
-                    crate::shared::ids::SubclassId::new(v),
-                )
-            })
+            .map(|(k, v)| (ClassId::new(k), crate::shared::ids::SubclassId::new(v)))
             .collect();
 
         let talents: Vec<TalentId> = prog_entity

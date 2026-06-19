@@ -1,0 +1,11 @@
+### Core UI strings — en-US
+-core-yes = Yes
+-core-no = No
+-core-confirm = Confirm
+-core-cancel = Cancel
+-core-ok = OK
+-core-back = Back
+-core-next = Next
+-core-save = Save
+-core-load = Load
+-core-exit = Exit

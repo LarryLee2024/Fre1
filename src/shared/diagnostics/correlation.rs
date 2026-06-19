@@ -45,10 +45,7 @@ pub struct ActionId {
 impl ActionId {
     /// 创建新的 ActionId。
     pub fn new(turn_id: TurnId, sequence: u32) -> Self {
-        Self {
-            turn_id,
-            sequence,
-        }
+        Self { turn_id, sequence }
     }
 }
 

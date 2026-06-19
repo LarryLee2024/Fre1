@@ -1,9 +1,7 @@
 use bevy::app::App;
 use bevy::prelude::*;
 
-use crate::core::capabilities::runtime::replay::foundation::{
-    ReplayCommand, ReplayHeader,
-};
+use crate::core::capabilities::runtime::replay::foundation::{ReplayCommand, ReplayHeader};
 use crate::core::capabilities::runtime::replay::mechanism::RecordingSession as CoreRecordingSession;
 use crate::infra::replay::plugin::ReplayPlugin;
 use crate::infra::replay::resources::RecordingSession;

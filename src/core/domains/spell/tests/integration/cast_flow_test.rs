@@ -10,12 +10,12 @@
 
 use bevy::prelude::*;
 
+use crate::app::scenes::{GameState, ScenePlugin};
 use crate::core::domains::spell::components::{
     Concentration, SpellDefId, SpellLevel, SpellSlotEntry, SpellSlotPool, Spellbook,
 };
 use crate::core::domains::spell::events::SpellCastRequest;
 use crate::core::domains::spell::plugin::SpellPlugin;
-use crate::app::scenes::{GameState, ScenePlugin};
 
 // ─── 辅助函数 ──────────────────────────────────────────────────────
 
@@ -87,8 +87,15 @@ fn has_concentration(world: &World, entity: Entity) -> bool {
 /// tick_concentration_duration 仅在 GameState::Combat 时运行（Phase E-3 栅栏）。
 fn build_combat_test_app() -> App {
     let mut app = App::new();
-    app.add_plugins((MinimalPlugins, bevy::state::app::StatesPlugin, ScenePlugin, SpellPlugin));
-    app.world_mut().resource_mut::<NextState<GameState>>().set(GameState::Combat);
+    app.add_plugins((
+        MinimalPlugins,
+        bevy::state::app::StatesPlugin,
+        ScenePlugin,
+        SpellPlugin,
+    ));
+    app.world_mut()
+        .resource_mut::<NextState<GameState>>()
+        .set(GameState::Combat);
     app.update();
     app.world_mut().flush();
     app

@@ -31,6 +31,7 @@ thiserror = "2"
 serde_json = "1"
 tracing = "0.1"
 paste = "1"
+regex = "1"
 
 # 确定性 PRNG（详见 ADR-041）
 rand = "0.10"
@@ -41,9 +42,13 @@ fluent-bundle = "0.16"
 fluent-syntax = "0.12"
 intl-memoizer = "0.5"
 
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+notify = { version = "6" }
+
 [features]
 default = []
 dev = ["bevy/file_watcher", "bevy/bevy_dev_tools", "bevy/bevy_debug_stepping"]
+fake-locale = []
 
 [dev-dependencies]
 bevy = { version = "0.18.1", features = ["2d"] }

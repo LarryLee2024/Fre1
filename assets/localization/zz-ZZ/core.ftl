@@ -1,0 +1,11 @@
+### Core UI strings — zz-ZZ (Fake Locale)
+-core-yes = [Ýéś]
+-core-no = [Ñó]
+-core-confirm = [Çóñfíŕm]
+-core-cancel = [Çáñçéŀ]
+-core-ok = [ÓĶ]
+-core-back = [Ḃáçķ]
+-core-next = [Ńéẋť]
+-core-save = [Śáṽé]
+-core-load = [Ĺóáḋ]
+-core-exit = [Éẋíť]

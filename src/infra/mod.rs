@@ -6,6 +6,7 @@
 //! 详见 `docs/01-architecture/README.md` §3.4
 
 pub mod input;
+pub mod localization;
 pub mod logging;
 pub mod pipeline;
 pub mod registry;
