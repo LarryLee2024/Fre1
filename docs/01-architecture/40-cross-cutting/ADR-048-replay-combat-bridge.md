@@ -1,7 +1,7 @@
 # ADR-048: Replay→Combat 桥接层设计
 
 ## 状态
-Proposed
+Accepted
 
 ## 背景
 

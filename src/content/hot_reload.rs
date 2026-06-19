@@ -7,6 +7,19 @@ use std::time::SystemTime;
 
 use super::content_plugin::*;
 use super::loading::{ContentFile, DefinitionType, discover_ron_files};
+use crate::core::capabilities::attribute::foundation::AttributeDefinition;
+use crate::core::capabilities::cue::foundation::CueDef;
+use crate::core::capabilities::effect::foundation::EffectDef;
+use crate::core::capabilities::tag::foundation::TagDefinition;
+use crate::core::capabilities::targeting::foundation::TargetingDef;
+use crate::core::domains::camp_rest::CampEventDef;
+use crate::core::domains::crafting::EnchantmentDef;
+use crate::core::domains::crafting::RecipeDef;
+use crate::core::domains::economy::ShopDef;
+use crate::core::domains::party::BondDef;
+use crate::core::domains::quest::QuestDef;
+use crate::core::domains::spell::{SpellConfig, SpellDef};
+use crate::core::domains::summon::SummonTemplateDef;
 
 const HOT_RELOAD_INTERVAL_SECS: f32 = 2.0;
 
@@ -385,6 +398,7 @@ fn reload_single_recipe(recipes: &mut ResMut<LoadedRecipeDefs>, file: &ContentFi
         );
         return false;
     }
+    recipes.defs.retain(|d| d.id != def.id);
     info!(
         "[HotReload] Reloaded recipe '{}' (id: {})",
         def.name_key,
@@ -421,6 +435,7 @@ fn reload_single_shop(shops: &mut ResMut<LoadedShopDefs>, file: &ContentFile) ->
         );
         return false;
     }
+    shops.defs.retain(|d| d.id != def.id);
     info!(
         "[HotReload] Reloaded shop '{}' (id: {})",
         def.name_key,
@@ -493,6 +508,7 @@ fn reload_single_tag(tags: &mut ResMut<LoadedTagDefs>, file: &ContentFile) -> bo
         );
         return false;
     }
+    tags.defs.retain(|d| d.id != def.id);
     info!(
         "[HotReload] Reloaded tag '{}' (path: {})",
         def.id.as_str(),
@@ -532,6 +548,7 @@ fn reload_single_attribute(
         );
         return false;
     }
+    attributes.defs.retain(|d| d.id != def.id);
     info!(
         "[HotReload] Reloaded attribute '{}' (category: {:?})",
         def.id.as_str(),
@@ -571,6 +588,7 @@ fn reload_single_summon_template(
         );
         return false;
     }
+    templates.defs.retain(|d| d.id != def.id);
     info!(
         "[HotReload] Reloaded summon template '{}' (id: {})",
         def.name_key,
@@ -610,6 +628,7 @@ fn reload_single_camp_event(
         );
         return false;
     }
+    events.defs.retain(|d| d.id != def.id);
     info!(
         "[HotReload] Reloaded camp event '{}' (id: {})",
         def.title_key,
@@ -646,6 +665,7 @@ fn reload_single_bond(bonds: &mut ResMut<LoadedBondDefs>, file: &ContentFile) ->
         );
         return false;
     }
+    bonds.defs.retain(|d| d.id != def.id);
     info!(
         "[HotReload] Reloaded bond '{}' (id: {})",
         def.name_key,
@@ -685,6 +705,7 @@ fn reload_single_enchantment(
         );
         return false;
     }
+    enchantments.defs.retain(|d| d.id != def.id);
     info!(
         "[HotReload] Reloaded enchantment '{}' (id: {})",
         def.name_key,

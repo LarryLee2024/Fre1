@@ -71,8 +71,7 @@ impl BattleUnitRegistry {
 
     /// 通过 String 查询 Entity（回放命令分发时使用）。
     pub fn get_entity_by_str(&self, id_str: &str) -> Option<&Entity> {
-        let unit_id = BattleUnitId(id_str.to_string());
-        self.id_to_entity.get(&unit_id)
+        self.id_to_entity.get(id_str)
     }
 
     /// 注册表是否为空。
@@ -123,55 +122,4 @@ pub(crate) fn build_battle_unit_registry(
     }
 
     registry
-}
-
-#[cfg(test)]
-mod unit_tests {
-    use super::*;
-
-    #[test]
-    fn registry_bidirectional_mapping() {
-        let mut registry = BattleUnitRegistry::default();
-        let e1 = Entity::from_raw_u32(1).unwrap();
-        let e2 = Entity::from_raw_u32(2).unwrap();
-        let id1 = BattleUnitId::new("bu:player:0");
-        let id2 = BattleUnitId::new("bu:enemy:0");
-
-        registry.register(e1, id1.clone());
-        registry.register(e2, id2.clone());
-
-        assert_eq!(registry.get_id(&e1), Some(&id1));
-        assert_eq!(registry.get_id(&e2), Some(&id2));
-        assert_eq!(registry.get_entity(&id1), Some(&e1));
-        assert_eq!(registry.get_entity(&id2), Some(&e2));
-        assert_eq!(registry.get_entity_by_str("bu:player:0"), Some(&e1));
-        assert_eq!(registry.get_entity_by_str("bu:enemy:0"), Some(&e2));
-        assert_eq!(registry.len(), 2);
-    }
-
-    #[test]
-    fn registry_is_empty_after_clear() {
-        let mut registry = BattleUnitRegistry::default();
-        let e1 = Entity::from_raw_u32(1).unwrap();
-        registry.register(e1, BattleUnitId::new("bu:player:0"));
-        assert!(!registry.is_empty());
-
-        registry.clear();
-        assert!(registry.is_empty());
-    }
-
-    #[test]
-    fn registry_unknown_entity_returns_none() {
-        let registry = BattleUnitRegistry::default();
-        let unknown = Entity::from_raw_u32(999).unwrap();
-        assert!(registry.get_id(&unknown).is_none());
-        assert!(registry.get_entity_by_str("bu:nobody:0").is_none());
-    }
-
-    #[test]
-    fn default_registry_is_empty() {
-        let registry = BattleUnitRegistry::default();
-        assert!(registry.is_empty());
-        assert_eq!(registry.len(), 0);
-    }
 }

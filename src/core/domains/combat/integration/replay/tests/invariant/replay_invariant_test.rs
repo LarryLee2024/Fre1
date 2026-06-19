@@ -16,6 +16,9 @@ use bevy::prelude::*;
 use crate::core::domains::combat::integration::replay::registry::{
     BattleUnitId, BattleUnitRegistry,
 };
+use crate::infra::replay::{
+    CorePlaybackSession, ReplayCommand, ReplayFrame, ReplayHeader, ReplayLog, ReplayMode,
+};
 
 /// INV-001: 注册表双向一致性
 ///
@@ -51,17 +54,14 @@ fn entity_maps_to_single_id() {
     let entity = Entity::from_raw_u32(1).unwrap();
 
     registry.register(entity, BattleUnitId::new("bu:first:0"));
-    // 同一 Entity 注册第二个 Id
     registry.register(entity, BattleUnitId::new("bu:second:0"));
 
-    // 当前实现：HashMap insert 会覆盖，因此 entity→id 是最新注册的
     assert_eq!(
         registry.get_id(&entity),
         Some(&BattleUnitId::new("bu:second:0")),
         "Entity 应映射到最后注册的 Id"
     );
 
-    // 但 id→entity 反向映射中两个 Id 都存在
     assert_eq!(
         registry.get_entity(&BattleUnitId::new("bu:first:0")),
         Some(&entity),
@@ -81,10 +81,8 @@ fn id_maps_to_single_entity() {
     let id = BattleUnitId::new("bu:shared:0");
 
     registry.register(e1, id.clone());
-    // 同一 Id 注册第二个 Entity
     registry.register(e2, id.clone());
 
-    // 后注册者覆盖
     assert_eq!(
         registry.get_entity(&id),
         Some(&e2),
@@ -98,12 +96,6 @@ fn id_maps_to_single_entity() {
 /// 验证 advance_frame 被调用后帧号推进。
 #[test]
 fn dispatch_advances_frame() {
-    use crate::core::capabilities::runtime::replay::foundation::{
-        ReplayCommand, ReplayLog, ReplayMode,
-    };
-    use crate::core::capabilities::runtime::replay::mechanism::PlaybackSession as CorePlaybackSession;
-
-    // 构造一个只有 1 帧的回放日志
     let log = make_single_frame_log(vec![ReplayCommand::SkipTurn {
         unit: "bu:player:0".to_string(),
     }]);
@@ -112,19 +104,15 @@ fn dispatch_advances_frame() {
     session.load(&log).unwrap();
     session.start();
 
-    // 初始在第 0 帧
     assert_eq!(session.current_frame_number(), Some(0));
 
-    // When: advance_frame
     session.advance_frame();
 
-    // Then: 帧号推进（由于只有 1 帧，is_finished 应为 true）
     assert!(session.is_finished(), "单帧回放 advance_frame 后应完成");
 }
 
 /// 创建一个单帧的回放日志。
 fn make_single_frame_log(commands: Vec<ReplayCommand>) -> ReplayLog {
-    use crate::core::capabilities::runtime::replay::foundation::{ReplayFrame, ReplayHeader};
     let header = ReplayHeader::new(1, "0.1.0", "invariant_test", 42);
     let mut log = ReplayLog::new(header);
     let mut frame = ReplayFrame::new(0, 0);

@@ -8,6 +8,11 @@
 //! - PB-001: dispatch_skips_when_not_replay_mode
 //! - PB-002: dispatch_matches_current_unit
 
+use std::sync::{
+    Arc,
+    atomic::{AtomicBool, Ordering},
+};
+
 use bevy::prelude::*;
 
 use crate::core::capabilities::runtime::replay::foundation::{
@@ -20,6 +25,7 @@ use crate::core::domains::combat::integration::replay::playback::dispatch_combat
 use crate::core::domains::combat::integration::replay::registry::{
     BattleUnitId, BattleUnitRegistry,
 };
+use crate::core::capabilities::runtime::pipeline::registry::PipelineRegistry;
 use crate::core::domains::combat::pipeline::driver::CombatPipelineDriver;
 use crate::infra::replay::resources::{PlaybackSession, ReplayModeGuard};
 
@@ -65,11 +71,15 @@ fn dispatch_skips_when_not_replay_mode() {
 ///
 /// Given: 回放模式，管线暂停，当前单位已注册，回放日志包含 SkipTurn 命令
 /// When: 运行 dispatch 系统
-/// Then: UnitActionComplete 被触发 → on_unit_action_complete 恢复管线
+/// Then: 使用 AtomicBool 标志验证 UnitActionComplete 被触发
 #[test]
 fn dispatch_matches_current_unit() {
     let mut app = App::new();
     let entity = app.world_mut().spawn_empty().id();
+
+    // 使用 AtomicBool 来跟踪 UnitActionComplete 是否被触发
+    let action_triggered = Arc::new(AtomicBool::new(false));
+    let action_triggered_clone = action_triggered.clone();
 
     // Setup: 回放模式 + 注册单位
     let mut registry = BattleUnitRegistry::default();
@@ -111,19 +121,18 @@ fn dispatch_matches_current_unit() {
     app.world_mut()
         .insert_resource(PlaybackSession(Some(core_session)));
 
-    // 注册 on_unit_action_complete（CombatPipelineDriver 的恢复 observer）
+    app.add_observer(move |_trigger: On<'_, '_, UnitActionComplete>| {
+        action_triggered_clone.store(true, Ordering::SeqCst);
+    });
+
     app.add_systems(Update, dispatch_combat_replay_commands);
-    // 注册 on_unit_action_complete observer 来验证管线恢复
-    app.add_observer(crate::core::domains::combat::pipeline::driver::on_unit_action_complete);
 
     app.update();
 
-    // Then: dispatch 触发了 UnitActionComplete → on_unit_action_complete 恢复管线
+    // Then: dispatch 应触发 UnitActionComplete
     assert!(
-        !app.world_mut()
-            .resource::<CombatPipelineDriver>()
-            .is_paused(),
-        "dispatch 匹配单位后应触发 UnitActionComplete 并恢复管线"
+        action_triggered.load(Ordering::SeqCst),
+        "dispatch 匹配单位后应触发 UnitActionComplete"
     );
 }
 

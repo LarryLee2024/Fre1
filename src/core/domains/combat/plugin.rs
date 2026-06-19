@@ -16,6 +16,7 @@ use super::pipeline::driver::{
     CombatPipelineDriver, combat_pipeline_driver, on_unit_action_complete,
 };
 use super::systems::effect_tick_system::on_turn_end_tick_effects;
+use super::systems::input_system::{PlayerTurnState, combat_input_system};
 use super::systems::turn_systems::{
     on_enter_battle, on_enter_defeat, on_enter_victory, on_turn_end_tick_ability_cooldowns,
     on_turn_start_evaluate_triggers,
@@ -46,6 +47,10 @@ impl Plugin for CombatPlugin {
 
         // ── 注册 Pipeline 驾驶员 Update System ──
         app.add_systems(Update, combat_pipeline_driver);
+
+        // ── Input System ──
+        app.init_resource::<PlayerTurnState>();
+        app.add_systems(Update, combat_input_system);
 
         // ── 注册 Observer (Bevy 0.18 Trigger 模式) ──
         // UnitActionComplete → 恢复驾驶员，跳转到 TurnSettlement

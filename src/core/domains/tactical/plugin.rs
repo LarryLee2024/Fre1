@@ -8,6 +8,7 @@ use bevy::prelude::*;
 
 use super::components::{Facing, GridPos, MovementPoints};
 use super::systems::grid_system::initialize_default_grid;
+use super::systems::input_system::{TacticalCursor, tactical_input_system};
 use super::systems::movement_system::on_compute_move;
 
 pub struct TacticalPlugin;
@@ -22,6 +23,10 @@ impl Plugin for TacticalPlugin {
         // 不在此处 init_resource（需要外部调用方控制尺寸和布局）
 
         app.add_systems(Startup, initialize_default_grid);
+
+        // ── Input System ──
+        app.init_resource::<TacticalCursor>();
+        app.add_systems(Update, tactical_input_system);
 
         // 注册 ComputeMoveRequest Observer — Capabilities 集成验证入口
         // 通过 integration.rs 触及 Tag → Attribute → Modifier 管线

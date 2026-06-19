@@ -38,6 +38,7 @@ pub mod effect;
 pub mod event;
 pub mod execution;
 pub mod gameplay_context;
+pub mod replay;
 pub mod targeting;
 pub mod trigger;
 pub mod turn;
