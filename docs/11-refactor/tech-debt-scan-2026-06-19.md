@@ -19,7 +19,7 @@ scope: ErrorContext 接入审查 + 架构依赖扫描
 
 | 类别 | 严重程度 | 数量 | 编号 | 状态 |
 |------|----------|------|------|------|
-| 架构漂移 | High | 1 | Drift-ADR-002 | ⏳ Open |
+| 架构漂移 | High | 1 | Drift-ADR-002 | ✅ Resolved (2026-06-20) |
 | 抽象泄漏 | Critical | 2 | Leak-003, Leak-004 | ✅ Resolved |
 | 内容债务 | Medium | 1 | Content-002 | ⏳ Open |
 | 测试债务 | Medium, Low | 2 | TestDebt-002, TestDebt-003 | ⏳ Open |
@@ -30,21 +30,20 @@ scope: ErrorContext 接入审查 + 架构依赖扫描
 
 ## Debt-019: [Drift-ADR-002] camp_rest 系统反向依赖 Infra 层
 
-- **状态**: 💡 Fix Planned (2026-06-20)
+- **状态**: ✅ Resolved (2026-06-20)
 - **发现日期**: 2026-06-19
+- **修复日期**: 2026-06-20
 - **负责人**: @architect → @feature-developer
 - **关联 ADR**: ADR-001 (依赖方向), ADR-041 (Replay)
 - **位置**: `src/core/domains/camp_rest/systems/camp_rest_system.rs:12`
 - **严重程度**: **High**
 - **问题描述**: `CampRestSystem` 直接 `use crate::infra::replay::resources::FrameCounter`。Core(L1) 模块反向依赖 Infra(L2)，违反 ADR 定义的 Shared ← Core ← Infrastructure 依赖方向。
 - **影响**: Core 层代码依赖 Infra 实现细节，部署时 Core 无法独立复用；依赖方向检查工具产生误报。
-- **架构评估**: 
-  - `FrameCounter` 是一个简单的 u64 包装 Resource，每帧在 PreUpdate 递增。
-  - `shared::time::GameTime` (L0, Shared) 已存在，自 P0 接入（§1.3）已在 SharedPlugin 中注册并每帧推进。
-  - `GameTime.frame()` 与 `FrameCounter.0` 语义等价（同为 PreUpdate 递增的单调帧计数）。
-  - `RestState.last_long_rest_frame` 字段注释（第 96 行）已注明为 "GameTime 帧计数"。
-  - camp_rest 使用 FrameCounter 的唯一位置是 `handle_long_rest_complete` 中记录长休完成帧。
-- **建议修复**: 将 camp_rest 中对 `Res<FrameCounter>` 的依赖替换为 `Res<GameTime>`。`FrameCounter` 保留在 `infra::replay` 中供回放基础设施自用。此方案零新增类型、零新增模块、零架构变更，仅修复现存依赖方向违规。
+- **修复内容**: 将 `Res<FrameCounter>` 替换为 `Res<GameTime>`（`shared::time::GameTime`，L0）。
+  - `camp_rest_system.rs` 的 import/parameter/usage 共 3 行改动
+  - 同时修复 `quest/components.rs` 中 QuestDef 的 `TypePath` + `Reflect` 冲突编译错误
+- **验证**: `cargo nextest run` — 1451/1451 passed, 8 skipped
+- **提交**: `774c5bc`
 
 ---
 
@@ -79,16 +78,33 @@ scope: ErrorContext 接入审查 + 架构依赖扫描
 
 ## Debt-022: [Content-002] 部分领域代码含硬编码业务数值
 
-- **状态**: Open
+- **状态**: 🔄 部分修复 (progression 域 ✅, combat/spell 待处理)
 - **发现日期**: 2026-06-19
+- **修复范围**: 2026-06-20
 - **负责人**: @feature-developer
 - **严重程度**: Medium
 - **问题描述**: 以下文件存在硬编码业务数值，应通过 content/ 配置驱动：
   - `src/core/domains/combat/pipeline/steps.rs` — 行动点数、回合限制等
   - `src/core/domains/spell/rules/rules.rs` — 法术位、专注时长等
-  - `src/core/domains/progression/rules/formulas.rs` — 升级曲线公式中的常数
+  - ~~`src/core/domains/progression/rules/formulas.rs`~~ ✅ 已修复
 - **影响**: 调整游戏平衡性需要修改 Rust 代码而非 RON 配置，违反 Rule/Content 分离原则。
 - **建议修复**: 将这些数值提取到 `assets/config/` 下的 RON 文件中，通过 Bevy Asset 加载。
+
+### ✅ 已完成 — progression 域
+
+2026-06-20 完成了 `LevelProgressionTable` 的 RON 配置化：
+
+1. **`assets/config/progression/balance.ron`** — 新建 RON 配置文件，包含 max_level、exp_thresholds、proficiency_by_level、asi_levels
+2. **`src/core/domains/progression/components.rs`** — 给 `LevelProgressionTable` 添加 `Deserialize` derive
+3. **`src/core/domains/progression/plugin.rs`** — 添加 `pub use` 重导出
+4. **`src/content/content_plugin.rs`** — 新增 `load_progression_balance()` 函数，在 `load_all_content` 中添加 `"progression"` bucket 调度和 `ResMut<LevelProgressionTable>` 参数
+5. **`src/core/domains/progression/systems/progression_system.rs`** — `enforce_xp_invariant` 和 `handle_level_up` 从 `LevelProgressionTable::default()` 改为 `Res<LevelProgressionTable>` 注入
+6. **验证**: `cargo nextest run` — 1473/1473 passed, 8 skipped
+
+### ⏳ 待处理
+
+- `src/core/domains/combat/pipeline/steps.rs` — 行动点数、回合限制等
+- `src/core/domains/spell/rules/rules.rs` — 法术位、专注时长等
 
 ---
 
@@ -149,14 +165,14 @@ scope: ErrorContext 接入审查 + 架构依赖扫描
 
 | 严重程度 | 数量 | 编号 |
 |---------|------|------|
-| **Critical** | 0| — (均已修复) |
-| **High** | 1 | Drift-ADR-002 |
-| **Medium** | 2 | Content-002, TestDebt-002 |
+| **Critical** | 0 | — (均已修复) |
+| **High** | 0 | — (均已修复) |
+| **Medium** | 2 | Content-002 (🔄 partial), TestDebt-002 |
 | Low | 1 | TestDebt-003 |
-| **总计** | **4** | |
+| **总计** | **3** | |
 
 ### 修复优先级建议
 
-1. **P1**: Drift-ADR-002 — Core→Infra 反向依赖破坏分层架构。唯一剩余的 High 级别问题。需 @architect 评估修复方案。
-2. **P2**: Content-002, TestDebt-002 — 渐进式改进，可随功能开发同时处理。
-3. **P3**: TestDebt-003 — Low 级别，测试目录结构一致性，可在重构时顺带修复。
+1. **P2**: Content-002 — progression 域已完成；剩余 combat/spell 域的硬编码数值迁移到 content/ RON 配置。
+2. **P2**: TestDebt-002 — combat integration/ facade 测试覆盖。机械性测试补写工作，风险低，可并行。
+3. **P3**: TestDebt-003 — movement facade 测试目录迁移。纯文件移动 + 路径调整，可在其他任务中顺带完成。

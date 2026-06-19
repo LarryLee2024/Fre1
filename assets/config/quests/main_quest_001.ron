@@ -1,0 +1,38 @@
+(
+    id: "qst_000001",
+    name_key: "quest.main_quest_001.name",
+    desc_key: "quest.main_quest_001.desc",
+    quest_type: Main,
+    prerequisites: [],
+    objectives: [
+        (
+            id: ObjectiveId("obj_001"),
+            description_key: "quest.main_quest_001.obj_001",
+            objective_type: Kill(enemy_tags: ["goblin"]),
+            target_value: 5,
+            associated_id: None,
+        ),
+        (
+            id: ObjectiveId("obj_002"),
+            description_key: "quest.main_quest_001.obj_002",
+            objective_type: Talk(npc_id: "npc_elder"),
+            target_value: 1,
+            associated_id: None,
+        ),
+    ],
+    rewards: (
+        xp_reward: 500,
+        gold_reward: 100,
+        item_rewards: [
+            (item_id: "itm_000001", quantity: 1),
+        ],
+        reputation_rewards: [
+            (faction_id: "fct_000001", amount: 10),
+        ],
+        unlocks: [
+            (unlock_type: Quest, unlock_id: "qst_000002"),
+        ],
+    ),
+    is_critical: true,
+    exclusive_with: [],
+)

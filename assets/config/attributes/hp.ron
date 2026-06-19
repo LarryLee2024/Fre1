@@ -1,0 +1,9 @@
+(
+    id: "attr:hp",
+    category: Primary,
+    default_base_value: 100.0,
+    min_value: 0.0,
+    max_value: 999.0,
+    derived_dependencies: [],
+    hidden: false,
+)

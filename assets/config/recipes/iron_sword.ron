@@ -1,0 +1,20 @@
+(
+    id: "rcp_000001",
+    name_key: "recipe.iron_sword.name",
+    station: Forge,
+    skill_requirement: Some((
+        skill_id: "skill_smithing",
+        dc: 10,
+    )),
+    materials: [
+        (item_id: "itm_iron_ingot", quantity: 3),
+        (item_id: "itm_wood_handle", quantity: 1),
+    ],
+    output: (
+        item_id: "itm_iron_sword",
+        quantity: 1,
+        enchantment_slots: 1,
+    ),
+    craft_time: 60,
+    craft_type: Smithing,
+)

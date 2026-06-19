@@ -10,7 +10,9 @@ pub mod def_impls;
 pub mod loading;
 
 pub use content_plugin::{
-    ContentPlugin, ContentState, LoadedCueDefs, LoadedEffectDefs, LoadedSpellDefs,
+    ContentPlugin, ContentState, LoadedAttributeDefs, LoadedCueDefs, LoadedEffectDefs,
+    LoadedQuestDefs, LoadedRecipeDefs, LoadedShopDefs, LoadedSpellDefs, LoadedTagDefs,
+    LoadedTargetingDefs,
 };
 pub use loading::{ConfigError, ContentFile, DefinitionType, ValidationError};
 

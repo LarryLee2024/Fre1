@@ -3,12 +3,14 @@
 //! 详见 docs/02-domain/domains/crafting_domain.md
 //! Schema: docs/04-data/domains/crafting_schema.md
 
+use bevy::asset::Asset;
 use bevy::prelude::*;
+use serde::{Deserialize, Serialize};
 
 // ─── 制作台类型 ────────────────────────────────────────────────
 
 /// 制作台类型。
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect, Serialize, Deserialize)]
 pub enum CraftingStation {
     Forge,
     EnchantingTable,
@@ -20,7 +22,7 @@ pub enum CraftingStation {
 // ─── 制作类型 ──────────────────────────────────────────────────
 
 /// 制作类型。
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect, Serialize, Deserialize)]
 pub enum CraftType {
     Smithing,
     Enchanting,
@@ -32,7 +34,7 @@ pub enum CraftType {
 // ─── 技能要求 ──────────────────────────────────────────────────
 
 /// 技能要求。
-#[derive(Debug, Clone, Reflect)]
+#[derive(Debug, Clone, Reflect, Serialize, Deserialize)]
 pub struct SkillRequirement {
     pub skill_id: String,
     pub dc: u32,
@@ -41,7 +43,7 @@ pub struct SkillRequirement {
 // ─── 材料消耗 ──────────────────────────────────────────────────
 
 /// 材料消耗。
-#[derive(Debug, Clone, Reflect)]
+#[derive(Debug, Clone, Reflect, Serialize, Deserialize)]
 pub struct MaterialCost {
     pub item_id: String,
     pub quantity: u32,
@@ -50,7 +52,7 @@ pub struct MaterialCost {
 // ─── 产出定义 ──────────────────────────────────────────────────
 
 /// 制作产出。
-#[derive(Debug, Clone, Reflect)]
+#[derive(Debug, Clone, Reflect, Serialize, Deserialize)]
 pub struct CraftOutput {
     pub item_id: String,
     pub quantity: u32,
@@ -60,7 +62,7 @@ pub struct CraftOutput {
 // ─── 配方定义 ──────────────────────────────────────────────────
 
 /// 配方定义。内容团队配置，运行时只读。
-#[derive(Debug, Clone, Reflect)]
+#[derive(Debug, Clone, Asset, Serialize, Deserialize, Reflect)]
 pub struct RecipeDef {
     pub id: String,
     pub name_key: String,

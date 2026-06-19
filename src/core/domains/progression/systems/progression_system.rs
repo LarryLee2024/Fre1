@@ -19,6 +19,7 @@ pub(crate) fn enforce_xp_invariant(
     trigger: On<ExperienceGained>,
     mut query: Query<&mut Experience>,
     mut commands: Commands,
+    balance: Res<LevelProgressionTable>,
 ) {
     let ev = trigger.event();
     let Ok(mut xp) = query.get_mut(ev.entity) else {
@@ -47,8 +48,7 @@ pub(crate) fn enforce_xp_invariant(
     );
 
     // 检查是否触发升级
-    let table = LevelProgressionTable::default();
-    let next_threshold = table.xp_for_level(xp.level + 1);
+    let next_threshold = balance.xp_for_level(xp.level + 1);
     if xp.can_level_up(next_threshold) {
         // 触发升级流程 — 发布 LevelUp 事件
         commands.trigger(LevelUp {
@@ -70,6 +70,7 @@ pub(crate) fn handle_level_up(
     trigger: On<LevelUp>,
     mut query: Query<(&mut Experience, Option<&mut ClassLevels>)>,
     mut commands: Commands,
+    balance: Res<LevelProgressionTable>,
 ) {
     let ev = trigger.event();
     let Ok((mut xp, class_levels)) = query.get_mut(ev.entity) else {
@@ -80,8 +81,7 @@ pub(crate) fn handle_level_up(
         return;
     };
 
-    let table = LevelProgressionTable::default();
-    let xp_cost = table.xp_for_level(ev.new_level);
+    let xp_cost = balance.xp_for_level(ev.new_level);
     xp.apply_level_up(xp_cost);
 
     // 更新 ClassLevels

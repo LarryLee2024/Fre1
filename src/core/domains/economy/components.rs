@@ -4,12 +4,13 @@
 //! Schema: docs/04-data/domains/economy_schema.md
 
 use bevy::prelude::*;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 // ─── 货币类型 ───────────────────────────────────────────────────
 
 /// 货币类型枚举。
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Reflect)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Reflect, Serialize, Deserialize)]
 pub enum CurrencyType {
     Gold,            // 金币 GP
     Silver,          // 银币 SP (1 GP = 10 SP)
@@ -159,7 +160,7 @@ impl Price {
 // ─── 供需系数 ──────────────────────────────────────────────────
 
 /// 供需系数枚举。
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect, Serialize, Deserialize)]
 pub enum SupplyDemand {
     Surplus,  // × 0.8
     Balanced, // × 1.0
@@ -181,7 +182,7 @@ impl SupplyDemand {
 // ─── 补货策略 ──────────────────────────────────────────────────
 
 /// 补货策略。
-#[derive(Debug, Clone, Reflect)]
+#[derive(Debug, Clone, Reflect, Serialize, Deserialize)]
 pub enum RestockPolicy {
     Timed { interval_hours: u32 },
     OnVisit { full_restock: bool },
@@ -191,7 +192,7 @@ pub enum RestockPolicy {
 // ─── 商店条目定义 ──────────────────────────────────────────────
 
 /// 商店商品条目定义。
-#[derive(Debug, Clone, Reflect)]
+#[derive(Debug, Clone, Reflect, Serialize, Deserialize)]
 pub struct ShopEntryDef {
     /// 物品模板 ID
     pub item_id: String,
@@ -208,7 +209,7 @@ pub struct ShopEntryDef {
 // ─── 商店定义 ──────────────────────────────────────────────────
 
 /// 商店定义。内容团队配置，运行时只读。
-#[derive(Debug, Clone, Reflect)]
+#[derive(Debug, Clone, Reflect, Asset, Serialize, Deserialize)]
 pub struct ShopDef {
     pub id: String,
     pub name_key: String,

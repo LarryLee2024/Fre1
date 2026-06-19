@@ -1,6 +1,6 @@
 (
     id: "cue_fireball_explosion",
-    cue_type: VFX((
+    cue_type: VFX(VFXParams(
         effect_key: "vfx/fireball_explosion",
         attach_point: None,
         follow_target: false,

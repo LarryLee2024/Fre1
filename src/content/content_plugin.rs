@@ -9,8 +9,15 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 use super::loading::{ContentFile, DefinitionType, RonAssetLoader, discover_ron_files};
+use crate::core::capabilities::attribute::foundation::AttributeDefinition;
 use crate::core::capabilities::cue::foundation::CueDef;
 use crate::core::capabilities::effect::foundation::EffectDef;
+use crate::core::capabilities::tag::foundation::TagDefinition;
+use crate::core::capabilities::targeting::foundation::TargetingDef;
+use crate::core::domains::crafting::RecipeDef;
+use crate::core::domains::economy::ShopDef;
+use crate::core::domains::progression::LevelProgressionTable;
+use crate::core::domains::quest::QuestDef;
 use crate::core::domains::spell::SpellDef;
 
 /// 内容加载状态 Resource。
@@ -24,6 +31,32 @@ pub struct ContentState {
     pub load_errors: Vec<(PathBuf, String)>,
     /// 各桶已加载的文件数量。
     pub loaded_counts: HashMap<String, usize>,
+}
+
+/// 内容加载摘要 Resource。
+///
+/// 在所有配置加载完成后生成，提供完整的加载结果概览。
+#[derive(Resource, Debug, Default)]
+pub struct ContentLoadSummary {
+    /// 总发现文件数。
+    pub total_discovered: usize,
+    /// 总成功加载数。
+    pub total_loaded: usize,
+    /// 总失败数。
+    pub total_errors: usize,
+    /// 各桶加载统计。
+    pub bucket_stats: HashMap<String, BucketLoadStats>,
+    /// 所有错误的聚合列表。
+    pub all_errors: Vec<(PathBuf, String)>,
+}
+
+/// 单个桶的加载统计。
+#[derive(Debug, Clone, Default)]
+pub struct BucketLoadStats {
+    /// 成功加载数。
+    pub loaded: usize,
+    /// 失败数。
+    pub errors: usize,
 }
 
 /// 已加载的法术定义集合 Resource。
@@ -53,6 +86,54 @@ pub struct LoadedEffectDefs {
     pub errors: Vec<(PathBuf, String)>,
 }
 
+/// 已加载的任务定义集合 Resource。
+#[derive(Resource, Debug, Default)]
+pub struct LoadedQuestDefs {
+    /// 成功加载并校验通过的任务定义。
+    pub defs: Vec<QuestDef>,
+    /// 加载或校验失败的文件（路径 + 错误信息）。
+    pub errors: Vec<(PathBuf, String)>,
+}
+
+/// 已加载的配方定义集合 Resource。
+#[derive(Resource, Debug, Default)]
+pub struct LoadedRecipeDefs {
+    /// 成功加载并校验通过的配方定义。
+    pub defs: Vec<RecipeDef>,
+    /// 加载或校验失败的文件（路径 + 错误信息）。
+    pub errors: Vec<(PathBuf, String)>,
+}
+
+/// 已加载的商店定义集合 Resource。
+#[derive(Resource, Debug, Default)]
+pub struct LoadedShopDefs {
+    /// 成功加载并校验通过的商店定义。
+    pub defs: Vec<ShopDef>,
+    /// 加载或校验失败的文件（路径 + 错误信息）。
+    pub errors: Vec<(PathBuf, String)>,
+}
+
+/// 已加载的目标选择定义集合 Resource。
+#[derive(Resource, Debug, Default)]
+pub struct LoadedTargetingDefs {
+    pub defs: Vec<TargetingDef>,
+    pub errors: Vec<(PathBuf, String)>,
+}
+
+/// 已加载的标签定义集合 Resource。
+#[derive(Resource, Debug, Default)]
+pub struct LoadedTagDefs {
+    pub defs: Vec<TagDefinition>,
+    pub errors: Vec<(PathBuf, String)>,
+}
+
+/// 已加载的属性定义集合 Resource。
+#[derive(Resource, Debug, Default)]
+pub struct LoadedAttributeDefs {
+    pub defs: Vec<AttributeDefinition>,
+    pub errors: Vec<(PathBuf, String)>,
+}
+
 /// ContentPlugin — 内容桥接层插件。
 ///
 /// 职责：
@@ -72,13 +153,32 @@ impl Plugin for ContentPlugin {
             .init_asset::<CueDef>()
             .init_asset_loader::<RonAssetLoader<CueDef>>()
             .init_asset::<EffectDef>()
-            .init_asset_loader::<RonAssetLoader<EffectDef>>();
+            .init_asset_loader::<RonAssetLoader<EffectDef>>()
+            .init_asset::<QuestDef>()
+            .init_asset_loader::<RonAssetLoader<QuestDef>>()
+            .init_asset::<RecipeDef>()
+            .init_asset_loader::<RonAssetLoader<RecipeDef>>()
+            .init_asset::<ShopDef>()
+            .init_asset_loader::<RonAssetLoader<ShopDef>>()
+            .init_asset::<TargetingDef>()
+            .init_asset_loader::<RonAssetLoader<TargetingDef>>()
+            .init_asset::<TagDefinition>()
+            .init_asset_loader::<RonAssetLoader<TagDefinition>>()
+            .init_asset::<AttributeDefinition>()
+            .init_asset_loader::<RonAssetLoader<AttributeDefinition>>();
 
         // ── 初始化 Resources ──
         app.init_resource::<ContentState>()
+            .init_resource::<ContentLoadSummary>()
             .init_resource::<LoadedSpellDefs>()
             .init_resource::<LoadedCueDefs>()
-            .init_resource::<LoadedEffectDefs>();
+            .init_resource::<LoadedEffectDefs>()
+            .init_resource::<LoadedQuestDefs>()
+            .init_resource::<LoadedRecipeDefs>()
+            .init_resource::<LoadedShopDefs>()
+            .init_resource::<LoadedTargetingDefs>()
+            .init_resource::<LoadedTagDefs>()
+            .init_resource::<LoadedAttributeDefs>();
 
         // ── 启动时加载所有配置内容 ──
         app.add_systems(Startup, load_all_content);
@@ -92,9 +192,16 @@ impl Plugin for ContentPlugin {
 /// 对已知 Definition 类型执行同步加载、反序列化和校验。
 fn load_all_content(
     mut state: ResMut<ContentState>,
+    mut summary: ResMut<ContentLoadSummary>,
     mut spells: ResMut<LoadedSpellDefs>,
     mut cues: ResMut<LoadedCueDefs>,
     mut effects: ResMut<LoadedEffectDefs>,
+    mut quests: ResMut<LoadedQuestDefs>,
+    mut recipes: ResMut<LoadedRecipeDefs>,
+    mut shops: ResMut<LoadedShopDefs>,
+    mut targeting: ResMut<LoadedTargetingDefs>,
+    mut tags: ResMut<LoadedTagDefs>,
+    mut attributes: ResMut<LoadedAttributeDefs>,
 ) {
     let config_root = std::path::Path::new("assets/config");
 
@@ -115,6 +222,12 @@ fn load_all_content(
             "spells" => load_spell_def(&mut spells, file),
             "cues" => load_cue_def(&mut cues, file),
             "effects" => load_effect_def(&mut effects, file),
+            "quests" => load_quest_def(&mut quests, file),
+            "recipes" => load_recipe_def(&mut recipes, file),
+            "shops" => load_shop_def(&mut shops, file),
+            "targeting" => load_targeting_def(&mut targeting, file),
+            "tags" => load_tag_def(&mut tags, file),
+            "attributes" => load_attribute_def(&mut attributes, file),
             other => {
                 info!("[Content] Unknown bucket '{}', skipping", other);
             }
@@ -124,6 +237,56 @@ fn load_all_content(
     // 4. 日志输出
     let total = state.discovered_files.len();
     let buckets: Vec<_> = state.loaded_counts.iter().collect();
+
+    // 5. 计算加载摘要
+    let total_loaded = spells.defs.len()
+        + cues.defs.len()
+        + effects.defs.len()
+        + quests.defs.len()
+        + recipes.defs.len()
+        + shops.defs.len()
+        + targeting.defs.len()
+        + tags.defs.len()
+        + attributes.defs.len();
+    let total_errors = spells.errors.len()
+        + cues.errors.len()
+        + effects.errors.len()
+        + quests.errors.len()
+        + recipes.errors.len()
+        + shops.errors.len()
+        + targeting.errors.len()
+        + tags.errors.len()
+        + attributes.errors.len();
+
+    let mut all_errors: Vec<(PathBuf, String)> = Vec::new();
+    all_errors.extend(spells.errors.iter().cloned());
+    all_errors.extend(cues.errors.iter().cloned());
+    all_errors.extend(effects.errors.iter().cloned());
+    all_errors.extend(quests.errors.iter().cloned());
+    all_errors.extend(recipes.errors.iter().cloned());
+    all_errors.extend(shops.errors.iter().cloned());
+    all_errors.extend(targeting.errors.iter().cloned());
+    all_errors.extend(tags.errors.iter().cloned());
+    all_errors.extend(attributes.errors.iter().cloned());
+
+    let mut bucket_stats: HashMap<String, BucketLoadStats> = HashMap::new();
+    for (bucket, count) in &buckets {
+        bucket_stats.insert(
+            bucket.to_string(),
+            BucketLoadStats {
+                loaded: **count,
+                errors: 0,
+            },
+        );
+    }
+
+    *summary = ContentLoadSummary {
+        total_discovered: total,
+        total_loaded,
+        total_errors,
+        bucket_stats,
+        all_errors,
+    };
 
     if total == 0 {
         info!("[Content] No config files found in assets/config/");
@@ -138,11 +301,25 @@ fn load_all_content(
         }
     }
     info!(
-        "[Content] Loaded {} spell def(s), {} cue def(s), {} effect def(s), {} error(s)",
+        "[Content] Loaded {} spell(s), {} cue(s), {} effect(s), {} quest(s), {} recipe(s), {} shop(s), {} targeting(s), {} tag(s), {} attribute(s), {} error(s)",
         spells.defs.len(),
         cues.defs.len(),
         effects.defs.len(),
-        spells.errors.len() + cues.errors.len() + effects.errors.len(),
+        quests.defs.len(),
+        recipes.defs.len(),
+        shops.defs.len(),
+        targeting.defs.len(),
+        tags.defs.len(),
+        attributes.defs.len(),
+        spells.errors.len()
+            + cues.errors.len()
+            + effects.errors.len()
+            + quests.errors.len()
+            + recipes.errors.len()
+            + shops.errors.len()
+            + targeting.errors.len()
+            + tags.errors.len()
+            + attributes.errors.len(),
     );
 }
 
@@ -239,4 +416,227 @@ fn load_effect_def(effects: &mut ResMut<LoadedEffectDefs>, file: &ContentFile) {
         def.name_key, def.id
     );
     effects.defs.push(def);
+}
+
+/// 从 RON 文件同步加载一个 QuestDef。
+fn load_quest_def(quests: &mut ResMut<LoadedQuestDefs>, file: &ContentFile) {
+    let content = match std::fs::read_to_string(&file.path) {
+        Ok(c) => c,
+        Err(e) => {
+            let msg = format!("failed to read file: {}", e);
+            quests.errors.push((file.path.clone(), msg));
+            return;
+        }
+    };
+
+    let def: QuestDef = match ron::from_str(&content) {
+        Ok(d) => d,
+        Err(e) => {
+            let msg = format!("failed to deserialize RON: {}", e);
+            quests.errors.push((file.path.clone(), msg));
+            return;
+        }
+    };
+
+    if let Err(e) = def.validate() {
+        let msg = format!("validation failed: {}", e);
+        quests.errors.push((file.path.clone(), msg));
+        return;
+    }
+
+    info!("[Content] Loaded quest '{}' (id: {})", def.name_key, def.id);
+    quests.defs.push(def);
+}
+
+/// 从 RON 文件同步加载一个 RecipeDef。
+fn load_recipe_def(recipes: &mut ResMut<LoadedRecipeDefs>, file: &ContentFile) {
+    let content = match std::fs::read_to_string(&file.path) {
+        Ok(c) => c,
+        Err(e) => {
+            let msg = format!("failed to read file: {}", e);
+            recipes.errors.push((file.path.clone(), msg));
+            return;
+        }
+    };
+
+    let def: RecipeDef = match ron::from_str(&content) {
+        Ok(d) => d,
+        Err(e) => {
+            let msg = format!("failed to deserialize RON: {}", e);
+            recipes.errors.push((file.path.clone(), msg));
+            return;
+        }
+    };
+
+    if let Err(e) = def.validate() {
+        let msg = format!("validation failed: {}", e);
+        recipes.errors.push((file.path.clone(), msg));
+        return;
+    }
+
+    info!(
+        "[Content] Loaded recipe '{}' (id: {})",
+        def.name_key, def.id
+    );
+    recipes.defs.push(def);
+}
+
+/// 从 RON 文件同步加载一个 ShopDef。
+fn load_shop_def(shops: &mut ResMut<LoadedShopDefs>, file: &ContentFile) {
+    let content = match std::fs::read_to_string(&file.path) {
+        Ok(c) => c,
+        Err(e) => {
+            let msg = format!("failed to read file: {}", e);
+            shops.errors.push((file.path.clone(), msg));
+            return;
+        }
+    };
+
+    let def: ShopDef = match ron::from_str(&content) {
+        Ok(d) => d,
+        Err(e) => {
+            let msg = format!("failed to deserialize RON: {}", e);
+            shops.errors.push((file.path.clone(), msg));
+            return;
+        }
+    };
+
+    if let Err(e) = def.validate() {
+        let msg = format!("validation failed: {}", e);
+        shops.errors.push((file.path.clone(), msg));
+        return;
+    }
+
+    info!("[Content] Loaded shop '{}' (id: {})", def.name_key, def.id);
+    shops.defs.push(def);
+}
+
+/// 从 RON 文件同步加载一个 TargetingDef。
+fn load_targeting_def(targeting: &mut ResMut<LoadedTargetingDefs>, file: &ContentFile) {
+    let content = match std::fs::read_to_string(&file.path) {
+        Ok(c) => c,
+        Err(e) => {
+            let msg = format!("failed to read file: {}", e);
+            targeting.errors.push((file.path.clone(), msg));
+            return;
+        }
+    };
+
+    let def: TargetingDef = match ron::from_str(&content) {
+        Ok(d) => d,
+        Err(e) => {
+            let msg = format!("failed to deserialize RON: {}", e);
+            targeting.errors.push((file.path.clone(), msg));
+            return;
+        }
+    };
+
+    if let Err(e) = def.validate() {
+        let msg = format!("validation failed: {}", e);
+        targeting.errors.push((file.path.clone(), msg));
+        return;
+    }
+
+    info!(
+        "[Content] Loaded targeting def (type: {}, shape: {})",
+        def.target_type.name(),
+        def.shape.name()
+    );
+    targeting.defs.push(def);
+}
+
+/// 从 RON 文件同步加载一个 TagDefinition。
+fn load_tag_def(tags: &mut ResMut<LoadedTagDefs>, file: &ContentFile) {
+    let content = match std::fs::read_to_string(&file.path) {
+        Ok(c) => c,
+        Err(e) => {
+            let msg = format!("failed to read file: {}", e);
+            tags.errors.push((file.path.clone(), msg));
+            return;
+        }
+    };
+
+    let def: TagDefinition = match ron::from_str(&content) {
+        Ok(d) => d,
+        Err(e) => {
+            let msg = format!("failed to deserialize RON: {}", e);
+            tags.errors.push((file.path.clone(), msg));
+            return;
+        }
+    };
+
+    if let Err(e) = def.validate() {
+        let msg = format!("validation failed: {}", e);
+        tags.errors.push((file.path.clone(), msg));
+        return;
+    }
+
+    info!(
+        "[Content] Loaded tag '{}' (path: {})",
+        def.id.as_str(),
+        def.path
+    );
+    tags.defs.push(def);
+}
+
+/// 从 RON 文件同步加载一个 AttributeDefinition。
+fn load_attribute_def(attributes: &mut ResMut<LoadedAttributeDefs>, file: &ContentFile) {
+    let content = match std::fs::read_to_string(&file.path) {
+        Ok(c) => c,
+        Err(e) => {
+            let msg = format!("failed to read file: {}", e);
+            attributes.errors.push((file.path.clone(), msg));
+            return;
+        }
+    };
+
+    let def: AttributeDefinition = match ron::from_str(&content) {
+        Ok(d) => d,
+        Err(e) => {
+            let msg = format!("failed to deserialize RON: {}", e);
+            attributes.errors.push((file.path.clone(), msg));
+            return;
+        }
+    };
+
+    if let Err(e) = def.validate() {
+        let msg = format!("validation failed: {}", e);
+        attributes.errors.push((file.path.clone(), msg));
+        return;
+    }
+
+    info!(
+        "[Content] Loaded attribute '{}' (category: {:?})",
+        def.id.as_str(),
+        def.category
+    );
+    attributes.defs.push(def);
+}
+
+/// 从 RON 文件同步加载 LevelProgressionTable。
+fn load_progression_balance(balance: &mut ResMut<LevelProgressionTable>, file: &ContentFile) {
+    let content = match std::fs::read_to_string(&file.path) {
+        Ok(c) => c,
+        Err(e) => {
+            warn!("[Content] Failed to read progression balance file: {}", e);
+            return;
+        }
+    };
+
+    let table: LevelProgressionTable = match ron::from_str(&content) {
+        Ok(t) => t,
+        Err(e) => {
+            warn!(
+                "[Content] Failed to deserialize progression balance RON: {}",
+                e
+            );
+            return;
+        }
+    };
+
+    **balance = table;
+    info!(
+        "[Content] Loaded progression balance table (max_level: {})",
+        balance.max_level
+    );
 }

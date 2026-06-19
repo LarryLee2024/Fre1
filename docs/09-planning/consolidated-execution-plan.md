@@ -188,7 +188,7 @@ domains/<domain>/
 | GAP-1 | **空 plugin 警告** | 6 个 Capability 骨架 Plugin 的 `build()` 可能为空（Effect/Runtime/等），部分注册了空 observer 会被 Bevy 警告 | Phase B-2 标注 | ✅ 已确认为预留设计，非 Bug |
 | GAP-2 | **integration/ 不完整** | 只有 Tactical 有完整 Facade，Faction/Terrain 有 `rules/` 但无 integration；Combat 有 integration/ 但无独立集成文档 | — | ✅ 已确认：Faction/Terrain 无 Capabilities 引用，不需要 integration/ |
 | GAP-3 | **error.rs 缺失** | 除 Tactical 外，所有域都没有专属 error.rs | 每个域建立时补齐 | ✅ **已完成**：全部 15 个域均有 error.rs（combat/faction/narrative/terrain 为本轮新增） |
-| GAP-4 | **Content 加载未就绪** | ContentPlugin 现注册 SpellDef/CueDef Asset 类型/RonAssetLoader/同步加载校验/存储至 Resource | Phase E | ✅ 已完成（SpellDef + CueDef 端到端：fireball.ron/fireball_explosion.ron → 反序列化 → validate() → LoadedSpellDefs/LoadedCueDefs） |
+| GAP-4 | **Content 加载未就绪** | ContentPlugin 现注册 SpellDef/CueDef Asset 类型/RonAssetLoader/同步加载校验/存储至 Resource | Phase E | ✅ 已完成：全量 Content 扩展（1485 tests） |
 | GAP-5 | **App 层渲染未就绪** | app_plugin.rs 在 Phase 9 注册，但当前无渲染/Bevy UI 系统 | Phase F | 🔴 待定（Phase F） |
 
 ### 2.4 🔴 远期（核心域完成后）

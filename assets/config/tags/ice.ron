@@ -1,0 +1,8 @@
+(
+    id: "tag:ice",
+    path: "DamageType.Elemental.Ice",
+    parent_id: None,
+    bit_index: 1,
+    is_abstract: false,
+    namespace: DamageType,
+)

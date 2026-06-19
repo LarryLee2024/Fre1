@@ -7,6 +7,7 @@
 use std::collections::HashMap;
 
 use bevy::prelude::*;
+use serde::Deserialize;
 
 // ─── ID 类型 ──────────────────────────────────────────────────────
 
@@ -308,7 +309,7 @@ pub struct ProgressionMarker;
 ///
 /// 定义经验曲线、熟练加值和 ASI 时机。
 /// 当前使用默认的 D&D 5e 经验表，内容系统接入后可替换为配置加载。
-#[derive(Resource, Debug, Clone, Reflect)]
+#[derive(Resource, Debug, Clone, Reflect, Deserialize)]
 #[reflect(Resource)]
 pub struct LevelProgressionTable {
     /// 等级上限

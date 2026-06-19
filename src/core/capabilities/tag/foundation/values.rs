@@ -2,13 +2,17 @@
 //!
 //! 所有值对象不可变，复制时语义等价。
 
+use bevy::asset::Asset;
+use bevy::reflect::TypePath;
+use serde::{Deserialize, Serialize};
+
 use crate::core::capabilities::tag::foundation::types::*;
 
 /// 位掩码类型，支持最多 128 个独立标签位。
 pub type BitMask = u128;
 
 /// 标签的静态定义（运行时只读）
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Asset, Serialize, Deserialize, TypePath)]
 pub struct TagDefinition {
     /// 标签唯一标识
     pub id: TagId,
@@ -25,7 +29,7 @@ pub struct TagDefinition {
 }
 
 /// 标签查询条件定义
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TagQuery {
     /// 匹配模式
     pub mode: TagQueryMode,

@@ -1,0 +1,8 @@
+(
+    id: "tag:elemental",
+    path: "DamageType.Elemental",
+    parent_id: None,
+    bit_index: 2,
+    is_abstract: true,
+    namespace: DamageType,
+)

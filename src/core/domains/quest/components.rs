@@ -162,7 +162,7 @@ pub struct UnlockReward {
 }
 
 /// 任务静态定义（Definition 层）。
-#[derive(Debug, Clone, Asset, Serialize, Deserialize, TypePath, Reflect)]
+#[derive(Debug, Clone, Asset, Serialize, Deserialize, Reflect)]
 pub struct QuestDef {
     pub id: QuestDefId,
     pub name_key: String,

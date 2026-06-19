@@ -7,9 +7,8 @@
 
 use bevy::prelude::*;
 
-use super::components::{
-    ClassLevels, Experience, LevelProgressionTable, ProgressionMarker, SubclassChoice, TalentTree,
-};
+pub use super::components::LevelProgressionTable;
+use super::components::{ClassLevels, Experience, ProgressionMarker, SubclassChoice, TalentTree};
 use super::systems::progression_system::{
     check_max_level_system, enforce_xp_invariant, handle_level_up, on_talent_unlocked,
 };

@@ -6,8 +6,13 @@
 //! See ADR-047 §1
 
 use crate::content::loading::{DefinitionType, ValidationError, validate_id_format};
+use crate::core::capabilities::attribute::foundation::AttributeDefinition;
 use crate::core::capabilities::cue::foundation::CueDef;
 use crate::core::capabilities::effect::foundation::EffectDef;
+use crate::core::capabilities::tag::foundation::TagDefinition;
+use crate::core::capabilities::targeting::foundation::TargetingDef;
+use crate::core::domains::crafting::RecipeDef;
+use crate::core::domains::economy::ShopDef;
 use crate::core::domains::quest::QuestDef;
 use crate::core::domains::spell::SpellDef;
 
@@ -98,6 +103,108 @@ impl DefinitionType for QuestDef {
             });
         }
 
+        Ok(())
+    }
+}
+
+impl DefinitionType for RecipeDef {
+    const BUCKET_NAME: &'static str = "recipes";
+    const EXTENSION: &'static str = "ron";
+
+    fn validate(&self) -> Result<(), ValidationError> {
+        validate_id_format(&self.id, "rcp_")?;
+
+        if self.name_key.is_empty() {
+            return Err(ValidationError::MissingField {
+                field: "name_key".to_string(),
+            });
+        }
+        if self.materials.is_empty() {
+            return Err(ValidationError::MissingField {
+                field: "materials".to_string(),
+            });
+        }
+        if self.output.item_id.is_empty() {
+            return Err(ValidationError::MissingField {
+                field: "output.item_id".to_string(),
+            });
+        }
+
+        Ok(())
+    }
+}
+
+impl DefinitionType for ShopDef {
+    const BUCKET_NAME: &'static str = "shops";
+    const EXTENSION: &'static str = "ron";
+
+    fn validate(&self) -> Result<(), ValidationError> {
+        validate_id_format(&self.id, "shp_")?;
+
+        if self.name_key.is_empty() {
+            return Err(ValidationError::MissingField {
+                field: "name_key".to_string(),
+            });
+        }
+        if self.faction_id.is_empty() {
+            return Err(ValidationError::MissingField {
+                field: "faction_id".to_string(),
+            });
+        }
+        if self.inventory.is_empty() {
+            return Err(ValidationError::MissingField {
+                field: "inventory".to_string(),
+            });
+        }
+
+        Ok(())
+    }
+}
+
+impl DefinitionType for TargetingDef {
+    const BUCKET_NAME: &'static str = "targeting";
+    const EXTENSION: &'static str = "ron";
+
+    fn validate(&self) -> Result<(), ValidationError> {
+        if self.max_targets == 0 {
+            return Err(ValidationError::MissingField {
+                field: "max_targets".to_string(),
+            });
+        }
+        Ok(())
+    }
+}
+
+impl DefinitionType for TagDefinition {
+    const BUCKET_NAME: &'static str = "tags";
+    const EXTENSION: &'static str = "ron";
+
+    fn validate(&self) -> Result<(), ValidationError> {
+        if self.id.as_str().is_empty() {
+            return Err(ValidationError::EmptyId);
+        }
+        if self.path.is_empty() {
+            return Err(ValidationError::MissingField {
+                field: "path".to_string(),
+            });
+        }
+        Ok(())
+    }
+}
+
+impl DefinitionType for AttributeDefinition {
+    const BUCKET_NAME: &'static str = "attributes";
+    const EXTENSION: &'static str = "ron";
+
+    fn validate(&self) -> Result<(), ValidationError> {
+        if self.id.as_str().is_empty() {
+            return Err(ValidationError::EmptyId);
+        }
+        if self.min_value > self.max_value {
+            return Err(ValidationError::MissingField {
+                field: "min/max_value".to_string(),
+            });
+        }
         Ok(())
     }
 }

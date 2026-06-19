@@ -1,6 +1,12 @@
 use crate::content::loading::DefinitionType;
+use crate::core::capabilities::attribute::foundation::*;
 use crate::core::capabilities::cue::foundation::*;
 use crate::core::capabilities::effect::foundation::*;
+use crate::core::capabilities::tag::foundation::*;
+use crate::core::capabilities::targeting::foundation::*;
+use crate::core::domains::crafting::*;
+use crate::core::domains::economy::*;
+use crate::core::domains::quest::*;
 use crate::core::domains::spell::*;
 
 fn sample_fireball() -> SpellDef {
@@ -179,4 +185,397 @@ fn effect_def_without_digit_suffix_fails() {
 fn effect_def_definition_type_constants() {
     assert_eq!(<EffectDef as DefinitionType>::BUCKET_NAME, "effects");
     assert_eq!(<EffectDef as DefinitionType>::EXTENSION, "ron");
+}
+
+fn sample_quest() -> QuestDef {
+    QuestDef {
+        id: QuestDefId("qst_000001".to_string()),
+        name_key: "quest.main_quest.name".to_string(),
+        desc_key: "quest.main_quest.desc".to_string(),
+        quest_type: QuestType::Main,
+        prerequisites: vec![],
+        objectives: vec![ObjectiveDef {
+            id: ObjectiveId("obj_001".to_string()),
+            description_key: "quest.main_quest.obj_001".to_string(),
+            objective_type: ObjectiveType::Kill {
+                enemy_tags: vec!["goblin".to_string()],
+            },
+            target_value: 5,
+            associated_id: None,
+        }],
+        rewards: QuestRewardDef {
+            xp_reward: 100,
+            gold_reward: 50,
+            item_rewards: vec![],
+            reputation_rewards: vec![],
+            unlocks: vec![],
+        },
+        is_critical: false,
+        exclusive_with: vec![],
+    }
+}
+
+#[test]
+fn valid_quest_def_passes_validation() {
+    let def = sample_quest();
+    assert!(def.validate().is_ok());
+}
+
+#[test]
+fn quest_def_with_empty_name_fails() {
+    let mut def = sample_quest();
+    def.name_key = "".to_string();
+    assert!(def.validate().is_err());
+}
+
+#[test]
+fn quest_def_with_empty_desc_fails() {
+    let mut def = sample_quest();
+    def.desc_key = "".to_string();
+    assert!(def.validate().is_err());
+}
+
+#[test]
+fn quest_def_with_bad_id_prefix_fails() {
+    let mut def = sample_quest();
+    def.id = QuestDefId("abc_000001".to_string());
+    assert!(def.validate().is_err());
+}
+
+#[test]
+fn quest_def_without_objectives_fails() {
+    let mut def = sample_quest();
+    def.objectives = vec![];
+    assert!(def.validate().is_err());
+}
+
+#[test]
+fn quest_def_definition_type_constants() {
+    assert_eq!(<QuestDef as DefinitionType>::BUCKET_NAME, "quests");
+    assert_eq!(<QuestDef as DefinitionType>::EXTENSION, "ron");
+}
+
+#[test]
+fn quest_ron_deserializes_and_validates() {
+    let path = std::path::Path::new("assets/config/quests/main_quest_001.ron");
+    let content = std::fs::read_to_string(path).expect("main_quest_001.ron should exist");
+    let def: QuestDef =
+        ron::from_str(&content).expect("main_quest_001.ron should deserialize to QuestDef");
+
+    assert_eq!(def.id.as_str(), "qst_000001");
+    assert_eq!(def.name_key, "quest.main_quest_001.name");
+    assert!(def.validate().is_ok());
+    assert_eq!(def.objectives.len(), 2);
+    assert!(def.is_critical);
+}
+
+fn sample_recipe() -> RecipeDef {
+    RecipeDef {
+        id: "rcp_000001".to_string(),
+        name_key: "recipe.iron_sword.name".to_string(),
+        station: CraftingStation::Forge,
+        skill_requirement: Some(SkillRequirement {
+            skill_id: "skill_smithing".to_string(),
+            dc: 10,
+        }),
+        materials: vec![
+            MaterialCost {
+                item_id: "itm_iron_ingot".to_string(),
+                quantity: 3,
+            },
+            MaterialCost {
+                item_id: "itm_wood_handle".to_string(),
+                quantity: 1,
+            },
+        ],
+        output: CraftOutput {
+            item_id: "itm_iron_sword".to_string(),
+            quantity: 1,
+            enchantment_slots: 1,
+        },
+        craft_time: 60,
+        craft_type: CraftType::Smithing,
+    }
+}
+
+#[test]
+fn valid_recipe_def_passes_validation() {
+    let def = sample_recipe();
+    assert!(def.validate().is_ok());
+}
+
+#[test]
+fn recipe_def_with_empty_name_fails() {
+    let mut def = sample_recipe();
+    def.name_key = "".to_string();
+    assert!(def.validate().is_err());
+}
+
+#[test]
+fn recipe_def_with_bad_id_prefix_fails() {
+    let mut def = sample_recipe();
+    def.id = "abc_000001".to_string();
+    assert!(def.validate().is_err());
+}
+
+#[test]
+fn recipe_def_without_materials_fails() {
+    let mut def = sample_recipe();
+    def.materials = vec![];
+    assert!(def.validate().is_err());
+}
+
+#[test]
+fn recipe_def_with_empty_output_item_fails() {
+    let mut def = sample_recipe();
+    def.output.item_id = "".to_string();
+    assert!(def.validate().is_err());
+}
+
+#[test]
+fn recipe_def_definition_type_constants() {
+    assert_eq!(<RecipeDef as DefinitionType>::BUCKET_NAME, "recipes");
+    assert_eq!(<RecipeDef as DefinitionType>::EXTENSION, "ron");
+}
+
+#[test]
+fn recipe_ron_deserializes_and_validates() {
+    let path = std::path::Path::new("assets/config/recipes/iron_sword.ron");
+    let content = std::fs::read_to_string(path).expect("iron_sword.ron should exist");
+    let def: RecipeDef =
+        ron::from_str(&content).expect("iron_sword.ron should deserialize to RecipeDef");
+
+    assert_eq!(def.id, "rcp_000001");
+    assert_eq!(def.name_key, "recipe.iron_sword.name");
+    assert!(def.validate().is_ok());
+    assert_eq!(def.materials.len(), 2);
+    assert_eq!(def.output.item_id, "itm_iron_sword");
+}
+
+fn sample_shop() -> ShopDef {
+    ShopDef {
+        id: "shp_000001".to_string(),
+        name_key: "shop.general_store.name".to_string(),
+        faction_id: "fac_merchants_guild".to_string(),
+        inventory: vec![
+            ShopEntryDef {
+                item_id: "itm_health_potion".to_string(),
+                base_price: Some(25),
+                initial_stock: 10,
+                restock_amount: 5,
+                buys_stolen: false,
+            },
+            ShopEntryDef {
+                item_id: "itm_mana_potion".to_string(),
+                base_price: Some(30),
+                initial_stock: 8,
+                restock_amount: 3,
+                buys_stolen: false,
+            },
+        ],
+        restock_policy: RestockPolicy::Timed { interval_hours: 24 },
+    }
+}
+
+#[test]
+fn valid_shop_def_passes_validation() {
+    let def = sample_shop();
+    assert!(def.validate().is_ok());
+}
+
+#[test]
+fn shop_def_with_empty_name_fails() {
+    let mut def = sample_shop();
+    def.name_key = "".to_string();
+    assert!(def.validate().is_err());
+}
+
+#[test]
+fn shop_def_with_empty_faction_fails() {
+    let mut def = sample_shop();
+    def.faction_id = "".to_string();
+    assert!(def.validate().is_err());
+}
+
+#[test]
+fn shop_def_with_bad_id_prefix_fails() {
+    let mut def = sample_shop();
+    def.id = "abc_000001".to_string();
+    assert!(def.validate().is_err());
+}
+
+#[test]
+fn shop_def_without_inventory_fails() {
+    let mut def = sample_shop();
+    def.inventory = vec![];
+    assert!(def.validate().is_err());
+}
+
+#[test]
+fn shop_def_definition_type_constants() {
+    assert_eq!(<ShopDef as DefinitionType>::BUCKET_NAME, "shops");
+    assert_eq!(<ShopDef as DefinitionType>::EXTENSION, "ron");
+}
+
+#[test]
+fn shop_ron_deserializes_and_validates() {
+    let path = std::path::Path::new("assets/config/shops/general_store.ron");
+    let content = std::fs::read_to_string(path).expect("general_store.ron should exist");
+    let def: ShopDef =
+        ron::from_str(&content).expect("general_store.ron should deserialize to ShopDef");
+
+    assert_eq!(def.id, "shp_000001");
+    assert_eq!(def.name_key, "shop.general_store.name");
+    assert!(def.validate().is_ok());
+    assert_eq!(def.inventory.len(), 3);
+    assert_eq!(def.faction_id, "fac_merchants_guild");
+}
+
+#[test]
+fn shop_def_ron_roundtrip() {
+    let original = sample_shop();
+    let ron_str = ron::to_string(&original).expect("ShopDef should serialize to RON");
+    let restored: ShopDef =
+        ron::from_str(&ron_str).expect("RON should deserialize back to ShopDef");
+
+    assert_eq!(original.id, restored.id);
+    assert_eq!(original.name_key, restored.name_key);
+    assert_eq!(original.faction_id, restored.faction_id);
+    assert_eq!(original.inventory.len(), restored.inventory.len());
+}
+
+// ─── TargetingDef ───────────────────────────────────────────────────
+
+fn sample_targeting() -> TargetingDef {
+    TargetingDef::new(TargetType::Enemy, TargetShape::Single, Some(30.0), 1).unwrap()
+}
+
+#[test]
+fn valid_targeting_def_passes_validation() {
+    let def = sample_targeting();
+    assert!(def.validate().is_ok());
+}
+
+#[test]
+fn targeting_def_with_zero_max_targets_fails() {
+    let def = TargetingDef::new(TargetType::Enemy, TargetShape::Single, Some(30.0), 0);
+    assert!(def.is_err());
+}
+
+#[test]
+fn targeting_def_definition_type_constants() {
+    assert_eq!(<TargetingDef as DefinitionType>::BUCKET_NAME, "targeting");
+    assert_eq!(<TargetingDef as DefinitionType>::EXTENSION, "ron");
+}
+
+#[test]
+fn targeting_ron_deserializes_and_validates() {
+    let path = std::path::Path::new("assets/config/targeting/single_enemy.ron");
+    let content = std::fs::read_to_string(path).expect("single_enemy.ron should exist");
+    let def: TargetingDef =
+        ron::from_str(&content).expect("single_enemy.ron should deserialize to TargetingDef");
+
+    assert_eq!(def.target_type, TargetType::Enemy);
+    assert_eq!(def.shape, TargetShape::Single);
+    assert_eq!(def.max_targets, 1);
+    assert!(def.require_los);
+    assert!(def.validate().is_ok());
+}
+
+// ─── TagDefinition ──────────────────────────────────────────────────
+
+fn sample_tag() -> TagDefinition {
+    TagDefinition {
+        id: TagId::new("tag:fire"),
+        path: "DamageType.Elemental.Fire".to_string(),
+        parent_id: None,
+        bit_index: 0,
+        is_abstract: false,
+        namespace: TagNamespace::DamageType,
+    }
+}
+
+#[test]
+fn valid_tag_def_passes_validation() {
+    let def = sample_tag();
+    assert!(def.validate().is_ok());
+}
+
+#[test]
+fn tag_def_with_empty_path_fails() {
+    let mut def = sample_tag();
+    def.path = "".to_string();
+    assert!(def.validate().is_err());
+}
+
+#[test]
+fn tag_def_definition_type_constants() {
+    assert_eq!(<TagDefinition as DefinitionType>::BUCKET_NAME, "tags");
+    assert_eq!(<TagDefinition as DefinitionType>::EXTENSION, "ron");
+}
+
+#[test]
+fn tag_ron_deserializes_and_validates() {
+    let path = std::path::Path::new("assets/config/tags/fire.ron");
+    let content = std::fs::read_to_string(path).expect("fire.ron should exist");
+    let def: TagDefinition =
+        ron::from_str(&content).expect("fire.ron should deserialize to TagDefinition");
+
+    assert_eq!(def.id.as_str(), "fire");
+    assert_eq!(def.path, "DamageType.Elemental.Fire");
+    assert_eq!(def.namespace, TagNamespace::DamageType);
+    assert!(!def.is_abstract);
+    assert!(def.validate().is_ok());
+}
+
+// ─── AttributeDefinition ────────────────────────────────────────────
+
+fn sample_attribute() -> AttributeDefinition {
+    AttributeDefinition {
+        id: AttributeId::new("attr:hp"),
+        category: AttributeCategory::Primary,
+        default_base_value: 100.0,
+        min_value: 0.0,
+        max_value: 999.0,
+        derived_dependencies: vec![],
+        hidden: false,
+    }
+}
+
+#[test]
+fn valid_attribute_def_passes_validation() {
+    let def = sample_attribute();
+    assert!(def.validate().is_ok());
+}
+
+#[test]
+fn attribute_def_with_inverted_min_max_fails() {
+    let mut def = sample_attribute();
+    def.min_value = 100.0;
+    def.max_value = 0.0;
+    assert!(def.validate().is_err());
+}
+
+#[test]
+fn attribute_def_definition_type_constants() {
+    assert_eq!(
+        <AttributeDefinition as DefinitionType>::BUCKET_NAME,
+        "attributes"
+    );
+    assert_eq!(<AttributeDefinition as DefinitionType>::EXTENSION, "ron");
+}
+
+#[test]
+fn attribute_ron_deserializes_and_validates() {
+    let path = std::path::Path::new("assets/config/attributes/hp.ron");
+    let content = std::fs::read_to_string(path).expect("hp.ron should exist");
+    let def: AttributeDefinition =
+        ron::from_str(&content).expect("hp.ron should deserialize to AttributeDefinition");
+
+    assert_eq!(def.id.as_str(), "hp");
+    assert_eq!(def.category, AttributeCategory::Primary);
+    assert_eq!(def.default_base_value, 100.0);
+    assert_eq!(def.min_value, 0.0);
+    assert_eq!(def.max_value, 999.0);
+    assert!(def.validate().is_ok());
 }

@@ -1,0 +1,29 @@
+(
+    id: "shp_000001",
+    name_key: "shop.general_store.name",
+    faction_id: "fac_merchants_guild",
+    inventory: [
+        (
+            item_id: "itm_health_potion",
+            base_price: Some(25),
+            initial_stock: 10,
+            restock_amount: 5,
+            buys_stolen: false,
+        ),
+        (
+            item_id: "itm_mana_potion",
+            base_price: Some(30),
+            initial_stock: 8,
+            restock_amount: 3,
+            buys_stolen: false,
+        ),
+        (
+            item_id: "itm_torch",
+            base_price: None,
+            initial_stock: 20,
+            restock_amount: 10,
+            buys_stolen: true,
+        ),
+    ],
+    restock_policy: Timed(interval_hours: 24),
+)

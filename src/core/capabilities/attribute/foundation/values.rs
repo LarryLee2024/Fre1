@@ -1,7 +1,11 @@
+use bevy::asset::Asset;
+use bevy::reflect::TypePath;
+use serde::{Deserialize, Serialize};
+
 use crate::core::capabilities::attribute::foundation::types::*;
 
 /// 属性的静态定义（运行时只读）。
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Asset, Serialize, Deserialize, TypePath)]
 pub struct AttributeDefinition {
     pub id: AttributeId,
     pub category: AttributeCategory,
@@ -22,7 +26,7 @@ pub struct AttributeValue {
 }
 
 /// 派生属性计算公式。
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DerivedFormula {
     pub target_attr_id: AttributeId,
     pub formula_type: FormulaType,
@@ -30,7 +34,7 @@ pub struct DerivedFormula {
 }
 
 /// 公式类型。
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum FormulaType {
     Constant,
     Sum,
@@ -41,7 +45,7 @@ pub enum FormulaType {
 }
 
 /// 公式参数。
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FormulaParameters {
     pub constant: Option<f32>,
     pub source_ids: Option<Vec<AttributeId>>,

@@ -3,6 +3,7 @@
 //! 仅包含纯数据定义，零行为逻辑。
 
 use bevy::prelude::Reflect;
+use serde::{Deserialize, Serialize};
 
 crate::define_string_id! {
     pub TagId,
@@ -11,7 +12,7 @@ crate::define_string_id! {
 
 /// 标签命名空间枚举。
 /// 用于强制命名空间一致性，禁止跨域引用。
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum TagNamespace {
     DamageType,
     StatusEffect,
@@ -36,7 +37,7 @@ pub enum TagNamespace {
 }
 
 /// 标签查询模式
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum TagQueryMode {
     /// 至少匹配一个目标标签
     Any,
