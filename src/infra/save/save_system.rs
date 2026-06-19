@@ -14,7 +14,7 @@ use super::save_data::*;
 
 pub fn save_world_system(
     trigger: On<SaveRequest>,
-    save_manager: Res<SaveManager>,
+    mut save_manager: ResMut<SaveManager>,
     mut entity_remapper: ResMut<EntityRemapper>,
     combat_participants: Query<(
         Entity,
@@ -29,10 +29,10 @@ pub fn save_world_system(
         Option<&TalentTree>,
         Option<&SubclassChoice>,
     )>,
-    battle_phase: Res<State<BattlePhase>>,
-    turn_queue: Res<TurnQueue>,
-    party: Res<Party>,
-    bond_state: Res<BondState>,
+    battle_phase: Option<Res<State<BattlePhase>>>,
+    turn_queue: Option<Res<TurnQueue>>,
+    party: Option<Res<Party>>,
+    bond_state: Option<Res<BondState>>,
     mut commands: Commands,
 ) {
     let request = trigger.event();
@@ -48,8 +48,11 @@ pub fn save_world_system(
         .unwrap_or_else(|| "save_001.fresave".to_string());
 
     if let Some(label) = &request.label {
+        save_manager.metadata.label = label.clone();
         tracing::info!("[SaveSystem] saving with label: {}", label);
     }
+    save_manager.current_save_path = Some(std::path::PathBuf::from(&path));
+    save_manager.is_dirty = false;
 
     entity_remapper.clear();
 
@@ -57,9 +60,8 @@ pub fn save_world_system(
     for (entity, participant, dead, action_points) in combat_participants.iter() {
         let pid = entity_remapper.assign(entity);
         let entry = turn_queue
-            .entries()
-            .iter()
-            .find(|e| e.entity == entity);
+            .as_ref()
+            .and_then(|tq| tq.entries().iter().find(|e| e.entity == entity));
         let initiative = entry.map(|e| e.initiative).unwrap_or(0);
 
         combat_entities.push(CombatEntityData {
@@ -77,48 +79,40 @@ pub fn save_world_system(
         });
     }
 
-    let phase_str = match battle_phase.get() {
-        BattlePhase::Preparation => "Preparation",
-        BattlePhase::Battle => "Battle",
-        BattlePhase::Victory => "Victory",
-        BattlePhase::Defeat => "Defeat",
+    let entries = turn_queue.as_ref().map(|t| t.entries());
+    let phase_str = match battle_phase.as_ref().map(|bp| bp.get()) {
+        Some(BattlePhase::Preparation) => "Preparation",
+        Some(BattlePhase::Battle) => "Battle",
+        Some(BattlePhase::Victory) => "Victory",
+        Some(BattlePhase::Defeat) => "Defeat",
+        None => "Preparation",
     }
     .to_string();
 
     let active_members: Vec<PartyMemberSaveData> = party
-        .members
-        .iter()
-        .filter_map(|m| {
-            entity_remapper
-                .persistent_to_entity
+        .as_ref()
+        .map(|p| {
+            p.members
                 .iter()
-                .find(|(_, e)| *e == m.entity)
-                .map(|(pid, _)| PartyMemberSaveData {
-                    persistent_id: pid.0,
-                    slot_index: m.slot_index,
-                    is_active: m.is_active,
+                .filter_map(|m| {
+                    entity_remapper
+                        .persistent_to_entity
+                        .iter()
+                        .find(|(_, e)| *e == m.entity)
+                        .map(|(pid, _)| PartyMemberSaveData {
+                            persistent_id: pid.0,
+                            slot_index: m.slot_index,
+                            is_active: m.is_active,
+                        })
                 })
+                .collect()
         })
-        .collect();
+        .unwrap_or_default();
 
     let reserve_members: Vec<u64> = party
-        .reserve_members
-        .iter()
-        .filter_map(|e| {
-            entity_remapper
-                .persistent_to_entity
-                .iter()
-                .find(|(_, ent)| *ent == *e)
-                .map(|(pid, _)| pid.0)
-        })
-        .collect();
-
-    let active_bonds: Vec<ActiveBondSaveData> = bond_state
-        .active_bonds
-        .iter()
-        .filter_map(|bond| {
-            let participant_ids: Vec<u64> = bond
-                .participants
+        .as_ref()
+        .map(|p| {
+            p.reserve_members
                 .iter()
                 .filter_map(|e| {
                     entity_remapper
@@ -127,15 +121,37 @@ pub fn save_world_system(
                         .find(|(_, ent)| *ent == *e)
                         .map(|(pid, _)| pid.0)
                 })
-                .collect();
-            Some(ActiveBondSaveData {
-                bond_id: bond.bond_id.to_string(),
-                level: bond.level,
-                participant_ids,
-                accumulated_battles: bond.accumulated_battles,
-            })
+                .collect()
         })
-        .collect();
+        .unwrap_or_default();
+
+    let active_bonds: Vec<ActiveBondSaveData> = bond_state
+        .as_ref()
+        .map(|bs| {
+            bs.active_bonds
+                .iter()
+                .filter_map(|bond| {
+                    let participant_ids: Vec<u64> = bond
+                        .participants
+                        .iter()
+                        .filter_map(|e| {
+                            entity_remapper
+                                .persistent_to_entity
+                                .iter()
+                                .find(|(_, ent)| *ent == *e)
+                                .map(|(pid, _)| pid.0)
+                        })
+                        .collect();
+                    Some(ActiveBondSaveData {
+                        bond_id: bond.bond_id.to_string(),
+                        level: bond.level,
+                        participant_ids,
+                        accumulated_battles: bond.accumulated_battles,
+                    })
+                })
+                .collect()
+        })
+        .unwrap_or_default();
 
     let mut prog_data = Vec::new();
     for (entity, xp, class_levels, talent_tree, subclass_choice) in
@@ -205,14 +221,14 @@ pub fn save_world_system(
         },
         combat: CombatSaveData {
             phase: phase_str,
-            round_number: turn_queue.round_number(),
-            current_index: turn_queue.current_index(),
+            round_number: turn_queue.as_ref().map_or(1, |tq| tq.round_number()),
+            current_index: turn_queue.as_ref().map_or(0, |tq| tq.current_index()),
             participants: combat_entities,
         },
         party: PartySaveData {
-            formation: format!("{:?}", party.formation),
-            max_active: party.max_active,
-            max_total: party.max_total,
+            formation: party.as_ref().map_or_else(|| format!("{:?}", crate::core::domains::party::FormationType::default()), |p| format!("{:?}", p.formation)),
+            max_active: party.as_ref().map_or(4, |p| p.max_active),
+            max_total: party.as_ref().map_or(12, |p| p.max_total),
             active_members,
             reserve_members,
             active_bonds,

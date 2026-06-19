@@ -419,8 +419,8 @@ Phase G (音频/UI 后):
 | **P1** | ErrorContext → pipeline/save | ✅ 已完成 | 无 |
 | **P1** | targeting/execution/gameplay_context/aggregator → combat | ✅ 已完成 | P0 capability |
 | **P1** | pipeline → combat 流程 (CombatPipelineDriver) | ✅ 已完成 | P0 capability |
-| **P1** | save → combat/party/progression | ⏳ 待执行 | shared::ids |
-| **P1** | input → tactical/combat | ⏳ 待执行 | 无 |
+| **P1** | save → combat/party/progression | ✅ 已完成（JSON 序列化 + EntityRemapper） | shared::ids |
+| **P1** | input → tactical/combat | ✅ 已完成（InputState → 游戏命令翻译） | 无 |
 | **P1** | content: 完整 RON 配置 + hot-reload | ✅ 已完成（15 类型 RON 配置） | P0 content |
 | **P2** | cue/spec/stacking → combat | ⏳ 待执行 | P1 capability |
 | **P2** | tools: Inspector 调试面板 | ⏳ 待执行 | 无 |

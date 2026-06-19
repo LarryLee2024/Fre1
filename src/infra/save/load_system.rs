@@ -90,10 +90,10 @@ pub(crate) fn process_pending_load(
     pending: Option<ResMut<PendingLoad>>,
     mut save_manager: ResMut<SaveManager>,
     mut entity_remapper: ResMut<EntityRemapper>,
-    mut party: ResMut<Party>,
-    mut bond_state: ResMut<BondState>,
-    mut turn_queue: ResMut<TurnQueue>,
-    battle_phase: ResMut<State<BattlePhase>>,
+    mut party: Option<ResMut<Party>>,
+    mut bond_state: Option<ResMut<BondState>>,
+    mut turn_queue: Option<ResMut<TurnQueue>>,
+    battle_phase: Option<ResMut<State<BattlePhase>>>,
 ) {
     let Some(mut pending) = pending else {
         return;
@@ -149,7 +149,9 @@ pub(crate) fn process_pending_load(
         })
         .collect();
 
-    *turn_queue = TurnQueue::new(turn_entries);
+    if let Some(mut tq) = turn_queue {
+        *tq = TurnQueue::new(turn_entries);
+    }
 
     let phase = match data.combat.phase.as_str() {
         "Preparation" => BattlePhase::Preparation,
@@ -158,7 +160,9 @@ pub(crate) fn process_pending_load(
         "Defeat" => BattlePhase::Defeat,
         _ => BattlePhase::Preparation,
     };
-    commands.insert_resource(NextState::Pending(phase));
+    if battle_phase.is_some() {
+        commands.insert_resource(NextState::Pending(phase));
+    }
 
     let mut active_members = Vec::new();
     for member_data in &data.party.active_members {
@@ -179,29 +183,36 @@ pub(crate) fn process_pending_load(
         reserve_entities.push(entity);
     }
 
-    party.members = active_members;
-    party.reserve_members = reserve_entities;
-    party.max_active = data.party.max_active;
-    party.max_total = data.party.max_total;
+    if let Some(mut p) = party {
+        p.members = active_members;
+        p.reserve_members = reserve_entities;
+        p.max_active = data.party.max_active;
+        p.max_total = data.party.max_total;
+    }
 
-    bond_state.active_bonds = data
-        .party
-        .active_bonds
-        .iter()
-        .filter_map(|bond_data| {
-            let participants: Vec<Entity> = bond_data
-                .participant_ids
+    if let Some(mut bs) = bond_state {
+        *bs = BondState {
+            active_bonds: data
+                .party
+                .active_bonds
                 .iter()
-                .filter_map(|pid| entity_remapper.lookup(PersistentEntityId(*pid)))
-                .collect();
-            Some(ActiveBond {
-                bond_id: crate::shared::ids::BondDefId::new(&bond_data.bond_id),
-                level: bond_data.level,
-                participants,
-                accumulated_battles: bond_data.accumulated_battles,
-            })
-        })
-        .collect();
+                .filter_map(|bond_data| {
+                    let participants: Vec<Entity> = bond_data
+                        .participant_ids
+                        .iter()
+                        .filter_map(|pid| entity_remapper.lookup(PersistentEntityId(*pid)))
+                        .collect();
+                    Some(ActiveBond {
+                        bond_id: crate::shared::ids::BondDefId::new(&bond_data.bond_id),
+                        level: bond_data.level,
+                        participants,
+                        accumulated_battles: bond_data.accumulated_battles,
+                    })
+                })
+                .collect(),
+            defs: HashMap::new(),
+        };
+    }
 
     for prog_entity in &data.progression.entities {
         let entity = commands.spawn_empty().id();
