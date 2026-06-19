@@ -1,6 +1,9 @@
-//! sinks — 日志输出后端（预留）
+//! sinks — 日志输出后端
 //!
-//! 预留模块，未来支持：
-//! - console: 控制台输出（当前由 tracing-subscriber 默认处理）
-//! - file: 文件输出
-//! - telemetry: 遥测上报
+//! 提供文件输出与 JSON 格式化能力。
+//! - `file_sink`: 可轮转的文件写入器
+//! - console: 控制台输出（由 tracing-subscriber 默认处理）
+
+mod file_sink;
+
+pub use file_sink::{FileSink, FileSinkConfig};

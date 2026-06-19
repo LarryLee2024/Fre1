@@ -10,6 +10,9 @@
 //! - apply_priority() — 按优先级规则排序
 //! - truncate_by_limit() — 按数量上限截断
 
+use bevy::prelude::{Commands, Entity};
+
+use crate::core::capabilities::targeting::events::{NoValidTarget, TargetSelected};
 use crate::core::capabilities::targeting::foundation::{
     EntityTarget, PriorityRule, TargetContext, TargetData, TargetType, TargetingDef,
     TargetingError, ValidationResult,
@@ -109,14 +112,21 @@ pub fn select_targets(
     def: &TargetingDef,
     candidates: Vec<CandidateTarget>,
     context: TargetContext,
+    entity: Entity,
+    ability_id: &str,
+    commands: &mut Commands,
 ) -> Result<TargetData, TargetingError> {
     // 1. 按 TargetType 初筛
     let filtered = filter_by_type(def, &candidates, &context.caster_faction);
 
     if filtered.is_empty() {
-        return Err(TargetingError::NoValidTargets {
-            reason: format!("no candidates match target type {:?}", def.target_type),
+        let reason = format!("no candidates match target type {:?}", def.target_type);
+        commands.trigger(NoValidTarget {
+            entity,
+            ability_id: ability_id.to_string(),
+            fail_reason: reason.clone(),
         });
+        return Err(TargetingError::NoValidTargets { reason });
     }
 
     // 2. 校验候选目标
@@ -138,9 +148,13 @@ pub fn select_targets(
     }
 
     if valid.is_empty() {
-        return Err(TargetingError::NoValidTargets {
-            reason: "all candidates failed validation checks".into(),
+        let reason: String = "all candidates failed validation checks".into();
+        commands.trigger(NoValidTarget {
+            entity,
+            ability_id: ability_id.to_string(),
+            fail_reason: reason.clone(),
         });
+        return Err(TargetingError::NoValidTargets { reason });
     }
 
     // 3. 按优先级排序
@@ -158,6 +172,16 @@ pub fn select_targets(
 
     // 6. 提取位置列表
     let positions: Vec<String> = valid.iter().map(|t| t.position.clone()).collect();
+
+    let target_count = valid.len() as u32;
+    let first_target = valid.first().map(|t| t.entity_id.clone());
+
+    commands.trigger(TargetSelected {
+        entity,
+        ability_id: ability_id.to_string(),
+        target_count,
+        first_target,
+    });
 
     Ok(TargetData::with_targets(valid, positions, context))
 }

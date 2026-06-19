@@ -51,12 +51,12 @@ impl<'w, 's> EffectTickParam<'w, 's> {
     /// 2. `expire_effects`（清理到期效果）
     ///
     /// 返回每个实体的处理结果列表。
-    pub fn tick_all(&mut self, _commands: &mut Commands) -> Vec<EffectTickOutcome> {
+    pub fn tick_all(&mut self, commands: &mut Commands) -> Vec<EffectTickOutcome> {
         let current_turn = self.turn_queue.round_number() as u64;
         let mut outcomes = Vec::new();
 
         for mut container in self.container_query.iter_mut() {
-            let outcome = facade::tick_and_expire(&mut container, current_turn);
+            let outcome = facade::tick_and_expire(&mut container, current_turn, commands);
             outcomes.push(outcome);
         }
 
@@ -64,12 +64,12 @@ impl<'w, 's> EffectTickParam<'w, 's> {
     }
 
     /// 仅推进计时，不清理到期效果。
-    pub fn tick_only(&mut self) -> Vec<EffectTickOutcome> {
+    pub fn tick_only(&mut self, commands: &mut Commands) -> Vec<EffectTickOutcome> {
         let current_turn = self.turn_queue.round_number() as u64;
         let mut outcomes = Vec::new();
 
         for mut container in self.container_query.iter_mut() {
-            let outcome = facade::tick_all_effects(&mut container, current_turn);
+            let outcome = facade::tick_all_effects(&mut container, current_turn, commands);
             outcomes.push(outcome);
         }
 

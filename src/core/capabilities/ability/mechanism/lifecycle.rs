@@ -11,6 +11,11 @@
 //! 5. start_cooldown() — 冷却管理
 //! 6. apply_block() / remove_block() — 封锁/恢复
 
+use bevy::prelude::*;
+
+use crate::core::capabilities::ability::events::{
+    AbilityActivated, AbilityCancelled, AbilityCompleted, AbilityCooldownStarted,
+};
 use crate::core::capabilities::ability::foundation::{
     AbilityError, AbilityInstance, AbilityInstanceId, AbilityState, ActivationContext,
     ActivationType, BlockedRestoreState, CooldownEntry, CostEntry,
@@ -53,6 +58,8 @@ pub struct ActivationRequest {
 pub fn try_activate(
     container: &mut ActiveAbilityContainer,
     request: ActivationRequest,
+    entity: Entity,
+    commands: &mut Commands,
 ) -> Result<AbilityInstanceId, AbilityError> {
     let spec_id = &request.spec_id;
 
@@ -91,7 +98,16 @@ pub fn try_activate(
 
     // 5. 注册到容器
     let instance_id = instance.instance_id;
+    let def_id = instance.def_id.clone();
     container.insert_instance(instance);
+
+    commands.trigger(AbilityActivated {
+        entity,
+        spec_id: spec_id.clone(),
+        def_id,
+        instance_id,
+        context_desc: format!("{:?}", request.activation),
+    });
 
     Ok(instance_id)
 }
@@ -181,6 +197,8 @@ fn validate_transition(from: AbilityState, to: AbilityState) -> Result<(), Abili
 pub fn cancel_ability(
     container: &mut ActiveAbilityContainer,
     instance_id: &AbilityInstanceId,
+    entity: Entity,
+    commands: &mut Commands,
 ) -> Result<(), AbilityError> {
     let instance = container
         .get_instance_mut(instance_id)
@@ -191,11 +209,29 @@ pub fn cancel_ability(
             // 打断施法，回到 Ready
             instance.state = AbilityState::Ready;
             instance.cast_progress = 0;
+            let spec_id = instance.spec_id.clone();
+            let def_id = instance.def_id.clone();
+            commands.trigger(AbilityCancelled {
+                entity,
+                spec_id,
+                def_id,
+                instance_id: *instance_id,
+                reason: "cancelled during casting".into(),
+            });
             Ok(())
         }
         AbilityState::Active => {
             // 终止执行
             instance.state = AbilityState::Removed;
+            let spec_id = instance.spec_id.clone();
+            let def_id = instance.def_id.clone();
+            commands.trigger(AbilityCancelled {
+                entity,
+                spec_id,
+                def_id,
+                instance_id: *instance_id,
+                reason: "cancelled during execution".into(),
+            });
             Ok(())
         }
         _ => Err(AbilityError::InvalidTransition {
@@ -227,6 +263,8 @@ pub fn complete_ability(
     container: &mut ActiveAbilityContainer,
     instance_id: &AbilityInstanceId,
     cooldown_turns: u32,
+    entity: Entity,
+    commands: &mut Commands,
 ) -> Result<(), AbilityError> {
     let instance = container
         .get_instance(instance_id)
@@ -242,6 +280,7 @@ pub fn complete_ability(
     }
 
     let spec_id = instance.spec_id.clone();
+    let def_id = instance.def_id.clone();
 
     // 移除实例
     container.remove_instance(instance_id);
@@ -250,6 +289,23 @@ pub fn complete_ability(
     if cooldown_turns > 0 {
         let cooldown = CooldownEntry::new(&spec_id, cooldown_turns);
         container.set_cooldown(cooldown);
+    }
+
+    commands.trigger(AbilityCompleted {
+        entity,
+        spec_id: spec_id.clone(),
+        def_id,
+        instance_id: *instance_id,
+        result: "success".into(),
+    });
+
+    if cooldown_turns > 0 {
+        commands.trigger(AbilityCooldownStarted {
+            entity,
+            spec_id,
+            cooldown_duration: cooldown_turns,
+            shared_group: None,
+        });
     }
 
     Ok(())
@@ -264,12 +320,21 @@ pub fn complete_ability(
 /// 如果已经存在同 spec_id 的冷却，则覆盖（更新回合数）。
 pub fn start_cooldown(
     container: &mut ActiveAbilityContainer,
+    commands: &mut Commands,
+    entity: Entity,
     spec_id: impl Into<String>,
     turns: u32,
 ) {
     if turns > 0 {
-        let cooldown = CooldownEntry::new(spec_id, turns);
+        let spec: String = spec_id.into();
+        let cooldown = CooldownEntry::new(&spec, turns);
         container.set_cooldown(cooldown);
+        commands.trigger(AbilityCooldownStarted {
+            entity,
+            spec_id: spec,
+            cooldown_duration: turns,
+            shared_group: None,
+        });
     }
 }
 
@@ -292,10 +357,12 @@ pub fn force_reset_cooldown(container: &mut ActiveAbilityContainer, spec_id: &st
 /// 批量添加冷却（从 SpecContainer 中读取多个 Spec 的冷却配置）。
 pub fn start_multiple_cooldowns(
     container: &mut ActiveAbilityContainer,
+    commands: &mut Commands,
+    entity: Entity,
     cooldowns: Vec<(String, u32)>,
 ) {
     for (spec_id, turns) in cooldowns {
-        start_cooldown(container, spec_id, turns);
+        start_cooldown(container, commands, entity, spec_id, turns);
     }
 }
 

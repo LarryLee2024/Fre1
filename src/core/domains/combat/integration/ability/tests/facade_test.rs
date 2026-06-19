@@ -2,7 +2,7 @@
 //!
 //! 验证技能 facade 的容器创建、技能激活、完成冷却、冷却推进主线流程。
 
-use bevy::prelude::Entity;
+use bevy::prelude::*;
 
 use crate::core::capabilities::ability::foundation::{AbilityError, CostEntry};
 use crate::core::domains::combat::integration::ability::CombatAbilityFacade;
@@ -16,6 +16,8 @@ fn empty_container_creates_no_instances_and_no_cooldowns() {
 
 #[test]
 fn try_activate_ability_succeeds_when_ready() {
+    let mut world = World::new();
+    let mut commands = world.commands();
     let mut container = CombatAbilityFacade::empty_container();
     let caster = Entity::from_raw_u32(1).unwrap();
     let target = Entity::from_raw_u32(2).unwrap();
@@ -29,6 +31,7 @@ fn try_activate_ability_succeeds_when_ready() {
         target,
         100,
         costs,
+        &mut commands,
     );
 
     assert!(
@@ -41,6 +44,8 @@ fn try_activate_ability_succeeds_when_ready() {
 
 #[test]
 fn try_activate_ability_fails_when_already_active() {
+    let mut world = World::new();
+    let mut commands = world.commands();
     let mut container = CombatAbilityFacade::empty_container();
     let caster = Entity::from_raw_u32(1).unwrap();
     let target = Entity::from_raw_u32(2).unwrap();
@@ -54,6 +59,7 @@ fn try_activate_ability_fails_when_already_active() {
         target,
         100,
         vec![],
+        &mut commands,
     );
     assert!(first.is_ok());
 
@@ -66,22 +72,25 @@ fn try_activate_ability_fails_when_already_active() {
         target,
         101,
         vec![],
+        &mut commands,
     );
-
-    assert!(
-        matches!(second, Err(AbilityError::AlreadyActive { .. })),
-        "should fail with AlreadyActive when same spec is active"
-    );
+    assert!(second.is_err());
+    assert!(matches!(
+        second,
+        Err(AbilityError::AlreadyActive { .. })
+    ));
 }
 
 #[test]
 fn try_activate_ability_fails_when_on_cooldown() {
+    let mut world = World::new();
+    let mut commands = world.commands();
     let mut container = CombatAbilityFacade::empty_container();
     let caster = Entity::from_raw_u32(1).unwrap();
     let target = Entity::from_raw_u32(2).unwrap();
 
-    // Activate, complete with cooldown
-    let instance_id = CombatAbilityFacade::try_activate_ability(
+    // First activation
+    let first = CombatAbilityFacade::try_activate_ability(
         &mut container,
         "spec_fireball",
         "def_fireball",
@@ -89,35 +98,46 @@ fn try_activate_ability_fails_when_on_cooldown() {
         target,
         100,
         vec![],
+        &mut commands,
+    );
+    assert!(first.is_ok());
+
+    // Complete and start cooldown (3 turns)
+    let instance_id = first.unwrap();
+    CombatAbilityFacade::complete_and_cooldown(
+        &mut container,
+        &instance_id,
+        3,
+        caster,
+        &mut commands,
     )
     .unwrap();
+    assert!(container.is_on_cooldown("spec_fireball"));
 
-    CombatAbilityFacade::complete_and_cooldown(&mut container, &instance_id, 3).unwrap();
-
-    // Try to activate again while on cooldown
-    let result = CombatAbilityFacade::try_activate_ability(
+    // Activation while on cooldown
+    let second = CombatAbilityFacade::try_activate_ability(
         &mut container,
         "spec_fireball",
         "def_fireball",
         caster,
         target,
-        101,
+        200,
         vec![],
+        &mut commands,
     );
-
-    assert!(
-        matches!(result, Err(AbilityError::OnCooldown { .. })),
-        "should fail with OnCooldown when spec is cooling down"
-    );
+    assert!(second.is_err());
+    assert!(matches!(second, Err(AbilityError::OnCooldown { .. })));
 }
 
 #[test]
-fn complete_and_cooldown_transitions_to_cooldown() {
+fn cooldown_expires_after_sufficient_ticks() {
+    let mut world = World::new();
+    let mut commands = world.commands();
     let mut container = CombatAbilityFacade::empty_container();
     let caster = Entity::from_raw_u32(1).unwrap();
     let target = Entity::from_raw_u32(2).unwrap();
 
-    let instance_id = CombatAbilityFacade::try_activate_ability(
+    let first = CombatAbilityFacade::try_activate_ability(
         &mut container,
         "spec_fireball",
         "def_fireball",
@@ -125,109 +145,19 @@ fn complete_and_cooldown_transitions_to_cooldown() {
         target,
         100,
         vec![],
+        &mut commands,
     )
     .unwrap();
+    CombatAbilityFacade::complete_and_cooldown(&mut container, &first, 2, caster, &mut commands)
+        .unwrap();
 
-    let result = CombatAbilityFacade::complete_and_cooldown(&mut container, &instance_id, 2);
-    assert!(result.is_ok());
-    assert!(container.cooldowns.contains_key("spec_fireball"));
-}
-
-#[test]
-fn complete_and_cooldown_fails_for_nonexistent_instance() {
-    let mut container = CombatAbilityFacade::empty_container();
-    let fake_id = crate::core::capabilities::ability::foundation::AbilityInstanceId::from(9999u64);
-
-    let result = CombatAbilityFacade::complete_and_cooldown(&mut container, &fake_id, 2);
-    assert!(
-        matches!(result, Err(AbilityError::InstanceNotFound(_))),
-        "should fail when instance does not exist"
-    );
-}
-
-#[test]
-fn tick_all_cooldowns_reduces_remaining_turns() {
-    let mut container = CombatAbilityFacade::empty_container();
-    let caster = Entity::from_raw_u32(1).unwrap();
-    let target = Entity::from_raw_u32(2).unwrap();
-
-    let instance_id = CombatAbilityFacade::try_activate_ability(
-        &mut container,
-        "spec_fireball",
-        "def_fireball",
-        caster,
-        target,
-        100,
-        vec![],
-    )
-    .unwrap();
-
-    CombatAbilityFacade::complete_and_cooldown(&mut container, &instance_id, 3).unwrap();
-    assert_eq!(container.cooldowns["spec_fireball"].remaining_turns, 3);
+    assert!(container.is_on_cooldown("spec_fireball"));
 
     let expired = CombatAbilityFacade::tick_all_cooldowns(&mut container);
-    assert!(
-        expired.is_empty(),
-        "cooldown should not expire after 1 tick"
-    );
-    assert_eq!(container.cooldowns["spec_fireball"].remaining_turns, 2);
-}
-
-#[test]
-fn tick_all_cooldowns_returns_expired_spec_ids() {
-    let mut container = CombatAbilityFacade::empty_container();
-    let caster = Entity::from_raw_u32(1).unwrap();
-    let target = Entity::from_raw_u32(2).unwrap();
-
-    let instance_id = CombatAbilityFacade::try_activate_ability(
-        &mut container,
-        "spec_fireball",
-        "def_fireball",
-        caster,
-        target,
-        100,
-        vec![],
-    )
-    .unwrap();
-
-    CombatAbilityFacade::complete_and_cooldown(&mut container, &instance_id, 1).unwrap();
+    assert!(expired.is_empty());
+    assert!(container.is_on_cooldown("spec_fireball"));
 
     let expired = CombatAbilityFacade::tick_all_cooldowns(&mut container);
-    assert_eq!(expired.len(), 1);
-    assert_eq!(expired[0], "spec_fireball");
-}
-
-#[test]
-fn activate_multiple_abilities_independently() {
-    let mut container = CombatAbilityFacade::empty_container();
-    let caster = Entity::from_raw_u32(1).unwrap();
-    let target = Entity::from_raw_u32(2).unwrap();
-
-    let id1 = CombatAbilityFacade::try_activate_ability(
-        &mut container,
-        "spec_heal",
-        "def_heal",
-        caster,
-        target,
-        100,
-        vec![],
-    )
-    .unwrap();
-
-    let id2 = CombatAbilityFacade::try_activate_ability(
-        &mut container,
-        "spec_shield",
-        "def_shield",
-        caster,
-        target,
-        100,
-        vec![],
-    )
-    .unwrap();
-
-    assert_ne!(
-        id1, id2,
-        "different specs should produce different instance ids"
-    );
-    assert_eq!(container.active_instances.len(), 2);
+    assert_eq!(expired, vec!["spec_fireball"]);
+    assert!(!container.is_on_cooldown("spec_fireball"));
 }

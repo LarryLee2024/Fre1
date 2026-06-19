@@ -29,8 +29,11 @@ impl CombatTargetingFacade {
         def: &TargetingDef,
         candidates: Vec<CandidateTarget>,
         context: TargetContext,
+        entity: Entity,
+        ability_id: &str,
+        commands: &mut Commands,
     ) -> Result<TargetData, TargetingError> {
-        select_targets(def, candidates, context)
+        select_targets(def, candidates, context, entity, ability_id, commands)
     }
 
     /// 校验 TargetingDef 参数合法性。

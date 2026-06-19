@@ -57,6 +57,14 @@ pub(crate) fn enforce_xp_invariant(
         ev.entity, ev.amount, xp.total_xp_earned, xp.level
     );
 
+    commands.trigger(ExperienceGained {
+        entity: ev.entity,
+        amount: ev.amount,
+        source: ev.source.clone(),
+        total_xp: xp.total_xp_earned,
+        current_level: xp.level,
+    });
+
     // 检查是否触发升级
     let next_threshold = balance.xp_for_level(xp.level + 1);
     if xp.can_level_up(next_threshold) {
@@ -120,7 +128,11 @@ pub(crate) fn handle_level_up(
 ///
 /// 处理 TalentUnlocked 事件：更新天赋树状态。
 /// 注意：调用方必须确保前置条件已检查（不变量 3.3）。
-pub(crate) fn on_talent_unlocked(trigger: On<TalentUnlocked>, mut query: Query<&mut TalentTree>) {
+pub(crate) fn on_talent_unlocked(
+    trigger: On<TalentUnlocked>,
+    mut query: Query<&mut TalentTree>,
+    mut commands: Commands,
+) {
     let ev = trigger.event();
     let Ok(mut tree) = query.get_mut(ev.entity) else {
         tracing::warn!(
@@ -134,6 +146,11 @@ pub(crate) fn on_talent_unlocked(trigger: On<TalentUnlocked>, mut query: Query<&
 
     let talent_id = crate::core::domains::progression::components::TalentId::new(&ev.talent_id);
     tree.unlock(talent_id);
+
+    commands.trigger(TalentUnlocked {
+        entity: ev.entity,
+        talent_id: ev.talent_id.clone(),
+    });
 }
 
 /// 满级检查系统。

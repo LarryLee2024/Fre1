@@ -35,6 +35,7 @@ impl CombatAbilityFacade {
         target_entity: Entity,
         frame: u64,
         costs: Vec<CostEntry>,
+        commands: &mut Commands,
     ) -> Result<AbilityInstanceId, AbilityError> {
         let request = ActivationRequest {
             spec_id: spec_id.to_string(),
@@ -44,7 +45,7 @@ impl CombatAbilityFacade {
                 .with_target(format!("{:?}", target_entity)),
             costs,
         };
-        try_activate(container, request)
+        try_activate(container, request, caster_entity, commands)
     }
 
     /// 完成一个技能并进入冷却。
@@ -52,8 +53,10 @@ impl CombatAbilityFacade {
         container: &mut ActiveAbilityContainer,
         instance_id: &AbilityInstanceId,
         cooldown_turns: u32,
+        entity: Entity,
+        commands: &mut Commands,
     ) -> Result<(), AbilityError> {
-        complete_ability(container, instance_id, cooldown_turns)
+        complete_ability(container, instance_id, cooldown_turns, entity, commands)
     }
 
     /// 推进所有冷却。返回本回合到期的 spec_id 列表。
@@ -80,6 +83,7 @@ impl<'w, 's> CombatAbilityParam<'w, 's> {
         target: Entity,
         frame: u64,
         costs: Vec<CostEntry>,
+        commands: &mut Commands,
     ) -> Result<AbilityInstanceId, AbilityError> {
         let mut container = self.containers.get_mut(entity).map_err(|e| {
             AbilityError::Runtime(format!(
@@ -95,6 +99,7 @@ impl<'w, 's> CombatAbilityParam<'w, 's> {
             target,
             frame,
             costs,
+            commands,
         )
     }
 

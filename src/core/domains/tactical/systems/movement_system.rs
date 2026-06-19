@@ -12,6 +12,7 @@ use bevy::prelude::*;
 
 use crate::core::domains::tactical::components::{GridPos, MovementPoints};
 use crate::core::domains::tactical::events::ComputeMoveRequest;
+use crate::core::domains::tactical::events::PositionChanged;
 use crate::core::domains::tactical::failure::TacticalFailure;
 use crate::core::domains::tactical::integration::movement::{MP, MovementCapabilityParam};
 use crate::core::domains::tactical::resources::GridMap;
@@ -136,6 +137,17 @@ pub(crate) fn on_compute_move(
 
     // ── 步骤 5: 发出事件 ──
     if emit_event {
+        // 每格移动均触发 PositionChanged
+        for window in path.windows(2) {
+            let step_from = window[0];
+            let step_to = window[1];
+            commands.trigger(PositionChanged {
+                entity,
+                old_pos: step_from,
+                new_pos: step_to,
+            });
+        }
+
         commands.trigger(crate::core::domains::tactical::events::UnitMoved {
             entity,
             from: old_pos,

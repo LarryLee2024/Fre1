@@ -1,5 +1,7 @@
 //! CombatExecutionFacade 测试
 
+use bevy::prelude::*;
+
 use crate::core::capabilities::execution::foundation::{
     DamageParams, ExecutionContext, ExecutionError, ExecutionType, ScalableValue,
 };
@@ -33,6 +35,8 @@ fn build_damage_context_has_attack_defense() {
 
 #[test]
 fn execute_empty_formula_fails() {
+    let mut world = World::new();
+    let mut commands = world.commands();
     let params = DamageParams {
         formula_id: "".to_string(),
         damage_type: vec!["physical".to_string()],
@@ -43,7 +47,7 @@ fn execute_empty_formula_fails() {
         critical_multiplier: 1.0,
     };
     let ctx = ExecutionContext::new(ExecutionType::Damage(params), "src", "tgt");
-    let result = CombatExecutionFacade::execute(&ctx);
+    let result = CombatExecutionFacade::execute(&ctx, &mut commands);
     assert!(matches!(
         result,
         Err(ExecutionError::FormulaNotFound { .. })

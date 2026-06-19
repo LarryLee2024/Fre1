@@ -1,9 +1,15 @@
+use bevy::prelude::*;
+
 use crate::core::capabilities::stacking::foundation::{
     OverflowBehavior, StackingConfig, StackingDecision, StackingType,
 };
 use crate::core::capabilities::stacking::mechanism::decider::{
     StackingSubject, decide_stacking, evaluate_stacking, match_identity, validate_config,
 };
+
+fn setup() -> World {
+    World::new()
+}
 
 fn subject(id: &str, def_id: &str, source: &str, turns: i64, stack: u32) -> StackingSubject {
     StackingSubject::new(id, def_id, source, turns, stack)
@@ -147,21 +153,25 @@ fn replace_type_directly_replaces() {
 
 #[test]
 fn different_def_evaluate_stacking_returns_none() {
+    let mut world = setup();
+    let mut commands = world.commands();
     let existing = subject("existing", "eff_poison", "caster_001", 3, 1);
     let incoming = subject("incoming", "eff_haste", "caster_001", 5, 1);
     let config = StackingConfig::aggregate(5, false).unwrap();
 
-    let result = evaluate_stacking(&existing, &incoming, &config);
+    let result = evaluate_stacking(&existing, &incoming, &config, "entity_001", &mut commands);
     assert!(result.is_none());
 }
 
 #[test]
 fn same_def_evaluate_stacking_returns_result() {
+    let mut world = setup();
+    let mut commands = world.commands();
     let existing = subject("existing", "eff_poison", "caster_001", 3, 1);
     let incoming = subject("incoming", "eff_poison", "caster_001", 3, 1);
     let config = StackingConfig::aggregate(5, false).unwrap();
 
-    let result = evaluate_stacking(&existing, &incoming, &config);
+    let result = evaluate_stacking(&existing, &incoming, &config, "entity_001", &mut commands);
     assert!(result.is_some());
     let outcome = result.unwrap();
     assert_eq!(outcome.new_stack_count, 2);
@@ -173,11 +183,13 @@ fn same_def_evaluate_stacking_returns_result() {
 
 #[test]
 fn replace_evaluate_stacking_returns_one_stack() {
+    let mut world = setup();
+    let mut commands = world.commands();
     let existing = subject("existing", "eff_buff", "caster_001", 3, 3);
     let incoming = subject("incoming", "eff_buff", "caster_002", 5, 1);
     let config = StackingConfig::replace().unwrap();
 
-    let result = evaluate_stacking(&existing, &incoming, &config);
+    let result = evaluate_stacking(&existing, &incoming, &config, "entity_001", &mut commands);
     assert!(result.is_some());
     let outcome = result.unwrap();
     assert_eq!(outcome.new_stack_count, 1);

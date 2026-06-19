@@ -8,10 +8,13 @@ use bevy::prelude::*;
 use crate::core::capabilities::ability::events::{
     AbilityActivated, AbilityCancelled, AbilityCompleted, AbilityCooldownStarted,
 };
+use crate::infra::logging::metrics;
 use crate::shared::diagnostics::LogCode;
 
 /// 技能激活日志 Observer。
+#[tracing::instrument(skip_all, fields(code = ?LogCode::ABL001, event = "ability_activated"))]
 pub(crate) fn on_ability_activated(trigger: On<AbilityActivated>) {
+    metrics::record(LogCode::ABL001);
     let event = trigger.event();
     info!(
         code = ?LogCode::ABL001,
@@ -24,7 +27,9 @@ pub(crate) fn on_ability_activated(trigger: On<AbilityActivated>) {
 }
 
 /// 技能完成日志 Observer。
+#[tracing::instrument(skip_all, fields(code = ?LogCode::ABL002, event = "ability_completed"))]
 pub(crate) fn on_ability_completed(trigger: On<AbilityCompleted>) {
+    metrics::record(LogCode::ABL002);
     let event = trigger.event();
     info!(
         code = ?LogCode::ABL002,
@@ -37,7 +42,9 @@ pub(crate) fn on_ability_completed(trigger: On<AbilityCompleted>) {
 }
 
 /// 技能取消日志 Observer。
+#[tracing::instrument(skip_all, fields(code = ?LogCode::ABL003, event = "ability_cancelled"))]
 pub(crate) fn on_ability_cancelled(trigger: On<AbilityCancelled>) {
+    metrics::record(LogCode::ABL003);
     let event = trigger.event();
     info!(
         code = ?LogCode::ABL003,
@@ -50,7 +57,9 @@ pub(crate) fn on_ability_cancelled(trigger: On<AbilityCancelled>) {
 }
 
 /// 技能冷却开始日志 Observer。
+#[tracing::instrument(skip_all, fields(code = ?LogCode::ABL004, event = "ability_cooldown_started"))]
 pub(crate) fn on_ability_cooldown_started(trigger: On<AbilityCooldownStarted>) {
+    metrics::record(LogCode::ABL004);
     let event = trigger.event();
     info!(
         code = ?LogCode::ABL004,

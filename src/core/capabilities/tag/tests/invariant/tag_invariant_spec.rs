@@ -3,14 +3,18 @@
 //! 不变量：同一 Tag 不能在位掩码中重复设置。
 //! 来源：docs/02-domain/capabilities/tag_domain.md
 
+use bevy::prelude::*;
+
 use crate::core::capabilities::tag::foundation::{TagId, TagNamespace};
 use crate::core::capabilities::tag::mechanism::lifecycle::TagHierarchy;
 use crate::shared::testing::fixtures::{TagDefBuilder, standard_damage_tags};
 
 fn make_hierarchy() -> TagHierarchy {
     let mut h = TagHierarchy::default();
+    let mut world = World::new();
+    let mut commands = world.commands();
     for tag in standard_damage_tags() {
-        h.register(tag).unwrap();
+        h.register(tag, &mut commands).unwrap();
     }
     h
 }
@@ -51,11 +55,13 @@ fn different_tags_occupy_different_bits() {
 
 #[test]
 fn duplicate_same_id_tag_rejected() {
+    let mut world = World::new();
+    let mut commands = world.commands();
     let mut hierarchy = TagHierarchy::default();
     let tag = TagDefBuilder::new("tag_test_dup", TagNamespace::DamageType)
         .bit_index(0)
         .build();
-    assert!(hierarchy.register(tag.clone()).is_ok());
-    let result = hierarchy.register(tag);
+    assert!(hierarchy.register(tag.clone(), &mut commands).is_ok());
+    let result = hierarchy.register(tag, &mut commands);
     assert!(result.is_err());
 }

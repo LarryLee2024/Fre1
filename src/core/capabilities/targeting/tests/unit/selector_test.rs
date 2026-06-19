@@ -1,3 +1,5 @@
+use bevy::prelude::*;
+
 use crate::core::capabilities::targeting::foundation::{
     EntityTarget, PriorityRule, TargetContext, TargetData, TargetShape, TargetType, TargetingDef,
     TargetingError, ValidationResult,
@@ -5,6 +7,12 @@ use crate::core::capabilities::targeting::foundation::{
 use crate::core::capabilities::targeting::mechanism::{
     CandidateTarget, filter_by_type, select_targets, validate_candidate, validate_targeting_def,
 };
+
+fn setup() -> (World, Entity) {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    (world, entity)
+}
 
 fn make_single_targeting_def() -> TargetingDef {
     TargetingDef::new(TargetType::Enemy, TargetShape::Single, Some(5.0), 1).unwrap()
@@ -147,41 +155,49 @@ fn no_range_limit_validates() {
 
 #[test]
 fn nearest_priority_sort_correct() {
+    let (mut _world, entity) = setup();
+    let mut commands = _world.commands();
     let def = make_single_targeting_def().with_priority_rule(PriorityRule::Nearest);
     let candidates = make_candidates();
     let context = make_context();
 
-    let result = select_targets(&def, candidates, context).unwrap();
+    let result = select_targets(&def, candidates, context, entity, "abl_test", &mut commands).unwrap();
     assert!(!result.entities.is_empty());
     assert_eq!(result.entities[0].entity_id, "enemy_001");
 }
 
 #[test]
 fn farthest_priority_sort_correct() {
+    let (mut _world, entity) = setup();
+    let mut commands = _world.commands();
     let def = TargetingDef::new(TargetType::Enemy, TargetShape::Single, Some(10.0), 1)
         .unwrap()
         .with_priority_rule(PriorityRule::Farthest);
     let candidates = make_candidates();
     let context = make_context();
 
-    let result = select_targets(&def, candidates, context).unwrap();
+    let result = select_targets(&def, candidates, context, entity, "abl_test", &mut commands).unwrap();
     assert!(!result.entities.is_empty());
     assert_eq!(result.entities[0].distance, 6.0);
 }
 
 #[test]
 fn select_single_target_succeeds() {
+    let (mut _world, entity) = setup();
+    let mut commands = _world.commands();
     let def = make_single_targeting_def();
     let candidates = make_candidates();
     let context = make_context();
 
-    let result = select_targets(&def, candidates, context).unwrap();
+    let result = select_targets(&def, candidates, context, entity, "abl_test", &mut commands).unwrap();
     assert!(result.has_valid_targets);
     assert_eq!(result.target_count(), 1);
 }
 
 #[test]
 fn select_multiple_targets_succeeds() {
+    let (mut _world, entity) = setup();
+    let mut commands = _world.commands();
     let def = TargetingDef::new(
         TargetType::Enemy,
         TargetShape::Area { radius: 10.0 },
@@ -192,23 +208,27 @@ fn select_multiple_targets_succeeds() {
     let candidates = make_candidates();
     let context = make_context();
 
-    let result = select_targets(&def, candidates, context).unwrap();
+    let result = select_targets(&def, candidates, context, entity, "abl_test", &mut commands).unwrap();
     assert!(result.has_valid_targets);
     assert_eq!(result.target_count(), 2);
 }
 
 #[test]
 fn no_valid_target_returns_error() {
+    let (mut _world, entity) = setup();
+    let mut commands = _world.commands();
     let def = TargetingDef::new(TargetType::Enemy, TargetShape::Single, Some(1.0), 1).unwrap();
     let candidates = make_candidates();
     let context = make_context();
 
-    let result = select_targets(&def, candidates, context);
+    let result = select_targets(&def, candidates, context, entity, "abl_test", &mut commands);
     assert!(result.is_err());
 }
 
 #[test]
 fn truncates_target_count_by_limit() {
+    let (mut _world, entity) = setup();
+    let mut commands = _world.commands();
     let def = TargetingDef::new(
         TargetType::Enemy,
         TargetShape::Area { radius: 10.0 },
@@ -219,23 +239,27 @@ fn truncates_target_count_by_limit() {
     let candidates = make_candidates();
     let context = make_context();
 
-    let result = select_targets(&def, candidates, context).unwrap();
+    let result = select_targets(&def, candidates, context, entity, "abl_test", &mut commands).unwrap();
     assert_eq!(result.target_count(), 1);
 }
 
 #[test]
 fn selected_target_carries_context_data() {
+    let (mut _world, entity) = setup();
+    let mut commands = _world.commands();
     let def = make_single_targeting_def();
     let candidates = make_candidates();
     let context = make_context();
 
-    let result = select_targets(&def, candidates, context.clone()).unwrap();
+    let result = select_targets(&def, candidates, context.clone(), entity, "abl_test", &mut commands).unwrap();
     assert_eq!(result.context.caster_entity, context.caster_entity);
     assert_eq!(result.context.frame, 1);
 }
 
 #[test]
 fn lowest_hp_priority_sort_correct() {
+    let (mut _world, entity) = setup();
+    let mut commands = _world.commands();
     let mut candidates = make_candidates();
     candidates[0] = candidates[0].clone().with_health(50.0, 100.0);
     candidates[1] = candidates[1].clone().with_health(30.0, 100.0);
@@ -251,7 +275,7 @@ fn lowest_hp_priority_sort_correct() {
     .unwrap()
     .with_priority_rule(PriorityRule::LowestHealth);
 
-    let result = select_targets(&def, candidates, context).unwrap();
+    let result = select_targets(&def, candidates, context, entity, "abl_test", &mut commands).unwrap();
     assert_eq!(result.target_count(), 2);
     assert_eq!(result.entities[0].entity_id, "enemy_002");
 }

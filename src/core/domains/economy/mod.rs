@@ -6,7 +6,7 @@
 
 mod components;
 mod error;
-mod events;
+pub(crate) mod events;
 mod failure;
 mod plugin;
 mod resources;

@@ -7,7 +7,7 @@
 
 use bevy::prelude::*;
 
-use crate::core::domains::terrain::components::{SurfaceType, TileProperties};
+use crate::core::domains::terrain::components::{SurfaceType, TilePos, TileProperties};
 use crate::core::domains::terrain::events::{TerrainEffectApplied, TileEntered};
 use crate::core::domains::terrain::resources::TileEntityMap;
 use crate::shared::ids::DefinitionId;
@@ -45,6 +45,22 @@ pub(crate) fn on_tile_entered(
             effect_id,
         });
     }
+}
+
+/// 通知单位进入格子，触发 TileEntered 事件。
+///
+/// 由移动系统或传送逻辑在单位进入新格子时调用。
+pub(crate) fn notify_tile_entered(
+    mut commands: Commands,
+    entity: Entity,
+    tile: TilePos,
+    surface: SurfaceType,
+) {
+    commands.trigger(TileEntered {
+        entity,
+        tile,
+        surface,
+    });
 }
 
 /// 表面类型到 EffectDefId 的映射常量。

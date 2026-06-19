@@ -6,7 +6,11 @@
 use bevy::prelude::*;
 
 use super::super::components::ReactionState;
-use super::super::events::{OpportunityAttackExecuted, ReactionExecuted, ReactionTriggered};
+use super::super::components::ReactionType;
+use super::super::events::{
+    CounterspellExecuted, GuardianUsed, OpportunityAttackExecuted, ReactionDeclined,
+    ReactionExecuted, ReactionTriggered, ShieldUsed,
+};
 use super::super::resources::GlobalReactionQueue;
 
 /// 回合开始时重置反应槽位。
@@ -51,6 +55,11 @@ pub fn process_reaction_queue(
         }
 
         // 不可用 → 跳过此条目，继续查找下一个
+        commands.trigger(ReactionDeclined {
+            reactor: entry.reactor,
+            reaction_type: entry.reaction_type,
+            reason: "反应槽位已用完".to_string(),
+        });
         queue.queue.cancel_current();
     }
 }
@@ -84,7 +93,79 @@ pub fn on_opportunity_attack_executed(
 
     commands.trigger(ReactionExecuted {
         reactor: event.attacker,
-        reaction_type: super::super::components::ReactionType::OpportunityAttack,
+        reaction_type: ReactionType::OpportunityAttack,
         result,
+    });
+}
+
+/// 触发 OpportunityAttackExecuted 事件（机会攻击执行后调用）。
+pub fn handle_opportunity_attack(
+    mut commands: Commands,
+    attacker: Entity,
+    target: Entity,
+    hit: bool,
+    damage: i32,
+    critical: bool,
+) {
+    commands.trigger(OpportunityAttackExecuted {
+        attacker,
+        target,
+        hit,
+        damage,
+        critical,
+    });
+}
+
+/// 触发 CounterspellExecuted 事件（法术反制执行后调用）。
+pub fn handle_counterspell(
+    mut commands: Commands,
+    counterer: Entity,
+    target_spell: String,
+    counter_level: u8,
+    success: bool,
+    check_required: bool,
+    check_roll: Option<i32>,
+    check_dc: Option<u32>,
+) {
+    commands.trigger(CounterspellExecuted {
+        counterer,
+        target_spell,
+        counter_level,
+        success,
+        check_required,
+        check_roll,
+        check_dc,
+    });
+}
+
+/// 触发 ShieldUsed 事件（护盾术使用后调用）。
+pub fn handle_shield_used(
+    mut commands: Commands,
+    caster: Entity,
+    attacker: Entity,
+    ac_bonus: i32,
+    still_hit: bool,
+) {
+    commands.trigger(ShieldUsed {
+        caster,
+        attacker,
+        ac_bonus,
+        still_hit,
+    });
+}
+
+/// 触发 GuardianUsed 事件（援护格挡使用后调用）。
+pub fn handle_guardian_used(
+    mut commands: Commands,
+    guardian: Entity,
+    target: Entity,
+    transferred_damage: i32,
+    attacker: Entity,
+) {
+    commands.trigger(GuardianUsed {
+        guardian,
+        target,
+        transferred_damage,
+        attacker,
     });
 }

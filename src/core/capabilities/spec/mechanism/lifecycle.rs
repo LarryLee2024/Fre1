@@ -9,6 +9,7 @@ use std::collections::HashMap;
 
 use bevy::prelude::*;
 
+use crate::core::capabilities::spec::events::{SpecGranted, SpecLevelChanged, SpecRemovalReason, SpecRemoved};
 use crate::core::capabilities::spec::foundation::{
     AbilitySpec, EffectSource, EffectSpec, SpecError, SpecId, SpecRegistryConfig, SpecType,
 };
@@ -176,6 +177,8 @@ pub fn grant_ability_spec(
     registry: &SpecRegistry,
     def_id: &str,
     level: u8,
+    entity: Entity,
+    commands: &mut Commands,
 ) -> Result<SpecId, SpecError> {
     // 1. 校验 Def 已注册 + 创建（含 V2 等级校验）
     let spec = registry.create_ability_spec(def_id, level)?;
@@ -186,6 +189,13 @@ pub fn grant_ability_spec(
     // 3. 注册到容器
     let spec_id = spec.spec_id.clone();
     container.insert_ability(spec);
+
+    commands.trigger(SpecGranted {
+        entity,
+        spec_id: spec_id.clone(),
+        spec_type: SpecType::Ability,
+        def_id: def_id.to_string(),
+    });
 
     Ok(spec_id)
 }
@@ -201,11 +211,20 @@ pub fn grant_ability_spec(
 pub fn remove_ability_spec(
     container: &mut SpecContainer,
     spec_id: &SpecId,
+    entity: Entity,
+    commands: &mut Commands,
 ) -> Result<(), SpecError> {
     if !container.abilities.contains_key(spec_id) {
         return Err(SpecError::SpecNotFound(spec_id.to_string()));
     }
     container.remove_ability(spec_id);
+
+    commands.trigger(SpecRemoved {
+        entity,
+        spec_id: spec_id.clone(),
+        reason: SpecRemovalReason::Manual,
+    });
+
     Ok(())
 }
 
@@ -224,6 +243,8 @@ pub fn change_ability_level(
     container: &mut SpecContainer,
     spec_id: &SpecId,
     new_level: u8,
+    entity: Entity,
+    commands: &mut Commands,
 ) -> Result<(), SpecError> {
     let spec = container
         .get_ability_mut(spec_id)
@@ -232,7 +253,16 @@ pub fn change_ability_level(
     // V2: 等级越界校验
     validate_level(new_level, spec.max_level)?;
 
+    let old_level = spec.level;
     spec.level = new_level;
+
+    commands.trigger(SpecLevelChanged {
+        entity,
+        spec_id: spec_id.clone(),
+        old_level,
+        new_level,
+    });
+
     Ok(())
 }
 
@@ -251,11 +281,20 @@ pub fn grant_effect_spec(
     def_id: &str,
     source: EffectSource,
     frame: u64,
+    entity: Entity,
+    commands: &mut Commands,
 ) -> Result<SpecId, SpecError> {
     let spec = registry.create_effect_spec(def_id, source, frame)?;
 
     let spec_id = spec.spec_id.clone();
     container.insert_effect(spec);
+
+    commands.trigger(SpecGranted {
+        entity,
+        spec_id: spec_id.clone(),
+        spec_type: SpecType::Effect,
+        def_id: def_id.to_string(),
+    });
 
     Ok(spec_id)
 }
@@ -267,10 +306,19 @@ pub fn grant_effect_spec(
 pub fn remove_effect_spec(
     container: &mut SpecContainer,
     spec_id: &SpecId,
+    entity: Entity,
+    commands: &mut Commands,
 ) -> Result<(), SpecError> {
     if !container.effects.contains_key(spec_id) {
         return Err(SpecError::SpecNotFound(spec_id.to_string()));
     }
     container.remove_effect(spec_id);
+
+    commands.trigger(SpecRemoved {
+        entity,
+        spec_id: spec_id.clone(),
+        reason: SpecRemovalReason::Manual,
+    });
+
     Ok(())
 }

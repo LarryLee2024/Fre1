@@ -97,10 +97,11 @@ Fre 的代码分为三层，日志系统跨越其中两层：
 │  这里绝对不能有日志代码（新项目还有历史遗留违规，正在清理中） │
 ├─ L2: Infra（技术实现层）────────────────────────────────│
 │  infra/logging/                                          │
-│  ├── plugin.rs           ← LoggingPlugin 注册 Observer   │
-│  ├── observers/           ← 领域事件的日志监听器          │
+│  ├── plugin.rs           ← LoggingPlugin (56 Observers) │
+│  ├── observers/           ← 20 个日志监听器模块          │
+│  ├── metrics/             ← 全局度量计数 + 定期汇总      │
 │  ├── rate_limit/          ← 日志风暴保护                 │
-│  └── sinks/               ← 日志输出后端（预留）          │
+│  └── sinks/               ← 文件写入 (JSON, 可轮转)     │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -125,31 +126,44 @@ Fre 的代码分为三层，日志系统跨越其中两层：
                                               ▼
 ┌─────── LoggingPlugin (L2 Infra) ─────────────────────────────────────┐
 │                                                                     │
-│  7 个 Observer 模块 × 共 18 个事件监听器                               │
-│  (battle / turn / spell / ability / effect / quest / content)       │
+│  20 个 Observer 模块 × 共 56 个事件监听器                              │
+│  (覆盖全部 15 个业务领域 + 内容基础设施)                                 │
 │                                                                     │
-│  ┌─ Observable（以 turn_logger 为例）────────────────────────────┐    │
-│  │  fn on_turn_started(trigger: On<TurnStarted>) {              │    │
-│  │      let e = trigger.event();                                │    │
-│  │      info!(                                                  │    │
-│  │          code = ?LogCode::BAT005,    ← 编码                 │    │
-│  │          event = "turn_started",     ← 事件名               │    │
-│  │          unit = ?e.unit,             ← 结构化字段           │    │
-│  │          "turn_started"             ← 人类可读消息          │    │
+│  同时初始化 MetricsCollector Resource + metrics_flush_system         │
+│                                                                     │
+│  ┌─ Observable（以 progression_logger 为例）────────────────────┐    │
+│  │  #[tracing::instrument(skip_all, fields(code = ?PRG002))]   │    │
+│  │  fn on_level_up(trigger: On<LevelUp>) {                     │    │
+│  │      metrics::record(LogCode::PRG002);    ← 度量计数器     │    │
+│  │      let e = trigger.event();                               │    │
+│  │      info!(                                                 │    │
+│  │          code = ?LogCode::PRG002,   ← 编码                 │    │
+│  │          event = "level_up",        ← 事件名               │    │
+│  │          entity = ?e.entity,        ← 结构化字段           │    │
+│  │          old = e.old_level,                                 │    │
+│  │          new = e.new_level,                                 │    │
+│  │          "level_up"                ← 人类可读消息          │    │
 │  │      );                                                     │    │
 │  │  }                                                           │    │
 │  └──────────────────────────────────────────────────────────────┘    │
 │                                                                     │
+│  额外输出后端：                                                       │
+│  ┌─ sinks/file_sink.rs ───────────────────────────────────────┐    │
+│  │  FileSink: 可轮转的 JSON 文件日志输出器                      │    │
+│  │  配置: dir/prefix/max_bytes/max_files/enabled               │    │
+│  └──────────────────────────────────────────────────────────────┘    │
 └───────────────────────────────────────────────────────────────────┘
                               │
                               ▼
-┌─────── tracing (Bevy 内置 LogPlugin) ──────┐
-│                                            │
-│  tracing::info! → tracing-subscriber       │
-│                    ↓                       │
-│              控制台输出                      │
-│              (stderr, 带颜色和时间戳)         │
-└────────────────────────────────────────────┘
+┌─────── tracing + MetricsCollector + FileSink ────┐
+│                                                  │
+│  tracing::info! → tracing-subscriber              │
+│                    ↓  控制台输出 (stderr)          │
+│                                                  │
+│  MetricsCollector → 每 60 帧 DEBUG 摘要           │
+│                                                  │
+│  FileSink → JSON 文件 (logs/game.jsonl)          │
+└──────────────────────────────────────────────────┘
 ```
 
 ---
@@ -234,105 +248,164 @@ let ctx = DiagnosticContext::default()
 
 ### 4.1 LoggingPlugin
 
-入口文件 `plugin.rs`。内容极其简单——它只做一件事：**注册 Observer**。
+入口文件 `plugin.rs`。它做两件事：**初始化 MetricsCollector** 和 **注册 56 个 Observer**。
 
 ```rust
 impl Plugin for LoggingPlugin {
     fn build(&self, app: &mut App) {
-        // battle / turn / spell
-        app.add_observer(battle_logger::on_battle_started)
-            .add_observer(battle_logger::on_battle_ended);
-        app.add_observer(turn_logger::on_turn_started)
-            .add_observer(turn_logger::on_turn_ended);
-        app.add_observer(spell_logger::on_spell_cast_result);
+        // ── 初始化度量收集器 ──
+        app.init_resource::<MetricsCollector>();
+        app.add_systems(Update, metrics::metrics_flush_system);
 
-        // ability (4 events)
-        app.add_observer(ability_logger::on_ability_activated)
-            .add_observer(ability_logger::on_ability_completed)
-            .add_observer(ability_logger::on_ability_cancelled)
-            .add_observer(ability_logger::on_ability_cooldown_started);
+        // ── 注册日志 Observer（20 模块 × 56 事件）──
+        // BAT  战斗 (2)   TAC  战术 (2)   TER  地形 (4)
+        // SPR  法术 (1)   RCT  反应 (5)   ABL  技能 (4)
+        // EFF  效果 (4)   QST  任务 (5)   PRG  成长 (6)
+        // INV  背包 (5)   ECO  经济 (3)   CRF  制作 (2)
+        // FAC  阵营 (4)   PRY  队伍 (5)   CNR  营地 (5)
+        // NAR  叙事 (5)   SUM  召唤 (4)   CNT  内容 (1)
 
-        // effect (4 events)
-        app.add_observer(effect_logger::on_effect_applied)
-            .add_observer(effect_logger::on_effect_removed)
-            .add_observer(effect_logger::on_effect_ticked)
-            .add_observer(effect_logger::on_effect_immunity);
-
-        // quest (5 events)
-        app.add_observer(quest_logger::on_quest_accepted)
-            .add_observer(quest_logger::on_objective_completed)
-            .add_observer(quest_logger::on_quest_turned_in)
-            .add_observer(quest_logger::on_quest_failed)
-            .add_observer(quest_logger::on_quest_progress_updated);
-
-        // content (1 event)
-        app.add_observer(content_logger::on_definition_reloaded);
+        app.add_observer(battle_logger::on_battle_started) ...
+        // ... 完整列表见源文件
     }
 }
 ```
 
-当前版本注册了 **7 个 Observer 模块、共 18 个事件监听器**。启动时会输出 `[LoggingPlugin] initialized (18 observers registered)`。
+当前版本注册了 **20 个 Observer 模块、共 56 个事件监听器**。启动时会输出 `[LoggingPlugin] initialized (Metrics + 56 observers)`。
 
 这个 Plugin 在 `app/app_plugin.rs` 的 Phase 8 被注册（Infrastructure 层）。
 
 ### 4.2 observers/ — 各领域的日志监听器
 
-每个 Observer 文件对应一组领域事件。目前实现了 **7 个 Observer 模块、共 18 个事件监听器**：
+目前实现了 **20 个 Observer 模块、共 56 个事件监听器**，覆盖全部 15 个业务领域 + 内容基础设施。按 LogCode 域前缀分组：
 
-**battle_logger.rs**
-- 监听 `BattleStarted` → `BAT001`，目前不记录额外字段
-- 监听 `BattleEnded` → `BAT002`，记录 `victory` 字段
+**BAT — Combat（战斗）：battle_logger.rs + turn_logger.rs**
+- `BattleStarted` → `BAT001`，监听全局战斗开始
+- `BattleEnded` → `BAT002`，记录 `victory`
+- `TurnStarted` → `BAT005`，记录 `unit`
+- `TurnEnded` → `BAT006`，记录 `unit`
 
-**turn_logger.rs**
-- 监听 `TurnStarted` → `BAT005`，记录 `unit` 字段
-- 监听 `TurnEnded` → `BAT006`，记录 `unit` 字段
+**TAC — Tactical（战术）：tactical_logger.rs**
+- `UnitMoved` → `TAC001`，记录 `entity`、`from`、`to`、`remaining_mp`
+- `PositionChanged` → `TAC005`，记录 `entity`、`new_pos`
 
-**spell_logger.rs**
-- 监听 `SpellCastResult` → `SPR001`，记录 `caster`、`spell_id`、`result` 字段
+**TER — Terrain（地形）：terrain_logger.rs**
+- `TileEntered` → `TER001`，记录 `entity`、`tile`
+- `SurfaceChanged` → `TER002`，记录 `tile`、`old_surface`、`new_surface`
+- `HazardTriggered` → `TER003`，记录 `entity`、`hazard`
+- `TerrainEffectApplied` → `TER004`，记录 `entity`、`effect`
 
-**ability_logger.rs**（新增）
-- 监听 `AbilityActivated` → `ABL001`，记录 `entity`、`spec_id`、`context_desc`
-- 监听 `AbilityCompleted` → `ABL002`，记录 `entity`、`spec_id`、`result`
-- 监听 `AbilityCancelled` → `ABL003`，记录 `entity`、`spec_id`、`reason`
-- 监听 `AbilityCooldownStarted` → `ABL004`，记录 `entity`、`spec_id`、`duration`、`shared_group`
+**SPR — Spell（法术）：spell_logger.rs**
+- `SpellCastResult` → `SPR001`，记录 `caster`、`spell_id`、`result`
 
-**effect_logger.rs**（新增）
-- 监听 `EffectApplied` → `EFF001`，记录 `instance_id`、`def_id`、`target`、`duration_type`
-- 监听 `EffectRemoved` → `EFF002`，记录 `instance_id`、`def_id`、`target`、`reason`
-- 监听 `EffectTicked` → `EFF003`（使用 `debug!` 级别），记录 `instance_id`、`tick_number`
-- 监听 `EffectImmunityTriggered` → `EFF004`（使用 `warn!` 级别），记录 `def_id`、`target`、`immune_tag`
+**RCT — Reaction（反应）：reaction_logger.rs**
+- `ReactionTriggered` → `RCT001`，记录 `entity`、`reaction`
+- `ReactionExecuted` → `RCT002`，记录 `entity`、`result`
+- `ReactionDeclined` → `RCT003`，记录 `entity`、`reason`
+- `OpportunityAttack` → `RCT004`，记录 `attacker`、`target`
+- `Counterspell` → `RCT005`，记录 `caster`、`target_spell`
 
-**quest_logger.rs**（新增）
-- 监听 `QuestAccepted` → `QST001`，记录 `entity`、`quest_id`
-- 监听 `ObjectiveCompleted` → `QST002`，记录 `entity`、`quest_id`、`objective_id`
-- 监听 `QuestTurnedIn` → `QST003`，记录 `entity`、`quest_id`
-- 监听 `QuestFailed` → `QST004`（使用 `warn!` 级别），记录 `entity`、`quest_id`、`fail_reason`
-- 监听 `QuestProgressUpdated` → `QST005`，记录 `entity`、`quest_id`、`old_progress`、`new_progress`、`target`
+**ABL — Ability（技能）：ability_logger.rs**
+- `AbilityActivated` → `ABL001`，记录 `entity`、`spec_id`、`context_desc`
+- `AbilityCompleted` → `ABL002`，记录 `entity`、`spec_id`、`result`
+- `AbilityCancelled` → `ABL003`，记录 `entity`、`spec_id`、`reason`
+- `AbilityCooldownStarted` → `ABL004`，记录 `entity`、`spec_id`、`duration`、`shared_group`
 
-**content_logger.rs**（新增）
-- 监听 `OnDefinitionReloaded` → `CNT001`，记录 `bucket_name`、`version`、`changed_ids` 数量
+**EFF — Effect（效果）：effect_logger.rs**
+- `EffectApplied` → `EFF001`，记录 `instance_id`、`def_id`、`target`
+- `EffectRemoved` → `EFF002`，记录 `instance_id`、`def_id`、`reason`
+- `EffectTicked` → `EFF003`（使用 `debug!`），记录 `instance_id`、`tick_number`
+- `EffectImmunity` → `EFF004`（使用 `warn!`），记录 `def_id`、`immune_tag`
 
-`observers/mod.rs` 现在导出 7 个模块：`ability_logger`、`battle_logger`、`content_logger`、`effect_logger`、`quest_logger`、`spell_logger`、`turn_logger`。
+**QST — Quest（任务）：quest_logger.rs**
+- `QuestAccepted` → `QST001`，记录 `entity`、`quest_id`
+- `ObjectiveCompleted` → `QST002`，记录 `entity`、`quest_id`、`objective_id`
+- `QuestTurnedIn` → `QST003`，记录 `entity`、`quest_id`
+- `QuestFailed` → `QST004`（使用 `warn!`），记录 `entity`、`quest_id`、`fail_reason`
+- `QuestProgressUpdated` → `QST005`，记录 `entity`、`quest_id`、`old`、`new`、`target`
 
-所有 Observer 都长一个模样：
+**PRG — Progression（成长）：progression_logger.rs**
+- `ExperienceGained` → `PRG001`，记录 `entity`、`amount`、`source`、`level`
+- `LevelUp` → `PRG002`，记录 `entity`、`old`、`new`
+- `TalentUnlocked` → `PRG003`，记录 `entity`、`talent_id`
+- `SubclassChosen` → `PRG004`，记录 `entity`、`subclass_id`
+- `ASICompleted` → `PRG005`，记录 `entity`、`level`、`choices`
+- `ClassGained` → `PRG006`，记录 `entity`、`class_id`、`level`
+
+**INV — Inventory（背包）：inventory_logger.rs**
+- `ItemAcquired` → `INV001`，记录 `entity`、`item_id`、`quantity`
+- `ItemUsed` → `INV002`，记录 `entity`、`item_id`、`target`
+- `EquipmentChanged` → `INV003`，记录 `entity`、`slot`、`old_item`、`new_item`
+- `ItemRemoved` → `INV004`，记录 `entity`、`item_id`、`reason`
+- `LootGenerated` → `INV005`，记录 `entity`、`items`、`gold`
+
+**ECO — Economy（经济）：economy_logger.rs**
+- `TransactionCompleted` → `ECO001`，记录 `entity`、`item`、`price`
+- `PriceChanged` → `ECO002`，记录 `shop`、`item`、`old`、`new`
+- `CurrencyChanged` → `ECO003`，记录 `entity`、`amount`、`reason`
+
+**CRF — Crafting（制作）：crafting_logger.rs**
+- `ItemCrafted` → `CRF003`，记录 `crafter`、`recipe`、`quality`
+- `CraftingFailed` → `CRF004`（使用 `warn!`），记录 `crafter`、`recipe`、`reason`
+
+**FAC — Faction（阵营）：faction_logger.rs**
+- `ReputationChanged` → `FAC001`，记录 `entity`、`faction`、`old`、`new`
+- `FactionRelationChanged` → `FAC002`，记录 `faction_a`、`faction_b`、`new_relation`
+- `ReputationLevelUp` → `FAC003`，记录 `entity`、`faction`、`level`
+- `RelationshipEvaluated` → `FAC004`，记录 `entity_a`、`entity_b`、`result`
+
+**PRY — Party（队伍）：party_logger.rs**
+- `MemberJoined` → `PRY001`，记录 `party`、`member`
+- `MemberRemoved` → `PRY002`，记录 `party`、`member`、`reason`
+- `MemberSwapped` → `PRY003`，记录 `party`、`out`、`in`
+- `BondActivated` → `PRY004`，记录 `member_a`、`member_b`
+- `BondDeactivated` → `PRY005`，记录 `member_a`、`member_b`
+
+**CNR — CampRest（营地）：camp_rest_logger.rs**
+- `ShortRestCompleted` → `CNR001`，记录 `entity`、`hd_spent`
+- `LongRestStarted` → `CNR002`，记录 `entity`
+- `LongRestCompleted` → `CNR003`，记录 `entity`、`recovered_hp`
+- `LongRestInterrupted` → `CNR004`（使用 `warn!`），记录 `entity`、`reason`
+- `CampEventTriggered` → `CNR005`，记录 `entity`、`event`
+
+**NAR — Narrative（叙事）：narrative_logger.rs**
+- `DialogueStarted` → `NAR001`，记录 `entity`、`dialogue_id`
+- `ChoiceMade` → `NAR002`，记录 `entity`、`choice_id`
+- `StoryFlagSet` → `NAR003`，记录 `flag`、`value`
+- `CutsceneStarted` → `NAR004`，记录 `cutscene_id`
+- `CutsceneEnded` → `NAR005`，记录 `cutscene_id`
+
+**SUM — Summon（召唤）：summon_logger.rs**
+- `SummonCreated` → `SUM001`，记录 `owner`、`template`
+- `SummonExpired` → `SUM002`，记录 `entity`、`reason`
+- `SummonCommand` → `SUM003`，记录 `entity`、`command`
+- `SummonSlotChanged` → `SUM004`，记录 `owner`、`used`、`max`
+
+**CNT — Content（内容基础设施）：content_logger.rs**
+- `OnDefinitionReloaded` → `CNT001`，记录 `bucket_name`、`version`、`changed_ids` 数量
+
+Observer 的典型模板（以 progression_logger 为例）：
 
 ```rust
-pub(crate) fn on_xxx(trigger: On<SomeEvent>) {
+#[tracing::instrument(skip_all, fields(code = ?LogCode::PRG002, event = "level_up"))]
+pub(crate) fn on_level_up(trigger: On<LevelUp>) {
+    metrics::record(LogCode::PRG002);
     let event = trigger.event();
     info!(
-        code = ?LogCode::XXX,
-        event = "event_name",
-        field1 = ?event.field1,
-        field2 = ?event.field2,
-        "human_readable_message"
+        code = ?LogCode::PRG002,
+        event = "level_up",
+        entity = ?event.entity,
+        old = event.old_level,
+        new = event.new_level,
+        "level_up"
     );
 }
 ```
 
-关键要求：
-- `code` 字段必须传 LogCode
-- `event` 字段必须和事件名一致
-- 所有数据必须是结构化字段，不能用 `format!` 拼到消息字符串里
+每个 Observer 包含三个要素：
+1. **`#[tracing::instrument]`** — 自动生成 span，携带 `code` 和 `event` 字段
+2. **`metrics::record(LogCode::XXX)`** — 更新全局度量计数器
+3. **`info!()` / `warn!()` / `debug!()`** — 输出结构化日志到 tracing
 
 ### 4.3 rate_limit/ — 日志风暴保护
 
@@ -352,11 +425,41 @@ warn_once!(GUARD, "实体 {} 缺少 Buff 组件", entity);
 
 配套提供了两个宏：`warn_once!` 和 `error_once!`。
 
-### 4.4 sinks/ — 日志输出后端（预留）
+### 4.4 sinks/ — 日志输出后端（文件写入）
 
-目前是一个空模块。日志输出的实际后端由 Bevy 的 `DefaultPlugins` 中的 `LogPlugin` 处理（默认输出到 stderr）。未来可以在这里实现文件输出、遥测上报等功能。
+现已实现 `file_sink.rs`，提供可轮转的 JSON 文件日志输出器：
 
-### 4.5 旁支：Pipeline ExecutionLog
+```rust
+let config = FileSinkConfig {
+    dir: PathBuf::from("logs"),
+    prefix: "game".to_string(),
+    max_bytes: 10 * 1024 * 1024,   // 10MB 后轮转
+    max_files: 5,                    // 保留最多 5 个轮转文件
+    enabled: cfg!(debug_assertions), // 默认仅 debug 模式启用
+};
+let sink = FileSink::new(config);
+sink.write(r#"{"level":"INFO","code":"PRG002","event":"level_up"}"#);
+```
+
+目前 Observer 中未自动调用 `FileSink`（因为它需要接入 tracing-subscriber 的 Layer，而非从 Observer 手动调用）。配套的 `format_json()` 函数可以将结构化字段格式化为 JSON 字符串。控制台输出仍由 Bevy 的 `DefaultPlugins.LogPlugin` 处理。
+
+### 4.5 metrics/ — 事件度量统计（新实现）
+
+对应 ADR-052 中「领域事件 → 日志的四路消费」的 Metrics 消费端。**这是一个新的子模块，完整实现了基于 LogCode 的度量计数和定期汇总。**
+
+**全局计数器**：使用 `LazyLock<Mutex<HashMap<LogCode, u64>>>`，Observer 中通过 `metrics::record(LogCode::XXX)` 调用，无需 World 访问。
+
+**MetricsCollector Resource**：每帧从全局计数器 drain 增量，每 60 帧通过 `metrics_flush_system` 输出一次 DEBUG 摘要——按域前缀（`BAT`、`PRG` 等）聚合，显示事件类型数和总量。
+
+```rust
+// 每 60 帧控制台输出类似：
+// DEBUG frame=120 delta_events=47 total_events=284
+//   detail="BAT:3x12 ABL:2x8 EFF:4x15 QST:2x7 CRF:1x5"
+```
+
+这个设计保证了：即使每秒发生数千次效果 Tick，Metrics 也不会产生大量日志，只会每 60 帧汇总一行。
+
+### 4.6 旁支：Pipeline ExecutionLog
 
 还有一个独立于 tracing 的「日志」系统：`PipelineContext.execution_log`（定义在 `src/core/capabilities/runtime/pipeline/foundation/types.rs`）。
 
@@ -364,7 +467,7 @@ warn_once!(GUARD, "实体 {} 缺少 Buff 组件", entity);
 
 配套的 `ExecutionLogHook`（`src/infra/pipeline/hooks.rs`）会在每个步骤结束时以 `trace!` 级别输出到 tracing，用于开发调试。
 
-### 4.6 旁支：UI CombatLog
+### 4.7 旁支：UI CombatLog
 
 还有一个单独的战斗日志 UI 系统（旧代码，在 `docs/ai_ignore_this_dir/` 中），它通过 `CombatLog` Resource 存储多色文本片段，驱动 UI 面板显示。这个属于**表现层日志**，不是**基础设施日志**，两者职责不同。
 
@@ -372,51 +475,67 @@ warn_once!(GUARD, "实体 {} 缺少 Buff 组件", entity);
 
 ## 5. 数据流全景：一条日志的诞生
 
-以「角色施法」为例，一条日志的完整旅程：
+以「角色升级」为例，一条日志的完整旅程（当前最新模式）：
 
 ```
 Step 1: 领域代码产生事件
 ─────────────────────────
-  spell_system.rs:
-    commands.trigger(SpellCastResult {
-        caster: player_entity,
-        spell_id: fireball_id,
-        result: CastSuccess { target, damage },
+  progression_system.rs:
+    commands.trigger(LevelUp {
+        entity: player,
+        old_level: 4,
+        new_level: 5,
+        class_id: ...,
+        is_asi_level: false,
     });
 
 Step 2: Bevy 调度 Observer
 ─────────────────────────
-  LoggingPlugin 注册了 spell_logger::on_spell_cast_result
-  Bevy 在执行完 spell_system 后，自动调用匹配的 Observer
+  LoggingPlugin 注册了 progression_logger::on_level_up
+  Bevy 在触发 LevelUp 事件后自动调用该 Observer
 
-Step 3: Observer 生成结构化日志
+Step 3: Observer 生成 span + 度量 + 结构化日志
 ─────────────────────────
-  spell_logger.rs:
-    info!(
-        code = ?LogCode::SPR001,      // "SPR001"
-        event = "spell_cast",          // 事件名
-        caster = ?event.caster,        // Entity(7)
-        spell_id = ?event.spell_id,    // SpellId("fireball")
-        result = ?event.result,        // CastSuccess(...)
-        "spell_cast"                   // 消息
-    );
+  progression_logger.rs:
+    #[tracing::instrument(skip_all, fields(code = ?LogCode::PRG002, event = "level_up"))]
+    fn on_level_up(trigger: On<LevelUp>) {
+        metrics::record(LogCode::PRG002);           // ← 更新全局计数器
+        let e = trigger.event();
+        info!(                                      // ← 输出到 tracing
+            code = ?LogCode::PRG002,
+            event = "level_up",
+            entity = ?e.entity,
+            old = e.old_level,
+            new = e.new_level,
+            "level_up"
+        );
+    }
 
-Step 4: tracing 框架处理
+Step 4: 三路输出
 ─────────────────────────
-  tracing::info! → tracing-subscriber（Bevy 默认初始化）
-      ↓
-  格式化输出:
-  2026-06-19T10:30:00.123456Z  INFO
-    code=SPR001 event=spell_cast caster=Entity(7)
-    spell_id=SpellId("fireball") result=CastSuccess
-    : spell_cast
+  ┌─ tracing::info! → tracing-subscriber
+  │     ↓
+  │   控制台标准错误输出:
+  │   2026-06-19T10:30:00.123456Z  INFO
+  │     code=PRG002 event=level_up entity=Entity(3)
+  │     old=4 new=5: level_up
+  │
+  ├─ #[instrument] span → 自动嵌套追踪
+  │     ↓
+  │   当有父 span（如战斗 span）时自动形成调用链:
+  │   battle → turn → ability → level_up
+  │
+  └─ metrics::record(PRG002) → MetricsCollector
+        ↓
+      每 60 帧聚合输出:
+      DEBUG frame=120 delta_events=47 detail="PRG:3x12 ..."
 
 Step 5: 你看到了
 ─────────────────────────
-  在终端里看到带颜色的日志行
+  控制台有带颜色的日志行，必要时可以在 logs/game.jsonl 找到 JSON 格式的持久化文件。
 ```
 
-这就是为什么领域层不需要写日志——它只需要发事件，剩下的由基础设施层自动完成。
+这就是为什么领域层不需要写日志——它只需要发事件，剩下的由基础设施层自动完成三路输出（tracing + span 链路 + 度量统计）。
 
 ---
 
@@ -466,9 +585,12 @@ impl LogCode {
 // src/infra/logging/observers/crafting_logger.rs
 use bevy::prelude::*;
 use crate::core::domains::crafting::events::ItemCrafted;
+use crate::infra::logging::metrics;
 use crate::shared::diagnostics::LogCode;
 
+#[tracing::instrument(skip_all, fields(code = ?LogCode::CRF003, event = "item_crafted"))]
 pub(crate) fn on_item_crafted(trigger: On<ItemCrafted>) {
+    metrics::record(LogCode::CRF003);
     let event = trigger.event();
     info!(
         code = ?LogCode::CRF003,
@@ -508,8 +630,11 @@ commands.trigger(ItemCrafted {
 
 - [ ] LogCode 在 `log_code.rs` 中已定义（code + description）
 - [ ] LogCategory 映射已更新（如果需要新的分类规则）
+- [ ] Observer 函数标注了 `#[tracing::instrument(skip_all, fields(...))]`
+- [ ] Observer 函数调用 `metrics::record(LogCode::XXX)`
 - [ ] Observer 函数遵循 `info!(code = ?LogCode::XXX, event = "...", ...)` 格式
-- [ ] Observer 在 `LoggingPlugin` 中注册
+- [ ] Observer 在 `observers/mod.rs` 中注册 (`pub(crate) mod xxx_logger`)
+- [ ] Observer 在 `LoggingPlugin` 中注册 (`app.add_observer(...)`)
 - [ ] 领域事件（`ItemCrafted`）包含日志所需的全部字段
 - [ ] 没有在 Observer 中写任何业务逻辑
 
@@ -526,25 +651,21 @@ commands.trigger(ItemCrafted {
 | CorrelationId | ✅ 完整 | BattleId / TurnId / ActionId 三级链路 |
 | DiagnosticContext | ✅ 已定义 | Builder 模式，带 Display 格式化 |
 | OnceGuard + 宏 | ✅ 完整 | warn_once! / error_once! |
-| battle_logger | ✅ 已注册 | 监听 BattleStarted / BattleEnded |
-| turn_logger | ✅ 已注册 | 监听 TurnStarted / TurnEnded |
-| spell_logger | ✅ 已注册 | 监听 SpellCastResult |
-| ability_logger | ✅ 已注册 | 监听 4 个技能事件（ABL001-004） |
-| effect_logger | ✅ 已注册 | 监听 4 个效果事件（EFF001-004） |
-| quest_logger | ✅ 已注册 | 监听 5 个任务事件（QST001-005） |
-| content_logger | ✅ 已注册 | 监听内容热重载（CNT001） |
-| LoggingPlugin | ✅ 已注册 | 18 个 Observer 在 app_plugin.rs Phase 8 |
+| Observer 覆盖（20 模块） | ✅ 完整 | 15 个业务领域 + 内容基础设施全部覆盖 |
+| LoggingPlugin | ✅ 已注册 | 56 个 Observer 在 app_plugin.rs Phase 8 |
+| MetricsCollector | ✅ 已实现 | 全局计数器 + Bevy Resource + 每 60 帧 DEBUG 摘要 |
+| sinks/FileSink | ✅ 已实现 | 可轮转的 JSON 文件日志输出器（logs/game.jsonl） |
+| tracing::instrument span | ✅ 已接入 | 17/20 个 Observer 模块已标注 `#[instrument]` |
 | ExecutionLogHook | ✅ 已实现 | Pipeline 执行日志 trace 输出 |
 
 ### 计划中但未实现
 
 | 组件 | 状态 | 说明 |
 |------|------|------|
-| sinks (文件输出) | ❌ 未实现 | `src/infra/logging/sinks/` 仍是空模块 |
-| DiagnosticContext 实际使用 | ❌ 未接入 | Observer 目前直接传结构化字段给 `info!()`，未使用 `DiagnosticContext` 类型 |
-| tracing::instrument span | ❌ 未接入 | ADR-052 规划的链路追踪 |
-| Metrics 消费端 | ❌ 未接入 | 领域事件 → 统计数据（counter/gauge）的链路 |
-| domain 层违规清理 | ⚠️ 持续进行中 | 仍有 13 个 core 层文件（分布在 progression/inventory/faction/tactical/terrain/combat/narrative）存在直接 `tracing::info!`/`warn!`/`trace!` 调用，需要逐步改为事件驱动 |
+| DiagnosticContext 实际使用 | ❌ 未接入 | 类型已定义但 Observer 仍直接传结构化字段给 `info!()`，未使用 `DiagnosticContext` 来包裹上下文 |
+| 旧版 Observer 升级 | ⚠️ 进行中 | battle_logger / turn_logger / spell_logger 这 3 个最早实现的模块尚未加上 `#[instrument]` 和 `metrics::record()` 调用，与其他 17 个模块不一致 |
+| Metrics 持久化 | ❌ 未实现 | MetricsCollector 当前仅输出 DEBUG 日志，未持久化到文件或对接外部监控 |
+| domain 层违规清理 | ⚠️ 持续进行中 | 仍有 13 个 core 层文件（progression/inventory/faction/tactical/terrain/combat/narrative）存在直接 `tracing::info!`/`warn!`/`trace!` 调用 |
 
 ---
 
@@ -583,6 +704,8 @@ commands.trigger(ItemCrafted {
 | `docs/00-governance/coding-rules.md` §14 | 日志编码规范 |
 | `docs/01-architecture/40-cross-cutting/ADR-052-logging-architecture.md` | 日志架构决策记录 |
 | `src/shared/diagnostics/mod.rs` | 共享日志类型定义 |
-| `src/infra/logging/plugin.rs` | LoggingPlugin 入口 |
-| `src/infra/logging/observers/` | 各领域日志 Observer |
+| `src/infra/logging/plugin.rs` | LoggingPlugin 入口（56 Observers + Metrics） |
+| `src/infra/logging/observers/` | 20 个领域日志 Observer 模块 |
+| `src/infra/logging/metrics/mod.rs` | MetricsCollector 度量统计实现 |
+| `src/infra/logging/sinks/file_sink.rs` | FileSink 文件日志输出器 |
 | `src/infra/logging/rate_limit/once_guard.rs` | 日志风暴保护实现 |

@@ -5,6 +5,9 @@
 //!
 //! 详见 docs/02-domain/capabilities/cue_domain.md §5。
 
+use bevy::ecs::system::Commands;
+
+use crate::core::capabilities::cue::events::{CueSuppressed, CueTriggered, SuppressReason};
 use crate::core::capabilities::cue::foundation::{
     CueContainer, CueData, CueDef, CueError, CueTag, CueType,
 };
@@ -114,14 +117,20 @@ fn cue_def_to_data(
 ///
 /// 当前为核心层占位——实际分发由 Infra 表现层实现。
 /// 此函数验证 Cue 数据合法性并返回分发目标信息。
-pub fn dispatch_cue(cue_data: &CueData) -> Result<DispatchTarget, CueError> {
+pub fn dispatch_cue(cue_data: &CueData, commands: &mut Commands) -> Result<DispatchTarget, CueError> {
     // 不变量 3.1: Cue 是只读信号——本函数不修改任何状态
     // 不变量 3.4: 检查 Cue 是否禁用（由调用方在 collect_cues 中处理）
 
     // 不变量 3.5: Cue 数据不应包含业务敏感信息（占位检查）
     // 实际实现中 Infra 层应验证数据合法性
 
-    Ok(DispatchTarget::from_cue_type(&cue_data.cue_type))
+    let target = DispatchTarget::from_cue_type(&cue_data.cue_type);
+
+    commands.trigger(CueTriggered {
+        data: cue_data.clone(),
+    });
+
+    Ok(target)
 }
 
 /// 检查 Cue 是否可以触发。
@@ -129,13 +138,18 @@ pub fn dispatch_cue(cue_data: &CueData) -> Result<DispatchTarget, CueError> {
 /// 静态检查：非禁用、参数合法。
 ///
 /// 不变量 3.4: 关键信号（critical）绕过禁用检查，确保始终可触发。
-pub fn can_trigger(cue_def: &CueDef, disabled_cues: &[String]) -> bool {
+pub fn can_trigger(cue_def: &CueDef, disabled_cues: &[String], commands: &mut Commands) -> bool {
     // 关键信号总是可触发（不变量 3.4 的例外）
     if cue_def.critical {
         return true;
     }
     // 不变量 3.4: 非关键信号受禁用控制
     if disabled_cues.contains(&cue_def.id) {
+        commands.trigger(CueSuppressed {
+            cue_def_id: cue_def.id.clone(),
+            cue_type_name: cue_def.cue_type.name().to_string(),
+            reason: SuppressReason::Disabled,
+        });
         return false;
     }
     true

@@ -13,10 +13,14 @@ use super::super::rules::{
 };
 
 /// 处理制作请求。
-pub fn on_craft_item(_trigger: On<ItemCrafted>, _config: Res<CraftingConfig>, _commands: Commands) {
+pub fn on_craft_item(
+    _trigger: On<ItemCrafted>,
+    _config: Res<CraftingConfig>,
+) {
     let _event = _trigger.event();
     // 简化实现：触发制作完成事件
     // 完整实现需检查材料、站台、技能，消耗材料，产生产出
+    // ItemCrafted 已由外部触发，此处不再重复触发
 }
 
 /// 处理附魔请求。
@@ -67,6 +71,7 @@ pub fn on_apply_enchantment(
 
         // 3. 应用附魔
         slot.active_enchants.push(event.new_enchantment.clone());
+        // EnchantmentApplied 已由外部触发，此处不再重复触发
     }
 }
 
@@ -89,6 +94,6 @@ pub fn on_upgrade_item(
         }
         let _old_level = level.current;
         level.current += 1;
-        // ItemUpgraded 已由外部触发
+        // ItemUpgraded 已由外部触发，此处不再重复触发
     }
 }

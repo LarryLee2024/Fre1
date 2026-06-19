@@ -1,4 +1,4 @@
-use bevy::prelude::Entity;
+use bevy::prelude::{Commands, Entity, World};
 
 use crate::core::capabilities::gameplay_context::foundation::{
     ContextBuildError, ContextOrigin, ElementType, SourceInfo, TargetInfo,
@@ -45,10 +45,12 @@ fn debug_entity_from_bits() {
 
 #[test]
 fn builder_with_source_and_target_succeeds() {
+    let mut world = World::new();
+    let mut commands = world.commands();
     let ctx = ContextBuilder::new(ContextOrigin::Direct, 1)
         .source(valid_source())
         .target(valid_target())
-        .build()
+        .build(&mut commands)
         .expect("build should succeed");
     assert_eq!(ctx.origin, ContextOrigin::Direct);
     assert!(ctx.context_id.starts_with("ctx_"));
@@ -57,9 +59,11 @@ fn builder_with_source_and_target_succeeds() {
 
 #[test]
 fn builder_missing_source_fails() {
+    let mut world = World::new();
+    let mut commands = world.commands();
     let ctx = ContextBuilder::new(ContextOrigin::Direct, 1)
         .target(valid_target())
-        .build();
+        .build(&mut commands);
     assert!(
         matches!(ctx, Err(ContextBuildError::MissingFields(fields)) if fields.contains(&"source".to_string()))
     );
@@ -67,9 +71,11 @@ fn builder_missing_source_fails() {
 
 #[test]
 fn builder_missing_target_fails() {
+    let mut world = World::new();
+    let mut commands = world.commands();
     let ctx = ContextBuilder::new(ContextOrigin::Direct, 1)
         .source(valid_source())
-        .build();
+        .build(&mut commands);
     assert!(
         matches!(ctx, Err(ContextBuildError::MissingFields(fields)) if fields.contains(&"target".to_string()))
     );
@@ -77,6 +83,8 @@ fn builder_missing_target_fails() {
 
 #[test]
 fn builder_all_optional_fields_succeeds() {
+    let mut world = World::new();
+    let mut commands = world.commands();
     let ctx = ContextBuilder::new(ContextOrigin::Triggered, 42)
         .source(valid_source())
         .target(valid_target())
@@ -84,7 +92,7 @@ fn builder_all_optional_fields_succeeds() {
         .equipment("equip_000001")
         .element(ElementType::Fire)
         .critical()
-        .build()
+        .build(&mut commands)
         .unwrap();
     assert_eq!(ctx.origin, ContextOrigin::Triggered);
     assert_eq!(ctx.ability_id, Some("abl_000001".to_string()));
@@ -97,10 +105,12 @@ fn builder_all_optional_fields_succeeds() {
 
 #[test]
 fn chain_first_node_at_head() {
+    let mut world = World::new();
+    let mut commands = world.commands();
     let ctx = ContextBuilder::new(ContextOrigin::Direct, 10)
         .source(valid_source())
         .target(valid_target())
-        .build()
+        .build(&mut commands)
         .unwrap();
     let last = ctx.chain.last().unwrap();
     assert_eq!(last.frame, 10);
@@ -109,15 +119,17 @@ fn chain_first_node_at_head() {
 
 #[test]
 fn context_id_unique_per_build() {
+    let mut world = World::new();
+    let mut commands = world.commands();
     let ctx1 = ContextBuilder::new(ContextOrigin::Direct, 1)
         .source(valid_source())
         .target(valid_target())
-        .build()
+        .build(&mut commands)
         .unwrap();
     let ctx2 = ContextBuilder::new(ContextOrigin::Direct, 1)
         .source(valid_source())
         .target(valid_target())
-        .build()
+        .build(&mut commands)
         .unwrap();
     assert_ne!(ctx1.context_id, ctx2.context_id);
 }

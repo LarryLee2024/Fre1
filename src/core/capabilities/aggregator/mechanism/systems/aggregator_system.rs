@@ -34,6 +34,7 @@ pub(crate) fn on_aggregate_dirty(
     trigger: On<AggregateDirty>,
     mut attr_query: Query<&mut AttributeContainer>,
     mod_query: Query<&ModifierContainer>,
+    mut commands: Commands,
 ) {
     let entity = trigger.entity;
     let attr_id_str = &trigger.event().attribute_id;
@@ -86,6 +87,8 @@ pub(crate) fn on_aggregate_dirty(
         f32::NEG_INFINITY,
         f32::INFINITY,
         0,
+        entity,
+        &mut commands,
     );
 
     if let Ok(agg_result) = result {

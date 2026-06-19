@@ -1,3 +1,5 @@
+use bevy::prelude::*;
+
 use crate::core::capabilities::ability::foundation::{
     AbilityError, AbilityInstanceId, AbilityState, ActivationContext, ActivationType,
     CooldownEntry, CostEntry,
@@ -30,10 +32,13 @@ fn make_request_casting(spec_id: &str, def_id: &str, frame: u64) -> ActivationRe
 
 #[test]
 fn activate_instant_ability_succeeds() {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let mut container = ActiveAbilityContainer::empty();
     let request = make_request("abl_001", "abl_000001", 1);
 
-    let result = try_activate(&mut container, request);
+    let result = try_activate(&mut container, request, entity, &mut commands);
     assert!(result.is_ok());
 
     let id = result.unwrap();
@@ -44,10 +49,13 @@ fn activate_instant_ability_succeeds() {
 
 #[test]
 fn activate_casting_ability_succeeds() {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let mut container = ActiveAbilityContainer::empty();
     let request = make_request_casting("abl_002", "abl_000002", 1);
 
-    let result = try_activate(&mut container, request);
+    let result = try_activate(&mut container, request, entity, &mut commands);
     assert!(result.is_ok());
 
     let id = result.unwrap();
@@ -58,11 +66,14 @@ fn activate_casting_ability_succeeds() {
 
 #[test]
 fn reject_activation_when_on_cooldown() {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let mut container = ActiveAbilityContainer::empty();
     container.set_cooldown(CooldownEntry::new("abl_001", 2));
 
     let request = make_request("abl_001", "abl_000001", 1);
-    let result = try_activate(&mut container, request);
+    let result = try_activate(&mut container, request, entity, &mut commands);
 
     assert!(result.is_err());
     assert!(matches!(
@@ -73,12 +84,15 @@ fn reject_activation_when_on_cooldown() {
 
 #[test]
 fn reject_duplicate_activation_of_active_ability() {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let mut container = ActiveAbilityContainer::empty();
     let request = make_request("abl_001", "abl_000001", 1);
-    try_activate(&mut container, request).unwrap();
+    try_activate(&mut container, request, entity, &mut commands).unwrap();
 
     let request2 = make_request("abl_001", "abl_000001", 2);
-    let result = try_activate(&mut container, request2);
+    let result = try_activate(&mut container, request2, entity, &mut commands);
 
     assert!(result.is_err());
     assert!(matches!(
@@ -89,11 +103,14 @@ fn reject_duplicate_activation_of_active_ability() {
 
 #[test]
 fn activate_ability_with_costs() {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let mut container = ActiveAbilityContainer::empty();
     let mut request = make_request("abl_001", "abl_000001", 1);
     request.costs = vec![CostEntry::new("mana", 20.0)];
 
-    let result = try_activate(&mut container, request);
+    let result = try_activate(&mut container, request, entity, &mut commands);
     assert!(result.is_ok());
 
     let id = result.unwrap();
@@ -104,9 +121,12 @@ fn activate_ability_with_costs() {
 
 #[test]
 fn transition_from_ready_to_active() {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let mut container = ActiveAbilityContainer::empty();
     let request = make_request_casting("abl_001", "abl_000001", 1);
-    let id = try_activate(&mut container, request).unwrap();
+    let id = try_activate(&mut container, request, entity, &mut commands).unwrap();
 
     let result = transition_to(&mut container, &id, AbilityState::Active);
     assert!(result.is_ok());
@@ -118,9 +138,12 @@ fn transition_from_ready_to_active() {
 
 #[test]
 fn transition_from_casting_to_ready() {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let mut container = ActiveAbilityContainer::empty();
     let request = make_request_casting("abl_001", "abl_000001", 1);
-    let id = try_activate(&mut container, request).unwrap();
+    let id = try_activate(&mut container, request, entity, &mut commands).unwrap();
 
     let result = transition_to(&mut container, &id, AbilityState::Ready);
     assert!(result.is_ok());
@@ -132,9 +155,12 @@ fn transition_from_casting_to_ready() {
 
 #[test]
 fn invalid_transition_from_ready_to_cooldown() {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let mut container = ActiveAbilityContainer::empty();
     let request = make_request_casting("abl_001", "abl_000001", 1);
-    let id = try_activate(&mut container, request).unwrap();
+    let id = try_activate(&mut container, request, entity, &mut commands).unwrap();
 
     transition_to(&mut container, &id, AbilityState::Ready).unwrap();
 
@@ -144,9 +170,12 @@ fn invalid_transition_from_ready_to_cooldown() {
 
 #[test]
 fn transition_from_any_state_to_removed() {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let mut container = ActiveAbilityContainer::empty();
     let request = make_request("abl_001", "abl_000001", 1);
-    let id = try_activate(&mut container, request).unwrap();
+    let id = try_activate(&mut container, request, entity, &mut commands).unwrap();
 
     let result = transition_to(&mut container, &id, AbilityState::Removed);
     assert!(result.is_ok());
@@ -154,11 +183,14 @@ fn transition_from_any_state_to_removed() {
 
 #[test]
 fn cancel_casting_returns_to_ready() {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let mut container = ActiveAbilityContainer::empty();
     let request = make_request_casting("abl_001", "abl_000001", 1);
-    let id = try_activate(&mut container, request).unwrap();
+    let id = try_activate(&mut container, request, entity, &mut commands).unwrap();
 
-    cancel_ability(&mut container, &id).unwrap();
+    cancel_ability(&mut container, &id, entity, &mut commands).unwrap();
     let instance = container.get_instance(&id).unwrap();
     assert_eq!(instance.state, AbilityState::Ready);
     assert_eq!(instance.cast_progress, 0);
@@ -166,34 +198,43 @@ fn cancel_casting_returns_to_ready() {
 
 #[test]
 fn cancel_active_removes_ability() {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let mut container = ActiveAbilityContainer::empty();
     let request = make_request("abl_001", "abl_000001", 1);
-    let id = try_activate(&mut container, request).unwrap();
+    let id = try_activate(&mut container, request, entity, &mut commands).unwrap();
 
-    cancel_ability(&mut container, &id).unwrap();
+    cancel_ability(&mut container, &id, entity, &mut commands).unwrap();
     let instance = container.get_instance(&id).unwrap();
     assert_eq!(instance.state, AbilityState::Removed);
 }
 
 #[test]
 fn cancel_ready_ability_returns_error() {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let mut container = ActiveAbilityContainer::empty();
     let request = make_request("abl_001", "abl_000001", 1);
-    let id = try_activate(&mut container, request).unwrap();
+    let id = try_activate(&mut container, request, entity, &mut commands).unwrap();
 
-    cancel_ability(&mut container, &id).unwrap();
+    cancel_ability(&mut container, &id, entity, &mut commands).unwrap();
 
-    let result = cancel_ability(&mut container, &id);
+    let result = cancel_ability(&mut container, &id, entity, &mut commands);
     assert!(result.is_err());
 }
 
 #[test]
 fn complete_ability_enters_cooldown() {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let mut container = ActiveAbilityContainer::empty();
     let request = make_request("abl_001", "abl_000001", 1);
-    let id = try_activate(&mut container, request).unwrap();
+    let id = try_activate(&mut container, request, entity, &mut commands).unwrap();
 
-    complete_ability(&mut container, &id, 3).unwrap();
+    complete_ability(&mut container, &id, 3, entity, &mut commands).unwrap();
     assert!(container.get_instance(&id).is_none());
     assert!(container.is_on_cooldown("abl_001"));
     assert_eq!(container.cooldown_remaining("abl_001"), 3);
@@ -201,22 +242,28 @@ fn complete_ability_enters_cooldown() {
 
 #[test]
 fn complete_ability_no_cooldown() {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let mut container = ActiveAbilityContainer::empty();
     let request = make_request("abl_001", "abl_000001", 1);
-    let id = try_activate(&mut container, request).unwrap();
+    let id = try_activate(&mut container, request, entity, &mut commands).unwrap();
 
-    complete_ability(&mut container, &id, 0).unwrap();
+    complete_ability(&mut container, &id, 0, entity, &mut commands).unwrap();
     assert!(container.get_instance(&id).is_none());
     assert!(!container.is_on_cooldown("abl_001"));
 }
 
 #[test]
 fn complete_casting_ability_returns_error() {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let mut container = ActiveAbilityContainer::empty();
     let request = make_request_casting("abl_001", "abl_000001", 1);
-    let id = try_activate(&mut container, request).unwrap();
+    let id = try_activate(&mut container, request, entity, &mut commands).unwrap();
 
-    let result = complete_ability(&mut container, &id, 2);
+    let result = complete_ability(&mut container, &id, 2, entity, &mut commands);
     assert!(result.is_err());
 }
 
@@ -238,8 +285,11 @@ fn cooldown_timer_expires() {
 
 #[test]
 fn test_force_reset_cooldown() {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let mut container = ActiveAbilityContainer::empty();
-    start_cooldown(&mut container, "abl_001", 5);
+    start_cooldown(&mut container, &mut commands, entity, "abl_001", 5);
     assert!(container.is_on_cooldown("abl_001"));
 
     force_reset_cooldown(&mut container, "abl_001");
@@ -248,16 +298,22 @@ fn test_force_reset_cooldown() {
 
 #[test]
 fn start_cooldown_zero_turns_noop() {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let mut container = ActiveAbilityContainer::empty();
-    start_cooldown(&mut container, "abl_001", 0);
+    start_cooldown(&mut container, &mut commands, entity, "abl_001", 0);
     assert!(!container.is_on_cooldown("abl_001"));
 }
 
 #[test]
 fn apply_block_pauses_all_active() {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let mut container = ActiveAbilityContainer::empty();
     let request = make_request("abl_001", "abl_000001", 1);
-    let id = try_activate(&mut container, request).unwrap();
+    let id = try_activate(&mut container, request, entity, &mut commands).unwrap();
 
     apply_block(&mut container);
 
@@ -268,9 +324,12 @@ fn apply_block_pauses_all_active() {
 
 #[test]
 fn remove_block_restores_state() {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let mut container = ActiveAbilityContainer::empty();
     let request = make_request("abl_001", "abl_000001", 1);
-    let id = try_activate(&mut container, request).unwrap();
+    let id = try_activate(&mut container, request, entity, &mut commands).unwrap();
 
     apply_block(&mut container);
     remove_block(&mut container);
@@ -282,9 +341,12 @@ fn remove_block_restores_state() {
 
 #[test]
 fn block_casting_restores_to_casting() {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let mut container = ActiveAbilityContainer::empty();
     let request = make_request_casting("abl_001", "abl_000001", 1);
-    let id = try_activate(&mut container, request).unwrap();
+    let id = try_activate(&mut container, request, entity, &mut commands).unwrap();
 
     apply_block(&mut container);
     remove_block(&mut container);
@@ -295,9 +357,12 @@ fn block_casting_restores_to_casting() {
 
 #[test]
 fn test_advance_cast_progress() {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let mut container = ActiveAbilityContainer::empty();
     let request = make_request_casting("abl_001", "abl_000001", 1);
-    let id = try_activate(&mut container, request).unwrap();
+    let id = try_activate(&mut container, request, entity, &mut commands).unwrap();
 
     let done = advance_cast_progress(&mut container, &id, 2).unwrap();
     assert!(!done);
@@ -311,9 +376,12 @@ fn test_advance_cast_progress() {
 
 #[test]
 fn advance_cast_progress_on_instant_returns_error() {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let mut container = ActiveAbilityContainer::empty();
     let request = make_request("abl_001", "abl_000001", 1);
-    let id = try_activate(&mut container, request).unwrap();
+    let id = try_activate(&mut container, request, entity, &mut commands).unwrap();
 
     let result = advance_cast_progress(&mut container, &id, 1);
     assert!(result.is_err());
@@ -321,10 +389,13 @@ fn advance_cast_progress_on_instant_returns_error() {
 
 #[test]
 fn test_get_ready_abilities() {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let mut container = ActiveAbilityContainer::empty();
-    start_cooldown(&mut container, "abl_001", 2);
+    start_cooldown(&mut container, &mut commands, entity, "abl_001", 2);
     let request = make_request("abl_002", "abl_000002", 1);
-    try_activate(&mut container, request).unwrap();
+    try_activate(&mut container, request, entity, &mut commands).unwrap();
 
     let all_specs = vec!["abl_001".into(), "abl_002".into(), "abl_003".into()];
     let ready = get_ready_abilities(&container, &all_specs);
@@ -334,9 +405,14 @@ fn test_get_ready_abilities() {
 
 #[test]
 fn test_start_multiple_cooldowns() {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let mut container = ActiveAbilityContainer::empty();
     start_multiple_cooldowns(
         &mut container,
+        &mut commands,
+        entity,
         vec![("abl_001".into(), 2), ("abl_002".into(), 3)],
     );
 

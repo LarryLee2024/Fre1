@@ -9,6 +9,9 @@ use std::collections::HashMap;
 
 use bevy::prelude::*;
 
+use crate::core::capabilities::event::events::{
+    EventCycleDetected, EventDelivered, EventDeliveryFailed, EventPublished,
+};
 use crate::core::capabilities::event::foundation::{
     DispatchReport, EVENT_CYCLE_LIMIT, EventHandler, EventPayload, EventPriority, EventTag,
     GameplayEvent, SubscriberEntry,
@@ -79,14 +82,33 @@ impl EventBus {
     ///
     /// 事件不会立即分发，而是加入待分发队列。
     /// 调用 `dispatch_pending()` 批量处理。
-    pub fn publish(&mut self, tag: EventTag, source: impl Into<String>, payload: EventPayload) {
+    pub fn publish(
+        &mut self,
+        tag: EventTag,
+        source: impl Into<String>,
+        payload: EventPayload,
+        commands: &mut Commands,
+    ) {
+        let tag_name = tag.name().to_string();
+        let source_str = source.into();
+
         let id = self.next_event_id();
         self.pending_events.push(GameplayEvent {
             id,
             tag,
-            source: source.into(),
+            source: source_str.clone(),
             priority: EventPriority::Normal,
             payload,
+        });
+
+        commands.trigger(EventPublished {
+            event_tag: tag_name,
+            source: source_str,
+            priority: "Normal".to_string(),
+            timestamp: std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_millis() as u64,
         });
     }
 
@@ -97,14 +119,29 @@ impl EventBus {
         source: impl Into<String>,
         payload: EventPayload,
         priority: EventPriority,
+        commands: &mut Commands,
     ) {
+        let tag_name = tag.name().to_string();
+        let source_str = source.into();
+        let priority_str = format!("{:?}", priority);
+
         let id = self.next_event_id();
         self.pending_events.push(GameplayEvent {
             id,
             tag,
-            source: source.into(),
+            source: source_str.clone(),
             priority,
             payload,
+        });
+
+        commands.trigger(EventPublished {
+            event_tag: tag_name,
+            source: source_str,
+            priority: priority_str,
+            timestamp: std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_millis() as u64,
         });
     }
 
@@ -124,7 +161,7 @@ impl EventBus {
     /// 4. 循环检测（不变量 §3.4）
     ///
     /// 返回分发报告。
-    pub fn dispatch_pending(&mut self) -> DispatchReport {
+    pub fn dispatch_pending(&mut self, commands: &mut Commands) -> DispatchReport {
         if self.pending_events.is_empty() {
             return DispatchReport::default();
         }
@@ -140,14 +177,18 @@ impl EventBus {
             let cycle_count = self.cycle_counters.entry(event.tag.clone()).or_insert(0);
             if *cycle_count >= EVENT_CYCLE_LIMIT {
                 report.cycle_interrupted = true;
-                report.errors.push((
-                    "EventBus".into(),
-                    format!(
-                        "cycle detected for event '{}': exceeded limit of {}",
-                        event.tag.name(),
-                        EVENT_CYCLE_LIMIT
-                    ),
-                ));
+                let chain_trace = format!(
+                    "cycle detected for event '{}': exceeded limit of {}",
+                    event.tag.name(),
+                    EVENT_CYCLE_LIMIT
+                );
+                report.errors.push(("EventBus".into(), chain_trace.clone()));
+
+                commands.trigger(EventCycleDetected {
+                    event_tag: event.tag.name().to_string(),
+                    cycle_depth: *cycle_count,
+                    chain_trace,
+                });
                 continue;
             }
 
@@ -164,9 +205,19 @@ impl EventBus {
             for (handler, subscriber_id) in &matching {
                 match handler(&event.payload) {
                     Ok(()) => {
+                        commands.trigger(EventDelivered {
+                            event_tag: event.tag.name().to_string(),
+                            subscriber_id: subscriber_id.clone(),
+                            latency_ms: 0,
+                        });
                         report.delivered += 1;
                     }
                     Err(err_msg) => {
+                        commands.trigger(EventDeliveryFailed {
+                            event_tag: event.tag.name().to_string(),
+                            subscriber_id: subscriber_id.clone(),
+                            error_message: err_msg.clone(),
+                        });
                         report.failed += 1;
                         report.errors.push((subscriber_id.clone(), err_msg.clone()));
                     }

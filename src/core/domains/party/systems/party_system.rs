@@ -9,7 +9,10 @@ use crate::core::domains::party::components::{BondState, Party};
 use crate::core::domains::party::events::{
     BondActivated, BondDeactivated, MemberJoined, MemberRemoved, MemberSwapped,
 };
-use crate::core::domains::party::rules::check_bond_activation;
+use crate::core::domains::party::rules::{
+    add_member_to_party, check_bond_activation, remove_member_from_party,
+    swap_active_with_reserve,
+};
 
 /// 响应成员加入事件：评估羁绊状态。
 ///
@@ -160,5 +163,98 @@ pub fn on_member_swapped(
             members: participants,
             effect_description: name_key,
         });
+    }
+}
+
+/// 添加成员到队伍并触发 MemberJoined 事件。
+///
+/// 外部调用方应在操作完成后调用此函数。
+pub fn handle_add_member(
+    mut commands: Commands,
+    mut party: ResMut<Party>,
+    entity: Entity,
+    is_active: bool,
+) {
+    let role = if is_active {
+        "active".to_string()
+    } else {
+        "reserve".to_string()
+    };
+
+    match add_member_to_party((*party).clone(), entity, is_active) {
+        Ok((new_party, _slot_index)) => {
+            *party = new_party;
+            commands.trigger(MemberJoined {
+                party_id: None,
+                entity,
+                role,
+            });
+        }
+        Err(e) => {
+            tracing::warn!(
+                event = "party.add_member.failed",
+                entity = ?entity,
+                error = %e,
+                "handle_add_member: add_member_to_party failed: {}",
+                e
+            );
+        }
+    }
+}
+
+/// 从队伍中移除成员并触发 MemberRemoved 事件。
+pub fn handle_remove_member(
+    mut commands: Commands,
+    mut party: ResMut<Party>,
+    entity: Entity,
+    reason: String,
+) {
+    match remove_member_from_party((*party).clone(), entity) {
+        Ok((new_party, _auto_filled)) => {
+            *party = new_party;
+            commands.trigger(MemberRemoved {
+                party_id: None,
+                entity,
+                reason,
+            });
+        }
+        Err(e) => {
+            tracing::warn!(
+                event = "party.remove_member.failed",
+                entity = ?entity,
+                error = %e,
+                "handle_remove_member: remove_member_from_party failed: {}",
+                e
+            );
+        }
+    }
+}
+
+/// 战斗中换人并触发 MemberSwapped 事件。
+pub fn handle_swap_member(
+    mut commands: Commands,
+    mut party: ResMut<Party>,
+    outgoing: Entity,
+    incoming: Entity,
+) {
+    match swap_active_with_reserve((*party).clone(), outgoing, incoming) {
+        Ok(new_party) => {
+            *party = new_party;
+            commands.trigger(MemberSwapped {
+                party_id: None,
+                outgoing,
+                incoming,
+            });
+        }
+        Err(e) => {
+            tracing::warn!(
+                event = "party.swap_member.failed",
+                outgoing = ?outgoing,
+                incoming = ?incoming,
+                error = %e,
+                "handle_swap_member: swap_active_with_reserve failed: {}",
+                e
+            );
+        }
     }
 }

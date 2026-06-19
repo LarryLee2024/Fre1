@@ -4,8 +4,12 @@
 
 use bevy::prelude::*;
 
-use crate::core::capabilities::attribute::events::AttributeInitialized;
-use crate::core::capabilities::attribute::foundation::{AttributeCategory, AttributeValue};
+use crate::core::capabilities::attribute::events::{
+    AttributeChanged, AttributeClamped, AttributeInitialized,
+};
+use crate::core::capabilities::attribute::foundation::{
+    AttributeCategory, AttributeId, AttributeValue,
+};
 use crate::core::capabilities::attribute::mechanism::AttributeContainer;
 use crate::core::capabilities::attribute::mechanism::AttributeRegistry;
 
@@ -35,4 +39,46 @@ pub(crate) fn on_attribute_initialized(
             );
         }
     }
+}
+
+/// 为实体初始化属性并触发 AttributeInitialized 事件。
+///
+/// 外部调用方在确保实体拥有 AttributeContainer 组件后调用此函数。
+pub(crate) fn initialize_attributes(
+    mut commands: Commands,
+    entity: Entity,
+) {
+    commands.trigger(AttributeInitialized { entity });
+}
+
+/// 触发 AttributeChanged 事件（属性值变化后调用）。
+pub(crate) fn notify_attribute_changed(
+    mut commands: Commands,
+    entity: Entity,
+    attribute_id: AttributeId,
+    old_value: f32,
+    new_value: f32,
+) {
+    commands.trigger(AttributeChanged {
+        entity,
+        attribute_id,
+        old_value,
+        new_value,
+    });
+}
+
+/// 触发 AttributeClamped 事件（属性值被截断时调用）。
+pub(crate) fn notify_attribute_clamped(
+    mut commands: Commands,
+    entity: Entity,
+    attribute_id: AttributeId,
+    attempted_value: f32,
+    clamped_value: f32,
+) {
+    commands.trigger(AttributeClamped {
+        entity,
+        attribute_id,
+        attempted_value,
+        clamped_value,
+    });
 }

@@ -1,3 +1,5 @@
+use bevy::prelude::*;
+
 use crate::core::capabilities::modifier::foundation::{
     ModifierInstanceId, ModifierOp, ModifierSource, ModifierSourceType,
 };
@@ -15,6 +17,9 @@ fn id_generator_produces_unique_ids() {
 
 #[test]
 fn valid_modifier_creation_succeeds() {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let source = ModifierSource {
         source_type: ModifierSourceType::Buff,
         source_id: "buf_000001".to_string(),
@@ -27,12 +32,17 @@ fn valid_modifier_creation_succeeds() {
         50,
         source,
         None,
+        entity,
+        &mut commands,
     );
     assert!(result.is_ok());
 }
 
 #[test]
 fn priority_out_of_range_rejected() {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let source = ModifierSource {
         source_type: ModifierSourceType::Buff,
         source_id: "buf_000001".to_string(),
@@ -45,6 +55,8 @@ fn priority_out_of_range_rejected() {
         150,
         source,
         None,
+        entity,
+        &mut commands,
     );
     assert!(matches!(
         result,
@@ -54,6 +66,9 @@ fn priority_out_of_range_rejected() {
 
 #[test]
 fn missing_source_rejected() {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let source = ModifierSource {
         source_type: ModifierSourceType::Buff,
         source_id: "".to_string(),
@@ -66,6 +81,8 @@ fn missing_source_rejected() {
         50,
         source,
         None,
+        entity,
+        &mut commands,
     );
     assert!(matches!(
         result,
@@ -75,6 +92,9 @@ fn missing_source_rejected() {
 
 #[test]
 fn missing_target_rejected() {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let source = ModifierSource {
         source_type: ModifierSourceType::Buff,
         source_id: "buf_000001".to_string(),
@@ -87,6 +107,8 @@ fn missing_target_rejected() {
         50,
         source,
         None,
+        entity,
+        &mut commands,
     );
     assert!(matches!(
         result,
@@ -96,6 +118,9 @@ fn missing_target_rejected() {
 
 #[test]
 fn create_multiply_modifier_succeeds() {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let source = ModifierSource {
         source_type: ModifierSourceType::Ability,
         source_id: "abl_000001".to_string(),
@@ -108,6 +133,8 @@ fn create_multiply_modifier_succeeds() {
         50,
         source,
         Some(10),
+        entity,
+        &mut commands,
     );
     assert!(result.is_ok());
     let data = result.unwrap();

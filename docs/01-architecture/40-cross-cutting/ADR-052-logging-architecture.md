@@ -1,7 +1,7 @@
 ---
 id: 01-architecture.40-cross-cutting.ADR-052
 title: "ADR-052: 日志架构（领域事件驱动 + LogCode + 结构化日志）"
-status: Proposed
+status: Accepted
 owner: architect
 created: 2026-06-25
 tags:

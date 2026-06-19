@@ -59,8 +59,9 @@ impl CombatEventFacade {
         tag: CombatEventTag,
         source: impl Into<String>,
         payload: EventPayload,
+        commands: &mut Commands,
     ) {
-        bus.publish(tag.to_event_tag(), source, payload);
+        bus.publish(tag.to_event_tag(), source, payload, commands);
     }
 
     /// 发布一个高优先级战斗事件。
@@ -69,8 +70,9 @@ impl CombatEventFacade {
         tag: CombatEventTag,
         source: impl Into<String>,
         payload: EventPayload,
+        commands: &mut Commands,
     ) {
-        bus.publish_with_priority(tag.to_event_tag(), source, payload, EventPriority::High);
+        bus.publish_with_priority(tag.to_event_tag(), source, payload, EventPriority::High, commands);
     }
 }
 
@@ -89,7 +91,8 @@ impl<'w> CombatEventParam<'w> {
         tag: CombatEventTag,
         source: impl Into<String>,
         payload: EventPayload,
+        commands: &mut Commands,
     ) {
-        CombatEventFacade::publish(&mut self.bus, tag, source, payload);
+        CombatEventFacade::publish(&mut self.bus, tag, source, payload, commands);
     }
 }

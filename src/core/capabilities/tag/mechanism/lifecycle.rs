@@ -3,6 +3,7 @@
 use std::collections::{HashMap, HashSet};
 
 use crate::core::capabilities::tag::foundation::{BitMask, TagDefinition, TagId};
+use crate::core::capabilities::tag::events::TagHierarchyChanged;
 use bevy::prelude::*;
 
 /// 全局标签层级树（Resource）。
@@ -63,7 +64,11 @@ impl std::error::Error for TagRegistrationError {}
 
 impl TagHierarchy {
     /// 注册单个标签，执行所有校验。
-    pub fn register(&mut self, def: TagDefinition) -> Result<(), TagRegistrationError> {
+    pub fn register(
+        &mut self,
+        def: TagDefinition,
+        commands: &mut Commands,
+    ) -> Result<(), TagRegistrationError> {
         // V1: TagId 全局唯一
         if self.tags.contains_key(&def.id) {
             return Err(TagRegistrationError::DuplicateId(def.id));
@@ -94,6 +99,10 @@ impl TagHierarchy {
         let id = def.id.clone();
         let bit_index = def.bit_index;
 
+        // 捕获事件所需数据（def 即将被 move）
+        let id_for_event = id.clone();
+        let parent_id_for_event = def.parent_id.clone();
+
         if def.is_abstract {
             self.abstract_tags.insert(id.clone());
         }
@@ -111,6 +120,11 @@ impl TagHierarchy {
         // 重建继承掩码
         self.rebuild_inherited_masks(bit_index);
 
+        commands.trigger(TagHierarchyChanged {
+            parent_tag_id: parent_id_for_event.unwrap_or_else(|| id_for_event.clone()),
+            affected_child_ids: vec![id_for_event],
+        });
+
         Ok(())
     }
 
@@ -118,8 +132,12 @@ impl TagHierarchy {
     pub fn register_batch(
         &mut self,
         defs: Vec<TagDefinition>,
+        commands: &mut Commands,
     ) -> Vec<Result<(), TagRegistrationError>> {
-        let results: Vec<_> = defs.into_iter().map(|def| self.register(def)).collect();
+        let results: Vec<_> = defs
+            .into_iter()
+            .map(|def| self.register(def, commands))
+            .collect();
         results
     }
 

@@ -6,8 +6,13 @@
 //! 详见 docs/02-domain/capabilities/stacking_domain.md §5。
 //! 详见 docs/04-data/capabilities/stacking_schema.md §3.5。
 
+use bevy::ecs::system::Commands;
+
+use crate::core::capabilities::stacking::events::{
+    StackAdded, StackOverflow, StackRefreshed, StackReplaced,
+};
 use crate::core::capabilities::stacking::foundation::{
-    StackingConfig, StackingDecision, StackingError, StackingType,
+    OverflowBehavior, StackingConfig, StackingDecision, StackingError, StackingType,
 };
 
 /// 堆叠判定所需的主题数据。
@@ -170,6 +175,8 @@ pub fn evaluate_stacking(
     existing: &StackingSubject,
     incoming: &StackingSubject,
     config: &StackingConfig,
+    entity_id: &str,
+    commands: &mut Commands,
 ) -> Option<StackingOutcome> {
     // Step 1: 检查 EffectDefId —— 不同 → 不进行堆叠
     if !match_identity(&existing.def_id, &incoming.def_id) {
@@ -187,6 +194,57 @@ pub fn evaluate_stacking(
         StackingDecision::Replace { .. } => 1,
         _ => existing.stack_count,
     };
+
+    // Step 4: 触发领域事件
+    match &decision {
+        StackingDecision::Accumulate {
+            new_stack_count,
+            added_layers,
+        } if *added_layers > 0 => {
+            commands.trigger(StackAdded {
+                entity_id: entity_id.to_string(),
+                effect_spec_id: existing.def_id.clone(),
+                old_stack: existing.stack_count,
+                new_stack: *new_stack_count,
+                max_stack: config.max_stacks,
+            });
+        }
+        StackingDecision::Accumulate { .. } => {
+            // added == 0 → 已达到上限，触发溢出事件
+            let action = match config.overflow_behavior {
+                OverflowBehavior::IgnoreNew => "IgnoreNew",
+                OverflowBehavior::Refresh => "Refresh",
+                OverflowBehavior::Replace => "Replace",
+                OverflowBehavior::RemoveOldest => "RemoveOldest",
+            };
+            commands.trigger(StackOverflow {
+                entity_id: entity_id.to_string(),
+                effect_spec_id: existing.def_id.clone(),
+                current_stack: existing.stack_count,
+                limit: config.max_stacks,
+                overflow_action: action.to_string(),
+            });
+        }
+        StackingDecision::Refresh { new_duration, .. } => {
+            commands.trigger(StackRefreshed {
+                entity_id: entity_id.to_string(),
+                effect_spec_id: existing.def_id.clone(),
+                new_duration: *new_duration,
+                old_duration: existing.remaining_turns,
+            });
+        }
+        StackingDecision::Replace { .. } => {
+            commands.trigger(StackReplaced {
+                entity_id: entity_id.to_string(),
+                effect_spec_id: existing.def_id.clone(),
+                old_source: existing.source_entity.clone(),
+                new_source: incoming.source_entity.clone(),
+            });
+        }
+        StackingDecision::Reject => {
+            // Reject 不触发事件（无堆叠或 overflow_behavior=IgnoreNew 时的正常拒绝）
+        }
+    }
 
     Some(StackingOutcome {
         decision,

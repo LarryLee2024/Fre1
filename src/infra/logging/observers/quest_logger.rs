@@ -8,10 +8,13 @@ use bevy::prelude::*;
 use crate::core::domains::quest::events::{
     ObjectiveCompleted, QuestAccepted, QuestFailed, QuestProgressUpdated, QuestTurnedIn,
 };
+use crate::infra::logging::metrics;
 use crate::shared::diagnostics::LogCode;
 
 /// 任务接受日志 Observer。
+#[tracing::instrument(skip_all, fields(code = ?LogCode::QST001, event = "quest_accepted"))]
 pub(crate) fn on_quest_accepted(trigger: On<QuestAccepted>) {
+    metrics::record(LogCode::QST001);
     let event = trigger.event();
     info!(
         code = ?LogCode::QST001,
@@ -23,7 +26,9 @@ pub(crate) fn on_quest_accepted(trigger: On<QuestAccepted>) {
 }
 
 /// 目标完成日志 Observer。
+#[tracing::instrument(skip_all, fields(code = ?LogCode::QST002, event = "objective_completed"))]
 pub(crate) fn on_objective_completed(trigger: On<ObjectiveCompleted>) {
+    metrics::record(LogCode::QST002);
     let event = trigger.event();
     info!(
         code = ?LogCode::QST002,
@@ -36,7 +41,9 @@ pub(crate) fn on_objective_completed(trigger: On<ObjectiveCompleted>) {
 }
 
 /// 任务交付日志 Observer。
+#[tracing::instrument(skip_all, fields(code = ?LogCode::QST003, event = "quest_turned_in"))]
 pub(crate) fn on_quest_turned_in(trigger: On<QuestTurnedIn>) {
+    metrics::record(LogCode::QST003);
     let event = trigger.event();
     info!(
         code = ?LogCode::QST003,
@@ -48,7 +55,9 @@ pub(crate) fn on_quest_turned_in(trigger: On<QuestTurnedIn>) {
 }
 
 /// 任务失败日志 Observer。
+#[tracing::instrument(skip_all, fields(code = ?LogCode::QST004, event = "quest_failed"))]
 pub(crate) fn on_quest_failed(trigger: On<QuestFailed>) {
+    metrics::record(LogCode::QST004);
     let event = trigger.event();
     warn!(
         code = ?LogCode::QST004,
@@ -61,7 +70,9 @@ pub(crate) fn on_quest_failed(trigger: On<QuestFailed>) {
 }
 
 /// 任务进度更新日志 Observer。
+#[tracing::instrument(skip_all, fields(code = ?LogCode::QST005, event = "quest_progress_updated"))]
 pub(crate) fn on_quest_progress_updated(trigger: On<QuestProgressUpdated>) {
+    metrics::record(LogCode::QST005);
     let event = trigger.event();
     info!(
         code = ?LogCode::QST005,

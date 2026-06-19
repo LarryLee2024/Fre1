@@ -1,3 +1,5 @@
+use bevy::prelude::*;
+
 use crate::core::capabilities::execution::foundation::{
     AbilityExecutionParams, AttributeModifierDef, CalcTrace, CustomExecutionRef, DamageParams,
     DiceDef, DirectOp, EnvironmentParams, ExecutionContext, ExecutionError, ExecutionResult,
@@ -41,33 +43,41 @@ fn make_direct_mod_context() -> ExecutionContext {
 
 #[test]
 fn execute_damage_calculation_returns_correct_value() {
+    let mut world = World::new();
+    let mut commands = world.commands();
     let ctx = make_damage_context();
-    let result = execute(&ctx).unwrap();
+    let result = execute(&ctx, &mut commands).unwrap();
     assert!(result.success);
     assert!(result.value >= 0.0);
 }
 
 #[test]
 fn execute_heal_calculation_returns_correct_value() {
+    let mut world = World::new();
+    let mut commands = world.commands();
     let ctx = make_heal_context();
-    let result = execute(&ctx).unwrap();
+    let result = execute(&ctx, &mut commands).unwrap();
     assert!(result.success);
     assert!(result.value >= 0.0);
 }
 
 #[test]
 fn execute_none_type_returns_zero() {
+    let mut world = World::new();
+    let mut commands = world.commands();
     let ctx = ExecutionContext::new(ExecutionType::None, "caster", "target");
-    let result = execute(&ctx).unwrap();
+    let result = execute(&ctx, &mut commands).unwrap();
     assert!(result.success);
     assert_eq!(result.value, 0.0);
 }
 
 #[test]
 fn execute_unregistered_custom_returns_error() {
+    let mut world = World::new();
+    let mut commands = world.commands();
     let custom = CustomExecutionRef::new("tactical.knockback");
     let ctx = ExecutionContext::new(ExecutionType::Custom(custom), "caster_001", "target_001");
-    let result = execute(&ctx);
+    let result = execute(&ctx, &mut commands);
     assert!(result.is_err());
     let err = result.unwrap_err();
     assert!(matches!(
@@ -78,17 +88,21 @@ fn execute_unregistered_custom_returns_error() {
 
 #[test]
 fn execute_direct_mod_returns_correct_value() {
+    let mut world = World::new();
+    let mut commands = world.commands();
     let ctx = make_direct_mod_context();
-    let result = execute(&ctx).unwrap();
+    let result = execute(&ctx, &mut commands).unwrap();
     assert!(result.success);
     assert_eq!(result.value, 5.0);
 }
 
 #[test]
 fn empty_formula_id_execution_error() {
+    let mut world = World::new();
+    let mut commands = world.commands();
     let params = DamageParams::new("");
     let ctx = ExecutionContext::new(ExecutionType::Damage(params), "caster_001", "target_001");
-    let result = execute(&ctx);
+    let result = execute(&ctx, &mut commands);
     assert!(result.is_err());
     let err = result.unwrap_err();
     assert!(matches!(err, ExecutionError::FormulaNotFound { .. }));
@@ -96,9 +110,11 @@ fn empty_formula_id_execution_error() {
 
 #[test]
 fn empty_heal_formula_id_execution_error() {
+    let mut world = World::new();
+    let mut commands = world.commands();
     let params = HealParams::new("", ScalableValue::Fixed(10.0));
     let ctx = ExecutionContext::new(ExecutionType::Heal(params), "healer_001", "target_001");
-    let result = execute(&ctx);
+    let result = execute(&ctx, &mut commands);
     assert!(result.is_err());
     let err = result.unwrap_err();
     assert!(matches!(err, ExecutionError::FormulaNotFound { .. }));
@@ -108,12 +124,14 @@ fn empty_heal_formula_id_execution_error() {
 
 #[test]
 fn damage_with_dice_and_flat_bonus_correct() {
+    let mut world = World::new();
+    let mut commands = world.commands();
     let params = DamageParams::new("test_formula")
         .with_dice(DiceDef::new(2, 6).unwrap())
         .with_flat_bonus(ScalableValue::Fixed(5.0));
 
     let ctx = ExecutionContext::new(ExecutionType::Damage(params), "caster", "target");
-    let result = execute(&ctx).unwrap();
+    let result = execute(&ctx, &mut commands).unwrap();
     assert!(result.success);
     // dice avg = (6+1)/2 * 2 = 7.0, + flat 5.0 = 12.0
     assert!(result.value >= 0.0);
@@ -121,6 +139,8 @@ fn damage_with_dice_and_flat_bonus_correct() {
 
 #[test]
 fn damage_with_attribute_modifier_correct() {
+    let mut world = World::new();
+    let mut commands = world.commands();
     let mut attrs = std::collections::HashMap::new();
     attrs.insert("attr_strength".into(), 4.0);
 
@@ -129,16 +149,18 @@ fn damage_with_attribute_modifier_correct() {
 
     let ctx = ExecutionContext::new(ExecutionType::Damage(params), "caster", "target")
         .with_source_attributes(attrs);
-    let result = execute(&ctx).unwrap();
+    let result = execute(&ctx, &mut commands).unwrap();
     assert!(result.success);
 }
 
 #[test]
 fn damage_with_critical_correct() {
+    let mut world = World::new();
+    let mut commands = world.commands();
     let params = DamageParams::new("test_formula").with_critical(2.0);
 
     let ctx = ExecutionContext::new(ExecutionType::Damage(params), "caster", "target");
-    let result = execute(&ctx).unwrap();
+    let result = execute(&ctx, &mut commands).unwrap();
     assert!(result.success);
     assert!(!result.was_critical);
 }
@@ -147,6 +169,8 @@ fn damage_with_critical_correct() {
 
 #[test]
 fn heal_with_attribute_modifier_correct() {
+    let mut world = World::new();
+    let mut commands = world.commands();
     let mut attrs = std::collections::HashMap::new();
     attrs.insert("attr_wisdom".into(), 5.0);
 
@@ -156,7 +180,7 @@ fn heal_with_attribute_modifier_correct() {
 
     let ctx = ExecutionContext::new(ExecutionType::Heal(params), "healer", "target")
         .with_source_attributes(attrs);
-    let result = execute(&ctx).unwrap();
+    let result = execute(&ctx, &mut commands).unwrap();
     assert!(result.success);
     // 10.0 + 5.0 = 15.0
     assert!(result.value >= 0.0);
@@ -164,10 +188,12 @@ fn heal_with_attribute_modifier_correct() {
 
 #[test]
 fn heal_temporary_hp_calculation_correct() {
+    let mut world = World::new();
+    let mut commands = world.commands();
     let params = HealParams::new("heal_formula", ScalableValue::Fixed(8.0)).with_temporary_hp(true);
 
     let ctx = ExecutionContext::new(ExecutionType::Heal(params), "healer", "target");
-    let result = execute(&ctx).unwrap();
+    let result = execute(&ctx, &mut commands).unwrap();
     assert!(result.success);
     assert_eq!(result.value, 8.0);
 }
@@ -317,8 +343,10 @@ fn calc_trace_records_calculation_correctly() {
 
 #[test]
 fn execution_result_contains_calc_trace() {
+    let mut world = World::new();
+    let mut commands = world.commands();
     let ctx = make_damage_context();
-    let result = execute(&ctx).unwrap();
+    let result = execute(&ctx, &mut commands).unwrap();
     assert!(result.calc_trace.is_some());
     let trace = result.calc_trace.unwrap();
     assert_eq!(trace.formula_id, "dnd_5e_damage");
@@ -384,6 +412,8 @@ fn damage_params_validate_valid_input_passes() {
 
 #[test]
 fn execute_direct_mod_set_correct() {
+    let mut world = World::new();
+    let mut commands = world.commands();
     let ctx = ExecutionContext::new(
         ExecutionType::DirectAttributeMod {
             attribute_id: "attr_hp".into(),
@@ -393,12 +423,14 @@ fn execute_direct_mod_set_correct() {
         "system",
         "target_001",
     );
-    let result = execute(&ctx).unwrap();
+    let result = execute(&ctx, &mut commands).unwrap();
     assert_eq!(result.value, 100.0);
 }
 
 #[test]
 fn direct_mod_empty_attribute_id_error() {
+    let mut world = World::new();
+    let mut commands = world.commands();
     let ctx = ExecutionContext::new(
         ExecutionType::DirectAttributeMod {
             attribute_id: "".into(),
@@ -408,7 +440,7 @@ fn direct_mod_empty_attribute_id_error() {
         "system",
         "target_001",
     );
-    let result = execute(&ctx);
+    let result = execute(&ctx, &mut commands);
     assert!(result.is_err());
 }
 

@@ -1,12 +1,14 @@
 //! CombatContextFacade 测试
 
-use bevy::prelude::Entity;
+use bevy::prelude::*;
 
 use crate::core::capabilities::gameplay_context::foundation::ContextOrigin;
 use crate::core::domains::combat::integration::gameplay_context::CombatContextFacade;
 
 #[test]
 fn build_attack_context_succeeds() {
+    let mut world = World::new();
+    let mut commands = world.commands();
     let result = CombatContextFacade::build_attack_context(
         Entity::from_raw_u32(1).unwrap(),
         "faction_a",
@@ -16,6 +18,7 @@ fn build_attack_context_succeeds() {
         Some((6, 3)),
         Some("fireball"),
         42,
+        &mut commands,
     );
     assert!(result.is_ok());
     let ctx = result.unwrap();
@@ -27,6 +30,8 @@ fn build_attack_context_succeeds() {
 
 #[test]
 fn build_reaction_context_creates_chain_reaction() {
+    let mut world = World::new();
+    let mut commands = world.commands();
     let result = CombatContextFacade::build_reaction_context(
         Entity::from_raw_u32(2).unwrap(),
         "faction_b",
@@ -34,6 +39,7 @@ fn build_reaction_context_creates_chain_reaction() {
         "faction_a",
         ContextOrigin::ChainReaction,
         43,
+        &mut commands,
     );
     assert!(result.is_ok());
     let ctx = result.unwrap();
@@ -42,11 +48,14 @@ fn build_reaction_context_creates_chain_reaction() {
 
 #[test]
 fn build_periodic_context_has_periodic_origin() {
+    let mut world = World::new();
+    let mut commands = world.commands();
     let result = CombatContextFacade::build_periodic_context(
         Entity::from_raw_u32(1).unwrap(),
         Entity::from_raw_u32(2).unwrap(),
         Some("poison"),
         100,
+        &mut commands,
     );
     assert!(result.is_ok());
     let ctx = result.unwrap();

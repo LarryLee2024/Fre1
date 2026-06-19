@@ -5,6 +5,9 @@
 
 use std::collections::HashMap;
 
+use bevy::prelude::*;
+
+use crate::core::capabilities::aggregator::events::AggregationComplete;
 use crate::core::capabilities::aggregator::foundation::{
     AggregationResult, CalcPipeline, CalcStage, ModifierEntry, ModifierOp, PipelineError,
     default_stages,
@@ -32,6 +35,8 @@ pub fn execute_aggregation(
     min_value: f32,
     max_value: f32,
     frame: u64,
+    entity: Entity,
+    commands: &mut Commands,
 ) -> Result<AggregationResult, PipelineError> {
     // ── 1. 按属性过滤 + 按 ModifierOp 分组 ──
     let attr_modifiers: Vec<&ModifierEntry> = modifiers
@@ -98,7 +103,7 @@ pub fn execute_aggregation(
         }
     }
 
-    Ok(AggregationResult {
+    let result = AggregationResult {
         frame,
         attribute_id: attribute_id.to_string(),
         stage_values,
@@ -106,7 +111,17 @@ pub fn execute_aggregation(
         was_overridden,
         final_value: current,
         base_value,
-    })
+    };
+
+    commands.trigger(AggregationComplete {
+        entity,
+        attribute_id: attribute_id.to_string(),
+        final_value: result.final_value,
+        base_value: result.base_value,
+        frame: result.frame,
+    });
+
+    Ok(result)
 }
 
 /// 按 ModifierOp 过滤修改器列表。

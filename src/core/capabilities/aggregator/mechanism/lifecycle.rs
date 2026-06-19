@@ -4,6 +4,7 @@
 
 use bevy::prelude::*;
 
+use crate::core::capabilities::aggregator::events::AggregateDirty;
 use crate::core::capabilities::aggregator::foundation::AggregationResult;
 use crate::core::capabilities::aggregator::mechanism::components::AggregatorState;
 
@@ -15,9 +16,16 @@ pub fn mark_dirty(
     attribute_id: &str,
     trigger_source: &str,
     frame: u64,
+    entity: Entity,
+    commands: &mut Commands,
 ) {
     state.dirty_attributes.insert(attribute_id.to_string());
     state.last_aggregation_frame = frame;
+    commands.trigger(AggregateDirty {
+        entity,
+        attribute_id: attribute_id.to_string(),
+        trigger_source: trigger_source.to_string(),
+    });
     // trigger_source 信息当前仅用于事件载荷，不在 state 中保留
     let _ = trigger_source;
 }

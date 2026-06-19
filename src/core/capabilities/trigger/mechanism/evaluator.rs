@@ -5,6 +5,9 @@
 //!
 //! 详见 docs/02-domain/capabilities/trigger_domain.md §5.2-5.4。
 
+use bevy::prelude::{Commands, Entity};
+
+use crate::core::capabilities::trigger::events::{TriggerFired, TriggerSuppressed};
 use crate::core::capabilities::trigger::foundation::{
     TriggerEntry, TriggerFrequency, TriggerParams, TriggerType,
 };
@@ -78,6 +81,8 @@ pub fn can_trigger(
     entry: &TriggerEntry,
     event_type: &TriggerType,
     condition_check: Option<&dyn Fn(&str) -> bool>,
+    entity: Entity,
+    commands: &mut Commands,
 ) -> TriggerEvalResult {
     // 1. 触发类型匹配
     if &entry.trigger_type != event_type {
@@ -89,6 +94,12 @@ pub fn can_trigger(
 
     // 2. 频率限制检查
     if !entry.can_trigger() {
+        commands.trigger(TriggerSuppressed {
+            entity,
+            trigger_id: entry.id.clone(),
+            current_count: entry.frequency.current_turn_count,
+            max_count: entry.frequency.max_per_turn,
+        });
         return TriggerEvalResult::Blocked(format!(
             "trigger '{}' exceeded frequency limit ({}/{})",
             entry.id, entry.frequency.current_turn_count, entry.frequency.max_per_turn,
@@ -107,13 +118,23 @@ pub fn can_trigger(
         }
     }
 
-    TriggerEvalResult::Ready(TriggerContext {
+    let ctx = TriggerContext {
         trigger_id: entry.id.clone(),
         trigger_type: entry.trigger_type.clone(),
         target_ability_def_id: entry.target_ability_def_id.clone(),
         source_entity: String::new(), // caller fills this
         payload: TriggerParams::new(),
-    })
+    };
+
+    commands.trigger(TriggerFired {
+        entity,
+        trigger_id: ctx.trigger_id.clone(),
+        trigger_type: ctx.trigger_type.clone(),
+        target_ability_def_id: ctx.target_ability_def_id.clone(),
+        payload: ctx.payload.clone(),
+    });
+
+    TriggerEvalResult::Ready(ctx)
 }
 
 /// 创建已就绪的 TriggerContext（简化版——当条件已由外部确认时使用）。

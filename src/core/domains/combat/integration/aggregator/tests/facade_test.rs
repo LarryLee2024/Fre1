@@ -1,5 +1,7 @@
 //! CombatAggregatorFacade 测试
 
+use bevy::prelude::*;
+
 use crate::core::capabilities::aggregator::foundation::ModifierOp;
 use crate::core::domains::combat::integration::aggregator::CombatAggregatorFacade;
 
@@ -12,6 +14,9 @@ fn default_pipeline_has_all_stages() {
 
 #[test]
 fn execute_default_aggregation_additive() {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let modifiers = vec![
         CombatAggregatorFacade::create_modifier_entry(
             ModifierOp::Add,
@@ -27,7 +32,7 @@ fn execute_default_aggregation_additive() {
         ),
     ];
     let result =
-        CombatAggregatorFacade::execute_default_aggregation("phys_atk", 100.0, &modifiers, 0);
+        CombatAggregatorFacade::execute_default_aggregation("phys_atk", 100.0, &modifiers, 0, entity, &mut commands);
     assert!(result.is_ok());
     let agg = result.unwrap();
     assert!((agg.final_value - 115.0).abs() < 0.001);
@@ -48,7 +53,10 @@ fn create_modifier_entry_has_correct_fields() {
 
 #[test]
 fn execute_aggregation_no_modifiers() {
-    let result = CombatAggregatorFacade::execute_default_aggregation("speed", 50.0, &[], 0);
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
+    let result = CombatAggregatorFacade::execute_default_aggregation("speed", 50.0, &[], 0, entity, &mut commands);
     assert!(result.is_ok());
     let agg = result.unwrap();
     assert!((agg.final_value - 50.0).abs() < 0.001);

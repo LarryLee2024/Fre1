@@ -1,3 +1,5 @@
+use bevy::prelude::*;
+
 use crate::core::capabilities::cue::foundation::{
     CueBinding, CueContainer, CueData, CueDef, CueTag, CueType, VFXParams,
 };
@@ -74,45 +76,53 @@ fn dispatch_target_name_correct() {
 
 #[test]
 fn dispatch_cue_returns_target() {
+    let mut world = World::new();
+    let mut commands = world.commands();
     let cue_data = CueData::new(
         "test",
         CueType::VFX(VFXParams::new("boom")),
         CueTag::OnApply,
     );
-    let result = dispatch_cue(&cue_data);
+    let result = dispatch_cue(&cue_data, &mut commands);
     assert!(result.is_ok());
     assert_eq!(result.unwrap(), DispatchTarget::VFX);
 }
 
 #[test]
 fn active_state_can_trigger() {
+    let mut world = World::new();
+    let mut commands = world.commands();
     let def = CueDef::new(
         "test",
         CueType::VFX(VFXParams::new("test")),
         CueTag::OnApply,
     );
-    assert!(can_trigger(&def, &[]));
+    assert!(can_trigger(&def, &[], &mut commands));
 }
 
 #[test]
 fn disabled_state_cannot_trigger() {
+    let mut world = World::new();
+    let mut commands = world.commands();
     let def = CueDef::new(
         "test",
         CueType::VFX(VFXParams::new("test")),
         CueTag::OnApply,
     );
-    assert!(!can_trigger(&def, &["test".into()]));
+    assert!(!can_trigger(&def, &["test".into()], &mut commands));
 }
 
 #[test]
 fn critical_always_can_trigger() {
+    let mut world = World::new();
+    let mut commands = world.commands();
     let def = CueDef::new(
         "test",
         CueType::VFX(VFXParams::new("test")),
         CueTag::OnApply,
     )
     .with_critical();
-    assert!(can_trigger(&def, &["test".into()])); // critical bypasses disabled
+    assert!(can_trigger(&def, &["test".into()], &mut commands)); // critical bypasses disabled
 }
 
 #[test]

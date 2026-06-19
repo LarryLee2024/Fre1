@@ -11,6 +11,9 @@
 //! - remove_effect() — 按条件移除效果（驱散/手动/来源死亡）
 //! - can_apply() — 检查效果能否施加（免疫/条件/重复）
 
+use bevy::prelude::*;
+
+use crate::core::capabilities::effect::events::{EffectApplied, EffectRemoved, EffectTicked};
 use crate::core::capabilities::effect::foundation::{
     ActiveEffectContainer, EffectDuration, EffectError, EffectInstance, EffectStage, RemovalReason,
 };
@@ -93,6 +96,7 @@ impl TickResult {
 pub fn apply_effect(
     container: &mut ActiveEffectContainer,
     instance: EffectInstance,
+    commands: &mut Commands,
 ) -> ApplyResult {
     let def_id = instance.def_id.clone();
     let source_entity = instance.source_entity.clone();
@@ -117,6 +121,12 @@ pub fn apply_effect(
 
     // 不变量 3.2: 免疫检查（占位）
     // 实际实现应检查目标标签是否为 Tag.Immune.{EffectCategory}
+    // 占位阶段跳过——当检测到免疫时应：
+    // commands.trigger(EffectImmunityTriggered {
+    //     def_id: def_id.clone(),
+    //     target_entity: instance.target_entity.clone(),
+    //     immune_tag: format!("Immune.{}", instance.category),
+    // });
 
     // 槽位检查
     if container.is_full() {
@@ -140,7 +150,21 @@ pub fn apply_effect(
     }
 
     let instance_id = instance.instance_id.clone();
+    let def_id = instance.def_id.clone();
+    let category = instance.category.clone();
+    let source_entity = instance.source_entity.clone();
+    let target_entity = instance.target_entity.clone();
+    let duration_type = instance.duration.name().to_string();
     container.effects.push(instance);
+
+    commands.trigger(EffectApplied {
+        instance_id: instance_id.clone(),
+        def_id,
+        category,
+        source_entity,
+        target_entity,
+        duration_type,
+    });
 
     ApplyResult::success(instance_id)
 }
@@ -158,6 +182,7 @@ pub fn tick_durations(
     container: &mut ActiveEffectContainer,
     turns_elapsed: u32,
     _current_turn: u64,
+    commands: &mut Commands,
 ) -> TickResult {
     let mut result = TickResult::empty();
 
@@ -193,7 +218,19 @@ pub fn tick_durations(
         if effect.stage == EffectStage::Active {
             if let Some(ref mut tick_state) = effect.tick_state {
                 if tick_state.advance(turns_elapsed) {
-                    result.ticked.push(effect.instance_id.clone());
+                    let instance_id = effect.instance_id.clone();
+                    let def_id = effect.def_id.clone();
+                    let target_entity = effect.target_entity.clone();
+                    let tick_number = tick_state.tick_count;
+                    let total_ticks = tick_state.max_ticks;
+                    result.ticked.push(instance_id.clone());
+                    commands.trigger(EffectTicked {
+                        instance_id,
+                        def_id,
+                        target_entity,
+                        tick_number,
+                        total_ticks,
+                    });
                 }
             }
         }
@@ -236,6 +273,7 @@ pub fn remove_effect_by_id(
     container: &mut ActiveEffectContainer,
     instance_id: &str,
     reason: &RemovalReason,
+    commands: &mut Commands,
 ) -> Result<EffectInstance, EffectError> {
     let idx = container
         .effects
@@ -257,8 +295,19 @@ pub fn remove_effect_by_id(
             // 不变量 3.4: Modifier 回退（占位）
             // 实际实现应在移除时回退所有关联 Modifier
 
+            let removed_def_id = effect.def_id.clone();
+            let removed_instance_id = effect.instance_id.clone();
+            let removed_target = effect.target_entity.clone();
+            let reason_str = reason.name().to_string();
+
             let mut effect = container.effects.remove(i);
             effect.stage = EffectStage::Removed;
+            commands.trigger(EffectRemoved {
+                instance_id: removed_instance_id,
+                def_id: removed_def_id,
+                target_entity: removed_target,
+                reason: reason_str,
+            });
             Ok(effect)
         }
         None => Err(EffectError::EffectNotFound(instance_id.into())),
@@ -270,11 +319,18 @@ pub fn remove_effects_by_source(
     container: &mut ActiveEffectContainer,
     source_entity: &str,
     reason: &RemovalReason,
+    commands: &mut Commands,
 ) -> Vec<EffectInstance> {
     let mut removed = Vec::new();
     container.effects.retain(|e| {
         if e.source_entity == source_entity && e.stage.is_active() && is_removal_allowed(e, reason)
         {
+            commands.trigger(EffectRemoved {
+                instance_id: e.instance_id.clone(),
+                def_id: e.def_id.clone(),
+                target_entity: e.target_entity.clone(),
+                reason: reason.name().to_string(),
+            });
             removed.push(e.clone());
             false
         } else {
@@ -289,10 +345,17 @@ pub fn remove_effects_by_def(
     container: &mut ActiveEffectContainer,
     def_id: &str,
     reason: &RemovalReason,
+    commands: &mut Commands,
 ) -> Vec<EffectInstance> {
     let mut removed = Vec::new();
     container.effects.retain(|e| {
         if e.def_id == def_id && e.stage.is_active() && is_removal_allowed(e, reason) {
+            commands.trigger(EffectRemoved {
+                instance_id: e.instance_id.clone(),
+                def_id: e.def_id.clone(),
+                target_entity: e.target_entity.clone(),
+                reason: reason.name().to_string(),
+            });
             removed.push(e.clone());
             false
         } else {
@@ -313,10 +376,18 @@ pub fn can_apply(
     _container: &ActiveEffectContainer,
     _def_id: &str,
     _target_tags: &[String],
+    _commands: &mut Commands,
 ) -> Result<(), EffectError> {
     // 占位：默认允许施加
     // 实际实现应：
     // 1. 检查 target_tags 是否包含 Tag.Immune.{category}
+    //    若检测到免疫标签，应：
+    //    _commands.trigger(EffectImmunityTriggered {
+    //        def_id: _def_id.to_string(),
+    //        target_entity: "...".to_string(),
+    //        immune_tag: format!("Immune.{}", category),
+    //    });
+    //    return Err(EffectError::ImmunityBlocked { def_id: _def_id.to_string(), immune_tag });
     // 2. 检查 application_condition
     Ok(())
 }

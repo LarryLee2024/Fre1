@@ -5,6 +5,11 @@
 //! - target.entity 必须有效
 //! - origin 必须有值
 
+use bevy::prelude::{Commands, Entity};
+
+use crate::core::capabilities::gameplay_context::events::{
+    ContextCreated, ContextValidationFailed,
+};
 use crate::core::capabilities::gameplay_context::foundation::{
     ChainNode, ContextBuildError, ContextChain, ContextMetadata, ContextOrigin, ContextStatus,
     ElementType, GameplayContextData, SourceInfo, TargetInfo,
@@ -81,19 +86,35 @@ impl ContextBuilder {
     /// 校验规则（V1）：
     /// - source 和 target 必须已填充
     /// - source.entity 和 target.entity 不得为 PLACEHOLDER
-    pub fn build(self) -> Result<GameplayContextData, ContextBuildError> {
-        let source = self
-            .source
-            .ok_or_else(|| ContextBuildError::MissingFields(vec!["source".to_string()]))?;
-        let target = self
-            .target
-            .ok_or_else(|| ContextBuildError::MissingFields(vec!["target".to_string()]))?;
+    pub fn build(self, commands: &mut Commands) -> Result<GameplayContextData, ContextBuildError> {
+        let origin = self.origin;
+
+        let source = match self.source {
+            Some(s) => s,
+            None => {
+                commands.trigger(ContextValidationFailed {
+                    missing_fields: vec!["source".to_string()],
+                    origin,
+                });
+                return Err(ContextBuildError::MissingFields(vec!["source".to_string()]));
+            }
+        };
+        let target = match self.target {
+            Some(t) => t,
+            None => {
+                commands.trigger(ContextValidationFailed {
+                    missing_fields: vec!["target".to_string()],
+                    origin,
+                });
+                return Err(ContextBuildError::MissingFields(vec!["target".to_string()]));
+            }
+        };
 
         // Entity validity is enforced by the ECS lifecycle.
         // Builder validates structural completeness (source + target present).
 
         let first_node = ChainNode {
-            origin: self.origin,
+            origin,
             source: source.clone(),
             target: target.clone(),
             ability_id: self.ability_id.clone(),
@@ -103,9 +124,18 @@ impl ContextBuilder {
 
         let chain = ContextChain::new(first_node);
 
+        let context_id = GameplayContextData::generate_id();
+
+        commands.trigger(ContextCreated {
+            context_id: context_id.clone(),
+            origin,
+            source_entity: source.entity,
+            target_entity: target.entity,
+        });
+
         Ok(GameplayContextData {
-            context_id: GameplayContextData::generate_id(),
-            origin: self.origin,
+            context_id,
+            origin,
             source,
             target,
             ability_id: self.ability_id,

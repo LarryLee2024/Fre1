@@ -8,10 +8,13 @@ use bevy::prelude::*;
 use crate::core::capabilities::effect::events::{
     EffectApplied, EffectImmunityTriggered, EffectRemoved, EffectTicked,
 };
+use crate::infra::logging::metrics;
 use crate::shared::diagnostics::LogCode;
 
 /// 效果施加日志 Observer。
+#[tracing::instrument(skip_all, fields(code = ?LogCode::EFF001, event = "effect_applied"))]
 pub(crate) fn on_effect_applied(trigger: On<EffectApplied>) {
+    metrics::record(LogCode::EFF001);
     let event = trigger.event();
     info!(
         code = ?LogCode::EFF001,
@@ -25,7 +28,9 @@ pub(crate) fn on_effect_applied(trigger: On<EffectApplied>) {
 }
 
 /// 效果移除日志 Observer。
+#[tracing::instrument(skip_all, fields(code = ?LogCode::EFF002, event = "effect_removed"))]
 pub(crate) fn on_effect_removed(trigger: On<EffectRemoved>) {
+    metrics::record(LogCode::EFF002);
     let event = trigger.event();
     info!(
         code = ?LogCode::EFF002,
@@ -39,7 +44,9 @@ pub(crate) fn on_effect_removed(trigger: On<EffectRemoved>) {
 }
 
 /// 效果 Tick 日志 Observer。
+#[tracing::instrument(skip_all, fields(code = ?LogCode::EFF003, event = "effect_ticked"))]
 pub(crate) fn on_effect_ticked(trigger: On<EffectTicked>) {
+    metrics::record(LogCode::EFF003);
     let event = trigger.event();
     debug!(
         code = ?LogCode::EFF003,
@@ -53,7 +60,9 @@ pub(crate) fn on_effect_ticked(trigger: On<EffectTicked>) {
 }
 
 /// 效果免疫日志 Observer。
+#[tracing::instrument(skip_all, fields(code = ?LogCode::EFF004, event = "effect_immunity"))]
 pub(crate) fn on_effect_immunity(trigger: On<EffectImmunityTriggered>) {
+    metrics::record(LogCode::EFF004);
     let event = trigger.event();
     warn!(
         code = ?LogCode::EFF004,

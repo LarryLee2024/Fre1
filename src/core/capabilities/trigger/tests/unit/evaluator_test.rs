@@ -1,3 +1,5 @@
+use bevy::prelude::*;
+
 use crate::core::capabilities::trigger::foundation::{
     TriggerCondition, TriggerEntry, TriggerFrequency, TriggerParams, TriggerType,
 };
@@ -8,85 +10,116 @@ use crate::core::capabilities::trigger::mechanism::{
 
 #[test]
 fn trigger_type_match_passes() {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let entry = TriggerEntry::new("trig_001", TriggerType::OnDamaged, "abl_000001");
-    let result = can_trigger(&entry, &TriggerType::OnDamaged, None);
+    let result = can_trigger(&entry, &TriggerType::OnDamaged, None, entity, &mut commands);
     assert!(matches!(result, TriggerEvalResult::Ready(_)));
 }
 
 #[test]
 fn trigger_type_mismatch_blocked() {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let entry = TriggerEntry::new("trig_001", TriggerType::OnDamaged, "abl_000001");
-    let result = can_trigger(&entry, &TriggerType::OnHealed, None);
+    let result = can_trigger(&entry, &TriggerType::OnHealed, None, entity, &mut commands);
     assert!(matches!(result, TriggerEvalResult::Blocked(_)));
 }
 
 #[test]
 fn unlimited_frequency_always_allowed() {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let mut entry = TriggerEntry::new("trig_001", TriggerType::OnDamaged, "abl_000001");
     entry.record_trigger();
     entry.record_trigger();
     entry.record_trigger();
-    let result = can_trigger(&entry, &TriggerType::OnDamaged, None);
+    let result = can_trigger(&entry, &TriggerType::OnDamaged, None, entity, &mut commands);
     assert!(matches!(result, TriggerEvalResult::Ready(_)));
 }
 
 #[test]
 fn limited_frequency_exceeded_blocked() {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let mut entry =
         TriggerEntry::new("trig_001", TriggerType::OnDamaged, "abl_000001").with_frequency(2);
     entry.record_trigger();
     entry.record_trigger();
-    let result = can_trigger(&entry, &TriggerType::OnDamaged, None);
+    let result = can_trigger(&entry, &TriggerType::OnDamaged, None, entity, &mut commands);
     assert!(matches!(result, TriggerEvalResult::Blocked(_)));
 }
 
 #[test]
 fn limited_frequency_within_limit_allowed() {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let mut entry =
         TriggerEntry::new("trig_001", TriggerType::OnDamaged, "abl_000001").with_frequency(3);
     entry.record_trigger();
-    let result = can_trigger(&entry, &TriggerType::OnDamaged, None);
+    let result = can_trigger(&entry, &TriggerType::OnDamaged, None, entity, &mut commands);
     assert!(matches!(result, TriggerEvalResult::Ready(_)));
 }
 
 #[test]
 fn frequency_reset_allows_retrigger() {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let mut entry =
         TriggerEntry::new("trig_001", TriggerType::OnDamaged, "abl_000001").with_frequency(1);
     entry.record_trigger();
     entry.reset_turn_count();
-    let result = can_trigger(&entry, &TriggerType::OnDamaged, None);
+    let result = can_trigger(&entry, &TriggerType::OnDamaged, None, entity, &mut commands);
     assert!(matches!(result, TriggerEvalResult::Ready(_)));
 }
 
 #[test]
 fn condition_check_passes() {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let entry = TriggerEntry::new("trig_001", TriggerType::OnDamaged, "abl_000001")
         .with_condition(TriggerCondition::with_condition("hp_below_30"));
     let result = can_trigger(
         &entry,
         &TriggerType::OnDamaged,
         Some(&|cond_id| cond_id == "hp_below_30"),
+        entity,
+        &mut commands,
     );
     assert!(matches!(result, TriggerEvalResult::Ready(_)));
 }
 
 #[test]
 fn condition_check_blocks() {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let entry = TriggerEntry::new("trig_001", TriggerType::OnDamaged, "abl_000001")
         .with_condition(TriggerCondition::with_condition("hp_below_30"));
     let result = can_trigger(
         &entry,
         &TriggerType::OnDamaged,
         Some(&|cond_id| cond_id == "is_raging"),
+        entity,
+        &mut commands,
     );
     assert!(matches!(result, TriggerEvalResult::Blocked(_)));
 }
 
 #[test]
 fn no_condition_always_passes() {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let entry = TriggerEntry::new("trig_001", TriggerType::OnTurnStart, "abl_000001");
-    let result = can_trigger(&entry, &TriggerType::OnTurnStart, None);
+    let result = can_trigger(&entry, &TriggerType::OnTurnStart, None, entity, &mut commands);
     assert!(matches!(result, TriggerEvalResult::Ready(_)));
 }
 

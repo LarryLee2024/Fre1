@@ -13,6 +13,9 @@
 //!
 //! 注意：自身不包含业务公式（不变量 3.1），所有公式调用指向 Domains/rules/ 的纯函数。
 
+use bevy::prelude::*;
+
+use crate::core::capabilities::execution::events::{ExecutionCompleted, ExecutionFailed};
 use crate::core::capabilities::execution::foundation::{
     CalcTrace, CustomExecutionRef, DamageParams, DirectOp, ExecutionContext, ExecutionError,
     ExecutionResult, ExecutionType, HealParams, ScalableValue,
@@ -30,21 +33,59 @@ use crate::core::capabilities::execution::foundation::{
 /// - ExecutionError::FormulaNotFound: formula_id 未注册
 /// - ExecutionError::ContextMissing: 必要上下文缺失
 /// - ExecutionError::InvalidResult: 计算结果数值非法
-pub fn execute(ctx: &ExecutionContext) -> Result<ExecutionResult, ExecutionError> {
+pub fn execute(ctx: &ExecutionContext, commands: &mut Commands) -> Result<ExecutionResult, ExecutionError> {
+    let exec_type_name = ctx.execution_type.name().to_string();
+    let src = ctx.source_entity.clone();
+    let tgt = ctx.target_entity.clone();
+    let aid = ctx.ability_params.ability_def_id.clone();
+
     let result = match &ctx.execution_type {
-        ExecutionType::Damage(params) => execute_damage(ctx, params)?,
-        ExecutionType::Heal(params) => execute_heal(ctx, params)?,
-        ExecutionType::Custom(custom_ref) => execute_custom(ctx, custom_ref)?,
+        ExecutionType::Damage(params) => execute_damage(ctx, params),
+        ExecutionType::Heal(params) => execute_heal(ctx, params),
+        ExecutionType::Custom(custom_ref) => execute_custom(ctx, custom_ref),
         ExecutionType::DirectAttributeMod {
             attribute_id,
             operation,
             value,
-        } => execute_direct_mod(ctx, attribute_id, operation, value)?,
-        ExecutionType::None => ExecutionResult::success(0.0),
+        } => execute_direct_mod(ctx, attribute_id, operation, value),
+        ExecutionType::None => Ok(ExecutionResult::success(0.0)),
+    };
+
+    let result = match result {
+        Ok(r) => r,
+        Err(e) => {
+            commands.trigger(ExecutionFailed {
+                execution_type: exec_type_name,
+                source_entity: src,
+                target_entity: tgt,
+                fail_reason: format!("{}", e),
+                ability_id: aid,
+            });
+            return Err(e);
+        }
     };
 
     // 不变量 3.4: 结果数值范围校验
-    validate_result(&result)?;
+    if let Err(e) = validate_result(&result) {
+        commands.trigger(ExecutionFailed {
+            execution_type: exec_type_name,
+            source_entity: src,
+            target_entity: tgt,
+            fail_reason: format!("{}", e),
+            ability_id: aid,
+        });
+        return Err(e);
+    }
+
+    commands.trigger(ExecutionCompleted {
+        execution_type: exec_type_name,
+        source_entity: src,
+        target_entity: tgt,
+        value: result.value,
+        was_critical: result.was_critical,
+        was_miss: result.was_miss,
+        ability_id: aid,
+    });
 
     Ok(result)
 }

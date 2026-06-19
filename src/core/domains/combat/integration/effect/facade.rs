@@ -10,6 +10,8 @@
 //! - ✅ 合并 tick + expire 为单次 pass（解决 Debt-D9-002）
 //! - 🟥 禁止：在此模块之外直接 import `ActiveEffectContainer` / `tick_durations` / `expire_effects`
 
+use bevy::prelude::*;
+
 use crate::core::capabilities::effect::foundation::ActiveEffectContainer;
 use crate::core::capabilities::effect::mechanism::{expire_effects, tick_durations};
 
@@ -48,9 +50,10 @@ pub fn active_effect_count(container: &ActiveEffectContainer) -> usize {
 pub fn tick_all_effects(
     container: &mut ActiveEffectContainer,
     current_turn: u64,
+    commands: &mut Commands,
 ) -> EffectTickOutcome {
     // 推进 1 回合（OnTurnEnd 语义）
-    let result = tick_durations(container, 1, current_turn);
+    let result = tick_durations(container, 1, current_turn, commands);
 
     EffectTickOutcome {
         ticked: result.ticked,
@@ -80,8 +83,9 @@ pub fn expire_all_effects(container: &mut ActiveEffectContainer) -> Vec<String> 
 pub fn tick_and_expire(
     container: &mut ActiveEffectContainer,
     current_turn: u64,
+    commands: &mut Commands,
 ) -> EffectTickOutcome {
-    let outcome = tick_all_effects(container, current_turn);
+    let outcome = tick_all_effects(container, current_turn, commands);
     let _expired_ids = expire_all_effects(container);
     outcome
 }

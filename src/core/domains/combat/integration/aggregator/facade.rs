@@ -37,6 +37,8 @@ impl CombatAggregatorFacade {
         min_value: f32,
         max_value: f32,
         frame: u64,
+        entity: Entity,
+        commands: &mut Commands,
     ) -> Result<AggregationResult, PipelineError> {
         execute_aggregation(
             attribute_id,
@@ -46,6 +48,8 @@ impl CombatAggregatorFacade {
             min_value,
             max_value,
             frame,
+            entity,
+            commands,
         )
     }
 
@@ -55,6 +59,8 @@ impl CombatAggregatorFacade {
         base_value: f32,
         modifiers: &[ModifierEntry],
         frame: u64,
+        entity: Entity,
+        commands: &mut Commands,
     ) -> Result<AggregationResult, PipelineError> {
         let pipeline = CalcPipeline {
             attribute_id: attribute_id.to_string(),
@@ -71,6 +77,8 @@ impl CombatAggregatorFacade {
             f32::NEG_INFINITY,
             f32::INFINITY,
             frame,
+            entity,
+            commands,
         )
     }
 
@@ -80,8 +88,10 @@ impl CombatAggregatorFacade {
         attribute_id: &str,
         trigger_source: &str,
         frame: u64,
+        entity: Entity,
+        commands: &mut Commands,
     ) {
-        mark_dirty(state, attribute_id, trigger_source, frame);
+        mark_dirty(state, attribute_id, trigger_source, frame, entity, commands);
     }
 
     /// 创建默认的聚合管线。

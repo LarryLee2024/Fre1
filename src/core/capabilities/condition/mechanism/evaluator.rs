@@ -5,6 +5,9 @@
 //!
 //! 详见 docs/02-domain/capabilities/condition_domain.md §5.1-5.3。
 
+use bevy::prelude::*;
+
+use crate::core::capabilities::condition::events::{ConditionFailed, ConditionPassed, ImmunityTriggered};
 use crate::core::capabilities::condition::foundation::{
     Condition, ConditionContext, ConditionResult, TagRequirementMode,
 };
@@ -19,24 +22,29 @@ use crate::core::capabilities::condition::foundation::{
 /// - 无副作用（§3.1）：纯函数，不修改任何外部状态
 /// - 确定性（§3.3）：同一输入始终返回同一结果
 /// - 引用存在性（§3.2）：标签/属性不存在时返回 Failed
-pub fn evaluate(condition: &Condition, context: &ConditionContext) -> ConditionResult {
+pub fn evaluate(
+    condition: &Condition,
+    context: &ConditionContext,
+    entity: Entity,
+    commands: &mut Commands,
+) -> ConditionResult {
     match condition {
         Condition::TagRequirement { mode, tag_id } => {
-            evaluate_tag_requirement(*mode, tag_id, context)
+            evaluate_tag_requirement(*mode, tag_id, context, entity, commands)
         }
         Condition::AttributeCheck {
             attribute_id,
             operator,
             threshold,
-        } => evaluate_attribute_check(attribute_id, *operator, *threshold, context),
+        } => evaluate_attribute_check(attribute_id, *operator, *threshold, context, entity, commands),
         Condition::ResourceCheck {
             resource_id,
             required_amount,
-        } => evaluate_resource_check(resource_id, *required_amount, context),
-        Condition::And(children) => evaluate_and(children, context),
-        Condition::Or(children) => evaluate_or(children, context),
+        } => evaluate_resource_check(resource_id, *required_amount, context, entity, commands),
+        Condition::And(children) => evaluate_and(children, context, entity, commands),
+        Condition::Or(children) => evaluate_or(children, context, entity, commands),
         Condition::Not(child) => {
-            let result = evaluate(child, context);
+            let result = evaluate(child, context, entity, commands);
             if result.is_passed() {
                 ConditionResult::failed("NOT condition: child passed, negated to fail")
             } else {
@@ -59,6 +67,8 @@ fn evaluate_tag_requirement(
     mode: TagRequirementMode,
     tag_id: &str,
     context: &ConditionContext,
+    entity: Entity,
+    commands: &mut Commands,
 ) -> ConditionResult {
     let tags = match &context.tag_ids {
         Some(tags) => tags,
@@ -72,7 +82,7 @@ fn evaluate_tag_requirement(
 
     let has_tag = tags.iter().any(|t| t == tag_id);
 
-    match mode {
+    let result = match mode {
         TagRequirementMode::Has => {
             if has_tag {
                 ConditionResult::passed()
@@ -87,7 +97,26 @@ fn evaluate_tag_requirement(
                 ConditionResult::passed()
             }
         }
+    };
+
+    match &result {
+        ConditionResult::Passed => {
+            commands.trigger(ConditionPassed {
+                entity,
+                condition_id: tag_id.to_string(),
+                result_data: format!("tag requirement {:?} met", mode),
+            });
+        }
+        ConditionResult::Failed { reason } => {
+            commands.trigger(ConditionFailed {
+                entity,
+                condition_id: tag_id.to_string(),
+                fail_reason: reason.clone(),
+            });
+        }
     }
+
+    result
 }
 
 /// 评估 AttributeCheck 条件。
@@ -99,6 +128,8 @@ fn evaluate_attribute_check(
     operator: crate::core::capabilities::condition::foundation::ComparisonOp,
     threshold: f32,
     context: &ConditionContext,
+    entity: Entity,
+    commands: &mut Commands,
 ) -> ConditionResult {
     let value = match context.attribute_values.get(attribute_id) {
         Some(v) => *v,
@@ -110,14 +141,33 @@ fn evaluate_attribute_check(
         }
     };
 
-    if operator.evaluate(value, threshold) {
+    let result = if operator.evaluate(value, threshold) {
         ConditionResult::passed()
     } else {
         ConditionResult::failed(format!(
             "attribute '{}' value {} does not satisfy {:?} {}",
             attribute_id, value, operator, threshold
         ))
+    };
+
+    match &result {
+        ConditionResult::Passed => {
+            commands.trigger(ConditionPassed {
+                entity,
+                condition_id: attribute_id.to_string(),
+                result_data: format!("attribute check passed (value={}, operator={:?}, threshold={})", value, operator, threshold),
+            });
+        }
+        ConditionResult::Failed { reason } => {
+            commands.trigger(ConditionFailed {
+                entity,
+                condition_id: attribute_id.to_string(),
+                fail_reason: reason.clone(),
+            });
+        }
     }
+
+    result
 }
 
 /// 评估 ResourceCheck 条件。
@@ -128,6 +178,8 @@ fn evaluate_resource_check(
     resource_id: &str,
     required_amount: f32,
     context: &ConditionContext,
+    entity: Entity,
+    commands: &mut Commands,
 ) -> ConditionResult {
     let value = match context.attribute_values.get(resource_id) {
         Some(v) => *v,
@@ -139,27 +191,46 @@ fn evaluate_resource_check(
         }
     };
 
-    if value >= required_amount {
+    let result = if value >= required_amount {
         ConditionResult::passed()
     } else {
         ConditionResult::failed(format!(
             "resource '{}' ({}) < required ({})",
             resource_id, value, required_amount
         ))
+    };
+
+    match &result {
+        ConditionResult::Passed => {
+            commands.trigger(ConditionPassed {
+                entity,
+                condition_id: resource_id.to_string(),
+                result_data: format!("resource check passed (value={}, required={})", value, required_amount),
+            });
+        }
+        ConditionResult::Failed { reason } => {
+            commands.trigger(ConditionFailed {
+                entity,
+                condition_id: resource_id.to_string(),
+                fail_reason: reason.clone(),
+            });
+        }
     }
+
+    result
 }
 
 /// 评估 AND 组合条件。
 ///
 /// 领域规则 §5.2.1：短路评估——任一失败立即返回 Failed。
-fn evaluate_and(children: &[Condition], context: &ConditionContext) -> ConditionResult {
+fn evaluate_and(children: &[Condition], context: &ConditionContext, entity: Entity, commands: &mut Commands) -> ConditionResult {
     if children.is_empty() {
         // 空 AND 视为通过（数学惯例）
         return ConditionResult::passed();
     }
 
     for child in children {
-        let result = evaluate(child, context);
+        let result = evaluate(child, context, entity, commands);
         if !result.is_passed() {
             return result;
         }
@@ -170,14 +241,14 @@ fn evaluate_and(children: &[Condition], context: &ConditionContext) -> Condition
 /// 评估 OR 组合条件。
 ///
 /// 领域规则 §5.2.2：短路评估——任一通过立即返回 Passed。
-fn evaluate_or(children: &[Condition], context: &ConditionContext) -> ConditionResult {
+fn evaluate_or(children: &[Condition], context: &ConditionContext, entity: Entity, commands: &mut Commands) -> ConditionResult {
     if children.is_empty() {
         // 空 OR 视为不通过
         return ConditionResult::failed("empty OR group has no passing condition");
     }
 
     for child in children {
-        let result = evaluate(child, context);
+        let result = evaluate(child, context, entity, commands);
         if result.is_passed() {
             return ConditionResult::passed();
         }
@@ -189,7 +260,12 @@ fn evaluate_or(children: &[Condition], context: &ConditionContext) -> ConditionR
 ///
 /// 构建免疫检查条件并评估：目标是否具有 Tag.Immune.{effect_type}。
 /// 免疫条件具有最高优先级（不变量 §3.5）。
-pub fn check_immunity(context: &ConditionContext, effect_type: &str) -> ConditionResult {
+pub fn check_immunity(
+    context: &ConditionContext,
+    effect_type: &str,
+    entity: Entity,
+    commands: &mut Commands,
+) -> ConditionResult {
     let immune_tag = format!("Immune.{}", effect_type);
 
     let condition = Condition::TagRequirement {
@@ -197,8 +273,13 @@ pub fn check_immunity(context: &ConditionContext, effect_type: &str) -> Conditio
         tag_id: immune_tag.clone(),
     };
 
-    let result = evaluate(&condition, context);
+    let result = evaluate(&condition, context, entity, commands);
     if result.is_passed() {
+        commands.trigger(ImmunityTriggered {
+            entity,
+            effect_type: effect_type.to_string(),
+            immune_tag,
+        });
         ConditionResult::failed(format!("target is immune to '{}'", effect_type))
     } else {
         ConditionResult::passed()

@@ -3,7 +3,9 @@
 //! | 不变量 | 来源 | 描述 |
 //! |--------|------|------|
 //! | 3.3 | effect_domain.md | remaining_turns must never be negative after tick |
-//! | 2 | effect_domain.md | Stage transitions: Active → Expiring → Removed (no skipping) |
+//! | 2 | effect_domain.md | Stage transitions: Active -> Expiring -> Removed (no skipping) |
+
+use bevy::prelude::*;
 
 use crate::core::capabilities::effect::foundation::{
     ActiveEffectContainer, DurationCalculation, EffectDuration, EffectInstance, EffectStage,
@@ -40,8 +42,8 @@ fn make_infinite_effect(id: &str, source: &str) -> EffectInstance {
     )
 }
 
-fn apply_and_activate(container: &mut ActiveEffectContainer, effect: EffectInstance) {
-    let _ = apply_effect(container, effect);
+fn apply_and_activate(container: &mut ActiveEffectContainer, effect: EffectInstance, commands: &mut Commands) {
+    let _ = apply_effect(container, effect, commands);
 }
 
 // -- Invariants ------------------------------------------------------------
@@ -49,18 +51,22 @@ fn apply_and_activate(container: &mut ActiveEffectContainer, effect: EffectInsta
 /// 不变量 3.3: remaining_turns must never be negative.
 #[test]
 fn remaining_turns_never_negative() {
+    let mut world = World::new();
+    let mut commands = world.commands();
     let mut container = ActiveEffectContainer::new();
     apply_and_activate(
         &mut container,
         make_duration_effect("a", "eff_a", 3, "src_a"),
+        &mut commands,
     );
     apply_and_activate(
         &mut container,
         make_duration_effect("b", "eff_b", 1, "src_b"),
+        &mut commands,
     );
-    apply_and_activate(&mut container, make_infinite_effect("c", "src_c"));
+    apply_and_activate(&mut container, make_infinite_effect("c", "src_c"), &mut commands);
 
-    let _ = tick_durations(&mut container, 100, 1);
+    let _ = tick_durations(&mut container, 100, 1, &mut commands);
 
     for effect in &container.effects {
         assert!(
@@ -75,18 +81,22 @@ fn remaining_turns_never_negative() {
 /// 不变量: After tick_durations + expire_effects, no effect remains Expiring.
 #[test]
 fn expire_effects_clears_all_expiring() {
+    let mut world = World::new();
+    let mut commands = world.commands();
     let mut container = ActiveEffectContainer::new();
     apply_and_activate(
         &mut container,
         make_duration_effect("a", "eff_a", 2, "src_a"),
+        &mut commands,
     );
     apply_and_activate(
         &mut container,
         make_duration_effect("b", "eff_b", 5, "src_b"),
+        &mut commands,
     );
-    apply_and_activate(&mut container, make_infinite_effect("c", "src_c"));
+    apply_and_activate(&mut container, make_infinite_effect("c", "src_c"), &mut commands);
 
-    let _ = tick_durations(&mut container, 3, 1);
+    let _ = tick_durations(&mut container, 3, 1, &mut commands);
     let _ = expire_effects(&mut container);
 
     for effect in &container.effects {
@@ -115,17 +125,21 @@ fn expire_effects_clears_all_expiring() {
 /// 不变量: expire_effects only touches Expiring effects.
 #[test]
 fn expire_effects_only_touches_expiring() {
+    let mut world = World::new();
+    let mut commands = world.commands();
     let mut container = ActiveEffectContainer::new();
     apply_and_activate(
         &mut container,
         make_duration_effect("a", "eff_a", 1, "src_a"),
+        &mut commands,
     );
     apply_and_activate(
         &mut container,
         make_duration_effect("b", "eff_b", 10, "src_b"),
+        &mut commands,
     );
 
-    let _ = tick_durations(&mut container, 1, 1);
+    let _ = tick_durations(&mut container, 1, 1, &mut commands);
     assert_eq!(
         container.find_by_id("a").unwrap().stage,
         EffectStage::Expiring
@@ -155,13 +169,16 @@ fn expire_effects_only_touches_expiring() {
 /// 不变量: tick_durations must not regress or skip effect stages.
 #[test]
 fn tick_durations_does_not_regress_stage() {
+    let mut world = World::new();
+    let mut commands = world.commands();
     let mut container = ActiveEffectContainer::new();
     apply_and_activate(
         &mut container,
         make_duration_effect("a", "eff_a", 1, "src_a"),
+        &mut commands,
     );
 
-    let _ = tick_durations(&mut container, 1, 1);
+    let _ = tick_durations(&mut container, 1, 1, &mut commands);
     assert_eq!(
         container.find_by_id("a").unwrap().stage,
         EffectStage::Expiring
@@ -173,7 +190,7 @@ fn tick_durations_does_not_regress_stage() {
         EffectStage::Removed
     );
 
-    let _ = tick_durations(&mut container, 5, 1);
+    let _ = tick_durations(&mut container, 5, 1, &mut commands);
     assert_eq!(
         container.find_by_id("a").unwrap().stage,
         EffectStage::Removed,

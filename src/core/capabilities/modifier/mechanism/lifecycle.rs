@@ -2,6 +2,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 use bevy::prelude::*;
 
+use crate::core::capabilities::modifier::events::ModifierApplied;
 use crate::core::capabilities::modifier::foundation::{
     ModifierData, ModifierInstanceId, ModifierOp, ModifierPriority, ModifierSource,
 };
@@ -72,6 +73,8 @@ pub fn create_modifier(
     priority: ModifierPriority,
     source: ModifierSource,
     duration_frames: Option<u64>,
+    entity: Entity,
+    commands: &mut Commands,
 ) -> Result<ModifierData, ModifierValidationError> {
     let data = ModifierData {
         id,
@@ -84,5 +87,10 @@ pub fn create_modifier(
         elapsed_frames: 0,
     };
     validate_modifier_data(&data)?;
+    let cloned = data.clone();
+    commands.trigger(ModifierApplied {
+        entity,
+        modifier_data: cloned,
+    });
     Ok(data)
 }

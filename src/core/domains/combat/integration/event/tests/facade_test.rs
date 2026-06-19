@@ -2,46 +2,56 @@
 //!
 //! 验证事件 facade 的事件发布、优先级发布、枚举标签映射。
 
+use bevy::prelude::*;
+
 use crate::core::capabilities::event::foundation::{EventPayload, EventTag};
 use crate::core::capabilities::event::mechanism::EventBus;
 use crate::core::domains::combat::integration::event::{CombatEventFacade, CombatEventTag};
 
 #[test]
 fn publish_adds_to_pending_queue() {
+    let mut world = World::new();
+    let mut commands = world.commands();
     let mut bus = EventBus::new();
     let payload = EventPayload::from_source("unit_001");
-    CombatEventFacade::publish(&mut bus, CombatEventTag::TurnStarted, "system", payload);
+    CombatEventFacade::publish(&mut bus, CombatEventTag::TurnStarted, "system", payload, &mut commands);
     assert_eq!(bus.pending_count(), 1);
 }
 
 #[test]
 fn publish_with_priority_adds_to_pending_queue() {
+    let mut world = World::new();
+    let mut commands = world.commands();
     let mut bus = EventBus::new();
     let payload = EventPayload::from_source("unit_001");
-    CombatEventFacade::publish_priority(&mut bus, CombatEventTag::DamageDealt, "system", payload);
+    CombatEventFacade::publish_priority(&mut bus, CombatEventTag::DamageDealt, "system", payload, &mut commands);
     assert_eq!(bus.pending_count(), 1);
 }
 
 #[test]
 fn publish_multiple_events_accumulate() {
+    let mut world = World::new();
+    let mut commands = world.commands();
     let mut bus = EventBus::new();
     let payload1 = EventPayload::from_source("unit_001");
     let payload2 = EventPayload::from_source("unit_002");
 
-    CombatEventFacade::publish(&mut bus, CombatEventTag::TurnStarted, "system", payload1);
-    CombatEventFacade::publish(&mut bus, CombatEventTag::TurnEnded, "system", payload2);
+    CombatEventFacade::publish(&mut bus, CombatEventTag::TurnStarted, "system", payload1, &mut commands);
+    CombatEventFacade::publish(&mut bus, CombatEventTag::TurnEnded, "system", payload2, &mut commands);
 
     assert_eq!(bus.pending_count(), 2);
 }
 
 #[test]
 fn publish_with_payload_carries_data() {
+    let mut world = World::new();
+    let mut commands = world.commands();
     let mut bus = EventBus::new();
     let payload = EventPayload::from_source("unit_001")
         .with_value("damage", 50.0)
         .with_target("unit_002");
 
-    CombatEventFacade::publish(&mut bus, CombatEventTag::DamageDealt, "system", payload);
+    CombatEventFacade::publish(&mut bus, CombatEventTag::DamageDealt, "system", payload, &mut commands);
 
     // Verify by dispatching and checking — for now, just verify it enqueues
     assert_eq!(bus.pending_count(), 1);

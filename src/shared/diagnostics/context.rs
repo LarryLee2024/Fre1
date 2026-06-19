@@ -18,6 +18,13 @@ use super::{CorrelationId, LogCode};
 /// ```ignore
 /// ctx.log_info(LogCode::BAT001, "battle_started");
 /// ```
+///
+/// 可通过 `with_extra` 添加事件私有结构化字段：
+/// ```ignore
+/// ctx.with_extra("spec_id", "abl_000001")
+///    .with_extra("damage", "150")
+///    .log_info(LogCode::BAT007, "damage_applied");
+/// ```
 #[derive(Debug, Clone, Default)]
 pub struct DiagnosticContext {
     /// 关联 ID（战斗/回合/行动）
@@ -32,6 +39,8 @@ pub struct DiagnosticContext {
     pub round: Option<u32>,
     /// 额外标签（用于过滤/搜索）
     pub tags: Vec<String>,
+    /// 事件私有扩展字段（如 spec_id, target, damage 等）
+    pub extras: Vec<(String, String)>,
 }
 
 impl DiagnosticContext {
@@ -71,9 +80,41 @@ impl DiagnosticContext {
         self
     }
 
+    /// 添加事件私有扩展字段。
+    /// 用于传递事件特有的结构化数据（如 spec_id、damage、target）。
+    pub fn with_extra(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
+        self.extras.push((key.into(), value.into()));
+        self
+    }
+
     /// 输出 INFO 级别结构化日志，自动携带诊断上下文。
     #[track_caller]
     pub fn log_info(&self, code: LogCode, event: &'static str) {
+        let mut fields = vec![
+            format!("code = {:?}", code),
+            format!("event = {:?}", event),
+        ];
+        if let Some(ref corr) = self.correlation {
+            fields.push(format!("correlation = {:?}", corr));
+        }
+        if let Some(entity) = self.entity {
+            fields.push(format!("entity = {:?}", entity));
+        }
+        if let Some(frame) = self.frame {
+            fields.push(format!("frame = {:?}", frame));
+        }
+        if let Some(turn) = self.turn {
+            fields.push(format!("turn = {:?}", turn));
+        }
+        if let Some(round) = self.round {
+            fields.push(format!("round = {:?}", round));
+        }
+        if !self.tags.is_empty() {
+            fields.push(format!("tags = {:?}", self.tags));
+        }
+        for (k, v) in &self.extras {
+            fields.push(format!("{} = {:?}", k, v));
+        }
         tracing::info!(
             code = ?code,
             event = event,
@@ -83,6 +124,7 @@ impl DiagnosticContext {
             turn = ?self.turn,
             round = ?self.round,
             tags = ?self.tags,
+            extras = ?self.extras,
             "{}", event
         );
     }
@@ -99,6 +141,7 @@ impl DiagnosticContext {
             turn = ?self.turn,
             round = ?self.round,
             tags = ?self.tags,
+            extras = ?self.extras,
             "{}", event
         );
     }
@@ -115,6 +158,7 @@ impl DiagnosticContext {
             turn = ?self.turn,
             round = ?self.round,
             tags = ?self.tags,
+            extras = ?self.extras,
             "{}", event
         );
     }

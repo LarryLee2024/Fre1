@@ -2,6 +2,8 @@
 //!
 //! 验证触发器 facade 的条目创建、触发评估、批量评估、空容器创建。
 
+use bevy::prelude::*;
+
 use crate::core::capabilities::trigger::foundation::{TriggerCondition, TriggerType};
 use crate::core::capabilities::trigger::mechanism::TriggerEvalResult;
 use crate::core::domains::combat::integration::trigger::{CombatTriggerFacade, CombatTriggerType};
@@ -40,28 +42,37 @@ fn create_trigger_entry_with_kill_type() {
 
 #[test]
 fn can_trigger_check_passes_when_type_matches() {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let entry = CombatTriggerFacade::create_trigger_entry(
         "trg_001",
         CombatTriggerType::TurnStarted,
         "def_buff",
     );
-    let result = CombatTriggerFacade::can_trigger_check(&entry, &TriggerType::OnTurnStart, None);
+    let result = CombatTriggerFacade::can_trigger_check(&entry, &TriggerType::OnTurnStart, None, entity, &mut commands);
     assert!(matches!(result, TriggerEvalResult::Ready(_)));
 }
 
 #[test]
 fn can_trigger_check_fails_when_type_mismatches() {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let entry = CombatTriggerFacade::create_trigger_entry(
         "trg_001",
         CombatTriggerType::TurnStarted,
         "def_buff",
     );
-    let result = CombatTriggerFacade::can_trigger_check(&entry, &TriggerType::OnDamaged, None);
+    let result = CombatTriggerFacade::can_trigger_check(&entry, &TriggerType::OnDamaged, None, entity, &mut commands);
     assert!(matches!(result, TriggerEvalResult::Blocked(_)));
 }
 
 #[test]
 fn evaluate_triggers_filters_by_type() {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let entries = vec![
         CombatTriggerFacade::create_trigger_entry(
             "trg_001",
@@ -81,13 +92,16 @@ fn evaluate_triggers_filters_by_type() {
     ];
 
     let ready =
-        CombatTriggerFacade::evaluate_triggers(&entries, CombatTriggerType::TurnStarted, None);
+        CombatTriggerFacade::evaluate_triggers(&entries, CombatTriggerType::TurnStarted, None, entity, &mut commands);
     assert_eq!(ready.len(), 1);
     assert_eq!(ready[0].id, "trg_001");
 }
 
 #[test]
 fn evaluate_triggers_returns_empty_when_no_match() {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let entries = vec![CombatTriggerFacade::create_trigger_entry(
         "trg_001",
         CombatTriggerType::DamageTaken,
@@ -95,12 +109,15 @@ fn evaluate_triggers_returns_empty_when_no_match() {
     )];
 
     let ready =
-        CombatTriggerFacade::evaluate_triggers(&entries, CombatTriggerType::TurnStarted, None);
+        CombatTriggerFacade::evaluate_triggers(&entries, CombatTriggerType::TurnStarted, None, entity, &mut commands);
     assert!(ready.is_empty());
 }
 
 #[test]
 fn evaluate_triggers_condition_check_blocks() {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let entry = CombatTriggerFacade::create_trigger_entry(
         "trg_001",
         CombatTriggerType::TurnStarted,
@@ -114,6 +131,8 @@ fn evaluate_triggers_condition_check_blocks() {
         &[entry],
         CombatTriggerType::TurnStarted,
         Some(&condition_check),
+        entity,
+        &mut commands,
     );
     assert!(
         ready.is_empty(),
@@ -123,6 +142,9 @@ fn evaluate_triggers_condition_check_blocks() {
 
 #[test]
 fn evaluate_triggers_condition_check_passes() {
+    let mut world = World::new();
+    let entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let entry = CombatTriggerFacade::create_trigger_entry(
         "trg_001",
         CombatTriggerType::TurnStarted,
@@ -136,6 +158,8 @@ fn evaluate_triggers_condition_check_passes() {
         &[entry],
         CombatTriggerType::TurnStarted,
         Some(&condition_check),
+        entity,
+        &mut commands,
     );
     assert_eq!(ready.len(), 1, "condition 'has_buff' should pass");
 }

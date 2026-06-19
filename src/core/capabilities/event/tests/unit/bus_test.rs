@@ -1,5 +1,7 @@
 use std::sync::Arc;
 
+use bevy::prelude::*;
+
 use crate::core::capabilities::event::foundation::{
     DispatchReport, EventPayload, EventTag, SubscriberEntry,
 };
@@ -9,12 +11,16 @@ use crate::core::capabilities::event::mechanism::EventBus;
 
 #[test]
 fn publish_and_dispatch_single_event() {
+    let mut world = World::new();
+    let _entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let mut bus = EventBus::new();
 
     bus.publish(
         EventTag::UnitSpawned,
         "test_system",
         EventPayload::from_source("entity_001"),
+        &mut commands,
     );
 
     assert_eq!(bus.pending_count(), 1);
@@ -22,14 +28,20 @@ fn publish_and_dispatch_single_event() {
 
 #[test]
 fn dispatch_empty_queue() {
+    let mut world = World::new();
+    let _entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let mut bus = EventBus::new();
-    let report = bus.dispatch_pending();
+    let report = bus.dispatch_pending(&mut commands);
     assert_eq!(report.total, 0);
     assert!(report.all_succeeded());
 }
 
 #[test]
 fn subscriber_receives_matching_event() {
+    let mut world = World::new();
+    let _entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let mut bus = EventBus::new();
     let received = Arc::new(std::sync::Mutex::new(false));
     let r = received.clone();
@@ -47,15 +59,19 @@ fn subscriber_receives_matching_event() {
         EventTag::UnitSpawned,
         "test",
         EventPayload::from_source("entity_001"),
+        &mut commands,
     );
 
-    let report = bus.dispatch_pending();
+    let report = bus.dispatch_pending(&mut commands);
     assert_eq!(report.delivered, 1);
     assert!(*received.lock().unwrap());
 }
 
 #[test]
 fn subscriber_ignores_non_matching_tag() {
+    let mut world = World::new();
+    let _entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let mut bus = EventBus::new();
     let received = Arc::new(std::sync::Mutex::new(false));
     let r = received.clone();
@@ -73,9 +89,10 @@ fn subscriber_ignores_non_matching_tag() {
         EventTag::UnitSpawned,
         "test",
         EventPayload::from_source("entity_001"),
+        &mut commands,
     );
 
-    let report = bus.dispatch_pending();
+    let report = bus.dispatch_pending(&mut commands);
     assert_eq!(report.delivered, 0);
     assert!(!*received.lock().unwrap());
 }
@@ -84,6 +101,9 @@ fn subscriber_ignores_non_matching_tag() {
 
 #[test]
 fn all_subscribers_receive_event() {
+    let mut world = World::new();
+    let _entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let mut bus = EventBus::new();
     let count = Arc::new(std::sync::Mutex::new(0u32));
     let c1 = count.clone();
@@ -111,9 +131,10 @@ fn all_subscribers_receive_event() {
         EventTag::DamageDealt,
         "test",
         EventPayload::from_source("entity_001"),
+        &mut commands,
     );
 
-    let report = bus.dispatch_pending();
+    let report = bus.dispatch_pending(&mut commands);
     assert_eq!(report.delivered, 2);
     assert_eq!(*count.lock().unwrap(), 2);
 }
@@ -122,6 +143,9 @@ fn all_subscribers_receive_event() {
 
 #[test]
 fn handler_failure_does_not_affect_other_subscribers() {
+    let mut world = World::new();
+    let _entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let mut bus = EventBus::new();
     let received = Arc::new(std::sync::Mutex::new(false));
     let r = received.clone();
@@ -145,9 +169,10 @@ fn handler_failure_does_not_affect_other_subscribers() {
         EventTag::DamageDealt,
         "test",
         EventPayload::from_source("entity_001"),
+        &mut commands,
     );
 
-    let report = bus.dispatch_pending();
+    let report = bus.dispatch_pending(&mut commands);
     assert_eq!(report.delivered, 1);
     assert_eq!(report.failed, 1);
     assert!(*received.lock().unwrap());
@@ -157,6 +182,9 @@ fn handler_failure_does_not_affect_other_subscribers() {
 
 #[test]
 fn cycle_detection_stops_at_limit() {
+    let mut world = World::new();
+    let _entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let mut bus = EventBus::new();
 
     let bus_ptr = Arc::new(std::sync::Mutex::new(Vec::new()));
@@ -177,10 +205,11 @@ fn cycle_detection_stops_at_limit() {
             EventTag::DamageDealt,
             "test",
             EventPayload::from_source("entity_001"),
+            &mut commands,
         );
     }
 
-    let report = bus.dispatch_pending();
+    let report = bus.dispatch_pending(&mut commands);
     assert!(report.cycle_interrupted);
     assert!(report.total <= 5 * 1);
 }
@@ -189,6 +218,9 @@ fn cycle_detection_stops_at_limit() {
 
 #[test]
 fn unsubscribe_removes_subscriber() {
+    let mut world = World::new();
+    let _entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let mut bus = EventBus::new();
     bus.subscribe(SubscriberEntry {
         id: "test_sub".into(),
@@ -203,6 +235,9 @@ fn unsubscribe_removes_subscriber() {
 
 #[test]
 fn unsubscribe_idempotent() {
+    let mut world = World::new();
+    let _entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let mut bus = EventBus::new();
     bus.unsubscribe("nonexistent_sub");
     assert_eq!(bus.total_subscribers(), 0);
@@ -210,6 +245,9 @@ fn unsubscribe_idempotent() {
 
 #[test]
 fn resubscribe_overrides_old() {
+    let mut world = World::new();
+    let _entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let mut bus = EventBus::new();
     let result = Arc::new(std::sync::Mutex::new(String::new()));
     let r1 = result.clone();
@@ -239,8 +277,9 @@ fn resubscribe_overrides_old() {
         EventTag::UnitSpawned,
         "test",
         EventPayload::from_source("entity_001"),
+        &mut commands,
     );
-    let report = bus.dispatch_pending();
+    let report = bus.dispatch_pending(&mut commands);
     assert_eq!(report.delivered, 1);
     assert_eq!(*result.lock().unwrap(), "second");
 }
@@ -298,6 +337,9 @@ fn report_with_error_fails() {
 
 #[test]
 fn reset_cycle_counters() {
+    let mut world = World::new();
+    let _entity = world.spawn_empty().id();
+    let mut commands = world.commands();
     let mut bus = EventBus::new();
     // TODO: cycle_counters 是私有字段，无法直接验证重置结果
     // 需要 @feature-developer 暴露 pub fn cycle_count(&self, tag: &EventTag) -> u32

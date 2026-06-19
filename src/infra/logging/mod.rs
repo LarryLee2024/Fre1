@@ -7,12 +7,14 @@
 //! - `plugin.rs` — LoggingPlugin 入口
 //! - `observers/` — 各领域事件的日志 Observer
 //! - `rate_limit/` — 日志风暴保护（OnceGuard + 宏）
-//! - `sinks/` — 日志输出后端（预留）
+//! - `sinks/` — 日志输出后端（文件/控制台）
+//! - `metrics/` — 事件度量统计（MetricsCollector）
 
 mod plugin;
 
 pub use plugin::*;
 
+pub mod metrics;
 pub mod observers;
 pub mod rate_limit;
 pub mod sinks;

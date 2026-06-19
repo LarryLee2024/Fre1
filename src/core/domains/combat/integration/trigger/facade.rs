@@ -3,6 +3,8 @@
 //! 封装 trigger capability 的触发器评估，
 //! 用于战斗事件（TurnStarted, DamageTaken 等）的触发器分发。
 
+use bevy::prelude::*;
+
 use crate::core::capabilities::trigger::foundation::{TriggerEntry, TriggerType};
 use crate::core::capabilities::trigger::mechanism::{
     TriggerContainer, TriggerEvalResult, can_trigger,
@@ -51,8 +53,10 @@ impl CombatTriggerFacade {
         entry: &TriggerEntry,
         event_type: &TriggerType,
         condition_check: Option<&dyn Fn(&str) -> bool>,
+        entity: Entity,
+        commands: &mut Commands,
     ) -> TriggerEvalResult {
-        can_trigger(entry, event_type, condition_check)
+        can_trigger(entry, event_type, condition_check, entity, commands)
     }
 
     /// 评估一组触发器，返回已就绪的触发器列表。
@@ -60,6 +64,8 @@ impl CombatTriggerFacade {
         entries: &[TriggerEntry],
         trigger_type: CombatTriggerType,
         condition_check: Option<&dyn Fn(&str) -> bool>,
+        entity: Entity,
+        commands: &mut Commands,
     ) -> Vec<TriggerEntry> {
         let tt = trigger_type.to_trigger_type();
         entries
@@ -67,7 +73,7 @@ impl CombatTriggerFacade {
             .filter(|entry| entry.trigger_type == tt)
             .filter(|entry| {
                 matches!(
-                    can_trigger(entry, &tt, condition_check),
+                    can_trigger(entry, &tt, condition_check, entity, commands),
                     TriggerEvalResult::Ready(_)
                 )
             })

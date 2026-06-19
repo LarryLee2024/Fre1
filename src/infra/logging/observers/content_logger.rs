@@ -5,11 +5,14 @@
 
 use bevy::prelude::*;
 
+use crate::infra::logging::metrics;
 use crate::infra::registry::registry::OnDefinitionReloaded;
 use crate::shared::diagnostics::LogCode;
 
 /// 内容热重载日志 Observer。
+#[tracing::instrument(skip_all, fields(code = ?LogCode::CNT001, event = "definition_reloaded"))]
 pub(crate) fn on_definition_reloaded(trigger: On<OnDefinitionReloaded>) {
+    metrics::record(LogCode::CNT001);
     let event = trigger.event();
     info!(
         code = ?LogCode::CNT001,
