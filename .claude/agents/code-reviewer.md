@@ -67,7 +67,7 @@ Consult `docs/01-architecture/` and `docs/02-domain/` for relevant rules before 
 - **Global State**: Is unnecessary global state used?
 - **Iterator Preference**: Are iterators used instead of manual loops?
 
-### 4. Bevy 0.18 Best Practices
+### 4. Bevy 0.19 Best Practices
 
 - **Message Communication**: Is cross-feature communication using Message (`add_message`) instead of Event?
 - **Event Overuse**: Is Event incorrectly used for intra-module calls? (Should use function calls)

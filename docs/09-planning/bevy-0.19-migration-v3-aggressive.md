@@ -1,6 +1,6 @@
 ---
 id: 09-planning.bevy-0-19-migration-v3
-title: Bevy 0.18 → 0.19 激进迁移总纲 v3.0
+title: Bevy 0.19 → 0.19 激进迁移总纲 v3.0
 status: active
 owner: architect
 created: 2026-06-19
@@ -11,7 +11,7 @@ tags:
   - bevy-0.19
 ---
 
-# Bevy 0.18 → 0.19 激进迁移总纲 v3.0
+# Bevy 0.19 → 0.19 激进迁移总纲 v3.0
 
 > **版本**: v3.0 | **角色**: @architect | **当前引擎**: `bevy = "0.19.0-rc.3"` | **目标**: 全面生产就绪 + 文档对齐
 > **风格**: 激进重构 — 全面采用 0.19 ECS 模型，不留技术债
@@ -49,7 +49,7 @@ tags:
 | User Settings | 🟢 低 | 未引入 |
 | Relationship | 🟢 低 | 未使用 |
 | Contiguous Query | 🟢 低 | 未使用 |
-| constitution 引擎版本声明 | 🟡 中 | 仍写 "Bevy 0.18+" |
+| constitution 引擎版本声明 | 🟡 中 | 仍写 "Bevy 0.19+" |
 | 架构文档通信机制 | 🟡 中 | 需移除 EventReader 描述，提升 Observer 地位 |
 | .trae/rules ECS 规则 | 🟡 中 | 需新增 Delayed/BSN/Relationship 规则 |
 
@@ -90,7 +90,7 @@ tags:
 | 文档 | 变更内容 | 优先级 |
 |------|---------|--------|
 | `Cargo.toml` | dev-dependencies `0.18.1` → `0.19` | 🔴 P0 |
-| `docs/00-governance/ai-constitution-complete.md` | §1.1 引擎版本 "0.18+" → "0.19"；新增 Observer/Delayed/Relationship/BSN 规则 | 🔴 P0 |
+| `docs/00-governance/ai-constitution-complete.md` | §1.1 引擎版本 "0.19+" → "0.19"；新增 Observer/Delayed/Relationship/BSN 规则 | 🔴 P0 |
 | `docs/01-architecture/README.md` | §4.2 通信机制：移除 EventReader，提升 Observer 地位；新增 §11 0.19 迁移 ADR | 🔴 P0 |
 | `docs/01-architecture/ADR-002-ecs-communication.md` | 更新通信机制优先级 | 🟡 P1 |
 | `docs/02-domain/` | 检查所有领域规则，确保无 0.18 模式引用 | 🟡 P1 |
@@ -233,14 +233,14 @@ mod settings {
 
 | 位置 | 当前内容 | 更新目标 |
 |------|---------|---------|
-| §1.1 适用范围 | 引擎：Bevy 0.18 及以上版本 | 引擎：Bevy 0.19 及以上版本 |
+| §1.1 适用范围 | 引擎：Bevy 0.19 及以上版本 | 引擎：Bevy 0.19 及以上版本 |
 | §6.2 ECS 允许清单 | `EventWriter/Reader` 在允许列表中 | 移除 `EventWriter/Reader`，明确 `trigger()` + `On<T>` Observer |
 | §6.3 四级通信 | Observer = 局部状态变化响应 | Observer = **跨领域通信首选**，Message 退居领域内部 |
 | §6.4 运行条件 | `run_if()` 优先 | 补充：Observer 也支持 `run_if()` |
 | §6.4 Timer | 无提及 | 新增：短生命周期效果优先使用 Delayed Commands |
 | §6.5 新增 | 无 | BSN 使用规范（UI 层使用，核心玩法层禁用） |
 | §6.5 新增 | 无 | Relationship 使用规范（从属关系使用，非关系字段不用） |
-| 附则 | v5.1 (Bevy 0.18+) | v5.2 (Bevy 0.19) |
+| 附则 | v5.1 (Bevy 0.19+) | v5.2 (Bevy 0.19) |
 
 ### 3.2 `docs/01-architecture/README.md` 更新
 

@@ -3,7 +3,7 @@ alwaysApply: false
 description: 
 ---
 
-# Bevy 0.18+ SRPG 项目总宪法 v5.0 · AI协作篇
+# Bevy 0.19+ SRPG 项目总宪法 v5.0 · AI协作篇
 > 定位：AI生成代码的直接执行依据，精简可直接作为提示词注入
 > 适用场景：AI编码、AI改Bug、AI代码评审，所有AI输出必须遵守本篇
 

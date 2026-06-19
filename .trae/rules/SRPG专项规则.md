@@ -2,7 +2,7 @@
 alwaysApply: false
 description: 
 ---
-# Bevy 0.18+ SRPG 项目总宪法 v5.0 · SRPG专项篇
+# Bevy 0.19+ SRPG 项目总宪法 v5.0 · SRPG专项篇
 > 定位：战棋游戏业务规则与系统设计规范，负责所有玩法系统的实现标准
 > 适用场景：开发角色、属性、技能、Buff、回合、战斗、存档等核心玩法
 

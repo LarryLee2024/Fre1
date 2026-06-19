@@ -38,7 +38,7 @@ Input infra 层 5 个文件 + core CommandQueue Resource 修改。
 
 | 检查项 | 结果 | 说明 |
 |--------|------|------|
-| ButtonInput<KeyCode> 使用 | ✅ 通过 | Bevy 0.18 正确 API |
+| ButtonInput<KeyCode> 使用 | ✅ 通过 | Bevy 0.19 正确 API |
 | KeyCode 变体命名 | ✅ 通过 | `KeyCode::KeyW`、`KeyCode::F5`、`KeyCode::Digit1` 等 |
 | System 参数正确 | ✅ 通过 | `Res<T>` / `ResMut<T>` 正确使用 |
 | Plugin 注册完整 | ✅ 通过 | 3 Resource + 2 PreUpdate Systems |

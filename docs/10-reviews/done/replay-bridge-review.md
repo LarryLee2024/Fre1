@@ -53,9 +53,9 @@ domain: docs/04-data/infrastructure/replay_schema.md ✅
 - **Iterator 使用**: ✅ `map()` + `unwrap_or()` 代替手动 match
 - **无未使用变量/导入**: ✅ `cargo check` 零 replay 警告
 
-### 4. Bevy 0.18 最佳实践
+### 4. Bevy 0.19 最佳实践
 
-- **Observer-based Events**: ✅ 使用 `commands.trigger()` 代替旧的 `EventWriter<T>`，对齐 Bevy 0.18 事件系统
+- **Observer-based Events**: ✅ 使用 `commands.trigger()` 代替旧的 `EventWriter<T>`，对齐 Bevy 0.19 事件系统
 - **Resource 初始化**: ✅ 使用 `FromWorld`/`Default` trait，通过 `init_resource` 注册
 - **System 挂载**: ✅ PreUpdate/PostUpdate 挂载正确，使用 `.chain()` 保证执行顺序
 - **Plugin 结构**: ✅ 遵循 Infra 层 Plugin 模式（与 `InputPlugin` 一致）
@@ -97,7 +97,7 @@ domain: docs/04-data/infrastructure/replay_schema.md ✅
 - ✅ `cargo test` — 939 passed, 0 failed (25 new infra replay tests + 61 core replay tests = 86 replay tests green)
 - ✅ ADR-041 compliance confirmed
 - ✅ replay_schema.md alignment confirmed
-- ✅ Bevy 0.18 observer-based event pattern used correctly
+- ✅ Bevy 0.19 observer-based event pattern used correctly
 - ✅ Resource/System separation follows existing infra patterns
 
 ---

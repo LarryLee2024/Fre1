@@ -67,7 +67,7 @@ tools: Read, Grep, Glob
 - **全局状态**：是否使用了不必要的全局状态
 - **Iterator 优先**：是否用 iterator 替代手动循环
 
-### 4. Bevy 0.18 最佳实践
+### 4. Bevy 0.19 最佳实践
 
 - **消息通信**：跨功能通信是否使用 Message（`add_message`）而非 Event
 - **Event 滥用**：模块内调用是否错误使用了 Event（应用函数调用）

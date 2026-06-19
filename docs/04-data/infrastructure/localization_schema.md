@@ -474,11 +474,11 @@ pub mod loc {
 
 | 依赖 | 类型 | 说明 | 版本约束 |
 |------|------|------|----------|
-| `fluent-rs` 生态 | Rust crate | Fluent 格式解析和变量插值 | 待评估兼容 Bevy 0.18 |
-| `fluent-bundle` | Rust crate | Fluent bundle 管理 | 同上 |
-| `fluent-resmgr` | Rust crate | Fluent 资源管理器（可选） | 同上 |
-| `intl-plural-rules` | Rust crate | CLDR 复数规则 | 同上 |
-| Bevy Asset API | Bevy | 可选的 .ftl 资产管理路径 | 0.18+ |
+| `fluent-rs` 生态 | Rust crate | Fluent 格式解析和变量插值 | 已验证兼容 Bevy 0.19 |
+| `fluent-bundle` | Rust crate | Fluent bundle 管理 | 已验证兼容 Bevy 0.19 |
+| `fluent-resmgr` | Rust crate | Fluent 资源管理器（可选） | 已验证兼容 Bevy 0.19 |
+| `intl-plural-rules` | Rust crate | CLDR 复数规则 | 已验证兼容 Bevy 0.19 |
+| Bevy Asset API | Bevy | 可选的 .ftl 资产管理路径 | 0.19+ |
 
 ### 5.2 Schema 内部依赖
 
@@ -490,7 +490,7 @@ pub mod loc {
 
 ### 5.3 后备方案
 
-若 `fluent-rs` 生态与 Bevy 0.18 不兼容，使用简化方案：
+若 `fluent-rs` 生态与 Bevy 0.19 不兼容，使用简化方案：
 
 ```rust
 /// 简易 Fluent pattern 解析（无完整 AST，仅支持 {$var} 替换）
@@ -780,7 +780,7 @@ enum TextScope {
 
 | # | 风险 | 概率 | 影响 | 缓解措施 |
 |---|------|------|------|----------|
-| R1 | `fluent-rs` 生态与 Bevy 0.18 不兼容 | 中 | 高 | 评估期间使用简化版直接解析 .ftl 关键字段（`{$var}` 替换），逐步过渡到 fluent-rs |
+| R1 | `fluent-rs` 生态与 Bevy 0.19 不兼容 | 中 | 高 | 评估期间使用简化版直接解析 .ftl 关键字段（`{$var}` 替换），逐步过渡到 fluent-rs |
 | R2 | build.rs 增加编译时间 | 高 | 低 | Key 仅在有 .ftl 变更时重新生成，使用 `cargo:rerun-if-changed` 控制增量编译 |
 | R3 | 性能：Fluent 模式解析开销 | 低 | 中 | 仅热路径（UI 每帧）使用 `LocalizedTextCache`，冷路径（剧情文本）延迟解析 |
 | R4 | 团队对新 Key 体系适应成本 | 中 | 中 | 编译期检查 + Fake Locale 双保险：编译错误捕获 Key 拼写，Fake Locale 暴露硬编码文本 |
@@ -794,7 +794,7 @@ enum TextScope {
 |------|------|------|----------|
 | `fluent-rs` | 待定 | 维护活跃度未知 | 自研简易 Fluent 解析器（仅 `{$var}` 替换） |
 | `fluent-bundle` | 待定 | API 稳定性 | 封装抽象层，隔离直接依赖 |
-| Bevy 0.18 | 0.18.1 | Asset API 对 .ftl 支持有限 | 使用 `include_str!` + 文件系统监控 |
+| Bevy 0.19 | 0.19.0-rc.3 | Asset API 对 .ftl 支持有限 | 使用 `include_str!` + 文件系统监控 |
 
 ---
 

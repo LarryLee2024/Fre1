@@ -46,7 +46,7 @@ tags:
 - [x] 无全局可变状态
 - [x] 使用迭代器模式（`.iter_mut().find()`、`.retain()`）
 
-### Bevy 0.18 最佳实践
+### Bevy 0.19 最佳实践
 - [x] 跨领域通信通过 Event（无直接数据引用）
 - [x] 组件使用 `register_type` 注册
 - [x] 资源使用 `init_resource` 初始化

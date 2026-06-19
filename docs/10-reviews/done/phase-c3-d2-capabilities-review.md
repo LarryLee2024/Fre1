@@ -144,7 +144,7 @@ pub fn get_str(&self, id: &str) -> Option<&T> {
 | ADR-003 Facade 封装 | ✅ | Tactical → Capabilities 仅通过 integration/ 访问 |
 | ADR-045 可见性 | ✅ | Terrain mod.rs 标注了 ADR-045 可见性规则 |
 | Data Law 012 (域间独立) | ✅ | TilePos 与 GridPos 独立，事件驱动通信 |
-| ECS Observer (Bevy 0.18) | ✅ | 使用 `add_observer` + `On<Event>`，无 `add_event` |
+| ECS Observer (Bevy 0.19) | ✅ | 使用 `add_observer` + `On<Event>`，无 `add_event` |
 | 无 unsafe/as_any | ✅ | 未发现违规 |
 
 ---
@@ -271,7 +271,7 @@ pub fn get_str(&self, id: &str) -> Option<&T> {
 | ADR-003 Facade 封装 | ✅ | Tactical → Capabilities 仅通过 integration/ 访问 |
 | ADR-045 可见性 | ✅ | Terrain mod.rs 标注了 ADR-045 可见性规则 |
 | Data Law 012 (域间独立) | ✅ | TilePos 与 GridPos 独立，事件驱动通信 |
-| ECS Observer (Bevy 0.18) | ✅ | 使用 `add_observer` + `On<Event>`，无 `add_event` |
+| ECS Observer (Bevy 0.19) | ✅ | 使用 `add_observer` + `On<Event>`，无 `add_event` |
 | 无 unsafe/as_any | ✅ | 未发现违规 |
 | **测试架构（领域内聚四层）** | ✅ | Terrain 域 4 层目录结构完整，Registry 测试已提取至 `tests/unit/` + `tests/invariant/` |
 

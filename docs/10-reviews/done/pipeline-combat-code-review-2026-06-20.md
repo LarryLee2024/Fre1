@@ -57,7 +57,7 @@ Phase F 完成后对 `pipeline → combat 流程` 的代码审查，涉及将 `T
 - [x] 无过度抽象或 Trait 滥用
 - [x] 迭代器模式适当使用（`position()`, `iter().fold()`, `contains_key()`）
 
-### Bevy 0.18 最佳实践
+### Bevy 0.19 最佳实践
 - [x] 使用 `commands.trigger()` + Observer 而非旧版 EventReader/EventWriter
 - [x] Component 使用 `register_type()` + Reflect 注册
 - [x] 跨阶段通信通过 Trigger (OnTurnStart, OnTurnEnd, OnBattleEnd)

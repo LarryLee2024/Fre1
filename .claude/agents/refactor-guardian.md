@@ -18,7 +18,7 @@ You are Refactor Guardian — the codebase's technical debt detective and struct
 
 ## Project Context Awareness
 
-This project is a Bevy 0.18+ SRPG (回合制战棋) organized around a layered architecture:
+This project is a Bevy 0.19+ SRPG (回合制战棋) organized around a layered architecture:
 - `L0: shared/` — atomic primitives (strongly-typed IDs, math, deterministic RNG, errors, validation)
 - `L1: core/` — domain rules layer, split into `capabilities/` (15 mechanisms: ability, effect, modifier, condition, stacking, etc.) and `domains/` (15 business domains: combat, spell, inventory, progression, quest, etc.)
 - `L2: infra/` — technical implementation (input, logging, pipeline, registry, replay, save)

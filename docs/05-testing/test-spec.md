@@ -457,6 +457,68 @@ AI 生成测试前应内部对照：
 
 ---
 
+## 17.5 Bevy 0.19 Observer / Delayed Commands 测试规范
+
+### Observer 测试
+
+- 使用最小 App + `app.add_observer()` 注册被测试 Observer
+- 使用 `app.world_mut().trigger(EventType)` 模拟事件触发
+- 使用 `app.update()` 刷新 Observer 执行
+- 验证 Observer 响应：查询组件/资源状态变更
+- 验证 Observer 不响应（条件守卫）：修改 run_if 条件后触发，确认无副作用
+- 🟥 禁止在单元测试中直接调用 Observer 函数体（绕过 Bevy 调度）
+
+```rust
+// Observer 集成测试示例
+#[test]
+fn observer_responds_to_damage_event() {
+    let mut app = App::new();
+    app.add_observer(on_damage_applied);
+    app.add_systems(Update, apply_pending_damage);
+
+    let entity = app.world_mut().spawn(Health::new(100)).id();
+    app.world_mut().trigger(DamageApplied { target: entity, amount: 30 });
+
+    app.update();
+    assert_eq!(app.world().get::<Health>(entity).unwrap().current, 70);
+}
+```
+
+### Delayed Commands 测试
+
+- 使用 `app.update()` 多次迭代模拟时间流逝
+- 验证延迟触发：确认实体组件/资源在预期延迟后变更
+- 验证取消：移除 Delayed 相关组件后确认未触发
+- 🟥 禁止在测试中依赖真实时间（如 `std::thread::sleep`）
+
+```rust
+// Delayed Command 测试示例
+#[test]
+fn delayed_damage_applies_after_duration() {
+    let mut app = App::new();
+    app.add_observer(on_delayed_damage);
+    app.add_systems(Update, apply_pending_damage);
+
+    let entity = app.world_mut().spawn(Health::new(100)).id();
+    app.world_mut()
+        .entity_mut(entity)
+        .insert(Delayed::new(Duration::from_secs(2), DamageApplied { amount: 30 }));
+
+    // 模拟 2 秒后
+    for _ in 0..120 { app.update(); }
+
+    assert_eq!(app.world().get::<Health>(entity).unwrap().current, 70);
+}
+```
+
+### Relationship 测试
+
+- 验证关系查询：`query.get::<Relationship<CasterOf>>(caster)` 返回正确目标
+- 验证插入/移除关系实体的级联效果
+- 🟥 禁止在测试中手动构造内部关系数据结构
+
+---
+
 # 18. Final Principle
 测试的目标不是证明代码正确。
 测试的目标是证明：

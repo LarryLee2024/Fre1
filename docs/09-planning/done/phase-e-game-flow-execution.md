@@ -200,7 +200,7 @@ app.init_state::<BattlePhase>();
 
 // 改后:
 // BattlePhase 作为 SubState 自动由 GameState::Combat 激活
-// Bevy 0.18 不需要显式注册 SubState，derive(SubStates) 自动处理
+// Bevy 0.19 不需要显式注册 SubState，derive(SubStates) 自动处理
 ```
 
 ### 验证

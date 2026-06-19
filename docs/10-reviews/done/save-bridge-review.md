@@ -35,7 +35,7 @@ data: docs/04-data/foundation/save_architecture.md ✅
 - **Effect/Modifier Pipeline**: ✅ 不涉及
 
 ### 2. ECS 模式正确性
-- **Observer 模式正确**: ✅ 使用 Bevy 0.18 `On<T>` observer param + `commands.trigger()`，而非旧的 EventWriter/EventReader
+- **Observer 模式正确**: ✅ 使用 Bevy 0.19 `On<T>` observer param + `commands.trigger()`，而非旧的 EventWriter/EventReader
 - **Resource 使用合理**: ✅ SaveManager/AutoSaveConfig/EntityRemapper 是正宗的横切 Resource
 - **Component 不含逻辑**: ✅ 无自定义 Component
 
@@ -44,7 +44,7 @@ data: docs/04-data/foundation/save_architecture.md ✅
 - **无 unwrap/expect**: ✅ 仅在安全路径使用 `.unwrap()`（已知 Option 不为 None）
 - **无死代码**: ✅ cargo check 零警告
 
-### 4. Bevy 0.18 最佳实践
+### 4. Bevy 0.19 最佳实践
 - **Observer-based Events**: ✅ 使用 `commands.trigger()` + `On<T>` pattern，对齐 tag_system.rs 模式
 - **FromWorld/Default**: ✅ 资源通过 `Default` trait + `init_resource` 注册
 - **app.add_observer**: ✅ 正确注册全局 Observer，无需手动管理 Schedule
@@ -76,7 +76,7 @@ data: docs/04-data/foundation/save_architecture.md ✅
 - ✅ `cargo test` — 932 passed, 0 failed (19 new save tests)
 - ✅ ADR-042 compliance confirmed
 - ✅ save_architecture.md alignment confirmed
-- ✅ Bevy 0.18 observer-based event pattern used correctly
+- ✅ Bevy 0.19 observer-based event pattern used correctly
 
 ---
 

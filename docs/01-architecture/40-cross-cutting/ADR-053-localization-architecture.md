@@ -345,7 +345,7 @@ cargo run --features fake-locale
 
 | 风险 | 缓解 |
 |------|------|
-| fluent-rs 库与 Bevy 0.18 兼容性 | 评估期先使用简化版直接解析 .ftl 关键字段，逐步过渡到 fluent-rs |
+| fluent-rs 库与 Bevy 0.19 兼容性 | 评估期先使用简化版直接解析 .ftl 关键字段，逐步过渡到 fluent-rs |
 | build.rs 增加编译时间 | Key 仅在有 .ftl 变更时重新生成，使用 cargo:rerun-if-changed 控制 |
 | 性能：Fluent 模式解析开销 | 仅热路径使用缓存，冷路径（剧情文本）延迟解析 |
 | 团队对新 Key 体系适应成本 | 编译期检查 + Fake Locale 双保险 |

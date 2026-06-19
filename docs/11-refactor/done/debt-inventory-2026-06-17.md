@@ -221,7 +221,7 @@ baseline_warnings: 433 (C-4 infra/replay 增量：0 新增 warning)
 | 超大 Plugin | ✅ 合规 | ReplayPlugin 注册 5 资源 + 4 系统，66 行 |
 | 禁止的文件名 | ✅ 无 | 无 utils.rs / helpers.rs |
 | cargo build 警告 | ✅ 零新增 | 0 replay-specific warnings |
-| Bevy 0.18 模式合规 | ✅ 通过 | observer-based events, FromWorld/Default, chain() |
+| Bevy 0.19 模式合规 | ✅ 通过 | observer-based events, FromWorld/Default, chain() |
 | ADR-041 对齐 | ✅ 已确认 | Resource/System/Event 设计与 ADR §4-5 一致 |
 
 **结论**: C-4 Replay 桥接层无新增技术债。5 个实现文件（145 行）+ 7 个测试文件（~250 行）均通过 @code-reviewer 审查。
@@ -236,7 +236,7 @@ baseline_warnings: 433 (C-4 infra/replay 增量：0 新增 warning)
 | 超大 Plugin | ✅ 合规 | SavePlugin 注册 3 资源 + 2 observer，20 行 |
 | 禁止的文件名 | ✅ 无 | 无 utils.rs / helpers.rs |
 | cargo build 警告 | ✅ 零新增 | 0 save-specific warnings |
-| Bevy 0.18 模式合规 | ✅ 通过 | observer-based events (On<T>), Default traits, app.add_observer |
+| Bevy 0.19 模式合规 | ✅ 通过 | observer-based events (On<T>), Default traits, app.add_observer |
 | ADR-042 对齐 | ✅ 已确认 | Resource/Event 设计与 ADR §2-3 一致 |
 
 **结论**: C-5 Save 桥接层无新增技术债。5 个实现文件（~260 行）+ 7 个测试文件（~250 行）均通过 @code-reviewer 审查。
@@ -256,7 +256,7 @@ baseline_warnings: 433 (C-4 infra/replay 增量：0 新增 warning)
 | 超大文件 (>500 行) | ✅ 无 | 最大测试文件 components_test.rs ~100 行 |
 | 禁止的文件名 | ✅ 无 | 无 utils.rs / helpers.rs |
 | cargo build 警告 | ✅ 零新增 | 新代码未引入新 warning |
-| Bevy 0.18 模式合规 | ✅ 通过 | observer-based events, reflect Components, Default traits |
+| Bevy 0.19 模式合规 | ✅ 通过 | observer-based events, reflect Components, Default traits |
 | 测试接线完整 | ✅ 已确认 | unit/invariant/integration 三层 + fixtures 预留 |
 | Bug 修复数 | 4 个 | B1-B4 均在修复当天验证，全部通过 |
 

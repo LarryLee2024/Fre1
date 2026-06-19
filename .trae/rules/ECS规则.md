@@ -2,13 +2,13 @@
 alwaysApply: false
 description: 
 ---
-# Bevy 0.18+ SRPG 架构宪法 v5.0 · ECS篇
+# Bevy 0.19+ SRPG 架构宪法 v5.2 · ECS篇
 > 定位：Bevy ECS 最佳实践与编码规则，负责所有引擎层代码规范
 > 适用场景：编写系统、组件、通信逻辑、调度配置、状态管理
 
 ## 效力说明
 1. 本篇约束所有ECS相关代码的编写方式，优先级高于通用Rust编码规范
-2. 专为Bevy 0.18及以上版本设计，贴合官方原生能力与演进方向
+2. 专为Bevy 0.19及以上版本设计，贴合官方原生能力与演进方向
 3. 条款强制等级与全文一致，违反条款的代码视为不合格输出
 
 ---
@@ -47,15 +47,23 @@ description:
 - 典型场景：伤害触发护盾、吸血、反击等连锁效果
 - 规则本质：比全局Message轻量，天然绑定实体，适合构建线性事件链
 
-### 2.3 Observer = 局部状态变化响应
-- 🟩 同一Feature内的组件变化、Trigger触发的响应逻辑，必须使用Observer实现
-- 典型场景：角色死亡播放动画、血量变化刷新UI
+### 2.3 Observer = 跨领域通信首选机制
+- 🟩 跨Feature、跨Domain的事件响应，必须使用`On<T>` Observer实现
+- 🟩 Observer支持`run_if()`条件守卫，替代手动if判断
+- 🟥 禁止使用`EventWriter<T>` / `EventReader<T>`（废弃模式）
+- 典型场景：伤害→护盾→吸血→死亡判定（跨Ability/Effect/Combat领域）
 
-### 2.4 Message = 跨Feature全局广播
-- 🟩 跨业务模块的通知必须使用全局Event
-- 典型场景：回合结束、战斗胜利、任务完成
+### 2.4 Delayed Commands = 延迟效果首选
+- 🟩 一次性延迟效果使用`Delayed<T>`或`FreDelayed<T>`实现
+- 🟩 循环延迟使用Observer自注册模式（handler末尾重新trigger）
+- 典型场景：DOT Tick、Buff过期、技能冷却
+- Timer仅用于基础设施周期性任务（热重载/审计）或可暂停Buff
 
-### 2.5 通用原则
+### 2.5 Message = 跨Feature全局广播（备选）
+- 🟩 当Observer不适用时的全局事件备选方案
+- 执行方式：`trigger(T)` + `On<T>` Observer（非旧EventWriter/EventReader）
+
+### 2.6 通用原则
 - 🟥 禁止将同一模块内的普通逻辑全部事件化，禁止滥用事件/Trigger模拟函数调用
 - 🟩 领域事件是唯一业务事实源，日志、回放、UI、成就均为下游消费者
 - 🟩 所有领域事件必须纳入白名单管理，禁止为临时副作用随意新增事件
@@ -79,11 +87,25 @@ description:
 ### 3.4 Resource规范
 - 🟩 Resource只能存储真正的全局唯一状态
 - 🟥 绝对禁止将Resource当作全局变量仓库使用
+- 🟨 优先使用Singleton Entity Component替代Res&lt;T&gt;（利用Observer/Hook能力）
 
 ### 3.5 性能优化
 - 🟥 高频逻辑中禁止使用Observer造成事件风暴
 - 每帧执行10次以上的逻辑必须直接使用System处理
 - 🟩 优先使用`Changed`过滤器减少不必要计算
+- 🟨 批量同构查询优先使用`contiguous_iter()`提升缓存命中率
+
+### 3.6 Reflect 全覆盖
+- 🟩 所有Component/Event/Resource类型必须 derive Reflect
+- 格式：`#[derive(Component, Reflect)]` + `#[reflect(Component)]`
+- 🟥 禁止新增无Reflect的Component/Event/Resource类型
+
+### 3.7 BSN 使用范围
+- 🟩 BSN用于描述实体结构（组件组合），System负责行为
+- 🟩 UI层（app/scenes/）默认使用`bsn! {}`
+- 🟩 核心玩法层使用`spawn_*()`工厂函数（内部自由选择BSN或传统spawn）
+- 🟥 禁止在BSN中描述业务逻辑或引用System/Observer
+- 🟥 禁止Core层直接import `bsn!`宏
 
 ---
 

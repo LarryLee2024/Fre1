@@ -16,7 +16,7 @@ supersedes: none
 
 ## 背景
 
-Bevy 0.18+ 提供多级通信原语：Hook（Component 生命周期）、Trigger（实体事件链）、Observer（状态变化响应）、Event/Message（全局广播）。错误的选择会导致：
+Bevy 0.19+ 提供多级通信原语：Hook（Component 生命周期）、Trigger（实体事件链）、Observer（状态变化响应）、Event/Message（全局广播）。错误的选择会导致：
 - Observer 滥用 → 高频系统性能退化
 - Event 滥用 → 全局耦合、调试困难
 - Hook 承载复杂逻辑 → 生命周期管理混乱
@@ -187,7 +187,7 @@ src/event/  (Layer 2)
 - 白名单事件统一管理，日志/回放/UI 天然对齐
 
 ### 负面
-- Trigger + Observer 是 Bevy 0.18 的新机制，团队需要学习
+- Trigger + Observer 是 Bevy 0.19 的新机制，团队需要学习
 - 过量使用 Observer 可能导致隐式调度依赖难以追踪
 - 白名单管理初期增加少量额外工作
 

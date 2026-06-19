@@ -181,7 +181,7 @@ Tactical 的 `integration.rs` 定义了 `MovementType → TagId` 映射，但没
 |----------|---------|------|
 | 独立实现 ReplayEvent/Recorder/Player | 包装 Core 层类型为 Bevy Resource | 避免重复实现已存在的能力 |
 | 4 个独立文件（event/recorder/player/plugin） | 4 个功能文件（resources/systems/events/api）+ plugin | 结构更清晰，API 统一出口 |
-| 使用 `add_event` 注册 | Observer-based Events + `commands.trigger()` | 对齐 Bevy 0.18 事件系统 |
+| 使用 `add_event` 注册 | Observer-based Events + `commands.trigger()` | 对齐 Bevy 0.19 事件系统 |
 
 #### 交付清单
 
@@ -220,7 +220,7 @@ Tactical 的 `integration.rs` 定义了 `MovementType → TagId` 映射，但没
 |----------|---------|------|
 | SaveData / SaveHeader 结构 | `events.rs` 中的 Event 类型 | observer-based 事件驱动 save/load |
 | SaveManager + serializer + migration | `resources.rs` 中 SaveManager + AutoSaveConfig + EntityRemapper | 最小实现，Per-Feature 序列化后续迭代 |
-| Per-Feature SaveLoad trait | Observer pattern (On<SaveRequest> / On<LoadRequest>) | 对齐 Bevy 0.18 事件系统 |
+| Per-Feature SaveLoad trait | Observer pattern (On<SaveRequest> / On<LoadRequest>) | 对齐 Bevy 0.19 事件系统 |
 
 #### 交付清单
 

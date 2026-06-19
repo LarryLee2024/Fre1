@@ -4,7 +4,7 @@ title: Architecture Overview — DDD Three-Layer + Four Cross-Cutting Layers
 status: stable
 owner: architect
 created: 2026-06-16
-updated: 2026-06-19
+updated: 2026-06-19（v5.1 + Bevy 0.19 通信机制更新 + ADR-054）
 tags:
   - architecture
   - governance
@@ -15,7 +15,7 @@ tags:
 
 # Architecture Overview — Fre SRPG DDD三层+横切四层 架构总纲
 
-> **版本**: 5.0 | **角色**: @architect | **宪法优先级**: 🟥 **最高**
+> **版本**: 5.1 | **角色**: @architect | **宪法优先级**: 🟥 **最高**
 
 本文档是 Fre 项目架构的最高准则。所有 Feature 边界、ECS 规则、Effect/Modifier 管线、模块间通信以本文档为最终依据。
 
@@ -251,10 +251,11 @@ L0 Shared                         └─ 计算层
 |------|------|---------|------|
 | **Hook** | Component 添加/移除的轻量副作用 | `#[component(on_add, on_remove)]` | `Dead` Tag 添加时移除移动能力 |
 | **Trigger** | 同 Feature 内事件链响应 | `commands.trigger()` + Observer | 伤害 → 护盾 → 吸血 |
-| **Observer** | Component 状态变化响应 | `on_event::<T>()` | 血量变化刷新 UI |
-| **Message** | 跨 Feature 全局广播 | `EventWriter<T>` / `EventReader<T>` | 回合结束 → 任务检查 |
+| **Observer** | 跨 Feature 通信首选机制 | `On<T>` + `run_if()` | 伤害 → 护盾 → 死亡判定 |
+| **Message** | 跨 Feature 全局广播（备选） | `trigger()` + Observer（代替旧 EventWriter/EventReader） | 回合结束 → 任务检查 |
 
 > 🟥 **禁止**将模块内普通逻辑全部事件化，禁止用 Event 模拟函数调用。
+> 🟥 **禁止**使用 `EventWriter<T>` / `EventReader<T>` 模式，统一使用 `trigger(T)` + `On<T>` Observer。
 
 ### 4.3 Schedule 权责划分
 
@@ -641,6 +642,7 @@ src/
 | ADR-050 | 游戏状态机与场景架构 | ✅ Accepted | Foundation |
 | ADR-051 | Error/Failure 分离架构（规则失败与程序错误严格区分） | ✅ Accepted | Cross-cutting |
 | ADR-053 | Localization 基础设施架构（Fluent + Key 代码生成 + 三级回退） | ✅ Proposed | Cross-cutting |
+| ADR-054 | Bevy 0.19 迁移决策（Observer 优先 / Delayed Commands / BSN 范围 / Relationship） | ✅ Accepted | Foundation |
 
 ---
 
@@ -658,6 +660,9 @@ src/
 - [ ] Plugin 注册顺序符合层次要求
 - [ ] 通信机制选择符合四级通信规范
 - [ ] 符合 Data Law（`docs/04-data/README.md` 第 5 节）
+- [ ] 符合 Bevy 0.19 规范：使用 `trigger()` + Observer（非 `EventWriter/EventReader`）
+- [ ] 符合 Bevy 0.19 规范：使用 `ButtonInput<T>`（非旧 `Input<T>`）
+- [ ] 符合 Bevy 0.19 规范：所有 Component/Event/Resource 包含 `Reflect`
 
 ---
 
@@ -706,6 +711,7 @@ src/
 | `00-foundation/ADR-050-game-state-machine.md` | ✅ accepted | architect | 2026-06-19 |
 | `40-cross-cutting/ADR-051-error-failure-separation.md` | ✅ accepted | architect | 2026-06-19 |
 | `40-cross-cutting/ADR-053-localization-architecture.md` | ✅ accepted | architect | 2026-06-19 |
+| `00-foundation/ADR-054-bevy-0-19-migration.md` | ✅ accepted | architect | 2026-06-19 |
 
 ---
 

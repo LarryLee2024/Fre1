@@ -1,12 +1,12 @@
-# Bevy 0.18+ SRPG 项目总宪法 v5.1（完整版）
+# Bevy 0.19+ SRPG 项目总宪法 v5.2（完整版）
 > 文档元数据
 > - id: 00-governance.project-constitution-complete
 > - title: SRPG 项目总宪法（架构 + 开发 + AI 执行）
-> - version: 5.1
+> - version: 5.2
 > - status: Proposed
 > - owner: architect
 > - created: 2026-06-14
-> - updated: 2026-06-19（v5.1 + §1.5 P0铁则第7条 + §21 红线第18条 + §22 Localization 专项规则）
+> - updated: 2026-06-19（v5.2 + Bevy 0.19 基线升级：Observer 优先、Delayed Commands、BSN 规则、Relationship 规则）
 > - tags: governance, constitution, architecture, bevy, srpg
 > - 效力说明：本宪法对项目所有架构设计、代码编写、AI生成内容具有最高约束力，优先级高于任何通用编程规范、语言习惯或AI默认输出。条款编号永久固定，违反条款即视为不合格输出。
 
@@ -16,7 +16,7 @@
 
 ## 第一编 总则
 ### 1.1 适用范围
-- 引擎：Bevy 0.18 及以上版本
+- 引擎：Bevy 0.19 及以上版本
 - 品类：单机战棋 SRPG
 - 规模：50万行+代码量级
 - 模式：长期连载式内容迭代
@@ -733,19 +733,24 @@ Modding 不是独立层级，而是贯穿多层的扩展能力，按职责拆分
   - 配置字段、临时计算值、非实体级状态允许使用 bool 类型
 - 🟨 **从属关系使用官方 Relationship**
   - 实体间从属关系优先使用 Bevy 官方 `Relationship` 机制实现
-  - 禁止手动维护父子实体 ID 字段
+  - 适用场景：CasterOf、TargetOf、SummonedBy、OwnerOf 等实体间关系
+  - 不适用场景：临时引用（如当前选中单位）、值语义关系（如队伍 ID）
+  - 禁止手动维护父子实体 ID 字段（可用 Relationship 的场景）
 
 ### 6.2 ECS 使用边界规范
 #### Core 层允许使用的 ECS 能力
 - `#[derive(Component)]` 定义业务数据组件
-- `Query`、`Res`、`EventWriter/Reader`、`Observer`、`Trigger`
+- `Query`、`Single`、`Observer`、`Trigger`、`Delayed`
 - `Schedule`、`SystemSet` 调度编排
-- `Resource` 全局业务状态
+- `Resource` 全局业务状态（优先使用 Singleton Entity Component）
+- `run_if()` 系统运行条件
+- `commands.trigger()` 事件链触发
 
 #### Core 层禁止使用的 ECS/引擎能力
+- `EventWriter` / `EventReader`（已废弃，使用 `trigger()` + Observer 替代）
 - `AssetServer`、`Handle<Image>` 等资源加载类型
 - `RenderDevice`、`Texture` 等渲染类型
-- `Input`、`KeyCode` 等输入类型
+- `Input`、`KeyCode` 等输入类型（已迁移为 `ButtonInput<T>`）
 - `AudioPlayer`、`SpatialAudio` 等音频类型
 - 所有 UI 组件与系统
 
@@ -757,12 +762,13 @@ Modding 不是独立层级，而是贯穿多层的扩展能力，按职责拆分
 2. **Trigger = Feature 内事件链载体**
    - 同一 Feature 内的多段响应逻辑、战斗事件链，使用 `commands.trigger()` 机制实现
    - 典型场景：伤害触发护盾、吸血、反击等连锁效果
-3. **Observer = 局部状态变化响应**
-   - 同一 Feature 内的组件变化、Trigger 触发的响应逻辑，使用 Observer 实现
-   - 典型场景：角色死亡播放动画、血量变化刷新 UI
-4. **Message = 跨 Feature 全局广播**
-   - 跨业务模块、跨 Domain 的通知必须使用全局事件（Event）
-   - 典型场景：回合结束、战斗胜利、任务完成
+3. **Observer = 跨领域通信首选机制**
+   - 跨 Feature、跨 Domain 的事件响应使用 `On<T>` Observer 实现
+   - 支持 `run_if()` 条件守卫，替代手动 if 判断
+   - 典型场景：伤害 → 护盾 → 吸血 → 死亡判定（跨 Ability/Effect/Combat 领域）
+4. **Message = 跨 Feature 全局广播（备选）**
+   - 当 Observer 不适用时的全局事件备选方案
+   - 典型场景：回合结束 → 同时通知 Quest/Progression/AI 多个领域
 
 #### 补充规则
 - 🟩 模块内部优先函数调用，🟥 绝对禁止将同一模块内的普通逻辑全部事件化
@@ -789,7 +795,12 @@ Modding 不是独立层级，而是贯穿多层的扩展能力，按职责拆分
   - 禁止手动维护全局状态枚举与切换逻辑
 - 🟨 **运行条件优先**
   - 系统的执行前置判断优先使用 `run_if()` 条件表达
-  - 避免在系统内部写大段 if 判断是否执行
+  - Observer 也支持 `run_if()`，用于条件守卫
+  - 避免在系统或 Observer 内部写大段 if 判断是否执行
+- 🟨 **Delayed Commands 优先于 Timer**
+  - 一次性延迟效果使用 `Delayed<T>` 或 `FreDelayed<T>` 实现
+  - Timer 仅用于基础设施层的周期性任务（热重载、审计）或需要暂停/恢复的长周期 Buff
+  - 🟥 禁止单纯的"等 X 秒后执行 Y"用 Timer 轮询实现
 - 🟩 **Schedule 权责划分**
   - `PreUpdate`：输入处理、命令执行、状态同步
   - `Update`：核心业务逻辑、规则结算
@@ -1558,10 +1569,23 @@ AI 生成代码前应内部对照以下要点：
 
 ## 附则
 ### 修订说明
-- 本宪法版本：v5.1（Bevy 0.18+）
+- 本宪法版本：v5.2（Bevy 0.19+）
 - 发布日期：2026-06-19
-- 核心升级（v4.1 → v5.0）：
-  5. **Localization 国际化专项规则新增**
+- 核心升级（v5.1 → v5.2）：
+  1. **Bevy 0.19 基线升级**
+     - §1.1 引擎版本从"0.19+"更新为"0.19+"
+     - §6.2 ECS 允许清单移除废弃的 `EventWriter`/`EventReader`，新增 `Single`、`Delayed`、`run_if()`
+     - §6.2 禁止清单明确禁止 `EventWriter/EventReader` 和旧 `Input<T>`
+     - §6.3 四级通信机制更新：Observer 从"局部状态变化响应"提升为"跨领域通信首选机制"
+     - §6.4 新增 Delayed Commands 规则、Observer run_if 支持
+     - §6.1 细化 Relationship 使用场景和不适用场景
+  2. **新增 BSN 规则**
+     - BSN 使用范围：UI 层默认使用，核心玩法层使用工厂函数
+     - BSN 禁止：描述业务逻辑、引用 System/Observer
+  3. **新增 Reflect 规则**
+     - 所有 Component/Event/Resource 类型必须 derive Reflect
+- 核心升级（v5.0 → v5.1）：
+  7. **Localization 国际化规则新增**
      - §1.5 P0 顶层铁则新增第7条 Localization First
      - §21 红线禁止事项新增第18条 禁止硬编码用户可见文本
      - §20.1 AI 反模式黑名单新增第27条 硬编码文本违规项
@@ -1586,5 +1610,3 @@ AI 生成代码前应内部对照以下要点：
      - 新增 `prelude/` 统一导出
 - 修订周期：每半年根据 Bevy 版本更新和项目实践进行一次修订
 - 效力期限：永久有效，除非发布新版本宪法明确替代
-
-需要的话，我可以基于 v4.1 双轴架构，输出升级后的 Core 层完整目录脚手架，以及对应的 Domain 边界检查脚本。
