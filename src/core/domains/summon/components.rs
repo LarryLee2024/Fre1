@@ -3,6 +3,7 @@
 //! 详见 docs/02-domain/domains/summon_domain.md
 //! Schema: docs/04-data/domains/summon_schema.md
 
+use crate::shared::localization_key::LocalizationKey;
 use bevy::asset::Asset;
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -45,7 +46,8 @@ pub struct SummonCost {
 #[derive(Debug, Clone, Asset, Reflect, Serialize, Deserialize)]
 pub struct SummonTemplateDef {
     pub id: String,
-    pub name_key: String,
+    #[reflect(ignore)]
+    pub name_key: LocalizationKey,
     pub base_attributes: Vec<(String, f32)>,
     pub tags: Vec<String>,
     pub abilities: Vec<String>,

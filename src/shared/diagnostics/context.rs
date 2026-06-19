@@ -2,7 +2,7 @@
 
 use bevy::prelude::Entity;
 
-use super::CorrelationId;
+use super::{CorrelationId, LogCode};
 
 /// 诊断上下文，用于关联同一战斗/回合/行动中的多条日志。
 ///
@@ -12,6 +12,11 @@ use super::CorrelationId;
 ///     .with_correlation(CorrelationId::Battle(42))
 ///     .with_entity(entity)
 ///     .with_tag("combat");
+/// ```
+///
+/// 日志输出方法自动携带上下文字段：
+/// ```ignore
+/// ctx.log_info(LogCode::BAT001, "battle_started");
 /// ```
 #[derive(Debug, Clone, Default)]
 pub struct DiagnosticContext {
@@ -64,6 +69,54 @@ impl DiagnosticContext {
     pub fn with_tag(mut self, tag: impl Into<String>) -> Self {
         self.tags.push(tag.into());
         self
+    }
+
+    /// 输出 INFO 级别结构化日志，自动携带诊断上下文。
+    #[track_caller]
+    pub fn log_info(&self, code: LogCode, event: &'static str) {
+        tracing::info!(
+            code = ?code,
+            event = event,
+            correlation = ?self.correlation,
+            entity = ?self.entity,
+            frame = ?self.frame,
+            turn = ?self.turn,
+            round = ?self.round,
+            tags = ?self.tags,
+            "{}", event
+        );
+    }
+
+    /// 输出 WARN 级别结构化日志，自动携带诊断上下文。
+    #[track_caller]
+    pub fn log_warn(&self, code: LogCode, event: &'static str) {
+        tracing::warn!(
+            code = ?code,
+            event = event,
+            correlation = ?self.correlation,
+            entity = ?self.entity,
+            frame = ?self.frame,
+            turn = ?self.turn,
+            round = ?self.round,
+            tags = ?self.tags,
+            "{}", event
+        );
+    }
+
+    /// 输出 ERROR 级别结构化日志，自动携带诊断上下文。
+    #[track_caller]
+    pub fn log_error(&self, code: LogCode, event: &'static str) {
+        tracing::error!(
+            code = ?code,
+            event = event,
+            correlation = ?self.correlation,
+            entity = ?self.entity,
+            frame = ?self.frame,
+            turn = ?self.turn,
+            round = ?self.round,
+            tags = ?self.tags,
+            "{}", event
+        );
     }
 }
 

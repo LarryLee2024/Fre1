@@ -21,6 +21,7 @@ pub use crate::shared::ids::BondDefId;
 ///
 /// 统一使用 shared::ids::FormationDefId。
 pub use crate::shared::ids::FormationDefId;
+use crate::shared::localization_key::LocalizationKey;
 
 // ─── 值类型 ────────────────────────────────────────────────────────
 
@@ -102,9 +103,11 @@ pub struct BondDef {
     /// 羁绊唯一标识。
     pub id: BondDefId,
     /// 羁绊名称本地化 Key。
-    pub name_key: String,
+    #[reflect(ignore)]
+    pub name_key: LocalizationKey,
     /// 羁绊描述本地化 Key。
-    pub desc_key: String,
+    #[reflect(ignore)]
+    pub desc_key: LocalizationKey,
     /// 激活条件：需要哪些角色/标签同时在活跃队伍中。
     pub required_members: Vec<BondRequirement>,
     /// 各等级的效果描述（ModifierDefId 占位）。

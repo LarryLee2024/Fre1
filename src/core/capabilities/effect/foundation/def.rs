@@ -14,6 +14,7 @@ use crate::core::capabilities::effect::foundation::types::{
 use crate::core::capabilities::execution::foundation::ExecutionType;
 use crate::core::capabilities::modifier::foundation::ModifierOp;
 use crate::core::capabilities::stacking::foundation::StackingConfig;
+use crate::shared::localization_key::LocalizationKey;
 
 /// 效果定义（Definition 层）。
 ///
@@ -25,13 +26,13 @@ pub struct EffectDef {
     pub id: String,
 
     /// 效果名称本地化 Key
-    pub name_key: String,
+    pub name_key: LocalizationKey,
 
     /// 效果描述本地化 Key
-    pub desc_key: String,
+    pub desc_key: LocalizationKey,
 
     /// 效果图标 Key
-    pub icon_key: Option<String>,
+    pub icon_key: Option<LocalizationKey>,
 
     /// 持续时间类型
     pub duration: EffectDuration,

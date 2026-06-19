@@ -7,6 +7,7 @@
 use bevy::prelude::*;
 
 use super::components::BondDefId;
+use crate::shared::localization_key::LocalizationKey;
 
 /// 新成员加入队伍时触发。
 ///
@@ -69,7 +70,7 @@ pub struct BondActivated {
     /// 参与的角色列表。
     pub members: Vec<Entity>,
     /// 效果描述。
-    pub effect_description: String,
+    pub effect_description: LocalizationKey,
 }
 
 /// 羁绊解除时触发。

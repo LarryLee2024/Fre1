@@ -27,6 +27,7 @@ use crate::core::domains::combat::integration::trigger::CombatTriggerType;
 // ═══════════════════════════════════════════════════════════════════════
 
 /// 进入 BattlePhase::Battle 时触发 OnBattleStart 并启动回合管线。
+#[tracing::instrument(skip_all)]
 pub(crate) fn on_enter_battle(mut commands: Commands) {
     commands.trigger(OnBattleStart);
 }
@@ -40,6 +41,7 @@ pub(crate) fn on_enter_battle(mut commands: Commands) {
 /// 与 effect_tick_system 并行，在回合结束时推进：
 /// - 技能冷却（tick_all_cooldowns）
 /// - 共享冷却（tick_shared_cooldowns）
+#[tracing::instrument(skip_all)]
 pub(crate) fn on_turn_end_tick_ability_cooldowns(
     trigger: On<'_, '_, OnTurnEnd>,
     mut ability_param: CombatAbilityParam,
@@ -80,6 +82,7 @@ pub(crate) fn on_turn_start_evaluate_triggers(
 }
 
 /// 进入 BattlePhase::Victory 时触发 OnBattleEnd。
+#[tracing::instrument(skip_all)]
 pub(crate) fn on_enter_victory(mut commands: Commands) {
     commands.trigger(OnBattleEnd {
         result: BattleResult::Victory,

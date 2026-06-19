@@ -71,11 +71,6 @@ pub(crate) fn on_hazard_check(
             continue;
         }
 
-        info!(
-            "[Terrain] Hazard triggered: tile=({},{}), hazard={}, entity={:?}",
-            target_tile.x, target_tile.y, hazard.id, entity
-        );
-
         commands.trigger(HazardTriggered {
             tile: target_tile,
             target: entity,

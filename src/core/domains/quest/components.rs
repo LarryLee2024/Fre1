@@ -14,6 +14,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// 统一使用 shared::ids::QuestId。
 pub use crate::shared::ids::QuestId as QuestDefId;
+use crate::shared::localization_key::LocalizationKey;
 
 /// 目标唯一标识符（任务内唯一）。
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Reflect, Serialize, Deserialize)]
@@ -164,8 +165,10 @@ pub struct UnlockReward {
 #[derive(Debug, Clone, Asset, Serialize, Deserialize, Reflect)]
 pub struct QuestDef {
     pub id: QuestDefId,
-    pub name_key: String,
-    pub desc_key: String,
+    #[reflect(ignore)]
+    pub name_key: LocalizationKey,
+    #[reflect(ignore)]
+    pub desc_key: LocalizationKey,
     pub quest_type: QuestType,
     pub prerequisites: Vec<QuestPrereq>,
     pub objectives: Vec<ObjectiveDef>,

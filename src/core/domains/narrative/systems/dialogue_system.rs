@@ -41,13 +41,18 @@ pub(crate) fn on_dialogue_start(
 ) {
     let req = trigger.event();
     let Some(registry) = tree_registry else {
-        warn!("[Narrative] DialogueStartRequest: no DialogueTreeRegistry");
+        tracing::warn!(
+            event = "narrative.dialogue_start.missing_registry",
+            "DialogueStartRequest: no DialogueTreeRegistry"
+        );
         return;
     };
 
     let Some(entry) = registry.entry_node(&req.tree_id) else {
-        warn!(
-            "[Narrative] DialogueStartRequest: tree '{}' not found",
+        tracing::warn!(
+            event = "narrative.dialogue_start.tree_not_found",
+            tree_id = %req.tree_id,
+            "DialogueStartRequest: tree '{}' not found",
             req.tree_id
         );
         return;
@@ -104,22 +109,29 @@ pub(crate) fn on_choice_select(
     let entity = req.entity;
 
     let Ok(mut state) = dialogue_query.get_mut(entity) else {
-        warn!(
-            "[Narrative] ChoiceSelectRequest: entity {:?} has no DialogueState",
+        tracing::warn!(
+            event = "narrative.choice_select.missing_state",
+            entity = ?entity,
+            "ChoiceSelectRequest: entity {:?} has no DialogueState",
             entity
         );
         return;
     };
 
     let Some(registry) = tree_registry else {
-        warn!("[Narrative] ChoiceSelectRequest: no DialogueTreeRegistry");
+        tracing::warn!(
+            event = "narrative.choice_select.missing_registry",
+            "ChoiceSelectRequest: no DialogueTreeRegistry"
+        );
         return;
     };
 
     // 查找当前节点
     let Some(node) = registry.get_node(&state.current_node_id) else {
-        warn!(
-            "[Narrative] ChoiceSelectRequest: node '{}' not found",
+        tracing::warn!(
+            event = "narrative.choice_select.node_not_found",
+            node_id = %state.current_node_id,
+            "ChoiceSelectRequest: node '{}' not found",
             state.current_node_id
         );
         return;
@@ -127,8 +139,11 @@ pub(crate) fn on_choice_select(
 
     // 查找选择的分支
     let Some(choice) = node.choices.iter().find(|c| c.id == req.choice_id) else {
-        warn!(
-            "[Narrative] ChoiceSelectRequest: choice '{}' not in node '{}'",
+        tracing::warn!(
+            event = "narrative.choice_select.choice_not_found",
+            choice_id = %req.choice_id,
+            node_id = %state.current_node_id,
+            "ChoiceSelectRequest: choice '{}' not in node '{}'",
             req.choice_id, state.current_node_id
         );
         return;

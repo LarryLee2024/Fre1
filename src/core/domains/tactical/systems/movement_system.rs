@@ -36,7 +36,9 @@ pub(crate) fn on_compute_move(
     let emit_event = trigger.event().emit_moved_event;
 
     if path.len() < 2 {
-        warn!(
+        tracing::warn!(
+            event = "tactical.move.short_path",
+            path_len = path.len(),
             "ComputeMoveRequest path too short: {} positions",
             path.len()
         );
@@ -44,7 +46,9 @@ pub(crate) fn on_compute_move(
     }
 
     let Ok((mut mp, mut pos)) = tac_query.get_mut(entity) else {
-        warn!(
+        tracing::warn!(
+            event = "tactical.move.missing_components",
+            entity = ?entity,
             "ComputeMoveRequest entity {} missing tactical components",
             entity
         );
@@ -56,18 +60,33 @@ pub(crate) fn on_compute_move(
     let view = match mov.build_view(entity, mov_type) {
         Ok(v) => v,
         Err(_) => {
-            warn!("Entity {} missing movement capabilities", entity);
+            tracing::warn!(
+                event = "tactical.move.missing_capabilities",
+                entity = ?entity,
+                "Entity {} missing movement capabilities",
+                entity
+            );
             return;
         }
     };
 
     if !view.can_move {
-        warn!("Entity {} has no movement tag for {:?}", entity, mov_type);
+        tracing::warn!(
+            event = "tactical.move.no_tag",
+            entity = ?entity,
+            mov_type = ?mov_type,
+            "Entity {} has no movement tag for {:?}",
+            entity,
+            mov_type
+        );
         return;
     }
-    info!(
-        "[Capabilities Integration] ✅ Movement capability view: can_move={}, effective={}, max={}",
-        view.can_move, view.effective_points, view.max_points
+    tracing::trace!(
+        event = "tactical.move.capability_view",
+        can_move = view.can_move,
+        effective = view.effective_points.0,
+        max = view.max_points.0,
+        "Movement capability view for entity"
     );
 
     // ── 步骤 3: 计算路径成本 ──
@@ -114,11 +133,6 @@ pub(crate) fn on_compute_move(
     let old_pos = *pos;
     mp.consume(total_cost);
     *pos = target;
-
-    info!(
-        "[Capabilities Integration] ✅ Move executed: {:?} → {:?}, cost={}, remaining_mp={}",
-        old_pos, target, total_cost, mp.current
-    );
 
     // ── 步骤 5: 发出事件 ──
     if emit_event {

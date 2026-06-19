@@ -23,8 +23,10 @@ pub(crate) fn enforce_xp_invariant(
 ) {
     let ev = trigger.event();
     let Ok(mut xp) = query.get_mut(ev.entity) else {
-        warn!(
-            "[Progression] ExperienceGained: entity {:?} has no Experience component",
+        tracing::warn!(
+            event = "progression.xp_gained.missing_component",
+            entity = ?ev.entity,
+            "ExperienceGained: entity {:?} has no Experience component",
             ev.entity
         );
         return;
@@ -32,8 +34,11 @@ pub(crate) fn enforce_xp_invariant(
 
     // 满级时不增加经验（不变量 3.1）
     if xp.is_max_level {
-        info!(
-            "[Progression] Entity {:?} is max level, XP gain ignored: +{}",
+        tracing::info!(
+            event = "progression.xp_gained.max_level",
+            entity = ?ev.entity,
+            amount = ev.amount,
+            "Entity {:?} is max level, XP gain ignored: +{}",
             ev.entity, ev.amount
         );
         return;
@@ -42,8 +47,13 @@ pub(crate) fn enforce_xp_invariant(
     let old_level = xp.level;
     xp.add_xp(ev.amount);
 
-    info!(
-        "[Progression] XP gained: entity={:?}, +{} (total: {}, level: {})",
+    tracing::trace!(
+        event = "progression.xp_gained.added",
+        entity = ?ev.entity,
+        amount = ev.amount,
+        total = xp.total_xp_earned,
+        level = xp.level,
+        "XP gained: entity={:?}, +{} (total: {}, level: {})",
         ev.entity, ev.amount, xp.total_xp_earned, xp.level
     );
 
@@ -74,8 +84,10 @@ pub(crate) fn handle_level_up(
 ) {
     let ev = trigger.event();
     let Ok((mut xp, class_levels)) = query.get_mut(ev.entity) else {
-        warn!(
-            "[Progression] LevelUp: entity {:?} has no Experience component",
+        tracing::warn!(
+            event = "progression.level_up.missing_component",
+            entity = ?ev.entity,
+            "LevelUp: entity {:?} has no Experience component",
             ev.entity
         );
         return;
@@ -94,11 +106,6 @@ pub(crate) fn handle_level_up(
         });
     }
 
-    info!(
-        "[Progression] Level up: entity={:?}, {} → {}, class={:?}",
-        ev.entity, ev.old_level, ev.new_level, ev.class_id
-    );
-
     // 检查 ASI
     if ev.is_asi_level {
         commands.trigger(ASICompleted {
@@ -116,8 +123,10 @@ pub(crate) fn handle_level_up(
 pub(crate) fn on_talent_unlocked(trigger: On<TalentUnlocked>, mut query: Query<&mut TalentTree>) {
     let ev = trigger.event();
     let Ok(mut tree) = query.get_mut(ev.entity) else {
-        warn!(
-            "[Progression] TalentUnlocked: entity {:?} has no TalentTree component",
+        tracing::warn!(
+            event = "progression.talent_unlocked.missing_component",
+            entity = ?ev.entity,
+            "TalentUnlocked: entity {:?} has no TalentTree component",
             ev.entity
         );
         return;
@@ -125,11 +134,6 @@ pub(crate) fn on_talent_unlocked(trigger: On<TalentUnlocked>, mut query: Query<&
 
     let talent_id = crate::core::domains::progression::components::TalentId::new(&ev.talent_id);
     tree.unlock(talent_id);
-
-    info!(
-        "[Progression] Talent unlocked: entity={:?}, talent={}",
-        ev.entity, ev.talent_id
-    );
 }
 
 /// 满级检查系统。
@@ -139,7 +143,10 @@ pub(crate) fn check_max_level_system(mut query: Query<&mut Experience>) {
     for mut xp in query.iter_mut() {
         if xp.level >= 20 && !xp.is_max_level {
             xp.is_max_level = true;
-            info!("[Progression] Entity reached max level");
+            tracing::info!(
+                event = "progression.max_level_reached",
+                "Entity reached max level"
+            );
         }
     }
 }

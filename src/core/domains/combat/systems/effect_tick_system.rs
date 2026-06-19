@@ -25,6 +25,7 @@ use crate::core::domains::combat::integration::effect::EffectTickParam;
 ///
 /// 通过 EffectTickParam（integration/effect/system_param.rs）与 Effect Capability 交互，
 /// 不直接接触 Capabilities 内部类型。
+#[tracing::instrument(skip_all)]
 pub(crate) fn on_turn_end_tick_effects(
     _trigger: On<'_, '_, OnTurnEnd>,
     mut commands: Commands,
@@ -43,7 +44,12 @@ pub(crate) fn on_turn_end_tick_effects(
         }
 
         if outcome.error_count > 0 {
-            warn!("[Combat-Effect] {} errors during tick", outcome.error_count);
+            tracing::warn!(
+                event = "combat.effect_tick.errors",
+                error_count = outcome.error_count,
+                "{} errors during tick",
+                outcome.error_count
+            );
         }
     }
 }

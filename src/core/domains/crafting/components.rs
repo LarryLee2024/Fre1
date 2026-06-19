@@ -3,6 +3,7 @@
 //! 详见 docs/02-domain/domains/crafting_domain.md
 //! Schema: docs/04-data/domains/crafting_schema.md
 
+use crate::shared::localization_key::LocalizationKey;
 use bevy::asset::Asset;
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -65,7 +66,8 @@ pub struct CraftOutput {
 #[derive(Debug, Clone, Asset, Serialize, Deserialize, Reflect)]
 pub struct RecipeDef {
     pub id: String,
-    pub name_key: String,
+    #[reflect(ignore)]
+    pub name_key: LocalizationKey,
     pub station: CraftingStation,
     pub skill_requirement: Option<SkillRequirement>,
     pub materials: Vec<MaterialCost>,
@@ -90,7 +92,8 @@ pub enum EnchantmentSlotType {
 #[derive(Debug, Clone, Asset, Reflect, Serialize, Deserialize)]
 pub struct EnchantmentDef {
     pub id: String,
-    pub name_key: String,
+    #[reflect(ignore)]
+    pub name_key: LocalizationKey,
     pub modifier_id: String,
     pub exclusive_group: Option<String>,
     pub slot_type: EnchantmentSlotType,

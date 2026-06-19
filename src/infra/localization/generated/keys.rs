@@ -4,6 +4,44 @@
 #[allow(non_snake_case, non_upper_case_globals)]
 
 pub mod loc {
+    pub mod ability {
+    pub const ABL_000001_NAME: &str = "ability.abl_000001.name";
+    pub const ABL_000001_NAME_DESC: &str = "ability.abl_000001.name.desc";
+    pub const ABL_000002_NAME: &str = "ability.abl_000002.name";
+    pub const ABL_000002_NAME_DESC: &str = "ability.abl_000002.name.desc";
+    pub const ABL_000003_NAME: &str = "ability.abl_000003.name";
+    pub const ABL_000003_NAME_DESC: &str = "ability.abl_000003.name.desc";
+    pub const ABL_000004_NAME: &str = "ability.abl_000004.name";
+    pub const ABL_000004_NAME_DESC: &str = "ability.abl_000004.name.desc";
+    pub const ABL_000005_NAME: &str = "ability.abl_000005.name";
+    pub const ABL_000005_NAME_DESC: &str = "ability.abl_000005.name.desc";
+    pub const ABL_000006_NAME: &str = "ability.abl_000006.name";
+    pub const ABL_000006_NAME_DESC: &str = "ability.abl_000006.name.desc";
+    pub const ABL_000007_NAME: &str = "ability.abl_000007.name";
+    pub const ABL_000007_NAME_DESC: &str = "ability.abl_000007.name.desc";
+    pub const ABL_000008_NAME: &str = "ability.abl_000008.name";
+    pub const ABL_000008_NAME_DESC: &str = "ability.abl_000008.name.desc";
+    }
+
+    pub mod buff {
+    pub const BUF_000001_NAME: &str = "buff.buf_000001.name";
+    pub const BUF_000001_NAME_DESC: &str = "buff.buf_000001.name.desc";
+    pub const BUF_000002_NAME: &str = "buff.buf_000002.name";
+    pub const BUF_000002_NAME_DESC: &str = "buff.buf_000002.name.desc";
+    pub const BUF_000003_NAME: &str = "buff.buf_000003.name";
+    pub const BUF_000003_NAME_DESC: &str = "buff.buf_000003.name.desc";
+    pub const BUF_000004_NAME: &str = "buff.buf_000004.name";
+    pub const BUF_000004_NAME_DESC: &str = "buff.buf_000004.name.desc";
+    pub const BUF_000005_NAME: &str = "buff.buf_000005.name";
+    pub const BUF_000005_NAME_DESC: &str = "buff.buf_000005.name.desc";
+    pub const BUF_000006_NAME: &str = "buff.buf_000006.name";
+    pub const BUF_000006_NAME_DESC: &str = "buff.buf_000006.name.desc";
+    pub const BUF_000007_NAME: &str = "buff.buf_000007.name";
+    pub const BUF_000007_NAME_DESC: &str = "buff.buf_000007.name.desc";
+    pub const BUF_000008_NAME: &str = "buff.buf_000008.name";
+    pub const BUF_000008_NAME_DESC: &str = "buff.buf_000008.name.desc";
+    }
+
     pub mod core {
     pub const BACK: &str = "core.back";
     pub const CANCEL: &str = "core.cancel";
@@ -17,10 +55,138 @@ pub mod loc {
     pub const YES: &str = "core.yes";
     }
 
+    pub mod gameplay {
+    pub const BUFF_APPLIED: &str = "gameplay.buff.applied";
+    pub const BUFF_EXPIRED: &str = "gameplay.buff.expired";
+    pub const BUFF_TICK: &str = "gameplay.buff.tick";
+    pub const COMBAT_COUNTER: &str = "gameplay.combat.counter";
+    pub const COMBAT_CRITICAL: &str = "gameplay.combat.critical";
+    pub const COMBAT_DAMAGE: &str = "gameplay.combat.damage";
+    pub const COMBAT_DODGE: &str = "gameplay.combat.dodge";
+    pub const COMBAT_HEAL: &str = "gameplay.combat.heal";
+    pub const COMBAT_IMMUNITY: &str = "gameplay.combat.immunity";
+    pub const COMBAT_MISS: &str = "gameplay.combat.miss";
+    pub const COMBAT_RESIST: &str = "gameplay.combat.resist";
+    pub const LEVEL_UP: &str = "gameplay.level.up";
+    pub const QUEST_COMPLETED: &str = "gameplay.quest.completed";
+    pub const QUEST_FAILED: &str = "gameplay.quest.failed";
+    pub const QUEST_UPDATED: &str = "gameplay.quest.updated";
+    pub const SKILL_UNLOCKED: &str = "gameplay.skill.unlocked";
+    }
+
+    pub mod item {
+    pub const ITM_000001_NAME: &str = "item.itm_000001.name";
+    pub const ITM_000001_NAME_DESC: &str = "item.itm_000001.name.desc";
+    pub const ITM_000002_NAME: &str = "item.itm_000002.name";
+    pub const ITM_000002_NAME_DESC: &str = "item.itm_000002.name.desc";
+    pub const ITM_000003_NAME: &str = "item.itm_000003.name";
+    pub const ITM_000003_NAME_DESC: &str = "item.itm_000003.name.desc";
+    pub const ITM_000004_NAME: &str = "item.itm_000004.name";
+    pub const ITM_000004_NAME_DESC: &str = "item.itm_000004.name.desc";
+    pub const ITM_000005_NAME: &str = "item.itm_000005.name";
+    pub const ITM_000005_NAME_DESC: &str = "item.itm_000005.name.desc";
+    pub const ITM_000006_NAME: &str = "item.itm_000006.name";
+    pub const ITM_000006_NAME_DESC: &str = "item.itm_000006.name.desc";
+    pub const ITM_000007_NAME: &str = "item.itm_000007.name";
+    pub const ITM_000007_NAME_DESC: &str = "item.itm_000007.name.desc";
+    pub const ITM_000008_NAME: &str = "item.itm_000008.name";
+    pub const ITM_000008_NAME_DESC: &str = "item.itm_000008.name.desc";
+    }
+
+    pub mod quest {
+    pub const OBJECTIVE_COLLECT: &str = "quest.objective.collect";
+    pub const OBJECTIVE_KILL: &str = "quest.objective.kill";
+    pub const OBJECTIVE_PROTECT: &str = "quest.objective.protect";
+    pub const OBJECTIVE_REACH: &str = "quest.objective.reach";
+    pub const OBJECTIVE_TALK: &str = "quest.objective.talk";
+    pub const QST_000001_NAME: &str = "quest.qst_000001.name";
+    pub const QST_000001_NAME_DESC: &str = "quest.qst_000001.name.desc";
+    pub const QST_000002_NAME: &str = "quest.qst_000002.name";
+    pub const QST_000002_NAME_DESC: &str = "quest.qst_000002.name.desc";
+    pub const QST_000003_NAME: &str = "quest.qst_000003.name";
+    pub const QST_000003_NAME_DESC: &str = "quest.qst_000003.name.desc";
+    pub const QST_000004_NAME: &str = "quest.qst_000004.name";
+    pub const QST_000004_NAME_DESC: &str = "quest.qst_000004.name.desc";
+    pub const QST_000005_NAME: &str = "quest.qst_000005.name";
+    pub const QST_000005_NAME_DESC: &str = "quest.qst_000005.name.desc";
+    }
+
+    pub mod tutorial {
+    pub const ATTACK: &str = "tutorial.attack";
+    pub const DEFEAT: &str = "tutorial.defeat";
+    pub const END_TURN: &str = "tutorial.end.turn";
+    pub const MOVE: &str = "tutorial.move";
+    pub const SELECT: &str = "tutorial.select";
+    pub const USE_SKILL: &str = "tutorial.use.skill";
+    pub const VICTORY: &str = "tutorial.victory";
+    }
+
+    pub mod ui {
+    pub const AP: &str = "ui.ap";
+    pub const BACK: &str = "ui.back";
+    pub const BATTLE_ATTACK: &str = "ui.battle.attack";
+    pub const BATTLE_DEFEND: &str = "ui.battle.defend";
+    pub const BATTLE_END_TURN: &str = "ui.battle.end.turn";
+    pub const BATTLE_ITEM: &str = "ui.battle.item";
+    pub const BATTLE_MOVE: &str = "ui.battle.move";
+    pub const BATTLE_SKILL: &str = "ui.battle.skill";
+    pub const BATTLE_WAIT: &str = "ui.battle.wait";
+    pub const CLOSE: &str = "ui.close";
+    pub const CONFIRM: &str = "ui.confirm";
+    pub const DIALOGUE_CONTINUE: &str = "ui.dialogue.continue";
+    pub const DIALOGUE_SKIP: &str = "ui.dialogue.skip";
+    pub const EXIT: &str = "ui.exit";
+    pub const EXP: &str = "ui.exp";
+    pub const GOLD: &str = "ui.gold";
+    pub const HP: &str = "ui.hp";
+    pub const LEVEL: &str = "ui.level";
+    pub const LOAD: &str = "ui.load";
+    pub const MAIN_MENU: &str = "ui.main.menu";
+    pub const MP: &str = "ui.mp";
+    pub const PAUSE: &str = "ui.pause";
+    pub const RESUME: &str = "ui.resume";
+    pub const RETRY: &str = "ui.retry";
+    pub const SAVE: &str = "ui.save";
+    pub const SETTINGS: &str = "ui.settings";
+    pub const TUTORIAL_HINT: &str = "ui.tutorial.hint";
+    }
+
 }
 
 /// 所有已注册的 Key 列表（用于启动校验）
 pub const ALL_KEYS: &[&str] = &[
+    "ability.abl_000001.name",
+    "ability.abl_000001.name.desc",
+    "ability.abl_000002.name",
+    "ability.abl_000002.name.desc",
+    "ability.abl_000003.name",
+    "ability.abl_000003.name.desc",
+    "ability.abl_000004.name",
+    "ability.abl_000004.name.desc",
+    "ability.abl_000005.name",
+    "ability.abl_000005.name.desc",
+    "ability.abl_000006.name",
+    "ability.abl_000006.name.desc",
+    "ability.abl_000007.name",
+    "ability.abl_000007.name.desc",
+    "ability.abl_000008.name",
+    "ability.abl_000008.name.desc",
+    "buff.buf_000001.name",
+    "buff.buf_000001.name.desc",
+    "buff.buf_000002.name",
+    "buff.buf_000002.name.desc",
+    "buff.buf_000003.name",
+    "buff.buf_000003.name.desc",
+    "buff.buf_000004.name",
+    "buff.buf_000004.name.desc",
+    "buff.buf_000005.name",
+    "buff.buf_000005.name.desc",
+    "buff.buf_000006.name",
+    "buff.buf_000006.name.desc",
+    "buff.buf_000007.name",
+    "buff.buf_000007.name.desc",
+    "buff.buf_000008.name",
+    "buff.buf_000008.name.desc",
     "core.back",
     "core.cancel",
     "core.confirm",
@@ -31,4 +197,85 @@ pub const ALL_KEYS: &[&str] = &[
     "core.ok",
     "core.save",
     "core.yes",
+    "gameplay.buff.applied",
+    "gameplay.buff.expired",
+    "gameplay.buff.tick",
+    "gameplay.combat.counter",
+    "gameplay.combat.critical",
+    "gameplay.combat.damage",
+    "gameplay.combat.dodge",
+    "gameplay.combat.heal",
+    "gameplay.combat.immunity",
+    "gameplay.combat.miss",
+    "gameplay.combat.resist",
+    "gameplay.level.up",
+    "gameplay.quest.completed",
+    "gameplay.quest.failed",
+    "gameplay.quest.updated",
+    "gameplay.skill.unlocked",
+    "item.itm_000001.name",
+    "item.itm_000001.name.desc",
+    "item.itm_000002.name",
+    "item.itm_000002.name.desc",
+    "item.itm_000003.name",
+    "item.itm_000003.name.desc",
+    "item.itm_000004.name",
+    "item.itm_000004.name.desc",
+    "item.itm_000005.name",
+    "item.itm_000005.name.desc",
+    "item.itm_000006.name",
+    "item.itm_000006.name.desc",
+    "item.itm_000007.name",
+    "item.itm_000007.name.desc",
+    "item.itm_000008.name",
+    "item.itm_000008.name.desc",
+    "quest.objective.collect",
+    "quest.objective.kill",
+    "quest.objective.protect",
+    "quest.objective.reach",
+    "quest.objective.talk",
+    "quest.qst_000001.name",
+    "quest.qst_000001.name.desc",
+    "quest.qst_000002.name",
+    "quest.qst_000002.name.desc",
+    "quest.qst_000003.name",
+    "quest.qst_000003.name.desc",
+    "quest.qst_000004.name",
+    "quest.qst_000004.name.desc",
+    "quest.qst_000005.name",
+    "quest.qst_000005.name.desc",
+    "tutorial.attack",
+    "tutorial.defeat",
+    "tutorial.end.turn",
+    "tutorial.move",
+    "tutorial.select",
+    "tutorial.use.skill",
+    "tutorial.victory",
+    "ui.ap",
+    "ui.back",
+    "ui.battle.attack",
+    "ui.battle.defend",
+    "ui.battle.end.turn",
+    "ui.battle.item",
+    "ui.battle.move",
+    "ui.battle.skill",
+    "ui.battle.wait",
+    "ui.close",
+    "ui.confirm",
+    "ui.dialogue.continue",
+    "ui.dialogue.skip",
+    "ui.exit",
+    "ui.exp",
+    "ui.gold",
+    "ui.hp",
+    "ui.level",
+    "ui.load",
+    "ui.main.menu",
+    "ui.mp",
+    "ui.pause",
+    "ui.resume",
+    "ui.retry",
+    "ui.save",
+    "ui.settings",
+    "ui.tutorial.hint",
 ];

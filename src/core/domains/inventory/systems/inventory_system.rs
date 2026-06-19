@@ -18,8 +18,11 @@ pub(crate) fn on_item_acquired(
 ) {
     let ev = trigger.event();
     let Ok(mut inventory) = query.get_mut(ev.entity) else {
-        warn!(
-            "[Inventory] ItemAcquired: entity {:?} has no Inventory component",
+        tracing::warn!(
+            event = "inventory.item_acquired.missing_component",
+            entity = ?ev.entity,
+            template = %ev.item_template_id,
+            "ItemAcquired: entity {:?} has no Inventory component",
             ev.entity
         );
         return;
@@ -30,13 +33,21 @@ pub(crate) fn on_item_acquired(
     let added = inventory.add_item(item, 1.0);
 
     if added > 0 {
-        info!(
-            "[Inventory] Item acquired: entity={:?}, template={}, qty={}",
+        tracing::trace!(
+            event = "inventory.item_acquired.added",
+            entity = ?ev.entity,
+            template = %ev.item_template_id,
+            qty = added,
+            "Item acquired: entity={:?}, template={}, qty={}",
             ev.entity, ev.item_template_id, added
         );
     } else {
-        warn!(
-            "[Inventory] Failed to acquire item: entity={:?}, template={}, qty={}",
+        tracing::warn!(
+            event = "inventory.item_acquired.failed",
+            entity = ?ev.entity,
+            template = %ev.item_template_id,
+            qty_requested = ev.quantity,
+            "Failed to acquire item: entity={:?}, template={}, qty={}",
             ev.entity, ev.item_template_id, ev.quantity
         );
     }
@@ -53,8 +64,11 @@ pub(crate) fn on_equip_item(
 ) {
     let ev = trigger.event();
     let Ok((mut inventory, mut equipment)) = query.get_mut(ev.entity) else {
-        warn!(
-            "[Inventory] EquipmentChanged: entity {:?} has no Inventory/EquipmentSlots",
+        tracing::warn!(
+            event = "inventory.equipment_changed.missing_components",
+            entity = ?ev.entity,
+            slot = ?ev.slot,
+            "EquipmentChanged: entity {:?} has no Inventory/EquipmentSlots",
             ev.entity
         );
         return;
@@ -72,13 +86,22 @@ pub(crate) fn on_equip_item(
             if let Some(old_item) = old {
                 let old_template = old_item.template_id.clone();
                 inventory.add_item(old_item, 1.0);
-                info!(
-                    "[Inventory] Equipment changed: entity={:?}, slot={:?}, new={}, replaced={}",
+                tracing::trace!(
+                    event = "inventory.equipment_changed.replaced",
+                    entity = ?ev.entity,
+                    slot = ?ev.slot,
+                    new = %new_template_id,
+                    replaced = %old_template,
+                    "Equipment changed: entity={:?}, slot={:?}, new={}, replaced={}",
                     ev.entity, ev.slot, new_template_id, old_template
                 );
             } else {
-                info!(
-                    "[Inventory] Equipment equipped: entity={:?}, slot={:?}, item={}",
+                tracing::trace!(
+                    event = "inventory.equipment_changed.equipped",
+                    entity = ?ev.entity,
+                    slot = ?ev.slot,
+                    item = %new_template_id,
+                    "Equipment equipped: entity={:?}, slot={:?}, item={}",
                     ev.entity, ev.slot, new_template_id
                 );
             }
@@ -91,8 +114,12 @@ pub(crate) fn on_equip_item(
             let old_item = equipment.unequip(ev.slot);
             if let Some(item) = old_item {
                 inventory.add_item(item, 1.0);
-                info!(
-                    "[Inventory] Equipment unequipped: entity={:?}, slot={:?}, item={}",
+                tracing::trace!(
+                    event = "inventory.equipment_changed.unequipped",
+                    entity = ?ev.entity,
+                    slot = ?ev.slot,
+                    item = %old_template_id,
+                    "Equipment unequipped: entity={:?}, slot={:?}, item={}",
                     ev.entity, ev.slot, old_template_id
                 );
             }
@@ -106,8 +133,10 @@ pub(crate) fn on_equip_item(
 pub(crate) fn on_item_used(trigger: On<ItemUsed>, mut query: Query<&mut Inventory>) {
     let ev = trigger.event();
     let Ok(mut inventory) = query.get_mut(ev.entity) else {
-        warn!(
-            "[Inventory] ItemUsed: entity {:?} has no Inventory component",
+        tracing::warn!(
+            event = "inventory.item_used.missing_component",
+            entity = ?ev.entity,
+            "ItemUsed: entity {:?} has no Inventory component",
             ev.entity
         );
         return;
@@ -115,8 +144,11 @@ pub(crate) fn on_item_used(trigger: On<ItemUsed>, mut query: Query<&mut Inventor
 
     // 检查是否拥有足够数量
     if !inventory.has_item(&ev.item_template_id, ev.quantity_consumed) {
-        warn!(
-            "[Inventory] ItemUsed: insufficient quantity for {} on entity {:?}",
+        tracing::warn!(
+            event = "inventory.item_used.insufficient_quantity",
+            entity = ?ev.entity,
+            template = %ev.item_template_id,
+            "ItemUsed: insufficient quantity for {} on entity {:?}",
             ev.item_template_id, ev.entity
         );
         return;
@@ -124,8 +156,12 @@ pub(crate) fn on_item_used(trigger: On<ItemUsed>, mut query: Query<&mut Inventor
 
     let removed = inventory.remove_item(&ev.item_template_id, ev.quantity_consumed, 1.0);
     if removed > 0 {
-        info!(
-            "[Inventory] Item used: entity={:?}, template={}, consumed={}",
+        tracing::trace!(
+            event = "inventory.item_used.consumed",
+            entity = ?ev.entity,
+            template = %ev.item_template_id,
+            consumed = removed,
+            "Item used: entity={:?}, template={}, consumed={}",
             ev.entity, ev.item_template_id, removed
         );
     }

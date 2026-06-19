@@ -39,10 +39,6 @@ pub(crate) fn on_tile_entered(
 
     // 如果表面有对应的地形效果，发出 TerrainEffectApplied 事件
     if let Some(effect_id) = surface_effect {
-        info!(
-            "[Terrain] TileEntered: entity={:?}, tile=({},{}), surface={:?} → effect={}",
-            entity, target_tile.x, target_tile.y, event.surface, effect_id
-        );
         commands.trigger(TerrainEffectApplied {
             entity,
             tile: target_tile,

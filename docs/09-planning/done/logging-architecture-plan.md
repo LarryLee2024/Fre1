@@ -1,7 +1,7 @@
 ---
 id: logging-architecture-plan
 title: 日志架构实施计划
-status: proposed
+status: completed
 owner: architect
 created: 2026-06-25
 based-on: 8logging.md + 宪法§11 + 项目现状
@@ -48,7 +48,17 @@ based-on: 8logging.md + 宪法§11 + 项目现状
 
 ## 实施计划
 
-### Phase 1: 文档先行（架构 + 领域 + 数据）
+### 总体状态
+
+| Phase | 内容 | 状态 |
+|-------|------|------|
+| Phase 1 | 文档先行（ADR + Schema + 领域文档） | ✅ 已完成 |
+| Phase 2 | shared/diagnostics 基础设施 | ✅ 已完成 |
+| Phase 3 | infra/logging 基础设施 | ✅ 已完成 |
+| Phase 4 | 代码迁移（清理违规） | ✅ 已完成（62 处全部清理） |
+| Phase 5 | 验证 + 归档 | ✅ 已完成 |
+
+### Phase 1: 文档先行（架构 + 领域 + 数据）✅ 已完成
 
 #### 1.1 新增 ADR：`docs/01-architecture/40-cross-cutting/ADR-052-logging-architecture.md`
 

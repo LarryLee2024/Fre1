@@ -22,8 +22,13 @@ pub(crate) fn on_surface_changed(
     for (tile_pos, mut props) in tile_query.iter_mut() {
         if tile_pos.is_same_tile(event.tile) {
             props.surface = event.new_surface;
-            info!(
-                "[Terrain] SurfaceChanged: tile=({},{}), {:?} → {:?}",
+            tracing::trace!(
+                event = "terrain.surface.changed",
+                tile_x = tile_pos.x,
+                tile_y = tile_pos.y,
+                old = ?event.old_surface,
+                new = ?event.new_surface,
+                "SurfaceChanged: tile=({},{}), {:?} → {:?}",
                 tile_pos.x, tile_pos.y, event.old_surface, event.new_surface
             );
             return;
@@ -58,10 +63,6 @@ pub(crate) fn on_turn_end_surface_recovery(
             // 恢复原始表面
             props.surface = override_.original;
             let pos = tile_pos.copied().unwrap_or(TilePos::new(0, 0));
-            info!(
-                "[Terrain] Surface recovered: tile=({},{}), restored to {:?}",
-                pos.x, pos.y, override_.original
-            );
 
             // 发射 SurfaceChanged 事件通知恢复
             commands.trigger(SurfaceChanged {

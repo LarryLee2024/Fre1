@@ -198,8 +198,12 @@ impl StoryFlags {
         let new_val = value.into();
         if let Some(existing) = self.flags.get(&id) {
             if *existing != new_val {
-                warn!(
-                    "[Narrative] StoryFlag '{}' already set to '{}', rejecting override to '{}'",
+                tracing::warn!(
+                    event = "narrative.story_flag.override_rejected",
+                    flag_id = %id,
+                    existing = %existing,
+                    rejected = %new_val,
+                    "StoryFlag '{}' already set to '{}', rejecting override to '{}'",
                     id, existing, new_val
                 );
                 return false;

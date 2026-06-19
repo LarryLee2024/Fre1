@@ -51,16 +51,21 @@ pub(crate) fn on_relationship_eval_request(
     let target = req.target;
 
     let Ok((subj_membership, subj_reputation)) = query.get(entity) else {
-        warn!(
-            "[Faction] RelationshipEvalRequest: entity {:?} has no FactionMembership",
+        tracing::warn!(
+            event = "faction.relationship_eval.missing_subject",
+            entity = ?entity,
+            "RelationshipEvalRequest: entity {:?} has no FactionMembership",
             entity
         );
         return;
     };
 
     let Ok((target_membership, _target_reputation)) = query.get(target) else {
-        warn!(
-            "[Faction] RelationshipEvalRequest: target {:?} has no FactionMembership",
+        tracing::warn!(
+            event = "faction.relationship_eval.missing_target",
+            entity = ?entity,
+            target = ?target,
+            "RelationshipEvalRequest: target {:?} has no FactionMembership",
             target
         );
         return;

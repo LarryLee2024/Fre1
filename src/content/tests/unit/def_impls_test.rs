@@ -8,12 +8,13 @@ use crate::core::domains::crafting::*;
 use crate::core::domains::economy::*;
 use crate::core::domains::quest::*;
 use crate::core::domains::spell::*;
+use crate::shared::localization_key::LocalizationKey;
 
 fn sample_fireball() -> SpellDef {
     SpellDef {
         id: SpellDefId("spl_000001".to_string()),
-        name_key: "spell.fireball.name".to_string(),
-        desc_key: "spell.fireball.desc".to_string(),
+        name_key: LocalizationKey::new("spell.fireball.name"),
+        desc_key: LocalizationKey::new("spell.fireball.desc"),
         level: SpellLevel::L3,
         casting_time: CastingTime::Action,
         components: SpellComponents {
@@ -46,7 +47,7 @@ fn valid_spell_def_passes_validation() {
 #[test]
 fn spell_def_with_empty_name_fails() {
     let mut def = sample_fireball();
-    def.name_key = "".to_string();
+    def.name_key = "".into();
     assert!(def.validate().is_err());
 }
 
@@ -121,8 +122,8 @@ use crate::core::capabilities::stacking::foundation::StackingConfig;
 fn sample_effect_def() -> EffectDef {
     EffectDef {
         id: "eff_000001".to_string(),
-        name_key: "effect.eff_000001.name".to_string(),
-        desc_key: "effect.eff_000001.desc".to_string(),
+        name_key: LocalizationKey::new("effect.eff_000001.name"),
+        desc_key: LocalizationKey::new("effect.eff_000001.desc"),
         icon_key: None,
         duration: EffectDuration::Instant,
         period: None,
@@ -156,14 +157,14 @@ fn valid_effect_def_passes_validation() {
 #[test]
 fn effect_def_with_empty_name_fails() {
     let mut def = sample_effect_def();
-    def.name_key = "".to_string();
+    def.name_key = "".into();
     assert!(def.validate().is_err());
 }
 
 #[test]
 fn effect_def_with_empty_desc_fails() {
     let mut def = sample_effect_def();
-    def.desc_key = "".to_string();
+    def.desc_key = "".into();
     assert!(def.validate().is_err());
 }
 
@@ -190,8 +191,8 @@ fn effect_def_definition_type_constants() {
 fn sample_quest() -> QuestDef {
     QuestDef {
         id: QuestDefId("qst_000001".to_string()),
-        name_key: "quest.main_quest.name".to_string(),
-        desc_key: "quest.main_quest.desc".to_string(),
+        name_key: LocalizationKey::new("quest.main_quest.name"),
+        desc_key: LocalizationKey::new("quest.main_quest.desc"),
         quest_type: QuestType::Main,
         prerequisites: vec![],
         objectives: vec![ObjectiveDef {
@@ -224,14 +225,14 @@ fn valid_quest_def_passes_validation() {
 #[test]
 fn quest_def_with_empty_name_fails() {
     let mut def = sample_quest();
-    def.name_key = "".to_string();
+    def.name_key = "".into();
     assert!(def.validate().is_err());
 }
 
 #[test]
 fn quest_def_with_empty_desc_fails() {
     let mut def = sample_quest();
-    def.desc_key = "".to_string();
+    def.desc_key = "".into();
     assert!(def.validate().is_err());
 }
 
@@ -272,7 +273,7 @@ fn quest_ron_deserializes_and_validates() {
 fn sample_recipe() -> RecipeDef {
     RecipeDef {
         id: "rcp_000001".to_string(),
-        name_key: "recipe.iron_sword.name".to_string(),
+        name_key: LocalizationKey::new("recipe.iron_sword.name"),
         station: CraftingStation::Forge,
         skill_requirement: Some(SkillRequirement {
             skill_id: "skill_smithing".to_string(),
@@ -307,7 +308,7 @@ fn valid_recipe_def_passes_validation() {
 #[test]
 fn recipe_def_with_empty_name_fails() {
     let mut def = sample_recipe();
-    def.name_key = "".to_string();
+    def.name_key = "".into();
     assert!(def.validate().is_err());
 }
 
@@ -355,7 +356,7 @@ fn recipe_ron_deserializes_and_validates() {
 fn sample_shop() -> ShopDef {
     ShopDef {
         id: "shp_000001".to_string(),
-        name_key: "shop.general_store.name".to_string(),
+        name_key: LocalizationKey::new("shop.general_store.name"),
         faction_id: "fac_merchants_guild".to_string(),
         inventory: vec![
             ShopEntryDef {
@@ -386,7 +387,7 @@ fn valid_shop_def_passes_validation() {
 #[test]
 fn shop_def_with_empty_name_fails() {
     let mut def = sample_shop();
-    def.name_key = "".to_string();
+    def.name_key = "".into();
     assert!(def.validate().is_err());
 }
 

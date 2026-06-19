@@ -13,6 +13,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// 统一使用 shared::ids::SpellId。
 pub use crate::shared::ids::SpellId as SpellDefId;
+use crate::shared::localization_key::LocalizationKey;
 
 // ─── 值类型 ────────────────────────────────────────────────────────
 
@@ -173,9 +174,11 @@ pub struct SpellDef {
     /// 法术唯一标识（前缀: `spl_`）。
     pub id: SpellDefId,
     /// 法术名称本地化 Key。
-    pub name_key: String,
+    #[reflect(ignore)]
+    pub name_key: LocalizationKey,
     /// 法术描述本地化 Key。
-    pub desc_key: String,
+    #[reflect(ignore)]
+    pub desc_key: LocalizationKey,
     /// 法术环阶（0 = 戏法, 1-9）。
     pub level: SpellLevel,
     /// 施法时间。

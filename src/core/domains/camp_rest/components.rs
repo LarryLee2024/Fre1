@@ -14,6 +14,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// 统一使用 shared::ids::CampEventId。
 pub use crate::shared::ids::CampEventId;
+use crate::shared::localization_key::LocalizationKey;
 
 // ─── 值类型 ────────────────────────────────────────────────────────
 
@@ -242,7 +243,8 @@ pub struct CampEventDef {
     /// 事件标题本地化 Key。
     pub title_key: String,
     /// 事件描述本地化 Key。
-    pub desc_key: String,
+    #[reflect(ignore)]
+    pub desc_key: LocalizationKey,
     /// 触发条件（ConditionDefId 占位）。
     pub trigger_conditions: Vec<String>,
     /// 事件类型。

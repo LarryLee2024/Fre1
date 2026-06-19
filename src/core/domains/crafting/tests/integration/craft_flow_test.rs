@@ -25,7 +25,7 @@ fn setup_app() -> App {
     for id in &["ench_flame", "ench_frost", "ench_shock"] {
         registry.register(EnchantmentDef {
             id: id.to_string(),
-            name_key: format!("enchantment.{}.name", id),
+            name_key: format!("enchantment.{}.name", id).into(),
             modifier_id: format!("mod_{}", id),
             exclusive_group: None,
             slot_type: EnchantmentSlotType::Weapon { max_slots: 3 },

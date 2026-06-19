@@ -3,6 +3,7 @@
 //! 详见 docs/02-domain/domains/economy_domain.md
 //! Schema: docs/04-data/domains/economy_schema.md
 
+use crate::shared::localization_key::LocalizationKey;
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -212,7 +213,8 @@ pub struct ShopEntryDef {
 #[derive(Debug, Clone, Reflect, Asset, Serialize, Deserialize)]
 pub struct ShopDef {
     pub id: String,
-    pub name_key: String,
+    #[reflect(ignore)]
+    pub name_key: LocalizationKey,
     pub faction_id: String,
     pub inventory: Vec<ShopEntryDef>,
     pub restock_policy: RestockPolicy,

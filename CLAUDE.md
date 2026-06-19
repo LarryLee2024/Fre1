@@ -85,8 +85,11 @@ combat/
 ```
 CodeGraph → Repomix → Context7 → Git → Filesystem
 ```
-
-先查已索引的信息（CodeGraph/Repomix），再查外部文档（Context7），再看 git 历史，最后直接读文件。
+除非内置工具更好，否则尽可能用下面工具
+- 查已索引的信息用 CodeGraph/Repomix）
+- 查外部文档用 Context7
+- 用 git 看 git 历史
+- 用 Filesystem 直接读文件
 
 ## Agent Delegation
 

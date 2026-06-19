@@ -102,29 +102,23 @@ fn generate_keys_file(keys: &[String]) {
          pub mod loc {\n",
     );
 
-    // 按 namespace 分组
+    // 按 namespace 分组，使用扁平常量名
     let mut namespaces: BTreeMap<String, Vec<String>> = BTreeMap::new();
 
     for key in keys {
-        let parts: Vec<&str> = key.splitn(3, '.').collect();
-        if parts.len() < 3 {
-            // 短 key: "core.yes"
-            let ns = parts[0].to_string();
-            let const_name = parts[1].to_uppercase();
-            let entry = format!("    pub const {}: &str = \"{}\";", const_name, key);
-            namespaces.entry(ns).or_default().push(entry);
-        } else {
-            // 长 key: "ability.abl_000042.name"
-            // → pub mod ability { pub mod abl_000042 { pub const NAME: &str = "..."; } }
-            let ns = parts[0].to_string();
-            let sub = parts[1].to_string();
-            let const_name = parts[2].to_uppercase();
-            let entry = format!(
-                "    pub mod {} {{\n        pub const {}: &str = \"{}\";\n    }}",
-                sub, const_name, key
-            );
-            namespaces.entry(ns).or_default().push(entry);
+        let parts: Vec<&str> = key.split('.').collect();
+        if parts.len() < 2 {
+            continue;
         }
+        let ns = parts[0].to_string();
+        // 扁平常量名：所有非 namespace 段用下划线连接 + 大写
+        let const_name = parts[1..]
+            .iter()
+            .map(|s| s.to_uppercase())
+            .collect::<Vec<_>>()
+            .join("_");
+        let entry = format!("    pub const {}: &str = \"{}\";", const_name, key);
+        namespaces.entry(ns).or_default().push(entry);
     }
 
     for (ns, entries) in &namespaces {
