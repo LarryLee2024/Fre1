@@ -502,6 +502,204 @@ impl LogCode {
         }
     }
 
+    /// 返回英文事件名（snake_case），用于结构化日志的 `event` 字段。
+    pub fn event_name(&self) -> &'static str {
+        match self {
+            Self::BAT001 => "battle_started",
+            Self::BAT002 => "battle_ended",
+            Self::BAT003 => "turn_started",
+            Self::BAT004 => "turn_ended",
+            Self::BAT005 => "unit_turn_started",
+            Self::BAT006 => "unit_turn_ended",
+            Self::BAT007 => "damage_dealt",
+            Self::BAT008 => "unit_died",
+            Self::BAT009 => "initiative_rolled",
+            Self::BAT010 => "victory_condition_met",
+
+            Self::TAC001 => "movement_completed",
+            Self::TAC002 => "flanking_assessed",
+            Self::TAC003 => "backstab_assessed",
+            Self::TAC004 => "cover_assessed",
+            Self::TAC005 => "position_changed",
+
+            Self::TER001 => "entity_entered_tile",
+            Self::TER002 => "tile_surface_changed",
+            Self::TER003 => "trap_triggered",
+            Self::TER004 => "terrain_effect_applied",
+
+            Self::ABL001 => "ability_activated",
+            Self::ABL002 => "ability_completed",
+            Self::ABL003 => "ability_cancelled",
+            Self::ABL004 => "cooldown_started",
+
+            Self::EFF001 => "effect_applied",
+            Self::EFF002 => "effect_removed",
+            Self::EFF003 => "effect_ticked",
+            Self::EFF004 => "effect_blocked_by_immunity",
+            Self::EFF005 => "execution_completed",
+            Self::EFF006 => "execution_failed",
+            Self::EFF007 => "custom_execution_registered",
+            Self::EFF008 => "stack_overflow",
+
+            Self::TAG001 => "tag_granted",
+            Self::TAG002 => "tag_removed",
+            Self::TAG003 => "tag_rank_changed",
+            Self::TAG004 => "tag_query_evaluated",
+
+            Self::MOD001 => "modifier_registered",
+            Self::MOD002 => "modifier_removed",
+            Self::MOD003 => "modifier_suppressed",
+            Self::MOD004 => "modifier_expired",
+
+            Self::AGG001 => "attribute_aggregated",
+            Self::AGG002 => "attribute_dirtied",
+            Self::AGG003 => "snapshot_taken",
+            Self::AGG004 => "aggregation_cycle_detected",
+
+            Self::TRG001 => "trigger_condition_met",
+            Self::TRG002 => "trigger_registered",
+            Self::TRG003 => "trigger_removed",
+            Self::TRG004 => "trigger_rate_limited",
+
+            Self::SPR001 => "spell_cast",
+            Self::SPR002 => "spell_slot_changed",
+            Self::SPR003 => "concentration_broken",
+            Self::SPR004 => "saving_throw_result",
+
+            Self::RCT001 => "reaction_triggered",
+            Self::RCT002 => "reaction_executed",
+            Self::RCT003 => "reaction_declined",
+            Self::RCT004 => "opportunity_attack_executed",
+            Self::RCT005 => "counterspell_executed",
+
+            Self::QST001 => "quest_accepted",
+            Self::QST002 => "quest_objective_completed",
+            Self::QST003 => "quest_completed",
+            Self::QST004 => "quest_failed",
+            Self::QST005 => "quest_progress_changed",
+
+            Self::PRG001 => "experience_gained",
+            Self::PRG002 => "level_up",
+            Self::PRG003 => "talent_unlocked",
+            Self::PRG004 => "subclass_chosen",
+            Self::PRG005 => "asi_completed",
+            Self::PRG006 => "class_gained",
+
+            Self::INV001 => "item_added",
+            Self::INV002 => "consumable_used",
+            Self::INV003 => "equipment_changed",
+            Self::INV004 => "item_removed",
+            Self::INV005 => "loot_generated",
+
+            Self::ECO001 => "trade_completed",
+            Self::ECO002 => "shop_price_changed",
+            Self::ECO003 => "currency_changed",
+
+            Self::CRF001 => "recipe_learned",
+            Self::CRF002 => "crafting_started",
+            Self::CRF003 => "crafting_completed",
+            Self::CRF004 => "crafting_failed",
+
+            Self::FAC001 => "reputation_changed",
+            Self::FAC002 => "faction_relation_changed",
+            Self::FAC003 => "reputation_tier_raised",
+            Self::FAC004 => "relation_assessed",
+
+            Self::PRY001 => "member_joined",
+            Self::PRY002 => "member_left",
+            Self::PRY003 => "battle_swap",
+            Self::PRY004 => "bond_activated",
+            Self::PRY005 => "bond_dissolved",
+
+            Self::CNR001 => "short_rest_completed",
+            Self::CNR002 => "long_rest_started",
+            Self::CNR003 => "long_rest_completed",
+            Self::CNR004 => "long_rest_interrupted",
+            Self::CNR005 => "camp_event_triggered",
+
+            Self::NAR001 => "dialogue_started",
+            Self::NAR002 => "choice_made",
+            Self::NAR003 => "story_flag_set",
+            Self::NAR004 => "cutscene_started",
+            Self::NAR005 => "cutscene_ended",
+
+            Self::SUM001 => "summon_created",
+            Self::SUM002 => "summon_vanished",
+            Self::SUM003 => "summon_commanded",
+            Self::SUM004 => "summon_slot_changed",
+
+            Self::CNT001 => "content_loaded",
+            Self::CNT002 => "content_validation_failed",
+            Self::CNT003 => "registry_registered",
+            Self::CNT004 => "context_built",
+            Self::CNT005 => "context_destroyed",
+            Self::CNT006 => "trace_cycle_detected",
+            Self::CNT007 => "context_validation_failed",
+            Self::CNT008 => "spec_granted",
+            Self::CNT009 => "spec_removed",
+            Self::CNT010 => "spec_rank_changed",
+            Self::CNT011 => "effect_spec_snapshot",
+            Self::CNT012 => "cue_triggered",
+            Self::CNT013 => "cue_disabled",
+            Self::CNT014 => "condition_evaluated_true",
+            Self::CNT015 => "condition_evaluated_false",
+            Self::CNT016 => "immunity_active",
+            Self::CNT017 => "condition_subscribed",
+            Self::CNT018 => "target_selected",
+            Self::CNT019 => "target_modified",
+            Self::CNT020 => "no_valid_target",
+            Self::CNT021 => "target_validated",
+            Self::CNT022 => "execution_computed",
+            Self::CNT023 => "execution_failed",
+            Self::CNT024 => "custom_execution_registered",
+            Self::CNT025 => "event_published",
+            Self::CNT026 => "event_delivered",
+            Self::CNT027 => "event_delivery_failed",
+            Self::CNT028 => "event_loop_detected",
+
+            Self::SAV001 => "save_created",
+            Self::SAV002 => "save_loaded",
+            Self::SAV003 => "save_deleted",
+
+            Self::RPL001 => "replay_started",
+            Self::RPL002 => "replay_frame_recorded",
+            Self::RPL003 => "replay_mismatch_detected",
+        }
+    }
+
+    /// 返回日志 target 字符串（`layer.domain` 格式）。
+    ///
+    /// 如 `domain.combat`、`content`、`infra.save`。
+    pub fn target(&self) -> &'static str {
+        match self.code().get(..3) {
+            Some("BAT") => "domain.combat",
+            Some("TAC") => "domain.tactical",
+            Some("TER") => "domain.terrain",
+            Some("ABL") => "domain.ability",
+            Some("EFF") => "domain.effect",
+            Some("TAG") => "domain.tag",
+            Some("MOD") => "domain.modifier",
+            Some("AGG") => "domain.aggregator",
+            Some("TRG") => "domain.trigger",
+            Some("SPR") => "domain.spell",
+            Some("RCT") => "domain.reaction",
+            Some("QST") => "domain.quest",
+            Some("PRG") => "domain.progression",
+            Some("INV") => "domain.inventory",
+            Some("ECO") => "domain.economy",
+            Some("CRF") => "domain.crafting",
+            Some("FAC") => "domain.faction",
+            Some("PRY") => "domain.party",
+            Some("CNR") => "domain.camp_rest",
+            Some("NAR") => "domain.narrative",
+            Some("SUM") => "domain.summon",
+            Some("CNT") => "content",
+            Some("SAV") => "infra.save",
+            Some("RPL") => "infra.replay",
+            _ => unreachable!("unknown LogCode prefix: {:?}", self.code()),
+        }
+    }
+
     /// 返回中文描述。
     pub fn description(&self) -> &'static str {
         match self {
