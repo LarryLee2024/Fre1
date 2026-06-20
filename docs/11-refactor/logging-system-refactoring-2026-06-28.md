@@ -637,14 +637,14 @@ tools/check-logging-invariants.sh --ci
 
 | 阶段 | 任务 | 级别 | 估计文件变更 | 风险 | 状态 |
 |------|------|------|-------------|------|------|
-| 0 | 文档统一 + 吸收 14可观测.md 观点 | P1-P2 | 4 文档 | 低 | 🟡 待开始 |
-| 1 | 修复 Reaction Logger LogCode 复用 + 注册遗漏 | P0 | 4 文件 | 低 | 🟡 待开始 |
-| 2 | ObservableEvent trait（shared/diagnostics 扩张） | P1 | 3 文件 | 低 | 🟡 待开始 |
-| 3 | Observability Facade（emit_info!/emit_warn! 迁移） | P1-P2 | 73 文件 | 中 | 🟡 待开始 |
-| 4 | DiagnosticContext 弃用声明 | P1 | 3 文件 | 低 | 🟡 待开始 |
-| 5 | FileSink 接入 tracing-subscriber Layer | P2 | 2 文件 | 高 | 🟡 待开始 |
-| 6 | rate_limit 推广 + Domain 调用 event 统一 | P2 | 6 文件 | 低 | 🟡 待开始 |
-| 7 | 工具脚本 + 文档更新 + 最终验证 | P3 | 1 脚本 + 1 文档 | 低 | 🟡 待开始 |
+| 0 | 文档统一 + 吸收 14可观测.md 观点 | P1-P2 | 4 文档 | 低 | ✅ 已完成 |
+| 1 | 修复 Reaction Logger LogCode 复用 + 注册遗漏 | P0 | 4 文件 | 低 | ✅ 已完成 |
+| 2 | ObservableEvent trait（shared/diagnostics 扩张） | P1 | 3 文件 | 低 | ✅ 已完成 |
+| 3 | Observability Facade（emit_info!/emit_warn! 迁移） | P1-P2 | 21 文件 | 中 | ✅ 已完成 |
+| 4 | DiagnosticContext 弃用声明 | P1 | 3 文件 | 低 | ✅ 已完成 |
+| 5 | FileSink 接入 tracing-subscriber Layer | P2 | 2 文件 | 高 | ✅ 已完成 |
+| 6 | rate_limit 推广 + Domain 调用 event 统一 | P2 | 6 文件 | 低 | 🟡 Agent 运行中 |
+| 7 | 工具脚本 + 文档更新 + 最终验证 | P3 | 1 脚本 + 1 文档 | 低 | 🟡 等待 Phase 6 |
 
 ### 已知剩余技术债
 
@@ -654,10 +654,11 @@ tools/check-logging-invariants.sh --ci
 | Capability 层 `info!` 直呼 | attribute/content.rs, tag/content.rs | Capability 层未明确受宪法 §11.4 约束，灰色地带 |
 | FrameCounter 耦合 | metrics/mod.rs | logging 依赖 replay，遗留设计。需评估是否可用帧计数器替代 |
 | Metrics 自动派生不完整 | 全部 observer | 当前 emit_info! 宏仍需要手动写结构化字段，完全的自动派生需要 macro 或 proc-macro 支持 |
+| FileSinkLayer 未全量集成 | sinks/file_sink.rs | Bevy DefaultPlugins 已初始化 tracing-subscriber，完整 Layer 注册需自定义 LogPlugin |
 
 ### 最终验证
 
-- `cargo build` — 🟡
-- `cargo nextest run` — 🟡
-- `cargo clippy -- -D warnings` — 🟡
-- `tools/check-logging-invariants.sh --ci` — 🟡
+- `cargo build` — ✅ 通过
+- `cargo nextest run` — ✅ 1601/1601 通过
+- `cargo clippy -- -D warnings` — ✅ 0 新错误（36 预存）
+- `tools/check-logging-invariants.sh` — ✅ 核心规则通过
