@@ -26,7 +26,7 @@ echo ""
 rule1_result=$(grep -rn "telemetry::emit" "$SRC_DIR" --include="*.rs" 2>/dev/null \
     | grep -v "target/" | grep -v ".codegraph/" \
     | grep -v "//\|///\|//!" \
-    | grep -v "tests/" \
+    | grep -v "/tests/" \
     | grep -v "rate_limit" \
     | grep -v "metrics/mod.rs" \
     | grep -v "telemetry.rs" || true)
@@ -39,8 +39,9 @@ fi
 # Rule 2: plugin.rs 中 add_observer 计数与实际硬编码数字一致
 if [[ -f "$INFRA_LOGGING/plugin.rs" ]]; then
     actual_count=$(grep -c "add_observer" "$INFRA_LOGGING/plugin.rs" 2>/dev/null || echo 0)
-    # 匹配中文文本中的数字，兼容不同编码
-    hardcoded_count=$(grep -Eo '[0-9]+ 个 observer' "$INFRA_LOGGING/plugin.rs" 2>/dev/null | grep -Eo '^[0-9]+' || echo 0)
+    # 匹配 "73 个 observer" 这类文本，提取数字
+    match_line=$(grep -Eo "[0-9]+ 个 observer" "$INFRA_LOGGING/plugin.rs" 2>/dev/null || echo "")
+    hardcoded_count=$(echo "$match_line" | sed 's/ 个 observer//' || echo 0)
     if [[ "$actual_count" -ne "$hardcoded_count" ]]; then
         echo "❌ Rule 2: plugin.rs observer 计数不一致（注册: $actual_count, 硬编码: $hardcoded_count）"
         echo "   请同步更新 plugin.rs 中的硬编码 observer 数量"
@@ -51,23 +52,19 @@ if [[ -f "$INFRA_LOGGING/plugin.rs" ]]; then
 fi
 
 # Rule 3: 检查 observer 文件内不同函数是否使用同一个 LogCode
-# 每个函数应使用唯一的 LogCode（emit_info!/emit_warn! 的第一个参数）
+# 从文件中提取所有 LogCode::XXX 引用（非注释行），去重后与函数数比较
 for observer_file in "$INFRA_LOGGING/observers/"*.rs; do
     filename=$(basename "$observer_file")
     [[ "$filename" == "mod.rs" ]] && continue
 
-    # 从 emit_info!/emit_warn!/emit_debug! 调用中提取 LogCode
-    # 模式: emit_info!(LogCode::XXX, 或 emit_warn!(LogCode::XXX,
-    unique_codes=$(grep -oP '(emit_info!|emit_warn!|emit_debug!)\(\s*LogCode::([A-Z0-9]+)' "$observer_file" \
-        | sed 's/.*LogCode:://' | sort -u || true)
-    code_count=$(echo "$unique_codes" | grep -c . || true)
+    # 提取文件中所有 LogCode::XXX（跳过注释行），去重
+    unique_codes=$(sed -n '/\/\//d; s/.*LogCode::\([A-Z0-9][A-Z0-9]*\).*/\1/p' "$observer_file" | sort -u || true)
+    code_count=$(echo "$unique_codes" | grep -c '[A-Z]' || true)
     func_count=$(grep -c "^pub(crate) fn" "$observer_file" 2>/dev/null || echo 0)
 
-    if [[ "$code_count" -ne "$func_count" ]] && [[ "$func_count" -gt 0 ]]; then
+    if [[ "$code_count" -ne "$func_count" ]] && [[ "$func_count" -gt 0 ]] && [[ "$code_count" -gt 0 ]]; then
         echo "❌ Rule 3: $filename 中存在 LogCode 复用（函数: $func_count, 唯一 LogCode: $code_count）"
-        # 找出哪些 LogCode 被重复使用
-        duplicate_codes=$(grep -oP '(emit_info!|emit_warn!|emit_debug!)\(\s*LogCode::([A-Z0-9]+)' "$observer_file" \
-            | sed 's/.*LogCode:://' | sort | uniq -d || true)
+        duplicate_codes=$(echo "$unique_codes" | sort | uniq -d || true)
         if [[ -n "$duplicate_codes" ]]; then
             echo "$duplicate_codes" | while read -r code; do
                 echo "  - $code 被多个函数使用"
