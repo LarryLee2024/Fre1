@@ -99,6 +99,7 @@ impl<'w, 's> CombatAbilityParam<'w, 's> {
             target,
             frame,
             costs,
+            &self.generator,
             commands,
         )
     }

@@ -1,32 +1,42 @@
-//! Module Name: Screens — 全屏 UI 视图（页面级）
+//! Module Name: Screens — Full-screen UI views (page level)
 //!
-//! 每个屏幕对应一个独立、排他的全屏 UI 视图，通过 Startup 系统或 Scene 状态切换触发。
-//! 屏幕层是 UI 架构的最高层，组合 Primitives 和 Widgets 构建完整页面。
+//! Each screen represents a mutually exclusive full-screen view, driven by
+//! Startup systems or scene state transitions.
+//! Screens sit at the top of the UI architecture, composing Primitives and
+//! Widgets into complete pages.
 //!
-//! 当前实现：
-//! - MainMenuScreen: 主菜单（标题画面）
+//! Current implementation:
+//! - MainMenuScreen: Title / main menu
+//! - BattleScreen: Battle / combat screen (MVP)
 
+pub mod battle;
 pub mod main_menu;
 
 use bevy::prelude::*;
 
+use battle::{spawn_battle_screen, systems::on_battle_button_clicked};
 use main_menu::{spawn_main_menu, systems::on_main_menu_button_clicked};
 
-/// ScreenPlugin — 注册所有屏幕的 System 和 Observer
+/// ScreenPlugin — registers all screen systems and observers
 ///
-/// 在 WidgetsPlugin 之后注册。当前使用 Startup 系统启动主菜单，
-/// 未来将迁移到 `OnEnter(GameState::MainMenu)` + `OnExit(...)` 模式。
+/// Registered after WidgetsPlugin. Currently uses Startup systems for
+/// spawning screens; will migrate to `OnEnter(GameState::...)` +
+/// `OnExit(...)` in the future.
 pub struct ScreenPlugin;
 
 impl Plugin for ScreenPlugin {
     fn build(&self, app: &mut App) {
         app
-            // 注册类型
+            // Register types
             .register_type::<main_menu::MenuAction>()
             .register_type::<main_menu::MainMenuScreen>()
-            // Startup 系统：应用启动时生成主菜单
+            .register_type::<battle::systems::BattleAction>()
+            .register_type::<battle::BattleScreen>()
+            // Startup systems: spawn screens on app start
             .add_systems(Startup, spawn_main_menu)
-            // Observer：监听主菜单按钮点击
-            .add_observer(on_main_menu_button_clicked);
+            .add_systems(Startup, spawn_battle_screen)
+            // Observers: listen for button clicks
+            .add_observer(on_main_menu_button_clicked)
+            .add_observer(on_battle_button_clicked);
     }
 }

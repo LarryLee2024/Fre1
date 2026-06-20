@@ -9,13 +9,15 @@
 //! 3. all_costs_consumed() 在全部消耗后返回 true
 //! 4. 部分消耗时 all_costs_consumed() 返回 false
 
-use crate::core::capabilities::ability::foundation::types::ActivationType;
+use crate::core::capabilities::ability::foundation::types::{AbilityInstanceId, ActivationType};
 use crate::core::capabilities::ability::foundation::values::{
     AbilityInstance, ActivationContext, CostEntry,
 };
+use crate::shared::ids::runtime_id::RuntimeId;
 
 fn make_instance() -> AbilityInstance {
     AbilityInstance::new(
+        AbilityInstanceId::new(RuntimeId::new(0, 0)),
         "spec_001",
         "abl_001",
         ActivationType::Instant,
@@ -139,8 +141,9 @@ fn on_cooldown_error_contains_remaining_turns() {
 
 #[test]
 fn already_active_error_contains_instance_id() {
-    let iid =
-        crate::core::capabilities::ability::foundation::types::AbilityInstanceId::from_u64(42);
+    let iid = crate::core::capabilities::ability::foundation::types::AbilityInstanceId::new(
+        crate::shared::ids::runtime_id::RuntimeId::new(42, 0),
+    );
     let err = crate::core::capabilities::ability::foundation::types::AbilityError::AlreadyActive {
         spec_id: "abl_heal".to_string(),
         instance_id: iid,

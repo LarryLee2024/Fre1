@@ -1,10 +1,11 @@
 use bevy::prelude::*;
 
+use crate::core::capabilities::ability::mechanism::AbilityInstanceIdGenerator;
+
 pub struct AbilityPlugin;
 
 impl Plugin for AbilityPlugin {
-    fn build(&self, _app: &mut App) {
-        // Events（Bevy 0.19+ observer-based 事件系统）
-        // 通过 commands.trigger() 触发，app.add_observer() 订阅
+    fn build(&self, app: &mut App) {
+        app.init_resource::<AbilityInstanceIdGenerator>();
     }
 }
