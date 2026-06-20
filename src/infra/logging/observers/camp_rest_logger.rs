@@ -11,7 +11,7 @@ use bevy::prelude::*;
 use crate::core::domains::camp_rest::events::{
     CampEventTriggered, LongRestCompleted, LongRestInterrupted, LongRestStarted, ShortRestCompleted,
 };
-use crate::infra::logging::metrics;
+use crate::infra::logging::telemetry;
 use crate::shared::diagnostics::LogCode;
 
 /// 短休完成日志 Observer。
@@ -20,7 +20,7 @@ use crate::shared::diagnostics::LogCode;
     event = "short_rest_completed",
 ))]
 pub(crate) fn on_short_rest_completed(trigger: On<ShortRestCompleted>) {
-    metrics::record(LogCode::CNR001);
+    telemetry::emit(LogCode::CNR001);
     let event = trigger.event();
     info!(
         target = "domain.camp_rest",
@@ -37,7 +37,7 @@ pub(crate) fn on_short_rest_completed(trigger: On<ShortRestCompleted>) {
     event = "long_rest_started",
 ))]
 pub(crate) fn on_long_rest_started(trigger: On<LongRestStarted>) {
-    metrics::record(LogCode::CNR002);
+    telemetry::emit(LogCode::CNR002);
     let event = trigger.event();
     info!(
         target = "domain.camp_rest",
@@ -53,7 +53,7 @@ pub(crate) fn on_long_rest_started(trigger: On<LongRestStarted>) {
     event = "long_rest_completed",
 ))]
 pub(crate) fn on_long_rest_completed(trigger: On<LongRestCompleted>) {
-    metrics::record(LogCode::CNR003);
+    telemetry::emit(LogCode::CNR003);
     let event = trigger.event();
     info!(
         target = "domain.camp_rest",
@@ -69,7 +69,7 @@ pub(crate) fn on_long_rest_completed(trigger: On<LongRestCompleted>) {
     event = "long_rest_interrupted",
 ))]
 pub(crate) fn on_long_rest_interrupted(trigger: On<LongRestInterrupted>) {
-    metrics::record(LogCode::CNR004);
+    telemetry::emit(LogCode::CNR004);
     let event = trigger.event();
     warn!(
         target = "domain.camp_rest",
@@ -85,7 +85,7 @@ pub(crate) fn on_long_rest_interrupted(trigger: On<LongRestInterrupted>) {
     event = "camp_event_triggered",
 ))]
 pub(crate) fn on_camp_event_triggered(trigger: On<CampEventTriggered>) {
-    metrics::record(LogCode::CNR005);
+    telemetry::emit(LogCode::CNR005);
     let event = trigger.event();
     info!(
         target = "domain.camp_rest",

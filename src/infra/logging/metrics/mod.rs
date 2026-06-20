@@ -1,6 +1,6 @@
 //! metrics — 日志度量统计
 //!
-//! 提供全局度量计数器，Observer 通过 `metrics::record(LogCode::BAT001)` 调用。
+//! 提供全局度量计数器，Observer 通过 `telemetry::emit(LogCode::BAT001)` 间接调用。
 //! `MetricsCollector` Resource + `metrics_flush_system` 定期输出摘要。
 //!
 //! 对应 ADR-052 §"领域事件 → 日志的四路消费"中的 Metrics 消费端。

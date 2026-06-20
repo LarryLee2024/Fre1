@@ -11,7 +11,7 @@ use bevy::prelude::*;
 use crate::core::domains::quest::events::{
     ObjectiveCompleted, QuestAccepted, QuestFailed, QuestProgressUpdated, QuestTurnedIn,
 };
-use crate::infra::logging::metrics;
+use crate::infra::logging::telemetry;
 use crate::shared::diagnostics::LogCode;
 
 /// 任务接受日志 Observer。
@@ -20,7 +20,7 @@ use crate::shared::diagnostics::LogCode;
     event = "quest_accepted",
 ))]
 pub(crate) fn on_quest_accepted(trigger: On<QuestAccepted>) {
-    metrics::record(LogCode::QST001);
+    telemetry::emit(LogCode::QST001);
     let event = trigger.event();
     info!(
         target = "domain.quest",
@@ -36,7 +36,7 @@ pub(crate) fn on_quest_accepted(trigger: On<QuestAccepted>) {
     event = "quest_objective_completed",
 ))]
 pub(crate) fn on_objective_completed(trigger: On<ObjectiveCompleted>) {
-    metrics::record(LogCode::QST002);
+    telemetry::emit(LogCode::QST002);
     let event = trigger.event();
     info!(
         target = "domain.quest",
@@ -53,7 +53,7 @@ pub(crate) fn on_objective_completed(trigger: On<ObjectiveCompleted>) {
     event = "quest_completed",
 ))]
 pub(crate) fn on_quest_turned_in(trigger: On<QuestTurnedIn>) {
-    metrics::record(LogCode::QST003);
+    telemetry::emit(LogCode::QST003);
     let event = trigger.event();
     info!(
         target = "domain.quest",
@@ -69,7 +69,7 @@ pub(crate) fn on_quest_turned_in(trigger: On<QuestTurnedIn>) {
     event = "quest_failed",
 ))]
 pub(crate) fn on_quest_failed(trigger: On<QuestFailed>) {
-    metrics::record(LogCode::QST004);
+    telemetry::emit(LogCode::QST004);
     let event = trigger.event();
     warn!(
         target = "domain.quest",
@@ -86,7 +86,7 @@ pub(crate) fn on_quest_failed(trigger: On<QuestFailed>) {
     event = "quest_progress_changed",
 ))]
 pub(crate) fn on_quest_progress_updated(trigger: On<QuestProgressUpdated>) {
-    metrics::record(LogCode::QST005);
+    telemetry::emit(LogCode::QST005);
     let event = trigger.event();
     info!(
         target = "domain.quest",

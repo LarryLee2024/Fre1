@@ -5,7 +5,7 @@
 //!
 //! 日志格式：每个 Observer 使用 `#[instrument]` 生成 span，
 //! 内部通过 `ctx.log_info/log_warn` 输出结构化事件。
-//! 同时调用 `metrics::record()` 记录度量计数。
+//! 同时通过 `telemetry::emit()` 触发度量计数。
 
 pub(crate) mod ability_logger;
 pub(crate) mod battle_logger;

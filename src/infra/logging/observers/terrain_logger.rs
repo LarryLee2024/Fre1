@@ -11,7 +11,7 @@ use bevy::prelude::*;
 use crate::core::domains::terrain::events::{
     HazardTriggered, SurfaceChanged, TerrainEffectApplied, TileEntered,
 };
-use crate::infra::logging::metrics;
+use crate::infra::logging::telemetry;
 use crate::shared::diagnostics::LogCode;
 
 /// 单位进入格子日志 Observer。
@@ -20,7 +20,7 @@ use crate::shared::diagnostics::LogCode;
     event = "entity_entered_tile",
 ))]
 pub(crate) fn on_tile_entered(trigger: On<TileEntered>) {
-    metrics::record(LogCode::TER001);
+    telemetry::emit(LogCode::TER001);
     let event = trigger.event();
     info!(
         target = "domain.terrain",
@@ -37,7 +37,7 @@ pub(crate) fn on_tile_entered(trigger: On<TileEntered>) {
     event = "tile_surface_changed",
 ))]
 pub(crate) fn on_surface_changed(trigger: On<SurfaceChanged>) {
-    metrics::record(LogCode::TER002);
+    telemetry::emit(LogCode::TER002);
     let event = trigger.event();
     info!(
         target = "domain.terrain",
@@ -54,7 +54,7 @@ pub(crate) fn on_surface_changed(trigger: On<SurfaceChanged>) {
     event = "trap_triggered",
 ))]
 pub(crate) fn on_hazard_triggered(trigger: On<HazardTriggered>) {
-    metrics::record(LogCode::TER003);
+    telemetry::emit(LogCode::TER003);
     let event = trigger.event();
     info!(
         target = "domain.terrain",
@@ -71,7 +71,7 @@ pub(crate) fn on_hazard_triggered(trigger: On<HazardTriggered>) {
     event = "terrain_effect_applied",
 ))]
 pub(crate) fn on_terrain_effect_applied(trigger: On<TerrainEffectApplied>) {
-    metrics::record(LogCode::TER004);
+    telemetry::emit(LogCode::TER004);
     let event = trigger.event();
     info!(
         target = "domain.terrain",

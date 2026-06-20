@@ -11,7 +11,7 @@ use bevy::prelude::*;
 use crate::core::domains::crafting::events::{
     CraftingFailed, EnchantmentApplied, ItemCrafted, ItemUpgraded,
 };
-use crate::infra::logging::metrics;
+use crate::infra::logging::telemetry;
 use crate::shared::diagnostics::LogCode;
 
 /// 制作完成日志 Observer。
@@ -20,7 +20,7 @@ use crate::shared::diagnostics::LogCode;
     event = "crafting_completed",
 ))]
 pub(crate) fn on_item_crafted(trigger: On<ItemCrafted>) {
-    metrics::record(LogCode::CRF003);
+    telemetry::emit(LogCode::CRF003);
     let event = trigger.event();
     info!(
         target = "domain.crafting",
@@ -37,7 +37,7 @@ pub(crate) fn on_item_crafted(trigger: On<ItemCrafted>) {
     event = "enchantment_applied",
 ))]
 pub(crate) fn on_enchantment_applied(trigger: On<EnchantmentApplied>) {
-    metrics::record(LogCode::CRF003);
+    telemetry::emit(LogCode::CRF003);
     let event = trigger.event();
     info!(
         target = "domain.crafting",
@@ -54,7 +54,7 @@ pub(crate) fn on_enchantment_applied(trigger: On<EnchantmentApplied>) {
     event = "item_upgraded",
 ))]
 pub(crate) fn on_item_upgraded(trigger: On<ItemUpgraded>) {
-    metrics::record(LogCode::CRF003);
+    telemetry::emit(LogCode::CRF003);
     let event = trigger.event();
     info!(
         target = "domain.crafting",
@@ -72,7 +72,7 @@ pub(crate) fn on_item_upgraded(trigger: On<ItemUpgraded>) {
     event = "crafting_failed",
 ))]
 pub(crate) fn on_crafting_failed(trigger: On<CraftingFailed>) {
-    metrics::record(LogCode::CRF004);
+    telemetry::emit(LogCode::CRF004);
     let event = trigger.event();
     warn!(
         target = "domain.crafting",

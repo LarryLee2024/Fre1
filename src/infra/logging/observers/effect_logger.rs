@@ -11,7 +11,7 @@ use bevy::prelude::*;
 use crate::core::capabilities::effect::events::{
     EffectApplied, EffectImmunityTriggered, EffectRemoved, EffectTicked,
 };
-use crate::infra::logging::metrics;
+use crate::infra::logging::telemetry;
 use crate::shared::diagnostics::LogCode;
 
 /// 效果施加日志 Observer。
@@ -20,7 +20,7 @@ use crate::shared::diagnostics::LogCode;
     event = "effect_applied",
 ))]
 pub(crate) fn on_effect_applied(trigger: On<EffectApplied>) {
-    metrics::record(LogCode::EFF001);
+    telemetry::emit(LogCode::EFF001);
     let event = trigger.event();
     info!(
         target = "domain.effect",
@@ -38,7 +38,7 @@ pub(crate) fn on_effect_applied(trigger: On<EffectApplied>) {
     event = "effect_removed",
 ))]
 pub(crate) fn on_effect_removed(trigger: On<EffectRemoved>) {
-    metrics::record(LogCode::EFF002);
+    telemetry::emit(LogCode::EFF002);
     let event = trigger.event();
     info!(
         target = "domain.effect",
@@ -56,7 +56,7 @@ pub(crate) fn on_effect_removed(trigger: On<EffectRemoved>) {
     event = "effect_ticked",
 ))]
 pub(crate) fn on_effect_ticked(trigger: On<EffectTicked>) {
-    metrics::record(LogCode::EFF003);
+    telemetry::emit(LogCode::EFF003);
     let event = trigger.event();
     debug!(
         target = "domain.effect",
@@ -74,7 +74,7 @@ pub(crate) fn on_effect_ticked(trigger: On<EffectTicked>) {
     event = "effect_blocked_by_immunity",
 ))]
 pub(crate) fn on_effect_immunity(trigger: On<EffectImmunityTriggered>) {
-    metrics::record(LogCode::EFF004);
+    telemetry::emit(LogCode::EFF004);
     let event = trigger.event();
     warn!(
         target = "domain.effect",

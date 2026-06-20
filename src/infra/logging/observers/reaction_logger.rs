@@ -4,7 +4,17 @@
 //!
 //! # 规范
 //! - `#[instrument(fields(...))]` 声明不变量（code、event）
-//! - `info!()` 只放变量字段，不重复不变量
+//! - `info!()` 只放变量字段，不重复不变量（但 target 因 tracing 限制需重复指定，见下文）
+//! - 不使用 `context_desc` 等高基数字段
+//!
+//! # target 重复说明
+//!
+//! `#[instrument(target = "domain.reaction")]` 与 `info!(target = "domain.reaction", ...)`
+//! 两处都需要指定 target。这是因为 tracing 的 Event 不会继承父 Span 的 target，
+//! 去掉 info! 的 target 会使 event target 退化为模块路径（如 `infra::logging::observers::reaction_logger`），
+//! 破坏按 `domain.reaction` 的日志聚合。
+//!
+//! 这是当前模式的已知冗余，后续通过 `telemetry::emit` 扩展可消除。
 
 use bevy::prelude::*;
 
@@ -12,7 +22,7 @@ use crate::core::domains::reaction::events::{
     CounterspellExecuted, GuardianUsed, OpportunityAttackExecuted, ReactionDeclined,
     ReactionExecuted, ReactionTriggered, ShieldUsed,
 };
-use crate::infra::logging::metrics;
+use crate::infra::logging::telemetry;
 use crate::shared::diagnostics::LogCode;
 
 /// 反应触发日志 Observer。
@@ -21,12 +31,12 @@ use crate::shared::diagnostics::LogCode;
     event = "reaction_triggered",
 ))]
 pub(crate) fn on_reaction_triggered(trigger: On<ReactionTriggered>) {
-    metrics::record(LogCode::RCT001);
+    telemetry::emit(LogCode::RCT001);
     let event = trigger.event();
     info!(
         target = "domain.reaction",
         reactor = ?event.reactor,
-        reaction_type = ?event.reaction_type,
+        reaction_type = %event.reaction_type.log_name(),
         "反应触发",
     );
 }
@@ -37,7 +47,7 @@ pub(crate) fn on_reaction_triggered(trigger: On<ReactionTriggered>) {
     event = "reaction_executed",
 ))]
 pub(crate) fn on_reaction_executed(trigger: On<ReactionExecuted>) {
-    metrics::record(LogCode::RCT002);
+    telemetry::emit(LogCode::RCT002);
     let event = trigger.event();
     info!(
         target = "domain.reaction",
@@ -53,7 +63,7 @@ pub(crate) fn on_reaction_executed(trigger: On<ReactionExecuted>) {
     event = "reaction_declined",
 ))]
 pub(crate) fn on_reaction_declined(trigger: On<ReactionDeclined>) {
-    metrics::record(LogCode::RCT003);
+    telemetry::emit(LogCode::RCT003);
     let event = trigger.event();
     info!(
         target = "domain.reaction",
@@ -69,7 +79,7 @@ pub(crate) fn on_reaction_declined(trigger: On<ReactionDeclined>) {
     event = "opportunity_attack_executed",
 ))]
 pub(crate) fn on_opportunity_attack(trigger: On<OpportunityAttackExecuted>) {
-    metrics::record(LogCode::RCT004);
+    telemetry::emit(LogCode::RCT004);
     let event = trigger.event();
     info!(
         target = "domain.reaction",
@@ -88,7 +98,7 @@ pub(crate) fn on_opportunity_attack(trigger: On<OpportunityAttackExecuted>) {
     event = "counterspell_executed",
 ))]
 pub(crate) fn on_counterspell(trigger: On<CounterspellExecuted>) {
-    metrics::record(LogCode::RCT005);
+    telemetry::emit(LogCode::RCT005);
     let event = trigger.event();
     info!(
         target = "domain.reaction",
@@ -105,7 +115,7 @@ pub(crate) fn on_counterspell(trigger: On<CounterspellExecuted>) {
     event = "shield_used",
 ))]
 pub(crate) fn on_shield_used(trigger: On<ShieldUsed>) {
-    metrics::record(LogCode::RCT005);
+    telemetry::emit(LogCode::RCT005);
     let event = trigger.event();
     info!(
         target = "domain.reaction",
@@ -122,7 +132,7 @@ pub(crate) fn on_shield_used(trigger: On<ShieldUsed>) {
     event = "guardian_used",
 ))]
 pub(crate) fn on_guardian_used(trigger: On<GuardianUsed>) {
-    metrics::record(LogCode::RCT005);
+    telemetry::emit(LogCode::RCT005);
     let event = trigger.event();
     info!(
         target = "domain.reaction",

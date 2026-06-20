@@ -528,8 +528,8 @@ enum LogValue {
 
 ## 10. Future Extension
 
-- **`telemetry::emit` 统一入口**：当前 Observer 存在三要素重复（`#[instrument]` + `metrics::record()` + `info!()`），target 需要在两处重复指定。后续引入 `telemetry::emit(LogCode::XXX, ...)` 统一封装日志 + 度量 + trace，消除重复模式。
 - **日志聚合分析**：基于 LogCode 统计技能使用率、伤害分布、效果触发频率
 - **战斗重放辅助**：将关键日志（BAT/ABL/EFF）与 ReplayFrame 关联
 - **性能监控**：统计各 LogCode 的记录频率和延迟
 - **告警系统**：Error 级别日志触发实时告警
+- **`telemetry::emit` 扩展**：已实现基础 `emit(LogCode)`，后续可扩展为 `emit(LogCode, fields...)` 消除 target 两处重复和 `#[instrument]` 的 event 字面量

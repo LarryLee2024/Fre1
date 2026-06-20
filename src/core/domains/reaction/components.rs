@@ -24,6 +24,19 @@ pub enum ReactionType {
 }
 
 impl ReactionType {
+    /// 获取日志安全的事件名（只输出枚举变体名，不输出 `Special` 的 `custom_id` 字段）。
+    ///
+    /// 避免高基数字段污染日志聚合系统。
+    pub fn log_name(&self) -> &'static str {
+        match self {
+            ReactionType::OpportunityAttack => "opportunity_attack",
+            ReactionType::Counterspell => "counterspell",
+            ReactionType::Shield => "shield",
+            ReactionType::Guardian => "guardian",
+            ReactionType::Special { .. } => "special",
+        }
+    }
+
     /// 获取反应类型的中文描述。
     pub fn display_name(&self) -> &str {
         match self {

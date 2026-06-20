@@ -12,7 +12,7 @@ use bevy::prelude::*;
 use crate::core::capabilities::ability::events::{
     AbilityActivated, AbilityCancelled, AbilityCompleted, AbilityCooldownStarted,
 };
-use crate::infra::logging::metrics;
+use crate::infra::logging::telemetry;
 use crate::shared::diagnostics::LogCode;
 
 /// 技能激活日志 Observer。
@@ -23,7 +23,7 @@ use crate::shared::diagnostics::LogCode;
     event = "ability_activated",
 ))]
 pub(crate) fn on_ability_activated(trigger: On<AbilityActivated>) {
-    metrics::record(LogCode::ABL001);
+    telemetry::emit(LogCode::ABL001);
     let event = trigger.event();
     info!(
         target = "domain.ability",
@@ -39,7 +39,7 @@ pub(crate) fn on_ability_activated(trigger: On<AbilityActivated>) {
     event = "ability_completed",
 ))]
 pub(crate) fn on_ability_completed(trigger: On<AbilityCompleted>) {
-    metrics::record(LogCode::ABL002);
+    telemetry::emit(LogCode::ABL002);
     let event = trigger.event();
     info!(
         target = "domain.ability",
@@ -56,7 +56,7 @@ pub(crate) fn on_ability_completed(trigger: On<AbilityCompleted>) {
     event = "ability_cancelled",
 ))]
 pub(crate) fn on_ability_cancelled(trigger: On<AbilityCancelled>) {
-    metrics::record(LogCode::ABL003);
+    telemetry::emit(LogCode::ABL003);
     let event = trigger.event();
     info!(
         target = "domain.ability",
@@ -73,7 +73,7 @@ pub(crate) fn on_ability_cancelled(trigger: On<AbilityCancelled>) {
     event = "cooldown_started",
 ))]
 pub(crate) fn on_ability_cooldown_started(trigger: On<AbilityCooldownStarted>) {
-    metrics::record(LogCode::ABL004);
+    telemetry::emit(LogCode::ABL004);
     let event = trigger.event();
     info!(
         target = "domain.ability",

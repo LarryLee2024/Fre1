@@ -11,7 +11,7 @@ use bevy::prelude::*;
 use crate::core::domains::faction::events::{
     FactionRelationChanged, RelationshipEvaluated, ReputationChanged, ReputationLevelUp,
 };
-use crate::infra::logging::metrics;
+use crate::infra::logging::telemetry;
 use crate::shared::diagnostics::LogCode;
 
 /// 声望变化日志 Observer。
@@ -20,7 +20,7 @@ use crate::shared::diagnostics::LogCode;
     event = "reputation_changed",
 ))]
 pub(crate) fn on_reputation_changed(trigger: On<ReputationChanged>) {
-    metrics::record(LogCode::FAC001);
+    telemetry::emit(LogCode::FAC001);
     let event = trigger.event();
     info!(
         target = "domain.faction",
@@ -39,7 +39,7 @@ pub(crate) fn on_reputation_changed(trigger: On<ReputationChanged>) {
     event = "faction_relation_changed",
 ))]
 pub(crate) fn on_faction_relation_changed(trigger: On<FactionRelationChanged>) {
-    metrics::record(LogCode::FAC002);
+    telemetry::emit(LogCode::FAC002);
     let event = trigger.event();
     info!(
         target = "domain.faction",
@@ -56,7 +56,7 @@ pub(crate) fn on_faction_relation_changed(trigger: On<FactionRelationChanged>) {
     event = "reputation_tier_raised",
 ))]
 pub(crate) fn on_reputation_level_up(trigger: On<ReputationLevelUp>) {
-    metrics::record(LogCode::FAC003);
+    telemetry::emit(LogCode::FAC003);
     let event = trigger.event();
     info!(
         target = "domain.faction",
@@ -73,7 +73,7 @@ pub(crate) fn on_reputation_level_up(trigger: On<ReputationLevelUp>) {
     event = "relation_assessed",
 ))]
 pub(crate) fn on_relationship_evaluated(trigger: On<RelationshipEvaluated>) {
-    metrics::record(LogCode::FAC004);
+    telemetry::emit(LogCode::FAC004);
     let event = trigger.event();
     info!(
         target = "domain.faction",

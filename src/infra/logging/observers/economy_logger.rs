@@ -9,7 +9,7 @@
 use bevy::prelude::*;
 
 use crate::core::domains::economy::events::{CurrencyChanged, PriceChanged, TransactionCompleted};
-use crate::infra::logging::metrics;
+use crate::infra::logging::telemetry;
 use crate::shared::diagnostics::LogCode;
 
 /// 交易完成日志 Observer。
@@ -18,7 +18,7 @@ use crate::shared::diagnostics::LogCode;
     event = "trade_completed",
 ))]
 pub(crate) fn on_transaction_completed(trigger: On<TransactionCompleted>) {
-    metrics::record(LogCode::ECO001);
+    telemetry::emit(LogCode::ECO001);
     let event = trigger.event();
     info!(
         target = "domain.economy",
@@ -37,7 +37,7 @@ pub(crate) fn on_transaction_completed(trigger: On<TransactionCompleted>) {
     event = "shop_price_changed",
 ))]
 pub(crate) fn on_price_changed(trigger: On<PriceChanged>) {
-    metrics::record(LogCode::ECO002);
+    telemetry::emit(LogCode::ECO002);
     let event = trigger.event();
     info!(
         target = "domain.economy",
@@ -55,7 +55,7 @@ pub(crate) fn on_price_changed(trigger: On<PriceChanged>) {
     event = "currency_changed",
 ))]
 pub(crate) fn on_currency_changed(trigger: On<CurrencyChanged>) {
-    metrics::record(LogCode::ECO003);
+    telemetry::emit(LogCode::ECO003);
     let event = trigger.event();
     info!(
         target = "domain.economy",

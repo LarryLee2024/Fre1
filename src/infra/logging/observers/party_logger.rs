@@ -11,7 +11,7 @@ use bevy::prelude::*;
 use crate::core::domains::party::events::{
     BondActivated, BondDeactivated, MemberJoined, MemberRemoved, MemberSwapped,
 };
-use crate::infra::logging::metrics;
+use crate::infra::logging::telemetry;
 use crate::shared::diagnostics::LogCode;
 
 /// 成员加入日志 Observer。
@@ -20,7 +20,7 @@ use crate::shared::diagnostics::LogCode;
     event = "member_joined",
 ))]
 pub(crate) fn on_member_joined(trigger: On<MemberJoined>) {
-    metrics::record(LogCode::PRY001);
+    telemetry::emit(LogCode::PRY001);
     let event = trigger.event();
     info!(
         target = "domain.party",
@@ -36,7 +36,7 @@ pub(crate) fn on_member_joined(trigger: On<MemberJoined>) {
     event = "member_left",
 ))]
 pub(crate) fn on_member_removed(trigger: On<MemberRemoved>) {
-    metrics::record(LogCode::PRY002);
+    telemetry::emit(LogCode::PRY002);
     let event = trigger.event();
     info!(
         target = "domain.party",
@@ -52,7 +52,7 @@ pub(crate) fn on_member_removed(trigger: On<MemberRemoved>) {
     event = "battle_swap",
 ))]
 pub(crate) fn on_member_swapped(trigger: On<MemberSwapped>) {
-    metrics::record(LogCode::PRY003);
+    telemetry::emit(LogCode::PRY003);
     let event = trigger.event();
     info!(
         target = "domain.party",
@@ -68,7 +68,7 @@ pub(crate) fn on_member_swapped(trigger: On<MemberSwapped>) {
     event = "bond_activated",
 ))]
 pub(crate) fn on_bond_activated(trigger: On<BondActivated>) {
-    metrics::record(LogCode::PRY004);
+    telemetry::emit(LogCode::PRY004);
     let event = trigger.event();
     info!(
         target = "domain.party",
@@ -84,7 +84,7 @@ pub(crate) fn on_bond_activated(trigger: On<BondActivated>) {
     event = "bond_dissolved",
 ))]
 pub(crate) fn on_bond_deactivated(trigger: On<BondDeactivated>) {
-    metrics::record(LogCode::PRY005);
+    telemetry::emit(LogCode::PRY005);
     let event = trigger.event();
     info!(
         target = "domain.party",

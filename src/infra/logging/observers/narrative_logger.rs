@@ -11,7 +11,7 @@ use bevy::prelude::*;
 use crate::core::domains::narrative::events::{
     ChoiceMade, CutsceneEnded, CutsceneStarted, DialogueStarted, StoryFlagSet,
 };
-use crate::infra::logging::metrics;
+use crate::infra::logging::telemetry;
 use crate::shared::diagnostics::LogCode;
 
 /// 对话开始日志 Observer。
@@ -20,7 +20,7 @@ use crate::shared::diagnostics::LogCode;
     event = "dialogue_started",
 ))]
 pub(crate) fn on_dialogue_started(trigger: On<DialogueStarted>) {
-    metrics::record(LogCode::NAR001);
+    telemetry::emit(LogCode::NAR001);
     let event = trigger.event();
     info!(
         target = "domain.narrative",
@@ -37,7 +37,7 @@ pub(crate) fn on_dialogue_started(trigger: On<DialogueStarted>) {
     event = "choice_made",
 ))]
 pub(crate) fn on_choice_made(trigger: On<ChoiceMade>) {
-    metrics::record(LogCode::NAR002);
+    telemetry::emit(LogCode::NAR002);
     let event = trigger.event();
     info!(
         target = "domain.narrative",
@@ -54,7 +54,7 @@ pub(crate) fn on_choice_made(trigger: On<ChoiceMade>) {
     event = "story_flag_set",
 ))]
 pub(crate) fn on_story_flag_set(trigger: On<StoryFlagSet>) {
-    metrics::record(LogCode::NAR003);
+    telemetry::emit(LogCode::NAR003);
     let event = trigger.event();
     info!(
         target = "domain.narrative",
@@ -71,7 +71,7 @@ pub(crate) fn on_story_flag_set(trigger: On<StoryFlagSet>) {
     event = "cutscene_started",
 ))]
 pub(crate) fn on_cutscene_started(trigger: On<CutsceneStarted>) {
-    metrics::record(LogCode::NAR004);
+    telemetry::emit(LogCode::NAR004);
     let event = trigger.event();
     info!(
         target = "domain.narrative",
@@ -87,7 +87,7 @@ pub(crate) fn on_cutscene_started(trigger: On<CutsceneStarted>) {
     event = "cutscene_ended",
 ))]
 pub(crate) fn on_cutscene_ended(trigger: On<CutsceneEnded>) {
-    metrics::record(LogCode::NAR005);
+    telemetry::emit(LogCode::NAR005);
     let event = trigger.event();
     info!(
         target = "domain.narrative",

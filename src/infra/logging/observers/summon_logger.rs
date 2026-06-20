@@ -11,7 +11,7 @@ use bevy::prelude::*;
 use crate::core::domains::summon::events::{
     SummonCommand, SummonCreated, SummonExpired, SummonSlotChanged,
 };
-use crate::infra::logging::metrics;
+use crate::infra::logging::telemetry;
 use crate::shared::diagnostics::LogCode;
 
 /// 召唤物创建日志 Observer。
@@ -20,7 +20,7 @@ use crate::shared::diagnostics::LogCode;
     event = "summon_created",
 ))]
 pub(crate) fn on_summon_created(trigger: On<SummonCreated>) {
-    metrics::record(LogCode::SUM001);
+    telemetry::emit(LogCode::SUM001);
     let event = trigger.event();
     info!(
         target = "domain.summon",
@@ -37,7 +37,7 @@ pub(crate) fn on_summon_created(trigger: On<SummonCreated>) {
     event = "summon_vanished",
 ))]
 pub(crate) fn on_summon_expired(trigger: On<SummonExpired>) {
-    metrics::record(LogCode::SUM002);
+    telemetry::emit(LogCode::SUM002);
     let event = trigger.event();
     info!(
         target = "domain.summon",
@@ -54,7 +54,7 @@ pub(crate) fn on_summon_expired(trigger: On<SummonExpired>) {
     event = "summon_commanded",
 ))]
 pub(crate) fn on_summon_command(trigger: On<SummonCommand>) {
-    metrics::record(LogCode::SUM003);
+    telemetry::emit(LogCode::SUM003);
     let event = trigger.event();
     info!(
         target = "domain.summon",
@@ -71,7 +71,7 @@ pub(crate) fn on_summon_command(trigger: On<SummonCommand>) {
     event = "summon_slot_changed",
 ))]
 pub(crate) fn on_summon_slot_changed(trigger: On<SummonSlotChanged>) {
-    metrics::record(LogCode::SUM004);
+    telemetry::emit(LogCode::SUM004);
     let event = trigger.event();
     info!(
         target = "domain.summon",

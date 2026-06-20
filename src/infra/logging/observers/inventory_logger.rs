@@ -11,7 +11,7 @@ use bevy::prelude::*;
 use crate::core::domains::inventory::events::{
     EquipmentChanged, ItemAcquired, ItemRemoved, ItemUsed, LootGenerated,
 };
-use crate::infra::logging::metrics;
+use crate::infra::logging::telemetry;
 use crate::shared::diagnostics::LogCode;
 
 /// 物品获取日志 Observer。
@@ -20,7 +20,7 @@ use crate::shared::diagnostics::LogCode;
     event = "item_added",
 ))]
 pub(crate) fn on_item_acquired(trigger: On<ItemAcquired>) {
-    metrics::record(LogCode::INV001);
+    telemetry::emit(LogCode::INV001);
     let event = trigger.event();
     info!(
         target = "domain.inventory",
@@ -38,7 +38,7 @@ pub(crate) fn on_item_acquired(trigger: On<ItemAcquired>) {
     event = "consumable_used",
 ))]
 pub(crate) fn on_item_used(trigger: On<ItemUsed>) {
-    metrics::record(LogCode::INV002);
+    telemetry::emit(LogCode::INV002);
     let event = trigger.event();
     info!(
         target = "domain.inventory",
@@ -56,7 +56,7 @@ pub(crate) fn on_item_used(trigger: On<ItemUsed>) {
     event = "equipment_changed",
 ))]
 pub(crate) fn on_equipment_changed(trigger: On<EquipmentChanged>) {
-    metrics::record(LogCode::INV003);
+    telemetry::emit(LogCode::INV003);
     let event = trigger.event();
     info!(
         target = "domain.inventory",
@@ -72,7 +72,7 @@ pub(crate) fn on_equipment_changed(trigger: On<EquipmentChanged>) {
     event = "item_removed",
 ))]
 pub(crate) fn on_item_removed(trigger: On<ItemRemoved>) {
-    metrics::record(LogCode::INV004);
+    telemetry::emit(LogCode::INV004);
     let event = trigger.event();
     info!(
         target = "domain.inventory",
@@ -90,7 +90,7 @@ pub(crate) fn on_item_removed(trigger: On<ItemRemoved>) {
     event = "loot_generated",
 ))]
 pub(crate) fn on_loot_generated(trigger: On<LootGenerated>) {
-    metrics::record(LogCode::INV005);
+    telemetry::emit(LogCode::INV005);
     let event = trigger.event();
     info!(
         target = "domain.inventory",

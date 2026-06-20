@@ -11,7 +11,7 @@ use bevy::prelude::*;
 use crate::core::domains::progression::events::{
     ASICompleted, ClassGained, ExperienceGained, LevelUp, SubclassChosen, TalentUnlocked,
 };
-use crate::infra::logging::metrics;
+use crate::infra::logging::telemetry;
 use crate::shared::diagnostics::LogCode;
 
 /// 经验获得日志 Observer。
@@ -20,7 +20,7 @@ use crate::shared::diagnostics::LogCode;
     event = "experience_gained",
 ))]
 pub(crate) fn on_experience_gained(trigger: On<ExperienceGained>) {
-    metrics::record(LogCode::PRG001);
+    telemetry::emit(LogCode::PRG001);
     let event = trigger.event();
     info!(
         target = "domain.progression",
@@ -38,7 +38,7 @@ pub(crate) fn on_experience_gained(trigger: On<ExperienceGained>) {
     event = "level_up",
 ))]
 pub(crate) fn on_level_up(trigger: On<LevelUp>) {
-    metrics::record(LogCode::PRG002);
+    telemetry::emit(LogCode::PRG002);
     let event = trigger.event();
     info!(
         target = "domain.progression",
@@ -56,7 +56,7 @@ pub(crate) fn on_level_up(trigger: On<LevelUp>) {
     event = "talent_unlocked",
 ))]
 pub(crate) fn on_talent_unlocked(trigger: On<TalentUnlocked>) {
-    metrics::record(LogCode::PRG003);
+    telemetry::emit(LogCode::PRG003);
     let event = trigger.event();
     info!(
         target = "domain.progression",
@@ -72,7 +72,7 @@ pub(crate) fn on_talent_unlocked(trigger: On<TalentUnlocked>) {
     event = "subclass_chosen",
 ))]
 pub(crate) fn on_subclass_chosen(trigger: On<SubclassChosen>) {
-    metrics::record(LogCode::PRG004);
+    telemetry::emit(LogCode::PRG004);
     let event = trigger.event();
     info!(
         target = "domain.progression",
@@ -88,7 +88,7 @@ pub(crate) fn on_subclass_chosen(trigger: On<SubclassChosen>) {
     event = "asi_completed",
 ))]
 pub(crate) fn on_asi_completed(trigger: On<ASICompleted>) {
-    metrics::record(LogCode::PRG005);
+    telemetry::emit(LogCode::PRG005);
     let event = trigger.event();
     info!(
         target = "domain.progression",
@@ -105,7 +105,7 @@ pub(crate) fn on_asi_completed(trigger: On<ASICompleted>) {
     event = "class_gained",
 ))]
 pub(crate) fn on_class_gained(trigger: On<ClassGained>) {
-    metrics::record(LogCode::PRG006);
+    telemetry::emit(LogCode::PRG006);
     let event = trigger.event();
     info!(
         target = "domain.progression",

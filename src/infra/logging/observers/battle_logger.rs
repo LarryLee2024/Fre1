@@ -9,7 +9,7 @@
 use bevy::prelude::*;
 
 use crate::core::events::{BattleEnded, BattleStarted};
-use crate::infra::logging::metrics;
+use crate::infra::logging::telemetry;
 use crate::shared::diagnostics::LogCode;
 
 /// 战斗开始日志 Observer。
@@ -18,7 +18,7 @@ use crate::shared::diagnostics::LogCode;
     event = "battle_started",
 ))]
 pub(crate) fn on_battle_started(_trigger: On<BattleStarted>) {
-    metrics::record(LogCode::BAT001);
+    telemetry::emit(LogCode::BAT001);
     info!(target = "domain.combat", "战斗开始");
 }
 
@@ -28,7 +28,7 @@ pub(crate) fn on_battle_started(_trigger: On<BattleStarted>) {
     event = "battle_ended",
 ))]
 pub(crate) fn on_battle_ended(trigger: On<BattleEnded>) {
-    metrics::record(LogCode::BAT002);
+    telemetry::emit(LogCode::BAT002);
     let event = trigger.event();
     info!(
         target = "domain.combat",

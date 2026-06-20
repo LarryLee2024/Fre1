@@ -1045,8 +1045,8 @@ screens/   → widgets/ + primitives/ （允许，通过 Factory）
 ### 11.6 Observer 实现规范（Span-Event 字段分离）
 - 🟩 **`#[instrument]` 的 `fields()` 只放不变量**：LogCode 和事件名（`code = ?LogCode::PRG002`, `event = "level_up"`）——所有日志实例共用的固定值
 - 🟩 **`info!()`/`warn!()` 只放变量**：当前调用独有的动态数据（`entity`, `old`, `new`, `amount`）——不重复 span 已有字段
-- 🟩 每个 Observer 包含三个要素：`#[instrument]` span（不变量）+ `metrics::record(LogCode::XXX)`（度量）+ `info!()`（变量）
-- 🟩 **未来统一入口**：后续引入 `telemetry::emit(LogCode::XXX, ...)` 作为日志 + 度量 + trace 的三合一调用入口，最终消除 Observer 中的手动重复模式
+- 🟩 每个 Observer 包含三个要素：`#[instrument]` span（不变量）+ `telemetry::emit(LogCode::XXX)`（统一观测入口）+ `info!()`（变量）
+- 🟩 **统一入口**：使用 `telemetry::emit(LogCode::XXX)` 作为日志 + 度量 + trace 的三合一调用入口，Observer 不再直接调用 `metrics::record`
 
 ### 11.7 错误体系规范
 #### 11.7.1 分领域错误原则
