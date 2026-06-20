@@ -22,6 +22,8 @@ use crate::core::capabilities::aggregator::mechanism::{AggregatorState, mark_dir
 pub struct CombatAggregatorFacade;
 
 impl CombatAggregatorFacade {
+    // ─── ReadFacade ───────────────────────────────────────────────────
+
     /// 执行属性聚合——将 base_value 与 modifiers 计算为 final_value。
     ///
     /// 使用指定的聚合管线。
@@ -82,6 +84,8 @@ impl CombatAggregatorFacade {
         )
     }
 
+    // ─── WriteFacade ──────────────────────────────────────────────────
+
     /// 标记指定属性为脏（需要重算）。
     pub fn mark_attribute_dirty(
         state: &mut AggregatorState,
@@ -93,6 +97,8 @@ impl CombatAggregatorFacade {
     ) {
         mark_dirty(state, attribute_id, trigger_source, frame, entity, commands);
     }
+
+    // ─── ReadFacade ───────────────────────────────────────────────────
 
     /// 创建默认的聚合管线。
     pub fn default_pipeline(attribute_id: &str) -> CalcPipeline {

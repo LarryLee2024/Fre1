@@ -36,5 +36,7 @@ pub(crate) mod validation;
 pub(crate) mod diagnostics;
 // [ADR-045] pub(crate) — 本地化 Key 类型，crate 内共享
 pub(crate) mod localization_key;
+// [ADR-045] pub(crate) — 通用宏定义，crate 内共享
+pub(crate) mod macros;
 
 pub use shared_plugin::SharedPlugin;

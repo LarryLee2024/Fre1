@@ -3,6 +3,7 @@
 //! 详见 docs/02-domain/domains/economy_domain.md
 //! Schema: docs/04-data/domains/economy_schema.md
 
+use crate::shared::diagnostics::{BreakdownInput, BreakdownStep, CalcBreakdown, Explain};
 use crate::shared::localization_key::LocalizationKey;
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -157,6 +158,71 @@ impl Price {
     pub fn final_price(&self) -> u64 {
         (self.base as f32 * self.reputation_modifier * self.supply_modifier * self.stolen_modifier)
             as u64
+    }
+}
+
+impl Explain for Price {
+    fn explain(&self) -> CalcBreakdown {
+        let base_f32 = self.base as f32;
+        let after_reputation = base_f32 * self.reputation_modifier;
+        let after_supply = after_reputation * self.supply_modifier;
+        let final_val = after_supply * self.stolen_modifier;
+
+        CalcBreakdown {
+            formula_expr: "Price = Base × ReputationModifier × SupplyModifier × StolenModifier"
+                .into(),
+            inputs: vec![
+                BreakdownInput {
+                    name: "base".into(),
+                    value: format!("{}", self.base),
+                },
+                BreakdownInput {
+                    name: "reputation_modifier".into(),
+                    value: format!("{}", self.reputation_modifier),
+                },
+                BreakdownInput {
+                    name: "supply_modifier".into(),
+                    value: format!("{}", self.supply_modifier),
+                },
+                BreakdownInput {
+                    name: "stolen_modifier".into(),
+                    value: format!("{}", self.stolen_modifier),
+                },
+            ],
+            steps: vec![
+                BreakdownStep {
+                    label: "base".into(),
+                    operation: format!("base = {}", self.base),
+                    output: base_f32,
+                },
+                BreakdownStep {
+                    label: "after_reputation".into(),
+                    operation: format!(
+                        "{} × {} = {}",
+                        base_f32, self.reputation_modifier, after_reputation
+                    ),
+                    output: after_reputation,
+                },
+                BreakdownStep {
+                    label: "after_supply".into(),
+                    operation: format!(
+                        "{} × {} = {}",
+                        after_reputation, self.supply_modifier, after_supply
+                    ),
+                    output: after_supply,
+                },
+                BreakdownStep {
+                    label: "after_stolen".into(),
+                    operation: format!(
+                        "{} × {} = {}",
+                        after_supply, self.stolen_modifier, final_val
+                    ),
+                    output: final_val,
+                },
+            ],
+            output: final_val,
+            source_doc: Some("docs/02-domain/domains/economy_domain.md".into()),
+        }
     }
 }
 

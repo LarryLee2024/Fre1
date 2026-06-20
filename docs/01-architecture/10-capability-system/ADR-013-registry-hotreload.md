@@ -289,6 +289,131 @@ Registry 本身不属于 Definition/Instance 分层，它是 Definition 的**管
 | Registry 持有 Arc<RwLock<T>> 可变引用 | 违反 Definition 不可变原则 |
 | 直接使用 Bevy Asset 的 `Assets<T>` | 需要包装才能提供 ID 查询 + 冲突检测 |
 
+## Registry + Trait Object 模式指导
+
+### 问题：大型 match 表达式的维护成本
+
+在 Effect 分发、Condition 评估、Trigger 调度等场景中，当变体数量超过 50 时，`match` 表达式面临以下问题：
+
+- **编译慢**：大型 match 对 Rust 编译器的类型检查造成显著负担
+- **扩展困难**：新增 Effect 类型需要修改多处 match 表达式（违反开闭原则）
+- **耦合度高**：Effect 处理逻辑与调度逻辑耦合在同一个 match 中
+- **热加载难**：无法在运行时动态注册新的 Effect 处理器
+
+### 解决方案：Registry + `Box<dyn Trait>`
+
+将 Effect 处理器按类型注册到统一的 `RegistryBucket` 中，调度时通过 Registry 查找对应的 Trait Object 来执行：
+
+```rust
+/// 统一 Effect 执行器 Trait
+pub trait EffectExecutor: Send + Sync {
+    fn execute(&self, ctx: &EffectContext, registry: &DefinitionRegistry) -> EffectResult;
+    fn validate(&self, def: &EffectDef) -> Result<(), ValidationError>;
+    fn display_name(&self) -> &'static str;
+}
+
+/// Effect 分发 Registry
+#[derive(Resource)]
+pub struct EffectDispatchRegistry {
+    /// EffectDef.type_name -> Box<dyn EffectExecutor>
+    executors: HashMap<String, RegistryEntry<Box<dyn EffectExecutor>>>,
+}
+
+impl EffectDispatchRegistry {
+    pub fn register<T: EffectExecutor + 'static>(
+        &mut self,
+        type_name: &str,
+        executor: T,
+    ) {
+        self.executors.insert(
+            type_name.to_string(),
+            RegistryEntry::new(DefinitionId::from(type_name))
+                .with_data(serde_json::to_value(&executor).unwrap()),
+        );
+    }
+
+    pub fn dispatch(
+        &self,
+        def: &EffectDef,
+        ctx: &EffectContext,
+        registry: &DefinitionRegistry,
+    ) -> EffectResult {
+        let Some(entry) = self.executors.get(&def.type_name) else {
+            return EffectResult::unhandled(def.id.clone(), "no executor registered");
+        };
+        // 实际 dispatch 通过 trait object 调用
+        let executor: &Box<dyn EffectExecutor> = ...; // 从 entry 反解
+        executor.execute(ctx, registry)
+    }
+}
+```
+
+### 迁移示例：match → Registry 分发
+
+**之前 — match 分发（50+ 分支）：**
+
+```rust
+fn execute_effect(def: &EffectDef, ctx: &EffectContext) -> EffectResult {
+    match def.effect_type {
+        EffectType::Damage { .. } => execute_damage(def, ctx),
+        EffectType::Heal { .. } => execute_heal(def, ctx),
+        EffectType::ApplyBuff { .. } => execute_apply_buff(def, ctx),
+        EffectType::RemoveBuff { .. } => execute_remove_buff(def, ctx),
+        EffectType::ModifyAttribute { .. } => execute_modify_attribute(def, ctx),
+        EffectType::Knockback { .. } => execute_knockback(def, ctx),
+        EffectType::Stun { .. } => execute_stun(def, ctx),
+        EffectType::Taunt { .. } => execute_taunt(def, ctx),
+        // ... 50+ 分支
+    }
+}
+```
+
+**之后 — Registry 分发：**
+
+```rust
+// 注册阶段（Plugin::build）
+dispatch_registry.register("Damage", DamageExecutor);
+dispatch_registry.register("Heal", HealExecutor);
+dispatch_registry.register("ApplyBuff", ApplyBuffExecutor);
+// ... 每个 EffectType 一行注册，新增类型只需追加一行
+
+// 调度阶段（System）
+fn execute_effect_system(
+    def: &EffectDef,
+    ctx: &EffectContext,
+    dispatch_registry: Res<EffectDispatchRegistry>,
+    def_registry: Res<DefinitionRegistry>,
+) -> EffectResult {
+    dispatch_registry.dispatch(def, ctx, &def_registry)
+}
+```
+
+### 决策标准
+
+| 条件 | 使用 match | 使用 Registry + Trait Object |
+|------|-----------|------------------------------|
+| 变体数量 | <= 5 个 | >= 10 个 |
+| 逻辑复杂度 | 简单，每个分支 1-3 行 | 复杂，每个分支独立模块 |
+| 扩展频率 | 极少新增变体 | 经常新增变体（如效果/条件） |
+| 模块化需求 | 不关注 | 需要独立开发、独立测试 |
+| 动态注册 | 不需要 | 需要运行时注册 |
+| 热重载支持 | 不需要 | 需要热重载后生效 |
+
+**折中原则：**
+
+- 5-10 个变体区间：优先用 match，若预期扩展频率高则提前迁移到 Registry
+- 如果 match 在多个文件中重复出现（"散弹式修改"），即使只有 3-4 个变体也应考虑 Registry
+- Trait Object 引入间接调用开销（vtable dispatch），对性能敏感的热路径（每帧 > 10000 次调用）可保留 match + 基准测试验证
+
+### 参考实现
+
+现有 `RegistryBucket`/`DefinitionRegistry` 已在 `src/infra/registry/registry.rs` 中实现，本模式在其基础上扩展：
+
+- `RegistryBucket<T>` 的泛型参数可接受 `Box<dyn TraitExecutor>`，与普通 Definition 共用同一套索引/版本/变更追踪机制
+- 新的 `EffectDispatchRegistry` 与 `DefinitionRegistry` 同级，均作为 Bevy Resource 注册
+- 在热重载场景下，Executor 注册表不受配置变更影响——只有 EffectDef 的配置数据更新，执行逻辑不变；热重载后新 Effect 实例自动使用已注册的 Executor
+- Content 层负责将 `EffectDef.type_name` 映射到已注册的 Executor，实现完全的 Rule/Content 分离
+
 ## 评审要点
 
 - [ ] `RegistryBucket` 是否需要并发访问支持（多线程 System）？

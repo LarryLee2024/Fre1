@@ -8,6 +8,7 @@ mod components;
 pub(crate) mod error;
 pub(crate) mod events;
 pub(crate) mod failure;
+pub(crate) mod integration;
 mod plugin;
 mod resources;
 mod rules;

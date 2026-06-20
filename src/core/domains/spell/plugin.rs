@@ -10,15 +10,14 @@ use bevy::prelude::*;
 use super::components::{Concentration, SpellConfig, SpellSlotPool, Spellbook};
 use super::systems::{on_spell_cast_request, tick_concentration_duration};
 use crate::app::scenes::GameState;
+use crate::register_domain_types;
 
 pub struct SpellPlugin;
 
 impl Plugin for SpellPlugin {
     fn build(&self, app: &mut App) {
         // ── 注册 Component 类型 ──
-        app.register_type::<SpellSlotPool>();
-        app.register_type::<Spellbook>();
-        app.register_type::<Concentration>();
+        register_domain_types!(app, [SpellSlotPool, Spellbook, Concentration,]);
 
         // ── 初始化 Resource ──
         app.init_resource::<SpellConfig>();

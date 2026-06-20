@@ -454,6 +454,98 @@ Screen 只做组合，不直接拼 Node。布局细节属于 Widget 内部。
 | 例外理由 | 战斗伤害数字是 BattleScreen 场景特有的表现元素（非全局 Overlay），其生命周期天然与战斗绑定：战斗结束（BattleScreen 销毁）时伤害数字必须同时消失。若将其放在独立层，需要在 OnExit(Combat) 中额外清理，增加维护复杂度。例外仅适用于纯粹的、无交互的、场景绑定的动画浮层。 |
 | 约束条件 | (1) 仅限 DamageTextOverlay，不扩展至其他 Overlay 类型；(2) DamageText 无交互事件（不可点击），不产生 UiAction；(3) 必须在 architecture.md、navigation-overlay.md 和 overlays.md 中显式记录此项例外 |
 
+### 6.7 Query Facade UI 约束
+
+#### 6.7.1 原则
+
+UI 层（Screen / Widget / Overlay）对 Domain 数据的访问必须通过 **ReadFacade / Integration 层**，禁止直接通过 ECS Query 访问 Domain 组件。
+
+```
+// ❌ 禁止：UI 代码直接 Query Domain 组件
+fn update_spell_ui(
+    query: Query<&Spellbook>,              // 直接读取 Domain 组件
+    slot_query: Query<&SpellSlotPool>,     // 直接读取 Domain 组件
+) { ... }
+
+// ✅ 允许：UI 通过 ViewModel 消费数据
+fn update_spell_ui(
+    spell_vm: Res<SpellPanelVm>,           // UiStore 中的 ViewModel
+) { ... }
+
+// ✅ 允许（Projection 层专属）：通过 Integration QueryParam
+fn project_spell_change(
+    trigger: Trigger<SpellChanged>,
+    spell_query: SpellQueryParam,          // Domain integration 层的 SystemParam 封装
+    mut store: ResMut<UiStore>,
+) { ... }
+```
+
+#### 6.7.2 数据访问层级
+
+| 层级 | 数据源 | 适用模块 | 禁止 |
+|------|--------|---------|------|
+| Screen | ViewModel（`Res<BattleHudVm>`） | `src/ui/screens/` | 禁止 `Query<&Health>` |
+| Widget | ViewModel（`Res<CharacterPanelVm>`） | `src/ui/widgets/` | 禁止 `Query<&Spellbook>` |
+| Overlay | Cue 负载或 ViewModel | `src/ui/overlay/` | 禁止 `Query<&Health>` |
+| Projection | Integration QueryParam + ViewModel | `src/ui/projections/` | 禁止直接修改 Domain |
+| Primitives | 仅 Props 参数 | `src/ui/primitives/` | 禁止任何 Domain 感知 |
+
+#### 6.7.3 SystemParam 封装模式
+
+UI 代码需要读取 Domain 数据时，必须使用 Domain integration 层定义的 SystemParam 封装，而非原始 Query：
+
+**合法模式**（Projection 层专属）：
+
+```rust
+// Spell 域的 SpellQueryParam 封装了所有法术相关的只读查询
+fn project_spell_change(
+    trigger: Trigger<SpellChanged>,
+    spell_query: SpellQueryParam,           // 来自 spell/integration/query.rs
+    mut store: ResMut<UiStore>,
+) {
+    if let Some(spellbook) = spell_query.get_spellbook(entity) {
+        store.skill_panel.update_from_spellbook(spellbook);
+        store.skill_panel.mark_dirty();
+    }
+}
+```
+
+**禁止模式**（所有 UI 代码）：
+
+```rust
+// ❌ 禁止：Screen 直接 Query Domain 组件
+fn inventory_screen(query: Query<&Inventory>) { ... }
+
+// ❌ 禁止：Widget 直接 Query Domain 组件
+fn item_icon_widget(query: Query<&Item>) { ... }
+
+// ❌ 禁止：在 Projection 中使用原始 Query 而非封装
+fn project_bad(
+    query: Query<&Health>,                  // 应该用 CharacterQueryParam
+    mut store: ResMut<UiStore>,
+) { ... }
+```
+
+#### 6.7.4 现有 QueryParam 参考
+
+| Domain | SystemParam | 文件路径 | 提供的查询 |
+|--------|------------|---------|-----------|
+| Spell | `SpellQueryParam` | `src/core/domains/spell/integration/query.rs` | `get_spellbook()`, `get_slot_pool()`, `has_concentration()`, `remaining_slots()` |
+| Combat | （拟新增 `CombatQueryParam`） | `src/core/domains/combat/integration/query.rs` | 战斗状态查询 |
+| Inventory | （拟新增 `InventoryQueryParam`） | `src/core/domains/inventory/integration/query.rs` | 背包数据查询 |
+| Party | （拟新增 `PartyQueryParam`） | `src/core/domains/party/integration/query.rs` | 队伍数据查询 |
+
+#### 6.7.5 验证规则
+
+| # | 规则 | 校验逻辑 |
+|---|------|----------|
+| QRY-VAL-01 | UI 模块参数不含 `Query<&DomainComponent>` | CI 静态分析：禁止在 `src/ui/` 下出现 `Query<&` 且类型属于 Domain 模块 |
+| QRY-VAL-02 | Projection 使用 QueryParam 而非裸 Query | 代码审查：Projection 函数签名应使用 `SpellQueryParam` 而非 `Query<&Spellbook>` |
+| QRY-VAL-03 | Screen/Widget 函数不含 Domain 组件引用 | 代码审查：Screen 和 Widget 系统函数的参数列表不应包含 `Query<&Component>` |
+| QRY-VAL-04 | 新增 Domain 须提供对应的 QueryParam | 架构审查：每个 Domain 的 `integration/` 模块必须包含至少一个 QueryParam 封装 |
+
+（引用：宪法 §8.9 — 读写分离原则；`src/core/domains/spell/integration/query.rs` — SpellQueryParam 实现参考；`src/core/domains/*/integration/facade.rs` — ReadFacade 参考）
+
 ---
 
 ## 7. UI 状态分级管理

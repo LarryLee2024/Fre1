@@ -16,6 +16,7 @@ use super::types::*;
 const MOVEMENT_POINTS_ATTR_ID: &str = "attr_movement_points";
 const MOVEMENT_COST_MODIFIER_KEY: &str = "movement_cost";
 
+// ReadFacade:
 // ─── Tag 查询（封装 TagSet + TagHierarchy） ─────────────────────────
 
 /// 移动类型对应的 TagId 常量。
@@ -71,6 +72,7 @@ pub fn can_move_with_type(
     has_movement_tag(tag_set, hierarchy, movement_type)
 }
 
+// ReadFacade:
 // ─── Attribute 查询（封装 AttributeContainer） ───────────────────────
 
 /// 从 AttributeContainer 中读取当前移动点数。
@@ -93,6 +95,7 @@ fn read_base_mp(attrs: &AttributeContainer) -> MP {
         .unwrap_or(0.0))
 }
 
+// ReadFacade:
 // ─── Modifier 查询（封装 ModifierContainer） ─────────────────────────
 
 /// 计算所有 Modifier 对移动成本的总影响。
@@ -117,6 +120,7 @@ fn get_modifier_summary(mods: &ModifierContainer) -> MovementModifierSummary {
     }
 }
 
+// ReadFacade:
 // ─── 复合操作（组合 Tag + Attribute + Modifier） ─────────────────────
 
 /// 评估实体的完整移动能力（复合查询）。
@@ -165,6 +169,7 @@ pub fn validate_prerequisites(
     Ok(())
 }
 
+// WriteFacade:
 // ─── 写操作（Modifier 管线） ─────────────────────────────────────────
 
 /// 应用移动消耗。

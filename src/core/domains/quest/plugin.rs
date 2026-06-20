@@ -12,13 +12,14 @@ use super::resources::QuestConfig;
 use super::systems::{
     on_accept_quest_request, on_advance_objective, on_quest_failed, on_turn_in_quest,
 };
+use crate::register_domain_types;
 
 pub struct QuestPlugin;
 
 impl Plugin for QuestPlugin {
     fn build(&self, app: &mut App) {
         // ── 注册 Component 类型 ──
-        app.register_type::<QuestLog>();
+        register_domain_types!(app, [QuestLog,]);
 
         // ── 初始化 Resource ──
         app.init_resource::<QuestConfig>();

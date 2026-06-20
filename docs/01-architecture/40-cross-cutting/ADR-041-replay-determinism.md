@@ -259,6 +259,45 @@ src/infra/replay/
 - 表现层（Cue/VFX）影响回放确定性
 - 回放跨越不同的游戏版本（必须版本匹配或迁移）
 
+## Event History 与 Replay 的关系
+
+Event History（ADR-059）是 Replay 的互补系统。本 ADR 明确二者的职责边界。
+
+### 核心差异
+
+| 维度 | Replay | Event History |
+|------|--------|---------------|
+| 录制数据 | 输入命令 (`RecordedCommand` + RNG 种子) | 输出事件 (`StoredEvent` 结构化快照) |
+| 目的 | 确定性验证与 Bug 复现 | 事后分析与可观测性 |
+| 完整性 | 必须完整，缺一不可 | 环形缓冲区，溢出丢弃 |
+| 持久化 | `.replay` 文件序列化 | 运行时内存存储 |
+| 因果关系 | 原因 | 结果 |
+
+### 互补工作流
+
+QA 或开发者使用 Replay 复现 Bug 后，可以查询 Event History 定位异常事件：
+
+```
+1. Replay 还原输入序列 → 重现 Bug 场景
+2. EventStore 查询输出事件 → 找到异常事件（如错误的伤害值）
+3. 结合因果链分析 → 确定根因
+```
+
+### 实现原则
+
+- Replay 不依赖 Event History：Replay 的确定性验证功能完整独立
+- Event History 在 Replay 模式下正常工作：回放过程中产生的事件同样写入 EventStore
+- EventStore 不写入 Replay 文件：事件历史是输出数据，不属于确定性输入的一部分
+- 两者共享 `FrameCounter` 帧号：帧号是对齐 Replay 帧和 EventStore 事件的桥梁
+
+### 关键禁止
+
+- 禁止将 Event History 作为 Replay 的替代——Event History 不保证确定性，不能用于回归测试
+- 禁止 EventStore 写入影响 Replay 的帧顺序或内容——EventStore 写入必须不可变、非阻塞
+- 禁止 Replay 文件包含 EventStore 数据——违反单一职责原则
+
+详见 `docs/01-architecture/40-cross-cutting/ADR-059-event-history.md` 和 `docs/04-data/capabilities/event_schema.md` §13。
+
 ## Forbidden
 
 | 禁止行为 | 理由 |
@@ -302,3 +341,16 @@ src/infra/replay/
 - [ ] SyncCheckpoint 的间隔——每 60 帧一个检查点是否太密？
 - [ ] 回放版本不匹配时的行为——拒绝加载还是自动迁移？
 - [ ] Command 录制是否覆盖了所有玩家操作？（移动、攻击、使用物品、结束回合等）
+
+## 后续更新
+
+### D2-5: Event History 与 Replay 的关系
+
+本 ADR 上述 §"Event History 与 Replay 的关系"已记录 Replay 与 Event History（`docs/01-architecture/40-cross-cutting/ADR-059-event-history.md`）的职责边界。Event History 作为 Replay 的互补系统，承担事件流记录与查询职责，不替代 Replay 的确定性校验功能。
+
+Replay + Event History 的协同已在以下 ADR 间建立交叉引用：
+- `ADR-041`（本文件）— Replay 确定性架构
+- `ADR-049`（共享跨域事件）— Event History 种子数据定义
+- `ADR-059` — Event History 架构（占位）
+
+Event History 从 Replay 中派生的可行性分析详见 `docs/04-data/foundation/event_history_architecture.md`。

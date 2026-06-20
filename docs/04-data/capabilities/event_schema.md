@@ -281,27 +281,244 @@ Event 系统是 Replay 的基础设施——回放时事件必须按录制时的
 
 ## 10. Future Extension
 
-- **事件历史缓冲区**: 保留最近 N 个事件用于调试和回放
 - **延迟事件**: 支持定时/条件触发的延迟事件
 - **事件追踪**: 事件流转的跟踪日志（用于性能分析和 bug 排查）
 - **事件过滤链**: 支持在事件投递前经过过滤链（如静默区域阻止事件触发）
 
 ---
 
-## 11. Risks
+## 11. EventStore Schema — 事件历史存储
 
-| 风险 | 影响 | 缓解 |
-|------|------|------|
-| 事件风暴 | 连锁事件导致无限循环 | ContextChain 循环检测 + 每帧事件上限 |
-| 事件丢失 | 订阅者处理失败导致事件未消费 | 失败记录 + 可恢复重试（最多 3 次） |
-| 订阅者死锁 | A 系统等待 B 系统处理事件，B 等待 A | 强制事件处理为同步 + 非阻塞 |
+> 本文档 §10 最初提及"事件历史缓冲区"。本节正式定义 EventStore Schema，是 Event History 系统的数据层。
+
+
+EventStore 是 EventBus 的附加 sink，记录所有通过 EventBus 分发的 `GameplayEvent` 的结构化快照。EventService 在将事件分发给订阅者的同时，将事件写入 EventStore。
+
+### 11.1 StoredEvent
+
+```rust
+/// 存储在 EventStore 中的历史事件记录。
+struct StoredEvent {
+    /// 单调递增的事件序号（全局唯一）。
+    event_id: u64,
+
+    /// 事件创建时的帧号（用于时序分析和回放对齐）。
+    timestamp: u64,
+
+    /// 事件编码，关联 LogCode 枚举（如 BAT007、EFF001）。
+    log_code: LogCode,
+
+    /// 路由域——事件所属的业务域。
+    domain: Domain,
+
+    /// 关联标识（可选），用于串联一次完整战斗行为中的所有日志。
+    /// 层级关系: BattleId → TurnId → ActionId
+    correlation_id: Option<CorrelationId>,
+
+    /// 事件类型标签（用于路由匹配，与 EventTag 对应）。
+    event_tag: EventTag,
+
+    /// 来源实体 ID（可选）。
+    source_entity: Option<EntityId>,
+
+    /// 目标实体 ID（可选）。
+    target_entity: Option<EntityId>,
+
+    /// 事件数值载荷（如伤害量 25、治疗量 10）。
+    magnitude: Option<f32>,
+
+    /// 结构化字段——从 ObservableEvent::record_fields() 收集的动态字段。
+    fields: HashMap<String, String>,
+}
+```
+
+### 11.2 EventStore
+
+```rust
+/// 事件存储——环形缓冲区实现。
+///
+/// - 定长 RingBuffer，容量在初始化时指定（默认 1000）
+/// - 追加写入，超过容量时覆盖最旧记录
+/// - 只读查询，不支持修改或删除已存储的事件
+///
+/// 所有权归属 `core/capabilities/runtime/event/`，与 EventBus 同域。
+/// EventService 在事件分发后自动写入。
+struct EventStore {
+    /// 环形缓冲区。
+    buffer: RingBuffer<StoredEvent>,
+
+    /// 最大容量（不可变）。
+    capacity: usize,
+}
+```
+
+### 11.3 EventService 集成
+
+```
+[发布者 Domain]                  [EventBus]                     [事件历史]
+      │                              │                              │
+      │── GameplayEvent ──────────→  │                              │
+      │                              │── EventStore.append(event) → │
+      │                              │     (写入历史，异步非阻塞)     │
+      │                              │                              │
+      │                              │── (按 EventTag 匹配订阅者) → │
+      │                              │── ...分发到订阅者...          │
+```
+
+EventService 在 `EventBus.publish()` 的调用链中增加一步：在事件入队分发之前，先将事件的快照写入 EventStore。写入必须是异步且非阻塞的——EventStore 作为观察者式 sink，不应影响事件分发主路径的延迟。
+
+### 11.4 与 ObservableEvent 的关系
+
+EventStore 利用现有的 `ObservableEvent` trait 提取事件的结构化字段：
+
+```rust
+// EventStore 内部实现示意（非代码规范，仅说明流程）：
+fn record(&mut self, event: &impl ObservableEvent, metadata: EventMetadata) {
+    let mut collector = FieldCollector::default();
+    event.record_fields(&mut collector);
+
+    let stored = StoredEvent {
+        log_code: event.log_code(),
+        domain: ObservableEvent::DOMAIN,       // const 泛型参数
+        fields: collector.fields().iter().map(|(k, v)| (k.to_string(), v.to_string())).collect(),
+        // ... 其他字段从 metadata 提取
+    };
+    self.buffer.push(stored);
+}
+```
 
 ---
 
-## 12. Constitution Check
+## 12. Query Interface — 事件历史查询
+
+EventStore 提供基于索引的只读查询接口，用于调试工具、QA 回放分析、AI 行为分析等场景。
+
+### 12.1 查询功能
+
+```rust
+/// 事件历史查询接口。
+impl EventStore {
+    /// 按关联标识查询（Battle、Turn、Action）。
+    fn by_correlation(&self, id: CorrelationId) -> Vec<StoredEvent>;
+
+    /// 按路由域查询（如 Combat、Progression）。
+    fn by_domain(&self, domain: Domain) -> Vec<StoredEvent>;
+
+    /// 按事件编码查询（如 BAT007）。
+    fn by_log_code(&self, code: LogCode) -> Vec<StoredEvent>;
+
+    /// 按事件标签查询（如 event.combat.damage_dealt）。
+    fn by_event_tag(&self, tag: &EventTag) -> Vec<StoredEvent>;
+
+    /// 按帧号范围查询。
+    fn by_frame_range(&self, start: u64, end: u64) -> Vec<StoredEvent>;
+
+    /// 获取最近的 N 条记录。
+    fn recent(&self, n: usize) -> Vec<StoredEvent>;
+
+    /// 获取单条记录。
+    fn get(&self, event_id: u64) -> Option<StoredEvent>;
+}
+```
+
+### 12.2 查询约束
+
+| 规则 | 说明 |
+|------|------|
+| 只读 | 查询不修改 EventStore，所有查询方法返回不可变引用或克隆 |
+| 按条件过滤 | 所有查询均为过滤操作——在 RingBuffer 中遍历匹配记录 |
+| 容量溢出 | 超过 RingBuffer 容量的最旧记录自动丢弃，不可恢复 |
+| O(n) 复杂度 | 基于 RingBuffer 的全量过滤，非索引查询。大数据量场景建议未来迁移到 SQLite |
+
+### 12.3 典型查询场景
+
+| 场景 | 查询参数 | 用途 |
+|------|---------|------|
+| 调试单次技能 | `correlation_id = ActionId(turn_id, seq)` | 追踪一次技能释放导致的所有效果 |
+| QA 日志分析 | `by_frame_range(120, 180)` | 分析指定帧范围内的所有事件 |
+| UI 战斗回放 | `by_correlation(CorrelationId::Battle(battle_id))` | 重建一局战斗的事件序列 |
+| AI 行为分析 | `by_domain(Domain::Combat)` | 统计战斗事件分布和频率 |
+| 定量分析 | `by_log_code(LogCode::BAT007)` | 统计伤害事件的总次数 |
+
+---
+
+## 13. Event History 与 Replay 的边界
+
+Event History 和 Replay 是两个独立但互补的系统。下表明确二者的职责边界。
+
+| 维度 | Replay（回放） | Event History（事件历史） |
+|------|---------------|--------------------------|
+| **录制的数据** | 输入命令（`RecordedCommand`）：玩家操作、AI 决策、RNG 种子 | 输出事件（`StoredEvent`）：`GameplayEvent` 的结构化快照 |
+| **核心目的** | 确定性验证——同一输入 + 同一种子 = 同一结果 | 可观测性——记录"发生了什么事"供事后分析 |
+| **数据完整性** | 必须完整记录每一帧，缺失即破坏确定性 | 允许容量溢出丢弃旧记录（RingBuffer 语义） |
+| **持久化** | 序列化到 `.replay` 文件，可离线存储和回放 | 运行时内存，未来可扩展到 SQLite 持久化 |
+| **数据流向** | `ReplayLog` → `ReplayPlayer` → 模拟输入 → 游戏逻辑 | `GameplayEvent` → `EventService` → `EventStore` |
+| **使用者** | CI/CD 回归测试、官方回放质控 | 开发调试、QA 分析、UI 历史面板、AI 行为分析 |
+| **版本依赖** | 强版本绑定——回放版本需匹配游戏版本 | 无版本绑定——事件 Schema 数据层向前兼容 |
+| **因果关系** | 原因（输入） | 结果（输出事件） |
+| **存储模型** | 全量逐帧序列 | 环形缓冲区（容量上限自动覆写） |
+
+### 13.1 互补关系
+
+```
+      ┌─────────────────────────────────────────────────────────┐
+      │                    游戏运行过程                          │
+      │                                                         │
+      │  [用户输入] ──→ [Command] ──→ [游戏逻辑] ──→ [Domain Events] │
+      │       ↑                          ↓                     │
+      │   Replay录                    EventStore              │
+      │   (输入命令)                   (输出事件)                │
+      │                                                         │
+      │  QA 工作流:                                              │
+      │  1. Replay 还原输入 → 复现 Bug                          │
+      │  2. EventStore 查询输出 → 定位异常事件                    │
+      │  3. 两者结合 → 完整因果链分析                             │
+      └─────────────────────────────────────────────────────────┘
+```
+
+Replay 回答"输入是什么"；Event History 回答"输出了什么"。两者结合可构建完整的因果链（Replay → Command → EventStore → 结构化数据），显著提升 QA 和 Debug 效率。
+
+### 13.2 配合使用场景
+
+| 场景 | Replay 角色 | Event History 角色 |
+|------|------------|-------------------|
+| CI 回归测试 | 执行 Replay 验证确定性 | 断言关键事件（BAT007）的期望值和顺序 |
+| Bug 复现 | 加载 Replay 还原输入序列 | 查询 EventStore 定位异常事件的精确帧和参数 |
+| 战斗分析 | 不参与 | 按 BattleId 查询完整事件序列，用于定量分析 |
+| Undo 系统 | 不参与（记录原始输入） | 记录事件序列，作为 Undo 的基础数据来源 |
+| AI 学习 | 不参与（输入序列不包含中间状态） | 输出事件序列携带结构化状态，可用于训练 |
+
+---
+
+## 14. Risks (更新)
+
+新增 EventStore 引入以下风险：
+
+| 风险 | 影响 | 缓解 |
+|------|------|------|
+| 内存占用 | RingBuffer 存储 1000 条事件记录，每条约 200-500 字节 | 默认容量 1000（~500KB），可通过配置调整 |
+| 写入延迟 | 每次事件发布多一步写入操作 | 写入为轻量结构体构建 + `Vec::push`；未来可异步批量写入 |
+| 查询性能 | RingBuffer 全量遍历 O(n) | 默认 1000 条查询在微秒级；大数据量建议迁移 SQLite |
+| 不完整历史 | 容量溢出后旧记录丢失 | 预期行为——定长 RingBuffer 语义，非持久化存储 |
+
+---
+
+## 15. Migration Strategy (更新)
+
+| 版本 | 变更 | 迁移策略 |
+|------|------|----------|
+| v1 | 初始版本 | — |
+| v2 | 新增 EventCategory | 新增 enum variant |
+| v3 (未来) | 新增 EventStore (Event History) | EventService 增加 EventStore 写入步骤。可选功能——新项目默认启用，存量项目按需开启 |
+| v4 (远期) | 新增 SQLite 持久化选项 | 可选的 Storage backend，运行时配置；RingBuffer 仍为默认实现 |
+
+---
+
+## 16. Constitution Check (更新)
 
 | 宪法条款 | 合规 | 说明 |
 |----------|------|------|
 | Domain 间仅通过事件通信 | ✅ | EventBus 是域间唯一通信通道 |
 | Event 与 Trigger 职责分离 | ✅ | Event 是通知，Trigger 是条件→技能映射 |
-| Replay First | ✅ | 事件顺序和内容确定 |
+| Replay First | ✅ | 事件顺序和内容确定；EventStore 不改变 Replay 确定性 |
+| 可观测性 | ✅ | EventStore 是 ObservableEvent 的附加 sink，利用现有日志基础设施 |

@@ -14,13 +14,14 @@ use super::systems::{
     reset_reactions_on_turn_start,
 };
 use crate::app::scenes::GameState;
+use crate::register_domain_types;
 
 pub struct ReactionPlugin;
 
 impl Plugin for ReactionPlugin {
     fn build(&self, app: &mut App) {
         // ── 注册 Component 类型 ──
-        app.register_type::<ReactionState>();
+        register_domain_types!(app, [ReactionState,]);
 
         // ── 初始化 Resource ──
         app.init_resource::<ReactionConfig>();

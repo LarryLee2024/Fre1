@@ -12,17 +12,23 @@ use super::components::{ClassLevels, Experience, ProgressionMarker, SubclassChoi
 use super::systems::progression_system::{
     check_max_level_system, enforce_xp_invariant, handle_level_up, on_talent_unlocked,
 };
+use crate::register_domain_types;
 
 pub struct ProgressionPlugin;
 
 impl Plugin for ProgressionPlugin {
     fn build(&self, app: &mut App) {
         // ── 注册 Component 类型 ──
-        app.register_type::<Experience>();
-        app.register_type::<ClassLevels>();
-        app.register_type::<TalentTree>();
-        app.register_type::<SubclassChoice>();
-        app.register_type::<ProgressionMarker>();
+        register_domain_types!(
+            app,
+            [
+                Experience,
+                ClassLevels,
+                TalentTree,
+                SubclassChoice,
+                ProgressionMarker,
+            ]
+        );
 
         // ── 初始化 Resource ──
         app.init_resource::<LevelProgressionTable>();

@@ -262,3 +262,23 @@ src/core/domains/combat/
 - [ ] 当前的 `tick_all` + `expire_all` 拆分是否有必要保留，还是直接合并为 `tick_and_expire`？
 - [ ] types.rs 的 `EffectView` / `EffectSummary` 在初版是否过度设计？是否仅保留 `EffectTickOutcome` 即可？
 - [ ] 未来 submodule 的预留文件名是否需要现在创建空文件？
+
+## 后续更新
+
+### D2-3: CQRS §8.9 WriteFacade/ReadFacade 分离确认
+
+本 ADR 设计的所有 facade 函数遵循 CQRS §8.9 要求的显式 WriteFacade/ReadFacade 分离原则：
+
+- **ReadFacade**（读操作）：`build_effect_view()`、`has_active_effects()`、`has_active_effect_by_def()` — 通过 `&ActiveEffectContainer` 只读引用查询
+- **WriteFacade**（写操作）：`tick_all_effects()`、`expire_all_effects()`、`tick_and_expire()` — 通过 `&mut ActiveEffectContainer` 可变引用写入
+
+这一分离已在以下 integration facade 中落地实现：
+
+| Facade | Read | Write |
+|--------|------|-------|
+| `combat/integration/effect/` | `build_effect_view` | `tick_all_effects` |
+| `combat/integration/ability/` | `CombatAbilityParam` | `try_activate_ability` |
+| `inventory/integration/` | `InventoryReadFacade` | `InventoryWriteFacade` |
+| `spell/integration/` | `SpellReadFacade` | `SpellWriteFacade` |
+
+CQRS 分离确保调用方在类型层面区分"仅查询"和"需要写入"的操作路径，避免误用可变引用进行纯读操作。详见 `docs/01-architecture/00-foundation/ADR-046-module-interface-pattern.md` §integration/ 标准结构。

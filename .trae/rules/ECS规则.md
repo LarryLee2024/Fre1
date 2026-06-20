@@ -33,6 +33,11 @@ description:
   - 非法：`is_dead: bool`、`is_frozen: bool`
 - 配置字段、临时计算值、非实体级状态允许使用bool类型
   - 合法：`is_unique: bool`（配置属性）、`is_critical: bool`（结算临时值）
+- 🟩 **生命周期状态机优先于 bool**
+  - 实体生命周期有 >= 3 种状态时，必须使用 `enum` 状态机，禁止用多个 `bool` 字段组合表示
+  - ✅ 正确：`enum UnitLifecycle { Spawning, Active, Dying, Removed }`
+  - ❌ 错误：`is_spawning: bool` + `is_dying: bool` + `is_removed: bool`
+  - 适用场景：Buff 生命周期（Apply→Tick→Expire→Remove）、Unit 状态、Quest 进度、Dialogue 阶段
 
 ### 1.4 从属关系
 - 🟨 实体间从属关系（Buff归属单位、背包归属角色）优先使用Bevy官方`Relationship`机制
@@ -103,6 +108,8 @@ description:
 - 🟩 所有Component/Event/Resource类型必须 derive Reflect
 - 格式：`#[derive(Component, Reflect)]` + `#[reflect(Component)]`
 - 🟥 禁止新增无Reflect的Component/Event/Resource类型
+- 🟩 **Reflect 工程价值**：Reflect 不仅用于 Inspector，更是**消灭手动 `app.register_type::<T>()` 的关键手段**。应通过全局注册宏或 build 脚本自动生成注册代码，禁止手动逐条注册
+- 🟩 **新增类型必须注册**：新增 Component/Event/Resource 后必须确保被注册机制覆盖，CI 将检查是否遗漏
 
 ### 3.7 BSN 使用范围
 - 🟩 BSN用于描述实体结构（组件组合），System负责行为

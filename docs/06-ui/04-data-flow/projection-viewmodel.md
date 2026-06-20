@@ -128,6 +128,116 @@ fn project_turn(
 
 （引用：ADR-055 §2 — `src/ui/projections/` 目录结构）
 
+### 2.5 CQRS 视角下的 Projection 定位
+
+#### 2.5.1 宪法 §8.9 的 CQRS 原则
+
+宪法 §8.9 规定读写分离原则（CQRS），要求 Domain integration 层显式分离 WriteFacade（命令处理）和 ReadFacade（查询 API）。Projection 在此框架中的定位如下：
+
+```
+                   CQRS 架构
+    ┌─────────────────────────────────┐
+    │      Write Side                 │
+    │  UiCommand → GameCommand →      │
+    │  Domain Mutation → Event        │
+    └─────────────────────────────────┘
+                      │
+                      ▼ Domain Event
+                      │
+    ┌─────────────────────────────────┐
+    │      Read Side                  │
+    │  Domain Read Model              │
+    │      ↓（Projection 转换）       │
+    │  ViewModel（UI 投影）           │
+    │      ↓                          │
+    │  Widget 消费                    │
+    └─────────────────────────────────┘
+```
+
+#### 2.5.2 Projection 是 ReadFacade 的 UI 端实现
+
+宪法 §8.9 明确：**"UI 层的 Projection 模式 = ReadFacade 的 UI 端实现"**。这意味着：
+
+- Projection 并非独立于 Domain 的新概念——它是 CQRS 读模型在 UI 层的自然延伸
+- Domain 的 `integration/facade.rs`（如 `CombatFacade::build_effect_view`）是读模型的 Domain 侧出口
+- UI 端的 `projections/battle.rs` 是读模型的 UI 侧入口，两者构成完整的 ReadFacade 链路
+
+```
+Domain 侧 ReadFacade              UI 侧 ReadFacade（Projection）
+┌──────────────────────┐          ┌──────────────────────────┐
+│ Integration Facade   │          │ Projection Observer      │
+│ （读 API）            │ ──Event──→ （监听 Domain Event）    │
+│ build_effect_view()  │          │ project_damage()         │
+│ get_character_stats()│          │ project_health_change()  │
+└──────────────────────┘          └──────────────────────────┘
+         ↓                                  ↓
+Domain Read Model                    UI ViewModel（UiStore）
+```
+
+**关键规则**：
+1. UI Projection 不重复实现 Domain 侧已存在的读逻辑——它只做格式转换（Domain 类型 → UI 友好的 ViewModel）
+2. 复杂查询（涉及多领域关联）应在 Domain 侧的 ReadFacade 中预计算，UI Projection 直接消费计算结果
+3. ViewModel 的定义应当与 Domain Read Model 的形状对齐——ViewModel 是 Domain Read Model 的 UI 投影，而不是一个独立的数据层
+
+#### 2.5.3 ViewModel 是 Domain Read Model 的 UI 投影
+
+ViewModel **不是**独立的数据架构——它是 Domain Read Model 经过 UI 适配后的表层：
+
+```
+Domain Read Model（Aggregate View）       UI ViewModel
+────────────────────────                 ────────────
+CharacterStats {                           CharacterPanelVm {
+    hp: u32,                                   hp: u32,
+    max_hp: u32,                               max_hp: u32,
+    level: u32,                                level: u32,
+    buffs: Vec<BuffInstance>,  ──投影──→       name_key: UiTextKey,   ← 文本字段本地化
+}                                              buffs: Vec<BuffVm>,   ← 类型扁平化
+                                        }
+```
+
+**投影规则**：
+- 数值字段（hp, max_hp, level）直接映射，保持类型一致
+- 业务类型（`BuffInstance`）扁平化为 UI 友好的 `BuffVm`
+- 文本字段（name, description）替换为 `UiTextKey`（本地化在 UI 侧处理）
+- Domain 不需要为 UI 创建专门的读模型——View 结构体复用已有的 Aggregate View 即可
+
+#### 2.5.4 UI 写操作：禁止调用 WriteFacade
+
+UI 层有一条绝对禁令：**UI 代码禁止调用 Domain 的 WriteFacade 方法**。
+
+```
+// ❌ 绝对禁止
+fn on_confirm_purchase(
+    mut economy_write: ResMut<EconomyWriteFacade>,  // UI 不可以持有 WriteFacade
+) { ... }
+
+// ✅ 唯一合法路径
+UiAction::Click
+    → UiCommand::BuyItem(item_id, quantity)
+    → GameCommand::Economy(BuyItem { ... })
+    → EconomyWriteFacade::process_buy()       // WriteFacade 只在 Domain 侧调用
+    → Domain Event（PurchaseProcessed）
+    → UI Observer（Projection 监听事件，更新 ViewModel）
+```
+
+**理由**：
+1. 违反宪法 §8.9 的写路径收口要求——所有状态修改必须通过命令与执行系统
+2. 绕过 Command 系统直接调用 WriteFacade 会破坏 Replay 确定性
+3. WriteFacade 的方法签名可能涉及 Domain 内部类型（`&mut World`），UI 层不应感知
+
+**唯一写入口**：UI 写操作的唯一合法出口是 `UiCommand → GameCommand` 转换器（定义于 `application-layer.md §4.3`）。所有 Domain 写操作必须经过 ADR-043 的 CommandQueue。
+
+#### 2.5.5 现有参考实现
+
+| Domain | ReadFacade（Domain 侧） | Projection（UI 侧） |
+|--------|------------------------|---------------------|
+| Combat | `combat/integration/facade.rs` → `build_effect_view()` | `projections/battle.rs` |
+| Economy | `economy/integration/facade.rs` → `get_wallet()` | `projections/economy.rs` |
+| Spell | `spell/integration/query.rs` → `SpellQueryParam` | `projections/character.rs` |
+| Campaign | `party/integration/facade.rs` → query methods | `projections/party.rs`（拟新增） |
+
+（引用：宪法 §8.9 — 读写分离原则；`src/core/domains/*/integration/facade.rs` — ReadFacade 参考实现）
+
 ---
 
 ## 3. ViewModel 架构

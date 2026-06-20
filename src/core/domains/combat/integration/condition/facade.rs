@@ -16,6 +16,8 @@ use crate::core::capabilities::condition::mechanism::{check_immunity, evaluate};
 pub struct CombatConditionFacade;
 
 impl CombatConditionFacade {
+    // ─── ReadFacade ───────────────────────────────────────────────────
+
     /// 检查目标是否对指定效果类型免疫。
     pub fn check_effect_immunity(
         context: &ConditionContext,

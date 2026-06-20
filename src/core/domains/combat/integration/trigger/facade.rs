@@ -48,6 +48,8 @@ impl CombatTriggerType {
 pub struct CombatTriggerFacade;
 
 impl CombatTriggerFacade {
+    // ─── ReadFacade ───────────────────────────────────────────────────
+
     /// 评估一个触发器是否可以触发。
     pub fn can_trigger_check(
         entry: &TriggerEntry,

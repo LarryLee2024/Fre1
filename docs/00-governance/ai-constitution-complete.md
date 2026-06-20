@@ -416,6 +416,7 @@ Tools → Core + Shared（开发期专用）
 Modding → Core/mod_api（唯一对外暴露的核心接口）
 ```
 🟥 严格禁止反向依赖：Core 不得依赖 Infrastructure/Content/UI，Shared 不得依赖任何业务层。
+- 🟩 **类型不可见性**：下层对上层的类型完全不可见——Shared 不知道 Core 的任何类型，Core 不知道 Infrastructure 的任何类型。这不仅是依赖方向约束，更是**编译期类型隔离**：下层的 `Cargo.toml` 中不得出现上层的 crate 依赖。
 
 ---
 
@@ -744,6 +745,10 @@ Modding 不是独立层级，而是贯穿多层的扩展能力，按职责拆分
   - 实体间从属关系优先使用 Bevy 官方 `Relationship` 机制实现
   - 适用场景：CasterOf、TargetOf、SummonedBy、OwnerOf 等实体间关系
   - 不适用场景：临时引用（如当前选中单位）、值语义关系（如队伍 ID）
+- 🟩 **复杂度对比指导**：业务对象直接持有其他业务对象形成对象图，复杂度增长是 **指数级**（O(n²)）；业务对象仅持有 ID 引用，通过 Registry 查找关系，复杂度增长是 **线性级**（O(n)）。所有跨实体关系的架构决策必须以此为指导：
+  - ✅ 正确：`struct Unit { id: UnitId }` + `unit_buffs.get(unit_id)`
+  - ❌ 错误：`struct Unit { buffs: Vec<Buff> }` (对象图嵌套)
+  - 🟥 禁止超过 2 层的对象图嵌套结构
   - 禁止手动维护父子实体 ID 字段（可用 Relationship 的场景）
 
 ### 6.2 ECS 使用边界规范
@@ -783,6 +788,9 @@ Modding 不是独立层级，而是贯穿多层的扩展能力，按职责拆分
 - 🟩 模块内部优先函数调用，🟥 绝对禁止将同一模块内的普通逻辑全部事件化
 - 🟩 领域事件是唯一业务事实源，日志、战斗回放、UI 履历、成就、任务均为事件的下游消费者
 - 🟩 领域事件白名单管理，新增事件必须先更新白名单，🟥 绝对禁止为临时副作用随意新增领域事件
+- 🟥 **系统互调禁令**：绝对禁止系统函数直接互相调用（如 `fn system_a()` 内部调用 `fn system_b()`）
+  系统间通信必须通过四级通信机制（Hook→Trigger→Observer→Message）进行
+  架构扫描已确认当前代码零违规，此条款为前瞻性防护
 
 ### 6.4 ECS 执行模型
 - 🟩 **ECS 是数据流，不是调用链**
@@ -855,6 +863,7 @@ Modding 不是独立层级，而是贯穿多层的扩展能力，按职责拆分
   - 装备 = Modifier 集合 + Trait 集合
   - Buff/Debuff = 临时 Modifier + 临时 Trait + 生命周期组件
 - 🟩 **状态效果统一**：所有数值类状态效果必须走统一的 Modifier 管线
+- 🟩 **Capability 运行时查询**：应提供 `has::<CanAttack>()` 式的统一查询 API，替代 `query.get::<Component>(entity).is_ok()` 的模式。查询 API 位于 Capabilities 层，所有 Domain 通过统一入口获取实体的能力状态
 
 ### 8.2 属性系统宪法
 - 🟩 **属性分类强制分离**：基础属性(Primary Stat)与派生属性(Derived Stat)必须完全分离
@@ -867,6 +876,7 @@ Modding 不是独立层级，而是贯穿多层的扩展能力，按职责拆分
   - HP、MP 等资源型数值的增减，可通过专用系统直接修改，不强制走 Modifier
 - 🟩 **来源统一**：最终属性值必须只有一个统一的计算来源
 - 🟩 **公式集中管理**：所有属性计算公式必须集中在领域层模块中
+- 🟩 **SSOT 唯一实现位置**：DamageFormula 在 combat/rules/ 中有唯一实现位置，UI 伤害预览必须通过 integration 层调用同一公式，禁止在 UI 层复制公式逻辑
 - 🟨 **属性缓存约定**
   - 缓存组件不是事实源，必须允许随时删除并重新生成
   - 属性源变化时必须立即失效对应缓存
@@ -898,6 +908,7 @@ Modding 不是独立层级，而是贯穿多层的扩展能力，按职责拆分
 - 🟩 **四阶段标准化**
   - 所有 Buff 必须遵循：Apply（施加）→ Tick（周期触发）→ Expire（到期）→ Remove（移除）四个生命周期阶段
   - 每个阶段有明确的触发时机与 Hook 点
+- 🟩 **Policy 模式要求**：伤害结算、掉落判定、目标选择等策略逻辑必须收敛为独立 Policy 对象（如 DamagePolicy、LootPolicy、TargetPolicy），禁止散落在 System 中的 if 链。参考 economy 域 RestockPolicy 模式：单一 `evaluate()` 入口，返回结构化决策结果。
 
 ### 8.7 命令层（Command Layer）
 - 🟩 **所有操作入口为命令**
@@ -910,13 +921,18 @@ Modding 不是独立层级，而是贯穿多层的扩展能力，按职责拆分
 - 🟩 输入为独立 Feature，鼠标、键盘、手柄、触摸等输入统一转换为业务命令
 - 🟥 绝对禁止业务模块直接读取原始输入按键
 
-### 8.9 读写分离原则（CQRS Lite）
+### 8.9 读写分离原则（CQRS）
 - 🟩 **读路径无副作用**
   - 伤害预览、范围查询、状态展示等读操作，必须使用纯函数或只读查询
   - 绝对禁止在读路径中修改状态、触发事件、消耗资源
 - 🟩 **写路径收口**
   - 所有状态修改必须通过命令与执行系统统一处理
   - 禁止零散分布的状态写入逻辑
+- 🟩 **显式 WriteFacade / ReadFacade 分离**
+  - Domain integration 层必须明确区分 WriteFacade（命令处理）和 ReadFacade（查询 API）
+  - 读模型使用扁平的 View 结构体，写模型使用 Aggregate + Event 模式
+  - UI 层的 Projection 模式 = ReadFacade 的 UI 端实现
+- 🟩 **现有实现参考**：Combat facade.rs（build_effect_view / request_effect_apply）+ MovementCapabilityView + AggregateDirty 事件
 
 ### 8.10 仿真优先原则
 - 🟩 核心规则支持离线仿真，战斗核心规则可以脱离 Bevy 运行时独立执行
@@ -994,6 +1010,10 @@ screens/   → widgets/ + primitives/ （允许，通过 Factory）
 ### 10.4 数值平衡隔离
 - 🟩 所有数值平衡参数必须放入配置文件
 - 🟥 绝对禁止在代码中硬编码魔法数字
+
+### 10.5 量化目标
+- 🟩 **新增内容零代码目标**：新增技能、角色、Buff、物品等标准内容的目标是 **0 行 Rust 代码 + 1 个 RON 配置**。超过此标准的新增内容需说明为何不能纯配置完成
+- 🟩 **代码/内容比例目标**：项目长期目标是 **10 万行 Rust 代码 + 50 万行内容配置**（含 RON/YAML/FTL），即 1:5 比例。当 Rust 代码增长显著快于内容配置时，应审视是否需要将更多逻辑数据化
 
 ### 10.5 字段删除与兼容性
 - 🟩 核心配置字段、存档字段禁止直接删除
@@ -1260,8 +1280,15 @@ tests/
 - **Core 级**：核心战斗、角色、属性等基础系统，稳定性要求最高
 - **Stable 级**：装备、任务、地图等成熟系统，新增功能不得破坏兼容性
 - **Experimental 级**：玩法实验、辅助工具等功能，允许快速迭代
+- 🟩 **运行时 Feature Flag**：复用现有 Semantic Tags（`sem:stable` / `sem:deprecated` / `sem:experimental`），不新增独立字段。运行时根据 Flag 过滤可用内容。
 
-### 16.5 TODO / FIXME / HACK 规范
+### 16.5 抽象与宏使用规范
+- 🟩 **"三次才抽象"原则**：代码重复 3 次以上再抽象，且仅当业务语义相同（非仅函数签名相同或逻辑相似）。可读性优先于复用性
+- 🟩 **宏只做重复结构**：宏只能用于消除声明式重复（如 `define_stat! { Health, Mana, Attack }`），🟥 禁止用宏生成业务逻辑
+- 🟩 **声明式宏 vs 过程宏**：声明式宏（`macro_rules!`）用于重复模式，允许；过程宏（`proc_macro`）用于代码生成，需 ADR 审批
+- 🟩 **BSN 宏边界**：BSN 仅用于描述实体结构（组件组合），🟥 禁止在 BSN 中描述业务逻辑或引用 System/Observer（已由 ECS 规则 §3.7 强制）
+
+### 16.6 TODO / FIXME / HACK 规范
 🟥 禁止无上下文的 TODO/FIXME。结构化注释是 AI 协作项目的核心工程资产。
 
 #### 格式定义
@@ -1315,7 +1342,7 @@ tests/
 // FIXME            ← 无任何信息
 ```
 
-### 16.6 测试命名规范
+### 16.7 测试命名规范
 - 🟩 测试函数名用英文 snake_case 描述预期行为，使用业务术语如 `damage_applies_armor_reduction`、`buff_removed_on_expiry`、`hp_never_goes_below_zero`
 - 🟩 文件名保持英文 snake_case
 

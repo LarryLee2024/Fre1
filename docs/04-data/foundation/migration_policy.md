@@ -27,6 +27,8 @@ replay-safe: true
 
 **TBD** — 链式增量迁移方案设计
 
+Content 层复用 ContentMigration trait（已存在于 content-platform-manifesto.md §8.3）。Save 层使用 save_version 字段 + SaveOperation::Migrate。Replay 层使用 replay_version。
+
 ## 4. Versioning Scheme
 
 **TBD** — 版本号策略与兼容矩阵
@@ -42,6 +44,8 @@ replay-safe: true
 ## 7. Risks
 
 **TBD** — 潜在风险与缓解措施
+
+向后兼容性是最高优先级。破坏性变更必须经过 deprecation 周期。
 
 ---
 

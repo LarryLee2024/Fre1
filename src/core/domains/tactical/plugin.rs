@@ -11,14 +11,13 @@ use super::systems::grid_system::initialize_default_grid;
 use super::systems::input_system::{TacticalCursor, tactical_input_system};
 use super::systems::movement_system::on_compute_move;
 use crate::app::scenes::GameState;
+use crate::register_domain_types;
 
 pub struct TacticalPlugin;
 
 impl Plugin for TacticalPlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<GridPos>();
-        app.register_type::<MovementPoints>();
-        app.register_type::<Facing>();
+        register_domain_types!(app, [GridPos, MovementPoints, Facing,]);
 
         // GridMap 由 initialize_default_grid 初始化，或外部设置
         // 不在此处 init_resource（需要外部调用方控制尺寸和布局）

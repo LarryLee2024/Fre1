@@ -1,0 +1,21 @@
+//! integration — CampRest 域的 Anti-Corruption Layer。
+//!
+//! 此模块是外部代码访问 CampRest 域 ECS 组件的唯一入口。
+//! 外部代码（其他 Domains 或 Capabilities）必须通过此模块的
+//! ReadFacade / WriteFacade 读取或修改营地/休息数据，禁止直接 import
+//! CampRest 域的 Component 类型。
+//!
+//! # 设计原则
+//!
+//! 1. Systems 通过 `CampRestQueryParam` (SystemParam) 或 Facade 的静态方法交互
+//! 2. Facade 是唯一访问 CampRest 域内部组件字段的地方
+//! 3. ReadFacade 使用 `&World` 提供不可变查询
+//! 4. WriteFacade 使用 `&mut World` / `Commands` 提供可变操作
+//!
+//! 详见 ADR-031, docs/02-domain/domains/camp_rest_domain.md
+
+mod facade;
+mod query;
+
+pub use facade::{CampRestReadFacade, CampRestWriteFacade};
+pub use query::CampRestQueryParam;

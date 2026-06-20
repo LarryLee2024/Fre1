@@ -12,6 +12,8 @@ mod plugin;
 mod resources;
 mod rules;
 mod systems;
+// [ADR-045] pub(crate) — 集成层，跨域/capability 访问入口
+pub(crate) mod integration;
 
 pub use components::*;
 pub use events::*;

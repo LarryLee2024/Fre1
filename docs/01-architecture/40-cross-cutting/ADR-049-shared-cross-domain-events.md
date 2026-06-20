@@ -69,3 +69,36 @@ src/core/core_plugin.rs  # 注册共享事件
 | 文件 | 状态 | 负责人 | 完成日期 |
 |------|------|--------|----------|
 | `ADR-049-shared-cross-domain-events.md` | ✅ stable | architect | 2026-06-19 |
+
+## 后续更新
+
+### D2-6: 共享事件作为 Event History 种子数据
+
+本 ADR 定义的共享事件（`TurnEnded`、`TurnStarted`、`BattleStarted`、`BattleEnded`）已被确认为 Event History（详见 `docs/01-architecture/40-cross-cutting/ADR-059-event-history.md`）的种子数据：
+
+| 共享事件 | Event History 用途 | 记录时机 |
+|---------|-------------------|---------|
+| `BattleStarted` | 战斗开始标记，关联参战单位快照 | Replay 帧序列第一帧 |
+| `TurnEnded` | 回合边界标记，用于分段式重放 | 每回合结束时 |
+| `TurnStarted` | 回合开始标记，用于 UI 轮播同步 | 每回合开始时 |
+| `BattleEnded` | 战斗结果标记，关联胜负判定 | 战斗结算时 |
+
+**数据流**：
+
+```
+Combat Pipeline → commands.trigger(TurnEnded)
+                     │
+                     ├──→ Terrain Domain (surface decay)
+                     │
+                     └──→ Event History Recorder (事件流记录)
+                              │
+                              ▼
+                          EventHistoryStore
+```
+
+**架构含义**：
+- Event History 的 replay 回放能力依赖这些共享事件作为时间轴标记
+- 新增共享事件时应同时评估其对 Event History 的时间轴意义
+- 共享事件的参数字段应包含 Event History 索引所需的最小上下文（entity ID + frame number）
+
+详见 `docs/04-data/foundation/event_history_architecture.md`。

@@ -9,16 +9,17 @@ use bevy::prelude::*;
 
 use super::components::{EquipmentSlots, Inventory, InventoryMarker, ItemInstance};
 use super::systems::inventory_system::{on_equip_item, on_item_acquired, on_item_used};
+use crate::register_domain_types;
 
 pub struct InventoryPlugin;
 
 impl Plugin for InventoryPlugin {
     fn build(&self, app: &mut App) {
         // ── 注册 Component 类型 ──
-        app.register_type::<Inventory>();
-        app.register_type::<EquipmentSlots>();
-        app.register_type::<ItemInstance>();
-        app.register_type::<InventoryMarker>();
+        register_domain_types!(
+            app,
+            [Inventory, EquipmentSlots, ItemInstance, InventoryMarker,]
+        );
 
         // ── 注册 Observer System ──
         app.add_observer(on_item_acquired);

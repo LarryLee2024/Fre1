@@ -18,6 +18,8 @@ pub(crate) mod events;
 pub(crate) mod rules;
 // [ADR-045] pub(crate) — ECS 系统，crate 内共享
 pub(crate) mod systems;
+// [ADR-045] pub(crate) — Anti-Corruption Layer，crate 内共享
+pub(crate) mod integration;
 
 #[cfg(test)]
 mod tests;

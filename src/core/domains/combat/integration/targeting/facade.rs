@@ -21,6 +21,8 @@ use crate::core::capabilities::targeting::mechanism::{select_targets, validate_t
 pub struct CombatTargetingFacade;
 
 impl CombatTargetingFacade {
+    // ─── ReadFacade ───────────────────────────────────────────────────
+
     /// 执行目标选择，返回符合 TargetingDef 的目标列表。
     ///
     /// # Errors

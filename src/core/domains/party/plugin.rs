@@ -9,15 +9,14 @@ use bevy::prelude::*;
 
 use super::components::{BondState, Party, PartyMarker};
 use super::systems::{on_member_joined, on_member_removed, on_member_swapped};
+use crate::register_domain_types;
 
 pub struct PartyPlugin;
 
 impl Plugin for PartyPlugin {
     fn build(&self, app: &mut App) {
         // ── 注册 Component 类型 ──
-        app.register_type::<Party>();
-        app.register_type::<BondState>();
-        app.register_type::<PartyMarker>();
+        register_domain_types!(app, [Party, BondState, PartyMarker,]);
 
         // ── 初始化 Resource ──
         app.init_resource::<Party>();

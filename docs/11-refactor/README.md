@@ -7,7 +7,7 @@
 ```
 11-refactor/
 ├── README.md                          # 本文件
-└── done/                              # 已完成的扫描报告（共 8 份）
+└── done/                              # 已完成的扫描报告（共 9 份）
     ├── debt-inventory-2026-06-17.md   # 首次全量扫描（433 warnings baseline）
     ├── tech-debt-batch3-4-2026-06-18.md # Batch 3+4 领域扫描（6 域）
     ├── tech-debt-scan-2026-06-19.md   # ErrorContext 接入审查 + 架构扫描（6 项全 Resolved）
@@ -15,7 +15,8 @@
     ├── clippy-debt-2026-06-28.md      # Clippy 技术债扫描（722→44 warnings，真实技术债为 0）
     ├── repetitive-patterns-analysis-2026-06-25.md # 重复性代码模式分析（Error thiserror 改造完成）
     ├── error-system-refactoring-2026-06-28.md # 错误处理系统激进重构（9 阶段，P0-P4 优先级）
-    └── logging-system-refactoring-2026-06-28.md # 日志/可观测系统激进重构（8 阶段，P0-P3 优先级）
+    ├── logging-system-refactoring-2026-06-28.md # 日志/可观测系统激进重构（8 阶段，P0-P3 优先级）
+    └── 37-principles-implementation-2026-07-01.md # 37条经验吸收激进重构（10 阶段，P0-P3 优先级）
 ```
 
 ## 技术债生命周期

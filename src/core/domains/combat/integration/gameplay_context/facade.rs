@@ -20,6 +20,8 @@ use crate::core::capabilities::gameplay_context::mechanism::ContextBuilder;
 pub struct CombatContextFacade;
 
 impl CombatContextFacade {
+    // ─── ReadFacade ───────────────────────────────────────────────────
+
     /// 构建战斗攻击上下文（最常见的 combat context 类型）。
     ///
     /// # Errors

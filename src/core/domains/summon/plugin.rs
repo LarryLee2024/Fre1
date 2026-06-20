@@ -8,13 +8,13 @@ use bevy::prelude::*;
 use super::components::{SummonBond, SummonSlotManager};
 use super::resources::SummonConfig;
 use super::systems::{on_summon_created, on_summon_expired};
+use crate::register_domain_types;
 
 pub struct SummonPlugin;
 
 impl Plugin for SummonPlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<SummonBond>();
-        app.register_type::<SummonSlotManager>();
+        register_domain_types!(app, [SummonBond, SummonSlotManager,]);
 
         app.init_resource::<SummonConfig>();
 

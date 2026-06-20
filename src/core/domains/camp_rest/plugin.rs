@@ -13,15 +13,14 @@ use super::systems::{
     handle_short_rest_complete, process_camp_events,
 };
 use crate::app::scenes::GameState;
+use crate::register_domain_types;
 
 pub struct CampRestPlugin;
 
 impl Plugin for CampRestPlugin {
     fn build(&self, app: &mut App) {
         // ── 注册 Component 类型 ──
-        app.register_type::<RestState>();
-        app.register_type::<HitDicePool>();
-        app.register_type::<CampRestMarker>();
+        register_domain_types!(app, [RestState, HitDicePool, CampRestMarker,]);
 
         // ── 初始化 Resource ──
         app.init_resource::<CampEventRegistry>();

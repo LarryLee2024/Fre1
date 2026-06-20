@@ -12,6 +12,8 @@ pub(crate) mod error;
 pub(crate) mod events;
 // [ADR-045] pub(crate) — 业务规则失败定义，crate 内共享
 pub(crate) mod failure;
+// [ADR-045] pub(crate) — 集成层，外部访问 CampRest 组件的唯一入口
+pub(crate) mod integration;
 mod plugin;
 mod resources;
 mod rules;

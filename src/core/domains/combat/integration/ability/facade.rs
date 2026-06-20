@@ -22,6 +22,8 @@ use crate::core::capabilities::ability::mechanism::{
 pub struct CombatAbilityFacade;
 
 impl CombatAbilityFacade {
+    // ─── WriteFacade ──────────────────────────────────────────────────
+
     /// 创建一个空的活跃技能容器（用于组件插入）。
     pub fn empty_container() -> ActiveAbilityContainer {
         ActiveAbilityContainer::empty()

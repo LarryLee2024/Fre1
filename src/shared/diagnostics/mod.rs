@@ -8,6 +8,7 @@
 mod context;
 mod correlation;
 mod domain;
+mod explain;
 mod log_category;
 mod log_code;
 mod observable;
@@ -15,6 +16,7 @@ mod observable;
 pub use context::DiagnosticContext;
 pub use correlation::{ActionId, BattleId, CorrelationId, TurnId};
 pub use domain::Domain;
+pub use explain::{BreakdownInput, BreakdownStep, CalcBreakdown, Explain};
 pub use log_category::LogCategory;
 pub use log_code::LogCode;
 pub use observable::{FieldCollector, ObservableEvent};

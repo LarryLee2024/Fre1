@@ -20,6 +20,8 @@ pub(crate) mod resources;
 pub(crate) mod rules;
 // [ADR-045] pub(crate) — ECS 系统，crate 内共享
 pub(crate) mod systems;
+// [ADR-045] pub(crate) — 域集成层（Anti-Corruption Layer），crate 内共享
+pub(crate) mod integration;
 
 // ── Re-exports for external consumers (content layer + tests) ──
 pub(crate) use components::{

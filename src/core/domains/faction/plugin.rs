@@ -10,15 +10,14 @@ use bevy::prelude::*;
 use super::components::{FactionMembership, FactionRelationTable, KeyCharacter, Reputation};
 use super::systems::relationship_system::on_relationship_eval_request;
 use super::systems::reputation_system::on_reputation_change_request;
+use crate::register_domain_types;
 
 pub struct FactionPlugin;
 
 impl Plugin for FactionPlugin {
     fn build(&self, app: &mut App) {
         // ── 注册 Component 类型 ──
-        app.register_type::<FactionMembership>();
-        app.register_type::<Reputation>();
-        app.register_type::<KeyCharacter>();
+        register_domain_types!(app, [FactionMembership, Reputation, KeyCharacter,]);
 
         // ── 初始化 Resource ──
         app.init_resource::<FactionRelationTable>();

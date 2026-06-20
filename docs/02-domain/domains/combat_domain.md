@@ -341,3 +341,16 @@ UnitDied
 - [x] CombatState 宏观状态机 + 回合微观状态机定义清晰
 - [x] 先攻规则/回合行动规则/伤害结算规则明确
 - [x] 每个操作有完整的流程定义（战斗开始、回合流转、伤害结算、胜负判定）
+
+---
+
+## 9. 架构演进
+
+### Policy 模式整合
+DamagePolicy + TargetPolicy 已引入。伤害结算、目标选择走 Policy 模式。
+
+### 伤害结算可解释性
+DamagePolicy 输出的 DamageDecision 包含 breakdown 字段，支持 Explain 集成。
+
+### 战斗事件历史
+通过 Event History 系统记录战斗领域事件，与 Replay 互补。

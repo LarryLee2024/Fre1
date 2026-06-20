@@ -16,17 +16,23 @@ use super::systems::on_turn_end_surface_recovery;
 use super::systems::surface_system::on_surface_changed;
 use super::systems::terrain_effect_system::on_tile_entered;
 use crate::app::scenes::GameState;
+use crate::register_domain_types;
 
 pub struct TerrainPlugin;
 
 impl Plugin for TerrainPlugin {
     fn build(&self, app: &mut App) {
         // ── 注册 Component 类型 ──
-        app.register_type::<TilePos>();
-        app.register_type::<TileProperties>();
-        app.register_type::<SurfaceOverride>();
-        app.register_type::<TerrainAttachEffect>();
-        app.register_type::<HazardTriggeredState>();
+        register_domain_types!(
+            app,
+            [
+                TilePos,
+                TileProperties,
+                SurfaceOverride,
+                TerrainAttachEffect,
+                HazardTriggeredState,
+            ]
+        );
 
         // ── 初始化 Resource ──
         app.init_resource::<HazardZoneRegistry>();

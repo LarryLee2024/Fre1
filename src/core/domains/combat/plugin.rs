@@ -24,14 +24,14 @@ use super::systems::turn_systems::{
 };
 use crate::app::scenes::GameState;
 use crate::core::capabilities::runtime::pipeline::registry::PipelineRegistry;
+use crate::register_domain_types;
 
 pub struct CombatPlugin;
 
 impl Plugin for CombatPlugin {
     fn build(&self, app: &mut App) {
         // ── 注册 Component 类型 ──
-        app.register_type::<ActionPoints>();
-        app.register_type::<CombatParticipant>();
+        register_domain_types!(app, [ActionPoints, CombatParticipant,]);
 
         // ── BattlePhase 已转为 SubState，由 GameState::Combat 自动激活 ──
         // 不再需要显式 init_state，SubStates derive 自动处理注册。

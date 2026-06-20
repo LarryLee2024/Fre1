@@ -20,6 +20,8 @@ use crate::core::capabilities::execution::mechanism::{execute, validate_context}
 pub struct CombatExecutionFacade;
 
 impl CombatExecutionFacade {
+    // ─── ReadFacade ───────────────────────────────────────────────────
+
     /// 根据 ExecutionType 执行计算（自动分发）。
     ///
     /// # Errors

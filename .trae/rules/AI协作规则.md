@@ -57,6 +57,9 @@ description:
 24. ❌ 未经授权创建新Feature、修改公共API
 25. ❌ 在Capabilities层硬编码业务规则，破坏机制与业务的边界
 26. ❌ Domain之间直接use对方内部类型，绕过双轨通信（写操作走事件，读操作走Query API）
+27. ❌ 复杂计算无Explain支持（所有核心结算逻辑必须附带可解释的 calc_breakdown 输出）
+28. ❌ 散落的if链代替Policy对象（伤害/掉落/目标判定应收敛为独立 Policy 对象而非散落 System 中）
+29. ❌ 架构Fitness Function门禁未通过（提交前必须通过 `tools/check-architecture-budget.sh` 检查）
 
 ---
 
@@ -108,6 +111,7 @@ AI提交的代码必须同时满足以下条件，否则视为不合格：
 3. 新增核心功能附带至少1个基础测试
 4. 代码格式符合`cargo fmt`规范
 5. 未越权修改架构与公共接口
+6. **架构Fitness Function检查通过**（`tools/check-architecture-budget.sh` 无硬性违规）
 
 ---
 

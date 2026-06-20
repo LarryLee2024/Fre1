@@ -7,6 +7,7 @@
 //!
 //! - `plugin` — CombatPlugin（唯一对外入口）
 //! - `components` — BattlePhase, TurnQueue, ActionPoints
+//! - `rules` — 纯函数策略（DamagePolicy, TargetPolicy）
 //! - `events` — 回合生命周期事件
 //! - `systems` — 战斗生命周期系统 + Observer
 //! - `pipeline/` — 回合流程管线（替代原 TurnSubState 状态机）
@@ -19,6 +20,7 @@ pub(crate) mod failure;
 pub(crate) mod integration;
 pub(crate) mod pipeline;
 mod plugin;
+pub(crate) mod rules;
 mod systems;
 
 #[cfg(test)]

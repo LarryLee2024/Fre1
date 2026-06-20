@@ -53,6 +53,8 @@ impl CombatEventTag {
 pub struct CombatEventFacade;
 
 impl CombatEventFacade {
+    // ─── WriteFacade ──────────────────────────────────────────────────
+
     /// 发布一个战斗事件。
     pub fn publish(
         bus: &mut EventBus,

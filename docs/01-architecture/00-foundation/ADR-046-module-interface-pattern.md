@@ -126,3 +126,28 @@ domain/
 
 - `docs/其他/2.md` — 模块接口模式分析
 - `docs/01-architecture/00-foundation/ADR-045-module-visibility-strategy.md` — 可见性策略（ADR-045）
+
+## 后续更新
+
+### D2-4: Integration 层覆盖全 13 个 Domain 确认
+
+本 ADR 发布后，integration 层已在全部 13 个需要跨域访问的业务 Domain 中落地，证实了 Query Facade 模式的有效性：
+
+| Domain | Integration Facade | 模式 |
+|--------|-------------------|------|
+| combat | `combat/integration/ability/`, `combat/integration/aggregator/`, `combat/integration/effect/` | 每 Capability 子模块 |
+| spell | `spell/integration/facade.rs` | 单 facade.rs (Read + Write) |
+| inventory | `inventory/integration/facade.rs` | 单 facade.rs (Read + Write) |
+| reaction | `reaction/integration/facade.rs` | 单 facade.rs |
+| economy | `economy/integration/facade.rs` | 单 facade.rs |
+| progression | `progression/integration/facade.rs` | 单 facade.rs |
+| faction | `faction/integration/facade.rs` | 单 facade.rs |
+| party | `party/integration/facade.rs` | 单 facade.rs |
+| narrative | `narrative/integration/facade.rs` | 单 facade.rs |
+| summon | `summon/integration/facade.rs` | 单 facade.rs |
+| terrain | `terrain/integration/facade.rs` | 单 facade.rs |
+| quest | `quest/integration/facade.rs` | 单 facade.rs |
+| crafting | `crafting/integration/facade.rs` | 单 facade.rs |
+| camp_rest | `camp_rest/integration/facade.rs` | 单 facade.rs |
+
+**结论**：Query Facade 模式（facade.rs + types.rs + system_param.rs 三件套）作为 integration/ 标准结构已在全项目范围内验证可行。combat 域因需要对接多个 Capabilities 而采用每 Capability 子模块结构，其余 Domain 均使用单 facade.rs 模式。详见 `docs/02-domain/factories.md` §4.2。

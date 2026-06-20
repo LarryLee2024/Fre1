@@ -8,13 +8,13 @@ use bevy::prelude::*;
 use super::components::{ShopInstance, Wallet};
 use super::resources::EconomyConfig;
 use super::systems::{on_purchase_request, on_sell_request};
+use crate::register_domain_types;
 
 pub struct EconomyPlugin;
 
 impl Plugin for EconomyPlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<Wallet>();
-        app.register_type::<ShopInstance>();
+        register_domain_types!(app, [Wallet, ShopInstance,]);
 
         app.init_resource::<EconomyConfig>();
 

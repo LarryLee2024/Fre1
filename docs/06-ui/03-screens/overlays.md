@@ -153,6 +153,106 @@ Overlay 设计遵循以下原则：
 - UiTypography::heading_size（数字字号）
 - FontSource::Family("mono")（数字等宽字体）
 
+### 3.8 CalcBreakdown 扩展：结构化伤害明细
+
+#### 3.8.1 设计目的
+
+基础 DamageTextOverlay（§3.1-§3.7）仅显示最终数值（如 "-85"）。当玩家需要理解伤害/治疗/效果是如何计算得出时，需要呈现完整的计算推导过程。本节定义如何通过 Cue 系统传递 `CalcBreakdown` 并渲染为结构化面板。
+
+#### 3.8.2 数据源与传递路径
+
+计算明细通过 Cue 系统传递，不直接处理 Domain Event：
+
+```
+Domain 计算（Explain trait 实现）
+    │  impl Explain for DamageCalculation { fn explain(&self) -> CalcBreakdown }
+    ▼
+CalcBreakdown 作为 Cue 的负载字段
+    │  CueTriggered { cue_type: CueType::Popup, breakdown: Option<CalcBreakdown>, ... }
+    ▼
+UI Observer（Overlay 层）→ DamageTextOverlay
+    │  Cue 中携带 breakdown 时，Overlay 同时创建浮动数字 + 明细面板入口
+    ▼
+玩家点击/悬停明细入口 → 展开 BreakdownPanel
+```
+
+| 数据字段 | 类型 | 来源 |
+|---------|------|------|
+| `damage_value` | i32 | Cue 主值（同现有） |
+| `breakdown` | `Option<CalcBreakdown>` | Domain 的 `Explain::explain()` 返回值 |
+| `formula_expr` | `String` | 公式表达式，如 "Price = Base * Reputation * Supply" |
+| `inputs` | `Vec<BreakdownInput>` | 输入参数列表，每项含 name + value 字符串 |
+| `steps` | `Vec<BreakdownStep>` | 中间步骤列表，每项含 label + operation + output |
+| `output` | f32 | 最终计算结果 |
+| `source_doc` | `Option<String>` | 可选的文档引用 |
+
+（引用：`src/shared/diagnostics/explain.rs` — `CalcBreakdown`, `BreakdownInput`, `BreakdownStep`, `Explain` trait；经济学域的 `Price::explain()` 为参考实现）
+
+#### 3.8.3 触发条件
+
+| 触发条件 | 说明 |
+|---------|------|
+| Cue 携带 `Some(CalcBreakdown)` | 自动创建 BreakdownDetailPanel 入口（不新增浮动文字） |
+| Cue 不携带 `breakdown` | 降级为纯数值显示，无明细 |
+| 玩家请求展开 | 通过交互（悬停/点击）展开明细面板，不影响浮动文字动画 |
+
+#### 3.8.4 渲染设计
+
+**分层展示**（多行文本，按步骤类型着色）：
+
+```
+┌─ Damage Breakdown ─────────────────┐
+│ Formula: ATK * SkillMul - DEF       │  ← formula_expr（标题色）
+│                                     │
+│ Inputs:                             │  ← 输入参数区（信息色）
+│   base_atk      = 120               │
+│   skill_mult    = 1.5               │
+│   target_def    = 95                │
+│                                     │
+│ Steps:                              │  ← 中间步骤区（步骤色）
+│   after_skill   = 120 * 1.5 = 180   │
+│   after_defense = 180 - 95   = 85   │
+│                                     │
+│ Result: 85                          │  ← 最终结果（结果色，同浮动数值色）
+└─────────────────────────────────────┘
+```
+
+**颜色编码**：
+
+| 段 | 语义色 | StyleToken | 说明 |
+|----|--------|-----------|------|
+| 公式标题 | 标题色 | `UiColors::panel_header` | formula_expr 行 |
+| 输入参数 | 信息色 | `UiColors::info_text` | name + value 对 |
+| 中间步骤 | 步骤色 | `UiColors::step_text` | label + operation + output |
+| 最终结果 | 结果色 | `UiColors::result_text`（或根据伤害/治疗类型着色） | 最终数值，与浮动文字颜色一致 |
+| 分隔线 | 装饰色 | `UiColors::divider` | 分段分隔 |
+
+#### 3.8.5 生命周期
+
+| 阶段 | 行为 |
+|------|------|
+| 显示 | Cue 中携带 `breakdown: Some(...)` → DamageTextOverlay 创建浮动数字 + 在浮动数字旁创建 `BreakdownHint` 点击入口 |
+| 展开 | 点击 `BreakdownHint` → 创建 BreakdownDetailPanel（Panel 原语 + 多行 LocalizedText），位于浮动数字附近 |
+| 更新 | 不更新（CalcBreakdown 是一次性快照） |
+| 关闭 | 与 DamageText 动画同步淡出；或玩家点击关闭按钮提前关闭 |
+| 批量合并 | 同一目标多个 Cue 各自独立的 breakdown 不合并——合并仅在纯数值显示时生效 |
+
+#### 3.8.6 交互行为
+
+| 行为 | 说明 |
+|------|------|
+| BreakdownHint | 小型 "i" 图标按钮，悬停/点击展开明细 |
+| BreakdownDetailPanel | 可点击关闭，不阻挡战斗操作 |
+| 动画同步 | 明细面板跟随 DamageText 的淡出动画 |
+| 无明细降级 | Cue 中没有 breakdown 字段时不显示 Hint 图标，降级为标准 §3.1-§3.7 的纯数值显示 |
+
+#### 3.8.7 实现约束
+
+- `CalcBreakdown` 结构定义在 `src/shared/diagnostics/explain.rs`，UI 模块通过 `use crate::shared::diagnostics::CalcBreakdown` 引用
+- 禁止 UI 模块自行构建或修改 `CalcBreakdown`——它只能由 Domain 层的 `Explain::explain()` 生成并通过 Cue 传递
+- 逐行渲染使用 `LocalizedText` 组件配合动态 params 实现，每行是一个独立 Text 节点
+- 步骤数量无硬上限（但建议 UI 渲染限制最多 20 步，超出截断并显示 "..."）
+
 ---
 
 ## 4. NotificationOverlay

@@ -8,13 +8,13 @@ use bevy::prelude::*;
 use super::components::{EnchantmentSlot, UpgradeLevel};
 use super::resources::CraftingConfig;
 use super::systems::{on_apply_enchantment, on_craft_item, on_upgrade_item};
+use crate::register_domain_types;
 
 pub struct CraftingPlugin;
 
 impl Plugin for CraftingPlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<EnchantmentSlot>();
-        app.register_type::<UpgradeLevel>();
+        register_domain_types!(app, [EnchantmentSlot, UpgradeLevel,]);
 
         app.init_resource::<CraftingConfig>();
 

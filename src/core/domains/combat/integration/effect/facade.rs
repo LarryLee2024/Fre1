@@ -17,7 +17,7 @@ use crate::core::capabilities::effect::mechanism::{expire_effects, tick_duration
 
 use super::types::EffectTickOutcome;
 
-// ─── 读操作 ────────────────────────────────────────────────────────────
+// ─── ReadFacade ────────────────────────────────────────────────────────
 
 /// 检查实体是否有活跃效果。
 pub fn has_active_effects(container: &ActiveEffectContainer) -> bool {
@@ -41,7 +41,7 @@ pub fn active_effect_count(container: &ActiveEffectContainer) -> usize {
         .count()
 }
 
-// ─── 写操作（Combat 域唯一调用 tick_durations / expire_effects 的地方） ───
+// ─── WriteFacade（Combat 域唯一调用 tick_durations / expire_effects 的地方） ───
 
 /// 推进所有效果的持续时间计时（单次 tick）。
 ///
