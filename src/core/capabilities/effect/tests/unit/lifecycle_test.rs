@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 
 use crate::core::capabilities::effect::foundation::{
-    ActiveEffectContainer, DurationCalculation, EffectDuration, EffectError,
-    EffectInstance, EffectPeriod, EffectStage, RemovalReason, TickState,
+    ActiveEffectContainer, DurationCalculation, EffectDuration, EffectError, EffectInstance,
+    EffectPeriod, EffectStage, RemovalReason, TickState,
 };
 use crate::core::capabilities::effect::mechanism::lifecycle::{
     ApplyResult, apply_effect, expire_effects, remove_effect_by_id, remove_effects_by_def,
@@ -339,7 +339,12 @@ fn expire_only_expiring_effects() {
     let mut world = World::new();
     let mut commands = world.commands();
     let mut container = make_test_container();
-    let _ = apply_effect(&mut container, make_duration_effect("a", 3), None, &mut commands);
+    let _ = apply_effect(
+        &mut container,
+        make_duration_effect("a", 3),
+        None,
+        &mut commands,
+    );
     let mut b = make_duration_effect("b", 1);
     b.source_entity = "caster_002".into();
     let _ = apply_effect(&mut container, b, None, &mut commands);
@@ -481,7 +486,12 @@ fn container_find_by_source() {
     let mut world = World::new();
     let mut commands = world.commands();
     let mut container = make_test_container();
-    let _ = apply_effect(&mut container, make_duration_effect("a", 3), None, &mut commands);
+    let _ = apply_effect(
+        &mut container,
+        make_duration_effect("a", 3),
+        None,
+        &mut commands,
+    );
     let found = container.find_by_source("caster_001");
     assert_eq!(found.len(), 1);
 }
@@ -509,7 +519,12 @@ fn container_has_duplicate() {
     let mut world = World::new();
     let mut commands = world.commands();
     let mut container = make_test_container();
-    let _ = apply_effect(&mut container, make_duration_effect("a", 3), None, &mut commands);
+    let _ = apply_effect(
+        &mut container,
+        make_duration_effect("a", 3),
+        None,
+        &mut commands,
+    );
     assert!(container.has_duplicate("eff_poison", "caster_001"));
     assert!(!container.has_duplicate("eff_other", "caster_001"));
 }

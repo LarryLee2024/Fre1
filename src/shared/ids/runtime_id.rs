@@ -150,7 +150,10 @@ impl RuntimeIdAllocator {
         } else {
             let index = self.next_index;
             self.next_index += 1;
-            RuntimeId { index, generation: 0 }
+            RuntimeId {
+                index,
+                generation: 0,
+            }
         }
     }
 

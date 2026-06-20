@@ -11,6 +11,8 @@
 //! 5. start_cooldown() — 冷却管理
 //! 6. apply_block() / remove_block() — 封锁/恢复
 
+use std::sync::Mutex;
+
 use bevy::prelude::*;
 
 use crate::core::capabilities::ability::events::{
@@ -21,6 +23,36 @@ use crate::core::capabilities::ability::foundation::{
     ActivationType, BlockedRestoreState, CooldownEntry, CostEntry,
 };
 use crate::core::capabilities::ability::mechanism::components::ActiveAbilityContainer;
+use crate::shared::ids::runtime_id::RuntimeIdAllocator;
+
+/// 技能实例 ID 生成器（Resource）。
+/// 通过 RuntimeIdAllocator 提供带 generation 保护的唯一 ID 分配。
+#[derive(Resource, Debug)]
+pub struct AbilityInstanceIdGenerator {
+    allocator: Mutex<RuntimeIdAllocator>,
+}
+
+impl Default for AbilityInstanceIdGenerator {
+    fn default() -> Self {
+        Self {
+            allocator: Mutex::new(RuntimeIdAllocator::new()),
+        }
+    }
+}
+
+impl AbilityInstanceIdGenerator {
+    /// 分配一个新的唯一 AbilityInstanceId。
+    pub fn next_id(&self) -> AbilityInstanceId {
+        let mut alloc = self.allocator.lock().expect("lock poisoned");
+        AbilityInstanceId::new(alloc.alloc())
+    }
+
+    /// 回收一个 AbilityInstanceId（generation 会在下次分配时递增）。
+    pub fn free(&self, id: AbilityInstanceId) {
+        let mut alloc = self.allocator.lock().expect("lock poisoned");
+        alloc.free(id.runtime_id());
+    }
+}
 
 // ============================================================================
 // 激活流程
@@ -60,6 +92,7 @@ pub fn try_activate(
     request: ActivationRequest,
     entity: Entity,
     commands: &mut Commands,
+    generator: &AbilityInstanceIdGenerator,
 ) -> Result<AbilityInstanceId, AbilityError> {
     let spec_id = &request.spec_id;
 
@@ -83,8 +116,10 @@ pub fn try_activate(
         });
     }
 
-    // 3. 创建 AbilityInstance
+    // 3. 创建 AbilityInstance（使用 generator 分配 ID，确保 generation safety）
+    let instance_id = generator.next_id();
     let mut instance = AbilityInstance::new(
+        instance_id,
         spec_id.clone(),
         &request.def_id,
         request.activation,
@@ -97,7 +132,6 @@ pub fn try_activate(
     }
 
     // 5. 注册到容器
-    let instance_id = instance.instance_id;
     let def_id = instance.def_id.clone();
     container.insert_instance(instance);
 

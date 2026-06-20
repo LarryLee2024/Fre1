@@ -8,8 +8,8 @@
 use bevy::prelude::*;
 use bevy::ui::widget::Button;
 
-use crate::ui::theme::Theme;
 use super::components::{ButtonInteraction, ButtonState, ButtonVariant};
+use crate::ui::theme::Theme;
 
 /// 根据变体和交互状态计算按钮背景色
 fn button_background_color(
@@ -90,10 +90,7 @@ pub fn spawn_button(
                 flex_direction: FlexDirection::Row,
                 align_items: AlignItems::Center,
                 justify_content: JustifyContent::Center,
-                padding: UiRect::axes(
-                    Val::Px(theme.spacing.md),
-                    Val::Px(theme.spacing.sm),
-                ),
+                padding: UiRect::axes(Val::Px(theme.spacing.md), Val::Px(theme.spacing.sm)),
                 min_height: Val::Px(theme.spacing.button_height),
                 ..default()
             },

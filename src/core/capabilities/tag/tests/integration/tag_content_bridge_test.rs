@@ -53,9 +53,21 @@ fn bridge_registers_root_and_child_into_hierarchy() {
     // 插入测试标签定义
     {
         let mut loaded = app.world_mut().resource_mut::<LoadedTagDefs>();
-        loaded.defs.push(make_root("test_elemental", 0, TagNamespace::Damage));
-        loaded.defs.push(make_child("test_fire", "test_elemental", 1, TagNamespace::Damage));
-        loaded.defs.push(make_child("test_ice", "test_elemental", 2, TagNamespace::Damage));
+        loaded
+            .defs
+            .push(make_root("test_elemental", 0, TagNamespace::Damage));
+        loaded.defs.push(make_child(
+            "test_fire",
+            "test_elemental",
+            1,
+            TagNamespace::Damage,
+        ));
+        loaded.defs.push(make_child(
+            "test_ice",
+            "test_elemental",
+            2,
+            TagNamespace::Damage,
+        ));
     }
 
     // 运行 Update 调度 → 触发 bridge 系统
@@ -63,9 +75,18 @@ fn bridge_registers_root_and_child_into_hierarchy() {
 
     // 验证三条标签全部注册
     let hierarchy = app.world_mut().resource::<TagHierarchy>();
-    assert!(hierarchy.tags.contains_key(&TagId::new("test_elemental")), "root should be registered");
-    assert!(hierarchy.tags.contains_key(&TagId::new("test_fire")), "child fire should be registered");
-    assert!(hierarchy.tags.contains_key(&TagId::new("test_ice")), "child ice should be registered");
+    assert!(
+        hierarchy.tags.contains_key(&TagId::new("test_elemental")),
+        "root should be registered"
+    );
+    assert!(
+        hierarchy.tags.contains_key(&TagId::new("test_fire")),
+        "child fire should be registered"
+    );
+    assert!(
+        hierarchy.tags.contains_key(&TagId::new("test_ice")),
+        "child ice should be registered"
+    );
 
     // 验证 child parent_id 链接到 root
     let fire = hierarchy.tags.get(&TagId::new("test_fire")).unwrap();
@@ -80,12 +101,28 @@ fn bridge_registers_root_and_child_into_hierarchy() {
     // 验证继承掩码: child 只包含自身
     let fire_mask = hierarchy.inherited_mask(&TagId::new("test_fire"));
     assert_ne!(fire_mask & (1 << 1), 0, "child fire mask must include self");
-    assert_eq!(fire_mask & (1 << 0), 0, "child fire mask must NOT include root");
-    assert_eq!(fire_mask & (1 << 2), 0, "child fire mask must NOT include sibling ice");
+    assert_eq!(
+        fire_mask & (1 << 0),
+        0,
+        "child fire mask must NOT include root"
+    );
+    assert_eq!(
+        fire_mask & (1 << 2),
+        0,
+        "child fire mask must NOT include sibling ice"
+    );
 
     // 验证 abstract_tags 集合
-    assert!(hierarchy.abstract_tags.contains(&TagId::new("test_elemental")), "root should be in abstract_tags");
-    assert!(!hierarchy.abstract_tags.contains(&TagId::new("test_fire")), "child fire should NOT be in abstract_tags");
+    assert!(
+        hierarchy
+            .abstract_tags
+            .contains(&TagId::new("test_elemental")),
+        "root should be in abstract_tags"
+    );
+    assert!(
+        !hierarchy.abstract_tags.contains(&TagId::new("test_fire")),
+        "child fire should NOT be in abstract_tags"
+    );
 }
 
 #[test]
@@ -101,7 +138,10 @@ fn bridge_skips_when_loaded_tag_defs_empty() {
     let hierarchy = app.world_mut().resource::<TagHierarchy>();
     assert!(hierarchy.tags.is_empty(), "no tags should be registered");
     assert!(hierarchy.children.is_empty(), "no children should exist");
-    assert!(hierarchy.inherited_masks.is_empty(), "no masks should exist");
+    assert!(
+        hierarchy.inherited_masks.is_empty(),
+        "no masks should exist"
+    );
 }
 
 #[test]
@@ -113,7 +153,9 @@ fn bridge_does_not_duplicate_tags_on_second_change() {
     // 第一轮插入
     {
         let mut loaded = app.world_mut().resource_mut::<LoadedTagDefs>();
-        loaded.defs.push(make_root("test_root", 0, TagNamespace::Damage));
+        loaded
+            .defs
+            .push(make_root("test_root", 0, TagNamespace::Damage));
     }
 
     app.update();
@@ -128,7 +170,9 @@ fn bridge_does_not_duplicate_tags_on_second_change() {
     // 第二轮修改 LoadedTagDefs（模拟热重载/第二轮加载）
     {
         let mut loaded = app.world_mut().resource_mut::<LoadedTagDefs>();
-        loaded.defs.push(make_root("test_second", 1, TagNamespace::Damage));
+        loaded
+            .defs
+            .push(make_root("test_second", 1, TagNamespace::Damage));
     }
 
     app.update();

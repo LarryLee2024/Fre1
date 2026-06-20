@@ -51,8 +51,7 @@ fn ron_files_in(dir: &Path) -> Vec<std::path::PathBuf> {
 
 /// Read a file and panic with a descriptive message on failure.
 fn read_to_string(path: &Path) -> String {
-    std::fs::read_to_string(path)
-        .unwrap_or_else(|e| panic!("failed to read {:?}: {}", path, e))
+    std::fs::read_to_string(path).unwrap_or_else(|e| panic!("failed to read {:?}: {}", path, e))
 }
 
 // ─── helpers: validate all RON files in a bucket ────────────────────────
@@ -81,7 +80,11 @@ where
         visit(&def, path);
     }
 
-    eprintln!("  [OK] {} files validated in assets/config/{}", files.len(), bucket);
+    eprintln!(
+        "  [OK] {} files validated in assets/config/{}",
+        files.len(),
+        bucket
+    );
     files.len()
 }
 
@@ -146,20 +149,20 @@ where
         // Try Vec<T> first (multi-entry files).
         if let Ok(defs) = ron::from_str::<Vec<T>>(&content) {
             for def in &defs {
-                def.validate()
-                    .unwrap_or_else(|e| panic!("Validation of {:?} (vec entry) failed: {}", path, e));
+                def.validate().unwrap_or_else(|e| {
+                    panic!("Validation of {:?} (vec entry) failed: {}", path, e)
+                });
                 visit(def, path);
                 total += 1;
             }
         } else {
             // Fall back to single T.
-            let def: T = ron::from_str(&content)
-                .unwrap_or_else(|e| {
-                    panic!(
-                        "Deserialization of {:?} failed (tried both Vec and single): {}",
-                        path, e
-                    )
-                });
+            let def: T = ron::from_str(&content).unwrap_or_else(|e| {
+                panic!(
+                    "Deserialization of {:?} failed (tried both Vec and single): {}",
+                    path, e
+                )
+            });
             def.validate()
                 .unwrap_or_else(|e| panic!("Validation of {:?} (single) failed: {}", path, e));
             visit(&def, path);
@@ -398,7 +401,10 @@ fn all_ability_ron_files_deserialize_and_validate() {
         );
         count += 1;
     }
-    eprintln!("  [OK] {} files validated in assets/config/abilities", count);
+    eprintln!(
+        "  [OK] {} files validated in assets/config/abilities",
+        count
+    );
 }
 
 // ─── RuleDef (bucket exists but may have no files yet) ──────────────────

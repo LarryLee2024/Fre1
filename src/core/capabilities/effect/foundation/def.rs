@@ -8,9 +8,7 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::core::capabilities::cue::foundation::CueTag;
-use crate::core::capabilities::effect::foundation::types::{
-    EffectDuration, EffectPeriod,
-};
+use crate::core::capabilities::effect::foundation::types::{EffectDuration, EffectPeriod};
 use crate::core::capabilities::execution::foundation::ExecutionType;
 use crate::core::capabilities::modifier::foundation::ModifierOp;
 use crate::core::capabilities::stacking::foundation::StackingConfig;

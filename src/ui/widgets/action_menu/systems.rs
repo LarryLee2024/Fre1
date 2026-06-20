@@ -23,11 +23,7 @@ pub fn action_menu_sync_system(
     for (state, children) in query.iter_mut() {
         for child in children.iter() {
             if let Ok((mut btn_state, action_type)) = button_query.get_mut(child) {
-                if let Some(item) = state
-                    .actions
-                    .iter()
-                    .find(|a| a.action_type == *action_type)
-                {
+                if let Some(item) = state.actions.iter().find(|a| a.action_type == *action_type) {
                     btn_state.disabled = !item.enabled;
                 }
             }

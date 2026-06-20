@@ -5,7 +5,12 @@
 use bevy::prelude::*;
 
 use crate::core::capabilities::ability::foundation::{AbilityError, CostEntry};
+use crate::core::capabilities::ability::mechanism::AbilityInstanceIdGenerator;
 use crate::core::domains::combat::integration::ability::CombatAbilityFacade;
+
+fn make_generator() -> AbilityInstanceIdGenerator {
+    AbilityInstanceIdGenerator::default()
+}
 
 #[test]
 fn empty_container_creates_no_instances_and_no_cooldowns() {
@@ -19,6 +24,7 @@ fn try_activate_ability_succeeds_when_ready() {
     let mut world = World::new();
     let mut commands = world.commands();
     let mut container = CombatAbilityFacade::empty_container();
+    let generator = make_generator();
     let caster = Entity::from_raw_u32(1).unwrap();
     let target = Entity::from_raw_u32(2).unwrap();
     let costs = vec![CostEntry::new("mana", 10.0)];
@@ -32,6 +38,7 @@ fn try_activate_ability_succeeds_when_ready() {
         100,
         costs,
         &mut commands,
+        &generator,
     );
 
     assert!(
@@ -47,6 +54,7 @@ fn try_activate_ability_fails_when_already_active() {
     let mut world = World::new();
     let mut commands = world.commands();
     let mut container = CombatAbilityFacade::empty_container();
+    let generator = make_generator();
     let caster = Entity::from_raw_u32(1).unwrap();
     let target = Entity::from_raw_u32(2).unwrap();
 
@@ -60,6 +68,7 @@ fn try_activate_ability_fails_when_already_active() {
         100,
         vec![],
         &mut commands,
+        &generator,
     );
     assert!(first.is_ok());
 
@@ -73,6 +82,7 @@ fn try_activate_ability_fails_when_already_active() {
         101,
         vec![],
         &mut commands,
+        &generator,
     );
     assert!(second.is_err());
     assert!(matches!(second, Err(AbilityError::AlreadyActive { .. })));
@@ -83,6 +93,7 @@ fn try_activate_ability_fails_when_on_cooldown() {
     let mut world = World::new();
     let mut commands = world.commands();
     let mut container = CombatAbilityFacade::empty_container();
+    let generator = make_generator();
     let caster = Entity::from_raw_u32(1).unwrap();
     let target = Entity::from_raw_u32(2).unwrap();
 
@@ -96,6 +107,7 @@ fn try_activate_ability_fails_when_on_cooldown() {
         100,
         vec![],
         &mut commands,
+        &generator,
     );
     assert!(first.is_ok());
 
@@ -121,6 +133,7 @@ fn try_activate_ability_fails_when_on_cooldown() {
         200,
         vec![],
         &mut commands,
+        &generator,
     );
     assert!(second.is_err());
     assert!(matches!(second, Err(AbilityError::OnCooldown { .. })));
@@ -131,6 +144,7 @@ fn cooldown_expires_after_sufficient_ticks() {
     let mut world = World::new();
     let mut commands = world.commands();
     let mut container = CombatAbilityFacade::empty_container();
+    let generator = make_generator();
     let caster = Entity::from_raw_u32(1).unwrap();
     let target = Entity::from_raw_u32(2).unwrap();
 
@@ -143,6 +157,7 @@ fn cooldown_expires_after_sufficient_ticks() {
         100,
         vec![],
         &mut commands,
+        &generator,
     )
     .unwrap();
     CombatAbilityFacade::complete_and_cooldown(&mut container, &first, 2, caster, &mut commands)

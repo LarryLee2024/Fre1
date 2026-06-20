@@ -15,10 +15,7 @@ use super::MenuAction;
 /// 当 primitives 层的 `button_interaction_system` 触发 `ButtonClicked` 事件时，
 /// 检查按钮实体是否挂载了 `MenuAction` 组件，匹配后执行对应动作。
 /// 当前仅记录日志，后续由 domain 系统接管。
-pub fn on_main_menu_button_clicked(
-    on: On<ButtonClicked>,
-    query: Query<&MenuAction>,
-) {
+pub fn on_main_menu_button_clicked(on: On<ButtonClicked>, query: Query<&MenuAction>) {
     let entity = on.event().entity;
     let Ok(action) = query.get(entity) else {
         // 不是主菜单按钮，忽略

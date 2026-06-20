@@ -5,9 +5,7 @@
 //! 详见 docs/02-domain/capabilities/ability_domain.md §1、§2。
 //! 详见 docs/04-data/capabilities/ability_schema.md §3。
 
-use core::sync::atomic::{AtomicU64, Ordering};
-
-static NEXT_INSTANCE_ID: AtomicU64 = AtomicU64::new(1);
+use crate::shared::ids::runtime_id::RuntimeId;
 
 /// 技能运行时阶段（状态机），定义技能当前所处的生命周期位置。
 ///
@@ -109,43 +107,70 @@ impl ActivationType {
     }
 }
 
-/// 技能运行时实例唯一标识（自增序列，Replay-safe）。
+/// 技能运行时实例唯一标识（基于 RuntimeId，带 generation 保护）。
+///
+/// 每次 ID 被回收后，再次分配时 generation 递增，防止旧引用指向新对象。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct AbilityInstanceId(pub u64);
+pub struct AbilityInstanceId(RuntimeId);
 
 impl AbilityInstanceId {
-    /// 生成一个新的唯一 AbilityInstanceId。
-    pub fn new() -> Self {
-        let id = NEXT_INSTANCE_ID.fetch_add(1, Ordering::Relaxed);
+    /// 从 RuntimeId 创建（标准路径，由 AbilityInstanceIdGenerator 分配）。
+    pub fn new(id: RuntimeId) -> Self {
         Self(id)
     }
 
-    /// 从 u64 创建（用于反序列化/测试）。
+    /// 从 u64 创建（用于反序列化/测试，generation 默认为 0）。
     pub fn from_u64(id: u64) -> Self {
-        Self(id)
+        Self(RuntimeId::new(id as u32, 0))
     }
 
-    /// 返回内部 u64 值。
-    pub fn value(&self) -> u64 {
+    /// 返回内部 RuntimeId。
+    pub fn runtime_id(&self) -> RuntimeId {
         self.0
     }
-}
 
-impl Default for AbilityInstanceId {
-    fn default() -> Self {
-        Self::new()
+    /// 返回索引值（兼容旧 API）。
+    pub fn value(&self) -> u64 {
+        self.0.index() as u64
+    }
+
+    /// 返回索引。
+    pub fn index(&self) -> u32 {
+        self.0.index()
+    }
+
+    /// 返回代际。
+    pub fn generation(&self) -> u32 {
+        self.0.generation()
+    }
+
+    /// 检查另一个 ID 是否是同一槽位的旧代际（generation safety）。
+    pub fn is_stale(&self, other: &AbilityInstanceId) -> bool {
+        self.0.is_stale(&other.0)
     }
 }
 
 impl std::fmt::Display for AbilityInstanceId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "inst_{:010}", self.0)
+        write!(f, "inst_{:010}", self.0.index())
     }
 }
 
 impl From<u64> for AbilityInstanceId {
     fn from(id: u64) -> Self {
-        Self(id)
+        Self::from_u64(id)
+    }
+}
+
+impl serde::Serialize for AbilityInstanceId {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        self.0.serialize(serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for AbilityInstanceId {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        RuntimeId::deserialize(deserializer).map(Self)
     }
 }
 

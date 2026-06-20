@@ -7,22 +7,12 @@
 
 use bevy::prelude::*;
 
-use crate::ui::primitives::button::{
-    components::ButtonVariant,
-    factory::spawn_button,
-};
-use crate::ui::primitives::panel::{
-    components::PanelVariant,
-    factory::spawn_panel,
-};
+use crate::ui::primitives::button::{components::ButtonVariant, factory::spawn_button};
+use crate::ui::primitives::panel::{components::PanelVariant, factory::spawn_panel};
 use crate::ui::primitives::progress_bar::{
-    components::ProgressBarVariant,
-    factory::spawn_progress_bar,
+    components::ProgressBarVariant, factory::spawn_progress_bar,
 };
-use crate::ui::primitives::text::{
-    components::TextVariant,
-    factory::spawn_text,
-};
+use crate::ui::primitives::text::{components::TextVariant, factory::spawn_text};
 use crate::ui::theme::Theme;
 
 use super::components::{SkillSlotAction, SkillSlotState};
@@ -81,7 +71,13 @@ pub fn spawn_skill_slot(
     ));
 
     // ── 2. Skill name text (Caption variant, secondary color) ──
-    let name_text = spawn_text(commands, asset_server, theme, &name_str, TextVariant::Caption);
+    let name_text = spawn_text(
+        commands,
+        asset_server,
+        theme,
+        &name_str,
+        TextVariant::Caption,
+    );
     commands.entity(name_text).set_parent_in_place(container);
 
     // ── 3. Cooldown progress bar (Generic variant, starts full) ──

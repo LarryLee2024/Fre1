@@ -1,33 +1,38 @@
-//! Module Name: Widgets — 游戏业务控件
+//! Module Name: Widgets — Gameplay UI controls
 //!
-//! 组合 Primitives 层基础组件为游戏概念控件。
-//! 本层是 Primitives 的唯一消费者，禁止直接操作 Node/Button 等 Bevy 原语。
+//! Composes primitives-layer components into game-concept controls.
+//! This layer is the sole consumer of Primitives; no direct Node/Button
+//! manipulation allowed.
 //!
-//! 当前包含：
-//! - SkillSlot — 技能槽卡片控件
+//! Current widgets:
+//! - SkillSlot — Skill card control
+//! - ActionMenu — Battle action menu (Attack, Defend, Skill, Item, Wait)
+//! - CharacterCard — Character stats card (name, level, HP/MP bars)
 //!
-//! 后续添加：
-//! - CharacterCard
+//! Future widgets:
 //! - BuffIcon
 //! - InventoryGrid
 //! - BattleLog
-//! - ActionMenu
 //!
-//! 详见 `docs/06-ui/02-design-system/widget-composites.md`
+//! See `docs/06-ui/02-design-system/widget-composites.md`
 
+pub mod action_menu;
+pub mod character_card;
 pub mod skill_slot;
 
 use bevy::prelude::*;
 
+use self::action_menu::ActionMenuPlugin;
+use self::character_card::CharacterCardPlugin;
 use self::skill_slot::SkillSlotPlugin;
 
-/// WidgetsPlugin — 注册所有游戏业务控件
+/// WidgetsPlugin — registers all gameplay UI controls
 ///
-/// 在 PrimitivesPlugin 之后、Screen Plugin 之前注册。
+/// Added after PrimitivesPlugin, before ScreenPlugin.
 pub struct WidgetsPlugin;
 
 impl Plugin for WidgetsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(SkillSlotPlugin);
+        app.add_plugins((SkillSlotPlugin, ActionMenuPlugin, CharacterCardPlugin));
     }
 }

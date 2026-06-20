@@ -7,22 +7,12 @@
 
 use bevy::prelude::*;
 
-use crate::ui::primitives::button::{
-    components::ButtonVariant,
-    factory::spawn_button,
-};
-use crate::ui::primitives::panel::{
-    components::PanelVariant,
-    factory::spawn_panel,
-};
+use crate::ui::primitives::button::{components::ButtonVariant, factory::spawn_button};
+use crate::ui::primitives::panel::{components::PanelVariant, factory::spawn_panel};
 use crate::ui::primitives::progress_bar::{
-    components::ProgressBarVariant,
-    factory::spawn_progress_bar,
+    components::ProgressBarVariant, factory::spawn_progress_bar,
 };
-use crate::ui::primitives::text::{
-    components::TextVariant,
-    factory::spawn_text,
-};
+use crate::ui::primitives::text::{components::TextVariant, factory::spawn_text};
 use crate::ui::theme::Theme;
 
 use super::components::{CharacterAction, CharacterCardState};
@@ -95,12 +85,26 @@ pub fn spawn_character_card(
     ));
 
     // ── 2. Character name text (Caption variant, primary color) ──
-    let name_text = spawn_text(commands, asset_server, theme, &name_str, TextVariant::Caption);
-    commands.entity(name_text).insert(TextColor(theme.colors.text_primary));
+    let name_text = spawn_text(
+        commands,
+        asset_server,
+        theme,
+        &name_str,
+        TextVariant::Caption,
+    );
+    commands
+        .entity(name_text)
+        .insert(TextColor(theme.colors.text_primary));
     commands.entity(name_text).set_parent_in_place(container);
 
     // ── 3. Level text (Caption variant) ──
-    let level_text = spawn_text(commands, asset_server, theme, &level_str, TextVariant::Caption);
+    let level_text = spawn_text(
+        commands,
+        asset_server,
+        theme,
+        &level_str,
+        TextVariant::Caption,
+    );
     commands.entity(level_text).set_parent_in_place(container);
 
     // ── 4. HP progress bar (Hp variant, show label) ──

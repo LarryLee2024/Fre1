@@ -7,14 +7,8 @@
 
 use bevy::prelude::*;
 
-use crate::ui::primitives::button::{
-    components::ButtonVariant,
-    factory::spawn_button,
-};
-use crate::ui::primitives::list::{
-    components::ListVariant,
-    factory::spawn_list,
-};
+use crate::ui::primitives::button::{components::ButtonVariant, factory::spawn_button};
+use crate::ui::primitives::list::{components::ListVariant, factory::spawn_list};
 use crate::ui::theme::Theme;
 
 use super::components::{ActionMenuItem, ActionMenuState, ActionType};
@@ -43,10 +37,7 @@ use super::components::{ActionMenuItem, ActionMenuState, ActionType};
 /// ```ignore
 /// let menu = spawn_action_menu(&mut commands, &theme);
 /// ```
-pub fn spawn_action_menu(
-    commands: &mut Commands,
-    theme: &Theme,
-) -> Entity {
+pub fn spawn_action_menu(commands: &mut Commands, theme: &Theme) -> Entity {
     // ── 1. Container list (Vertical) ──
     let container = spawn_list(commands, theme, ListVariant::Vertical);
 
@@ -80,12 +71,9 @@ pub fn spawn_action_menu(
     ];
 
     // Attach ActionMenuState and an identifiable Name
-    commands.entity(container).insert((
-        ActionMenuState {
-            actions,
-        },
-        Name::new("ActionMenu"),
-    ));
+    commands
+        .entity(container)
+        .insert((ActionMenuState { actions }, Name::new("ActionMenu")));
 
     // ── 2. Attack button (Primary) ──
     let attack_btn = spawn_button(commands, theme, "Attack", ButtonVariant::Primary);

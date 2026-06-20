@@ -129,18 +129,20 @@ pub fn apply_effect(
             // 检查目标的 tags 是否包含 ignored_tags 中的任意一个
             let target_has_immune = immune_tags.iter().any(|immune_tag| {
                 instance.tags.iter().any(|t| t == immune_tag)
-                    || container.effects.iter().any(|e| {
-                        e.stage.is_active() && e.tags.iter().any(|t| t == immune_tag)
-                    })
+                    || container
+                        .effects
+                        .iter()
+                        .any(|e| e.stage.is_active() && e.tags.iter().any(|t| t == immune_tag))
             });
             if target_has_immune {
                 let immune_tag = immune_tags
                     .iter()
                     .find(|tag| {
                         instance.tags.iter().any(|t| t == *tag)
-                            || container.effects.iter().any(|e| {
-                                e.stage.is_active() && e.tags.iter().any(|t| t == *tag)
-                            })
+                            || container
+                                .effects
+                                .iter()
+                                .any(|e| e.stage.is_active() && e.tags.iter().any(|t| t == *tag))
                     })
                     .cloned()
                     .unwrap_or_default();

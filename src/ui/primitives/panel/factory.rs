@@ -7,8 +7,8 @@
 
 use bevy::prelude::*;
 
-use crate::ui::theme::Theme;
 use super::components::{PanelState, PanelVariant};
+use crate::ui::theme::Theme;
 
 /// 根据变体计算 Panel 背景色
 fn panel_background_color(variant: PanelVariant, theme: &Theme) -> Color {
@@ -39,11 +39,7 @@ fn panel_background_color(variant: PanelVariant, theme: &Theme) -> Color {
 ///     parent.spawn(Text::new("Content"));
 /// });
 /// ```
-pub fn spawn_panel(
-    commands: &mut Commands,
-    theme: &Theme,
-    variant: PanelVariant,
-) -> Entity {
+pub fn spawn_panel(commands: &mut Commands, theme: &Theme, variant: PanelVariant) -> Entity {
     let bg_color = panel_background_color(variant, theme);
 
     let (node, border_color) = match variant {

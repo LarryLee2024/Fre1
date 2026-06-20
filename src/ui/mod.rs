@@ -41,6 +41,6 @@ pub use primitives::{
         factory::spawn_text,
     },
 };
-pub use widgets::skill_slot::factory::spawn_skill_slot;
-pub use widgets::skill_slot::components::{SkillSlotAction, SkillSlotState};
 pub use theme::{Theme, ThemePlugin, UiColors, UiSpacing, UiTypography};
+pub use widgets::skill_slot::components::{SkillSlotAction, SkillSlotState};
+pub use widgets::skill_slot::factory::spawn_skill_slot;

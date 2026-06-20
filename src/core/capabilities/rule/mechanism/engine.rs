@@ -44,9 +44,7 @@ pub fn evaluate_rules(
     let mut matches: Vec<RuleMatch> = rules
         .iter()
         .filter(|rule| rule.enabled)
-        .filter(|rule| {
-            evaluate(&rule.condition, context, entity, commands).is_passed()
-        })
+        .filter(|rule| evaluate(&rule.condition, context, entity, commands).is_passed())
         .map(|rule| RuleMatch {
             rule_id: rule.id.clone(),
             effect: rule.effect.clone(),

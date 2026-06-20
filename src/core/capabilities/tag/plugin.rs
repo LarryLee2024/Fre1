@@ -14,8 +14,7 @@ impl Plugin for TagPlugin {
         app.add_observer(on_tag_removed);
         app.add_systems(
             Update,
-            register_tags_from_content
-                .run_if(resource_changed::<LoadedTagDefs>),
+            register_tags_from_content.run_if(resource_changed::<LoadedTagDefs>),
         );
     }
 }

@@ -13,8 +13,7 @@ impl Plugin for AttributePlugin {
         app.add_observer(on_attribute_initialized);
         app.add_systems(
             Update,
-            register_attributes_from_content
-                .run_if(resource_changed::<LoadedAttributeDefs>),
+            register_attributes_from_content.run_if(resource_changed::<LoadedAttributeDefs>),
         );
     }
 }

@@ -8,12 +8,12 @@
 //! Button 系统使用 commands.trigger() 发送 ButtonClicked（Observer 模式），
 //! 而非 EventWriter。EventReader<ButtonClicked> 无法接收到该信号。
 
-use bevy::prelude::*;
 use bevy::ecs::observer::On;
+use bevy::prelude::*;
 
-use crate::ui::primitives::button::events::ButtonClicked;
 use super::components::{ModalButtonRole, ModalState};
 use super::events::{ModalCancelled, ModalConfirmed};
+use crate::ui::primitives::button::events::ButtonClicked;
 
 /// 模态框交互观察者
 ///

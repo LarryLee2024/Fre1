@@ -8,9 +8,9 @@
 use bevy::prelude::*;
 use bevy::ui::widget::Button;
 
+use super::components::{ModalButtonRole, ModalState, ModalVariant};
 use crate::ui::Theme;
 use crate::ui::primitives::button::components::{ButtonInteraction, ButtonState, ButtonVariant};
-use super::components::{ModalButtonRole, ModalState, ModalVariant};
 
 /// 工厂函数：生成一个完整配置的模态框 UI 节点树
 ///
@@ -132,7 +132,8 @@ pub fn spawn_modal(
                     ));
 
                     // 按钮行（仅 Alert 和 Confirm 变体有默认按钮）
-                    let has_buttons = matches!(variant, ModalVariant::Alert | ModalVariant::Confirm);
+                    let has_buttons =
+                        matches!(variant, ModalVariant::Alert | ModalVariant::Confirm);
                     if has_buttons {
                         card.spawn((
                             Node {
@@ -147,110 +148,119 @@ pub fn spawn_modal(
                             match variant {
                                 ModalVariant::Alert => {
                                     // Alert：单个"确定"按钮（Primary 风格）
-                                    button_row.spawn((
-                                        Node {
-                                            flex_direction: FlexDirection::Row,
-                                            align_items: AlignItems::Center,
-                                            justify_content: JustifyContent::Center,
-                                            padding: UiRect::axes(
-                                                Val::Px(theme.spacing.md),
-                                                Val::Px(theme.spacing.sm),
-                                            ),
-                                            min_height: Val::Px(theme.spacing.button_height),
-                                            ..default()
-                                        },
-                                        Button,
-                                        BackgroundColor(theme.colors.accent_primary),
-                                        BorderColor::all(Color::NONE),
-                                        ButtonState {
-                                            variant: ButtonVariant::Primary,
-                                            disabled: false,
-                                            label: "确定".to_string(),
-                                        },
-                                        ButtonInteraction::default(),
-                                        ModalButtonRole::Cancel,
-                                    ))
-                                    .with_children(|btn| {
-                                        btn.spawn((
-                                            Text::new("确定"),
-                                            TextFont {
-                                                font_size: FontSize::Px(theme.typography.size_body),
+                                    button_row
+                                        .spawn((
+                                            Node {
+                                                flex_direction: FlexDirection::Row,
+                                                align_items: AlignItems::Center,
+                                                justify_content: JustifyContent::Center,
+                                                padding: UiRect::axes(
+                                                    Val::Px(theme.spacing.md),
+                                                    Val::Px(theme.spacing.sm),
+                                                ),
+                                                min_height: Val::Px(theme.spacing.button_height),
                                                 ..default()
                                             },
-                                            TextColor(theme.colors.text_primary),
-                                        ));
-                                    });
+                                            Button,
+                                            BackgroundColor(theme.colors.accent_primary),
+                                            BorderColor::all(Color::NONE),
+                                            ButtonState {
+                                                variant: ButtonVariant::Primary,
+                                                disabled: false,
+                                                label: "确定".to_string(),
+                                            },
+                                            ButtonInteraction::default(),
+                                            ModalButtonRole::Cancel,
+                                        ))
+                                        .with_children(|btn| {
+                                            btn.spawn((
+                                                Text::new("确定"),
+                                                TextFont {
+                                                    font_size: FontSize::Px(
+                                                        theme.typography.size_body,
+                                                    ),
+                                                    ..default()
+                                                },
+                                                TextColor(theme.colors.text_primary),
+                                            ));
+                                        });
                                 }
                                 ModalVariant::Confirm => {
                                     // Confirm："取消"按钮（Secondary 风格）
-                                    button_row.spawn((
-                                        Node {
-                                            flex_direction: FlexDirection::Row,
-                                            align_items: AlignItems::Center,
-                                            justify_content: JustifyContent::Center,
-                                            padding: UiRect::axes(
-                                                Val::Px(theme.spacing.md),
-                                                Val::Px(theme.spacing.sm),
-                                            ),
-                                            min_height: Val::Px(theme.spacing.button_height),
-                                            ..default()
-                                        },
-                                        Button,
-                                        BackgroundColor(theme.colors.surface_secondary),
-                                        BorderColor::all(theme.colors.border_default),
-                                        ButtonState {
-                                            variant: ButtonVariant::Secondary,
-                                            disabled: false,
-                                            label: "取消".to_string(),
-                                        },
-                                        ButtonInteraction::default(),
-                                        ModalButtonRole::Cancel,
-                                    ))
-                                    .with_children(|btn| {
-                                        btn.spawn((
-                                            Text::new("取消"),
-                                            TextFont {
-                                                font_size: FontSize::Px(theme.typography.size_body),
+                                    button_row
+                                        .spawn((
+                                            Node {
+                                                flex_direction: FlexDirection::Row,
+                                                align_items: AlignItems::Center,
+                                                justify_content: JustifyContent::Center,
+                                                padding: UiRect::axes(
+                                                    Val::Px(theme.spacing.md),
+                                                    Val::Px(theme.spacing.sm),
+                                                ),
+                                                min_height: Val::Px(theme.spacing.button_height),
                                                 ..default()
                                             },
-                                            TextColor(theme.colors.text_primary),
-                                        ));
-                                    });
+                                            Button,
+                                            BackgroundColor(theme.colors.surface_secondary),
+                                            BorderColor::all(theme.colors.border_default),
+                                            ButtonState {
+                                                variant: ButtonVariant::Secondary,
+                                                disabled: false,
+                                                label: "取消".to_string(),
+                                            },
+                                            ButtonInteraction::default(),
+                                            ModalButtonRole::Cancel,
+                                        ))
+                                        .with_children(|btn| {
+                                            btn.spawn((
+                                                Text::new("取消"),
+                                                TextFont {
+                                                    font_size: FontSize::Px(
+                                                        theme.typography.size_body,
+                                                    ),
+                                                    ..default()
+                                                },
+                                                TextColor(theme.colors.text_primary),
+                                            ));
+                                        });
 
                                     // "确认"按钮（Primary 风格）
-                                    button_row.spawn((
-                                        Node {
-                                            flex_direction: FlexDirection::Row,
-                                            align_items: AlignItems::Center,
-                                            justify_content: JustifyContent::Center,
-                                            padding: UiRect::axes(
-                                                Val::Px(theme.spacing.md),
-                                                Val::Px(theme.spacing.sm),
-                                            ),
-                                            min_height: Val::Px(theme.spacing.button_height),
-                                            ..default()
-                                        },
-                                        Button,
-                                        BackgroundColor(theme.colors.accent_primary),
-                                        BorderColor::all(Color::NONE),
-                                        ButtonState {
-                                            variant: ButtonVariant::Primary,
-                                            disabled: false,
-                                            label: "确认".to_string(),
-                                        },
-                                        ButtonInteraction::default(),
-                                        ModalButtonRole::Confirm,
-                                    ))
-                                    .with_children(|btn| {
-                                        btn.spawn((
-                                            Text::new("确认"),
-                                            TextFont {
-                                                font_size: FontSize::Px(theme.typography.size_body),
+                                    button_row
+                                        .spawn((
+                                            Node {
+                                                flex_direction: FlexDirection::Row,
+                                                align_items: AlignItems::Center,
+                                                justify_content: JustifyContent::Center,
+                                                padding: UiRect::axes(
+                                                    Val::Px(theme.spacing.md),
+                                                    Val::Px(theme.spacing.sm),
+                                                ),
+                                                min_height: Val::Px(theme.spacing.button_height),
                                                 ..default()
                                             },
-                                            TextColor(theme.colors.text_primary),
-                                        ));
-                                    });
+                                            Button,
+                                            BackgroundColor(theme.colors.accent_primary),
+                                            BorderColor::all(Color::NONE),
+                                            ButtonState {
+                                                variant: ButtonVariant::Primary,
+                                                disabled: false,
+                                                label: "确认".to_string(),
+                                            },
+                                            ButtonInteraction::default(),
+                                            ModalButtonRole::Confirm,
+                                        ))
+                                        .with_children(|btn| {
+                                            btn.spawn((
+                                                Text::new("确认"),
+                                                TextFont {
+                                                    font_size: FontSize::Px(
+                                                        theme.typography.size_body,
+                                                    ),
+                                                    ..default()
+                                                },
+                                                TextColor(theme.colors.text_primary),
+                                            ));
+                                        });
                                 }
                                 // Custom 变体无默认按钮，由调用方自主添加
                                 ModalVariant::Custom => {}

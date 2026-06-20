@@ -8,22 +8,10 @@ pub mod systems;
 
 use bevy::prelude::*;
 
-use crate::ui::primitives::button::{
-    components::ButtonVariant,
-    factory::spawn_button,
-};
-use crate::ui::primitives::list::{
-    components::ListVariant,
-    factory::spawn_list,
-};
-use crate::ui::primitives::panel::{
-    components::PanelVariant,
-    factory::spawn_panel,
-};
-use crate::ui::primitives::text::{
-    components::TextVariant,
-    factory::spawn_text,
-};
+use crate::ui::primitives::button::{components::ButtonVariant, factory::spawn_button};
+use crate::ui::primitives::list::{components::ListVariant, factory::spawn_list};
+use crate::ui::primitives::panel::{components::PanelVariant, factory::spawn_panel};
+use crate::ui::primitives::text::{components::TextVariant, factory::spawn_text};
 use crate::ui::theme::Theme;
 
 /// 菜单按钮动作标识
@@ -80,7 +68,13 @@ pub fn spawn_main_menu(mut commands: Commands, theme: Res<Theme>, asset_server: 
     ));
 
     // ── 2. Title "Fre" ──
-    let title = spawn_text(&mut commands, &asset_server, &theme, "Fre", TextVariant::Title);
+    let title = spawn_text(
+        &mut commands,
+        &asset_server,
+        &theme,
+        "Fre",
+        TextVariant::Title,
+    );
     // Title 默认 24px，设计规格要求大标题 48px
     commands.entity(title).insert((
         TextFont {

@@ -7,8 +7,8 @@ use std::time::SystemTime;
 
 use super::content_plugin::*;
 use super::loading::{ContentFile, DefinitionType, discover_ron_files};
-use crate::core::capabilities::attribute::foundation::AttributeDefinition;
 use crate::core::capabilities::ability::foundation::AbilityDef;
+use crate::core::capabilities::attribute::foundation::AttributeDefinition;
 use crate::core::capabilities::cue::foundation::CueDef;
 use crate::core::capabilities::effect::foundation::EffectDef;
 use crate::core::capabilities::tag::foundation::TagDefinition;
@@ -494,7 +494,11 @@ fn reload_single_tag(tags: &mut ResMut<LoadedTagDefs>, file: &ContentFile) -> bo
         match ron::from_str(trimmed) {
             Ok(d) => d,
             Err(e) => {
-                warn!("[HotReload] Failed to parse array {}: {}", file.path.display(), e);
+                warn!(
+                    "[HotReload] Failed to parse array {}: {}",
+                    file.path.display(),
+                    e
+                );
                 return false;
             }
         }
@@ -551,7 +555,11 @@ fn reload_single_attribute(
         match ron::from_str(trimmed) {
             Ok(d) => d,
             Err(e) => {
-                warn!("[HotReload] Failed to parse array {}: {}", file.path.display(), e);
+                warn!(
+                    "[HotReload] Failed to parse array {}: {}",
+                    file.path.display(),
+                    e
+                );
                 return false;
             }
         }

@@ -8,8 +8,8 @@
 use bevy::prelude::*;
 use bevy::text::FontSource;
 
-use crate::ui::Theme;
 use super::components::{TextVariant, TextWidget};
+use crate::ui::Theme;
 
 /// 根据变体计算字体大小
 fn font_size_for_variant(variant: TextVariant, theme: &Theme) -> f32 {

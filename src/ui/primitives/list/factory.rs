@@ -7,8 +7,8 @@
 
 use bevy::prelude::*;
 
-use crate::ui::theme::Theme;
 use super::components::{ListState, ListVariant};
+use crate::ui::theme::Theme;
 
 /// 工厂函数：生成一个完整配置的 List UI 节点
 ///
@@ -28,11 +28,7 @@ use super::components::{ListState, ListVariant};
 ///     parent.spawn(Text::new("Item 2"));
 /// });
 /// ```
-pub fn spawn_list(
-    commands: &mut Commands,
-    theme: &Theme,
-    variant: ListVariant,
-) -> Entity {
+pub fn spawn_list(commands: &mut Commands, theme: &Theme, variant: ListVariant) -> Entity {
     let (flex_direction, row_gap, column_gap, overflow) = match variant {
         ListVariant::Vertical => (
             FlexDirection::Column,

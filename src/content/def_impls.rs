@@ -6,8 +6,8 @@
 //! See ADR-047 §1
 
 use crate::content::loading::{DefinitionType, ValidationError, validate_id_format};
-use crate::core::capabilities::attribute::foundation::AttributeDefinition;
 use crate::core::capabilities::ability::foundation::AbilityDef;
+use crate::core::capabilities::attribute::foundation::AttributeDefinition;
 use crate::core::capabilities::cue::foundation::CueDef;
 use crate::core::capabilities::effect::foundation::EffectDef;
 use crate::core::capabilities::rule::foundation::RuleDef;

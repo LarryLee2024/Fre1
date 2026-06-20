@@ -7,10 +7,12 @@ mod tests {
     use bevy::prelude::*;
 
     use crate::core::capabilities::condition::foundation::{
-        Condition, ConditionContext, ComparisonOp,
+        ComparisonOp, Condition, ConditionContext,
     };
     use crate::core::capabilities::rule::foundation::{RuleDef, RuleEffect, RuleModifierOp};
-    use crate::core::capabilities::rule::mechanism::engine::{evaluate_rules, evaluate_single_rule};
+    use crate::core::capabilities::rule::mechanism::engine::{
+        evaluate_rules, evaluate_single_rule,
+    };
     use crate::shared::localization_key::LocalizationKey;
 
     fn make_rule(id: &str, condition: Condition, effect: RuleEffect) -> RuleDef {

@@ -10,14 +10,14 @@
 //! These are behavior tests -- they verify input -> output without
 //! testing implementation details (internal fields, intermediate state).
 
-use bevy::prelude::*;
 use bevy::ecs::observer::On;
+use bevy::prelude::*;
 use bevy::ui::Interaction;
 
+use crate::ui::primitives::button::ButtonPlugin;
 use crate::ui::primitives::button::components::{ButtonInteraction, ButtonState, ButtonVariant};
 use crate::ui::primitives::button::events::ButtonClicked;
 use crate::ui::primitives::button::factory::spawn_button;
-use crate::ui::primitives::button::ButtonPlugin;
 use crate::ui::theme::{Theme, ThemePlugin};
 
 // ── Helpers ──
@@ -72,7 +72,10 @@ fn factory_spawns_button_with_default_interaction() {
         .unwrap();
     assert!(!interaction.hovered, "initial hovered must be false");
     assert!(!interaction.pressed, "initial pressed must be false");
-    assert!(!interaction.just_clicked, "initial just_clicked must be false");
+    assert!(
+        !interaction.just_clicked,
+        "initial just_clicked must be false"
+    );
 }
 
 #[test]
@@ -100,11 +103,7 @@ fn primary_variant_uses_accent_color() {
     let theme = app.world().resource::<Theme>().clone();
     let entity = spawn_button_in_app(&mut app, "OK", ButtonVariant::Primary);
 
-    let bg = app
-        .world()
-        .entity(entity)
-        .get::<BackgroundColor>()
-        .unwrap();
+    let bg = app.world().entity(entity).get::<BackgroundColor>().unwrap();
     assert_eq!(
         bg.0, theme.colors.accent_primary,
         "Primary variant should use accent_primary color"
@@ -117,11 +116,7 @@ fn secondary_variant_uses_surface_color() {
     let theme = app.world().resource::<Theme>().clone();
     let entity = spawn_button_in_app(&mut app, "OK", ButtonVariant::Secondary);
 
-    let bg = app
-        .world()
-        .entity(entity)
-        .get::<BackgroundColor>()
-        .unwrap();
+    let bg = app.world().entity(entity).get::<BackgroundColor>().unwrap();
     assert_eq!(
         bg.0, theme.colors.surface_secondary,
         "Secondary variant should use surface_secondary color"
@@ -134,11 +129,7 @@ fn danger_variant_uses_negative_feedback_color() {
     let theme = app.world().resource::<Theme>().clone();
     let entity = spawn_button_in_app(&mut app, "Delete", ButtonVariant::Danger);
 
-    let bg = app
-        .world()
-        .entity(entity)
-        .get::<BackgroundColor>()
-        .unwrap();
+    let bg = app.world().entity(entity).get::<BackgroundColor>().unwrap();
     assert_eq!(
         bg.0, theme.colors.feedback_negative,
         "Danger variant should use feedback_negative color"
@@ -150,13 +141,10 @@ fn ghost_variant_uses_transparent_color() {
     let mut app = button_app();
     let entity = spawn_button_in_app(&mut app, "Cancel", ButtonVariant::Ghost);
 
-    let bg = app
-        .world()
-        .entity(entity)
-        .get::<BackgroundColor>()
-        .unwrap();
+    let bg = app.world().entity(entity).get::<BackgroundColor>().unwrap();
     assert_eq!(
-        bg.0, Color::NONE,
+        bg.0,
+        Color::NONE,
         "Ghost variant should have transparent background"
     );
 }
@@ -187,8 +175,14 @@ fn disabled_button_ignores_press_interaction() {
         .entity(entity)
         .get::<ButtonInteraction>()
         .unwrap();
-    assert!(!interaction.hovered, "disabled button must not become hovered");
-    assert!(!interaction.pressed, "disabled button must not become pressed");
+    assert!(
+        !interaction.hovered,
+        "disabled button must not become hovered"
+    );
+    assert!(
+        !interaction.pressed,
+        "disabled button must not become pressed"
+    );
     assert!(
         !interaction.just_clicked,
         "disabled button must not become just_clicked"
@@ -211,11 +205,7 @@ fn disabled_button_uses_disabled_surface_color() {
     }
     app.update();
 
-    let bg = app
-        .world()
-        .entity(entity)
-        .get::<BackgroundColor>()
-        .unwrap();
+    let bg = app.world().entity(entity).get::<BackgroundColor>().unwrap();
     assert_eq!(
         bg.0, theme.colors.surface_disabled,
         "disabled button should use surface_disabled color"
@@ -232,14 +222,19 @@ fn button_tracks_hover_state() {
     let entity = spawn_button_in_app(&mut app, "Test", ButtonVariant::Primary);
 
     // -- Hover on --
-    app.world_mut().entity_mut(entity).insert(Interaction::Hovered);
+    app.world_mut()
+        .entity_mut(entity)
+        .insert(Interaction::Hovered);
     app.update();
     let interaction = app
         .world()
         .entity(entity)
         .get::<ButtonInteraction>()
         .unwrap();
-    assert!(interaction.hovered, "hovered should be true when Interaction is Hovered");
+    assert!(
+        interaction.hovered,
+        "hovered should be true when Interaction is Hovered"
+    );
     assert!(!interaction.pressed, "should not be pressed when hovering");
 
     // -- Hover off --
@@ -250,7 +245,10 @@ fn button_tracks_hover_state() {
         .entity(entity)
         .get::<ButtonInteraction>()
         .unwrap();
-    assert!(!interaction.hovered, "hovered should clear when Interaction is None");
+    assert!(
+        !interaction.hovered,
+        "hovered should clear when Interaction is None"
+    );
 }
 
 #[test]
@@ -258,7 +256,9 @@ fn button_tracks_press_state() {
     let mut app = button_app();
     let entity = spawn_button_in_app(&mut app, "Test", ButtonVariant::Primary);
 
-    app.world_mut().entity_mut(entity).insert(Interaction::Pressed);
+    app.world_mut()
+        .entity_mut(entity)
+        .insert(Interaction::Pressed);
     app.update();
 
     let interaction = app
@@ -266,7 +266,10 @@ fn button_tracks_press_state() {
         .entity(entity)
         .get::<ButtonInteraction>()
         .unwrap();
-    assert!(interaction.pressed, "pressed should be true when Interaction is Pressed");
+    assert!(
+        interaction.pressed,
+        "pressed should be true when Interaction is Pressed"
+    );
     assert!(!interaction.hovered, "should not be hovered when pressed");
 }
 
@@ -276,7 +279,9 @@ fn button_detects_click_on_press_release() {
     let entity = spawn_button_in_app(&mut app, "Test", ButtonVariant::Primary);
 
     // Press
-    app.world_mut().entity_mut(entity).insert(Interaction::Pressed);
+    app.world_mut()
+        .entity_mut(entity)
+        .insert(Interaction::Pressed);
     app.update();
 
     // Release
@@ -300,7 +305,9 @@ fn just_clicked_resets_after_one_frame() {
     let entity = spawn_button_in_app(&mut app, "Test", ButtonVariant::Primary);
 
     // Complete click cycle: press then release
-    app.world_mut().entity_mut(entity).insert(Interaction::Pressed);
+    app.world_mut()
+        .entity_mut(entity)
+        .insert(Interaction::Pressed);
     app.update();
     app.world_mut().entity_mut(entity).insert(Interaction::None);
     app.update();
@@ -338,7 +345,9 @@ fn button_clicked_event_fires_on_click_release() {
     });
 
     // Press then release
-    app.world_mut().entity_mut(entity).insert(Interaction::Pressed);
+    app.world_mut()
+        .entity_mut(entity)
+        .insert(Interaction::Pressed);
     app.update();
     app.world_mut().entity_mut(entity).insert(Interaction::None);
     app.update();
@@ -362,7 +371,9 @@ fn button_clicked_event_does_not_fire_on_hover_alone() {
     });
 
     // Hover does NOT click
-    app.world_mut().entity_mut(entity).insert(Interaction::Hovered);
+    app.world_mut()
+        .entity_mut(entity)
+        .insert(Interaction::Hovered);
     app.update();
 
     let tracker = app.world().resource::<ClickTracker>();

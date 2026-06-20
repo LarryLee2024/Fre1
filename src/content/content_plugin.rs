@@ -10,8 +10,8 @@ use std::path::PathBuf;
 
 use super::hot_reload::{ContentHotReloadState, hot_reload_content_system, init_hot_reload_state};
 use super::loading::{ContentFile, DefinitionType, RonAssetLoader, discover_ron_files};
-use crate::core::capabilities::attribute::foundation::AttributeDefinition;
 use crate::core::capabilities::ability::foundation::AbilityDef;
+use crate::core::capabilities::attribute::foundation::AttributeDefinition;
 use crate::core::capabilities::cue::foundation::CueDef;
 use crate::core::capabilities::effect::foundation::EffectDef;
 use crate::core::capabilities::rule::foundation::RuleDef;
@@ -585,10 +585,7 @@ fn load_rule_def(rules: &mut ResMut<LoadedRuleDefs>, file: &ContentFile) {
         return;
     }
 
-    info!(
-        "[Content] Loaded rule '{}' (id: {})",
-        def.name_key, def.id
-    );
+    info!("[Content] Loaded rule '{}' (id: {})", def.name_key, def.id);
     rules.defs.push(def);
 }
 
@@ -772,7 +769,11 @@ fn load_tag_def(tags: &mut ResMut<LoadedTagDefs>, file: &ContentFile) {
     }
 
     if count > 1 {
-        info!("[Content] Loaded {} tags from {}", count, file.path.display());
+        info!(
+            "[Content] Loaded {} tags from {}",
+            count,
+            file.path.display()
+        );
     }
 }
 
@@ -829,7 +830,10 @@ fn load_attribute_def(attributes: &mut ResMut<LoadedAttributeDefs>, file: &Conte
     }
 
     if count > 1 {
-        info!("[Content] Loaded {count} attributes from {}", file.path.display());
+        info!(
+            "[Content] Loaded {count} attributes from {}",
+            file.path.display()
+        );
     }
 }
 

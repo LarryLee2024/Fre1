@@ -9,10 +9,10 @@ use crate::infra::{
     input::InputPlugin, localization, logging::LoggingPlugin, pipeline::PipelinePlugin,
     registry::RegistryPlugin, replay::ReplayPlugin, save::SavePlugin,
 };
+use crate::ui::UiPlugin;
 use crate::{
     app::scenes::ScenePlugin, content::ContentPlugin, modding::ModdingPlugin, shared::SharedPlugin,
 };
-use crate::ui::UiPlugin;
 use bevy::prelude::*;
 
 #[cfg(feature = "dev")]

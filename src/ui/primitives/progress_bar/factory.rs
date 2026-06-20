@@ -7,8 +7,8 @@
 
 use bevy::prelude::*;
 
-use crate::ui::Theme;
 use super::components::{ProgressBarFill, ProgressBarLabel, ProgressBarState, ProgressBarVariant};
+use crate::ui::Theme;
 
 /// 根据变体计算进度条填充色
 fn progress_bar_fill_color(variant: ProgressBarVariant, theme: &Theme) -> Color {
@@ -110,8 +110,8 @@ pub fn spawn_progress_bar(
 
             // 标签（绝对定位，居中显示）
             if show_label {
-                parent.spawn((
-                    Node {
+                parent
+                    .spawn((Node {
                         position_type: PositionType::Absolute,
                         left: Val::Px(0.0),
                         right: Val::Px(0.0),
@@ -120,19 +120,18 @@ pub fn spawn_progress_bar(
                         align_items: AlignItems::Center,
                         justify_content: JustifyContent::Center,
                         ..default()
-                    },
-                ))
-                .with_children(|label_parent| {
-                    label_parent.spawn((
-                        Text::new(label_text),
-                        TextFont {
-                            font_size: FontSize::Px(theme.typography.size_small),
-                            ..default()
-                        },
-                        TextColor(theme.colors.text_primary),
-                        ProgressBarLabel,
-                    ));
-                });
+                    },))
+                    .with_children(|label_parent| {
+                        label_parent.spawn((
+                            Text::new(label_text),
+                            TextFont {
+                                font_size: FontSize::Px(theme.typography.size_small),
+                                ..default()
+                            },
+                            TextColor(theme.colors.text_primary),
+                            ProgressBarLabel,
+                        ));
+                    });
             }
         })
         .id()

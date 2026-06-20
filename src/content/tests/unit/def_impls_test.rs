@@ -630,11 +630,14 @@ fn attribute_def_definition_type_constants() {
 fn attribute_ron_deserializes_and_validates() {
     let path = std::path::Path::new("assets/config/attributes/core_attributes.ron");
     let content = std::fs::read_to_string(path).expect("core_attributes.ron should exist");
-    let defs: Vec<AttributeDefinition> =
-        ron::from_str(&content).expect("core_attributes.ron should deserialize to Vec<AttributeDefinition>");
+    let defs: Vec<AttributeDefinition> = ron::from_str(&content)
+        .expect("core_attributes.ron should deserialize to Vec<AttributeDefinition>");
 
     // Find the hp entry to validate structure
-    let hp = defs.iter().find(|d| d.id.as_str() == "hp").expect("hp entry should exist");
+    let hp = defs
+        .iter()
+        .find(|d| d.id.as_str() == "hp")
+        .expect("hp entry should exist");
     assert_eq!(hp.category, AttributeCategory::Resource);
     assert_eq!(hp.default_base_value, 100.0);
     assert_eq!(hp.min_value, 0.0);
@@ -642,7 +645,11 @@ fn attribute_ron_deserializes_and_validates() {
 
     // Validate all entries pass validation
     for def in &defs {
-        assert!(def.validate().is_ok(), "validation failed for '{}'", def.id.as_str());
+        assert!(
+            def.validate().is_ok(),
+            "validation failed for '{}'",
+            def.id.as_str()
+        );
     }
 
     // Verify expected count: 7 Primary + 3 Derived + 2 Resource = 12

@@ -165,6 +165,7 @@ impl AbilityInstance {
     /// - 瞬发技能（is_instant=true）初始状态为 Active
     /// - 非瞬发技能初始状态为 Casting
     pub fn new(
+        instance_id: AbilityInstanceId,
         spec_id: impl Into<String>,
         def_id: impl Into<String>,
         activation: ActivationType,
@@ -174,7 +175,7 @@ impl AbilityInstance {
         let is_instant = activation.is_instant();
 
         Self {
-            instance_id: AbilityInstanceId::new(),
+            instance_id,
             spec_id: spec_id.into(),
             def_id: def_id.into(),
             state: if is_instant {

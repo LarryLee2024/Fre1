@@ -22,18 +22,9 @@ pub mod systems;
 
 use bevy::prelude::*;
 
-use crate::ui::primitives::button::{
-    components::ButtonVariant,
-    factory::spawn_button,
-};
-use crate::ui::primitives::panel::{
-    components::PanelVariant,
-    factory::spawn_panel,
-};
-use crate::ui::primitives::text::{
-    components::TextVariant,
-    factory::spawn_text,
-};
+use crate::ui::primitives::button::{components::ButtonVariant, factory::spawn_button};
+use crate::ui::primitives::panel::{components::PanelVariant, factory::spawn_panel};
+use crate::ui::primitives::text::{components::TextVariant, factory::spawn_text};
 use crate::ui::theme::Theme;
 use crate::ui::widgets::action_menu::factory::spawn_action_menu;
 use crate::ui::widgets::character_card::factory::spawn_character_card;
@@ -111,12 +102,7 @@ pub fn spawn_battle_screen(
     commands.entity(action_menu).set_parent_in_place(root);
 
     // ── 6. End Turn button (Danger variant) ──
-    let end_turn_btn = spawn_button(
-        &mut commands,
-        &theme,
-        "End Turn",
-        ButtonVariant::Danger,
-    );
+    let end_turn_btn = spawn_button(&mut commands, &theme, "End Turn", ButtonVariant::Danger);
     commands.entity(end_turn_btn).insert(BattleAction::EndTurn);
     commands.entity(end_turn_btn).set_parent_in_place(root);
 }

@@ -24,10 +24,7 @@ pub enum BattleAction {
 /// `ButtonClicked` event, checks if the button entity carries a
 /// `BattleAction` component and dispatches accordingly.
 /// Currently only logs; will be replaced by domain system integration.
-pub fn on_battle_button_clicked(
-    on: On<ButtonClicked>,
-    query: Query<&BattleAction>,
-) {
+pub fn on_battle_button_clicked(on: On<ButtonClicked>, query: Query<&BattleAction>) {
     let entity = on.event().entity;
     let Ok(action) = query.get(entity) else {
         // Not a battle button, ignore

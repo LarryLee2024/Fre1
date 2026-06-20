@@ -47,12 +47,20 @@ fn bridge_registers_attributes_into_registry() {
     // 插入标准测试属性定义
     {
         let mut loaded = app.world_mut().resource_mut::<LoadedAttributeDefs>();
-        loaded
-            .defs
-            .push(make_attr("test_str", AttributeCategory::Primary, 10.0, 1.0, 30.0));
-        loaded
-            .defs
-            .push(make_attr("test_hp", AttributeCategory::Resource, 100.0, 0.0, 999.0));
+        loaded.defs.push(make_attr(
+            "test_str",
+            AttributeCategory::Primary,
+            10.0,
+            1.0,
+            30.0,
+        ));
+        loaded.defs.push(make_attr(
+            "test_hp",
+            AttributeCategory::Resource,
+            100.0,
+            0.0,
+            999.0,
+        ));
     }
 
     // 运行 Update 调度 → 触发 bridge 系统
@@ -60,8 +68,14 @@ fn bridge_registers_attributes_into_registry() {
 
     // 验证两条属性全部注册
     let registry = app.world_mut().resource::<AttributeRegistry>();
-    assert!(registry.contains(&AttributeId::new("test_str")), "primary attr should be registered");
-    assert!(registry.contains(&AttributeId::new("test_hp")), "resource attr should be registered");
+    assert!(
+        registry.contains(&AttributeId::new("test_str")),
+        "primary attr should be registered"
+    );
+    assert!(
+        registry.contains(&AttributeId::new("test_hp")),
+        "resource attr should be registered"
+    );
     assert_eq!(registry.definitions.len(), 2);
 
     // 验证属性定义的数值正确
@@ -89,7 +103,10 @@ fn bridge_skips_when_loaded_attribute_defs_empty() {
 
     // 验证 AttributeRegistry 保持空
     let registry = app.world_mut().resource::<AttributeRegistry>();
-    assert!(registry.definitions.is_empty(), "no attrs should be registered");
+    assert!(
+        registry.definitions.is_empty(),
+        "no attrs should be registered"
+    );
 }
 
 #[test]
@@ -101,9 +118,13 @@ fn bridge_rejects_attribute_with_default_out_of_range() {
     // 插入一个 default > max 的属性
     {
         let mut loaded = app.world_mut().resource_mut::<LoadedAttributeDefs>();
-        loaded
-            .defs
-            .push(make_attr("test_bad", AttributeCategory::Primary, 50.0, 0.0, 30.0));
+        loaded.defs.push(make_attr(
+            "test_bad",
+            AttributeCategory::Primary,
+            50.0,
+            0.0,
+            30.0,
+        ));
     }
 
     app.update();
@@ -114,7 +135,10 @@ fn bridge_rejects_attribute_with_default_out_of_range() {
         !registry.contains(&AttributeId::new("test_bad")),
         "attr with default > max should NOT be registered"
     );
-    assert!(registry.definitions.is_empty(), "registry should remain empty");
+    assert!(
+        registry.definitions.is_empty(),
+        "registry should remain empty"
+    );
 }
 
 #[test]
@@ -126,9 +150,13 @@ fn bridge_rejects_resource_with_negative_min() {
     // Resource 类别 min < 0 应被拒绝
     {
         let mut loaded = app.world_mut().resource_mut::<LoadedAttributeDefs>();
-        loaded
-            .defs
-            .push(make_attr("test_bad_resource", AttributeCategory::Resource, 50.0, -10.0, 100.0));
+        loaded.defs.push(make_attr(
+            "test_bad_resource",
+            AttributeCategory::Resource,
+            50.0,
+            -10.0,
+            100.0,
+        ));
     }
 
     app.update();
@@ -150,9 +178,13 @@ fn bridge_does_not_duplicate_attributes_on_second_change() {
     // 第一轮
     {
         let mut loaded = app.world_mut().resource_mut::<LoadedAttributeDefs>();
-        loaded
-            .defs
-            .push(make_attr("test_first", AttributeCategory::Primary, 10.0, 1.0, 30.0));
+        loaded.defs.push(make_attr(
+            "test_first",
+            AttributeCategory::Primary,
+            10.0,
+            1.0,
+            30.0,
+        ));
     }
     app.update();
 
@@ -164,9 +196,13 @@ fn bridge_does_not_duplicate_attributes_on_second_change() {
     // 第二轮（模拟热重载/增量加载）
     {
         let mut loaded = app.world_mut().resource_mut::<LoadedAttributeDefs>();
-        loaded
-            .defs
-            .push(make_attr("test_second", AttributeCategory::Primary, 20.0, 1.0, 30.0));
+        loaded.defs.push(make_attr(
+            "test_second",
+            AttributeCategory::Primary,
+            20.0,
+            1.0,
+            30.0,
+        ));
     }
     app.update();
 

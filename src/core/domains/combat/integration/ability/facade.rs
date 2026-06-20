@@ -12,7 +12,8 @@ use crate::core::capabilities::ability::foundation::{
     AbilityError, AbilityInstanceId, ActivationContext, ActivationType, CostEntry,
 };
 use crate::core::capabilities::ability::mechanism::{
-    ActivationRequest, ActiveAbilityContainer, complete_ability, tick_cooldowns, try_activate,
+    AbilityInstanceIdGenerator, ActivationRequest, ActiveAbilityContainer, complete_ability,
+    tick_cooldowns, try_activate,
 };
 
 // ─── Facade ────────────────────────────────────────────────────────
@@ -36,6 +37,7 @@ impl CombatAbilityFacade {
         frame: u64,
         costs: Vec<CostEntry>,
         commands: &mut Commands,
+        generator: &AbilityInstanceIdGenerator,
     ) -> Result<AbilityInstanceId, AbilityError> {
         let request = ActivationRequest {
             spec_id: spec_id.to_string(),
@@ -45,7 +47,7 @@ impl CombatAbilityFacade {
                 .with_target(format!("{:?}", target_entity)),
             costs,
         };
-        try_activate(container, request, caster_entity, commands)
+        try_activate(container, request, caster_entity, commands, generator)
     }
 
     /// 完成一个技能并进入冷却。
@@ -71,6 +73,7 @@ impl CombatAbilityFacade {
 #[derive(SystemParam)]
 pub struct CombatAbilityParam<'w, 's> {
     pub containers: Query<'w, 's, &'static mut ActiveAbilityContainer>,
+    pub generator: Res<'w, AbilityInstanceIdGenerator>,
 }
 
 impl<'w, 's> CombatAbilityParam<'w, 's> {
@@ -99,8 +102,8 @@ impl<'w, 's> CombatAbilityParam<'w, 's> {
             target,
             frame,
             costs,
-            &self.generator,
             commands,
+            &self.generator,
         )
     }
 
