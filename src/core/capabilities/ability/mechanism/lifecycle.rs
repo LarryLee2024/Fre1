@@ -176,9 +176,12 @@ pub fn transition_to(
     instance_id: &AbilityInstanceId,
     new_state: AbilityState,
 ) -> Result<(), AbilityError> {
-    let instance = container
-        .get_instance_mut(instance_id)
-        .ok_or(AbilityError::InstanceNotFound { instance_id: *instance_id })?;
+    let instance =
+        container
+            .get_instance_mut(instance_id)
+            .ok_or(AbilityError::InstanceNotFound {
+                instance_id: *instance_id,
+            })?;
 
     let old_state = instance.state;
 
@@ -243,9 +246,12 @@ pub fn cancel_ability(
     entity: Entity,
     commands: &mut Commands,
 ) -> Result<(), AbilityError> {
-    let instance = container
-        .get_instance_mut(instance_id)
-        .ok_or(AbilityError::InstanceNotFound { instance_id: *instance_id })?;
+    let instance =
+        container
+            .get_instance_mut(instance_id)
+            .ok_or(AbilityError::InstanceNotFound {
+                instance_id: *instance_id,
+            })?;
 
     match instance.state {
         AbilityState::Casting => {
@@ -311,7 +317,9 @@ pub fn complete_ability(
 ) -> Result<(), AbilityError> {
     let instance = container
         .get_instance(instance_id)
-        .ok_or(AbilityError::InstanceNotFound { instance_id: *instance_id })?;
+        .ok_or(AbilityError::InstanceNotFound {
+            instance_id: *instance_id,
+        })?;
 
     // 校验状态
     if instance.state != AbilityState::Active {
@@ -489,9 +497,12 @@ pub fn advance_cast_progress(
     instance_id: &AbilityInstanceId,
     delta: u64,
 ) -> Result<bool, AbilityError> {
-    let instance = container
-        .get_instance_mut(instance_id)
-        .ok_or(AbilityError::InstanceNotFound { instance_id: *instance_id })?;
+    let instance =
+        container
+            .get_instance_mut(instance_id)
+            .ok_or(AbilityError::InstanceNotFound {
+                instance_id: *instance_id,
+            })?;
 
     if instance.state != AbilityState::Casting {
         return Err(AbilityError::InvalidTransition {

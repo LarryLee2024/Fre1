@@ -61,7 +61,7 @@ pub fn validation_system(db: Res<LocalizationDatabase>) {
     }
 
     if !errors.is_empty() {
-        error!(target: "localization", 
+        error!(target: "localization",
             "[Localization] 验证失败，共 {} 个错误：",
             errors.len()
         );
@@ -75,7 +75,7 @@ pub fn validation_system(db: Res<LocalizationDatabase>) {
         );
     }
 
-    info!(target: "localization", 
+    info!(target: "localization",
         "[Localization] 验证通过。{} 个键正常，{} 个警告。",
         all_keys.len(),
         warnings.len()

@@ -27,7 +27,9 @@ impl StackingState {
     /// - V1: max_stacks ≥ 1
     pub fn new(max_stacks: u32) -> Result<Self, super::error::StackingError> {
         if max_stacks < 1 {
-            return Err(super::error::StackingError::InvalidConfig { reason: "max_stacks must be ≥ 1".into() });
+            return Err(super::error::StackingError::InvalidConfig {
+                reason: "max_stacks must be ≥ 1".into(),
+            });
         }
         Ok(Self {
             stack_count: 1,

@@ -22,7 +22,7 @@ pub(crate) fn on_surface_changed(
     for (tile_pos, mut props) in tile_query.iter_mut() {
         if tile_pos.is_same_tile(event.tile) {
             props.surface = event.new_surface;
-            tracing::trace!(target: "terrain", 
+            tracing::trace!(target: "terrain",
                 event = "terrain.surface.changed",
                 tile_x = tile_pos.x,
                 tile_y = tile_pos.y,

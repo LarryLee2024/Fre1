@@ -21,13 +21,12 @@ HAS_ERRORS=false
 check_pattern() {
     local pattern="$1"
     local description="$2"
-    local exclude="${3:-}"
+    local exclude=("${@:3}")
     local result
-    if [[ -n "$exclude" ]]; then
-        result=$(grep -rn "$pattern" "$SRC_DIR" --include="*.rs" 2>/dev/null | grep -v "target/" | grep -v ".codegraph/" | grep -v "$exclude" || true)
-    else
-        result=$(grep -rn "$pattern" "$SRC_DIR" --include="*.rs" 2>/dev/null | grep -v "target/" | grep -v ".codegraph/" || true)
-    fi
+    result=$(grep -rn "$pattern" "$SRC_DIR" --include="*.rs" 2>/dev/null | grep -v "target/" | grep -v ".codegraph/" || true)
+    for ex in "${exclude[@]}"; do
+        result=$(echo "$result" | grep -v "$ex" || true)
+    done
     if [[ -n "$result" ]]; then
         echo "❌ $description"
         echo "$result"
@@ -44,10 +43,12 @@ check_pattern "pub use error::\*" "Rule 1: pub use error::* (应为 pub(crate) m
 # Rule 2: 禁止 pub use failure::*
 check_pattern "pub use failure::\*" "Rule 2: pub use failure::* (应为 pub(crate) mod failure)"
 
-# Rule 3: 检查手动 impl Display for Error 类型（排除非 Error 类型）
-# 某些类型需要 Display 但不是错误（如 ID 类型、 diagnostics）
-# 只检查路径包含 error.rs 或 errors.rs 的文件
-check_pattern "impl.*Display.*for.*Error" "Rule 3: 手动 Display impl 在 error 文件中" "tests"
+# Rule 3: 检查手动 Display impl for Error 类型（排除非 Error 类型和测试）
+# 已知例外（追踪中）：
+# - attribute/mechanism/lifecycle.rs - AttributeRegistrationError (小，非 foundation)
+# - modifier/mechanism/lifecycle.rs - ModifierValidationError (小，非 foundation)
+# - tag/mechanism/lifecycle.rs - TagRegistrationError (小，非 foundation)
+check_pattern "impl.*Display.*for.*Error" "Rule 3: 手动 Display impl 在 error 文件中" "/tests/" "shared/error/mod.rs"
 
 # Rule 4: 所有 Failure 枚举必须实现 RuleFailure
 # 检查 *Failure 枚举是否都有对应的 impl RuleFailure
@@ -67,7 +68,7 @@ if [[ -n "$failure_enums" ]]; then
 fi
 
 # Rule 5: 检查 error.rs 中是否有裸 Entity 作为字段
-check_pattern "Entity\)" "Rule 5: error.rs 中使用裸 Entity 作为字段" "tests"
+check_pattern "Entity)" "Rule 5: error.rs 中使用裸 Entity 作为字段" "/tests/"
 
 echo ""
 if $HAS_ERRORS; then

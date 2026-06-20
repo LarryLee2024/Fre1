@@ -49,7 +49,7 @@ pub(crate) fn on_turn_end_tick_ability_cooldowns(
     let unit = trigger.event().unit;
     let expired = ability_param.tick_cooldowns_for_unit(unit);
     if !expired.is_empty() {
-        debug!(target: "combat", 
+        debug!(target: "combat",
             "[Combat-Ability] 单位 {:?} 的 {} 个技能冷却到期",
             unit,
             expired.len(),
@@ -72,7 +72,7 @@ pub(crate) fn on_turn_start_evaluate_triggers(
     let unit = trigger.event().unit;
     let ready_ids = trigger_param.evaluate_and_consume(unit, CombatTriggerType::TurnStarted);
     if !ready_ids.is_empty() {
-        debug!(target: "combat", 
+        debug!(target: "combat",
             "[Combat-Trigger] 单位 {:?} 的 {} 个 OnTurnStart 触发器就绪：{:?}",
             unit,
             ready_ids.len(),

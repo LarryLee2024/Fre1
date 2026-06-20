@@ -89,10 +89,9 @@ impl<'w, 's> CombatAbilityParam<'w, 's> {
         commands: &mut Commands,
     ) -> Result<AbilityInstanceId, ActivationIssue> {
         let mut container = self.containers.get_mut(entity).map_err(|e| {
-            ActivationIssue::Error(AbilityError::ContainerMissing { detail: format!(
-                "entity {:?} has no ActiveAbilityContainer: {}",
-                entity, e
-            )})
+            ActivationIssue::Error(AbilityError::ContainerMissing {
+                detail: format!("entity {:?} has no ActiveAbilityContainer: {}", entity, e),
+            })
         })?;
         CombatAbilityFacade::try_activate_ability(
             &mut container,

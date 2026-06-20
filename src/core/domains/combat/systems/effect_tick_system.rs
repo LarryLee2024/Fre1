@@ -36,7 +36,7 @@ pub(crate) fn on_turn_end_tick_effects(
     // 记录 Tick 活动日志
     for outcome in &outcomes {
         if !outcome.ticked.is_empty() {
-            debug!(target: "combat", 
+            debug!(target: "combat",
                 "[Combat-Effect] {} 个效果触发 Tick，{} 个到期",
                 outcome.ticked.len(),
                 outcome.expired.len()
@@ -44,7 +44,7 @@ pub(crate) fn on_turn_end_tick_effects(
         }
 
         if outcome.error_count > 0 {
-            tracing::warn!(target: "combat", 
+            tracing::warn!(target: "combat",
                 event = "combat.effect_tick.errors",
                 error_count = outcome.error_count,
                 "Tick 过程中出现 {} 个错误",

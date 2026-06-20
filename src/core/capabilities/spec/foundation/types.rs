@@ -67,4 +67,3 @@ pub enum SpecType {
     Ability,
     Effect,
 }
-

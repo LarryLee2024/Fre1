@@ -93,7 +93,9 @@ fn error_message_format_correct() {
     let msg = format!("{}", err);
     assert!(msg.contains("128"));
 
-    let err = CommandError::InvalidCommand { reason: "unknown action".into() };
+    let err = CommandError::InvalidCommand {
+        reason: "unknown action".into(),
+    };
     let msg = format!("{}", err);
     assert!(msg.contains("unknown action"));
 }

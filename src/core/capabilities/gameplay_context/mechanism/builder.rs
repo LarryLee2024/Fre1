@@ -12,8 +12,8 @@ use crate::core::capabilities::gameplay_context::events::{
 };
 use crate::core::capabilities::gameplay_context::foundation::error::ContextBuildError;
 use crate::core::capabilities::gameplay_context::foundation::{
-    ChainNode, ContextChain, ContextMetadata, ContextOrigin, ContextStatus,
-    ElementType, GameplayContextData, SourceInfo, TargetInfo,
+    ChainNode, ContextChain, ContextMetadata, ContextOrigin, ContextStatus, ElementType,
+    GameplayContextData, SourceInfo, TargetInfo,
 };
 
 /// 游戏上下文的构建器。

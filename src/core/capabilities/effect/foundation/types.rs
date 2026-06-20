@@ -5,9 +5,9 @@
 //! 详见 docs/02-domain/capabilities/effect_domain.md §1、§3。
 //! 详见 docs/04-data/capabilities/effect_schema.md §3。
 
+use super::error::EffectError;
 use bevy::prelude::Reflect;
 use serde::{Deserialize, Serialize};
-use super::error::EffectError;
 
 /// 效果生命周期阶段（四阶段状态机）。
 ///
@@ -176,7 +176,9 @@ impl EffectPeriod {
     /// 设置最大 Tick 次数。
     pub fn with_max_ticks(mut self, max: u32) -> Result<Self, EffectError> {
         if max < 1 {
-            return Err(EffectError::InvalidPeriod { reason: "max_ticks must be ≥ 1".into() });
+            return Err(EffectError::InvalidPeriod {
+                reason: "max_ticks must be ≥ 1".into(),
+            });
         }
         self.max_ticks = Some(max);
         Ok(self)

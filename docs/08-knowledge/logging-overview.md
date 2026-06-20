@@ -4,6 +4,7 @@ title: 日志系统深度解析 — 从宪法到代码
 status: draft
 owner: architect
 created: 2026-06-19
+updated: 2026-06-20（吸收 6 点最佳实践：span-event 字段分离、event 英文规范、LogCode 作为 SSoT、高基数警告、telemetry::emit 规划）
 tags:
   - knowledge
   - logging
@@ -185,12 +186,19 @@ BAT002 → 战斗结束     EFF001 → 效果施加     SAV001 → 存档创建
 - 文本搜索：搜 "damage" 能搜到几百条，不知道哪个是哪个
 - LogCode：搜 `BAT007` 只有这一个事件，AI 也能理解
 
-目前定义了 20 个域名、约 150 个编码。每个 LogCode 有两个方法：
+目前定义了 20 个域名、约 150 个编码。每个 LogCode 有四个核心方法：
 
 ```rust
 LogCode::BAT001.code()          // 返回 "BAT001"
 LogCode::BAT001.description()   // 返回 "战斗开始"
+LogCode::BAT001.event_name()    // 返回 "battle_started" — 机器可读事件名（英文 snake_case）
+LogCode::BAT001.target()        // 返回 "domain.combat" — 对应的 tracing target
 ```
+
+其中 `event_name()` 和 `target()` 是新增方法，目的是让 LogCode 成为**单一事实源**：
+- `event` 字符串从 LogCode 派生，不需要在 Observer 中手动写 `event = "level_up"`
+- `target` 从 LogCode 域前缀映射为 `domain.xxx` 层级格式
+- 后续通过 `telemetry::emit(LogCode::XXX)` 自动完成所有派生
 
 ### 3.2 LogCategory — 日志分类
 
@@ -306,10 +314,12 @@ impl Plugin for LoggingPlugin {
 - `Counterspell` → `RCT005`，记录 `caster`、`target_spell`
 
 **ABL — Ability（技能）：ability_logger.rs**
-- `AbilityActivated` → `ABL001`，记录 `entity`、`spec_id`、`context_desc`
+- `AbilityActivated` → `ABL001`，记录 `entity`、`spec_id`
 - `AbilityCompleted` → `ABL002`，记录 `entity`、`spec_id`、`result`
 - `AbilityCancelled` → `ABL003`，记录 `entity`、`spec_id`、`reason`
 - `AbilityCooldownStarted` → `ABL004`，记录 `entity`、`spec_id`、`duration`、`shared_group`
+
+> ⚠️ **注意**：`ABL001` 原有一个 `context_desc` 字段，因高基数风险（自然语言描述会导致日志聚合系统 label 爆炸）已被移除。请改用 `spec_id` + `LocalizationKey` 的组合来提供上下文信息。
 
 **EFF — Effect（效果）：effect_logger.rs**
 - `EffectApplied` → `EFF001`，记录 `instance_id`、`def_id`、`target`
@@ -387,25 +397,36 @@ impl Plugin for LoggingPlugin {
 Observer 的典型模板（以 progression_logger 为例）：
 
 ```rust
-#[tracing::instrument(skip_all, fields(code = ?LogCode::PRG002, event = "level_up"))]
+#[tracing::instrument(skip_all, target = "domain.progression", fields(
+    code = ?LogCode::PRG002,
+    event = "level_up",
+))]
 pub(crate) fn on_level_up(trigger: On<LevelUp>) {
+    // 1. 度量计数
     metrics::record(LogCode::PRG002);
+
+    // 2. 取事件数据
     let event = trigger.event();
+
+    // 3. 输出 — 只放变量字段，不放 span 已覆盖的不变量
     info!(
-        code = ?LogCode::PRG002,
-        event = "level_up",
+        target = "domain.progression",
         entity = ?event.entity,
         old = event.old_level,
         new = event.new_level,
-        "level_up"
+        "角色升级",
     );
 }
 ```
 
+**为什么 `info!()` 里没有 `code` 和 `event`？** 因为它们已经在 `#[instrument]` 的 span 字段里了。Span 负责不变量（本次调用共用的固定值），Event 只放变量（本次调用独有的动态数据）。重复写它们不仅冗余，还会导致未来修改时只改了一处、另一处忘记改的维护问题。
+
+> 注意：`#[instrument]` 的 `target` 只作用于 span 层。`info!()` 内部仍需显式传递 `target` 参数，因为 tracing 的 event 不会继承父 span 的 target。这是当前模式的已知冗余，后续通过 `telemetry::emit` 统一封装后可消除。
+
 每个 Observer 包含三个要素：
-1. **`#[tracing::instrument]`** — 自动生成 span，携带 `code` 和 `event` 字段
+1. **`#[tracing::instrument]`** — 自动生成 span，携带 `code` 和 `event` 等不变字段
 2. **`metrics::record(LogCode::XXX)`** — 更新全局度量计数器
-3. **`info!()` / `warn!()` / `debug!()`** — 输出结构化日志到 tracing
+3. **`info!()` / `warn!()` / `debug!()`** — 输出结构化日志（只放动态变量字段）
 
 ### 4.3 rate_limit/ — 日志风暴保护
 
@@ -494,20 +515,22 @@ Step 2: Bevy 调度 Observer
   LoggingPlugin 注册了 progression_logger::on_level_up
   Bevy 在触发 LevelUp 事件后自动调用该 Observer
 
-Step 3: Observer 生成 span + 度量 + 结构化日志
+Step 3: Observer 生成 span + 度量 + 结构化日志（2026-06 最新模式）
 ─────────────────────────
   progression_logger.rs:
-    #[tracing::instrument(skip_all, fields(code = ?LogCode::PRG002, event = "level_up"))]
+    #[tracing::instrument(skip_all, target = "domain.progression", fields(
+        code = ?LogCode::PRG002,
+        event = "level_up",
+    ))]
     fn on_level_up(trigger: On<LevelUp>) {
         metrics::record(LogCode::PRG002);           // ← 更新全局计数器
         let e = trigger.event();
-        info!(                                      // ← 输出到 tracing
-            code = ?LogCode::PRG002,
-            event = "level_up",
+        info!(                                      // ← 只放变量
+            target = "domain.progression",
             entity = ?e.entity,
             old = e.old_level,
             new = e.new_level,
-            "level_up"
+            "角色升级",
         );
     }
 
@@ -588,17 +611,20 @@ use crate::core::domains::crafting::events::ItemCrafted;
 use crate::infra::logging::metrics;
 use crate::shared::diagnostics::LogCode;
 
-#[tracing::instrument(skip_all, fields(code = ?LogCode::CRF003, event = "item_crafted"))]
+// span 放不变量（code + event），info! 只放变量
+#[tracing::instrument(skip_all, target = "domain.crafting", fields(
+    code = ?LogCode::CRF003,
+    event = "item_crafted",
+))]
 pub(crate) fn on_item_crafted(trigger: On<ItemCrafted>) {
     metrics::record(LogCode::CRF003);
     let event = trigger.event();
     info!(
-        code = ?LogCode::CRF003,
-        event = "item_crafted",
+        target = "domain.crafting",
         crafter = ?event.crafter,
         item_id = ?event.item_id,
         quality = ?event.quality,
-        "item_crafted"
+        "物品铸造完成",
     );
 }
 ```
@@ -628,11 +654,14 @@ commands.trigger(ItemCrafted {
 
 ### 检查清单
 
-- [ ] LogCode 在 `log_code.rs` 中已定义（code + description）
+- [ ] LogCode 在 `log_code.rs` 中已定义（code + description + event_name + target）
 - [ ] LogCategory 映射已更新（如果需要新的分类规则）
-- [ ] Observer 函数标注了 `#[tracing::instrument(skip_all, fields(...))]`
+- [ ] Observer 函数标注了 `#[tracing::instrument(skip_all, target="domain.xxx", fields(...))]`
 - [ ] Observer 函数调用 `metrics::record(LogCode::XXX)`
-- [ ] Observer 函数遵循 `info!(code = ?LogCode::XXX, event = "...", ...)` 格式
+- [ ] `info!()` 中**没有**重复 `code`/`event` 字段（它们已在 span 中）
+- [ ] `info!()` 中只放变量字段（entity, old, new, amount 等动态数据）
+- [ ] `event` 字段值是英文（`"item_crafted"`），消息可用中文（`"物品铸造完成"`）
+- [ ] 所有结构化字段都是 ID 类型（`entity_id`、`spec_id`），没有 `context_desc` 等自然语言文本
 - [ ] Observer 在 `observers/mod.rs` 中注册 (`pub(crate) mod xxx_logger`)
 - [ ] Observer 在 `LoggingPlugin` 中注册 (`app.add_observer(...)`)
 - [ ] 领域事件（`ItemCrafted`）包含日志所需的全部字段
@@ -666,10 +695,30 @@ commands.trigger(ItemCrafted {
 | 旧版 Observer 升级 | ⚠️ 进行中 | battle_logger / turn_logger / spell_logger 这 3 个最早实现的模块尚未加上 `#[instrument]` 和 `metrics::record()` 调用，与其他 17 个模块不一致 |
 | Metrics 持久化 | ❌ 未实现 | MetricsCollector 当前仅输出 DEBUG 日志，未持久化到文件或对接外部监控 |
 | domain 层违规清理 | ⚠️ 持续进行中 | 仍有 13 个 core 层文件（progression/inventory/faction/tactical/terrain/combat/narrative）存在直接 `tracing::info!`/`warn!`/`trace!` 调用 |
+| **span-field-only 模式改造** | ⚠️ 待启动 | 所有 Observer 需要消除 `info!()` 中的 `code`/`event` 重复字段，改为 span 放不变量、event 放变量的新模式 |
+| **`context_desc` 清理** | ❌ 待处理 | ABL001 等 Observer 中仍有 `context_desc` 高基数字段，需替换为 `spec_id` + `LocalizationKey` |
+| **`telemetry::emit` 统一入口** | 📋 规划中 | 引入 `telemetry::emit(LogCode::XXX, ...)` 封装日志 + 度量 + trace，消除 target 两处重复和 event 手动派生 |
 
 ---
 
-## 8. 规则速查：该做什么和不该做什么
+## 8. 本次同步吸收的 6 点最佳实践
+
+以下 6 条最佳实践是 2026-06-20 跨文档同步后吸收的结论，涵盖 Observer 编写规范、LogCode 职责、字段管控和未来进化方向：
+
+| # | 实践 | 核心理念 | 关键约束 |
+|---|------|---------|---------|
+| 1 | **Span-Event 字段分离** | `#[instrument(fields(...))]` 放不变量（`code`、`event`），`info!()` 放变量（`entity`、`amount`） | 禁止在 `info!()` 中重复 span 已有的字段 |
+| 2 | **event 值用英文** | `event = "level_up"` 而非 `event = "升级"`；结构化日志是给机器消费的 | 英文小写 + 下划线，禁止中文 |
+| 3 | **LogCode 作为 SSoT** | `LogCode::XXX.event_name()` 和 `LogCode::XXX.target()` 派生所有元数据，Observer 不硬编码 | Observer 只引用 `LogCode::XXX`，不写字面量 `"level_up"` |
+| 4 | **target 分层格式** | `layer.domain`（如 `domain.progression`、`infra.logging`）；Layer 取 `app/core/infra/content` 缩写 | I/O / 渲染 / AI / 持久化用 `infra`，领域逻辑用 `domain` |
+| 5 | **禁止高基数字段** | 自然语言描述（`context_desc`）导致日志聚合系统 label 爆炸 | 用 `spec_id` + `LocalizationKey` 替代，字段值必须可枚举 |
+| 6 | **`telemetry::emit` 统一入口（规划中）** | 未来用 `telemetry::emit(LogCode::XXX, ...)` 封装 `metrics::record` + `info!()` + span，消除重复 | 当前仍手动写三步式，不可提前引入新依赖 |
+
+这些实践已在 `docs/01-architecture/40-cross-cutting/ADR-052.md`、`logging_schema.md` 和宪法 §11 中落笔，这里用通俗语言归纳，方便日常速查。
+
+---
+
+## 9. 规则速查：该做什么和不该做什么
 
 ### ✅ 允许的
 
@@ -693,6 +742,9 @@ commands.trigger(ItemCrafted {
 | Observer 中写业务逻辑 | Observer 只负责输出日志，不负责判断 |
 | ERROR 级别日志 | ERROR = Bug，出现即修，预算为零 |
 | 使用 `println!` / `dbg!` | 必须用 tracing 统一管理 |
+| 在 `info!()` 中重复 span 的 `code`/`event` 字段 | 冗余维护，改一处忘另一处 |
+| `event` 字段值用中文（如 `"技能激活"`） | 结构化日志是机器消费的，必须英文 |
+| 使用 `context_desc` 等自然语言文本作为结构化字段 | 高基数，压垮日志聚合系统 |
 
 ---
 
@@ -700,7 +752,7 @@ commands.trigger(ItemCrafted {
 
 | 文档 | 内容 |
 |------|------|
-| `docs/00-governance/ai-constitution-complete.md` §11 | 可观测性宪法（最高准则） |
+| `docs/00-governance/ai-constitution-complete.md` §11.1-11.6 | 可观测性宪法（最高准则，含 Observer 实现规范） |
 | `docs/00-governance/coding-rules.md` §14 | 日志编码规范 |
 | `docs/01-architecture/40-cross-cutting/ADR-052-logging-architecture.md` | 日志架构决策记录 |
 | `src/shared/diagnostics/mod.rs` | 共享日志类型定义 |

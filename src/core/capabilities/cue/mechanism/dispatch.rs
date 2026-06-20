@@ -9,9 +9,7 @@ use bevy::ecs::system::Commands;
 
 use crate::core::capabilities::cue::events::{CueSuppressed, CueTriggered, SuppressReason};
 use crate::core::capabilities::cue::foundation::error::CueError;
-use crate::core::capabilities::cue::foundation::{
-    CueContainer, CueData, CueDef, CueTag, CueType,
-};
+use crate::core::capabilities::cue::foundation::{CueContainer, CueData, CueDef, CueTag, CueType};
 
 /// 分发目标子系统。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

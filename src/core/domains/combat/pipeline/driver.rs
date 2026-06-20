@@ -114,7 +114,7 @@ pub(crate) fn combat_pipeline_driver(
     let def = match pipeline_registry.get(&driver.state.pipeline_id) {
         Some(d) => d.clone(),
         None => {
-            tracing::warn!(target: "combat", 
+            tracing::warn!(target: "combat",
                 event = "combat.pipeline.not_found",
                 pipeline_id = %driver.state.pipeline_id,
                 "管线 '{}' 未在 Registry 中找到",
@@ -256,7 +256,7 @@ pub(crate) fn on_unit_action_complete(
         return;
     }
 
-    debug!(target: "combat", 
+    debug!(target: "combat",
         "[Combat] UnitAction: 单位 {:?} 行动完成，恢复管线执行",
         event.unit
     );
@@ -265,7 +265,7 @@ pub(crate) fn on_unit_action_complete(
     let def = match pipeline_registry.get(&driver.state.pipeline_id) {
         Some(d) => d.clone(),
         None => {
-            tracing::warn!(target: "combat", 
+            tracing::warn!(target: "combat",
                 event = "combat.pipeline.missing_resume",
                 pipeline_id = %driver.state.pipeline_id,
                 "管线 '{}' 未找到，无法恢复执行",

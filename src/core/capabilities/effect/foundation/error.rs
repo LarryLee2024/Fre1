@@ -3,8 +3,8 @@
 //! 涵盖 Effect 系统的程序错误（不应发生的异常情况）。
 //! 详见 ADR-051。
 
-use bevy::prelude::Event;
 use crate::core::capabilities::effect::foundation::types::EffectStage;
+use bevy::prelude::Event;
 use thiserror::Error;
 
 /// Effect 领域错误。

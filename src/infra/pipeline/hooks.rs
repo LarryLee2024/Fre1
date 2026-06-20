@@ -36,7 +36,7 @@ impl PipelineHook for ExecutionLogHook {
         _context: &PipelineContext,
         result: &StepResult,
     ) {
-        tracing::trace!(target: "pipeline", 
+        tracing::trace!(target: "pipeline",
             hook = %self.name,
             stage = %stage,
             step = %step,

@@ -372,7 +372,9 @@ pub fn validate_targeting_def(def: &TargetingDef) -> Result<(), TargetingError> 
 
     // V2: 最大目标数 ≥ 1
     if def.max_targets < 1 {
-        return Err(TargetingError::InvalidMaxTargets(def.max_targets));
+        return Err(TargetingError::InvalidMaxTargets {
+            max: def.max_targets,
+        });
     }
 
     // V3: min_range ≤ range

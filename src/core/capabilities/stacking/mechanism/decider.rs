@@ -262,7 +262,9 @@ pub fn evaluate_stacking(
 pub fn validate_config(config: &StackingConfig) -> Result<(), StackingError> {
     // V1: max_stacks ≥ 1
     if config.max_stacks < 1 {
-        return Err(StackingError::InvalidConfig { reason: "max_stacks must be ≥ 1".into() });
+        return Err(StackingError::InvalidConfig {
+            reason: "max_stacks must be ≥ 1".into(),
+        });
     }
 
     match config.stacking_type {
@@ -272,13 +274,17 @@ pub fn validate_config(config: &StackingConfig) -> Result<(), StackingError> {
         StackingType::Aggregate => {
             // V2: Aggregate 类型 max_stacks 必须 ≥ 2
             if config.max_stacks < 2 {
-                return Err(StackingError::InvalidConfig { reason: "Aggregate stacking requires max_stacks ≥ 2".into() });
+                return Err(StackingError::InvalidConfig {
+                    reason: "Aggregate stacking requires max_stacks ≥ 2".into(),
+                });
             }
         }
         StackingType::Replace => {
             // V3: Replace 类型 max_stacks 必须 = 1
             if config.max_stacks != 1 {
-                return Err(StackingError::InvalidConfig { reason: "Replace stacking requires max_stacks == 1".into() });
+                return Err(StackingError::InvalidConfig {
+                    reason: "Replace stacking requires max_stacks == 1".into(),
+                });
             }
         }
     }

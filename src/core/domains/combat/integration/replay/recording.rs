@@ -83,7 +83,7 @@ pub(crate) fn start_recording_on_battle_begin(
     commands.insert_resource(mapper);
     commands.insert_resource(RecordingSession(Some(core_session)));
 
-    debug!(target: "combat", 
+    debug!(target: "combat",
         "[ReplayBridge] 录制开始：{} 个单位，种子={}",
         unit_count, initial_seed
     );
@@ -134,7 +134,7 @@ pub(crate) fn stop_recording_on_battle_end(
     // 停止录制并获取日志
     match session.stop(0) {
         Ok(log) => {
-            debug!(target: "combat", 
+            debug!(target: "combat",
                 "[ReplayBridge] 录制停止：{} 帧，{} 条命令",
                 log.header.total_frames,
                 log.frames.iter().map(|f| f.commands.len()).sum::<usize>()

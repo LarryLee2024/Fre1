@@ -12,7 +12,9 @@ pub type LocaleId = String;
 #[derive(Debug, Clone, thiserror::Error)]
 pub enum LocError {
     /// Key 在重试所有 fallback locale 后仍未找到
-    #[error("Key '{key}' not found in locale '{locale}' (fallbacks attempted: {fallbacks_attempted:?})")]
+    #[error(
+        "Key '{key}' not found in locale '{locale}' (fallbacks attempted: {fallbacks_attempted:?})"
+    )]
     KeyNotFound {
         key: String,
         locale: LocaleId,

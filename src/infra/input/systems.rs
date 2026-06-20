@@ -60,7 +60,7 @@ pub fn collect_input_actions(
         }
     }
 
-    tracing::trace!(target: "input", 
+    tracing::trace!(target: "input",
         "Input: 按下={:?} 刚按下={:?}",
         input_state.pressed_actions,
         input_state.just_pressed_actions

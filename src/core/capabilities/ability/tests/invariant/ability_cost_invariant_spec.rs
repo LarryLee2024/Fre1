@@ -90,12 +90,11 @@ fn multi_resource_consumption_all_or_nothing() {
 
 #[test]
 fn insufficient_cost_error_contains_required_fields() {
-    let err =
-        crate::core::capabilities::ability::foundation::AbilityFailure::InsufficientCost {
-            resource: "attr_mp".to_string(),
-            required: 50.0,
-            available: 20.0,
-        };
+    let err = crate::core::capabilities::ability::foundation::AbilityFailure::InsufficientCost {
+        resource: "attr_mp".to_string(),
+        required: 50.0,
+        available: 20.0,
+    };
     let msg = format!("{}", err);
     assert!(msg.contains("attr_mp"));
     assert!(msg.contains("50"));
@@ -106,10 +105,9 @@ fn insufficient_cost_error_contains_required_fields() {
 
 #[test]
 fn condition_failed_error_structured() {
-    let err =
-        crate::core::capabilities::ability::foundation::AbilityFailure::ConditionFailed {
-            reason: "silenced".to_string(),
-        };
+    let err = crate::core::capabilities::ability::foundation::AbilityFailure::ConditionFailed {
+        reason: "silenced".to_string(),
+    };
     let msg = format!("{}", err);
     assert!(msg.contains("silenced"));
 }

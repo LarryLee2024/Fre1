@@ -5,7 +5,7 @@ use crate::core::capabilities::ability::foundation::{
     ActivationType, CooldownEntry, CostEntry,
 };
 use crate::core::capabilities::ability::mechanism::{
-    ActivationIssue, AbilityInstanceIdGenerator, ActivationRequest, ActiveAbilityContainer,
+    AbilityInstanceIdGenerator, ActivationIssue, ActivationRequest, ActiveAbilityContainer,
     advance_cast_progress, apply_block, cancel_ability, complete_ability, force_reset_cooldown,
     get_ready_abilities, remove_block, start_cooldown, start_multiple_cooldowns, tick_cooldowns,
     transition_to, try_activate,

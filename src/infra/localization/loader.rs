@@ -113,20 +113,19 @@ fn load_all_locales() -> HashMap<LocaleId, HashMap<String, Pattern>> {
         for ftl_entry in ftl_files.flatten() {
             let ftl_path = ftl_entry.path();
             if ftl_path.extension().is_some_and(|e| e == "ftl") {
-                let content = std::fs::read_to_string(&ftl_path).unwrap_or_else(|e| {
-                    panic!("[Localization] 读取失败 {:?}: {}", ftl_path, e)
-                });
+                let content = std::fs::read_to_string(&ftl_path)
+                    .unwrap_or_else(|e| panic!("[Localization] 读取失败 {:?}: {}", ftl_path, e));
                 let patterns = parse_ftl(&content);
                 let count = patterns.len();
                 locale_map.extend(patterns);
-                info!(target: "localization", 
+                info!(target: "localization",
                     "[Localization] 从 {:?} 加载了 {} 个模式",
                     ftl_path, count
                 );
             }
         }
 
-        info!(target: "localization", 
+        info!(target: "localization",
             "[Localization] 加载了区域 '{}'，共 {} 个模式",
             locale_name,
             locale_map.len()
@@ -149,7 +148,7 @@ pub fn load_all_ftl_system(mut db: ResMut<LocalizationDatabase>) {
         total_patterns += count;
     }
 
-    info!(target: "localization", 
+    info!(target: "localization",
         "[Localization] 加载了 {} 个区域共 {} 个模式。当前区域：{}",
         db.loaded_locales().len(),
         total_patterns,
@@ -249,7 +248,7 @@ pub fn hot_reload_system(
                 let count = patterns.len();
                 db.load_patterns(locale, patterns);
 
-                info!(target: "localization", 
+                info!(target: "localization",
                     "[Localization] 热重载了 {} 个模式从 {:?}",
                     count, path
                 );

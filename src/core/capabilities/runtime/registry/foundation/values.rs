@@ -41,7 +41,9 @@ impl DefRegistry {
 
         // V1: 检查 ID 格式（非空）
         if def_id.is_empty() {
-            return Err(RegistryError::InvalidIdFormat { id: "ID must not be empty".into() });
+            return Err(RegistryError::InvalidIdFormat {
+                id: "ID must not be empty".into(),
+            });
         }
 
         self.entries.insert(def_id.clone(), entry);

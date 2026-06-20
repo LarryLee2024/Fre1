@@ -105,7 +105,9 @@ fn stacking_decision_structure_validated() {
 
 #[test]
 fn stacking_error_display_correct() {
-    let err = StackingError::InvalidConfig { reason: "max_stacks < 2 for Aggregate".into() };
+    let err = StackingError::InvalidConfig {
+        reason: "max_stacks < 2 for Aggregate".into(),
+    };
     let msg = format!("{}", err);
     assert!(msg.contains("invalid stacking config"));
 }

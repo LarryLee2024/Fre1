@@ -18,8 +18,8 @@ use bevy::prelude::*;
 use crate::core::capabilities::execution::events::{ExecutionCompleted, ExecutionFailed};
 use crate::core::capabilities::execution::foundation::error::ExecutionError;
 use crate::core::capabilities::execution::foundation::{
-    CalcTrace, CustomExecutionRef, DamageParams, DirectOp, ExecutionContext,
-    ExecutionResult, ExecutionType, HealParams, ScalableValue,
+    CalcTrace, CustomExecutionRef, DamageParams, DirectOp, ExecutionContext, ExecutionResult,
+    ExecutionType, HealParams, ScalableValue,
 };
 
 /// 执行完整计算流程。

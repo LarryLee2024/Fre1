@@ -49,6 +49,38 @@ Logging 属于 Infrastructure
 统一 Span 链路
 ```
 
+### Target 层级规范
+
+所有日志 `target` 必须遵循 `domain.module.submodule` 层级格式：
+
+| target | 模块 | 说明 |
+|--------|------|------|
+| `domain.combat` | 战斗核心流程 | BAT 系列 |
+| `domain.ability.activation` | 技能激活 | ABL001–ABL004 |
+| `domain.effect` | 效果系统 | EFF 系列 |
+| `domain.tactical.turn` | 回合流转 | TAC 系列 |
+| `domain.tactical.movement` | 单位移动 | TAC001–TAC005 |
+| `domain.terrain` | 地形效果 | TER 系列 |
+| `domain.spell` | 法术系统 | SPR 系列 |
+| `domain.reaction` | 反应/援护 | RCT 系列 |
+| `domain.progression` | 成长体系 | PRG 系列 |
+| `domain.inventory` | 背包物品 | INV 系列 |
+| `domain.economy` | 经济交易 | ECO 系列 |
+| `domain.crafting` | 制作系统 | CRF 系列 |
+| `domain.faction` | 阵营关系 | FAC 系列 |
+| `domain.party` | 队伍管理 | PRY 系列 |
+| `domain.camp_rest` | 营地休息 | CNR 系列 |
+| `domain.narrative` | 叙事对话 | NAR 系列 |
+| `domain.quest` | 任务系统 | QST 系列 |
+| `domain.summon` | 召唤系统 | SUM 系列 |
+| `infra.save` | 存档 | SAV 系列 |
+| `infra.content` | 内容加载 | CNT 系列 |
+| `infra.replay` | 回放 | RPL 系列 |
+
+`#[instrument]` 用法示例：`#[tracing::instrument(skip_all, target = "domain.ability.activation", fields(...))]`
+
+> 注意：`#[instrument]` 的 `target` 只影响 span 层。`info!()` 内部仍需显式传递 `target` 参数，因为 tracing 的 event 不会从父 span 继承 target。后续通过 `telemetry::emit` 统一封装。
+
 ### 日志分级（宪法 §11.2 扩展）
 
 | 级别 | 用途 | 示例 |
@@ -75,14 +107,22 @@ CNR — CampRest        NAR — Narrative        SUM — Summon
 CNT — Content (infra) SAV — Save (infra)     RPL — Replay (infra)
 ```
 
-使用示例：
+使用示例（span 放不变量，event 放变量）：
 ```rust
-info!(
+#[tracing::instrument(skip_all, target = "domain.combat", fields(
     code = ?LogCode::BAT001,
-    battle_id = ?e.battle_id,
-    participants = e.participant_count,
-    "battle_started"
-);
+    event = "battle_started",
+))]
+fn on_battle_started(trigger: On<BattleStarted>) {
+    let e = trigger.event();
+    metrics::record(LogCode::BAT001);
+    info!(
+        target = "domain.combat",
+        battle_id = ?e.battle_id,
+        participants = e.participant_count,
+        "战斗开始",
+    );
+}
 ```
 
 ### CorrelationId 链路
@@ -158,6 +198,88 @@ battle
          └─ effect
 ```
 
+### Observer 字段分离规范（Span 不变量 vs Event 变量）
+
+`#[instrument]` 的 `fields()` 和 `info!()` 的参数有严格分工，禁止重复：
+
+| 位置 | 内容 | 示例 |
+|------|------|------|
+| `#[instrument(fields(...))]` | 不变量：本次调用中所有日志共用的固定值 | `code = ?LogCode::PRG002`, `event = "level_up"` |
+| `info!()` / `warn!()` | 变量：仅本次调用独有的动态数据 | `entity`, `old`, `new`, `amount` |
+
+```rust
+// ✅ 正确：span 放不变量，event 只放变量
+#[tracing::instrument(skip_all, target = "domain.progression", fields(
+    code = ?LogCode::PRG002,
+    event = "level_up",
+))]
+fn on_level_up(trigger: On<LevelUp>) {
+    metrics::record(LogCode::PRG002);
+    let e = trigger.event();
+    info!(
+        target = "domain.progression",
+        entity = ?e.entity,
+        old = e.old_level,
+        new = e.new_level,
+        "角色升级",
+    );
+}
+
+// ❌ 错误：code/event 重复出现在 info!() 中（已在 span 中）
+info!(
+    code = ?LogCode::PRG002,     // ❌ 重复
+    event = "level_up",          // ❌ 重复
+    entity = ?e.entity,
+    ...
+);
+```
+
+注意：`#[instrument]` 的 `target` 只作用于 span 层。`info!()` 内部仍需显式传递 `target` 参数，因为 tracing 的 event 不会继承父 span 的 target。后续通过 `telemetry::emit` 统一封装后可解决此问题。
+
+### 结构化字段低基数要求
+
+所有结构化字段必须使用 ID 类型（`entity_id`、`spec_id`、`item_id`），**禁止使用自然语言文本**：
+
+```rust
+// ❌ 高基数：context_desc 是自然语言，每个调用值都不同
+info!(context_desc = "caster's level 3 fireball");
+
+// ✅ 低基数：使用 ID
+info!(spec_id = ?spec_id, entity = ?entity);
+```
+
+`context_desc` 等自由文本字段会导致日志聚合分析系统（如 Loki、Elasticsearch）的基数爆炸，长期存在会压垮存储和查询。应改用 `context_id` + `LocalizationKey` 方案。
+
+### 字段语言规范
+
+- `event` 字段值（结构化字段）**必须使用英文**（`"level_up"`、`"battle_started"`）——结构化日志的消费者是机器（日志聚合系统、AI 搜索），英文保证可移植性
+- `message`（字符串消息）可以用中文或英文——消费者是人，以开发者阅读效率为主
+- `LogCode::description()` 可以用中文（例如 `"角色升级"`）
+
+### telemetry::emit — 未来统一入口
+
+当前 Observer 存在三要素重复模式：`#[instrument]` span + `metrics::record()` + `info!()`，其中 target 需要在两处重复指定。后续引入 `telemetry::emit()` 统一封装：
+
+```rust
+// 未来模式
+#[instrument(skip_all, fields(code = ?LogCode::PRG002))]
+fn on_level_up(trigger: On<LevelUp>) {
+    let e = trigger.event();
+    telemetry::emit(LogCode::PRG002, e);
+}
+
+// telemetry::emit 内部实现：
+// 1. metrics::record(LogCode::PRG002)
+// 2. 自动识别 target = "domain.progression"（从 LogCode 域前缀映射）
+// 3. output!(LogCode::PRG002, entity = ?e.entity, ...)
+// 4. span 已携带 code/event，无需重复
+```
+
+收益：
+- 消除 target 两处重复指定
+- 自动统一 metrics 和 log 调用
+- `event` 字符串从 LogCode 自动派生，消除"LogCode 和 event 是同一件事的两种表达"的冗余
+
 ### 领域事件 → 日志的四路消费
 
 ```
@@ -224,6 +346,9 @@ src/infra/logging/                # L2: 日志基础设施实现
 - 🟥 Release 版本每帧系统输出 INFO/DEBUG
 - 🟥 ERROR 预算非零（出现 error! 就是 Bug）
 - 🟥 LogCode 使用文本搜索替代编码（必须用 `code = ?LogCode::XXX`）
+- 🟥 在 `info!()` 中重复 `#[instrument(fields(...))]` 已覆盖的 `code`/`event` 字段（span 负责不变量，event 只放变量）
+- 🟥 `event` 字段值使用中文（结构化日志是机器消费的，必须英文）
+- 🟥 使用 `context_desc` 等自然语言文本作为结构化字段（高基数风险，必须改用 ID）
 
 ## Definition / Instance Design
 

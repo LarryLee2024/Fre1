@@ -36,7 +36,7 @@ pub(crate) fn step_turn_start(
         unit: current.entity,
     });
 
-    debug!(target: "combat", 
+    debug!(target: "combat",
         "[Combat] TurnStart: 单位={:?}, 队伍={}, 回合={}",
         current.entity,
         current.team_id,
@@ -72,13 +72,13 @@ pub(crate) fn step_phase_check(
     match ap_query.get(current.entity) {
         Ok(ap) => {
             if ap.is_idle() {
-                debug!(target: "combat", 
+                debug!(target: "combat",
                     "[Combat] PhaseCheck: 单位 {:?} 空闲，跳过到结算阶段",
                     current.entity
                 );
                 PhaseCheckResult::Idle
             } else {
-                debug!(target: "combat", 
+                debug!(target: "combat",
                     "[Combat] PhaseCheck: 单位 {:?} 有可用行动，等待输入",
                     current.entity
                 );
@@ -86,7 +86,7 @@ pub(crate) fn step_phase_check(
             }
         }
         Err(_) => {
-            debug!(target: "combat", 
+            debug!(target: "combat",
                 "[Combat] PhaseCheck: 单位 {:?} 没有 ActionPoints，跳过",
                 current.entity
             );
@@ -104,7 +104,7 @@ pub(crate) fn step_unit_action(_commands: &mut Commands, turn_queue: &TurnQueue)
     let Some(current) = turn_queue.current() else {
         return;
     };
-    debug!(target: "combat", 
+    debug!(target: "combat",
         "[Combat] UnitAction: 等待输入，单位={:?}",
         current.entity
     );
@@ -131,7 +131,7 @@ pub(crate) fn step_turn_settlement(commands: &mut Commands, turn_queue: &TurnQue
         unit: current.entity,
     });
 
-    debug!(target: "combat", 
+    debug!(target: "combat",
         "[Combat] TurnSettlement: 单位 {:?} 结算完成",
         current.entity
     );
@@ -174,7 +174,7 @@ pub(crate) fn step_turn_end(
 
     let round = turn_queue.round_number();
 
-    debug!(target: "combat", 
+    debug!(target: "combat",
         "[Combat] TurnEnd: 前进到 index={}, 回合={}",
         turn_queue.current_index(),
         round

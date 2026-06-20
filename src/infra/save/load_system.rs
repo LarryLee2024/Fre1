@@ -72,7 +72,7 @@ pub fn on_load_request(
         }
     };
 
-    tracing::info!(target: "save", 
+    tracing::info!(target: "save",
         "[LoadSystem] 反序列化存档：版本={}, 战斗实体数={}, 成长实体数={}",
         world_data.save_version,
         world_data.combat.participants.len(),
@@ -281,7 +281,7 @@ pub(crate) fn process_pending_load(
 
     let entity_count =
         data.combat.participants.len() as u32 + data.progression.entities.len() as u32;
-    tracing::info!(target: "save", 
+    tracing::info!(target: "save",
         "[LoadSystem] 加载完成：路径={}, 实体数={}",
         path,
         entity_count

@@ -332,7 +332,9 @@ pub fn remove_effect_by_id(
 
             // 不可驱散检查
             if !effect.dispellable && matches!(reason, RemovalReason::Dispelled) {
-                return Err(EffectError::Undispellable { instance_id: instance_id.to_string() });
+                return Err(EffectError::Undispellable {
+                    instance_id: instance_id.to_string(),
+                });
             }
 
             // 不变量 3.4: Modifier 回退（占位）
@@ -353,7 +355,9 @@ pub fn remove_effect_by_id(
             });
             Ok(effect)
         }
-        None => Err(EffectError::EffectNotFound { effect_id: instance_id.into() }),
+        None => Err(EffectError::EffectNotFound {
+            effect_id: instance_id.into(),
+        }),
     }
 }
 

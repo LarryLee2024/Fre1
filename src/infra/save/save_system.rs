@@ -230,7 +230,7 @@ pub fn save_world_system(
             }
             let entity_count =
                 world_data.combat.participants.len() + world_data.progression.entities.len();
-            tracing::info!(target: "save", 
+            tracing::info!(target: "save",
                 "[SaveSystem] 保存完成：路径={}, 实体数={}",
                 path,
                 entity_count

@@ -115,7 +115,10 @@ fn apply_effect_missing_source_rejected() {
     );
     let result = apply_effect(&mut container, effect, None, &mut commands);
     assert!(!result.success);
-    assert!(matches!(result.error, Some(EffectError::MissingSource { detail: _ })));
+    assert!(matches!(
+        result.error,
+        Some(EffectError::MissingSource { detail: _ })
+    ));
 }
 
 #[test]

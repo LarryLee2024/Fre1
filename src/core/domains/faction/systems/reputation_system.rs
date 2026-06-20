@@ -37,7 +37,7 @@ pub(crate) fn on_reputation_change_request(
     let entity = req.entity;
 
     let Ok((mut reputation, key_char)) = query.get_mut(entity) else {
-        tracing::warn!(target: "faction", 
+        tracing::warn!(target: "faction",
             event = "faction.reputation_change.missing_component",
             entity = ?entity,
             "ReputationChangeRequest: 实体 {:?} 没有 Reputation 组件",

@@ -18,7 +18,7 @@ pub(crate) fn on_item_acquired(
 ) {
     let ev = trigger.event();
     let Ok(mut inventory) = query.get_mut(ev.entity) else {
-        tracing::warn!(target: "inventory", 
+        tracing::warn!(target: "inventory",
             event = "inventory.item_acquired.missing_component",
             entity = ?ev.entity,
             template = %ev.item_template_id,
@@ -33,7 +33,7 @@ pub(crate) fn on_item_acquired(
     let added = inventory.add_item(item, 1.0);
 
     if added > 0 {
-        tracing::trace!(target: "inventory", 
+        tracing::trace!(target: "inventory",
             event = "inventory.item_acquired.added",
             entity = ?ev.entity,
             template = %ev.item_template_id,
@@ -42,7 +42,7 @@ pub(crate) fn on_item_acquired(
             ev.entity, ev.item_template_id, added
         );
     } else {
-        tracing::warn!(target: "inventory", 
+        tracing::warn!(target: "inventory",
             event = "inventory.item_acquired.failed",
             entity = ?ev.entity,
             template = %ev.item_template_id,
@@ -64,7 +64,7 @@ pub(crate) fn on_equip_item(
 ) {
     let ev = trigger.event();
     let Ok((mut inventory, mut equipment)) = query.get_mut(ev.entity) else {
-        tracing::warn!(target: "inventory", 
+        tracing::warn!(target: "inventory",
             event = "inventory.equipment_changed.missing_components",
             entity = ?ev.entity,
             slot = ?ev.slot,
@@ -86,7 +86,7 @@ pub(crate) fn on_equip_item(
             if let Some(old_item) = old {
                 let old_template = old_item.template_id.clone();
                 inventory.add_item(old_item, 1.0);
-                tracing::trace!(target: "inventory", 
+                tracing::trace!(target: "inventory",
                     event = "inventory.equipment_changed.replaced",
                     entity = ?ev.entity,
                     slot = ?ev.slot,
@@ -96,7 +96,7 @@ pub(crate) fn on_equip_item(
                     ev.entity, ev.slot, new_template_id, old_template
                 );
             } else {
-                tracing::trace!(target: "inventory", 
+                tracing::trace!(target: "inventory",
                     event = "inventory.equipment_changed.equipped",
                     entity = ?ev.entity,
                     slot = ?ev.slot,
@@ -115,7 +115,7 @@ pub(crate) fn on_equip_item(
         let old_item = equipment.unequip(ev.slot);
         if let Some(item) = old_item {
             inventory.add_item(item, 1.0);
-            tracing::trace!(target: "inventory", 
+            tracing::trace!(target: "inventory",
                 event = "inventory.equipment_changed.unequipped",
                 entity = ?ev.entity,
                 slot = ?ev.slot,
@@ -133,7 +133,7 @@ pub(crate) fn on_equip_item(
 pub(crate) fn on_item_used(trigger: On<ItemUsed>, mut query: Query<&mut Inventory>) {
     let ev = trigger.event();
     let Ok(mut inventory) = query.get_mut(ev.entity) else {
-        tracing::warn!(target: "inventory", 
+        tracing::warn!(target: "inventory",
             event = "inventory.item_used.missing_component",
             entity = ?ev.entity,
             "ItemUsed: 实体 {:?} 没有 Inventory 组件",
@@ -144,7 +144,7 @@ pub(crate) fn on_item_used(trigger: On<ItemUsed>, mut query: Query<&mut Inventor
 
     // 检查是否拥有足够数量
     if !inventory.has_item(&ev.item_template_id, ev.quantity_consumed) {
-        tracing::warn!(target: "inventory", 
+        tracing::warn!(target: "inventory",
             event = "inventory.item_used.insufficient_quantity",
             entity = ?ev.entity,
             template = %ev.item_template_id,
@@ -156,7 +156,7 @@ pub(crate) fn on_item_used(trigger: On<ItemUsed>, mut query: Query<&mut Inventor
 
     let removed = inventory.remove_item(&ev.item_template_id, ev.quantity_consumed, 1.0);
     if removed > 0 {
-        tracing::trace!(target: "inventory", 
+        tracing::trace!(target: "inventory",
             event = "inventory.item_used.consumed",
             entity = ?ev.entity,
             template = %ev.item_template_id,

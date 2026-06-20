@@ -80,7 +80,9 @@ impl StackingConfig {
     /// - V2: Aggregate 类型 max_stacks 必须 ≥ 2
     pub fn aggregate(max_stacks: u32, allow_cross_source: bool) -> Result<Self, StackingError> {
         if max_stacks < 2 {
-            return Err(StackingError::InvalidConfig { reason: "Aggregate stacking requires max_stacks ≥ 2".into() });
+            return Err(StackingError::InvalidConfig {
+                reason: "Aggregate stacking requires max_stacks ≥ 2".into(),
+            });
         }
         Ok(Self {
             stacking_type: StackingType::Aggregate,
@@ -223,4 +225,3 @@ pub enum StackingDecision {
         replaced_instance_id: String,
     },
 }
-

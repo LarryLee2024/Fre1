@@ -72,7 +72,9 @@ fn registry_entry_mark_deprecated() {
 
 #[test]
 fn error_message_display() {
-    let err = RegistryError::DuplicateId { id: "abl_000001".into() };
+    let err = RegistryError::DuplicateId {
+        id: "abl_000001".into(),
+    };
     let msg = format!("{}", err);
     assert!(msg.contains("abl_000001"));
 }

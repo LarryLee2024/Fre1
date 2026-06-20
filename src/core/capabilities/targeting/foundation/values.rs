@@ -9,7 +9,9 @@ use bevy::reflect::TypePath;
 use serde::{Deserialize, Serialize};
 
 use crate::core::capabilities::targeting::foundation::error::TargetingError;
-use crate::core::capabilities::targeting::foundation::types::{PriorityRule, TargetShape, TargetType};
+use crate::core::capabilities::targeting::foundation::types::{
+    PriorityRule, TargetShape, TargetType,
+};
 
 /// 目标选择定义——技能/效果的目标选择完整配置。
 ///
@@ -56,7 +58,7 @@ impl TargetingDef {
 
         // V2: 最大目标数 ≥ 1
         if max_targets < 1 {
-            return Err(TargetingError::InvalidMaxTargets(max_targets));
+            return Err(TargetingError::InvalidMaxTargets { max: max_targets });
         }
 
         // V4: Single 形状时 max_targets 必须为 1

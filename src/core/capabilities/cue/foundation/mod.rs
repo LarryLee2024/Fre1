@@ -5,7 +5,7 @@ pub(crate) mod types;
 pub(crate) mod values;
 
 pub use types::{
-    AnimationParams, CueData, CueDef, CueTag, CueType, PopupDirection, PopupParams,
-    SFXParams, ShakeFalloff, ShakeParams, VFXParams,
+    AnimationParams, CueData, CueDef, CueTag, CueType, PopupDirection, PopupParams, SFXParams,
+    ShakeFalloff, ShakeParams, VFXParams,
 };
 pub use values::{CueBinding, CueContainer};

@@ -189,7 +189,7 @@ pub fn handle_add_member(
             });
         }
         Err(e) => {
-            tracing::warn!(target: "party", 
+            tracing::warn!(target: "party",
                 event = "party.add_member.failed",
                 entity = ?entity,
                 error = %e,
@@ -217,7 +217,7 @@ pub fn handle_remove_member(
             });
         }
         Err(e) => {
-            tracing::warn!(target: "party", 
+            tracing::warn!(target: "party",
                 event = "party.remove_member.failed",
                 entity = ?entity,
                 error = %e,
@@ -245,7 +245,7 @@ pub fn handle_swap_member(
             });
         }
         Err(e) => {
-            tracing::warn!(target: "party", 
+            tracing::warn!(target: "party",
                 event = "party.swap_member.failed",
                 outgoing = ?outgoing,
                 incoming = ?incoming,

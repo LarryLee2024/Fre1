@@ -41,7 +41,10 @@ fn queue_full_rejects_addition() {
     queue.set_max_size(2);
     assert!(queue.push(make_move_cmd()).is_ok());
     assert!(queue.push(make_move_cmd()).is_ok());
-    assert_eq!(queue.push(make_move_cmd()), Err(CommandError::QueueFull { max: 2 }));
+    assert_eq!(
+        queue.push(make_move_cmd()),
+        Err(CommandError::QueueFull { max: 2 })
+    );
 }
 
 #[test]

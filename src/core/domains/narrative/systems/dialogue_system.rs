@@ -41,7 +41,7 @@ pub(crate) fn on_dialogue_start(
 ) {
     let req = trigger.event();
     let Some(registry) = tree_registry else {
-        tracing::warn!(target: "narrative", 
+        tracing::warn!(target: "narrative",
             event = "narrative.dialogue_start.missing_registry",
             "DialogueStartRequest: 没有 DialogueTreeRegistry"
         );
@@ -49,7 +49,7 @@ pub(crate) fn on_dialogue_start(
     };
 
     let Some(entry) = registry.entry_node(&req.tree_id) else {
-        tracing::warn!(target: "narrative", 
+        tracing::warn!(target: "narrative",
             event = "narrative.dialogue_start.tree_not_found",
             tree_id = %req.tree_id,
             "DialogueStartRequest: 对话树 '{}' 未找到",
@@ -109,7 +109,7 @@ pub(crate) fn on_choice_select(
     let entity = req.entity;
 
     let Ok(mut state) = dialogue_query.get_mut(entity) else {
-        tracing::warn!(target: "narrative", 
+        tracing::warn!(target: "narrative",
             event = "narrative.choice_select.missing_state",
             entity = ?entity,
             "ChoiceSelectRequest: 实体 {:?} 没有 DialogueState",
@@ -119,7 +119,7 @@ pub(crate) fn on_choice_select(
     };
 
     let Some(registry) = tree_registry else {
-        tracing::warn!(target: "narrative", 
+        tracing::warn!(target: "narrative",
             event = "narrative.choice_select.missing_registry",
             "ChoiceSelectRequest: 没有 DialogueTreeRegistry"
         );
@@ -128,7 +128,7 @@ pub(crate) fn on_choice_select(
 
     // 查找当前节点
     let Some(node) = registry.get_node(&state.current_node_id) else {
-        tracing::warn!(target: "narrative", 
+        tracing::warn!(target: "narrative",
             event = "narrative.choice_select.node_not_found",
             node_id = %state.current_node_id,
             "ChoiceSelectRequest: 节点 '{}' 未找到",
@@ -139,7 +139,7 @@ pub(crate) fn on_choice_select(
 
     // 查找选择的分支
     let Some(choice) = node.choices.iter().find(|c| c.id == req.choice_id) else {
-        tracing::warn!(target: "narrative", 
+        tracing::warn!(target: "narrative",
             event = "narrative.choice_select.choice_not_found",
             choice_id = %req.choice_id,
             node_id = %state.current_node_id,

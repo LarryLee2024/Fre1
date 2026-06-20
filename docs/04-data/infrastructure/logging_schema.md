@@ -230,6 +230,28 @@ enum LogCode {
 }
 ```
 
+### 3.1.1 LogCode 扩展方法（事件名自动派生）
+
+LogCode 是事件唯一标识，所有关联属性应从 LogCode 本身派生，不需要外部维护映射表：
+
+```rust
+impl LogCode {
+    /// 返回机器可读的事件名（snake_case），用于 `event` 结构化字段。
+    /// 例如：PRG002 → "level_up", BAT001 → "battle_started"
+    /// 这是 event 字段的 Single Source of Truth。
+    pub fn event_name(&self) -> &'static str { ... }
+
+    /// 返回日志分类（按业务领域划分五大类）
+    pub fn category(&self) -> LogCategory { ... }
+
+    /// 返回日志 target（按 `domain.module.submodule` 层级格式）
+    /// 例如：PRG002 → "domain.progression", BAT001 → "domain.combat"
+    pub fn target(&self) -> &'static str { ... }
+}
+```
+
+**设计原则**：代码中 `#[instrument(fields(event = "level_up"))]` 中的 `event` 字符串应与 `LogCode::PRG002.event_name()` 保持一致。后续通过 `telemetry::emit(LogCode::PRG002)` 自动派生，消除手动维护双份事件名的冗余。
+
 ### 3.2 LogCategory 分类
 
 ```rust
@@ -454,6 +476,8 @@ enum LogValue {
 | V2 | CorrelationId 非空 | 日志记录时 | 必须有有效的 CorrelationId（Battle/Turn/Action 之一） |
 | V3 | Level 合理性 | 日志记录时 | Error 级别日志必须附带错误详情 |
 | V4 | 数据完整性 | 日志输出时 | JSON 格式必须包含 code/category/context/message 四个必填字段 |
+| V5 | 字段低基数 | Schema 设计时 | 所有结构化字段必须使用 ID 类型（entity_id、spec_id、item_id），禁止使用 context_desc 等自然语言文本字段。高基数字段会压垮日志聚合系统（Loki/Elasticsearch） |
+| V6 | event 字段语言 | 日志记录时 | `event` 字段值必须使用英文（`"level_up"`、`"battle_started"`），结构化日志是机器消费的，禁止使用中文 |
 
 ---
 
@@ -465,6 +489,29 @@ enum LogValue {
 | Info | 正常业务流程记录 | 战斗开始/结束、技能激活、效果施加、伤害结算 |
 | Warn | 异常但可恢复的情况 | 堆叠溢出、属性值被 clamp、效果移除失败 |
 | Error | 异常且影响流程的情况 | 内容校验失败、回放校验不一致、注册中心注册失败 |
+
+---
+
+## 9. 字段语言与基数规范
+
+### 9.1 语言规范
+
+| 字段 | 语言要求 | 原因 |
+|------|----------|------|
+| `code` (LogCode) | N/A（枚举） | 纯编码，无语言问题 |
+| `event` | **必须英文**（snake_case） | 机器消费（日志聚合/AI搜索），需统一可移植 |
+| `message`（字符串消息） | 中文/英文皆可 | 人消费，以开发者阅读效率为准 |
+| `LogCode::description()` | 中文/英文皆可 | 人消费，以开发者理解为准 |
+
+### 9.2 基数规范
+
+| 字段类型 | 允许 | 禁止 | 原因 |
+|----------|------|------|------|
+| ID 字段 | `entity_id`, `spec_id`, `item_id` | — | 低基数，适合聚合 |
+| 枚举字段 | `event`, `damage_type` | — | 有限取值集合 |
+| 自然语言 | — | `context_desc`, `detail` 等 | 高基数，压垮聚合存储 |
+
+> **经验教训**：`context_desc` 等自由文本字段在 Loki/Elasticsearch 中会指数级增加 label 基数，导致查询性能骤降和存储爆炸。必须使用 ID + LocalizationKey 替代。
 
 ---
 
@@ -481,6 +528,7 @@ enum LogValue {
 
 ## 10. Future Extension
 
+- **`telemetry::emit` 统一入口**：当前 Observer 存在三要素重复（`#[instrument]` + `metrics::record()` + `info!()`），target 需要在两处重复指定。后续引入 `telemetry::emit(LogCode::XXX, ...)` 统一封装日志 + 度量 + trace，消除重复模式。
 - **日志聚合分析**：基于 LogCode 统计技能使用率、伤害分布、效果触发频率
 - **战斗重放辅助**：将关键日志（BAT/ABL/EFF）与 ReplayFrame 关联
 - **性能监控**：统计各 LogCode 的记录频率和延迟

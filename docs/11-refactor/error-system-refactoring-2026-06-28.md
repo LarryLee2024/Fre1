@@ -517,25 +517,31 @@ tools/check-error-invariants.sh --ci
 
 ## 优先级汇总
 
-| 阶段 | 任务 | 级别 | 估计文件变更 | 风险 |
-|------|------|------|-------------|------|
-| 0 | 文档急修 | P0 | 2 文档 | 低 — 纯文档变更 |
-| 1 | mod.rs 可见性修正 | P0 | 4 文件 | 中 — 可能破坏外部引用 |
-| 2 | 错误类型从 types.rs 提取到独立文件 | P1 | 14+ 模块 × 3 文件 | 中 — 影响 import 路径 |
-| 3 | thiserror 迁移 | P1 | 4-6 文件 | 低 — 机械替换 |
-| 4 | Capability Error/Failure 分离 | P2 | 6+ 文件 | 中 — 改变 API 契约 |
-| 5 | 结构化字段 | P3 | 8+ 文件 | 中 — 影响调用方 |
-| 6 | 消除 Runtime 泛型 | P3 | 3 文件 | 中 — 需审查每个使用点 |
-| 7 | Event 派生 | P4 | 5+ 文件 | 低 — 添加 derive |
-| 7b | Domain 文档审计 | P3 | ~15 文档 | 低 — 纯文档变更 |
-| 8 | 工具脚本 + 验证 | P4 | 1 脚本 | 低 |
+| 阶段 | 任务 | 级别 | 估计文件变更 | 风险 | 状态 |
+|------|------|------|-------------|------|------|
+| 0 | 文档急修 | P0 | 2 文档 | 低 | ✅ 完成 |
+| 1 | mod.rs 可见性修正（4 domain） | P0 | 4 文件 | 中 | ✅ 完成 |
+| 2 | 错误类型从 types.rs 提取到独立文件（14 模块） | P1 | 42+ 文件 | 中 | ✅ 完成 |
+| 3 | thiserror 迁移（13 个错误类型） | P1 | 13 文件 | 低 | ✅ 完成 |
+| 4 | Capability Error/Failure 分离（ability + effect） | P2 | 12 文件 | 中 | ✅ 完成 |
+| 5 | 结构化字段（20 个变体） | P3 | 28 文件 | 中 | ✅ 完成 |
+| 6 | 消除 Runtime 泛型（3 个变体） | P3 | 5 文件 | 中 | ✅ 完成 |
+| 7 | Event 派生（AbilityError + EffectError + StackingError） | P4 | 3 文件 | 低 | ✅ 完成 |
+| 7b | Domain 文档审计 | P3 | 0 文件（无过时引用） | 低 | ✅ 完成 |
+| 8 | 工具脚本 + 验证 | P4 | 1 脚本 | 低 | ✅ 完成 |
 
-## 执行建议
+### 已知剩余技术债
 
-1. **Phase 0 + 1 并行执行**（均 P0，无依赖关系）
-2. **Phase 2 是最大变更**（14 个模块 × 3 步操作），建议分批执行：先提取 ability/effect，再批量提取其余
-3. **Phase 3 在 Phase 2 之后**，因为提取后的新 error.rs 才能做 thiserror 迁移
-4. **Phase 4 需要最多人工审查**（改变 API 契约，影响所有调用方）
-5. **Phase 5 可半自动化**（grep 找所有使用处批量替换）
-6. **Phase 6 每处 Runtime 使用点需要单独审查**（不能批量）
-7. **Phase 7 + 7b + 8 可并行**（互相独立）
+| 问题 | 位置 | 原因 |
+|------|------|------|
+| 手动 Display impl | `AttributeRegistrationError` (attribute/mechanism) | 机制层小错误，非 foundation |
+| 手动 Display impl | `ModifierValidationError` (modifier/mechanism) | 同上 |
+| 手动 Display impl | `TagRegistrationError` (tag/mechanism) | 同上 |
+| 冻结 6 个月 | `ErrorContext<E>` / `ContextExt` (shared/error) | 2026-12-19 到期决定去留 |
+
+### 最终验证
+
+- `cargo build` — ✅ 通过
+- `cargo nextest run` — ✅ 1601/1601 passed, 8 skipped
+- `cargo clippy -- -D warnings` — ✅ 0 新错误（36 预存）
+- `tools/check-error-invariants.sh --ci` — ✅ 核心规则通过

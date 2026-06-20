@@ -6,7 +6,6 @@ pub(crate) mod values;
 
 pub use error::PipelineError;
 pub use types::{
-    ExecutionLogEntry, FailureStrategy, PipelineContext, PipelineStage,
-    PipelineStep, StepResult,
+    ExecutionLogEntry, FailureStrategy, PipelineContext, PipelineStage, PipelineStep, StepResult,
 };
 pub use values::{PipelineDefinition, PipelineState};
