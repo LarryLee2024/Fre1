@@ -1,6 +1,7 @@
+use crate::core::capabilities::stacking::foundation::error::StackingError;
 use crate::core::capabilities::stacking::foundation::types::{
     OverflowBehavior, StackIdentity, StackMatchResult, StackingConfig, StackingDecision,
-    StackingError, StackingType,
+    StackingType,
 };
 
 #[test]

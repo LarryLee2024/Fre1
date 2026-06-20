@@ -1,5 +1,6 @@
+use crate::core::capabilities::cue::foundation::error::CueError;
 use crate::core::capabilities::cue::foundation::{
-    AnimationParams, CueData, CueDef, CueError, CueTag, CueType, PopupDirection, PopupParams,
+    AnimationParams, CueData, CueDef, CueTag, CueType, PopupDirection, PopupParams,
     SFXParams, ShakeFalloff, ShakeParams, VFXParams,
 };
 

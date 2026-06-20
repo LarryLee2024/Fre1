@@ -33,7 +33,7 @@ pub fn on_battle_button_clicked(on: On<ButtonClicked>, query: Query<&BattleActio
 
     match action {
         BattleAction::EndTurn => {
-            info!("[Battle] End Turn");
+            info!("[Battle] 结束回合");
         }
     }
 }

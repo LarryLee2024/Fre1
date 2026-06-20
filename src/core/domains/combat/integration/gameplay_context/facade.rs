@@ -8,8 +8,9 @@
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 
+use crate::core::capabilities::gameplay_context::foundation::error::ContextBuildError;
 use crate::core::capabilities::gameplay_context::foundation::{
-    ContextBuildError, ContextOrigin, GameplayContextData, SourceInfo, TargetInfo,
+    ContextOrigin, GameplayContextData, SourceInfo, TargetInfo,
 };
 use crate::core::capabilities::gameplay_context::mechanism::ContextBuilder;
 

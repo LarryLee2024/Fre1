@@ -62,21 +62,21 @@ pub fn validation_system(db: Res<LocalizationDatabase>) {
 
     if !errors.is_empty() {
         error!(
-            "[Localization] Validation failed with {} errors:",
+            "[Localization] 验证失败，共 {} 个错误：",
             errors.len()
         );
         for err in &errors {
             error!("  {}", err);
         }
         panic!(
-            "[Localization] Validation failed: {} errors (see above). \
-             This prevents startup to avoid showing untranslated text.",
+            "[Localization] 验证失败：{} 个错误（见上方）。\
+             为阻止显示未翻译文本，已阻止启动。",
             errors.len()
         );
     }
 
     info!(
-        "[Localization] Validation passed. {} keys OK, {} warnings.",
+        "[Localization] 验证通过。{} 个键正常，{} 个警告。",
         all_keys.len(),
         warnings.len()
     );

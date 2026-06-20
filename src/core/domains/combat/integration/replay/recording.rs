@@ -59,7 +59,7 @@ pub(crate) fn start_recording_on_battle_begin(
 
     let unit_count = mapper.len();
     if unit_count == 0 {
-        debug!("[ReplayBridge] No combat participants found, skipping recording start");
+        debug!("[ReplayBridge] 未找到战斗参与者，跳过录制启动");
         return;
     }
 
@@ -84,7 +84,7 @@ pub(crate) fn start_recording_on_battle_begin(
     commands.insert_resource(RecordingSession(Some(core_session)));
 
     debug!(
-        "[ReplayBridge] Recording started for {} units with seed={}",
+        "[ReplayBridge] 录制开始：{} 个单位，种子={}",
         unit_count, initial_seed
     );
 }
@@ -108,7 +108,7 @@ pub(crate) fn record_unit_action(
     let unit_id = match mapper.get_id(&unit) {
         Some(id) => id.as_str().to_string(),
         None => {
-            debug!("[ReplayBridge] Unknown entity recorded, skipping");
+            debug!("[ReplayBridge] 未知实体被记录，跳过");
             return;
         }
     };
@@ -135,13 +135,13 @@ pub(crate) fn stop_recording_on_battle_end(
     match session.stop(0) {
         Ok(log) => {
             debug!(
-                "[ReplayBridge] Recording stopped: {} frames, {} commands",
+                "[ReplayBridge] 录制停止：{} 帧，{} 条命令",
                 log.header.total_frames,
                 log.frames.iter().map(|f| f.commands.len()).sum::<usize>()
             );
         }
         Err(e) => {
-            debug!("[ReplayBridge] Failed to stop recording: {:?}", e);
+            debug!("[ReplayBridge] 录制停止失败：{:?}", e);
         }
     }
 

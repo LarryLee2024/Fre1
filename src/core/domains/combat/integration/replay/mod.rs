@@ -55,6 +55,6 @@ impl Plugin for CombatReplayBridgePlugin {
         // PreUpdate: 回放模式下阻止玩家输入
         app.add_systems(PreUpdate, block_player_input_during_replay);
 
-        debug!("[ReplayBridge] CombatReplayBridgePlugin registered");
+        debug!("[ReplayBridge] CombatReplayBridgePlugin 已注册");
     }
 }

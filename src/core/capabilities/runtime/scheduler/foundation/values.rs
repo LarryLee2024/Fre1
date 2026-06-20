@@ -1,6 +1,7 @@
 //! Scheduler 值对象：调度器运行时状态
 
-use super::types::{GameTime, SchedulerError, TickPhase};
+use super::error::SchedulerError;
+use super::types::{GameTime, TickPhase};
 
 /// 调度器运行时状态。
 #[derive(Debug, Clone, PartialEq)]

@@ -8,9 +8,8 @@ use bevy::asset::Asset;
 use bevy::reflect::TypePath;
 use serde::{Deserialize, Serialize};
 
-use crate::core::capabilities::targeting::foundation::types::{
-    PriorityRule, TargetShape, TargetType, TargetingError,
-};
+use crate::core::capabilities::targeting::foundation::error::TargetingError;
+use crate::core::capabilities::targeting::foundation::types::{PriorityRule, TargetShape, TargetType};
 
 /// 目标选择定义——技能/效果的目标选择完整配置。
 ///

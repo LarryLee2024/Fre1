@@ -24,8 +24,8 @@
 
 ## 当前状态
 
-- **进行中**: `id-system-refactoring-2026-06-20.md` — ID 系统激进重构计划（9 阶段，P0-P2 优先级）
-- 所有已识别的技术债已 Resolved 或标记为预留
+- **进行中**: `error-system-refactoring-2026-06-28.md` — 错误处理系统激进重构计划（9 阶段，P0-P4 优先级）
+- **已归档**: `id-system-refactoring-2026-06-20.md` → `done/`
+- 所有已识别的 ID 系统技术债已 Resolved 或标记为预留
 - Clippy 技术债：真实技术债为 0，剩余 44 warnings 全部为架构设计模式
-- 重复性代码模式：Error thiserror 改造、Mod.rs 可见性统一、测试 Fixtures 提取均已完成
-- 下次扫描建议间隔：新增 2+ 域或重大架构变更后
+- 错误处理系统当前有 19 个代码问题（6 个 P0、5 个 P1、5 个 P2、3 个 P3+）

@@ -1,6 +1,6 @@
 //! Execution 基础类型与枚举
 //!
-//! 定义执行计算类型、直接操作类型以及领域错误。
+//! 定义执行计算类型、直接操作类型。
 //!
 //! 详见 docs/02-domain/capabilities/execution_domain.md §1、§3。
 //! 详见 docs/04-data/capabilities/execution_schema.md §3。
@@ -119,42 +119,3 @@ impl CustomExecutionRef {
     }
 }
 
-/// Execution 领域错误。
-#[derive(Debug, Clone, PartialEq)]
-pub enum ExecutionError {
-    /// 计算公式 ID 未注册（V1: formula_id 已注册）
-    FormulaNotFound { formula_id: String, detail: String },
-    /// ExecutionContext 数据缺失（不变量 3.3）
-    ContextMissing { field: String, detail: String },
-    /// 计算结果数值非法（不变量 3.4）
-    InvalidResult(String),
-    /// 自定义计算未注册（不变量 3.5）
-    CustomExecutionNotRegistered(String),
-    /// 不支持的执行类型
-    UnsupportedExecutionType(String),
-    /// 通用运行时错误
-    Runtime(String),
-}
-
-impl std::fmt::Display for ExecutionError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::FormulaNotFound { formula_id, detail } => {
-                write!(f, "formula '{}' not found: {}", formula_id, detail)
-            }
-            Self::ContextMissing { field, detail } => {
-                write!(f, "context field '{}' missing: {}", field, detail)
-            }
-            Self::InvalidResult(msg) => write!(f, "invalid result: {}", msg),
-            Self::CustomExecutionNotRegistered(id) => {
-                write!(f, "custom execution '{}' not registered", id)
-            }
-            Self::UnsupportedExecutionType(msg) => {
-                write!(f, "unsupported execution type: {}", msg)
-            }
-            Self::Runtime(msg) => write!(f, "runtime error: {}", msg),
-        }
-    }
-}
-
-impl std::error::Error for ExecutionError {}

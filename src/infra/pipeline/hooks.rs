@@ -41,7 +41,7 @@ impl PipelineHook for ExecutionLogHook {
             stage = %stage,
             step = %step,
             result = ?result,
-            "pipeline step executed"
+            "管线步骤已执行"
         );
     }
 }

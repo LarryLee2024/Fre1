@@ -80,7 +80,7 @@ fn error_message_display() {
 #[test]
 fn broken_reference_error() {
     let err = RegistryError::BrokenReference {
-        source: "abl_000001".into(),
+        source_id: "abl_000001".into(),
         field: "effect_id".into(),
         target: "eff_999999".into(),
     };

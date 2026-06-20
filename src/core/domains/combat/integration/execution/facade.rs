@@ -8,8 +8,9 @@
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 
+use crate::core::capabilities::execution::foundation::error::ExecutionError;
 use crate::core::capabilities::execution::foundation::{
-    DamageParams, ExecutionContext, ExecutionError, ExecutionResult, ExecutionType,
+    DamageParams, ExecutionContext, ExecutionResult, ExecutionType,
 };
 use crate::core::capabilities::execution::mechanism::{execute, validate_context};
 

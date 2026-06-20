@@ -1,11 +1,13 @@
 //! Stacking 基础类型与枚举
 //!
-//! 定义堆叠策略类型、堆叠标识判定、堆叠决策结果以及领域错误。
+//! 定义堆叠策略类型、堆叠标识判定、堆叠决策结果。
 //!
 //! 详见 docs/02-domain/capabilities/stacking_domain.md §1、§3。
 //! 详见 docs/04-data/capabilities/stacking_schema.md §3。
 
 use serde::{Deserialize, Serialize};
+
+use super::error::StackingError;
 
 /// 堆叠类型枚举，定义效果叠加的基本策略。
 ///
@@ -224,39 +226,3 @@ pub enum StackingDecision {
     },
 }
 
-/// Stacking 领域错误。
-#[derive(Debug, Clone, PartialEq)]
-pub enum StackingError {
-    /// 无效的堆叠配置（如 Aggregate 但 max_stacks < 2）
-    InvalidConfig(String),
-    /// 堆叠标识不匹配
-    IdentityMismatch {
-        existing_def_id: String,
-        incoming_def_id: String,
-        detail: String,
-    },
-    /// 运行时错误
-    Runtime(String),
-}
-
-impl std::fmt::Display for StackingError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::InvalidConfig(msg) => write!(f, "invalid stacking config: {}", msg),
-            Self::IdentityMismatch {
-                existing_def_id,
-                incoming_def_id,
-                detail,
-            } => {
-                write!(
-                    f,
-                    "identity mismatch: '{}' vs '{}': {}",
-                    existing_def_id, incoming_def_id, detail
-                )
-            }
-            Self::Runtime(msg) => write!(f, "stacking runtime error: {}", msg),
-        }
-    }
-}
-
-impl std::error::Error for StackingError {}

@@ -10,8 +10,9 @@ use bevy::prelude::{Commands, Entity};
 use crate::core::capabilities::gameplay_context::events::{
     ContextCreated, ContextValidationFailed,
 };
+use crate::core::capabilities::gameplay_context::foundation::error::ContextBuildError;
 use crate::core::capabilities::gameplay_context::foundation::{
-    ChainNode, ContextBuildError, ContextChain, ContextMetadata, ContextOrigin, ContextStatus,
+    ChainNode, ContextChain, ContextMetadata, ContextOrigin, ContextStatus,
     ElementType, GameplayContextData, SourceInfo, TargetInfo,
 };
 

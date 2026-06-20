@@ -22,7 +22,7 @@ pub(crate) fn on_item_acquired(
             event = "inventory.item_acquired.missing_component",
             entity = ?ev.entity,
             template = %ev.item_template_id,
-            "ItemAcquired: entity {:?} has no Inventory component",
+            "ItemAcquired: 实体 {:?} 没有 Inventory 组件",
             ev.entity
         );
         return;
@@ -38,7 +38,7 @@ pub(crate) fn on_item_acquired(
             entity = ?ev.entity,
             template = %ev.item_template_id,
             qty = added,
-            "Item acquired: entity={:?}, template={}, qty={}",
+            "物品获取成功：实体={:?}, 模板={}, 数量={}",
             ev.entity, ev.item_template_id, added
         );
     } else {
@@ -47,7 +47,7 @@ pub(crate) fn on_item_acquired(
             entity = ?ev.entity,
             template = %ev.item_template_id,
             qty_requested = ev.quantity,
-            "Failed to acquire item: entity={:?}, template={}, qty={}",
+            "物品获取失败：实体={:?}, 模板={}, 请求数量={}",
             ev.entity, ev.item_template_id, ev.quantity
         );
     }
@@ -68,7 +68,7 @@ pub(crate) fn on_equip_item(
             event = "inventory.equipment_changed.missing_components",
             entity = ?ev.entity,
             slot = ?ev.slot,
-            "EquipmentChanged: entity {:?} has no Inventory/EquipmentSlots",
+            "EquipmentChanged: 实体 {:?} 没有 Inventory/EquipmentSlots 组件",
             ev.entity
         );
         return;
@@ -92,7 +92,7 @@ pub(crate) fn on_equip_item(
                     slot = ?ev.slot,
                     new = %new_template_id,
                     replaced = %old_template,
-                    "Equipment changed: entity={:?}, slot={:?}, new={}, replaced={}",
+                    "装备更换：实体={:?}, 槽位={:?}, 新={}, 旧={}",
                     ev.entity, ev.slot, new_template_id, old_template
                 );
             } else {
@@ -101,7 +101,7 @@ pub(crate) fn on_equip_item(
                     entity = ?ev.entity,
                     slot = ?ev.slot,
                     item = %new_template_id,
-                    "Equipment equipped: entity={:?}, slot={:?}, item={}",
+                    "装备穿戴：实体={:?}, 槽位={:?}, 物品={}",
                     ev.entity, ev.slot, new_template_id
                 );
             }
@@ -120,7 +120,7 @@ pub(crate) fn on_equip_item(
                 entity = ?ev.entity,
                 slot = ?ev.slot,
                 item = %old_template_id,
-                "Equipment unequipped: entity={:?}, slot={:?}, item={}",
+                "装备卸下：实体={:?}, 槽位={:?}, 物品={}",
                 ev.entity, ev.slot, old_template_id
             );
         }
@@ -136,7 +136,7 @@ pub(crate) fn on_item_used(trigger: On<ItemUsed>, mut query: Query<&mut Inventor
         tracing::warn!(
             event = "inventory.item_used.missing_component",
             entity = ?ev.entity,
-            "ItemUsed: entity {:?} has no Inventory component",
+            "ItemUsed: 实体 {:?} 没有 Inventory 组件",
             ev.entity
         );
         return;
@@ -148,8 +148,8 @@ pub(crate) fn on_item_used(trigger: On<ItemUsed>, mut query: Query<&mut Inventor
             event = "inventory.item_used.insufficient_quantity",
             entity = ?ev.entity,
             template = %ev.item_template_id,
-            "ItemUsed: insufficient quantity for {} on entity {:?}",
-            ev.item_template_id, ev.entity
+            "ItemUsed: 实体 {:?} 的物品 {} 数量不足",
+            ev.entity, ev.item_template_id
         );
         return;
     }
@@ -161,7 +161,7 @@ pub(crate) fn on_item_used(trigger: On<ItemUsed>, mut query: Query<&mut Inventor
             entity = ?ev.entity,
             template = %ev.item_template_id,
             consumed = removed,
-            "Item used: entity={:?}, template={}, consumed={}",
+            "物品使用：实体={:?}, 模板={}, 消耗={}",
             ev.entity, ev.item_template_id, removed
         );
     }

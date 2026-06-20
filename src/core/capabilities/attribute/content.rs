@@ -27,7 +27,9 @@ pub(crate) fn register_attributes_from_content(
     }
 
     info!(
-        "[Attribute] Registering {} attribute definition(s) into registry",
+        event = "attribute.registration.start",
+        count = defs.len(),
+        "[Attribute] 开始注册 {} 个属性定义",
         defs.len()
     );
 
@@ -38,18 +40,34 @@ pub(crate) fn register_attributes_from_content(
         let id = def.id.clone();
         match registry.register(def) {
             Ok(()) => {
-                info!("[Attribute] Registered attribute '{}' into registry", id);
+                trace!(
+                    event = "attribute.registration.item_ok",
+                    attribute_id = %id,
+                    "[Attribute] 属性 '{}' 注册成功",
+                    id
+                );
                 success_count += 1;
             }
             Err(e) => {
-                warn!("[Attribute] Failed to register attribute '{}': {}", id, e);
+                warn!(
+                    event = "attribute.registration.item_error",
+                    attribute_id = %id,
+                    error = %e,
+                    "[Attribute] 属性 '{}' 注册失败：{}",
+                    id,
+                    e
+                );
                 error_count += 1;
             }
         }
     }
 
     info!(
-        "[Attribute] Attribute registration complete: {} succeeded, {} failed",
-        success_count, error_count
+        event = "attribute.registration.complete",
+        success = success_count,
+        failed = error_count,
+        "[Attribute] 属性注册完成：{} 成功，{} 失败",
+        success_count,
+        error_count
     );
 }

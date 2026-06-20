@@ -14,6 +14,6 @@ impl Plugin for PipelinePlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<PipelineRegistry>();
 
-        tracing::info!("[PipelinePlugin] initialized");
+        tracing::info!("[PipelinePlugin] 已初始化");
     }
 }

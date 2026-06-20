@@ -10,16 +10,16 @@ use crate::infra::registry::registry::OnDefinitionReloaded;
 use crate::shared::diagnostics::LogCode;
 
 /// 内容热重载日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::CNT001, event = "definition_reloaded"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::CNT001, event = "定义重载"))]
 pub(crate) fn on_definition_reloaded(trigger: On<OnDefinitionReloaded>) {
     metrics::record(LogCode::CNT001);
     let event = trigger.event();
     info!(
         code = ?LogCode::CNT001,
-        event = "definition_reloaded",
+        event = "定义重载",
         bucket = event.bucket_name,
         version = event.new_version,
         changed = event.changed_ids.len(),
-        "definition_reloaded"
+        "定义重载"
     );
 }

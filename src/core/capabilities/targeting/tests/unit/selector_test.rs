@@ -1,8 +1,9 @@
 use bevy::prelude::*;
 
+use crate::core::capabilities::targeting::foundation::error::TargetingError;
 use crate::core::capabilities::targeting::foundation::{
     EntityTarget, PriorityRule, TargetContext, TargetData, TargetShape, TargetType, TargetingDef,
-    TargetingError, ValidationResult,
+    ValidationResult,
 };
 use crate::core::capabilities::targeting::mechanism::{
     CandidateTarget, filter_by_type, select_targets, validate_candidate, validate_targeting_def,

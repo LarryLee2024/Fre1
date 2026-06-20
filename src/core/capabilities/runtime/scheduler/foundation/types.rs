@@ -88,31 +88,3 @@ impl TickPhase {
         }
     }
 }
-
-/// Scheduler 领域错误。
-#[derive(Debug, Clone, PartialEq)]
-pub enum SchedulerError {
-    /// 调度器未初始化
-    NotInitialized,
-    /// 调度器已暂停
-    Paused,
-    /// 无效的阶段转换
-    InvalidTransition { from: TickPhase, to: TickPhase },
-    /// 帧计数器溢出
-    FrameOverflow(u64),
-}
-
-impl std::fmt::Display for SchedulerError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::NotInitialized => write!(f, "scheduler not initialized"),
-            Self::Paused => write!(f, "scheduler is paused"),
-            Self::InvalidTransition { from, to } => {
-                write!(f, "invalid phase transition: {:?} → {:?}", from, to)
-            }
-            Self::FrameOverflow(count) => write!(f, "frame counter overflow at {}", count),
-        }
-    }
-}
-
-impl std::error::Error for SchedulerError {}

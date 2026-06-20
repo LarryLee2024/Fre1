@@ -91,7 +91,7 @@ fn multi_resource_consumption_all_or_nothing() {
 #[test]
 fn insufficient_cost_error_contains_required_fields() {
     let err =
-        crate::core::capabilities::ability::foundation::types::AbilityError::InsufficientCost {
+        crate::core::capabilities::ability::foundation::AbilityError::InsufficientCost {
             resource: "attr_mp".to_string(),
             required: 50.0,
             available: 20.0,
@@ -107,7 +107,7 @@ fn insufficient_cost_error_contains_required_fields() {
 #[test]
 fn condition_failed_error_structured() {
     let err =
-        crate::core::capabilities::ability::foundation::types::AbilityError::ConditionFailed {
+        crate::core::capabilities::ability::foundation::AbilityError::ConditionFailed {
             reason: "silenced".to_string(),
         };
     let msg = format!("{}", err);
@@ -130,7 +130,7 @@ fn ability_state_can_activate_only_ready() {
 
 #[test]
 fn on_cooldown_error_contains_remaining_turns() {
-    let err = crate::core::capabilities::ability::foundation::types::AbilityError::OnCooldown {
+    let err = crate::core::capabilities::ability::foundation::AbilityError::OnCooldown {
         spec_id: "abl_fireball".to_string(),
         remaining_turns: 3,
     };
@@ -144,7 +144,7 @@ fn already_active_error_contains_instance_id() {
     let iid = crate::core::capabilities::ability::foundation::types::AbilityInstanceId::new(
         crate::shared::ids::types::runtime_id::RuntimeId::new(42, 0),
     );
-    let err = crate::core::capabilities::ability::foundation::types::AbilityError::AlreadyActive {
+    let err = crate::core::capabilities::ability::foundation::AbilityError::AlreadyActive {
         spec_id: "abl_heal".to_string(),
         instance_id: iid,
     };
@@ -157,7 +157,7 @@ fn already_active_error_contains_instance_id() {
 
 #[test]
 fn invalid_transition_blocked_state() {
-    use crate::core::capabilities::ability::foundation::types::{AbilityError, AbilityState};
+    use crate::core::capabilities::ability::foundation::{AbilityError, types::AbilityState};
 
     let err = AbilityError::InvalidTransition {
         from: AbilityState::Blocked,

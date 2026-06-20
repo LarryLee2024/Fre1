@@ -8,8 +8,9 @@
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 
+use crate::core::capabilities::targeting::foundation::error::TargetingError;
 use crate::core::capabilities::targeting::foundation::{
-    TargetContext, TargetData, TargetShape, TargetType, TargetingDef, TargetingError,
+    TargetContext, TargetData, TargetShape, TargetType, TargetingDef,
 };
 use crate::core::capabilities::targeting::mechanism::CandidateTarget;
 use crate::core::capabilities::targeting::mechanism::{select_targets, validate_targeting_def};

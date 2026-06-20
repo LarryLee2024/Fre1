@@ -40,7 +40,7 @@ pub(crate) fn on_reputation_change_request(
         tracing::warn!(
             event = "faction.reputation_change.missing_component",
             entity = ?entity,
-            "ReputationChangeRequest: entity {:?} has no Reputation component",
+            "ReputationChangeRequest: 实体 {:?} 没有 Reputation 组件",
             entity
         );
         return;

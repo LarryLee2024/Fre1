@@ -94,7 +94,7 @@ impl FileSink {
         }
 
         if let Err(e) = writeln!(writer.file, "{}", json_line) {
-            eprintln!("[FileSink] Write error: {}", e);
+            eprintln!("[FileSink] 写入错误：{}", e);
         } else {
             writer.bytes_written += line_len;
         }

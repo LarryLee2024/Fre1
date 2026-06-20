@@ -212,7 +212,7 @@ impl StoryFlags {
                     flag_id = %id,
                     existing = %existing,
                     rejected = %new_val,
-                    "StoryFlag '{}' already set to '{}', rejecting override to '{}'",
+                    "StoryFlag '{}' 已设为 '{}'，拒绝覆盖为 '{}'",
                     id, existing, new_val
                 );
                 return false;

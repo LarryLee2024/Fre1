@@ -4,6 +4,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 use bevy::prelude::Entity;
 
+use crate::core::capabilities::gameplay_context::foundation::error::ContextBuildError;
 use crate::core::capabilities::gameplay_context::foundation::types::*;
 
 // 全局自增上下文 ID 生成器（确定性，Replay-safe）

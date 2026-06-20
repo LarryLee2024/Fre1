@@ -22,7 +22,7 @@ pub(crate) fn step_turn_start(
     ap_query: &mut Query<&mut ActionPoints>,
 ) {
     let Some(current) = turn_queue.current() else {
-        debug!("[Combat] TurnStart: empty turn queue, skipping");
+        debug!("[Combat] TurnStart: 回合队列为空，跳过");
         return;
     };
 
@@ -37,7 +37,7 @@ pub(crate) fn step_turn_start(
     });
 
     debug!(
-        "[Combat] TurnStart: unit={:?}, team={}, round={}",
+        "[Combat] TurnStart: 单位={:?}, 队伍={}, 回合={}",
         current.entity,
         current.team_id,
         turn_queue.round_number()
@@ -65,7 +65,7 @@ pub(crate) fn step_phase_check(
     ap_query: &Query<&mut ActionPoints>,
 ) -> PhaseCheckResult {
     let Some(current) = turn_queue.current() else {
-        debug!("[Combat] PhaseCheck: empty turn queue, skipping");
+        debug!("[Combat] PhaseCheck: 回合队列为空，跳过");
         return PhaseCheckResult::Idle;
     };
 
@@ -73,13 +73,13 @@ pub(crate) fn step_phase_check(
         Ok(ap) => {
             if ap.is_idle() {
                 debug!(
-                    "[Combat] PhaseCheck: unit={:?} idle, skipping to settlement",
+                    "[Combat] PhaseCheck: 单位 {:?} 空闲，跳过到结算阶段",
                     current.entity
                 );
                 PhaseCheckResult::Idle
             } else {
                 debug!(
-                    "[Combat] PhaseCheck: unit={:?} has actions, waiting for input",
+                    "[Combat] PhaseCheck: 单位 {:?} 有可用行动，等待输入",
                     current.entity
                 );
                 PhaseCheckResult::HasActions
@@ -87,7 +87,7 @@ pub(crate) fn step_phase_check(
         }
         Err(_) => {
             debug!(
-                "[Combat] PhaseCheck: unit={:?} has no ActionPoints, skipping",
+                "[Combat] PhaseCheck: 单位 {:?} 没有 ActionPoints，跳过",
                 current.entity
             );
             PhaseCheckResult::Idle
@@ -105,7 +105,7 @@ pub(crate) fn step_unit_action(_commands: &mut Commands, turn_queue: &TurnQueue)
         return;
     };
     debug!(
-        "[Combat] UnitAction: waiting for input, unit={:?}",
+        "[Combat] UnitAction: 等待输入，单位={:?}",
         current.entity
     );
 }
@@ -117,7 +117,7 @@ pub(crate) fn step_unit_action(_commands: &mut Commands, turn_queue: &TurnQueue)
 /// TurnSettlement 步骤：触发 OnTurnEnd 领域事件。
 pub(crate) fn step_turn_settlement(commands: &mut Commands, turn_queue: &TurnQueue) {
     let Some(current) = turn_queue.current() else {
-        debug!("[Combat] TurnSettlement: empty turn queue, skipping");
+        debug!("[Combat] TurnSettlement: 回合队列为空，跳过");
         return;
     };
 
@@ -132,7 +132,7 @@ pub(crate) fn step_turn_settlement(commands: &mut Commands, turn_queue: &TurnQue
     });
 
     debug!(
-        "[Combat] TurnSettlement: unit={:?} settlement complete",
+        "[Combat] TurnSettlement: 单位 {:?} 结算完成",
         current.entity
     );
 }
@@ -160,7 +160,7 @@ pub(crate) fn step_turn_end(
     dead_query: &Query<&CombatParticipant, With<Dead>>,
 ) -> TurnEndResult {
     if turn_queue.is_empty() {
-        debug!("[Combat] TurnEnd: empty turn queue, ending battle");
+        debug!("[Combat] TurnEnd: 回合队列为空，战斗结束");
         return TurnEndResult::BattleOver;
     }
 
@@ -175,7 +175,7 @@ pub(crate) fn step_turn_end(
     let round = turn_queue.round_number();
 
     debug!(
-        "[Combat] TurnEnd: advanced to index={}, round={}",
+        "[Combat] TurnEnd: 前进到 index={}, 回合={}",
         turn_queue.current_index(),
         round
     );
@@ -192,7 +192,7 @@ pub(crate) fn step_turn_end(
 
     // 胜负判定 — 检查是否仅剩 ≤1 个队伍存活
     if check_team_elimination(combatant_query, dead_query) {
-        debug!("[Combat] Victory check: battle over (≤1 team(s) alive)");
+        debug!("[Combat] 胜负判定：战斗结束（活跃队伍 ≤1）");
         commands.trigger(OnBattleEnd {
             result: BattleResult::Victory,
         });

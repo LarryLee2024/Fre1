@@ -11,73 +11,73 @@ use crate::infra::logging::metrics;
 use crate::shared::diagnostics::LogCode;
 
 /// 对话开始日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::NAR001, event = "dialogue_started"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::NAR001, event = "对话开始"))]
 pub(crate) fn on_dialogue_started(trigger: On<DialogueStarted>) {
     metrics::record(LogCode::NAR001);
     let event = trigger.event();
     info!(
         code = ?LogCode::NAR001,
-        event = "dialogue_started",
+        event = "对话开始",
         entity = ?event.entity,
         npc = ?event.npc,
         tree_id = %event.tree_id,
-        "dialogue_started"
+        "对话开始"
     );
 }
 
 /// 玩家选择分支日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::NAR002, event = "choice_made"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::NAR002, event = "选择分支"))]
 pub(crate) fn on_choice_made(trigger: On<ChoiceMade>) {
     metrics::record(LogCode::NAR002);
     let event = trigger.event();
     info!(
         code = ?LogCode::NAR002,
-        event = "choice_made",
+        event = "选择分支",
         entity = ?event.entity,
         choice_id = %event.choice_id,
         flags_set = event.story_flags_set.len(),
-        "choice_made"
+        "选择分支"
     );
 }
 
 /// 故事标记设置日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::NAR003, event = "story_flag_set"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::NAR003, event = "故事标记设置"))]
 pub(crate) fn on_story_flag_set(trigger: On<StoryFlagSet>) {
     metrics::record(LogCode::NAR003);
     let event = trigger.event();
     info!(
         code = ?LogCode::NAR003,
-        event = "story_flag_set",
+        event = "故事标记设置",
         flag_id = %event.flag_id,
         value = %event.value,
         source = %event.source,
-        "story_flag_set"
+        "故事标记设置"
     );
 }
 
 /// 过场动画开始日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::NAR004, event = "cutscene_started"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::NAR004, event = "过场动画开始"))]
 pub(crate) fn on_cutscene_started(trigger: On<CutsceneStarted>) {
     metrics::record(LogCode::NAR004);
     let event = trigger.event();
     info!(
         code = ?LogCode::NAR004,
-        event = "cutscene_started",
+        event = "过场动画开始",
         cutscene_id = %event.cutscene_id,
         duration = event.duration,
-        "cutscene_started"
+        "过场动画开始"
     );
 }
 
 /// 过场动画结束日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::NAR005, event = "cutscene_ended"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::NAR005, event = "过场动画结束"))]
 pub(crate) fn on_cutscene_ended(trigger: On<CutsceneEnded>) {
     metrics::record(LogCode::NAR005);
     let event = trigger.event();
     info!(
         code = ?LogCode::NAR005,
-        event = "cutscene_ended",
+        event = "过场动画结束",
         cutscene_id = %event.cutscene_id,
-        "cutscene_ended"
+        "过场动画结束"
     );
 }

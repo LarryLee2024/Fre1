@@ -317,7 +317,7 @@ fn load_all_content(
             "enchantments" => load_enchantment_def(&mut enchantments, file),
             "spell_config" => load_spell_config(&mut spell_config, file),
             other => {
-                info!("[Content] Unknown bucket '{}', skipping", other);
+                info!("[Content] 未知的 bucket '{}'，已跳过", other);
             }
         }
     }
@@ -389,19 +389,19 @@ fn load_all_content(
     };
 
     if total == 0 {
-        info!("[Content] No config files found in assets/config/");
+        info!("[Content] 在 assets/config/ 中未发现配置文件");
     } else {
         info!(
-            "[Content] Discovered {} config file(s) across {} bucket(s)",
+            "[Content] 发现 {} 个配置文件，分布于 {} 个 bucket",
             total,
             buckets.len()
         );
         for (bucket, count) in &buckets {
-            info!("[Content]   {}: {} file(s)", bucket, count);
+            info!("[Content]   {}：{} 个文件", bucket, count);
         }
     }
     info!(
-        "[Content] Loaded {} spell(s), {} cue(s), {} effect(s), {} quest(s), {} recipe(s), {} shop(s), {} targeting(s), {} tag(s), {} attribute(s), {} summon(s), {} camp_event(s), {} bond(s), {} enchantment(s), {} error(s)",
+        "[Content] 加载了 {} 个技能、{} 个线索、{} 个效果、{} 个任务、{} 个配方、{} 个商店、{} 个目标定义、{} 个标签、{} 个属性、{} 个召唤模板、{} 个营地事件、{} 个羁绊、{} 个附魔、{} 个错误",
         spells.defs.len(),
         cues.defs.len(),
         effects.defs.len(),
@@ -458,7 +458,7 @@ fn load_spell_def(spells: &mut ResMut<LoadedSpellDefs>, file: &ContentFile) {
         return;
     }
 
-    info!("[Content] Loaded spell '{}' (id: {})", def.name_key, def.id);
+    info!("[Content] 加载了技能 '{}'（id: {}）", def.name_key, def.id);
     spells.defs.push(def);
 }
 
@@ -489,7 +489,7 @@ fn load_cue_def(cues: &mut ResMut<LoadedCueDefs>, file: &ContentFile) {
         return;
     }
 
-    info!("[Content] Loaded cue '{}'", def.id);
+    info!("[Content] 加载了线索 '{}'", def.id);
     cues.defs.push(def);
 }
 
@@ -520,7 +520,7 @@ fn load_effect_def(effects: &mut ResMut<LoadedEffectDefs>, file: &ContentFile) {
     }
 
     info!(
-        "[Content] Loaded effect '{}' (id: {})",
+        "[Content] 加载了效果 '{}'（id: {}）",
         def.name_key, def.id
     );
     effects.defs.push(def);
@@ -553,7 +553,7 @@ fn load_ability_def(abilities: &mut ResMut<LoadedAbilityDefs>, file: &ContentFil
     }
 
     info!(
-        "[Content] Loaded ability '{}' (id: {})",
+        "[Content] 加载了能力 '{}'（id: {}）",
         def.name_key, def.id
     );
     abilities.defs.push(def);
@@ -585,7 +585,7 @@ fn load_rule_def(rules: &mut ResMut<LoadedRuleDefs>, file: &ContentFile) {
         return;
     }
 
-    info!("[Content] Loaded rule '{}' (id: {})", def.name_key, def.id);
+    info!("[Content] 加载了规则 '{}'（id: {}）", def.name_key, def.id);
     rules.defs.push(def);
 }
 
@@ -615,7 +615,7 @@ fn load_quest_def(quests: &mut ResMut<LoadedQuestDefs>, file: &ContentFile) {
         return;
     }
 
-    info!("[Content] Loaded quest '{}' (id: {})", def.name_key, def.id);
+    info!("[Content] 加载了任务 '{}'（id: {}）", def.name_key, def.id);
     quests.defs.push(def);
 }
 
@@ -646,7 +646,7 @@ fn load_recipe_def(recipes: &mut ResMut<LoadedRecipeDefs>, file: &ContentFile) {
     }
 
     info!(
-        "[Content] Loaded recipe '{}' (id: {})",
+        "[Content] 加载了配方 '{}'（id: {}）",
         def.name_key, def.id
     );
     recipes.defs.push(def);
@@ -678,7 +678,7 @@ fn load_shop_def(shops: &mut ResMut<LoadedShopDefs>, file: &ContentFile) {
         return;
     }
 
-    info!("[Content] Loaded shop '{}' (id: {})", def.name_key, def.id);
+    info!("[Content] 加载了商店 '{}'（id: {}）", def.name_key, def.id);
     shops.defs.push(def);
 }
 
@@ -709,7 +709,7 @@ fn load_targeting_def(targeting: &mut ResMut<LoadedTargetingDefs>, file: &Conten
     }
 
     info!(
-        "[Content] Loaded targeting def (type: {}, shape: {})",
+        "[Content] 加载了目标定义（类型: {}, 形状: {}）",
         def.target_type.name(),
         def.shape.name()
     );
@@ -761,7 +761,7 @@ fn load_tag_def(tags: &mut ResMut<LoadedTagDefs>, file: &ContentFile) {
     let count = defs.len();
     for def in defs {
         info!(
-            "[Content] Loaded tag '{}' (path: {})",
+            "[Content] 加载了标签 '{}'（路径: {}）",
             def.id.as_str(),
             def.path
         );
@@ -770,9 +770,9 @@ fn load_tag_def(tags: &mut ResMut<LoadedTagDefs>, file: &ContentFile) {
 
     if count > 1 {
         info!(
-            "[Content] Loaded {} tags from {}",
-            count,
-            file.path.display()
+            "[Content] 从 {} 加载了 {} 个标签",
+            file.path.display(),
+            count
         );
     }
 }
@@ -822,7 +822,7 @@ fn load_attribute_def(attributes: &mut ResMut<LoadedAttributeDefs>, file: &Conte
     let count = defs.len();
     for def in defs {
         info!(
-            "[Content] Loaded attribute '{}' (category: {:?})",
+            "[Content] 加载了属性 '{}'（类别: {:?}）",
             def.id.as_str(),
             def.category
         );
@@ -831,7 +831,7 @@ fn load_attribute_def(attributes: &mut ResMut<LoadedAttributeDefs>, file: &Conte
 
     if count > 1 {
         info!(
-            "[Content] Loaded {count} attributes from {}",
+            "[Content] 从 {} 加载了 {count} 个属性",
             file.path.display()
         );
     }
@@ -864,7 +864,7 @@ fn load_summon_template_def(templates: &mut ResMut<LoadedSummonTemplateDefs>, fi
     }
 
     info!(
-        "[Content] Loaded summon template '{}' (id: {})",
+        "[Content] 加载了召唤模板 '{}'（id: {}）",
         def.name_key, def.id
     );
     templates.defs.push(def);
@@ -897,7 +897,7 @@ fn load_camp_event_def(events: &mut ResMut<LoadedCampEventDefs>, file: &ContentF
     }
 
     info!(
-        "[Content] Loaded camp event '{}' (id: {})",
+        "[Content] 加载了营地事件 '{}'（id: {}）",
         def.title_key, def.id
     );
     events.defs.push(def);
@@ -929,7 +929,7 @@ fn load_bond_def(bonds: &mut ResMut<LoadedBondDefs>, file: &ContentFile) {
         return;
     }
 
-    info!("[Content] Loaded bond '{}' (id: {})", def.name_key, def.id);
+    info!("[Content] 加载了羁绊 '{}'（id: {}）", def.name_key, def.id);
     bonds.defs.push(def);
 }
 
@@ -960,7 +960,7 @@ fn load_enchantment_def(enchantments: &mut ResMut<LoadedEnchantmentDefs>, file: 
     }
 
     info!(
-        "[Content] Loaded enchantment '{}' (id: {})",
+        "[Content] 加载了附魔 '{}'（id: {}）",
         def.name_key, def.id
     );
     enchantments.defs.push(def);
@@ -971,7 +971,7 @@ fn load_progression_balance(balance: &mut ResMut<LevelProgressionTable>, file: &
     let content = match std::fs::read_to_string(&file.path) {
         Ok(c) => c,
         Err(e) => {
-            warn!("[Content] Failed to read progression balance file: {}", e);
+            warn!("[Content] 读取等级成长表文件失败：{}", e);
             return;
         }
     };
@@ -980,7 +980,7 @@ fn load_progression_balance(balance: &mut ResMut<LevelProgressionTable>, file: &
         Ok(t) => t,
         Err(e) => {
             warn!(
-                "[Content] Failed to deserialize progression balance RON: {}",
+                "[Content] 反序列化等级成长表 RON 失败：{}",
                 e
             );
             return;
@@ -989,7 +989,7 @@ fn load_progression_balance(balance: &mut ResMut<LevelProgressionTable>, file: &
 
     **balance = table;
     info!(
-        "[Content] Loaded progression balance table (max_level: {})",
+        "[Content] 加载了等级成长表（最高等级: {}）",
         balance.max_level
     );
 }
@@ -999,7 +999,7 @@ fn load_spell_config(config: &mut ResMut<SpellConfig>, file: &ContentFile) {
     let content = match std::fs::read_to_string(&file.path) {
         Ok(c) => c,
         Err(e) => {
-            warn!("[Content] Failed to read spell config file: {}", e);
+            warn!("[Content] 读取法术配置文件失败：{}", e);
             return;
         }
     };
@@ -1007,14 +1007,14 @@ fn load_spell_config(config: &mut ResMut<SpellConfig>, file: &ContentFile) {
     let cfg: SpellConfig = match ron::from_str(&content) {
         Ok(c) => c,
         Err(e) => {
-            warn!("[Content] Failed to deserialize spell config RON: {}", e);
+            warn!("[Content] 反序列化法术配置 RON 失败：{}", e);
             return;
         }
     };
 
     **config = cfg;
     info!(
-        "[Content] Loaded spell config (concentration_base_dc: {}, max_concentration: {})",
+        "[Content] 加载了法术配置（专注基础 DC: {}, 最大专注数: {}）",
         config.concentration_base_dc, config.max_concentration
     );
 }

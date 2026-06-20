@@ -11,8 +11,9 @@ use bevy::ecs::system::Commands;
 use crate::core::capabilities::stacking::events::{
     StackAdded, StackOverflow, StackRefreshed, StackReplaced,
 };
+use crate::core::capabilities::stacking::foundation::error::StackingError;
 use crate::core::capabilities::stacking::foundation::{
-    OverflowBehavior, StackingConfig, StackingDecision, StackingError, StackingType,
+    OverflowBehavior, StackingConfig, StackingDecision, StackingType,
 };
 
 /// 堆叠判定所需的主题数据。

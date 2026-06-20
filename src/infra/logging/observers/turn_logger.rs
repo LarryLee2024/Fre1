@@ -12,29 +12,29 @@ use crate::shared::diagnostics::LogCode;
 /// 单位回合开始日志 Observer。
 ///
 /// 监听 `TurnStarted` 事件，记录开始回合的单位。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::BAT005, event = "turn_started"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::BAT005, event = "回合开始"))]
 pub(crate) fn on_turn_started(trigger: On<TurnStarted>) {
     metrics::record(LogCode::BAT005);
     let event = trigger.event();
     info!(
         code = ?LogCode::BAT005,
-        event = "turn_started",
+        event = "回合开始",
         unit = ?event.unit,
-        "turn_started"
+        "回合开始"
     );
 }
 
 /// 单位回合结束日志 Observer。
 ///
 /// 监听 `TurnEnded` 事件，记录结束回合的单位。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::BAT006, event = "turn_ended"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::BAT006, event = "回合结束"))]
 pub(crate) fn on_turn_ended(trigger: On<TurnEnded>) {
     metrics::record(LogCode::BAT006);
     let event = trigger.event();
     info!(
         code = ?LogCode::BAT006,
-        event = "turn_ended",
+        event = "回合结束",
         unit = ?event.unit,
-        "turn_ended"
+        "回合结束"
     );
 }

@@ -11,17 +11,17 @@ use crate::infra::logging::metrics;
 use crate::shared::diagnostics::LogCode;
 
 /// 制作完成日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::CRF003, event = "item_crafted"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::CRF003, event = "制作完成"))]
 pub(crate) fn on_item_crafted(trigger: On<ItemCrafted>) {
     metrics::record(LogCode::CRF003);
     let event = trigger.event();
     info!(
         code = ?LogCode::CRF003,
-        event = "item_crafted",
+        event = "制作完成",
         entity = ?event.entity,
         recipe = %event.recipe_id,
         output = %event.output_item,
-        "item_crafted"
+        "制作完成"
     );
 }
 
@@ -30,11 +30,11 @@ pub(crate) fn on_enchantment_applied(trigger: On<EnchantmentApplied>) {
     let event = trigger.event();
     info!(
         code = ?LogCode::CRF003,
-        event = "enchantment_applied",
+        event = "附魔应用",
         entity = ?event.entity,
         equipment = %event.equipment_item,
         enchantment = %event.new_enchantment,
-        "enchantment_applied"
+        "附魔应用"
     );
 }
 
@@ -43,26 +43,26 @@ pub(crate) fn on_item_upgraded(trigger: On<ItemUpgraded>) {
     let event = trigger.event();
     info!(
         code = ?LogCode::CRF003,
-        event = "item_upgraded",
+        event = "装备升级",
         entity = ?event.entity,
         equipment = %event.equipment_item,
         old = event.old_level,
         new = event.new_level,
-        "item_upgraded"
+        "装备升级"
     );
 }
 
 /// 制作失败日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::CRF004, event = "crafting_failed"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::CRF004, event = "制作失败"))]
 pub(crate) fn on_crafting_failed(trigger: On<CraftingFailed>) {
     metrics::record(LogCode::CRF004);
     let event = trigger.event();
     warn!(
         code = ?LogCode::CRF004,
-        event = "crafting_failed",
+        event = "制作失败",
         entity = ?event.entity,
         recipe = %event.recipe_id,
         reason = %event.fail_reason,
-        "crafting_failed"
+        "制作失败"
     );
 }

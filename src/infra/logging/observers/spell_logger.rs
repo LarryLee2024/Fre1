@@ -12,16 +12,16 @@ use crate::shared::diagnostics::LogCode;
 /// 法术施放结果日志 Observer。
 ///
 /// 监听 `SpellCastResult` 事件，记录施法者和施法结果。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::SPR001, event = "spell_cast"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::SPR001, event = "法术施放"))]
 pub(crate) fn on_spell_cast_result(trigger: On<SpellCastResult>) {
     metrics::record(LogCode::SPR001);
     let event = trigger.event();
     info!(
         code = ?LogCode::SPR001,
-        event = "spell_cast",
+        event = "法术施放",
         caster = ?event.caster,
         spell_id = ?event.spell_id,
         result = ?event.result,
-        "spell_cast"
+        "法术施放"
     );
 }

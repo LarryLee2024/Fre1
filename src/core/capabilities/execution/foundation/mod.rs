@@ -1,5 +1,6 @@
 //! C1: 纯数据定义层 — Execution 基础类型、枚举、值对象
 
+pub(crate) mod error;
 mod types;
 mod values;
 

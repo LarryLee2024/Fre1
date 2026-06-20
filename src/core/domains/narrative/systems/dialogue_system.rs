@@ -43,7 +43,7 @@ pub(crate) fn on_dialogue_start(
     let Some(registry) = tree_registry else {
         tracing::warn!(
             event = "narrative.dialogue_start.missing_registry",
-            "DialogueStartRequest: no DialogueTreeRegistry"
+            "DialogueStartRequest: 没有 DialogueTreeRegistry"
         );
         return;
     };
@@ -52,7 +52,7 @@ pub(crate) fn on_dialogue_start(
         tracing::warn!(
             event = "narrative.dialogue_start.tree_not_found",
             tree_id = %req.tree_id,
-            "DialogueStartRequest: tree '{}' not found",
+            "DialogueStartRequest: 对话树 '{}' 未找到",
             req.tree_id
         );
         return;
@@ -112,7 +112,7 @@ pub(crate) fn on_choice_select(
         tracing::warn!(
             event = "narrative.choice_select.missing_state",
             entity = ?entity,
-            "ChoiceSelectRequest: entity {:?} has no DialogueState",
+            "ChoiceSelectRequest: 实体 {:?} 没有 DialogueState",
             entity
         );
         return;
@@ -121,7 +121,7 @@ pub(crate) fn on_choice_select(
     let Some(registry) = tree_registry else {
         tracing::warn!(
             event = "narrative.choice_select.missing_registry",
-            "ChoiceSelectRequest: no DialogueTreeRegistry"
+            "ChoiceSelectRequest: 没有 DialogueTreeRegistry"
         );
         return;
     };
@@ -131,7 +131,7 @@ pub(crate) fn on_choice_select(
         tracing::warn!(
             event = "narrative.choice_select.node_not_found",
             node_id = %state.current_node_id,
-            "ChoiceSelectRequest: node '{}' not found",
+            "ChoiceSelectRequest: 节点 '{}' 未找到",
             state.current_node_id
         );
         return;
@@ -143,7 +143,7 @@ pub(crate) fn on_choice_select(
             event = "narrative.choice_select.choice_not_found",
             choice_id = %req.choice_id,
             node_id = %state.current_node_id,
-            "ChoiceSelectRequest: choice '{}' not in node '{}'",
+            "ChoiceSelectRequest: 分支 '{}' 不在节点 '{}' 中",
             req.choice_id, state.current_node_id
         );
         return;

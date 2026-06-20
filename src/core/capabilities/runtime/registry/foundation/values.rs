@@ -2,7 +2,8 @@
 
 use std::collections::HashMap;
 
-use super::types::{RegistryEntry, RegistryError};
+use super::error::RegistryError;
+use super::types::RegistryEntry;
 
 /// 全局 Definition 注册中心。
 ///

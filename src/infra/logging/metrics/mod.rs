@@ -92,7 +92,7 @@ impl MetricsCollector {
             delta_events = delta_total,
             total_events = self.lifetime_total,
             detail = detail,
-            "[Metrics] summary"
+            "[Metrics] 汇总"
         );
 
         self.last_summary_frame = frame;

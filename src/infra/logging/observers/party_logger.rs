@@ -11,71 +11,71 @@ use crate::infra::logging::metrics;
 use crate::shared::diagnostics::LogCode;
 
 /// 成员加入日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::PRY001, event = "member_joined"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::PRY001, event = "成员加入"))]
 pub(crate) fn on_member_joined(trigger: On<MemberJoined>) {
     metrics::record(LogCode::PRY001);
     let event = trigger.event();
     info!(
         code = ?LogCode::PRY001,
-        event = "member_joined",
+        event = "成员加入",
         entity = ?event.entity,
         role = %event.role,
-        "member_joined"
+        "成员加入"
     );
 }
 
 /// 成员离开日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::PRY002, event = "member_removed"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::PRY002, event = "成员离开"))]
 pub(crate) fn on_member_removed(trigger: On<MemberRemoved>) {
     metrics::record(LogCode::PRY002);
     let event = trigger.event();
     info!(
         code = ?LogCode::PRY002,
-        event = "member_removed",
+        event = "成员离开",
         entity = ?event.entity,
         reason = %event.reason,
-        "member_removed"
+        "成员离开"
     );
 }
 
 /// 换人日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::PRY003, event = "member_swapped"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::PRY003, event = "换人"))]
 pub(crate) fn on_member_swapped(trigger: On<MemberSwapped>) {
     metrics::record(LogCode::PRY003);
     let event = trigger.event();
     info!(
         code = ?LogCode::PRY003,
-        event = "member_swapped",
+        event = "换人",
         outgoing = ?event.outgoing,
         incoming = ?event.incoming,
-        "member_swapped"
+        "换人"
     );
 }
 
 /// 羁绊激活日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::PRY004, event = "bond_activated"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::PRY004, event = "羁绊激活"))]
 pub(crate) fn on_bond_activated(trigger: On<BondActivated>) {
     metrics::record(LogCode::PRY004);
     let event = trigger.event();
     info!(
         code = ?LogCode::PRY004,
-        event = "bond_activated",
+        event = "羁绊激活",
         bond_id = %event.bond_id,
         members = ?event.members,
-        "bond_activated"
+        "羁绊激活"
     );
 }
 
 /// 羁绊解除日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::PRY005, event = "bond_deactivated"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::PRY005, event = "羁绊解除"))]
 pub(crate) fn on_bond_deactivated(trigger: On<BondDeactivated>) {
     metrics::record(LogCode::PRY005);
     let event = trigger.event();
     info!(
         code = ?LogCode::PRY005,
-        event = "bond_deactivated",
+        event = "羁绊解除",
         bond_id = %event.bond_id,
         reason = %event.reason,
-        "bond_deactivated"
+        "羁绊解除"
     );
 }

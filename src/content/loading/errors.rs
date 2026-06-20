@@ -1,61 +1,42 @@
 //! Content 加载管线的错误类型
 
-use std::path::PathBuf;
-
 /// 配置加载错误。
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, thiserror::Error)]
 pub enum ConfigError {
     /// 文件读取失败。
-    FileReadError { path: PathBuf, reason: String },
+    #[error("failed to read {path}: {reason}")]
+    FileReadError { path: String, reason: String },
     /// RON 反序列化失败。
-    DeserializeError { path: PathBuf, detail: String },
+    #[error("failed to deserialize {path}: {detail}")]
+    DeserializeError { path: String, detail: String },
     /// Definition 转换失败。
-    ConversionError { path: PathBuf, detail: String },
+    #[error("failed to convert {path}: {detail}")]
+    ConversionError { path: String, detail: String },
     /// 加载后校验失败。
+    #[error("validation failed for {path}: {} error(s)", errors.len())]
     ValidationFailed {
-        path: PathBuf,
+        path: String,
         errors: Vec<ValidationError>,
     },
 }
 
-impl std::fmt::Display for ConfigError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            ConfigError::FileReadError { path, reason } => {
-                write!(f, "failed to read {}: {}", path.display(), reason)
-            }
-            ConfigError::DeserializeError { path, detail } => {
-                write!(f, "failed to deserialize {}: {}", path.display(), detail)
-            }
-            ConfigError::ConversionError { path, detail } => {
-                write!(f, "failed to convert {}: {}", path.display(), detail)
-            }
-            ConfigError::ValidationFailed { path, errors } => {
-                write!(
-                    f,
-                    "validation failed for {}: {} error(s)",
-                    path.display(),
-                    errors.len()
-                )
-            }
-        }
-    }
-}
-
-impl std::error::Error for ConfigError {}
-
 /// Definition 校验错误。
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, thiserror::Error)]
 pub enum ValidationError {
     /// ID 为空。
+    #[error("definition ID is empty")]
     EmptyId,
     /// ID 前缀不匹配。
+    #[error("ID '{id}' does not start with expected prefix '{expected_prefix}'")]
     InvalidIdPrefix { id: String, expected_prefix: String },
     /// ID 格式非法（非数字后缀）。
+    #[error("ID '{id}' has invalid format: {detail}")]
     InvalidIdFormat { id: String, detail: String },
     /// 必填字段缺失。
+    #[error("required field '{field}' is missing")]
     MissingField { field: String },
     /// 数值超出合法范围。
+    #[error("field '{field}' value {value} is out of range [{min}, {max}]")]
     OutOfRange {
         field: String,
         value: f64,
@@ -63,59 +44,12 @@ pub enum ValidationError {
         max: f64,
     },
     /// 引用了不存在的 Definition。
+    #[error("field '{field}' references non-existent definition '{referenced_id}'")]
     BrokenReference {
         field: String,
         referenced_id: String,
     },
     /// 自定义校验错误。
+    #[error("{0}")]
     Custom(String),
 }
-
-impl std::fmt::Display for ValidationError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            ValidationError::EmptyId => write!(f, "definition ID is empty"),
-            ValidationError::InvalidIdPrefix {
-                id,
-                expected_prefix,
-            } => {
-                write!(
-                    f,
-                    "ID '{}' does not start with expected prefix '{}'",
-                    id, expected_prefix
-                )
-            }
-            ValidationError::InvalidIdFormat { id, detail } => {
-                write!(f, "ID '{}' has invalid format: {}", id, detail)
-            }
-            ValidationError::MissingField { field } => {
-                write!(f, "required field '{}' is missing", field)
-            }
-            ValidationError::OutOfRange {
-                field,
-                value,
-                min,
-                max,
-            } => {
-                write!(
-                    f,
-                    "field '{}' value {} is out of range [{}, {}]",
-                    field, value, min, max
-                )
-            }
-            ValidationError::BrokenReference {
-                field,
-                referenced_id,
-            } => {
-                write!(
-                    f,
-                    "field '{}' references non-existent definition '{}'",
-                    field, referenced_id
-                )
-            }
-            ValidationError::Custom(msg) => write!(f, "{}", msg),
-        }
-    }
-}
-
-impl std::error::Error for ValidationError {}

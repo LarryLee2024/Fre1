@@ -26,7 +26,7 @@ pub(crate) fn enforce_xp_invariant(
         tracing::warn!(
             event = "progression.xp_gained.missing_component",
             entity = ?ev.entity,
-            "ExperienceGained: entity {:?} has no Experience component",
+            "实体 {:?} 没有 Experience 组件，经验获取被忽略",
             ev.entity
         );
         return;
@@ -34,11 +34,11 @@ pub(crate) fn enforce_xp_invariant(
 
     // 满级时不增加经验（不变量 3.1）
     if xp.is_max_level {
-        tracing::info!(
+        tracing::warn!(
             event = "progression.xp_gained.max_level",
             entity = ?ev.entity,
             amount = ev.amount,
-            "Entity {:?} is max level, XP gain ignored: +{}",
+            "实体 {:?} 已达满级，经验 +{} 被忽略",
             ev.entity, ev.amount
         );
         return;
@@ -53,7 +53,7 @@ pub(crate) fn enforce_xp_invariant(
         amount = ev.amount,
         total = xp.total_xp_earned,
         level = xp.level,
-        "XP gained: entity={:?}, +{} (total: {}, level: {})",
+        "经验增加：实体={:?}, +{}（累计: {}, 等级: {}）",
         ev.entity, ev.amount, xp.total_xp_earned, xp.level
     );
 
@@ -95,7 +95,7 @@ pub(crate) fn handle_level_up(
         tracing::warn!(
             event = "progression.level_up.missing_component",
             entity = ?ev.entity,
-            "LevelUp: entity {:?} has no Experience component",
+            "LevelUp: 实体 {:?} 没有 Experience 组件，升级失败",
             ev.entity
         );
         return;
@@ -138,7 +138,7 @@ pub(crate) fn on_talent_unlocked(
         tracing::warn!(
             event = "progression.talent_unlocked.missing_component",
             entity = ?ev.entity,
-            "TalentUnlocked: entity {:?} has no TalentTree component",
+            "TalentUnlocked: 实体 {:?} 没有 TalentTree 组件，天赋解锁失败",
             ev.entity
         );
         return;
@@ -160,9 +160,9 @@ pub(crate) fn check_max_level_system(mut query: Query<&mut Experience>) {
     for mut xp in query.iter_mut() {
         if xp.level >= 20 && !xp.is_max_level {
             xp.is_max_level = true;
-            tracing::info!(
+            tracing::debug!(
                 event = "progression.max_level_reached",
-                "Entity reached max level"
+                "实体达到满级"
             );
         }
     }

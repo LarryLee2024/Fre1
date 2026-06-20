@@ -40,7 +40,7 @@ pub(crate) fn on_compute_move(
         tracing::warn!(
             event = "tactical.move.short_path",
             path_len = path.len(),
-            "ComputeMoveRequest path too short: {} positions",
+            "ComputeMoveRequest 路径太短：{} 个位置",
             path.len()
         );
         return;
@@ -50,7 +50,7 @@ pub(crate) fn on_compute_move(
         tracing::warn!(
             event = "tactical.move.missing_components",
             entity = ?entity,
-            "ComputeMoveRequest entity {} missing tactical components",
+            "ComputeMoveRequest 实体 {} 缺少战术移动组件",
             entity
         );
         return;
@@ -64,7 +64,7 @@ pub(crate) fn on_compute_move(
             tracing::warn!(
                 event = "tactical.move.missing_capabilities",
                 entity = ?entity,
-                "Entity {} missing movement capabilities",
+                "实体 {} 缺少移动能力组件",
                 entity
             );
             return;
@@ -76,7 +76,7 @@ pub(crate) fn on_compute_move(
             event = "tactical.move.no_tag",
             entity = ?entity,
             mov_type = ?mov_type,
-            "Entity {} has no movement tag for {:?}",
+            "实体 {} 没有 {:?} 对应的移动标签",
             entity,
             mov_type
         );
@@ -87,7 +87,7 @@ pub(crate) fn on_compute_move(
         can_move = view.can_move,
         effective = view.effective_points.0,
         max = view.max_points.0,
-        "Movement capability view for entity"
+        "实体移动能力视图"
     );
 
     // ── 步骤 3: 计算路径成本 ──

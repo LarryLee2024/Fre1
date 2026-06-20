@@ -2,7 +2,8 @@
 
 use bevy::prelude::Resource;
 
-use super::types::{CommandError, CommandSource, GameCommand, RecordedCommand};
+use super::error::CommandError;
+use super::types::{CommandSource, GameCommand, RecordedCommand};
 
 /// 命令队列——统一命令入口。
 ///

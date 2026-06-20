@@ -1,8 +1,9 @@
 use bevy::prelude::*;
 
+use crate::core::capabilities::execution::foundation::error::ExecutionError;
 use crate::core::capabilities::execution::foundation::{
     AbilityExecutionParams, AttributeModifierDef, CalcTrace, CustomExecutionRef, DamageParams,
-    DiceDef, DirectOp, EnvironmentParams, ExecutionContext, ExecutionError, ExecutionResult,
+    DiceDef, DirectOp, EnvironmentParams, ExecutionContext, ExecutionResult,
     ExecutionType, HealParams, ScalableValue,
 };
 use crate::core::capabilities::execution::mechanism::{execute, validate_context, validate_result};

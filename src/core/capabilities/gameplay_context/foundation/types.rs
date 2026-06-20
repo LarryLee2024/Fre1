@@ -38,30 +38,3 @@ pub enum ContextStatus {
     Consumed,
     Archived,
 }
-
-/// 上下文构建错误。
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum ContextBuildError {
-    /// 缺失必填字段（列出缺失字段名）
-    MissingFields(Vec<String>),
-    /// 溯源链检测到循环
-    CycleDetected,
-    /// 溯源链达到长度上限
-    ChainTooLong { current: u8, max: u8 },
-}
-
-impl std::fmt::Display for ContextBuildError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::MissingFields(fields) => {
-                write!(f, "missing required fields: {}", fields.join(", "))
-            }
-            Self::CycleDetected => write!(f, "context chain cycle detected"),
-            Self::ChainTooLong { current, max } => {
-                write!(f, "chain length {} exceeds max {}", current, max)
-            }
-        }
-    }
-}
-
-impl std::error::Error for ContextBuildError {}

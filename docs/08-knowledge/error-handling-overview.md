@@ -744,6 +744,14 @@ fn create_summon(
 | 统一错误日志 | ✅ 已有方案 | Error 通过 tracing 记录（参考 logging-overview.md），Failure 通过 `code()` 记录 |
 | 错误恢复策略 | ✅ 不需要 | Failure 是正常业务结果，不需要恢复；Pipeline 已有 Retry 策略处理程序错误 |
 
+### 已知缺口
+
+| 缺口 | 严重度 | 追踪 |
+|------|--------|------|
+| 能力层（Capability）错误类型未进行 Error/Failure 分离 | 中 | `docs/11-refactor/error-system-refactoring-2026-06-28.md` Phase 4 |
+| 能力层错误类型嵌入在 foundation/types.rs 中，无独立 error.rs | 中 | `docs/11-refactor/error-system-refactoring-2026-06-28.md` Phase 2 |
+| 部分错误类型使用手动 Display/Error 实现而非 thiserror | 低 | `docs/11-refactor/error-system-refactoring-2026-06-28.md` Phase 3 |
+
 ---
 
 ## 10. 规则速查：该做什么和不该做什么

@@ -78,9 +78,9 @@ impl DamageParams {
     /// 校验参数合法性。
     ///
     /// - V3: critical_multiplier ≥ 1.0
-    pub fn validate(&self) -> Result<(), super::types::ExecutionError> {
+    pub fn validate(&self) -> Result<(), super::error::ExecutionError> {
         if self.can_critical && self.critical_multiplier < 1.0 {
-            return Err(super::types::ExecutionError::InvalidResult(format!(
+            return Err(super::error::ExecutionError::InvalidResult(format!(
                 "critical_multiplier {} must be >= 1.0",
                 self.critical_multiplier
             )));
@@ -139,15 +139,15 @@ impl DiceDef {
     /// 创建骰子定义。
     ///
     /// 校验：count ≥ 1, sides ≥ 2
-    pub fn new(count: u8, sides: u8) -> Result<Self, super::types::ExecutionError> {
+    pub fn new(count: u8, sides: u8) -> Result<Self, super::error::ExecutionError> {
         if count < 1 {
-            return Err(super::types::ExecutionError::InvalidResult(format!(
+            return Err(super::error::ExecutionError::InvalidResult(format!(
                 "dice count must be ≥ 1, got {}",
                 count
             )));
         }
         if sides < 2 {
-            return Err(super::types::ExecutionError::InvalidResult(format!(
+            return Err(super::error::ExecutionError::InvalidResult(format!(
                 "dice sides must be ≥ 2, got {}",
                 sides
             )));

@@ -28,7 +28,9 @@ pub(crate) fn register_tags_from_content(
     }
 
     info!(
-        "[Tag] Registering {} tag definition(s) into hierarchy",
+        event = "tag.registration.start",
+        count = defs.len(),
+        "[Tag] 开始注册 {} 个标签定义",
         defs.len()
     );
 
@@ -39,18 +41,34 @@ pub(crate) fn register_tags_from_content(
         let id = def.id.clone();
         match hierarchy.register(def, &mut commands) {
             Ok(()) => {
-                info!("[Tag] Registered tag '{}' into hierarchy", id);
+                trace!(
+                    event = "tag.registration.item_ok",
+                    tag_id = %id,
+                    "[Tag] 标签 '{}' 注册成功",
+                    id
+                );
                 success_count += 1;
             }
             Err(e) => {
-                warn!("[Tag] Failed to register tag '{}': {}", id, e);
+                warn!(
+                    event = "tag.registration.item_error",
+                    tag_id = %id,
+                    error = %e,
+                    "[Tag] 标签 '{}' 注册失败：{}",
+                    id,
+                    e
+                );
                 error_count += 1;
             }
         }
     }
 
     info!(
-        "[Tag] Tag registration complete: {} succeeded, {} failed",
-        success_count, error_count
+        event = "tag.registration.complete",
+        success = success_count,
+        failed = error_count,
+        "[Tag] 标签注册完成：{} 成功，{} 失败",
+        success_count,
+        error_count
     );
 }

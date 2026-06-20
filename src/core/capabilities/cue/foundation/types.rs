@@ -351,23 +351,3 @@ impl CueData {
         self
     }
 }
-
-/// Cue 领域错误。
-#[derive(Debug, Clone, PartialEq)]
-pub enum CueError {
-    /// Cue 未找到
-    CueNotFound(String),
-    /// 无效的参数
-    InvalidParams(String),
-}
-
-impl std::fmt::Display for CueError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::CueNotFound(id) => write!(f, "cue '{}' not found", id),
-            Self::InvalidParams(msg) => write!(f, "invalid cue params: {}", msg),
-        }
-    }
-}
-
-impl std::error::Error for CueError {}

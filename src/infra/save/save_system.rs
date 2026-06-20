@@ -53,7 +53,7 @@ pub fn save_world_system(
 
     if let Some(label) = &request.label {
         save_manager.metadata.label = label.clone();
-        tracing::info!("[SaveSystem] saving with label: {}", label);
+        tracing::info!("[SaveSystem] 正在保存，标签：{}", label);
     }
     save_manager.current_save_path = Some(std::path::PathBuf::from(&path));
     save_manager.is_dirty = false;
@@ -225,13 +225,13 @@ pub fn save_world_system(
     match serde_json::to_string_pretty(&world_data) {
         Ok(json) => {
             if let Err(e) = std::fs::write(&path, &json) {
-                tracing::error!("[SaveSystem] failed to write save file: {}", e);
+                tracing::error!("[SaveSystem] 写入存档文件失败：{}", e);
                 return;
             }
             let entity_count =
                 world_data.combat.participants.len() + world_data.progression.entities.len();
             tracing::info!(
-                "[SaveSystem] save completed: path={}, entities={}",
+                "[SaveSystem] 保存完成：路径={}, 实体数={}",
                 path,
                 entity_count
             );
@@ -242,7 +242,7 @@ pub fn save_world_system(
             });
         }
         Err(e) => {
-            tracing::error!("[SaveSystem] serialization failed: {}", e);
+            tracing::error!("[SaveSystem] 序列化失败：{}", e);
         }
     }
 }

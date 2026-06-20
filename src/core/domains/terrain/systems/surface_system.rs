@@ -28,7 +28,7 @@ pub(crate) fn on_surface_changed(
                 tile_y = tile_pos.y,
                 old = ?event.old_surface,
                 new = ?event.new_surface,
-                "SurfaceChanged: tile=({},{}), {:?} → {:?}",
+                "地表变更：格子=({},{}), {:?} → {:?}",
                 tile_pos.x, tile_pos.y, event.old_surface, event.new_surface
             );
             return;

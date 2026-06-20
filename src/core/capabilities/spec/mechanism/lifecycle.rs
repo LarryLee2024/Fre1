@@ -12,8 +12,9 @@ use bevy::prelude::*;
 use crate::core::capabilities::spec::events::{
     SpecGranted, SpecLevelChanged, SpecRemovalReason, SpecRemoved,
 };
+use crate::core::capabilities::spec::foundation::error::SpecError;
 use crate::core::capabilities::spec::foundation::{
-    AbilitySpec, EffectSource, EffectSpec, SpecError, SpecId, SpecRegistryConfig, SpecType,
+    AbilitySpec, EffectSource, EffectSpec, SpecId, SpecRegistryConfig, SpecType,
 };
 
 use crate::core::capabilities::spec::mechanism::components::SpecContainer;

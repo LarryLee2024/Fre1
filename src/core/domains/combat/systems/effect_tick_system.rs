@@ -37,7 +37,7 @@ pub(crate) fn on_turn_end_tick_effects(
     for outcome in &outcomes {
         if !outcome.ticked.is_empty() {
             debug!(
-                "[Combat-Effect] {} effects ticked, {} expired",
+                "[Combat-Effect] {} 个效果触发 Tick，{} 个到期",
                 outcome.ticked.len(),
                 outcome.expired.len()
             );
@@ -47,7 +47,7 @@ pub(crate) fn on_turn_end_tick_effects(
             tracing::warn!(
                 event = "combat.effect_tick.errors",
                 error_count = outcome.error_count,
-                "{} errors during tick",
+                "Tick 过程中出现 {} 个错误",
                 outcome.error_count
             );
         }

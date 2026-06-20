@@ -25,7 +25,5 @@ mod systems;
 mod tests;
 
 pub use components::*;
-pub use error::*;
 pub use events::*;
-pub use failure::*;
 pub use plugin::*;

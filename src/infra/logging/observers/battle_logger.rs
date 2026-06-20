@@ -12,27 +12,27 @@ use crate::shared::diagnostics::LogCode;
 /// 战斗开始日志 Observer。
 ///
 /// 监听 `BattleStarted` 事件，输出结构化 INFO 日志。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::BAT001, event = "battle_started"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::BAT001, event = "战斗开始"))]
 pub(crate) fn on_battle_started(_trigger: On<BattleStarted>) {
     metrics::record(LogCode::BAT001);
     info!(
         code = ?LogCode::BAT001,
-        event = "battle_started",
-        "battle_started"
+        event = "战斗开始",
+        "战斗开始"
     );
 }
 
 /// 战斗结束日志 Observer。
 ///
 /// 监听 `BattleEnded` 事件，记录战斗结果（胜利/失败）。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::BAT002, event = "battle_ended"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::BAT002, event = "战斗结束"))]
 pub(crate) fn on_battle_ended(trigger: On<BattleEnded>) {
     metrics::record(LogCode::BAT002);
     let event = trigger.event();
     info!(
         code = ?LogCode::BAT002,
-        event = "battle_ended",
+        event = "战斗结束",
         victory = event.victory,
-        "battle_ended"
+        "战斗结束"
     );
 }

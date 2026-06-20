@@ -1,7 +1,8 @@
 use bevy::prelude::{Commands, Entity, World};
 
+use crate::core::capabilities::gameplay_context::foundation::error::ContextBuildError;
 use crate::core::capabilities::gameplay_context::foundation::{
-    ContextBuildError, ContextOrigin, ElementType, SourceInfo, TargetInfo,
+    ContextOrigin, ElementType, SourceInfo, TargetInfo,
 };
 use crate::core::capabilities::gameplay_context::mechanism::ContextBuilder;
 

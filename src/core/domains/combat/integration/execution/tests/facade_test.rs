@@ -2,8 +2,9 @@
 
 use bevy::prelude::*;
 
+use crate::core::capabilities::execution::foundation::error::ExecutionError;
 use crate::core::capabilities::execution::foundation::{
-    DamageParams, ExecutionContext, ExecutionError, ExecutionType, ScalableValue,
+    DamageParams, ExecutionContext, ExecutionType, ScalableValue,
 };
 use crate::core::domains::combat::integration::execution::CombatExecutionFacade;
 

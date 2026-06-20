@@ -54,7 +54,7 @@ pub(crate) fn on_relationship_eval_request(
         tracing::warn!(
             event = "faction.relationship_eval.missing_subject",
             entity = ?entity,
-            "RelationshipEvalRequest: entity {:?} has no FactionMembership",
+            "RelationshipEvalRequest: 主体 {:?} 没有 FactionMembership",
             entity
         );
         return;
@@ -65,7 +65,7 @@ pub(crate) fn on_relationship_eval_request(
             event = "faction.relationship_eval.missing_target",
             entity = ?entity,
             target = ?target,
-            "RelationshipEvalRequest: target {:?} has no FactionMembership",
+            "RelationshipEvalRequest: 目标 {:?} 没有 FactionMembership",
             target
         );
         return;

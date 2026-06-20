@@ -24,13 +24,13 @@ pub fn on_main_menu_button_clicked(on: On<ButtonClicked>, query: Query<&MenuActi
 
     match action {
         MenuAction::NewGame => {
-            info!("[MainMenu] New Game clicked");
+            info!("[MainMenu] 新游戏被点击");
         }
         MenuAction::LoadGame => {
-            info!("[MainMenu] Load Game clicked");
+            info!("[MainMenu] 加载游戏被点击");
         }
         MenuAction::Settings => {
-            info!("[MainMenu] Settings clicked");
+            info!("[MainMenu] 设置被点击");
         }
     }
 }

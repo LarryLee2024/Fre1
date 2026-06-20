@@ -193,7 +193,7 @@ pub fn handle_add_member(
                 event = "party.add_member.failed",
                 entity = ?entity,
                 error = %e,
-                "handle_add_member: add_member_to_party failed: {}",
+                "添加成员失败：add_member_to_party 返回错误：{}",
                 e
             );
         }
@@ -221,7 +221,7 @@ pub fn handle_remove_member(
                 event = "party.remove_member.failed",
                 entity = ?entity,
                 error = %e,
-                "handle_remove_member: remove_member_from_party failed: {}",
+                "移除成员失败：remove_member_from_party 返回错误：{}",
                 e
             );
         }
@@ -250,7 +250,7 @@ pub fn handle_swap_member(
                 outgoing = ?outgoing,
                 incoming = ?incoming,
                 error = %e,
-                "handle_swap_member: swap_active_with_reserve failed: {}",
+                "换人失败：swap_active_with_reserve 返回错误：{}",
                 e
             );
         }

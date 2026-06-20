@@ -13,9 +13,10 @@
 use bevy::prelude::{Commands, Entity};
 
 use crate::core::capabilities::targeting::events::{NoValidTarget, TargetSelected};
+use crate::core::capabilities::targeting::foundation::error::TargetingError;
 use crate::core::capabilities::targeting::foundation::{
     EntityTarget, PriorityRule, TargetContext, TargetData, TargetType, TargetingDef,
-    TargetingError, ValidationResult,
+    ValidationResult,
 };
 
 /// 候选目标描述——选择前的原始目标数据。

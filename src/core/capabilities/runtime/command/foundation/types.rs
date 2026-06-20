@@ -132,31 +132,6 @@ impl RecordedCommand {
     }
 }
 
-/// Command 领域错误。
-#[derive(Debug, Clone, PartialEq)]
-pub enum CommandError {
-    /// 命令队列已满
-    QueueFull(usize),
-    /// 命令无效
-    InvalidCommand(String),
-    /// 命令执行失败
-    ExecutionFailed { command: String, reason: String },
-}
-
-impl std::fmt::Display for CommandError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::QueueFull(size) => write!(f, "command queue full (max {})", size),
-            Self::InvalidCommand(msg) => write!(f, "invalid command: {}", msg),
-            Self::ExecutionFailed { command, reason } => {
-                write!(f, "execution failed for '{}': {}", command, reason)
-            }
-        }
-    }
-}
-
-impl std::error::Error for CommandError {}
-
 /// 命令分发结果。
 #[derive(Debug, Clone, PartialEq)]
 pub enum DispatchResult {

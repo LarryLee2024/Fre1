@@ -116,42 +116,6 @@ pub enum StepResult {
     Skipped,
 }
 
-/// Pipeline 领域错误。
-#[derive(Debug, Clone, PartialEq)]
-pub enum PipelineError {
-    /// 阶段未找到
-    StageNotFound(String),
-    /// 步骤执行失败
-    StepFailed {
-        stage: String,
-        step: String,
-        detail: String,
-    },
-    /// 管线被中止
-    Aborted(String),
-    /// 上下文数据缺失
-    MissingContext(String),
-}
-
-impl std::fmt::Display for PipelineError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::StageNotFound(name) => write!(f, "stage '{}' not found", name),
-            Self::StepFailed {
-                stage,
-                step,
-                detail,
-            } => {
-                write!(f, "step '{}' in stage '{}' failed: {}", step, stage, detail)
-            }
-            Self::Aborted(reason) => write!(f, "pipeline aborted: {}", reason),
-            Self::MissingContext(key) => write!(f, "missing context key: {}", key),
-        }
-    }
-}
-
-impl std::error::Error for PipelineError {}
-
 /// 管线执行日志条目。
 #[derive(Debug, Clone, PartialEq)]
 pub struct ExecutionLogEntry {

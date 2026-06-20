@@ -2,7 +2,7 @@
 
 use bevy::prelude::*;
 
-use crate::core::capabilities::targeting::foundation::TargetingError;
+use crate::core::capabilities::targeting::foundation::error::TargetingError;
 use crate::core::capabilities::targeting::mechanism::CandidateTarget;
 use crate::core::domains::combat::integration::targeting::CombatTargetingFacade;
 
