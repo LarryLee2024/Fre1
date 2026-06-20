@@ -7,6 +7,7 @@
 use bevy::prelude::*;
 
 use super::components::CampEventId;
+use crate::shared::diagnostics::DomainEvent;
 
 /// 短休完成时触发。
 ///
@@ -91,3 +92,11 @@ pub struct CampEventTriggered {
     /// 可用选项列表。
     pub choices_available: Vec<String>,
 }
+
+// ─── Marker Trait 实现 ─────────────────────────────────────────
+
+impl DomainEvent for ShortRestCompleted {}
+impl DomainEvent for LongRestStarted {}
+impl DomainEvent for LongRestCompleted {}
+impl DomainEvent for LongRestInterrupted {}
+impl DomainEvent for CampEventTriggered {}

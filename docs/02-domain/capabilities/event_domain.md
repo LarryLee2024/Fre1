@@ -240,3 +240,68 @@ Consumed（事件消费完毕）
 - [x] 禁止事项已明确列出（5 条禁止）
 - [x] Event 与 Trigger 的职责分离已明确定义
 - [x] 每个操作有完整的流程定义（发布、分发、订阅注册、注销、循环检测）
+
+---
+
+## 9. Marker Trait 事件分类
+
+### 9.1 事件 Marker Trait 层级
+
+使用 Marker Trait 对事件进行分类，不携带行为、不创建层级，仅作为注册标签：
+
+| Marker Trait | 用途 | 示例事件 |
+|-------------|------|----------|
+| `DomainEvent` | 领域业务事件，代表有意义的业务发生 | LevelUp, ShortRestCompleted, TurnEnded |
+| `ReplayEvent` | 回放基础设施事件，录制/回放流程的元事件 | ReplayStarted, RecordingCompleted |
+| `AuditEvent` | 审计事件，需要记录到审计轨迹 | EventPublished, EventDeliveryFailed |
+
+### 9.2 Marker Trait vs Classification Trait
+
+- 🟩 **Marker Trait**：空 trait，不携带任何方法，仅作为类型标签驱动自动注册系统
+- 🟩 **Classification Trait**：携带行为方法（如 `ObservableEvent`），定义类型的契约接口
+- 🟩 Marker Trait 不违反"组合优于继承"，因为它们是零行为标签，不创建行为层级
+
+### 9.3 自动注册
+
+Marker Trait 驱动自动注册系统，事件类型只需 impl 对应 Marker Trait 即可被自动发现：
+
+```rust
+// 只需添加标记，无需手动注册
+impl DomainEvent for TurnEnded {}
+
+// EventBus 自动发现并注册事件类型
+// ReplayRecorder 自动开始录制事件
+```
+
+---
+
+## 10. Blanket Impl 自动派生
+
+### 10.1 原则
+
+当一个能力可由另一个能力自动推导时，使用 blanket impl，禁止手动重复实现。
+
+### 10.2 核心 Blanket Impl
+
+```rust
+/// 所有 DomainEvent 自动获得 Replayable 能力
+impl<T: DomainEvent + 'static> Replayable for T {
+    fn replay(&self) -> ReplayAction {
+        ReplayAction { record: true, priority: 0 }
+    }
+}
+
+/// 所有 ReplayEvent 自动获得 Replayable 能力
+impl<T: ReplayEvent + 'static> Replayable for T {
+    fn replay(&self) -> ReplayAction {
+        ReplayAction { record: true, priority: 255 }
+    }
+}
+```
+
+### 10.3 效果
+
+- 事件定义者只需关心 `impl DomainEvent for MyEvent {}`（添加标记）
+- `Replayable` 能力自动派生，无需额外实现
+- 新增事件类型时自动获得所有派生能力，不存在遗漏
+- 禁止手动为每个事件类型重复实现可自动推导的 trait

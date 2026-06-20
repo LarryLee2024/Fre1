@@ -56,6 +56,46 @@ pub trait ObservableEvent: fmt::Debug + Send + Sync + 'static {
     fn record_fields(&self, _collector: &mut FieldCollector) {}
 }
 
+// ─── Marker Trait 事件分类 ────────────────────────────────────
+//
+// Marker Trait 不携带行为、不创建层级，仅作为注册标签。
+// 驱动自动注册系统：事件类型只需 impl 对应 Marker Trait 即可被自动发现。
+
+/// Marker trait for domain events.
+///
+/// All domain events represent meaningful business occurrences within a domain.
+/// Implementing this marker trait enables automatic discovery, logging, replay,
+/// and audit capabilities without behavioral inheritance.
+///
+/// # Marker Trait vs Classification Trait
+///
+/// This is a pure marker trait: it carries no behavior, creates no hierarchy,
+/// and serves only as a registration tag for auto-registration systems.
+pub trait DomainEvent {}
+
+/// Marker trait for replay events.
+///
+/// Events implementing this trait are recorded during gameplay and replayed
+/// during verification. Replay events are a subset of system events related
+/// to the replay infrastructure itself (e.g., ReplayStarted, RecordingCompleted).
+///
+/// # Marker Trait vs Classification Trait
+///
+/// This is a pure marker trait: it carries no behavior, creates no hierarchy,
+/// and serves only as a registration tag for auto-registration systems.
+pub trait ReplayEvent {}
+
+/// Marker trait for audit events.
+///
+/// Events implementing this trait are recorded in the audit trail for
+/// compliance, debugging, and post-mortem analysis.
+///
+/// # Marker Trait vs Classification Trait
+///
+/// This is a pure marker trait: it carries no behavior, creates no hierarchy,
+/// and serves only as a registration tag for auto-registration systems.
+pub trait AuditEvent {}
+
 /// 结构化字段收集器——Observer 通过此结构收集事件字段。
 #[derive(Debug, Default)]
 pub struct FieldCollector {

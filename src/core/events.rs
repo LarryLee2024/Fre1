@@ -10,7 +10,7 @@
 
 use bevy::prelude::*;
 
-// ─── 回合生命周期事件 ────────────────────────────────────────────────
+use crate::shared::diagnostics::DomainEvent;
 
 /// 全局回合结束事件。
 ///
@@ -53,3 +53,10 @@ pub struct BattleEnded {
     /// 战斗结果：true = 胜利，false = 失败
     pub victory: bool,
 }
+
+// ─── Marker Trait 实现 ─────────────────────────────────────────
+
+impl DomainEvent for TurnEnded {}
+impl DomainEvent for TurnStarted {}
+impl DomainEvent for BattleStarted {}
+impl DomainEvent for BattleEnded {}

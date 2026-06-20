@@ -7,6 +7,8 @@
 
 use bevy::prelude::*;
 
+use crate::shared::diagnostics::{AuditEvent, DomainEvent};
+
 /// 事件被发布到 EventBus 时触发（调试用）。
 #[derive(Event, Debug, Clone)]
 pub struct EventPublished {
@@ -52,3 +54,17 @@ pub struct EventCycleDetected {
     /// 事件链追踪
     pub chain_trace: String,
 }
+
+// ─── Marker Trait 实现 ─────────────────────────────────────────
+
+impl DomainEvent for EventPublished {}
+impl AuditEvent for EventPublished {}
+
+impl DomainEvent for EventDelivered {}
+impl AuditEvent for EventDelivered {}
+
+impl DomainEvent for EventDeliveryFailed {}
+impl AuditEvent for EventDeliveryFailed {}
+
+impl DomainEvent for EventCycleDetected {}
+impl AuditEvent for EventCycleDetected {}

@@ -19,4 +19,4 @@ pub use domain::Domain;
 pub use explain::{BreakdownInput, BreakdownStep, CalcBreakdown, Explain};
 pub use log_category::LogCategory;
 pub use log_code::LogCode;
-pub use observable::{FieldCollector, ObservableEvent};
+pub use observable::{AuditEvent, DomainEvent, FieldCollector, ObservableEvent, ReplayEvent};

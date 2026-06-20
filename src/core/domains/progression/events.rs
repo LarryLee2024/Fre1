@@ -7,7 +7,7 @@
 use bevy::prelude::*;
 
 use super::components::ClassId;
-use crate::shared::diagnostics::{Domain, FieldCollector, LogCode, ObservableEvent};
+use crate::shared::diagnostics::{Domain, DomainEvent, FieldCollector, LogCode, ObservableEvent};
 
 /// 角色获得经验值时触发。
 ///
@@ -48,6 +48,8 @@ pub struct LevelUp {
     /// 是否达到 ASI 等级
     pub is_asi_level: bool,
 }
+
+impl DomainEvent for LevelUp {}
 
 impl ObservableEvent for LevelUp {
     const DOMAIN: Domain = Domain::Progression;

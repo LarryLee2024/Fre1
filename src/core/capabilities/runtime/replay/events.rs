@@ -2,6 +2,8 @@
 
 use bevy::prelude::*;
 
+use crate::shared::diagnostics::ReplayEvent;
+
 /// 回放开始时触发。
 #[derive(Event, Debug, Clone, PartialEq)]
 pub struct ReplayStarted {
@@ -61,3 +63,12 @@ pub struct ReplayMismatchDetected {
     /// 实际的校验和
     pub actual_checksum: u64,
 }
+
+// ─── Marker Trait 实现 ─────────────────────────────────────────
+
+impl ReplayEvent for ReplayStarted {}
+impl ReplayEvent for ReplayFrameProcessed {}
+impl ReplayEvent for ReplayCompleted {}
+impl ReplayEvent for RecordingStarted {}
+impl ReplayEvent for RecordingCompleted {}
+impl ReplayEvent for ReplayMismatchDetected {}
