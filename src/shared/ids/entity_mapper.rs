@@ -30,6 +30,8 @@
 use bevy::prelude::*;
 use std::collections::HashMap;
 
+use crate::shared::ids::UnitId;
+
 /// Entity 双向映射 Resource。
 ///
 /// 维护 `业务 ID ↔ Entity` 的双向映射，确保 Domain 层代码不直接依赖 Entity。
