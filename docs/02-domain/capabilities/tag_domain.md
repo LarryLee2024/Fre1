@@ -1,6 +1,6 @@
 ---
 id: 02-domain.tag
-title: Tag（标签）领域规则 v2.0
+title: Tag（标签）领域规则 v2.1
 status: stable
 owner: domain-designer
 created: 2026-06-16
@@ -324,6 +324,58 @@ TagAdded/TagRemoved
 
 ---
 
+## 10. Tag 治理规范（面向 50 万行）
+
+### 10.1 Tag 生命周期
+
+```
+提案 → 审核 → 注册 → 使用 → 引用统计 → 废弃 → 删除
+```
+
+### 10.2 Tag 文档要求
+
+每个 Tag 必须有 YAML 描述（AI Agent 可读）：
+
+```yaml
+Enemy.Boss:
+  description: |
+    用于标记 Boss 单位。
+    不保证具有特殊数值。
+    不用于伤害计算。
+    可用于目标筛选、UI展示、成就统计。
+  level: L2    # L1=Core / L2=Gameplay / L3=Content / L4=Temporary
+  deprecated: false
+  replacement: null
+```
+
+### 10.3 Tag 数量控制
+
+| 级别 | 数量上限 | 说明 |
+|------|---------|------|
+| L1 Core Tag | < 100 | 极少修改，几十年不动 |
+| L2 Gameplay Tag | < 500 | 玩法层，变化较少 |
+| L3 Content Tag | < 1000 | 内容层，变化频繁 |
+| L4 Temporary Tag | 无限制 | 活动/实验，可删除 |
+| **总计** | **< 1500** | 超过需架构评审 |
+
+### 10.4 Tag 废弃机制
+
+```yaml
+Enemy.Monster:
+  deprecated: true
+  replacement: Enemy.Beast
+  deprecated_at: "2026-06-28"
+```
+
+### 10.5 Tag 引用统计
+
+```rust
+tag_registry.find_references("Enemy.Boss")
+// → 技能引用: 53, Buff引用: 12, 任务引用: 4, AI引用: 8
+```
+
+---
+
 ## 8. 自检清单
 
 - [x] 所有术语有唯一定义，与项目已有术语一致
@@ -332,5 +384,7 @@ TagAdded/TagRemoved
 - [x] 未涉及代码实现细节（函数名、trait 名等）
 - [x] 领域模型能完整覆盖标签注册、层级管理、查询匹配、实体关联等场景
 - [x] 所有不变量和约束条件已识别（5 条不变量）
-- [x] 禁止事项已明确列出（5 条禁止）
+- [x] 禁止事项已明确列出（8 条禁止）
 - [x] 每个操作有完整的流程定义（注册、查询、授予/移除、层级同步）
+- [x] Tag 治理规范已定义（生命周期、文档、数量控制、废弃、引用统计）
+- [x] 五层架构定位已明确（Type→Tag→Query→Rule→Content）

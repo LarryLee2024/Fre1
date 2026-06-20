@@ -474,8 +474,8 @@ GrantedTags                     granted_tags: Vec<TagId>
 | **P0** | AbilityDef 创建 + Tag 字段 | 3 天 | ✅ 完成 |
 | **P1** | EffectCategory Tag 化 | 5 天 | ✅ 完成 |
 | **P1** | Rule System 建设 | 9 天 | ✅ 完成 |
-| **P2** | Marker Component → TagSet | 1.5 天 | 待执行 |
-| **长期** | Tag 治理规范（引用统计/废弃/文档） | 持续 | 待执行 |
+| **P2** | Marker Component → TagSet | 1.5 天 | ✅ 完成（渐进策略） |
+| **长期** | Tag 治理规范（引用统计/废弃/文档） | 持续 | ✅ 完成（§10 写入 tag_domain.md） |
 
 ### 7.3 一句话总结
 
