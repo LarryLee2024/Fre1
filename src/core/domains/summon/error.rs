@@ -1,27 +1,19 @@
-//! 召唤领域 — 错误类型
+//! 领域错误 — Summon 域程序错误枚举。
+//!
+//! 涵盖召唤系统的程序错误（不应发生的异常情况）。
+//! 业务规则失败请使用 `SummonFailure`（failure.rs）。
+//! 详见 ADR-051
 
 use bevy::prelude::*;
 use thiserror::Error;
 
-/// 召唤领域错误。
+/// 召唤系统程序错误。
+///
+/// 这些错误表示系统内部状态异常，属于程序缺陷或环境问题。
+/// 业务规则不满足的结果（如"召唤槽位已满"）请使用 [`SummonFailure`]。
 #[derive(Debug, Clone, PartialEq, Event, Error)]
 pub enum SummonError {
-    /// 召唤位置不可用
-    #[error("invalid summon position: {reason}")]
-    InvalidPosition { reason: String },
-    /// 专注冲突
-    #[error("concentration conflict")]
-    ConcentrationConflict,
-    /// 召唤数量已达上限
-    #[error("summon slot limit reached: current={current}, max={max}")]
-    SlotLimitReached { current: u32, max: u32 },
-    /// 模板不存在
+    /// 模板不存在。
     #[error("summon template not found: {0}")]
     TemplateNotFound(String),
-    /// 嵌套召唤被禁止
-    #[error("nested summon forbidden")]
-    NestedSummonForbidden,
-    /// 召唤者已死亡
-    #[error("caster is dead")]
-    CasterDead,
 }

@@ -1,34 +1,19 @@
-//! 经济/交易领域 — 错误类型
+//! 领域错误 — Economy 域程序错误枚举。
+//!
+//! 涵盖经济系统的程序错误（不应发生的异常情况）。
+//! 业务规则失败请使用 `EconomyFailure`（failure.rs）。
+//! 详见 ADR-051
 
 use bevy::prelude::*;
 use thiserror::Error;
 
-/// 经济领域错误。
+/// 经济系统程序错误。
+///
+/// 这些错误表示系统内部状态异常，属于程序缺陷或环境问题。
+/// 业务规则不满足的结果（如"余额不足"）请使用 [`EconomyFailure`]。
 #[derive(Debug, Clone, PartialEq, Event, Error)]
 pub enum EconomyError {
-    /// 钱包余额不足
-    #[error("insufficient funds: required={required}, available={available}")]
-    InsufficientFunds { required: u64, available: u64 },
-    /// 商店库存不足
-    #[error("insufficient stock for '{item_id}': requested={requested}, available={available}")]
-    InsufficientStock {
-        item_id: String,
-        requested: u32,
-        available: u32,
-    },
-    /// 背包已满
-    #[error("inventory full")]
-    InventoryFull,
-    /// 物品不存在
+    /// 物品不存在。
     #[error("item not found: {0}")]
     ItemNotFound(String),
-    /// 商人拒收
-    #[error("merchant refuses: {reason}")]
-    MerchantRefuses { reason: String },
-    /// 交易不符合规则
-    #[error("invalid transaction: {reason}")]
-    InvalidTransaction { reason: String },
-    /// 补货周期未到
-    #[error("restock not ready: remaining={remaining}")]
-    RestockNotReady { remaining: u32 },
 }

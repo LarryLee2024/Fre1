@@ -21,6 +21,7 @@ description:
 - 钩子=内置行为
 - 观察者=外部响应
 - 消息=跨功能通信
+- Domain层禁止裸Entity/u64，只允许强类型ID（详见 `docs/04-data/foundation/id-taxonomy.md`）
 
 ## Rust编程规范
 

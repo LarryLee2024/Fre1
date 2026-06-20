@@ -13,8 +13,7 @@ pub use components::{
     ClassId, ClassLevelEntry, ClassLevels, Experience, ProgressionMarker, SubclassChoice,
     SubclassId, TalentId, TalentTree,
 };
-// [ADR-045] pub(crate) — 领域错误定义，crate 内共享
-pub(crate) mod error;
+// [ADR-051] 无程序错误，所有变体均为业务规则失败
 // [ADR-045] pub(crate) — 业务规则失败定义，crate 内共享
 pub(crate) mod failure;
 // [ADR-045] pub(crate) — 领域事件定义，crate 内共享

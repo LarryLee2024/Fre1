@@ -73,8 +73,8 @@ Screen / Widget (表现层)          ── Bevy UI 渲染
 │   ├── application-layer.md            ── UI 应用层（UiIntent/UiCommand/UiEvent + 完整映射链）
 │   └── implementation-patterns.md      ── 实现模式（Widget/Screen/ViewModel/Overlay 的 Bevy ECS 骨架）
 ├── 02-design-system/
-│   ├── widget-atoms.md                 ── 原子组件契约详细设计（Button/ProgressBar/Text/Panel 等，源自 widget-atoms.md）
-│   ├── widget-composites.md            ── 复合组件详细设计（Molecule/Organism，本次新增）
+│   ├── widget-atoms.md                 ── Primitives 原语层组件契约（Button/ProgressBar/Text/Panel/List/Modal）
+│   ├── widget-composites.md            ── 复合组件详细设计（Molecule/Organism，组合原语）
 │   ├── theme-localization.md           ── 主题与本地化（StyleToken、Theme、UiTextKey）
 │   └── focus-binding.md                ── 焦点导航与数据绑定（Focusable/FocusGroup/Dirty<T>/UiBinding）
 ├── 03-screens/
@@ -176,8 +176,8 @@ Screen / Widget (表现层)          ── Bevy UI 渲染
 | **Projection** | Domain → ViewModel 的纯函数转换，防火墙层 | `04-data-flow/projection-viewmodel.md §2` |
 | **ViewModel** | UI 状态的投影，Widget 的唯一数据源 | `04-data-flow/projection-viewmodel.md §3` |
 | **Screen** | 页面级容器，组合 Widget/Organism，与 GameState 对应 | `03-screens/screen-lifecycle.md §2`, `03-screens/screens.md` |
-| **Widget Atom** | 可复用的最小 UI 元素，独立 Plugin，有明确 Contract | `03-screens/screen-lifecycle.md §3`, `02-design-system/widget-atoms.md` |
-| **Widget Composite** | Molecule（3-5 Atom）/ Organism（多个 Molecule + Atom）组合 | `02-design-system/widget-composites.md` |
+| **Primitives** | 可复用的最小 UI 元素，独立 Plugin，有明确 Contract。**唯一允许直接操作 Bevy UI 底层实现的层** | `03-screens/screen-lifecycle.md §3`, `02-design-system/widget-atoms.md` |
+| **Widget Composite** | Molecule（3-5 原语）/ Organism（多个 Molecule + 原语）组合，关联 ViewModel | `02-design-system/widget-composites.md` |
 | **Application** | UiIntent/UiCommand/UiEvent 输入意图与命令通道 | `01-architecture/application-layer.md` |
 | **Navigation** | ScreenStack 管理 push/pop/replace | `03-screens/navigation-overlay.md §3` |
 | **Overlay** | Tooltip/Notification/Modal 等独立浮层 | `03-screens/navigation-overlay.md §4`, `03-screens/overlays.md` |

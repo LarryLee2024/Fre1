@@ -1,29 +1,18 @@
-//! 领域错误 — Reaction 域错误枚举
+//! 领域错误 — Reaction 域程序错误枚举。
 //!
-//! 涵盖反应触发、执行、反制判定等操作的错误。
-//! 详见 docs/02-domain/domains/reaction_domain.md §4
+//! 涵盖反应系统的程序错误（不应发生的异常情况）。
+//! 业务规则失败请使用 `ReactionFailure`（failure.rs）。
+//! 详见 ADR-051
 
 use bevy::prelude::*;
 use thiserror::Error;
 
-/// 反应系统错误。
+/// 反应系统程序错误。
+///
+/// 这些错误表示系统内部状态异常，属于程序缺陷或环境问题。
+/// 业务规则不满足的结果（如"反应槽位已用尽"）请使用 [`ReactionFailure`]。
 #[derive(Debug, Clone, PartialEq, Event, Error)]
 pub enum ReactionError {
-    /// 反应槽位已用尽。
-    #[error("no reactions available for reactor: {reactor}")]
-    NoReactionsAvailable { reactor: Entity },
-    /// 不在触发范围内（援护距离检查）。
-    #[error("out of range: {reason}")]
-    OutOfRange { reason: String },
-    /// 目标不合法。
-    #[error("invalid target: {reason}")]
-    InvalidTarget { reason: String },
-    /// 反制者法术位不足。
-    #[error("insufficient spell slot for counterspell: required_level={required_level}")]
-    NoCounterspellSlot { required_level: u8 },
-    /// 反应类型不支持当前触发条件。
-    #[error("trigger mismatch: reaction='{reaction}', trigger='{trigger}'")]
-    TriggerMismatch { reaction: String, trigger: String },
     /// 特殊反应未注册。
     #[error("special reaction not registered: {custom_id}")]
     SpecialNotRegistered { custom_id: String },

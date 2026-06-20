@@ -1,14 +1,16 @@
 ---
 id: 08-knowledge.error-handling-overview
 title: 错误处理架构深度解析 — Error vs Failure 严格分离
-status: draft
+status: stable
 owner: architect
 created: 2026-06-20
+updated: 2026-06-28
 tags:
   - knowledge
   - error-handling
   - domain-driven
   - rust
+  - adr-051
 ---
 
 # 错误处理架构深度解析
@@ -352,37 +354,40 @@ impl RuleFailure for CombatFailure {
 ```
 src/core/domains/
 ├── combat/
-│   ├── error.rs          # CombatError（程序错误）
-│   └── failure.rs        # CombatFailure（业务失败）
+│   ├── error.rs          # CombatError（5 个程序错误）
+│   └── failure.rs        # CombatFailure（4 个业务失败）
 ├── crafting/
-│   ├── error.rs          # CraftingError
-│   └── failure.rs        # CraftingFailure
+│   └── failure.rs        # CraftingFailure（7 个业务失败，无程序错误）
 ├── inventory/
-│   ├── error.rs          # InventoryError
-│   └── failure.rs        # InventoryFailure
-└── ... (15 个领域各有 error.rs + failure.rs)
+│   ├── error.rs          # InventoryError（1 个程序错误）
+│   └── failure.rs        # InventoryFailure（8 个业务失败）
+├── progression/
+│   └── failure.rs        # ProgressionFailure（7 个业务失败，无程序错误）
+└── ... (13 个领域有 error.rs + failure.rs，2 个领域只有 failure.rs)
 ```
+
+> **注意**：Progression 和 Crafting 域没有程序错误，因此没有 `error.rs` 文件。
 
 ### 5.2 Error 枚举模板
 
-以 `CombatError` 为例：
+以 `CombatError` 为例（迁移后只包含程序错误）：
 
 ```rust
-//! 领域错误 — Combat 域错误枚举。
+//! 领域错误 — Combat 域程序错误枚举。
 //!
-//! 涵盖战斗开始、回合流转、伤害结算、战斗结束等操作的错误。
-//! 详见 docs/02-domain/domains/combat_domain.md §4
+//! 涵盖战斗系统的程序错误（不应发生的异常情况）。
+//! 业务规则失败请使用 `CombatFailure`（failure.rs）。
+//! 详见 ADR-051
 
 use bevy::prelude::*;
 use thiserror::Error;
 
-/// 战斗系统错误。
+/// 战斗系统程序错误。
+///
+/// 这些错误表示系统内部状态异常，属于程序缺陷或环境问题。
+/// 业务规则不满足的结果（如"不是你的回合"）请使用 [`CombatFailure`]。
 #[derive(Debug, Clone, PartialEq, Event, Error)]
 pub enum CombatError {
-    /// 参与单位不足，无法开始战斗。
-    #[error("insufficient participants: required={required}, actual={actual}")]
-    InsufficientParticipants { required: usize, actual: usize },
-    
     /// 单位未注册为战斗参与者。
     #[error("entity is not a combat participant")]
     NotCombatParticipant,
@@ -391,7 +396,17 @@ pub enum CombatError {
     #[error("combat has not started")]
     CombatNotStarted,
     
-    // ... 其他变体
+    /// 战斗已结束，不可再操作。
+    #[error("combat has already ended")]
+    CombatAlreadyEnded,
+    
+    /// 先攻排序为空。
+    #[error("turn order is empty")]
+    EmptyTurnOrder,
+    
+    /// 伤害已被结算，禁止重复结算。
+    #[error("damage already resolved, duplicate forbidden")]
+    DamageAlreadyResolved,
 }
 ```
 
@@ -399,6 +414,7 @@ pub enum CombatError {
 - 派生 `Event`（可作为 Bevy 事件）
 - 派生 `Error`（来自 thiserror）
 - 使用 `#[error("...")]` 定义 Display 输出
+- **只包含程序错误**，业务规则失败在 `*Failure` 中
 
 ### 5.3 Failure 枚举模板
 
@@ -699,23 +715,26 @@ fn create_summon(
 | Pipeline 错误处理 | ✅ 完整 | StepResult + PipelineError |
 | Localization 错误 | ✅ 完整 | LocError（零依赖） |
 
-### 待完成工作
+### 阶段 2 迁移状态（ADR-051）— ✅ 全部完成
 
-| 组件 | 状态 | 说明 |
-|------|------|------|
-| Error/Failure 分离迁移（阶段 2） | 📋 计划中 | ADR-051 定义的迁移计划，将 `*Error` 中的 Failure 变体迁移到 `*Failure`，然后删除重复变体 |
-| 错误监控集成 | 📋 未来需求 | 将错误码对接外部监控系统（如 Sentry、Prometheus） |
+根据 ADR-051，阶段 2 迁移已全部完成：
 
-### 阶段 2 迁移状态（ADR-051）
-
-根据 ADR-051，阶段 2 迁移按以下顺序进行：
-
-| 域 | 状态 | 说明 |
-|----|------|------|
-| Combat | ⏳ 待迁移 | `CombatError` 中仍有 4 个 Failure 变体（InsufficientParticipants, NotYourTurn, NoActionRemaining, UnitDead） |
-| Inventory | ⏳ 待迁移 | `InventoryError` 中仍有 8 个 Failure 变体 |
-| Spell | ⏳ 待迁移 | `SpellError` 中仍有 9 个 Failure 变体 |
-| 其他域 | ⏳ 待迁移 | 按需求紧迫度排序 |
+| 域 | 程序错误数 | Failure 数 | 说明 |
+|----|-----------|-----------|------|
+| Combat | 5 | 4 | NotCombatParticipant, CombatNotStarted, CombatAlreadyEnded, EmptyTurnOrder, DamageAlreadyResolved |
+| Inventory | 1 | 8 | ItemNotFound |
+| Spell | 1 | 9 | SpellDefNotFound |
+| CampRest | 2 | 4 | InterruptedTimeout, InvalidPhase |
+| Progression | 0 | 7 | 已删除 error.rs（无程序错误） |
+| Crafting | 0 | 7 | 已删除 error.rs（无程序错误） |
+| Economy | 1 | 6 | ItemNotFound |
+| Faction | 2 | 3 | FactionNotFound, RelationAsymmetry |
+| Narrative | 2 | 4 | DialogueNodeNotFound, DialogueTreeHasCycle |
+| Party | 2 | 7 | MemberNotFound, BondDefNotFound |
+| Quest | 2 | 6 | QuestNotFound, ObjectiveNotFound |
+| Reaction | 1 | 5 | SpecialNotRegistered |
+| Summon | 1 | 5 | TemplateNotFound |
+| Terrain | 3 | 7 | OutOfBounds, InvalidHazardDefinition, TileNotFound |
 
 ### 设计决策说明
 

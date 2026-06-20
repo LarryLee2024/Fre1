@@ -17,6 +17,10 @@ description:
 ### 1.1 Entity
 - 🟩 Entity只是纯ID，**绝对禁止**在Entity上调用方法或当作面向对象实例使用
 - 允许将Entity作为ID参数传递，禁止承载任何行为
+- 🟥 **Domain层禁止裸Entity**：Domain/Application层禁止裸`Entity`、`u64`、`usize`作为业务对象标识
+  - 只允许使用显式命名的强类型ID（如`UnitId`、`AbilityId`）
+  - Entity ↔ 业务ID映射集中在Infrastructure层（`integration/`模块）
+  - 详见 `docs/04-data/foundation/id-taxonomy.md`
 
 ### 1.2 数据与行为分离
 - 🟥 Component只能存储纯数据状态，绝对禁止包含任何逻辑
@@ -143,15 +147,15 @@ description:
 
 ## 核心速查（10条）
 1. Entity只是ID，数据行为严格分离
-2. 实体状态用Tag，配置临时值可用bool
-3. 四级通信：Hook生命周期、Trigger事件链、Observer局部响应、Message跨域广播
-4. 组件依赖用`#[require]`，禁止手动补全
-5. 组件变化用原生过滤器，禁止手写脏标记
-6. 状态机用官方States体系，不手动实现
-7. 三级Schedule权责清晰，不跨阶段乱放系统
-8. 高频逻辑不用Observer，优先System处理
-9. 事件链设防递归深度，避免循环触发
-10. 性能优化必须基于Profile，禁止凭直觉优化
+2. Domain层禁止裸Entity/u64，只用强类型ID
+3. 实体状态用Tag，配置临时值可用bool
+4. 四级通信：Hook生命周期、Trigger事件链、Observer局部响应、Message跨域广播
+5. 组件依赖用`#[require]`，禁止手动补全
+6. 组件变化用原生过滤器，禁止手写脏标记
+7. 状态机用官方States体系，不手动实现
+8. 三级Schedule权责清晰，不跨阶段乱放系统
+9. 高频逻辑不用Observer，优先System处理
+10. 事件链设防递归深度，避免循环触发
 
 ---
 

@@ -173,14 +173,15 @@ Despawned（已销毁）
 - **不变量**：禁止 `Color::srgb(...)` 直接写在 Widget 中，使用 `UiColors::Primary`、`UiSpacing::Md`、`UiTypography::Heading` 等 Token，Theme 切换时所有 Widget 自动更新
 - **违反后果**：视觉风格不一致，Theme 切换失败
 
-### INV-UI-009：四条铁律（精简版）
+### INV-UI-010：五条铁律（精简版）
 
-从 8 条不变量中提炼的 4 条最核心约束：
+从 9 条不变量中提炼的 5 条最核心约束：
 
 1. **Domain 不依赖 UI** — Core/Infra 禁止 import ui/ 中的任何类型
 2. **UI 不直接读 Domain** — 通过 ViewModel，禁止 Query Domain Component
 3. **Screen 组合 Widget** — Screen 不直接拼 Node
 4. **颜色字体间距统一 Token 化** — 禁止 Color::srgb() 直接写在 Widget 中
+5. **Primitives 隔离** — Widgets 和 Screens 禁止直接 import Bevy UI 原语（Node、Button、Interaction、BackgroundColor 等），必须通过 Primitives 层
 
 违反任何一条，50 万行后 UI 必然成为最大技术债。
 

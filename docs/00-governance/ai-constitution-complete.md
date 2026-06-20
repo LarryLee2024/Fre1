@@ -724,6 +724,10 @@ Modding 不是独立层级，而是贯穿多层的扩展能力，按职责拆分
 - 🟩 **Entity 只是 ID**
   - 🟥 绝对禁止：在 Entity 上调用任何方法或将其当作面向对象实例使用
   - 允许将 Entity 作为纯 ID 参数传递
+- 🟥 **Domain 层禁止裸 Entity**（详见 `docs/04-data/foundation/id-taxonomy.md`）
+  - Domain/Application 层禁止裸 `Entity`、`u64`、`usize` 作为业务对象标识
+  - 只允许使用显式命名的强类型 ID（如 `UnitId`、`AbilityId`）
+  - Entity ↔ 业务 ID 映射集中在 Infrastructure 层（`integration/` 模块）
 - 🟩 **数据与行为强制分离**
   - Component 只能存储纯数据状态，🟥 绝对禁止包含任何逻辑
   - System 只能包含纯逻辑，🟥 绝对禁止存储任何状态
@@ -952,6 +956,20 @@ Modding 不是独立层级，而是贯穿多层的扩展能力，按职责拆分
   - 🟩 Factory 是 UI 的唯一构建入口
   - 🟩 Factory 输入仅限：Props、ViewModel、Theme；禁止直接读取 Domain
   - 🟩 Factory 必须满足：可测试、可复用、可审查、可被 AI 独立生成
+
+### 第 X 条：Primitives 隔离
+
+UI 代码必须遵守三层依赖方向：
+
+```
+primitives/ → theme/     （允许）
+widgets/   → primitives/ （允许，禁止直接访问 Bevy UI 类型）
+screens/   → widgets/ + primitives/ （允许，通过 Factory）
+```
+
+- 🟩 `primitives/` 是 UI 层唯一允许直接操作 Bevy UI 底层类型（Node、Button、Interaction、BackgroundColor）的模块
+- 🟩 `widgets/` 和 `screens/` 必须通过 Primitives 的工厂函数和组件索引使用底层 UI 能力
+- 🟥 违反此规则的代码应在 code review 中被拒绝
 
 ---
 
@@ -1408,7 +1426,8 @@ refactor-guardian 必须覆盖以下六个扫描维度（来源：50万行级项
 - [ ] Capabilities 模块未包含业务规则，Domain 未重复实现通用机制
 - [ ] 未突破 Domain 边界直接依赖其他 Domain
 - [ ] 错误类型定义在对应领域内部
-- [ ] 强类型 ID 放在 `shared/ids/`
+- [ ] 强类型 ID 放在 `shared/ids/`（五类 ID 分类详见 `docs/04-data/foundation/id-taxonomy.md`）
+- [ ] Domain 层无裸 Entity/u64 作为业务标识（Entity 映射在 Infrastructure 层）
 - [ ] 未创建 utils/helpers 垃圾桶文件
 
 ### 19.2 自动化门禁

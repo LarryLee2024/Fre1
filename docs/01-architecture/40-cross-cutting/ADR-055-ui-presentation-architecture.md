@@ -104,17 +104,18 @@ src/ui/
 │   ├── quest_log.rs      # QuestLogVm
 │   ├── notification.rs   # NotificationVm
 │   └── mod.rs
-├── widgets/              # 可复用 Widget（每个独立 Plugin）
+├── primitives/           # L3-P: UI 原语层（唯一允许操作 Bevy UI 底层类型的模块）
 │   ├── button/           # PrimaryButton, SecondaryButton, DangerButton
 │   ├── progress_bar/     # ProgressBar
-│   ├── tooltip/          # TooltipService（不属于任何 Widget）
 │   ├── panel/            # Panel, CardPanel
-│   ├── list/             # VirtualList
 │   ├── text/             # LocalizedText（统一文本包装，对接 ADR-053）
-│   ├── modal/            # ModalService
+│   ├── list/             # VirtualList
+│   └── modal/            # ModalService
+├── widgets/              # L3-W: 游戏业务控件（组合原语，骨架阶段）
+│   ├── tooltip/          # TooltipService（不属于任何原语）
 │   ├── notification/     # NotificationService
 │   └── mod.rs
-├── screens/              # 页面（组合 Widget，与 GameState 对应）
+├── screens/              # L3-S: 页面（组合 Widget，与 GameState 对应）
 │   ├── battle/           # BattleScreen（对应 GameState::Combat）
 │   ├── menu/             # MainMenuScreen（对应 GameState::MainMenu）
 │   ├── inventory/        # InventoryScreen
@@ -597,6 +598,30 @@ Schema 文件清单：
 - `docs/ui_schema/widgets/` — 每个 Widget 一个 Schema
 - `docs/ui_schema/view_models/` — 每个 ViewModel 的字段定义
 - `docs/ui_schema/contracts/` — Widget Contract 声明
+
+### DR-XXX: Primitives 隔离层
+
+**背景**：50 万行级别项目中，UI 框架替换成本极高。Bevy UI 底层 API（Node、Button、Interaction）可能随版本升级而变化。
+
+**决策**：引入 Primitives 隔离层作为 UI 架构的最底层。
+
+**Primitives 层确保**：
+- 底层 UI 实现变更时只影响 `primitives/`
+- 业务控件层（`widgets/`）不感知底层实现细节
+- 新增 Widget 自动获得隔离保护
+
+**约束**：
+1. `primitives/` 是唯一允许直接操作 `Node`/`Button`/`Interaction`/`BackgroundColor` 等 Bevy UI 原语的模块
+2. `widgets/` 和 `screens/` 只能通过 Primitives Factory 函数和组件使用底层 UI 能力
+3. `primitives/` 依赖 `theme/`，不依赖任何业务模块
+4. `.claude/rules/` 中增加规则禁止在 primitives 外使用 Bevy UI 原语类型
+
+**依赖方向**：
+```
+primitives/ → theme/     （允许）
+widgets/   → primitives/ （允许，禁止直接访问 Bevy UI 类型）
+screens/   → widgets/ + primitives/ （允许，通过 Factory）
+```
 
 ### 10. UI 三层测试体系
 

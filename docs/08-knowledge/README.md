@@ -18,7 +18,8 @@ tags:
 | 领域 | 文章 | 说明 |
 |------|------|------|
 | 日志系统 | [日志系统深度解析](logging-overview.md) | 从宪法到代码：日志如何设计、如何流动、如何扩展 |
-| 错误处理 | [错误处理架构深度解析](error-handling-overview.md) | Error vs Failure 严格分离：为什么这么设计、代码怎么跑 |
+| 错误处理 | [错误处理架构深度解析](error-handling-overview.md) | Error vs Failure 严格分离：架构设计、15 域迁移完成、1579 测试全绿 |
+| ID 系统 | [强类型 ID 系统深度解析](ids-overview.md) | 类型安全的标识符策略：String ID vs Numeric ID、宏详解、22 个类型 |
 | *待补充* | | |
 
 ## 定位

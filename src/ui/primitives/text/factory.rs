@@ -6,6 +6,7 @@
 //! 详见 `docs/06-ui/01-architecture/architecture.md` §9
 
 use bevy::prelude::*;
+use bevy::text::FontSource;
 
 use crate::ui::Theme;
 use super::components::{TextVariant, TextWidget};
@@ -23,12 +24,12 @@ fn font_size_for_variant(variant: TextVariant, theme: &Theme) -> f32 {
 }
 
 /// 根据变体计算字体路径
-fn font_path_for_variant(variant: TextVariant, theme: &Theme) -> &str {
+fn font_path_for_variant(variant: TextVariant, theme: &Theme) -> String {
     match variant {
-        TextVariant::Mono => &theme.typography.font_mono,
-        TextVariant::Heading | TextVariant::Title => &theme.typography.font_heading,
+        TextVariant::Mono => theme.typography.font_mono.clone(),
+        TextVariant::Heading | TextVariant::Title => theme.typography.font_heading.clone(),
         TextVariant::Body | TextVariant::Caption | TextVariant::Label => {
-            &theme.typography.font_body
+            theme.typography.font_body.clone()
         }
     }
 }
@@ -76,7 +77,7 @@ pub fn spawn_text(
         .spawn((
             Text::new(content_str.clone()),
             TextFont {
-                font: asset_server.load(font_path),
+                font: FontSource::Handle(asset_server.load(font_path)),
                 font_size: FontSize::Px(font_size),
                 ..default()
             },

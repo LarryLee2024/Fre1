@@ -134,6 +134,14 @@ Entity仅用于引用实体。
 * 面向对象实体模型
 * 在Entity上调用任何方法
 
+## Domain 层禁止裸 Entity
+Domain/Application 层禁止裸 `Entity`、`u64`、`usize` 作为业务对象标识。
+
+只允许使用显式命名的强类型 ID（如 `UnitId`、`AbilityId`）。
+Entity ↔ 业务 ID 映射集中在 Infrastructure 层。
+
+详见 `docs/04-data/foundation/id-taxonomy.md`。
+
 ## Component 只存数据
 Component只能存储纯数据状态。
 

@@ -1,0 +1,2 @@
+- [Bevy 0.19 Observer API](bevy-0.19-observer-api.md) -- On<T> type, add_observer(), set_parent_in_place()
+- [UI Screens Implementation Pattern](ui-screens-implementation-pattern.md) -- Screen structure using primitives factories with hierarchy

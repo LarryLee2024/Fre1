@@ -170,7 +170,7 @@ L0 Shared                         └─ 计算层
 
 | 模块 | 路径 | 对应领域文档 | 对应 Schema |
 |------|------|-------------|-------------|
-| IDs | `src/shared/ids/` | — | `foundation/id_strategy.md` |
+| IDs | `src/shared/ids/` | — | `foundation/id_strategy.md` + `foundation/id-taxonomy.md` |
 | Error | `src/shared/error/` | — | — |
 | Math | `src/shared/math/` | — | — |
 | Random | `src/shared/random/` | — | — |

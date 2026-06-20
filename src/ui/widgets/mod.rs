@@ -1,24 +1,27 @@
-//! Module Name: Widgets — 可复用 UI 组件集合
+//! Module Name: Widgets — 游戏业务控件
 //!
-//! 每个 Widget 有独立的 Plugin、Factory、Component 和 System。
-//! Widget 只通过 Factory 创建，禁止直接 spawn Node。
-//! 详见 `docs/06-ui/01-architecture/architecture.md` §3 目录结构
-
-pub mod button;
-pub mod progress_bar;
+//! 组合 Primitives 层基础组件为游戏概念控件。
+//! 本层是 Primitives 的唯一消费者，禁止直接操作 Node/Button 等 Bevy 原语。
+//!
+//! 当前为骨架阶段，后续添加：
+//! - CharacterCard
+//! - SkillSlot
+//! - BuffIcon
+//! - InventoryGrid
+//! - BattleLog
+//! - ActionMenu
+//!
+//! 详见 `docs/06-ui/02-design-system/widget-composites.md`
 
 use bevy::prelude::*;
 
-use self::button::ButtonPlugin;
-use self::progress_bar::ProgressBarPlugin;
-
-/// WidgetsPlugin — 注册所有 Widget Plugin
+/// WidgetsPlugin — 注册所有游戏业务控件
 ///
-/// 在 ThemePlugin 之后、Overlay/Screen Plugin 之前注册。
+/// 在 PrimitivesPlugin 之后、Screen Plugin 之前注册。
 pub struct WidgetsPlugin;
 
 impl Plugin for WidgetsPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_plugins((ButtonPlugin, ProgressBarPlugin));
+    fn build(&self, _app: &mut App) {
+        // 骨架阶段，后续添加实际 Widget
     }
 }

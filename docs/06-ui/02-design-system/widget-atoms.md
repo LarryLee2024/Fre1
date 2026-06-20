@@ -1,6 +1,6 @@
 ---
 id: 06-ui.widget-atoms
-title: Widget Atoms — 原子组件契约详细设计
+title: Primitives — UI 原语层（Atoms 组件契约详细设计）
 status: draft
 owner: presentation-architect
 created: 2026-06-20
@@ -13,7 +13,7 @@ tags:
   - events
 ---
 
-# Widget Contracts — 组件契约详细设计
+# Primitives — UI 原语层（组件契约详细设计）
 
 > **职责**: @presentation-architect | **上游**: ADR-055 §5.4 (Contract 模式), §8 (Widget 分类), §12 (WidgetFactory) | domain rules §1 (统一术语), §8 (Contract 清单) | schema §4, §25 (WidgetFactory)
 
@@ -21,7 +21,11 @@ tags:
 
 ## 1. 设计目的
 
-每个 Widget 必须有明确的契约声明：
+本文档定义 UI 原语层（Primitives）的组件契约。原语层是 UI 架构的最底层，包含 6 个原子控件系列（Button、ProgressBar、Panel、Text、List、Modal），是 `ui/` 中唯一允许直接操作 Bevy UI 底层实现（Node、Button、Interaction、BackgroundColor）的模块。
+
+> **架构隔离规则**：Primitives 是 UI 层与底层 Bevy UI 实现的唯一桥梁。游戏业务控件（`widgets/`）和页面（`screens/`）不应绕过本层直接操作 Node/Button/Interaction。违反此规则会导致 UI 重构时波及范围失控。
+
+每个 Primitives 控件（以下简称"Widget"，在本文档中仍保持与原来的 Widget Contract 模式一致）必须有明确的契约声明：
 - **Props（输入）** — 所需的数据字段，Widget 通过 ViewModel 消费
 - **Events（输出）** — 发射的交互事件，通过 UiAction 向上传递
 - **Local State（本地状态）** — Widget 内部状态（如 hovered/selected），对 Screen 不可见
