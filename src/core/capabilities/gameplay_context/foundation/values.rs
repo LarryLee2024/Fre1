@@ -1,14 +1,9 @@
 //! GameplayContext 值对象定义
 
-use std::sync::atomic::{AtomicU64, Ordering};
-
 use bevy::prelude::Entity;
 
 use crate::core::capabilities::gameplay_context::foundation::error::ContextBuildError;
 use crate::core::capabilities::gameplay_context::foundation::types::*;
-
-// 全局自增上下文 ID 生成器（确定性，Replay-safe）
-static NEXT_CONTEXT_ID: AtomicU64 = AtomicU64::new(1);
 
 /// 行为发起者信息。
 #[derive(Debug, Clone)]
@@ -172,8 +167,9 @@ pub struct GameplayContextData {
 
 impl GameplayContextData {
     /// 生成唯一上下文 ID（确定性自增序列）。
-    pub(crate) fn generate_id() -> String {
-        let id = NEXT_CONTEXT_ID.fetch_add(1, Ordering::Relaxed);
+    pub(crate) fn generate_id(next_id: &mut u64) -> String {
+        let id = *next_id;
+        *next_id += 1;
         format!("ctx_{:010}", id)
     }
 }

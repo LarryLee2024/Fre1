@@ -1,7 +1,7 @@
 ---
 id: 01-architecture.ADR-059
 title: ADR-059 — Event History Architecture
-status: draft
+status: Accepted
 owner: content-architect
 created: 2026-06-21
 updated: 2026-06-21
@@ -12,7 +12,7 @@ supersedes: none
 
 ## 状态
 
-**Draft** — 依赖 ADR-041（Replay Determinism）、ADR-052（Logging Architecture）、ObservableEvent trait 和 EventBus Schema（`docs/04-data/capabilities/event_schema.md`）。
+**Accepted** — 依赖 ADR-041（Replay Determinism）、ADR-052（Logging Architecture）、ObservableEvent trait 和 EventBus Schema（`docs/04-data/capabilities/event_schema.md`）。
 
 ## 背景
 

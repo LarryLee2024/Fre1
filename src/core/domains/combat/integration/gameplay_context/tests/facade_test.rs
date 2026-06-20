@@ -9,6 +9,7 @@ use crate::core::domains::combat::integration::gameplay_context::CombatContextFa
 fn build_attack_context_succeeds() {
     let mut world = World::new();
     let mut commands = world.commands();
+    let mut counter = 1u64;
     let result = CombatContextFacade::build_attack_context(
         Entity::from_raw_u32(1).unwrap(),
         "faction_a",
@@ -19,6 +20,7 @@ fn build_attack_context_succeeds() {
         Some("fireball"),
         42,
         &mut commands,
+        &mut counter,
     );
     assert!(result.is_ok());
     let ctx = result.unwrap();
@@ -32,6 +34,7 @@ fn build_attack_context_succeeds() {
 fn build_reaction_context_creates_chain_reaction() {
     let mut world = World::new();
     let mut commands = world.commands();
+    let mut counter = 1u64;
     let result = CombatContextFacade::build_reaction_context(
         Entity::from_raw_u32(2).unwrap(),
         "faction_b",
@@ -40,6 +43,7 @@ fn build_reaction_context_creates_chain_reaction() {
         ContextOrigin::ChainReaction,
         43,
         &mut commands,
+        &mut counter,
     );
     assert!(result.is_ok());
     let ctx = result.unwrap();
@@ -50,12 +54,14 @@ fn build_reaction_context_creates_chain_reaction() {
 fn build_periodic_context_has_periodic_origin() {
     let mut world = World::new();
     let mut commands = world.commands();
+    let mut counter = 1u64;
     let result = CombatContextFacade::build_periodic_context(
         Entity::from_raw_u32(1).unwrap(),
         Entity::from_raw_u32(2).unwrap(),
         Some("poison"),
         100,
         &mut commands,
+        &mut counter,
     );
     assert!(result.is_ok());
     let ctx = result.unwrap();

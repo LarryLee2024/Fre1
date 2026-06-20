@@ -25,6 +25,7 @@ tags:
 | 系统间通信 | [系统间通信深度解析](communication-overview.md) | 四级通信（Hook/Trigger/Observer/Message）、CommandQueue 命令系统、UI Action 模式、Integration 桥梁、日志 Observer 56 监听器、三条端到端数据流 |
 | GAS-Lite 能力系统 | [GAS-Lite 能力系统深度解析](capabilities-overview.md) | 15 个能力模块全景、三端到端数据流、Def→Spec→Instance 分离、宪法约束 Data Laws #004-#009 |
 | Pipeline 管线系统 | [Pipeline 管线系统深度解析](pipeline-overview.md) | 通用 Pipeline 引擎设计、四条业务管线（Ability / Modifier / Combat / Content）、驾驶员模式、全协作时序图 |
+| UI 表现层 | [UI 表现层深度解析](ui-overview.md) | 三层渲染栈（Primitives→Widgets→Screens）、五条铁律、Theme 令牌系统、Observer 事件路由、工厂模式、完整四层数据流设计、当前实现状态一览 |
 
 ## 定位
 

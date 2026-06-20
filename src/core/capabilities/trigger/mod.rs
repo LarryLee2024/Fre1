@@ -5,7 +5,7 @@
 //!
 //! 分层结构：
 //! - foundation/: 纯数据类型（TriggerType, TriggerEntry, TriggerFrequency）
-//! - mechanism/:  ECS 组件（TriggerContainer）+ 评估器（can_trigger）
+//! - mechanism/:  ECS 组件（TriggerContainer）+ 评估器（evaluate_trigger）
 //! - events/:     领域事件（TriggerFired, TriggerRegistered, etc.）
 //!
 //! 详见 docs/02-domain/capabilities/trigger_domain.md

@@ -1,6 +1,8 @@
 //! Trigger 评估器
 //!
-//! 纯函数触发器评估与触发逻辑（无副作用）。
+//! 两阶段设计：
+//! 1. evaluate_trigger — 纯函数评估触发器是否可触发（无副作用）
+//! 2. emit_trigger_events — 将评估结果转译为领域事件
 //! 遵循领域规则 §5.2：检查频率限制 → 检查触发条件 → 创建 TriggerContext。
 //!
 //! 详见 docs/02-domain/capabilities/trigger_domain.md §5.2-5.4。
@@ -62,7 +64,7 @@ impl TriggerContext {
     }
 }
 
-/// 评估触发器是否可触发。
+/// 评估触发器是否可触发（纯函数）。
 ///
 /// 三阶段检查：
 /// 1. 触发类型匹配（由 event_type 指定）
@@ -76,13 +78,13 @@ impl TriggerContext {
 ///   参数为 condition_id，返回 true = 条件通过。
 ///
 /// # 无副作用保证
-/// 纯函数——不修改 entry 的状态。调用方需在确认触发后调用 `record_trigger`。
-pub fn can_trigger(
+/// 纯函数——不修改 entry 的状态，不发出事件。
+/// 调用方在获取 Ready 结果后，应调用 `emit_trigger_events` 发出事件，
+/// 然后调用 `record_trigger` 记录触发。
+pub fn evaluate_trigger(
     entry: &TriggerEntry,
     event_type: &TriggerType,
     condition_check: Option<&dyn Fn(&str) -> bool>,
-    entity: Entity,
-    commands: &mut Commands,
 ) -> TriggerEvalResult {
     // 1. 触发类型匹配
     if &entry.trigger_type != event_type {
@@ -94,12 +96,6 @@ pub fn can_trigger(
 
     // 2. 频率限制检查
     if !entry.can_trigger() {
-        commands.trigger(TriggerSuppressed {
-            entity,
-            trigger_id: entry.id.clone(),
-            current_count: entry.frequency.current_turn_count,
-            max_count: entry.frequency.max_per_turn,
-        });
         return TriggerEvalResult::Blocked(format!(
             "trigger '{}' exceeded frequency limit ({}/{})",
             entry.id, entry.frequency.current_turn_count, entry.frequency.max_per_turn,
@@ -122,20 +118,46 @@ pub fn can_trigger(
         payload: TriggerParams::new(),
     };
 
-    commands.trigger(TriggerFired {
-        entity,
-        trigger_id: ctx.trigger_id.clone(),
-        trigger_type: ctx.trigger_type.clone(),
-        target_ability_def_id: ctx.target_ability_def_id.clone(),
-        payload: ctx.payload.clone(),
-    });
-
     TriggerEvalResult::Ready(ctx)
+}
+
+/// 根据评估结果发出对应的事件。
+///
+/// # 参数
+/// - `result`: 评估结果（Ready → TriggerFired, Blocked → TriggerSuppressed）
+/// - `entity`: 触发源实体
+/// - `entry`: 触发器条目（用于 Blocked 分支的频率信息）
+/// - `commands`: 命令缓冲区
+pub fn emit_trigger_events(
+    result: &TriggerEvalResult,
+    entity: Entity,
+    entry: &TriggerEntry,
+    commands: &mut Commands,
+) {
+    match result {
+        TriggerEvalResult::Ready(ctx) => {
+            commands.trigger(TriggerFired {
+                entity,
+                trigger_id: ctx.trigger_id.clone(),
+                trigger_type: ctx.trigger_type.clone(),
+                target_ability_def_id: ctx.target_ability_def_id.clone(),
+                payload: ctx.payload.clone(),
+            });
+        }
+        TriggerEvalResult::Blocked(_) => {
+            commands.trigger(TriggerSuppressed {
+                entity,
+                trigger_id: entry.id.clone(),
+                current_count: entry.frequency.current_turn_count,
+                max_count: entry.frequency.max_per_turn,
+            });
+        }
+    }
 }
 
 /// 创建已就绪的 TriggerContext（简化版——当条件已由外部确认时使用）。
 ///
-/// 调用方负责：确认 can_trigger 返回 Ready 之后，再调用此函数生成上下文。
+/// 调用方负责：确认 `evaluate_trigger` 返回 Ready 之后，再调用此函数生成上下文。
 pub fn build_trigger_context(
     entry: &TriggerEntry,
     source_entity: impl Into<String>,

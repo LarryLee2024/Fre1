@@ -74,6 +74,7 @@ Fre/
 | `02-domain/` | 31 | 领域规则（`capabilities/` 15 能力机制 + `domains/` 15 业务域） |
 | `04-data/` | 1 | 数据架构（Schema、Save/Replay 兼容） |
 | `05-testing/` | 4 | 测试规范（测试宪法、测试规则） |
+| `08-knowledge/` | 9 | 知识库（通俗知识介绍：日志/错误/ID/国际化/Reflect/通信/GAS-Lite/Pipeline/UI） |
 | `10-reviews/` | 7 | 代码审查记录 |
 
 ### 核心文档入口
@@ -84,6 +85,7 @@ Fre/
 | `docs/00-governance/ai-constitution-complete.md` | 项目总宪法 v5.0（21 编） | 最高 |
 | `docs/02-domain/README.md` | 领域规则索引（capabilities/ + domains/） | 必须遵守 |
 | `docs/05-testing/test-spec.md` | 测试宪法 v4.0 | 必须遵守 |
+| `docs/08-knowledge/README.md` | 知识库索引（9 篇文章，理解工作原理） | 推荐阅读 |
 
 ## AI 协作
 

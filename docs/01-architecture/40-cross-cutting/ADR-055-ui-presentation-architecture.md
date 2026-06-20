@@ -1,7 +1,7 @@
 ---
 id: 01-architecture.40-cross-cutting.ADR-055
 title: "ADR-055: UI 表现层架构"
-status: proposed
+status: Accepted
 owner: architect
 created: 2026-06-19
 tags:
@@ -16,7 +16,7 @@ tags:
 
 ## 状态
 
-提议中
+Accepted
 
 ## 背景
 

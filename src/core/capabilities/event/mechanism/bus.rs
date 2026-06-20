@@ -17,8 +17,6 @@ use crate::core::capabilities::event::foundation::{
     GameplayEvent, SubscriberEntry,
 };
 
-static NEXT_EVENT_ID: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
-
 /// 全局事件总线 Resource。
 ///
 /// 管理订阅者注册、待分发事件队列、循环检测。
@@ -31,6 +29,8 @@ pub struct EventBus {
     pending_events: Vec<GameplayEvent>,
     /// 循环检测计数器（EventTag → 当前处理链中的触发次数）
     cycle_counters: HashMap<EventTag, u32>,
+    /// 下一个事件 ID
+    next_id: u64,
 }
 
 impl EventBus {
@@ -40,6 +40,7 @@ impl EventBus {
             subscribers: Vec::new(),
             pending_events: Vec::new(),
             cycle_counters: HashMap::new(),
+            next_id: 1,
         }
     }
 
@@ -239,7 +240,8 @@ impl EventBus {
     // ── 内部辅助 ───────────────────────────────────────────
 
     fn next_event_id(&mut self) -> String {
-        let id = NEXT_EVENT_ID.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        let id = self.next_id;
+        self.next_id += 1;
         format!("evt_{:010}", id)
     }
 }

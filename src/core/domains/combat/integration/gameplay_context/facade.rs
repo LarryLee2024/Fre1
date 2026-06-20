@@ -36,6 +36,7 @@ impl CombatContextFacade {
         ability_id: Option<&str>,
         frame: u64,
         commands: &mut Commands,
+        next_context_id: &mut u64,
     ) -> Result<GameplayContextData, ContextBuildError> {
         ContextBuilder::new(ContextOrigin::Direct, frame)
             .source(SourceInfo {
@@ -50,7 +51,7 @@ impl CombatContextFacade {
                 is_valid: true,
             })
             .ability(ability_id.unwrap_or(""))
-            .build(commands)
+            .build(commands, next_context_id)
     }
 
     /// 构建反击/连锁反应上下文。
@@ -62,6 +63,7 @@ impl CombatContextFacade {
         origin: ContextOrigin,
         frame: u64,
         commands: &mut Commands,
+        next_context_id: &mut u64,
     ) -> Result<GameplayContextData, ContextBuildError> {
         ContextBuilder::new(origin, frame)
             .source(SourceInfo {
@@ -75,7 +77,7 @@ impl CombatContextFacade {
                 position: None,
                 is_valid: true,
             })
-            .build(commands)
+            .build(commands, next_context_id)
     }
 
     /// 构建周期性效果（DoT/HoT）上下文。
@@ -85,6 +87,7 @@ impl CombatContextFacade {
         ability_id: Option<&str>,
         frame: u64,
         commands: &mut Commands,
+        next_context_id: &mut u64,
     ) -> Result<GameplayContextData, ContextBuildError> {
         ContextBuilder::new(ContextOrigin::Periodic, frame)
             .source(SourceInfo {
@@ -99,7 +102,7 @@ impl CombatContextFacade {
                 is_valid: true,
             })
             .ability(ability_id.unwrap_or(""))
-            .build(commands)
+            .build(commands, next_context_id)
     }
 
     /// 获取上下文中的发起者 entity。

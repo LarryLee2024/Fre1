@@ -1,18 +1,16 @@
 //! Spec 基础类型定义
 
 use bevy::prelude::Reflect;
-use std::sync::atomic::{AtomicU64, Ordering};
-
-static NEXT_SPEC_ID: AtomicU64 = AtomicU64::new(1);
 
 /// Spec 标识（自增序列，Replay-safe）。
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Reflect)]
 pub struct SpecId(pub String);
 
 impl SpecId {
-    /// 使用 AtomicU64 自增序列，Replay-safe（不受随机数种子影响）。
-    pub fn new() -> Self {
-        let id = NEXT_SPEC_ID.fetch_add(1, Ordering::Relaxed);
+    /// 使用自增序列，Replay-safe（不受随机数种子影响）。
+    pub fn new(next_id: &mut u64) -> Self {
+        let id = *next_id;
+        *next_id += 1;
         Self(format!("spec_{:010}", id))
     }
 
@@ -24,12 +22,6 @@ impl SpecId {
     /// 用于与外部系统交互（序列化、存储查找）。
     pub fn as_str(&self) -> &str {
         &self.0
-    }
-}
-
-impl Default for SpecId {
-    fn default() -> Self {
-        Self::new()
     }
 }
 

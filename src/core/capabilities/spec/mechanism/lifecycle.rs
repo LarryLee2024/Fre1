@@ -38,6 +38,8 @@ pub struct SpecRegistry {
     pub registered_defs: HashMap<String, DefEntry>,
     /// 注册中心配置
     pub config: SpecRegistryConfig,
+    /// Spec ID 自增计数器（Replay-safe）
+    pub next_spec_id: u64,
 }
 
 impl SpecRegistry {
@@ -46,6 +48,7 @@ impl SpecRegistry {
         Self {
             registered_defs: HashMap::new(),
             config,
+            next_spec_id: 1,
         }
     }
 
@@ -76,7 +79,7 @@ impl SpecRegistry {
     /// - V1: Def 必须已注册
     /// - V2: 等级必须在 [1, max_level] 范围内
     pub fn create_ability_spec(
-        &self,
+        &mut self,
         def_id: impl Into<String>,
         level: u8,
     ) -> Result<AbilitySpec, SpecError> {
@@ -91,7 +94,12 @@ impl SpecRegistry {
         // V2: 等级必须在合法范围
         validate_level(level, entry.max_level)?;
 
-        Ok(AbilitySpec::new(def_id, level, entry.max_level))
+        Ok(AbilitySpec::new(
+            def_id,
+            level,
+            entry.max_level,
+            &mut self.next_spec_id,
+        ))
     }
 
     /// 基于 Def 创建 EffectSpec 实例。
@@ -99,7 +107,7 @@ impl SpecRegistry {
     /// 校验：
     /// - V1: Def 必须已注册
     pub fn create_effect_spec(
-        &self,
+        &mut self,
         def_id: impl Into<String>,
         source: EffectSource,
         frame: u64,
@@ -111,7 +119,7 @@ impl SpecRegistry {
             .get(&def_id)
             .ok_or_else(|| SpecError::DefNotRegistered(def_id.clone()))?;
 
-        let spec = EffectSpec::new(def_id, source, frame);
+        let spec = EffectSpec::new(def_id, source, frame, &mut self.next_spec_id);
         if self.config.enable_snapshot {
             // snapshot 已由 EffectSpec::new 初始化为 empty(frame)
             // 完整快照需在应用时由调用方填充属性值（不变量 V4）
@@ -177,7 +185,7 @@ pub fn validate_no_duplicate_ability(
 /// 透传 SpecError 的错误变体。
 pub fn grant_ability_spec(
     container: &mut SpecContainer,
-    registry: &SpecRegistry,
+    registry: &mut SpecRegistry,
     def_id: &str,
     level: u8,
     entity: Entity,
@@ -280,7 +288,7 @@ pub fn change_ability_level(
 /// 透传 SpecError 的错误变体。
 pub fn grant_effect_spec(
     container: &mut SpecContainer,
-    registry: &SpecRegistry,
+    registry: &mut SpecRegistry,
     def_id: &str,
     source: EffectSource,
     frame: u64,

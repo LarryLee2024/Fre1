@@ -7,7 +7,7 @@ use bevy::prelude::*;
 
 use crate::core::capabilities::trigger::foundation::{TriggerEntry, TriggerType};
 use crate::core::capabilities::trigger::mechanism::{
-    TriggerContainer, TriggerEvalResult, can_trigger,
+    TriggerContainer, TriggerEvalResult, emit_trigger_events, evaluate_trigger,
 };
 
 // ─── 战斗触发器类型 ────────────────────────────────────────────────
@@ -50,7 +50,7 @@ pub struct CombatTriggerFacade;
 impl CombatTriggerFacade {
     // ─── ReadFacade ───────────────────────────────────────────────────
 
-    /// 评估一个触发器是否可以触发。
+    /// 评估一个触发器是否可以触发（两阶段：评估 + 事件发出）。
     pub fn can_trigger_check(
         entry: &TriggerEntry,
         event_type: &TriggerType,
@@ -58,7 +58,9 @@ impl CombatTriggerFacade {
         entity: Entity,
         commands: &mut Commands,
     ) -> TriggerEvalResult {
-        can_trigger(entry, event_type, condition_check, entity, commands)
+        let result = evaluate_trigger(entry, event_type, condition_check);
+        emit_trigger_events(&result, entity, entry, commands);
+        result
     }
 
     /// 评估一组触发器，返回已就绪的触发器列表。
@@ -74,10 +76,9 @@ impl CombatTriggerFacade {
             .iter()
             .filter(|entry| entry.trigger_type == tt)
             .filter(|entry| {
-                matches!(
-                    can_trigger(entry, &tt, condition_check, entity, commands),
-                    TriggerEvalResult::Ready(_)
-                )
+                let result = evaluate_trigger(entry, &tt, condition_check);
+                emit_trigger_events(&result, entity, entry, commands);
+                matches!(result, TriggerEvalResult::Ready(_))
             })
             .cloned()
             .collect()

@@ -44,9 +44,9 @@ pub struct AbilitySpec {
 
 impl AbilitySpec {
     /// AbilitySpec 默认 level=1、cooldown_reduction=0、enhancements 为空。由 SpecRegistrationSystem 在注册后填充 spec_id。
-    pub fn new(def_id: impl Into<String>, level: u8, max_level: u8) -> Self {
+    pub fn new(def_id: impl Into<String>, level: u8, max_level: u8, next_id: &mut u64) -> Self {
         Self {
-            spec_id: SpecId::new(),
+            spec_id: SpecId::new(next_id),
             def_id: def_id.into(),
             level,
             max_level,
@@ -119,9 +119,14 @@ pub struct EffectSpec {
 
 impl EffectSpec {
     /// 默认 stack_count=1、is_periodic=false、condition_passed=false。由 EffectRegistrationSystem 在 condition 检查后更新。
-    pub fn new(def_id: impl Into<String>, source: EffectSource, frame: u64) -> Self {
+    pub fn new(
+        def_id: impl Into<String>,
+        source: EffectSource,
+        frame: u64,
+        next_id: &mut u64,
+    ) -> Self {
         Self {
-            spec_id: SpecId::new(),
+            spec_id: SpecId::new(next_id),
             def_id: def_id.into(),
             source,
             duration_modifier: 0,

@@ -87,7 +87,11 @@ impl ContextBuilder {
     /// 校验规则（V1）：
     /// - source 和 target 必须已填充
     /// - source.entity 和 target.entity 不得为 PLACEHOLDER
-    pub fn build(self, commands: &mut Commands) -> Result<GameplayContextData, ContextBuildError> {
+    pub fn build(
+        self,
+        commands: &mut Commands,
+        next_id: &mut u64,
+    ) -> Result<GameplayContextData, ContextBuildError> {
         let origin = self.origin;
 
         let source = match self.source {
@@ -125,7 +129,7 @@ impl ContextBuilder {
 
         let chain = ContextChain::new(first_node);
 
-        let context_id = GameplayContextData::generate_id();
+        let context_id = GameplayContextData::generate_id(next_id);
 
         commands.trigger(ContextCreated {
             context_id: context_id.clone(),

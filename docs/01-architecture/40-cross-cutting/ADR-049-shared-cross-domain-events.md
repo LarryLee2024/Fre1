@@ -44,12 +44,19 @@ src/core/core_plugin.rs  # 注册共享事件
 
 ## 实现的共享事件
 
-| 事件 | 发射方 | 消费方 | 用途 |
-|------|--------|--------|------|
-| `TurnEnded` | combat pipeline | terrain (表面恢复) | 回合结束通知 |
-| `TurnStarted` | combat pipeline | 待定 | 回合开始通知 |
-| `BattleStarted` | combat | 待定 | 战斗开始通知 |
-| `BattleEnded` | combat | 待定 | 战斗结束通知 |
+| 事件 | 发射方 | 消费方 | 用途 | 状态 |
+|------|--------|--------|------|------|
+| `TurnEnded` | combat pipeline | terrain (表面恢复), infra/logging (turn_logger) | 回合结束通知 | ✅ 已实现 |
+| `TurnStarted` | **未发射** (combat pipeline 仅触发自身 `OnTurnStart`) | infra/logging (turn_logger) — **死代码** | 回合开始通知 | ❌ 待修复 |
+| `BattleStarted` | **未发射** (combat 使用自身 `OnBattleStart` 事件) | infra/logging (battle_logger) — **死代码** | 战斗开始通知 | ❌ 待修复 |
+| `BattleEnded` | **未发射** (combat 使用自身 `OnBattleEnd` 事件) | infra/logging (battle_logger) — **死代码** | 战斗结束通知 | ❌ 待修复 |
+
+**审计发现 (2026-06-21)**:
+- 仅 `TurnEnded` 被正确桥接：`combat/pipeline/steps.rs:130` 在 `step_turn_settlement` 中同时触发 `OnTurnEnd`（域内）和 `TurnEnded`（跨域共享）。
+- `TurnStarted` 在 `combat/pipeline/steps.rs:35` 仅触发 `OnTurnStart`（域内），未触发 `core::events::TurnStarted`。
+- `BattleStarted` / `BattleEnded` 在 `combat/systems/turn_systems.rs:32,87,94` 和 `pipeline/steps.rs:196` 仅触发 `OnBattleStart`/`OnBattleEnd`（域内），未触发 `core::events::BattleStarted`/`BattleEnded`。
+- `infra/logging/observers/turn_logger.rs` 和 `battle_logger.rs` 订阅了核心共享事件，但因事件未被触发而处于死代码状态。
+- 建议：或在 combat 管线中添加共享事件桥接触发，或将 logger 改为订阅 combat 域内事件（后者需考虑 infra→core 依赖方向）。
 
 ## 后果
 ### 正面
@@ -68,7 +75,7 @@ src/core/core_plugin.rs  # 注册共享事件
 ## 文件状态
 | 文件 | 状态 | 负责人 | 完成日期 |
 |------|------|--------|----------|
-| `ADR-049-shared-cross-domain-events.md` | ✅ stable | architect | 2026-06-19 |
+| `ADR-049-shared-cross-domain-events.md` | ✅ stable (shared events table reviewed 2026-06-21) | architect | 2026-06-19 |
 
 ## 后续更新
 

@@ -60,6 +60,8 @@ description:
 - 🟩 跨Feature、跨Domain的事件响应，必须使用`On<T>` Observer实现
 - 🟩 Observer支持`run_if()`条件守卫，替代手动if判断
 - 🟥 禁止使用`EventWriter<T>` / `EventReader<T>`（废弃模式）
+- ⚠️ Observer 递归深度必须限制在 `MAX_OBSERVER_DEPTH`（默认 10）以内
+- 🟥 禁止 Observer 触发同一事件类型的递归循环无保护
 - 典型场景：伤害→护盾→吸血→死亡判定（跨Ability/Effect/Combat领域）
 
 ### 2.4 Delayed Commands = 延迟效果首选

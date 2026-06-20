@@ -51,7 +51,7 @@ fn builder_with_source_and_target_succeeds() {
     let ctx = ContextBuilder::new(ContextOrigin::Direct, 1)
         .source(valid_source())
         .target(valid_target())
-        .build(&mut commands)
+        .build(&mut commands, &mut 0u64)
         .expect("build should succeed");
     assert_eq!(ctx.origin, ContextOrigin::Direct);
     assert!(ctx.context_id.starts_with("ctx_"));
@@ -64,7 +64,7 @@ fn builder_missing_source_fails() {
     let mut commands = world.commands();
     let ctx = ContextBuilder::new(ContextOrigin::Direct, 1)
         .target(valid_target())
-        .build(&mut commands);
+        .build(&mut commands, &mut 0u64);
     assert!(
         matches!(ctx, Err(ContextBuildError::MissingFields(fields)) if fields.contains(&"source".to_string()))
     );
@@ -76,7 +76,7 @@ fn builder_missing_target_fails() {
     let mut commands = world.commands();
     let ctx = ContextBuilder::new(ContextOrigin::Direct, 1)
         .source(valid_source())
-        .build(&mut commands);
+        .build(&mut commands, &mut 0u64);
     assert!(
         matches!(ctx, Err(ContextBuildError::MissingFields(fields)) if fields.contains(&"target".to_string()))
     );
@@ -93,7 +93,7 @@ fn builder_all_optional_fields_succeeds() {
         .equipment("equip_000001")
         .element(ElementType::Fire)
         .critical()
-        .build(&mut commands)
+        .build(&mut commands, &mut 0u64)
         .unwrap();
     assert_eq!(ctx.origin, ContextOrigin::Triggered);
     assert_eq!(ctx.ability_id, Some("abl_000001".to_string()));
@@ -111,7 +111,7 @@ fn chain_first_node_at_head() {
     let ctx = ContextBuilder::new(ContextOrigin::Direct, 10)
         .source(valid_source())
         .target(valid_target())
-        .build(&mut commands)
+        .build(&mut commands, &mut 0u64)
         .unwrap();
     let last = ctx.chain.last().unwrap();
     assert_eq!(last.frame, 10);
@@ -122,15 +122,16 @@ fn chain_first_node_at_head() {
 fn context_id_unique_per_build() {
     let mut world = World::new();
     let mut commands = world.commands();
+    let mut counter = 1u64;
     let ctx1 = ContextBuilder::new(ContextOrigin::Direct, 1)
         .source(valid_source())
         .target(valid_target())
-        .build(&mut commands)
+        .build(&mut commands, &mut counter)
         .unwrap();
     let ctx2 = ContextBuilder::new(ContextOrigin::Direct, 1)
         .source(valid_source())
         .target(valid_target())
-        .build(&mut commands)
+        .build(&mut commands, &mut counter)
         .unwrap();
     assert_ne!(ctx1.context_id, ctx2.context_id);
 }

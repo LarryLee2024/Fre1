@@ -34,6 +34,8 @@ pub(crate) mod traits;
 pub(crate) mod validation;
 // [ADR-045] pub(crate) — 日志诊断基础设施，crate 内共享
 pub(crate) mod diagnostics;
+// [ADR-045] pub(crate) — 全局常量，crate 内共享
+pub(crate) mod constants;
 // [ADR-045] pub(crate) — 本地化 Key 类型，crate 内共享
 pub(crate) mod localization_key;
 // [ADR-045] pub(crate) — 通用宏定义，crate 内共享

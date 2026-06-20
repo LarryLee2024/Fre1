@@ -101,14 +101,11 @@ impl TriggerFrequency {
 
 /// 触发器 ID 生成器（确定性）。
 ///
-/// 使用 AtomicU64 生成 Replay-safe 的唯一触发 ID。
-use std::sync::atomic::{AtomicU64, Ordering};
-
-static NEXT_TRIGGER_INSTANCE_ID: AtomicU64 = AtomicU64::new(1);
-
-/// 生成一个唯一触发实例 ID（格式: "trig_{n}"）。
-pub fn generate_trigger_id() -> String {
-    let id = NEXT_TRIGGER_INSTANCE_ID.fetch_add(1, Ordering::Relaxed);
+/// 使用传入的计数器生成 Replay-safe 的唯一触发 ID。
+/// 调用者负责持有并维护计数器状态。
+pub fn generate_trigger_id(next_id: &mut u64) -> String {
+    let id = *next_id;
+    *next_id += 1;
     format!("trig_{:010}", id)
 }
 
