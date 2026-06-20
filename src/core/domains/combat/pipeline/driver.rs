@@ -11,6 +11,8 @@
 
 use bevy::prelude::*;
 
+use crate::infra::logging::rate_limit::OnceGuard;
+
 use crate::core::capabilities::runtime::pipeline::foundation::{
     PipelineContext, PipelineDefinition, PipelineState,
 };
@@ -25,6 +27,10 @@ use crate::core::domains::combat::components::{
     ActionPoints, BattlePhase, CombatParticipant, Dead, TurnQueue,
 };
 use crate::core::domains::combat::events::UnitActionComplete;
+
+// ── Rate limiting guards for high-frequency warn! calls ──
+static PIPELINE_NOT_FOUND_GUARD: OnceGuard = OnceGuard::new();
+static PIPELINE_MISSING_RESUME_GUARD: OnceGuard = OnceGuard::new();
 
 /// 回合管线驾驶员 Resource。
 #[derive(Resource)]
@@ -114,12 +120,14 @@ pub(crate) fn combat_pipeline_driver(
     let def = match pipeline_registry.get(&driver.state.pipeline_id) {
         Some(d) => d.clone(),
         None => {
-            tracing::warn!(target: "combat",
+            if PIPELINE_NOT_FOUND_GUARD.try_fire() {
+                tracing::warn!(target: "combat",
                 event = "combat.pipeline.not_found",
                 pipeline_id = %driver.state.pipeline_id,
                 "管线 '{}' 未在 Registry 中找到",
                 driver.state.pipeline_id
             );
+            }
             driver.state.completed = true;
             return;
         }
@@ -265,12 +273,14 @@ pub(crate) fn on_unit_action_complete(
     let def = match pipeline_registry.get(&driver.state.pipeline_id) {
         Some(d) => d.clone(),
         None => {
-            tracing::warn!(target: "combat",
+            if PIPELINE_MISSING_RESUME_GUARD.try_fire() {
+                tracing::warn!(target: "combat",
                 event = "combat.pipeline.missing_resume",
                 pipeline_id = %driver.state.pipeline_id,
                 "管线 '{}' 未找到，无法恢复执行",
                 driver.state.pipeline_id
             );
+            }
             return;
         }
     };

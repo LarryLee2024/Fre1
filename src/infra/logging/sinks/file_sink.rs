@@ -15,7 +15,7 @@ use std::{
     sync::Mutex,
 };
 
-use tracing_subscriber::{layer::Context, registry::LookupSpan, Layer};
+use tracing_subscriber::{Layer, layer::Context};
 
 /// 文件日志输出器配置。
 #[derive(Debug, Clone, Resource)]
@@ -234,7 +234,7 @@ impl FileSinkLayer {
     }
 }
 
-impl<S: tracing::Subscriber + for<'a> LookupSpan<'a>> Layer<S> for FileSinkLayer {
+impl<S: tracing::Subscriber + 'static> Layer<S> for FileSinkLayer {
     fn on_event(
         &self,
         event: &tracing::Event<'_>,
