@@ -1,6 +1,6 @@
 //! AppPlugin — Composition Root
 //!
-//! 唯一知道所有层的 Plugin，按 Phase 0–9 顺序注册。
+//! 唯一知道所有层的 Plugin，按 Phase 0–11 顺序注册。
 //! 详见 `docs/01-architecture/README.md` §6.1
 
 use crate::core::CorePlugin;
@@ -12,6 +12,7 @@ use crate::infra::{
 use crate::{
     app::scenes::ScenePlugin, content::ContentPlugin, modding::ModdingPlugin, shared::SharedPlugin,
 };
+use crate::ui::UiPlugin;
 use bevy::prelude::*;
 
 #[cfg(feature = "dev")]
@@ -56,6 +57,14 @@ impl Plugin for AppPlugin {
         // Phase 10: Cross-cutting
         // ════════════════════════════════════════════
         app.add_plugins(ContentPlugin).add_plugins(ModdingPlugin);
+
+        // ════════════════════════════════════════════
+        // Phase 11: UI Presentation Layer (L3)
+        // ════════════════════════════════════════════
+        // UiPlugin must be registered after Localization (Phase 8),
+        // ScenePlugin (Phase 9), and Content/Modding (Phase 10).
+        // See docs/06-ui/01-architecture/architecture.md §8.1
+        app.add_plugins(UiPlugin);
 
         #[cfg(feature = "dev")]
         app.add_plugins(DevToolsPlugin);

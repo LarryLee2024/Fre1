@@ -12,7 +12,7 @@ crate::define_string_id! {
 
 /// 标签命名空间枚举。
 /// 用于强制命名空间一致性，禁止跨域引用。
-/// 顶级命名空间控制在 12 个以内，新增需架构评审。
+/// 顶级命名空间控制在 15个以内，新增需架构评审。
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum TagNamespace {
     /// 角色/单位分类（Human, Elf, Boss, Undead 等）
@@ -39,6 +39,8 @@ pub enum TagNamespace {
     Trigger,
     /// 表现信号分类（OnApply, OnTick 等）
     Cue,
+    /// 领域归属分类（Party, Progression, Inventory, CampRest 等）
+    Domain,
     /// 允许扩展的命名空间，但必须注册
     Custom(String),
 }

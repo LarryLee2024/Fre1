@@ -16,6 +16,7 @@ pub mod core;
 pub mod infra;
 pub mod modding;
 pub mod shared;
+pub mod ui;
 
 #[cfg(feature = "dev")]
 pub mod tools;
