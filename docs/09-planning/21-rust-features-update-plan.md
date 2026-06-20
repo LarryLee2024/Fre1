@@ -2,7 +2,7 @@
 
 > 来源：`docs/ai_ignore_this_dir/15rust特性.md`
 > 日期：2026-06-21
-> 状态：待执行
+> 状态：✅ 全部完成 — 详见 `docs/11-refactor/done/rust-features-debt-2026-06-21.md`
 
 ---
 

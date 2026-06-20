@@ -1024,6 +1024,12 @@ screens/   → widgets/ + primitives/ （允许，通过 Factory）
 - 🟩 新版本必须支持读取上一个大版本的存档，通过自动迁移完成升级
 - 🟥 禁止版本升级后旧存档直接无法读取
 
+### 10.7 零拷贝文本
+- 🟩 静态文本（LocalizationKey常量、Def中的name_key/desc_key）必须使用 `Cow<'static, str>` 而非 `String`
+- 🟩 动态文本（运行时拼接、用户输入）使用 `String`
+- 🟨 跨层数据传递优先使用 `Cow<'static, str>` 兼顾灵活性与性能
+- 🟥 禁止在热路径 clone String
+
 ---
 
 ## 第十一编 可观测性宪法

@@ -217,7 +217,40 @@ Pipelining 是运行时编排机制，不单独持久化。只在存档中记录
 
 ---
 
-## 6. Constitution Check
+## 6. Typestate 编译期状态保证
+
+> 引入 Typestate 模式到 Content Pipeline 的 Def 加载流程，在编译期保证状态转换正确性。
+
+### 6.1 适用模式
+
+Content Pipeline 的 Def 加载流程可引入 Typestate 状态链：
+
+```
+DefBuilder<Unvalidated> → DefBuilder<Validated> → DefFrozen
+```
+
+| 状态 | 含义 | 允许操作 |
+|------|------|----------|
+| `Unvalidated` | 原始 RON 数据已加载但未校验 | 反序列化、格式转换 |
+| `Validated` | 校验通过但未冻结 | ID/引用/数值校验 |
+| `Frozen` | 已冻结的不可变 Definition | 注册到 Registry |
+
+### 6.2 编译期保证
+
+- 编译期保证：未验证的 Def 不可注册到 Registry
+- 只有 `DefFrozen` 类型暴露注册方法
+- 状态转换在类型层面编码，非法转换在编译期被阻止（如 `Unvalidated → Frozen` 直接跳过校验）
+
+### 6.3 边界约束
+
+- 🟩 仅适用于 Pipeline/Builder 模式
+- 🟥 禁止用于运行时状态机（运行时状态机用 enum）
+- 🟥 禁止为 Typestate 引入复杂泛型体操
+- 🟥 禁止在热路径使用 Typestate
+
+---
+
+## 7. Constitution Check
 
 | 条款 | 合规 | 说明 |
 |------|------|------|

@@ -129,6 +129,11 @@ type LocalizationKey = &'static str;
 | `core.yes_zh` | locale 信息嵌入 Key | `core.yes` + locale 分离 |
 | `ability.abl_000042.NAME` | 后缀使用大写 | 统一小写 `.name` |
 
+### Cow<'static, str> 优化
+- LocalizationKey 常量应使用 `Cow<'static, str>` 而非 `String`
+- 静态 Key 在编译期确定，零分配
+- 运行时构造的 Key 使用 Cow::Owned，调用方管理生命周期
+
 ### 3.2 LocaleId 类型定义
 
 ```rust

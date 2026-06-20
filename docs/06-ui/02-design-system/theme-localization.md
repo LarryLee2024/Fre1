@@ -291,6 +291,10 @@ LocalizedText
 | 状态名称 | `Text::new("中毒")` | `LocalizedText(UiTextKey::StatusPoisoned)` |
 | 数值单位 | `Text::new("HP")` | `LocalizedText(UiTextKey::HpLabel)` |
 
+### 4.6 文本所有权
+- UI文本展示应使用 `Cow<'static, str>` 避免静态文本堆分配
+- LocalizedText 组件存储 Key+参数，渲染时解析为 Cow 文本
+
 ---
 
 ## 5. UiSettings 持久化
