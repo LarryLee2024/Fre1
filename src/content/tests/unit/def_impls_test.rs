@@ -551,6 +551,8 @@ fn sample_tag() -> TagDefinition {
         bit_index: 0,
         is_abstract: false,
         namespace: TagNamespace::Damage,
+        category: TagCategory::Gameplay,
+        desc_key: None,
     }
 }
 
@@ -626,15 +628,23 @@ fn attribute_def_definition_type_constants() {
 
 #[test]
 fn attribute_ron_deserializes_and_validates() {
-    let path = std::path::Path::new("assets/config/attributes/hp.ron");
-    let content = std::fs::read_to_string(path).expect("hp.ron should exist");
-    let def: AttributeDefinition =
-        ron::from_str(&content).expect("hp.ron should deserialize to AttributeDefinition");
+    let path = std::path::Path::new("assets/config/attributes/core_attributes.ron");
+    let content = std::fs::read_to_string(path).expect("core_attributes.ron should exist");
+    let defs: Vec<AttributeDefinition> =
+        ron::from_str(&content).expect("core_attributes.ron should deserialize to Vec<AttributeDefinition>");
 
-    assert_eq!(def.id.as_str(), "hp");
-    assert_eq!(def.category, AttributeCategory::Primary);
-    assert_eq!(def.default_base_value, 100.0);
-    assert_eq!(def.min_value, 0.0);
-    assert_eq!(def.max_value, 999.0);
-    assert!(def.validate().is_ok());
+    // Find the hp entry to validate structure
+    let hp = defs.iter().find(|d| d.id.as_str() == "hp").expect("hp entry should exist");
+    assert_eq!(hp.category, AttributeCategory::Resource);
+    assert_eq!(hp.default_base_value, 100.0);
+    assert_eq!(hp.min_value, 0.0);
+    assert_eq!(hp.max_value, 999.0);
+
+    // Validate all entries pass validation
+    for def in &defs {
+        assert!(def.validate().is_ok(), "validation failed for '{}'", def.id.as_str());
+    }
+
+    // Verify expected count: 7 Primary + 3 Derived + 2 Resource = 12
+    assert_eq!(defs.len(), 12);
 }

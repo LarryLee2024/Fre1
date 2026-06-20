@@ -1,0 +1,37 @@
+(
+    id: "eff_000018",
+    name_key: "effect.eff_000018.name",
+    desc_key: "effect.eff_000018.desc",
+    icon_key: None,
+    duration: HasDuration(
+        turns: 2,
+        calculation: Fixed,
+    ),
+    period: None,
+    tick_execution: None,
+    modifiers: [
+        (
+            op: Add,
+            target_attribute: "speed",
+            value: Fixed(-2.0),
+            priority: 50,
+        ),
+    ],
+    granted_tags: ["slowed"],
+    required_tags: None,
+    removed_tags: None,
+    application_condition: None,
+    stacking: (
+        stacking_type: RefreshDuration,
+        max_stacks: 1,
+        allow_cross_source: false,
+        overflow_behavior: IgnoreNew,
+        reapply_modifiers_on_stack: false,
+    ),
+    effect_tags: ["CrowdControl", "Debuff"],
+    execution: None,
+    cues: [],
+    visible: true,
+    dispellable: true,
+    display_priority: 8,
+)

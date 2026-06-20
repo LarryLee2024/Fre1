@@ -1,8 +1,8 @@
 (
     target_type: Enemy,
     shape: Cone(
-        angle_degrees: 60.0,
-        max_length: 15.0,
+        angle: 60.0,
+        length: 15.0,
     ),
     range: Some(20.0),
     min_range: None,

@@ -1,8 +1,10 @@
 (
     id: "tag:ice",
     path: "DamageType.Elemental.Ice",
-    parent_id: None,
+    parent_id: Some("elemental"),
     bit_index: 1,
     is_abstract: false,
     namespace: Damage,
+    category: Gameplay,
+    desc_key: Some("tag.ice.desc"),
 )

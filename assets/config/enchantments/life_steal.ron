@@ -1,0 +1,7 @@
+(
+    id: "enc_life_steal",
+    name_key: "enchantment.life_steal.name",
+    modifier_id: "mod_life_steal_10",
+    exclusive_group: Some("vampiric_weapon"),
+    slot_type: Weapon(max_slots: 1),
+)

@@ -1,0 +1,34 @@
+(
+    id: "qst_000002",
+    name_key: "quest.merchants_plea.name",
+    desc_key: "quest.merchants_plea.desc",
+    quest_type: Side,
+    prerequisites: [
+        (
+            prereq_type: Level(min_level: 2),
+            required_quest: None,
+        ),
+    ],
+    objectives: [
+        (
+            id: ObjectiveId("obj_003"),
+            description_key: "quest.merchants_plea.obj_001",
+            objective_type: Collect(item_ids: ["itm_iron_ingot", "itm_copper_ore"]),
+            target_value: 5,
+            associated_id: None,
+        ),
+    ],
+    rewards: (
+        xp_reward: 150,
+        gold_reward: 75,
+        item_rewards: [
+            (item_id: "itm_health_potion", quantity: 2),
+        ],
+        reputation_rewards: [
+            (faction_id: "fac_merchants_guild", amount: 5),
+        ],
+        unlocks: [],
+    ),
+    is_critical: false,
+    exclusive_with: [],
+)

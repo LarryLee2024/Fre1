@@ -1,0 +1,15 @@
+(
+    id: "cue_burn_tick",
+    cue_type: VFX(VFXParams(
+        effect_key: "vfx/burn_tick",
+        attach_point: None,
+        follow_target: true,
+        duration_frames: Some(10),
+        scale: None,
+        color_override: None,
+    )),
+    cue_tag: OnTick,
+    delay_frames: None,
+    interruptible: false,
+    critical: false,
+)

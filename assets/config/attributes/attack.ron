@@ -1,9 +1,0 @@
-(
-    id: "attr:attack",
-    category: Primary,
-    default_base_value: 10.0,
-    min_value: 1.0,
-    max_value: 99.0,
-    derived_dependencies: [],
-    hidden: false,
-)

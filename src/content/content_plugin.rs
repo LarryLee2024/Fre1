@@ -14,6 +14,7 @@ use crate::core::capabilities::attribute::foundation::AttributeDefinition;
 use crate::core::capabilities::ability::foundation::AbilityDef;
 use crate::core::capabilities::cue::foundation::CueDef;
 use crate::core::capabilities::effect::foundation::EffectDef;
+use crate::core::capabilities::rule::foundation::RuleDef;
 use crate::core::capabilities::tag::foundation::TagDefinition;
 use crate::core::capabilities::targeting::foundation::TargetingDef;
 use crate::core::domains::camp_rest::CampEventDef;
@@ -97,6 +98,15 @@ pub struct LoadedEffectDefs {
 pub struct LoadedAbilityDefs {
     /// 成功加载并校验通过的技能定义。
     pub defs: Vec<AbilityDef>,
+    /// 加载或校验失败的文件（路径 + 错误信息）。
+    pub errors: Vec<(PathBuf, String)>,
+}
+
+/// 已加载的规则定义集合 Resource。
+#[derive(Resource, Debug, Default)]
+pub struct LoadedRuleDefs {
+    /// 成功加载并校验通过的规则定义。
+    pub defs: Vec<RuleDef>,
     /// 加载或校验失败的文件（路径 + 错误信息）。
     pub errors: Vec<(PathBuf, String)>,
 }
@@ -549,6 +559,39 @@ fn load_ability_def(abilities: &mut ResMut<LoadedAbilityDefs>, file: &ContentFil
     abilities.defs.push(def);
 }
 
+/// 从 RON 文件同步加载一个 RuleDef。
+fn load_rule_def(rules: &mut ResMut<LoadedRuleDefs>, file: &ContentFile) {
+    let content = match std::fs::read_to_string(&file.path) {
+        Ok(c) => c,
+        Err(e) => {
+            let msg = format!("failed to read file: {}", e);
+            rules.errors.push((file.path.clone(), msg));
+            return;
+        }
+    };
+
+    let def: RuleDef = match ron::from_str(&content) {
+        Ok(d) => d,
+        Err(e) => {
+            let msg = format!("failed to deserialize RON: {}", e);
+            rules.errors.push((file.path.clone(), msg));
+            return;
+        }
+    };
+
+    if let Err(e) = def.validate() {
+        let msg = format!("validation failed: {}", e);
+        rules.errors.push((file.path.clone(), msg));
+        return;
+    }
+
+    info!(
+        "[Content] Loaded rule '{}' (id: {})",
+        def.name_key, def.id
+    );
+    rules.defs.push(def);
+}
+
 /// 从 RON 文件同步加载一个 QuestDef。
 fn load_quest_def(quests: &mut ResMut<LoadedQuestDefs>, file: &ContentFile) {
     let content = match std::fs::read_to_string(&file.path) {
@@ -676,7 +719,7 @@ fn load_targeting_def(targeting: &mut ResMut<LoadedTargetingDefs>, file: &Conten
     targeting.defs.push(def);
 }
 
-/// 从 RON 文件同步加载一个 TagDefinition。
+/// 从 RON 文件同步加载标签定义（支持单条和数组格式）。
 fn load_tag_def(tags: &mut ResMut<LoadedTagDefs>, file: &ContentFile) {
     let content = match std::fs::read_to_string(&file.path) {
         Ok(c) => c,
@@ -687,61 +730,107 @@ fn load_tag_def(tags: &mut ResMut<LoadedTagDefs>, file: &ContentFile) {
         }
     };
 
-    let def: TagDefinition = match ron::from_str(&content) {
-        Ok(d) => d,
-        Err(e) => {
-            let msg = format!("failed to deserialize RON: {}", e);
-            tags.errors.push((file.path.clone(), msg));
-            return;
+    let trimmed = content.trim();
+    let defs: Vec<TagDefinition> = if trimmed.starts_with('[') {
+        // 数组格式: [item1, item2, ...]
+        match ron::from_str(trimmed) {
+            Ok(d) => d,
+            Err(e) => {
+                let msg = format!("failed to deserialize RON array: {}", e);
+                tags.errors.push((file.path.clone(), msg));
+                return;
+            }
+        }
+    } else {
+        // 单条格式: (id: ..., path: ..., ...)
+        match ron::from_str::<TagDefinition>(trimmed) {
+            Ok(d) => vec![d],
+            Err(e) => {
+                let msg = format!("failed to deserialize RON: {}", e);
+                tags.errors.push((file.path.clone(), msg));
+                return;
+            }
         }
     };
 
-    if let Err(e) = def.validate() {
-        let msg = format!("validation failed: {}", e);
-        tags.errors.push((file.path.clone(), msg));
-        return;
+    for def in &defs {
+        if let Err(e) = def.validate() {
+            let msg = format!("validation failed for '{}': {}", def.id.as_str(), e);
+            tags.errors.push((file.path.clone(), msg));
+            return;
+        }
     }
 
-    info!(
-        "[Content] Loaded tag '{}' (path: {})",
-        def.id.as_str(),
-        def.path
-    );
-    tags.defs.push(def);
+    let count = defs.len();
+    for def in defs {
+        info!(
+            "[Content] Loaded tag '{}' (path: {})",
+            def.id.as_str(),
+            def.path
+        );
+        tags.defs.push(def);
+    }
+
+    if count > 1 {
+        info!("[Content] Loaded {} tags from {}", count, file.path.display());
+    }
 }
 
-/// 从 RON 文件同步加载一个 AttributeDefinition。
+/// 从 RON 文件同步加载 AttributeDefinition（支持单条和数组格式）。
 fn load_attribute_def(attributes: &mut ResMut<LoadedAttributeDefs>, file: &ContentFile) {
     let content = match std::fs::read_to_string(&file.path) {
         Ok(c) => c,
         Err(e) => {
-            let msg = format!("failed to read file: {}", e);
+            let msg = format!("failed to read file: {e}");
             attributes.errors.push((file.path.clone(), msg));
             return;
         }
     };
 
-    let def: AttributeDefinition = match ron::from_str(&content) {
-        Ok(d) => d,
-        Err(e) => {
-            let msg = format!("failed to deserialize RON: {}", e);
-            attributes.errors.push((file.path.clone(), msg));
-            return;
+    let trimmed = content.trim();
+    let defs: Vec<AttributeDefinition> = if trimmed.starts_with('[') {
+        // 数组格式: [item1, item2, ...]
+        match ron::from_str(trimmed) {
+            Ok(d) => d,
+            Err(e) => {
+                let msg = format!("failed to deserialize RON array: {e}");
+                attributes.errors.push((file.path.clone(), msg));
+                return;
+            }
+        }
+    } else {
+        // 单条格式: (id: "attr:...", category: ..., ...)
+        match ron::from_str::<AttributeDefinition>(trimmed) {
+            Ok(d) => vec![d],
+            Err(e) => {
+                let msg = format!("failed to deserialize RON: {e}");
+                attributes.errors.push((file.path.clone(), msg));
+                return;
+            }
         }
     };
 
-    if let Err(e) = def.validate() {
-        let msg = format!("validation failed: {}", e);
-        attributes.errors.push((file.path.clone(), msg));
-        return;
+    for def in &defs {
+        if let Err(e) = def.validate() {
+            let msg = format!("validation failed for '{}': {e}", def.id.as_str());
+            attributes.errors.push((file.path.clone(), msg));
+            return;
+        }
     }
 
-    info!(
-        "[Content] Loaded attribute '{}' (category: {:?})",
-        def.id.as_str(),
-        def.category
-    );
-    attributes.defs.push(def);
+    let count = defs.len();
+    for def in defs {
+        info!(
+            "[Content] Loaded attribute '{}' (category: {:?})",
+            def.id.as_str(),
+            def.category
+        );
+        attributes.defs.push(def);
+    }
+
+    if count > 1 {
+        info!("[Content] Loaded {count} attributes from {}", file.path.display());
+    }
 }
 
 /// 从 RON 文件同步加载一个 SummonTemplateDef。

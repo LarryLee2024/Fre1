@@ -1,0 +1,14 @@
+(
+    id: "cue_heal_received",
+    cue_type: Popup(PopupParams(
+        text_key: "popup.heal",
+        color: "#00FF00",
+        font_size: 20,
+        float_direction: Up,
+        duration_frames: 45,
+    )),
+    cue_tag: OnApply,
+    delay_frames: None,
+    interruptible: true,
+    critical: false,
+)

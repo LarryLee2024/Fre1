@@ -1,0 +1,28 @@
+(
+    id: "bnd:comrades",
+    name_key: "bond.comrades.name",
+    desc_key: "bond.comrades.desc",
+    required_members: [
+        (
+            required_tags: ["tag:warrior"],
+            match_mode: Any,
+        ),
+        (
+            required_tags: ["tag:warrior"],
+            match_mode: Any,
+        ),
+        (
+            required_tags: ["tag:warrior"],
+            match_mode: Any,
+        ),
+        (
+            required_tags: ["tag:warrior"],
+            match_mode: Any,
+        ),
+    ],
+    level_effects: {
+        1: ["mod_bond_comrades_001"],
+        2: ["mod_bond_comrades_001", "mod_bond_comrades_002"],
+    },
+    max_level: 2,
+)

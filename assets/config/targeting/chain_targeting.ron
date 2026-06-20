@@ -1,0 +1,16 @@
+(
+    target_type: Enemy,
+    shape: Chain(
+        bounces: 4,
+        bounce_range: 8.0,
+        allow_retarget: false,
+    ),
+    range: Some(25.0),
+    min_range: None,
+    max_targets: 5,
+    include_self: false,
+    require_los: true,
+    ignore_obstacles: false,
+    allow_dead_targets: false,
+    priority_rule: None,
+)

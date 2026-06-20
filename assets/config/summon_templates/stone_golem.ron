@@ -1,0 +1,20 @@
+(
+    id: "smt_stone_golem",
+    name_key: "summon.stone_golem.name",
+    base_attributes: [
+        ("attr:hp", 150.0),
+        ("attr:attack", 8.0),
+        ("attr:defense", 20.0),
+        ("attr:speed", 4.0),
+    ],
+    tags: ["tag:construct", "tag:earth"],
+    abilities: ["abl_slam", "abl_taunt"],
+    modifiers: ["mod_damage_reduction_physical"],
+    grid_size: Large,
+    default_ai_mode: Guard,
+    summon_cost: (
+        ability_id: Some("abl_summon_stone_golem"),
+        spell_level: Some(4),
+        requires_concentration: false,
+    ),
+)

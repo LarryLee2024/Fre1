@@ -1,0 +1,18 @@
+(
+    id: "spl_000004",
+    name_key: "spell.fire_bolt.name",
+    desc_key: "spell.fire_bolt.desc",
+    level: Cantrip,
+    casting_time: Action,
+    components: (
+        verbal: true,
+        somatic: true,
+        material: None,
+    ),
+    range: Ranged(base: 8, max: None),
+    duration: Instant,
+    requires_concentration: false,
+    saving_throw: None,
+    can_upcast: false,
+    effects: ["eff_000010"],
+)

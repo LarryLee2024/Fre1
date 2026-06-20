@@ -1,0 +1,11 @@
+(
+    id: "cmp:medical_care",
+    title_key: "camp_event.medical_care.title",
+    desc_key: "camp_event.medical_care.desc",
+    trigger_conditions: [
+        "cond_has_medic",
+        "cond_has_injury",
+    ],
+    event_type: Character,
+    priority: 15,
+)

@@ -1,0 +1,21 @@
+(
+    id: "rcp_000003",
+    name_key: "recipe.leather_armor.name",
+    station: TailoringBench,
+    skill_requirement: Some((
+        skill_id: "skill_tailoring",
+        dc: 10,
+    )),
+    materials: [
+        (item_id: "itm_tanned_hide", quantity: 4),
+        (item_id: "itm_thread", quantity: 2),
+        (item_id: "itm_iron_buckle", quantity: 1),
+    ],
+    output: (
+        item_id: "itm_leather_armor",
+        quantity: 1,
+        enchantment_slots: 1,
+    ),
+    craft_time: 90,
+    craft_type: Tailoring,
+)

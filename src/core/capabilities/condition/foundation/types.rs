@@ -2,8 +2,10 @@
 //!
 //! 包含条件类型分类、逻辑运算、比较运算符和评估结果类型。
 
+use serde::{Deserialize, Serialize};
+
 /// Condition 逻辑组合运算。
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum ConditionOp {
     /// 所有子条件通过则通过（短路：任一失败即返回 Fail）
     And,
@@ -14,7 +16,7 @@ pub enum ConditionOp {
 }
 
 /// 数值比较运算符。
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum ComparisonOp {
     /// 等于
     Equal,
@@ -45,7 +47,7 @@ impl ComparisonOp {
 }
 
 /// 标签匹配模式（用于 TagRequirement）。
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum TagRequirementMode {
     /// 目标必须持有指定标签
     Has,
@@ -82,5 +84,5 @@ impl ConditionResult {
 }
 
 /// 自定义条件标识（由具体领域定义并注册）。
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct CustomConditionId(pub u32);

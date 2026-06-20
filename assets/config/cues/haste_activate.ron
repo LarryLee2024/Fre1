@@ -1,0 +1,15 @@
+(
+    id: "cue_haste_activate",
+    cue_type: VFX(VFXParams(
+        effect_key: "vfx/haste_aura",
+        attach_point: Some("chest"),
+        follow_target: true,
+        duration_frames: Some(45),
+        scale: None,
+        color_override: Some("#FFD700"),
+    )),
+    cue_tag: Custom("OnCast"),
+    delay_frames: None,
+    interruptible: false,
+    critical: true,
+)

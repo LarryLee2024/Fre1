@@ -1,0 +1,15 @@
+(
+    target_type: Enemy,
+    shape: Line(
+        length: 30.0,
+        width: 5.0,
+    ),
+    range: Some(30.0),
+    min_range: None,
+    max_targets: 6,
+    include_self: false,
+    require_los: true,
+    ignore_obstacles: false,
+    allow_dead_targets: false,
+    priority_rule: None,
+)

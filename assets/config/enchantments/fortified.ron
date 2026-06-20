@@ -1,0 +1,7 @@
+(
+    id: "enc_fortified",
+    name_key: "enchantment.fortified.name",
+    modifier_id: "mod_defense_plus_3",
+    exclusive_group: Some("defense_armor"),
+    slot_type: Armor(max_slots: 1),
+)

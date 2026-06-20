@@ -15,6 +15,7 @@ pub mod event;
 pub mod execution;
 pub mod gameplay_context;
 pub mod modifier;
+pub mod rule;
 pub mod runtime;
 pub mod spec;
 pub mod stacking;

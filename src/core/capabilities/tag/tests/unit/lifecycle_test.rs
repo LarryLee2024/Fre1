@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::core::capabilities::tag::foundation::{TagDefinition, TagId, TagNamespace};
+use crate::core::capabilities::tag::foundation::{TagCategory, TagDefinition, TagId, TagNamespace};
 use crate::core::capabilities::tag::mechanism::lifecycle::{TagHierarchy, TagRegistrationError};
 
 fn make_tag(
@@ -17,6 +17,8 @@ fn make_tag(
         bit_index: index,
         is_abstract: abstract_,
         namespace: ns,
+        category: TagCategory::Gameplay,
+        desc_key: None,
     }
 }
 

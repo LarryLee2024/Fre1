@@ -1,0 +1,21 @@
+(
+    id: "rcp_000004",
+    name_key: "recipe.fire_arrow.name",
+    station: Forge,
+    skill_requirement: Some((
+        skill_id: "skill_fletching",
+        dc: 8,
+    )),
+    materials: [
+        (item_id: "itm_wood_shaft", quantity: 5),
+        (item_id: "itm_oil_flask", quantity: 1),
+        (item_id: "itm_cloth", quantity: 2),
+    ],
+    output: (
+        item_id: "itm_fire_arrow",
+        quantity: 5,
+        enchantment_slots: 0,
+    ),
+    craft_time: 45,
+    craft_type: Smithing,
+)

@@ -2,6 +2,7 @@
 // Source: assets/localization/en-US/*.ftl
 
 #[allow(non_snake_case, non_upper_case_globals)]
+
 pub mod loc {
     pub mod ability {
     pub const ABL_000001_NAME: &str = "ability.abl_000001.name";

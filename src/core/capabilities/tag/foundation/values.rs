@@ -26,10 +26,16 @@ pub struct TagDefinition {
     pub is_abstract: bool,
     /// 所属分类命名空间
     pub namespace: TagNamespace,
+    /// 内容分类（Gameplay/Semantic/System），默认 Gameplay
+    #[serde(default)]
+    pub category: TagCategory,
+    /// 描述文本本地化 Key（可选，仅在需要时提供）
+    #[serde(default)]
+    pub desc_key: Option<String>,
 }
 
 /// 标签查询条件定义
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct TagQuery {
     /// 匹配模式
     pub mode: TagQueryMode,

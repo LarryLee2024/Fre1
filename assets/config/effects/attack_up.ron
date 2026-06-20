@@ -1,0 +1,37 @@
+(
+    id: "eff_000020",
+    name_key: "effect.eff_000020.name",
+    desc_key: "effect.eff_000020.desc",
+    icon_key: None,
+    duration: HasDuration(
+        turns: 3,
+        calculation: Fixed,
+    ),
+    period: None,
+    tick_execution: None,
+    modifiers: [
+        (
+            op: Add,
+            target_attribute: "attack",
+            value: Fixed(5.0),
+            priority: 50,
+        ),
+    ],
+    granted_tags: ["attack_buffed"],
+    required_tags: None,
+    removed_tags: None,
+    application_condition: None,
+    stacking: (
+        stacking_type: None,
+        max_stacks: 1,
+        allow_cross_source: false,
+        overflow_behavior: IgnoreNew,
+        reapply_modifiers_on_stack: false,
+    ),
+    effect_tags: ["Buff", "Physical"],
+    execution: None,
+    cues: [],
+    visible: true,
+    dispellable: true,
+    display_priority: 4,
+)

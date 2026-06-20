@@ -1,0 +1,34 @@
+(
+    id: "qst_000004",
+    name_key: "quest.bounty_hunt.name",
+    desc_key: "quest.bounty_hunt.desc",
+    quest_type: Side,
+    prerequisites: [
+        (
+            prereq_type: Level(min_level: 4),
+            required_quest: Some("qst_000002"),
+        ),
+    ],
+    objectives: [
+        (
+            id: ObjectiveId("obj_006"),
+            description_key: "quest.bounty_hunt.obj_001",
+            objective_type: Kill(enemy_tags: ["tag:boss", "tag:bandit"]),
+            target_value: 1,
+            associated_id: None,
+        ),
+    ],
+    rewards: (
+        xp_reward: 1200,
+        gold_reward: 500,
+        item_rewards: [
+            (item_id: "itm_rare_gem", quantity: 1),
+        ],
+        reputation_rewards: [
+            (faction_id: "fac_town_guard", amount: 15),
+        ],
+        unlocks: [],
+    ),
+    is_critical: false,
+    exclusive_with: [],
+)

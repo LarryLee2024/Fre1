@@ -1,0 +1,36 @@
+(
+    id: "shp_000002",
+    name_key: "shop.blacksmith.name",
+    faction_id: "fac_merchants_guild",
+    inventory: [
+        (
+            item_id: "itm_iron_sword",
+            base_price: Some(150),
+            initial_stock: 3,
+            restock_amount: 2,
+            buys_stolen: false,
+        ),
+        (
+            item_id: "itm_iron_armor",
+            base_price: Some(300),
+            initial_stock: 2,
+            restock_amount: 1,
+            buys_stolen: false,
+        ),
+        (
+            item_id: "itm_iron_shield",
+            base_price: Some(120),
+            initial_stock: 3,
+            restock_amount: 2,
+            buys_stolen: true,
+        ),
+        (
+            item_id: "itm_dagger",
+            base_price: Some(40),
+            initial_stock: 5,
+            restock_amount: 5,
+            buys_stolen: true,
+        ),
+    ],
+    restock_policy: Timed(interval_hours: 48),
+)

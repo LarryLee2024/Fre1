@@ -1,0 +1,21 @@
+(
+    id: "rcp_000005",
+    name_key: "recipe.antidote.name",
+    station: AlchemyLab,
+    skill_requirement: Some((
+        skill_id: "skill_alchemy",
+        dc: 12,
+    )),
+    materials: [
+        (item_id: "itm_purple_herb", quantity: 2),
+        (item_id: "itm_glass_vial", quantity: 1),
+        (item_id: "itm_purified_water", quantity: 1),
+    ],
+    output: (
+        item_id: "itm_antidote",
+        quantity: 1,
+        enchantment_slots: 0,
+    ),
+    craft_time: 25,
+    craft_type: Alchemy,
+)

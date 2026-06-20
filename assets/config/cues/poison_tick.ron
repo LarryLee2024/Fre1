@@ -1,0 +1,15 @@
+(
+    id: "cue_poison_tick",
+    cue_type: VFX(VFXParams(
+        effect_key: "vfx/poison_tick",
+        attach_point: None,
+        follow_target: true,
+        duration_frames: Some(12),
+        scale: None,
+        color_override: Some("#7B68EE"),
+    )),
+    cue_tag: OnTick,
+    delay_frames: None,
+    interruptible: false,
+    critical: false,
+)

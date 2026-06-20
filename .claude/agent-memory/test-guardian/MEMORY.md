@@ -1,0 +1,1 @@
+- [Content RON validation test](content-ron-validation-test.md) — Created comprehensive test that validates all 95 RON config files deserialize and pass DefinitionType::validate(); discovered and fixed 4 RON data bugs

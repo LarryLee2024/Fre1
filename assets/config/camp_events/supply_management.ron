@@ -1,0 +1,10 @@
+(
+    id: "cmp:supply_management",
+    title_key: "camp_event.supply_management.title",
+    desc_key: "camp_event.supply_management.desc",
+    trigger_conditions: [
+        "cond_has_supplies",
+    ],
+    event_type: Rest,
+    priority: 50,
+)

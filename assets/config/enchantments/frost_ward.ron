@@ -1,0 +1,7 @@
+(
+    id: "enc_frost_ward",
+    name_key: "enchantment.frost_ward.name",
+    modifier_id: "mod_ice_resistance_plus_3",
+    exclusive_group: Some("resistance_armor"),
+    slot_type: Armor(max_slots: 1),
+)

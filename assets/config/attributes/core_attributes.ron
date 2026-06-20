@@ -1,0 +1,119 @@
+[
+    // ============================================================================
+    // Primary Attributes (Core Stats)
+    // ============================================================================
+    (
+        id: "attr:strength",
+        category: Primary,
+        default_base_value: 10.0,
+        min_value: 1.0,
+        max_value: 30.0,
+        derived_dependencies: [],
+        hidden: false,
+    ),
+    (
+        id: "attr:dexterity",
+        category: Primary,
+        default_base_value: 10.0,
+        min_value: 1.0,
+        max_value: 30.0,
+        derived_dependencies: [],
+        hidden: false,
+    ),
+    (
+        id: "attr:constitution",
+        category: Primary,
+        default_base_value: 10.0,
+        min_value: 1.0,
+        max_value: 30.0,
+        derived_dependencies: [],
+        hidden: false,
+    ),
+    (
+        id: "attr:intelligence",
+        category: Primary,
+        default_base_value: 10.0,
+        min_value: 1.0,
+        max_value: 30.0,
+        derived_dependencies: [],
+        hidden: false,
+    ),
+    (
+        id: "attr:wisdom",
+        category: Primary,
+        default_base_value: 10.0,
+        min_value: 1.0,
+        max_value: 30.0,
+        derived_dependencies: [],
+        hidden: false,
+    ),
+    (
+        id: "attr:charisma",
+        category: Primary,
+        default_base_value: 10.0,
+        min_value: 1.0,
+        max_value: 30.0,
+        derived_dependencies: [],
+        hidden: false,
+    ),
+    (
+        id: "attr:attack",
+        category: Primary,
+        default_base_value: 10.0,
+        min_value: 1.0,
+        max_value: 99.0,
+        derived_dependencies: [],
+        hidden: false,
+    ),
+    // ============================================================================
+    // Derived Attributes (computed from Primaries)
+    // ============================================================================
+    (
+        id: "attr:max_hp",
+        category: Derived,
+        default_base_value: 100.0,
+        min_value: 1.0,
+        max_value: 9999.0,
+        derived_dependencies: ["constitution"],
+        hidden: false,
+    ),
+    (
+        id: "attr:max_mp",
+        category: Derived,
+        default_base_value: 50.0,
+        min_value: 0.0,
+        max_value: 9999.0,
+        derived_dependencies: ["intelligence"],
+        hidden: false,
+    ),
+    (
+        id: "attr:defense",
+        category: Derived,
+        default_base_value: 10.0,
+        min_value: 0.0,
+        max_value: 999.0,
+        derived_dependencies: ["dexterity"],
+        hidden: false,
+    ),
+    // ============================================================================
+    // Resource Attributes (current values, mutable at runtime)
+    // ============================================================================
+    (
+        id: "attr:hp",
+        category: Resource,
+        default_base_value: 100.0,
+        min_value: 0.0,
+        max_value: 999.0,
+        derived_dependencies: [],
+        hidden: false,
+    ),
+    (
+        id: "attr:mp",
+        category: Resource,
+        default_base_value: 50.0,
+        min_value: 0.0,
+        max_value: 500.0,
+        derived_dependencies: [],
+        hidden: false,
+    ),
+]

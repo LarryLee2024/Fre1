@@ -1,0 +1,36 @@
+(
+    id: "shp_000005",
+    name_key: "shop.weaponsmith.name",
+    faction_id: "fac_merchants_guild",
+    inventory: [
+        (
+            item_id: "itm_battle_axe",
+            base_price: Some(250),
+            initial_stock: 2,
+            restock_amount: 1,
+            buys_stolen: true,
+        ),
+        (
+            item_id: "itm_war_hammer",
+            base_price: Some(280),
+            initial_stock: 2,
+            restock_amount: 1,
+            buys_stolen: true,
+        ),
+        (
+            item_id: "itm_spear",
+            base_price: Some(100),
+            initial_stock: 4,
+            restock_amount: 3,
+            buys_stolen: false,
+        ),
+        (
+            item_id: "itm_arrows",
+            base_price: Some(5),
+            initial_stock: 30,
+            restock_amount: 20,
+            buys_stolen: false,
+        ),
+    ],
+    restock_policy: Timed(interval_hours: 48),
+)

@@ -1,0 +1,20 @@
+(
+    id: "smt_healing_spirit",
+    name_key: "summon.healing_spirit.name",
+    base_attributes: [
+        ("attr:hp", 30.0),
+        ("attr:attack", 2.0),
+        ("attr:defense", 4.0),
+        ("attr:speed", 10.0),
+    ],
+    tags: ["tag:spirit", "tag:holy"],
+    abilities: ["abl_heal_ally", "abl_purify"],
+    modifiers: ["mod_healing_aura_small"],
+    grid_size: Small,
+    default_ai_mode: Follow,
+    summon_cost: (
+        ability_id: Some("abl_summon_healing_spirit"),
+        spell_level: Some(3),
+        requires_concentration: true,
+    ),
+)

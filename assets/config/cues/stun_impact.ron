@@ -1,0 +1,14 @@
+(
+    id: "cue_stun_impact",
+    cue_type: Popup(PopupParams(
+        text_key: "popup.stunned",
+        color: "#FFD700",
+        font_size: 24,
+        float_direction: Up,
+        duration_frames: 60,
+    )),
+    cue_tag: OnApply,
+    delay_frames: None,
+    interruptible: true,
+    critical: false,
+)

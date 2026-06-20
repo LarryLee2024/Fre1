@@ -1,0 +1,22 @@
+(
+    id: "spl_000006",
+    name_key: "spell.haste.name",
+    desc_key: "spell.haste.desc",
+    level: L3,
+    casting_time: BonusAction,
+    components: (
+        verbal: true,
+        somatic: true,
+        material: Some((
+            description: "spell.haste.material",
+            consumed: true,
+            cost_gold: Some(50),
+        )),
+    ),
+    range: Self_,
+    duration: Timed(turns: 3),
+    requires_concentration: true,
+    saving_throw: None,
+    can_upcast: false,
+    effects: ["eff_000020", "eff_000022"],
+)

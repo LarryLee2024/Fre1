@@ -1,0 +1,20 @@
+(
+    id: "bnd:rivalry",
+    name_key: "bond.rivalry.name",
+    desc_key: "bond.rivalry.desc",
+    required_members: [
+        (
+            required_tags: ["tag:fighter"],
+            match_mode: Any,
+        ),
+        (
+            required_tags: ["tag:rogue"],
+            match_mode: Any,
+        ),
+    ],
+    level_effects: {
+        1: ["mod_bond_rivalry_001"],
+        2: ["mod_bond_rivalry_001", "mod_bond_rivalry_002"],
+    },
+    max_level: 2,
+)

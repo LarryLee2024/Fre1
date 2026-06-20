@@ -1,0 +1,10 @@
+(
+    id: "cmp:watch_duty",
+    title_key: "camp_event.watch_duty.title",
+    desc_key: "camp_event.watch_duty.desc",
+    trigger_conditions: [
+        "cond_wilderness_camp",
+    ],
+    event_type: Random,
+    priority: 30,
+)

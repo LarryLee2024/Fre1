@@ -12,8 +12,8 @@ pub mod loading;
 
 pub use content_plugin::{
     ContentPlugin, ContentState, LoadedAbilityDefs, LoadedAttributeDefs, LoadedCueDefs,
-    LoadedEffectDefs, LoadedQuestDefs, LoadedRecipeDefs, LoadedShopDefs, LoadedSpellDefs,
-    LoadedTagDefs, LoadedTargetingDefs,
+    LoadedEffectDefs, LoadedQuestDefs, LoadedRecipeDefs, LoadedRuleDefs, LoadedShopDefs,
+    LoadedSpellDefs, LoadedTagDefs, LoadedTargetingDefs,
 };
 pub use hot_reload::ContentHotReloadState;
 pub use loading::{ConfigError, ContentFile, DefinitionType, ValidationError};

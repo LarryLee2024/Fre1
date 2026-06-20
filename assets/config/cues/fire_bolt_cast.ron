@@ -1,0 +1,15 @@
+(
+    id: "cue_fire_bolt_cast",
+    cue_type: VFX(VFXParams(
+        effect_key: "vfx/fire_bolt",
+        attach_point: None,
+        follow_target: false,
+        duration_frames: Some(15),
+        scale: None,
+        color_override: None,
+    )),
+    cue_tag: Custom("OnCast"),
+    delay_frames: None,
+    interruptible: true,
+    critical: false,
+)

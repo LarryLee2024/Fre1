@@ -1,0 +1,43 @@
+(
+    id: "qst_000005",
+    name_key: "quest.alliance_building.name",
+    desc_key: "quest.alliance_building.desc",
+    quest_type: Faction,
+    prerequisites: [
+        (
+            prereq_type: Reputation(faction_id: "fac_magic_order", min_level: 25),
+            required_quest: None,
+        ),
+    ],
+    objectives: [
+        (
+            id: ObjectiveId("obj_007"),
+            description_key: "quest.alliance_building.obj_001",
+            objective_type: Talk(npc_id: "npc_archmage"),
+            target_value: 1,
+            associated_id: None,
+        ),
+        (
+            id: ObjectiveId("obj_008"),
+            description_key: "quest.alliance_building.obj_002",
+            objective_type: Collect(item_ids: ["itm_arcane_tome"]),
+            target_value: 3,
+            associated_id: None,
+        ),
+    ],
+    rewards: (
+        xp_reward: 2000,
+        gold_reward: 350,
+        item_rewards: [
+            (item_id: "itm_magic_ring", quantity: 1),
+        ],
+        reputation_rewards: [
+            (faction_id: "fac_magic_order", amount: 30),
+        ],
+        unlocks: [
+            (unlock_type: Area, unlock_id: "area_tower_archmage"),
+        ],
+    ),
+    is_critical: false,
+    exclusive_with: [],
+)

@@ -1,0 +1,41 @@
+(
+    id: "qst_000003",
+    name_key: "quest.the_lost_patrol.name",
+    desc_key: "quest.the_lost_patrol.desc",
+    quest_type: Main,
+    prerequisites: [
+        (
+            prereq_type: QuestCompleted(quest_id: "qst_000001"),
+            required_quest: None,
+        ),
+    ],
+    objectives: [
+        (
+            id: ObjectiveId("obj_004"),
+            description_key: "quest.the_lost_patrol.obj_001",
+            objective_type: Reach(area_id: "area_forest_ruins"),
+            target_value: 1,
+            associated_id: None,
+        ),
+        (
+            id: ObjectiveId("obj_005"),
+            description_key: "quest.the_lost_patrol.obj_002",
+            objective_type: Kill(enemy_tags: ["tag:bandit"]),
+            target_value: 8,
+            associated_id: None,
+        ),
+    ],
+    rewards: (
+        xp_reward: 800,
+        gold_reward: 200,
+        item_rewards: [
+            (item_id: "itm_iron_sword", quantity: 1),
+        ],
+        reputation_rewards: [],
+        unlocks: [
+            (unlock_type: Quest, unlock_id: "qst_000004"),
+        ],
+    ),
+    is_critical: true,
+    exclusive_with: [],
+)

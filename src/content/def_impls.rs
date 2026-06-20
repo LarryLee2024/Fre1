@@ -10,6 +10,7 @@ use crate::core::capabilities::attribute::foundation::AttributeDefinition;
 use crate::core::capabilities::ability::foundation::AbilityDef;
 use crate::core::capabilities::cue::foundation::CueDef;
 use crate::core::capabilities::effect::foundation::EffectDef;
+use crate::core::capabilities::rule::foundation::RuleDef;
 use crate::core::capabilities::tag::foundation::TagDefinition;
 use crate::core::capabilities::targeting::foundation::TargetingDef;
 use crate::core::domains::camp_rest::CampEventDef;
@@ -91,6 +92,28 @@ impl DefinitionType for AbilityDef {
 
     fn validate(&self) -> Result<(), ValidationError> {
         validate_id_format(&self.id, "abl_")?;
+
+        if self.name_key.is_empty() {
+            return Err(ValidationError::MissingField {
+                field: "name_key".to_string(),
+            });
+        }
+        if self.desc_key.is_empty() {
+            return Err(ValidationError::MissingField {
+                field: "desc_key".to_string(),
+            });
+        }
+
+        Ok(())
+    }
+}
+
+impl DefinitionType for RuleDef {
+    const BUCKET_NAME: &'static str = "rules";
+    const EXTENSION: &'static str = "ron";
+
+    fn validate(&self) -> Result<(), ValidationError> {
+        validate_id_format(&self.id, "rule_")?;
 
         if self.name_key.is_empty() {
             return Err(ValidationError::MissingField {
@@ -213,6 +236,15 @@ impl DefinitionType for TagDefinition {
         if self.path.is_empty() {
             return Err(ValidationError::MissingField {
                 field: "path".to_string(),
+            });
+        }
+        // BitMask 为 u128，bit_index 必须在 0..128 范围内
+        if self.bit_index >= 128 {
+            return Err(ValidationError::OutOfRange {
+                field: "bit_index".to_string(),
+                value: self.bit_index as f64,
+                min: 0.0,
+                max: 127.0,
             });
         }
         Ok(())

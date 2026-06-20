@@ -1,0 +1,15 @@
+(
+    id: "cue_frost_bolt_hit",
+    cue_type: VFX(VFXParams(
+        effect_key: "vfx/frost_impact",
+        attach_point: None,
+        follow_target: false,
+        duration_frames: Some(25),
+        scale: None,
+        color_override: Some("#A0D8EF"),
+    )),
+    cue_tag: OnApply,
+    delay_frames: None,
+    interruptible: false,
+    critical: false,
+)

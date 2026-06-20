@@ -1,0 +1,21 @@
+(
+    id: "rcp_000006",
+    name_key: "recipe.mana_potion.name",
+    station: AlchemyLab,
+    skill_requirement: Some((
+        skill_id: "skill_alchemy",
+        dc: 14,
+    )),
+    materials: [
+        (item_id: "itm_mana_moss", quantity: 3),
+        (item_id: "itm_glass_vial", quantity: 1),
+        (item_id: "itm_crystal_shard", quantity: 1),
+    ],
+    output: (
+        item_id: "itm_mana_potion",
+        quantity: 1,
+        enchantment_slots: 0,
+    ),
+    craft_time: 35,
+    craft_type: Alchemy,
+)

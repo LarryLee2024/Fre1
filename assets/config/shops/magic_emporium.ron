@@ -1,0 +1,36 @@
+(
+    id: "shp_000004",
+    name_key: "shop.magic_emporium.name",
+    faction_id: "fac_magic_order",
+    inventory: [
+        (
+            item_id: "itm_magic_ring",
+            base_price: Some(500),
+            initial_stock: 1,
+            restock_amount: 1,
+            buys_stolen: false,
+        ),
+        (
+            item_id: "itm_arcane_tome",
+            base_price: Some(350),
+            initial_stock: 2,
+            restock_amount: 1,
+            buys_stolen: false,
+        ),
+        (
+            item_id: "itm_enchanted_robe",
+            base_price: Some(800),
+            initial_stock: 1,
+            restock_amount: 0,
+            buys_stolen: false,
+        ),
+        (
+            item_id: "itm_crystal_shard",
+            base_price: Some(100),
+            initial_stock: 5,
+            restock_amount: 3,
+            buys_stolen: true,
+        ),
+    ],
+    restock_policy: Timed(interval_hours: 72),
+)

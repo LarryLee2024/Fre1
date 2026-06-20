@@ -53,3 +53,23 @@ pub enum TagQueryMode {
     /// 不匹配任何目标标签（用于免疫/排除检查）
     None,
 }
+
+/// 标签内容分类（Content Layer 概念）
+///
+/// 决定标签的可见性、参与层级继承的行为、以及内容管线的处理方式。
+/// 对应 docs/03-content/definitions/vocabulary/tag-def.md §TagCategory
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Reflect)]
+pub enum TagCategory {
+    /// 游戏玩法标签 — 玩家可见，参与层级继承，用于运行时逻辑
+    Gameplay,
+    /// 内容管理标签 — 编辑器/工具链使用，不参与运行时逻辑
+    Semantic,
+    /// 系统内部标签 — 系统标记用，通常仅代码注册
+    System,
+}
+
+impl Default for TagCategory {
+    fn default() -> Self {
+        Self::Gameplay
+    }
+}

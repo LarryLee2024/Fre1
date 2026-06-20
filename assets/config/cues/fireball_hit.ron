@@ -1,0 +1,15 @@
+(
+    id: "cue_fireball_hit",
+    cue_type: VFX(VFXParams(
+        effect_key: "vfx/fireball_explosion",
+        attach_point: None,
+        follow_target: false,
+        duration_frames: Some(30),
+        scale: Some(1.5),
+        color_override: None,
+    )),
+    cue_tag: OnApply,
+    delay_frames: None,
+    interruptible: false,
+    critical: false,
+)

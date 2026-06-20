@@ -1,0 +1,43 @@
+(
+    id: "eff_000016",
+    name_key: "effect.eff_000016.name",
+    desc_key: "effect.eff_000016.desc",
+    icon_key: None,
+    duration: HasDuration(
+        turns: 4,
+        calculation: Fixed,
+    ),
+    period: Some(EffectPeriod(
+        interval_turns: 1,
+        max_ticks: None,
+    )),
+    tick_execution: Some(ExecutionConfig(
+        execution_type: Damage(DamageParams(
+            formula_id: "flat_damage",
+            damage_type: ["poison"],
+            damage_dice: None,
+            flat_bonus: Some(Fixed(-10.0)),
+            attribute_modifier: None,
+            can_critical: false,
+            critical_multiplier: 1.0,
+        )),
+    )),
+    modifiers: [],
+    granted_tags: ["poisoned"],
+    required_tags: None,
+    removed_tags: None,
+    application_condition: None,
+    stacking: (
+        stacking_type: Aggregate,
+        max_stacks: 5,
+        allow_cross_source: true,
+        overflow_behavior: Refresh,
+        reapply_modifiers_on_stack: false,
+    ),
+    effect_tags: ["Damage", "Poison", "Periodic"],
+    execution: None,
+    cues: [],
+    visible: true,
+    dispellable: true,
+    display_priority: 3,
+)

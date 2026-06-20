@@ -1,0 +1,15 @@
+(
+    id: "cue_heal_cast",
+    cue_type: VFX(VFXParams(
+        effect_key: "vfx/heal_glow",
+        attach_point: Some("chest"),
+        follow_target: true,
+        duration_frames: Some(20),
+        scale: None,
+        color_override: None,
+    )),
+    cue_tag: Custom("OnCast"),
+    delay_frames: None,
+    interruptible: true,
+    critical: false,
+)

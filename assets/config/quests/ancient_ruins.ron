@@ -1,0 +1,45 @@
+(
+    id: "qst_000006",
+    name_key: "quest.ancient_ruins.name",
+    desc_key: "quest.ancient_ruins.desc",
+    quest_type: World,
+    prerequisites: [
+        (
+            prereq_type: QuestCompleted(quest_id: "qst_000003"),
+            required_quest: None,
+        ),
+        (
+            prereq_type: Level(min_level: 6),
+            required_quest: None,
+        ),
+    ],
+    objectives: [
+        (
+            id: ObjectiveId("obj_009"),
+            description_key: "quest.ancient_ruins.obj_001",
+            objective_type: Reach(area_id: "area_ancient_temple"),
+            target_value: 1,
+            associated_id: None,
+        ),
+        (
+            id: ObjectiveId("obj_010"),
+            description_key: "quest.ancient_ruins.obj_002",
+            objective_type: Kill(enemy_tags: ["tag:undead", "tag:boss"]),
+            target_value: 3,
+            associated_id: None,
+        ),
+    ],
+    rewards: (
+        xp_reward: 3500,
+        gold_reward: 1000,
+        item_rewards: [
+            (item_id: "itm_artifact_shard", quantity: 1),
+        ],
+        reputation_rewards: [],
+        unlocks: [
+            (unlock_type: Ability, unlock_id: "abl_ancient_power"),
+        ],
+    ),
+    is_critical: true,
+    exclusive_with: [],
+)

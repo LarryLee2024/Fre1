@@ -488,28 +488,49 @@ fn reload_single_tag(tags: &mut ResMut<LoadedTagDefs>, file: &ContentFile) -> bo
             return false;
         }
     };
-    let def: TagDefinition = match ron::from_str(&content) {
-        Ok(d) => d,
-        Err(e) => {
-            warn!("[HotReload] Failed to parse {}: {}", file.path.display(), e);
-            return false;
+
+    let trimmed = content.trim();
+    let defs: Vec<TagDefinition> = if trimmed.starts_with('[') {
+        match ron::from_str(trimmed) {
+            Ok(d) => d,
+            Err(e) => {
+                warn!("[HotReload] Failed to parse array {}: {}", file.path.display(), e);
+                return false;
+            }
+        }
+    } else {
+        match ron::from_str::<TagDefinition>(trimmed) {
+            Ok(d) => vec![d],
+            Err(e) => {
+                warn!("[HotReload] Failed to parse {}: {}", file.path.display(), e);
+                return false;
+            }
         }
     };
-    if let Err(e) = def.validate() {
-        warn!(
-            "[HotReload] Validation failed for {}: {}",
-            file.path.display(),
-            e
-        );
-        return false;
+
+    for def in &defs {
+        if let Err(e) = def.validate() {
+            warn!(
+                "[HotReload] Validation failed for {}: {}",
+                file.path.display(),
+                e
+            );
+            return false;
+        }
     }
-    tags.defs.retain(|d| d.id != def.id);
-    info!(
-        "[HotReload] Reloaded tag '{}' (path: {})",
-        def.id.as_str(),
-        def.path
-    );
-    tags.defs.push(def);
+
+    for def in &defs {
+        tags.defs.retain(|d| d.id != def.id);
+    }
+
+    for def in defs {
+        info!(
+            "[HotReload] Reloaded tag '{}' (path: {})",
+            def.id.as_str(),
+            def.path
+        );
+        tags.defs.push(def);
+    }
     true
 }
 
@@ -524,28 +545,49 @@ fn reload_single_attribute(
             return false;
         }
     };
-    let def: AttributeDefinition = match ron::from_str(&content) {
-        Ok(d) => d,
-        Err(e) => {
-            warn!("[HotReload] Failed to parse {}: {}", file.path.display(), e);
-            return false;
+
+    let trimmed = content.trim();
+    let defs: Vec<AttributeDefinition> = if trimmed.starts_with('[') {
+        match ron::from_str(trimmed) {
+            Ok(d) => d,
+            Err(e) => {
+                warn!("[HotReload] Failed to parse array {}: {}", file.path.display(), e);
+                return false;
+            }
+        }
+    } else {
+        match ron::from_str::<AttributeDefinition>(trimmed) {
+            Ok(d) => vec![d],
+            Err(e) => {
+                warn!("[HotReload] Failed to parse {}: {}", file.path.display(), e);
+                return false;
+            }
         }
     };
-    if let Err(e) = def.validate() {
-        warn!(
-            "[HotReload] Validation failed for {}: {}",
-            file.path.display(),
-            e
-        );
-        return false;
+
+    for def in &defs {
+        if let Err(e) = def.validate() {
+            warn!(
+                "[HotReload] Validation failed for {}: {}",
+                file.path.display(),
+                e
+            );
+            return false;
+        }
     }
-    attributes.defs.retain(|d| d.id != def.id);
-    info!(
-        "[HotReload] Reloaded attribute '{}' (category: {:?})",
-        def.id.as_str(),
-        def.category
-    );
-    attributes.defs.push(def);
+
+    for def in &defs {
+        attributes.defs.retain(|d| d.id != def.id);
+    }
+
+    for def in defs {
+        info!(
+            "[HotReload] Reloaded attribute '{}' (category: {:?})",
+            def.id.as_str(),
+            def.category
+        );
+        attributes.defs.push(def);
+    }
     true
 }
 

@@ -1,0 +1,15 @@
+(
+    id: "cue_cleanse_effect",
+    cue_type: VFX(VFXParams(
+        effect_key: "vfx/cleanse",
+        attach_point: Some("chest"),
+        follow_target: true,
+        duration_frames: Some(20),
+        scale: None,
+        color_override: Some("#FFFFFF"),
+    )),
+    cue_tag: OnApply,
+    delay_frames: None,
+    interruptible: false,
+    critical: false,
+)

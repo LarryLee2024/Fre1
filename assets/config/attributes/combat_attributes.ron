@@ -1,0 +1,41 @@
+[
+    // ============================================================================
+    // Secondary Attributes (combat-related, derived from Primaries)
+    // ============================================================================
+    (
+        id: "attr:initiative",
+        category: Secondary,
+        default_base_value: 10.0,
+        min_value: 0.0,
+        max_value: 100.0,
+        derived_dependencies: ["dexterity"],
+        hidden: false,
+    ),
+    (
+        id: "attr:movement_speed",
+        category: Secondary,
+        default_base_value: 30.0,
+        min_value: 0.0,
+        max_value: 100.0,
+        derived_dependencies: ["dexterity", "strength"],
+        hidden: false,
+    ),
+    (
+        id: "attr:crit_chance",
+        category: Secondary,
+        default_base_value: 5.0,
+        min_value: 0.0,
+        max_value: 100.0,
+        derived_dependencies: ["dexterity"],
+        hidden: false,
+    ),
+    (
+        id: "attr:dodge",
+        category: Secondary,
+        default_base_value: 5.0,
+        min_value: 0.0,
+        max_value: 100.0,
+        derived_dependencies: ["dexterity"],
+        hidden: false,
+    ),
+]

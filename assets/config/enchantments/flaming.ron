@@ -1,0 +1,7 @@
+(
+    id: "enc_flaming",
+    name_key: "enchantment.flaming.name",
+    modifier_id: "mod_fire_damage_plus_5",
+    exclusive_group: Some("elemental_weapon"),
+    slot_type: Weapon(max_slots: 1),
+)

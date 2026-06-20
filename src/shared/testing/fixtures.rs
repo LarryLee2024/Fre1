@@ -10,7 +10,7 @@ use crate::core::capabilities::effect::foundation::{EffectDuration, EffectInstan
 use crate::core::capabilities::modifier::foundation::{
     ModifierData, ModifierInstanceId, ModifierOp, ModifierSource, ModifierSourceType,
 };
-use crate::core::capabilities::tag::foundation::{TagDefinition, TagId, TagNamespace};
+use crate::core::capabilities::tag::foundation::{TagCategory, TagDefinition, TagId, TagNamespace};
 
 // ── 标准测试单位 ─────────────────────────────────────────
 
@@ -320,6 +320,7 @@ pub struct TagDefBuilder {
     bit_index: u32,
     is_abstract: bool,
     namespace: TagNamespace,
+    category: TagCategory,
 }
 
 impl TagDefBuilder {
@@ -331,6 +332,7 @@ impl TagDefBuilder {
             bit_index: 0,
             is_abstract: false,
             namespace,
+            category: TagCategory::Gameplay,
         }
     }
 
@@ -354,6 +356,11 @@ impl TagDefBuilder {
         self
     }
 
+    pub fn category(mut self, c: TagCategory) -> Self {
+        self.category = c;
+        self
+    }
+
     pub fn build(self) -> TagDefinition {
         TagDefinition {
             id: TagId::new(&self.id),
@@ -362,6 +369,8 @@ impl TagDefBuilder {
             bit_index: self.bit_index,
             is_abstract: self.is_abstract,
             namespace: self.namespace,
+            category: self.category,
+            desc_key: None,
         }
     }
 }

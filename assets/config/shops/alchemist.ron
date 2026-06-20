@@ -1,0 +1,36 @@
+(
+    id: "shp_000003",
+    name_key: "shop.alchemist.name",
+    faction_id: "fac_magic_order",
+    inventory: [
+        (
+            item_id: "itm_health_potion",
+            base_price: Some(50),
+            initial_stock: 8,
+            restock_amount: 5,
+            buys_stolen: false,
+        ),
+        (
+            item_id: "itm_mana_potion",
+            base_price: Some(60),
+            initial_stock: 6,
+            restock_amount: 4,
+            buys_stolen: false,
+        ),
+        (
+            item_id: "itm_antidote",
+            base_price: Some(30),
+            initial_stock: 4,
+            restock_amount: 3,
+            buys_stolen: false,
+        ),
+        (
+            item_id: "itm_healing_herb",
+            base_price: Some(8),
+            initial_stock: 15,
+            restock_amount: 10,
+            buys_stolen: false,
+        ),
+    ],
+    restock_policy: Timed(interval_hours: 24),
+)

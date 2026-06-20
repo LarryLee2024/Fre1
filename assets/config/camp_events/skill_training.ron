@@ -1,0 +1,10 @@
+(
+    id: "cmp:skill_training",
+    title_key: "camp_event.skill_training.title",
+    desc_key: "camp_event.skill_training.desc",
+    trigger_conditions: [
+        "cond_has_trainer",
+    ],
+    event_type: Character,
+    priority: 40,
+)

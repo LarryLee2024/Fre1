@@ -1,0 +1,7 @@
+(
+    id: "enc_sharp_edge",
+    name_key: "enchantment.sharp_edge.name",
+    modifier_id: "mod_attack_plus_2",
+    exclusive_group: Some("damage_weapon"),
+    slot_type: Weapon(max_slots: 1),
+)

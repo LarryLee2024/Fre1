@@ -6,6 +6,8 @@
 
 use std::collections::HashMap;
 
+use serde::{Deserialize, Serialize};
+
 use crate::core::capabilities::condition::foundation::types::{
     ComparisonOp, CustomConditionId, TagRequirementMode,
 };
@@ -24,7 +26,7 @@ use crate::core::capabilities::tag::mechanism::query::InheritedMaskMap;
 ///   └── NOT
 ///        └── ResourceCheck: ...
 /// ```
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Condition {
     /// 基于标签的存在性/排除性检查。
     TagRequirement {
@@ -67,7 +69,7 @@ pub enum Condition {
 /// 自定义条件——领域扩展点。
 ///
 /// 允许 Domain 注册特定条件逻辑，通过 id 分派到对应的外部检查函数。
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct CustomCondition {
     /// 自定义条件标识
     pub id: CustomConditionId,

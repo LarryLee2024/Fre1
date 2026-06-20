@@ -1,0 +1,18 @@
+(
+    id: "spl_000005",
+    name_key: "spell.cure.name",
+    desc_key: "spell.cure.desc",
+    level: L2,
+    casting_time: Action,
+    components: (
+        verbal: true,
+        somatic: true,
+        material: None,
+    ),
+    range: Touch,
+    duration: Instant,
+    requires_concentration: false,
+    saving_throw: None,
+    can_upcast: true,
+    effects: ["eff_000013", "eff_000023"],
+)

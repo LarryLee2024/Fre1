@@ -1,4 +1,4 @@
-use crate::core::capabilities::tag::foundation::{TagDefinition, TagId, TagNamespace};
+use crate::core::capabilities::tag::foundation::{TagCategory, TagDefinition, TagId, TagNamespace};
 use crate::core::capabilities::tag::mechanism::{TagHierarchy, TagSet};
 use crate::core::domains::tactical::components::MovementType;
 use crate::core::domains::tactical::integration::movement::facade::{
@@ -15,6 +15,8 @@ fn make_hierarchy_with_walk() -> TagHierarchy {
         bit_index: 10,
         is_abstract: false,
         namespace: TagNamespace::Custom("Movement".to_string()),
+        category: TagCategory::Gameplay,
+        desc_key: None,
     };
     hierarchy.tags.insert(tag_id, def);
     hierarchy
