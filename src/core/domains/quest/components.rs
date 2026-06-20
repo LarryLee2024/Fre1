@@ -22,7 +22,19 @@ pub struct ObjectiveId(pub String);
 
 // ─── 值类型 ────────────────────────────────────────────────────────
 
-/// 任务生命周期状态。
+/// 任务生命周期状态机。
+///
+/// 状态转换图（线性推进 + 异常终态）：
+/// ```text
+/// Unavailable → Available → Active → Completed
+///                     │                  │
+///                     └──→ Failed ←──────┘
+/// ```
+/// - Unavailable: 前置条件未满足
+/// - Available: 可接取
+/// - Active: 进行中
+/// - Completed: 所有目标完成
+/// - Failed: 任务失败
 #[derive(Debug, Clone, PartialEq, Eq, Reflect, Serialize, Deserialize)]
 pub enum QuestState {
     /// 前置条件未满足，不可接取。
@@ -267,6 +279,7 @@ pub struct QuestLog {
 }
 
 impl QuestLog {
+    /// 创建空任务日志。无活跃任务，后续通过 add_entry() 添加。
     pub fn new() -> Self {
         Self {
             entries: Vec::new(),

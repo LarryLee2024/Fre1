@@ -79,7 +79,8 @@ pub fn process_camp_events(rest_query: Query<&RestState>) {
     // 当前为占位
     for rest in rest_query.iter() {
         if can_trigger_camp_event(rest) {
-            // TODO: 触发营地事件
+            // TODO[P2][CAMP_REST][2026-06-20]: 触发营地事件
+            // 完成条件: CampEventRegistry 就绪后，从注册表中选取事件并触发
         }
     }
 }

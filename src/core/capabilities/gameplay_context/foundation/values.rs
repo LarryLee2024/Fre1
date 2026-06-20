@@ -72,7 +72,7 @@ pub struct ContextChain {
 }
 
 impl ContextChain {
-    /// 创建一个新的空溯源链。
+    /// max_length=10，第一个节点由 ContextBuilder 传入，代表行为链的起点。
     pub fn new(first_node: ChainNode) -> Self {
         Self {
             max_length: 10,
@@ -80,17 +80,17 @@ impl ContextChain {
         }
     }
 
-    /// 返回当前链长度。
+    /// 用于链长度检查（不变量：chain.len() ≤ max_length）。
     pub fn len(&self) -> u8 {
         self.nodes.len() as u8
     }
 
-    /// 链是否为空。
+    /// is_empty 仅检查 nodes 是否为空，不涉及生命周期状态。
     pub fn is_empty(&self) -> bool {
         self.nodes.is_empty()
     }
 
-    /// 获取最新节点。
+    /// 用于 trace 日志和循环检测中的节点遍历。
     pub fn last(&self) -> Option<&ChainNode> {
         self.nodes.last()
     }
@@ -133,7 +133,7 @@ impl ContextChain {
         Ok(())
     }
 
-    /// 遍历所有节点。
+    /// 用于日志和调试遍历。使用 nodes.iter() 而非 IntoIterator 以明确只读语义。
     pub fn iter(&self) -> impl Iterator<Item = &ChainNode> {
         self.nodes.iter()
     }

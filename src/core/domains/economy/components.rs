@@ -41,6 +41,7 @@ pub struct Wallet {
 }
 
 impl Wallet {
+    /// 创建一个空钱包。currencies 初始为空 HashMap。
     pub fn new() -> Self {
         Self {
             currencies: HashMap::new(),
@@ -142,6 +143,7 @@ pub struct Price {
 }
 
 impl Price {
+    /// 创建基础价格（所有 modifier = 1.0）。
     pub fn new(base: u64) -> Self {
         Self {
             base,

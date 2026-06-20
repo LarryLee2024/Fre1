@@ -36,7 +36,7 @@ pub enum EventTag {
 }
 
 impl EventTag {
-    /// 返回人类可读的标签名。
+    /// 序列化/日志友好形式。Custom 变体返回固定字面量 "Custom"，不包含内部字符串。
     pub fn name(&self) -> &str {
         match self {
             Self::DamageDealt => "DamageDealt",
@@ -109,7 +109,7 @@ pub struct EventPayload {
 }
 
 impl EventPayload {
-    /// 创建仅含来源实体的载荷。
+    /// 最小化载荷构造，适用于不需要数值/目标/标签的纯通知事件。
     pub fn from_source(source_entity: impl Into<String>) -> Self {
         Self {
             source_entity: source_entity.into(),
@@ -117,25 +117,25 @@ impl EventPayload {
         }
     }
 
-    /// 添加数值。
+    /// values 用于传递数字型事件数据（如伤害量、治疗量），attribute_id 作为 key。
     pub fn with_value(mut self, key: impl Into<String>, value: f32) -> Self {
         self.values.insert(key.into(), value);
         self
     }
 
-    /// 添加目标实体。
+    /// 对于无目标事件（AOE、全局效果），target_entity 保持为 None。
     pub fn with_target(mut self, entity: impl Into<String>) -> Self {
         self.target_entity = Some(entity.into());
         self
     }
 
-    /// 添加自定义数据。
+    /// 用于传递领域特定的非数值信息（如能力名称、地块类型等）。
     pub fn with_data(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
         self.custom_data.insert(key.into(), value.into());
         self
     }
 
-    /// 添加标签。
+    /// 标签用于订阅匹配：分配器检查订阅者注册的 EventTag 与标签列表的交集。
     pub fn with_tag(mut self, tag: impl Into<String>) -> Self {
         self.tags.push(tag.into());
         self

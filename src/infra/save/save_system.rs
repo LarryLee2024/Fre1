@@ -17,6 +17,11 @@ use super::events::{SaveCompleted, SaveRequest};
 use super::resources::{EntityRemapper, SaveManager};
 use super::save_data::*;
 
+/// 响应 SaveRequest 事件：将当前世界状态序列化为 JSON 存档。
+///
+/// 当前序列化 Combat / Party / Progression 三个领域的数据；
+/// 其他领域（Inventory、Quest、Narrative 等）将在后续迭代中添加。
+/// 使用 EntityRemapper 将运行时 Entity 映射为持久化 ID，确保加载时正确重建引用。
 pub fn save_world_system(
     trigger: On<SaveRequest>,
     mut save_manager: ResMut<SaveManager>,
@@ -94,10 +99,8 @@ pub fn save_world_system(
                 .iter()
                 .filter_map(|m| {
                     entity_remapper
-                        .persistent_to_entity
-                        .iter()
-                        .find(|(_, e)| *e == m.entity)
-                        .map(|(pid, _)| PartyMemberSaveData {
+                        .lookup_persistent(m.entity)
+                        .map(|pid| PartyMemberSaveData {
                             persistent_id: pid.0,
                             slot_index: m.slot_index,
                             is_active: m.is_active,
@@ -112,13 +115,7 @@ pub fn save_world_system(
         .map(|p| {
             p.reserve_members
                 .iter()
-                .filter_map(|e| {
-                    entity_remapper
-                        .persistent_to_entity
-                        .iter()
-                        .find(|(_, ent)| *ent == *e)
-                        .map(|(pid, _)| pid.0)
-                })
+                .filter_map(|e| entity_remapper.lookup_persistent(*e).map(|pid| pid.0))
                 .collect()
         })
         .unwrap_or_default();
@@ -132,13 +129,7 @@ pub fn save_world_system(
                     let participant_ids: Vec<u64> = bond
                         .participants
                         .iter()
-                        .filter_map(|e| {
-                            entity_remapper
-                                .persistent_to_entity
-                                .iter()
-                                .find(|(_, ent)| *ent == *e)
-                                .map(|(pid, _)| pid.0)
-                        })
+                        .filter_map(|e| entity_remapper.lookup_persistent(*e).map(|pid| pid.0))
                         .collect();
                     ActiveBondSaveData {
                         bond_id: bond.bond_id.to_string(),
@@ -153,12 +144,8 @@ pub fn save_world_system(
 
     let mut prog_data = Vec::new();
     for (entity, xp, class_levels, talent_tree, subclass_choice) in progression_entities.iter() {
-        let pid = if let Some((existing_pid, _)) = entity_remapper
-            .persistent_to_entity
-            .iter()
-            .find(|(_, e)| *e == entity)
-        {
-            *existing_pid
+        let pid = if let Some(pid) = entity_remapper.lookup_persistent(entity) {
+            pid
         } else {
             entity_remapper.assign(entity)
         };

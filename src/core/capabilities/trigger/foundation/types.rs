@@ -36,7 +36,7 @@ pub enum TriggerType {
 }
 
 impl TriggerType {
-    /// 返回该触发类型的人类可读名称。
+    /// 返回的是 Rust 变体名的字面量（Custom 变体返回 "OnCustom" 固定值，不包含内部字符串）。
     pub fn name(&self) -> &str {
         match self {
             Self::OnTagAdded => "OnTagAdded",
@@ -67,7 +67,7 @@ pub struct TriggerFrequency {
 }
 
 impl TriggerFrequency {
-    /// 创建无限制频率。
+    /// max_per_turn=0，current_turn_count 初始为 0。由 TriggerSystem 在回合切换时重置。
     pub fn unlimited() -> Self {
         Self {
             max_per_turn: 0,
@@ -75,7 +75,7 @@ impl TriggerFrequency {
         }
     }
 
-    /// 创建有限次频率。
+    /// 由 TriggerEntry 在定义时指定 max。can_trigger() 返回 false 后本回合不再触发。
     pub fn limited(max: u32) -> Self {
         Self {
             max_per_turn: max,
@@ -88,12 +88,12 @@ impl TriggerFrequency {
         self.max_per_turn == 0 || self.current_turn_count < self.max_per_turn
     }
 
-    /// 记录一次触发。
+    /// 用于避免溢出。saturating_add 确保从 u32::MAX 开始不会 panic。
     pub fn record_trigger(&mut self) {
         self.current_turn_count = self.current_turn_count.saturating_add(1);
     }
 
-    /// 回合结束时重置计数。
+    /// 回合切换时由 TriggerSystem 调用。仅重置计数，不影响 max_per_turn。
     pub fn reset_turn(&mut self) {
         self.current_turn_count = 0;
     }

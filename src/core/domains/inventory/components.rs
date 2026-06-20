@@ -139,6 +139,7 @@ pub struct DurabilityState {
 }
 
 impl DurabilityState {
+    /// 创建满耐久状态（current = max，且未损坏）。
     pub fn new(max: u32) -> Self {
         Self {
             current: max,

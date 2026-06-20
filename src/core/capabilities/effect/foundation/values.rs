@@ -24,7 +24,7 @@ pub struct TickState {
 }
 
 impl TickState {
-    /// 创建新的 Tick 状态。
+    /// 从 EffectPeriod 初始化，remaining_turns 初始等于 interval_turns。
     pub fn new(period: &EffectPeriod) -> Self {
         Self {
             tick_count: 0,
@@ -34,7 +34,7 @@ impl TickState {
         }
     }
 
-    /// 是否还可以继续 Tick。
+    /// max_ticks=None 时永不停止；max_ticks=Some(n) 时 tick_count < n 才能继续。
     pub fn has_more(&self) -> bool {
         match self.max_ticks {
             Some(max) => self.tick_count < max,
@@ -96,7 +96,7 @@ pub struct EffectInstance {
 }
 
 impl EffectInstance {
-    /// 创建新的效果实例。
+    /// 初始阶段为 Applying，由 EffectSystem 在施加校验通过后推进到 Active。
     pub fn new(
         instance_id: impl Into<String>,
         def_id: impl Into<String>,
@@ -125,25 +125,25 @@ impl EffectInstance {
         }
     }
 
-    /// 设置周期 Tick 状态。
+    /// 仅 Duration 类效果需要 Tick 状态。Instant 效果设置此值无意义。
     pub fn with_period(mut self, period: EffectPeriod) -> Self {
         self.tick_state = Some(TickState::new(&period));
         self
     }
 
-    /// 设置不可驱散。
+    /// 不可驱散的效果只能通过手动移除或来源死亡解除。默认可驱散（dispellable=true）。
     pub fn with_undispellable(mut self) -> Self {
         self.dispellable = false;
         self
     }
 
-    /// 设置 Modifier 数量。
+    /// 移除效果时需要回退对应数量的 Modifier。不变量 3.4：modifier_count 必须与 ModifierContainer 中的数量一致。
     pub fn with_modifiers(mut self, count: u32) -> Self {
         self.modifier_count = count;
         self
     }
 
-    /// 设置堆叠层数。
+    /// 由 StackingDecider 在判定后设置。默认值为 1（无堆叠）。
     pub fn with_stack(mut self, count: u32) -> Self {
         self.stack_count = count;
         self
@@ -191,7 +191,7 @@ pub struct ActiveEffectContainer {
 }
 
 impl ActiveEffectContainer {
-    /// 创建新的效果容器。
+    /// 默认效果槽位上限为 50（覆盖大多数角色同时生效的效果数量）。
     pub fn new() -> Self {
         Self {
             effects: Vec::new(),
@@ -199,13 +199,13 @@ impl ActiveEffectContainer {
         }
     }
 
-    /// 设置效果槽位上限。
+    /// 通过 Def 的 slot_limit 覆盖默认值。槽位满后新效果无法施加。
     pub fn with_max_effects(mut self, max: u32) -> Self {
         self.max_effects = max;
         self
     }
 
-    /// 获取当前活跃效果数量。
+    /// 仅统计 Applying + Active 阶段的效果。Expiring/Removed 不计入。
     pub fn active_count(&self) -> usize {
         self.effects.iter().filter(|e| e.stage.is_active()).count()
     }
@@ -218,19 +218,19 @@ impl ActiveEffectContainer {
             .collect()
     }
 
-    /// 按 instance_id 查找效果。
+    /// 精确查找（包含所有阶段，不仅限于活跃效果）。
     pub fn find_by_id(&self, instance_id: &str) -> Option<&EffectInstance> {
         self.effects.iter().find(|e| e.instance_id == instance_id)
     }
 
-    /// 按 instance_id 查找可变引用。
+    /// 用户 EffectTickSystem 修改活跃效果的 TickState。
     pub fn find_by_id_mut(&mut self, instance_id: &str) -> Option<&mut EffectInstance> {
         self.effects
             .iter_mut()
             .find(|e| e.instance_id == instance_id)
     }
 
-    /// 按来源实体查找效果。
+    /// 用于来源死亡级联移除。只返回 Applying + Active 阶段的效果。
     pub fn find_by_source(&self, source_entity: &str) -> Vec<&EffectInstance> {
         self.effects
             .iter()
@@ -238,7 +238,7 @@ impl ActiveEffectContainer {
             .collect()
     }
 
-    /// 获取所有可 Tick 的效果。
+    /// 由 EffectTickSystem 每回合调用。暂停的效果不参与 Tick。
     pub fn get_tickable(&self) -> Vec<&EffectInstance> {
         self.effects
             .iter()
@@ -253,17 +253,17 @@ impl ActiveEffectContainer {
             .any(|e| e.def_id == def_id && e.source_entity == source_entity && e.stage.is_active())
     }
 
-    /// 检查是否达到槽位上限。
+    /// 槽位满时 EffectSystem 返回 SlotLimitReached，由调用方决定是否移除旧效果腾出空间。
     pub fn is_full(&self) -> bool {
         self.active_count() as u32 >= self.max_effects
     }
 
-    /// 获取效果数量（仅 Active/Applying 阶段）。
+    /// 等价于 active_count()，为符合常见命名习惯提供别名。
     pub fn count(&self) -> u32 {
         self.active_count() as u32
     }
 
-    /// 是否为空的容器。
+    /// 没有任何 Applying 或 Active 阶段的效果时视为空。Expiring/Removed 不计入。
     pub fn is_empty(&self) -> bool {
         !self.effects.iter().any(|e| e.stage.is_active())
     }

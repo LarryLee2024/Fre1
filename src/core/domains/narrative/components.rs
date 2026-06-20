@@ -9,7 +9,12 @@ use bevy::prelude::*;
 
 // ─── 核心枚举 ─────────────────────────────────────────────────────
 
-/// 对话状态阶段。
+/// 对话状态阶段状态机。
+///
+/// ```text
+/// NotStarted → Speaking → End
+/// ```
+/// 玩家选择退出或对话树完毕时进入 End。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect, Default)]
 pub enum DialoguePhase {
     /// 未开始
@@ -21,7 +26,11 @@ pub enum DialoguePhase {
     End,
 }
 
-/// 演出状态阶段。
+/// 演出状态阶段状态机。
+///
+/// ```text
+/// Idle → Playing ⇄ Paused → Finished
+/// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect, Default)]
 pub enum CutscenePhase {
     /// 未播放
@@ -89,7 +98,7 @@ pub struct DialogueTreeRegistry {
 }
 
 impl DialogueTreeRegistry {
-    /// 创建空的注册表。
+    /// 创建一个空的 DialogueTreeRegistry。trees 和 nodes 均为空。
     pub fn new() -> Self {
         Self {
             trees: HashMap::new(),

@@ -10,7 +10,7 @@ static NEXT_SPEC_ID: AtomicU64 = AtomicU64::new(1);
 pub struct SpecId(pub String);
 
 impl SpecId {
-    /// 生成一个新的唯一 SpecId。
+    /// 使用 AtomicU64 自增序列，Replay-safe（不受随机数种子影响）。
     pub fn new() -> Self {
         let id = NEXT_SPEC_ID.fetch_add(1, Ordering::Relaxed);
         Self(format!("spec_{:010}", id))
@@ -21,7 +21,7 @@ impl SpecId {
         Self(s.to_string())
     }
 
-    /// 返回内部字符串引用。
+    /// 用于与外部系统交互（序列化、存储查找）。
     pub fn as_str(&self) -> &str {
         &self.0
     }

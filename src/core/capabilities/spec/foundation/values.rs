@@ -43,7 +43,7 @@ pub struct AbilitySpec {
 }
 
 impl AbilitySpec {
-    /// 使用默认参数创建新 AbilitySpec。
+    /// AbilitySpec 默认 level=1、cooldown_reduction=0、enhancements 为空。由 SpecRegistrationSystem 在注册后填充 spec_id。
     pub fn new(def_id: impl Into<String>, level: u8, max_level: u8) -> Self {
         Self {
             spec_id: SpecId::new(),
@@ -84,7 +84,7 @@ pub struct EffectSnapshot {
 }
 
 impl EffectSnapshot {
-    /// 创建一个新的空快照。
+    /// 空快照的 caster_attributes 和 target_attributes 均为空 HashMap，由 SnapshotSystem 在施加时填充。
     pub fn empty(frame: u64) -> Self {
         Self {
             caster_attributes: HashMap::new(),
@@ -118,7 +118,7 @@ pub struct EffectSpec {
 }
 
 impl EffectSpec {
-    /// 使用默认参数创建新 EffectSpec。
+    /// 默认 stack_count=1、is_periodic=false、condition_passed=false。由 EffectRegistrationSystem 在 condition 检查后更新。
     pub fn new(def_id: impl Into<String>, source: EffectSource, frame: u64) -> Self {
         Self {
             spec_id: SpecId::new(),

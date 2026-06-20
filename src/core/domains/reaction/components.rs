@@ -36,7 +36,22 @@ impl ReactionType {
     }
 }
 
-/// 反应条目在队列中的状态。
+/// 反应条目在队列中的状态机。
+///
+/// ```text
+///          Pending
+///         /       \
+///        ▼         ▼
+///    Accepted   Declined
+///        │
+///        ▼
+///    Executed
+///        │
+///        ▼
+///    Cancelled (因前置反应影响)
+/// ```
+/// 从 Pending 发散，选定 Accepted 后必达 Executed。
+/// Cancelled 可发生在 Accepted 到 Executed 之间。
 #[derive(Debug, Clone, PartialEq, Eq, Reflect)]
 pub enum ReactionEntryStatus {
     /// 等待玩家/AI 决策。
@@ -181,7 +196,7 @@ pub struct ReactionQueue {
 }
 
 impl ReactionQueue {
-    /// 创建空反应队列。
+    /// 创建空反应队列。触发时按优先级插入条目。
     pub fn new() -> Self {
         Self {
             entries: Vec::new(),

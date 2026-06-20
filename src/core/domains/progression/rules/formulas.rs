@@ -2,6 +2,11 @@
 //!
 //! 包括升级经验曲线、熟练加值计算、属性成长率等。
 //! 详见 docs/02-domain/domains/progression_domain.md §1
+//!
+//! 来源：
+//! - D&D 5e SRD §4-5：升级经验表与熟练加值表
+//! - ADR-030 §3：经验曲线设计决策
+//! - 等级上限 20、ASI 等级 [4,8,12,16,19] 为 D&D 5e 标准
 
 use super::super::components::LevelProgressionTable;
 

@@ -11,7 +11,7 @@
 //!   ├── dispatch_combat_replay_commands (Update 系统)
 //!   │     ├── 检查: ReplayModeGuard.is_replay && 管线 paused
 //!   │     ├── 读取 PlaybackSession.current_commands()
-//!   │     ├── 匹配当前 TurnQueue 单位的命令
+//!   │     ├── 匹配当前 TurnQueue 单位的命令（通过 EntityMapper<BattleUnitId>）
 //!   │     └── commands.trigger(UnitActionComplete { unit })
 //!   │
 //!   ├── on_unit_action_complete (原有 observer)
@@ -24,12 +24,13 @@
 
 use bevy::prelude::*;
 
-use super::registry::BattleUnitRegistry;
 use crate::core::capabilities::runtime::replay::foundation::ReplayCommand;
 use crate::core::domains::combat::components::TurnQueue;
 use crate::core::domains::combat::events::UnitActionComplete;
 use crate::core::domains::combat::pipeline::driver::CombatPipelineDriver;
 use crate::infra::replay::resources::{PlaybackSession, ReplayModeGuard};
+use crate::shared::ids::BattleUnitId;
+use crate::shared::ids::mapping::EntityMapper;
 
 /// Update 系统：回放模式下，当管线暂停时从 PlaybackSession 读取命令并恢复。
 ///
@@ -40,14 +41,14 @@ use crate::infra::replay::resources::{PlaybackSession, ReplayModeGuard};
 ///
 /// 匹配策略：
 /// 1. 读取 PlaybackSession 当前帧的所有命令
-/// 2. 用 BattleUnitRegistry 将 String ID 转回 Entity
+/// 2. 用 EntityMapper<BattleUnitId> 将 String ID 转回 Entity
 /// 3. 匹配当前 TurnQueue.current() 的单位
 /// 4. 触发 UnitActionComplete 恢复管线
 pub(crate) fn dispatch_combat_replay_commands(
     mode: Res<ReplayModeGuard>,
     pipeline: Res<CombatPipelineDriver>,
     turn_queue: Res<TurnQueue>,
-    registry: Res<BattleUnitRegistry>,
+    mapper: Res<EntityMapper<BattleUnitId>>,
     mut playback: ResMut<PlaybackSession>,
     mut commands: Commands,
 ) {
@@ -85,18 +86,16 @@ pub(crate) fn dispatch_combat_replay_commands(
             ReplayCommand::ReactionConfirm { reactor, .. } => reactor,
             ReplayCommand::ConfirmTargets { caster, .. } => caster,
             ReplayCommand::DialogueChoice { speaker, .. } => speaker,
-            ReplayCommand::Custom { params, .. } => {
-                // Custom 命令：尝试查找 "unit" 参数
-                params
-                    .iter()
-                    .find(|(k, _)| k == "unit")
-                    .map(|(_, v)| v.as_str())
-                    .unwrap_or("") // No match for empty string
-            }
+            ReplayCommand::Custom { params, .. } => params
+                .iter()
+                .find(|(k, _)| k == "unit")
+                .map(|(_, v)| v.as_str())
+                .unwrap_or(""),
         };
 
-        // Try to match this command's unit to the current TurnQueue unit
-        if let Some(mapped_entity) = registry.get_entity_by_str(cmd_unit_id)
+        // 通过 BattleUnitId 查找 Entity
+        let battle_id = BattleUnitId::new(cmd_unit_id);
+        if let Some(mapped_entity) = mapper.get_entity(&battle_id)
             && *mapped_entity == current_unit
         {
             // 找到匹配命令！推进到下一帧 & 触发恢复

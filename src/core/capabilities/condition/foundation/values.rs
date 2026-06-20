@@ -78,7 +78,7 @@ pub struct CustomCondition {
 }
 
 impl CustomCondition {
-    /// 创建新的自定义条件。
+    /// 参数 HashMap 初始为空，由注册方在评估时填充查询所需键值。
     pub fn new(id: CustomConditionId) -> Self {
         Self {
             id,
@@ -86,7 +86,7 @@ impl CustomCondition {
         }
     }
 
-    /// 带参数创建。
+    /// params 键值对语义由 CustomConditionId 对应的领域注册方定义（如 "minimum_level" → "5"）。
     pub fn with_params(id: CustomConditionId, params: HashMap<String, String>) -> Self {
         Self { id, params }
     }
@@ -127,7 +127,7 @@ impl ConditionContext {
         }
     }
 
-    /// 创建带标签的上下文。
+    /// 标签 ID 列表用于 TagRequirement 检查。tag_bits 为 0，TagQuery 评估将不通过。
     pub fn with_tags(tag_ids: Vec<String>) -> Self {
         Self {
             tag_ids: Some(tag_ids),

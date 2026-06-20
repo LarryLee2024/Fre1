@@ -123,14 +123,14 @@ pub struct FactionMembership {
 }
 
 impl FactionMembership {
-    /// 创建空的阵营归属。
+    /// 初始 factions 为空。调用 join() 添加归属。
     pub fn new() -> Self {
         Self {
             factions: Vec::new(),
         }
     }
 
-    /// 创建带初始阵营的归属。
+    /// 创建时立即加入指定阵营。
     pub fn with_faction(faction: impl Into<FactionId>) -> Self {
         Self {
             factions: vec![faction.into()],
@@ -173,7 +173,7 @@ pub struct Reputation {
 }
 
 impl Reputation {
-    /// 创建空的声望记录。
+    /// 创建空的声望记录（对所有阵营默认为 Neutral）。
     pub fn new() -> Self {
         Self {
             values: HashMap::new(),

@@ -16,7 +16,7 @@ pub struct CueBinding {
 }
 
 impl CueBinding {
-    /// 创建新的 Cue 绑定。
+    /// 创建新的 Cue 绑定。disabled 初始为 false。
     pub fn new(cue_def: CueDef) -> Self {
         Self {
             cue_def,
@@ -36,24 +36,24 @@ pub struct CueContainer {
 }
 
 impl CueContainer {
-    /// 创建空的 Cue 容器。
+    /// bindings 初始为空 Vec，由 CueRegistrationSystem 在效果施加时填充。
     pub fn new() -> Self {
         Self {
             bindings: Vec::new(),
         }
     }
 
-    /// 创建带初始绑定的 Cue 容器。
+    /// 用于从 EffectDef 的 cue_defs 批量初始化。
     pub fn with_bindings(bindings: Vec<CueBinding>) -> Self {
         Self { bindings }
     }
 
-    /// 注册一个 Cue 绑定。
+    /// register 不检查重复，由 CueSystem 保证同一 CueDef 不会重复注册。
     pub fn register(&mut self, binding: CueBinding) {
         self.bindings.push(binding);
     }
 
-    /// 按触发时机查找所有活跃的 Cue。
+    /// 用于 CueDispatchSystem 在效果触发时按 CueTag 批量调度。
     pub fn find_by_tag(&self, tag: &super::types::CueTag) -> Vec<&CueBinding> {
         self.bindings
             .iter()
@@ -61,17 +61,17 @@ impl CueContainer {
             .collect()
     }
 
-    /// 按 ID 查找 Cue。
+    /// 查找包括已禁用的 Cue。用于重新启用场景。
     pub fn find_by_id(&self, id: &str) -> Option<&CueBinding> {
         self.bindings.iter().find(|b| b.cue_def.id == id)
     }
 
-    /// 按 ID 查找 Cue（可变引用）。
+    /// 用于 CueSystem 动态修改 Cue 的运行时属性（如禁用/启用）。
     pub fn find_by_id_mut(&mut self, id: &str) -> Option<&mut CueBinding> {
         self.bindings.iter_mut().find(|b| b.cue_def.id == id)
     }
 
-    /// 禁用某个 Cue（不变量 3.4）。
+    /// 已禁用的 Cue 不会被 find_by_tag 返回。不变量 3.4 保证。
     pub fn disable(&mut self, id: &str) -> bool {
         if let Some(binding) = self.find_by_id_mut(id) {
             binding.disabled = true;
@@ -81,7 +81,7 @@ impl CueContainer {
         }
     }
 
-    /// 启用某个 Cue。
+    /// 启用后 find_by_tag 会重新匹配到该 Cue。
     pub fn enable(&mut self, id: &str) -> bool {
         if let Some(binding) = self.find_by_id_mut(id) {
             binding.disabled = false;
@@ -91,14 +91,14 @@ impl CueContainer {
         }
     }
 
-    /// 移除一个 Cue 绑定。
+    /// 完全移除绑定，不影响其他 Cue。返回 true 表示找到并移除。
     pub fn remove(&mut self, id: &str) -> bool {
         let len = self.bindings.len();
         self.bindings.retain(|b| b.cue_def.id != id);
         self.bindings.len() < len
     }
 
-    /// 获取所有启用中的 Cue。
+    /// 仅返回 disabled=false 的绑定。用于批量处理需要播放的 Cue。
     pub fn enabled(&self) -> Vec<&CueBinding> {
         self.bindings.iter().filter(|b| !b.disabled).collect()
     }
@@ -112,12 +112,12 @@ impl CueContainer {
             .collect()
     }
 
-    /// 容器是否为空。
+    /// 所有绑定（含已禁用）数量为 0 时返回 true。
     pub fn is_empty(&self) -> bool {
         self.bindings.is_empty()
     }
 
-    /// 容器中的 Cue 数量。
+    /// 含已禁用 Cue。用于 CueContainer 容量检查。
     pub fn count(&self) -> usize {
         self.bindings.len()
     }

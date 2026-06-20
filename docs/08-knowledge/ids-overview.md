@@ -112,54 +112,43 @@ Fre 的 ID 系统覆盖两个维度：
 ## 2. 整体架构全景图
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         src/shared/ids/                                 │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│  mod.rs                     StrongId trait                              │
-│  ┌─────────────────────────────────────────────────────────────────┐    │
-│  │  pub trait StrongId:                                             │    │
-│  │      Display + FromStr + Deref<Target = str> + Sized            │    │
-│  │  {                                                               │    │
-│  │      fn prefix() -> &'static str;   // 返回类型前缀            │    │
-│  │      fn as_str(&self) -> &str;      // 返回内部值              │    │
-│  │  }                                                               │    │
-│  └─────────────────────────────────────────────────────────────────┘    │
-│                                                                         │
-│  types.rs                   宏定义 + 22 个 ID 类型                      │
-│  ┌─────────────────────────────────────────────────────────────────┐    │
-│  │  define_string_id! 宏                                           │    │
-│  │  ┌─────────────────────────────────────────────────────────┐    │    │
-│  │  │  • new(id: impl Into<String>) -> Self                   │    │    │
-│  │  │  • as_str() -> &str                                     │    │    │
-│  │  │  • Display: "<prefix>:<value>"                          │    │    │
-│  │  │  • FromStr: 接受 "prefix:value" 或裸 "value"           │    │    │
-│  │  │  • Deref<Target=str>: 可当 &str 使用                    │    │    │
-│  │  │  • Serialize/Deserialize: JSON 序列化                   │    │    │
-│  │  │  • StrongId trait 实现                                  │    │    │
-│  │  └─────────────────────────────────────────────────────────┘    │    │
-│  │                                                                 │    │
-│  │  define_numeric_id! 宏                                         │    │
-│  │  ┌─────────────────────────────────────────────────────────┐    │    │
-│  │  │  • new(id: u64) -> Self                                 │    │    │
-│  │  │  • value() -> u64                                       │    │    │
-│  │  │  • Display: "TypeName(value)"                           │    │    │
-│  │  │  • From<u64>: 从 u64 转换                               │    │    │
-│  │  │  • Deref<Target=u64>: 可当 &u64 使用                    │    │    │
-│  │  │  • Serialize/Deserialize: 序列化为纯数字                │    │    │
-│  │  │  • Copy: 支持复制语义                                   │    │    │
-│  │  └─────────────────────────────────────────────────────────┘    │    │
-│  │                                                                 │    │
-│  │  22 个 String ID 类型（领域 Definition 标识）                   │    │
-│  │  1 个 Numeric ID 类型（ModifierInstanceId）                     │    │
-│  │  1 个特殊类型（DefinitionId — 无前缀通用 ID）                   │    │
-│  └─────────────────────────────────────────────────────────────────┘    │
-│                                                                         │
-│  tests/                        单元测试                                 │
-│  └── unit/                                                                │
-│      ├── string_id_test.rs      235 行，覆盖 String ID 全部 API         │
-│      └── numeric_id_test.rs     99 行，覆盖 Numeric ID 全部 API         │
-└─────────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                              src/shared/ids/                                     │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│  foundation/                      核心抽象层（零依赖，仅 Rust std）               │
+│  ┌─────────────────────────────────────────────────────────────────────────┐    │
+│  │  strong_id.rs    pub trait StrongId: Display + FromStr + Deref + Sized  │    │
+│  │                  { fn prefix(), fn as_str() }                           │    │
+│  │                                                                         │    │
+│  │  macros.rs       define_string_id! 宏（String ID 生成器）               │    │
+│  │                  define_numeric_id! 宏（Numeric ID 生成器）             │    │
+│  │                                                                         │    │
+│  │  errors.rs       IdFormatError / IdAllocationError（thiserror）         │    │
+│  └─────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                 │
+│  types/                           具体 ID 类型定义                              │
+│  ┌─────────────────────────────────────────────────────────────────────────┐    │
+│  │  string_ids.rs     24 个 String ID（attr/tag/mod/eff/abl/...）          │    │
+│  │  numeric_ids.rs    1+ 个 Numeric ID（ModifierInstanceId）               │    │
+│  │  definition_id.rs  DefinitionId（无前缀通用 ID）                        │    │
+│  │  runtime_id.rs     RuntimeId + RuntimeIdAllocator（generation 保护）    │    │
+│  │  battle_unit_id.rs BattleUnitId（回放系统用）                           │    │
+│  └─────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                 │
+│  mapping/                         Entity ↔ ID 运行时映射                       │
+│  ┌─────────────────────────────────────────────────────────────────────────┐    │
+│  │  entity_mapper.rs  EntityMapper<ID> 泛型双向映射器                      │    │
+│  └─────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                 │
+│  prelude.rs                       便捷导入                                     │
+│  mod.rs                           模块根（只做 re-export）                     │
+│                                                                                 │
+│  tests/                           测试                                         │
+│  ├── unit/                        单元测试（string/numeric/runtime/mapper）    │
+│  ├── invariant/                   不变量测试（13 条 Identity Invariant）      │
+│  └── fixtures/                    共享测试夹具                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -646,6 +635,10 @@ AbilityDef (
 | 单元测试 | ✅ 完整 | 345 行测试覆盖全部 API（含 RuntimeId 11 个测试） |
 | Serde 支持 | ✅ 完整 | 序列化/反序列化兼容两种格式 |
 | Reflect 支持 | ✅ 完整 | Bevy 反射系统集成 |
+| EntityMapper (双向映射) | ✅ 完整 | Entity ↔ 业务 ID 双向映射，8 个测试 |
+
+> **2026-06-20 更新**: EntityMapper 和 RuntimeId 均已实现并投入生产。
+> 代码结构重构（扁平 → foundation/types/mapping 三层）计划见 `docs/11-refactor/id-system-refactoring-2026-06-20.md`。
 
 ### 已实现 — 文档/治理层
 
@@ -668,17 +661,23 @@ AbilityDef (
 | UI 架构引用 id-taxonomy | ✅ 落地 | theme-localization.md |
 | 知识文档 Identity Invariant 速查 | ✅ 落地 | ids-overview.md §10（13 条一览表） |
 
-### 待实现 — 代码层（大型项目关键差距）
+### 待实现或待重构 — 代码层
 
 | 组件 | 优先级 | 说明 |
 |------|--------|------|
-| EntityMapper (双向映射) | 🔴 高 | Domain 层隔离 Entity，当前无统一映射层 |
-| SaveObjectId (Uuid) | 🟡 中 | 存档兼容性，当前存档无独立 ID 体系 |
+| 代码目录结构重构 | 🔴 高 | `shared/ids/` 扁平结构 → foundation/types/mapping 三层（见重构文档） |
+| ModifierInstanceId → RuntimeId | 🔴 高 | 裸 u64 需升级为带 generation 保护的 RuntimeId |
+| BattleUnitRegistry → EntityMapper | 🔴 高 | 重复实现需统一为泛型 EntityMapper\<ID\>（详见 ADR-048） |
+| EntityRemapper Vec→HashMap | 🟡 中 | 存档量大的时候 O(n) 不可接受，需改为 HashMap O(1) |
+| define_string_id! 格式校验 | 🟡 中 | 需添加 `checked_new()` 方法校验 ID 格式 |
+| Numeric ID 实现 StrongId trait | 🟡 中 | 当前 define_numeric_id! 不实现 StrongId，类型体系不统一 |
+| SaveObjectId (Uuid) | 🟡 中 | 存档兼容性，当前 PersistentEntityId(u64) 可用但非最佳 |
 | Mod 命名空间 | 🟡 中 | Template ID 前缀需升级为 `namespace:type.name` |
 | IdRegistry 统一管理 | 🟡 中 | 生成/回收/映射/校验集中管理 |
-| Network ID | 🟢 低 | 联机功能预留 |
 | ID 创建审计（Debug 模式） | 🟡 中 | IdCreationInfo 记录创建来源/帧号/触发者 |
-| Identity Invariant 代码级检查 | 🟡 中 | Clippy Lint 或 CI 脚本自动检测违规 |
+| DefinitionId 实现 StrongId | 🟡 中 | 当前手写定义未统一实现 StrongId trait |
+| Network ID | 🟢 低 | 联机功能预留 |
+| Identity Invariant 代码级检查 | 🟢 低 | Clippy Lint 或 CI 脚本自动检测违规 |
 
 ### 设计决策说明
 
@@ -761,7 +760,18 @@ AbilityDef (
 
 | 文件 | 内容 |
 |------|------|
-| `src/shared/ids/mod.rs` | StrongId trait 定义 |
-| `src/shared/ids/types.rs` | 宏定义 + 22 个 ID 类型 |
+| `src/shared/ids/` | 模块根目录（详见架构全景图 §2） |
+| `src/shared/ids/mod.rs` | 模块根（只做 re-export） |
+| `src/shared/ids/foundation/` | StrongId trait、宏定义、错误类型 |
+| `src/shared/ids/types/` | 具体 ID 类型（string_ids / numeric_ids / runtime_id / definition_id） |
+| `src/shared/ids/mapping/` | EntityMapper 通用双向映射器 |
 | `src/shared/ids/tests/unit/string_id_test.rs` | String ID 单元测试（235 行） |
 | `src/shared/ids/tests/unit/numeric_id_test.rs` | Numeric ID 单元测试（99 行） |
+| `src/shared/ids/tests/unit/runtime_id_test.rs` | RuntimeId 测试（134 行） |
+| `src/shared/ids/tests/unit/entity_mapper_test.rs` | EntityMapper 测试（104 行） |
+
+### 重构计划
+
+| 文档 | 内容 |
+|------|------|
+| `docs/11-refactor/id-system-refactoring-2026-06-20.md` | ID 系统激进重构计划（9 阶段，P0-P2 优先级） |

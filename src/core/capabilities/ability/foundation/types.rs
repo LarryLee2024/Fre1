@@ -5,11 +5,26 @@
 //! 详见 docs/02-domain/capabilities/ability_domain.md §1、§2。
 //! 详见 docs/04-data/capabilities/ability_schema.md §3。
 
-use crate::shared::ids::runtime_id::RuntimeId;
+use crate::shared::ids::types::runtime_id::RuntimeId;
 
 /// 技能运行时阶段（状态机），定义技能当前所处的生命周期位置。
 ///
-/// 状态转换图见 docs/02-domain/capabilities/ability_domain.md §1。
+/// 状态转换图（主流程——自循环，非 DAG）：
+/// ```text
+///        ┌─────────────────────────────────────┐
+///        │                                     │
+///        ▼                                     │
+///     Ready ──→ Casting ──→ Active ──→ Cooldown─┤
+///       │          │                            │
+///       │          ▼                            │
+///       │     (取消/打断)                        │
+///       └──── Ready                             │
+///                                              │
+///     Blocked (任何状态 ↔ Blocked ─ 由 apply/remove_block 管理)
+///     Removed (任何状态 → Removed)
+/// ```
+///
+/// 详见 docs/02-domain/capabilities/ability_domain.md §1。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum AbilityState {
     /// 就绪——可激活
@@ -27,7 +42,7 @@ pub enum AbilityState {
 }
 
 impl AbilityState {
-    /// 返回人类可读的状态名。
+    /// 用于日志、调试显示和 UI 状态文本。
     pub fn name(&self) -> &str {
         match self {
             Self::Ready => "Ready",
@@ -39,17 +54,20 @@ impl AbilityState {
         }
     }
 
-    /// 该状态下技能是否可以被激活。
+    /// 只有 Ready 状态才能通过 try_activate 激活。
+    /// 不变量 §3.1：Casting/Active/Cooldown 状态下禁止重复激活。
     pub fn can_activate(&self) -> bool {
         matches!(self, Self::Ready)
     }
 
-    /// 该状态下是否可以被打断/取消。
+    /// Casting 可打断回到 Ready；Active 可终止进入 Removed。
+    /// Cooldown/Ready 状态不允许取消（已在冷却或无事可取消）。
     pub fn can_cancel(&self) -> bool {
         matches!(self, Self::Casting | Self::Active)
     }
 
-    /// 该状态下是否可以进入冷却。
+    /// 只有 Active 状态的技能执行完毕后才能进入 Cooldown。
+    /// Casting 被打断后回到 Ready，不经过 Cooldown。
     pub fn can_cooldown(&self) -> bool {
         matches!(self, Self::Active)
     }
@@ -114,37 +132,40 @@ impl ActivationType {
 pub struct AbilityInstanceId(RuntimeId);
 
 impl AbilityInstanceId {
-    /// 从 RuntimeId 创建（标准路径，由 AbilityInstanceIdGenerator 分配）。
+    /// 由 AbilityInstanceIdGenerator 分配，确保 generation safety。
+    /// 不要直接构造——使用 generator.next_id()。
     pub fn new(id: RuntimeId) -> Self {
         Self(id)
     }
 
-    /// 从 u64 创建（用于反序列化/测试，generation 默认为 0）。
+    /// 仅用于反序列化或测试——generation 固定为 0。
+    /// 正式路径走 new(RuntimeId) 以获得正确的 generation。
     pub fn from_u64(id: u64) -> Self {
         Self(RuntimeId::new(id as u32, 0))
     }
 
-    /// 返回内部 RuntimeId。
+    /// 用于将 ID 传入需要 RuntimeId 的 API（如序列化层）。
     pub fn runtime_id(&self) -> RuntimeId {
         self.0
     }
 
-    /// 返回索引值（兼容旧 API）。
+    /// 兼容旧序列化格式的数值表示。新代码优先使用 runtime_id()。
     pub fn value(&self) -> u64 {
         self.0.index() as u64
     }
 
-    /// 返回索引。
+    /// 用于 ID 分配器索引计算。
     pub fn index(&self) -> u32 {
         self.0.index()
     }
 
-    /// 返回代际。
+    /// 用于 generation safety 校验——旧代际的引用应视为过期。
     pub fn generation(&self) -> u32 {
         self.0.generation()
     }
 
-    /// 检查另一个 ID 是否是同一槽位的旧代际（generation safety）。
+    /// Generation safety：如果 other 是同一槽位的旧代际，说明该引用已过期。
+    /// 调用方应丢弃旧引用并从容器重新查询。
     pub fn is_stale(&self, other: &AbilityInstanceId) -> bool {
         self.0.is_stale(&other.0)
     }

@@ -26,7 +26,8 @@ pub fn check_prerequisites(
     _quest_log: &QuestLog,
     _player_level: u32,
 ) -> Result<(), String> {
-    // TODO: 接入 Condition 领域进行完整的前置条件评估
+    // TODO[P2][QUEST][2026-06-20]: 接入 Condition 领域进行完整的前置条件评估
+    // 完成条件: 使用 ConditionSystem.evaluate() 替代手动检查前置任务
     // 当前简化实现：检查前置任务是否已完成
     Ok(())
 }

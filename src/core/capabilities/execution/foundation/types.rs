@@ -35,7 +35,7 @@ pub enum ExecutionType {
 }
 
 impl ExecutionType {
-    /// 返回人类可读的执行类型名。
+    /// 返回的字符串与 ExecutionType 变体名一致，用于日志和运行时类型分发。
     pub fn name(&self) -> &str {
         match self {
             Self::Damage(_) => "Damage",
@@ -104,7 +104,7 @@ pub struct CustomExecutionRef {
 }
 
 impl CustomExecutionRef {
-    /// 创建新的自定义执行引用。
+    /// execution_id 指向 CustomExecutionRegistry 中已注册的计算逻辑。params 初始为空。
     pub fn new(execution_id: impl Into<String>) -> Self {
         Self {
             execution_id: execution_id.into(),
@@ -112,7 +112,7 @@ impl CustomExecutionRef {
         }
     }
 
-    /// 添加参数。
+    /// 参数语义由 execution_id 对应的注册方定义（如 "damage_scale" → "1.5"）。
     pub fn with_param(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
         self.params.insert(key.into(), value.into());
         self

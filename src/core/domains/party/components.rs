@@ -173,7 +173,7 @@ pub struct Party {
 }
 
 impl Party {
-    /// 创建空队伍。
+    /// 创建空队伍（无成员、无预备队员、默认 Line 阵型）。
     pub fn new() -> Self {
         Self {
             members: Vec::new(),
@@ -185,17 +185,17 @@ impl Party {
         }
     }
 
-    /// 获取活跃成员数。
+    /// 用于 UI 显示和成员上限检查。
     pub fn active_count(&self) -> usize {
         self.members.iter().filter(|m| m.is_active).count()
     }
 
-    /// 获取预备队员数。
+    /// 预备队员不受 max_active 限制，但受 max_total 限制。
     pub fn reserve_count(&self) -> usize {
         self.reserve_members.len()
     }
 
-    /// 获取总人数（活跃 + 预备）。
+    /// 用于槽位上限检查（max_total）。
     pub fn total_count(&self) -> usize {
         self.active_count() + self.reserve_count()
     }

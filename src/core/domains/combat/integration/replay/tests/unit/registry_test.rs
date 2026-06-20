@@ -1,73 +1,75 @@
-//! BattleUnitRegistry 单元测试
+//! EntityMapper<BattleUnitId> 单元测试
 //!
-//! 验证双向映射的正确性，不启动 Bevy App。
+//! 验证 BattleUnitId 通过 EntityMapper 的双向映射正确性。
 //!
 //! Test IDs:
-//! - REG-001: registry_bidirectional_mapping
-//! - REG-002: registry_is_empty_after_clear
-//! - REG-003: registry_unknown_entity_returns_none
-//! - REG-004: default_registry_is_empty
+//! - REG-001: bidirectional_mapping
+//! - REG-002: is_empty_after_clear
+//! - REG-003: unknown_entity_returns_none
+//! - REG-004: default_is_empty
 
-use crate::core::domains::combat::integration::replay::registry::{
-    BattleUnitId, BattleUnitRegistry,
-};
 use bevy::prelude::Entity;
 
+use crate::shared::ids::BattleUnitId;
+use crate::shared::ids::mapping::EntityMapper;
+
 #[test]
-fn registry_bidirectional_mapping() {
+fn bidirectional_mapping() {
     // Given: 两个实体和对应的 BattleUnitId
-    let mut registry = BattleUnitRegistry::default();
+    let mut mapper = EntityMapper::<BattleUnitId>::new();
     let e1 = Entity::from_raw_u32(1).unwrap();
     let e2 = Entity::from_raw_u32(2).unwrap();
-    let id1 = BattleUnitId::new("bu:player:0");
-    let id2 = BattleUnitId::new("bu:enemy:0");
+    let id1 = BattleUnitId::new("bu:0:0");
+    let id2 = BattleUnitId::new("bu:1:0");
 
     // When: 注册两个实体
-    registry.register(e1, id1.clone());
-    registry.register(e2, id2.clone());
+    mapper.register(id1.clone(), e1);
+    mapper.register(id2.clone(), e2);
 
-    // Then: 正向+反向映射均正确，get_entity_by_str 也工作
-    assert_eq!(registry.get_id(&e1), Some(&id1));
-    assert_eq!(registry.get_id(&e2), Some(&id2));
-    assert_eq!(registry.get_entity(&id1), Some(&e1));
-    assert_eq!(registry.get_entity(&id2), Some(&e2));
-    assert_eq!(registry.get_entity_by_str("bu:player:0"), Some(&e1));
-    assert_eq!(registry.get_entity_by_str("bu:enemy:0"), Some(&e2));
-    assert_eq!(registry.len(), 2);
+    // Then: 正向+反向映射均正确
+    assert_eq!(mapper.get_id(&e1), Some(&id1));
+    assert_eq!(mapper.get_id(&e2), Some(&id2));
+    assert_eq!(mapper.get_entity(&id1), Some(&e1));
+    assert_eq!(mapper.get_entity(&id2), Some(&e2));
+    assert_eq!(mapper.len(), 2);
 }
 
 #[test]
-fn registry_is_empty_after_clear() {
-    // Given: 有一个实体的注册表
-    let mut registry = BattleUnitRegistry::default();
+fn is_empty_after_clear() {
+    // Given: 有实体注册的映射器
+    let mut mapper = EntityMapper::<BattleUnitId>::new();
     let e1 = Entity::from_raw_u32(1).unwrap();
-    registry.register(e1, BattleUnitId::new("bu:player:0"));
-    assert!(!registry.is_empty());
+    mapper.register(BattleUnitId::new("bu:0:0"), e1);
+    assert!(!mapper.is_empty());
 
-    // When: 清理注册表
-    registry.clear();
+    // When: 清理
+    mapper.clear();
 
-    // Then: 注册表为空
-    assert!(registry.is_empty());
+    // Then: 为空
+    assert!(mapper.is_empty());
 }
 
 #[test]
-fn registry_unknown_entity_returns_none() {
-    // Given: 空的注册表
-    let registry = BattleUnitRegistry::default();
+fn unknown_entity_returns_none() {
+    // Given: 空的映射器
+    let mapper = EntityMapper::<BattleUnitId>::new();
 
     // When/Then: 查询不存在的实体返回 None
     let unknown = Entity::from_raw_u32(999).unwrap();
-    assert!(registry.get_id(&unknown).is_none());
-    assert!(registry.get_entity_by_str("bu:nobody:0").is_none());
+    assert!(mapper.get_id(&unknown).is_none());
+    assert!(
+        mapper
+            .get_entity(&BattleUnitId::new("bu:nobody:0"))
+            .is_none()
+    );
 }
 
 #[test]
-fn default_registry_is_empty() {
-    // Given/When: 默认构造的注册表
-    let registry = BattleUnitRegistry::default();
+fn default_is_empty() {
+    // Given/When: 默认构造
+    let mapper = EntityMapper::<BattleUnitId>::new();
 
     // Then: 为空
-    assert!(registry.is_empty());
-    assert_eq!(registry.len(), 0);
+    assert!(mapper.is_empty());
+    assert_eq!(mapper.len(), 0);
 }

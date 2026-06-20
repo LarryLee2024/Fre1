@@ -1,6 +1,11 @@
 //! 移动消耗计算 — 纯函数
 //!
 //! 根据地形倍率和基础消耗计算单位移动一个格子的实际消耗。
+//!
+//! 来源：
+//! - ADR-022 §3：地形类型与移动类型分类
+//! - docs/02-domain/domains/tactical_domain.md §5：移动力消耗规则
+//! - 地形倍率值（0.5-999.0）为设计初版配置，后续应从 TerrainDef 配置加载
 
 use super::super::components::{GridPos, MovementType};
 

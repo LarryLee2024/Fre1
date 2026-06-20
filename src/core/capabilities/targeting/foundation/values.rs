@@ -153,13 +153,13 @@ impl EntityTarget {
         }
     }
 
-    /// 设置位置。
+    /// position 初始为空字符串，由 TargetResolver 在计算后填充。"5,3" 格式的网格坐标。
     pub fn with_position(mut self, pos: impl Into<String>) -> Self {
         self.position = pos.into();
         self
     }
 
-    /// 设置距离。
+    /// distance 由 TargetResolver 在排序环节计算。Single 形状此值用于 Nearest/Farthest 排序。
     pub fn with_distance(mut self, distance: f32) -> Self {
         self.distance = distance;
         self
@@ -217,7 +217,7 @@ pub struct TargetData {
 }
 
 impl TargetData {
-    /// 创建一个空的目标选择结果。
+    /// has_valid_targets 在下游由 EffectApplier 判断是否跳过执行。
     pub fn empty(context: TargetContext) -> Self {
         Self {
             entities: Vec::new(),
@@ -227,7 +227,7 @@ impl TargetData {
         }
     }
 
-    /// 创建包含目标的结果。
+    /// 包含目标时 has_valid_targets 自动设为 true。entities 为空时仍可包含 positions（区域技能）。
     pub fn with_targets(
         entities: Vec<EntityTarget>,
         positions: Vec<String>,
@@ -242,17 +242,17 @@ impl TargetData {
         }
     }
 
-    /// 获取第一个目标实体 ID。
+    /// entities 为空时返回 None。用于 UI 预览和高亮显示。
     pub fn first_target(&self) -> Option<&str> {
         self.entities.first().map(|e| e.entity_id.as_str())
     }
 
-    /// 获取目标数量。
+    /// 用于校验 max_targets 约束。注意 entities 包含已被过滤的实体时此值可能 > max_targets。
     pub fn target_count(&self) -> usize {
         self.entities.len()
     }
 
-    /// 检查是否有指定实体在目标列表中。
+    /// 用于链式弹射中排除已选目标，防止重复选择。
     pub fn contains_entity(&self, entity_id: &str) -> bool {
         self.entities.iter().any(|e| e.entity_id == entity_id)
     }
@@ -268,17 +268,17 @@ pub enum ValidationResult {
 }
 
 impl ValidationResult {
-    /// 是否通过。
+    /// 与 matches!(self, ValidationResult::Pass) 等价，提供调用方更可读的语法。
     pub fn is_pass(&self) -> bool {
         matches!(self, Self::Pass)
     }
 
-    /// 创建通过结果。
+    /// 无参快捷构造，用于目标校验成功时返回。
     pub fn pass() -> Self {
         Self::Pass
     }
 
-    /// 创建失败结果。
+    /// 失败时必须附带人类可读的原因，由校验器在发现不匹配时提供（如 "entity not in range"）。
     pub fn fail(reason: impl Into<String>) -> Self {
         Self::Fail(reason.into())
     }

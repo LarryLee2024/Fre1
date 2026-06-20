@@ -341,7 +341,7 @@ fn reset_cycle_counters() {
     let _entity = world.spawn_empty().id();
     let _commands = world.commands();
     let mut bus = EventBus::new();
-    // TODO: cycle_counters 是私有字段，无法直接验证重置结果
+    // TODO[P3][EVENT][2026-06-20]: cycle_counters 是私有字段，无法直接验证重置结果
     // 需要 @feature-developer 暴露 pub fn cycle_count(&self, tag: &EventTag) -> u32
     // 或 pub fn is_cycle_counters_empty(&self) -> bool
     bus.reset_cycle_counters();

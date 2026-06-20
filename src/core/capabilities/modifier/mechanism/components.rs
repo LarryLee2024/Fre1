@@ -9,6 +9,7 @@ use crate::core::capabilities::modifier::foundation::{ModifierData, ModifierInst
 #[reflect(Component)]
 pub struct ModifierContainer {
     pub modifiers: HashMap<String, Vec<ModifierData>>,
+    #[reflect(ignore)]
     pub override_index: HashMap<String, ModifierInstanceId>,
     pub max_modifiers: u32,
 }

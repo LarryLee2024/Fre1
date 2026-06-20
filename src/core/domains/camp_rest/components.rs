@@ -25,7 +25,20 @@ pub enum RestType {
     LongRest,
 }
 
-/// 休息阶段。
+/// 休息阶段状态机。
+///
+/// 状态转换图（Idle→Resting，有终态和异常态）：
+/// ```text
+///       Idle
+///      /    \
+///     ▼     ▼
+/// Resting  LightActivity (长休轻活动)
+///     │        │
+///     ▼        ▼
+/// Complete  Failed (中断超 1h)
+/// ```
+/// 短休：Idle → Resting → Complete
+/// 长休：Idle → Resting → LightActivity ↔ Resting → Complete/Failed
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Reflect)]
 pub enum RestPhase {
     /// 未在休息中。
@@ -222,6 +235,7 @@ pub struct CampNPC {
 }
 
 impl CampNPC {
+    /// 创建一个 NPC 实例，对话选项列表初始为空（由 Narrative 领域在营地加载时填充）。
     pub fn new() -> Self {
         Self {
             available_dialogues: Vec::new(),

@@ -27,7 +27,7 @@ fn auto_save_config_default_enabled() {
 #[test]
 fn entity_remapper_default_empty() {
     let r = EntityRemapper::default();
-    assert!(r.persistent_to_entity.is_empty());
+    assert!(r.is_empty());
 }
 
 #[test]
@@ -50,9 +50,9 @@ fn entity_remapper_clear_resets() {
     let mut r = EntityRemapper::default();
     r.assign(Entity::from_raw_u32(1).unwrap());
     r.assign(Entity::from_raw_u32(2).unwrap());
-    assert_eq!(r.persistent_to_entity.len(), 2);
+    assert_eq!(r.len(), 2);
     r.clear();
-    assert!(r.persistent_to_entity.is_empty());
+    assert!(r.is_empty());
     let pid = r.assign(Entity::from_raw_u32(3).unwrap());
     assert_eq!(pid.0, 1, "counter should reset after clear");
 }

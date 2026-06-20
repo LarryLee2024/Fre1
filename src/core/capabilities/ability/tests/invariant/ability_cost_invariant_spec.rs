@@ -13,7 +13,7 @@ use crate::core::capabilities::ability::foundation::types::{AbilityInstanceId, A
 use crate::core::capabilities::ability::foundation::values::{
     AbilityInstance, ActivationContext, CostEntry,
 };
-use crate::shared::ids::runtime_id::RuntimeId;
+use crate::shared::ids::types::runtime_id::RuntimeId;
 
 fn make_instance() -> AbilityInstance {
     AbilityInstance::new(
@@ -142,7 +142,7 @@ fn on_cooldown_error_contains_remaining_turns() {
 #[test]
 fn already_active_error_contains_instance_id() {
     let iid = crate::core::capabilities::ability::foundation::types::AbilityInstanceId::new(
-        crate::shared::ids::runtime_id::RuntimeId::new(42, 0),
+        crate::shared::ids::types::runtime_id::RuntimeId::new(42, 0),
     );
     let err = crate::core::capabilities::ability::foundation::types::AbilityError::AlreadyActive {
         spec_id: "abl_heal".to_string(),

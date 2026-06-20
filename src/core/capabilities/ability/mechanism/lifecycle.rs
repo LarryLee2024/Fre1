@@ -23,7 +23,7 @@ use crate::core::capabilities::ability::foundation::{
     ActivationType, BlockedRestoreState, CooldownEntry, CostEntry,
 };
 use crate::core::capabilities::ability::mechanism::components::ActiveAbilityContainer;
-use crate::shared::ids::runtime_id::RuntimeIdAllocator;
+use crate::shared::ids::types::runtime_id::RuntimeIdAllocator;
 
 /// 技能实例 ID 生成器（Resource）。
 /// 通过 RuntimeIdAllocator 提供带 generation 保护的唯一 ID 分配。

@@ -3,7 +3,7 @@
 //! 验证 Runtime ID 的创建、显示、世代比较、相等、排序、序列化往返，
 //! 以及 Allocator 的顺序分配、释放复用、批量释放、重置和过时检测。
 
-use crate::shared::ids::runtime_id::{RuntimeId, RuntimeIdAllocator};
+use crate::shared::ids::types::runtime_id::{RuntimeId, RuntimeIdAllocator};
 
 #[test]
 fn runtime_id_basic() {

@@ -44,31 +44,31 @@ impl DamageParams {
         }
     }
 
-    /// 设置伤害类型标签。
+    /// 设置伤害类型标签，用于伤害减免/免疫/弱点判定（与 Tag 系统联动）。
     pub fn with_damage_type(mut self, tags: Vec<String>) -> Self {
         self.damage_type = tags;
         self
     }
 
-    /// 设置伤害骰。
+    /// 设置伤害骰（如 1d8 火焰伤害）。None 时使用 flat_bonus 作为唯一伤害源。
     pub fn with_dice(mut self, dice: DiceDef) -> Self {
         self.damage_dice = Some(dice);
         self
     }
 
-    /// 设置固定伤害加值。
+    /// 固定伤害加值（如 +5），与 dice 结果叠加后作为原始伤害输出。
     pub fn with_flat_bonus(mut self, bonus: ScalableValue) -> Self {
         self.flat_bonus = Some(bonus);
         self
     }
 
-    /// 设置属性修正。
+    /// 属性修正（如力量修正 StrMod）。None 时只使用 dice + flat_bonus 计算。
     pub fn with_attribute_modifier(mut self, modifier: AttributeModifierDef) -> Self {
         self.attribute_modifier = Some(modifier);
         self
     }
 
-    /// 设置暴击参数。
+    /// 设置暴击参数。multiplier 会自动 clamp 到 ≥ 1.0。
     pub fn with_critical(mut self, multiplier: f32) -> Self {
         self.can_critical = true;
         self.critical_multiplier = if multiplier >= 1.0 { multiplier } else { 1.0 };
@@ -103,7 +103,7 @@ pub struct HealParams {
 }
 
 impl HealParams {
-    /// 创建新的治疗计算参数。
+    /// 创建新的治疗计算参数。base_heal 使用 ScalableValue 支持 PerLevel 缩放（如 10 + 5/级）。
     pub fn new(formula_id: impl Into<String>, base_heal: ScalableValue) -> Self {
         Self {
             formula_id: formula_id.into(),
@@ -113,13 +113,13 @@ impl HealParams {
         }
     }
 
-    /// 设置属性修正。
+    /// 属性修正（如精神修正 SpiritMod）。用于实现基于施法属性的治疗缩放。
     pub fn with_attribute_modifier(mut self, modifier: AttributeModifierDef) -> Self {
         self.attribute_modifier = Some(modifier);
         self
     }
 
-    /// 设置为临时生命值。
+    /// 临时生命值不计入最大 HP，到期移除。默认 false（真实治疗）。
     pub fn with_temporary_hp(mut self, value: bool) -> Self {
         self.is_temporary_hp = value;
         self
@@ -187,13 +187,13 @@ impl AttributeModifierDef {
         }
     }
 
-    /// 设置系数。
+    /// 设置系数，默认 1.0（全值）。用于实现半值修正等缩放逻辑。
     pub fn with_multiplier(mut self, multiplier: f32) -> Self {
         self.multiplier = multiplier;
         self
     }
 
-    /// 设置使用基础值。
+    /// use_base=true 时读取属性的基础值（如基础力量，不受 buff 影响）。用于 snapshot 场景。
     pub fn with_use_base(mut self, value: bool) -> Self {
         self.use_base = value;
         self
@@ -339,7 +339,7 @@ pub struct ExecutionResult {
 }
 
 impl ExecutionResult {
-    /// 创建成功结果。
+    /// success=true 时 value 为有效结果。由 ExecutionSystem 在计算完成后填充 calc_trace。
     pub fn success(value: f32) -> Self {
         Self {
             success: true,
@@ -350,7 +350,7 @@ impl ExecutionResult {
         }
     }
 
-    /// 创建失败结果。
+    /// success=false、value=0.0。调用方可通过 with_critical/with_miss 附加状态。
     pub fn failure() -> Self {
         Self {
             success: false,
@@ -361,19 +361,19 @@ impl ExecutionResult {
         }
     }
 
-    /// 标记为暴击。
+    /// 由 ExecutionSystem 在判定暴击后设置。暴击时 value 应乘以 critical_multiplier。
     pub fn with_critical(mut self, value: bool) -> Self {
         self.was_critical = value;
         self
     }
 
-    /// 标记为未命中。
+    /// 未命中时 value 应为 0.0。由 HitCheckSystem 在判定后设置。
     pub fn with_miss(mut self, value: bool) -> Self {
         self.was_miss = value;
         self
     }
 
-    /// 添加计算追踪。
+    /// calc_trace 满足不变量 3.2（计算结果可追踪），用于 Replay 校验和调试。
     pub fn with_trace(mut self, trace: CalcTrace) -> Self {
         self.calc_trace = Some(trace);
         self
@@ -396,7 +396,7 @@ pub struct CalcTrace {
 }
 
 impl CalcTrace {
-    /// 创建计算追踪。
+    /// inputs 在创建后由 ExecutionSystem 填充。用于记录公式入参快照。
     pub fn new(formula_id: impl Into<String>) -> Self {
         Self {
             formula_id: formula_id.into(),
@@ -406,19 +406,19 @@ impl CalcTrace {
         }
     }
 
-    /// 记录一个输入参数。
+    /// 记录一个输入参数，key 为公式中的变量名（如 "caster_level"），value 为实际值。
     pub fn with_input(mut self, key: impl Into<String>, value: f32) -> Self {
         self.inputs.insert(key.into(), value);
         self
     }
 
-    /// 记录一个中间值。
+    /// 记录一个中间计算值，label 描述该步骤含义（如 "raw_damage_before_resistance"）。
     pub fn with_intermediate(mut self, label: impl Into<String>, value: f32) -> Self {
         self.intermediate_values.push((label.into(), value));
         self
     }
 
-    /// 设置最终输出值。
+    /// 设置最终输出值，同时也写入 ExecutionResult.value。
     pub fn with_output(mut self, value: f32) -> Self {
         self.output = value;
         self

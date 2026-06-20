@@ -22,7 +22,7 @@ pub struct TriggerContainer {
 }
 
 impl TriggerContainer {
-    /// 创建一个空的触发器容器。
+    /// 创建一个空的 TriggerContainer。triggers 和 by_type 均为初始为空。
     pub fn empty() -> Self {
         Self {
             triggers: HashMap::new(),
@@ -57,17 +57,17 @@ impl TriggerContainer {
         }
     }
 
-    /// 获取指定 ID 的触发器。
+    /// 用于 TriggerSystem 评估期间读取触发器条件。
     pub fn get(&self, trigger_id: &str) -> Option<&TriggerEntry> {
         self.triggers.get(trigger_id)
     }
 
-    /// 获取指定 ID 的触发器可变引用。
+    /// 用于外部系统修改触发器运行时状态（如禁用/重置频率）。
     pub fn get_mut(&mut self, trigger_id: &str) -> Option<&mut TriggerEntry> {
         self.triggers.get_mut(trigger_id)
     }
 
-    /// 按触发类型查找所有触发器 ID。
+    /// 用于 TriggerSystem 在事件发生时精确匹配对应的触发器。
     pub fn find_by_type(&self, trigger_type: &TriggerType) -> Vec<&TriggerEntry> {
         self.by_type
             .get(trigger_type)
@@ -75,12 +75,12 @@ impl TriggerContainer {
             .unwrap_or_default()
     }
 
-    /// 获取所有触发器引用。
+    /// 用于遍历所有触发器（如回合重置、批量检查）。
     pub fn all(&self) -> impl Iterator<Item = &TriggerEntry> {
         self.triggers.values()
     }
 
-    /// 获取所有触发器可变引用。
+    /// 用于外部系统修改触发器状态（如频率计数重置）。
     pub fn all_mut(&mut self) -> impl Iterator<Item = &mut TriggerEntry> {
         self.triggers.values_mut()
     }
@@ -95,7 +95,7 @@ impl TriggerContainer {
         self.triggers.is_empty()
     }
 
-    /// 清空所有触发器。
+    /// 用于 TriggerSystem 清空后重建。
     pub fn clear(&mut self) {
         self.triggers.clear();
         self.by_type.clear();

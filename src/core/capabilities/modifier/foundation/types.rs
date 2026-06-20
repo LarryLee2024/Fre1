@@ -1,6 +1,6 @@
 use bevy::prelude::Reflect;
 
-crate::define_numeric_id!(ModifierInstanceId);
+pub use crate::shared::ids::ModifierInstanceId;
 
 use serde::{Deserialize, Serialize};
 

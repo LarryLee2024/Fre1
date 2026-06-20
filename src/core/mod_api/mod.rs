@@ -5,7 +5,8 @@
 //!
 //! 详见 `docs/01-architecture/Fre项目架构设计.md` §八
 
-// TODO: 实现 Gateways:
+// TODO[P2][MOD][2026-06-20]: 实现 Gateways
+// 完成条件: 每个业务域提供 1 个稳定的只读访问 Gateway（共 14 个）
 //   combat_gateway, character_gateway, spell_gateway, quest_gateway,
 //   party_gateway, camp_gateway, summon_gateway, terrain_gateway,
 //   craft_gateway, economy_gateway, inventory_gateway, faction_gateway,

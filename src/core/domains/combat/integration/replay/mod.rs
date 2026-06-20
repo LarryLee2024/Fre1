@@ -2,20 +2,16 @@
 //!
 //! 提供战斗过程的录制与确定性回放：
 //!
-//! - `registry.rs` — BattleUnitRegistry 资源（Entity ↔ String 双向映射）
+//! - `registry.rs` — EntityMapper<BattleUnitId> 构建辅助（Entity ↔ 稳定 ID 双向映射）
 //! - `recording.rs` — 录制生命周期（OnBattleStart → OnBattleEnd）
 //! - `playback.rs` — 回放命令分发（从 PlaybackSession 读取并触发 UnitActionComplete）
-//!
-//! # 使用方式
-//!
-//! 在 `app_plugin.rs` Phase 8（ReplayPlugin 后）添加。
-//! 该 Plugin 必须在 `CombatPlugin` 和 `ReplayPlugin` 之后注册。
 //!
 //! # 设计原则
 //!
 //! 1. **最小侵入** — 不修改 CombatPipelineDriver、TurnQueue、CombatParticipant 等核心类型
 //! 2. **纯挂载层** — 通过 Observer 接入现有事件流，移除后不影响战斗核心逻辑
 //! 3. **录制/回放分离** — 两个子系统独立，互不干扰
+//! 4. **使用 EntityMapper** — 统一通过 EntityMapper<BattleUnitId> 映射，不再手写 BattleUnitRegistry
 //!
 //! 详见 ADR-048
 
@@ -32,7 +28,8 @@ use self::playback::{block_player_input_during_replay, dispatch_combat_replay_co
 use self::recording::{
     record_unit_action, start_recording_on_battle_begin, stop_recording_on_battle_end,
 };
-use self::registry::BattleUnitRegistry;
+use crate::shared::ids::BattleUnitId;
+use crate::shared::ids::mapping::EntityMapper;
 
 /// Combat 域与 Replay 系统的桥接 Plugin。
 ///
@@ -42,10 +39,10 @@ pub struct CombatReplayBridgePlugin;
 impl Plugin for CombatReplayBridgePlugin {
     fn build(&self, app: &mut App) {
         // ── Resource ──
-        app.init_resource::<BattleUnitRegistry>();
+        app.insert_resource(EntityMapper::<BattleUnitId>::new());
 
         // ── Recording Observers ──
-        // OnBattleStart → 创建 BattleUnitRegistry + 启动录制会话
+        // OnBattleStart → 创建 EntityMapper<BattleUnitId> + 启动录制会话
         app.add_observer(start_recording_on_battle_begin);
         // UnitActionComplete → 记录为 ReplayCommand
         app.add_observer(record_unit_action);

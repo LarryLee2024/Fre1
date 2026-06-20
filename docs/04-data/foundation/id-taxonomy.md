@@ -501,7 +501,7 @@ info!("[Knight][UnitId:18472] took 10 damage");
 
 ### 10.9 Identity 是横切关注点
 
-所有 ID 类型集中在 `shared/ids/`，不分散到各领域。
+所有 ID 类型集中在 `shared/ids/`，按职责分层组织：
 
 ```
 // ❌ 错误：各领域自己定义 ID
@@ -509,12 +509,17 @@ domain_character/ids.rs
 domain_item/ids.rs
 domain_quest/ids.rs
 
-// ✅ 正确：统一管理
+// ✅ 正确：统一管理，分层清晰
 shared/ids/
-├── types.rs       # 所有 ID 类型
-├── registry.rs    # 统一注册/分配/映射
-└── prelude.rs     # 便捷导入
+├── foundation/             # 核心抽象（StrongId trait、宏、错误类型）
+├── types/                  # 具体 ID 类型定义（按类拆分）
+├── mapping/                # Entity ↔ ID 运行时映射
+├── prelude.rs              # 便捷导入
+└── mod.rs                  # 模块根（只做 re-export）
 ```
+
+> **2026-06-20 更新**: 从扁平结构重构为 foundation/types/mapping 三层。
+> 重构详情见 `docs/11-refactor/id-system-refactoring-2026-06-20.md §阶段1`。
 
 **理由**：Identity 本身就是 Cross-cutting Concern，类似 `shared/error/`、`shared/events/`。
 
@@ -603,5 +608,6 @@ AbilityTemplateId("ability.fireball")
 | `docs/00-governance/ai-constitution-complete.md` §724 | Entity 只是 ID |
 | `docs/00-governance/coding-rules.md` §129 | Entity 仅用于引用实体 |
 | `docs/02-domain/capabilities/ui-presentation.md` INV-UI-002 | Widget 禁止 Entity 字段 |
-| `src/shared/ids/mod.rs` | StrongId trait 定义 |
-| `src/shared/ids/types.rs` | 当前 ID 类型定义 |
+| `src/shared/ids/mod.rs` | 模块根（StrongId trait 在 foundation/strong_id.rs） |
+| `src/shared/ids/types/` | 具体 ID 类型定义（string_ids.rs / numeric_ids.rs / definition_id.rs / runtime_id.rs） |
+| `docs/11-refactor/id-system-refactoring-2026-06-20.md` | ID 系统激进重构计划（结构 + 架构 + 文档） |

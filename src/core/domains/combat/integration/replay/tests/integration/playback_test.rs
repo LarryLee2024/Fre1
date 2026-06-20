@@ -23,11 +23,10 @@ use crate::core::capabilities::runtime::replay::mechanism::PlaybackSession as Co
 use crate::core::domains::combat::components::{TeamId, TurnEntry, TurnQueue};
 use crate::core::domains::combat::events::UnitActionComplete;
 use crate::core::domains::combat::integration::replay::playback::dispatch_combat_replay_commands;
-use crate::core::domains::combat::integration::replay::registry::{
-    BattleUnitId, BattleUnitRegistry,
-};
 use crate::core::domains::combat::pipeline::driver::CombatPipelineDriver;
 use crate::infra::replay::resources::{PlaybackSession, ReplayModeGuard};
+use crate::shared::ids::BattleUnitId;
+use crate::shared::ids::mapping::EntityMapper;
 
 /// 验证非回放模式下 dispatch_combat_replay_commands 跳过执行。
 ///
@@ -42,7 +41,7 @@ fn dispatch_skips_when_not_replay_mode() {
     app.init_resource::<CombatPipelineDriver>();
     app.init_resource::<PlaybackSession>();
     app.init_resource::<TurnQueue>();
-    app.insert_resource(BattleUnitRegistry::default());
+    app.insert_resource(EntityMapper::<BattleUnitId>::new());
 
     // 显式设置为非回放模式（Default 已是 normal，这里冗余确保语义清晰）
     app.world_mut()
@@ -82,9 +81,9 @@ fn dispatch_matches_current_unit() {
     let action_triggered_clone = action_triggered.clone();
 
     // Setup: 回放模式 + 注册单位
-    let mut registry = BattleUnitRegistry::default();
-    registry.register(entity, BattleUnitId::new("bu:player:0"));
-    app.insert_resource(registry);
+    let mut mapper = EntityMapper::<BattleUnitId>::new();
+    mapper.register(BattleUnitId::new("bu:player:0"), entity);
+    app.insert_resource(mapper);
 
     app.init_resource::<ReplayModeGuard>();
     app.init_resource::<CombatPipelineDriver>();

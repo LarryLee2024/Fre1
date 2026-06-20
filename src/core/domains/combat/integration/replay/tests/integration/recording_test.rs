@@ -17,10 +17,9 @@ use crate::core::domains::combat::events::{OnBattleEnd, UnitActionComplete};
 use crate::core::domains::combat::integration::replay::recording::{
     record_unit_action, stop_recording_on_battle_end,
 };
-use crate::core::domains::combat::integration::replay::registry::{
-    BattleUnitId, BattleUnitRegistry,
-};
 use crate::infra::replay::resources::RecordingSession;
+use crate::shared::ids::BattleUnitId;
+use crate::shared::ids::mapping::EntityMapper;
 
 #[test]
 fn record_unit_action_records_command() {
@@ -35,9 +34,9 @@ fn record_unit_action_records_command() {
         },))
         .id();
 
-    let mut registry = BattleUnitRegistry::default();
-    registry.register(entity, BattleUnitId::new("bu:player:0"));
-    app.world_mut().insert_resource(registry);
+    let mut mapper = EntityMapper::<BattleUnitId>::new();
+    mapper.register(BattleUnitId::new("bu:0:0"), entity);
+    app.world_mut().insert_resource(mapper);
 
     let mut core_session = CoreRecordingSession::new(60);
     core_session.start(ReplayHeader::new(1, "0.1.0", "test", 42), 0);
@@ -70,7 +69,7 @@ fn stop_recording_cleans_up() {
     // Given: 一个正在录制中的会话
     let mut app = App::new();
     app.init_resource::<RecordingSession>();
-    app.insert_resource(BattleUnitRegistry::default());
+    app.insert_resource(EntityMapper::<BattleUnitId>::new());
 
     let mut core_session = CoreRecordingSession::new(60);
     core_session.start(ReplayHeader::new(1, "0.1.0", "test", 42), 0);

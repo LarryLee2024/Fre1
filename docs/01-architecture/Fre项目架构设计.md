@@ -1,4 +1,12 @@
+---
+title: Fre 项目架构设计
+status: deprecated
+deprecated_reason: 本文件展示的是单文件每 ID 类型的旧结构，实际代码已采用宏统一生成（types.rs）。详见 docs/11-refactor/id-system-refactoring-2026-06-20.md
+---
+
 # Fre 项目架构设计文档
+
+> ⚠️ **DEPRECATED**: 本文档描述的是旧版 ID 结构（每文件一类型）。实际代码已迁移到 `src/shared/ids/` 并采用宏统一生成。请参考 `docs/04-data/foundation/id-taxonomy.md` 和 `docs/08-knowledge/ids-overview.md`。
 
 > **引擎**: Bevy 0.19+ | **类型**: SRPG | **规模**: 50万行+ | **周期**: 10-20年
 > **开发模式**: 单人开发 + AI 协作 | **对标**: D&D 5e / BG3 / 铃兰之剑

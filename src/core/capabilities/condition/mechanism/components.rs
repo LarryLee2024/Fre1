@@ -35,7 +35,7 @@ pub struct ConditionContainer {
 }
 
 impl ConditionContainer {
-    /// 创建一个空的容器。
+    /// 创建一个空的 ConditionContainer。conditions/tag_dependents/attribute_dependents 均为零初始化。
     pub fn empty() -> Self {
         Self {
             conditions: HashMap::new(),
@@ -133,24 +133,24 @@ impl ConditionContainer {
         }
     }
 
-    /// 获取指定条件 ID 的条目。
+    /// 用于 ConditionSystem 在重评估时查询。返回 Some 表示有上次评估结果。
     pub fn get(&self, id: &str) -> Option<&ConditionEntry> {
         self.conditions.get(id)
     }
 
-    /// 获取指定条件 ID 的可变引用。
+    /// 用于外部系统在实体状态变更后重设评估结果。
     pub fn get_mut(&mut self, id: &str) -> Option<&mut ConditionEntry> {
         self.conditions.get_mut(id)
     }
 
-    /// 标记所有条件为待重新评估。
+    /// 将所有条件的 last_result 清空，触发全面重新评估。用于状态大幅变化（如回合切换）。
     pub fn invalidate_all(&mut self) {
         for entry in self.conditions.values_mut() {
             entry.last_result = None;
         }
     }
 
-    /// 移除一个条件及其依赖追踪。
+    /// 移除时同时清理 tag_dependents 和 attribute_dependents 中的反向引用，保持索引一致性。
     pub fn remove(&mut self, id: &str) {
         self.conditions.remove(id);
         self.tag_dependents.retain(|_, ids| {

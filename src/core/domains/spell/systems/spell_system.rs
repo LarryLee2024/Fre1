@@ -22,8 +22,8 @@ use crate::core::domains::spell::rules::{
 /// 3. 法术位是否充足
 /// 4. 专注冲突检查
 ///
-/// TODO: 待 SpellDefRegistry 就绪后，补充 check_upcast 校验。
-/// TODO: 待 SpellComponents 校验所需的状态组件（can_speak, has_free_hand, has_focus）就绪后，
+/// TODO[P2][SPELL][2026-06-20]: 待 SpellDefRegistry 就绪后，补充 check_upcast 校验。
+/// TODO[P2][SPELL][2026-06-20]: 待 SpellComponents 校验所需的状态组件就绪后，
 ///       补充 check_components 校验。
 pub fn on_spell_cast_request(
     _trigger: On<SpellCastRequest>,

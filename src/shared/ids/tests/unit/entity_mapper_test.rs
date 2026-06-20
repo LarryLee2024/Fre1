@@ -4,7 +4,7 @@
 
 use bevy::prelude::Entity;
 
-use crate::shared::ids::entity_mapper::EntityMapper;
+use crate::shared::ids::mapping::EntityMapper;
 
 #[test]
 fn entity_mapper_register_and_query() {

@@ -19,23 +19,25 @@
 //! OnBattleEnd (Trigger)
 //!   │
 //!   ├── session.stop() → 生成 ReplayLog
-//!   └── 清理 BattleUnitRegistry
+//!   └── 清理 EntityMapper<BattleUnitId>
 //! ```
 //!
 //! 详见 ADR-048 §Communication Design
 
 use bevy::prelude::*;
 
-use super::registry::{BattleUnitRegistry, build_battle_unit_registry};
+use super::registry::build_battle_unit_registry;
 use crate::core::capabilities::runtime::replay::foundation::{ReplayCommand, ReplayHeader};
 use crate::core::capabilities::runtime::replay::mechanism::RecordingSession as CoreRecordingSession;
 use crate::core::domains::combat::components::CombatParticipant;
 use crate::core::domains::combat::events::{OnBattleEnd, OnBattleStart, UnitActionComplete};
 use crate::infra::replay::resources::{DeterministicRng, RecordingSession};
+use crate::shared::ids::BattleUnitId;
+use crate::shared::ids::mapping::EntityMapper;
 
 /// Observer: OnBattleStart → 初始化录制。
 ///
-/// 1. 枚举所有 CombatParticipant，分配 BattleUnitId（Component + Registry）
+/// 1. 枚举所有 CombatParticipant，分配 BattleUnitId（通过 EntityMapper 建立映射）
 /// 2. 创建 CoreRecordingSession 并开始录制
 /// 3. 将 RecordingSession 插入 ECS World
 pub(crate) fn start_recording_on_battle_begin(
@@ -52,10 +54,10 @@ pub(crate) fn start_recording_on_battle_begin(
         return;
     }
 
-    // 构建 BattleUnitRegistry
-    let registry = build_battle_unit_registry(&participants, &mut commands);
+    // 构建 EntityMapper<BattleUnitId>
+    let mapper = build_battle_unit_registry(&participants);
 
-    let unit_count = registry.len();
+    let unit_count = mapper.len();
     if unit_count == 0 {
         debug!("[ReplayBridge] No combat participants found, skipping recording start");
         return;
@@ -63,10 +65,8 @@ pub(crate) fn start_recording_on_battle_begin(
 
     // 收集参与者 ID
     let mut header = ReplayHeader::new(1, "0.1.0", "combat_battle", 0);
-    for entity in registry.entities() {
-        if let Some(unit_id) = registry.get_id(entity) {
-            header.add_participant(unit_id.0.clone());
-        }
+    for entity_id in mapper.ids() {
+        header.add_participant(entity_id.as_str().to_string());
     }
 
     // 设置初始种子
@@ -80,7 +80,7 @@ pub(crate) fn start_recording_on_battle_begin(
     let mut core_session = CoreRecordingSession::new(60); // 每 60 帧一个检查点
     core_session.start(header, 0);
 
-    commands.insert_resource(registry);
+    commands.insert_resource(mapper);
     commands.insert_resource(RecordingSession(Some(core_session)));
 
     debug!(
@@ -95,7 +95,7 @@ pub(crate) fn start_recording_on_battle_begin(
 /// 后续扩展时可添加 action 类型参数以录制详细命令（UseAbility 等）。
 pub(crate) fn record_unit_action(
     trigger: On<'_, '_, UnitActionComplete>,
-    registry: Res<BattleUnitRegistry>,
+    mapper: Res<EntityMapper<BattleUnitId>>,
     mut recording: ResMut<RecordingSession>,
 ) {
     let Some(ref mut session) = recording.0 else {
@@ -104,9 +104,9 @@ pub(crate) fn record_unit_action(
 
     let unit = trigger.event().unit;
 
-    // 通过 BattleUnitRegistry 将 Entity 转换为 String
-    let unit_id = match registry.get_id(&unit) {
-        Some(id) => id.0.clone(),
+    // 通过 EntityMapper 将 Entity 转换为 BattleUnitId
+    let unit_id = match mapper.get_id(&unit) {
+        Some(id) => id.as_str().to_string(),
         None => {
             debug!("[ReplayBridge] Unknown entity recorded, skipping");
             return;
@@ -121,11 +121,11 @@ pub(crate) fn record_unit_action(
 /// Observer: OnBattleEnd → 停止录制。
 ///
 /// 1. 结束录制会话，获取 ReplayLog
-/// 2. 清理 BattleUnitRegistry
+/// 2. 清理 EntityMapper<BattleUnitId>
 pub(crate) fn stop_recording_on_battle_end(
     _trigger: On<'_, '_, OnBattleEnd>,
     mut recording: ResMut<RecordingSession>,
-    mut registry: ResMut<BattleUnitRegistry>,
+    mut mapper: ResMut<EntityMapper<BattleUnitId>>,
 ) {
     let Some(ref mut session) = recording.0 else {
         return;
@@ -147,5 +147,5 @@ pub(crate) fn stop_recording_on_battle_end(
 
     // 清理
     recording.0 = None;
-    registry.clear();
+    mapper.clear();
 }

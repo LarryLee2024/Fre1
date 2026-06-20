@@ -27,7 +27,7 @@ pub enum StackingType {
 }
 
 impl StackingType {
-    /// 返回堆叠类型名称。
+    /// 返回的字符串用于序列化和日志，与枚举变体名一致。
     pub fn name(&self) -> &str {
         match self {
             Self::None => "None",
@@ -37,7 +37,7 @@ impl StackingType {
         }
     }
 
-    /// 是否需要追踪堆叠层数。
+    /// 仅 Aggregate 类型需要追踪层数。None/RefreshDuration/Replace 的层数恒为 1。
     pub fn tracks_layers(&self) -> bool {
         matches!(self, Self::Aggregate)
     }
@@ -91,7 +91,7 @@ impl StackingConfig {
         })
     }
 
-    /// 创建刷新持续时间配置。
+    /// 刷新模式下 max_stacks=1、allow_cross_source=true、不重算 Modifier。
     pub fn refresh() -> Self {
         Self {
             stacking_type: StackingType::RefreshDuration,
@@ -102,7 +102,7 @@ impl StackingConfig {
         }
     }
 
-    /// 创建替换配置。
+    /// 替换模式下 max_stacks=1、allow_cross_source=true、溢出行为为 Replace。
     ///
     /// # Errors
     /// - V3: Replace 类型 max_stacks 必须 = 1
@@ -137,7 +137,7 @@ pub enum OverflowBehavior {
 }
 
 impl OverflowBehavior {
-    /// 返回溢出行为名称。
+    /// 用于日志和序列化，与枚举变体名一致。
     pub fn name(&self) -> &str {
         match self {
             Self::IgnoreNew => "IgnoreNew",
@@ -172,13 +172,13 @@ impl StackIdentity {
         }
     }
 
-    /// 设置来源能力 ID。
+    /// 用于同源判定细化：同 Def 但不同能力来源时是否视为异源，由 allow_cross_source 决定。
     pub fn with_ability(mut self, ability_id: impl Into<String>) -> Self {
         self.source_ability = Some(ability_id.into());
         self
     }
 
-    /// 设置分组标签。
+    /// 用于多效果分组堆叠：即使 effect_def_id 不同，group_tag 相同的效果也在同一堆叠组内。
     pub fn with_group_tag(mut self, tag: impl Into<String>) -> Self {
         self.group_tag = Some(tag.into());
         self

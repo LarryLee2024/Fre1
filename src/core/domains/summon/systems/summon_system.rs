@@ -113,5 +113,5 @@ pub fn handle_summon_command(
     });
 }
 
-// TODO(on_caster_died): 召唤者死亡级联消失 — 已记录至 docs/09-planning/ 跟踪项
+// TODO[P2][SUMMON][2026-06-20]: 召唤者死亡级联消失 — 已记录至 docs/09-planning/ 跟踪项
 // 实现要点: 监听 UnitDied → 查找 SummonBond → 逐个触发 SummonExpired

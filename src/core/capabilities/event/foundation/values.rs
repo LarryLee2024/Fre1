@@ -46,7 +46,7 @@ pub struct DispatchReport {
 }
 
 impl DispatchReport {
-    /// 所有投递均成功。
+    /// 无失败且无循环中断才是完全成功。failed>0 或 cycle_interrupted=true 均返回 false。
     pub fn all_succeeded(&self) -> bool {
         self.failed == 0 && !self.cycle_interrupted
     }

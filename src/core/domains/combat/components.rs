@@ -25,7 +25,19 @@ use crate::app::scenes::GameState;
 ///
 /// 转为 SubState 后自动获得 `in_state(GameState::Combat)` 前置条件，
 /// 当 GameState ≠ Combat 时 BattlePhase 不可访问。
-/// 回合内流程由 `pipeline::CombatPipelineDriver` 驱动。
+/// 战斗阶段状态机。
+///
+/// 状态转换图（树形终态）：
+/// ```text
+/// Preparation
+///      │
+///      ▼
+///   Battle ──→ Victory
+///      │
+///      ▼
+///   Defeat
+/// ```
+/// Battle 阶段由 `pipeline::CombatPipelineDriver` 驱动回合内流程。
 ///
 /// 详见 ADR-050 §2: BattlePhase 转为 SubState。
 #[derive(SubStates, Clone, Eq, PartialEq, Hash, Debug, Default)]
@@ -78,12 +90,12 @@ impl TurnQueue {
         }
     }
 
-    /// 当前行动的单位。
+    /// 空队列时返回 None。用于 UI 显示当前行动单位。
     pub fn current(&self) -> Option<&TurnEntry> {
         self.entries.get(self.current_index)
     }
 
-    /// 当前行动单位的可变引用。
+    /// 用于系统修改当前单位的行动状态（如消耗行动点）。
     pub fn current_mut(&mut self) -> Option<&mut TurnEntry> {
         self.entries.get_mut(self.current_index)
     }
@@ -101,12 +113,12 @@ impl TurnQueue {
         }
     }
 
-    /// 当前索引。
+    /// 用于 UI 主动高亮和调试日志。
     pub fn current_index(&self) -> usize {
         self.current_index
     }
 
-    /// 当前轮数。
+    /// 用于回合数限制条件和胜利条件判断。
     pub fn round_number(&self) -> u32 {
         self.round_number
     }
@@ -129,7 +141,7 @@ impl TurnQueue {
         self.current().map(|e| &e.team_id)
     }
 
-    /// 所有条目引用。
+    /// 用于外部迭代（如序列化、AI 决策）。返回切片引用。
     pub fn entries(&self) -> &[TurnEntry] {
         &self.entries
     }

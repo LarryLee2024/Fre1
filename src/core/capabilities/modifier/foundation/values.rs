@@ -12,6 +12,7 @@ pub struct ModifierSource {
 /// 修改器运行时实例。
 #[derive(Debug, Clone, Reflect)]
 pub struct ModifierData {
+    #[reflect(ignore)]
     pub id: ModifierInstanceId,
     pub op: ModifierOp,
     pub target_attribute: String,

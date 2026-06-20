@@ -206,7 +206,7 @@ pub struct TalentTree {
 }
 
 impl TalentTree {
-    /// 创建空的天赋树。
+    /// 创建空天赋树。available_points 为 0，由升级系统或事件奖励加点。
     pub fn new() -> Self {
         Self {
             unlocked_talents: Vec::new(),
@@ -262,7 +262,7 @@ pub struct SubclassChoice {
 }
 
 impl SubclassChoice {
-    /// 创建空的子职选择记录。
+    /// 创建空子职选择记录。角色达到相应职业等级后通过 choose() 填充。
     pub fn new() -> Self {
         Self {
             choices: HashMap::new(),

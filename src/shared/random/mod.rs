@@ -94,7 +94,7 @@ impl Default for GameRng {
     }
 }
 
-// TODO: rand 0.10 API 变更，以下代码需要 @feature-developer 适配：
+// TODO[P2][SHARED][2026-06-20]: rand 0.10 API 变更，以下代码需要 @feature-developer 适配：
 // - RngCore 已移至 rand_core，需改用 rand_core::TryRng
 // - rand::Error 已移除，try_fill_bytes 返回 Infallible
 // - CryptoRng 需要 DerefMut，SeededRng 需要实现 DerefMut

@@ -24,7 +24,8 @@ pub struct ActivationContext {
 }
 
 impl ActivationContext {
-    /// 创建施法上下文。
+    /// 初始化施法上下文。后续通过 with_target / with_position / with_level_override 链式填充。
+    /// frame 在生命周期内不可变——Replay 依赖此值进行帧精确还原。
     pub fn new(caster: impl Into<String>, frame: u64) -> Self {
         Self {
             caster: caster.into(),
@@ -35,19 +36,20 @@ impl ActivationContext {
         }
     }
 
-    /// 设置目标实体。
+    /// 预选目标实体（可选——部分技能在激活时不一定确定目标，由后续 Targeting 系统选择）。
     pub fn with_target(mut self, target: impl Into<String>) -> Self {
         self.target = Some(target.into());
         self
     }
 
-    /// 设置目标位置。
+    /// 目标位置（网格坐标字符串，如 "5,3"）。地面目标技能需要此值进行 AoE 判定。
     pub fn with_position(mut self, pos: impl Into<String>) -> Self {
         self.target_position = Some(pos.into());
         self
     }
 
-    /// 设置等级覆盖。
+    /// 升环施法时覆盖技能等级。None 表示使用 Spec 当前等级。
+    /// 等级覆盖影响 Execution 阶段的计算（如伤害骰数量）。
     pub fn with_level_override(mut self, level: u8) -> Self {
         self.level_override = Some(level);
         self
@@ -66,7 +68,8 @@ pub struct CostEntry {
 }
 
 impl CostEntry {
-    /// 创建新的消耗条目（默认未消耗）。
+    /// 追踪技能激活所需的资源消耗。consumed=false 表示尚未从实体扣除。
+    /// 不变量 §3.4：所有消耗条目必须在技能执行完毕前标记为 consumed。
     pub fn new(resource: impl Into<String>, amount: f32) -> Self {
         Self {
             resource: resource.into(),
@@ -92,7 +95,7 @@ pub struct CooldownEntry {
 }
 
 impl CooldownEntry {
-    /// 创建新的冷却条目。
+    /// total_turns = remaining_turns 初始化。冷却结束后由 CooldownSystem 移除。
     pub fn new(spec_id: impl Into<String>, total_turns: u32) -> Self {
         Self {
             spec_id: spec_id.into(),
@@ -103,24 +106,25 @@ impl CooldownEntry {
         }
     }
 
-    /// 设置为共享冷却。
+    /// 同组技能共享冷却时间（如"所有传送技能共享 3 回合冷却"）。
     pub fn with_shared_group(mut self, group: impl Into<String>) -> Self {
         self.shared_group = Some(group.into());
         self
     }
 
-    /// 设置为激活时开始计时。
+    /// 默认冷却从技能进入 Cooldown 状态开始计时。
+    /// 设为 true 后从 Active 状态就开始计时，适合"持续效果结束后冷却已过半"的设计。
     pub fn with_starts_on_activate(mut self, value: bool) -> Self {
         self.starts_on_activate = value;
         self
     }
 
-    /// 冷却是否已结束。
+    /// 冷却结束后由 CooldownSystem 在回合开始时自动移除。
     pub fn is_expired(&self) -> bool {
         self.remaining_turns == 0
     }
 
-    /// 减少剩余回合数（最小为 0）。
+    /// 每回合开始时由 CooldownSystem 调用。到 0 后 is_expired() 返回 true。
     pub fn tick(&mut self) {
         self.remaining_turns = self.remaining_turns.saturating_sub(1);
     }
@@ -198,17 +202,17 @@ impl AbilityInstance {
         }
     }
 
-    /// 添加消耗追踪条目。
+    /// 在技能激活时由 ActivationSystem 调用，记录需消耗的资源。
     pub fn add_cost(&mut self, entry: CostEntry) {
         self.costs.push(entry);
     }
 
-    /// 消耗是否全部完成。
+    /// 由 ExecutionSystem 在执行完成后检查。全部 consumed 才能标记为执行完毕。
     pub fn all_costs_consumed(&self) -> bool {
         !self.costs.is_empty() && self.costs.iter().all(|c| c.consumed)
     }
 
-    /// 标记所有消耗为已消耗。
+    /// 由 CostSystem 在扣除资源后调用。不变量 §3.4：一旦标记不可回退。
     pub fn mark_costs_consumed(&mut self) {
         for cost in &mut self.costs {
             cost.consumed = true;
@@ -254,7 +258,7 @@ pub enum BlockedRestoreState {
 }
 
 impl BlockedRestoreState {
-    /// 转换为 AbilityState。
+    /// 阻塞解除后，技能恢复到对应状态。由 BlockSystem 在 remove_block 时调用。
     pub fn to_state(self) -> AbilityState {
         match self {
             Self::Ready => AbilityState::Ready,

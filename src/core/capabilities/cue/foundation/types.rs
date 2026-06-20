@@ -26,7 +26,7 @@ pub enum CueType {
 }
 
 impl CueType {
-    /// 返回信号类型名称。
+    /// 用于日志和调试。Custom 变体也返回 "Custom" 固定值。
     pub fn name(&self) -> &str {
         match self {
             Self::VFX(_) => "VFX",
@@ -56,7 +56,7 @@ pub struct VFXParams {
 }
 
 impl VFXParams {
-    /// 创建 VFX 参数。
+    /// effect_key 指向 Infra 层 VFX 资源。attach_point 默认为 None（坐标系中心）。
     pub fn new(effect_key: impl Into<String>) -> Self {
         Self {
             effect_key: effect_key.into(),
@@ -68,19 +68,19 @@ impl VFXParams {
         }
     }
 
-    /// 设置附着点。
+    /// 附着点由 Infra 层定义（如 weapon_tip、chest）。None 表示模型原点。
     pub fn with_attach_point(mut self, point: impl Into<String>) -> Self {
         self.attach_point = Some(point.into());
         self
     }
 
-    /// 设置跟随目标。
+    /// follow_target=true 时 VFX 随目标移动而移动，false 时停留在施放位置。
     pub fn with_follow(mut self, follow: bool) -> Self {
         self.follow_target = follow;
         self
     }
 
-    /// 设置持续帧数。
+    /// duration_frames=None 表示单帧播放（瞬发特效）。
     pub fn with_duration(mut self, frames: u64) -> Self {
         self.duration_frames = Some(frames);
         self
@@ -101,7 +101,7 @@ pub struct SFXParams {
 }
 
 impl SFXParams {
-    /// 创建 SFX 参数。
+    /// 默认 volume=1.0、is_3d=true。sound_key 指向 Infra 层音效资源。
     pub fn new(sound_key: impl Into<String>) -> Self {
         Self {
             sound_key: sound_key.into(),
@@ -139,7 +139,7 @@ pub struct AnimationParams {
 }
 
 impl AnimationParams {
-    /// 创建动画参数。
+    /// 默认 speed=1.0、loop=false。animation_name 对应 Infra 动画资源。
     pub fn new(animation_name: impl Into<String>) -> Self {
         Self {
             animation_name: animation_name.into(),
@@ -162,7 +162,7 @@ pub struct ShakeParams {
 }
 
 impl ShakeParams {
-    /// 创建震动参数。
+    /// 默认 falloff=Linear。intensity 为 0 时震动不播放。
     pub fn new(intensity: f32, duration_frames: u64) -> Self {
         Self {
             intensity,
@@ -196,7 +196,7 @@ pub struct PopupParams {
 }
 
 impl PopupParams {
-    /// 创建 Popup 参数。
+    /// 默认 font_size=16、direction=Up、duration=60 帧。text_key 对应 Localization 条目。
     pub fn new(text_key: impl Into<String>, color: impl Into<String>) -> Self {
         Self {
             text_key: text_key.into(),
@@ -236,7 +236,7 @@ pub enum CueTag {
 }
 
 impl CueTag {
-    /// 返回触发时机名称。
+    /// Custom 变体返回内部存储的字符串，其余返回变体名常量。
     pub fn name(&self) -> &str {
         match self {
             Self::OnApply => "OnApply",
@@ -266,7 +266,7 @@ pub struct CueDef {
 }
 
 impl CueDef {
-    /// 创建 Cue 定义。
+    /// 默认 interruptible=true、critical=false。delay_frames 为 0 时立即触发。
     pub fn new(id: impl Into<String>, cue_type: CueType, cue_tag: CueTag) -> Self {
         Self {
             id: id.into(),
@@ -278,13 +278,13 @@ impl CueDef {
         }
     }
 
-    /// 设置延迟触发。
+    /// 延迟帧数在 CueSystem 中处理，不影响 Infra 层的直接播放。
     pub fn with_delay(mut self, frames: u64) -> Self {
         self.delay_frames = Some(frames);
         self
     }
 
-    /// 标记为关键信号。
+    /// critical=true 时 interruptible 自动设为 false，表示该信号必须播放到结束。
     pub fn with_critical(mut self) -> Self {
         self.critical = true;
         self.interruptible = false;
@@ -314,7 +314,7 @@ pub struct CueData {
 }
 
 impl CueData {
-    /// 创建 Cue 信号数据。
+    /// source_entity/target_entity 初始为 None，由 CueSystem 在触发时填充。
     pub fn new(cue_def_id: impl Into<String>, cue_type: CueType, cue_tag: CueTag) -> Self {
         Self {
             cue_def_id: cue_def_id.into(),
@@ -327,25 +327,25 @@ impl CueData {
         }
     }
 
-    /// 设置来源实体。
+    /// source_entity 在 Popup 中用于定位浮动文字的出现方向。
     pub fn with_source(mut self, entity: impl Into<String>) -> Self {
         self.source_entity = Some(entity.into());
         self
     }
 
-    /// 设置目标实体。
+    /// 在 SFX/Animation 中 target_entity 用于决定音效/动画的播放目标。
     pub fn with_target(mut self, entity: impl Into<String>) -> Self {
         self.target_entity = Some(entity.into());
         self
     }
 
-    /// 设置数值。
+    /// numeric_value 用于 Popup 显示伤害/治疗数字。None 时 Popup 只显示文字。
     pub fn with_value(mut self, value: f32) -> Self {
         self.numeric_value = Some(value);
         self
     }
 
-    /// 标记为关键信号。
+    /// 关键信号在 cue_queue 中优先播放，不会被低优先级信号打断。
     pub fn with_critical(mut self) -> Self {
         self.critical = true;
         self

@@ -10,7 +10,16 @@ use serde::{Deserialize, Serialize};
 
 /// 效果生命周期阶段（四阶段状态机）。
 ///
-/// 转换规则见 docs/02-domain/capabilities/effect_domain.md §2。
+/// 状态转换图（线性推进）：
+/// ```text
+/// Applying ──→ Active ──→ Expiring ──→ Removed
+///   │                     (Active ──→ Removed, 被驱散)
+///   └──→ Removed (条件不满足直接移除)
+/// ```
+///
+/// 每个 Tick 循环：Active 阶段持续执行周期性逻辑。
+///
+/// 详见 docs/02-domain/capabilities/effect_domain.md §2。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Reflect)]
 pub enum EffectStage {
     /// 施加阶段——检查条件，初始化
@@ -24,7 +33,7 @@ pub enum EffectStage {
 }
 
 impl EffectStage {
-    /// 返回阶段名称。
+    /// 用于日志、调试显示和 UI 状态文本。
     pub fn name(&self) -> &str {
         match self {
             Self::Applying => "Applying",
@@ -34,12 +43,12 @@ impl EffectStage {
         }
     }
 
-    /// 是否处于活跃阶段（Applying 或 Active）。
+    /// 活跃阶段的效果参与 Tick 和到期结算。Removed 阶段的效果已被清理。
     pub fn is_active(&self) -> bool {
         matches!(self, Self::Applying | Self::Active)
     }
 
-    /// 是否可 Tick（仅 Active 阶段可 Tick）。
+    /// 只有 Active 阶段的效果能产生周期性效果。Applying/Expiring 阶段不触发 Tick。
     pub fn can_tick(&self) -> bool {
         matches!(self, Self::Active)
     }
@@ -62,7 +71,7 @@ pub enum EffectDuration {
 }
 
 impl EffectDuration {
-    /// 返回持续时间类型名称。
+    /// 用于日志、调试显示和序列化分类。
     pub fn name(&self) -> &str {
         match self {
             Self::Instant => "Instant",
@@ -71,12 +80,12 @@ impl EffectDuration {
         }
     }
 
-    /// 是否为瞬时效果。
+    /// 瞬时效果在 Applying 阶段立即执行，不进入 Active 阶段。
     pub fn is_instant(&self) -> bool {
         matches!(self, Self::Instant)
     }
 
-    /// 是否为持续效果（HasDuration 或 Infinite）。
+    /// 持续效果需要 TickSystem 每回合推进。Infinite 效果永不自动到期。
     pub fn is_persistent(&self) -> bool {
         !matches!(self, Self::Instant)
     }
@@ -199,7 +208,7 @@ pub enum RemovalReason {
 }
 
 impl RemovalReason {
-    /// 返回原因名称。
+    /// 用于日志、事件追踪和 UI 显示（如"被驱散！"、"[无效] 来源死亡"）。
     pub fn name(&self) -> &str {
         match self {
             Self::Expired => "Expired",

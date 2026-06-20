@@ -7,15 +7,14 @@ use bevy::prelude::*;
 use crate::core::capabilities::runtime::replay::foundation::{
     ReplayCommand, ReplayFrame, ReplayHeader, ReplayLog,
 };
-use crate::core::domains::combat::integration::replay::registry::{
-    BattleUnitId, BattleUnitRegistry,
-};
 use crate::infra::replay::resources::{PlaybackSession, ReplayModeGuard};
+use crate::shared::ids::BattleUnitId;
+use crate::shared::ids::mapping::EntityMapper;
 
 /// 回放模式下设置最小测试环境。
 ///
 /// 初始化 ReplayModeGuard, CombatPipelineDriver, PlaybackSession, TurnQueue,
-/// 并根据 participants 构建 BattleUnitRegistry。
+/// 并根据 participants 构建 EntityMapper<BattleUnitId>。
 pub fn setup_replay_mode(app: &mut App, participants: Vec<(&str, Entity)>) {
     use crate::core::domains::combat::components::TurnQueue;
     use crate::core::domains::combat::pipeline::driver::CombatPipelineDriver;
@@ -25,12 +24,12 @@ pub fn setup_replay_mode(app: &mut App, participants: Vec<(&str, Entity)>) {
     app.init_resource::<PlaybackSession>();
     app.init_resource::<TurnQueue>();
 
-    // 构建 BattleUnitRegistry
-    let mut registry = BattleUnitRegistry::default();
+    // 构建 EntityMapper<BattleUnitId>
+    let mut mapper = EntityMapper::<BattleUnitId>::new();
     for (id_str, entity) in &participants {
-        registry.register(*entity, BattleUnitId::new(*id_str));
+        mapper.register(BattleUnitId::new(*id_str), *entity);
     }
-    app.world_mut().insert_resource(registry);
+    app.world_mut().insert_resource(mapper);
 
     // 设置回放模式
     app.world_mut()

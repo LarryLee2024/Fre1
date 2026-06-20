@@ -30,7 +30,7 @@ pub struct SpecContainer {
 }
 
 impl SpecContainer {
-    /// 创建一个空的 SpecContainer。
+    /// 创建一个空的 SpecContainer。四个 HashMap 均为空。
     pub fn empty() -> Self {
         Self {
             abilities: HashMap::new(),
@@ -40,17 +40,17 @@ impl SpecContainer {
         }
     }
 
-    /// 获取指定 AbilitySpec 的可变引用。
+    /// 用于 SpecSystem 在外部修改 AbilitySpec（如等级提升、冷却设置）。
     pub fn get_ability_mut(&mut self, spec_id: &SpecId) -> Option<&mut AbilitySpec> {
         self.abilities.get_mut(spec_id)
     }
 
-    /// 获取指定 AbilitySpec 的不可变引用。
+    /// 用于只读查询（如 UI 显示、冷却检查）。
     pub fn get_ability(&self, spec_id: &SpecId) -> Option<&AbilitySpec> {
         self.abilities.get(spec_id)
     }
 
-    /// 获取指定 EffectSpec 的不可变引用。
+    /// 用于只读查询（如检查效果叠加状态）。
     pub fn get_effect(&self, spec_id: &SpecId) -> Option<&EffectSpec> {
         self.effects.get(spec_id)
     }
@@ -121,17 +121,17 @@ impl SpecContainer {
         None
     }
 
-    /// 获取所有 AbilitySpec 的数量。
+    /// 用于 SpecSystem 诊断和容量检查。
     pub fn ability_count(&self) -> usize {
         self.abilities.len()
     }
 
-    /// 获取所有 EffectSpec 的数量。
+    /// 用于 SpecSystem 诊断和容量检查。
     pub fn effect_count(&self) -> usize {
         self.effects.len()
     }
 
-    /// 清空所有 Spec 和索引。
+    /// 销毁所有 Spec。调用后整个容器回到 empty 状态。
     pub fn clear(&mut self) {
         self.abilities.clear();
         self.effects.clear();

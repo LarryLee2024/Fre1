@@ -33,7 +33,7 @@ pub enum ComparisonOp {
 }
 
 impl ComparisonOp {
-    /// 对两个 f32 值执行比较运算。
+    /// Equal/NotEqual 使用 epsilon 比较以避免浮点精度问题，其余运算符直接比较。
     pub fn evaluate(&self, actual: f32, threshold: f32) -> bool {
         match self {
             Self::Equal => (actual - threshold).abs() < f32::EPSILON,
@@ -65,17 +65,17 @@ pub enum ConditionResult {
 }
 
 impl ConditionResult {
-    /// 是否通过。
+    /// 与 matches!(result, ConditionResult::Passed) 等价，提供更可读的调用方式。
     pub fn is_passed(&self) -> bool {
         matches!(self, Self::Passed)
     }
 
-    /// 创建通过结果。
+    /// 无参数快捷构造，用于条件树评估成功时的返回。
     pub fn passed() -> Self {
         Self::Passed
     }
 
-    /// 创建失败结果。
+    /// 失败时要求附带原因，由评估器在短路时提供领域可读的错误信息。
     pub fn failed(reason: impl Into<String>) -> Self {
         Self::Failed {
             reason: reason.into(),

@@ -21,7 +21,7 @@ pub struct AggregatorState {
 }
 
 impl AggregatorState {
-    /// 创建一个空的聚合状态。
+    /// 创建一个空的 AggregatorState。cached_values、dirty_attributes 均为空。
     pub fn empty() -> Self {
         Self {
             cached_values: HashMap::new(),
@@ -31,7 +31,7 @@ impl AggregatorState {
         }
     }
 
-    /// 检查指定属性是否为脏。
+    /// 用于判断是否需要重算该属性的聚合值。
     pub fn is_dirty(&self, attribute_id: &str) -> bool {
         self.dirty_attributes.contains(attribute_id)
     }
@@ -44,7 +44,7 @@ impl AggregatorState {
         self.cached_values.get(attribute_id).copied()
     }
 
-    /// 是否有任何脏属性。
+    /// 用于判断是否需要触发一次聚合管线。
     pub fn has_dirty(&self) -> bool {
         !self.dirty_attributes.is_empty()
     }

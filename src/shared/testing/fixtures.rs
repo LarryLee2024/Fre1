@@ -231,7 +231,7 @@ impl ModifierBuilder {
 
     pub fn build(self) -> ModifierData {
         ModifierData {
-            id: ModifierInstanceId::new(self.id),
+            id: ModifierInstanceId::from_u64(self.id),
             op: self.op,
             target_attribute: self.target,
             magnitude: self.magnitude,

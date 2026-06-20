@@ -19,7 +19,7 @@ pub struct TriggerCondition {
 }
 
 impl TriggerCondition {
-    /// 创建无条件触发器条件。
+    /// condition_id=None、params 为空。适用于不加额外条件的纯事件触发。
     pub fn always() -> Self {
         Self {
             condition_id: None,
@@ -27,7 +27,7 @@ impl TriggerCondition {
         }
     }
 
-    /// 创建带条件引用的触发器条件。
+    /// condition_id 指向 Condition Registry 中的命名条件（可复用）。params 仍为空。
     pub fn with_condition(condition_id: impl Into<String>) -> Self {
         Self {
             condition_id: Some(condition_id.into()),
@@ -56,7 +56,7 @@ pub struct TriggerEntry {
 }
 
 impl TriggerEntry {
-    /// 创建一个新的触发器条目。
+    /// 默认频率为 unlimited，condition 为 always。allow_concurrent=false 满足不变量 §4.5。
     pub fn new(
         id: impl Into<String>,
         trigger_type: TriggerType,
@@ -72,13 +72,13 @@ impl TriggerEntry {
         }
     }
 
-    /// 设置触发条件。
+    /// condition 在触发时作为第二层过滤（TriggerType 是第一层）。
     pub fn with_condition(mut self, condition: TriggerCondition) -> Self {
         self.condition = condition;
         self
     }
 
-    /// 设置频率限制。
+    /// max_per_turn 决定 TriggerFrequency 计数上限。调用后 can_trigger() 返回 false 则本回合不会执行。
     pub fn with_frequency(mut self, max_per_turn: u32) -> Self {
         self.frequency = TriggerFrequency::limited(max_per_turn);
         self

@@ -31,7 +31,7 @@ pub struct ActiveAbilityContainer {
 }
 
 impl ActiveAbilityContainer {
-    /// 创建一个空的 ActiveAbilityContainer。
+    /// 创建一个空的 ActiveAbilityContainer。四个容器/映射全部零初始化。
     pub fn empty() -> Self {
         Self {
             active_instances: HashMap::new(),
@@ -43,12 +43,12 @@ impl ActiveAbilityContainer {
 
     // ── 实例查询 ───────────────────────────────────────────
 
-    /// 获取指定实例的不可变引用。
+    /// 用于 AbilitySystem 查询实例状态（Casting/Active/Blocked）。
     pub fn get_instance(&self, instance_id: &AbilityInstanceId) -> Option<&AbilityInstance> {
         self.active_instances.get(instance_id)
     }
 
-    /// 获取指定实例的可变引用。
+    /// 用于 AbilitySystem 修改实例阶段（Casting→Active→Completed）。
     pub fn get_instance_mut(
         &mut self,
         instance_id: &AbilityInstanceId,
@@ -87,7 +87,7 @@ impl ActiveAbilityContainer {
 
     // ── 实例管理 ───────────────────────────────────────────
 
-    /// 插入一个活跃实例。
+    /// 用于 AbilitySystem 在技能激活后注册新实例。
     pub fn insert_instance(&mut self, instance: AbilityInstance) {
         self.active_instances.insert(instance.instance_id, instance);
     }
@@ -115,25 +115,25 @@ impl ActiveAbilityContainer {
         removed
     }
 
-    /// 清空所有活跃实例。
+    /// 清除所有活跃实例（如实体死亡时）。
     pub fn clear_instances(&mut self) {
         self.active_instances.clear();
     }
 
     // ── 冷却管理 ───────────────────────────────────────────
 
-    /// 查询指定 spec_id 的冷却状态。
+    /// 用于冷却系统在回合开始时查询冷却状态。
     pub fn get_cooldown(&self, spec_id: &str) -> Option<&CooldownEntry> {
         self.cooldowns.get(spec_id)
     }
 
-    /// 设置冷却状态。
+    /// 由 CooldownSystem 在技能使用后写入冷却记录。
     pub fn set_cooldown(&mut self, entry: CooldownEntry) {
         let spec_id = entry.spec_id.clone();
         self.cooldowns.insert(spec_id, entry);
     }
 
-    /// 移除冷却状态。
+    /// 手动清除冷却（如冷却缩减效果触发时）。
     pub fn remove_cooldown(&mut self, spec_id: &str) {
         self.cooldowns.remove(spec_id);
     }
@@ -168,7 +168,7 @@ impl ActiveAbilityContainer {
 
     // ── 共享冷却管理 ───────────────────────────────────────
 
-    /// 设置共享冷却组时间。
+    /// 由 CooldownSystem 在共享冷却启用时调用。
     pub fn set_shared_cooldown(&mut self, group: impl Into<String>, turns: u32) {
         self.shared_cooldowns.insert(group.into(), turns);
     }

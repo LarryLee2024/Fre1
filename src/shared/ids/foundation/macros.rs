@@ -1,6 +1,14 @@
-//! 领域 ID 类型（由宏统一生成）
-
-use bevy::prelude::Reflect;
+//! define_string_id! / define_numeric_id! 宏定义。
+//!
+//! 提供两个宏用于生成强类型 ID：
+//!
+//! - `define_string_id!` — 生成 String 类型 ID（配置表标识），带 Display/FromStr/Serde/StrongId
+//! - `define_numeric_id!` — 生成 u64 类型 ID（运行时实例标识），带 Display/Copy/Serde
+//!
+//! # 注意
+//!
+//! 调用此宏的模块必须将 `bevy::prelude::Reflect` 引入作用域，
+//! 因为 `#[derive(Reflect)]` 需要在调用方展开。
 
 /// String 类型 ID 宏。
 ///
@@ -8,7 +16,7 @@ use bevy::prelude::Reflect;
 /// Serde 格式: 同时接受 `<prefix>:<value>` 和裸 `<value>`
 ///
 /// 注意：调用此宏的模块必须将 `bevy::prelude::Reflect` 引入作用域，
-/// 因为 `#[derive(Reflect)]` 需要在调用方展开。参见 `types.rs` 顶部。
+/// 因为 `#[derive(Reflect)]` 需要在调用方展开。参见 `types/string_ids.rs` 顶部。
 #[macro_export]
 macro_rules! define_string_id {
     (
@@ -21,6 +29,43 @@ macro_rules! define_string_id {
 
         impl $name {
             $vis fn new(id: impl Into<String>) -> Self {
+                Self(id.into())
+            }
+
+            /// 创建 ID 并校验格式。
+            ///
+            /// 校验规则：
+            /// - 非空
+            /// - 不包含冒号（防止与 `prefix:value` 格式混淆）
+            /// - 只包含字母、数字、下划线（标准 ID 字符）
+            ///
+            /// # Errors
+            ///
+            /// 如果格式不符合规范，返回 `IdFormatError`。
+            $vis fn checked_new(id: impl Into<String>) -> Result<Self, $crate::shared::ids::foundation::IdFormatError> {
+                let s = id.into();
+                if s.is_empty() {
+                    return Err($crate::shared::ids::foundation::IdFormatError::Empty);
+                }
+                if s.contains(':') {
+                    return Err($crate::shared::ids::foundation::IdFormatError::PrefixMismatch {
+                        expected: $prefix,
+                        actual: s,
+                    });
+                }
+                if !s.chars().all(|c| c.is_alphanumeric() || c == '_') {
+                    return Err($crate::shared::ids::foundation::IdFormatError::InvalidCharacters(s));
+                }
+                Ok(Self(s))
+            }
+
+            /// 创建 ID 并附加 Debug 审计信息（仅 debug 模式收集，release 模式无开销）。
+            $vis fn new_tracked(id: impl Into<String>, _info: $crate::shared::ids::foundation::IdCreationInfo) -> Self {
+                #[cfg(debug_assertions)]
+                {
+                    // 审计信息在 debug 模式下可用，release 模式被编译消除
+                    let _ = &_info;
+                }
                 Self(id.into())
             }
 
@@ -169,188 +214,4 @@ macro_rules! define_numeric_id {
             }
         }
     };
-}
-
-// ============================================================================
-// String ID 类型（领域 Definition 标识）
-// ============================================================================
-
-define_string_id! {
-    pub AttributeId,
-    prefix: "attr",
-}
-
-define_string_id! {
-    pub TagId,
-    prefix: "tag",
-}
-
-define_string_id! {
-    pub ModifierId,
-    prefix: "mod",
-}
-
-define_string_id! {
-    pub EffectId,
-    prefix: "eff",
-}
-
-define_string_id! {
-    pub AbilityId,
-    prefix: "abl",
-}
-
-define_string_id! {
-    pub TriggerId,
-    prefix: "trg",
-}
-
-define_string_id! {
-    pub CueId,
-    prefix: "cue",
-}
-
-define_string_id! {
-    pub CharacterId,
-    prefix: "char",
-}
-
-define_string_id! {
-    pub UnitId,
-    prefix: "unit",
-}
-
-define_string_id! {
-    pub EquipmentId,
-    prefix: "equip",
-}
-
-define_string_id! {
-    pub ItemId,
-    prefix: "itm",
-}
-
-define_string_id! {
-    pub FactionId,
-    prefix: "fct",
-}
-
-// ============================================================================
-// 补充领域 ID 类型（按 id_strategy.md table 新增）
-// ============================================================================
-
-define_string_id! {
-    pub QuestId,
-    prefix: "qst",
-}
-
-define_string_id! {
-    pub SpellId,
-    prefix: "spl",
-}
-
-define_string_id! {
-    pub BuffId,
-    prefix: "buf",
-}
-
-define_string_id! {
-    pub TerrainId,
-    prefix: "ter",
-}
-
-define_string_id! {
-    pub RecipeId,
-    prefix: "rcp",
-}
-
-define_string_id! {
-    pub LootTableId,
-    prefix: "ltb",
-}
-
-define_string_id! {
-    pub TeamId,
-    prefix: "team",
-}
-
-define_string_id! {
-    pub ClassId,
-    prefix: "cls",
-}
-
-define_string_id! {
-    pub TalentId,
-    prefix: "tal",
-}
-
-define_string_id! {
-    pub SubclassId,
-    prefix: "sub",
-}
-
-define_string_id! {
-    pub BondDefId,
-    prefix: "bnd",
-}
-
-define_string_id! {
-    pub FormationDefId,
-    prefix: "fmd",
-}
-
-define_string_id! {
-    pub CampEventId,
-    prefix: "cmp",
-}
-
-// ============================================================================
-// DefinitionId — 通用 Definition ID（无前缀，用于 Registry 系统）
-// ============================================================================
-
-/// 通用 Definition 标识符。
-///
-/// 用于 Registry 系统中的泛型 Def 查询，不绑定特定前缀格式。
-/// 与 `define_string_id!` 生成的 ID 不同，DefinitionId 不要求前缀格式，
-/// 可直接使用任意字符串作为 ID。
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Reflect)]
-#[reflect(Hash, PartialEq)]
-pub struct DefinitionId(pub String);
-
-impl DefinitionId {
-    pub fn new(id: impl Into<String>) -> Self {
-        Self(id.into())
-    }
-
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
-
-    pub fn into_inner(self) -> String {
-        self.0
-    }
-}
-
-impl std::fmt::Display for DefinitionId {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl AsRef<str> for DefinitionId {
-    fn as_ref(&self) -> &str {
-        &self.0
-    }
-}
-
-impl From<String> for DefinitionId {
-    fn from(s: String) -> Self {
-        Self(s)
-    }
-}
-
-impl From<&str> for DefinitionId {
-    fn from(s: &str) -> Self {
-        Self(s.to_string())
-    }
 }

@@ -2,6 +2,11 @@
 //!
 //! 包括生命骰恢复量、HP 恢复量等计算。
 //! 详见 docs/02-domain/domains/camp_rest_domain.md §1
+//!
+//! 来源：
+//! - ADR-031 §4.2：短休/长休恢复公式
+//! - D&D 5e SRD §6：长休恢复全部 HP，短休消耗生命骰
+//! - 不变量 3.4：长休后生命骰上限 = ceil(等级/2)
 
 use super::super::components::DiceType;
 

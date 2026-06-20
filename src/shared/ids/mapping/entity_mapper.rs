@@ -11,7 +11,7 @@
 //! # 使用
 //!
 //! ```ignore
-//! use crate::shared::ids::entity_mapper::EntityMapper;
+//! use crate::shared::ids::mapping::EntityMapper;
 //!
 //! let mut mapper = EntityMapper::new();
 //! mapper.register(unit_id, entity);

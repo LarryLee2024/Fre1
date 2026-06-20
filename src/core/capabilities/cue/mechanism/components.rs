@@ -18,14 +18,14 @@ pub struct CueContainerComponent {
 }
 
 impl CueContainerComponent {
-    /// 创建空的 Cue 容器组件。
+    /// 创建一个空的 CueContainerComponent（无任何 Cue 绑定）。
     pub fn new() -> Self {
         Self {
             container: CueContainer::new(),
         }
     }
 
-    /// 从现有容器创建组件。
+    /// 用于从 EffectDef 的 cues 列表批量初始化。
     pub fn from_container(container: CueContainer) -> Self {
         Self { container }
     }

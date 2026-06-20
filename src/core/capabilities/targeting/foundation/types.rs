@@ -31,7 +31,7 @@ pub enum TargetType {
 }
 
 impl TargetType {
-    /// 返回人类可读的名称。
+    /// 返回的字符串与 Rust 枚举变体名一致，用于序列化和日志展示。
     pub fn name(&self) -> &str {
         match self {
             Self::Self_ => "Self",
@@ -96,7 +96,7 @@ pub enum TargetShape {
 }
 
 impl TargetShape {
-    /// 返回形状名称。
+    /// 返回的字符串忽略变体内部数据，Area/Line/Cone 等均返回不变的形状类别名。
     pub fn name(&self) -> &str {
         match self {
             Self::Single => "Single",
@@ -233,7 +233,7 @@ pub enum PriorityRule {
 }
 
 impl PriorityRule {
-    /// 返回规则名称。
+    /// 返回的字符串用于 UI 显示和序列化，与枚举变体名完全一致。
     pub fn name(&self) -> &str {
         match self {
             Self::Nearest => "Nearest",

@@ -1,4 +1,4 @@
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::Mutex;
 
 use bevy::prelude::*;
 
@@ -6,25 +6,26 @@ use crate::core::capabilities::modifier::events::ModifierApplied;
 use crate::core::capabilities::modifier::foundation::{
     ModifierData, ModifierInstanceId, ModifierOp, ModifierPriority, ModifierSource,
 };
+use crate::shared::ids::types::runtime_id::RuntimeIdAllocator;
 
 /// 修改器 ID 生成器（Resource）。
-/// 提供线程安全的唯一 ID 分配。
+/// 通过 `RuntimeIdAllocator` 提供带 generation 保护的唯一 ID 分配。
 #[derive(Resource, Debug)]
 pub struct ModifierIdGenerator {
-    next_id: AtomicU64,
+    allocator: Mutex<RuntimeIdAllocator>,
 }
 
 impl Default for ModifierIdGenerator {
     fn default() -> Self {
         Self {
-            next_id: AtomicU64::new(1),
+            allocator: Mutex::new(RuntimeIdAllocator::new()),
         }
     }
 }
 
 impl ModifierIdGenerator {
     pub fn next_id(&self) -> ModifierInstanceId {
-        ModifierInstanceId::new(self.next_id.fetch_add(1, Ordering::Relaxed))
+        ModifierInstanceId::from_runtime_id(self.allocator.lock().unwrap().alloc())
     }
 }
 

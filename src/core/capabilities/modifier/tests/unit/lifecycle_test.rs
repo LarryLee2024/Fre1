@@ -25,7 +25,7 @@ fn valid_modifier_creation_succeeds() {
         source_id: "buf_000001".to_string(),
     };
     let result = create_modifier(
-        ModifierInstanceId::new(1),
+        ModifierInstanceId::from_u64(1),
         ModifierOp::Add,
         "attr_000001".to_string(),
         5.0,
@@ -48,7 +48,7 @@ fn priority_out_of_range_rejected() {
         source_id: "buf_000001".to_string(),
     };
     let result = create_modifier(
-        ModifierInstanceId::new(1),
+        ModifierInstanceId::from_u64(1),
         ModifierOp::Add,
         "attr_000001".to_string(),
         5.0,
@@ -74,7 +74,7 @@ fn missing_source_rejected() {
         source_id: "".to_string(),
     };
     let result = create_modifier(
-        ModifierInstanceId::new(1),
+        ModifierInstanceId::from_u64(1),
         ModifierOp::Add,
         "attr_000001".to_string(),
         5.0,
@@ -100,7 +100,7 @@ fn missing_target_rejected() {
         source_id: "buf_000001".to_string(),
     };
     let result = create_modifier(
-        ModifierInstanceId::new(1),
+        ModifierInstanceId::from_u64(1),
         ModifierOp::Add,
         "".to_string(),
         5.0,
@@ -126,7 +126,7 @@ fn create_multiply_modifier_succeeds() {
         source_id: "abl_000001".to_string(),
     };
     let result = create_modifier(
-        ModifierInstanceId::new(1),
+        ModifierInstanceId::from_u64(1),
         ModifierOp::Multiply,
         "attr_000001".to_string(),
         1.5,

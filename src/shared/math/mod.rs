@@ -1,3 +1,4 @@
 //! 纯数学工具（距离 / 插值 / 网格坐标）
 
-// TODO: 实现 HexGrid/Math/Float 工具
+// TODO[P2][SHARED][2026-06-20]: 实现 HexGrid/Math/Float 工具
+// 完成条件: 提供网格距离计算 / 插值 / 浮点比较函数

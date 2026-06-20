@@ -2,6 +2,13 @@
 //!
 //! 读取 InputState，将技能槽、回合结束等输入映射为战斗命令。
 //! 仅在玩家回合期间响应输入。
+//!
+//! # 系统间契约
+//!
+//! - **输入方**：infra::input（InputState / InputAction）— 原始按键已在此层翻译为语义动作
+//! - **消费方**：本系统消费语义动作，构造战斗命令入队到 CommandQueue
+//! - **边界规则**：本系统不访问原始按键（KeyCode），只消费 InputAction 枚举
+//! - **方向**：Infra (Input) → Domain (Combat)，符合架构法第 2 层依赖方向
 
 use bevy::prelude::*;
 use tracing;

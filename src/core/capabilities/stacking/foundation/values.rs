@@ -75,27 +75,27 @@ impl StackingState {
         }
     }
 
-    /// 检查是否已达到上限。
+    /// 满足不变量 3.1 时返回 false，否则返回 true。
     pub fn is_at_max(&self) -> bool {
         self.stack_count >= self.max_stacks
     }
 
-    /// 添加一个成员实例 ID 到追踪列表。
+    /// 用于在仓颉移除效果时同步移除成员记录，保持 stack_members 与活跃效果一致。
     pub fn add_member(&mut self, instance_id: impl Into<String>) {
         self.stack_members.push(instance_id.into());
     }
 
-    /// 从追踪列表移除一个成员实例 ID。
+    /// 移除指定实例 ID，不影响 stack_count。用于效果提前终止时清理。
     pub fn remove_member(&mut self, instance_id: &str) {
         self.stack_members.retain(|id| id != instance_id);
     }
 
-    /// 获取当前层数。
+    /// 等价于直接读取 stack_count，提供方法式访问。
     pub fn current_layers(&self) -> u32 {
         self.stack_count
     }
 
-    /// 获取剩余可用层数（还可叠加多少层）。
+    /// 用于判断是否还能叠加新层。满足不变量 3.1 检查时调用此方法。
     pub fn remaining_capacity(&self) -> u32 {
         self.max_stacks.saturating_sub(self.stack_count)
     }
