@@ -1,7 +1,7 @@
 ---
 id: 01-architecture.40-cross-cutting.ADR-053
 title: "ADR-053: Localization 基础设施架构（Fluent + Key 代码生成 + 三级回退）"
-status: Proposed
+status: Accepted
 owner: architect
 created: 2026-06-19
 tags:
@@ -57,54 +57,46 @@ Content（加载 .ftl 资产）
 Tools（覆盖率报告工具）
 ```
 
-### 2. 组件架构
+### 2. 组件架构（Sublayer 结构）
+
+代码按六层子目录组织，每层有明确职责，依赖方向从下到上：
 
 ```
 infra/localization/
-├── mod.rs                          # 模块导出
-├── plugin.rs                       # LocalizationPlugin
-│   ├── 注册 LocalizationDatabase (Resource)
-│   ├── 注册 LocalizationLoader (System)
-│   ├── 注册 LocalizationValidator (Startup System)
-│   └── 注册 LocalizationAudit (System)
-│
-├── database.rs                     # LocalizationDatabase
-│   ├── 存储所有 locale 的所有 key→value 映射
-│   ├── 支持 locale 切换（set_locale()）
-│   ├── Fallback 链：{locale} → en-US → raw_key
-│   └── clear_cache() 刷新所有缓存
-│
-├── loader.rs                       # LocalizationLoader
-│   ├── 从 assets/localization/{locale}/*.ftl 加载
-│   ├── 支持热重载（监听文件变化）
-│   └── 解析 .ftl 为扁平 key→pattern 映射
-│
-├── cache.rs                        # LocalizedTextCache
-│   ├── 解析后的文本缓存（key+locale → String）
-│   ├── 仅缓存热路径（UI 每帧查询的键）
-│   └── set_locale() 时全量失效
-│
-├── components.rs                   # LocalizedText Component
-│   ├── LocalizedText { key: &str, params: Vec<(String, Value)> }
-│   ├── 供 UI 系统使用的组件
-│   └── UI 系统只需读 Component 自动渲染
-│
-├── validator.rs                    # LocalizationValidator
-│   ├── 启动时扫描所有已注册的 LocalizationKey
-│   ├── 检查：缺失 Key / 重复 Key / 参数不匹配
-│   └── 严重缺失直接阻止启动
-│
-├── audit.rs                        # LocalizationAudit
-│   ├── 运行时审计：orphan Key / deprecated Key / 覆盖率
-│   └── 输出覆盖率报告
-│
-├── generated/
-│   └── keys.rs                     # 自动生成（build.rs）
-│       ├── 常量模块如 loc::ability::abl_000042::NAME
-│       └── 编译期 Key 拼写检查
-│
-└── test.rs                         # 单元测试
+├── mod.rs, plugin.rs           # 入口：模块导出 + Bevy Plugin 注册
+├──
+├── foundation/                 # L0: 零业务语义的纯类型
+│   ├── error.rs                #   LocError 枚举（thiserror）
+│   ├── locale_id.rs            #   LocaleId 枚举（EnUS/ZhCN/JaJP/ZzZZ）
+│   └── pattern.rs              #   Pattern 结构体（template + variables）
+├── storage/                    # L1: ECS Resource 存储
+│   ├── database.rs             #   LocalizationDatabase（三级回退链）
+│   └── cache.rs                #   LocalizedTextCache（运行时缓存）
+├── io/                         # L2: 文件 IO 与解析
+│   ├── parser.rs               #   parse_ftl() 解析器
+│   ├── loader.rs               #   .ftl 文件加载系统
+│   └── watcher.rs              #   热重载文件监控（debug only）
+├── ui/                         # L3: 表现层
+│   ├── components.rs           #   LocalizedText Component
+│   └── render.rs               #   render_localized_text 系统
+├── facade/                     # L4: 跨层编排（统一入口）
+│   └── resolve.rs              #   resolve_cached 封装
+├── validation/                 # L5: 校验与审计
+│   ├── validator.rs            #   启动时 Key 完整性校验
+│   └── audit.rs                #   运行时覆盖率审计
+└──
+    generated/
+        └── keys.rs             #   build.rs 自动生成，扁平常量
 ```
+
+**层间依赖规则**（从下到上单向依赖）：
+- `foundation/` → 零依赖（仅 Rust 标准库 + thiserror）
+- `storage/` → `foundation/`
+- `io/` → `foundation/` + `storage/`
+- `ui/` → `foundation/` + `storage/`
+- `facade/` → `storage/` + `ui/`
+- `validation/` → `storage/`
+- `plugin.rs` 组装所有层
 
 ### 3. LocalizationDatabase 接口设计
 

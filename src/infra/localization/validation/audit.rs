@@ -6,7 +6,7 @@
 
 use bevy::prelude::*;
 
-use super::database::LocalizationDatabase;
+use crate::infra::localization::storage::LocalizationDatabase;
 
 /// 审计周期（秒）
 const AUDIT_INTERVAL_SECONDS: f64 = 300.0; // 每 5 分钟

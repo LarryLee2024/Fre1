@@ -1,14 +1,15 @@
 //! 启动校验 — 检查 Key 完整性、Orphan Key、覆盖率
 //!
 //! 必须在所有 .ftl 加载完成后运行。
-//! 缺失 Key → panic（阻止启动），Orphan → warn，覆盖率低 → warn。
+//! 缺失 Key -> panic（阻止启动），Orphan -> warn，覆盖率低 -> warn。
 //!
 //! 详见 `docs/03-technical/localization-design.md` §6
 
 use bevy::prelude::*;
 
-use super::database::LocalizationDatabase;
+use crate::infra::localization::foundation::LocaleId;
 use crate::infra::localization::generated::ALL_KEYS;
+use crate::infra::localization::storage::LocalizationDatabase;
 
 /// 启动时校验 —— 必须在所有 .ftl 加载完成后运行
 ///
@@ -23,29 +24,29 @@ pub fn validation_system(db: Res<LocalizationDatabase>) {
     // 已生成 key 的列表
     let all_keys: &[&str] = ALL_KEYS;
 
-    // ── 1. 缺失 Key ──
+    // -- 1. 缺失 Key --
     // Rust 代码引用了，但 en-US 的 .ftl 中没有
     for key in all_keys {
-        if !db.has_key("en-US", key) {
+        if !db.has_key(&LocaleId::EnUS, key) {
             errors.push(format!(
-                "MISSING KEY: '{}' — referenced in code, not found in en-US .ftl files",
+                "MISSING KEY: '{}' -- referenced in code, not found in en-US .ftl files",
                 key
             ));
         }
     }
 
-    // ── 2. Orphan Key ──
+    // -- 2. Orphan Key --
     // .ftl 中存在，但没有 Rust 代码引用
-    for key in db.all_keys("en-US") {
+    for key in db.all_keys(&LocaleId::EnUS) {
         if !all_keys.contains(&key) {
             warnings.push(format!(
-                "ORPHAN KEY: '{}' — defined in .ftl but never referenced in code",
+                "ORPHAN KEY: '{}' -- defined in .ftl but never referenced in code",
                 key
             ));
         }
     }
 
-    // ── 3. 覆盖率检查 ──
+    // -- 3. 覆盖率检查 --
     let coverage = db.coverage();
     if coverage < 0.80 {
         warnings.push(format!(
@@ -55,7 +56,7 @@ pub fn validation_system(db: Res<LocalizationDatabase>) {
         ));
     }
 
-    // ── 输出 ──
+    // -- 输出 --
     for warn in &warnings {
         warn!(target: "localization", "[Localization] {}", warn);
     }

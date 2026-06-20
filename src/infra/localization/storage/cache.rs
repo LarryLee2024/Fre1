@@ -10,7 +10,7 @@ use std::hash::{Hash, Hasher};
 
 use bevy::prelude::*;
 
-use super::error::LocaleId;
+use crate::infra::localization::foundation::LocaleId;
 
 /// 运行时解析文本缓存
 ///
@@ -88,7 +88,7 @@ fn params_hash(params: &[(&str, &str)]) -> u64 {
 /// 通过比较 current_locale 与上次记录的值来检测切换。
 pub fn detect_locale_change_and_clear_cache(
     db: Res<super::database::LocalizationDatabase>,
-    mut last_locale: Local<Option<super::error::LocaleId>>,
+    mut last_locale: Local<Option<LocaleId>>,
     mut cache: ResMut<LocalizedTextCache>,
 ) {
     let current = db.current_locale().clone();

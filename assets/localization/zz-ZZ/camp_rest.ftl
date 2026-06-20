@@ -1,0 +1,10 @@
+### Camp and rest activities — zz-ZZ (Fake Locale)
+-camp_rest-long-rest-text = [Ŧáķé á ŀóñĝ ŕéśŧ?]
+    .desc = [Ƒúŀŀý ŕéśŧóŕé ĤṖ áñḋ ḾṖ ƒóŕ áŀŀ ṕáŕŧý ḿéḿƀéŕś]
+-camp_rest-short-rest-text = [Ŧáķé á śħóŕŧ ŕéśŧ?]
+    .desc = [Ŕéśŧóŕé {$value} ĤṖ áñḋ ḾṖ]
+-camp_rest-interrupted-text = [Ŕéśŧ íñţéŕŕúṕŧéḋ ƀý {$enemy}]
+-camp_rest-cook-text = [Çóóķ á ḿéáŀ]
+    .desc = [Ṕŕéṕáŕé ƒóóḋ úśíñĝ íñĝŕéḋíéñŧś]
+-camp_rest-save-text = [Śáṽé ĝáḿé]
+    .desc = [Śáṽé ýóúŕ ṕŕóĝŕéśś áŧ ţħé çáḿṕ]

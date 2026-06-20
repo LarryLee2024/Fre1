@@ -1,10 +1,10 @@
 ---
 id: infrastructure.localization.schema.v1
 title: Localization Schema — 本地化系统数据架构
-status: draft
+status: stable
 owner: data-architect
 created: 2026-06-19
-updated: 2026-06-19
+updated: 2026-06-21
 layer: infrastructure
 replay-safe: true
 ---

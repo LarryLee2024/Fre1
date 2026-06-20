@@ -1,12 +1,9 @@
 //! Localization 错误类型
 //!
-//! 零依赖层，仅使用 Rust 标准库。
+//! 零依赖层，仅使用 Rust 标准库和 thiserror。
 //! 详见 `docs/03-technical/localization-design.md` 附录 A
 
-/// Locale ID: 语言标识符，遵循 BCP-47 格式。
-///
-/// 如 "en-US", "zh-CN", "ja-JP", "zz-ZZ"
-pub type LocaleId = String;
+use super::locale_id::LocaleId;
 
 /// Localization 错误类型
 #[derive(Debug, Clone, thiserror::Error)]

@@ -1,0 +1,11 @@
+### Core UI strings — en-US
+-core-yes = [ja-JP 未翻訳]
+-core-no = [ja-JP 未翻訳]
+-core-confirm = [ja-JP 未翻訳]
+-core-cancel = [ja-JP 未翻訳]
+-core-ok = [ja-JP 未翻訳]
+-core-back = [ja-JP 未翻訳]
+-core-next = [ja-JP 未翻訳]
+-core-save = [ja-JP 未翻訳]
+-core-load = [ja-JP 未翻訳]
+-core-exit = [ja-JP 未翻訳]

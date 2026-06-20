@@ -1,0 +1,11 @@
+### Error messages — zz-ZZ (Fake Locale)
+-error-character-not-found = [Çħáŕáçŧéŕ ñóŧ ƒóúñḋ]
+-error-item-not-found = [Íŧéḿ ñóŧ ƒóúñḋ]
+-error-invalid-target = [Íñṽáŀíď ŧáŕĝéŧ]
+-error-not-enough-gold = [Ńóŧ éñóúĝħ ĝóŀḋ]
+-error-inventory-full = [Íñṽéñŧóŕý ƒúŀŀ]
+-error-ability-not-ready = [Áƀíŀíŧý íś ñóŧ ŕéáďý]
+-error-out-of-range = [Ŧáŕĝéŧ íś óúŧ óƒ ŕáñĝé]
+-error-level-requirement = [Ļéṽéŀ {$level} ŕéƣúíŕéḋ]
+-error-quest-not-found = [Qúéśŧ ñóŧ ƒóúñḋ]
+-error-summon-limit = [Śúḿḿóñ ŀíḿíŧ ŕéáçħéḋ]

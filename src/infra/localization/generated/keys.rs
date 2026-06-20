@@ -23,6 +23,20 @@ pub mod loc {
     pub const ABL_000008_NAME_DESC: &str = "ability.abl_000008.name.desc";
     }
 
+    pub mod battle {
+    pub const BUFF_APPLIED_TEXT: &str = "battle.buff.applied.text";
+    pub const BUFF_EXPIRED_TEXT: &str = "battle.buff.expired.text";
+    pub const COUNTER_TEXT: &str = "battle.counter.text";
+    pub const CRITICAL_TEXT: &str = "battle.critical.text";
+    pub const DAMAGE_DEALT_TEXT: &str = "battle.damage.dealt.text";
+    pub const DODGE_TEXT: &str = "battle.dodge.text";
+    pub const HEAL_RECEIVED_TEXT: &str = "battle.heal.received.text";
+    pub const IMMUNE_TEXT: &str = "battle.immune.text";
+    pub const MISS_TEXT: &str = "battle.miss.text";
+    pub const RESIST_TEXT: &str = "battle.resist.text";
+    pub const UNIT_DIED_TEXT: &str = "battle.unit.died.text";
+    }
+
     pub mod buff {
     pub const BUF_000001_NAME: &str = "buff.buf_000001.name";
     pub const BUF_000001_NAME_DESC: &str = "buff.buf_000001.name.desc";
@@ -42,6 +56,18 @@ pub mod loc {
     pub const BUF_000008_NAME_DESC: &str = "buff.buf_000008.name.desc";
     }
 
+    pub mod camp_rest {
+    pub const COOK_TEXT: &str = "camp_rest.cook.text";
+    pub const COOK_TEXT_DESC: &str = "camp_rest.cook.text.desc";
+    pub const INTERRUPTED_TEXT: &str = "camp_rest.interrupted.text";
+    pub const LONG_REST_TEXT: &str = "camp_rest.long.rest.text";
+    pub const LONG_REST_TEXT_DESC: &str = "camp_rest.long.rest.text.desc";
+    pub const SAVE_TEXT: &str = "camp_rest.save.text";
+    pub const SAVE_TEXT_DESC: &str = "camp_rest.save.text.desc";
+    pub const SHORT_REST_TEXT: &str = "camp_rest.short.rest.text";
+    pub const SHORT_REST_TEXT_DESC: &str = "camp_rest.short.rest.text.desc";
+    }
+
     pub mod core {
     pub const BACK: &str = "core.back";
     pub const CANCEL: &str = "core.cancel";
@@ -53,6 +79,54 @@ pub mod loc {
     pub const OK: &str = "core.ok";
     pub const SAVE: &str = "core.save";
     pub const YES: &str = "core.yes";
+    }
+
+    pub mod crafting {
+    pub const CRAFT_FAIL_TEXT: &str = "crafting.craft.fail.text";
+    pub const CRAFT_SUCCESS_TEXT: &str = "crafting.craft.success.text";
+    pub const CRAFT_TEXT: &str = "crafting.craft.text";
+    pub const MATERIAL_MISSING_TEXT: &str = "crafting.material.missing.text";
+    pub const RECIPE_LEARNED_TEXT: &str = "crafting.recipe.learned.text";
+    pub const STATION_TEXT: &str = "crafting.station.text";
+    }
+
+    pub mod economy {
+    pub const BARTER_TEXT: &str = "economy.barter.text";
+    pub const REPUTATION_TEXT: &str = "economy.reputation.text";
+    pub const SHOP_BUY_TEXT: &str = "economy.shop.buy.text";
+    pub const SHOP_CONFIRM_PURCHASE: &str = "economy.shop.confirm.purchase";
+    pub const SHOP_GREETING: &str = "economy.shop.greeting";
+    pub const SHOP_NOT_ENOUGH_GOLD: &str = "economy.shop.not.enough.gold";
+    pub const SHOP_SELL_TEXT: &str = "economy.shop.sell.text";
+    pub const SHOP_TRANSACTION_COMPLETE: &str = "economy.shop.transaction.complete";
+    }
+
+    pub mod error {
+    pub const ABILITY_NOT_READY: &str = "error.ability.not.ready";
+    pub const CHARACTER_NOT_FOUND: &str = "error.character.not.found";
+    pub const INVALID_TARGET: &str = "error.invalid.target";
+    pub const INVENTORY_FULL: &str = "error.inventory.full";
+    pub const ITEM_NOT_FOUND: &str = "error.item.not.found";
+    pub const LEVEL_REQUIREMENT: &str = "error.level.requirement";
+    pub const NOT_ENOUGH_GOLD: &str = "error.not.enough.gold";
+    pub const OUT_OF_RANGE: &str = "error.out.of.range";
+    pub const QUEST_NOT_FOUND: &str = "error.quest.not.found";
+    pub const SUMMON_LIMIT: &str = "error.summon.limit";
+    }
+
+    pub mod faction {
+    pub const FCT_000001_NAME: &str = "faction.fct_000001.name";
+    pub const FCT_000001_NAME_DESC: &str = "faction.fct_000001.name.desc";
+    pub const FCT_000002_NAME: &str = "faction.fct_000002.name";
+    pub const FCT_000002_NAME_DESC: &str = "faction.fct_000002.name.desc";
+    pub const FCT_000003_NAME: &str = "faction.fct_000003.name";
+    pub const FCT_000003_NAME_DESC: &str = "faction.fct_000003.name.desc";
+    pub const FCT_000004_NAME: &str = "faction.fct_000004.name";
+    pub const FCT_000004_NAME_DESC: &str = "faction.fct_000004.name.desc";
+    pub const RELATION_ALLIED: &str = "faction.relation.allied";
+    pub const RELATION_FRIENDLY: &str = "faction.relation.friendly";
+    pub const RELATION_HOSTILE: &str = "faction.relation.hostile";
+    pub const RELATION_NEUTRAL: &str = "faction.relation.neutral";
     }
 
     pub mod gameplay {
@@ -93,6 +167,22 @@ pub mod loc {
     pub const ITM_000008_NAME_DESC: &str = "item.itm_000008.name.desc";
     }
 
+    pub mod party {
+    pub const FORMATION_TEXT: &str = "party.formation.text";
+    pub const LEADER_CHANGED_TEXT: &str = "party.leader.changed.text";
+    pub const MEMBER_JOIN_TEXT: &str = "party.member.join.text";
+    pub const MEMBER_LEAVE_TEXT: &str = "party.member.leave.text";
+    pub const WELCOME_TEXT: &str = "party.welcome.text";
+    }
+
+    pub mod progression {
+    pub const CLASS_ADVANCE_TEXT: &str = "progression.class.advance.text";
+    pub const EXP_GAIN_TEXT: &str = "progression.exp.gain.text";
+    pub const LEVEL_UP_TEXT: &str = "progression.level.up.text";
+    pub const SKILL_UNLOCKED_TEXT: &str = "progression.skill.unlocked.text";
+    pub const STAT_INCREASE_TEXT: &str = "progression.stat.increase.text";
+    }
+
     pub mod quest {
     pub const OBJECTIVE_COLLECT: &str = "quest.objective.collect";
     pub const OBJECTIVE_KILL: &str = "quest.objective.kill";
@@ -109,6 +199,49 @@ pub mod loc {
     pub const QST_000004_NAME_DESC: &str = "quest.qst_000004.name.desc";
     pub const QST_000005_NAME: &str = "quest.qst_000005.name";
     pub const QST_000005_NAME_DESC: &str = "quest.qst_000005.name.desc";
+    }
+
+    pub mod reaction {
+    pub const COUNTER_ATTACK_TEXT: &str = "reaction.counter.attack.text";
+    pub const COVER_TEXT: &str = "reaction.cover.text";
+    pub const INTERRUPT_TEXT: &str = "reaction.interrupt.text";
+    pub const OPPORTUNITY_ATTACK_TEXT: &str = "reaction.opportunity.attack.text";
+    pub const RIPOSTE_TEXT: &str = "reaction.riposte.text";
+    }
+
+    pub mod spell {
+    pub const SPL_000001_NAME: &str = "spell.spl_000001.name";
+    pub const SPL_000001_NAME_DESC: &str = "spell.spl_000001.name.desc";
+    pub const SPL_000002_NAME: &str = "spell.spl_000002.name";
+    pub const SPL_000002_NAME_DESC: &str = "spell.spl_000002.name.desc";
+    pub const SPL_000003_NAME: &str = "spell.spl_000003.name";
+    pub const SPL_000003_NAME_DESC: &str = "spell.spl_000003.name.desc";
+    pub const SPL_000004_NAME: &str = "spell.spl_000004.name";
+    pub const SPL_000004_NAME_DESC: &str = "spell.spl_000004.name.desc";
+    }
+
+    pub mod story {
+    pub const CH01_DLG_001_TEXT: &str = "story.ch01.dlg.001.text";
+    pub const CH01_DLG_002_TEXT: &str = "story.ch01.dlg.002.text";
+    pub const CH01_DLG_003_TEXT: &str = "story.ch01.dlg.003.text";
+    pub const CH01_DLG_004_TEXT: &str = "story.ch01.dlg.004.text";
+    pub const CH01_DLG_005_TEXT: &str = "story.ch01.dlg.005.text";
+    pub const CH01_TITLE: &str = "story.ch01.title";
+    }
+
+    pub mod summon {
+    pub const DISMISSED_TEXT: &str = "summon.dismissed.text";
+    pub const EXPIRED_TEXT: &str = "summon.expired.text";
+    pub const NO_SLOTS_TEXT: &str = "summon.no.slots.text";
+    pub const SUMMONED_TEXT: &str = "summon.summoned.text";
+    }
+
+    pub mod terrain {
+    pub const DIFFICULT_TEXT: &str = "terrain.difficult.text";
+    pub const EFFECT_TEXT: &str = "terrain.effect.text";
+    pub const ENTER_TEXT: &str = "terrain.enter.text";
+    pub const HAZARD_TRIGGERED_TEXT: &str = "terrain.hazard.triggered.text";
+    pub const INTERACT_TEXT: &str = "terrain.interact.text";
     }
 
     pub mod tutorial {
@@ -171,6 +304,17 @@ pub const ALL_KEYS: &[&str] = &[
     "ability.abl_000007.name.desc",
     "ability.abl_000008.name",
     "ability.abl_000008.name.desc",
+    "battle.buff.applied.text",
+    "battle.buff.expired.text",
+    "battle.counter.text",
+    "battle.critical.text",
+    "battle.damage.dealt.text",
+    "battle.dodge.text",
+    "battle.heal.received.text",
+    "battle.immune.text",
+    "battle.miss.text",
+    "battle.resist.text",
+    "battle.unit.died.text",
     "buff.buf_000001.name",
     "buff.buf_000001.name.desc",
     "buff.buf_000002.name",
@@ -187,6 +331,15 @@ pub const ALL_KEYS: &[&str] = &[
     "buff.buf_000007.name.desc",
     "buff.buf_000008.name",
     "buff.buf_000008.name.desc",
+    "camp_rest.cook.text",
+    "camp_rest.cook.text.desc",
+    "camp_rest.interrupted.text",
+    "camp_rest.long.rest.text",
+    "camp_rest.long.rest.text.desc",
+    "camp_rest.save.text",
+    "camp_rest.save.text.desc",
+    "camp_rest.short.rest.text",
+    "camp_rest.short.rest.text.desc",
     "core.back",
     "core.cancel",
     "core.confirm",
@@ -197,6 +350,42 @@ pub const ALL_KEYS: &[&str] = &[
     "core.ok",
     "core.save",
     "core.yes",
+    "crafting.craft.fail.text",
+    "crafting.craft.success.text",
+    "crafting.craft.text",
+    "crafting.material.missing.text",
+    "crafting.recipe.learned.text",
+    "crafting.station.text",
+    "economy.barter.text",
+    "economy.reputation.text",
+    "economy.shop.buy.text",
+    "economy.shop.confirm.purchase",
+    "economy.shop.greeting",
+    "economy.shop.not.enough.gold",
+    "economy.shop.sell.text",
+    "economy.shop.transaction.complete",
+    "error.ability.not.ready",
+    "error.character.not.found",
+    "error.invalid.target",
+    "error.inventory.full",
+    "error.item.not.found",
+    "error.level.requirement",
+    "error.not.enough.gold",
+    "error.out.of.range",
+    "error.quest.not.found",
+    "error.summon.limit",
+    "faction.fct_000001.name",
+    "faction.fct_000001.name.desc",
+    "faction.fct_000002.name",
+    "faction.fct_000002.name.desc",
+    "faction.fct_000003.name",
+    "faction.fct_000003.name.desc",
+    "faction.fct_000004.name",
+    "faction.fct_000004.name.desc",
+    "faction.relation.allied",
+    "faction.relation.friendly",
+    "faction.relation.hostile",
+    "faction.relation.neutral",
     "gameplay.buff.applied",
     "gameplay.buff.expired",
     "gameplay.buff.tick",
@@ -229,6 +418,16 @@ pub const ALL_KEYS: &[&str] = &[
     "item.itm_000007.name.desc",
     "item.itm_000008.name",
     "item.itm_000008.name.desc",
+    "party.formation.text",
+    "party.leader.changed.text",
+    "party.member.join.text",
+    "party.member.leave.text",
+    "party.welcome.text",
+    "progression.class.advance.text",
+    "progression.exp.gain.text",
+    "progression.level.up.text",
+    "progression.skill.unlocked.text",
+    "progression.stat.increase.text",
     "quest.objective.collect",
     "quest.objective.kill",
     "quest.objective.protect",
@@ -244,6 +443,34 @@ pub const ALL_KEYS: &[&str] = &[
     "quest.qst_000004.name.desc",
     "quest.qst_000005.name",
     "quest.qst_000005.name.desc",
+    "reaction.counter.attack.text",
+    "reaction.cover.text",
+    "reaction.interrupt.text",
+    "reaction.opportunity.attack.text",
+    "reaction.riposte.text",
+    "spell.spl_000001.name",
+    "spell.spl_000001.name.desc",
+    "spell.spl_000002.name",
+    "spell.spl_000002.name.desc",
+    "spell.spl_000003.name",
+    "spell.spl_000003.name.desc",
+    "spell.spl_000004.name",
+    "spell.spl_000004.name.desc",
+    "story.ch01.dlg.001.text",
+    "story.ch01.dlg.002.text",
+    "story.ch01.dlg.003.text",
+    "story.ch01.dlg.004.text",
+    "story.ch01.dlg.005.text",
+    "story.ch01.title",
+    "summon.dismissed.text",
+    "summon.expired.text",
+    "summon.no.slots.text",
+    "summon.summoned.text",
+    "terrain.difficult.text",
+    "terrain.effect.text",
+    "terrain.enter.text",
+    "terrain.hazard.triggered.text",
+    "terrain.interact.text",
     "tutorial.attack",
     "tutorial.defeat",
     "tutorial.end.turn",

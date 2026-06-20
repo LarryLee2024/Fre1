@@ -9,6 +9,8 @@ use bevy::prelude::*;
 use bevy::ui::widget::Button;
 
 use super::components::{ModalButtonRole, ModalState, ModalVariant};
+use crate::infra::localization::LocalizedText;
+use crate::infra::localization::generated::loc;
 use crate::ui::Theme;
 use crate::ui::primitives::button::components::{ButtonInteraction, ButtonState, ButtonVariant};
 
@@ -167,14 +169,15 @@ pub fn spawn_modal(
                                             ButtonState {
                                                 variant: ButtonVariant::Primary,
                                                 disabled: false,
-                                                label: "确定".to_string(),
+                                                label: String::new(),
                                             },
                                             ButtonInteraction::default(),
                                             ModalButtonRole::Cancel,
                                         ))
                                         .with_children(|btn| {
                                             btn.spawn((
-                                                Text::new("确定"),
+                                                Text::new(""),
+                                                LocalizedText::static_text(loc::core::CONFIRM),
                                                 TextFont {
                                                     font_size: FontSize::Px(
                                                         theme.typography.size_body,
@@ -206,14 +209,15 @@ pub fn spawn_modal(
                                             ButtonState {
                                                 variant: ButtonVariant::Secondary,
                                                 disabled: false,
-                                                label: "取消".to_string(),
+                                                label: String::new(),
                                             },
                                             ButtonInteraction::default(),
                                             ModalButtonRole::Cancel,
                                         ))
                                         .with_children(|btn| {
                                             btn.spawn((
-                                                Text::new("取消"),
+                                                Text::new(""),
+                                                LocalizedText::static_text(loc::core::CANCEL),
                                                 TextFont {
                                                     font_size: FontSize::Px(
                                                         theme.typography.size_body,
@@ -244,14 +248,15 @@ pub fn spawn_modal(
                                             ButtonState {
                                                 variant: ButtonVariant::Primary,
                                                 disabled: false,
-                                                label: "确认".to_string(),
+                                                label: String::new(),
                                             },
                                             ButtonInteraction::default(),
                                             ModalButtonRole::Confirm,
                                         ))
                                         .with_children(|btn| {
                                             btn.spawn((
-                                                Text::new("确认"),
+                                                Text::new(""),
+                                                LocalizedText::static_text(loc::core::CONFIRM),
                                                 TextFont {
                                                     font_size: FontSize::Px(
                                                         theme.typography.size_body,

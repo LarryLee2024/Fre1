@@ -1,0 +1,11 @@
+### Core localization keys for testing
+-core-yes = Yes
+-core-no = No
+-core-ok = OK
+-core-cancel = Cancel
+-core-back = Back
+-core-confirm = Confirm
+-core-save = Save
+-core-load = Load
+-core-exit = Exit
+-core-next = Next

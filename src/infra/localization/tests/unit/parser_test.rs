@@ -1,9 +1,8 @@
-//! parse_ftl 解析器单元测试
+//! Unit tests for localization parsing.
 //!
-//! 验证 .ftl 文本解析为 key → Pattern 映射的正确性，
-//! 包括基本解析、空内容、纯注释、多变量和特殊字符。
+//! Tests for parse_ftl: basic parsing, empty input, comments, variables, fake locale.
 
-use crate::infra::localization::loader::parse_ftl;
+use crate::infra::localization::io::parse_ftl;
 
 #[test]
 fn test_parse_basic_ftl() {
@@ -57,10 +56,10 @@ fn test_parse_multiple_variables() {
 #[test]
 fn test_parse_zz_zz_fake_locale() {
     let content = r#"
--core-yes = [Ýéś]
--core-no = [Ñó]
+-core-yes = [Yes]
+-core-no = [No]
 "#;
     let map = parse_ftl(content);
-    assert_eq!(map.get("core.yes").unwrap().template, "[Ýéś]");
-    assert_eq!(map.get("core.no").unwrap().template, "[Ñó]");
+    assert_eq!(map.get("core.yes").unwrap().template, "[Yes]");
+    assert_eq!(map.get("core.no").unwrap().template, "[No]");
 }

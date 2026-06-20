@@ -1,0 +1,12 @@
+### Battle log messages — zz-ZZ (Fake Locale)
+-battle-damage-dealt-text = [{$source} ḋéáŀś {$damage} ḋáḿáĝé ţó {$target}]
+-battle-heal-received-text = [{$source} ŕéśţóŕéś {$value} ḢṖ ţó {$target}]
+-battle-unit-died-text = [{$unit} ħáś ƀééñ ḋéƒéáţéḋ]
+-battle-critical-text = [Çŕíţíçáŀ ħíŧ! {$damage} ḋáḿáĝé!]
+-battle-miss-text = [{$source} áţţáçķ ḿíśśéś {$target}]
+-battle-dodge-text = [{$target} ḋóḋĝéś ţħé áţţáçķ]
+-battle-resist-text = [{$target} ŕéśíśţś {$effect}]
+-battle-counter-text = [{$source} çóúñţéŕś ƒóŕ {$damage} ḋáḿáĝé]
+-battle-immune-text = [{$target} íś íḿḿúñé ţó {$effect}]
+-battle-buff-applied-text = [{$effect} áṗŀíéḋ ţó {$target}]
+-battle-buff-expired-text = [{$effect} éẋṗíŕéḋ óñ {$target}]

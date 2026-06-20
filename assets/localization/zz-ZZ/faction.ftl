@@ -1,0 +1,13 @@
+### Faction names and relations — zz-ZZ (Fake Locale)
+-faction-fct_000001-name = [Ķíñĝḋóm óƒ Áŀḋóŕíá]
+    .desc = [Ŧħé ḿíĝħţý ħúḿáñ ķíñĝḋóm]
+-faction-fct_000002-name = [Éŀvéñ Áŀŀíáñçé]
+    .desc = [Ŧħé áñçíéñţ éŀvéñ çóñƒéḋéŕáţíóñ]
+-faction-fct_000003-name = [Ďŵáŕvéñ Çŀáñś]
+    .desc = [Ŧħé ḿóúñţáíñ ďŵáŕƒ çŀáñś]
+-faction-fct_000004-name = [Ďáŕķ Ħóŕḋé]
+    .desc = [Ŧħé éñçŕóáçħíñĝ ďáŕķñéśś]
+-faction-relation-hostile = [Ħóśţíŀé]
+-faction-relation-neutral = [Ńéúţŕáŀ]
+-faction-relation-friendly = [Ƒŕíéñḋŀý]
+-faction-relation-allied = [Áŀŀíéḋ]

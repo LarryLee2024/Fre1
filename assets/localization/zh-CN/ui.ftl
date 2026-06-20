@@ -1,0 +1,29 @@
+### UI 界面文本 — 简体中文
+
+-ui-back = 返回
+-ui-confirm = 确认
+-ui-close = 关闭
+-ui-save = 保存
+-ui-load = 加载
+-ui-settings = 设置
+-ui-exit = 退出
+-ui-pause = 暂停
+-ui-resume = 继续
+-ui-retry = 重试
+-ui-main-menu = 主菜单
+-ui-battle-end-turn = 结束回合
+-ui-battle-attack = 攻击
+-ui-battle-defend = 防御
+-ui-battle-wait = 等待
+-ui-battle-item = 道具
+-ui-battle-skill = 技能
+-ui-battle-move = 移动
+-ui-hp = 生命
+-ui-mp = 魔力
+-ui-ap = 行动
+-ui-exp = 经验
+-ui-level = 等级
+-ui-gold = 金币
+-ui-tutorial-hint = 提示
+-ui-dialogue-continue = 继续
+-ui-dialogue-skip = 跳过

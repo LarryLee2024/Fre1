@@ -1,7 +1,7 @@
 ---
 id: 03-technical.localization-design
 title: Localization（国际化）技术设计
-status: draft
+status: stable
 owner: architect
 created: 2026-06-19
 tags:
@@ -19,29 +19,56 @@ tags:
 
 ---
 
-## 1. 目录结构
+## 1. 目录结构（重构后）
 
-`src/infra/localization/` 目录布局及每个文件的职责：
+`src/infra/localization/` 按子层架构重组后的目录布局及每个子层的职责：
 
 ```
 src/infra/localization/
-├── mod.rs                          # 模块导出: pub use plugin::LocalizationPlugin;
+├── mod.rs                          # 模块导出: 统一 pub use 各子层公开类型
 ├── plugin.rs                       # LocalizationPlugin — Bevy Plugin 注册点
-├── database.rs                     # LocalizationDatabase — ECS Resource，核心文本数据库
-├── loader.rs                       # 从 assets/localization/{locale}/*.ftl 加载文本
-├── cache.rs                        # LocalizedTextCache — 运行时解析文本缓存
-├── components.rs                   # LocalizedText Component — UI 系统消费
-├── validator.rs                    # 启动时校验 System
-├── audit.rs                        # 运行时审计（orphan key 检测、覆盖率报告）
-├── error.rs                        # LocError 错误类型定义
+│
+├── foundation/                     # L0: 纯类型层（零 Bevy 依赖）
+│   ├── mod.rs                      #   子层导出
+│   ├── error.rs                    #   LocError 枚举 + LocaleId 类型
+│   ├── locale_id.rs                #   LocaleId 枚举（BCP-47 格式）
+│   └── pattern.rs                  #   Pattern 结构体（Fluent 模式文本）
+│
+├── storage/                        # L1: ECS Resource 存储
+│   ├── mod.rs
+│   ├── database.rs                 #   LocalizationDatabase（纯查询，无缓存耦合）
+│   └── cache.rs                    #   LocalizedTextCache（运行时缓存）
+│
+├── io/                             # L1: 文件 I/O 与解析
+│   ├── mod.rs
+│   ├── parser.rs                   #   parse_ftl() — .ftl 解析器
+│   ├── loader.rs                   #   load_all_ftl_system — 文件加载
+│   └── watcher.rs                  #   热重载文件监控（debug 构建）
+│
+├── ui/                             # L2: 表现层
+│   ├── mod.rs
+│   ├── components.rs               #   LocalizedText Component 定义
+│   └── render.rs                   #   render_localized_text 系统
+│
+├── facade/                         # 跨层编排
+│   ├── mod.rs
+│   └── resolve.rs                  #   resolve_cached() 统一入口
+│
+├── validation/                     # 校验与审计
+│   ├── mod.rs
+│   ├── validator.rs                #   启动时 Key 完整性校验
+│   └── audit.rs                    #   运行时覆盖率审计
+│
 ├── generated/
-│   └── keys.rs (auto-gen)          # build.rs 自动生成，不出现在 git 中？
-│                                   # 建议: 提交 generated/keys.rs 到版本控制，
-│                                   # 避免开发环境没有 build.rs 工具链时编译失败
-└── test.rs                         # 单元测试与集成测试
+│   └── keys.rs (auto-gen)          # build.rs 自动生成，提交到版本控制
+│
+└── tests/
+    ├── mod.rs
+    ├── unit/                       # 单元测试
+    ├── integration/                # 集成测试
+    ├── invariant/                  # 不变量测试
+    └── fixtures/                   # 测试 .ftl 文件
 ```
-
-### 文件依赖关系（从底向上）
 
 ```
 error.rs                   — 零依赖，仅 Rust 标准库
@@ -62,22 +89,23 @@ test.rs                    — 依赖 plugin.rs（通过集成测试）
 ### 模块导出 (`mod.rs`)
 
 ```rust
+mod foundation;
+mod storage;
+mod io;
+mod ui;
+mod facade;
+mod validation;
 mod plugin;
-mod database;
-mod loader;
-mod cache;
-mod components;
-mod validator;
-mod audit;
-mod error;
 pub mod generated {
     include!("generated/keys.rs");
 }
+#[cfg(test)]
+mod tests;
 
+pub use foundation::{LocError, LocaleId};
+pub use ui::LocalizedText;
+pub use storage::LocalizationDatabase;
 pub use plugin::LocalizationPlugin;
-pub use database::LocalizationDatabase;
-pub use components::LocalizedText;
-pub use error::LocError;
 ```
 
 ---
@@ -245,15 +273,9 @@ impl LocalizationDatabase {
 
 ```rust
 impl LocalizationDatabase {
-    /// 切换当前语言，同时触发缓存清理事件
-    pub fn set_locale(
-        &mut self,
-        locale: LocaleId,
-        commands: &mut Commands,
-    ) {
-        self.current_locale = locale.clone();
-        // 发出缓存清理事件，通知所有 LocalizedTextCache 失效
-        commands.trigger(LocaleChangedEvent(locale));
+    /// 切换当前语言，调用方应同时清除缓存。
+    pub fn set_locale(&mut self, locale: LocaleId) {
+        self.current_locale = locale;
     }
 
     /// 获取当前 locale
@@ -262,14 +284,24 @@ impl LocalizationDatabase {
     }
 }
 
-/// 语言切换事件 — cache.rs 中的系统监听此事件清理缓存
-#[derive(Event)]
-pub struct LocaleChangedEvent(pub LocaleId);
+/// 缓存清理系统：通过 Local 资源轮询检测 locale 变化
+pub fn detect_locale_change_and_clear_cache(
+    db: Res<LocalizationDatabase>,
+    mut last_locale: Local<Option<LocaleId>>,
+    mut cache: ResMut<LocalizedTextCache>,
+) {
+    let current = db.current_locale().clone();
+    if last_locale.as_ref() != Some(&current) {
+        let _ = last_locale.insert(current);
+        cache.clear();
+    }
+}
 ```
 
-**关键设计点**：
-- `set_locale()` 通过 Event 通知缓存失效，而非直接操作缓存 — 保持 `database.rs` 不依赖 `cache.rs`
-- `commands.trigger()` 使用 Bevy 的 Observer 模式，支持多处监听
+**设计要点**：
+- `set_locale()` 只更新内部状态，不直接操作缓存 — 保持数据库层纯净
+- 缓存清理通过 `detect_locale_change_and_clear_cache` 系统在 Update 阶段自动处理
+- 使用 `Local<Option<LocaleId>>` 轮询检测，而非 Event 机制：更简单，无需额外事件定义
 
 ### 3.3 `resolve()` 三级回退链
 
@@ -397,6 +429,10 @@ use bevy::prelude::*;
 /// # 为什么用 &'static str 而非 String？
 /// - Key 是编译期已知的常量（由 build.rs 生成），无需运行时分配
 /// - 确保所有 key 引用都经过编译检查
+///
+/// # 注意：样式存储在 Text Component 中
+/// LocalizedText 只负责 Key + 参数，样式通过配套的 TextBundle 或 TextStyle 控制。
+/// 见 render_localized_text 系统如何组合两者。
 #[derive(Component, Debug, Clone)]
 pub struct LocalizedText {
     /// Localization Key（编译期常量，来自 generated/keys.rs）
@@ -405,27 +441,20 @@ pub struct LocalizedText {
     /// 参数名 &'static str = 编译期已知
     /// 参数值 String = 运行时动态构建
     pub params: Vec<(&'static str, String)>,
-    /// 文本样式
-    pub style: TextStyle,
 }
 
 impl LocalizedText {
     /// 创建无参数的静态文本
-    pub fn static_text(key: &'static str, style: TextStyle) -> Self {
+    pub fn static_text(key: &'static str) -> Self {
         Self {
             key,
             params: vec![],
-            style,
         }
     }
 
     /// 创建带参数的动态文本
-    pub fn with_params(
-        key: &'static str,
-        params: Vec<(&'static str, String)>,
-        style: TextStyle,
-    ) -> Self {
-        Self { key, params, style }
+    pub fn with_params(key: &'static str, params: Vec<(&'static str, String)>) -> Self {
+        Self { key, params }
     }
 }
 ```
@@ -436,20 +465,22 @@ impl LocalizedText {
 /// UI 渲染系统：监听 LocalizedText 组件变化，自动更新文本
 fn render_localized_text(
     db: Res<LocalizationDatabase>,
+    mut cache: ResMut<LocalizedTextCache>,
     mut query: Query<(&LocalizedText, &mut Text), Changed<LocalizedText>>,
 ) {
     for (loc_text, mut text) in query.iter_mut() {
-        // 将 params 转为 resolve() 接受的格式
         let params: Vec<(&str, &str)> = loc_text
             .params
             .iter()
             .map(|(k, v)| (*k, v.as_str()))
             .collect();
 
-        match db.resolve(loc_text.key, &params) {
-            Ok(resolved) => text.sections[0].value = resolved,
+        match db.resolve_cached(loc_text.key, &params, &mut cache) {
+            Ok(resolved) => {
+                text.0 = resolved;       // Bevy 0.19: Text 是元组结构体
+            }
             Err(e) => {
-                text.sections[0].value = format!("[LOC_ERR: {}]", e);
+                text.0 = format!("[LOC_ERR: {}]", e);
                 warn!("Localization error: {}", e);
             }
         }
@@ -459,7 +490,7 @@ fn render_localized_text(
 
 **关键设计**：
 - 使用 `Changed<LocalizedText>` Filter，只有 key/params 变化时才重新解析
-- 不依赖 `Deref` 或 `From` 等隐式转换 — 显式调用 `resolve()`
+- 使用 `resolve_cached()` 通过 facade 函数访问，Database 不直接依赖 Cache
 
 ### 4.3 在 UI 构建中使用
 
@@ -656,25 +687,33 @@ pub mod loc {
     }
 
     pub mod ability {
-        pub const abl_000042: &str = "ability.abl_000042";
-        pub mod abl_000042 {
-            pub const NAME: &str = "ability.abl_000042.name";
-            pub const DESC: &str = "ability.abl_000042.desc";
-        }
-        pub mod abl_000043 {
-            pub const NAME: &str = "ability.abl_000043.name";
-            pub const DESC: &str = "ability.abl_000043.desc";
-        }
+        pub const ABL_000001_NAME: &str = "ability.abl_000001.name";
+        pub const ABL_000001_NAME_DESC: &str = "ability.abl_000001.name.desc";
+        pub const ABL_000002_NAME: &str = "ability.abl_000002.name";
+        pub const ABL_000002_NAME_DESC: &str = "ability.abl_000002.name.desc";
     }
 
     pub mod battle {
-        pub const damage_dealt: &str = "battle.damage_dealt";
-        pub const heal_received: &str = "battle.heal_received";
+        pub const DAMAGE_DEALT: &str = "battle.damage_dealt";
+        pub const HEAL_RECEIVED: &str = "battle.heal_received";
     }
 
     // ... 更多模块
 }
+
+/// 所有已注册的 Key 列表（用于启动校验）
+pub const ALL_KEYS: &[&str] = &[
+    "core.yes",
+    "core.no",
+    "ability.abl_000001.name",
+    // ...
+];
 ```
+
+**生成风格说明**：采用**扁平常量命名**（`ABL_000001_NAME`）而非嵌套模块（`abl_000001::NAME`）。选择扁平常量的原因：
+- build.rs 生成逻辑简单，无需处理深层嵌套
+- 常量名本身包含完整语义，IDE 自动补全足够
+- 减少生成代码行数，ALL_KEYS 数组也自然对齐
 
 ### 5.5 增量编译控制
 

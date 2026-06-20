@@ -20,7 +20,11 @@ tags:
 | 日志系统 | [日志系统深度解析](logging-overview.md) | 从宪法到代码：日志如何设计、如何流动、如何扩展 |
 | 错误处理 | [错误处理架构深度解析](error-handling-overview.md) | Error vs Failure 严格分离：架构设计、15 域迁移完成、1579 测试全绿 |
 | ID 系统 | [强类型 ID 系统深度解析](ids-overview.md) | 类型安全的标识符策略：String ID vs Numeric ID、宏详解、22 个类型 |
-| *待补充* | | |
+| 国际化 | [Localization 国际化深度解析](localization-overview.md) | 从宪法到代码：5 层约束体系、Fluent .ftl、Key 代码生成、三级回退链、Fake Locale |
+| Reflect | [Bevy Reflect 深度解析](reflect-overview.md) | 运行时类型反射原理、宪法三规则、类型注册三件套、Save/Replay 中的角色、高频计算禁令 |
+| 系统间通信 | [系统间通信深度解析](communication-overview.md) | 四级通信（Hook/Trigger/Observer/Message）、CommandQueue 命令系统、UI Action 模式、Integration 桥梁、日志 Observer 56 监听器、三条端到端数据流 |
+| GAS-Lite 能力系统 | [GAS-Lite 能力系统深度解析](capabilities-overview.md) | 15 个能力模块全景、三端到端数据流、Def→Spec→Instance 分离、宪法约束 Data Laws #004-#009 |
+| Pipeline 管线系统 | [Pipeline 管线系统深度解析](pipeline-overview.md) | 通用 Pipeline 引擎设计、四条业务管线（Ability / Modifier / Combat / Content）、驾驶员模式、全协作时序图 |
 
 ## 定位
 
