@@ -643,8 +643,8 @@ tools/check-logging-invariants.sh --ci
 | 3 | Observability Facade（emit_info!/emit_warn! 迁移） | P1-P2 | 21 文件 | 中 | ✅ 已完成 |
 | 4 | DiagnosticContext 弃用声明 | P1 | 3 文件 | 低 | ✅ 已完成 |
 | 5 | FileSink 接入 tracing-subscriber Layer | P2 | 2 文件 | 高 | ✅ 已完成 |
-| 6 | rate_limit 推广 + Domain 调用 event 统一 | P2 | 6 文件 | 低 | 🟡 Agent 运行中 |
-| 7 | 工具脚本 + 文档更新 + 最终验证 | P3 | 1 脚本 + 1 文档 | 低 | 🟡 等待 Phase 6 |
+| 6 | rate_limit 推广 + Domain 调用 event 统一 | P2 | 6 文件 | 低 | ✅ 已完成 |
+| 7 | 工具脚本 + 文档更新 + 最终验证 | P3 | 1 脚本 + 1 文档 | 低 | ✅ 已完成 |
 
 ### 已知剩余技术债
 

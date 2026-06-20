@@ -51,11 +51,11 @@ pub(crate) fn on_turn_end_tick_effects(
         if outcome.error_count > 0 {
             if EFFECT_TICK_ERRORS_GUARD.try_fire() {
                 tracing::warn!(target: "combat",
-                event = "combat.effect_tick.errors",
-                error_count = outcome.error_count,
-                "Tick 过程中出现 {} 个错误",
-                outcome.error_count
-            );
+                    event = "combat.effect_tick.errors",
+                    error_count = outcome.error_count,
+                    "Tick 过程中出现 {} 个错误",
+                    outcome.error_count
+                );
             }
         }
     }

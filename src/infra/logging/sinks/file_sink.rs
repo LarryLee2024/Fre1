@@ -235,11 +235,7 @@ impl FileSinkLayer {
 }
 
 impl<S: tracing::Subscriber + 'static> Layer<S> for FileSinkLayer {
-    fn on_event(
-        &self,
-        event: &tracing::Event<'_>,
-        _ctx: Context<'_, S>,
-    ) {
+    fn on_event(&self, event: &tracing::Event<'_>, _ctx: Context<'_, S>) {
         let mut fields = Vec::new();
         let mut visitor = JsonFieldVisitor(&mut fields);
         event.record(&mut visitor);
@@ -256,8 +252,7 @@ impl<S: tracing::Subscriber + 'static> Layer<S> for FileSinkLayer {
             .unwrap_or("");
         let level = format!("{:?}", event.metadata().level());
 
-        let fields_ref: Vec<(&str, &str)> =
-            fields.iter().map(|(k, v)| (*k, v.as_str())).collect();
+        let fields_ref: Vec<(&str, &str)> = fields.iter().map(|(k, v)| (*k, v.as_str())).collect();
         let json = format_json(code, event_name, &level, &fields_ref);
         self.sink.write(&json);
     }

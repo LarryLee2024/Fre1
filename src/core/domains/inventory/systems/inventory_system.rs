@@ -29,12 +29,12 @@ pub(crate) fn on_item_acquired(
     let Ok(mut inventory) = query.get_mut(ev.entity) else {
         if ITEM_ACQUIRED_MISSING_COMPONENT_GUARD.try_fire() {
             tracing::warn!(target: "inventory",
-            event = "inventory.item_acquired.missing_component",
-            entity = ?ev.entity,
-            template = %ev.item_template_id,
-            "ItemAcquired: 实体 {:?} 没有 Inventory 组件",
-            ev.entity
-        );
+                event = "inventory.item_acquired.missing_component",
+                entity = ?ev.entity,
+                template = %ev.item_template_id,
+                "ItemAcquired: 实体 {:?} 没有 Inventory 组件",
+                ev.entity
+            );
         }
         return;
     };
@@ -55,13 +55,13 @@ pub(crate) fn on_item_acquired(
     } else {
         if ITEM_ACQUIRED_FAILED_GUARD.try_fire() {
             tracing::warn!(target: "inventory",
-            event = "inventory.item_acquired.failed",
-            entity = ?ev.entity,
-            template = %ev.item_template_id,
-            qty_requested = ev.quantity,
-            "物品获取失败：实体={:?}, 模板={}, 请求数量={}",
-            ev.entity, ev.item_template_id, ev.quantity
-        );
+                event = "inventory.item_acquired.failed",
+                entity = ?ev.entity,
+                template = %ev.item_template_id,
+                qty_requested = ev.quantity,
+                "物品获取失败：实体={:?}, 模板={}, 请求数量={}",
+                ev.entity, ev.item_template_id, ev.quantity
+            );
         }
     }
 }
@@ -79,12 +79,12 @@ pub(crate) fn on_equip_item(
     let Ok((mut inventory, mut equipment)) = query.get_mut(ev.entity) else {
         if EQUIPMENT_CHANGED_MISSING_COMPONENTS_GUARD.try_fire() {
             tracing::warn!(target: "inventory",
-            event = "inventory.equipment_changed.missing_components",
-            entity = ?ev.entity,
-            slot = ?ev.slot,
-            "EquipmentChanged: 实体 {:?} 没有 Inventory/EquipmentSlots 组件",
-            ev.entity
-        );
+                event = "inventory.equipment_changed.missing_components",
+                entity = ?ev.entity,
+                slot = ?ev.slot,
+                "EquipmentChanged: 实体 {:?} 没有 Inventory/EquipmentSlots 组件",
+                ev.entity
+            );
         }
         return;
     };
@@ -150,11 +150,11 @@ pub(crate) fn on_item_used(trigger: On<ItemUsed>, mut query: Query<&mut Inventor
     let Ok(mut inventory) = query.get_mut(ev.entity) else {
         if ITEM_USED_MISSING_COMPONENT_GUARD.try_fire() {
             tracing::warn!(target: "inventory",
-            event = "inventory.item_used.missing_component",
-            entity = ?ev.entity,
-            "ItemUsed: 实体 {:?} 没有 Inventory 组件",
-            ev.entity
-        );
+                event = "inventory.item_used.missing_component",
+                entity = ?ev.entity,
+                "ItemUsed: 实体 {:?} 没有 Inventory 组件",
+                ev.entity
+            );
         }
         return;
     };
@@ -163,12 +163,12 @@ pub(crate) fn on_item_used(trigger: On<ItemUsed>, mut query: Query<&mut Inventor
     if !inventory.has_item(&ev.item_template_id, ev.quantity_consumed) {
         if ITEM_USED_INSUFFICIENT_QUANTITY_GUARD.try_fire() {
             tracing::warn!(target: "inventory",
-            event = "inventory.item_used.insufficient_quantity",
-            entity = ?ev.entity,
-            template = %ev.item_template_id,
-            "ItemUsed: 实体 {:?} 的物品 {} 数量不足",
-            ev.entity, ev.item_template_id
-        );
+                event = "inventory.item_used.insufficient_quantity",
+                entity = ?ev.entity,
+                template = %ev.item_template_id,
+                "ItemUsed: 实体 {:?} 的物品 {} 数量不足",
+                ev.entity, ev.item_template_id
+            );
         }
         return;
     }

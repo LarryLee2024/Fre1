@@ -122,11 +122,11 @@ pub(crate) fn combat_pipeline_driver(
         None => {
             if PIPELINE_NOT_FOUND_GUARD.try_fire() {
                 tracing::warn!(target: "combat",
-                event = "combat.pipeline.not_found",
-                pipeline_id = %driver.state.pipeline_id,
-                "管线 '{}' 未在 Registry 中找到",
-                driver.state.pipeline_id
-            );
+                    event = "combat.pipeline.not_found",
+                    pipeline_id = %driver.state.pipeline_id,
+                    "管线 '{}' 未在 Registry 中找到",
+                    driver.state.pipeline_id
+                );
             }
             driver.state.completed = true;
             return;
@@ -275,11 +275,11 @@ pub(crate) fn on_unit_action_complete(
         None => {
             if PIPELINE_MISSING_RESUME_GUARD.try_fire() {
                 tracing::warn!(target: "combat",
-                event = "combat.pipeline.missing_resume",
-                pipeline_id = %driver.state.pipeline_id,
-                "管线 '{}' 未找到，无法恢复执行",
-                driver.state.pipeline_id
-            );
+                    event = "combat.pipeline.missing_resume",
+                    pipeline_id = %driver.state.pipeline_id,
+                    "管线 '{}' 未找到，无法恢复执行",
+                    driver.state.pipeline_id
+                );
             }
             return;
         }

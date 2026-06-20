@@ -28,9 +28,5 @@ pub(crate) fn on_battle_started(_trigger: On<BattleStarted>) {
 ))]
 pub(crate) fn on_battle_ended(trigger: On<BattleEnded>) {
     let event = trigger.event();
-    emit_info!(
-        LogCode::BAT002,
-        victory = event.victory,
-        "战斗结束",
-    );
+    emit_info!(LogCode::BAT002, victory = event.victory, "战斗结束",);
 }
