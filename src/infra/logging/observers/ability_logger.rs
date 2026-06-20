@@ -12,7 +12,7 @@ use bevy::prelude::*;
 use crate::core::capabilities::ability::events::{
     AbilityActivated, AbilityCancelled, AbilityCompleted, AbilityCooldownStarted,
 };
-use crate::infra::logging::telemetry;
+use crate::emit_info;
 use crate::shared::diagnostics::LogCode;
 
 /// 技能激活日志 Observer。
@@ -23,10 +23,9 @@ use crate::shared::diagnostics::LogCode;
     event = "ability_activated",
 ))]
 pub(crate) fn on_ability_activated(trigger: On<AbilityActivated>) {
-    telemetry::emit(LogCode::ABL001);
     let event = trigger.event();
-    info!(
-        target = "domain.ability",
+    emit_info!(
+        LogCode::ABL001,
         entity = ?event.entity,
         spec_id = %event.spec_id,
         "技能激活",
@@ -39,10 +38,9 @@ pub(crate) fn on_ability_activated(trigger: On<AbilityActivated>) {
     event = "ability_completed",
 ))]
 pub(crate) fn on_ability_completed(trigger: On<AbilityCompleted>) {
-    telemetry::emit(LogCode::ABL002);
     let event = trigger.event();
-    info!(
-        target = "domain.ability",
+    emit_info!(
+        LogCode::ABL002,
         entity = ?event.entity,
         spec_id = %event.spec_id,
         result = %event.result,
@@ -56,10 +54,9 @@ pub(crate) fn on_ability_completed(trigger: On<AbilityCompleted>) {
     event = "ability_cancelled",
 ))]
 pub(crate) fn on_ability_cancelled(trigger: On<AbilityCancelled>) {
-    telemetry::emit(LogCode::ABL003);
     let event = trigger.event();
-    info!(
-        target = "domain.ability",
+    emit_info!(
+        LogCode::ABL003,
         entity = ?event.entity,
         spec_id = %event.spec_id,
         reason = %event.reason,
@@ -73,10 +70,9 @@ pub(crate) fn on_ability_cancelled(trigger: On<AbilityCancelled>) {
     event = "cooldown_started",
 ))]
 pub(crate) fn on_ability_cooldown_started(trigger: On<AbilityCooldownStarted>) {
-    telemetry::emit(LogCode::ABL004);
     let event = trigger.event();
-    info!(
-        target = "domain.ability",
+    emit_info!(
+        LogCode::ABL004,
         entity = ?event.entity,
         spec_id = %event.spec_id,
         duration = event.cooldown_duration,

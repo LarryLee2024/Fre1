@@ -8,7 +8,7 @@
 
 use bevy::prelude::*;
 
-use crate::infra::logging::telemetry;
+use crate::emit_info;
 use crate::infra::registry::registry::OnDefinitionReloaded;
 use crate::shared::diagnostics::LogCode;
 
@@ -18,10 +18,9 @@ use crate::shared::diagnostics::LogCode;
     event = "content_loaded",
 ))]
 pub(crate) fn on_definition_reloaded(trigger: On<OnDefinitionReloaded>) {
-    telemetry::emit(LogCode::CNT001);
     let event = trigger.event();
-    info!(
-        target = "content",
+    emit_info!(
+        LogCode::CNT001,
         bucket = event.bucket_name,
         version = event.new_version,
         changed = event.changed_ids.len(),

@@ -691,10 +691,10 @@ commands.trigger(ItemCrafted {
 
 | 组件 | 状态 | 说明 |
 |------|------|------|
-| DiagnosticContext 实际使用 | ❌ 未接入 | 类型已定义但 Observer 仍直接传结构化字段给 `info!()`，未使用 `DiagnosticContext` 来包裹上下文 |
+| DiagnosticContext 实际使用 | ⚠️ 已弃用（保留为工具类，非 Observer 强制模式） | 类型已定义但 Observer 仍直接传结构化字段给 `info!()`，未使用 `DiagnosticContext` 来包裹上下文 |
 | 旧版 Observer 升级 | ✅ 已完成 | 全部 20 个 observer 已统一模式：`#[instrument]` + `telemetry::emit` + `info!()` |
 | Metrics 持久化 | ❌ 未实现 | MetricsCollector 当前仅输出 DEBUG 日志，未持久化到文件或对接外部监控 |
-| domain 层违规清理 | ⚠️ 持续进行中 | 仍有 13 个 core 层文件（progression/inventory/faction/tactical/terrain/combat/narrative）存在直接 `tracing::info!`/`warn!`/`trace!` 调用 |
+| domain 层违规清理 | ⚠️ 持续进行中 | 仍有 17 个 domain 文件使用直接 tracing 调用（warn!/debug!/trace!），按日志规则.md 例外允许。另 2 个 capability 文件（attribute/content.rs, tag/content.rs）的 info! 调用属于灰色地带，Capability 层尚未明确受宪法 §11.4 约束 |
 | **span-field-only 模式改造** | ✅ 已完成 | 所有 Observer 已消除 `info!()` 中的 `code`/`event` 重复字段，改为 span 放不变量、event 放变量 |
 | **`context_desc` 清理** | ✅ 已完成 | `ability_logger` 中的 `context_desc` 已移除，`ReactionType::log_name()` 已用于避免高基数 |
 | **`telemetry::emit` 统一入口** | ✅ 已实现 | `telemetry::emit(LogCode)` 已创建为 metrics::record 的封装，所有 Observer 已迁移。后续可扩展为 `emit(LogCode, fields...)` 消除 target 两处重复 |
@@ -745,6 +745,46 @@ commands.trigger(ItemCrafted {
 | 在 `info!()` 中重复 span 的 `code`/`event` 字段 | 冗余维护，改一处忘另一处 |
 | `event` 字段值用中文（如 `"技能激活"`） | 结构化日志是机器消费的，必须英文 |
 | 使用 `context_desc` 等自然语言文本作为结构化字段 | 高基数，压垮日志聚合系统 |
+
+---
+
+## 10. 已吸收的架构演进（2026-06-28）
+
+本次重构吸收了 `docs/ai_ignore_this_dir/14可观测.md` 的核心观点：
+
+### 10.1 ObservableEvent trait
+
+```rust
+// shared/diagnostics/observable.rs
+pub trait ObservableEvent: Debug + Send + Sync + 'static {
+    fn log_code(&self) -> LogCode;
+    fn record_fields(&self, _collector: &mut FieldCollector) {}
+}
+```
+
+领域事件实现此 trait 后，Observer 可以通过统一方式提取结构化字段。
+
+### 10.2 Observability Facade（emit_info!/emit_warn!）
+
+Observer 从原来的三要素模式：
+```
+#[instrument] + telemetry::emit(LogCode) + info!()
+```
+
+变为两要素模式：
+```
+#[instrument] + emit_info!(LogCode, field1, field2, "msg")
+```
+
+emit_info! 宏内部自动完成 metrics::record + target 派生 + 结构化输出。
+
+### 10.3 设计决策记录
+
+| 决策 | 结论 | 参考来源 |
+|------|------|---------|
+| infra/observability/ 改名 | 不执行 —— telemetry.rs 门面进化即可 | 14可观测.md §11 |
+| core/events/ 统一事件 | 不执行 —— 领域事件按 DDD 在各 domain/events/ 中 | 14可观测.md §11 |
+| LogCode 命名体替代数值 | 不执行 —— 数值编码搜索明确性是实际优势 | 14可观测.md §7 |
 
 ---
 

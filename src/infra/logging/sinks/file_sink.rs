@@ -2,6 +2,11 @@
 //!
 //! 将结构化日志以 JSON 格式写入文件，支持按大小轮转。
 //! 通过 `FileSinkConfig` 配置输出路径、轮转阈值。
+//!
+//! 还提供 `FileSinkLayer`，一个 tracing-subscriber Layer，
+//! 可自动捕获所有 tracing 事件并写入 JSON 文件。
+
+use bevy::prelude::Resource;
 
 use std::{
     fs::{self, File, OpenOptions},
@@ -10,8 +15,10 @@ use std::{
     sync::Mutex,
 };
 
+use tracing_subscriber::{layer::Context, registry::LookupSpan, Layer};
+
 /// 文件日志输出器配置。
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Resource)]
 pub struct FileSinkConfig {
     /// 日志文件目录
     pub dir: PathBuf,
@@ -102,10 +109,10 @@ impl FileSink {
 
     /// 轮转日志文件：重命名当前文件 → 写入新文件。
     fn rotate(config: &FileSinkConfig, current_path: &PathBuf) -> std::io::Result<File> {
-        // 清理最旧的文件
+        // 使用 epoch 秒作为文件名后缀（避免 ISO 8601 冒号导致 Windows 路径问题）
         let rotated_path = config
             .dir
-            .join(format!("{}.{}.jsonl", config.prefix, chrono_now()));
+            .join(format!("{}.{}.jsonl", config.prefix, epoch_secs()));
         fs::rename(current_path, &rotated_path)?;
 
         // 限制保留文件数
@@ -120,14 +127,57 @@ impl FileSink {
     }
 }
 
-/// 返回适用于文件名的当前时间戳字符串。
+/// 返回 ISO 8601 格式的当前 UTC 时间戳（用于 JSON 日志输出）。
+///
+/// 格式示例：`2026-06-19T10:30:45.123Z`
 fn chrono_now() -> String {
-    // 使用简单的时间格式，不引入 chrono 依赖
+    use std::time::{SystemTime, UNIX_EPOCH};
+    let dur = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default();
+
+    let total_secs = dur.as_secs();
+    let millis = dur.subsec_millis();
+    let days = total_secs / 86_400;
+    let time_secs = total_secs % 86_400;
+
+    let hours = time_secs / 3_600;
+    let minutes = (time_secs % 3_600) / 60;
+    let seconds = time_secs % 60;
+
+    let (year, month, day) = civil_from_days(days as i64);
+
+    format!(
+        "{:04}-{:02}-{:02}T{:02}:{:02}:{:02}.{:03}Z",
+        year, month, day, hours, minutes, seconds, millis
+    )
+}
+
+/// 返回 Unix 纪元秒数（仅用于日志文件名轮转）。
+fn epoch_secs() -> String {
     use std::time::{SystemTime, UNIX_EPOCH};
     let dur = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default();
     format!("{}", dur.as_secs())
+}
+
+/// 将天数（自 Unix 纪元）转换为公历 (year, month, day)。
+///
+/// 使用 Howard Hinnant 的 `civil_from_days` 算法，
+/// 无需引入 chrono / time 等外部依赖。
+fn civil_from_days(z: i64) -> (i64, u32, u32) {
+    let z = z + 719_468;
+    let era = if z >= 0 { z } else { z - 146_096 } / 146_097;
+    let doe = z - era * 146_097; // day of era
+    let yoe = (doe - doe / 1_460 + doe / 36_524 - doe / 146_096) / 365;
+    let y = yoe + era * 400;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let d = doy - (153 * mp + 2) / 5 + 1;
+    let m = if mp < 10 { mp + 3 } else { mp - 9 };
+    let y = if m <= 2 { y + 1 } else { y };
+    (y, m as u32, d as u32)
 }
 
 /// 保留最近的 max_files 个轮转文件，删除更旧的。
@@ -165,4 +215,79 @@ pub fn format_json(code: &str, event: &str, level: &str, fields: &[(&str, &str)]
         map.insert(k.to_string(), v.to_string().into());
     }
     serde_json::Value::Object(map).to_string()
+}
+
+/// A tracing-subscriber Layer that writes structured log events to a JSON file.
+///
+/// Captures all tracing events and writes them as JSON lines via `FileSink`.
+/// Each line contains: timestamp, level, code, event, and all structured fields.
+pub struct FileSinkLayer {
+    sink: FileSink,
+}
+
+impl FileSinkLayer {
+    /// Create a new `FileSinkLayer` with the given configuration.
+    pub fn new(config: FileSinkConfig) -> Self {
+        Self {
+            sink: FileSink::new(config),
+        }
+    }
+}
+
+impl<S: tracing::Subscriber + for<'a> LookupSpan<'a>> Layer<S> for FileSinkLayer {
+    fn on_event(
+        &self,
+        event: &tracing::Event<'_>,
+        _ctx: Context<'_, S>,
+    ) {
+        let mut fields = Vec::new();
+        let mut visitor = JsonFieldVisitor(&mut fields);
+        event.record(&mut visitor);
+
+        let code = fields
+            .iter()
+            .find(|(k, _)| *k == "code")
+            .map(|(_, v)| v.as_str())
+            .unwrap_or("");
+        let event_name = fields
+            .iter()
+            .find(|(k, _)| *k == "event")
+            .map(|(_, v)| v.as_str())
+            .unwrap_or("");
+        let level = format!("{:?}", event.metadata().level());
+
+        let fields_ref: Vec<(&str, &str)> =
+            fields.iter().map(|(k, v)| (*k, v.as_str())).collect();
+        let json = format_json(code, event_name, &level, &fields_ref);
+        self.sink.write(&json);
+    }
+}
+
+/// A tracing `Visit` implementation that collects all event fields into a Vec.
+struct JsonFieldVisitor<'a>(&'a mut Vec<(&'static str, String)>);
+
+impl<'a> tracing::field::Visit for JsonFieldVisitor<'a> {
+    fn record_str(&mut self, field: &tracing::field::Field, value: &str) {
+        self.0.push((field.name(), value.to_string()));
+    }
+
+    fn record_bool(&mut self, field: &tracing::field::Field, value: bool) {
+        self.0.push((field.name(), value.to_string()));
+    }
+
+    fn record_i64(&mut self, field: &tracing::field::Field, value: i64) {
+        self.0.push((field.name(), value.to_string()));
+    }
+
+    fn record_u64(&mut self, field: &tracing::field::Field, value: u64) {
+        self.0.push((field.name(), value.to_string()));
+    }
+
+    fn record_f64(&mut self, field: &tracing::field::Field, value: f64) {
+        self.0.push((field.name(), format!("{:.2}", value)));
+    }
+
+    fn record_debug(&mut self, field: &tracing::field::Field, value: &dyn std::fmt::Debug) {
+        self.0.push((field.name(), format!("{:?}", value)));
+    }
 }

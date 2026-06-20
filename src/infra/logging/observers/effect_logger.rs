@@ -11,8 +11,8 @@ use bevy::prelude::*;
 use crate::core::capabilities::effect::events::{
     EffectApplied, EffectImmunityTriggered, EffectRemoved, EffectTicked,
 };
-use crate::infra::logging::telemetry;
 use crate::shared::diagnostics::LogCode;
+use crate::{emit_debug, emit_info, emit_warn};
 
 /// 效果施加日志 Observer。
 #[tracing::instrument(skip_all, target = "domain.effect", fields(
@@ -20,10 +20,9 @@ use crate::shared::diagnostics::LogCode;
     event = "effect_applied",
 ))]
 pub(crate) fn on_effect_applied(trigger: On<EffectApplied>) {
-    telemetry::emit(LogCode::EFF001);
     let event = trigger.event();
-    info!(
-        target = "domain.effect",
+    emit_info!(
+        LogCode::EFF001,
         instance = %event.instance_id,
         def_id = %event.def_id,
         target = %event.target_entity,
@@ -38,10 +37,9 @@ pub(crate) fn on_effect_applied(trigger: On<EffectApplied>) {
     event = "effect_removed",
 ))]
 pub(crate) fn on_effect_removed(trigger: On<EffectRemoved>) {
-    telemetry::emit(LogCode::EFF002);
     let event = trigger.event();
-    info!(
-        target = "domain.effect",
+    emit_info!(
+        LogCode::EFF002,
         instance = %event.instance_id,
         def_id = %event.def_id,
         target = %event.target_entity,
@@ -56,10 +54,9 @@ pub(crate) fn on_effect_removed(trigger: On<EffectRemoved>) {
     event = "effect_ticked",
 ))]
 pub(crate) fn on_effect_ticked(trigger: On<EffectTicked>) {
-    telemetry::emit(LogCode::EFF003);
     let event = trigger.event();
-    debug!(
-        target = "domain.effect",
+    emit_debug!(
+        LogCode::EFF003,
         instance = %event.instance_id,
         target = %event.target_entity,
         tick = event.tick_number,
@@ -74,10 +71,9 @@ pub(crate) fn on_effect_ticked(trigger: On<EffectTicked>) {
     event = "effect_blocked_by_immunity",
 ))]
 pub(crate) fn on_effect_immunity(trigger: On<EffectImmunityTriggered>) {
-    telemetry::emit(LogCode::EFF004);
     let event = trigger.event();
-    warn!(
-        target = "domain.effect",
+    emit_warn!(
+        LogCode::EFF004,
         def_id = %event.def_id,
         target = %event.target_entity,
         immune_tag = %event.immune_tag,

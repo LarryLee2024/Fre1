@@ -11,7 +11,7 @@ use bevy::prelude::*;
 use crate::core::domains::narrative::events::{
     ChoiceMade, CutsceneEnded, CutsceneStarted, DialogueStarted, StoryFlagSet,
 };
-use crate::infra::logging::telemetry;
+use crate::emit_info;
 use crate::shared::diagnostics::LogCode;
 
 /// 对话开始日志 Observer。
@@ -20,10 +20,9 @@ use crate::shared::diagnostics::LogCode;
     event = "dialogue_started",
 ))]
 pub(crate) fn on_dialogue_started(trigger: On<DialogueStarted>) {
-    telemetry::emit(LogCode::NAR001);
     let event = trigger.event();
-    info!(
-        target = "domain.narrative",
+    emit_info!(
+        LogCode::NAR001,
         entity = ?event.entity,
         npc = ?event.npc,
         tree_id = %event.tree_id,
@@ -37,10 +36,9 @@ pub(crate) fn on_dialogue_started(trigger: On<DialogueStarted>) {
     event = "choice_made",
 ))]
 pub(crate) fn on_choice_made(trigger: On<ChoiceMade>) {
-    telemetry::emit(LogCode::NAR002);
     let event = trigger.event();
-    info!(
-        target = "domain.narrative",
+    emit_info!(
+        LogCode::NAR002,
         entity = ?event.entity,
         choice_id = %event.choice_id,
         flags_set = event.story_flags_set.len(),
@@ -54,10 +52,9 @@ pub(crate) fn on_choice_made(trigger: On<ChoiceMade>) {
     event = "story_flag_set",
 ))]
 pub(crate) fn on_story_flag_set(trigger: On<StoryFlagSet>) {
-    telemetry::emit(LogCode::NAR003);
     let event = trigger.event();
-    info!(
-        target = "domain.narrative",
+    emit_info!(
+        LogCode::NAR003,
         flag_id = %event.flag_id,
         value = %event.value,
         source = %event.source,
@@ -71,10 +68,9 @@ pub(crate) fn on_story_flag_set(trigger: On<StoryFlagSet>) {
     event = "cutscene_started",
 ))]
 pub(crate) fn on_cutscene_started(trigger: On<CutsceneStarted>) {
-    telemetry::emit(LogCode::NAR004);
     let event = trigger.event();
-    info!(
-        target = "domain.narrative",
+    emit_info!(
+        LogCode::NAR004,
         cutscene_id = %event.cutscene_id,
         duration = event.duration,
         "过场动画开始",
@@ -87,10 +83,9 @@ pub(crate) fn on_cutscene_started(trigger: On<CutsceneStarted>) {
     event = "cutscene_ended",
 ))]
 pub(crate) fn on_cutscene_ended(trigger: On<CutsceneEnded>) {
-    telemetry::emit(LogCode::NAR005);
     let event = trigger.event();
-    info!(
-        target = "domain.narrative",
+    emit_info!(
+        LogCode::NAR005,
         cutscene_id = %event.cutscene_id,
         "过场动画结束",
     );

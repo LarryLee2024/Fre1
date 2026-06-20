@@ -11,8 +11,8 @@ use bevy::prelude::*;
 use crate::core::domains::crafting::events::{
     CraftingFailed, EnchantmentApplied, ItemCrafted, ItemUpgraded,
 };
-use crate::infra::logging::telemetry;
 use crate::shared::diagnostics::LogCode;
+use crate::{emit_info, emit_warn};
 
 /// 制作完成日志 Observer。
 #[tracing::instrument(skip_all, target = "domain.crafting", fields(
@@ -20,10 +20,9 @@ use crate::shared::diagnostics::LogCode;
     event = "crafting_completed",
 ))]
 pub(crate) fn on_item_crafted(trigger: On<ItemCrafted>) {
-    telemetry::emit(LogCode::CRF003);
     let event = trigger.event();
-    info!(
-        target = "domain.crafting",
+    emit_info!(
+        LogCode::CRF003,
         entity = ?event.entity,
         recipe = %event.recipe_id,
         output = %event.output_item,
@@ -37,10 +36,9 @@ pub(crate) fn on_item_crafted(trigger: On<ItemCrafted>) {
     event = "enchantment_applied",
 ))]
 pub(crate) fn on_enchantment_applied(trigger: On<EnchantmentApplied>) {
-    telemetry::emit(LogCode::CRF005);
     let event = trigger.event();
-    info!(
-        target = "domain.crafting",
+    emit_info!(
+        LogCode::CRF005,
         entity = ?event.entity,
         equipment = %event.equipment_item,
         enchantment = %event.new_enchantment,
@@ -54,10 +52,9 @@ pub(crate) fn on_enchantment_applied(trigger: On<EnchantmentApplied>) {
     event = "item_upgraded",
 ))]
 pub(crate) fn on_item_upgraded(trigger: On<ItemUpgraded>) {
-    telemetry::emit(LogCode::CRF006);
     let event = trigger.event();
-    info!(
-        target = "domain.crafting",
+    emit_info!(
+        LogCode::CRF006,
         entity = ?event.entity,
         equipment = %event.equipment_item,
         old = event.old_level,
@@ -72,10 +69,9 @@ pub(crate) fn on_item_upgraded(trigger: On<ItemUpgraded>) {
     event = "crafting_failed",
 ))]
 pub(crate) fn on_crafting_failed(trigger: On<CraftingFailed>) {
-    telemetry::emit(LogCode::CRF004);
     let event = trigger.event();
-    warn!(
-        target = "domain.crafting",
+    emit_warn!(
+        LogCode::CRF004,
         entity = ?event.entity,
         recipe = %event.recipe_id,
         reason = %event.fail_reason,

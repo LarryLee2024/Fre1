@@ -11,8 +11,8 @@ use bevy::prelude::*;
 use crate::core::domains::camp_rest::events::{
     CampEventTriggered, LongRestCompleted, LongRestInterrupted, LongRestStarted, ShortRestCompleted,
 };
-use crate::infra::logging::telemetry;
 use crate::shared::diagnostics::LogCode;
+use crate::{emit_info, emit_warn};
 
 /// 短休完成日志 Observer。
 #[tracing::instrument(skip_all, target = "domain.camp_rest", fields(
@@ -20,10 +20,9 @@ use crate::shared::diagnostics::LogCode;
     event = "short_rest_completed",
 ))]
 pub(crate) fn on_short_rest_completed(trigger: On<ShortRestCompleted>) {
-    telemetry::emit(LogCode::CNR001);
     let event = trigger.event();
-    info!(
-        target = "domain.camp_rest",
+    emit_info!(
+        LogCode::CNR001,
         entities = ?event.entities,
         hit_dice_used = event.hit_dice_used,
         hp_healed = event.hp_healed,
@@ -37,10 +36,9 @@ pub(crate) fn on_short_rest_completed(trigger: On<ShortRestCompleted>) {
     event = "long_rest_started",
 ))]
 pub(crate) fn on_long_rest_started(trigger: On<LongRestStarted>) {
-    telemetry::emit(LogCode::CNR002);
     let event = trigger.event();
-    info!(
-        target = "domain.camp_rest",
+    emit_info!(
+        LogCode::CNR002,
         entities = ?event.entities,
         location = %event.camp_location,
         "长休开始",
@@ -53,10 +51,9 @@ pub(crate) fn on_long_rest_started(trigger: On<LongRestStarted>) {
     event = "long_rest_completed",
 ))]
 pub(crate) fn on_long_rest_completed(trigger: On<LongRestCompleted>) {
-    telemetry::emit(LogCode::CNR003);
     let event = trigger.event();
-    info!(
-        target = "domain.camp_rest",
+    emit_info!(
+        LogCode::CNR003,
         hp_restored = event.hp_restored,
         slots_restored = event.spell_slots_restored,
         "长休完成",
@@ -69,10 +66,9 @@ pub(crate) fn on_long_rest_completed(trigger: On<LongRestCompleted>) {
     event = "long_rest_interrupted",
 ))]
 pub(crate) fn on_long_rest_interrupted(trigger: On<LongRestInterrupted>) {
-    telemetry::emit(LogCode::CNR004);
     let event = trigger.event();
-    warn!(
-        target = "domain.camp_rest",
+    emit_warn!(
+        LogCode::CNR004,
         entities = ?event.entities,
         source = %event.interruption_source,
         "长休中断",
@@ -85,10 +81,9 @@ pub(crate) fn on_long_rest_interrupted(trigger: On<LongRestInterrupted>) {
     event = "camp_event_triggered",
 ))]
 pub(crate) fn on_camp_event_triggered(trigger: On<CampEventTriggered>) {
-    telemetry::emit(LogCode::CNR005);
     let event = trigger.event();
-    info!(
-        target = "domain.camp_rest",
+    emit_info!(
+        LogCode::CNR005,
         event_type = %event.event_type,
         participants = ?event.participants,
         "营地事件触发",

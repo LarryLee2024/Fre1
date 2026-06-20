@@ -19,8 +19,8 @@ layer: infrastructure
 | 数据类别 | 归属层 | 说明 |
 |----------|--------|------|
 | `LogEntry` | Infrastructure | 单条日志记录 |
-| `LogCode` | Infrastructure | 日志类型编码（按域分组） |
-| `LogCategory` | Infrastructure | 日志分类（5 大类） |
+| `LogCode` | Shared/Infrastructure | 日志类型编码（按域分组）。LogCode/LogCategory: 编译期枚举，物理位于 shared/diagnostics/，逻辑属于 Infrastructure 日志系统 |
+| `LogCategory` | Shared/Infrastructure | 日志分类（5 大类） |
 | `DiagnosticContext` | Infrastructure | 诊断上下文（关联 ID） |
 | `CorrelationId` | Infrastructure | 关联标识（BattleId/TurnId/ActionId） |
 
@@ -121,6 +121,8 @@ enum LogCode {
     RCT003, // reaction_declined       单位选择不使用反应
     RCT004, // opportunity_attack      机会攻击执行完毕
     RCT005, // counterspell_executed   法术反制执行完毕
+    RCT006, // shield_used              护盾术
+    RCT007, // guardian_used            援护格挡
 
     // ─── QST — Quest（任务）───
     QST001, // quest_accepted          任务被接受
@@ -154,6 +156,8 @@ enum LogCode {
     CRF002, // crafting_started        制作开始
     CRF003, // crafting_completed      制作完成
     CRF004, // crafting_failed         制作失败
+    CRF005, // enchantment_applied      附魔应用
+    CRF006, // item_upgraded            装备升级
 
     // ─── FAC — Faction（阵营）───
     FAC001, // reputation_changed      角色声望变化
@@ -400,6 +404,7 @@ enum LogValue {
 | `DiagnosticContext` | Infrastructure | 否 | 诊断上下文 |
 | `CorrelationId` | Infrastructure | 否 | 关联标识 |
 | `LogEntry` | Infrastructure | 可选（文件/输出流） | 单条日志记录 |
+| `ObservableEvent` | Shared | 否（trait） | 可观测事件契约 |
 
 ---
 
@@ -411,6 +416,8 @@ enum LogValue {
 | 依赖 | → TurnSchema | 回合级关联 ID |
 | 依赖 | → ActionSchema | 行动级关联 ID |
 | 被依赖 | ← 全部 Domain | 所有域通过日志记录关键事件 |
+
+ObservableEvent trait 定义了领域事件与可观测系统之间的正式契约
 
 ---
 

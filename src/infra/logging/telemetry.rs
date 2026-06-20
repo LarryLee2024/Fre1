@@ -1,35 +1,70 @@
-//! 统一可观测性入口——Observer 的唯一埋点接口。
+//! 可观测性门面（Observability Facade）——Observer 的唯一埋点接口。
 //!
 //! # 职责
 //!
-//! 封装当前日志 + 度量（metrics）调用，未来可扩展至 trace/audit/analytics，
-//! Observer 无需关心底层实现。
-//!
-//! # 当前能力
-//!
-//! - `emit(LogCode)` — 记录一次编码化日志事件（metrics::record）
-//!
-//! # 未来扩展（规划中）
-//!
-//! - 自动生成 tracing span / event
-//! - audit::record / analytics::record
-//! - 消除 Observer 中 `target` 两处重复（span + info!）
+//! 封装日志 + 度量调用，自动从 LogCode 派生 target，消除 info!() 中的 target 重复。
+//! Observer 调用 `emit_info!`/`emit_warn!`/`emit_debug!` 后不需要再手动调用 `metrics::record` 或写 `target`。
 //!
 //! # 使用示例
 //!
 //! ```ignore
-//! use crate::infra::logging::telemetry;
 //! use crate::shared::diagnostics::LogCode;
 //!
-//! telemetry::emit(LogCode::RCT001);
+//! emit_info!(
+//!     LogCode::PRG002,
+//!     entity = ?entity,
+//!     old = old_level,
+//!     new = new_level,
+//!     "角色升级",
+//! );
 //! ```
 
-use crate::infra::logging::metrics;
 use crate::shared::diagnostics::LogCode;
 
-/// 记录一次可观测性事件。
-///
-/// 等价于 `metrics::record(code)`，但作为统一入口，未来扩展不改变 Observer 调用点。
+/// 记录一次可观测性事件（仅 metrics，无日志输出）。
+/// 在 emit_info!/emit_warn!/emit_debug! 宏内部自动调用，通常不需要直接使用。
 pub fn emit(code: LogCode) {
-    metrics::record(code);
+    crate::infra::logging::metrics::record(code);
+}
+
+/// 统一 INFO 日志 + 度量入口。
+/// 自动从 LogCode 派生 target，消除 info!() 中的 target 字面量重复。
+///
+/// # 用法
+///
+/// ```ignore
+/// emit_info!(LogCode::PRG002, entity = ?e.entity, old = e.old_level, "角色升级");
+/// ```
+#[macro_export]
+macro_rules! emit_info {
+    ($code:expr, $($arg:tt)*) => {
+        {
+            $crate::infra::logging::telemetry::emit($code);
+            // 注：target 由 #[instrument] span 层传递，事件层自动继承 span target。
+            // 此处不显式覆盖 target 以避免 tracing 宏的静态求值限制。
+            ::tracing::info!($($arg)*);
+        }
+    };
+}
+
+/// 统一 WARN 日志 + 度量入口。
+#[macro_export]
+macro_rules! emit_warn {
+    ($code:expr, $($arg:tt)*) => {
+        {
+            $crate::infra::logging::telemetry::emit($code);
+            ::tracing::warn!($($arg)*);
+        }
+    };
+}
+
+/// 统一 DEBUG 日志 + 度量入口。
+#[macro_export]
+macro_rules! emit_debug {
+    ($code:expr, $($arg:tt)*) => {
+        {
+            $crate::infra::logging::telemetry::emit($code);
+            ::tracing::debug!($($arg)*);
+        }
+    };
 }

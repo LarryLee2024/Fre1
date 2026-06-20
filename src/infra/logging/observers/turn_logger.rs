@@ -9,7 +9,7 @@
 use bevy::prelude::*;
 
 use crate::core::events::{TurnEnded, TurnStarted};
-use crate::infra::logging::telemetry;
+use crate::emit_info;
 use crate::shared::diagnostics::LogCode;
 
 /// 单位回合开始日志 Observer。
@@ -18,10 +18,9 @@ use crate::shared::diagnostics::LogCode;
     event = "unit_turn_started",
 ))]
 pub(crate) fn on_turn_started(trigger: On<TurnStarted>) {
-    telemetry::emit(LogCode::BAT005);
     let event = trigger.event();
-    info!(
-        target = "domain.combat",
+    emit_info!(
+        LogCode::BAT005,
         unit = ?event.unit,
         "回合开始",
     );
@@ -33,10 +32,9 @@ pub(crate) fn on_turn_started(trigger: On<TurnStarted>) {
     event = "unit_turn_ended",
 ))]
 pub(crate) fn on_turn_ended(trigger: On<TurnEnded>) {
-    telemetry::emit(LogCode::BAT006);
     let event = trigger.event();
-    info!(
-        target = "domain.combat",
+    emit_info!(
+        LogCode::BAT006,
         unit = ?event.unit,
         "回合结束",
     );

@@ -11,7 +11,7 @@ use bevy::prelude::*;
 use crate::core::domains::summon::events::{
     SummonCommand, SummonCreated, SummonExpired, SummonSlotChanged,
 };
-use crate::infra::logging::telemetry;
+use crate::emit_info;
 use crate::shared::diagnostics::LogCode;
 
 /// 召唤物创建日志 Observer。
@@ -20,10 +20,9 @@ use crate::shared::diagnostics::LogCode;
     event = "summon_created",
 ))]
 pub(crate) fn on_summon_created(trigger: On<SummonCreated>) {
-    telemetry::emit(LogCode::SUM001);
     let event = trigger.event();
-    info!(
-        target = "domain.summon",
+    emit_info!(
+        LogCode::SUM001,
         caster = ?event.caster,
         summon = ?event.summon_entity,
         template = %event.template_id,
@@ -37,10 +36,9 @@ pub(crate) fn on_summon_created(trigger: On<SummonCreated>) {
     event = "summon_vanished",
 ))]
 pub(crate) fn on_summon_expired(trigger: On<SummonExpired>) {
-    telemetry::emit(LogCode::SUM002);
     let event = trigger.event();
-    info!(
-        target = "domain.summon",
+    emit_info!(
+        LogCode::SUM002,
         caster = ?event.caster,
         summon = ?event.summon_entity,
         reason = ?event.reason,
@@ -54,10 +52,9 @@ pub(crate) fn on_summon_expired(trigger: On<SummonExpired>) {
     event = "summon_commanded",
 ))]
 pub(crate) fn on_summon_command(trigger: On<SummonCommand>) {
-    telemetry::emit(LogCode::SUM003);
     let event = trigger.event();
-    info!(
-        target = "domain.summon",
+    emit_info!(
+        LogCode::SUM003,
         caster = ?event.caster,
         summon = ?event.summon_entity,
         command = ?event.command_type,
@@ -71,10 +68,9 @@ pub(crate) fn on_summon_command(trigger: On<SummonCommand>) {
     event = "summon_slot_changed",
 ))]
 pub(crate) fn on_summon_slot_changed(trigger: On<SummonSlotChanged>) {
-    telemetry::emit(LogCode::SUM004);
     let event = trigger.event();
-    info!(
-        target = "domain.summon",
+    emit_info!(
+        LogCode::SUM004,
         caster = ?event.caster,
         used = event.slots_used,
         max = event.slots_max,

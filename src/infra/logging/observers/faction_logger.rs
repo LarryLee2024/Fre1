@@ -11,7 +11,7 @@ use bevy::prelude::*;
 use crate::core::domains::faction::events::{
     FactionRelationChanged, RelationshipEvaluated, ReputationChanged, ReputationLevelUp,
 };
-use crate::infra::logging::telemetry;
+use crate::emit_info;
 use crate::shared::diagnostics::LogCode;
 
 /// 声望变化日志 Observer。
@@ -20,10 +20,9 @@ use crate::shared::diagnostics::LogCode;
     event = "reputation_changed",
 ))]
 pub(crate) fn on_reputation_changed(trigger: On<ReputationChanged>) {
-    telemetry::emit(LogCode::FAC001);
     let event = trigger.event();
-    info!(
-        target = "domain.faction",
+    emit_info!(
+        LogCode::FAC001,
         entity = ?event.entity,
         faction = %event.faction_id,
         old = event.old_value,
@@ -39,10 +38,9 @@ pub(crate) fn on_reputation_changed(trigger: On<ReputationChanged>) {
     event = "faction_relation_changed",
 ))]
 pub(crate) fn on_faction_relation_changed(trigger: On<FactionRelationChanged>) {
-    telemetry::emit(LogCode::FAC002);
     let event = trigger.event();
-    info!(
-        target = "domain.faction",
+    emit_info!(
+        LogCode::FAC002,
         faction_a = %event.faction_a,
         faction_b = %event.faction_b,
         new_relation = ?event.new_relation,
@@ -56,10 +54,9 @@ pub(crate) fn on_faction_relation_changed(trigger: On<FactionRelationChanged>) {
     event = "reputation_tier_raised",
 ))]
 pub(crate) fn on_reputation_level_up(trigger: On<ReputationLevelUp>) {
-    telemetry::emit(LogCode::FAC003);
     let event = trigger.event();
-    info!(
-        target = "domain.faction",
+    emit_info!(
+        LogCode::FAC003,
         entity = ?event.entity,
         faction = %event.faction_id,
         new_level = ?event.new_level,
@@ -73,10 +70,9 @@ pub(crate) fn on_reputation_level_up(trigger: On<ReputationLevelUp>) {
     event = "relation_assessed",
 ))]
 pub(crate) fn on_relationship_evaluated(trigger: On<RelationshipEvaluated>) {
-    telemetry::emit(LogCode::FAC004);
     let event = trigger.event();
-    info!(
-        target = "domain.faction",
+    emit_info!(
+        LogCode::FAC004,
         entity = ?event.entity,
         final_state = ?event.final_state,
         "关系判定",

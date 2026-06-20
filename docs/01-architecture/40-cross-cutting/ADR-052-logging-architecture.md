@@ -74,7 +74,7 @@ Logging 属于 Infrastructure
 | `domain.quest` | 任务系统 | QST 系列 |
 | `domain.summon` | 召唤系统 | SUM 系列 |
 | `infra.save` | 存档 | SAV 系列 |
-| `infra.content` | 内容加载 | CNT 系列 |
+| `content` | 内容加载 | CNT 系列 |
 | `infra.replay` | 回放 | RPL 系列 |
 
 `#[instrument]` 用法示例：`#[tracing::instrument(skip_all, target = "domain.ability.activation", fields(...))]`
@@ -301,18 +301,32 @@ src/shared/diagnostics/           # L0: 日志基础设施类型
 ├── correlation.rs                # CorrelationId（BattleId, TurnId, ActionId）
 └── context.rs                    # DiagnosticContext
 
+> **Note**: LogCode/LogCategory types are physically located in `shared/diagnostics/` but logically owned by the Infrastructure logging system.
+
 src/infra/logging/                # L2: 日志基础设施实现
 ├── mod.rs
 ├── plugin.rs                     # LoggingPlugin
 ├── observers/
 │   ├── mod.rs
-│   ├── battle_logger.rs          # 监听战斗事件 → INFO 日志
-│   ├── ability_logger.rs         # 监听技能事件 → INFO 日志
-│   ├── effect_logger.rs          # 监听效果事件 → INFO 日志
-│   ├── spell_logger.rs           # 监听法术事件 → INFO 日志
-│   ├── quest_logger.rs           # 监听任务事件 → INFO 日志
-│   ├── content_logger.rs         # 监听内容加载 → WARN 日志
-│   └── turn_logger.rs            # 监听回合事件 → INFO 日志
+│   ├── ability_logger.rs       # 技能事件 → INFO
+│   ├── battle_logger.rs        # 战斗生命周期 → INFO
+│   ├── camp_rest_logger.rs     # 营地休息事件 → INFO
+│   ├── content_logger.rs       # 内容加载事件 → INFO
+│   ├── crafting_logger.rs      # 制作/附魔事件 → INFO
+│   ├── economy_logger.rs       # 交易/货币事件 → INFO
+│   ├── effect_logger.rs        # 效果生命周期 → INFO/WARN
+│   ├── faction_logger.rs       # 声望/阵营事件 → INFO
+│   ├── inventory_logger.rs     # 物品/装备事件 → INFO
+│   ├── narrative_logger.rs     # 对话/剧情事件 → INFO
+│   ├── party_logger.rs         # 队伍管理事件 → INFO
+│   ├── progression_logger.rs   # 经验/升级事件 → INFO
+│   ├── quest_logger.rs         # 任务生命周期 → INFO/WARN
+│   ├── reaction_logger.rs      # 反应/援护事件 → INFO
+│   ├── spell_logger.rs         # 法术事件 → INFO
+│   ├── summon_logger.rs        # 召唤物事件 → INFO
+│   ├── tactical_logger.rs      # 战术移动事件 → INFO
+│   ├── terrain_logger.rs       # 地形效果事件 → INFO
+│   └── turn_logger.rs          # 回合流转事件 → INFO
 ├── rate_limit/
 │   ├── mod.rs
 │   └── once_guard.rs             # warn_once!/error_once! 实现
@@ -320,11 +334,23 @@ src/infra/logging/                # L2: 日志基础设施实现
     └── mod.rs
 ```
 
+### ObservableEvent 契约（2026-06-28 新增）
+
+从 `docs/ai_ignore_this_dir/14可观测.md` 提炼的 Single Source of Observability 原则：
+
+1. **ObservableEvent trait** — 位于 `shared/diagnostics/observable.rs`，领域事件实现此 trait 后
+   可观测系统可以自动提取事件的结构化字段，无需每个 Observer 手动展开事件字段
+2. **Observability Facade** — `infra/logging/telemetry.rs` 提供 `emit_info!`/`emit_warn!` 宏，
+   自动从 LogCode 派生 target，Observer 不再需要手动指定 target 和调用 metrics::record
+3. **业务代码零感知** — Observer 是基础设施代码，领域代码只产生领域事件，不知道日志/指标的存在
+
+详见 `docs/11-refactor/logging-system-refactoring-2026-06-28.md`
+
 ## Communication Design
 
 - **Hook**: 不适用
 - **Trigger**: 领域事件通过 `commands.trigger()` 发射
-- **Observer**: Logging observers 通过 `app.add_observer()` 订阅领域事件
+- **Observer**: Logging observers 通过 `app.add_observer()` 订阅领域事件（共 73 个 observer）
 - **Message**: 不适用
 - **Query API**: 不适用
 

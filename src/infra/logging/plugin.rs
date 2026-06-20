@@ -16,6 +16,8 @@ use super::observers::{
     tactical_logger, terrain_logger, turn_logger,
 };
 
+use super::sinks::file_sink::FileSinkConfig;
+
 /// 日志基础设施 Plugin。
 ///
 /// 注册所有日志 Observer + MetricsCollector。
@@ -146,5 +148,14 @@ impl Plugin for LoggingPlugin {
         app.add_observer(content_logger::on_definition_reloaded);
 
         tracing::info!(target: "logging", "[LoggingPlugin] 已初始化（Metrics + 73 个 observer）");
+
+        // ── 文件日志输出器（FileSink）──
+        // 注意：Bevy 的 DefaultPlugins.LogPlugin 已初始化 tracing-subscriber。
+        // FileSinkLayer 的完整集成需要自定义 Bevy LogPlugin。
+        // 当前先将 FileSinkConfig 注册为 Resource，后续通过自定义 LogPlugin 追加 Layer。
+        let file_sink_config = FileSinkConfig::default();
+        if file_sink_config.enabled {
+            app.insert_resource(file_sink_config);
+        }
     }
 }

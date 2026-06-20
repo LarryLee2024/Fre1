@@ -7,6 +7,7 @@
 use bevy::prelude::*;
 
 use super::components::ClassId;
+use crate::shared::diagnostics::{FieldCollector, LogCode, ObservableEvent};
 
 /// 角色获得经验值时触发。
 ///
@@ -46,6 +47,20 @@ pub struct LevelUp {
     pub class_id: ClassId,
     /// 是否达到 ASI 等级
     pub is_asi_level: bool,
+}
+
+impl ObservableEvent for LevelUp {
+    fn log_code(&self) -> LogCode {
+        LogCode::PRG002
+    }
+
+    fn record_fields(&self, collector: &mut FieldCollector) {
+        collector.add_field("entity", format_args!("{:?}", self.entity));
+        collector.add_field("old", self.old_level);
+        collector.add_field("new", self.new_level);
+        collector.add_field("class", &self.class_id);
+        collector.add_field("asi", self.is_asi_level);
+    }
 }
 
 /// 天赋解锁时触发。

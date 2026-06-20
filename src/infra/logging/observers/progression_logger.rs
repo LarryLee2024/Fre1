@@ -11,7 +11,7 @@ use bevy::prelude::*;
 use crate::core::domains::progression::events::{
     ASICompleted, ClassGained, ExperienceGained, LevelUp, SubclassChosen, TalentUnlocked,
 };
-use crate::infra::logging::telemetry;
+use crate::emit_info;
 use crate::shared::diagnostics::LogCode;
 
 /// 经验获得日志 Observer。
@@ -20,10 +20,9 @@ use crate::shared::diagnostics::LogCode;
     event = "experience_gained",
 ))]
 pub(crate) fn on_experience_gained(trigger: On<ExperienceGained>) {
-    telemetry::emit(LogCode::PRG001);
     let event = trigger.event();
-    info!(
-        target = "domain.progression",
+    emit_info!(
+        LogCode::PRG001,
         entity = ?event.entity,
         amount = event.amount,
         source = %event.source,
@@ -38,10 +37,9 @@ pub(crate) fn on_experience_gained(trigger: On<ExperienceGained>) {
     event = "level_up",
 ))]
 pub(crate) fn on_level_up(trigger: On<LevelUp>) {
-    telemetry::emit(LogCode::PRG002);
     let event = trigger.event();
-    info!(
-        target = "domain.progression",
+    emit_info!(
+        LogCode::PRG002,
         entity = ?event.entity,
         old = event.old_level,
         new = event.new_level,
@@ -56,10 +54,9 @@ pub(crate) fn on_level_up(trigger: On<LevelUp>) {
     event = "talent_unlocked",
 ))]
 pub(crate) fn on_talent_unlocked(trigger: On<TalentUnlocked>) {
-    telemetry::emit(LogCode::PRG003);
     let event = trigger.event();
-    info!(
-        target = "domain.progression",
+    emit_info!(
+        LogCode::PRG003,
         entity = ?event.entity,
         talent_id = %event.talent_id,
         "天赋解锁",
@@ -72,10 +69,9 @@ pub(crate) fn on_talent_unlocked(trigger: On<TalentUnlocked>) {
     event = "subclass_chosen",
 ))]
 pub(crate) fn on_subclass_chosen(trigger: On<SubclassChosen>) {
-    telemetry::emit(LogCode::PRG004);
     let event = trigger.event();
-    info!(
-        target = "domain.progression",
+    emit_info!(
+        LogCode::PRG004,
         entity = ?event.entity,
         subclass_id = %event.subclass_id,
         "子职选择",
@@ -88,10 +84,9 @@ pub(crate) fn on_subclass_chosen(trigger: On<SubclassChosen>) {
     event = "asi_completed",
 ))]
 pub(crate) fn on_asi_completed(trigger: On<ASICompleted>) {
-    telemetry::emit(LogCode::PRG005);
     let event = trigger.event();
-    info!(
-        target = "domain.progression",
+    emit_info!(
+        LogCode::PRG005,
         entity = ?event.entity,
         level = event.level,
         choices = event.choices.len(),
@@ -105,10 +100,9 @@ pub(crate) fn on_asi_completed(trigger: On<ASICompleted>) {
     event = "class_gained",
 ))]
 pub(crate) fn on_class_gained(trigger: On<ClassGained>) {
-    telemetry::emit(LogCode::PRG006);
     let event = trigger.event();
-    info!(
-        target = "domain.progression",
+    emit_info!(
+        LogCode::PRG006,
         entity = ?event.entity,
         class_id = %event.class_id,
         level = event.new_level,

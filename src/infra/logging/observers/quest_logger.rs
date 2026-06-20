@@ -11,8 +11,8 @@ use bevy::prelude::*;
 use crate::core::domains::quest::events::{
     ObjectiveCompleted, QuestAccepted, QuestFailed, QuestProgressUpdated, QuestTurnedIn,
 };
-use crate::infra::logging::telemetry;
 use crate::shared::diagnostics::LogCode;
+use crate::{emit_info, emit_warn};
 
 /// 任务接受日志 Observer。
 #[tracing::instrument(skip_all, target = "domain.quest", fields(
@@ -20,10 +20,9 @@ use crate::shared::diagnostics::LogCode;
     event = "quest_accepted",
 ))]
 pub(crate) fn on_quest_accepted(trigger: On<QuestAccepted>) {
-    telemetry::emit(LogCode::QST001);
     let event = trigger.event();
-    info!(
-        target = "domain.quest",
+    emit_info!(
+        LogCode::QST001,
         entity = ?event.entity,
         quest_id = %event.quest_id,
         "任务接受",
@@ -36,10 +35,9 @@ pub(crate) fn on_quest_accepted(trigger: On<QuestAccepted>) {
     event = "quest_objective_completed",
 ))]
 pub(crate) fn on_objective_completed(trigger: On<ObjectiveCompleted>) {
-    telemetry::emit(LogCode::QST002);
     let event = trigger.event();
-    info!(
-        target = "domain.quest",
+    emit_info!(
+        LogCode::QST002,
         entity = ?event.entity,
         quest_id = %event.quest_id,
         objective_id = %event.objective_id,
@@ -53,10 +51,9 @@ pub(crate) fn on_objective_completed(trigger: On<ObjectiveCompleted>) {
     event = "quest_completed",
 ))]
 pub(crate) fn on_quest_turned_in(trigger: On<QuestTurnedIn>) {
-    telemetry::emit(LogCode::QST003);
     let event = trigger.event();
-    info!(
-        target = "domain.quest",
+    emit_info!(
+        LogCode::QST003,
         entity = ?event.entity,
         quest_id = %event.quest_id,
         "任务交付",
@@ -69,10 +66,9 @@ pub(crate) fn on_quest_turned_in(trigger: On<QuestTurnedIn>) {
     event = "quest_failed",
 ))]
 pub(crate) fn on_quest_failed(trigger: On<QuestFailed>) {
-    telemetry::emit(LogCode::QST004);
     let event = trigger.event();
-    warn!(
-        target = "domain.quest",
+    emit_warn!(
+        LogCode::QST004,
         entity = ?event.entity,
         quest_id = %event.quest_id,
         reason = %event.fail_reason,
@@ -86,10 +82,9 @@ pub(crate) fn on_quest_failed(trigger: On<QuestFailed>) {
     event = "quest_progress_changed",
 ))]
 pub(crate) fn on_quest_progress_updated(trigger: On<QuestProgressUpdated>) {
-    telemetry::emit(LogCode::QST005);
     let event = trigger.event();
-    info!(
-        target = "domain.quest",
+    emit_info!(
+        LogCode::QST005,
         entity = ?event.entity,
         quest_id = %event.quest_id,
         objective_id = %event.objective_id,

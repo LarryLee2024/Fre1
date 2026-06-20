@@ -11,7 +11,7 @@ use bevy::prelude::*;
 use crate::core::domains::terrain::events::{
     HazardTriggered, SurfaceChanged, TerrainEffectApplied, TileEntered,
 };
-use crate::infra::logging::telemetry;
+use crate::emit_info;
 use crate::shared::diagnostics::LogCode;
 
 /// 单位进入格子日志 Observer。
@@ -20,10 +20,9 @@ use crate::shared::diagnostics::LogCode;
     event = "entity_entered_tile",
 ))]
 pub(crate) fn on_tile_entered(trigger: On<TileEntered>) {
-    telemetry::emit(LogCode::TER001);
     let event = trigger.event();
-    info!(
-        target = "domain.terrain",
+    emit_info!(
+        LogCode::TER001,
         entity = ?event.entity,
         tile = ?event.tile,
         surface = ?event.surface,
@@ -37,10 +36,9 @@ pub(crate) fn on_tile_entered(trigger: On<TileEntered>) {
     event = "tile_surface_changed",
 ))]
 pub(crate) fn on_surface_changed(trigger: On<SurfaceChanged>) {
-    telemetry::emit(LogCode::TER002);
     let event = trigger.event();
-    info!(
-        target = "domain.terrain",
+    emit_info!(
+        LogCode::TER002,
         tile = ?event.tile,
         old = ?event.old_surface,
         new = ?event.new_surface,
@@ -54,10 +52,9 @@ pub(crate) fn on_surface_changed(trigger: On<SurfaceChanged>) {
     event = "trap_triggered",
 ))]
 pub(crate) fn on_hazard_triggered(trigger: On<HazardTriggered>) {
-    telemetry::emit(LogCode::TER003);
     let event = trigger.event();
-    info!(
-        target = "domain.terrain",
+    emit_info!(
+        LogCode::TER003,
         tile = ?event.tile,
         target = ?event.target,
         hazard_id = %event.hazard_id,
@@ -71,10 +68,9 @@ pub(crate) fn on_hazard_triggered(trigger: On<HazardTriggered>) {
     event = "terrain_effect_applied",
 ))]
 pub(crate) fn on_terrain_effect_applied(trigger: On<TerrainEffectApplied>) {
-    telemetry::emit(LogCode::TER004);
     let event = trigger.event();
-    info!(
-        target = "domain.terrain",
+    emit_info!(
+        LogCode::TER004,
         entity = ?event.entity,
         tile = ?event.tile,
         effect = %event.effect_id,

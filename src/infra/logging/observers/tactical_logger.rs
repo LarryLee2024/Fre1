@@ -9,7 +9,7 @@
 use bevy::prelude::*;
 
 use crate::core::domains::tactical::events::{PositionChanged, UnitMoved};
-use crate::infra::logging::telemetry;
+use crate::emit_info;
 use crate::shared::diagnostics::LogCode;
 
 /// 单位移动完成日志 Observer。
@@ -18,10 +18,9 @@ use crate::shared::diagnostics::LogCode;
     event = "movement_completed",
 ))]
 pub(crate) fn on_unit_moved(trigger: On<UnitMoved>) {
-    telemetry::emit(LogCode::TAC001);
     let event = trigger.event();
-    info!(
-        target = "domain.tactical",
+    emit_info!(
+        LogCode::TAC001,
         entity = ?event.entity,
         from = ?event.from,
         to = ?event.to,
@@ -36,10 +35,9 @@ pub(crate) fn on_unit_moved(trigger: On<UnitMoved>) {
     event = "position_changed",
 ))]
 pub(crate) fn on_position_changed(trigger: On<PositionChanged>) {
-    telemetry::emit(LogCode::TAC005);
     let event = trigger.event();
-    info!(
-        target = "domain.tactical",
+    emit_info!(
+        LogCode::TAC005,
         entity = ?event.entity,
         new_pos = ?event.new_pos,
         "位置变更",

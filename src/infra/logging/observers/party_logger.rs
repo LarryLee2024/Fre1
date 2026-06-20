@@ -11,7 +11,7 @@ use bevy::prelude::*;
 use crate::core::domains::party::events::{
     BondActivated, BondDeactivated, MemberJoined, MemberRemoved, MemberSwapped,
 };
-use crate::infra::logging::telemetry;
+use crate::emit_info;
 use crate::shared::diagnostics::LogCode;
 
 /// 成员加入日志 Observer。
@@ -20,10 +20,9 @@ use crate::shared::diagnostics::LogCode;
     event = "member_joined",
 ))]
 pub(crate) fn on_member_joined(trigger: On<MemberJoined>) {
-    telemetry::emit(LogCode::PRY001);
     let event = trigger.event();
-    info!(
-        target = "domain.party",
+    emit_info!(
+        LogCode::PRY001,
         entity = ?event.entity,
         role = %event.role,
         "成员加入",
@@ -36,10 +35,9 @@ pub(crate) fn on_member_joined(trigger: On<MemberJoined>) {
     event = "member_left",
 ))]
 pub(crate) fn on_member_removed(trigger: On<MemberRemoved>) {
-    telemetry::emit(LogCode::PRY002);
     let event = trigger.event();
-    info!(
-        target = "domain.party",
+    emit_info!(
+        LogCode::PRY002,
         entity = ?event.entity,
         reason = %event.reason,
         "成员离开",
@@ -52,10 +50,9 @@ pub(crate) fn on_member_removed(trigger: On<MemberRemoved>) {
     event = "battle_swap",
 ))]
 pub(crate) fn on_member_swapped(trigger: On<MemberSwapped>) {
-    telemetry::emit(LogCode::PRY003);
     let event = trigger.event();
-    info!(
-        target = "domain.party",
+    emit_info!(
+        LogCode::PRY003,
         outgoing = ?event.outgoing,
         incoming = ?event.incoming,
         "战斗换人",
@@ -68,10 +65,9 @@ pub(crate) fn on_member_swapped(trigger: On<MemberSwapped>) {
     event = "bond_activated",
 ))]
 pub(crate) fn on_bond_activated(trigger: On<BondActivated>) {
-    telemetry::emit(LogCode::PRY004);
     let event = trigger.event();
-    info!(
-        target = "domain.party",
+    emit_info!(
+        LogCode::PRY004,
         bond_id = %event.bond_id,
         members = ?event.members,
         "羁绊激活",
@@ -84,10 +80,9 @@ pub(crate) fn on_bond_activated(trigger: On<BondActivated>) {
     event = "bond_dissolved",
 ))]
 pub(crate) fn on_bond_deactivated(trigger: On<BondDeactivated>) {
-    telemetry::emit(LogCode::PRY005);
     let event = trigger.event();
-    info!(
-        target = "domain.party",
+    emit_info!(
+        LogCode::PRY005,
         bond_id = %event.bond_id,
         reason = %event.reason,
         "羁绊解除",

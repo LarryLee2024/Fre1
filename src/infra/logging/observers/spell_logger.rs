@@ -9,7 +9,7 @@
 use bevy::prelude::*;
 
 use crate::core::domains::spell::events::SpellCastResult;
-use crate::infra::logging::telemetry;
+use crate::emit_info;
 use crate::shared::diagnostics::LogCode;
 
 /// 法术施放结果日志 Observer。
@@ -18,10 +18,9 @@ use crate::shared::diagnostics::LogCode;
     event = "spell_cast",
 ))]
 pub(crate) fn on_spell_cast_result(trigger: On<SpellCastResult>) {
-    telemetry::emit(LogCode::SPR001);
     let event = trigger.event();
-    info!(
-        target = "domain.spell",
+    emit_info!(
+        LogCode::SPR001,
         caster = ?event.caster,
         spell_id = ?event.spell_id,
         result = ?event.result,
