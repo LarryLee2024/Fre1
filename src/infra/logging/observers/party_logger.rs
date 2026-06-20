@@ -11,7 +11,7 @@ use crate::infra::logging::metrics;
 use crate::shared::diagnostics::LogCode;
 
 /// 成员加入日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::PRY001, event = "成员加入"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::PRY001, event = "成员加入"), target = "party")]
 pub(crate) fn on_member_joined(trigger: On<MemberJoined>) {
     metrics::record(LogCode::PRY001);
     let event = trigger.event();
@@ -25,7 +25,7 @@ pub(crate) fn on_member_joined(trigger: On<MemberJoined>) {
 }
 
 /// 成员离开日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::PRY002, event = "成员离开"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::PRY002, event = "成员离开"), target = "party")]
 pub(crate) fn on_member_removed(trigger: On<MemberRemoved>) {
     metrics::record(LogCode::PRY002);
     let event = trigger.event();
@@ -39,7 +39,7 @@ pub(crate) fn on_member_removed(trigger: On<MemberRemoved>) {
 }
 
 /// 换人日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::PRY003, event = "换人"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::PRY003, event = "换人"), target = "party")]
 pub(crate) fn on_member_swapped(trigger: On<MemberSwapped>) {
     metrics::record(LogCode::PRY003);
     let event = trigger.event();
@@ -53,7 +53,7 @@ pub(crate) fn on_member_swapped(trigger: On<MemberSwapped>) {
 }
 
 /// 羁绊激活日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::PRY004, event = "羁绊激活"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::PRY004, event = "羁绊激活"), target = "party")]
 pub(crate) fn on_bond_activated(trigger: On<BondActivated>) {
     metrics::record(LogCode::PRY004);
     let event = trigger.event();
@@ -67,7 +67,7 @@ pub(crate) fn on_bond_activated(trigger: On<BondActivated>) {
 }
 
 /// 羁绊解除日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::PRY005, event = "羁绊解除"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::PRY005, event = "羁绊解除"), target = "party")]
 pub(crate) fn on_bond_deactivated(trigger: On<BondDeactivated>) {
     metrics::record(LogCode::PRY005);
     let event = trigger.event();

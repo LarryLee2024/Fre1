@@ -12,7 +12,7 @@ use crate::infra::logging::metrics;
 use crate::shared::diagnostics::LogCode;
 
 /// 反应触发日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::RCT001, event = "反应触发"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::RCT001, event = "反应触发"), target = "combat")]
 pub(crate) fn on_reaction_triggered(trigger: On<ReactionTriggered>) {
     metrics::record(LogCode::RCT001);
     let event = trigger.event();
@@ -26,7 +26,7 @@ pub(crate) fn on_reaction_triggered(trigger: On<ReactionTriggered>) {
 }
 
 /// 反应执行日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::RCT002, event = "反应执行"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::RCT002, event = "反应执行"), target = "combat")]
 pub(crate) fn on_reaction_executed(trigger: On<ReactionExecuted>) {
     metrics::record(LogCode::RCT002);
     let event = trigger.event();
@@ -40,7 +40,7 @@ pub(crate) fn on_reaction_executed(trigger: On<ReactionExecuted>) {
 }
 
 /// 反应拒绝日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::RCT003, event = "反应拒绝"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::RCT003, event = "反应拒绝"), target = "combat")]
 pub(crate) fn on_reaction_declined(trigger: On<ReactionDeclined>) {
     metrics::record(LogCode::RCT003);
     let event = trigger.event();
@@ -54,7 +54,7 @@ pub(crate) fn on_reaction_declined(trigger: On<ReactionDeclined>) {
 }
 
 /// 机会攻击日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::RCT004, event = "机会攻击"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::RCT004, event = "机会攻击"), target = "combat")]
 pub(crate) fn on_opportunity_attack(trigger: On<OpportunityAttackExecuted>) {
     metrics::record(LogCode::RCT004);
     let event = trigger.event();
@@ -71,7 +71,7 @@ pub(crate) fn on_opportunity_attack(trigger: On<OpportunityAttackExecuted>) {
 }
 
 /// 法术反制日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::RCT005, event = "法术反制"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::RCT005, event = "法术反制"), target = "combat")]
 pub(crate) fn on_counterspell(trigger: On<CounterspellExecuted>) {
     metrics::record(LogCode::RCT005);
     let event = trigger.event();
@@ -86,7 +86,9 @@ pub(crate) fn on_counterspell(trigger: On<CounterspellExecuted>) {
 }
 
 /// 护盾术日志 Observer。
+#[tracing::instrument(skip_all, fields(code = ?LogCode::RCT005, event = "护盾术"), target = "combat")]
 pub(crate) fn on_shield_used(trigger: On<ShieldUsed>) {
+    metrics::record(LogCode::RCT005);
     let event = trigger.event();
     info!(
         code = ?LogCode::RCT005,
@@ -99,7 +101,9 @@ pub(crate) fn on_shield_used(trigger: On<ShieldUsed>) {
 }
 
 /// 援护格挡日志 Observer。
+#[tracing::instrument(skip_all, fields(code = ?LogCode::RCT005, event = "援护格挡"), target = "combat")]
 pub(crate) fn on_guardian_used(trigger: On<GuardianUsed>) {
+    metrics::record(LogCode::RCT005);
     let event = trigger.event();
     info!(
         code = ?LogCode::RCT005,

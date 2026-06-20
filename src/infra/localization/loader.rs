@@ -92,7 +92,7 @@ fn load_all_locales() -> HashMap<LocaleId, HashMap<String, Pattern>> {
     let mut all = HashMap::new();
 
     let Ok(entries) = std::fs::read_dir(base) else {
-        warn!("[Localization] assets/localization/ 目录未找到 — 跳过加载");
+        warn!(target: "localization", "[Localization] assets/localization/ 目录未找到 — 跳过加载");
         return all;
     };
 
@@ -106,7 +106,7 @@ fn load_all_locales() -> HashMap<LocaleId, HashMap<String, Pattern>> {
 
         let mut locale_map = HashMap::new();
         let Ok(ftl_files) = std::fs::read_dir(&path) else {
-            warn!("[Localization] 无法读取 locale 目录：{:?}", path);
+            warn!(target: "localization", "[Localization] 无法读取 locale 目录：{:?}", path);
             continue;
         };
 
@@ -119,14 +119,14 @@ fn load_all_locales() -> HashMap<LocaleId, HashMap<String, Pattern>> {
                 let patterns = parse_ftl(&content);
                 let count = patterns.len();
                 locale_map.extend(patterns);
-                info!(
+                info!(target: "localization", 
                     "[Localization] 从 {:?} 加载了 {} 个模式",
                     ftl_path, count
                 );
             }
         }
 
-        info!(
+        info!(target: "localization", 
             "[Localization] 加载了区域 '{}'，共 {} 个模式",
             locale_name,
             locale_map.len()
@@ -139,7 +139,7 @@ fn load_all_locales() -> HashMap<LocaleId, HashMap<String, Pattern>> {
 
 /// Startup System: 扫描 assets/localization/ 下所有 locale 目录和 .ftl 文件并加载
 pub fn load_all_ftl_system(mut db: ResMut<LocalizationDatabase>) {
-    info!("[Localization] 开始加载 FTL 文件...");
+    info!(target: "localization", "[Localization] 开始加载 FTL 文件...");
     let all_locales = load_all_locales();
 
     let mut total_patterns = 0;
@@ -149,7 +149,7 @@ pub fn load_all_ftl_system(mut db: ResMut<LocalizationDatabase>) {
         total_patterns += count;
     }
 
-    info!(
+    info!(target: "localization", 
         "[Localization] 加载了 {} 个区域共 {} 个模式。当前区域：{}",
         db.loaded_locales().len(),
         total_patterns,
@@ -249,7 +249,7 @@ pub fn hot_reload_system(
                 let count = patterns.len();
                 db.load_patterns(locale, patterns);
 
-                info!(
+                info!(target: "localization", 
                     "[Localization] 热重载了 {} 个模式从 {:?}",
                     count, path
                 );

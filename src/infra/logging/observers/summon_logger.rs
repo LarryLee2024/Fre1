@@ -11,7 +11,7 @@ use crate::infra::logging::metrics;
 use crate::shared::diagnostics::LogCode;
 
 /// 召唤物创建日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::SUM001, event = "召唤物创建"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::SUM001, event = "召唤物创建"), target = "combat")]
 pub(crate) fn on_summon_created(trigger: On<SummonCreated>) {
     metrics::record(LogCode::SUM001);
     let event = trigger.event();
@@ -26,7 +26,7 @@ pub(crate) fn on_summon_created(trigger: On<SummonCreated>) {
 }
 
 /// 召唤物消失日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::SUM002, event = "召唤物消失"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::SUM002, event = "召唤物消失"), target = "combat")]
 pub(crate) fn on_summon_expired(trigger: On<SummonExpired>) {
     metrics::record(LogCode::SUM002);
     let event = trigger.event();
@@ -41,7 +41,7 @@ pub(crate) fn on_summon_expired(trigger: On<SummonExpired>) {
 }
 
 /// 召唤指令日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::SUM003, event = "召唤指令"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::SUM003, event = "召唤指令"), target = "combat")]
 pub(crate) fn on_summon_command(trigger: On<SummonCommand>) {
     metrics::record(LogCode::SUM003);
     let event = trigger.event();
@@ -56,7 +56,7 @@ pub(crate) fn on_summon_command(trigger: On<SummonCommand>) {
 }
 
 /// 召唤槽位变化日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::SUM004, event = "召唤槽位变化"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::SUM004, event = "召唤槽位变化"), target = "combat")]
 pub(crate) fn on_summon_slot_changed(trigger: On<SummonSlotChanged>) {
     metrics::record(LogCode::SUM004);
     let event = trigger.event();

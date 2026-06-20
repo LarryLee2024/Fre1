@@ -31,7 +31,7 @@ pub fn on_save_request(
     save_manager.current_save_path = Some(std::path::PathBuf::from(&path));
     save_manager.is_dirty = false;
 
-    tracing::info!("[SavePlugin] 保存完成：路径={}", path);
+    tracing::info!(target: "save", "[SavePlugin] 保存完成：路径={}", path);
     commands.trigger(SaveCompleted {
         path,
         entity_count: 0,
@@ -47,7 +47,7 @@ pub fn on_load_request(
 ) {
     let path = trigger.event().path.clone();
     if !std::path::Path::new(&path).exists() {
-        tracing::error!("[SavePlugin] 存档文件未找到：{}", path);
+        tracing::error!(target: "save", "[SavePlugin] 存档文件未找到：{}", path);
         commands.trigger(SaveError {
             error_context: ErrorContext {
                 domain: "save",
@@ -62,7 +62,7 @@ pub fn on_load_request(
     save_manager.current_save_path = Some(std::path::PathBuf::from(&path));
     save_manager.is_dirty = false;
 
-    tracing::info!("[SavePlugin] 加载完成：路径={}", path);
+    tracing::info!(target: "save", "[SavePlugin] 加载完成：路径={}", path);
     commands.trigger(LoadCompleted {
         path,
         entity_count: 0,

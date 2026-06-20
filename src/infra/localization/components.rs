@@ -64,7 +64,7 @@ pub fn render_localized_text(
             }
             Err(e) => {
                 text.0 = format!("[LOC_ERR: {}]", e);
-                warn!("[Localization] 渲染错误：{}", e);
+                warn!(target: "localization", "[Localization] 渲染错误：{}", e);
             }
         }
     }

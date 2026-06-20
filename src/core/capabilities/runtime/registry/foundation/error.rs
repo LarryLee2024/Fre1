@@ -6,14 +6,14 @@
 #[derive(Debug, Clone, PartialEq, thiserror::Error)]
 pub enum RegistryError {
     /// ID 已存在
-    #[error("duplicate registry ID: {0}")]
-    DuplicateId(String),
+    #[error("duplicate registry ID: {id}")]
+    DuplicateId { id: String },
     /// ID 不存在
-    #[error("registry ID not found: {0}")]
-    IdNotFound(String),
+    #[error("registry ID not found: {id}")]
+    IdNotFound { id: String },
     /// ID 格式无效
-    #[error("invalid ID format: {0}")]
-    InvalidIdFormat(String),
+    #[error("invalid ID format: {id}")]
+    InvalidIdFormat { id: String },
     /// 跨 Def 引用断裂
     #[error("broken reference: {source_id}.{field} \u{2192} {target} (not found)")]
     BrokenReference {
@@ -25,6 +25,6 @@ pub enum RegistryError {
         target: String,
     },
     /// 分配器未注册
-    #[error("allocator not found: {0}")]
-    AllocatorNotFound(String),
+    #[error("allocator not found: {allocator}")]
+    AllocatorNotFound { allocator: String },
 }

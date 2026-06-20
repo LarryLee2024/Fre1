@@ -61,6 +61,6 @@ impl Plugin for ReplayPlugin {
                 .chain(),
         );
 
-        tracing::info!("[ReplayPlugin] 已初始化（resources, frame systems）");
+        tracing::info!(target: "replay", "[ReplayPlugin] 已初始化（resources, frame systems）");
     }
 }

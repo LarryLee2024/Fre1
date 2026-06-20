@@ -50,7 +50,7 @@ pub fn audit_system(
     let coverage = db.coverage();
     let missing = db.missing_keys();
 
-    info!(
+    info!(target: "localization", 
         "[Localization Audit] {} 个区域，{} 个模式。当前区域：'{}'",
         locale_count,
         total_patterns,
@@ -58,21 +58,21 @@ pub fn audit_system(
     );
 
     if !missing.is_empty() {
-        warn!(
+        warn!(target: "localization", 
             "[Localization Audit] 当前区域 '{}' 缺失 {} 个键（覆盖率：{:.1}%）",
             db.current_locale(),
             missing.len(),
             coverage * 100.0,
         );
     } else {
-        info!(
+        info!(target: "localization", 
             "[Localization Audit] 当前区域 '{}' 覆盖率达到 100%",
             db.current_locale()
         );
     }
 
     if coverage < 0.80 {
-        warn!(
+        warn!(target: "localization", 
             "[Localization Audit] 区域 '{}' 覆盖率过低（{:.1}%）",
             db.current_locale(),
             coverage * 100.0,

@@ -13,18 +13,16 @@ use crate::core::capabilities::runtime::registry::foundation::{
 /// V1: ID 格式正确（前缀 + 6 位数字）。
 pub fn validate_id_format(def_id: &str) -> Result<(), RegistryError> {
     if def_id.is_empty() {
-        return Err(RegistryError::InvalidIdFormat(
-            "ID must not be empty".into(),
-        ));
+        return Err(RegistryError::InvalidIdFormat { id: "ID must not be empty".into() });
     }
 
     // 检查前缀是否合法
     let prefix = &def_id[..def_id.len().min(4)];
     if IdType::from_prefix(prefix).is_none() {
-        return Err(RegistryError::InvalidIdFormat(format!(
+        return Err(RegistryError::InvalidIdFormat { id: format!(
             "unknown ID prefix: '{}' in '{}'",
             prefix, def_id
-        )));
+        )});
     }
 
     Ok(())

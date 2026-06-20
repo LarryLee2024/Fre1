@@ -11,7 +11,7 @@ use crate::infra::logging::metrics;
 use crate::shared::diagnostics::LogCode;
 
 /// 经验获得日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::PRG001, event = "获得经验"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::PRG001, event = "获得经验"), target = "progression")]
 pub(crate) fn on_experience_gained(trigger: On<ExperienceGained>) {
     metrics::record(LogCode::PRG001);
     let event = trigger.event();
@@ -27,7 +27,7 @@ pub(crate) fn on_experience_gained(trigger: On<ExperienceGained>) {
 }
 
 /// 升级日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::PRG002, event = "升级"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::PRG002, event = "升级"), target = "progression")]
 pub(crate) fn on_level_up(trigger: On<LevelUp>) {
     metrics::record(LogCode::PRG002);
     let event = trigger.event();
@@ -43,7 +43,7 @@ pub(crate) fn on_level_up(trigger: On<LevelUp>) {
 }
 
 /// 天赋解锁日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::PRG003, event = "天赋解锁"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::PRG003, event = "天赋解锁"), target = "progression")]
 pub(crate) fn on_talent_unlocked(trigger: On<TalentUnlocked>) {
     metrics::record(LogCode::PRG003);
     let event = trigger.event();
@@ -57,7 +57,7 @@ pub(crate) fn on_talent_unlocked(trigger: On<TalentUnlocked>) {
 }
 
 /// 子职选择日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::PRG004, event = "子职选择"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::PRG004, event = "子职选择"), target = "progression")]
 pub(crate) fn on_subclass_chosen(trigger: On<SubclassChosen>) {
     metrics::record(LogCode::PRG004);
     let event = trigger.event();
@@ -71,7 +71,7 @@ pub(crate) fn on_subclass_chosen(trigger: On<SubclassChosen>) {
 }
 
 /// ASI 完成日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::PRG005, event = "属性提升完成"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::PRG005, event = "属性提升完成"), target = "progression")]
 pub(crate) fn on_asi_completed(trigger: On<ASICompleted>) {
     metrics::record(LogCode::PRG005);
     let event = trigger.event();
@@ -86,7 +86,7 @@ pub(crate) fn on_asi_completed(trigger: On<ASICompleted>) {
 }
 
 /// 职业等级获得日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::PRG006, event = "获得职业等级"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::PRG006, event = "获得职业等级"), target = "progression")]
 pub(crate) fn on_class_gained(trigger: On<ClassGained>) {
     metrics::record(LogCode::PRG006);
     let event = trigger.event();

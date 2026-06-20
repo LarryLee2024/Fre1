@@ -23,7 +23,7 @@ pub(crate) fn enforce_xp_invariant(
 ) {
     let ev = trigger.event();
     let Ok(mut xp) = query.get_mut(ev.entity) else {
-        tracing::warn!(
+        tracing::warn!(target: "progression", 
             event = "progression.xp_gained.missing_component",
             entity = ?ev.entity,
             "实体 {:?} 没有 Experience 组件，经验获取被忽略",
@@ -34,7 +34,7 @@ pub(crate) fn enforce_xp_invariant(
 
     // 满级时不增加经验（不变量 3.1）
     if xp.is_max_level {
-        tracing::warn!(
+        tracing::warn!(target: "progression", 
             event = "progression.xp_gained.max_level",
             entity = ?ev.entity,
             amount = ev.amount,
@@ -47,7 +47,7 @@ pub(crate) fn enforce_xp_invariant(
     let old_level = xp.level;
     xp.add_xp(ev.amount);
 
-    tracing::trace!(
+    tracing::trace!(target: "progression", 
         event = "progression.xp_gained.added",
         entity = ?ev.entity,
         amount = ev.amount,
@@ -92,7 +92,7 @@ pub(crate) fn handle_level_up(
 ) {
     let ev = trigger.event();
     let Ok((mut xp, class_levels)) = query.get_mut(ev.entity) else {
-        tracing::warn!(
+        tracing::warn!(target: "progression", 
             event = "progression.level_up.missing_component",
             entity = ?ev.entity,
             "LevelUp: 实体 {:?} 没有 Experience 组件，升级失败",
@@ -135,7 +135,7 @@ pub(crate) fn on_talent_unlocked(
 ) {
     let ev = trigger.event();
     let Ok(mut tree) = query.get_mut(ev.entity) else {
-        tracing::warn!(
+        tracing::warn!(target: "progression", 
             event = "progression.talent_unlocked.missing_component",
             entity = ?ev.entity,
             "TalentUnlocked: 实体 {:?} 没有 TalentTree 组件，天赋解锁失败",
@@ -160,7 +160,7 @@ pub(crate) fn check_max_level_system(mut query: Query<&mut Experience>) {
     for mut xp in query.iter_mut() {
         if xp.level >= 20 && !xp.is_max_level {
             xp.is_max_level = true;
-            tracing::debug!(
+            tracing::debug!(target: "progression", 
                 event = "progression.max_level_reached",
                 "实体达到满级"
             );

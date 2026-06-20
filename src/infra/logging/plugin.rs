@@ -140,6 +140,6 @@ impl Plugin for LoggingPlugin {
         // ── CNT: Content（内容基础设施）──
         app.add_observer(content_logger::on_definition_reloaded);
 
-        tracing::info!("[LoggingPlugin] 已初始化（Metrics + {} 个 observer）", 56);
+        tracing::info!(target: "logging", "[LoggingPlugin] 已初始化（Metrics + {} 个 observer）", 56);
     }
 }

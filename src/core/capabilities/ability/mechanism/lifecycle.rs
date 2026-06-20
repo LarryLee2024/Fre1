@@ -19,11 +19,20 @@ use crate::core::capabilities::ability::events::{
     AbilityActivated, AbilityCancelled, AbilityCompleted, AbilityCooldownStarted,
 };
 use crate::core::capabilities::ability::foundation::{
-    AbilityError, AbilityInstance, AbilityInstanceId, AbilityState, ActivationContext,
-    ActivationType, BlockedRestoreState, CooldownEntry, CostEntry,
+    AbilityError, AbilityFailure, AbilityInstance, AbilityInstanceId, AbilityState,
+    ActivationContext, ActivationType, BlockedRestoreState, CooldownEntry, CostEntry,
 };
 use crate::core::capabilities::ability::mechanism::components::ActiveAbilityContainer;
 use crate::shared::ids::types::runtime_id::RuntimeIdAllocator;
+
+/// 技能激活问题 — 程序错误或业务规则失败。
+#[derive(Debug)]
+pub enum ActivationIssue {
+    /// 程序错误（不应发生的异常）
+    Error(AbilityError),
+    /// 业务规则失败（正常预期结果）
+    Failure(AbilityFailure),
+}
 
 /// 技能实例 ID 生成器（Resource）。
 /// 通过 RuntimeIdAllocator 提供带 generation 保护的唯一 ID 分配。
@@ -76,7 +85,7 @@ pub struct ActivationRequest {
 /// 尝试激活一个技能。
 ///
 /// 完整流程（docs/02-domain/capabilities/ability_domain.md §5.1）：
-/// 1. 检查技能是否在冷却中（不变量 3.3）
+/// 1. 检查技能是否在冷却中（不变量 3.3）冷却失败为业务规则失败
 /// 2. 检查是否有同 Spec 的活跃实例（不变量 V5）
 /// 3. 创建 AbilityInstance
 /// 4. 注册实例到容器
@@ -86,23 +95,23 @@ pub struct ActivationRequest {
 ///
 /// # Errors
 ///
-/// 返回 AbilityError 的各种错误变体。
+/// 返回 `ActivationIssue` — 程序错误（Error）或业务规则失败（Failure）。
 pub fn try_activate(
     container: &mut ActiveAbilityContainer,
     request: ActivationRequest,
     entity: Entity,
     commands: &mut Commands,
     generator: &AbilityInstanceIdGenerator,
-) -> Result<AbilityInstanceId, AbilityError> {
+) -> Result<AbilityInstanceId, ActivationIssue> {
     let spec_id = &request.spec_id;
 
     // 1. 冷却检查（不变量 3.3）
     if container.is_on_cooldown(spec_id) {
         let remaining = container.cooldown_remaining(spec_id);
-        return Err(AbilityError::OnCooldown {
+        return Err(ActivationIssue::Failure(AbilityFailure::OnCooldown {
             spec_id: spec_id.clone(),
             remaining_turns: remaining,
-        });
+        }));
     }
 
     // 2. 唯一实例检查（不变量 V5）
@@ -110,10 +119,10 @@ pub fn try_activate(
         let existing = container
             .find_instance_by_spec(spec_id)
             .expect("has_active_instance returned true but no instance found");
-        return Err(AbilityError::AlreadyActive {
+        return Err(ActivationIssue::Error(AbilityError::AlreadyActive {
             spec_id: spec_id.clone(),
             instance_id: existing.instance_id,
-        });
+        }));
     }
 
     // 3. 创建 AbilityInstance（使用 generator 分配 ID，确保 generation safety）
@@ -169,7 +178,7 @@ pub fn transition_to(
 ) -> Result<(), AbilityError> {
     let instance = container
         .get_instance_mut(instance_id)
-        .ok_or(AbilityError::InstanceNotFound(*instance_id))?;
+        .ok_or(AbilityError::InstanceNotFound { instance_id: *instance_id })?;
 
     let old_state = instance.state;
 
@@ -236,7 +245,7 @@ pub fn cancel_ability(
 ) -> Result<(), AbilityError> {
     let instance = container
         .get_instance_mut(instance_id)
-        .ok_or(AbilityError::InstanceNotFound(*instance_id))?;
+        .ok_or(AbilityError::InstanceNotFound { instance_id: *instance_id })?;
 
     match instance.state {
         AbilityState::Casting => {
@@ -302,7 +311,7 @@ pub fn complete_ability(
 ) -> Result<(), AbilityError> {
     let instance = container
         .get_instance(instance_id)
-        .ok_or(AbilityError::InstanceNotFound(*instance_id))?;
+        .ok_or(AbilityError::InstanceNotFound { instance_id: *instance_id })?;
 
     // 校验状态
     if instance.state != AbilityState::Active {
@@ -482,7 +491,7 @@ pub fn advance_cast_progress(
 ) -> Result<bool, AbilityError> {
     let instance = container
         .get_instance_mut(instance_id)
-        .ok_or(AbilityError::InstanceNotFound(*instance_id))?;
+        .ok_or(AbilityError::InstanceNotFound { instance_id: *instance_id })?;
 
     if instance.state != AbilityState::Casting {
         return Err(AbilityError::InvalidTransition {

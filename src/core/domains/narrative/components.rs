@@ -207,7 +207,7 @@ impl StoryFlags {
         let new_val = value.into();
         if let Some(existing) = self.flags.get(&id) {
             if *existing != new_val {
-                tracing::warn!(
+                tracing::warn!(target: "narrative", 
                     event = "narrative.story_flag.override_rejected",
                     flag_id = %id,
                     existing = %existing,

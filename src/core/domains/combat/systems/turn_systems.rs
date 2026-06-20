@@ -27,7 +27,7 @@ use crate::core::domains::combat::integration::trigger::CombatTriggerType;
 // ═══════════════════════════════════════════════════════════════════════
 
 /// 进入 BattlePhase::Battle 时触发 OnBattleStart 并启动回合管线。
-#[tracing::instrument(skip_all)]
+#[tracing::instrument(skip_all, target = "combat")]
 pub(crate) fn on_enter_battle(mut commands: Commands) {
     commands.trigger(OnBattleStart);
 }
@@ -41,7 +41,7 @@ pub(crate) fn on_enter_battle(mut commands: Commands) {
 /// 与 effect_tick_system 并行，在回合结束时推进：
 /// - 技能冷却（tick_all_cooldowns）
 /// - 共享冷却（tick_shared_cooldowns）
-#[tracing::instrument(skip_all)]
+#[tracing::instrument(skip_all, target = "combat")]
 pub(crate) fn on_turn_end_tick_ability_cooldowns(
     trigger: On<'_, '_, OnTurnEnd>,
     mut ability_param: CombatAbilityParam,
@@ -49,7 +49,7 @@ pub(crate) fn on_turn_end_tick_ability_cooldowns(
     let unit = trigger.event().unit;
     let expired = ability_param.tick_cooldowns_for_unit(unit);
     if !expired.is_empty() {
-        debug!(
+        debug!(target: "combat", 
             "[Combat-Ability] 单位 {:?} 的 {} 个技能冷却到期",
             unit,
             expired.len(),
@@ -72,7 +72,7 @@ pub(crate) fn on_turn_start_evaluate_triggers(
     let unit = trigger.event().unit;
     let ready_ids = trigger_param.evaluate_and_consume(unit, CombatTriggerType::TurnStarted);
     if !ready_ids.is_empty() {
-        debug!(
+        debug!(target: "combat", 
             "[Combat-Trigger] 单位 {:?} 的 {} 个 OnTurnStart 触发器就绪：{:?}",
             unit,
             ready_ids.len(),
@@ -82,7 +82,7 @@ pub(crate) fn on_turn_start_evaluate_triggers(
 }
 
 /// 进入 BattlePhase::Victory 时触发 OnBattleEnd。
-#[tracing::instrument(skip_all)]
+#[tracing::instrument(skip_all, target = "combat")]
 pub(crate) fn on_enter_victory(mut commands: Commands) {
     commands.trigger(OnBattleEnd {
         result: BattleResult::Victory,

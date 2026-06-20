@@ -51,7 +51,7 @@ pub(crate) fn on_relationship_eval_request(
     let target = req.target;
 
     let Ok((subj_membership, subj_reputation)) = query.get(entity) else {
-        tracing::warn!(
+        tracing::warn!(target: "faction", 
             event = "faction.relationship_eval.missing_subject",
             entity = ?entity,
             "RelationshipEvalRequest: 主体 {:?} 没有 FactionMembership",
@@ -61,7 +61,7 @@ pub(crate) fn on_relationship_eval_request(
     };
 
     let Ok((target_membership, _target_reputation)) = query.get(target) else {
-        tracing::warn!(
+        tracing::warn!(target: "faction", 
             event = "faction.relationship_eval.missing_target",
             entity = ?entity,
             target = ?target,

@@ -9,7 +9,7 @@ use crate::infra::logging::metrics;
 use crate::shared::diagnostics::LogCode;
 
 /// 单位移动完成日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::TAC001, event = "单位移动"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::TAC001, event = "单位移动"), target = "tactical")]
 pub(crate) fn on_unit_moved(trigger: On<UnitMoved>) {
     metrics::record(LogCode::TAC001);
     let event = trigger.event();
@@ -25,7 +25,7 @@ pub(crate) fn on_unit_moved(trigger: On<UnitMoved>) {
 }
 
 /// 单位位置变更日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::TAC005, event = "位置变更"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::TAC005, event = "位置变更"), target = "tactical")]
 pub(crate) fn on_position_changed(trigger: On<PositionChanged>) {
     metrics::record(LogCode::TAC005);
     let event = trigger.event();

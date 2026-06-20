@@ -11,7 +11,7 @@ use crate::infra::logging::metrics;
 use crate::shared::diagnostics::LogCode;
 
 /// 对话开始日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::NAR001, event = "对话开始"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::NAR001, event = "对话开始"), target = "narrative")]
 pub(crate) fn on_dialogue_started(trigger: On<DialogueStarted>) {
     metrics::record(LogCode::NAR001);
     let event = trigger.event();
@@ -26,7 +26,7 @@ pub(crate) fn on_dialogue_started(trigger: On<DialogueStarted>) {
 }
 
 /// 玩家选择分支日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::NAR002, event = "选择分支"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::NAR002, event = "选择分支"), target = "narrative")]
 pub(crate) fn on_choice_made(trigger: On<ChoiceMade>) {
     metrics::record(LogCode::NAR002);
     let event = trigger.event();
@@ -41,7 +41,7 @@ pub(crate) fn on_choice_made(trigger: On<ChoiceMade>) {
 }
 
 /// 故事标记设置日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::NAR003, event = "故事标记设置"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::NAR003, event = "故事标记设置"), target = "narrative")]
 pub(crate) fn on_story_flag_set(trigger: On<StoryFlagSet>) {
     metrics::record(LogCode::NAR003);
     let event = trigger.event();
@@ -56,7 +56,7 @@ pub(crate) fn on_story_flag_set(trigger: On<StoryFlagSet>) {
 }
 
 /// 过场动画开始日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::NAR004, event = "过场动画开始"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::NAR004, event = "过场动画开始"), target = "narrative")]
 pub(crate) fn on_cutscene_started(trigger: On<CutsceneStarted>) {
     metrics::record(LogCode::NAR004);
     let event = trigger.event();
@@ -70,7 +70,7 @@ pub(crate) fn on_cutscene_started(trigger: On<CutsceneStarted>) {
 }
 
 /// 过场动画结束日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::NAR005, event = "过场动画结束"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::NAR005, event = "过场动画结束"), target = "narrative")]
 pub(crate) fn on_cutscene_ended(trigger: On<CutsceneEnded>) {
     metrics::record(LogCode::NAR005);
     let event = trigger.event();

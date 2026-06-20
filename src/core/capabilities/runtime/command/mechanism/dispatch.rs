@@ -51,21 +51,21 @@ pub fn validate_command(command: &GameCommand) -> Result<(), CommandError> {
     match command {
         GameCommand::MoveUnit { unit_id, path } => {
             if unit_id.is_empty() {
-                return Err(CommandError::InvalidCommand(
+                return Err(CommandError::InvalidCommand { reason:
                     "unit_id must not be empty".into(),
-                ));
+                });
             }
             if path.is_empty() {
-                return Err(CommandError::InvalidCommand(
+                return Err(CommandError::InvalidCommand { reason:
                     "path must not be empty".into(),
-                ));
+                });
             }
         }
         GameCommand::Wait { unit_id } | GameCommand::EndTurn { unit_id } => {
             if unit_id.is_empty() {
-                return Err(CommandError::InvalidCommand(
+                return Err(CommandError::InvalidCommand { reason:
                     "unit_id must not be empty".into(),
-                ));
+                });
             }
         }
         GameCommand::Attack {
@@ -74,9 +74,9 @@ pub fn validate_command(command: &GameCommand) -> Result<(), CommandError> {
             ..
         } => {
             if attacker_id.is_empty() || target_id.is_empty() {
-                return Err(CommandError::InvalidCommand(
+                return Err(CommandError::InvalidCommand { reason:
                     "attacker_id and target_id must not be empty".into(),
-                ));
+                });
             }
         }
         GameCommand::CastSpell {
@@ -85,9 +85,9 @@ pub fn validate_command(command: &GameCommand) -> Result<(), CommandError> {
             target_id,
         } => {
             if caster_id.is_empty() || spell_def_id.is_empty() || target_id.is_empty() {
-                return Err(CommandError::InvalidCommand(
+                return Err(CommandError::InvalidCommand { reason:
                     "caster_id, spell_def_id, and target_id must not be empty".into(),
-                ));
+                });
             }
         }
         GameCommand::UseItem {
@@ -96,9 +96,9 @@ pub fn validate_command(command: &GameCommand) -> Result<(), CommandError> {
             ..
         } => {
             if user_id.is_empty() || item_instance_id.is_empty() {
-                return Err(CommandError::InvalidCommand(
+                return Err(CommandError::InvalidCommand { reason:
                     "user_id and item_instance_id must not be empty".into(),
-                ));
+                });
             }
         }
         GameCommand::OpenMenu | GameCommand::SaveGame | GameCommand::LoadGame => {

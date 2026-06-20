@@ -12,7 +12,7 @@ use crate::infra::logging::metrics;
 use crate::shared::diagnostics::LogCode;
 
 /// 效果施加日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::EFF001, event = "效果施加"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::EFF001, event = "效果施加"), target = "combat")]
 pub(crate) fn on_effect_applied(trigger: On<EffectApplied>) {
     metrics::record(LogCode::EFF001);
     let event = trigger.event();
@@ -28,7 +28,7 @@ pub(crate) fn on_effect_applied(trigger: On<EffectApplied>) {
 }
 
 /// 效果移除日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::EFF002, event = "效果移除"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::EFF002, event = "效果移除"), target = "combat")]
 pub(crate) fn on_effect_removed(trigger: On<EffectRemoved>) {
     metrics::record(LogCode::EFF002);
     let event = trigger.event();
@@ -44,7 +44,7 @@ pub(crate) fn on_effect_removed(trigger: On<EffectRemoved>) {
 }
 
 /// 效果 Tick 日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::EFF003, event = "效果Tick"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::EFF003, event = "效果Tick"), target = "combat")]
 pub(crate) fn on_effect_ticked(trigger: On<EffectTicked>) {
     metrics::record(LogCode::EFF003);
     let event = trigger.event();
@@ -60,7 +60,7 @@ pub(crate) fn on_effect_ticked(trigger: On<EffectTicked>) {
 }
 
 /// 效果免疫日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::EFF004, event = "效果免疫"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::EFF004, event = "效果免疫"), target = "combat")]
 pub(crate) fn on_effect_immunity(trigger: On<EffectImmunityTriggered>) {
     metrics::record(LogCode::EFF004);
     let event = trigger.event();

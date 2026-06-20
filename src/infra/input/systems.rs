@@ -60,7 +60,7 @@ pub fn collect_input_actions(
         }
     }
 
-    tracing::trace!(
+    tracing::trace!(target: "input", 
         "Input: 按下={:?} 刚按下={:?}",
         input_state.pressed_actions,
         input_state.just_pressed_actions
@@ -79,15 +79,15 @@ pub fn process_meta_commands(
         match action {
             InputAction::QuickSave => {
                 let _ = command_queue.push_recorded(GameCommand::SaveGame, CommandSource::Player);
-                tracing::info!("[Input] QuickSave 命令已入队");
+                tracing::info!(target: "input", "[Input] QuickSave 命令已入队");
             }
             InputAction::QuickLoad => {
                 let _ = command_queue.push_recorded(GameCommand::LoadGame, CommandSource::Player);
-                tracing::info!("[Input] QuickLoad 命令已入队");
+                tracing::info!(target: "input", "[Input] QuickLoad 命令已入队");
             }
             InputAction::OpenMenu => {
                 let _ = command_queue.push_recorded(GameCommand::OpenMenu, CommandSource::Player);
-                tracing::info!("[Input] OpenMenu 命令已入队");
+                tracing::info!(target: "input", "[Input] OpenMenu 命令已入队");
             }
             _ => {
                 // 其他动作（方向键、技能槽、Select/Cancel 等）由 Domain 层处理

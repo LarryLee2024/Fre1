@@ -1,14 +1,14 @@
 use bevy::prelude::*;
 
 use crate::core::capabilities::ability::foundation::{
-    AbilityError, AbilityInstanceId, AbilityState, ActivationContext, ActivationType,
-    CooldownEntry, CostEntry,
+    AbilityError, AbilityFailure, AbilityInstanceId, AbilityState, ActivationContext,
+    ActivationType, CooldownEntry, CostEntry,
 };
 use crate::core::capabilities::ability::mechanism::{
-    AbilityInstanceIdGenerator, ActivationRequest, ActiveAbilityContainer, advance_cast_progress,
-    apply_block, cancel_ability, complete_ability, force_reset_cooldown, get_ready_abilities,
-    remove_block, start_cooldown, start_multiple_cooldowns, tick_cooldowns, transition_to,
-    try_activate,
+    ActivationIssue, AbilityInstanceIdGenerator, ActivationRequest, ActiveAbilityContainer,
+    advance_cast_progress, apply_block, cancel_ability, complete_ability, force_reset_cooldown,
+    get_ready_abilities, remove_block, start_cooldown, start_multiple_cooldowns, tick_cooldowns,
+    transition_to, try_activate,
 };
 
 fn make_generator() -> AbilityInstanceIdGenerator {
@@ -86,7 +86,7 @@ fn reject_activation_when_on_cooldown() {
     assert!(result.is_err());
     assert!(matches!(
         result.unwrap_err(),
-        AbilityError::OnCooldown { .. }
+        ActivationIssue::Failure(AbilityFailure::OnCooldown { .. })
     ));
 }
 
@@ -106,7 +106,7 @@ fn reject_duplicate_activation_of_active_ability() {
     assert!(result.is_err());
     assert!(matches!(
         result.unwrap_err(),
-        AbilityError::AlreadyActive { .. }
+        ActivationIssue::Error(AbilityError::AlreadyActive { .. })
     ));
 }
 

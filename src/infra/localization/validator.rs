@@ -57,16 +57,16 @@ pub fn validation_system(db: Res<LocalizationDatabase>) {
 
     // ── 输出 ──
     for warn in &warnings {
-        warn!("[Localization] {}", warn);
+        warn!(target: "localization", "[Localization] {}", warn);
     }
 
     if !errors.is_empty() {
-        error!(
+        error!(target: "localization", 
             "[Localization] 验证失败，共 {} 个错误：",
             errors.len()
         );
         for err in &errors {
-            error!("  {}", err);
+            error!(target: "localization", "  {}", err);
         }
         panic!(
             "[Localization] 验证失败：{} 个错误（见上方）。\
@@ -75,7 +75,7 @@ pub fn validation_system(db: Res<LocalizationDatabase>) {
         );
     }
 
-    info!(
+    info!(target: "localization", 
         "[Localization] 验证通过。{} 个键正常，{} 个警告。",
         all_keys.len(),
         warnings.len()

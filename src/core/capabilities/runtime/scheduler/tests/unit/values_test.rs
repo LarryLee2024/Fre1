@@ -76,7 +76,7 @@ fn frame_overflow_limited() {
     for _ in 0..5 {
         assert!(state.advance_frame().is_ok());
     }
-    assert_eq!(state.advance_frame(), Err(SchedulerError::FrameOverflow(6)));
+    assert_eq!(state.advance_frame(), Err(SchedulerError::FrameOverflow { frame: 6 }));
 }
 
 #[test]

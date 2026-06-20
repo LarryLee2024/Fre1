@@ -22,6 +22,6 @@ pub enum SchedulerError {
         to: TickPhase,
     },
     /// 帧计数器溢出
-    #[error("frame counter overflow at {0}")]
-    FrameOverflow(u64),
+    #[error("frame counter overflow at {frame}")]
+    FrameOverflow { frame: u64 },
 }

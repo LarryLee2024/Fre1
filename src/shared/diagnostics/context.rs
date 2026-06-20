@@ -112,7 +112,7 @@ impl DiagnosticContext {
         for (k, v) in &self.extras {
             fields.push(format!("{} = {:?}", k, v));
         }
-        tracing::info!(
+        tracing::info!(target: "diagnostics", 
             code = ?code,
             event = event,
             correlation = ?self.correlation,
@@ -129,7 +129,7 @@ impl DiagnosticContext {
     /// 输出 WARN 级别结构化日志，自动携带诊断上下文。
     #[track_caller]
     pub fn log_warn(&self, code: LogCode, event: &'static str) {
-        tracing::warn!(
+        tracing::warn!(target: "diagnostics", 
             code = ?code,
             event = event,
             correlation = ?self.correlation,
@@ -146,7 +146,7 @@ impl DiagnosticContext {
     /// 输出 ERROR 级别结构化日志，自动携带诊断上下文。
     #[track_caller]
     pub fn log_error(&self, code: LogCode, event: &'static str) {
-        tracing::error!(
+        tracing::error!(target: "diagnostics", 
             code = ?code,
             event = event,
             correlation = ?self.correlation,

@@ -87,7 +87,7 @@ impl MetricsCollector {
             .collect::<Vec<_>>()
             .join(" ");
 
-        tracing::debug!(
+        tracing::debug!(target: "logging", 
             frame = frame,
             delta_events = delta_total,
             total_events = self.lifetime_total,

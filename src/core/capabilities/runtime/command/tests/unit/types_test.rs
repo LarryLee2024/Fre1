@@ -89,11 +89,11 @@ fn record_command_correct() {
 
 #[test]
 fn error_message_format_correct() {
-    let err = CommandError::QueueFull(128);
+    let err = CommandError::QueueFull { max: 128 };
     let msg = format!("{}", err);
     assert!(msg.contains("128"));
 
-    let err = CommandError::InvalidCommand("unknown action".into());
+    let err = CommandError::InvalidCommand { reason: "unknown action".into() };
     let msg = format!("{}", err);
     assert!(msg.contains("unknown action"));
 }

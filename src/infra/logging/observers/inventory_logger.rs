@@ -11,7 +11,7 @@ use crate::infra::logging::metrics;
 use crate::shared::diagnostics::LogCode;
 
 /// 物品获取日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::INV001, event = "物品获取"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::INV001, event = "物品获取"), target = "inventory")]
 pub(crate) fn on_item_acquired(trigger: On<ItemAcquired>) {
     metrics::record(LogCode::INV001);
     let event = trigger.event();
@@ -27,7 +27,7 @@ pub(crate) fn on_item_acquired(trigger: On<ItemAcquired>) {
 }
 
 /// 物品使用日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::INV002, event = "物品使用"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::INV002, event = "物品使用"), target = "inventory")]
 pub(crate) fn on_item_used(trigger: On<ItemUsed>) {
     metrics::record(LogCode::INV002);
     let event = trigger.event();
@@ -43,7 +43,7 @@ pub(crate) fn on_item_used(trigger: On<ItemUsed>) {
 }
 
 /// 装备变更日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::INV003, event = "装备变更"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::INV003, event = "装备变更"), target = "inventory")]
 pub(crate) fn on_equipment_changed(trigger: On<EquipmentChanged>) {
     metrics::record(LogCode::INV003);
     let event = trigger.event();
@@ -57,7 +57,7 @@ pub(crate) fn on_equipment_changed(trigger: On<EquipmentChanged>) {
 }
 
 /// 物品移除日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::INV004, event = "物品移除"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::INV004, event = "物品移除"), target = "inventory")]
 pub(crate) fn on_item_removed(trigger: On<ItemRemoved>) {
     metrics::record(LogCode::INV004);
     let event = trigger.event();
@@ -73,7 +73,7 @@ pub(crate) fn on_item_removed(trigger: On<ItemRemoved>) {
 }
 
 /// 战利品生成日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::INV005, event = "战利品生成"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::INV005, event = "战利品生成"), target = "inventory")]
 pub(crate) fn on_loot_generated(trigger: On<LootGenerated>) {
     metrics::record(LogCode::INV005);
     let event = trigger.event();

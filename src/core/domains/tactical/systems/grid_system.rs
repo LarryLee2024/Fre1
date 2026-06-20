@@ -9,7 +9,7 @@ use crate::core::domains::tactical::resources::{GridLayout, GridMap};
 /// 在游戏启动或编辑器新建地图时调用。
 pub fn initialize_default_grid(mut commands: Commands) {
     commands.insert_resource(GridMap::new(20, 15, GridLayout::Square));
-    tracing::debug!(
+    tracing::debug!(target: "tactical", 
         event = "tactical.grid.initialized",
         rows = 20,
         cols = 15,

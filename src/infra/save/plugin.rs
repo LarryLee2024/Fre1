@@ -16,6 +16,6 @@ impl Plugin for SavePlugin {
 
         app.add_systems(Update, process_pending_load);
 
-        tracing::info!("[SavePlugin] 已初始化（resources, observers, systems）");
+        tracing::info!(target: "save", "[SavePlugin] 已初始化（resources, observers, systems）");
     }
 }

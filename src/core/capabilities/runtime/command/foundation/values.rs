@@ -42,7 +42,7 @@ impl CommandQueue {
     /// 提交一个命令（不限来源）。
     pub fn push(&mut self, command: GameCommand) -> Result<(), CommandError> {
         if self.max_size > 0 && self.pending.len() >= self.max_size {
-            return Err(CommandError::QueueFull(self.max_size));
+            return Err(CommandError::QueueFull { max: self.max_size });
         }
         self.pending.push(command);
         Ok(())

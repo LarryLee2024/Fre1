@@ -11,7 +11,7 @@ use crate::infra::logging::metrics;
 use crate::shared::diagnostics::LogCode;
 
 /// 声望变化日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::FAC001, event = "声望变化"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::FAC001, event = "声望变化"), target = "faction")]
 pub(crate) fn on_reputation_changed(trigger: On<ReputationChanged>) {
     metrics::record(LogCode::FAC001);
     let event = trigger.event();
@@ -28,7 +28,7 @@ pub(crate) fn on_reputation_changed(trigger: On<ReputationChanged>) {
 }
 
 /// 阵营关系变化日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::FAC002, event = "阵营关系变化"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::FAC002, event = "阵营关系变化"), target = "faction")]
 pub(crate) fn on_faction_relation_changed(trigger: On<FactionRelationChanged>) {
     metrics::record(LogCode::FAC002);
     let event = trigger.event();
@@ -43,7 +43,7 @@ pub(crate) fn on_faction_relation_changed(trigger: On<FactionRelationChanged>) {
 }
 
 /// 声望等级提升日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::FAC003, event = "声望等级提升"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::FAC003, event = "声望等级提升"), target = "faction")]
 pub(crate) fn on_reputation_level_up(trigger: On<ReputationLevelUp>) {
     metrics::record(LogCode::FAC003);
     let event = trigger.event();
@@ -58,7 +58,7 @@ pub(crate) fn on_reputation_level_up(trigger: On<ReputationLevelUp>) {
 }
 
 /// 关系判定完成日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::FAC004, event = "关系判定完成"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::FAC004, event = "关系判定完成"), target = "faction")]
 pub(crate) fn on_relationship_evaluated(trigger: On<RelationshipEvaluated>) {
     metrics::record(LogCode::FAC004);
     let event = trigger.event();

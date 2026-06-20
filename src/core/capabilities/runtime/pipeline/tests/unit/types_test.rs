@@ -84,7 +84,7 @@ fn context_log_recording() {
 
 #[test]
 fn error_message_format_correct() {
-    let err = PipelineError::StageNotFound("combat".into());
+    let err = PipelineError::StageNotFound { stage: "combat".into() };
     let msg = format!("{}", err);
     assert!(msg.contains("combat"));
 }

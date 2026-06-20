@@ -12,7 +12,7 @@ use crate::infra::logging::metrics;
 use crate::shared::diagnostics::LogCode;
 
 /// 任务接受日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::QST001, event = "任务接受"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::QST001, event = "任务接受"), target = "combat")]
 pub(crate) fn on_quest_accepted(trigger: On<QuestAccepted>) {
     metrics::record(LogCode::QST001);
     let event = trigger.event();
@@ -26,7 +26,7 @@ pub(crate) fn on_quest_accepted(trigger: On<QuestAccepted>) {
 }
 
 /// 目标完成日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::QST002, event = "目标完成"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::QST002, event = "目标完成"), target = "combat")]
 pub(crate) fn on_objective_completed(trigger: On<ObjectiveCompleted>) {
     metrics::record(LogCode::QST002);
     let event = trigger.event();
@@ -41,7 +41,7 @@ pub(crate) fn on_objective_completed(trigger: On<ObjectiveCompleted>) {
 }
 
 /// 任务交付日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::QST003, event = "任务交付"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::QST003, event = "任务交付"), target = "combat")]
 pub(crate) fn on_quest_turned_in(trigger: On<QuestTurnedIn>) {
     metrics::record(LogCode::QST003);
     let event = trigger.event();
@@ -55,7 +55,7 @@ pub(crate) fn on_quest_turned_in(trigger: On<QuestTurnedIn>) {
 }
 
 /// 任务失败日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::QST004, event = "任务失败"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::QST004, event = "任务失败"), target = "combat")]
 pub(crate) fn on_quest_failed(trigger: On<QuestFailed>) {
     metrics::record(LogCode::QST004);
     let event = trigger.event();
@@ -70,7 +70,7 @@ pub(crate) fn on_quest_failed(trigger: On<QuestFailed>) {
 }
 
 /// 任务进度更新日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::QST005, event = "任务进度更新"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::QST005, event = "任务进度更新"), target = "combat")]
 pub(crate) fn on_quest_progress_updated(trigger: On<QuestProgressUpdated>) {
     metrics::record(LogCode::QST005);
     let event = trigger.event();

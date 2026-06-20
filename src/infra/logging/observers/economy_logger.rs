@@ -9,7 +9,7 @@ use crate::infra::logging::metrics;
 use crate::shared::diagnostics::LogCode;
 
 /// 交易完成日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::ECO001, event = "交易完成"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::ECO001, event = "交易完成"), target = "economy")]
 pub(crate) fn on_transaction_completed(trigger: On<TransactionCompleted>) {
     metrics::record(LogCode::ECO001);
     let event = trigger.event();
@@ -26,7 +26,7 @@ pub(crate) fn on_transaction_completed(trigger: On<TransactionCompleted>) {
 }
 
 /// 价格变化日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::ECO002, event = "价格变化"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::ECO002, event = "价格变化"), target = "economy")]
 pub(crate) fn on_price_changed(trigger: On<PriceChanged>) {
     metrics::record(LogCode::ECO002);
     let event = trigger.event();
@@ -42,7 +42,7 @@ pub(crate) fn on_price_changed(trigger: On<PriceChanged>) {
 }
 
 /// 货币变化日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::ECO003, event = "货币变化"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::ECO003, event = "货币变化"), target = "economy")]
 pub(crate) fn on_currency_changed(trigger: On<CurrencyChanged>) {
     metrics::record(LogCode::ECO003);
     let event = trigger.event();

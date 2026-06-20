@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 
 use crate::core::capabilities::effect::foundation::{
-    ActiveEffectContainer, DurationCalculation, EffectDuration, EffectError, EffectInstance,
-    EffectPeriod, EffectStage, RemovalReason, TickState,
+    ActiveEffectContainer, DurationCalculation, EffectDuration, EffectError, EffectFailure,
+    EffectInstance, EffectPeriod, EffectStage, RemovalReason, TickState,
 };
 use crate::core::capabilities::effect::mechanism::lifecycle::{
     ApplyResult, apply_effect, expire_effects, remove_effect_by_id, remove_effects_by_def,
@@ -115,7 +115,7 @@ fn apply_effect_missing_source_rejected() {
     );
     let result = apply_effect(&mut container, effect, None, &mut commands);
     assert!(!result.success);
-    assert!(matches!(result.error, Some(EffectError::MissingSource(_))));
+    assert!(matches!(result.error, Some(EffectError::MissingSource { detail: _ })));
 }
 
 #[test]
@@ -137,8 +137,8 @@ fn apply_effect_slot_limit() {
     let result = apply_effect(&mut container, second, None, &mut commands);
     assert!(!result.success);
     assert!(matches!(
-        result.error,
-        Some(EffectError::SlotLimitReached { .. })
+        result.failure_reason,
+        Some(EffectFailure::SlotLimitReached { .. })
     ));
 }
 
@@ -623,11 +623,11 @@ fn apply_result_success() {
 }
 
 #[test]
-fn apply_result_failure() {
-    let r = ApplyResult::failure(EffectError::SlotLimitReached { current: 5, max: 5 });
+fn apply_result_blocked_by_rule() {
+    let r = ApplyResult::blocked_by_rule(EffectFailure::SlotLimitReached { current: 5, max: 5 });
     assert!(!r.success);
     assert!(r.instance_id.is_none());
-    assert!(r.error.is_some());
+    assert!(r.failure_reason.is_some());
 }
 
 // -- EffectPeriod validation -----------------------------------------------

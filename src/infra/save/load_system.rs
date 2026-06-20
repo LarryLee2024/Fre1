@@ -28,7 +28,7 @@ pub fn on_load_request(
 ) {
     let path = trigger.event().path.clone();
     if !std::path::Path::new(&path).exists() {
-        tracing::error!("[LoadSystem] 存档文件未找到：{}", path);
+        tracing::error!(target: "save", "[LoadSystem] 存档文件未找到：{}", path);
         commands.trigger(SaveError {
             error_context: crate::shared::error::ErrorContext {
                 domain: "save",
@@ -43,7 +43,7 @@ pub fn on_load_request(
     let content = match std::fs::read_to_string(&path) {
         Ok(c) => c,
         Err(e) => {
-            tracing::error!("[LoadSystem] 读取存档文件失败：{}", e);
+            tracing::error!(target: "save", "[LoadSystem] 读取存档文件失败：{}", e);
             commands.trigger(SaveError {
                 error_context: crate::shared::error::ErrorContext {
                     domain: "save",
@@ -59,7 +59,7 @@ pub fn on_load_request(
     let world_data: WorldSaveData = match serde_json::from_str(&content) {
         Ok(d) => d,
         Err(e) => {
-            tracing::error!("[LoadSystem] 反序列化存档失败：{}", e);
+            tracing::error!(target: "save", "[LoadSystem] 反序列化存档失败：{}", e);
             commands.trigger(SaveError {
                 error_context: crate::shared::error::ErrorContext {
                     domain: "save",
@@ -72,7 +72,7 @@ pub fn on_load_request(
         }
     };
 
-    tracing::info!(
+    tracing::info!(target: "save", 
         "[LoadSystem] 反序列化存档：版本={}, 战斗实体数={}, 成长实体数={}",
         world_data.save_version,
         world_data.combat.participants.len(),
@@ -281,7 +281,7 @@ pub(crate) fn process_pending_load(
 
     let entity_count =
         data.combat.participants.len() as u32 + data.progression.entities.len() as u32;
-    tracing::info!(
+    tracing::info!(target: "save", 
         "[LoadSystem] 加载完成：路径={}, 实体数={}",
         path,
         entity_count

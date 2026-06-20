@@ -136,7 +136,7 @@ fn execute_early_termination_pipeline() {
     ctx.abort("external cancellation");
     let result = execute_pipeline(&def, &mut ctx, mock_success_executor);
     assert!(result.is_err());
-    assert!(matches!(result, Err(PipelineError::Aborted(_))));
+    assert!(matches!(result, Err(PipelineError::Aborted { reason: _ })));
 }
 
 #[test]

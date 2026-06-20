@@ -36,14 +36,12 @@ impl DefRegistry {
         let def_type = entry.def_type.clone();
 
         if self.entries.contains_key(&def_id) {
-            return Err(RegistryError::DuplicateId(def_id));
+            return Err(RegistryError::DuplicateId { id: def_id });
         }
 
         // V1: 检查 ID 格式（非空）
         if def_id.is_empty() {
-            return Err(RegistryError::InvalidIdFormat(
-                "ID must not be empty".into(),
-            ));
+            return Err(RegistryError::InvalidIdFormat { id: "ID must not be empty".into() });
         }
 
         self.entries.insert(def_id.clone(), entry);
@@ -94,7 +92,7 @@ impl DefRegistry {
         let entry = self
             .entries
             .get_mut(def_id)
-            .ok_or_else(|| RegistryError::IdNotFound(def_id.into()))?;
+            .ok_or_else(|| RegistryError::IdNotFound { id: def_id.into() })?;
         entry.deprecated = true;
         entry.superseded_by = superseded_by;
         Ok(())

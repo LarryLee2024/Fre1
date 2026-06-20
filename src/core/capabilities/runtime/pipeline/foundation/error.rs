@@ -6,8 +6,8 @@
 #[derive(Debug, Clone, PartialEq, thiserror::Error)]
 pub enum PipelineError {
     /// 阶段未找到
-    #[error("stage '{0}' not found")]
-    StageNotFound(String),
+    #[error("stage '{stage}' not found")]
+    StageNotFound { stage: String },
     /// 步骤执行失败
     #[error("step '{step}' in stage '{stage}' failed: {detail}")]
     StepFailed {
@@ -19,9 +19,9 @@ pub enum PipelineError {
         detail: String,
     },
     /// 管线被中止
-    #[error("pipeline aborted: {0}")]
-    Aborted(String),
+    #[error("pipeline aborted: {reason}")]
+    Aborted { reason: String },
     /// 上下文数据缺失
-    #[error("missing context key: {0}")]
-    MissingContext(String),
+    #[error("missing context key: {key}")]
+    MissingContext { key: String },
 }

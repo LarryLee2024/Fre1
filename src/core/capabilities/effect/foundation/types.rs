@@ -163,9 +163,9 @@ impl EffectPeriod {
     /// - V6: interval_turns ≥ 1, max_ticks ≥ 1
     pub fn new(interval_turns: u32) -> Result<Self, EffectError> {
         if interval_turns < 1 {
-            return Err(EffectError::InvalidPeriod(
-                "interval_turns must be ≥ 1".into(),
-            ));
+            return Err(EffectError::InvalidPeriod {
+                reason: "interval_turns must be ≥ 1".into(),
+            });
         }
         Ok(Self {
             interval_turns,
@@ -176,7 +176,7 @@ impl EffectPeriod {
     /// 设置最大 Tick 次数。
     pub fn with_max_ticks(mut self, max: u32) -> Result<Self, EffectError> {
         if max < 1 {
-            return Err(EffectError::InvalidPeriod("max_ticks must be ≥ 1".into()));
+            return Err(EffectError::InvalidPeriod { reason: "max_ticks must be ≥ 1".into() });
         }
         self.max_ticks = Some(max);
         Ok(self)

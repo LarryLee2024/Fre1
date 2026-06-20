@@ -46,30 +46,30 @@ pub(crate) fn combat_input_system(
     };
 
     if input_state.just_pressed(InputAction::SkillSlot1) {
-        tracing::trace!(event = "combat_input.skill_slot", slot = 1);
+        tracing::trace!(target: "combat", event = "combat_input.skill_slot", slot = 1);
     }
 
     if input_state.just_pressed(InputAction::SkillSlot2) {
-        tracing::trace!(event = "combat_input.skill_slot", slot = 2);
+        tracing::trace!(target: "combat", event = "combat_input.skill_slot", slot = 2);
     }
 
     if input_state.just_pressed(InputAction::SkillSlot3) {
-        tracing::trace!(event = "combat_input.skill_slot", slot = 3);
+        tracing::trace!(target: "combat", event = "combat_input.skill_slot", slot = 3);
     }
 
     if input_state.just_pressed(InputAction::SkillSlot4) {
-        tracing::trace!(event = "combat_input.skill_slot", slot = 4);
+        tracing::trace!(target: "combat", event = "combat_input.skill_slot", slot = 4);
     }
 
     if input_state.just_pressed(InputAction::EndTurn) {
-        tracing::trace!(event = "combat_input.end_turn");
+        tracing::trace!(target: "combat", event = "combat_input.end_turn");
     }
 
     if input_state.just_pressed(InputAction::Select) {
-        tracing::trace!(event = "combat_input.confirm");
+        tracing::trace!(target: "combat", event = "combat_input.confirm");
     }
 
     if input_state.just_pressed(InputAction::Cancel) {
-        tracing::trace!(event = "combat_input.cancel");
+        tracing::trace!(target: "combat", event = "combat_input.cancel");
     }
 }

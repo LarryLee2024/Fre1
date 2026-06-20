@@ -11,7 +11,7 @@ use crate::infra::logging::metrics;
 use crate::shared::diagnostics::LogCode;
 
 /// 短休完成日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::CNR001, event = "短休完成"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::CNR001, event = "短休完成"), target = "camp")]
 pub(crate) fn on_short_rest_completed(trigger: On<ShortRestCompleted>) {
     metrics::record(LogCode::CNR001);
     let event = trigger.event();
@@ -26,7 +26,7 @@ pub(crate) fn on_short_rest_completed(trigger: On<ShortRestCompleted>) {
 }
 
 /// 长休开始日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::CNR002, event = "长休开始"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::CNR002, event = "长休开始"), target = "camp")]
 pub(crate) fn on_long_rest_started(trigger: On<LongRestStarted>) {
     metrics::record(LogCode::CNR002);
     let event = trigger.event();
@@ -40,7 +40,7 @@ pub(crate) fn on_long_rest_started(trigger: On<LongRestStarted>) {
 }
 
 /// 长休完成日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::CNR003, event = "长休完成"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::CNR003, event = "长休完成"), target = "camp")]
 pub(crate) fn on_long_rest_completed(trigger: On<LongRestCompleted>) {
     metrics::record(LogCode::CNR003);
     let event = trigger.event();
@@ -54,7 +54,7 @@ pub(crate) fn on_long_rest_completed(trigger: On<LongRestCompleted>) {
 }
 
 /// 长休中断日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::CNR004, event = "长休中断"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::CNR004, event = "长休中断"), target = "camp")]
 pub(crate) fn on_long_rest_interrupted(trigger: On<LongRestInterrupted>) {
     metrics::record(LogCode::CNR004);
     let event = trigger.event();
@@ -68,7 +68,7 @@ pub(crate) fn on_long_rest_interrupted(trigger: On<LongRestInterrupted>) {
 }
 
 /// 营地事件触发日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::CNR005, event = "营地事件触发"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::CNR005, event = "营地事件触发"), target = "camp")]
 pub(crate) fn on_camp_event_triggered(trigger: On<CampEventTriggered>) {
     metrics::record(LogCode::CNR005);
     let event = trigger.event();

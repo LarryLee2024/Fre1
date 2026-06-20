@@ -17,7 +17,8 @@ use crate::core::capabilities::effect::events::{
     EffectApplied, EffectImmunityTriggered, EffectRemoved, EffectTicked,
 };
 use crate::core::capabilities::effect::foundation::{
-    ActiveEffectContainer, EffectDuration, EffectError, EffectInstance, EffectStage, RemovalReason,
+    ActiveEffectContainer, EffectDuration, EffectError, EffectFailure, EffectInstance, EffectStage,
+    RemovalReason,
 };
 
 /// 效果施加结果。
@@ -27,8 +28,10 @@ pub struct ApplyResult {
     pub success: bool,
     /// 效果实例 ID（成功时）
     pub instance_id: Option<String>,
-    /// 失败原因（失败时）
+    /// 程序错误原因（失败时）
     pub error: Option<EffectError>,
+    /// 业务规则失败原因（失败时）
+    pub failure_reason: Option<EffectFailure>,
     /// 是否因免疫被阻止
     pub was_immunity_blocked: bool,
 }
@@ -40,17 +43,31 @@ impl ApplyResult {
             success: true,
             instance_id: Some(instance_id.into()),
             error: None,
+            failure_reason: None,
             was_immunity_blocked: false,
         }
     }
 
-    /// 创建失败结果。
+    /// 创建程序错误结果。
     pub fn failure(error: EffectError) -> Self {
         let was_blocked = matches!(&error, EffectError::ImmunityBlocked { .. });
         Self {
             success: false,
             instance_id: None,
             error: Some(error),
+            failure_reason: None,
+            was_immunity_blocked: was_blocked,
+        }
+    }
+
+    /// 创建业务规则失败结果（非程序错误）。
+    pub fn blocked_by_rule(failure: EffectFailure) -> Self {
+        let was_blocked = matches!(&failure, EffectFailure::SlotLimitReached { .. });
+        Self {
+            success: false,
+            instance_id: None,
+            error: None,
+            failure_reason: Some(failure),
             was_immunity_blocked: was_blocked,
         }
     }
@@ -93,8 +110,7 @@ impl TickResult {
 /// # Errors
 /// - DuplicateEffect: 同源效果已存在且不允许叠加
 /// - ImmunityBlocked: 目标免疫此效果
-/// - ConditionNotMet: 应用条件不满足
-/// - SlotLimitReached: 效果槽位已满
+/// - SlotLimitReached: 效果槽位已满（业务规则失败，非程序错误）
 pub fn apply_effect(
     container: &mut ActiveEffectContainer,
     instance: EffectInstance,
@@ -106,9 +122,9 @@ pub fn apply_effect(
 
     // V1: 来源检查（不变量 3.1）
     if source_entity.is_empty() {
-        return ApplyResult::failure(EffectError::MissingSource(
-            "source_entity must not be empty".into(),
-        ));
+        return ApplyResult::failure(EffectError::MissingSource {
+            detail: "source_entity must not be empty".into(),
+        });
     }
 
     // 不变量 3.5: 同源效果重复检查
@@ -161,7 +177,7 @@ pub fn apply_effect(
 
     // 槽位检查
     if container.is_full() {
-        return ApplyResult::failure(EffectError::SlotLimitReached {
+        return ApplyResult::blocked_by_rule(EffectFailure::SlotLimitReached {
             current: container.count(),
             max: container.max_effects,
         });
@@ -316,10 +332,7 @@ pub fn remove_effect_by_id(
 
             // 不可驱散检查
             if !effect.dispellable && matches!(reason, RemovalReason::Dispelled) {
-                return Err(EffectError::Runtime(format!(
-                    "effect '{}' is undispellable",
-                    instance_id
-                )));
+                return Err(EffectError::Undispellable { instance_id: instance_id.to_string() });
             }
 
             // 不变量 3.4: Modifier 回退（占位）
@@ -340,7 +353,7 @@ pub fn remove_effect_by_id(
             });
             Ok(effect)
         }
-        None => Err(EffectError::EffectNotFound(instance_id.into())),
+        None => Err(EffectError::EffectNotFound { effect_id: instance_id.into() }),
     }
 }
 

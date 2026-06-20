@@ -37,7 +37,7 @@ pub(crate) fn on_compute_move(
     let emit_event = trigger.event().emit_moved_event;
 
     if path.len() < 2 {
-        tracing::warn!(
+        tracing::warn!(target: "tactical", 
             event = "tactical.move.short_path",
             path_len = path.len(),
             "ComputeMoveRequest 路径太短：{} 个位置",
@@ -47,7 +47,7 @@ pub(crate) fn on_compute_move(
     }
 
     let Ok((mut mp, mut pos)) = tac_query.get_mut(entity) else {
-        tracing::warn!(
+        tracing::warn!(target: "tactical", 
             event = "tactical.move.missing_components",
             entity = ?entity,
             "ComputeMoveRequest 实体 {} 缺少战术移动组件",
@@ -61,7 +61,7 @@ pub(crate) fn on_compute_move(
     let view = match mov.build_view(entity, mov_type) {
         Ok(v) => v,
         Err(_) => {
-            tracing::warn!(
+            tracing::warn!(target: "tactical", 
                 event = "tactical.move.missing_capabilities",
                 entity = ?entity,
                 "实体 {} 缺少移动能力组件",
@@ -72,7 +72,7 @@ pub(crate) fn on_compute_move(
     };
 
     if !view.can_move {
-        tracing::warn!(
+        tracing::warn!(target: "tactical", 
             event = "tactical.move.no_tag",
             entity = ?entity,
             mov_type = ?mov_type,
@@ -82,7 +82,7 @@ pub(crate) fn on_compute_move(
         );
         return;
     }
-    tracing::trace!(
+    tracing::trace!(target: "tactical", 
         event = "tactical.move.capability_view",
         can_move = view.can_move,
         effective = view.effective_points.0,

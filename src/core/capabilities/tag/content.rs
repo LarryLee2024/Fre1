@@ -27,7 +27,7 @@ pub(crate) fn register_tags_from_content(
         return;
     }
 
-    info!(
+    info!(target: "tag", 
         event = "tag.registration.start",
         count = defs.len(),
         "[Tag] 开始注册 {} 个标签定义",
@@ -41,7 +41,7 @@ pub(crate) fn register_tags_from_content(
         let id = def.id.clone();
         match hierarchy.register(def, &mut commands) {
             Ok(()) => {
-                trace!(
+                trace!(target: "tag", 
                     event = "tag.registration.item_ok",
                     tag_id = %id,
                     "[Tag] 标签 '{}' 注册成功",
@@ -50,7 +50,7 @@ pub(crate) fn register_tags_from_content(
                 success_count += 1;
             }
             Err(e) => {
-                warn!(
+                warn!(target: "tag", 
                     event = "tag.registration.item_error",
                     tag_id = %id,
                     error = %e,
@@ -63,7 +63,7 @@ pub(crate) fn register_tags_from_content(
         }
     }
 
-    info!(
+    info!(target: "tag", 
         event = "tag.registration.complete",
         success = success_count,
         failed = error_count,

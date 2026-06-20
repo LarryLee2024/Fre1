@@ -91,7 +91,7 @@ fn multi_resource_consumption_all_or_nothing() {
 #[test]
 fn insufficient_cost_error_contains_required_fields() {
     let err =
-        crate::core::capabilities::ability::foundation::AbilityError::InsufficientCost {
+        crate::core::capabilities::ability::foundation::AbilityFailure::InsufficientCost {
             resource: "attr_mp".to_string(),
             required: 50.0,
             available: 20.0,
@@ -107,7 +107,7 @@ fn insufficient_cost_error_contains_required_fields() {
 #[test]
 fn condition_failed_error_structured() {
     let err =
-        crate::core::capabilities::ability::foundation::AbilityError::ConditionFailed {
+        crate::core::capabilities::ability::foundation::AbilityFailure::ConditionFailed {
             reason: "silenced".to_string(),
         };
     let msg = format!("{}", err);
@@ -130,7 +130,7 @@ fn ability_state_can_activate_only_ready() {
 
 #[test]
 fn on_cooldown_error_contains_remaining_turns() {
-    let err = crate::core::capabilities::ability::foundation::AbilityError::OnCooldown {
+    let err = crate::core::capabilities::ability::foundation::AbilityFailure::OnCooldown {
         spec_id: "abl_fireball".to_string(),
         remaining_turns: 3,
     };

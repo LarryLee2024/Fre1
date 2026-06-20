@@ -5,12 +5,14 @@
 //! 详见 docs/02-domain/capabilities/stacking_domain.md §1、§3。
 //! 详见 docs/04-data/capabilities/stacking_schema.md §3。
 
+use bevy::prelude::Event;
+
 /// Stacking 领域错误。
-#[derive(Debug, Clone, PartialEq, thiserror::Error)]
+#[derive(Debug, Clone, PartialEq, thiserror::Error, Event)]
 pub enum StackingError {
     /// 无效的堆叠配置（如 Aggregate 但 max_stacks < 2）
-    #[error("invalid stacking config: {0}")]
-    InvalidConfig(String),
+    #[error("invalid stacking config: {reason}")]
+    InvalidConfig { reason: String },
     /// 堆叠标识不匹配
     #[error("identity mismatch: '{existing_def_id}' vs '{incoming_def_id}': {detail}")]
     IdentityMismatch {
@@ -18,7 +20,4 @@ pub enum StackingError {
         incoming_def_id: String,
         detail: String,
     },
-    /// 运行时错误
-    #[error("stacking runtime error: {0}")]
-    Runtime(String),
 }

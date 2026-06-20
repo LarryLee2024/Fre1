@@ -41,12 +41,12 @@ pub fn execute_pipeline(
     for stage in &definition.stages {
         // 检查管线是否已被中止
         if context.aborted {
-            return Err(PipelineError::Aborted(
-                context
+            return Err(PipelineError::Aborted {
+                reason: context
                     .abort_reason
                     .clone()
                     .unwrap_or_else(|| "unknown reason".into()),
-            ));
+            });
         }
 
         let result = execute_stage(stage, context, executor)?;
@@ -199,30 +199,28 @@ fn execute_atomic_step(
 /// - 没有重复的阶段名称
 pub fn validate_pipeline(definition: &PipelineDefinition) -> Result<(), PipelineError> {
     if definition.id.is_empty() {
-        return Err(PipelineError::MissingContext("pipeline id is empty".into()));
+        return Err(PipelineError::MissingContext { key: "pipeline id is empty".into() });
     }
 
     let mut seen_names = Vec::new();
     for stage in &definition.stages {
         if stage.name.is_empty() {
-            return Err(PipelineError::MissingContext(
-                "stage name must not be empty".into(),
-            ));
+            return Err(PipelineError::MissingContext { key: "stage name must not be empty".into() });
         }
 
         if seen_names.contains(&stage.name) {
-            return Err(PipelineError::MissingContext(format!(
+            return Err(PipelineError::MissingContext { key: format!(
                 "duplicate stage name: {}",
                 stage.name
-            )));
+            )});
         }
         seen_names.push(stage.name.clone());
 
         if stage.steps.is_empty() && !stage.skippable {
-            return Err(PipelineError::MissingContext(format!(
+            return Err(PipelineError::MissingContext { key: format!(
                 "stage '{}' has no steps and is not skippable",
                 stage.name
-            )));
+            )});
         }
     }
 

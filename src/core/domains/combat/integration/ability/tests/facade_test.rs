@@ -4,8 +4,8 @@
 
 use bevy::prelude::*;
 
-use crate::core::capabilities::ability::foundation::{AbilityError, CostEntry};
-use crate::core::capabilities::ability::mechanism::AbilityInstanceIdGenerator;
+use crate::core::capabilities::ability::foundation::{AbilityError, AbilityFailure, CostEntry};
+use crate::core::capabilities::ability::mechanism::{AbilityInstanceIdGenerator, ActivationIssue};
 use crate::core::domains::combat::integration::ability::CombatAbilityFacade;
 
 fn make_generator() -> AbilityInstanceIdGenerator {
@@ -85,7 +85,10 @@ fn try_activate_ability_fails_when_already_active() {
         &generator,
     );
     assert!(second.is_err());
-    assert!(matches!(second, Err(AbilityError::AlreadyActive { .. })));
+    assert!(matches!(
+        second,
+        Err(ActivationIssue::Error(AbilityError::AlreadyActive { .. }))
+    ));
 }
 
 #[test]
@@ -136,7 +139,10 @@ fn try_activate_ability_fails_when_on_cooldown() {
         &generator,
     );
     assert!(second.is_err());
-    assert!(matches!(second, Err(AbilityError::OnCooldown { .. })));
+    assert!(matches!(
+        second,
+        Err(ActivationIssue::Failure(AbilityFailure::OnCooldown { .. }))
+    ));
 }
 
 #[test]

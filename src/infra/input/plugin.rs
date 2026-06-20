@@ -30,6 +30,6 @@ impl Plugin for InputPlugin {
         // 先采集原始输入 → InputState，再处理元命令入队
         app.add_systems(PreUpdate, (collect_input_actions, process_meta_commands));
 
-        tracing::info!("[InputPlugin] 已初始化");
+        tracing::info!(target: "input", "[InputPlugin] 已初始化");
     }
 }

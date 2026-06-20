@@ -12,8 +12,8 @@ use crate::core::capabilities::ability::foundation::{
     AbilityError, AbilityInstanceId, ActivationContext, ActivationType, CostEntry,
 };
 use crate::core::capabilities::ability::mechanism::{
-    AbilityInstanceIdGenerator, ActivationRequest, ActiveAbilityContainer, complete_ability,
-    tick_cooldowns, try_activate,
+    AbilityInstanceIdGenerator, ActivationIssue, ActivationRequest, ActiveAbilityContainer,
+    complete_ability, tick_cooldowns, try_activate,
 };
 
 // ─── Facade ────────────────────────────────────────────────────────
@@ -38,7 +38,7 @@ impl CombatAbilityFacade {
         costs: Vec<CostEntry>,
         commands: &mut Commands,
         generator: &AbilityInstanceIdGenerator,
-    ) -> Result<AbilityInstanceId, AbilityError> {
+    ) -> Result<AbilityInstanceId, ActivationIssue> {
         let request = ActivationRequest {
             spec_id: spec_id.to_string(),
             def_id: def_id.to_string(),
@@ -87,12 +87,12 @@ impl<'w, 's> CombatAbilityParam<'w, 's> {
         frame: u64,
         costs: Vec<CostEntry>,
         commands: &mut Commands,
-    ) -> Result<AbilityInstanceId, AbilityError> {
+    ) -> Result<AbilityInstanceId, ActivationIssue> {
         let mut container = self.containers.get_mut(entity).map_err(|e| {
-            AbilityError::Runtime(format!(
+            ActivationIssue::Error(AbilityError::ContainerMissing { detail: format!(
                 "entity {:?} has no ActiveAbilityContainer: {}",
                 entity, e
-            ))
+            )})
         })?;
         CombatAbilityFacade::try_activate_ability(
             &mut container,

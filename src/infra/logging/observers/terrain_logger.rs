@@ -11,7 +11,7 @@ use crate::infra::logging::metrics;
 use crate::shared::diagnostics::LogCode;
 
 /// 单位进入格子日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::TER001, event = "格子进入"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::TER001, event = "格子进入"), target = "terrain")]
 pub(crate) fn on_tile_entered(trigger: On<TileEntered>) {
     metrics::record(LogCode::TER001);
     let event = trigger.event();
@@ -26,7 +26,7 @@ pub(crate) fn on_tile_entered(trigger: On<TileEntered>) {
 }
 
 /// 表面变化日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::TER002, event = "表面变化"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::TER002, event = "表面变化"), target = "terrain")]
 pub(crate) fn on_surface_changed(trigger: On<SurfaceChanged>) {
     metrics::record(LogCode::TER002);
     let event = trigger.event();
@@ -41,7 +41,7 @@ pub(crate) fn on_surface_changed(trigger: On<SurfaceChanged>) {
 }
 
 /// 陷阱触发日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::TER003, event = "陷阱触发"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::TER003, event = "陷阱触发"), target = "terrain")]
 pub(crate) fn on_hazard_triggered(trigger: On<HazardTriggered>) {
     metrics::record(LogCode::TER003);
     let event = trigger.event();
@@ -56,7 +56,7 @@ pub(crate) fn on_hazard_triggered(trigger: On<HazardTriggered>) {
 }
 
 /// 地形效果施加日志 Observer。
-#[tracing::instrument(skip_all, fields(code = ?LogCode::TER004, event = "地形效果施加"))]
+#[tracing::instrument(skip_all, fields(code = ?LogCode::TER004, event = "地形效果施加"), target = "terrain")]
 pub(crate) fn on_terrain_effect_applied(trigger: On<TerrainEffectApplied>) {
     metrics::record(LogCode::TER004);
     let event = trigger.event();
