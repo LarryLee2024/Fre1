@@ -19,6 +19,9 @@ pub mod generated {
     include!("generated/keys.rs");
 }
 
+#[cfg(test)]
+mod tests;
+
 pub use components::LocalizedText;
 pub use database::LocalizationDatabase;
 pub use error::LocError;

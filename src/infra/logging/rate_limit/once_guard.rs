@@ -42,16 +42,3 @@ impl OnceGuard {
             .is_ok()
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn once_guard_fires_only_once() {
-        let guard = OnceGuard::new();
-        assert!(guard.try_fire());
-        assert!(!guard.try_fire());
-        assert!(!guard.try_fire());
-    }
-}

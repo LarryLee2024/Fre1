@@ -1,9 +1,10 @@
 ---
 id: 10-reviews.ui-presentation-architecture-review
 title: UI 表现层架构评审报告
-status: active
+status: done
 owner: presentation-architect
 created: 2026-06-20
+completed: 2026-06-20
 reviewed_documents:
   - docs/01-architecture/40-cross-cutting/ADR-055-ui-presentation-architecture.md
   - docs/02-domain/capabilities/ui-presentation.md

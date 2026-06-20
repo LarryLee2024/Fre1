@@ -1,9 +1,10 @@
 ---
 id: 11-refactor.repetitive-patterns-analysis-2026-06-25
 title: 重复性代码模式分析 — 2026-06-25
-status: active
+status: done
 owner: refactor-guardian
 created: 2026-06-25
+completed: 2026-06-25
 scope: 全 src/ 重复性代码模式识别与抽象建议
 tools: CodeGraph, Repomix, Grep
 ---

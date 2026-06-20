@@ -63,15 +63,24 @@ pub struct EntityMapper<ID: Eq + std::hash::Hash + Clone + 'static = UnitId> {
 impl<ID: Eq + std::hash::Hash + Clone + 'static> EntityMapper<ID> {
     /// 创建空的映射器。
     pub fn new() -> Self {
-        Self::default()
+        Self {
+            entity_to_id: HashMap::new(),
+            id_to_entity: HashMap::new(),
+        }
     }
 
     /// 注册一个映射关系。
     ///
     /// 如果已存在旧映射，会被覆盖。
     pub fn register(&mut self, id: ID, entity: Entity) {
-        self.id_to_entity.insert(id.clone(), entity);
-        self.entity_to_id.insert(entity, id);
+        // 清除旧 ID→Entity 映射
+        if let Some(old_entity) = self.id_to_entity.insert(id.clone(), entity) {
+            self.entity_to_id.remove(&old_entity);
+        }
+        // 清除旧 Entity→ID 映射
+        if let Some(old_id) = self.entity_to_id.insert(entity, id) {
+            self.id_to_entity.remove(&old_id);
+        }
     }
 
     /// 注销一个 Entity 的所有映射。
@@ -145,105 +154,3 @@ impl<ID: Eq + std::hash::Hash + Clone + 'static> EntityMapper<ID> {
 ///
 /// 用于战斗系统的 `UnitId ↔ Entity` 映射。
 pub type UnitEntityMapper = EntityMapper<UnitId>;
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn entity_mapper_register_and_query() {
-        let mut mapper = EntityMapper::<String>::new();
-        let entity = Entity::from_raw(42);
-        let id = "unit_001".to_string();
-
-        mapper.register(id.clone(), entity);
-
-        assert_eq!(mapper.get_id(&entity), Some(&id));
-        assert_eq!(mapper.get_entity(&id), Some(&entity));
-        assert!(mapper.contains_entity(&entity));
-        assert!(mapper.contains_id(&id));
-    }
-
-    #[test]
-    fn entity_mapper_unregister_entity() {
-        let mut mapper = EntityMapper::<String>::new();
-        let entity = Entity::from_raw(42);
-        let id = "unit_001".to_string();
-
-        mapper.register(id.clone(), entity);
-        let removed = mapper.unregister_entity(&entity);
-
-        assert_eq!(removed, Some(id));
-        assert!(!mapper.contains_entity(&entity));
-        assert!(mapper.is_empty());
-    }
-
-    #[test]
-    fn entity_mapper_unregister_id() {
-        let mut mapper = EntityMapper::<String>::new();
-        let entity = Entity::from_raw(42);
-        let id = "unit_001".to_string();
-
-        mapper.register(id.clone(), entity);
-        let removed = mapper.unregister_id(&id);
-
-        assert_eq!(removed, Some(entity));
-        assert!(!mapper.contains_id(&id));
-        assert!(mapper.is_empty());
-    }
-
-    #[test]
-    fn entity_mapper_overwrite() {
-        let mut mapper = EntityMapper::<String>::new();
-        let entity1 = Entity::from_raw(42);
-        let entity2 = Entity::from_raw(43);
-        let id = "unit_001".to_string();
-
-        mapper.register(id.clone(), entity1);
-        mapper.register(id.clone(), entity2);
-
-        assert_eq!(mapper.get_entity(&id), Some(&entity2));
-        assert!(!mapper.contains_entity(&entity1));
-    }
-
-    #[test]
-    fn entity_mapper_len() {
-        let mut mapper = EntityMapper::<String>::new();
-        assert_eq!(mapper.len(), 0);
-
-        mapper.register("a".to_string(), Entity::from_raw(1));
-        mapper.register("b".to_string(), Entity::from_raw(2));
-        assert_eq!(mapper.len(), 2);
-
-        mapper.unregister_entity(&Entity::from_raw(1));
-        assert_eq!(mapper.len(), 1);
-    }
-
-    #[test]
-    fn entity_mapper_iterators() {
-        let mut mapper = EntityMapper::<String>::new();
-        let e1 = Entity::from_raw(1);
-        let e2 = Entity::from_raw(2);
-
-        mapper.register("a".to_string(), e1);
-        mapper.register("b".to_string(), e2);
-
-        let entities: Vec<_> = mapper.entities().copied().collect();
-        assert!(entities.contains(&e1));
-        assert!(entities.contains(&e2));
-
-        let ids: Vec<_> = mapper.ids().cloned().collect();
-        assert!(ids.contains(&"a".to_string()));
-        assert!(ids.contains(&"b".to_string()));
-    }
-
-    #[test]
-    fn entity_mapper_clear() {
-        let mut mapper = EntityMapper::<String>::new();
-        mapper.register("a".to_string(), Entity::from_raw(1));
-        mapper.register("b".to_string(), Entity::from_raw(2));
-
-        mapper.clear();
-        assert!(mapper.is_empty());
-    }
-}

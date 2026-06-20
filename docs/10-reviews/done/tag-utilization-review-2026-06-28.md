@@ -1,10 +1,11 @@
 ---
 id: 10-reviews.tag-utilization-review
 title: Tag 系统重构方案 — 五层架构下的 Tag 定位与重构路径
-status: active
+status: done
 owner: architect
 created: 2026-06-28
 updated: 2026-06-28
+completed: 2026-06-28
 reviewed_documents:
   - docs/ai_ignore_this_dir/12tag.md（最佳实践参考）
   - docs/02-domain/capabilities/tag_domain.md

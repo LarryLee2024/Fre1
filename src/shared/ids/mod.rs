@@ -28,6 +28,8 @@
 //! ```
 
 pub mod runtime_id;
+// [ADR-045] pub(crate) — EntityMapper 用于 Domain 层隔离 Entity，crate 内共享
+pub(crate) mod entity_mapper;
 mod types;
 
 /// 所有强类型 ID 必须实现的 trait。

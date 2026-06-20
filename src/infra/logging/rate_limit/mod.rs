@@ -5,6 +5,9 @@
 
 mod once_guard;
 
+#[cfg(test)]
+mod tests;
+
 pub use once_guard::OnceGuard;
 
 /// 一次性警告日志：每个调用点只输出一次。
