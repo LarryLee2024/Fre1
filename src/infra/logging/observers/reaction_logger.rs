@@ -111,11 +111,11 @@ pub(crate) fn on_counterspell(trigger: On<CounterspellExecuted>) {
 
 /// 护盾术日志 Observer。
 #[tracing::instrument(skip_all, target = "domain.reaction", fields(
-    code = ?LogCode::RCT005,
+    code = ?LogCode::RCT006,
     event = "shield_used",
 ))]
 pub(crate) fn on_shield_used(trigger: On<ShieldUsed>) {
-    telemetry::emit(LogCode::RCT005);
+    telemetry::emit(LogCode::RCT006);
     let event = trigger.event();
     info!(
         target = "domain.reaction",
@@ -128,11 +128,11 @@ pub(crate) fn on_shield_used(trigger: On<ShieldUsed>) {
 
 /// 援护格挡日志 Observer。
 #[tracing::instrument(skip_all, target = "domain.reaction", fields(
-    code = ?LogCode::RCT005,
+    code = ?LogCode::RCT007,
     event = "guardian_used",
 ))]
 pub(crate) fn on_guardian_used(trigger: On<GuardianUsed>) {
-    telemetry::emit(LogCode::RCT005);
+    telemetry::emit(LogCode::RCT007);
     let event = trigger.event();
     info!(
         target = "domain.reaction",

@@ -1,4 +1,13 @@
 //! 诊断上下文，用于关联同一战斗/回合/行动中的多条日志。
+//!
+//! # DEPRECATED
+//!
+//! 当前 Observer 采用 `emit_info!`/`emit_warn!` 直接传结构化字段的模式，
+//! `DiagnosticContext` 保留为工具类，供需要 `CorrelationId` 链路追踪的
+//! 复杂调试场景使用，但不再是 Observer 的强制模式。
+//!
+//! 原因：`emit_info!` 直接传字段在 90% 场景中更具可读性，
+//! 且不需要 Builder 模式的开销。
 
 use bevy::prelude::Entity;
 

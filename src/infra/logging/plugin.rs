@@ -32,6 +32,7 @@ impl Plugin for LoggingPlugin {
         // ════════════════════════════════════════════
         // 注册日志 Observer
         // ════════════════════════════════════════════
+        // 注意：增删 Observer 后请同步更新下方启动日志中的计数
 
         // ── BAT: Combat（战斗）──
         app.add_observer(battle_logger::on_battle_started)
@@ -59,7 +60,9 @@ impl Plugin for LoggingPlugin {
             .add_observer(reaction_logger::on_reaction_executed)
             .add_observer(reaction_logger::on_reaction_declined)
             .add_observer(reaction_logger::on_opportunity_attack)
-            .add_observer(reaction_logger::on_counterspell);
+            .add_observer(reaction_logger::on_counterspell)
+            .add_observer(reaction_logger::on_shield_used)
+            .add_observer(reaction_logger::on_guardian_used);
 
         // ── ABL: Ability（技能）──
         app.add_observer(ability_logger::on_ability_activated)
@@ -102,6 +105,8 @@ impl Plugin for LoggingPlugin {
 
         // ── CRF: Crafting（制作）──
         app.add_observer(crafting_logger::on_item_crafted)
+            .add_observer(crafting_logger::on_enchantment_applied)
+            .add_observer(crafting_logger::on_item_upgraded)
             .add_observer(crafting_logger::on_crafting_failed);
 
         // ── FAC: Faction（阵营）──
@@ -140,6 +145,6 @@ impl Plugin for LoggingPlugin {
         // ── CNT: Content（内容基础设施）──
         app.add_observer(content_logger::on_definition_reloaded);
 
-        tracing::info!(target: "logging", "[LoggingPlugin] 已初始化（Metrics + {} 个 observer）", 56);
+        tracing::info!(target: "logging", "[LoggingPlugin] 已初始化（Metrics + 73 个 observer）");
     }
 }

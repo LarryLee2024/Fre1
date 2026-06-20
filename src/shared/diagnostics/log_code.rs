@@ -143,6 +143,12 @@ pub enum LogCode {
     /// 法术反制执行完毕
     RCT005,
 
+    // ─── RCT — Reaction（反应/援护）扩展 ───
+    /// 护盾术
+    RCT006,
+    /// 援护格挡
+    RCT007,
+
     // ─── QST — Quest（任务）───
     /// 任务被接受
     QST001,
@@ -198,6 +204,12 @@ pub enum LogCode {
     CRF003,
     /// 制作失败
     CRF004,
+
+    // ─── CRF — Crafting（制作）扩展 ───
+    /// 附魔应用
+    CRF005,
+    /// 装备升级
+    CRF006,
 
     // ─── FAC — Faction（阵营）───
     /// 角色声望变化
@@ -406,6 +418,8 @@ impl LogCode {
             Self::RCT003 => "RCT003",
             Self::RCT004 => "RCT004",
             Self::RCT005 => "RCT005",
+            Self::RCT006 => "RCT006",
+            Self::RCT007 => "RCT007",
 
             Self::QST001 => "QST001",
             Self::QST002 => "QST002",
@@ -434,6 +448,8 @@ impl LogCode {
             Self::CRF002 => "CRF002",
             Self::CRF003 => "CRF003",
             Self::CRF004 => "CRF004",
+            Self::CRF005 => "CRF005",
+            Self::CRF006 => "CRF006",
 
             Self::FAC001 => "FAC001",
             Self::FAC002 => "FAC002",
@@ -571,6 +587,8 @@ impl LogCode {
             Self::RCT003 => "reaction_declined",
             Self::RCT004 => "opportunity_attack_executed",
             Self::RCT005 => "counterspell_executed",
+            Self::RCT006 => "shield_used",
+            Self::RCT007 => "guardian_used",
 
             Self::QST001 => "quest_accepted",
             Self::QST002 => "quest_objective_completed",
@@ -599,6 +617,8 @@ impl LogCode {
             Self::CRF002 => "crafting_started",
             Self::CRF003 => "crafting_completed",
             Self::CRF004 => "crafting_failed",
+            Self::CRF005 => "enchantment_applied",
+            Self::CRF006 => "item_upgraded",
 
             Self::FAC001 => "reputation_changed",
             Self::FAC002 => "faction_relation_changed",
@@ -769,6 +789,8 @@ impl LogCode {
             Self::RCT003 => "单位选择不使用反应",
             Self::RCT004 => "机会攻击执行完毕",
             Self::RCT005 => "法术反制执行完毕",
+            Self::RCT006 => "护盾术",
+            Self::RCT007 => "援护格挡",
 
             Self::QST001 => "任务被接受",
             Self::QST002 => "单个目标完成",
@@ -797,6 +819,8 @@ impl LogCode {
             Self::CRF002 => "制作开始",
             Self::CRF003 => "制作完成",
             Self::CRF004 => "制作失败",
+            Self::CRF005 => "附魔应用",
+            Self::CRF006 => "装备升级",
 
             Self::FAC001 => "角色声望变化",
             Self::FAC002 => "阵营关系变化",

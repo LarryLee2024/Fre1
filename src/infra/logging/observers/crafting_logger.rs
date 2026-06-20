@@ -33,11 +33,11 @@ pub(crate) fn on_item_crafted(trigger: On<ItemCrafted>) {
 
 /// 附魔应用日志 Observer。
 #[tracing::instrument(skip_all, target = "domain.crafting", fields(
-    code = ?LogCode::CRF003,
+    code = ?LogCode::CRF005,
     event = "enchantment_applied",
 ))]
 pub(crate) fn on_enchantment_applied(trigger: On<EnchantmentApplied>) {
-    telemetry::emit(LogCode::CRF003);
+    telemetry::emit(LogCode::CRF005);
     let event = trigger.event();
     info!(
         target = "domain.crafting",
@@ -50,11 +50,11 @@ pub(crate) fn on_enchantment_applied(trigger: On<EnchantmentApplied>) {
 
 /// 装备升级日志 Observer。
 #[tracing::instrument(skip_all, target = "domain.crafting", fields(
-    code = ?LogCode::CRF003,
+    code = ?LogCode::CRF006,
     event = "item_upgraded",
 ))]
 pub(crate) fn on_item_upgraded(trigger: On<ItemUpgraded>) {
-    telemetry::emit(LogCode::CRF003);
+    telemetry::emit(LogCode::CRF006);
     let event = trigger.event();
     info!(
         target = "domain.crafting",

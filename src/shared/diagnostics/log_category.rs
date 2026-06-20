@@ -61,7 +61,9 @@ impl LogCode {
             | Self::RCT002
             | Self::RCT003
             | Self::RCT004
-            | Self::RCT005 => LogCategory::Battle,
+            | Self::RCT005
+            | Self::RCT006
+            | Self::RCT007 => LogCategory::Battle,
 
             // ABL / SPR / TRG → Ability
             Self::ABL001
@@ -123,6 +125,8 @@ impl LogCode {
             | Self::CRF002
             | Self::CRF003
             | Self::CRF004
+            | Self::CRF005
+            | Self::CRF006
             | Self::FAC001
             | Self::FAC002
             | Self::FAC003
