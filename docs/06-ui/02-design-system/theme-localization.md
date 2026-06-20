@@ -220,6 +220,7 @@ ui.notification.item_acquired— 通知：获得物品
 - scope 对应功能域（battle/inventory/shop/quest/settings/notification/...）
 - suffix 描述具体文本用途
 - 遵循 `docs/04-data/foundation/id_strategy.md` §5 规范
+- ID 分类体系详见 `docs/04-data/foundation/id-taxonomy.md`
 
 (引用：schema §13 — ID 策略)
 

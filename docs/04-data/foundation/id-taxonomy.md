@@ -364,8 +364,213 @@ CharacterId("knight")     ┌─→ Entity(42)              SaveObjectId(uuid)
 
 ---
 
-## 10. 验证清单
+## 10. Identity Invariant — ID 系统的 11 条铁律
 
+> 以下规则是大型项目（30~50 万行）长期维护的生命线。越早建立越好。
+
+### 10.1 ID 不参与业务逻辑
+
+ID 只负责 **Identity**，不承担分类、权限、行为、状态。
+
+```rust
+// ❌ 错误：用 ID 判断业务逻辑
+if unit.id() == UnitId(1) { ... }
+if quest.id() == QuestId(10086) { ... }
+
+// ✅ 正确：用 Tag / Kind 判断业务逻辑
+if unit.has_tag(UnitTag::Boss) { ... }
+if quest.kind() == QuestKind::Main { ... }
+```
+
+**理由**：后期配置重构、ID 重分配时，硬编码 ID 的业务逻辑直接崩溃。
+
+### 10.2 ID 不隐含排序
+
+ID 不应表达业务顺序。
+
+```rust
+// ❌ 错误：用 ID 排序
+units.sort_by_key(|u| u.id());
+if attacker.id() > defender.id() { ... }
+
+// ✅ 正确：用专用排序字段
+units.sort_by_key(|u| u.initiative());
+if attacker.turn_order() > defender.turn_order() { ... }
+```
+
+**理由**：存档恢复、网络同步、对象池、ECS 重建都会改变生成顺序。
+
+### 10.3 永远不暴露 ID 生成方式
+
+ID 生成集中在 Allocator，业务代码不直接创建。
+
+```rust
+// ❌ 错误：业务代码自己生成 ID
+let id = UnitId(counter.fetch_add(1));
+
+// ✅ 正确：通过 Allocator 统一分配
+let unit = commands.spawn_unit(template_id);
+// 内部由 UnitIdAllocator 生成 ID
+```
+
+**理由**：这是大型项目非常重要的封装边界。暴露生成方式会导致 ID 冲突、重复分配、无法审计。
+
+### 10.4 ID 创建必须可审计
+
+Debug 模式支持 ID 创建溯源。
+
+```rust
+// Debug 模式下记录
+struct IdCreationInfo {
+    created_by: &'static str,  // "BattleSpawnSystem"
+    frame: u64,                // 18273
+    source: &'static str,      // "SummonAbility"
+}
+```
+
+**理由**：出现幽灵对象时，找不到来源是大型项目最痛苦的调试体验。
+
+### 10.5 区分引用和拥有
+
+ID = 引用。`Vec<T>` / `Box<T>` / `Arc<T>` / `Resource<T>` = 拥有。
+
+```rust
+// ID 是引用，不是拥有
+struct Buff {
+    caster: UnitId,  // 引用施法者
+    // 不拥有 caster 的生命周期
+}
+
+// 如果需要拥有，用 Owner 组件
+struct Owned<T> {
+    owner: UnitId,
+    data: T,  // 拥有数据
+}
+```
+
+**理由**：不区分引用和拥有，容易出现循环引用和对象生命周期混乱。
+
+### 10.6 Null ID 是反模式
+
+禁止用 `UnitId(0)` 表示"无目标"。
+
+```rust
+// ❌ 错误：Magic Number
+let target = UnitId(0);  // 表示无目标
+
+// ✅ 正确：用 Option 或枚举
+let target: Option<UnitId> = None;
+let target: Target = Target::None;
+```
+
+**理由**：`0` 会在各种地方传播，后期非常难查。
+
+### 10.7 跨层禁止 ID 隐式转换
+
+`From<CharacterId> for UnitId` 是反模式。ID 转换必须经过显式服务。
+
+```rust
+// ❌ 错误：隐式转换
+impl From<CharacterTemplateId> for UnitId { ... }
+
+// ✅ 正确：通过服务显式转换
+impl UnitSpawner {
+    fn spawn(&self, template: CharacterTemplateId) -> UnitId {
+        // 显式的 Identity Transform 过程
+    }
+}
+```
+
+**理由**：隐式转换让数据流不可追踪，调试困难。
+
+### 10.8 ID 不承担显示职责
+
+ID 不给玩家看。显示用 `display_name()` / `nickname()`。
+
+```rust
+// ❌ 错误：直接显示 ID
+format!("{}", unit.id());  // "UnitId(18472)"
+
+// ✅ 正确：用专用显示字段
+unit.display_name()  // "骑士"
+// 或结构化日志
+info!("[Knight][UnitId:18472] took 10 damage");
+```
+
+**理由**：日志里全是 `Unit#18472` 时调试体验极差。
+
+### 10.9 Identity 是横切关注点
+
+所有 ID 类型集中在 `shared/ids/`，不分散到各领域。
+
+```
+// ❌ 错误：各领域自己定义 ID
+domain_character/ids.rs
+domain_item/ids.rs
+domain_quest/ids.rs
+
+// ✅ 正确：统一管理
+shared/ids/
+├── types.rs       # 所有 ID 类型
+├── registry.rs    # 统一注册/分配/映射
+└── prelude.rs     # 便捷导入
+```
+
+**理由**：Identity 本身就是 Cross-cutting Concern，类似 `shared/error/`、`shared/events/`。
+
+### 10.10 配置表引用必须编译为 Typed ID
+
+运行时零 String 查找。
+
+```yaml
+# 配置文件
+ability: ability.fireball
+```
+
+加载阶段直接编译为：
+
+```rust
+// 运行时
+AbilityTemplateId("ability.fireball")
+// 整个项目运行时 String -> 0 次
+// HashMap 查找 -> 极少
+// 全部变成强类型 ID 互相引用
+```
+
+**理由**：这是 UE Gameplay Ability、Paradox 游戏、Larian 数据驱动系统的共同做法。ID 系统不只是"标识对象"，而是整个项目的数据连接层（Data Linking Layer）。
+
+### 10.11 Runtime ID 必须满足
+
+| 约束 | 说明 |
+|------|------|
+| **唯一** | 同一游戏会话内不重复 |
+| **不可变** | 创建后值不变 |
+| **可复制** | 支持 `Copy` / `Clone` |
+| **可序列化** | 支持 Serde（存档/网络） |
+| **Generation 保护** | 回收后 generation 递增，防止复用 |
+
+### 10.12 Template ID 必须满足
+
+| 约束 | 说明 |
+|------|------|
+| **跨版本稳定** | v1.0 发布的 ID，v5.0 仍然有效 |
+| **跨 DLC 稳定** | DLC 合并不产生 ID 冲突 |
+| **跨 Mod 稳定** | Mod 命名空间隔离 |
+| **无语义** | `abl_000042` 而非 `ability.fireball` |
+
+### 10.13 Entity 必须满足
+
+| 约束 | 说明 |
+|------|------|
+| **不出 Infrastructure** | Domain/Application 层禁止裸 Entity |
+| **通过映射访问** | Entity ↔ 业务 ID 映射在 `integration/` |
+| **不可序列化** | 存档中不存储 Entity，存储 SaveObjectId |
+
+---
+
+## 11. 验证清单
+
+### 分类检查
 - [ ] Template ID 使用命名空间格式（`namespace:type.name`）
 - [ ] Runtime ID 使用 generation 机制
 - [ ] Save ID 基于 Uuid，独立于 Runtime ID
@@ -374,6 +579,18 @@ CharacterId("knight")     ┌─→ Entity(42)              SaveObjectId(uuid)
 - [ ] Entity ↔ 业务 ID 映射集中在基础设施层
 - [ ] 所有 ID 类型实现 StrongId trait
 - [ ] 存档加载能正确恢复 ID 映射
+
+### Identity Invariant 检查（§10）
+- [ ] ID 不参与业务逻辑（无 `id() == SomeId(N)` 判断）
+- [ ] ID 不隐含排序（无 `sort_by_key(|x| x.id())`）
+- [ ] ID 生成集中在 Allocator（业务代码不直接创建）
+- [ ] Debug 模式可追溯 ID 创建来源
+- [ ] ID 仅表示引用，不表示拥有
+- [ ] 无 Null ID（用 `Option<T>` 或枚举替代）
+- [ ] 跨层 ID 转换经过显式服务
+- [ ] ID 不用于玩家显示（用 `display_name()`）
+- [ ] 所有 ID 类型集中在 `shared/ids/`
+- [ ] 配置表引用在加载时编译为 Typed ID
 
 ---
 

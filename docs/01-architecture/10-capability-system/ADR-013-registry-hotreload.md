@@ -27,6 +27,7 @@ Fre 项目采用数据驱动设计——所有 Definition（AbilityDef、EffectD
 
 - `docs/04-data/infrastructure/registry_schema.md` — Registry Schema
 - `docs/04-data/foundation/id_strategy.md` — ID 策略
+- `docs/04-data/foundation/id-taxonomy.md` — ID 分类体系（五类 ID：Template/Runtime/Save/Entity/Network）
 - `docs/04-data/README.md` — Data Law 001（Def-Instance 分离）
 - `.trae/rules/架构规则.md` §五 — 数据驱动与内容生产
 - `.trae/rules/编码规则.md` — Definition 不可变

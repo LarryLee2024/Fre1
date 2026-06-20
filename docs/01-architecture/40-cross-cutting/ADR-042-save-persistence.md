@@ -22,6 +22,7 @@ supersedes: none
 
 - `docs/04-data/foundation/save_architecture.md` — Save 架构详述
 - `docs/04-data/foundation/id_strategy.md` — ID 策略
+- `docs/04-data/foundation/id-taxonomy.md` — ID 分类体系（五类 ID：Template/Runtime/Save/Entity/Network）
 - `docs/04-data/README.md` — Data Law 011（Schema 版本化）
 - `.trae/rules/SRPG专项规则.md` §九 — 存档与兼容性
 

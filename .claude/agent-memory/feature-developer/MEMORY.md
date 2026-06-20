@@ -1,2 +1,4 @@
 - [Bevy 0.19 Observer API](bevy-0.19-observer-api.md) -- On<T> type, add_observer(), set_parent_in_place()
 - [UI Screens Implementation Pattern](ui-screens-implementation-pattern.md) -- Screen structure using primitives factories with hierarchy
+- [Button Widget Factory](button-widget-factory.md) -- Button factory pattern, variant styling, theme tokens
+- [Panel Widget Patterns](panel-widget-patterns.md) -- Panel widget structure, factory pattern, and variant styling

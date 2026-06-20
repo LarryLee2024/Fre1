@@ -577,7 +577,29 @@ AbilityDef (
 
 ---
 
-## 10. 规则速查：该做什么和不该做什么
+## 10. Identity Invariant — ID 系统的 13 条铁律
+
+> 详细定义见 `docs/04-data/foundation/id-taxonomy.md` §10
+
+| # | 规则 | 一句话 | 反面教材 |
+|---|------|--------|---------|
+| 1 | ID 不参与业务逻辑 | ID 只负责 Identity，不承担分类/权限/行为/状态 | `if unit.id() == UnitId(1)` |
+| 2 | ID 不隐含排序 | 排序用专用字段，不用 ID | `units.sort_by_key(\|u\| u.id())` |
+| 3 | 不暴露 ID 生成方式 | 生成集中在 Allocator，业务代码不直接创建 | `UnitId(counter.fetch_add(1))` |
+| 4 | ID 创建必须可审计 | Debug 模式记录创建来源、帧号、触发者 | 幽灵对象找不到来源 |
+| 5 | 区分引用和拥有 | ID = 引用，`Vec<T>` = 拥有 | 循环引用、生命周期混乱 |
+| 6 | Null ID 是反模式 | 用 `Option<T>` 或枚举，不用 Magic Number | `UnitId(0)` 表示无目标 |
+| 7 | 跨层禁止隐式转换 | ID 转换经过显式服务 | `impl From<A> for B` |
+| 8 | ID 不承担显示职责 | 显示用 `display_name()`，不用 `format!("{}", id)` | 日志全是 `Unit#18472` |
+| 9 | Identity 是横切关注点 | 所有 ID 集中在 `shared/ids/` | 各领域自己定义 ID |
+| 10 | 配置表引用编译为 Typed ID | 运行时零 String 查找 | 运行时 HashMap 查找 |
+| 11 | Runtime ID 约束 | 唯一、不可变、可复制、可序列化、Generation 保护 | ID 复用导致引用悬空 |
+| 12 | Template ID 约束 | 跨版本稳定、跨 DLC 稳定、跨 Mod 稳定、无语义 | DLC 合并 ID 冲突 |
+| 13 | Entity 约束 | 不出 Infrastructure、通过映射访问、不可序列化 | Domain 层裸 Entity |
+
+---
+
+## 11. 规则速查：该做什么和不该做什么
 
 ### ✅ 允许的
 
@@ -598,35 +620,65 @@ AbilityDef (
 | 在 ID 中编码语义 | 语义变化需要改 ID，破坏所有引用 |
 | 重用已废弃的 ID | 破坏存档/Replay 兼容性 |
 | 混用不同前缀的 ID | 编译期类型不同，运行时值相同但语义不同 |
+| `id() == SomeId(N)` 判断业务逻辑 | 后期 ID 重分配时逻辑崩溃 |
+| `sort_by_key(\|x\| x.id())` 排序 | 存档恢复/网络同步后顺序变化 |
+| 业务代码直接创建 ID | 破坏封装边界，导致 ID 冲突 |
+| `UnitId(0)` 表示无目标 | Magic Number 传播，后期难查 |
+| `impl From<A> for B` 隐式转换 | 数据流不可追踪 |
+| `format!("{}", id)` 给玩家看 | 调试体验差，日志无意义 |
 
 ---
 
 ## 现状盘点：已经做了什么，还缺什么
 
-### 已实现
+### 已实现 — 代码层
 
 | 组件 | 状态 | 说明 |
 |------|------|------|
 | StrongId trait | ✅ 完整 | 统一接口：prefix() + as_str() |
 | define_string_id! 宏 | ✅ 完整 | 生成 String ID 类型（22 个） |
 | define_numeric_id! 宏 | ✅ 完整 | 生成 Numeric ID 类型（1 个） |
+| RuntimeId (index + generation) | ✅ 完整 | 带 Generation 保护的运行时 ID，11 个测试 |
+| RuntimeIdAllocator | ✅ 完整 | 分配/回收/复用/空闲列表管理 |
 | DefinitionId 通用 ID | ✅ 完整 | 无前缀通用 ID，用于 Registry 泛型查询 |
 | String ID 类型 | ✅ 完整 | 22 个领域 ID 类型（attr/tag/eff/abl 等） |
 | Numeric ID 类型 | ✅ 完整 | 1 个实例 ID 类型（ModifierInstanceId） |
-| 单元测试 | ✅ 完整 | 334 行测试覆盖全部 API |
+| 单元测试 | ✅ 完整 | 345 行测试覆盖全部 API（含 RuntimeId 11 个测试） |
 | Serde 支持 | ✅ 完整 | 序列化/反序列化兼容两种格式 |
 | Reflect 支持 | ✅ 完整 | Bevy 反射系统集成 |
 
-### 待实现（大型项目关键差距）
+### 已实现 — 文档/治理层
+
+| 组件 | 状态 | 说明 |
+|------|------|------|
+| ID 分类体系文档 | ✅ 完整 | `docs/04-data/foundation/id-taxonomy.md`（607 行） |
+| Identity Invariant 13 条铁律 | ✅ 完整 | 定义在 id-taxonomy.md §10 |
+| 五类 ID 分类（Template/Runtime/Save/Entity/Network） | ✅ 完整 | id-taxonomy.md §2-§7 |
+| 验证清单（18 项） | ✅ 完整 | id-taxonomy.md §11 |
+| 宪法 Domain 层 Entity 限制 | ✅ 落地 | ai-constitution-complete.md §6.1 + §19.1 |
+| 编码规则 Domain 层 Entity 限制 | ✅ 落地 | coding-rules.md §3 |
+| ECS 规则 Domain 层 Entity 限制 | ✅ 落地 | .trae/rules/ECS规则.md §1.1 + 速查第 2 条 |
+| 编码规则 .trae Domain 层 Entity 限制 | ✅ 落地 | .trae/rules/编码规则.md |
+| AI 架构准则 Domain 层 Entity 限制 | ✅ 落地 | .trae/rules/AI架构准则.md |
+| SRPG 专项规则 ID 章节 | ✅ 落地 | .trae/rules/SRPG专项规则.md §十 |
+| 审查规则 ID 审查清单 | ✅ 落地 | .trae/rules/审查规则.md（6 项） |
+| 测试规范 ID 测试不变量 | ✅ 落地 | .trae/rules/测试规范.md（5 项） |
+| ADR-042 引用 id-taxonomy | ✅ 落地 | save-persistence.md |
+| ADR-013 引用 id-taxonomy | ✅ 落地 | registry-hotreload.md |
+| UI 架构引用 id-taxonomy | ✅ 落地 | theme-localization.md |
+| 知识文档 Identity Invariant 速查 | ✅ 落地 | ids-overview.md §10（13 条一览表） |
+
+### 待实现 — 代码层（大型项目关键差距）
 
 | 组件 | 优先级 | 说明 |
 |------|--------|------|
-| RuntimeId (index + generation) | 🔴 高 | 防止 ID 复用，存档安全，当前 ModifierInstanceId 无 generation |
 | EntityMapper (双向映射) | 🔴 高 | Domain 层隔离 Entity，当前无统一映射层 |
 | SaveObjectId (Uuid) | 🟡 中 | 存档兼容性，当前存档无独立 ID 体系 |
 | Mod 命名空间 | 🟡 中 | Template ID 前缀需升级为 `namespace:type.name` |
 | IdRegistry 统一管理 | 🟡 中 | 生成/回收/映射/校验集中管理 |
 | Network ID | 🟢 低 | 联机功能预留 |
+| ID 创建审计（Debug 模式） | 🟡 中 | IdCreationInfo 记录创建来源/帧号/触发者 |
+| Identity Invariant 代码级检查 | 🟡 中 | Clippy Lint 或 CI 脚本自动检测违规 |
 
 ### 设计决策说明
 
@@ -636,6 +688,7 @@ AbilityDef (
 | ID 生成方式 | 宏生成 | 确保所有 ID 类型行为一致 |
 | ID 永不重用 | Registry 管理 | 删除时标记 deprecated，不重新分配 |
 | 6 位编号 | 每领域 100 万空间 | 覆盖 DLC、Mod、长期运营 |
+| Identity 定位 | Cross-cutting Concern | 类似 `shared/error/`、`shared/events/`，独立子域 |
 
 ### 大型项目硬规则
 
@@ -649,6 +702,24 @@ AbilityDef (
 
 **理由**：Entity 在存档加载/场景重载后失效；u64 无法编译期防混用；裸类型无法跨 Mod/网络确定性同步。
 
+### Governance 覆盖矩阵
+
+| 治理层级 | 文件 | 引用 id-taxonomy |
+|---------|------|-----------------|
+| 宪法 | `ai-constitution-complete.md` §6.1 + §19.1 | ✅ |
+| 编码规则 | `coding-rules.md` §3 | ✅ |
+| ECS 规则 | `.trae/rules/ECS规则.md` §1.1 + 速查 | ✅ |
+| 编码规则 .trae | `.trae/rules/编码规则.md` | ✅ |
+| AI 架构准则 | `.trae/rules/AI架构准则.md` | ✅ |
+| SRPG 专项规则 | `.trae/rules/SRPG专项规则.md` §十 | ✅ |
+| 审查规则 | `.trae/rules/审查规则.md` | ✅ |
+| 测试规范 | `.trae/rules/测试规范.md` | ✅ |
+| 架构总纲 | `01-architecture/README.md` | ✅ |
+| ADR-042 | `ADR-042-save-persistence.md` | ✅ |
+| ADR-013 | `ADR-013-registry-hotreload.md` | ✅ |
+| 数据架构总纲 | `04-data/README.md` | ✅ |
+| UI 架构 | `06-ui/02-design-system/theme-localization.md` | ✅ |
+
 ### 与旧版对比
 
 | 维度 | 旧版（ai_ignore_this_dir） | 新版（shared/ids） |
@@ -658,6 +729,9 @@ AbilityDef (
 | 前缀格式 | 不统一 | 统一 `<prefix>:<value>` |
 | 测试覆盖 | 无 | 334 行测试 |
 | Entity 隔离 | 无规则 | 宪法+编码规则+领域规则三重约束 |
+| ID 分类 | 无 | 五类分离（Template/Runtime/Save/Entity/Network） |
+| Identity Invariant | 无 | 13 条铁律 + 18 项验证清单 |
+| Governance 覆盖 | 无 | 13 个文件引用 id-taxonomy |
 
 ---
 
