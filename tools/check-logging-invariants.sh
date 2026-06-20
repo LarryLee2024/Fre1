@@ -21,9 +21,9 @@ HAS_ERRORS=false
 echo "=== Logging Invariant Check ==="
 echo ""
 
-# Rule 1: 检查 Observer 中是否还有分离的 telemetry::emit + info! 模式
+# Rule 1: 检查 Observer 中是否有直接调用 telemetry::record 的残留（应使用 emit_info!/emit_warn!）
 # 排除注释行、测试、rate_limit 模块、metrics 和 telemetry.rs 自身
-rule1_result=$(grep -rn "telemetry::emit" "$SRC_DIR" --include="*.rs" 2>/dev/null \
+rule1_result=$(grep -rn "telemetry::record\|\.emit(" "$SRC_DIR" --include="*.rs" 2>/dev/null \
     | grep -v "target/" | grep -v ".codegraph/" \
     | grep -v "//\|///\|//!" \
     | grep -v "/tests/" \

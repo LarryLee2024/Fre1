@@ -3,11 +3,17 @@
 //! 任何需要被日志/指标/追踪系统监听的领域事件都应实现此 trait。
 //! 这保证了 Observer 可以通过统一方式提取事件的结构化字段。
 //!
+//! # 设计要点
+//!
+//! - `const DOMAIN` — 路由归属，决定 tracing target（`domain.xxx`）
+//! - `const CODE` — 事件编码，关联 LogCode 枚举
+//! - `fn record_fields()` — 动态字段收集（runtime，可被 Observer 调用）
+//!
 //! 详见 ADR-052 ObservableEvent。
 
 use std::fmt;
 
-use super::LogCode;
+use super::{Domain, LogCode};
 
 /// 可观测事件——领域事件实现此 trait 后，Observability Facade
 /// 可以自动将事件分发到日志、指标、追踪等所有 sink。
@@ -16,14 +22,32 @@ use super::LogCode;
 ///
 /// ```ignore
 /// impl ObservableEvent for LevelUp {
-///     fn log_code(&self) -> LogCode {
-///         LogCode::PRG002
+///     const DOMAIN: Domain = Domain::Progression;
+///     const CODE: LogCode = LogCode::PRG002;
+///
+///     fn record_fields(&self, collector: &mut FieldCollector) {
+///         collector.add_field("entity", format_args!("{:?}", self.entity));
+///         collector.add_field("old", self.old_level);
+///         collector.add_field("new", self.new_level);
 ///     }
 /// }
 /// ```
 pub trait ObservableEvent: fmt::Debug + Send + Sync + 'static {
+    /// 路由域——决定 tracing target，与 LogCode 的编码职责分离。
+    ///
+    /// LogCode 只回答"这是什么事件"，Domain 只回答"路由到哪里"。
+    const DOMAIN: Domain;
+
+    /// 事件编码——该事件类型对应的 LogCode 枚举变体。
+    const CODE: LogCode;
+
     /// 返回该事件对应的 LogCode。
-    fn log_code(&self) -> LogCode;
+    ///
+    /// 默认实现返回 `Self::CODE`。当需要基于运行时状态选择不同 LogCode 时
+    /// 可覆盖此方法（极少数情况）。
+    fn log_code(&self) -> LogCode {
+        Self::CODE
+    }
 
     /// 将事件的结构化字段写入 FieldCollector。
     /// Observer 可以通过此方法获取事件的动态字段，无需反射。

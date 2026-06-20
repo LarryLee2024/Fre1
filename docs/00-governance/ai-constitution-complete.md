@@ -1042,11 +1042,36 @@ screens/   → widgets/ + primitives/ （允许，通过 Factory）
 - 日志 Observer 统一放在基础设施层，绝对不侵入业务模块
 - Battle Replay、战斗履历 UI、成就系统、任务系统与日志共用同一套领域事件源
 
-### 11.6 Observer 实现规范（Span-Event 字段分离）
-- 🟩 **`#[instrument]` 的 `fields()` 只放不变量**：LogCode 和事件名（`code = ?LogCode::PRG002`, `event = "level_up"`）——所有日志实例共用的固定值
-- 🟩 **`info!()`/`warn!()` 只放变量**：当前调用独有的动态数据（`entity`, `old`, `new`, `amount`）——不重复 span 已有字段
-- 🟩 每个 Observer 包含三个要素：`#[instrument]` span（不变量）+ `telemetry::emit(LogCode::XXX)`（统一观测入口）+ `info!()`（变量）
-- 🟩 **统一入口**：使用 `telemetry::emit(LogCode::XXX)` 作为日志 + 度量 + trace 的三合一调用入口，Observer 不再直接调用 `metrics::record`
+### 11.6 Observer 实现规范（两要素模式）
+
+Observer 包含两个要素：
+
+1. 🟩 **`#[tracing::instrument]` span（不变量）**：LogCode 和事件名（`code = ?LogCode::PRG002`, `event = "level_up"`）——所有日志实例共用的固定值
+2. 🟩 **`emit_info!`/`emit_warn!`/`emit_debug!`（统一入口）**：宏内部自动完成 `telemetry::record(LogCode)`（度量）+ `tracing::info!`（结构化日志）
+
+```rust
+// ✅ Observer 两要素模式
+#[tracing::instrument(skip_all, target = "domain.progression", fields(
+    code = ?LogCode::PRG002,
+    event = "level_up",
+))]
+pub(crate) fn on_level_up(trigger: On<LevelUp>) {
+    let e = trigger.event();
+    // 两要素 = #[instrument] span + emit_info!宏
+    emit_info!(
+        LogCode::PRG002,
+        entity = ?e.entity,
+        old = e.old_level,
+        new = e.new_level,
+        "角色升级",
+    );
+}
+```
+
+**使用限制**（铁律）：
+- 🟥 禁止在 Domain Service、Domain Model、Ability Executor、Pipeline 中使用 `emit_info!`/`emit_warn!`/`emit_debug!`
+- 🟩 只在 Observer、Adapter、Infra 层使用
+- DDD 原则：Domain 不知道 Observability 的存在，领域只产生事件
 
 ### 11.7 错误体系规范
 #### 11.7.1 分领域错误原则

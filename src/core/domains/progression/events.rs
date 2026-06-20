@@ -7,7 +7,7 @@
 use bevy::prelude::*;
 
 use super::components::ClassId;
-use crate::shared::diagnostics::{FieldCollector, LogCode, ObservableEvent};
+use crate::shared::diagnostics::{Domain, FieldCollector, LogCode, ObservableEvent};
 
 /// 角色获得经验值时触发。
 ///
@@ -50,9 +50,8 @@ pub struct LevelUp {
 }
 
 impl ObservableEvent for LevelUp {
-    fn log_code(&self) -> LogCode {
-        LogCode::PRG002
-    }
+    const DOMAIN: Domain = Domain::Progression;
+    const CODE: LogCode = LogCode::PRG002;
 
     fn record_fields(&self, collector: &mut FieldCollector) {
         collector.add_field("entity", format_args!("{:?}", self.entity));

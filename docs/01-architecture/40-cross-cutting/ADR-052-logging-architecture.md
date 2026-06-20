@@ -79,7 +79,7 @@ Logging 属于 Infrastructure
 
 `#[instrument]` 用法示例：`#[tracing::instrument(skip_all, target = "domain.ability.activation", fields(...))]`
 
-> 注意：`#[instrument]` 的 `target` 只影响 span 层。`info!()` 内部仍需显式传递 `target` 参数，因为 tracing 的 event 不会从父 span 继承 target。后续通过 `telemetry::emit` 统一封装。
+target 是 Domain 的职责，不由 LogCode 承担。每个 Domain 枚举变体决定自己的 target 字符串（详见 `src/shared/diagnostics/domain.rs`）。
 
 ### 日志分级（宪法 §11.2 扩展）
 
@@ -115,9 +115,8 @@ CNT — Content (infra) SAV — Save (infra)     RPL — Replay (infra)
 ))]
 fn on_battle_started(trigger: On<BattleStarted>) {
     let e = trigger.event();
-    metrics::record(LogCode::BAT001);
-    info!(
-        target = "domain.combat",
+    emit_info!(
+        LogCode::BAT001,
         battle_id = ?e.battle_id,
         participants = e.participant_count,
         "战斗开始",
@@ -214,10 +213,9 @@ battle
     event = "level_up",
 ))]
 fn on_level_up(trigger: On<LevelUp>) {
-    metrics::record(LogCode::PRG002);
     let e = trigger.event();
-    info!(
-        target = "domain.progression",
+    emit_info!(
+        LogCode::PRG002,
         entity = ?e.entity,
         old = e.old_level,
         new = e.new_level,
@@ -225,8 +223,9 @@ fn on_level_up(trigger: On<LevelUp>) {
     );
 }
 
-// ❌ 错误：code/event 重复出现在 info!() 中（已在 span 中）
-info!(
+// ❌ 错误：code/event 重复出现在 emit_info! 中（已在 span 中）
+emit_info!(
+    LogCode::PRG002,
     code = ?LogCode::PRG002,     // ❌ 重复
     event = "level_up",          // ❌ 重复
     entity = ?e.entity,
@@ -234,7 +233,8 @@ info!(
 );
 ```
 
-注意：`#[instrument]` 的 `target` 只作用于 span 层。`info!()` 内部仍需显式传递 `target` 参数，因为 tracing 的 event 不会继承父 span 的 target。后续通过 `telemetry::emit` 统一封装后可解决此问题。
+注意：`emit_info!`/`emit_warn!`/`emit_debug!` 宏内部不指定 target——target 继承自 `#[instrument]` span。
+LogCode 只负责事件编码，不负责路由（见 Domain::target）。
 
 ### 结构化字段低基数要求
 
@@ -256,29 +256,65 @@ info!(spec_id = ?spec_id, entity = ?entity);
 - `message`（字符串消息）可以用中文或英文——消费者是人，以开发者阅读效率为主
 - `LogCode::description()` 可以用中文（例如 `"角色升级"`）
 
-### telemetry::emit — 未来统一入口
+### Observability Facade — 观测入口的 L1→L2 演进
 
-当前 Observer 存在三要素重复模式：`#[instrument]` span + `metrics::record()` + `info!()`，其中 target 需要在两处重复指定。后续引入 `telemetry::emit()` 统一封装：
+#### L1（当前）：emit_info! 宏
+
+Observer 使用 `emit_info!`/`emit_warn!`/`emit_debug!` 宏作为统一入口：
 
 ```rust
-// 未来模式
-#[instrument(skip_all, fields(code = ?LogCode::PRG002))]
+#[instrument(skip_all, target = "domain.progression", fields(code = ?LogCode::PRG002))]
 fn on_level_up(trigger: On<LevelUp>) {
     let e = trigger.event();
-    telemetry::emit(LogCode::PRG002, e);
+    emit_info!(LogCode::PRG002, entity = ?e.entity, old = e.old_level, "角色升级");
 }
-
-// telemetry::emit 内部实现：
-// 1. metrics::record(LogCode::PRG002)
-// 2. 自动识别 target = "domain.progression"（从 LogCode 域前缀映射）
-// 3. output!(LogCode::PRG002, entity = ?e.entity, ...)
-// 4. span 已携带 code/event，无需重复
 ```
 
+宏内部自动完成：
+1. `telemetry::record(LogCode)` — 记录度量
+2. `tracing::info!(fields...)` — 输出结构化日志（target 从 span 继承）
+
 收益：
-- 消除 target 两处重复指定
-- 自动统一 metrics 和 log 调用
-- `event` 字符串从 LogCode 自动派生，消除"LogCode 和 event 是同一件事的两种表达"的冗余
+- Observer 不需要手动调用 `metrics::record`
+- Observer 不需要手动指定 `target`（由 span 承载）
+- `event` 字符串从 LogCode 自动派生
+
+#### L2（未来）：record_event 统一分发
+
+未来将提供 `telemetry::record_event(&event)` 作为唯一入口：
+
+```rust
+#[instrument(skip_all, target = Domain::Progression.target())]
+fn on_level_up(trigger: On<LevelUp>) {
+    telemetry::record_event(trigger.event());
+}
+```
+
+`record_event` 内部会将 `ObservableEvent` 统一分发到所有 sink：
+```
+record_event(event)
+    ├── LoggerSink    → tracing 结构化日志
+    ├── MetricSink    → 全局计数 + 定期汇总
+    ├── ReplaySink    → 录制完整事件对象
+    ├── AuditSink     → 审计轨迹持久化
+    └── AnalyticsSink → 运行时统计分析
+```
+
+当前 `record_event` 仅实现 MetricSink 部分，其余为预留扩展点。
+
+### emit_info! 使用限制
+
+`emit_info!`/`emit_warn!`/`emit_debug!` 宏只能在以下位置使用：
+
+| 允许使用 | 禁止使用 |
+|---------|---------|
+| Observer 层（infra/logging/observers/） | Domain Service |
+| Adapter 层（infra/ 下其他适配器） | Domain Model |
+| Infrastructure 层初始化日志 | Ability Executor |
+| | Pipeline 内部 |
+| | 任何领域逻辑代码 |
+
+DDD 原则：领域代码不知道 Observability 的存在，领域只产生事件。
 
 ### 领域事件 → 日志的四路消费
 
@@ -334,17 +370,28 @@ src/infra/logging/                # L2: 日志基础设施实现
     └── mod.rs
 ```
 
-### ObservableEvent 契约（2026-06-28 新增）
+### ObservableEvent 契约（2026-06-28 新增，2026-06-30 扩展 const DOMAIN/CODE）
 
 从 `docs/ai_ignore_this_dir/14可观测.md` 提炼的 Single Source of Observability 原则：
 
 1. **ObservableEvent trait** — 位于 `shared/diagnostics/observable.rs`，领域事件实现此 trait 后
    可观测系统可以自动提取事件的结构化字段，无需每个 Observer 手动展开事件字段
 2. **Observability Facade** — `infra/logging/telemetry.rs` 提供 `emit_info!`/`emit_warn!` 宏，
-   自动从 LogCode 派生 target，Observer 不再需要手动指定 target 和调用 metrics::record
-3. **业务代码零感知** — Observer 是基础设施代码，领域代码只产生领域事件，不知道日志/指标的存在
+   Observer 不再需要手动指定 target 和调用 metrics::record
+3. **Domain 路由分离** — `shared/diagnostics/domain.rs` 定义 Domain 枚举，LogCode 不再承担
+   路由职责。`ObservableEvent::DOMAIN` 决定 tracing target，`ObservableEvent::CODE` 决定事件编码
+4. **业务代码零感知** — Observer 是基础设施代码，领域代码只产生领域事件，不知道日志/指标的存在
 
-详见 `docs/11-refactor/logging-system-refactoring-2026-06-28.md`
+```rust
+// ObservableEvent trait（当前版本）
+pub trait ObservableEvent: Debug + Send + Sync + 'static {
+    const DOMAIN: Domain;          // 路由域 → 决定 tracing target
+    const CODE: LogCode;           // 事件编码 → 唯一标识
+
+    fn log_code(&self) -> LogCode; // 默认返回 Self::CODE，支持运行时覆盖
+    fn record_fields(&self, _collector: &mut FieldCollector) {}
+}
+```
 
 ## Communication Design
 
@@ -365,7 +412,7 @@ src/infra/logging/                # L2: 日志基础设施实现
 
 ## Forbidden（禁止事项）
 
-- 🟥 domain 层直接 `info!`/`warn!` 输出业务事件（必须走领域事件链路）
+- 🟥 domain 层直接 `info!`/`warn!`/`emit_info!`/`emit_warn!` 输出业务事件（必须走领域事件链路，emit 宏只能在 Observer/Infra 层使用）
 - 🟥 LogObserver 包含业务逻辑（只负责日志输出）
 - 🟥 日志使用 `format!` 拼接字符串（必须结构化字段）
 - 🟥 循环/迭代器内部输出 INFO 级别日志

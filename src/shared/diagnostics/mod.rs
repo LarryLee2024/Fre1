@@ -7,12 +7,14 @@
 
 mod context;
 mod correlation;
+mod domain;
 mod log_category;
 mod log_code;
 mod observable;
 
 pub use context::DiagnosticContext;
 pub use correlation::{ActionId, BattleId, CorrelationId, TurnId};
+pub use domain::Domain;
 pub use log_category::LogCategory;
 pub use log_code::LogCode;
 pub use observable::{FieldCollector, ObservableEvent};
