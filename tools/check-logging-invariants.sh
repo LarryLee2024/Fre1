@@ -4,9 +4,8 @@
 # 验证 ADR-052、宪法 §11、日志规则.md 的核心规则：
 #   1. Observer 中无残留 telemetry::emit + info! 分离模式（应使用 emit_info!/emit_warn!）
 #   2. plugin.rs observer 计数与实际注册数一致
-#   3. 禁止不同 observer 函数使用同一个 LogCode
+#   3. 禁止不同 observer 函数使用同一个 LogCode（审计 crafting/reaction logger 的复用 bug）
 #   4. 所有 observer 函数都有 #[instrument]
-#   5. emit_info!/emit_warn! 中不包含 target 参数（应由宏自动派生）
 #
 # 用法: ./tools/check-logging-invariants.sh [--ci]
 #   --ci: CI 模式下输出错误即退出码 1
@@ -19,54 +18,61 @@ SRC_DIR="src"
 INFRA_LOGGING="$SRC_DIR/infra/logging"
 HAS_ERRORS=false
 
-check_pattern() {
-    local pattern="$1"
-    local description="$2"
-    local exclude=("${@:3}")
-    local result
-    result=$(grep -rn "$pattern" "$SRC_DIR" --include="*.rs" 2>/dev/null | grep -v "target/" | grep -v ".codegraph/" || true)
-    for ex in "${exclude[@]}"; do
-        result=$(echo "$result" | grep -v "$ex" || true)
-    done
-    if [[ -n "$result" ]]; then
-        echo "❌ $description"
-        echo "$result"
-        HAS_ERRORS=true
-    fi
-}
-
 echo "=== Logging Invariant Check ==="
 echo ""
 
 # Rule 1: 检查 Observer 中是否还有分离的 telemetry::emit + info! 模式
-# 正常情况：info! 在 observer 函数中应该被 emit_info! 替代
-check_pattern "telemetry::emit" "Rule 1: Observer 中残留 telemetry::emit 调用（应使用 emit_info!/emit_warn!）" "/tests/" "rate_limit" "metrics/mod.rs" "telemetry.rs"
+# 排除注释行、测试、rate_limit 模块、metrics 和 telemetry.rs 自身
+rule1_result=$(grep -rn "telemetry::emit" "$SRC_DIR" --include="*.rs" 2>/dev/null \
+    | grep -v "target/" | grep -v ".codegraph/" \
+    | grep -v "//\|///\|//!" \
+    | grep -v "tests/" \
+    | grep -v "rate_limit" \
+    | grep -v "metrics/mod.rs" \
+    | grep -v "telemetry.rs" || true)
+if [[ -n "$rule1_result" ]]; then
+    echo "❌ Rule 1: Observer 中残留 telemetry::emit 调用（应使用 emit_info!/emit_warn!）"
+    echo "$rule1_result"
+    HAS_ERRORS=true
+fi
 
-# Rule 2: plugin.rs 中 add_observer 计数与实际硬编码数字不一致
+# Rule 2: plugin.rs 中 add_observer 计数与实际硬编码数字一致
 if [[ -f "$INFRA_LOGGING/plugin.rs" ]]; then
     actual_count=$(grep -c "add_observer" "$INFRA_LOGGING/plugin.rs" 2>/dev/null || echo 0)
-    hardcoded_count=$(grep -oP '\d+(?= 个 observer)' "$INFRA_LOGGING/plugin.rs" 2>/dev/null || echo 0)
+    # 匹配中文文本中的数字，兼容不同编码
+    hardcoded_count=$(grep -Eo '[0-9]+ 个 observer' "$INFRA_LOGGING/plugin.rs" 2>/dev/null | grep -Eo '^[0-9]+' || echo 0)
     if [[ "$actual_count" -ne "$hardcoded_count" ]]; then
         echo "❌ Rule 2: plugin.rs observer 计数不一致（注册: $actual_count, 硬编码: $hardcoded_count）"
+        echo "   请同步更新 plugin.rs 中的硬编码 observer 数量"
         HAS_ERRORS=true
     else
         echo "✅ Rule 2: plugin.rs observer 计数一致（$actual_count）"
     fi
 fi
 
-# Rule 3: 检查 observer 文件内是否有 LogCode 复用
-# 每个 observer 函数应使用不同的 LogCode
+# Rule 3: 检查 observer 文件内不同函数是否使用同一个 LogCode
+# 每个函数应使用唯一的 LogCode（emit_info!/emit_warn! 的第一个参数）
 for observer_file in "$INFRA_LOGGING/observers/"*.rs; do
     filename=$(basename "$observer_file")
     [[ "$filename" == "mod.rs" ]] && continue
 
-    # 提取文件中所有 LogCode::XXX 引用（非注释行）
-    logcodes=$(grep -n "LogCode::[A-Z]" "$observer_file" | grep -v "//\|target" | sed -n 's/.*LogCode::\([A-Z0-9]*\).*/\1/p' | sort | uniq -d || true)
-    if [[ -n "$logcodes" ]]; then
-        echo "❌ Rule 3: $filename 中存在 LogCode 复用"
-        echo "$logcodes" | while read -r code; do
-            echo "  - $code 被多个 observer 函数使用"
-        done
+    # 从 emit_info!/emit_warn!/emit_debug! 调用中提取 LogCode
+    # 模式: emit_info!(LogCode::XXX, 或 emit_warn!(LogCode::XXX,
+    unique_codes=$(grep -oP '(emit_info!|emit_warn!|emit_debug!)\(\s*LogCode::([A-Z0-9]+)' "$observer_file" \
+        | sed 's/.*LogCode:://' | sort -u || true)
+    code_count=$(echo "$unique_codes" | grep -c . || true)
+    func_count=$(grep -c "^pub(crate) fn" "$observer_file" 2>/dev/null || echo 0)
+
+    if [[ "$code_count" -ne "$func_count" ]] && [[ "$func_count" -gt 0 ]]; then
+        echo "❌ Rule 3: $filename 中存在 LogCode 复用（函数: $func_count, 唯一 LogCode: $code_count）"
+        # 找出哪些 LogCode 被重复使用
+        duplicate_codes=$(grep -oP '(emit_info!|emit_warn!|emit_debug!)\(\s*LogCode::([A-Z0-9]+)' "$observer_file" \
+            | sed 's/.*LogCode:://' | sort | uniq -d || true)
+        if [[ -n "$duplicate_codes" ]]; then
+            echo "$duplicate_codes" | while read -r code; do
+                echo "  - $code 被多个函数使用"
+            done
+        fi
         HAS_ERRORS=true
     fi
 done
@@ -76,15 +82,9 @@ for observer_file in "$INFRA_LOGGING/observers/"*.rs; do
     filename=$(basename "$observer_file")
     [[ "$filename" == "mod.rs" ]] && continue
 
-    # 检查每个 pub(crate) fn 前面是否有 #[tracing::instrument
-    functions=$(grep -c "^pub(crate) fn" "$observer_file" 2>/dev/null || echo 0)
-    instruments=$(grep -c "#\[tracing::instrument\]" "$observer_file" 2>/dev/null || echo 0)
-    # 每个函数可能有 skip_all + target + fields 三个 instrument 行，所以不能直接比较
-    # 改为检查是否有函数完全没有 instrument
     while IFS= read -r line; do
         if [[ "$line" =~ ^pub\(crate\)\ fn ]]; then
             func_name=$(echo "$line" | sed 's/.*fn \([a-z_]*\).*/\1/')
-            # 检查函数名前是否有 #[tracing::instrument
             if ! grep -B1 "pub(crate) fn $func_name" "$observer_file" | grep -q "#\[tracing::instrument"; then
                 echo "❌ Rule 4: $filename 中 $func_name 缺少 #[tracing::instrument]"
                 HAS_ERRORS=true
