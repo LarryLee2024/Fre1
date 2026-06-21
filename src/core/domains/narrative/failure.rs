@@ -9,16 +9,16 @@ use thiserror::Error;
 #[derive(Debug, Clone, PartialEq, Error)]
 pub enum NarrativeFailure {
     /// 分支选项不在当前可选列表中。
-    #[error("invalid dialogue choice: {choice_id}")]
+    #[error("无效的 dialogue choice: {choice_id}")]
     InvalidChoice { choice_id: String },
     /// 关键对话不可跳过。
-    #[error("critical dialogue cannot be skipped")]
+    #[error("关键对话不可跳过")]
     CriticalDialogueCannotSkip,
     /// 故事标记试图恢复到初始值（不可逆）。
-    #[error("story flag is irreversible and cannot be reverted: {flag_key}")]
+    #[error("story flag 不可逆，无法恢复: {flag_key}")]
     StoryFlagIrreversible { flag_key: String },
     /// 对话未开始或已结束。
-    #[error("no active dialogue session")]
+    #[error("没有活跃的 dialogue session")]
     DialogueNotActive,
 }
 

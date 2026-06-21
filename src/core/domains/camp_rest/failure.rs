@@ -9,22 +9,22 @@ use thiserror::Error;
 #[derive(Debug, Clone, PartialEq, Error)]
 pub enum CampRestFailure {
     /// 战斗状态中无法休息。
-    #[error("cannot rest while in combat")]
+    #[error("战斗中无法休息")]
     InCombat,
     /// 不在安全区域。
-    #[error("not in a safe area")]
+    #[error("不在安全区域")]
     NotSafe,
     /// 24 小时内已进行过长休。
-    #[error("already rested within 24 hours")]
+    #[error("24 小时内已休息过")]
     AlreadyRestedWithin24h,
     /// 长休被中断超过 1 小时。
-    #[error("long rest interrupted: cumulative_minutes={cumulative_minutes}")]
+    #[error("长休被打断: cumulative_minutes={cumulative_minutes}")]
     InterruptedTimeout { cumulative_minutes: u32 },
     /// 生命骰不足。
-    #[error("insufficient hit dice: available={available}, requested={requested}")]
+    #[error("hit dice 不足: 可用={available}, 需求={requested}")]
     InsufficientHitDice { available: u32, requested: u32 },
     /// 当前休息阶段不允许该操作。
-    #[error("invalid rest phase: current={current_phase}, expected={expected}")]
+    #[error("无效的 rest phase: 当前={current_phase}, 期望={expected}")]
     InvalidPhase {
         current_phase: String,
         expected: String,

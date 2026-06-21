@@ -9,28 +9,28 @@ use thiserror::Error;
 #[derive(Debug, Clone, PartialEq, Error)]
 pub enum ProgressionFailure {
     /// 已达到等级上限（20 级），无法继续升级。
-    #[error("max level reached")]
+    #[error("已达最高等级")]
     MaxLevelReached,
     /// 经验不足，无法升级。
-    #[error("insufficient experience: current={current_xp}, required={required_xp}")]
+    #[error("经验不足: current={current_xp}, required={required_xp}")]
     InsufficientExperience { current_xp: u64, required_xp: u64 },
     /// 天赋前置条件不满足。
-    #[error("talent prerequisite not met for '{talent_id}': {reason}")]
+    #[error("talent '{talent_id}' 前置条件不满足: {reason}")]
     TalentPrerequisiteNotMet { talent_id: String, reason: String },
     /// 该职业已有子职，不可更改。
-    #[error("subclass already chosen for '{class_id}': existing={existing_subclass}")]
+    #[error("'{class_id}' 已有子职: existing={existing_subclass}")]
     SubclassAlreadyChosen {
         class_id: String,
         existing_subclass: String,
     },
     /// 属性值已达到上限（20），无法继续提升。
-    #[error("attribute at max: {attribute}")]
+    #[error("属性已达上限: {attribute}")]
     AttributeAtMax { attribute: String },
     /// 无法开始新职业：不满足属性需求。
-    #[error("multiclass prerequisite not met for '{class_id}': {reason}")]
+    #[error("'{class_id}' 兼职前置条件不满足: {reason}")]
     MulticlassPrerequisiteNotMet { class_id: String, reason: String },
     /// ASI 不能跳过。
-    #[error("ASI cannot be skipped at level {level}")]
+    #[error("ASI 在 {level} 级不可跳过")]
     ASICannotBeSkipped { level: u32 },
 }
 

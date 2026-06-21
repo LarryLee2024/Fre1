@@ -1,7 +1,7 @@
 ---
 id: 06-ui.theme-localization
 title: Theme and Localization Architecture — 主题与本地化架构
-status: draft
+status: code-aligned
 owner: presentation-architect
 created: 2026-06-20
 tags:

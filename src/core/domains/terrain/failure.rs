@@ -9,25 +9,25 @@ use thiserror::Error;
 #[derive(Debug, Clone, PartialEq, Error)]
 pub enum TerrainFailure {
     /// 格子不可通行。
-    #[error("tile not passable at ({x}, {y})")]
+    #[error("tile 不可通行: ({x}, {y})")]
     TileNotPassable { x: i32, y: i32 },
     /// 格子已被占用。
-    #[error("tile already occupied at ({x}, {y})")]
+    #[error("tile 已被占用: ({x}, {y})")]
     TileOccupied { x: i32, y: i32 },
     /// 表面类型无法通过。
-    #[error("surface type not passable at ({x}, {y})")]
+    #[error("surface 类型不可通行: ({x}, {y})")]
     SurfaceNotPassable { x: i32, y: i32 },
     /// 互斥表面类型冲突（如冰面和灼烧不可共存）。
-    #[error("conflicting surface types cannot coexist on same tile")]
+    #[error("冲突的 surface 类型无法共存于同一 tile")]
     ConflictingSurfaceType,
     /// 相邻格高度差超过允许的最大值。
-    #[error("height difference exceeded: max_allowed={max_allowed}, actual={actual}")]
+    #[error("高度差超出限制: max_allowed={max_allowed}, actual={actual}")]
     HeightDifferenceExceeded { max_allowed: i32, actual: i32 },
     /// 无法在非陷阱格子上触发陷阱。
-    #[error("no hazard at tile ({x}, {y})")]
+    #[error("tile ({x}, {y}) 上没有 hazard")]
     NoHazardAtTile { x: i32, y: i32 },
     /// 表面变化冲突。
-    #[error("surface change rejected: {reason}")]
+    #[error("surface 变更被拒绝: {reason}")]
     SurfaceChangeRejected { reason: String },
 }
 

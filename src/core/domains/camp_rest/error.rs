@@ -14,10 +14,10 @@ use thiserror::Error;
 #[derive(Debug, Clone, PartialEq, Event, Error)]
 pub enum CampRestError {
     /// 长休被中断超过 1 小时。
-    #[error("long rest interrupted: cumulative_minutes={cumulative_minutes}")]
+    #[error("长休被打断: cumulative_minutes={cumulative_minutes}")]
     InterruptedTimeout { cumulative_minutes: u32 },
     /// 当前休息阶段不允许该操作。
-    #[error("invalid rest phase: current={current_phase}, expected={expected}")]
+    #[error("无效的 rest phase: 当前={current_phase}, 期望={expected}")]
     InvalidPhase {
         current_phase: String,
         expected: String,

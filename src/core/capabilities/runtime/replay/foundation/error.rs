@@ -8,7 +8,7 @@ use bevy::prelude::Reflect;
 #[derive(Debug, Clone, PartialEq, thiserror::Error, Reflect)]
 pub enum ReplayError {
     /// 版本不兼容
-    #[error("replay version mismatch: expected v{expected}, got v{actual}")]
+    #[error("replay 版本不匹配: 期望 v{expected}, 实际 v{actual}")]
     VersionMismatch {
         /// 期望版本
         expected: u32,
@@ -16,7 +16,7 @@ pub enum ReplayError {
         actual: u32,
     },
     /// 帧序号不连续
-    #[error("frame number gap: expected {expected}, got {got}")]
+    #[error("帧号不连续: 期望 {expected}, 实际 {got}")]
     FrameNumberGap {
         /// 期望帧号
         expected: u64,
@@ -24,7 +24,7 @@ pub enum ReplayError {
         got: u64,
     },
     /// 校验和不匹配
-    #[error("checksum mismatch at frame {frame}: expected {expected:x}, got {actual:x}")]
+    #[error("帧 {frame} 校验和不匹配: 期望 {expected:x}, 实际 {actual:x}")]
     ChecksumMismatch {
         /// 帧序号
         frame: u64,
@@ -34,12 +34,12 @@ pub enum ReplayError {
         actual: u64,
     },
     /// 未在录制模式
-    #[error("not in recording mode")]
+    #[error("未处于 recording 模式")]
     NotRecording,
     /// 未在回放模式
-    #[error("not in playback mode")]
+    #[error("未处于 playback 模式")]
     NotPlaying,
     /// 回放日志为空
-    #[error("replay log is empty")]
+    #[error("replay log 为空")]
     EmptyLog,
 }

@@ -9,9 +9,9 @@
 #[derive(Debug, Clone, PartialEq, thiserror::Error)]
 pub enum CueError {
     /// Cue 未找到
-    #[error("cue '{0}' not found")]
+    #[error("cue '{0}' 未找到")]
     CueNotFound(String),
     /// 无效的参数
-    #[error("invalid cue params: {0}")]
+    #[error("无效的 cue 参数: {0}")]
     InvalidParams(String),
 }

@@ -10,25 +10,25 @@ use thiserror::Error;
 #[derive(Debug, Clone, PartialEq, Error)]
 pub enum PartyFailure {
     /// 队伍已满，无法添加新成员。
-    #[error("party full: current={current}, max={max}")]
+    #[error("队伍已满: current={current}, max={max}")]
     Full { current: usize, max: u32 },
     /// 该成员已在队伍中。
-    #[error("entity already in party: {entity:?}")]
+    #[error("entity 已在队伍中: {entity:?}")]
     AlreadyInParty { entity: Entity },
     /// 活跃成员已满，无法激活更多。
-    #[error("active party full: current={current}, max={max}")]
+    #[error("活跃队伍已满: current={current}, max={max}")]
     ActiveFull { current: usize, max: u32 },
     /// 本回合已进行过换人操作。
-    #[error("swap already performed this turn")]
+    #[error("本回合已进行过换人操作")]
     SwapAlreadyPerformedThisTurn,
     /// 行动力不足，无法换人。
-    #[error("insufficient action points for swap: required={required}, available={available}")]
+    #[error("行动力不足: 需要={required}, 可用={available}")]
     InsufficientActionPoints { required: u32, available: u32 },
     /// 该队员不在预备队伍中。
-    #[error("entity not in reserve: {entity:?}")]
+    #[error("entity 不在备用列表中: {entity:?}")]
     NotInReserve { entity: Entity },
     /// 羁绊已激活。
-    #[error("bond already active: {bond_id}")]
+    #[error("bond 已激活: {bond_id}")]
     BondAlreadyActive { bond_id: String },
 }
 

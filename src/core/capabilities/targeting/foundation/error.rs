@@ -12,44 +12,44 @@ use thiserror::Error;
 #[derive(Debug, Clone, PartialEq, Error)]
 pub enum TargetingError {
     /// 形状参数不合法
-    #[error("invalid parameter '{param}' for shape '{shape}': {detail}")]
+    #[error("shape '{shape}' 的参数 '{param}' 不合法: {detail}")]
     InvalidShapeParameter {
         shape: String,
         param: &'static str,
         detail: String,
     },
     /// 最大目标数不合法（V2: max_targets >= 1）
-    #[error("invalid max_targets: {max} (must be >= 1)")]
+    #[error("无效的 max_targets: {max}（必须 >= 1）")]
     InvalidMaxTargets { max: u32 },
     /// 射程不合法（V3: min_range <= range）
-    #[error("invalid range (min={min:?}, max={max:?}): {detail}")]
+    #[error("无效的 range (min={min:?}, max={max:?}): {detail}")]
     InvalidRange {
         min: Option<f32>,
         max: Option<f32>,
         detail: String,
     },
     /// 没有合法目标
-    #[error("no valid targets: {reason}")]
+    #[error("没有合法目标: {reason}")]
     NoValidTargets { reason: String },
     /// 目标实体不存在
-    #[error("entity '{entity_id}' not found")]
+    #[error("entity '{entity_id}' 未找到")]
     EntityNotFound { entity_id: String },
     /// 超出射程
-    #[error("distance {distance} exceeds max range {max_range}")]
+    #[error("距离 {distance} 超过最大射程 {max_range}")]
     OutOfRange { distance: f32, max_range: f32 },
     /// 阵营不匹配
-    #[error("faction mismatch: expected {expected:?}, got {actual}")]
+    #[error("faction 不匹配: 期望 {expected:?}, 实际 {actual}")]
     FactionMismatch {
         expected: TargetType,
         actual: String,
     },
     /// 目标数量已达上限
-    #[error("target limit of {limit} reached")]
+    #[error("目标数量上限 {limit} 已满")]
     TargetLimitReached { limit: u32 },
     /// 视野检查失败
-    #[error("line of sight blocked")]
+    #[error("视线被阻挡")]
     LineOfSightBlocked,
     /// 目标选择被重复调用
-    #[error("target selection already in progress")]
+    #[error("目标选择正在进行中")]
     AlreadySelecting,
 }

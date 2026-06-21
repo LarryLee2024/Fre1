@@ -14,9 +14,9 @@ use thiserror::Error;
 #[derive(Debug, Clone, PartialEq, Event, Error)]
 pub enum PartyError {
     /// 未找到指定成员。
-    #[error("member not found: {entity}")]
+    #[error("成员未找到: {entity}")]
     MemberNotFound { entity: Entity },
     /// 羁绊模板未注册。
-    #[error("bond definition not found: {bond_id}")]
+    #[error("bond definition 未找到: {bond_id}")]
     BondDefNotFound { bond_id: String },
 }

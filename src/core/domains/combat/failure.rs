@@ -9,16 +9,16 @@ use thiserror::Error;
 #[derive(Debug, Clone, PartialEq, Error)]
 pub enum CombatFailure {
     /// 参与单位不足，无法开始战斗。
-    #[error("insufficient participants: required={required}, actual={actual}")]
+    #[error("参与者不足: 需要={required}, 实际={actual}")]
     InsufficientParticipants { required: usize, actual: usize },
     /// 不是该单位的回合。
-    #[error("it is not this unit's turn")]
+    #[error("不是该单位的回合")]
     NotYourTurn,
     /// 行动资源已耗尽。
-    #[error("no action remaining this turn")]
+    #[error("本回合无剩余行动")]
     NoActionRemaining,
     /// 单位已死亡，不可行动。
-    #[error("unit is dead and cannot act")]
+    #[error("单位已死亡，无法行动")]
     UnitDead,
 }
 

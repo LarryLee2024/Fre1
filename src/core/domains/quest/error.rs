@@ -16,9 +16,9 @@ use super::components::QuestDefId;
 #[derive(Debug, Clone, PartialEq, Event, Error)]
 pub enum QuestError {
     /// 任务未找到。
-    #[error("quest not found: {quest_id}")]
+    #[error("quest 未找到: {quest_id}")]
     QuestNotFound { quest_id: QuestDefId },
     /// 目标未找到。
-    #[error("objective not found: {objective_id}")]
+    #[error("objective 未找到: {objective_id}")]
     ObjectiveNotFound { objective_id: String },
 }

@@ -6,13 +6,13 @@
 #[derive(Debug, Clone, PartialEq, thiserror::Error)]
 pub enum CommandError {
     /// 命令队列已满
-    #[error("command queue full (max {max})")]
+    #[error("command queue 已满（上限 {max}）")]
     QueueFull { max: usize },
     /// 命令无效
-    #[error("invalid command: {reason}")]
+    #[error("无效的 command: {reason}")]
     InvalidCommand { reason: String },
     /// 命令执行失败
-    #[error("execution failed for '{command}': {reason}")]
+    #[error("命令 '{command}' 执行失败: {reason}")]
     ExecutionFailed {
         /// 命令名称
         command: String,

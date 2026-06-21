@@ -14,6 +14,6 @@ use thiserror::Error;
 #[derive(Debug, Clone, PartialEq, Event, Error)]
 pub enum ReactionError {
     /// 特殊反应未注册。
-    #[error("special reaction not registered: {custom_id}")]
+    #[error("特殊 reaction 未注册: {custom_id}")]
     SpecialNotRegistered { custom_id: String },
 }

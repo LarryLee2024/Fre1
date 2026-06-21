@@ -59,15 +59,15 @@ pub struct MovementCapabilityView {
 /// 移动前提条件错误。
 #[derive(Debug, Clone, thiserror::Error)]
 pub enum MovementPrerequisiteError {
-    #[error("no tag registered for movement type {0:?}")]
+    #[error("movement type {0:?} 没有注册 tag")]
     NoTagForMovementType(MovementType),
-    #[error("insufficient movement points: available {available}, required {required}")]
+    #[error("移动力不足: available {available}, required {required}")]
     InsufficientPoints { available: MP, required: MP },
 }
 
 /// 移动成本错误。
 #[derive(Debug, Clone, thiserror::Error)]
 pub enum MovementCostError {
-    #[error("insufficient movement points: available {available}, cost {cost}")]
+    #[error("移动力不足: available {available}, cost {cost}")]
     InsufficientPoints { available: MP, cost: MP },
 }

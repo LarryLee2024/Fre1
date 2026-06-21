@@ -9,26 +9,26 @@ use thiserror::Error;
 #[derive(Debug, Clone, PartialEq, Error)]
 pub enum EconomyFailure {
     /// 钱包余额不足。
-    #[error("insufficient funds: required={required}, available={available}")]
+    #[error("资金不足: 需要={required}, 可用={available}")]
     InsufficientFunds { required: u64, available: u64 },
     /// 商店库存不足。
-    #[error("insufficient stock for '{item_id}': requested={requested}, available={available}")]
+    #[error("'{item_id}' 库存不足: 需求={requested}, 可用={available}")]
     InsufficientStock {
         item_id: String,
         requested: u32,
         available: u32,
     },
     /// 背包已满。
-    #[error("inventory full")]
+    #[error("背包已满")]
     InventoryFull,
     /// 商人拒收。
-    #[error("merchant refuses: {reason}")]
+    #[error("商人拒绝: {reason}")]
     MerchantRefuses { reason: String },
     /// 交易不符合规则。
-    #[error("invalid transaction: {reason}")]
+    #[error("无效的交易: {reason}")]
     InvalidTransaction { reason: String },
     /// 补货周期未到。
-    #[error("restock not ready: remaining={remaining}")]
+    #[error("补货尚未就绪: remaining={remaining}")]
     RestockNotReady { remaining: u32 },
 }
 

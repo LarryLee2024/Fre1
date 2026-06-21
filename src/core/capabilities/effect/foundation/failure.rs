@@ -11,10 +11,10 @@ use thiserror::Error;
 #[derive(Debug, Clone, PartialEq, Error)]
 pub enum EffectFailure {
     /// 条件不满足
-    #[error("condition not met: {0}")]
+    #[error("条件不满足: {0}")]
     ConditionNotMet(String),
     /// 效果槽位已满
-    #[error("effect slot limit reached ({current} / {max})")]
+    #[error("effect 槽位已达上限 ({current} / {max})")]
     SlotLimitReached { current: u32, max: u32 },
 }
 

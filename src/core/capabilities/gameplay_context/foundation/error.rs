@@ -6,12 +6,12 @@
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum ContextBuildError {
     /// 缺失必填字段（列出缺失字段名）
-    #[error("missing required fields: {0:?}")]
+    #[error("缺少必填字段: {0:?}")]
     MissingFields(Vec<String>),
     /// 溯源链检测到循环
-    #[error("context chain cycle detected")]
+    #[error("context chain 检测到循环")]
     CycleDetected,
     /// 溯源链达到长度上限
-    #[error("chain length {current} exceeds max {max}")]
+    #[error("chain 长度 {current} 超过上限 {max}")]
     ChainTooLong { current: u8, max: u8 },
 }

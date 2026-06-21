@@ -10,7 +10,9 @@
 
 use bevy::prelude::*;
 
-use super::components::{ActionPoints, BattlePhase, CombatParticipant, HitPoints, TurnQueue};
+use super::components::{
+    ActionPoints, BattlePhase, CombatParticipant, HitPoints, TurnQueue, UnitIdComponent,
+};
 use super::integration::event::EventBus;
 use super::integration::on_combat_command;
 use super::pipeline::definition::build_turn_pipeline;
@@ -37,7 +39,10 @@ pub struct CombatPlugin;
 impl Plugin for CombatPlugin {
     fn build(&self, app: &mut App) {
         // ── 注册 Component 类型 ──
-        register_domain_types!(app, [ActionPoints, CombatParticipant, HitPoints,]);
+        register_domain_types!(
+            app,
+            [ActionPoints, CombatParticipant, HitPoints, UnitIdComponent,]
+        );
 
         // ── BattlePhase 已转为 SubState，由 GameState::Combat 自动激活 ──
         // 不再需要显式 init_state，SubStates derive 自动处理注册。

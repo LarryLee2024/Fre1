@@ -1,7 +1,7 @@
 ---
 id: 06-ui.screens
 title: Screen Design — 页面详细设计
-status: partially-implemented
+status: code-aligned
 owner: presentation-architect
 created: 2026-06-20
 updated: 2026-06-21

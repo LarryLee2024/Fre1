@@ -9,19 +9,19 @@ use thiserror::Error;
 #[derive(Debug, Clone, PartialEq, Error)]
 pub enum SummonFailure {
     /// 召唤位置不可用。
-    #[error("invalid summon position: {reason}")]
+    #[error("无效的 summon 位置: {reason}")]
     InvalidPosition { reason: String },
     /// 专注冲突。
-    #[error("concentration conflict")]
+    #[error("专注冲突")]
     ConcentrationConflict,
     /// 召唤数量已达上限。
-    #[error("summon slot limit reached: current={current}, max={max}")]
+    #[error("召唤槽位已达上限: current={current}, max={max}")]
     SlotLimitReached { current: u32, max: u32 },
     /// 嵌套召唤被禁止。
-    #[error("nested summon forbidden")]
+    #[error("禁止嵌套召唤")]
     NestedSummonForbidden,
     /// 召唤者已死亡。
-    #[error("caster is dead")]
+    #[error("召唤者已死亡")]
     CasterDead,
 }
 

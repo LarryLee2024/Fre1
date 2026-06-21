@@ -11,17 +11,17 @@ use thiserror::Error;
 #[derive(Debug, Clone, PartialEq, Error)]
 pub enum AbilityFailure {
     /// 条件检查不通过
-    #[error("condition check failed: {reason}")]
+    #[error("条件检查失败: {reason}")]
     ConditionFailed { reason: String },
     /// 资源消耗不足
-    #[error("insufficient '{resource}': required {required}, available {available}")]
+    #[error("'{resource}' 不足: 需要 {required}, 可用 {available}")]
     InsufficientCost {
         resource: String,
         required: f32,
         available: f32,
     },
     /// 冷却中不可激活
-    #[error("ability '{spec_id}' on cooldown ({remaining_turns} turns remaining)")]
+    #[error("ability '{spec_id}' 冷却中（剩余 {remaining_turns} 回合）")]
     OnCooldown {
         spec_id: String,
         remaining_turns: u32,

@@ -14,6 +14,6 @@ use thiserror::Error;
 #[derive(Debug, Clone, PartialEq, Event, Error)]
 pub enum EconomyError {
     /// 物品不存在。
-    #[error("item not found: {0}")]
+    #[error("item 未找到: {0}")]
     ItemNotFound(String),
 }

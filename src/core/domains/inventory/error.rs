@@ -14,6 +14,6 @@ use thiserror::Error;
 #[derive(Debug, Clone, PartialEq, Event, Error)]
 pub enum InventoryError {
     /// 背包中没有该物品。
-    #[error("item not found: {item_template_id}")]
+    #[error("item 未找到: {item_template_id}")]
     ItemNotFound { item_template_id: String },
 }

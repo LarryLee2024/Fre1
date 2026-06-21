@@ -12,6 +12,6 @@ use super::components::SpellDefId;
 #[derive(Debug, Clone, PartialEq, Event, Error)]
 pub enum SpellError {
     /// 法术定义未找到。
-    #[error("spell definition not found: {spell_id}")]
+    #[error("spell definition 未找到: {spell_id}")]
     SpellDefNotFound { spell_id: SpellDefId },
 }

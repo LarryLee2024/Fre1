@@ -1,7 +1,7 @@
 ---
 id: 06-ui.screen-lifecycle
 title: Screen and Widget Lifecycle — 页面生命周期与组件架构
-status: draft
+status: code-aligned
 owner: presentation-architect
 created: 2026-06-20
 tags:

@@ -14,12 +14,12 @@ use thiserror::Error;
 #[derive(Debug, Clone, PartialEq, Event, Error)]
 pub enum TerrainError {
     /// 格子坐标超出地图范围。
-    #[error("tile coordinates out of bounds: ({x}, {y})")]
+    #[error("tile 坐标超出边界: ({x}, {y})")]
     OutOfBounds { x: i32, y: i32 },
     /// 陷阱缺少必要的触发条件或效果定义。
-    #[error("hazard zone missing required trigger or effect definition")]
+    #[error("hazard zone 缺少必要的 trigger 或 effect 定义")]
     InvalidHazardDefinition,
     /// 格子 ID 未注册。
-    #[error("tile not found at ({x}, {y})")]
+    #[error("tile 未找到: ({x}, {y})")]
     TileNotFound { x: i32, y: i32 },
 }

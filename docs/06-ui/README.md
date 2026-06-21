@@ -1,7 +1,7 @@
 ---
 id: 06-ui.README
 title: UI/Presentation Architecture — Projection、ViewModel、Screen、Widget
-status: in_progress
+status: code-aligned
 owner: presentation-architect
 created: 2026-06-20
 updated: 2026-06-20

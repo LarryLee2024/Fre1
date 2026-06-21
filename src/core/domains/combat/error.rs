@@ -14,18 +14,18 @@ use thiserror::Error;
 #[derive(Debug, Clone, PartialEq, Event, Error)]
 pub enum CombatError {
     /// 单位未注册为战斗参与者。
-    #[error("entity is not a combat participant")]
+    #[error("entity 不是战斗参与者")]
     NotCombatParticipant,
     /// 战斗尚未开始。
-    #[error("combat has not started")]
+    #[error("战斗尚未开始")]
     CombatNotStarted,
     /// 战斗已结束，不可再操作。
-    #[error("combat has already ended")]
+    #[error("战斗已结束")]
     CombatAlreadyEnded,
     /// 先攻排序为空。
-    #[error("turn order is empty")]
+    #[error("回合顺序为空")]
     EmptyTurnOrder,
     /// 伤害已被结算，禁止重复结算。
-    #[error("damage already resolved, duplicate forbidden")]
+    #[error("伤害已结算，禁止重复结算")]
     DamageAlreadyResolved,
 }

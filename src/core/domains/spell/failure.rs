@@ -11,37 +11,37 @@ use super::components::SpellDefId;
 #[derive(Debug, Clone, PartialEq, Error)]
 pub enum SpellFailure {
     /// 法术位不足。
-    #[error("insufficient spell slots for '{spell_id}': required_level={required_level}")]
+    #[error("'{spell_id}' 法术位不足: required_level={required_level}")]
     InsufficientSlots {
         spell_id: SpellDefId,
         required_level: u8,
     },
     /// 法术未习得。
-    #[error("spell not known: {spell_id}")]
+    #[error("法术未习得: {spell_id}")]
     NotKnown { spell_id: SpellDefId },
     /// 法术未准备。
-    #[error("spell not prepared: {spell_id}")]
+    #[error("法术未准备: {spell_id}")]
     NotPrepared { spell_id: SpellDefId },
     /// 语言成分被沉默封锁。
-    #[error("verbal component blocked by silence")]
+    #[error("语言成分被沉默封锁")]
     Silenced,
     /// 姿势成分被束缚封锁。
-    #[error("somatic component blocked by restraint")]
+    #[error("姿势成分被束缚封锁")]
     Restrained,
     /// 材料成分缺失。
-    #[error("material component missing: {description}")]
+    #[error("材料成分缺失: {description}")]
     MissingMaterial { description: String },
     /// 已有其他专注法术存在。
-    #[error("already concentrating on spell: {current_spell}")]
+    #[error("已在专注法术: {current_spell}")]
     AlreadyConcentrating { current_spell: SpellDefId },
     /// 施法者等级不足以施放该环阶法术。
-    #[error("caster level too low: required={required_level}, caster={caster_level}")]
+    #[error("施法者等级不足: required={required_level}, caster={caster_level}")]
     LevelTooLow {
         required_level: u8,
         caster_level: u8,
     },
     /// 升环施法不合法。
-    #[error("invalid upcast for '{spell_id}': target_level={target_level}")]
+    #[error("'{spell_id}' 升环不合法: target_level={target_level}")]
     InvalidUpcast {
         spell_id: SpellDefId,
         target_level: u8,

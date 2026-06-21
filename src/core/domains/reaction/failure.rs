@@ -10,19 +10,19 @@ use thiserror::Error;
 #[derive(Debug, Clone, PartialEq, Error)]
 pub enum ReactionFailure {
     /// 反应槽位已用尽。
-    #[error("no reactions available for reactor: {reactor:?}")]
+    #[error("reactor {reactor:?} 无剩余 reaction")]
     NoReactionsAvailable { reactor: Entity },
     /// 不在触发范围内。
-    #[error("out of range: {reason}")]
+    #[error("超出范围: {reason}")]
     OutOfRange { reason: String },
     /// 目标不合法。
-    #[error("invalid target: {reason}")]
+    #[error("无效的目标: {reason}")]
     InvalidTarget { reason: String },
     /// 反制者法术位不足。
-    #[error("insufficient spell slot for counterspell: required_level={required_level}")]
+    #[error("法术位不足: required_level={required_level}")]
     NoCounterspellSlot { required_level: u8 },
     /// 反应类型不支持当前触发条件。
-    #[error("trigger mismatch: reaction='{reaction}', trigger='{trigger}'")]
+    #[error("trigger 不匹配: reaction='{reaction}', trigger='{trigger}'")]
     TriggerMismatch { reaction: String, trigger: String },
 }
 

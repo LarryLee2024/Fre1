@@ -1,7 +1,7 @@
 ---
 id: 06-ui.widget-composites
 title: Widget Composites — 复合组件（Molecules / Organisms）
-status: partially-implemented
+status: code-aligned
 updated: 2026-06-21
 owner: presentation-architect
 created: 2026-06-20

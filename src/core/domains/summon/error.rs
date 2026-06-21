@@ -14,6 +14,6 @@ use thiserror::Error;
 #[derive(Debug, Clone, PartialEq, Event, Error)]
 pub enum SummonError {
     /// 模板不存在。
-    #[error("summon template not found: {0}")]
+    #[error("summon template 未找到: {0}")]
     TemplateNotFound(String),
 }

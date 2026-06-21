@@ -202,6 +202,24 @@ impl TurnEntry {
 
 // ─── 战斗参与者标记 ────────────────────────────────────────────────────
 
+/// 单位的业务 ID 组件 —— 存储战斗单位的字符串标识符。
+///
+/// 用于在 ECS 中通过 String ID 查询实体，在 Domain 事件中传递 String ID，
+/// 然后通过此组件解析回 Entity。
+#[derive(Component, Debug, Clone, PartialEq, Reflect)]
+#[reflect(Component)]
+pub struct UnitIdComponent {
+    /// 单位标识符（全局唯一）
+    pub id: String,
+}
+
+impl UnitIdComponent {
+    /// 创建新的 UnitIdComponent。
+    pub fn new(id: impl Into<String>) -> Self {
+        Self { id: id.into() }
+    }
+}
+
 /// 阵亡标记 Tag Component。
 ///
 /// 实体获得此 Tag 表示已在战斗中死亡。

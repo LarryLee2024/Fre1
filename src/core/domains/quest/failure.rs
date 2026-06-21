@@ -11,31 +11,31 @@ use super::components::QuestDefId;
 #[derive(Debug, Clone, PartialEq, Error)]
 pub enum QuestFailure {
     /// 前置条件未满足。
-    #[error("prerequisites not met for quest {quest_id}: {reason}")]
+    #[error("quest {quest_id} 前置条件不满足: {reason}")]
     PrerequisitesNotMet {
         quest_id: QuestDefId,
         reason: String,
     },
     /// 任务已处于不可接取状态。
-    #[error("quest {quest_id} not available: current_state={current_state}")]
+    #[error("quest {quest_id} 不可接取: current_state={current_state}")]
     NotAvailable {
         quest_id: QuestDefId,
         current_state: String,
     },
     /// 任务已完成（不可重新接受）。
-    #[error("quest already completed: {quest_id}")]
+    #[error("quest 已完成: {quest_id}")]
     AlreadyCompleted { quest_id: QuestDefId },
     /// 任务奖励已发放。
-    #[error("quest reward already granted: {quest_id}")]
+    #[error("quest 奖励已发放: {quest_id}")]
     RewardAlreadyGranted { quest_id: QuestDefId },
     /// 互斥任务当前激活中。
-    #[error("exclusive quest active: {quest_id} conflicts with {exclusive_with}")]
+    #[error("互斥 quest 激活中: {quest_id} 与 {exclusive_with} 冲突")]
     ExclusiveQuestActive {
         quest_id: QuestDefId,
         exclusive_with: QuestDefId,
     },
     /// 关键任务不可放弃。
-    #[error("critical quest cannot be abandoned: {quest_id}")]
+    #[error("关键 quest 不可放弃: {quest_id}")]
     CriticalQuestCannotAbandon { quest_id: QuestDefId },
 }
 

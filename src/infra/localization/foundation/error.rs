@@ -9,9 +9,7 @@ use super::locale_id::LocaleId;
 #[derive(Debug, Clone, thiserror::Error)]
 pub enum LocError {
     /// Key 在重试所有 fallback locale 后仍未找到
-    #[error(
-        "Key '{key}' not found in locale '{locale}' (fallbacks attempted: {fallbacks_attempted:?})"
-    )]
+    #[error("Key '{key}' 在 locale '{locale}' 中未找到（已尝试 fallback: {fallbacks_attempted:?})")]
     KeyNotFound {
         key: String,
         locale: LocaleId,
@@ -19,7 +17,7 @@ pub enum LocError {
     },
 
     /// 参数不匹配：pattern 需要某参数但未提供
-    #[error("Key '{key}' missing parameters: {missing:?} (provided: {provided:?})")]
+    #[error("Key '{key}' 缺少参数: {missing:?}（已提供: {provided:?})")]
     MissingParameter {
         key: String,
         missing: Vec<String>,
@@ -27,7 +25,7 @@ pub enum LocError {
     },
 
     /// 内部解析错误（.ftl 语法异常）
-    #[error("Parse error: {message}")]
+    #[error("解析错误: {message}")]
     ParseError {
         file: Option<String>,
         line: Option<usize>,
@@ -35,6 +33,6 @@ pub enum LocError {
     },
 
     /// 未分类内部错误
-    #[error("Internal error: {0}")]
+    #[error("内部错误: {0}")]
     Internal(String),
 }

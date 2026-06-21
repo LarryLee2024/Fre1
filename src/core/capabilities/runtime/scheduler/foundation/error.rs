@@ -8,13 +8,13 @@ use super::types::TickPhase;
 #[derive(Debug, Clone, PartialEq, thiserror::Error)]
 pub enum SchedulerError {
     /// 调度器未初始化
-    #[error("scheduler not initialized")]
+    #[error("scheduler 未初始化")]
     NotInitialized,
     /// 调度器已暂停
-    #[error("scheduler is paused")]
+    #[error("scheduler 已暂停")]
     Paused,
     /// 无效的阶段转换
-    #[error("invalid phase transition: {from:?} \u{2192} {to:?}")]
+    #[error("无效的 phase 转换: {from:?} → {to:?}")]
     InvalidTransition {
         /// 来源阶段
         from: TickPhase,
@@ -22,6 +22,6 @@ pub enum SchedulerError {
         to: TickPhase,
     },
     /// 帧计数器溢出
-    #[error("frame counter overflow at {frame}")]
+    #[error("帧计数器在 {frame} 溢出")]
     FrameOverflow { frame: u64 },
 }

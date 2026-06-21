@@ -9,11 +9,11 @@
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum IdFormatError {
     /// ID 为空。
-    #[error("ID is empty")]
+    #[error("ID 为空")]
     Empty,
 
     /// 前缀不匹配。
-    #[error("Invalid prefix: expected '{expected}', got '{actual}'")]
+    #[error("前缀无效: 期望 '{expected}', 实际 '{actual}'")]
     PrefixMismatch {
         /// 期望的前缀。
         expected: &'static str,
@@ -22,11 +22,11 @@ pub enum IdFormatError {
     },
 
     /// ID 包含非法字符。
-    #[error("ID contains invalid characters: {0}")]
+    #[error("ID 包含非法字符: {0}")]
     InvalidCharacters(String),
 
     /// ID 超过最大长度。
-    #[error("ID exceeds maximum length of {max}: got {len}")]
+    #[error("ID 超过最大长度 {max}: 实际 {len}")]
     TooLong {
         /// 最大长度。
         max: usize,
@@ -41,15 +41,15 @@ pub enum IdFormatError {
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum IdAllocationError {
     /// 该前缀的 ID 空间已耗尽。
-    #[error("ID range exhausted for prefix '{0}'")]
+    #[error("前缀 '{0}' 的 ID 范围已耗尽")]
     RangeExhausted(&'static str),
 
     /// 尝试重新使用已废弃的 ID。
-    #[error("ID '{0}' is deprecated and cannot be reused")]
+    #[error("ID '{0}' 已废弃，不可重用")]
     Deprecated(String),
 
     /// 预留范围内无可用 ID。
-    #[error("No available ID in reserved range for prefix '{0}'")]
+    #[error("前缀 '{0}' 的预留范围内无可用 ID")]
     ReservedRangeExhausted(&'static str),
 }
 

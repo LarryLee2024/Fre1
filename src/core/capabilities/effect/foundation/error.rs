@@ -11,31 +11,31 @@ use thiserror::Error;
 #[derive(Debug, Clone, PartialEq, Event, Error)]
 pub enum EffectError {
     /// 来源缺失（不变量 3.1）
-    #[error("missing source: {detail}")]
+    #[error("缺少 source: {detail}")]
     MissingSource { detail: String },
     /// 目标缺失
-    #[error("missing target: {detail}")]
+    #[error("缺少 target: {detail}")]
     MissingTarget { detail: String },
     /// 目标已有同源效果（不变量 3.5）
-    #[error("duplicate effect '{def_id}': {detail}")]
+    #[error("重复的 effect '{def_id}': {detail}")]
     DuplicateEffect { def_id: String, detail: String },
     /// 免疫阻止（不变量 3.2）
-    #[error("effect '{def_id}' blocked by immunity '{immune_tag}'")]
+    #[error("effect '{def_id}' 被免疫 '{immune_tag}' 阻挡")]
     ImmunityBlocked { def_id: String, immune_tag: String },
     /// 效果未找到
-    #[error("effect '{effect_id}' not found")]
+    #[error("effect '{effect_id}' 未找到")]
     EffectNotFound { effect_id: String },
     /// 周期参数非法（V6）
-    #[error("invalid period: {reason}")]
+    #[error("无效的 period: {reason}")]
     InvalidPeriod { reason: String },
     /// 阶段转换非法
-    #[error("invalid transition {from:?} → {to:?}: {detail}")]
+    #[error("无效的阶段转换: {from:?} → {to:?}: {detail}")]
     InvalidStageTransition {
         from: EffectStage,
         to: EffectStage,
         detail: String,
     },
     /// 效果不可驱散（尝试 Dispelled 移除不可驱散的效果）
-    #[error("effect '{instance_id}' is undispellable")]
+    #[error("effect '{instance_id}' 不可驱散")]
     Undispellable { instance_id: String },
 }

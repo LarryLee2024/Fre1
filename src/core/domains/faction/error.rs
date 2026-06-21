@@ -16,9 +16,9 @@ use super::components::FactionId;
 #[derive(Debug, Clone, PartialEq, Event, Error)]
 pub enum FactionError {
     /// 阵营 ID 未注册。
-    #[error("faction not found: {faction_id}")]
+    #[error("faction 未找到: {faction_id}")]
     FactionNotFound { faction_id: FactionId },
     /// 阵营间关系不对称，违反对称性不变量。
-    #[error("faction relation asymmetry detected between {a} and {b}")]
+    #[error("faction {a} 和 {b} 之间检测到关系不对称")]
     RelationAsymmetry { a: FactionId, b: FactionId },
 }

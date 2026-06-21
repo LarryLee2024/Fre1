@@ -9,22 +9,22 @@ use thiserror::Error;
 #[derive(Debug, Clone, PartialEq, Error)]
 pub enum TacticalFailure {
     /// 目标位置在网格外。
-    #[error("position is out of grid bounds")]
+    #[error("位置超出网格边界")]
     OutOfBounds,
     /// 目标位置不可通行。
-    #[error("target tile is not passable")]
+    #[error("目标格子不可通行")]
     TileNotPassable,
     /// 目标位置已被占用。
-    #[error("target tile is occupied by another unit")]
+    #[error("目标格子已被其他单位占用")]
     TileOccupied,
     /// 移动力不足。
-    #[error("insufficient MP: required={required}, available={available}")]
+    #[error("移动力不足: required={required}, available={available}")]
     InsufficientMovementPoints { required: f32, available: f32 },
     /// 路径不可达。
-    #[error("path to target not found")]
+    #[error("未找到通往目标的路径")]
     PathNotFound,
     /// 无效的网格坐标。
-    #[error("invalid grid position")]
+    #[error("无效的网格坐标")]
     InvalidGridPosition,
 }
 

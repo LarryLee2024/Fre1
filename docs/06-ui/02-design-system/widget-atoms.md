@@ -1,7 +1,7 @@
 ---
 id: 06-ui.widget-atoms
 title: Primitives — UI 原语层（Atoms 组件契约详细设计）
-status: draft
+status: code-aligned
 owner: presentation-architect
 created: 2026-06-20
 tags:

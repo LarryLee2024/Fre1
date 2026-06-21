@@ -14,9 +14,9 @@ use thiserror::Error;
 #[derive(Debug, Clone, PartialEq, Event, Error)]
 pub enum NarrativeError {
     /// 对话节点不存在。
-    #[error("dialogue node not found: {node_id}")]
+    #[error("dialogue node 未找到: {node_id}")]
     DialogueNodeNotFound { node_id: String },
     /// 对话树存在循环引用。
-    #[error("dialogue tree contains cycle at node: {node_id}")]
+    #[error("dialogue tree 在节点 {node_id} 处存在循环")]
     DialogueTreeHasCycle { node_id: String },
 }

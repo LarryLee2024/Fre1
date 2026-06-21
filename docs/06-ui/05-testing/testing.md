@@ -1,7 +1,7 @@
 ---
 id: 06-ui.testing
 title: UI Testing Strategy — UI 测试策略
-status: partially-implemented
+status: code-aligned
 owner: presentation-architect
 created: 2026-06-20
 updated: 2026-06-21
