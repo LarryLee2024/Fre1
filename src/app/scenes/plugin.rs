@@ -10,6 +10,7 @@ use bevy::prelude::*;
 use super::components::SceneRoot;
 use super::queue::{StateTransitionQueue, cleanup_scene, process_transition_queue};
 use super::state::GameState;
+use crate::core::domains::combat::components::BattlePhase;
 
 /// 场景管理 Plugin——注册 GameState、StateTransitionQueue 和场景切换系统。
 pub struct ScenePlugin;
@@ -17,6 +18,7 @@ pub struct ScenePlugin;
 impl Plugin for ScenePlugin {
     fn build(&self, app: &mut App) {
         app.init_state::<GameState>()
+            .add_sub_state::<BattlePhase>()
             .insert_resource(StateTransitionQueue::default())
             .add_systems(Last, process_transition_queue);
 

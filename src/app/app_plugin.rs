@@ -11,7 +11,10 @@ use crate::infra::{
 };
 use crate::ui::UiPlugin;
 use crate::{
-    app::scenes::ScenePlugin, content::ContentPlugin, modding::ModdingPlugin, shared::SharedPlugin,
+    app::scenes::{ScenePlugin, test_battle::TestBattlePlugin},
+    content::ContentPlugin,
+    modding::ModdingPlugin,
+    shared::SharedPlugin,
 };
 use bevy::prelude::*;
 
@@ -53,6 +56,17 @@ impl Plugin for AppPlugin {
         // GameState 注册 + StateTransitionQueue + ScenePlugin。
         // 详见 ADR-050。
         app.add_plugins(ScenePlugin);
+
+        // ── 测试战斗场景 Plugin ──
+        app.add_plugins(TestBattlePlugin);
+
+        // ── 自动启动战斗（开发用，后续由主菜单 → 战斗流程替代）──
+        app.add_systems(
+            Startup,
+            |mut next: ResMut<NextState<crate::shared::game_state::GameState>>| {
+                next.set(crate::shared::game_state::GameState::Combat);
+            },
+        );
 
         // ════════════════════════════════════════════
         // Phase 10: Cross-cutting

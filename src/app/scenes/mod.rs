@@ -6,6 +6,7 @@ pub mod components;
 pub mod plugin;
 pub mod queue;
 pub mod state;
+pub mod test_battle;
 
 #[cfg(test)]
 mod tests;

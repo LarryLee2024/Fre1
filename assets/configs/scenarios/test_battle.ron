@@ -1,0 +1,45 @@
+(
+    units: [
+        (
+            id: "unit_hero",
+            name_key: "unit.hero.name",
+            team: "Player",
+            coord: (1, 1),
+            hp: 100,
+            max_hp: 100,
+            ap: 2,
+        ),
+        (
+            id: "unit_ally",
+            name_key: "unit.ally.name",
+            team: "Player",
+            coord: (1, 2),
+            hp: 80,
+            max_hp: 80,
+            ap: 2,
+        ),
+        (
+            id: "unit_goblin",
+            name_key: "unit.goblin.name",
+            team: "Enemy",
+            coord: (5, 4),
+            hp: 40,
+            max_hp: 40,
+            ap: 1,
+        ),
+        (
+            id: "unit_orc",
+            name_key: "unit.orc.name",
+            team: "Enemy",
+            coord: (5, 5),
+            hp: 60,
+            max_hp: 60,
+            ap: 1,
+        ),
+    ],
+    grid: (
+        width: 6,
+        height: 6,
+        cell_size: 80.0,
+    ),
+)

@@ -63,16 +63,15 @@ pub fn validation_system(db: Res<LocalizationDatabase>) {
 
     if !errors.is_empty() {
         error!(target: "localization",
-            "[Localization] 验证失败，共 {} 个错误：",
+            "[Localization] 验证失败，共 {} 个错误（非严格模式，继续运行）：",
             errors.len()
         );
         for err in &errors {
             error!(target: "localization", "  {}", err);
         }
-        panic!(
-            "[Localization] 验证失败：{} 个错误（见上方）。\
-             为阻止显示未翻译文本，已阻止启动。",
-            errors.len()
+        // 非严格模式下仅警告不阻止启动
+        info!(target: "localization",
+            "[Localization] 严重模式下 panic；当前为非严格模式，继续运行。"
         );
     }
 

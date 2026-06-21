@@ -7,8 +7,8 @@
 mod plugin;
 pub use plugin::*;
 
-// [ADR-045] private — 业务组件，仅当前模块可见
-mod components;
+// [ADR-045] pub(crate) — 业务组件，crate 内可用
+pub(crate) mod components;
 // [ADR-045] private — 业务规则失败，仅当前模块可见
 // [ADR-051] TacticalError 已移除 — 所有变体均为规则失败，已迁移至 TacticalFailure
 mod failure;
