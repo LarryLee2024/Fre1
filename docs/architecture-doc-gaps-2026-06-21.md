@@ -335,21 +335,23 @@ UI 文档目录包含 11 个文档文件 + 1 个 README，全部标记为 `🟡 
 
 ### 9.1 优先级矩阵
 
-| 优先级 | 差距描述 | 负责 Agent | 类型 |
-|--------|---------|-----------|------|
-| **P0** | ADR-056 frontmatter/body 状态矛盾 | @architect | 一致性 |
-| **P0** | ADR 索引缺失 ADR-048/049/052 | @architect | 完整性 |
-| **P0** | Appendix B 缺失 ADR-046/048/052 | @architect | 完整性 |
-| **P1** | `ability-def.md` 为 TODO | @content-architect | 内容缺失 |
-| **P1** | `replay_domain.md` 不存在 | @domain-designer | 缺失文档 |
-| **P1** | `event_history_architecture.md` 不存在 | @data-architect | 缺失文档 |
-| **P2** | `migration_policy.md` 为 TBD 骨架 | @data-architect | 内容缺失 |
-| **P2** | shared/math/ HexCoord 无领域规则 | @domain-designer | 缺覆盖 |
-| **P2** | docs/04-data/ 状态表遗漏 3 个文件 | @data-architect | 状态缺失 |
-| **P2** | docs/06-ui/ 状态表遗漏 implementation-patterns.md | @presentation-architect | 状态缺失 |
-| **P2** | logging_schema.md 日期为未来 | @data-architect | 数据错误 |
-| **P3** | L4 World Def 定义为 TBD | @content-architect | 远期内容 |
-| **P3** | shared/constants/ 常量理由无文档 | @domain-designer | 改进项 |
+| 优先级 | 差距描述 | 负责 Agent | 类型 | 状态 |
+|--------|---------|-----------|------|------|
+| **P0** | ADR-056 frontmatter/body 状态矛盾 | @architect | 一致性 | ✅ 已修复 |
+| **P0** | ADR 索引缺失 ADR-048/049/052 | @architect | 完整性 | ✅ 已修复 |
+| **P0** | Appendix B 缺失 ADR-046/048/052 | @architect | 完整性 | ✅ 已修复 |
+| **P1** | `ability-def.md` 为 TODO | @content-architect | 内容缺失 | ✅ 已修复 |
+| **P1** | `replay_domain.md` 不存在 | @domain-designer | 缺失文档 | ✅ 已创建 |
+| **P1** | `event_history_architecture.md` 不存在 | @data-architect | 缺失文档 | ✅ 已创建 |
+| **P2** | `migration_policy.md` 为 TBD 骨架 | @data-architect | 内容缺失 | ✅ 已填充 |
+| **P2** | shared/math/ HexCoord 无领域规则 | @domain-designer | 缺覆盖 | ✅ 已补充 |
+| **P2** | docs/04-data/ 状态表遗漏 3 个文件 | @data-architect | 状态缺失 | ✅ 已修复 |
+| **P2** | docs/06-ui/ 状态表遗漏 implementation-patterns.md | @presentation-architect | 状态缺失 | ✅ 已修复 |
+| **P2** | logging_schema.md 日期为未来 | @data-architect | 数据错误 | ✅ 已修复 |
+| **P2** | docs/08-knowledge/random-overview.md 全部陈旧 | @architect | 内容陈旧 | ✅ 已重写 |
+| **P3** | L4 World Def 定义为 TBD | @content-architect | 远期内容 | ⏳ 远期 |
+| **P3** | shared/constants/ 常量理由无文档 | @domain-designer | 改进项 | ⏳ 远期 |
+
 
 ### 9.2 建议修复顺序
 

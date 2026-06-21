@@ -1,1 +1,2 @@
 - [Event History Architecture](event-history-architecture.md) — EventStore Schema + 三层事件归属 + Replay 互补
+- [Migration Policy](migration-policy.md) — 三层迁移策略（Content/Save/Replay）、链式迁移、N-2 兼容、回滚、测试规范
