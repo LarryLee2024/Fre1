@@ -9,8 +9,8 @@ use bevy::prelude::*;
 
 use super::components::{Concentration, SpellConfig, SpellSlotPool, Spellbook};
 use super::systems::{on_spell_cast_request, tick_concentration_duration};
-use crate::app::scenes::GameState;
 use crate::register_domain_types;
+use crate::shared::game_state::GameState;
 
 pub struct SpellPlugin;
 

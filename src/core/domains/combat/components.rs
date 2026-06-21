@@ -17,7 +17,7 @@
 
 use bevy::prelude::*;
 
-use crate::app::scenes::GameState;
+use crate::shared::game_state::GameState;
 
 // ─── 外层宏观状态 ─────────────────────────────────────────────────────
 

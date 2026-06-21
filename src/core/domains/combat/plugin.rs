@@ -22,9 +22,9 @@ use super::systems::turn_systems::{
     on_enter_battle, on_enter_defeat, on_enter_victory, on_turn_end_tick_ability_cooldowns,
     on_turn_start_evaluate_triggers,
 };
-use crate::app::scenes::GameState;
 use crate::core::capabilities::runtime::pipeline::registry::PipelineRegistry;
 use crate::register_domain_types;
+use crate::shared::game_state::GameState;
 
 pub struct CombatPlugin;
 

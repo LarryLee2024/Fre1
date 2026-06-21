@@ -4,7 +4,7 @@ title: Tag（标签）领域规则 v2.1
 status: stable
 owner: domain-designer
 created: 2026-06-16
-updated: 2026-06-28
+updated: 2026-06-21
 tags:
   - domain
   - tag
@@ -40,7 +40,7 @@ TagQuery       ─── 筛选的"过滤器"
 
 ### 已对齐项目术语
 
-- **Unit**：战场上的可操作单位（玩家或 AI 控制），通过 GameTagContainer 获得标签
+- **Unit**：战场上的可操作单位（玩家或 AI 控制），通过 TagSet 获得标签
 - **Skill**：主动技能，通过标签标记技能类型（如 Skill.Fire, Skill.Heal）
 - **Buff**：持续性增益/减益效果，通过标签标记 Buff 类型（如 Buff.Poison, Buff.Burn）
 - **Equipment**：装备物品，通过标签标记装备类型（如 Equipment.Weapon.Sword）
@@ -187,10 +187,10 @@ Tag.Root
   - 移除：目标实体、移除的标签列表
 - **处理**：
   1. 检查待授予/移除的标签是否已注册（不变量 3.4）
-  2. 授予：将标签加入实体的 GameTagContainer
-  3. 移除：将标签从实体的 GameTagContainer 移除
+  2. 授予：将标签加入实体的 TagSet
+  3. 移除：将标签从实体的 TagSet 移除
   4. 如果授予/移除的是父标签，自动推导所有子标签的同步状态
-- **输出**：GameTagContainer 变更确认
+- **输出**：TagSet 变更确认
 - **失败处理**：引用未注册标签时授予/移除失败，返回 TagLookupError
 
 ### 5.4 层级同步
@@ -198,7 +198,7 @@ Tag.Root
 - **输入**：父标签的授予或移除事件
 - **处理**：
   1. 检测到父标签被授予实体
-  2. 检查该实体现有 GameTagContainer 中是否有冲突标签（排除法）
+  2. 检查该实体现有 TagSet 中是否有冲突标签（排除法）
   3. 标记该实体"拥有该父标签"的位
   4. 查询时，父标签的位掩码自动覆盖所有子标签
 - **输出**：隐式层级状态更新
@@ -319,7 +319,7 @@ TagAdded/TagRemoved
 - ✅ 架构边界：Tag 能力领域位于 `core/capabilities/tag/`，数据定义归 foundation/，规则组件归 mechanism/，符合 C1→C2 分层
 - ✅ 术语一致：TagId、TagSet、TagHierarchy、TagQuery 与架构文档第六节完全一致
 - ✅ 职责明确：Tag 只做标识与分类，不涉及业务逻辑，不越界到 Condition/Effect 领域
-- ✅ ECS 边界：GameTagContainer 是 ECS Component，但其规则（标签生命周期/层级同步）属于机制层 C2，非 ECS 实现细节
+- ✅ ECS 边界：TagSet（原 GameTagContainer）是 ECS Component，但其规则（标签生命周期/层级同步）属于机制层 C2，非 ECS 实现细节。名称已于 2026-06-21 从 GameTagContainer 更新为 TagSet 以对齐实际代码
 - ✅ LocalizationKey：Tag 使用 LocalizationKey 而非硬编码文本（宪法 §22）
 
 ---

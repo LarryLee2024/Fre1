@@ -11,8 +11,8 @@ use super::components::{
 use super::systems::cutscene_system::{on_cutscene_ended, on_cutscene_start};
 use super::systems::dialogue_system::{on_choice_select, on_dialogue_start};
 use super::systems::story_flag_system::on_story_flag_set;
-use crate::app::scenes::GameState;
 use crate::register_domain_types;
+use crate::shared::game_state::GameState;
 
 pub struct NarrativePlugin;
 

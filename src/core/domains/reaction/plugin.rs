@@ -13,8 +13,8 @@ use super::systems::{
     cleanup_reaction_queue, on_opportunity_attack_executed, process_reaction_queue,
     reset_reactions_on_turn_start,
 };
-use crate::app::scenes::GameState;
 use crate::register_domain_types;
+use crate::shared::game_state::GameState;
 
 pub struct ReactionPlugin;
 

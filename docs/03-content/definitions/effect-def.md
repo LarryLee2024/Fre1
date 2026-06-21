@@ -306,10 +306,10 @@ EffectDefPlugin::build
 
 | # | 规则 | 说明 |
 |---|------|------|
-| V18 | `execution` 和 `execution_def` 二选一 | 同时设置或同时不设置则报错（Instant 类型必须有其一） |
+| V18 | `execution` 和 `execution_def` 不可同时设置 | 两者互斥，只能选其一。Instant 类型可两者皆无（通过 modifiers 直接生效） |
 | V19 | `stacking` 和 `stacking_def` 不可同时设置 | inline config 和 Def 引用互斥 |
 | V20 | Duration::Instant 类型不能有 `period` | 瞬时效果不能有周期 Tick |
-| V21 | Duration::Instant 类型必须设置 `execution` 或 `execution_def` | 瞬时效果需要执行计算 |
+| V21 | Duration::Instant 类型若同时无 `execution` 和 `execution_def`，则必须至少有一个 `modifiers` | 瞬时效果需通过 execution 或 modifiers 产生实际效果 |
 
 ### 4.4 依赖图校验
 

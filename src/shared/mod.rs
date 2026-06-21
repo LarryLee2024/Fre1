@@ -40,5 +40,7 @@ pub(crate) mod constants;
 pub(crate) mod localization_key;
 // [ADR-045] pub(crate) — 通用宏定义，crate 内共享
 pub(crate) mod macros;
+// [ADR-050] pub(crate) — 游戏状态枚举，所有层共享
+pub(crate) mod game_state;
 
 pub use shared_plugin::SharedPlugin;

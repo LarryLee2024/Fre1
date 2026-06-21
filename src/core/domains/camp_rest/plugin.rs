@@ -12,8 +12,8 @@ use super::systems::{
     CampEventRegistry, handle_long_rest_complete, handle_long_rest_interrupted,
     handle_short_rest_complete, process_camp_events,
 };
-use crate::app::scenes::GameState;
 use crate::register_domain_types;
+use crate::shared::game_state::GameState;
 
 pub struct CampRestPlugin;
 

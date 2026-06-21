@@ -10,8 +10,8 @@ use super::components::{Facing, GridPos, MovementPoints};
 use super::systems::grid_system::initialize_default_grid;
 use super::systems::input_system::{TacticalCursor, tactical_input_system};
 use super::systems::movement_system::on_compute_move;
-use crate::app::scenes::GameState;
 use crate::register_domain_types;
+use crate::shared::game_state::GameState;
 
 pub struct TacticalPlugin;
 

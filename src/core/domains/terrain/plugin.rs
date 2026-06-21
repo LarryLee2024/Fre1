@@ -15,8 +15,8 @@ use super::systems::hazard_system::on_hazard_check;
 use super::systems::on_turn_end_surface_recovery;
 use super::systems::surface_system::on_surface_changed;
 use super::systems::terrain_effect_system::on_tile_entered;
-use crate::app::scenes::GameState;
 use crate::register_domain_types;
+use crate::shared::game_state::GameState;
 
 pub struct TerrainPlugin;
 
