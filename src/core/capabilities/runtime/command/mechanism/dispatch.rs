@@ -101,8 +101,11 @@ pub fn validate_command(command: &GameCommand) -> Result<(), CommandError> {
                 });
             }
         }
-        GameCommand::OpenMenu | GameCommand::SaveGame | GameCommand::LoadGame | GameCommand::NewGame => {
-            // Meta commands always valid
+        GameCommand::OpenMenu
+        | GameCommand::SaveGame
+        | GameCommand::LoadGame
+        | GameCommand::NewGame => {
+            // 元命令始终有效
         }
         GameCommand::BuyItem {
             buyer_id,

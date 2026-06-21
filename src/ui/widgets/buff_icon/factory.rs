@@ -72,7 +72,7 @@ pub fn spawn_buff_icon(
     // ── 1. Container panel (Card variant, compact square) ──
     let container = spawn_panel(commands, theme, PanelVariant::Card);
 
-    // Override border with buff/debuff color and attach BuffIconState
+    // 用增益/减益颜色覆盖边框并挂载 BuffIconState
     commands.entity(container).insert((
         BorderColor::all(border_color),
         BuffIconState {
@@ -87,7 +87,7 @@ pub fn spawn_buff_icon(
     // ── 2. Remaining turns text (centered, emphasis) ──
     let turns_str = remaining_turns.to_string();
     let turns_text = spawn_text(commands, asset_server, theme, &turns_str, TextVariant::Caption);
-    // Override to primary color for visibility
+    // 覆盖为主色调以提高可见性
     commands.entity(turns_text).insert(TextColor(theme.colors.text_primary));
     commands.entity(turns_text).set_parent_in_place(container);
 

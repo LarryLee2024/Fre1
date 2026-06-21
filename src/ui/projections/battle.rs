@@ -20,8 +20,7 @@ use crate::core::domains::combat::components::ActionPoints;
 use crate::core::events::{BattleStarted, TurnEnded, TurnStarted};
 use crate::ui::binding::Dirty;
 use crate::ui::view_models::{
-    UiStore, battle_hud::BattleHudVm, character_panel::CharacterPanelVm,
-    skill_panel::SkillPanelVm,
+    UiStore, battle_hud::BattleHudVm, character_panel::CharacterPanelVm, skill_panel::SkillPanelVm,
 };
 
 // ─── 纯投影函数 ─────────────────────────────────────────────────────────
@@ -117,7 +116,11 @@ pub fn on_turn_started_projection(
     // 每个单位每回合获得 1 个标准行动；bonus_action 是第二个 AP。
     if let Ok(ap_component) = ap_query.get(unit) {
         // 将布尔型行动可用性映射为 f32 表示，用于 HUD 条。
-        let standard_val = if ap_component.standard_action { 1.0 } else { 0.0 };
+        let standard_val = if ap_component.standard_action {
+            1.0
+        } else {
+            0.0
+        };
         let bonus_val = if ap_component.bonus_action { 1.0 } else { 0.0 };
         store.battle_hud.ap = standard_val + bonus_val;
         store.battle_hud.max_ap = 2.0; // Standard + bonus = 2 max AP

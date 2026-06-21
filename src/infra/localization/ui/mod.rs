@@ -1,6 +1,6 @@
-//! ui — Presentation layer for localized text.
+//! ui — 本地化文本的表现层。
 //!
-//! Contains the LocalizedText component and the render system.
+//! 包含 LocalizedText 组件和渲染系统。
 
 pub(crate) mod components;
 pub(crate) mod render;

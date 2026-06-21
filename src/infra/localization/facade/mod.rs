@@ -1,6 +1,6 @@
-//! facade — Cross-cutting orchestration for localization.
+//! facade — 本地化的横切编排。
 //!
-//! Combines storage (database + cache) for cached resolution.
+//! 组合存储（数据库 + 缓存）用于缓存解析。
 
 pub(crate) mod resolve;
 

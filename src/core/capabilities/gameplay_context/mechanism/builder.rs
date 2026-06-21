@@ -115,8 +115,8 @@ impl ContextBuilder {
             }
         };
 
-        // Entity validity is enforced by the ECS lifecycle.
-        // Builder validates structural completeness (source + target present).
+        // 实体有效性由 ECS 生命周期强制执行。
+        // Builder 校验结构完整性（source + target 存在）。
 
         let first_node = ChainNode {
             origin,

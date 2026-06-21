@@ -1,6 +1,6 @@
-//! io — File I/O and parsing for .ftl localization files.
+//! io — .ftl 本地化文件的文件 I/O 和解析。
 //!
-//! Contains the FTL parser, file loading system, and hot-reload watcher.
+//! 包含 FTL 解析器、文件加载系统和热重载监视器。
 
 pub(crate) mod loader;
 pub(crate) mod parser;

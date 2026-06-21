@@ -30,7 +30,7 @@ impl DefinitionType for SpellDef {
         // ID must start with "spl_" followed by digits
         validate_id_format(&self.id.0, "spl_")?;
 
-        // Name and description keys must be non-empty
+        // 名称和描述 key 必须非空
         if self.name_key.is_empty() {
             return Err(ValidationError::MissingField {
                 field: "name_key".to_string(),

@@ -83,18 +83,18 @@ pub fn refresh_skill_slot_from_vm(
 
         // 更新子级 Widget
         for child in children.iter() {
-            // Update skill name text
+            // 更新技能名称文本
             if let Ok((mut text, _)) = text_query.get_mut(child) {
                 text.0 = vm.name_key.to_string();
             }
 
-            // Update cooldown progress bar
+            // 更新冷却进度条
             if let Ok(mut pb_state) = progress_bar_query.get_mut(child) {
                 pb_state.current = vm.cooldown_remaining as f32;
                 pb_state.maximum = vm.max_cooldown as f32;
             }
 
-            // Update button disabled state
+            // 更新按钮禁用状态
             if let Ok(mut btn_state) = button_query.get_mut(child) {
                 btn_state.disabled = !vm.is_usable;
             }

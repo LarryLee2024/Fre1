@@ -1,6 +1,6 @@
-//! GameplayContext Integration Module
+//! GameplayContext 集成模块
 //!
-//! Wraps gameplay_context capability for combat action context building.
+//! 封装 gameplay_context 能力，用于战斗行动上下文构建。
 
 mod facade;
 

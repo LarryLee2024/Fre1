@@ -77,7 +77,7 @@ pub fn spawn_shop_panel(
     let title = spawn_text(commands, asset_server, theme, "Shop", TextVariant::Heading);
     commands.entity(title).set_parent_in_place(header);
 
-    // Gold display text
+    // 金币显示文本
     let gold_text = spawn_text(
         commands,
         asset_server,
