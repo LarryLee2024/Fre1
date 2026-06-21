@@ -1,23 +1,22 @@
-//! Module Name: Widgets — Gameplay UI controls
+//! 模块名：Widgets — 游戏 UI 控件
 //!
-//! Composes primitives-layer components into game-concept controls.
-//! This layer is the sole consumer of Primitives; no direct Node/Button
-//! manipulation allowed.
+//! 将 Primitives 层组件组合成游戏概念控件。
+//! 本层是 Primitives 的唯一消费者；不允许直接操作 Node/Button。
 //!
-//! Current widgets:
-//! - SkillSlot — Skill card control
-//! - ActionMenu — Battle action menu (Attack, Defend, Skill, Item, Wait)
-//! - CharacterCard — Character stats card (name, level, HP/MP bars)
-//! - InventoryItemRow — Item row widget (name, quantity, use button)
-//! - InventoryGrid — Inventory grid organism (title, gold, item list, close button)
-//! - ShopItemCard — Shop item card widget (name, price, stock, buy button)
-//! - ShopPanel — Shop panel organism (header, tab panel, items, close button)
+//! 当前 Widget：
+//! - SkillSlot — 技能卡片控件
+//! - ActionMenu — 战斗行动菜单（攻击、防御、技能、道具、等待）
+//! - CharacterCard — 角色属性卡片（名称、等级、HP/MP 条）
+//! - InventoryItemRow — 物品行 Widget（名称、数量、使用按钮）
+//! - InventoryGrid — 背包网格有机体（标题、金币、物品列表、关闭按钮）
+//! - ShopItemCard — 商店物品卡片 Widget（名称、价格、库存、购买按钮）
+//! - ShopPanel — 商店面板有机体（标题栏、标签面板、物品列表、关闭按钮）
 //!
-//! Future widgets:
+//! 未来 Widget：
 //! - BuffIcon
 //! - BattleLog
 //!
-//! See `docs/06-ui/02-design-system/widget-composites.md`
+//! 参见 `docs/06-ui/02-design-system/widget-composites.md`
 
 pub mod action_menu;
 pub mod character_card;
@@ -37,9 +36,9 @@ use self::shop_item_card::ShopItemCardPlugin;
 use self::shop_panel::ShopPanelPlugin;
 use self::skill_slot::SkillSlotPlugin;
 
-/// WidgetsPlugin — registers all gameplay UI controls
+/// WidgetsPlugin — 注册所有游戏 UI 控件
 ///
-/// Added after PrimitivesPlugin, before ScreenPlugin.
+/// 在 PrimitivesPlugin 之后、ScreenPlugin 之前添加。
 pub struct WidgetsPlugin;
 
 impl Plugin for WidgetsPlugin {

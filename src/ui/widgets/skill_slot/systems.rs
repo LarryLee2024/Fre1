@@ -81,7 +81,7 @@ pub fn refresh_skill_slot_from_vm(
         state.cooldown_current = vm.cooldown_remaining;
         state.is_ready = vm.is_usable;
 
-        // Update child widgets
+        // 更新子级 Widget
         for child in children.iter() {
             // Update skill name text
             if let Ok((mut text, _)) = text_query.get_mut(child) {

@@ -1,16 +1,16 @@
-//! Module Name: Screens — Full-screen UI views (page level)
+//! 模块名：Screens — 全屏 UI 视图（页面级）
 //!
-//! Each screen represents a mutually exclusive full-screen view, driven by
-//! Startup systems or scene state transitions.
-//! Screens sit at the top of the UI architecture, composing Primitives and
-//! Widgets into complete pages.
+//! 每个 Screen 代表一个互斥的全屏视图，由 Startup 系统
+//! 或场景状态转换驱动。
+//! Screen 位于 UI 架构的顶层，将 Primitives 和 Widgets
+//! 组合成完整页面。
 //!
-//! Current implementation:
-//! - MainMenuScreen: Title / main menu
-//! - BattleScreen: Battle / combat screen (MVP)
-//! - SettingsScreen: Game settings (theme, gameplay toggles)
-//! - SaveLoadScreen: Save / load game slots
-//! - ShopScreen: Shop / trading screen (MVP)
+//! 当前实现：
+//! - MainMenuScreen：标题 / 主菜单
+//! - BattleScreen：战斗界面（MVP）
+//! - SettingsScreen：游戏设置（主题、玩法开关）
+//! - SaveLoadScreen：存档 / 读档槽位
+//! - ShopScreen：商店界面（MVP）
 
 pub mod battle;
 pub mod inventory;
@@ -36,17 +36,16 @@ use shop::{on_shop_button_clicked, spawn_shop_screen};
 
 use crate::ui::navigation::ScreenType;
 
-/// ScreenPlugin — registers all screen systems and observers
+/// ScreenPlugin — 注册所有 Screen 系统和 Observer
 ///
-/// Registered after WidgetsPlugin. Currently uses Startup systems for
-/// spawning screens; will migrate to `OnEnter(GameState::...)` +
-/// `OnExit(...)` in the future.
+/// 在 WidgetsPlugin 之后注册。当前使用 Startup 系统生成 Screen；
+/// 未来将迁移到 `OnEnter(GameState::...)` + `OnExit(...)`。
 pub struct ScreenPlugin;
 
 impl Plugin for ScreenPlugin {
     fn build(&self, app: &mut App) {
         app
-            // Register types for reflection
+            // 注册反射类型
             .register_type::<main_menu::MenuAction>()
             .register_type::<main_menu::MainMenuScreen>()
             .register_type::<battle::systems::BattleAction>()
@@ -59,31 +58,31 @@ impl Plugin for ScreenPlugin {
             .register_type::<save_load::SaveLoadAction>()
             .register_type::<shop::ShopScreen>()
             .register_type::<ScreenType>()
-            // Startup systems: spawn screens on app start
+            // Startup 系统：应用启动时生成 Screen
             .add_systems(Startup, spawn_main_menu)
             .add_systems(Startup, spawn_battle_screen)
             .add_systems(Startup, spawn_inventory_screen)
             .add_systems(Startup, spawn_shop_screen)
-            // Observers: button click -> UiCommand mapping（方案A）
-            // Bevy 0.19: Commands::trigger fires the event, add_observer catches it
+            // Observer：按钮点击 → UiCommand 映射（方案A）
+            // Bevy 0.19：Commands::trigger 触发事件，add_observer 捕获
             .add_observer(on_main_menu_button_handler)
             .add_observer(on_inventory_button_clicked)
             .add_observer(on_battle_button_clicked)
-            // Observers: generic UiAction event handling
+            // Observer：通用 UiAction 事件处理
             .add_observer(on_main_menu_action)
-            // Settings screen: lifecycle observers
+            // Settings 界面：生命周期 Observer
             .add_observer(on_open_settings_screen)
             .add_observer(on_close_settings_screen)
-            // Settings screen: button click handler
+            // Settings 界面：按钮点击处理器
             .add_observer(on_settings_button_clicked)
-            // Settings screen: toggle state change handler (Update)
+            // Settings 界面：开关状态变更处理器（Update）
             .add_systems(Update, settings_toggle_system)
-            // SaveLoad screen: lifecycle observers
+            // SaveLoad 界面：生命周期 Observer
             .add_observer(on_open_save_load_screen)
             .add_observer(on_close_save_load_screen)
-            // SaveLoad screen: button click handler
+            // SaveLoad 界面：按钮点击处理器
             .add_observer(on_save_load_button_clicked)
-            // Shop screen: button click handler
+            // Shop 界面：按钮点击处理器
             .add_observer(on_shop_button_clicked);
     }
 }

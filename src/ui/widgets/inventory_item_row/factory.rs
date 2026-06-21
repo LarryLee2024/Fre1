@@ -58,7 +58,7 @@ pub fn spawn_inventory_item_row(
     // for the horizontal inventory row.
     let container = spawn_panel(commands, theme, PanelVariant::Basic);
 
-    // Override to horizontal row layout
+    // 覆盖为水平行布局
     commands.entity(container).insert((
         Node {
             flex_direction: FlexDirection::Row,

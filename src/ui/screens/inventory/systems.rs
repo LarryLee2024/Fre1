@@ -22,7 +22,7 @@ pub fn on_inventory_button_clicked(
 ) {
     let entity = on.event().entity;
     let Ok(action) = query.get(entity) else {
-        // Not an inventory button, ignore
+        // 非背包按钮，忽略
         return;
     };
 

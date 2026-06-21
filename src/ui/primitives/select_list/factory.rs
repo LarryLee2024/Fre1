@@ -49,7 +49,7 @@ pub fn spawn_select_list(
     for (i, item) in items.iter().enumerate() {
         let is_selected = i == default_index;
         let btn = spawn_button(commands, theme, *item, ButtonVariant::Secondary);
-        // Selected item gets accent_primary border
+        // 选中项获得 accent_primary 边框
         if is_selected {
             commands
                 .entity(btn)

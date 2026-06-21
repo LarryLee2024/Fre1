@@ -73,11 +73,11 @@ pub fn spawn_character_card(
     let level_str = format!("Lv.{}", level);
 
     // ── 1. Container panel ──
-    // Card variant provides a rounded, padded column layout
+    // Card 变体提供圆角、带内边距的列布局
     let container = spawn_panel(commands, theme, PanelVariant::Card);
 
-    // Attach CharacterCardState, Dirty<CharacterPanelVm> for ViewModel refresh,
-    // and an identifiable Name
+    // 挂载 CharacterCardState、Dirty<CharacterPanelVm>（用于 ViewModel 刷新）
+    // 以及可识别的 Name
     commands.entity(container).insert((
         CharacterCardState {
             name: name_str.clone(),
@@ -140,7 +140,7 @@ pub fn spawn_character_card(
     commands.entity(mp_bar).set_parent_in_place(container);
 
     // ── 6. Action buttons ──
-    // Attack button (Primary variant)
+    // 攻击按钮（Primary 变体）
     let attack_btn = spawn_localized_button(
         commands,
         theme,
@@ -151,7 +151,7 @@ pub fn spawn_character_card(
     commands.entity(attack_btn).insert(CharacterAction::Attack);
     commands.entity(attack_btn).set_parent_in_place(container);
 
-    // Defend button (Secondary variant)
+    // 防御按钮（Secondary 变体）
     let defend_btn = spawn_localized_button(
         commands,
         theme,
@@ -162,7 +162,7 @@ pub fn spawn_character_card(
     commands.entity(defend_btn).insert(CharacterAction::Defend);
     commands.entity(defend_btn).set_parent_in_place(container);
 
-    // Skill button (Primary variant)
+    // 技能按钮（Primary 变体）
     let skill_btn = spawn_localized_button(
         commands,
         theme,

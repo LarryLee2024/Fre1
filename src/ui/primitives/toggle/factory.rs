@@ -58,7 +58,7 @@ pub fn spawn_toggle(
             Name::new(format!("Toggle({})", default_label)),
         ))
         .with_children(|parent| {
-            // Left side: label text (localized)
+            // 左侧：标签文本（本地化）
             parent.spawn((
                 Text::new(default_label.to_string()),
                 TextFont {
@@ -69,7 +69,7 @@ pub fn spawn_toggle(
                 LocalizedText::static_text(label_key),
                 Name::new(format!("ToggleLabel({})", default_label)),
             ));
-            // Right side: clickable indicator box
+            // 右侧：可点击的指示器框
             parent.spawn((
                 Node {
                     width: Val::Px(24.0),

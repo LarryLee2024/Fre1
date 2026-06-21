@@ -25,10 +25,10 @@ pub struct ThemePlugin;
 
 impl Plugin for ThemePlugin {
     fn build(&self, app: &mut App) {
-        // Insert the default (dark) theme as a global resource.
+        // 插入默认（暗色）主题作为全局资源
         app.init_resource::<Theme>();
 
-        // Register all theme types for reflection support.
+        // 注册所有主题类型以支持反射
         app.register_type::<UiColors>();
         app.register_type::<UiSpacing>();
         app.register_type::<UiTypography>();

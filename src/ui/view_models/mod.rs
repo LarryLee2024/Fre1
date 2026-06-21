@@ -35,7 +35,19 @@ pub struct UiStore {
 impl Default for UiStore {
     fn default() -> Self {
         Self {
-            battle_hud: BattleHudVm::default(),
+            // 使用合理的非零默认值，使 UI 在首次投影触发前能正常渲染。
+            // turn_number 从 0 开始，以便 on_turn_started 在首次激活时递增到 1；
+            // phase_key 初始为空，避免在任何战斗事件前产生误导性显示。
+            battle_hud: BattleHudVm {
+                hp: 100.0,
+                max_hp: 100.0,
+                mp: 50.0,
+                max_mp: 50.0,
+                ap: 1.0,
+                max_ap: 1.0,
+                turn_number: 0,
+                phase_key: "",
+            },
             character_panel: CharacterPanelVm::default(),
             skill_panel: SkillPanelVm::default(),
         }

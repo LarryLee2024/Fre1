@@ -42,7 +42,7 @@ pub fn spawn_action_menu(commands: &mut Commands, theme: &Theme) -> Entity {
     // ── 1. Container list (Vertical) ──
     let container = spawn_list(commands, theme, ListVariant::Vertical);
 
-    // Build default action items
+    // 构建默认行动项
     let actions = vec![
         ActionMenuItem {
             label: "Attack".to_string(),
@@ -71,7 +71,7 @@ pub fn spawn_action_menu(commands: &mut Commands, theme: &Theme) -> Entity {
         },
     ];
 
-    // Attach ActionMenuState and an identifiable Name
+    // 挂载 ActionMenuState 和可识别的 Name
     commands
         .entity(container)
         .insert((ActionMenuState { actions }, Name::new("ActionMenu")));

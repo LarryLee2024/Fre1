@@ -46,7 +46,7 @@ pub struct SaveLoadScreen;
 /// 来确定哪个按钮被点击。
 #[derive(Component, Debug, Clone, PartialEq, Eq, Reflect)]
 pub enum SaveLoadAction {
-    /// Close the SaveLoad screen
+    /// 关闭 SaveLoad 界面
     Close,
 }
 

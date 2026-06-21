@@ -58,17 +58,17 @@ pub fn spawn_skill_slot(
     let name_str: String = name.into();
 
     // ── 1. Container panel ──
-    // Card variant provides a rounded, padded column layout
+    // Card 变体提供圆角、带内边距的列布局
     let container = spawn_panel(commands, theme, PanelVariant::Card);
 
-    // Attach SkillSlotState, Dirty<SkillPanelVm> for ViewModel refresh,
-    // and an identifiable Name
+    // 挂载 SkillSlotState、Dirty<SkillPanelVm>（用于 ViewModel 刷新）
+    // 以及可识别的 Name
     commands.entity(container).insert((
         SkillSlotState {
             name: name_str.clone(),
             skill_id: 0,
             cooldown_max,
-            // Start at max cooldown (just used)
+            // 初始为最大冷却（刚使用过）
             cooldown_current: cooldown_max,
             is_ready: cooldown_max == 0,
         },

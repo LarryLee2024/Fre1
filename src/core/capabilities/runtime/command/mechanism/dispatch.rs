@@ -101,8 +101,74 @@ pub fn validate_command(command: &GameCommand) -> Result<(), CommandError> {
                 });
             }
         }
-        GameCommand::OpenMenu | GameCommand::SaveGame | GameCommand::LoadGame => {
+        GameCommand::OpenMenu | GameCommand::SaveGame | GameCommand::LoadGame | GameCommand::NewGame => {
             // Meta commands always valid
+        }
+        GameCommand::BuyItem {
+            buyer_id,
+            item_def_id,
+            shop_id,
+            ..
+        } => {
+            if buyer_id.is_empty() || item_def_id.is_empty() || shop_id.is_empty() {
+                return Err(CommandError::InvalidCommand {
+                    reason: "buyer_id, item_def_id, and shop_id must not be empty".into(),
+                });
+            }
+        }
+        GameCommand::SellItem {
+            seller_id,
+            item_def_id,
+            shop_id,
+            ..
+        } => {
+            if seller_id.is_empty() || item_def_id.is_empty() || shop_id.is_empty() {
+                return Err(CommandError::InvalidCommand {
+                    reason: "seller_id, item_def_id, and shop_id must not be empty".into(),
+                });
+            }
+        }
+        GameCommand::EquipItem {
+            unit_id,
+            item_instance_id,
+            ..
+        } => {
+            if unit_id.is_empty() || item_instance_id.is_empty() {
+                return Err(CommandError::InvalidCommand {
+                    reason: "unit_id and item_instance_id must not be empty".into(),
+                });
+            }
+        }
+        GameCommand::DropItem {
+            unit_id,
+            item_instance_id,
+            ..
+        } => {
+            if unit_id.is_empty() || item_instance_id.is_empty() {
+                return Err(CommandError::InvalidCommand {
+                    reason: "unit_id and item_instance_id must not be empty".into(),
+                });
+            }
+        }
+        GameCommand::AcceptQuest {
+            unit_id,
+            quest_def_id,
+        } => {
+            if unit_id.is_empty() || quest_def_id.is_empty() {
+                return Err(CommandError::InvalidCommand {
+                    reason: "unit_id and quest_def_id must not be empty".into(),
+                });
+            }
+        }
+        GameCommand::AbandonQuest {
+            unit_id,
+            quest_def_id,
+        } => {
+            if unit_id.is_empty() || quest_def_id.is_empty() {
+                return Err(CommandError::InvalidCommand {
+                    reason: "unit_id and quest_def_id must not be empty".into(),
+                });
+            }
         }
     }
     Ok(())

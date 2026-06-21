@@ -31,7 +31,7 @@ pub fn on_battle_button_clicked(
 ) {
     let entity = on.event().entity;
     let Ok(action) = query.get(entity) else {
-        // Not a battle button, ignore
+        // 非战斗按钮，忽略
         return;
     };
 

@@ -27,7 +27,7 @@ pub fn character_card_update_system(
     for (card_state, children) in parent_query.iter() {
         for child in children.iter() {
             if let Ok(mut pb_state) = progress_bar_query.get_mut(child) {
-                // Route values based on progress bar variant
+                // 根据进度条变体路由值
                 match pb_state.variant {
                     crate::ui::primitives::progress_bar::components::ProgressBarVariant::Hp => {
                         pb_state.current = card_state.hp_current;
@@ -38,7 +38,7 @@ pub fn character_card_update_system(
                         pb_state.maximum = card_state.mp_max;
                     }
                     _ => {
-                        // Non-HP/MP bars are not updated by this system
+                        // 非 HP/MP 进度条不由此系统更新
                     }
                 }
             }
@@ -77,7 +77,7 @@ pub fn refresh_character_card_from_vm(
         state.mp_current = vm.mp;
         state.mp_max = vm.max_mp;
 
-        // Update child name text (marked with CharacterCardNameLabel)
+        // 更新子级名称文本（标记了 CharacterCardNameLabel）
         for child in children.iter() {
             if let Ok((mut text, _)) = text_query.get_mut(child) {
                 text.0 = vm.name_key.to_string();

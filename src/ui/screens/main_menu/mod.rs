@@ -136,7 +136,7 @@ pub fn spawn_main_menu(mut commands: Commands, theme: Res<Theme>, asset_server: 
         ButtonVariant::Secondary,
     );
 
-    // Attach MenuAction for button identification
+    // 挂载 MenuAction 用于按钮识别
     commands.entity(new_game_btn).insert(MenuAction::NewGame);
     commands.entity(load_game_btn).insert(MenuAction::LoadGame);
     commands.entity(settings_btn).insert(MenuAction::Settings);

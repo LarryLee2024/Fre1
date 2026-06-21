@@ -1,4 +1,4 @@
-//! Module Name: Panel Widget — Panel 容器原子组件
+//! Panel Widget — Panel 容器原子组件
 //!
 //! 提供 6 种变体的 Panel 容器：Basic/Card/Modal/Tooltip/List/Group。
 //! 使用 Factory 模式创建，唯一入口为 spawn_panel()。
@@ -24,6 +24,6 @@ pub struct PanelPlugin;
 impl Plugin for PanelPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<PanelState>();
-        // PanelVariant is a sub-field of PanelState, automatically registered
+        // PanelVariant 是 PanelState 的子字段，自动注册
     }
 }

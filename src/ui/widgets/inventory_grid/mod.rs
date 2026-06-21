@@ -11,10 +11,9 @@ use bevy::prelude::*;
 
 use self::components::{InventoryGrid, InventoryGridAction};
 
-/// InventoryGridPlugin — registers InventoryGrid component types
+/// InventoryGridPlugin — 注册 InventoryGrid 组件类型
 ///
-/// Added by WidgetsPlugin. No update systems needed as this is a
-/// static layout composition of existing widgets.
+/// 由 WidgetsPlugin 添加。无需 update 系统，因为这是现有 Widget 的静态布局组合。
 pub struct InventoryGridPlugin;
 
 impl Plugin for InventoryGridPlugin {

@@ -56,8 +56,8 @@ fn read_to_string(path: &Path) -> String {
 
 // ─── helpers: validate all RON files in a bucket ────────────────────────
 
-/// Deserialize every `.ron` file as `T` (individual struct), validate,
-/// and call `visit` on each parsed definition (e.g. to collect IDs).
+/// 将每个 `.ron` 文件反序列化为 `T`（单个结构体），校验，
+/// 并对每个解析的定义调用 `visit`（例如收集 ID）。
 fn for_each_individual_ron<T, F>(bucket: &str, mut visit: F) -> usize
 where
     T: serde::de::DeserializeOwned + DefinitionType,
@@ -88,8 +88,8 @@ where
     files.len()
 }
 
-/// Deserialize every `.ron` file as `Vec<T>`, validate each element,
-/// and call `visit` on each parsed definition.
+/// 将每个 `.ron` 文件反序列化为 `Vec<T>`，校验每个元素，
+/// 并对每个解析的定义调用 `visit`。
 fn for_each_vec_ron<T, F>(bucket: &str, mut visit: F) -> usize
 where
     T: serde::de::DeserializeOwned + DefinitionType,
@@ -127,8 +127,8 @@ where
 
 // ─── helpers: mixed single-or-vec (tags) ────────────────────────────────
 
-/// Deserialize every `.ron` file — either as a single `T` or as `Vec<T>` —
-/// validate each entry, and call `visit` on each parsed definition.
+/// 将每个 `.ron` 文件反序列化 — 可能是单个 `T` 或 `Vec<T>` —
+/// 校验每个条目，并对每个解析的定义调用 `visit`。
 fn for_each_mixed_ron<T, F>(bucket: &str, mut visit: F) -> usize
 where
     T: serde::de::DeserializeOwned + DefinitionType,

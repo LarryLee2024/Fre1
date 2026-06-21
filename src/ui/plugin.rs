@@ -18,7 +18,10 @@ use super::binding::Dirty;
 use super::focus::FocusPlugin;
 use super::overlay::OverlayPlugin;
 use super::primitives::PrimitivesPlugin;
-use super::projections::battle::{on_effect_applied_projection, on_turn_started_projection};
+use super::projections::battle::{
+    on_battle_started_projection, on_character_panel_projection, on_effect_applied_projection,
+    on_turn_ended_projection, on_turn_started_projection,
+};
 use super::screens::ScreenPlugin;
 use super::settings::{UiSettings, load_settings};
 use super::theme::ThemePlugin;
@@ -60,7 +63,10 @@ impl Plugin for UiPlugin {
         app.add_plugins(OverlayPlugin);
 
         // 7. Projections — domain event to ViewModel observers
+        app.add_observer(on_battle_started_projection);
         app.add_observer(on_turn_started_projection);
+        app.add_observer(on_turn_ended_projection);
+        app.add_observer(on_character_panel_projection);
         app.add_observer(on_effect_applied_projection);
 
         // 8. Bridge — UiCommand to GameCommand wiring (observer pattern)

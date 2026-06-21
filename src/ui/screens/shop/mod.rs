@@ -78,7 +78,7 @@ pub fn on_shop_button_clicked(
 ) {
     let entity = trigger.event().entity;
     let Ok(action) = query.get(entity) else {
-        // Not a shop button, ignore
+        // 非商店按钮，忽略
         return;
     };
 

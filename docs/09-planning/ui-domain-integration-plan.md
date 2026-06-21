@@ -23,17 +23,22 @@ tags:
 
 - ✅ UiPlugin 已在 AppPlugin Phase 11 注册
 - ✅ UiCommand 枚举 17 个变体
-- ✅ UiCommand→GameCommand 转换器（但大部分返回 None）
-- ✅ BattleProjection 基础监听（TurnStarted, EffectApplied）
-- 🟡 缺少运行时接线系统
-- 🟡 缺少更多领域事件投影
+- ✅ UiCommand→GameCommand 转换器
+- ✅ BattleProjection 基础监听（BattleStarted, TurnStarted, TurnEnded, EffectApplied）
+- ✅ BattleHudVm hp/mp/ap 实时数据投影（ActionPoints 组件）
+- ✅ CharacterPanelVm 投影（TurnStarted → 角色面板更新）
+- ✅ EconomyProjection 骨架 TODO 完善
+- ✅ process_ui_commands 接线系统完成（Round 1a + 1b）
+- 🟡 技能面板冷却数据尚未接入（EffectApplied → SkillPanelVm）
+- 🟡 角色属性（HP/MP/Level）尚无专属域组件
 
 ## 任务
 
 | # | 任务 | 工作量 | 前置 | 说明 | 状态 |
 |---|------|--------|------|------|------|
 | A1 | UiCommand→GameCommand 接线系统 | 1 天 | 无 | 创建 process_ui_commands 系统，监听 UiCommand→CommandQueue | ✅ 完成 |
-| A2 | BattleProjection 增强 | 1 天 | 无 | 扩展监听 BattleStarted/TurnEnded，正确更新 ViewModel | ✅ 完成 |
-| A3 | 端到端验证 | 0.5 天 | A1-A2 | cargo check + nextest 验证完整链路 | ✅ 完成 |
+| A2 | BattleProjection 基础投影 | 1 天 | 无 | 监听 BattleStarted/TurnEnded，正确更新 ViewModel | ✅ 完成 |
+| A2b | BattleProjection 数据增强 | 1 天 | A2 | BattleHudVm hp/mp/ap 实时数据 + CharacterPanelVm 投影 | ✅ 完成 |
+| A3 | 端到端验证 | 0.5 天 | A1-A2b | cargo check + nextest 验证完整链路 | ✅ 完成 |
 
-**总计**: ~3 天
+**总计**: ~3.5 天

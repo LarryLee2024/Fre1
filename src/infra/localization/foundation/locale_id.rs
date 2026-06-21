@@ -7,7 +7,7 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
-/// BCP-47 language identifier.
+/// BCP-47 语言标识符。
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Reflect)]
 pub enum LocaleId {
     /// 美式英语
@@ -25,7 +25,7 @@ pub enum LocaleId {
 }
 
 impl LocaleId {
-    /// Return the BCP-47 string representation.
+    /// 返回 BCP-47 字符串表示。
     pub fn as_str(&self) -> &str {
         match self {
             LocaleId::EnUS => "en-US",

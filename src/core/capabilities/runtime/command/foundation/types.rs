@@ -91,6 +91,70 @@ pub enum GameCommand {
     SaveGame,
     /// 加载游戏
     LoadGame,
+
+    // ── Commerce ─────────────────────────────────
+    /// 购买物品
+    BuyItem {
+        /// 购买者标识
+        buyer_id: String,
+        /// 物品定义 ID
+        item_def_id: String,
+        /// 数量
+        quantity: u32,
+        /// 商店标识
+        shop_id: String,
+    },
+    /// 出售物品
+    SellItem {
+        /// 出售者标识
+        seller_id: String,
+        /// 物品定义 ID
+        item_def_id: String,
+        /// 数量
+        quantity: u32,
+        /// 商店标识
+        shop_id: String,
+    },
+
+    // ── Inventory ────────────────────────────────
+    /// 装备物品
+    EquipItem {
+        /// 单位标识
+        unit_id: String,
+        /// 物品实例 ID
+        item_instance_id: String,
+        /// 槽位索引
+        slot_index: u32,
+    },
+    /// 丢弃物品
+    DropItem {
+        /// 单位标识
+        unit_id: String,
+        /// 物品实例 ID
+        item_instance_id: String,
+        /// 数量
+        quantity: u32,
+    },
+
+    // ── Quest ─────────────────────────────────────
+    /// 接受任务
+    AcceptQuest {
+        /// 单位标识
+        unit_id: String,
+        /// 任务定义 ID
+        quest_def_id: String,
+    },
+    /// 放弃任务
+    AbandonQuest {
+        /// 单位标识
+        unit_id: String,
+        /// 任务定义 ID
+        quest_def_id: String,
+    },
+
+    // ── System ────────────────────────────────────
+    /// 新游戏
+    NewGame,
 }
 
 impl GameCommand {
@@ -106,6 +170,13 @@ impl GameCommand {
             Self::OpenMenu => "OpenMenu",
             Self::SaveGame => "SaveGame",
             Self::LoadGame => "LoadGame",
+            Self::BuyItem { .. } => "BuyItem",
+            Self::SellItem { .. } => "SellItem",
+            Self::EquipItem { .. } => "EquipItem",
+            Self::DropItem { .. } => "DropItem",
+            Self::AcceptQuest { .. } => "AcceptQuest",
+            Self::AbandonQuest { .. } => "AbandonQuest",
+            Self::NewGame => "NewGame",
         }
     }
 }
