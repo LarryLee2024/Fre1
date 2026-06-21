@@ -52,12 +52,12 @@ impl DefRegistry {
         Ok(())
     }
 
-    /// 按 ID 查询 Def。
+    /// 按 ID 查询 Def 条目。
     pub fn get(&self, def_id: &str) -> Option<&RegistryEntry> {
         self.entries.get(def_id)
     }
 
-    /// 按类型查询所有 Def。
+    /// 按类型查询所有 Def 条目。
     pub fn get_by_type(&self, def_type: &str) -> Vec<&RegistryEntry> {
         self.type_index
             .get(def_type)
@@ -65,27 +65,30 @@ impl DefRegistry {
             .unwrap_or_default()
     }
 
-    /// 检查 ID 是否存在。
+    /// 检查 Def ID 是否已注册。
     pub fn contains(&self, def_id: &str) -> bool {
         self.entries.contains_key(def_id)
     }
 
-    /// 注册的 Def 总数。
+    /// 返回已注册的 Def 总数。
     pub fn count(&self) -> usize {
         self.entries.len()
     }
 
-    /// 所有已注册的 Def ID。
+    /// 返回所有已注册的 Def ID 引用。
     pub fn all_ids(&self) -> Vec<&String> {
         self.entries.keys().collect()
     }
 
-    /// 获取所有条目。
+    /// 返回所有已注册条目的不可变引用。
     pub fn all_entries(&self) -> Vec<&RegistryEntry> {
         self.entries.values().collect()
     }
 
-    /// 标记一个 Def 为已废弃。
+    /// 标记一个 Def 为已废弃，可选设置替换者。
+    ///
+    /// # Errors
+    /// - IdNotFound: def_id 未注册
     pub fn mark_deprecated(
         &mut self,
         def_id: &str,
@@ -108,6 +111,8 @@ impl Default for DefRegistry {
 }
 
 /// 跨 Def 引用校验报告。
+///
+/// 记录总引用数和断裂引用详情，用于启动时内容完整性验证。
 #[derive(Debug, Clone, PartialEq)]
 pub struct CrossReferenceReport {
     /// 总 Def 数
@@ -121,7 +126,7 @@ pub struct CrossReferenceReport {
 }
 
 impl CrossReferenceReport {
-    /// 创建空的引用报告。
+    /// 创建空的引用报告，所有计数为 0。
     pub fn new() -> Self {
         Self {
             total_defs: 0,
@@ -131,7 +136,7 @@ impl CrossReferenceReport {
         }
     }
 
-    /// 是否有断裂引用。
+    /// 是否存在断裂引用。
     pub fn has_broken_references(&self) -> bool {
         self.broken_count > 0
     }

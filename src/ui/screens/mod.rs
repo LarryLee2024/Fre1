@@ -10,11 +10,13 @@
 //! - BattleScreen: Battle / combat screen (MVP)
 
 pub mod battle;
+pub mod inventory;
 pub mod main_menu;
 
 use bevy::prelude::*;
 
 use battle::{spawn_battle_screen, systems::on_battle_button_clicked};
+use inventory::{spawn_inventory_screen, systems::on_inventory_button_clicked};
 use main_menu::{
     spawn_main_menu,
     systems::{on_main_menu_action, on_main_menu_button_handler},
@@ -37,13 +39,16 @@ impl Plugin for ScreenPlugin {
             .register_type::<main_menu::MainMenuScreen>()
             .register_type::<battle::systems::BattleAction>()
             .register_type::<battle::BattleScreen>()
+            .register_type::<inventory::InventoryScreen>()
             .register_type::<ScreenType>()
             // Startup systems: spawn screens on app start
             .add_systems(Startup, spawn_main_menu)
             .add_systems(Startup, spawn_battle_screen)
+            .add_systems(Startup, spawn_inventory_screen)
             // Observers: button click -> UiCommand mapping（方案A）
             // Bevy 0.19: Commands::trigger fires the event, add_observer catches it
             .add_observer(on_main_menu_button_handler)
+            .add_observer(on_inventory_button_clicked)
             .add_observer(on_battle_button_clicked)
             // Observers: generic UiAction event handling
             .add_observer(on_main_menu_action);

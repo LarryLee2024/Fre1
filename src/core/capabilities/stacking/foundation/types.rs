@@ -126,6 +126,8 @@ impl Default for StackingConfig {
 }
 
 /// 堆叠上限溢出处理行为。
+///
+/// 当 Aggregate 堆叠达到 max_stacks 上限时，决定新到达的层数如何处理。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum OverflowBehavior {
     /// 丢弃新到达的层数，保持原状态
@@ -188,6 +190,8 @@ impl StackIdentity {
 }
 
 /// 堆叠匹配判定结果。
+///
+/// 由 StackIdentity 在比对 EffectDefId、SourceEntity、GroupTag 后产生。
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum StackMatchResult {
     /// 完全匹配（同 EffectDef + 同源）——进行堆叠判定

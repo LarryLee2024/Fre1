@@ -1,3 +1,4 @@
+- [Screen/Widget Factory Patterns](ui-screen-widget-pattern.md) -- Screen spawn/despawn, widget factory + plugin registration, primitives factory URLs
 - [Bevy 0.19 Observer API](bevy-0.19-observer-api.md) -- On<T> type, add_observer(), set_parent_in_place()
 - [UI Screens Implementation Pattern](ui-screens-implementation-pattern.md) -- Screen structure using primitives factories with hierarchy
 - [Button Widget Factory](button-widget-factory.md) -- Button factory pattern, variant styling, theme tokens

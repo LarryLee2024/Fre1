@@ -1,5 +1,8 @@
 use bevy::prelude::*;
 
+/// 目标选择能力插件。
+///
+/// 注册目标选择领域事件，供 Ability 和 UI 订阅消费。
 pub struct TargetingPlugin;
 
 impl Plugin for TargetingPlugin {

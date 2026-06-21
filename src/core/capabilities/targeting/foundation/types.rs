@@ -49,6 +49,8 @@ impl TargetType {
 }
 
 /// 目标范围形状枚举，定义技能的影响区域形状。
+///
+/// 与 TargetType 组合使用，共同构成完整的目标选择规则。
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum TargetShape {
     /// 单体（单一目标）
@@ -98,7 +100,7 @@ pub enum TargetShape {
 }
 
 impl TargetShape {
-    /// 返回的字符串忽略变体内部数据，Area/Line/Cone 等均返回不变的形状类别名。
+    /// 返回形状类别名称，忽略变体内部参数。
     pub fn name(&self) -> &str {
         match self {
             Self::Single => "Single",
@@ -111,12 +113,16 @@ impl TargetShape {
         }
     }
 
-    /// 是否为单体形状（Single）。
+    /// 判断是否为单体形状（Single）。
+    ///
+    /// 用于校验 Single 形状时 max_targets 必须为 1。
     pub fn is_single(&self) -> bool {
         matches!(self, Self::Single)
     }
 
-    /// 获取形状的默认最大目标数下限（Single=1，其余按定义）。
+    /// 返回该形状的最小最大目标数下限。
+    ///
+    /// Single 固定为 1，Chain 按 bounces 计算，其余默认为 1。
     pub fn min_max_targets(&self) -> u32 {
         match self {
             Self::Single => 1,
@@ -125,7 +131,9 @@ impl TargetShape {
         }
     }
 
-    /// 校验形状参数是否合法（V1: 形状参数合法）。
+    /// 校验形状内部参数是否合法。
+    ///
+    /// 不变量 V1: 形状参数必须有效（半径>0、长度>0、角度在(0,360]等）。
     pub fn validate(&self) -> Result<(), TargetingError> {
         match self {
             Self::Area { radius } => {
@@ -235,7 +243,7 @@ pub enum PriorityRule {
 }
 
 impl PriorityRule {
-    /// 返回的字符串用于 UI 显示和序列化，与枚举变体名完全一致。
+    /// 返回优先级规则名称，用于 UI 显示和日志。
     pub fn name(&self) -> &str {
         match self {
             Self::Nearest => "Nearest",

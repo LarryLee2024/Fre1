@@ -7,6 +7,8 @@
 use std::collections::HashMap;
 
 /// Def ID 类型枚举。
+///
+/// 每种类型对应一个固定的 ID 前缀，用于 ID 分配和类型路由。
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum IdType {
     Ability,
@@ -27,7 +29,7 @@ pub enum IdType {
 }
 
 impl IdType {
-    /// 从类型前缀字符串解析 IdType。
+    /// 从 ID 前缀字符串解析 IdType，未知前缀返回 None。
     pub fn from_prefix(prefix: &str) -> Option<Self> {
         match prefix {
             "abl_" => Some(Self::Ability),
@@ -48,7 +50,7 @@ impl IdType {
         }
     }
 
-    /// 返回 ID 类型的前缀。
+    /// 返回 ID 类型对应的固定前缀（如 "abl_"、"eff_"）。
     pub fn prefix(&self) -> &str {
         match self {
             Self::Ability => "abl_",
@@ -69,7 +71,7 @@ impl IdType {
         }
     }
 
-    /// 返回类型名称。
+    /// 返回类型的人类可读名称，用于日志和错误信息。
     pub fn name(&self) -> &str {
         match self {
             Self::Ability => "Ability",
@@ -91,7 +93,7 @@ impl IdType {
     }
 }
 
-/// ID 分配器状态。
+/// ID 分配器状态——管理单个类型的编号递增。
 #[derive(Debug, Clone, PartialEq)]
 pub struct AllocatorState {
     /// 类型前缀
@@ -103,7 +105,7 @@ pub struct AllocatorState {
 }
 
 impl AllocatorState {
-    /// 创建分配器状态。
+    /// 创建分配器状态，从编号 1 开始分配。
     pub fn new(prefix: impl Into<String>, digit_count: u8) -> Self {
         Self {
             prefix: prefix.into(),
@@ -112,10 +114,9 @@ impl AllocatorState {
         }
     }
 
-    /// 分配下一个 ID。
+    /// 分配下一个 ID 并自动递增编号。
     ///
-    /// 格式：`{prefix}{number:0>digit_count$}`
-    /// 示例：`abl_000001`, `eff_000042`
+    /// 格式：`{prefix}{number:0>digit_count$}`，如 `abl_000001`。
     pub fn allocate(&mut self) -> String {
         let id = self.next_id;
         self.next_id += 1;
@@ -129,6 +130,8 @@ impl AllocatorState {
 }
 
 /// ID 分配器——管理各类型前缀的编号分配。
+///
+/// 每个 IdType 对应一个 AllocatorState，按需注册后即可分配 ID。
 #[derive(Debug, Clone, PartialEq)]
 pub struct IdAllocator {
     /// 各类型的分配器状态
@@ -136,19 +139,19 @@ pub struct IdAllocator {
 }
 
 impl IdAllocator {
-    /// 创建空的 ID 分配器。
+    /// 创建空的 ID 分配器，需调用 register_type 后才能分配。
     pub fn new() -> Self {
         Self {
             allocators: HashMap::new(),
         }
     }
 
-    /// 注册一个 ID 类型及其分配器。
+    /// 注册一个 ID 类型及其分配器状态。
     pub fn register_type(&mut self, id_type: IdType, state: AllocatorState) {
         self.allocators.insert(id_type, state);
     }
 
-    /// 分配指定类型的下一个 ID。
+    /// 分配指定类型的下一个 ID，未注册的类型返回 None。
     pub fn allocate(&mut self, id_type: &IdType) -> Option<String> {
         self.allocators.get_mut(id_type).map(|s| s.allocate())
     }
@@ -160,7 +163,7 @@ impl Default for IdAllocator {
     }
 }
 
-/// 注册条目元数据。
+/// 注册条目元数据——存储 Def 的注册信息和废弃状态。
 #[derive(Debug, Clone, PartialEq)]
 pub struct RegistryEntry {
     /// Def ID
@@ -176,7 +179,7 @@ pub struct RegistryEntry {
 }
 
 impl RegistryEntry {
-    /// 创建注册条目。
+    /// 创建注册条目，def_id、def_type、data 必填。
     pub fn new(
         def_id: impl Into<String>,
         def_type: impl Into<String>,
@@ -191,13 +194,13 @@ impl RegistryEntry {
         }
     }
 
-    /// 标记为已废弃。
+    /// 标记为已废弃，废弃后运行时不再加载。
     pub fn deprecated(mut self) -> Self {
         self.deprecated = true;
         self
     }
 
-    /// 设置替换者。
+    /// 设置替换者 ID，标记此 Def 被哪个新 Def 取代。
     pub fn superseded_by(mut self, new_id: impl Into<String>) -> Self {
         self.superseded_by = Some(new_id.into());
         self

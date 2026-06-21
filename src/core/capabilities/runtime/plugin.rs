@@ -1,5 +1,9 @@
 use bevy::prelude::*;
 
+/// Runtime 能力插件。
+///
+/// 管理执行管线、调度器、命令队列、注册中心和回放系统。
+/// 当前 Phase B 状态：领域层纯函数已完成，ECS 集成待后续 Phase 实现。
 pub struct RuntimePlugin;
 
 impl Plugin for RuntimePlugin {

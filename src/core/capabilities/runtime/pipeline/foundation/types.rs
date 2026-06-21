@@ -9,6 +9,8 @@ use std::collections::HashMap;
 use crate::shared::error::ErrorContext;
 
 /// 管线的执行阶段。
+///
+/// 一个阶段包含多个有序步骤，阶段失败时按 FailureStrategy 决定后续行为。
 #[derive(Debug, Clone, PartialEq)]
 pub struct PipelineStage {
     /// 阶段名称
@@ -22,7 +24,7 @@ pub struct PipelineStage {
 }
 
 impl PipelineStage {
-    /// 创建新的执行阶段。
+    /// 创建新的执行阶段，默认失败策略为 Abort、不可跳过。
     pub fn new(name: impl Into<String>) -> Self {
         Self {
             name: name.into(),
@@ -32,19 +34,21 @@ impl PipelineStage {
         }
     }
 
-    /// 添加步骤。
+    /// 添加一个步骤到阶段末尾。
     pub fn step(mut self, step: PipelineStep) -> Self {
         self.steps.push(step);
         self
     }
 
-    /// 设置失败策略。
+    /// 设置失败策略，覆盖默认的 Abort。
     pub fn on_failure(mut self, strategy: FailureStrategy) -> Self {
         self.on_failure = strategy;
         self
     }
 
-    /// 标记为可跳过。
+    /// 标记阶段为可跳过。
+    ///
+    /// 可跳过阶段在执行条件不满足时直接跳过，不计入失败统计。
     pub fn skippable(mut self) -> Self {
         self.skippable = true;
         self
@@ -52,6 +56,8 @@ impl PipelineStage {
 }
 
 /// 管线步骤类型。
+///
+/// 每个步骤可以是命名的 System、领域规则、子管线或条件分支。
 #[derive(Debug, Clone, PartialEq)]
 pub enum PipelineStep {
     /// 执行一个命名的 System 函数
@@ -72,7 +78,7 @@ pub enum PipelineStep {
 }
 
 impl PipelineStep {
-    /// 返回步骤的名称标识。
+    /// 返回步骤的唯一标识名称。
     pub fn name(&self) -> &str {
         match self {
             Self::System(id) => id.as_str(),
@@ -84,6 +90,8 @@ impl PipelineStep {
 }
 
 /// 步骤执行失败时的策略。
+///
+/// 影响管线在遇到错误时的后续行为：立即终止、跳过继续或重试。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum FailureStrategy {
     /// 失败时立即终止整条管线
@@ -95,7 +103,7 @@ pub enum FailureStrategy {
 }
 
 impl FailureStrategy {
-    /// 返回策略名称。
+    /// 返回策略名称，用于日志和调试。
     pub fn name(&self) -> &str {
         match self {
             Self::Abort => "Abort",
@@ -105,7 +113,7 @@ impl FailureStrategy {
     }
 }
 
-/// 管线执行结果。
+/// 管线步骤执行结果。
 #[derive(Debug, Clone, PartialEq)]
 pub enum StepResult {
     /// 成功
@@ -117,6 +125,8 @@ pub enum StepResult {
 }
 
 /// 管线执行日志条目。
+///
+/// 记录单个步骤的执行结果，用于调试和 Replay 校验。
 #[derive(Debug, Clone, PartialEq)]
 pub struct ExecutionLogEntry {
     /// 阶段名称
@@ -128,7 +138,7 @@ pub struct ExecutionLogEntry {
 }
 
 impl ExecutionLogEntry {
-    /// 创建日志条目。
+    /// 创建日志条目，stage 和 step 为必填字段。
     pub fn new(stage: impl Into<String>, step: impl Into<String>, result: StepResult) -> Self {
         Self {
             stage: stage.into(),
@@ -157,7 +167,7 @@ pub struct PipelineContext {
 }
 
 impl PipelineContext {
-    /// 创建新的管线上下文。
+    /// 创建新的管线上下文，pipeline_id 为必填字段。
     pub fn new(pipeline_id: impl Into<String>) -> Self {
         Self {
             pipeline_id: pipeline_id.into(),
@@ -168,22 +178,24 @@ impl PipelineContext {
         }
     }
 
-    /// 写入阶段数据。
+    /// 写入阶段产出数据，供后续阶段读取。
     pub fn set_stage_data(&mut self, stage: impl Into<String>, data: impl Into<String>) {
         self.stage_data.insert(stage.into(), data.into());
     }
 
-    /// 读取阶段数据。
+    /// 读取指定阶段的产出数据。
     pub fn get_stage_data(&self, stage: &str) -> Option<&String> {
         self.stage_data.get(stage)
     }
 
-    /// 记录执行日志。
+    /// 追加执行日志条目。
     pub fn log(&mut self, entry: ExecutionLogEntry) {
         self.execution_log.push(entry);
     }
 
-    /// 中止管线。
+    /// 中止管线执行，记录中止原因。
+    ///
+    /// 中止后后续阶段不再执行，但已执行阶段的日志保留。
     pub fn abort(&mut self, reason: impl Into<String>) {
         self.aborted = true;
         self.abort_reason = Some(reason.into());

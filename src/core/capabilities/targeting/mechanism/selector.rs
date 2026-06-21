@@ -55,38 +55,38 @@ impl CandidateTarget {
         }
     }
 
-    /// 设置位置。
+    /// 设置网格坐标位置（如 "5,3"），用于区域技能范围判定。
     pub fn with_position(mut self, pos: impl Into<String>) -> Self {
         self.position = pos.into();
         self
     }
 
-    /// 设置距离。
+    /// 设置与施法者的距离，用于射程校验和优先级排序。
     pub fn with_distance(mut self, distance: f32) -> Self {
         self.distance = distance;
         self
     }
 
-    /// 设置阵营。
+    /// 设置阵营标识，用于 Ally/Enemy 筛选。
     pub fn with_faction(mut self, faction: impl Into<String>) -> Self {
         self.faction = faction.into();
         self
     }
 
-    /// 设置存活状态。
+    /// 设置存活状态，用于 Dead 类型筛选和 alive 过滤。
     pub fn with_alive(mut self, alive: bool) -> Self {
         self.alive = alive;
         self
     }
 
-    /// 设置生命值。
+    /// 设置当前生命值和最大值，用于 LowestHealth/HighestHealth 排序。
     pub fn with_health(mut self, health: f32, max_health: f32) -> Self {
         self.health = Some(health);
         self.max_health = Some(max_health);
         self
     }
 
-    /// 标记为施法者。
+    /// 标记为施法者自身，用于 Self_ 类型筛选和 include_self 过滤。
     pub fn with_is_caster(mut self, value: bool) -> Self {
         self.is_caster = value;
         self

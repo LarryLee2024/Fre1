@@ -1,5 +1,9 @@
 use bevy::prelude::*;
 
+/// 游戏上下文能力插件。
+///
+/// GameplayContext 是纯数据载体，无 ECS Resource 或 System。
+/// 注册领域事件供 Ability/Execution/Cue 订阅消费。
 pub struct GameplayContextPlugin;
 
 impl Plugin for GameplayContextPlugin {

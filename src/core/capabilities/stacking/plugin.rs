@@ -1,5 +1,8 @@
 use bevy::prelude::*;
 
+/// 堆叠能力插件。
+///
+/// 注册堆叠领域事件，供 Effect lifecycle 订阅消费。
 pub struct StackingPlugin;
 
 impl Plugin for StackingPlugin {

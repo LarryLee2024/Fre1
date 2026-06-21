@@ -6,6 +6,8 @@ use crate::core::capabilities::gameplay_context::foundation::error::ContextBuild
 use crate::core::capabilities::gameplay_context::foundation::types::*;
 
 /// 行为发起者信息。
+///
+/// 记录施法者/触发者的实体、阵营和位置，用于阵营判定和溯源。
 #[derive(Debug, Clone)]
 pub struct SourceInfo {
     /// 发起者实体
@@ -17,6 +19,8 @@ pub struct SourceInfo {
 }
 
 /// 行为目标者信息。
+///
+/// 记录被作用方的实体、阵营、位置和有效性，用于效果施加和溯源。
 #[derive(Debug, Clone)]
 pub struct TargetInfo {
     /// 目标实体
@@ -30,6 +34,8 @@ pub struct TargetInfo {
 }
 
 /// 溯源链的单个节点。
+///
+/// 每次触发（反击/连锁/伤害转移）时追加一个节点，用于循环检测和日志追踪。
 #[derive(Debug, Clone)]
 pub struct ChainNode {
     /// 节点触发类型
@@ -46,7 +52,7 @@ pub struct ChainNode {
     pub node_id: u64,
 }
 
-/// 上下文元数据。
+/// 上下文元数据——Schema 版本和生命周期状态。
 #[derive(Debug, Clone)]
 pub struct ContextMetadata {
     /// 上下文版本
@@ -139,6 +145,11 @@ impl ContextChain {
 ///
 /// 通过 ContextBuilder 构建，构建完成后不可变。
 /// 是 Ability → Targeting → Execution → Effect → Cue 全链路的统一数据总线。
+///
+/// 不变量：
+/// - context_id 全局唯一（由 generate_id 生成）
+/// - source.entity 和 target.entity 由 ECS 生命周期保证有效
+/// - chain 不得包含循环节点
 #[derive(Debug, Clone)]
 pub struct GameplayContextData {
     /// 上下文唯一标识

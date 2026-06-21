@@ -3,6 +3,8 @@
 use super::types::{PipelineContext, PipelineStage};
 
 /// 管线定义——由一组有序阶段组成的执行计划。
+///
+/// 🟥 禁止运行时动态调整阶段顺序（破坏 Replay 确定性）。
 #[derive(Debug, Clone, PartialEq)]
 pub struct PipelineDefinition {
     /// 管线标识
@@ -12,7 +14,7 @@ pub struct PipelineDefinition {
 }
 
 impl PipelineDefinition {
-    /// 创建新的管线定义。
+    /// 创建新的管线定义，id 必填。
     pub fn new(id: impl Into<String>) -> Self {
         Self {
             id: id.into(),
@@ -20,24 +22,26 @@ impl PipelineDefinition {
         }
     }
 
-    /// 添加执行阶段。
+    /// 追加一个执行阶段到管线末尾。
     pub fn stage(mut self, s: PipelineStage) -> Self {
         self.stages.push(s);
         self
     }
 
-    /// 按名称查找阶段。
+    /// 按阶段名称查找，返回不可变引用。
     pub fn find_stage(&self, name: &str) -> Option<&PipelineStage> {
         self.stages.iter().find(|s| s.name == name)
     }
 
-    /// 阶段数量。
+    /// 返回阶段总数。
     pub fn stage_count(&self) -> usize {
         self.stages.len()
     }
 }
 
 /// 管线运行时状态。
+///
+/// 记录当前执行进度和上下文，由 Executor 驱动推进。
 #[derive(Debug, Clone, PartialEq)]
 pub struct PipelineState {
     /// 管线定义 ID
@@ -53,7 +57,7 @@ pub struct PipelineState {
 }
 
 impl PipelineState {
-    /// 创建初始管线运行时状态。
+    /// 从管线定义创建初始运行时状态，当前阶段索引和步骤索引均为 0。
     pub fn new(definition: &PipelineDefinition) -> Self {
         Self {
             pipeline_id: definition.id.clone(),
@@ -64,17 +68,17 @@ impl PipelineState {
         }
     }
 
-    /// 标记为已完成。
+    /// 标记管线为已完成，不再接受进一步推进。
     pub fn mark_completed(&mut self) {
         self.completed = true;
     }
 
-    /// 推进到下一个步骤。
+    /// 推进到当前阶段内的下一个步骤。
     pub fn advance_step(&mut self) {
         self.current_step_index += 1;
     }
 
-    /// 推进到下一个阶段。
+    /// 推进到下一个阶段，步骤索引重置为 0。
     pub fn advance_stage(&mut self) {
         self.current_stage_index += 1;
         self.current_step_index = 0;

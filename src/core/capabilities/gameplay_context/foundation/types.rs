@@ -1,6 +1,8 @@
 //! GameplayContext 基础类型定义
 
 /// 上下文的原始触发类型。
+///
+/// 决定 GameplayContextData 的 origin 字段，影响溯源链的循环检测和日志分类。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ContextOrigin {
     /// 直接行为（如主动施放技能）
@@ -15,7 +17,7 @@ pub enum ContextOrigin {
     Environmental,
 }
 
-/// 元素类型。
+/// 元素类型——用于伤害属性判定和元素反应链。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ElementType {
     Fire,
@@ -30,6 +32,8 @@ pub enum ElementType {
 }
 
 /// 上下文生命周期状态。
+///
+/// 状态流转：Building → Validated → Active → Consumed → Archived
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ContextStatus {
     Building,
