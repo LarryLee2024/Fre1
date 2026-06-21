@@ -665,8 +665,11 @@ src/
 | ADR-045 | 模块可见性策略（可见性宪法） | ✅ Accepted | Foundation |
 | ADR-046 | 模块接口模式统一（消除 api.rs） | ✅ Accepted | Foundation |
 | ADR-047 | Content 加载管线架构 | ✅ Approved | Cross-cutting |
+| ADR-048 | Replay→Combat 桥接层设计 | ✅ Accepted | Cross-cutting |
+| ADR-049 | 跨域共享事件模式 | ✅ Accepted | Cross-cutting |
 | ADR-050 | 游戏状态机与场景架构 | ✅ Accepted | Foundation |
 | ADR-051 | Error/Failure 分离架构（规则失败与程序错误严格区分） | ✅ Accepted | Cross-cutting |
+| ADR-052 | 日志架构（领域事件驱动 + LogCode + 结构化日志） | ✅ Accepted | Cross-cutting |
 | ADR-053 | Localization 基础设施架构（Fluent + Key 代码生成 + 三级回退） | ✅ Accepted | Cross-cutting |
 | ADR-054 | Bevy 0.19 迁移决策（Observer 优先 / Delayed Commands / BSN 范围 / Relationship） | ✅ Accepted | Foundation |
 | ADR-055 | UI 表现层架构（Projection 防火墙 / 单向数据流 / Widget Contract） | ✅ Accepted | Cross-cutting |
@@ -745,11 +748,13 @@ src/
 | `40-cross-cutting/ADR-043-command-input.md` | ✅ stable | architect | 2026-06-16 |
 | `40-cross-cutting/ADR-044-pipeline-engine.md` | ✅ stable | architect | 2026-06-17 |
 | `00-foundation/ADR-045-module-visibility-strategy.md` | ✅  stable | architect | 2026-06-17 |
+| `00-foundation/ADR-046-module-interface-pattern.md` | ✅ stable | architect | 2026-06-18 |
 | `40-cross-cutting/ADR-047-content-loading-pipeline.md` | ✅ stable | architect | 2026-06-18 |
+| `40-cross-cutting/ADR-048-replay-combat-bridge.md` | ✅ stable | architect | 2026-06-19 |
 | `40-cross-cutting/ADR-049-shared-cross-domain-events.md` | ✅ stable | architect | 2026-06-19 |
 | `00-foundation/ADR-050-game-state-machine.md` | ✅ accepted | architect | 2026-06-19 |
 | `40-cross-cutting/ADR-051-error-failure-separation.md` | ✅ accepted | architect | 2026-06-19 |
-| `40-cross-cutting/ADR-053-localization-architecture.md` | ✅ accepted | architect | 2026-06-19 |
+| `40-cross-cutting/ADR-052-logging-architecture.md` | ✅ accepted | architect | 2026-06-19 |
 | `00-foundation/ADR-054-bevy-0-19-migration.md` | ✅ accepted | architect | 2026-06-19 |
 | `40-cross-cutting/ADR-055-ui-presentation-architecture.md` | ✅ accepted | presentation-architect | 2026-06-20 |
 | `00-foundation/ADR-056-agent-governance.md` | ✅ accepted | architect | 2026-06-20 |

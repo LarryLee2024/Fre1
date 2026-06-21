@@ -240,57 +240,6 @@ FlankingDetected / BackstabDetected / CoverEvaluated
 
 ---
 
-## 7. Integration Facade 设计（Anti-Corruption Layer）
-
-Tactical 域与 Capabilities 的交互通过 `integration/` 模块完成，采用 **Facade + SystemParam** 模式。
-
-### 7.1 设计原则
-
-- **Systems 不知道 Capabilities 内部类型**：通过 SystemParam + View Types 交互
-- **Facade 是唯一访问 Capabilities 字段的地方**：当 AttributeContainer / ModifierContainer 内部变化时，只修改 facade.rs
-- **按能力域拆分**：避免单文件膨胀为 God File
-
-### 7.2 模块结构
-
-```
-integration/
-├── mod.rs
-└── movement/
-    ├── mod.rs
-    ├── facade.rs       # 业务语义 API
-    ├── types.rs        # MovementCapabilityView, MP(newtype)
-    └── system_param.rs # MovementCapabilityParam(SystemParam)
-```
-
-### 7.3 View Types
-
-| 类型 | 说明 |
-|------|------|
-| `MP` | 移动力值（newtype，禁止裸 f32） |
-| `MovementCapabilityView` | 移动能力评估报告（can_move, effective_points, max_points, modifier_summary） |
-| `MovementModifierSummary` | 移动修正摘要（flat_bonus, multiplier, total_effect） |
-| `MovementPrerequisiteError` | 移动前提条件错误 |
-| `MovementCostError` | 移动成本错误 |
-
-### 7.4 SystemParam
-
-`MovementCapabilityParam` 封装所有 Capabilities 查询依赖：
-
-```rust
-fn movement_system(mov: MovementCapabilityParam) {
-    let view = mov.build_view(entity, MovementType::Walk);
-    if view.can_move { /* ... */ }
-}
-```
-
-### 7.5 禁止事项
-
-- 🟥 禁止 Systems 直接 `use` TagSet / AttributeContainer / ModifierContainer 进行字段访问
-- 🟥 禁止在 `integration/` 外部访问 Capabilities 组件的内部字段
-- 🟥 禁止将所有能力域塞入单个 `integration/` 文件
-
----
-
 ## 8. 自检清单
 
 - [x] 所有术语有唯一定义，与项目已有术语一致
@@ -302,3 +251,176 @@ fn movement_system(mov: MovementCapabilityParam) {
 - [x] 禁止事项已明确列出（4 条禁止）
 - [x] 战术判定与数值加成的职责边界定义清晰
 - [x] 每个操作有完整的流程定义（移动、夹击、背刺、掩体、高地判定）
+
+---
+
+## 9. Integration Facade 设计（Anti-Corruption Layer）
+
+Tactical 域与 Capabilities 的交互通过 `integration/` 模块完成，采用 **Facade + SystemParam** 模式。
+
+### 9.1 设计原则
+
+- **Systems 不知道 Capabilities 内部类型**：通过 SystemParam + View Types 交互
+- **Facade 是唯一访问 Capabilities 字段的地方**：当 AttributeContainer / ModifierContainer 内部变化时，只修改 facade.rs
+- **按能力域拆分**：避免单文件膨胀为 God File
+
+### 9.2 模块结构
+
+```
+integration/
+├── mod.rs
+└── movement/
+    ├── mod.rs
+    ├── facade.rs       # 业务语义 API
+    ├── types.rs        # MovementCapabilityView, MP(newtype)
+    └── system_param.rs # MovementCapabilityParam(SystemParam)
+```
+
+### 9.3 View Types
+
+| 类型 | 说明 |
+|------|------|
+| `MP` | 移动力值（newtype，禁止裸 f32） |
+| `MovementCapabilityView` | 移动能力评估报告（can_move, effective_points, max_points, modifier_summary） |
+| `MovementModifierSummary` | 移动修正摘要（flat_bonus, multiplier, total_effect） |
+| `MovementPrerequisiteError` | 移动前提条件错误 |
+| `MovementCostError` | 移动成本错误 |
+
+### 9.4 SystemParam
+
+`MovementCapabilityParam` 封装所有 Capabilities 查询依赖：
+
+```rust
+fn movement_system(mov: MovementCapabilityParam) {
+    let view = mov.build_view(entity, MovementType::Walk);
+    if view.can_move { /* ... */ }
+}
+```
+
+### 9.5 禁止事项
+
+- 🟥 禁止 Systems 直接 `use` TagSet / AttributeContainer / ModifierContainer 进行字段访问
+- 🟥 禁止在 `integration/` 外部访问 Capabilities 组件的内部字段
+- 🟥 禁止将所有能力域塞入单个 `integration/` 文件
+
+---
+
+## 10. 六边形网格坐标系规则
+
+### 10.1 坐标系统
+
+Tactical 领域使用六边形网格坐标系统，由 `HexCoord` 类型（定义于 `shared/math/`）实现。
+
+**轴向坐标（Axial Coordinate System）**：
+
+- 使用 (q, r) 两个轴表示六边形网格中的位置
+- q = 列坐标（沿水平方向）、r = 行坐标（沿斜向方向）
+- 第三个立方体坐标 `s = -q - r` 隐式存在，用于距离计算
+- 坐标类型为 `i32`，支持负值
+- 方向：点顶朝向（pointy-top）
+
+**坐标类型转换**：
+
+| 操作 | 方法 | 说明 |
+|------|------|------|
+| 构造 | `HexCoord::new(q, r)` | 从 q, r 创建坐标 |
+| 加法 | `a + b` | 坐标向量加法 |
+| 减法 | `a - b` | 坐标向量减法 |
+| 元组转换 | `HexCoord::from((q, r))` | 从 (i32, i32) 元组创建 |
+
+### 10.2 距离公式
+
+两个六边形坐标之间的立方体距离：
+
+```
+distance(a, b) = (|dq| + |dr| + |ds|) / 2
+               = (|dq| + |dr| + |dq + dr|) / 2
+
+其中 dq = b.q - a.q，dr = b.r - a.r，ds = -dq - dr
+```
+
+**距离示例**：
+
+| 起点 | 终点 | 距离 |
+|------|------|------|
+| (0, 0) | (0, 0) | 0 |
+| (0, 0) | (1, 0) | 1 |
+| (0, 0) | (2, 1) | 3 |
+| (-3, 2) | (1, -1) | 5 |
+
+### 10.3 邻居方向
+
+每个六边形有 6 个邻居，以轴向坐标偏移表示（点顶朝向）：
+
+| 邻居 | q 偏移 | r 偏移 | 方向描述 |
+|------|--------|--------|----------|
+| N1 | +1 | 0 | 右（East） |
+| N2 | -1 | 0 | 左（West） |
+| N3 | 0 | +1 | 右下（Southeast） |
+| N4 | 0 | -1 | 左上（Northwest） |
+| N5 | +1 | -1 | 右上（Northeast） |
+| N6 | -1 | +1 | 左下（Southwest） |
+
+**邻居判定规则**：
+
+- 两个坐标相邻当且仅当 `hex_distance(a, b) == 1`
+- 每个 HexCoord 可通过 `neighbors()` 方法获取 6 个邻居数组
+
+### 10.4 战术领域 HexCoord 使用不变量
+
+以下不变量是对战术领域已有规则的补充，专门约束六边形网格坐标系下的行为：
+
+#### 10.4.1 移动范围以 hex_distance 衡量
+
+- **条件**：计算单位移动范围时
+- **不变量**：移动范围以 `hex_distance` 计算的步数为单位。单位可移动到的格子必须是 `distance(start, target) <= remaining_mp` 的格子
+- **违反后果类型**：🔴 程序错误
+- **违反后果**：移动范围计算错误导致单位移动到不可达位置
+
+#### 10.4.2 目标范围以 hex_distance 衡量
+
+- **条件**：计算技能/攻击的目标范围时
+- **不变量**：技能/攻击的射程以 `hex_distance` 计算。目标必须满足 `distance(attacker, target) <= range`
+- **违反后果类型**：🔴 程序错误
+- **违反后果**：射程判定错误导致越界攻击或无法选择有效目标
+
+#### 10.4.3 路径步进必须为相邻格
+
+- **条件**：单位沿路径移动时（路径由 PathData 表示）
+- **不变量**：路径中相邻的坐标之间必须满足 `hex_distance(path[i], path[i+1]) == 1`。不允许跳跃
+- **违反后果类型**：🔴 程序错误
+- **违反后果**：路径中存在非相邻跳跃，导致单位表现瞬移
+
+#### 10.4.4 坐标运算不可溢出
+
+- **条件**：任何 HexCoord 加减运算时
+- **不变量**：坐标值必须在 i32 范围内，防止算术溢出导致坐标取绕
+- **违反后果类型**：🔴 程序错误
+- **违反后果**：坐标溢出导致位置错误，单位出现在非预期位置
+
+#### 10.4.5 夹击判别使用 hex_distance 角度
+
+- **条件**：判定夹击时
+- **不变量**：夹击的角度计算基于六边形网格的几何关系，使用 `hex_distance` 和位置向量关系确定是否形成 180° 夹击
+- **违反后果类型**：🔴 程序错误
+- **违反后果**：夹击判定错误导致实际站位和判定结果不一致
+
+### 10.5 HexCoord 与 GridPosition 的关系
+
+| 概念 | HexCoord | GridPosition |
+|------|----------|--------------|
+| 用途 | 六边形网格的底层数学坐标 | 战场单位的空间位置抽象 |
+| 坐标系统 | 轴向坐标 (q, r) | 可适配不同网格类型 |
+| 距离计算 | hex_distance 公式 | 委托 HexCoord |
+| 邻居 | 6 个固定偏移 | 委托 HexCoord |
+| 领域职责 | 纯数学运算（无 ECS 依赖） | 战场空间管理（ECS Component） |
+
+> **核心原则**：GridPosition 内聚 HexCoord 作为其坐标表示。所有战术领域中的距离和方向计算最终委托给 HexCoord 的数学方法。
+
+### 10.6 与已有架构的对齐校验
+
+- ✅ HexCoord 位于 `shared/math/`，符合"shared 层零业务语义"的架构分层
+- ✅ GridPosition 通过 HexCoord 实现距离/方向计算，不重复实现数学逻辑
+- ✅ 距离公式、方向判定与 SRPG 标准六边形网格算法一致
+- ✅ 所有战术定位计算都有明确的数学基础（axial + cubic 坐标系统）
+- ✅ 不变量覆盖移动范围、目标范围、路径连贯性、坐标安全、夹击判定

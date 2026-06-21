@@ -263,7 +263,7 @@ assets/config/
 | StackingDef | `StackingDef` | `StackingId` | stacking | `definitions/stacking-def.md` |
 | CueDef | `CueDef` | `CueId` | cue | `definitions/cue-def.md` |
 | AbilityDef | `AbilityDef` | `AbilityId` | ability | `definitions/ability-def.md` |
-| SpellDef | `SpellDef` | `SpellId` | spell | `definitions/ability-def.md` |
+| SpellDef | `SpellDef` | `SpellId` | spell | `definitions/spell-def.md` |
 
 ### L2: Entity Defs
 
@@ -390,7 +390,8 @@ assets/config/
 | `definitions/execution-def.md` | ✅ new | content-architect | 2026-06-20 |
 | `definitions/stacking-def.md` | ✅ new | content-architect | 2026-06-20 |
 | `definitions/cue-def.md` | ✅ new | content-architect | 2026-06-20 |
-| `definitions/ability-def.md` | 🟡 TODO | content-architect | — |
+| `definitions/ability-def.md` | ✅ complete | content-architect | 2026-06-21 |
+| `definitions/spell-def.md` | ✅ new | content-architect | 2026-06-21 |
 | `definitions/entities/README.md` | ✅ new | content-architect | 2026-06-20 |
 | `definitions/entities/character-def.md` | ✅ new | content-architect | 2026-06-20 |
 | `definitions/entities/monster-def.md` | ✅ new | content-architect | 2026-06-20 |

@@ -1,0 +1,1 @@
+- [Event History Architecture](event-history-architecture.md) — EventStore Schema + 三层事件归属 + Replay 互补

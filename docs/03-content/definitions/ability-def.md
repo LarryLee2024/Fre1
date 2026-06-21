@@ -1,10 +1,10 @@
 ---
 id: 03-content.definitions.ability-def
 title: AbilityDef — Ability Content Def 定义
-status: draft
+status: complete
 owner: content-architect
 created: 2026-06-20
-updated: 2026-06-20
+updated: 2026-06-21
 ---
 
 # AbilityDef — Ability Content Def 定义
@@ -55,6 +55,8 @@ AbilityDef (组合终端)
 
 不直接引用 L0+ 层：内容通过 Effect → Modifier 间接引用 L0 AttributeDef
 不直接引用 L2+ 层：Entity/Gameplay/World 层内容通过 Event 间接交互
+
+被 SpellDef 引用：AbilityDef 作为 Spell 域的底层能力引擎，SpellDef 通过 ability_id 引用本 Def
 ```
 
 ### 关键设计原则
@@ -961,6 +963,14 @@ AbilityDef 是所有 Def 中引用最广、校验规则最多的类型。
 | 生命周期 | Ready → Casting → Active → Cooldown → Ready | Applied → Tick → Expired → Removed |
 | 激活方式 | 手动/触发/常驻 | 由 Effect 应用时自动创建 |
 | 依赖关系 | 引用 EffectDef | 包装 EffectDef |
+
+| 对比维度 | AbilityDef | SpellDef |
+|----------|-----------|----------|
+| 本质 | 通用能力编排容器 | AbilityDef 的魔法上下文包装 |
+| 关系 | 被 SpellDef.ability_id 引用 | 引用 AbilityDef 作为底层能力引擎 |
+| 职责 | 定义消耗/冷却/目标/效果链 | 定义学派/环阶/组件/专注/升环 |
+| 是否必填 | 否（可独立注册） | 是（SpellDef 必须关联 AbilityDef） |
+| 典型存储 | `abilities.ron` | `spells.ron` |
 
 ---
 
