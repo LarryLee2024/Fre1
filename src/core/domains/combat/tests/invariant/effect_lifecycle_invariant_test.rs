@@ -1,9 +1,9 @@
-//! Invariant tests — Effect lifecycle invariants at the Combat integration level.
+//! 不变量测试 — Combat 集成层的 Effect 生命周期不变量。
 //!
 //! | 不变量 | 来源 | 描述 |
 //! |--------|------|------|
-//! | 3.3 | effect_domain.md | remaining_turns must never be negative after tick |
-//! | 2 | effect_domain.md | Stage transitions: Active -> Expiring -> Removed (no skipping) |
+//! | 3.3 | effect_domain.md | tick 后 remaining_turns 不得为负数 |
+//! | 2 | effect_domain.md | 阶段转移：Active -> Expiring -> Removed（不可跳过） |
 
 use bevy::prelude::*;
 
@@ -14,7 +14,7 @@ use crate::core::capabilities::effect::mechanism::{apply_effect, expire_effects,
 
 // -- Helpers ---------------------------------------------------------------
 
-/// Create a Duration effect with unique (instance_id, def_id, source) to avoid duplicate rejection.
+/// 创建 Duration 效果，使用唯一的 (instance_id, def_id, source) 避免重复排斥。
 fn make_duration_effect(id: &str, def_id: &str, turns: u32, source: &str) -> EffectInstance {
     EffectInstance::new(
         id,

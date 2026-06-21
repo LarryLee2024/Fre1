@@ -1,4 +1,4 @@
-//! LocaleId enum tests — string conversion, display, equality.
+//! LocaleId 枚举测试 — 字符串转换、显示、相等性。
 
 use crate::infra::localization::foundation::LocaleId;
 

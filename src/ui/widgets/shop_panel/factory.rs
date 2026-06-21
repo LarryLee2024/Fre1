@@ -76,7 +76,7 @@ pub fn spawn_shop_panel(
     let title = spawn_text(commands, asset_server, theme, "Shop", TextVariant::Heading);
     commands.entity(title).set_parent_in_place(header);
 
-    // Gold display text
+    // 金币显示文本
     let gold_text = spawn_text(
         commands,
         asset_server,
@@ -119,7 +119,7 @@ pub fn spawn_shop_panel(
     let sell_items: [(&str, u32); 2] = [("Old Sword", 1), ("Leather Armor", 1)];
 
     for (idx, (name, qty)) in sell_items.iter().enumerate() {
-        // Each sell item is wrapped in a horizontal row container
+        // 每个出售物品包裹在水平行容器中
         let sell_row = commands
             .spawn(Node {
                 flex_direction: FlexDirection::Row,
@@ -130,7 +130,7 @@ pub fn spawn_shop_panel(
             .id();
         commands.entity(sell_row).set_parent_in_place(container);
 
-        // Display item name and quantity
+        // 显示物品名称和数量
         let sell_label = spawn_text(
             commands,
             asset_server,
@@ -140,7 +140,7 @@ pub fn spawn_shop_panel(
         );
         commands.entity(sell_label).set_parent_in_place(sell_row);
 
-        // Sell button with ShopPanelAction::SellItem
+        // 出售按钮，携带 ShopPanelAction::SellItem
         let sell_btn = spawn_localized_button(
             commands,
             theme,

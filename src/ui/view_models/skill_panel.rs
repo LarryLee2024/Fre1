@@ -24,8 +24,51 @@ pub struct SkillSlotVm {
 }
 
 /// 技能面板视图模型
-#[derive(Clone, Reflect, Default)]
+#[derive(Clone, Reflect)]
 pub struct SkillPanelVm {
     /// 技能数据映射（skill_id → SkillSlotVm）
     pub skills: HashMap<u32, SkillSlotVm>,
+}
+
+impl Default for SkillPanelVm {
+    /// 默认提供三个示例技能，使 UI 在首次投影前有显示内容。
+    /// 进入战斗后，投影函数（on_effect_applied、on_turn_started_for_skills）
+    /// 会更新冷却状态和可用性。
+    fn default() -> Self {
+        let mut skills = HashMap::new();
+        skills.insert(
+            1,
+            SkillSlotVm {
+                skill_id: 1,
+                name_key: "ui.skill.attack",
+                cooldown_remaining: 0,
+                max_cooldown: 0,
+                is_usable: true,
+                ap_cost: 1,
+            },
+        );
+        skills.insert(
+            2,
+            SkillSlotVm {
+                skill_id: 2,
+                name_key: "ui.skill.fireball",
+                cooldown_remaining: 0,
+                max_cooldown: 3,
+                is_usable: true,
+                ap_cost: 2,
+            },
+        );
+        skills.insert(
+            3,
+            SkillSlotVm {
+                skill_id: 3,
+                name_key: "ui.skill.heal",
+                cooldown_remaining: 0,
+                max_cooldown: 2,
+                is_usable: true,
+                ap_cost: 1,
+            },
+        );
+        Self { skills }
+    }
 }

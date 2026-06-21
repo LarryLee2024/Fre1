@@ -1,6 +1,6 @@
-//! storage — ECS Resources for localization data.
+//! storage — 本地化数据的 ECS Resource。
 //!
-//! Contains LocalizationDatabase (core data) and LocalizedTextCache (runtime cache).
+//! 包含 LocalizationDatabase（核心数据）和 LocalizedTextCache（运行时缓存）。
 
 pub(crate) mod cache;
 pub(crate) mod database;

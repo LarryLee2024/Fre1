@@ -20,7 +20,7 @@ use super::overlay::OverlayPlugin;
 use super::primitives::PrimitivesPlugin;
 use super::projections::battle::{
     on_battle_started_projection, on_character_panel_projection, on_effect_applied_projection,
-    on_turn_ended_projection, on_turn_started_projection,
+    on_turn_ended_projection, on_turn_started_projection, on_turn_started_skill_projection,
 };
 use super::screens::ScreenPlugin;
 use super::settings::{UiSettings, load_settings};
@@ -68,6 +68,7 @@ impl Plugin for UiPlugin {
         app.add_observer(on_turn_ended_projection);
         app.add_observer(on_character_panel_projection);
         app.add_observer(on_effect_applied_projection);
+        app.add_observer(on_turn_started_skill_projection);
 
         // 8. Bridge — UiCommand to GameCommand wiring (observer pattern)
         app.add_observer(process_ui_commands);

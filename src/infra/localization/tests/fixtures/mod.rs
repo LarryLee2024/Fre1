@@ -1,1 +1,1 @@
-//! Test fixtures — .ftl files for unit and integration tests.
+//! 测试夹具 — 单元测试和集成测试用的 .ftl 文件。

@@ -63,22 +63,52 @@ impl BattleProjection {
 
     /// 将 `EffectApplied` 事件投影到 `UiStore.skill_panel`。
     ///
-    /// 当前为占位符，仅记录事件。未来实现将匹配效果的 def_id 与已知技能
-    /// 效果，并更新技能面板中的冷却状态。
+    /// 尝试将 effect def_id 与技能面板中的技能匹配以更新冷却状态。
+    /// 匹配策略：将 event.def_id（如 "spl_fireball"）与
+    /// UiStore.skill_panel.skills 中的 name_key 进行模糊匹配。
+    /// 当前简化实现：标记所有非零冷却技能为"已使用"状态
+    /// （cooldown_remaining = max_cooldown, is_usable = false）。
+    /// 精确匹配留待 EffectDef -> SkillDef 关联表就绪后实现。
     pub fn on_effect_applied(store: &mut UiStore, event: &EffectApplied) {
-        // 占位符：记录效果应用
-        // TODO[P3][Projection][2026-06-21]: 实现技能冷却更新
-        //   通过匹配 event.def_id 与 UiStore.skill_panel 中的技能
-        //   并为匹配的技能设置 cooldown_remaining = max_cooldown。
-        //   完成条件：EffectApplied 的 def_id 匹配时，
-        //   对应 SkillSlotVm 的 cooldown_remaining = max_cooldown。
-        let _ = store; // 占位符，待实现真实逻辑
-        info!(
-            target: "ui",
-            "[BattleProjection] Effect applied: def_id={}, target={}",
-            event.def_id,
-            event.target_entity,
-        );
+        let effect_id = &event.def_id;
+        let mut matched = false;
+
+        for (_skill_id, slot) in store.skill_panel.skills.iter_mut() {
+            if slot.max_cooldown > 0 && slot.name_key.contains(effect_id) {
+                slot.cooldown_remaining = slot.max_cooldown;
+                slot.is_usable = false;
+                matched = true;
+            }
+        }
+
+        if matched {
+            info!(
+                target: "ui",
+                "[BattleProjection] Effect '{}' matched to skill - cooldown set",
+                effect_id,
+            );
+        } else {
+            info!(
+                target: "ui",
+                "[BattleProjection] Effect applied: def_id={}, target={} (no skill match)",
+                event.def_id,
+                event.target_entity,
+            );
+        }
+    }
+
+    /// 回合开始时递减所有技能的冷却。
+    ///
+    /// 每个回合将 cooldown_remaining 减 1，当降至 0 时将技能标记为可用。
+    pub fn on_turn_started_for_skills(store: &mut UiStore, _event: &TurnStarted) {
+        for (_id, slot) in store.skill_panel.skills.iter_mut() {
+            if slot.cooldown_remaining > 0 {
+                slot.cooldown_remaining -= 1;
+                if slot.cooldown_remaining == 0 {
+                    slot.is_usable = true;
+                }
+            }
+        }
     }
 }
 
@@ -171,6 +201,23 @@ pub fn on_effect_applied_projection(
     BattleProjection::on_effect_applied(&mut store, trigger.event());
 
     // 标记所有 SkillPanelVm 消费者为脏
+    for mut dirty in dirty_query.iter_mut() {
+        dirty.mark_dirty();
+    }
+}
+
+/// Observer：监听 `TurnStarted` 领域事件并通过
+/// `BattleProjection::on_turn_started_for_skills` 递减技能冷却。
+///
+/// 同时标记所有 `Dirty<SkillPanelVm>` 组件为脏，以便技能
+/// 槽位 Widget 在下一帧刷新。
+pub fn on_turn_started_skill_projection(
+    trigger: On<TurnStarted>,
+    mut store: ResMut<UiStore>,
+    mut dirty_query: Query<&mut Dirty<SkillPanelVm>>,
+) {
+    BattleProjection::on_turn_started_for_skills(&mut store, trigger.event());
+
     for mut dirty in dirty_query.iter_mut() {
         dirty.mark_dirty();
     }

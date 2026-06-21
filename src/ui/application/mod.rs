@@ -20,3 +20,6 @@ pub use action::UiAction;
 pub use command::UiCommand;
 pub use event::UiEvent;
 pub use intent::UiIntent;
+
+#[cfg(test)]
+mod tests;

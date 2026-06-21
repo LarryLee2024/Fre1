@@ -8,14 +8,10 @@
 //!   - 添加到 UiStore
 //!   - 创建 EconomyProjection::on_purchase_complete / on_sell_complete
 //!   - 添加 Observer 包装器并注册到 plugin.rs
+//!
 //!   Completion criteria: 购买/出售事件到来时更新 UiStore 中的金币和库存 VM
 //!
 //! 参见 `docs/06-ui/04-data-flow/projection-viewmodel.md` §4
-
-// TODO[P3][Economy][2026-06-21]: 当经济领域事件就绪时，添加对应的 Observer 系统
-//   - on_purchase_complete_projection(trigger, store, dirty)
-//   - on_sell_complete_projection(trigger, store, dirty)
-//   - 注册到 plugin.rs 的 projections 部分
 
 use bevy::prelude::*;
 
@@ -30,17 +26,22 @@ pub struct EconomyProjection;
 impl EconomyProjection {
     /// 购买交易完成后的投影更新
     ///
+    /// 当 `PurchaseCompleted` 领域事件就绪后，从事件中提取 item_def_id、
+    /// quantity 和 total_cost，更新 `UiStore` 中的金币显示和物品列表。
+    ///
     /// TODO[P3][Economy][2026-06-21]: 更新金币显示和物品列表
     ///   - 需要一个 EconomyVm（含 gold 字段）添加到 UiStore
     ///   - 需要 PurchaseCompleted 领域事件
+    ///
     ///   Completion criteria: 购买事件到来时更新 UiStore 中的金币和库存 VM
-    pub fn on_purchase_complete(store: &mut UiStore) {
-        // Placeholder: no-op until ViewModel is defined
-        let _ = store;
+    pub fn on_purchase_complete(store: &mut UiStore, item_def_id: &str, quantity: u32, total_cost: u64) {
         info!(
             target: "ui",
-            "[EconomyProjection] Purchase complete — stub, no-op"
+            "[EconomyProjection] Purchase: {} x{} for {} gold",
+            item_def_id, quantity, total_cost,
         );
+        // TODO: 更新钱包和库存显示
+        let _ = store;
     }
 
     /// 出售交易完成后的投影更新
@@ -48,13 +49,15 @@ impl EconomyProjection {
     /// TODO[P3][Economy][2026-06-21]: 更新金币显示和物品列表
     ///   - 需要一个 EconomyVm（含 gold 字段）添加到 UiStore
     ///   - 需要 SellCompleted 领域事件
+    ///
     ///   Completion criteria: 出售事件到来时更新 UiStore 中的金币和库存 VM
-    pub fn on_sell_complete(store: &mut UiStore) {
-        // Placeholder: no-op until ViewModel is defined
-        let _ = store;
+    pub fn on_sell_complete(store: &mut UiStore, item_def_id: &str, quantity: u32, total_revenue: u64) {
         info!(
             target: "ui",
-            "[EconomyProjection] Sell complete — stub, no-op"
+            "[EconomyProjection] Sold: {} x{} for {} gold",
+            item_def_id, quantity, total_revenue,
         );
+        // TODO: 更新钱包和库存显示
+        let _ = store;
     }
 }

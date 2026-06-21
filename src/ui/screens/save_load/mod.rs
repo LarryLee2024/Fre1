@@ -52,11 +52,11 @@ pub struct SaveLoadScreen;
 /// 来确定哪个按钮被点击。
 #[derive(Component, Debug, Clone, PartialEq, Eq, Reflect)]
 pub enum SaveLoadAction {
-    /// Close the SaveLoad screen
+    /// 关闭存档/读档界面
     Close,
-    /// Save game to the specified slot
+    /// 保存游戏到指定槽位
     SaveSlot(u32),
-    /// Load game from the specified slot
+    /// 从指定槽位读取存档
     LoadSlot(u32),
 }
 

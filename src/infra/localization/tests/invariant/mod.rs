@@ -1,1 +1,1 @@
-//! Invariant tests — key consistency between generated keys and parsed locales.
+//! 不变量测试 — 生成的 key 与解析的 locale 之间的一致性。

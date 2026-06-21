@@ -1,4 +1,4 @@
-//! Cache tests — eviction, get/set, and clear behavior.
+//! 缓存测试 — 驱逐、get/set 和清空行为。
 
 use crate::infra::localization::foundation::LocaleId;
 use crate::infra::localization::storage::cache::LocalizedTextCache;
