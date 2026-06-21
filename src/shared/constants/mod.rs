@@ -1,22 +1,21 @@
-//! Shared constants used across the crate.
+//! 跨 crate 使用的共享常量。
 //!
-//! This module contains game-wide constants that have zero business or technical
-//! semantics — they are pure configuration values shared across layers.
-//! For domain-specific constants, see the respective domain module.
+//! 本模块包含具有零业务或技术语义的全局常量 — 它们是跨层共享的纯配置值。
+//! 领域特定的常量请参见各自的领域模块。
 
-/// Maximum depth for Observer chain reactions.
+/// Observer 链式反应的最大深度。
 ///
-/// When observers trigger other observers recursively, this limit prevents
-/// infinite loops. Set to 10 based on ADR-002 recommendation.
+/// 当 Observer 递归触发其他 Observer 时，此限制防止无限循环。
+/// 基于 ADR-002 建议设置为 10。
 ///
-/// Violation at runtime triggers a WARN log but does not panic.
+/// 运行时违规触发 WARN 日志但不会 panic。
 pub const MAX_OBSERVER_DEPTH: u32 = 10;
 
-/// Maximum party members.
+/// 最大队伍成员数。
 pub const MAX_PARTY_SIZE: usize = 6;
 
-/// Maximum inventory slots per entity.
+/// 每个实体的最大背包槽位数。
 pub const MAX_INVENTORY_SIZE: usize = 100;
 
-/// Default maximum buff stack count.
+/// 默认最大 Buff 叠加层数。
 pub const MAX_BUFF_STACK: usize = 5;

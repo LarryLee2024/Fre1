@@ -1,23 +1,23 @@
-//! EntityCommandsExt -- Extension trait for [`EntityCommands`].
+//! EntityCommandsExt — [`EntityCommands`] 的扩展 trait。
 //!
-//! Provides domain-specific method sugar on top of Bevy's `EntityCommands`,
-//! internally delegating to integration-layer Facade functions.
+//! 在 Bevy 的 `EntityCommands` 之上提供领域特定的语法糖方法，
+//! 内部委托给集成层 Facade 函数。
 //!
-//! All methods return `&mut Self` to support chainable DSL usage.
+//! 所有方法返回 `&mut Self` 以支持链式 DSL 用法。
 
 use bevy::prelude::info;
 use bevy::prelude::EntityCommands;
 
 use crate::core::domains::combat::components::Dead;
 
-/// Extension trait for [`EntityCommands`] providing domain-specific operations.
+/// [`EntityCommands`] 的扩展 trait，提供领域特定操作。
 ///
-/// All methods internally delegate to integration-layer Facade functions,
-/// never directly manipulate Capabilities internals.
+/// 所有方法内部委托给集成层 Facade 函数，
+/// 不直接操作 Capabilities 内部。
 ///
-/// Methods return `&mut Self` for chainable DSL usage.
+/// 方法返回 `&mut Self` 以支持链式 DSL 用法。
 ///
-/// # Usage
+/// # 用法
 ///
 /// ```ignore
 /// use crate::core::domains::combat::integration::ext::EntityCommandsExt;
@@ -35,30 +35,30 @@ use crate::core::domains::combat::components::Dead;
 /// 存在原因：战斗中施加 Buff、治疗、击杀等操作需要链式 API，
 /// 避免每个系统重复写 `commands.trigger(XxxRequest { ... })` 样板代码。
 pub trait EntityCommandsExt {
-    /// Add a buff (active effect) to this entity.
+    /// 为此实体添加一个 Buff（主动效果）。
     ///
-    /// Internally queues a buff request that will be processed by the
-    /// Effect capability's integration facade.
+    /// 内部将 Buff 请求入队，由 Effect 能力的
+    /// 集成 Facade 处理。
     ///
-    /// # Parameters
+    /// # 参数
     ///
-    /// * `buff_id` — The Def ID of the buff to apply (e.g. `"eff_000001"`).
+    /// * `buff_id` — 要施加的 Buff 的 Def ID（如 `"eff_000001"`）。
     fn add_buff(&mut self, buff_id: &str) -> &mut Self;
 
-    /// Heal this entity for the given amount.
+    /// 治疗此实体指定量的生命值。
     ///
-    /// Internally delegates to the Execution integration facade which
-    /// routes through the Effect/Modifier pipeline.
+    /// 内部委托给 Execution 集成 Facade，
+    /// 经由 Effect/Modifier 管线处理。
     ///
-    /// # Parameters
+    /// # 参数
     ///
-    /// * `amount` — Raw heal amount before modifiers/mitigation.
+    /// * `amount` — 修正前的原始治疗量。
     fn heal(&mut self, amount: u32) -> &mut Self;
 
-    /// Kill this entity (mark as dead).
+    /// 击杀此实体（标记为死亡）。
     ///
-    /// Inserts the [`Dead`] marker component, which the combat pipeline
-    /// uses to identify eliminated participants.
+    /// 插入 [`Dead`] 标记组件，战斗管线
+    /// 使用该组件来识别已淘汰的参与者。
     fn kill(&mut self) -> &mut Self;
 }
 
@@ -69,9 +69,9 @@ impl EntityCommandsExt for EntityCommands<'_> {
             "EntityCommandsExt::add_buff(buff_id={}) — queuing buff application",
             buff_id,
         );
-        // TODO[Phase C2]: Wire to EffectFacade::apply_buff once the effect
-        //   integration facade exposes a command-level API.
-        //   Current plan:
+        // TODO[Phase C2]: 接入 EffectFacade::apply_buff，等待 effect 集成
+        //   Facade 暴露命令级别 API。
+        //   当前计划：
         //     let entity = self.id();
         //     self.queue(move |world| {
         //         EffectFacade::apply_buff(world, entity, buff_id);
@@ -84,9 +84,9 @@ impl EntityCommandsExt for EntityCommands<'_> {
             "EntityCommandsExt::heal(amount={}) — queuing heal request",
             amount,
         );
-        // TODO[Phase C2]: Wire to ExecutionFacade::heal once the execution
-        //   integration facade exposes a command-level API for HP modification.
-        //   Current plan:
+        // TODO[Phase C2]: 接入 ExecutionFacade::heal，等待 execution
+        //   集成 Facade 暴露 HP 修改的命令级别 API。
+        //   当前计划：
         //     let entity = self.id();
         //     self.queue(move |world| {
         //         ExecutionFacade::heal(world, entity, amount);

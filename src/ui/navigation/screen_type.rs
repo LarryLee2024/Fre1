@@ -1,14 +1,14 @@
-//! Module Name: ScreenType — Screen type identifiers for navigation stack
+//! 导航栈的屏幕类型标识符
 //!
-//! Defines the canonical set of screen types managed by ScreenStack.
-//! Each variant corresponds to a distinct full-screen view.
+//! 定义 ScreenStack 管理的规范屏幕类型集合。
+//! 每个变体对应一个不同的全屏视图。
 
 use bevy::prelude::*;
 
-/// Identifies a screen type in the navigation stack.
+/// 标识导航栈中的屏幕类型。
 ///
-/// Used by ScreenStack to track navigation history and by UiScreenState
-/// to represent the current screen's lifecycle status.
+/// 被 ScreenStack 用于跟踪导航历史，被 UiScreenState
+/// 用于表示当前屏幕的生命周期状态。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect)]
 pub enum ScreenType {
     /// Main menu / title screen

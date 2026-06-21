@@ -1,50 +1,50 @@
-//! UiTypography — Font and text style tokens
+//! 字体和文本样式令牌
 //!
-//! Widgets must reference typography tokens (e.g., `theme.typography.size_body`)
-//! instead of raw font sizes or hardcoded font paths. This enables consistent
-//! text styling and global typography changes.
+//! Widget 必须引用字体令牌（如 `theme.typography.size_body`）
+//! 而非原始字体大小或硬编码字体路径。这使得文本样式一致
+//! 并支持全局字体更改。
 //!
-//! See `docs/06-ui/02-design-system/theme-localization.md` §2.5
+//! 参见 `docs/06-ui/02-design-system/theme-localization.md` §2.5
 
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
-/// Typography tokens for the UI theme.
+/// UI 主题的字体令牌。
 ///
-/// Font paths reference assets in the `assets/fonts/` directory.
-/// Widgets MUST NOT hardcode font sizes or font paths — always
-/// reference a token from this struct.
+/// 字体路径引用 `assets/fonts/` 目录中的资源。
+/// Widget 不得硬编码字体大小或字体路径 —
+/// 始终引用此结构体中的令牌。
 #[derive(Debug, Clone, Reflect, Serialize, Deserialize)]
 pub struct UiTypography {
-    // ── Font paths ──
-    /// Path to the body text font asset
+    // ── 字体路径 ──
+    /// 正文字体资源路径
     pub font_body: String,
-    /// Path to the heading/title font asset
+    /// 标题字体资源路径
     pub font_heading: String,
-    /// Path to the monospace font asset (for numbers, code)
+    /// 等宽字体资源路径（用于数字、代码）
     pub font_mono: String,
 
-    // ── Font sizes ──
-    /// Body text size (14px)
+    // ── 字体大小 ──
+    /// 正文字体大小（14px）
     pub size_body: f32,
-    /// Small/caption text size (12px)
+    /// 小号/说明文字大小（12px）
     pub size_small: f32,
-    /// Heading text size (18px)
+    /// 标题字体大小（18px）
     pub size_heading: f32,
-    /// Title text size (24px)
+    /// 大标题字体大小（24px）
     pub size_title: f32,
-    /// Display/large title size (36px)
+    /// 展示/超大标题大小（36px）
     pub size_display: f32,
 
-    // ── Font weights ──
-    /// Normal font weight
+    // ── 字体粗细 ──
+    /// 常规字体粗细
     pub weight_normal: f32,
-    /// Bold font weight
+    /// 粗体字体粗细
     pub weight_bold: f32,
 }
 
 impl UiTypography {
-    /// Default typography values (shared across themes).
+    /// 默认字体值（跨主题共享）。
     pub fn default_values() -> Self {
         Self {
             font_body: "fonts/FiraSans-Regular.ttf".into(),

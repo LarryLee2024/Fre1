@@ -85,31 +85,31 @@ pub trait DomainEvent: bevy::prelude::Event + fmt::Debug + Clone + Send + Sync +
 /// `impl_domain_event!()` 或 `#[derive(DomainEvent)]` 的需求。
 impl<T> DomainEvent for T where T: bevy::prelude::Event + fmt::Debug + Clone + Send + Sync + 'static {}
 
-/// Marker trait for replay events.
+/// 回放事件标记 trait。
 ///
-/// Events implementing this trait are recorded during gameplay and replayed
-/// during verification. Replay events are a subset of system events related
-/// to the replay infrastructure itself (e.g., ReplayStarted, RecordingCompleted).
+/// 实现此 trait 的事件在游戏过程中被记录，在验证时被回放。
+/// 回放事件是与回放基础设施本身相关的系统事件的子集
+/// （如 ReplayStarted、RecordingCompleted）。
 ///
-/// # Marker Trait vs Classification Trait
+/// # 标记 Trait 与分类 Trait
 ///
-/// This is a pure marker trait: it carries no behavior, creates no hierarchy,
-/// and serves only as a registration tag for auto-registration systems.
+/// 这是纯标记 trait：不携带行为、不创建层级，
+/// 仅作为自动注册系统的注册标签。
 /// 回放事件标记 trait。
 ///
 /// 存在原因：回放基础设施自身的事件（ReplayStarted、RecordingCompleted 等）需要与业务领域事件区分，
 /// 避免回放系统误处理业务事件。
 pub trait ReplayEvent {}
 
-/// Marker trait for audit events.
+/// 审计事件标记 trait。
 ///
-/// Events implementing this trait are recorded in the audit trail for
-/// compliance, debugging, and post-mortem analysis.
+/// 实现此 trait 的事件被记录到审计日志中，
+/// 用于合规、调试和事后分析。
 ///
-/// # Marker Trait vs Classification Trait
+/// # 标记 Trait 与分类 Trait
 ///
-/// This is a pure marker trait: it carries no behavior, creates no hierarchy,
-/// and serves only as a registration tag for auto-registration systems.
+/// 这是纯标记 trait：不携带行为、不创建层级，
+/// 仅作为自动注册系统的注册标签。
 /// 审计事件标记 trait。
 ///
 /// 存在原因：合规/调试/事后分析需要记录关键操作轨迹，

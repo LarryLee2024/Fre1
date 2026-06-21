@@ -1,13 +1,13 @@
-//! Theme — Global UI theme resource
+//! 全局 UI 主题资源
 //!
-//! The `Theme` struct is a global ECS Resource holding all style tokens
-//! (colors, spacing, typography). It is registered first in the UI plugin
-//! chain so that all widgets and screens can access theme values.
+//! `Theme` 结构体是全局 ECS Resource，包含所有样式令牌
+//! （颜色、间距、字体）。它在 UI 插件链中首先注册，
+//! 以便所有 Widget 和界面可以访问主题值。
 //!
-//! Dark theme is the default. Light theme is provided as a variant for
-//! future theme-switching support.
+//! 暗色主题为默认。亮色主题作为变体提供，
+//! 用于未来的主题切换支持。
 //!
-//! See `docs/06-ui/02-design-system/theme-localization.md` §2
+//! 参见 `docs/06-ui/02-design-system/theme-localization.md` §2
 
 use bevy::prelude::*;
 
@@ -15,20 +15,20 @@ use super::colors::UiColors;
 use super::spacing::UiSpacing;
 use super::typography::UiTypography;
 
-/// Global UI theme resource.
+/// 全局 UI 主题资源。
 ///
-/// Inserted into the ECS by `ThemePlugin`. All UI widgets access style
-/// tokens through this resource — never through hardcoded values.
+/// 由 `ThemePlugin` 插入到 ECS 中。所有 UI Widget 通过此资源访问样式
+/// 令牌 — 不通过硬编码值。
 #[derive(Resource, Debug, Clone, Reflect)]
 #[reflect(Resource)]
 pub struct Theme {
-    /// Theme name identifier (e.g., "dark", "light")
+    /// 主题名称标识符（如 "dark"、"light"）
     pub name: &'static str,
-    /// Semantic color tokens
+    /// 语义颜色令牌
     pub colors: UiColors,
-    /// Spacing scale tokens
+    /// 间距比例令牌
     pub spacing: UiSpacing,
-    /// Typography tokens
+    /// 字体令牌
     pub typography: UiTypography,
 }
 
@@ -39,7 +39,7 @@ impl Default for Theme {
 }
 
 impl Theme {
-    /// Create the dark theme variant.
+    /// 创建暗色主题变体。
     pub fn dark() -> Self {
         Self {
             name: "dark",
@@ -49,7 +49,7 @@ impl Theme {
         }
     }
 
-    /// Create the light theme variant.
+    /// 创建亮色主题变体。
     pub fn light() -> Self {
         Self {
             name: "light",

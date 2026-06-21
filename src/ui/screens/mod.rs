@@ -9,10 +9,12 @@
 //! - MainMenuScreen: Title / main menu
 //! - BattleScreen: Battle / combat screen (MVP)
 //! - SettingsScreen: Game settings (theme, gameplay toggles)
+//! - SaveLoadScreen: Save / load game slots
 
 pub mod battle;
 pub mod inventory;
 pub mod main_menu;
+pub mod save_load;
 pub mod settings;
 
 use bevy::prelude::*;
@@ -22,6 +24,9 @@ use inventory::{spawn_inventory_screen, systems::on_inventory_button_clicked};
 use main_menu::{
     spawn_main_menu,
     systems::{on_main_menu_action, on_main_menu_button_handler},
+};
+use save_load::{
+    on_close_save_load_screen, on_open_save_load_screen, on_save_load_button_clicked,
 };
 use settings::{
     on_close_settings_screen, on_open_settings_screen, on_settings_button_clicked,
@@ -49,6 +54,8 @@ impl Plugin for ScreenPlugin {
             .register_type::<settings::SettingsScreen>()
             .register_type::<settings::SettingsAction>()
             .register_type::<settings::SettingsToggle>()
+            .register_type::<save_load::SaveLoadScreen>()
+            .register_type::<save_load::SaveLoadAction>()
             .register_type::<ScreenType>()
             // Startup systems: spawn screens on app start
             .add_systems(Startup, spawn_main_menu)
@@ -67,6 +74,11 @@ impl Plugin for ScreenPlugin {
             // Settings screen: button click handler
             .add_observer(on_settings_button_clicked)
             // Settings screen: toggle state change handler (Update)
-            .add_systems(Update, settings_toggle_system);
+            .add_systems(Update, settings_toggle_system)
+            // SaveLoad screen: lifecycle observers
+            .add_observer(on_open_save_load_screen)
+            .add_observer(on_close_save_load_screen)
+            // SaveLoad screen: button click handler
+            .add_observer(on_save_load_button_clicked);
     }
 }

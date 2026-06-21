@@ -1,7 +1,7 @@
-//! BattleScreen systems — button click handling via UiCommand routing
+//! 战斗界面系统 — 通过 UiCommand 路由处理按钮点击
 //!
-//! Uses the ButtonClicked trigger observer with Commands::trigger
-//! to map BattleAction to domain commands（方案A）。
+//! 使用 ButtonClicked 触发 Observer 和 Commands::trigger
+//! 将 BattleAction 映射到领域命令（方案A）。
 
 use bevy::ecs::observer::On;
 use bevy::prelude::*;
@@ -9,22 +9,21 @@ use bevy::prelude::*;
 use crate::ui::application::UiCommand;
 use crate::ui::primitives::button::events::ButtonClicked;
 
-/// Battle button action identifier
+/// 战斗按钮操作标识
 ///
-/// Attached as a Component to buttons in the battle screen. The observer
-/// queries for this component to identify which button was clicked.
+/// 作为 Component 挂载到战斗界面的按钮上。Observer
+/// 查询此组件来确定哪个按钮被点击。
 #[derive(Component, Debug, Clone, PartialEq, Eq, Reflect)]
 pub enum BattleAction {
-    /// End the current turn
+    /// 结束当前回合
     EndTurn,
 }
 
-/// Observer: handles battle button clicks, mapping to UiCommand
+/// Observer：处理战斗按钮点击，映射到 UiCommand
 ///
-/// When the primitives-layer `button_interaction_system` triggers a
-/// `ButtonClicked` event via Commands::trigger, checks if the button
-/// entity carries a `BattleAction` component and dispatches the
-/// corresponding UiCommand.
+/// 当原语层的 `button_interaction_system` 通过 Commands::trigger 触发
+/// `ButtonClicked` 事件时，检查按钮实体是否携带 `BattleAction` 组件
+/// 并分发对应的 UiCommand。
 pub fn on_battle_button_clicked(
     on: On<ButtonClicked>,
     query: Query<&BattleAction>,

@@ -1,10 +1,10 @@
-//! Module Name: Theme — UI theme system (ThemePlugin + style tokens)
+//! UI 主题系统（ThemePlugin + 样式令牌）
 //!
-//! Registers the global `Theme` resource and all style token types
-//! for reflection support. Must be added first in the UI plugin chain
-//! so that widgets and screens can access theme values during construction.
+//! 注册全局 `Theme` 资源和所有样式令牌类型
+//! 以支持反射。必须在 UI 插件链中首先添加，
+//! 以便 Widget 和界面在构造期间可以访问主题值。
 //!
-//! See `docs/06-ui/01-architecture/architecture.md` §8.2
+//! 参见 `docs/06-ui/01-architecture/architecture.md` §8.2
 
 pub mod colors;
 pub mod resource;
@@ -20,7 +20,7 @@ pub use typography::UiTypography;
 
 use bevy::prelude::*;
 
-/// Plugin that registers the global Theme resource and reflect types.
+/// 注册全局 Theme 资源和反射类型的插件。
 pub struct ThemePlugin;
 
 impl Plugin for ThemePlugin {

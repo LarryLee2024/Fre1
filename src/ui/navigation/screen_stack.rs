@@ -1,35 +1,34 @@
-//! Module Name: ScreenStack — Navigation stack for full-screen views
+//! 全屏视图的导航栈
 //!
-//! Implements a LIFO stack of ScreenType values that tracks the navigation
-//! history. Guards against duplicate top-of-stack pushes and empty-stack pops.
-//! Designed to be registered as a Bevy Resource.
+//! 实现 ScreenType 值的 LIFO 栈，跟踪导航历史。
+//! 防止重复的栈顶入栈和空栈出栈操作。
+//! 设计为注册为 Bevy Resource。
 
 use bevy::prelude::*;
 
 use super::screen_type::ScreenType;
 
-/// LIFO navigation stack of screen types.
+/// 屏幕类型的 LIFO 导航栈。
 ///
-/// Stored as a Bevy Resource for ECS access. Only screen type identities
-/// are tracked here; screen entities and their lifecycle are managed by
-/// UiScreenState and screen-specific systems.
+/// 作为 Bevy Resource 存储以供 ECS 访问。此处仅跟踪屏幕类型标识；
+/// 屏幕实体及其生命周期由 UiScreenState 和屏幕特定系统管理。
 #[derive(Resource, Debug, Clone, Reflect)]
 #[reflect(Resource)]
 pub struct ScreenStack {
-    /// Stack of screen types, bottom (earliest) to top (current).
+    /// 屏幕类型栈，从底部（最早）到顶部（当前）。
     stack: Vec<ScreenType>,
 }
 
 impl ScreenStack {
-    /// Creates an empty navigation stack.
+    /// 创建空的导航栈。
     pub fn new() -> Self {
         Self { stack: Vec::new() }
     }
 
-    /// Pushes a screen onto the stack.
+    /// 将屏幕压入栈中。
     ///
-    /// If `screen` is already at the top of the stack, this is a no-op
-    /// to prevent redundant pushes.
+    /// 如果 `screen` 已在栈顶，则不执行任何操作，
+    /// 以防止重复压入。
     pub fn push(&mut self, screen: ScreenType) {
         if self.peek() == Some(&screen) {
             return;
@@ -37,10 +36,10 @@ impl ScreenStack {
         self.stack.push(screen);
     }
 
-    /// Pops the top screen from the stack and returns it.
+    /// 从栈中弹出顶部屏幕并返回。
     ///
-    /// Returns `None` if the stack has only one element remaining (the root
-    /// screen is preserved). Returns `None` if the stack is empty.
+    /// 如果栈中只剩一个元素（根屏幕被保留），返回 `None`。
+    /// 如果栈为空，返回 `None`。
     pub fn pop(&mut self) -> Option<ScreenType> {
         if self.stack.len() <= 1 {
             return None;
@@ -48,42 +47,42 @@ impl ScreenStack {
         self.stack.pop()
     }
 
-    /// Replaces the top screen with a new one.
+    /// 用新屏幕替换栈顶屏幕。
     ///
-    /// Returns the previous top screen, or `None` if the stack was empty.
-    /// If the stack is empty, this degrades to a push.
+    /// 返回之前的栈顶屏幕，如果栈为空则返回 `None`。
+    /// 如果栈为空，此操作退化为压入操作。
     pub fn replace(&mut self, screen: ScreenType) -> Option<ScreenType> {
         let old = self.stack.pop();
         self.stack.push(screen);
         old
     }
 
-    /// Returns a reference to the top screen, or `None` if empty.
+    /// 返回顶部屏幕的引用，如果为空则返回 `None`。
     pub fn peek(&self) -> Option<&ScreenType> {
         self.stack.last()
     }
 
-    /// Returns `true` if the stack contains no screens.
+    /// 如果栈不包含任何屏幕，返回 `true`。
     pub fn is_empty(&self) -> bool {
         self.stack.is_empty()
     }
 
-    /// Returns the number of screens in the stack.
+    /// 返回栈中屏幕的数量。
     pub fn len(&self) -> usize {
         self.stack.len()
     }
 
-    /// Returns `true` if the stack contains the given screen type.
+    /// 如果栈包含给定的屏幕类型，返回 `true`。
     pub fn contains(&self, screen: ScreenType) -> bool {
         self.stack.contains(&screen)
     }
 
-    /// Removes all screens from the stack.
+    /// 移除栈中的所有屏幕。
     pub fn clear(&mut self) {
         self.stack.clear();
     }
 
-    /// Returns an iterator over the screens, bottom to top.
+    /// 返回从底部到顶部的屏幕迭代器。
     pub fn iter(&self) -> impl Iterator<Item = &ScreenType> {
         self.stack.iter()
     }

@@ -1,18 +1,16 @@
-//! Module Name: BattleScreen — Battle main screen (MVP)
+//! 战斗主界面（MVP）
 //!
-//! Full-screen battle UI combining existing widgets into a functioning
-//! combat screen layout: turn info bar, battle area placeholder,
-//! character card, action menu, and an End Turn button.
+//! 全屏战斗 UI，将现有 Widget 组合成功能性的战斗界面布局：
+//! 回合信息栏、战斗区域占位符、角色卡片、行动菜单和结束回合按钮。
 //!
-//! Uses primitives-layer factories and widget factories exclusively.
-//! No direct Node/Button/Interaction manipulation outside factories.
+//! 仅使用原语层和 Widget 层工厂。不直接操作 Node/Button/Interaction。
 //!
-//! UI tree structure:
+//! UI 树结构：
 //!
 //! ```text
 //! Panel (Basic, full screen)
 //!   ├── Text ("Turn: 3    Phase: Player Turn", Body)
-//!   ├── Panel (Basic, battle area placeholder)
+//!   ├── Panel (Basic, 战斗区域占位符)
 //!   ├── CharacterCard (Aria, Lv.5, HP/MP bars)
 //!   ├── ActionMenu (Attack, Defend, Skill, Item, Wait)
 //!   └── Button ("End Turn", Danger) -- BattleAction::EndTurn
@@ -32,18 +30,16 @@ use crate::ui::widgets::character_card::factory::spawn_character_card;
 
 use systems::BattleAction;
 
-/// Battle screen marker component
+/// 战斗界面标记组件
 ///
-/// Used for scene-management cleanup (despawn all entities carrying this
-/// component when leaving the battle screen).
+/// 用于场景管理清理（离开战斗界面时销毁所有携带此组件的实体）。
 #[derive(Component, Debug, Clone, PartialEq, Eq, Reflect)]
 pub struct BattleScreen;
 
-/// Startup System: spawns the battle screen (MVP)
+/// 启动系统：生成战斗界面（MVP）
 ///
-/// Creates the full-screen battle UI tree. All elements are created
-/// through primitives/widget factories -- no direct Node/Button/Interaction
-/// manipulation.
+/// 创建全屏战斗 UI 树。所有元素通过原语/Widget 工厂创建
+/// — 不直接操作 Node/Button/Interaction。
 pub fn spawn_battle_screen(
     mut commands: Commands,
     theme: Res<Theme>,

@@ -1,49 +1,48 @@
-//! Module Name: UiScreenState — Current screen lifecycle state
+//! 当前屏幕的生命周期状态
 //!
-//! Tracks the currently active screen and its lifecycle phase.
-//! Paired with ScreenStack to provide complete navigation state.
+//! 跟踪当前活动的屏幕及其生命周期阶段。
+//! 与 ScreenStack 配合提供完整的导航状态。
 
 use bevy::prelude::*;
 
 use super::screen_type::ScreenType;
 
-/// Represents the lifecycle phase of the current screen.
+/// 表示当前屏幕的生命周期阶段。
 ///
-/// Screens move through these states: Defined → Loading → Active,
-/// then on navigation away: Active → Background, or on removal:
-/// Active → Destroyed.
+/// 屏幕经历以下状态：Defined → Loading → Active，
+/// 然后在导航离开时：Active → Background，或在移除时：
+/// Active → Destroyed。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect)]
 pub enum ScreenLifecycle {
-    /// Screen is registered but not yet loaded.
+    /// 屏幕已注册但尚未加载。
     Defined,
-    /// Screen resources are being loaded (assets, view models, observers).
+    /// 屏幕资源正在加载（资源、ViewModel、Observer）。
     Loading,
-    /// Screen is fully active and interactive.
+    /// 屏幕完全激活且可交互。
     Active,
-    /// Screen is in the background (another screen is on top).
+    /// 屏幕在后台（另一个屏幕在顶部）。
     Background,
-    /// Screen has been destroyed and its entities should be despawned.
+    /// 屏幕已销毁，其实体应被 despawn。
     Destroyed,
 }
 
-/// Tracks the current screen's identity and lifecycle phase.
+/// 跟踪当前屏幕的身份和生命周期阶段。
 ///
-/// Stored as a Bevy Resource. Unlike ScreenStack which tracks navigation
-/// history, UiScreenState captures only the immediate screen state and
-/// serves as a quick-lookup for systems that need the current context.
+/// 作为 Bevy Resource 存储。与跟踪导航历史的 ScreenStack 不同，
+/// UiScreenState 仅捕获即时屏幕状态，作为需要当前上下文的系统的快速查找。
 #[derive(Resource, Debug, Clone, Reflect)]
 #[reflect(Resource)]
 pub struct UiScreenState {
-    /// The currently active (top-most) screen type.
+    /// 当前活动（最顶层）的屏幕类型。
     pub current_screen: Option<ScreenType>,
-    /// Lifecycle phase of the current screen.
+    /// 当前屏幕的生命周期阶段。
     pub lifecycle: ScreenLifecycle,
-    /// The previous screen before the current one was pushed.
+    /// 当前屏幕被压入之前的上一个屏幕。
     pub previous_screen: Option<ScreenType>,
 }
 
 impl UiScreenState {
-    /// Creates a new UiScreenState with no current screen.
+    /// 创建没有当前屏幕的新的 UiScreenState。
     pub fn new() -> Self {
         Self {
             current_screen: None,

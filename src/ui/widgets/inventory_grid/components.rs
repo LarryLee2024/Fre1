@@ -1,24 +1,24 @@
-//! InventoryGrid Components — Type definitions for InventoryGrid organism
+//! InventoryGrid 组件 — InventoryGrid 有机体的类型定义
 //!
-//! Defines the InventoryGrid marker component and InventoryGridAction enum
-//! for identifying interactive elements within the grid.
+//! 定义 InventoryGrid 标记组件和 InventoryGridAction 枚举，
+//! 用于识别网格中的交互元素。
 
 use bevy::prelude::*;
 
-/// InventoryGrid marker component
+/// InventoryGrid 标记组件
 ///
-/// Identifies the root entity of an InventoryGrid widget.
-/// Used for cleanup and query-based targeting.
+/// 标识 InventoryGrid Widget 的根实体。
+/// 用于清理和基于查询的定位。
 #[derive(Component, Debug, Clone, Reflect)]
 #[reflect(Component)]
 pub struct InventoryGrid;
 
-/// Actions that can be triggered from InventoryGrid buttons
+/// 可从 InventoryGrid 按钮触发的操作
 ///
-/// Attached as a Component to interactive child entities.
-/// Observers query this component to identify which button was clicked.
+/// 作为 Component 挂载到交互子实体上。
+/// Observer 查询此组件来确定哪个按钮被点击。
 #[derive(Component, Debug, Clone, PartialEq, Eq, Reflect)]
 pub enum InventoryGridAction {
-    /// Close the inventory screen
+    /// 关闭背包界面
     Close,
 }

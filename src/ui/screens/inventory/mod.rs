@@ -1,10 +1,9 @@
-//! Module Name: InventoryScreen — Inventory management screen
+//! 背包管理界面
 //!
-//! Full-screen inventory view composed of InventoryGrid widget.
-//! Uses primitives-layer factories and widget factories exclusively.
-//! No direct Node/Button/Interaction manipulation outside factories.
+//! 全屏背包视图，由 InventoryGrid Widget 组成。
+//! 仅使用原语层和 Widget 层工厂。不直接操作 Node/Button/Interaction。
 //!
-//! UI tree structure:
+//! UI 树结构：
 //!
 //! ```text
 //! Panel (Basic, full screen, centered)
@@ -23,18 +22,16 @@ use crate::ui::primitives::panel::{components::PanelVariant, factory::spawn_pane
 use crate::ui::theme::Theme;
 use crate::ui::widgets::inventory_grid::factory::spawn_inventory_grid;
 
-/// Inventory screen marker component
+/// 背包界面标记组件
 ///
-/// Used for scene-management cleanup (despawn all entities carrying this
-/// component when leaving the inventory screen).
+/// 用于场景管理清理（离开背包界面时销毁所有携带此组件的实体）。
 #[derive(Component, Debug, Clone, PartialEq, Eq, Reflect)]
 pub struct InventoryScreen;
 
-/// Startup System: spawns the inventory screen
+/// 启动系统：生成背包界面
 ///
-/// Creates the full-screen inventory UI tree. All elements are created
-/// through primitives/widget factories -- no direct Node/Button/Interaction
-/// manipulation.
+/// 创建全屏背包 UI 树。所有元素通过原语/Widget 工厂创建
+/// — 不直接操作 Node/Button/Interaction。
 pub fn spawn_inventory_screen(
     mut commands: Commands,
     theme: Res<Theme>,

@@ -217,16 +217,16 @@ pub fn format_json(code: &str, event: &str, level: &str, fields: &[(&str, &str)]
     serde_json::Value::Object(map).to_string()
 }
 
-/// A tracing-subscriber Layer that writes structured log events to a JSON file.
+/// 一个 tracing-subscriber Layer，将结构化日志事件写入 JSON 文件。
 ///
-/// Captures all tracing events and writes them as JSON lines via `FileSink`.
-/// Each line contains: timestamp, level, code, event, and all structured fields.
+/// 捕获所有 tracing 事件并通过 `FileSink` 以 JSON 行格式写入。
+/// 每行包含：时间戳、级别、编码、事件和所有结构化字段。
 pub struct FileSinkLayer {
     sink: FileSink,
 }
 
 impl FileSinkLayer {
-    /// Create a new `FileSinkLayer` with the given configuration.
+    /// 使用给定配置创建新的 `FileSinkLayer`。
     pub fn new(config: FileSinkConfig) -> Self {
         Self {
             sink: FileSink::new(config),
@@ -258,7 +258,7 @@ impl<S: tracing::Subscriber + 'static> Layer<S> for FileSinkLayer {
     }
 }
 
-/// A tracing `Visit` implementation that collects all event fields into a Vec.
+/// 一个 tracing `Visit` 实现，将所有事件字段收集到 Vec 中。
 struct JsonFieldVisitor<'a>(&'a mut Vec<(&'static str, String)>);
 
 impl<'a> tracing::field::Visit for JsonFieldVisitor<'a> {

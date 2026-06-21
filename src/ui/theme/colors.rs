@@ -1,82 +1,81 @@
-//! UiColors — Semantic color token definitions
+//! 语义颜色令牌定义
 //!
-//! Widgets must reference semantic tokens (e.g., `theme.colors.text_primary`)
-//! instead of raw RGB values. This enables theme switching without touching
-//! widget code.
+//! Widget 必须引用语义令牌（如 `theme.colors.text_primary`）
+//! 而非原始 RGB 值。这使得切换主题时无需修改 Widget 代码。
 //!
-//! See `docs/06-ui/02-design-system/theme-localization.md` §2.3
+//! 参见 `docs/06-ui/02-design-system/theme-localization.md` §2.3
 
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
-/// Semantic color tokens for the UI theme.
+/// UI 主题的语义颜色令牌。
 ///
-/// All values are defined in sRGB color space. Widgets MUST NOT use
-/// raw `Color::srgb(...)` or `Color::WHITE` / `Color::BLACK` — always
-/// reference a token from this struct.
+/// 所有值在 sRGB 颜色空间中定义。Widget 不得使用
+/// 原始 `Color::srgb(...)` 或 `Color::WHITE` / `Color::BLACK` —
+/// 始终引用此结构体中的令牌。
 #[derive(Debug, Clone, Reflect, Serialize, Deserialize)]
 pub struct UiColors {
-    // ── UI surface colors ──
-    /// Primary surface background (panels, menus)
+    // ── UI 表面颜色 ──
+    /// 主要表面背景（面板、菜单）
     pub surface_primary: Color,
-    /// Secondary surface background (sub-panels, tooltips)
+    /// 次要表面背景（子面板、工具提示）
     pub surface_secondary: Color,
-    /// Surface for danger/destructive actions
+    /// 危险/破坏性操作的表面
     pub surface_danger: Color,
-    /// Disabled surface (non-interactive elements)
+    /// 禁用表面（非交互元素）
     pub surface_disabled: Color,
-    /// Surface secondary hover state
+    /// 次要表面悬停状态
     pub surface_secondary_hover: Color,
-    /// Surface secondary pressed state
+    /// 次要表面按下状态
     pub surface_secondary_pressed: Color,
-    /// Surface danger hover state
+    /// 危险表面悬停状态
     pub surface_danger_hover: Color,
-    /// Surface danger pressed state
+    /// 危险表面按下状态
     pub surface_danger_pressed: Color,
 
-    // ── Text colors ──
-    /// Primary text color (body content)
+    // ── 文本颜色 ──
+    /// 主要文本颜色（正文内容）
     pub text_primary: Color,
-    /// Secondary text color (labels, captions)
+    /// 次要文本颜色（标签、说明）
     pub text_secondary: Color,
-    /// Disabled text color
+    /// 禁用文本颜色
     pub text_disabled: Color,
-    /// Accent text color (highlights, key values)
+    /// 强调文本颜色（高亮、关键值）
     pub text_accent: Color,
 
-    // ── Accent / interaction colors ──
-    /// Primary accent color (buttons, interactive elements)
+    // ── 强调/交互颜色 ──
+    /// 主要强调颜色（按钮、交互元素）
     pub accent_primary: Color,
-    /// Hover state accent
+    /// 悬停状态强调色
     pub accent_hover: Color,
-    /// Pressed state accent
+    /// 按下状态强调色
     pub accent_pressed: Color,
 
-    // ── Ghost button colors (transparent background variants) ──
-    /// Ghost button default background (transparent)
+    // ── Ghost 按钮颜色（透明背景变体） ──
+    /// Ghost 按钮默认背景（透明）
     pub ghost: Color,
-    /// Ghost button hover background
+    /// Ghost 按钮悬停背景
     pub ghost_hover: Color,
-    /// Ghost button pressed background
+    /// Ghost 按钮按下背景
     pub ghost_pressed: Color,
 
-    // ── Feedback colors ──
-    /// Positive feedback (healing, success)
+    // ── 反馈颜色 ──
+    /// 正面反馈（治疗、成功）
     pub feedback_positive: Color,
-    /// Negative feedback (damage, error)
+    /// 负面反馈（伤害、错误）
     pub feedback_negative: Color,
-    /// Warning feedback (caution, alert)
+    /// 警告反馈（注意、告警）
     pub feedback_warning: Color,
 
-    // ── Border colors ──
-    /// Default border color
+    // ── 边框颜色 ──
+    /// 默认边框颜色
     pub border_default: Color,
-    /// Focus/highlight border color
+    /// 聚焦/高亮边框颜色
     pub border_focus: Color,
 }
 
 impl UiColors {
-    /// Dark theme color palette.
+    /// 暗色主题调色板。
     pub fn dark() -> Self {
         Self {
             surface_primary: Color::srgb(0.11, 0.11, 0.14),
@@ -105,7 +104,7 @@ impl UiColors {
         }
     }
 
-    /// Light theme color palette.
+    /// 亮色主题调色板。
     pub fn light() -> Self {
         Self {
             surface_primary: Color::srgb(0.97, 0.97, 0.98),
