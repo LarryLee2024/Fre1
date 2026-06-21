@@ -1,9 +1,10 @@
 ---
 id: architecture.gap-analysis.2026-06-21
 title: 架构文档差距分析 — 5个 Tier S Agent 输出完整性评估
-status: proposed
+status: completed
 owner: architect
 created: 2026-06-21
+updated: 2026-06-21
 tags:
   - gap-analysis
   - documentation
@@ -16,6 +17,7 @@ tags:
 > **分析角色**: @architect（系统集成者）
 > **分析范围**: 5个 Tier S Agent 输出目录 + 代码现状对齐
 > **版本**: 1.0
+> **定稿日期**: 2026-06-21 — 所有 P0/P1/P2 差距已确认修复，P3 项列为远期跟踪
 
 本文档系统评估 Fre SRPG 项目 Tier S 架构委员会各角色的文档输出完整性和质量。对每个文档差距给出具体文件路径、行号，并指定应由哪个 Agent 填补。
 
