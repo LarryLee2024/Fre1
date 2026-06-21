@@ -9,8 +9,6 @@
 //!   with bucket name and extension from struct-level attributes,
 //!   and optional custom validation via `#[validate(with = "...")]`.
 
-extern crate proc_macro;
-
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, DeriveInput, Error, Expr, Lit, Meta};
@@ -24,10 +22,10 @@ use syn::{parse_macro_input, DeriveInput, Error, Expr, Lit, Meta};
 pub fn derive_domain_event(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = &input.ident;
-    let gen = quote! {
+    let output = quote! {
         impl crate::shared::diagnostics::DomainEvent for #name {}
     };
-    gen.into()
+    output.into()
 }
 
 // ============================================================================
@@ -79,7 +77,7 @@ pub fn derive_rule_failure(input: TokenStream) -> TokenStream {
         }
     };
 
-    let gen = quote! {
+    let output = quote! {
         impl crate::shared::traits::RuleFailure for #name {
             fn code(&self) -> &'static str {
                 match self {
@@ -89,7 +87,7 @@ pub fn derive_rule_failure(input: TokenStream) -> TokenStream {
         }
     };
 
-    gen.into()
+    output.into()
 }
 
 // ============================================================================
@@ -125,7 +123,7 @@ pub fn derive_definition_type(input: TokenStream) -> TokenStream {
 
     let validate_fn = extract_validate_with(&input.attrs);
 
-    let gen = if let Some(fn_path) = validate_fn {
+    let output = if let Some(fn_path) = validate_fn {
         quote! {
             impl crate::content::loading::DefinitionType for #name {
                 const BUCKET_NAME: &'static str = #bucket_str;
@@ -149,7 +147,7 @@ pub fn derive_definition_type(input: TokenStream) -> TokenStream {
         }
     };
 
-    gen.into()
+    output.into()
 }
 
 // ============================================================================

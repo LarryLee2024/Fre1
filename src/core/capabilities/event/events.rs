@@ -7,10 +7,10 @@
 
 use bevy::prelude::*;
 
-use crate::shared::diagnostics::{AuditEvent, DomainEvent};
+use crate::shared::diagnostics::AuditEvent;
 
 /// 事件被发布到 EventBus 时触发（调试用）。
-#[derive(Event, Debug, Clone)]
+#[derive(Event, Debug, Clone, DomainEvent)]
 pub struct EventPublished {
     /// 事件标签
     pub event_tag: String,
@@ -23,7 +23,7 @@ pub struct EventPublished {
 }
 
 /// 事件成功投递到订阅者时触发（调试用）。
-#[derive(Event, Debug, Clone)]
+#[derive(Event, Debug, Clone, DomainEvent)]
 pub struct EventDelivered {
     /// 事件标签
     pub event_tag: String,
@@ -34,7 +34,7 @@ pub struct EventDelivered {
 }
 
 /// 事件投递到订阅者失败时触发（用于监控告警）。
-#[derive(Event, Debug, Clone)]
+#[derive(Event, Debug, Clone, DomainEvent)]
 pub struct EventDeliveryFailed {
     /// 事件标签
     pub event_tag: String,
@@ -45,7 +45,7 @@ pub struct EventDeliveryFailed {
 }
 
 /// 检测到事件循环触发时触发（严重告警）。
-#[derive(Event, Debug, Clone)]
+#[derive(Event, Debug, Clone, DomainEvent)]
 pub struct EventCycleDetected {
     /// 循环的事件标签
     pub event_tag: String,
@@ -57,14 +57,10 @@ pub struct EventCycleDetected {
 
 // ─── Marker Trait 实现 ─────────────────────────────────────────
 
-impl DomainEvent for EventPublished {}
 impl AuditEvent for EventPublished {}
 
-impl DomainEvent for EventDelivered {}
 impl AuditEvent for EventDelivered {}
 
-impl DomainEvent for EventDeliveryFailed {}
 impl AuditEvent for EventDeliveryFailed {}
 
-impl DomainEvent for EventCycleDetected {}
 impl AuditEvent for EventCycleDetected {}

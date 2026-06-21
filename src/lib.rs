@@ -14,6 +14,7 @@ pub mod app;
 pub mod content;
 pub mod core;
 pub mod infra;
+pub mod macros;
 pub mod modding;
 pub mod shared;
 pub mod ui;

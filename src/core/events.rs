@@ -10,8 +10,6 @@
 
 use bevy::prelude::*;
 
-use crate::shared::diagnostics::DomainEvent;
-
 /// 全局回合结束事件。
 ///
 /// 由 Combat 域在每个单位回合结束时发射，供其他 Domain 订阅。
@@ -54,9 +52,7 @@ pub struct BattleEnded {
     pub victory: bool,
 }
 
-// ─── Marker Trait 实现 ─────────────────────────────────────────
-
-impl DomainEvent for TurnEnded {}
-impl DomainEvent for TurnStarted {}
-impl DomainEvent for BattleStarted {}
-impl DomainEvent for BattleEnded {}
+impl_domain_event!(TurnEnded);
+impl_domain_event!(TurnStarted);
+impl_domain_event!(BattleStarted);
+impl_domain_event!(BattleEnded);

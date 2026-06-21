@@ -7,7 +7,7 @@
 use bevy::prelude::*;
 
 use super::components::ClassId;
-use crate::shared::diagnostics::{Domain, DomainEvent, FieldCollector, LogCode, ObservableEvent};
+use crate::shared::diagnostics::{Domain, FieldCollector, LogCode, ObservableEvent};
 
 /// 角色获得经验值时触发。
 ///
@@ -35,7 +35,7 @@ pub struct ExperienceGained {
 /// - Attribute：应用升级带来的属性变化（通过 Modifier Pipeline）
 /// - Progression：解锁天赋选项、检查 ASI
 /// - UI：显示升级选择界面
-#[derive(Event, Debug, Clone, PartialEq)]
+#[derive(Event, Debug, Clone, PartialEq, DomainEvent)]
 pub struct LevelUp {
     /// 升级的实体
     pub entity: Entity,
@@ -48,8 +48,6 @@ pub struct LevelUp {
     /// 是否达到 ASI 等级
     pub is_asi_level: bool,
 }
-
-impl DomainEvent for LevelUp {}
 
 impl ObservableEvent for LevelUp {
     const DOMAIN: Domain = Domain::Progression;
