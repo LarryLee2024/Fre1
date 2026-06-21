@@ -382,10 +382,10 @@ impl Default for DefinitionRegistry {
 
 /// Definition 类型 trait。
 ///
-/// 每个 Def 数据类应实现此 trait，提供从配置创建和校验的能力。
-/// 当各领域的 Def 类型定型后，由对应 struct 实现。
+/// Registry Definition 类型 trait。
 ///
-/// 当前阶段为注册中心的基础设施提供，具体实现随领域推进。
+/// 存在原因：Registry 需要统一加载各种 Def 类型（SpellDef、EffectDef 等），
+/// 此 trait 提供桶名、文件扩展名、校验逻辑等元信息，驱动通用加载管线。
 pub trait DefinitionType: Sized {
     /// 配置反序列化类型
     type Config: serde::de::DeserializeOwned;

@@ -21,9 +21,10 @@ pub(crate) mod sealed {
     pub trait Sealed {}
 }
 
-/// 所有强类型 ID 必须实现的 trait。
+/// 强类型 ID 基础 trait。
 ///
-/// 提供统一的接口以支持 Registry 约束和跨模块泛型操作。
+/// 存在原因：所有业务 ID（UnitId、AbilityId 等）必须实现统一接口，
+/// 支持 Registry 约束、序列化、跨模块泛型操作，防止 ID 类型混淆。
 pub trait StrongId:
     sealed::Sealed + std::fmt::Display + std::str::FromStr + std::ops::Deref<Target = str> + Sized
 {

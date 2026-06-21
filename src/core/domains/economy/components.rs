@@ -97,7 +97,7 @@ impl Wallet {
             }
         }
 
-        // 处理特殊货币
+        // 特殊货币按 base_value 折算为标准货币单位后继续扣除
         if remaining > 0 {
             for (currency, amount) in self.currencies.iter_mut() {
                 if matches!(currency, CurrencyType::Special(_)) {
@@ -238,6 +238,7 @@ pub enum SupplyDemand {
 }
 
 impl SupplyDemand {
+    /// 返回供需状态对应的价格修正系数。
     pub fn modifier(&self) -> f32 {
         match self {
             SupplyDemand::Surplus => 0.8,
@@ -300,6 +301,7 @@ pub struct ShopInstance {
 }
 
 impl ShopInstance {
+    /// 创建商店实例（初始库存为空）。
     pub fn new(shop_def_id: String) -> Self {
         Self {
             shop_def_id,

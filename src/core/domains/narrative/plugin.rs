@@ -14,6 +14,7 @@ use super::systems::story_flag_system::on_story_flag_set;
 use crate::register_domain_types;
 use crate::shared::game_state::GameState;
 
+/// 叙事/对话领域 Plugin——注册对话树、StoryFlag 组件和对话流程系统。
 pub struct NarrativePlugin;
 
 impl Plugin for NarrativePlugin {

@@ -19,6 +19,7 @@ use crate::core::domains::{
 };
 use bevy::prelude::*;
 
+/// Core 层总 Plugin——聚合所有 Capabilities 和 Domains 子 Plugin。
 pub struct CorePlugin;
 
 impl Plugin for CorePlugin {

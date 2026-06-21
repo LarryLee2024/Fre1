@@ -10,6 +10,7 @@
 //! 参见 docs/06-ui/01-architecture/application-layer.md
 
 pub mod action;
+pub mod bridge;
 pub mod command;
 pub mod event;
 pub mod intent;

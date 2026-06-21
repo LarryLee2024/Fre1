@@ -21,6 +21,7 @@ pub(crate) struct PendingLoad {
     pub path: String,
 }
 
+/// Observer: LoadRequest → 从指定路径加载存档并替换当前世界状态。
 pub fn on_load_request(
     trigger: On<LoadRequest>,
     _save_manager: ResMut<SaveManager>,

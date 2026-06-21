@@ -12,6 +12,7 @@ use super::systems::{on_spell_cast_request, tick_concentration_duration};
 use crate::register_domain_types;
 use crate::shared::game_state::GameState;
 
+/// 法术领域 Plugin——注册法术位、专注、施法组件和法术执行系统。
 pub struct SpellPlugin;
 
 impl Plugin for SpellPlugin {

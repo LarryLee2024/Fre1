@@ -45,6 +45,7 @@ impl Default for NotificationService {
 }
 
 impl NotificationService {
+    /// 将通知入队（按时间顺序显示）。
     pub fn push(&mut self, vm: NotificationVm) {
         self.queue.push(vm);
     }

@@ -5,7 +5,7 @@
 /// 战斗唯一标识。
 pub type BattleId = u64;
 
-/// 回合标识：`(BattleId, RoundNumber, TurnIndex)`。
+/// 回合标识：`(BattleId, RoundNumber, TurnIndex)`——串联同一回合内所有日志。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TurnId {
     /// 所属战斗 ID
@@ -33,7 +33,7 @@ impl std::fmt::Display for TurnId {
     }
 }
 
-/// 行动标识：`(TurnId, ActionSequence)`。
+/// 行动标识：`(TurnId, ActionSequence)`——串联同一次行动的所有日志。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ActionId {
     /// 所属回合标识

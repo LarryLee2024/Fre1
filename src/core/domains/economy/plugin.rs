@@ -10,6 +10,7 @@ use super::resources::EconomyConfig;
 use super::systems::{on_purchase_request, on_sell_request};
 use crate::register_domain_types;
 
+/// 经济领域 Plugin——注册货币、商店、交易组件和系统。
 pub struct EconomyPlugin;
 
 impl Plugin for EconomyPlugin {

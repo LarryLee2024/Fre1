@@ -1,7 +1,7 @@
 //! Module Name: BattleProjection — Domain Event to BattleHudVm / SkillPanelVm projection
 //!
-//! Pure functions that transform battle-domain events (TurnStarted, EffectApplied)
-//! into ViewModel updates on the UiStore.  These functions are stateless,
+//! Pure functions that transform battle-domain events (BattleStarted, TurnStarted,
+//! TurnEnded, EffectApplied) into ViewModel updates on the UiStore.  These functions are stateless,
 //! deterministic, and independently testable — they never touch ECS directly.
 //!
 //! Each function takes `&mut UiStore` and the domain event, performs the
@@ -14,7 +14,7 @@ use bevy::ecs::observer::On;
 use bevy::prelude::*;
 
 use crate::core::capabilities::effect::events::EffectApplied;
-use crate::core::events::TurnStarted;
+use crate::core::events::{BattleStarted, TurnEnded, TurnStarted};
 use crate::ui::binding::Dirty;
 use crate::ui::view_models::{UiStore, battle_hud::BattleHudVm, skill_panel::SkillPanelVm};
 
@@ -27,6 +27,16 @@ use crate::ui::view_models::{UiStore, battle_hud::BattleHudVm, skill_panel::Skil
 pub struct BattleProjection;
 
 impl BattleProjection {
+    /// Projects a `BattleStarted` event onto `UiStore.battle_hud`.
+    ///
+    /// Initializes turn counter to 1 and sets the phase key to the player phase.
+    pub fn on_battle_started(store: &mut UiStore, _event: &BattleStarted) {
+        let hud = &mut store.battle_hud;
+        hud.turn_number = 1;
+        hud.phase_key = "ui.battle.phase.player";
+        info!(target: "ui", "[BattleProjection] Battle started — HUD initialized");
+    }
+
     /// Projects a `TurnStarted` event onto `UiStore.battle_hud`.
     ///
     /// Increments turn counter and sets the phase key to the player phase
@@ -35,6 +45,15 @@ impl BattleProjection {
         let hud = &mut store.battle_hud;
         hud.turn_number += 1;
         hud.phase_key = "ui.battle.phase.player";
+    }
+
+    /// Projects a `TurnEnded` event onto `UiStore.battle_hud`.
+    ///
+    /// Sets the phase key to the enemy phase to reflect that the player's
+    /// active turn has concluded.
+    pub fn on_turn_ended(store: &mut UiStore, _event: &TurnEnded) {
+        store.battle_hud.phase_key = "ui.battle.phase.enemy";
+        info!(target: "ui", "[BattleProjection] Turn ended — phase set to enemy");
     }
 
     /// Projects an `EffectApplied` event onto `UiStore.skill_panel`.
@@ -61,6 +80,20 @@ impl BattleProjection {
 
 // ─── Observer Systems (ECS bridge) ───────────────────────────────────────
 
+/// Observer: listens for `BattleStarted` domain events and projects them into
+/// `UiStore.battle_hud` via `BattleProjection::on_battle_started`.
+pub fn on_battle_started_projection(
+    trigger: On<BattleStarted>,
+    mut store: ResMut<UiStore>,
+    mut dirty_query: Query<&mut Dirty<BattleHudVm>>,
+) {
+    BattleProjection::on_battle_started(&mut store, trigger.event());
+
+    for mut dirty in dirty_query.iter_mut() {
+        dirty.mark_dirty();
+    }
+}
+
 /// Observer: listens for `TurnStarted` domain events and projects them into
 /// `UiStore.battle_hud` via `BattleProjection::on_turn_started`.
 ///
@@ -74,6 +107,20 @@ pub fn on_turn_started_projection(
     BattleProjection::on_turn_started(&mut store, trigger.event());
 
     // Mark all BattleHudVm consumers dirty
+    for mut dirty in dirty_query.iter_mut() {
+        dirty.mark_dirty();
+    }
+}
+
+/// Observer: listens for `TurnEnded` domain events and projects them into
+/// `UiStore.battle_hud` via `BattleProjection::on_turn_ended`.
+pub fn on_turn_ended_projection(
+    trigger: On<TurnEnded>,
+    mut store: ResMut<UiStore>,
+    mut dirty_query: Query<&mut Dirty<BattleHudVm>>,
+) {
+    BattleProjection::on_turn_ended(&mut store, trigger.event());
+
     for mut dirty in dirty_query.iter_mut() {
         dirty.mark_dirty();
     }

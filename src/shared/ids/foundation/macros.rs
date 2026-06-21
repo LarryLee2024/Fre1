@@ -175,10 +175,12 @@ macro_rules! define_numeric_id {
         pub struct $name(pub u64);
 
         impl $name {
+            /// 从原始 u64 值创建强类型 ID。
             pub fn new(id: u64) -> Self {
                 Self(id)
             }
 
+            /// 返回内部 u64 值。
             pub fn value(&self) -> u64 {
                 self.0
             }

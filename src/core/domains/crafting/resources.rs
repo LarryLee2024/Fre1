@@ -33,16 +33,19 @@ pub struct EnchantmentDefRegistry {
 }
 
 impl EnchantmentDefRegistry {
+    /// 创建空的附魔定义注册表。
     pub fn new() -> Self {
         Self {
             defs: HashMap::new(),
         }
     }
 
+    /// 注册一个附魔定义（同 ID 覆盖）。
     pub fn register(&mut self, def: EnchantmentDef) {
         self.defs.insert(def.id.clone(), def);
     }
 
+    /// 按 ID 查询附魔定义。
     pub fn get(&self, id: &str) -> Option<&EnchantmentDef> {
         self.defs.get(id)
     }

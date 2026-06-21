@@ -161,15 +161,21 @@ pub struct ItemReward {
     pub quantity: u32,
 }
 
+/// 任务完成奖励：声望变更。
 #[derive(Debug, Clone, PartialEq, Reflect, Serialize, Deserialize)]
 pub struct ReputationReward {
+    /// 受影响的阵营 ID
     pub faction_id: String,
+    /// 声望变化量（正数增加，负数减少）
     pub amount: i32,
 }
 
+/// 任务完成奖励：解锁内容。
 #[derive(Debug, Clone, PartialEq, Reflect, Serialize, Deserialize)]
 pub struct UnlockReward {
+    /// 解锁类型（天赋/法术/配方等）
     pub unlock_type: UnlockType,
+    /// 被解锁内容的 ID
     pub unlock_id: String,
 }
 
@@ -287,10 +293,12 @@ impl QuestLog {
         }
     }
 
+    /// 按任务 ID 查询任务条目（只读）。
     pub fn get_entry(&self, quest_id: &QuestDefId) -> Option<&QuestEntry> {
         self.entries.iter().find(|e| e.quest_id == *quest_id)
     }
 
+    /// 按任务 ID 查询任务条目（可变引用，用于更新进度）。
     pub fn get_entry_mut(&mut self, quest_id: &QuestDefId) -> Option<&mut QuestEntry> {
         self.entries.iter_mut().find(|e| e.quest_id == *quest_id)
     }

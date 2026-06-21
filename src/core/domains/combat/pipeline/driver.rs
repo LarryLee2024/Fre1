@@ -269,7 +269,7 @@ pub(crate) fn on_unit_action_complete(
         event.unit
     );
 
-    // 查找管线定义，跳转到 turn_settlement
+    // 行动完成后恢复管线，从 TurnSettlement 继续执行
     let def = match pipeline_registry.get(&driver.state.pipeline_id) {
         Some(d) => d.clone(),
         None => {

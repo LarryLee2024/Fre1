@@ -13,6 +13,7 @@
 
 use bevy::prelude::*;
 
+use super::application::bridge::process_ui_commands;
 use super::binding::Dirty;
 use super::focus::FocusPlugin;
 use super::overlay::OverlayPlugin;
@@ -61,5 +62,8 @@ impl Plugin for UiPlugin {
         // 7. Projections — domain event to ViewModel observers
         app.add_observer(on_turn_started_projection);
         app.add_observer(on_effect_applied_projection);
+
+        // 8. Bridge — UiCommand to GameCommand wiring (observer pattern)
+        app.add_observer(process_ui_commands);
     }
 }

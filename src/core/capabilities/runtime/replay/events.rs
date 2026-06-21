@@ -5,6 +5,8 @@ use bevy::prelude::*;
 use crate::shared::diagnostics::ReplayEvent;
 
 /// 回放开始时触发。
+///
+/// 订阅者：UI（显示回放进度条）、Debug 工具（初始化回放状态）。
 #[derive(Event, Debug, Clone, PartialEq)]
 pub struct ReplayStarted {
     /// 回放场景标识
@@ -25,6 +27,8 @@ pub struct ReplayFrameProcessed {
 }
 
 /// 回放完成时触发。
+///
+/// 订阅者：UI（显示回放完成提示）、日志（记录回放结果）。
 #[derive(Event, Debug, Clone, PartialEq)]
 pub struct ReplayCompleted {
     /// 总帧数
@@ -36,6 +40,8 @@ pub struct ReplayCompleted {
 }
 
 /// 录制开始时触发。
+///
+/// 订阅者：UI（显示录制指示器）、日志（记录录制启动）。
 #[derive(Event, Debug, Clone, PartialEq)]
 pub struct RecordingStarted {
     /// 场景标识
@@ -45,6 +51,8 @@ pub struct RecordingStarted {
 }
 
 /// 录制完成时触发。
+///
+/// 订阅者：UI（隐藏录制指示器）、存档（保存 ReplayLog）。
 #[derive(Event, Debug, Clone, PartialEq)]
 pub struct RecordingCompleted {
     /// 录制的帧数

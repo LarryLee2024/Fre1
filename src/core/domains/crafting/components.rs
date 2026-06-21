@@ -119,6 +119,7 @@ pub struct UpgradeLevel {
 }
 
 impl UpgradeLevel {
+    /// 创建指定最大等级的升级等级组件。
     pub fn new(max: u32) -> Self {
         Self {
             current: 0,

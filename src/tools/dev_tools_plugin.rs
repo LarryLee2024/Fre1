@@ -8,6 +8,7 @@
 use bevy::dev_tools::diagnostics_overlay::{DiagnosticsOverlay, DiagnosticsOverlayPlugin};
 use bevy::prelude::*;
 
+/// 开发工具集 Plugin——注册 Debug 面板、性能分析、热重载控制台。
 pub struct DevToolsPlugin;
 
 impl Plugin for DevToolsPlugin {

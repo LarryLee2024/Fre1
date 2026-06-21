@@ -10,6 +10,7 @@ use super::resources::CraftingConfig;
 use super::systems::{on_apply_enchantment, on_craft_item, on_upgrade_item};
 use crate::register_domain_types;
 
+/// 制作/锻造领域 Plugin——注册配方、附魔、升级组件和制作系统。
 pub struct CraftingPlugin;
 
 impl Plugin for CraftingPlugin {

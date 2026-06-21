@@ -34,10 +34,12 @@ impl TileFlags {
     pub const BUILDABLE: Self = Self(0b0000_0100);
     pub const BLOCKS_SIGHT: Self = Self(0b0000_1000);
 
+    /// 检查是否包含指定标记位（位运算子集检查）。
     pub fn contains(&self, other: Self) -> bool {
         (self.0 & other.0) == other.0
     }
 
+    /// 检查格子是否可通行（包含 PASSABLE 标记）。
     pub fn is_passable(&self) -> bool {
         self.contains(Self::PASSABLE)
     }
@@ -58,6 +60,7 @@ impl TileData {
     const TERRAIN_SHIFT: u32 = 16;
     const HEIGHT_SHIFT: u32 = 8;
 
+    /// 从地形 ID、高度和标记位创建紧凑 TileData。
     pub fn new(terrain_def_id: u16, height: u8, flags: TileFlags) -> Self {
         Self {
             packed: (terrain_def_id as u32) << Self::TERRAIN_SHIFT
@@ -66,18 +69,22 @@ impl TileData {
         }
     }
 
+    /// 提取地形定义 ID（高 16 位）。
     pub fn terrain_def_id(&self) -> u16 {
         ((self.packed & Self::TERRAIN_MASK) >> Self::TERRAIN_SHIFT) as u16
     }
 
+    /// 提取高度值（中间 8 位）。
     pub fn height(&self) -> u8 {
         ((self.packed & Self::HEIGHT_MASK) >> Self::HEIGHT_SHIFT) as u8
     }
 
+    /// 提取标记位（低 8 位）。
     pub fn flags(&self) -> TileFlags {
         TileFlags((self.packed & Self::FLAGS_MASK) as u8)
     }
 
+    /// 检查格子是否可通行（委托给 TileFlags::is_passable）。
     pub fn is_passable(&self) -> bool {
         self.flags().is_passable()
     }

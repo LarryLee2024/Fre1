@@ -12,6 +12,7 @@ use super::systems::relationship_system::on_relationship_eval_request;
 use super::systems::reputation_system::on_reputation_change_request;
 use crate::register_domain_types;
 
+/// 阵营领域 Plugin——注册阵营关系、声望组件和关系计算系统。
 pub struct FactionPlugin;
 
 impl Plugin for FactionPlugin {

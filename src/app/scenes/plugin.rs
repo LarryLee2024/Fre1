@@ -11,6 +11,7 @@ use super::components::SceneRoot;
 use super::queue::{StateTransitionQueue, cleanup_scene, process_transition_queue};
 use super::state::GameState;
 
+/// 场景管理 Plugin——注册 GameState、StateTransitionQueue 和场景切换系统。
 pub struct ScenePlugin;
 
 impl Plugin for ScenePlugin {

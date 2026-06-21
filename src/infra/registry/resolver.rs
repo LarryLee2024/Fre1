@@ -208,7 +208,7 @@ impl IdAllocator {
         if id.as_str().len() < 5 {
             return false;
         }
-        // 检查前缀是否已知
+        // 4 字符前缀校验：未知前缀说明未注册的 Def 类型
         let prefix = &id.as_str()[..4]; // 4-char prefix: 3 letters + _
         IdType::from_prefix(prefix).is_some()
     }

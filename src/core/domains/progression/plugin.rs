@@ -14,6 +14,7 @@ use super::systems::progression_system::{
 };
 use crate::register_domain_types;
 
+/// 成长/升级领域 Plugin——注册经验、职业等级、天赋组件和升级系统。
 pub struct ProgressionPlugin;
 
 impl Plugin for ProgressionPlugin {

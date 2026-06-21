@@ -13,6 +13,7 @@ use super::systems::movement_system::on_compute_move;
 use crate::register_domain_types;
 use crate::shared::game_state::GameState;
 
+/// 战术/网格领域 Plugin——注册网格移动、高地优势、夹击组件和战术系统。
 pub struct TacticalPlugin;
 
 impl Plugin for TacticalPlugin {

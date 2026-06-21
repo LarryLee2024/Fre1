@@ -15,7 +15,7 @@ pub struct UnitMoved {
     pub remaining_mp: f32,
 }
 
-/// 单位每移动一格时触发。
+/// 单位每移动一格时触发（用于逐格动画和地形效果检查）。
 #[derive(Event, Debug, Clone, PartialEq)]
 pub struct PositionChanged {
     pub entity: Entity,

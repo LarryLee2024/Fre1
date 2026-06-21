@@ -10,6 +10,7 @@ use super::resources::SummonConfig;
 use super::systems::{on_summon_created, on_summon_expired};
 use crate::register_domain_types;
 
+/// 召唤领域 Plugin——注册召唤组件、槽位管理和生命周期系统。
 pub struct SummonPlugin;
 
 impl Plugin for SummonPlugin {

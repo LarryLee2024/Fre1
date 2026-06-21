@@ -26,6 +26,7 @@ use crate::core::capabilities::runtime::pipeline::registry::PipelineRegistry;
 use crate::register_domain_types;
 use crate::shared::game_state::GameState;
 
+/// 战斗领域 Plugin——注册战斗组件、回合管线和战斗结算系统。
 pub struct CombatPlugin;
 
 impl Plugin for CombatPlugin {

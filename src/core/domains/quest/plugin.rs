@@ -14,6 +14,7 @@ use super::systems::{
 };
 use crate::register_domain_types;
 
+/// 任务领域 Plugin——注册任务状态、目标追踪组件和任务流程系统。
 pub struct QuestPlugin;
 
 impl Plugin for QuestPlugin {

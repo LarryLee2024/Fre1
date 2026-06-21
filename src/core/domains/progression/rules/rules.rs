@@ -80,7 +80,7 @@ pub fn check_talent_prerequisites(
     required_talents: &[String],
     unlocked_talents: &[String],
 ) -> Result<(), String> {
-    // 检查等级要求
+    // 天赋解锁前置条件：等级和前置天赋必须同时满足
     if current_level < required_level {
         return Err(format!(
             "需要等级 {}，当前等级 {}",
@@ -88,7 +88,7 @@ pub fn check_talent_prerequisites(
         ));
     }
 
-    // 检查前置天赋
+    // 前置天赋检查：依赖链中的天赋必须已解锁
     for prereq in required_talents {
         if !unlocked_talents.contains(prereq) {
             return Err(format!("前置天赋 {} 尚未解锁", prereq));

@@ -16,6 +16,7 @@ use super::systems::{
 use crate::register_domain_types;
 use crate::shared::game_state::GameState;
 
+/// 反应/援护领域 Plugin——注册反应队列、反应条件组件和反应处理系统。
 pub struct ReactionPlugin;
 
 impl Plugin for ReactionPlugin {

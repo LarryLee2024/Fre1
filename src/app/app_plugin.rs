@@ -18,6 +18,7 @@ use bevy::prelude::*;
 #[cfg(feature = "dev")]
 use crate::tools::DevToolsPlugin;
 
+/// 游戏主 Plugin（Composition Root）——唯一知道所有层的装配入口。
 pub struct AppPlugin;
 
 impl Plugin for AppPlugin {

@@ -19,6 +19,7 @@ impl Default for ThemeVariant {
 }
 
 impl ThemeVariant {
+    /// 返回主题变体的字符串标识（"dark" 或 "light"）。
     pub fn as_str(&self) -> &'static str {
         match self {
             Self::Dark => "dark",

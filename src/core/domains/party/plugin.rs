@@ -11,6 +11,7 @@ use super::components::{BondState, Party, PartyMarker};
 use super::systems::{on_member_joined, on_member_removed, on_member_swapped};
 use crate::register_domain_types;
 
+/// 队伍领域 Plugin——注册队伍成员、羁绊组件和队伍管理系统。
 pub struct PartyPlugin;
 
 impl Plugin for PartyPlugin {

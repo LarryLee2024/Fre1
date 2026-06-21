@@ -25,10 +25,12 @@ impl<T: Clone + Send + Sync + 'static> Default for OverlayQueue<T> {
 }
 
 impl<T: Clone + Send + Sync + 'static> OverlayQueue<T> {
+    /// 将覆盖层条目入队（按顺序处理）。
     pub fn push(&mut self, entry: OverlayEntry<T>) {
         self.entries.push(entry);
     }
 
+    /// 取出所有待处理的覆盖层条目并清空队列。
     pub fn drain(&mut self) -> Vec<OverlayEntry<T>> {
         std::mem::take(&mut self.entries)
     }

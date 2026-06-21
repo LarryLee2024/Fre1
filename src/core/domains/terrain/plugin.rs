@@ -18,6 +18,7 @@ use super::systems::terrain_effect_system::on_tile_entered;
 use crate::register_domain_types;
 use crate::shared::game_state::GameState;
 
+/// 地形领域 Plugin——注册地形组件、表面变化和陷阱触发系统。
 pub struct TerrainPlugin;
 
 impl Plugin for TerrainPlugin {

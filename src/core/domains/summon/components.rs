@@ -78,6 +78,7 @@ pub struct SummonSlotManager {
 }
 
 impl SummonSlotManager {
+    /// 创建指定最大槽位数的召唤槽管理器。
     pub fn new(max_slots: u32) -> Self {
         Self {
             active_summons: Vec::new(),
@@ -85,14 +86,17 @@ impl SummonSlotManager {
         }
     }
 
+    /// 检查是否有空闲槽位（当前召唤物数量 < 最大槽位数）。
     pub fn has_free_slot(&self) -> bool {
         (self.active_summons.len() as u32) < self.max_slots
     }
 
+    /// 注册一个召唤物实体到槽位。
     pub fn add_summon(&mut self, entity: Entity) {
         self.active_summons.push(entity);
     }
 
+    /// 移除一个召唤物实体（召唤物死亡/超时时调用）。
     pub fn remove_summon(&mut self, entity: Entity) {
         self.active_summons.retain(|&e| e != entity);
     }

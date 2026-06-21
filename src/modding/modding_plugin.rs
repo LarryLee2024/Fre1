@@ -6,6 +6,7 @@
 
 use bevy::prelude::*;
 
+/// Mod 扩展层 Plugin——注册 Mod 加载器、沙箱、稳定 API 层。
 pub struct ModdingPlugin;
 
 impl Plugin for ModdingPlugin {

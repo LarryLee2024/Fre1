@@ -11,6 +11,7 @@ use super::components::{EquipmentSlots, Inventory, InventoryMarker, ItemInstance
 use super::systems::inventory_system::{on_equip_item, on_item_acquired, on_item_used};
 use crate::register_domain_types;
 
+/// 背包物品领域 Plugin——注册背包、装备槽位组件和物品操作系统。
 pub struct InventoryPlugin;
 
 impl Plugin for InventoryPlugin {

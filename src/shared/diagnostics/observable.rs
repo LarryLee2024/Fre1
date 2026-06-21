@@ -75,6 +75,10 @@ pub trait ObservableEvent: sealed::Sealed + fmt::Debug + Send + Sync + 'static {
 /// Any Bevy event that derives `Event + Debug + Clone + Send + Sync + 'static`
 /// automatically implements this trait via blanket impl — no macro or manual
 /// impl needed.
+/// 领域事件标记 trait。
+///
+/// 存在原因：所有 DomainEvent 自动获得日志、回放、审计能力，
+/// 通过 blanket impl 零样板代码实现，替代 `impl_domain_event!()` 宏。
 pub trait DomainEvent: bevy::prelude::Event + fmt::Debug + Clone + Send + Sync + 'static {}
 
 /// Blanket impl: every Bevy event satisfying the supertrait bounds is
@@ -92,6 +96,10 @@ impl<T> DomainEvent for T where T: bevy::prelude::Event + fmt::Debug + Clone + S
 ///
 /// This is a pure marker trait: it carries no behavior, creates no hierarchy,
 /// and serves only as a registration tag for auto-registration systems.
+/// 回放事件标记 trait。
+///
+/// 存在原因：回放基础设施自身的事件（ReplayStarted、RecordingCompleted 等）需要与业务领域事件区分，
+/// 避免回放系统误处理业务事件。
 pub trait ReplayEvent {}
 
 /// Marker trait for audit events.
@@ -103,6 +111,10 @@ pub trait ReplayEvent {}
 ///
 /// This is a pure marker trait: it carries no behavior, creates no hierarchy,
 /// and serves only as a registration tag for auto-registration systems.
+/// 审计事件标记 trait。
+///
+/// 存在原因：合规/调试/事后分析需要记录关键操作轨迹，
+/// 审计事件与业务事件分离，确保审计日志独立于业务日志。
 pub trait AuditEvent {}
 
 /// 结构化字段收集器——Observer 通过此结构收集事件字段。

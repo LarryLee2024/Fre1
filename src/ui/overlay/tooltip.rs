@@ -30,6 +30,7 @@ impl Default for TooltipService {
 }
 
 impl TooltipService {
+    /// 显示工具提示（延迟显示，防止快速悬停闪烁）。
     pub fn show(&mut self, key: &'static str, pos: Vec2) {
         self.content_key = Some(key);
         self.position = pos;
@@ -37,6 +38,7 @@ impl TooltipService {
         self.active = true;
     }
 
+    /// 隐藏工具提示并清除内容。
     pub fn hide(&mut self) {
         self.active = false;
         self.content_key = None;

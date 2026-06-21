@@ -142,7 +142,7 @@ pub fn apply_effect(
     // ignored_tags 来自 EffectDef，表示目标不能拥有的标签（否则效果应用失败）
     if let Some(immune_tags) = ignored_tags {
         if !immune_tags.is_empty() {
-            // 检查目标的 tags 是否包含 ignored_tags 中的任意一个
+            // 免疫标签匹配：任一命中即拒绝效果应用
             let target_has_immune = immune_tags.iter().any(|immune_tag| {
                 instance.tags.iter().any(|t| t == immune_tag)
                     || container

@@ -58,7 +58,7 @@ pub fn keyboard_navigation_system(
         return;
     };
 
-    // 查找当前活跃组的导航模式
+    // 导航模式决定方向键行为（Grid = 网格导航，Linear = 列表导航）
     let navigation_mode = focus_groups
         .iter()
         .find(|g| g.group_id == active_group)

@@ -23,7 +23,7 @@ pub struct CutsceneStartRequest {
 pub(crate) fn on_cutscene_start(trigger: On<CutsceneStartRequest>, mut commands: Commands) {
     let req = trigger.event();
 
-    // 生成 CutsceneState 供 UI 查询当前演出状态
+    // CutsceneState 挂载到实体供 UI 查询演出进度（Phase/elapsed/duration）
     commands.spawn(CutsceneState {
         phase: CutscenePhase::Playing,
         cutscene_id: req.cutscene_id.clone(),

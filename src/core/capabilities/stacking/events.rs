@@ -12,6 +12,8 @@
 use bevy::prelude::*;
 
 /// 堆叠层数增加时触发。
+///
+/// 订阅者：Modifier（重新计算层数相关 Modifier）、UI（更新堆叠显示）。
 #[derive(Event, Debug, Clone, PartialEq)]
 pub struct StackAdded {
     /// 受影响的实体 ID
@@ -27,6 +29,8 @@ pub struct StackAdded {
 }
 
 /// 堆叠层数减少时触发。
+///
+/// 订阅者：Modifier（回退层数相关 Modifier）、UI（更新堆叠显示）。
 #[derive(Event, Debug, Clone, PartialEq)]
 pub struct StackRemoved {
     /// 受影响的实体 ID

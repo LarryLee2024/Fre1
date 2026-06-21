@@ -246,7 +246,7 @@ fn reload_single_spell(spells: &mut ResMut<LoadedSpellDefs>, file: &ContentFile)
         );
         return false;
     }
-    // 移除同 ID 的旧定义，插入新定义
+    // retain + insert 保证同一 ID 只保留最新版本（热重载幂等性）
     spells.defs.retain(|d| d.id != def.id);
     info!(target: "content",
         "[HotReload] 重载了技能 '{}'（id: {}）",
