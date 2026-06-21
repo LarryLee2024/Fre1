@@ -5,3 +5,4 @@
 - [RNG System Refactoring](rng-system-refactoring-2026-06-21.md) -- ChaCha12 DeterministicRng moved to shared/random/, GameRng deleted, Core->Infra violation fixed
 - [Shared Collections Iterator Extensions](shared-collections-iterator-extensions.md) -- GroupByMap, TakeWhileInclusive, PartitionMap in shared/collections/
 - [Shared Validation Module](shared-validation-module.md) -- ValidationResult, Validator trait, ValidationChain, built-in validators
+- [UiAction Routing System](ui-action-routing-system.md) -- UiAction/UiCommand/UiEvent enums, ScreenType, ButtonClicked→UiCommand mapping via方案A, Bevy 0.19 trigger/observer pattern

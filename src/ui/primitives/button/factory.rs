@@ -9,6 +9,7 @@ use bevy::prelude::*;
 use bevy::ui::widget::Button;
 
 use super::components::{ButtonInteraction, ButtonState, ButtonVariant};
+use crate::infra::localization::LocalizedText;
 use crate::ui::theme::Theme;
 
 /// 根据变体和交互状态计算按钮背景色
@@ -109,6 +110,71 @@ pub fn spawn_button(
                     ..default()
                 },
                 TextColor(text_color),
+            ));
+        })
+        .id()
+}
+
+/// 工厂函数：生成本地化按钮 Widget
+///
+/// 与 `spawn_button` 相同，但按钮文本使用 LocalizedText Key。
+/// `default_label` 用于 FTL 尚未加载时显示的兜底文本。
+///
+/// # 参数
+/// - `commands`: ECS 命令
+/// - `theme`: 主题 Resource
+/// - `key`: 本地化 Key（如 `loc::ui::BATTLE_END_TURN`）
+/// - `default_label`: FTL 未加载时的兜底文本
+/// - `variant`: 按钮样式变体
+///
+/// # 返回
+/// 按钮实体的 Entity
+pub fn spawn_localized_button(
+    commands: &mut Commands,
+    theme: &Theme,
+    key: &'static str,
+    default_label: &str,
+    variant: ButtonVariant,
+) -> Entity {
+    let state = ButtonState {
+        variant,
+        disabled: false,
+        label: default_label.to_string(),
+    };
+    let bg_color = button_background_color(variant, &ButtonInteraction::default(), theme);
+    let text_color = button_text_color(variant, false, theme);
+
+    let border = match variant {
+        ButtonVariant::Secondary => theme.colors.border_default,
+        _ => Color::NONE,
+    };
+
+    commands
+        .spawn((
+            Node {
+                flex_direction: FlexDirection::Row,
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::Center,
+                padding: UiRect::axes(Val::Px(theme.spacing.md), Val::Px(theme.spacing.sm)),
+                min_height: Val::Px(theme.spacing.button_height),
+                ..default()
+            },
+            Button,
+            BackgroundColor(bg_color),
+            BorderColor::all(border),
+            state,
+            ButtonInteraction::default(),
+            Name::new(format!("Button({})", key)),
+        ))
+        .with_children(|parent| {
+            parent.spawn((
+                Text::new(default_label.to_string()),
+                TextFont {
+                    font_size: FontSize::Px(theme.typography.size_body),
+                    ..default()
+                },
+                TextColor(text_color),
+                LocalizedText::static_text(key),
             ));
         })
         .id()

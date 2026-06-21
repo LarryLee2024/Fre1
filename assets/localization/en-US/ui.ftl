@@ -26,3 +26,9 @@
 -ui-tutorial-hint = Hint
 -ui-dialogue-continue = Continue
 -ui-dialogue-skip = Skip
+-ui-new-game = New Game
+-ui-load-game = Load Game
+-ui-continue = Continue
+-ui-use = Use
+-ui-equip = Equip
+-ui-drop = Drop

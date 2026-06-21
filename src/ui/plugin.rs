@@ -10,9 +10,11 @@
 
 use bevy::prelude::*;
 
+use super::binding::Dirty;
 use super::primitives::PrimitivesPlugin;
 use super::screens::ScreenPlugin;
 use super::theme::ThemePlugin;
+use super::view_models::{battle_hud::BattleHudVm, character_panel::CharacterPanelVm, skill_panel::SkillPanelVm, UiStore};
 use super::widgets::WidgetsPlugin;
 
 /// UiPlugin — L3 UI 表现层入口
@@ -22,6 +24,16 @@ pub struct UiPlugin;
 
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
+        // 0. Binding + ViewModel infrastructure — registered before UI rendering
+        app.init_resource::<UiStore>();
+        app.register_type::<UiStore>();
+        app.register_type::<BattleHudVm>();
+        app.register_type::<CharacterPanelVm>();
+        app.register_type::<SkillPanelVm>();
+        app.register_type::<Dirty<BattleHudVm>>();
+        app.register_type::<Dirty<CharacterPanelVm>>();
+        app.register_type::<Dirty<SkillPanelVm>>();
+
         // 1. Theme — 必须在所有 UI 组件之前注册
         app.add_plugins(ThemePlugin);
         // 2. Primitives — 基础 UI 原语

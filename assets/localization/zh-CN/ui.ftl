@@ -27,3 +27,9 @@
 -ui-tutorial-hint = 提示
 -ui-dialogue-continue = 继续
 -ui-dialogue-skip = 跳过
+-ui-new-game = 新游戏
+-ui-load-game = 读取存档
+-ui-continue = 继续游戏
+-ui-use = 使用
+-ui-equip = 装备
+-ui-drop = 丢弃

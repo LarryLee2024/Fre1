@@ -6,10 +6,15 @@
 //! 三层架构：Primitives → Widgets → Screens
 //! 详见 `docs/06-ui/` 架构文档
 
+pub mod application;
+pub mod binding;
+pub mod localization;
+pub mod navigation;
 pub mod plugin;
 pub mod primitives;
 pub mod screens;
 pub mod theme;
+pub mod view_models;
 pub mod widgets;
 
 pub use plugin::UiPlugin;
@@ -17,7 +22,7 @@ pub use primitives::{
     button::{
         components::{ButtonInteraction, ButtonState, ButtonVariant},
         events::ButtonClicked,
-        factory::spawn_button,
+        factory::{spawn_button, spawn_localized_button},
     },
     list::{
         components::{ListState, ListVariant},
@@ -38,7 +43,7 @@ pub use primitives::{
     },
     text::{
         components::{TextVariant, TextWidget},
-        factory::spawn_text,
+        factory::{spawn_localized_text, spawn_text},
     },
 };
 pub use theme::{Theme, ThemePlugin, UiColors, UiSpacing, UiTypography};

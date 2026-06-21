@@ -8,10 +8,12 @@ pub mod systems;
 
 use bevy::prelude::*;
 
-use crate::ui::primitives::button::{components::ButtonVariant, factory::spawn_button};
+use crate::infra::localization::generated::loc;
+use crate::ui::primitives::button::{components::ButtonVariant, factory::spawn_localized_button};
 use crate::ui::primitives::list::{components::ListVariant, factory::spawn_list};
 use crate::ui::primitives::panel::{components::PanelVariant, factory::spawn_panel};
-use crate::ui::primitives::text::{components::TextVariant, factory::spawn_text};
+use crate::ui::primitives::text::factory::{spawn_localized_text, spawn_text};
+use crate::ui::primitives::text::{components::TextVariant};
 use crate::ui::theme::Theme;
 
 /// 菜单按钮动作标识
@@ -29,7 +31,7 @@ pub enum MenuAction {
 
 /// 主菜单屏幕标记组件
 ///
-/// 用于未来场景管理系统的 despawn 清理。
+/// 用于场景管理系统的 despawn 清理。
 #[derive(Component, Debug, Clone, PartialEq, Eq, Reflect)]
 pub struct MainMenuScreen;
 
@@ -112,9 +114,9 @@ pub fn spawn_main_menu(mut commands: Commands, theme: Res<Theme>, asset_server: 
     });
 
     // ── 5. Menu buttons ──
-    let new_game_btn = spawn_button(&mut commands, &theme, "New Game", ButtonVariant::Primary);
-    let load_game_btn = spawn_button(&mut commands, &theme, "Load Game", ButtonVariant::Secondary);
-    let settings_btn = spawn_button(&mut commands, &theme, "Settings", ButtonVariant::Secondary);
+    let new_game_btn = spawn_localized_button(&mut commands, &theme, loc::ui::NEW_GAME, "New Game", ButtonVariant::Primary);
+    let load_game_btn = spawn_localized_button(&mut commands, &theme, loc::ui::LOAD_GAME, "Load Game", ButtonVariant::Secondary);
+    let settings_btn = spawn_localized_button(&mut commands, &theme, loc::ui::SETTINGS, "Settings", ButtonVariant::Secondary);
 
     // Attach MenuAction for button identification
     commands.entity(new_game_btn).insert(MenuAction::NewGame);
@@ -141,4 +143,11 @@ pub fn spawn_main_menu(mut commands: Commands, theme: Res<Theme>, asset_server: 
     commands.entity(new_game_btn).set_parent_in_place(list);
     commands.entity(load_game_btn).set_parent_in_place(list);
     commands.entity(settings_btn).set_parent_in_place(list);
+}
+
+/// 清除系统：离开主菜单时销毁所有主菜单实体
+pub fn despawn_main_menu(mut commands: Commands, query: Query<Entity, With<MainMenuScreen>>) {
+    for entity in query {
+        commands.entity(entity).despawn();
+    }
 }

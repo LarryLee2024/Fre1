@@ -22,7 +22,8 @@ pub mod systems;
 
 use bevy::prelude::*;
 
-use crate::ui::primitives::button::{components::ButtonVariant, factory::spawn_button};
+use crate::infra::localization::generated::loc;
+use crate::ui::primitives::button::{components::ButtonVariant, factory::spawn_localized_button};
 use crate::ui::primitives::panel::{components::PanelVariant, factory::spawn_panel};
 use crate::ui::primitives::text::{components::TextVariant, factory::spawn_text};
 use crate::ui::theme::Theme;
@@ -102,7 +103,14 @@ pub fn spawn_battle_screen(
     commands.entity(action_menu).set_parent_in_place(root);
 
     // ── 6. End Turn button (Danger variant) ──
-    let end_turn_btn = spawn_button(&mut commands, &theme, "End Turn", ButtonVariant::Danger);
+    let end_turn_btn = spawn_localized_button(&mut commands, &theme, loc::ui::BATTLE_END_TURN, "End Turn", ButtonVariant::Danger);
     commands.entity(end_turn_btn).insert(BattleAction::EndTurn);
     commands.entity(end_turn_btn).set_parent_in_place(root);
+}
+
+/// 清除系统：离开战斗时销毁所有战斗屏幕实体
+pub fn despawn_battle_screen(mut commands: Commands, query: Query<Entity, With<BattleScreen>>) {
+    for entity in query {
+        commands.entity(entity).despawn();
+    }
 }

@@ -266,22 +266,28 @@ pub mod loc {
     pub const BATTLE_WAIT: &str = "ui.battle.wait";
     pub const CLOSE: &str = "ui.close";
     pub const CONFIRM: &str = "ui.confirm";
+    pub const CONTINUE: &str = "ui.continue";
     pub const DIALOGUE_CONTINUE: &str = "ui.dialogue.continue";
     pub const DIALOGUE_SKIP: &str = "ui.dialogue.skip";
+    pub const DROP: &str = "ui.drop";
+    pub const EQUIP: &str = "ui.equip";
     pub const EXIT: &str = "ui.exit";
     pub const EXP: &str = "ui.exp";
     pub const GOLD: &str = "ui.gold";
     pub const HP: &str = "ui.hp";
     pub const LEVEL: &str = "ui.level";
     pub const LOAD: &str = "ui.load";
+    pub const LOAD_GAME: &str = "ui.load.game";
     pub const MAIN_MENU: &str = "ui.main.menu";
     pub const MP: &str = "ui.mp";
+    pub const NEW_GAME: &str = "ui.new.game";
     pub const PAUSE: &str = "ui.pause";
     pub const RESUME: &str = "ui.resume";
     pub const RETRY: &str = "ui.retry";
     pub const SAVE: &str = "ui.save";
     pub const SETTINGS: &str = "ui.settings";
     pub const TUTORIAL_HINT: &str = "ui.tutorial.hint";
+    pub const USE: &str = "ui.use";
     }
 
 }
@@ -489,20 +495,26 @@ pub const ALL_KEYS: &[&str] = &[
     "ui.battle.wait",
     "ui.close",
     "ui.confirm",
+    "ui.continue",
     "ui.dialogue.continue",
     "ui.dialogue.skip",
+    "ui.drop",
+    "ui.equip",
     "ui.exit",
     "ui.exp",
     "ui.gold",
     "ui.hp",
     "ui.level",
     "ui.load",
+    "ui.load.game",
     "ui.main.menu",
     "ui.mp",
+    "ui.new.game",
     "ui.pause",
     "ui.resume",
     "ui.retry",
     "ui.save",
     "ui.settings",
     "ui.tutorial.hint",
+    "ui.use",
 ];

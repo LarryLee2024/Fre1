@@ -1,7 +1,8 @@
 //! Button 交互系统
 //!
 //! 每帧检测按钮的 Interaction 状态，更新 ButtonInteraction 组件，
-//! 并在检测到点击时通过 Observer 模式触发 ButtonClicked 事件。
+//! 并在检测到点击时通过 Observer 模式触发 ButtonClicked 事件
+//! 和 UiAction::Click（Bevy 0.19 Commands::trigger + Observer 双通道）。
 //!
 //! 依赖 Bevy 内置的 Interaction 组件（UI 系统自动更新）。
 
@@ -11,6 +12,7 @@ use bevy::ui::Interaction;
 use super::components::{ButtonInteraction, ButtonState, ButtonVariant};
 use super::events::ButtonClicked;
 use crate::ui::Theme;
+use crate::ui::application::UiAction;
 
 /// 根据按钮变体和交互状态计算背景色（禁用时固定为 surface_disabled）
 fn resolve_bg_color(
@@ -53,6 +55,7 @@ fn resolve_bg_color(
 /// 1. 读取 Bevy 自动管理的 Interaction 组件
 /// 2. 更新 ButtonInteraction（hovered / pressed / just_clicked）
 /// 3. 在 just_clicked 时通过 Observer 机制触发 ButtonClicked 事件
+///    并同步触发 UiAction::Click（Bevy 0.19 Commands::trigger 双通道）
 /// 4. 根据状态更新 BackgroundColor
 pub fn button_interaction_system(
     theme: Res<Theme>,
@@ -89,9 +92,10 @@ pub fn button_interaction_system(
         // 点击释放时设置 just_clicked（持续一帧）
         btn_interaction.just_clicked = was_pressed && !btn_interaction.pressed;
 
-        // 触发点击事件
+        // 触发点击事件（Bevy 0.19 Commands::trigger 双通道）
         if btn_interaction.just_clicked {
             commands.trigger(ButtonClicked { entity });
+            commands.trigger(UiAction::Click);
         }
 
         // 更新背景色

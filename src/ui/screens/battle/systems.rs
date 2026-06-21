@@ -1,11 +1,12 @@
-//! BattleScreen systems — button click handling via Observer pattern
+//! BattleScreen systems — button click handling via UiCommand routing
 //!
-//! Observers listen for `ButtonClicked` events triggered by the primitives
-//! button system, then match on `BattleAction` to determine the intended action.
+//! Uses the ButtonClicked trigger observer with Commands::trigger
+//! to map BattleAction to domain commands（方案A）。
 
 use bevy::ecs::observer::On;
 use bevy::prelude::*;
 
+use crate::ui::application::UiCommand;
 use crate::ui::primitives::button::events::ButtonClicked;
 
 /// Battle button action identifier
@@ -18,22 +19,27 @@ pub enum BattleAction {
     EndTurn,
 }
 
-/// Observer: handles battle button clicks
+/// Observer: handles battle button clicks, mapping to UiCommand
 ///
 /// When the primitives-layer `button_interaction_system` triggers a
-/// `ButtonClicked` event, checks if the button entity carries a
-/// `BattleAction` component and dispatches accordingly.
-/// Currently only logs; will be replaced by domain system integration.
-pub fn on_battle_button_clicked(on: On<ButtonClicked>, query: Query<&BattleAction>) {
+/// `ButtonClicked` event via Commands::trigger, checks if the button
+/// entity carries a `BattleAction` component and dispatches the
+/// corresponding UiCommand.
+pub fn on_battle_button_clicked(
+    on: On<ButtonClicked>,
+    query: Query<&BattleAction>,
+    mut commands: Commands,
+) {
     let entity = on.event().entity;
     let Ok(action) = query.get(entity) else {
         // Not a battle button, ignore
         return;
     };
 
-    match action {
-        BattleAction::EndTurn => {
-            info!(target: "ui", "[Battle] 结束回合");
-        }
-    }
+    let command = match action {
+        BattleAction::EndTurn => UiCommand::EndTurn,
+    };
+
+    info!(target: "ui", "[Battle] 命令映射: {:?}", command);
+    commands.trigger(command);
 }

@@ -7,7 +7,8 @@
 
 use bevy::prelude::*;
 
-use crate::ui::primitives::button::{components::ButtonVariant, factory::spawn_button};
+use crate::infra::localization::generated::loc;
+use crate::ui::primitives::button::{components::ButtonVariant, factory::spawn_localized_button};
 use crate::ui::primitives::panel::{components::PanelVariant, factory::spawn_panel};
 use crate::ui::primitives::progress_bar::{
     components::ProgressBarVariant, factory::spawn_progress_bar,
@@ -93,7 +94,7 @@ pub fn spawn_skill_slot(
     commands.entity(cooldown_bar).set_parent_in_place(container);
 
     // ── 4. Use button (Primary variant, small) ──
-    let use_button = spawn_button(commands, theme, "Use", ButtonVariant::Primary);
+    let use_button = spawn_localized_button(commands, theme, loc::ui::USE, "Use", ButtonVariant::Primary);
     // Attach SkillSlotAction marker for event routing
     commands.entity(use_button).insert(SkillSlotAction::Use);
     commands.entity(use_button).set_parent_in_place(container);

@@ -3,12 +3,17 @@
 //! 遵循 Factory 模式，禁止直接通过 commands.spawn 创建文本节点。
 //! 输入 Props + Theme → 输出 Entity。
 //!
+//! 提供两个工厂函数：
+//! - `spawn_text`: 创建带有硬编码文本的 Text Widget（用于调试/临时文本）
+//! - `spawn_localized_text`: 创建带有 LocalizedText Key 的文本 Widget（正式用）
+//!
 //! 详见 `docs/06-ui/01-architecture/architecture.md` §9
 
 use bevy::prelude::*;
 use bevy::text::FontSource;
 
 use super::components::{TextVariant, TextWidget};
+use crate::infra::localization::LocalizedText;
 use crate::ui::Theme;
 
 /// 根据变体计算字体大小
@@ -88,6 +93,62 @@ pub fn spawn_text(
                 color_override: None,
             },
             Name::new(format!("Text({})", content_str)),
+        ))
+        .id()
+}
+
+/// 工厂函数：生成本地化文本 Widget
+///
+/// 使用 LocalizedText key 代替硬编码字符串，由 infra 本地化系统自动翻译。
+/// `fallback` 参数用于 FTL 尚未加载时显示的默认文本。
+///
+/// # 参数
+/// - `commands`: ECS 命令
+/// - `asset_server`: 资源管理器
+/// - `theme`: 主题 Resource
+/// - `key`: 本地化 Key（如 `loc::ui::BATTLE_END_TURN`）
+/// - `fallback`: FTL 未加载时的兜底文本
+/// - `variant`: 文本样式变体
+///
+/// # 返回
+/// 文本 Widget 实体的 Entity
+///
+/// # 用法
+/// ```ignore
+/// use crate::infra::localization::generated::loc;
+/// let txt = spawn_localized_text(
+///     &mut commands, &asset_server, &theme,
+///     loc::ui::BATTLE_END_TURN, "End Turn", TextVariant::Body,
+/// );
+/// ```
+pub fn spawn_localized_text(
+    commands: &mut Commands,
+    asset_server: &AssetServer,
+    theme: &Theme,
+    key: &'static str,
+    fallback: &str,
+    variant: TextVariant,
+) -> Entity {
+    let font_size = font_size_for_variant(variant, theme);
+    let font_color = color_for_variant(variant, theme);
+    let font_path = font_path_for_variant(variant, theme);
+
+    commands
+        .spawn((
+            Text::new(fallback.to_string()),
+            TextFont {
+                font: FontSource::Handle(asset_server.load(font_path)),
+                font_size: FontSize::Px(font_size),
+                ..default()
+            },
+            TextColor(font_color),
+            TextWidget {
+                variant,
+                content: fallback.to_string(),
+                color_override: None,
+            },
+            LocalizedText::static_text(key),
+            Name::new(format!("Text({})", key)),
         ))
         .id()
 }

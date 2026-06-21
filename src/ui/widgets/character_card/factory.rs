@@ -7,7 +7,8 @@
 
 use bevy::prelude::*;
 
-use crate::ui::primitives::button::{components::ButtonVariant, factory::spawn_button};
+use crate::infra::localization::generated::loc;
+use crate::ui::primitives::button::{components::ButtonVariant, factory::spawn_localized_button};
 use crate::ui::primitives::panel::{components::PanelVariant, factory::spawn_panel};
 use crate::ui::primitives::progress_bar::{
     components::ProgressBarVariant, factory::spawn_progress_bar,
@@ -133,17 +134,17 @@ pub fn spawn_character_card(
 
     // ── 6. Action buttons ──
     // Attack button (Primary variant)
-    let attack_btn = spawn_button(commands, theme, "Attack", ButtonVariant::Primary);
+    let attack_btn = spawn_localized_button(commands, theme, loc::ui::BATTLE_ATTACK, "Attack", ButtonVariant::Primary);
     commands.entity(attack_btn).insert(CharacterAction::Attack);
     commands.entity(attack_btn).set_parent_in_place(container);
 
     // Defend button (Secondary variant)
-    let defend_btn = spawn_button(commands, theme, "Defend", ButtonVariant::Secondary);
+    let defend_btn = spawn_localized_button(commands, theme, loc::ui::BATTLE_DEFEND, "Defend", ButtonVariant::Secondary);
     commands.entity(defend_btn).insert(CharacterAction::Defend);
     commands.entity(defend_btn).set_parent_in_place(container);
 
     // Skill button (Primary variant)
-    let skill_btn = spawn_button(commands, theme, "Skill", ButtonVariant::Primary);
+    let skill_btn = spawn_localized_button(commands, theme, loc::ui::BATTLE_SKILL, "Skill", ButtonVariant::Primary);
     commands.entity(skill_btn).insert(CharacterAction::Skill);
     commands.entity(skill_btn).set_parent_in_place(container);
 

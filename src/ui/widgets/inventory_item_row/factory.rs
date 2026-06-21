@@ -7,9 +7,10 @@
 
 use bevy::prelude::*;
 
+use crate::infra::localization::generated::loc;
 use crate::ui::primitives::button::{
     components::ButtonVariant,
-    factory::spawn_button,
+    factory::spawn_localized_button,
 };
 use crate::ui::primitives::panel::{
     components::PanelVariant,
@@ -99,7 +100,7 @@ pub fn spawn_inventory_item_row(
     commands.entity(qty_text).set_parent_in_place(container);
 
     // ── 4. Use button (Primary variant) ──
-    let use_btn = spawn_button(commands, theme, "Use", ButtonVariant::Primary);
+    let use_btn = spawn_localized_button(commands, theme, loc::ui::USE, "Use", ButtonVariant::Primary);
     commands.entity(use_btn).insert(InventoryItemAction::Use);
     commands.entity(use_btn).set_parent_in_place(container);
 
