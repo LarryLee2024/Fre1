@@ -17,3 +17,6 @@ pub mod ui_binding;
 
 pub use dirty_flag::Dirty;
 pub use ui_binding::UiBinding;
+
+#[cfg(test)]
+mod tests;

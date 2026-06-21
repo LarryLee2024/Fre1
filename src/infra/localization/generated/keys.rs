@@ -275,6 +275,7 @@ pub mod loc {
     pub const EXP: &str = "ui.exp";
     pub const GOLD: &str = "ui.gold";
     pub const HP: &str = "ui.hp";
+    pub const INVENTORY: &str = "ui.inventory";
     pub const LEVEL: &str = "ui.level";
     pub const LOAD: &str = "ui.load";
     pub const LOAD_GAME: &str = "ui.load.game";
@@ -504,6 +505,7 @@ pub const ALL_KEYS: &[&str] = &[
     "ui.exp",
     "ui.gold",
     "ui.hp",
+    "ui.inventory",
     "ui.level",
     "ui.load",
     "ui.load.game",

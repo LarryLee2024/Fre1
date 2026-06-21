@@ -32,3 +32,4 @@
 -ui-use = Use
 -ui-equip = Equip
 -ui-drop = Drop
+-ui-inventory = Inventory

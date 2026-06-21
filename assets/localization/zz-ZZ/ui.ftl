@@ -1,4 +1,4 @@
-### UI interface strings — en-US
+### UI interface strings — zz-ZZ (pseudo-translation)
 -ui-back = [XXXXX]
 -ui-confirm = [XXXXXXX]
 -ui-close = [XXXXX]
@@ -26,3 +26,10 @@
 -ui-tutorial-hint = [XXXXX]
 -ui-dialogue-continue = [XXXXXXXX]
 -ui-dialogue-skip = [XXXXX]
+-ui-new-game = [XXXXXXXXX]
+-ui-load-game = [XXXXXXXX]
+-ui-continue = [XXXXXXXX]
+-ui-use = [XXX]
+-ui-equip = [XXXXX]
+-ui-drop = [XXXX]
+-ui-inventory = [XXXXXXXXX]

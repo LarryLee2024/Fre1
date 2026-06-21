@@ -18,3 +18,6 @@ pub use components::*;
 pub use manager::*;
 pub use navigation::*;
 pub use plugin::FocusPlugin;
+
+#[cfg(test)]
+mod tests;

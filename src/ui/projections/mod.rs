@@ -9,3 +9,6 @@
 pub mod battle;
 
 pub use battle::*;
+
+#[cfg(test)]
+mod tests;
