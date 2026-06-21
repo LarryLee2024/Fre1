@@ -5,7 +5,10 @@
 
 use bevy::prelude::*;
 
+use crate::core::domains::combat::components::TurnQueue;
+use crate::ui::application::UiCommand;
 use crate::ui::primitives::button::components::ButtonState;
+use crate::ui::primitives::button::events::ButtonClicked;
 
 use super::components::{ActionMenuState, ActionType};
 
@@ -29,4 +32,48 @@ pub fn action_menu_sync_system(
             }
         }
     }
+}
+
+/// Observer：处理行动菜单按钮点击，映射到 UiCommand
+///
+/// 当 button_interaction_system 触发 ButtonClicked 事件时，
+/// 检查按钮实体是否携带 ActionType 组件，映射到对应的 UiCommand。
+pub fn on_action_menu_button_clicked(
+    on: On<ButtonClicked>,
+    query: Query<&ActionType>,
+    turn_queue: Option<Res<TurnQueue>>,
+    mut commands: Commands,
+) {
+    let entity = on.event().entity;
+    let Ok(action_type) = query.get(entity) else {
+        return;
+    };
+
+    let current_unit_id = turn_queue
+        .as_ref()
+        .and_then(|q| q.current())
+        .map(|entry| entry.entity.to_string())
+        .unwrap_or_default();
+
+    let command = match action_type {
+        ActionType::Attack => UiCommand::Attack {
+            attacker_id: current_unit_id,
+            target_id: String::new(),
+        },
+        ActionType::Wait => UiCommand::Wait {
+            unit_id: current_unit_id,
+        },
+        // Skill/Item 暂不映射，由后续 PR 实现
+        ActionType::Skill | ActionType::Item => {
+            info!(target: "ui", "[ActionMenu] {:?} 命令暂未实现", action_type);
+            return;
+        }
+        ActionType::Defend => {
+            info!(target: "ui", "[ActionMenu] Defend 命令暂未实现");
+            return;
+        }
+    };
+
+    info!(target: "ui", "[ActionMenu] 命令映射: {:?}", command);
+    commands.trigger(command);
 }

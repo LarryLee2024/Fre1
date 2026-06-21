@@ -22,6 +22,18 @@ use crate::ui::navigation::ScreenType;
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Reflect, Event)]
 pub enum UiCommand {
     // ── 战斗 ──
+    /// 攻击目标
+    Attack {
+        /// 攻击者标识
+        attacker_id: String,
+        /// 目标标识
+        target_id: String,
+    },
+    /// 待机
+    Wait {
+        /// 单位标识
+        unit_id: String,
+    },
     /// 施放技能
     CastSkill {
         /// 技能定义 ID
@@ -34,7 +46,10 @@ pub enum UiCommand {
     /// 选择目标（CharacterId）
     SelectTarget(u32),
     /// 结束当前回合
-    EndTurn,
+    EndTurn {
+        /// 当前单位标识
+        unit_id: String,
+    },
     /// 移动到网格位置
     MoveToPosition {
         /// 单位标识
@@ -147,9 +162,19 @@ impl UiCommand {
                 target_id: target_id.clone(),
             }),
             UiCommand::SelectTarget(_) => None,
-            UiCommand::EndTurn => Some(GameCommand::EndTurn {
-                // 调用方应在入队前填充 unit_id
-                unit_id: String::new(),
+            UiCommand::EndTurn { unit_id } => Some(GameCommand::EndTurn {
+                unit_id: unit_id.clone(),
+            }),
+            UiCommand::Attack {
+                attacker_id,
+                target_id,
+            } => Some(GameCommand::Attack {
+                attacker_id: attacker_id.clone(),
+                target_id: target_id.clone(),
+                ability_slot: None,
+            }),
+            UiCommand::Wait { unit_id } => Some(GameCommand::Wait {
+                unit_id: unit_id.clone(),
             }),
             UiCommand::MoveToPosition { unit_id, x, y } => Some(GameCommand::MoveUnit {
                 unit_id: unit_id.clone(),

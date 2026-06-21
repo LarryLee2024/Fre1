@@ -22,10 +22,11 @@ pub mod shop;
 use bevy::prelude::*;
 
 use battle::{
-    spawn_battle_screen, systems::on_battle_button_clicked,
+    BattleScreen, despawn_battle_screen, spawn_battle_screen,
+    systems::{BattleAction, on_battle_button_clicked},
     visibility::battle_zone_visibility_system,
 };
-use inventory::{spawn_inventory_screen, systems::on_inventory_button_clicked};
+use inventory::systems::on_inventory_button_clicked;
 use main_menu::{
     spawn_main_menu,
     systems::{on_main_menu_action, on_main_menu_button_handler},
@@ -35,7 +36,7 @@ use settings::{
     on_close_settings_screen, on_open_settings_screen, on_settings_button_clicked,
     settings_toggle_system,
 };
-use shop::{on_shop_button_clicked, spawn_shop_screen};
+use shop::on_shop_button_clicked;
 
 use crate::shared::game_state::GameState;
 
@@ -64,11 +65,10 @@ impl Plugin for ScreenPlugin {
             .register_type::<shop::ShopScreen>()
             .register_type::<ScreenType>()
             .register_type::<battle::layout::BattleZone>()
-            // Startup 系统：应用启动时生成 Screen
+            // Startup 系统：应用启动时生成主菜单
+            // 其他 Screen（Battle/Inventory/Shop）由对应的 GameState OnEnter 或 Overlay 触发，
+            // 不在 Startup 生成，避免多屏重叠和按钮误触。
             .add_systems(Startup, spawn_main_menu)
-            .add_systems(Startup, spawn_battle_screen)
-            .add_systems(Startup, spawn_inventory_screen)
-            .add_systems(Startup, spawn_shop_screen)
             // Observer：按钮点击 → UiCommand 映射（方案A）
             // Bevy 0.19：Commands::trigger 触发事件，add_observer 捕获
             .add_observer(on_main_menu_button_handler)
@@ -78,6 +78,9 @@ impl Plugin for ScreenPlugin {
             .add_observer(on_main_menu_action)
             // MainMenu 清理：离开 MainMenu 时销毁所有 MainMenuScreen 实体
             .add_systems(OnExit(GameState::MainMenu), main_menu::despawn_main_menu)
+            // BattleScreen 生命周期：进入 Combat 时生成，离开时销毁
+            .add_systems(OnEnter(GameState::Combat), spawn_battle_screen)
+            .add_systems(OnExit(GameState::Combat), despawn_battle_screen)
             // Settings 界面：生命周期 Observer
             .add_observer(on_open_settings_screen)
             .add_observer(on_close_settings_screen)

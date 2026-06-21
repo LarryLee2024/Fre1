@@ -18,7 +18,7 @@ pub mod systems;
 use bevy::prelude::*;
 
 use self::components::{ActionMenuState, ActionType};
-use self::systems::action_menu_sync_system;
+use self::systems::{action_menu_sync_system, on_action_menu_button_clicked};
 
 /// ActionMenuPlugin — 注册 ActionMenu Widget 所需的 Component/System
 pub struct ActionMenuPlugin;
@@ -27,6 +27,7 @@ impl Plugin for ActionMenuPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<ActionMenuState>()
             .register_type::<ActionType>()
-            .add_systems(Update, action_menu_sync_system);
+            .add_systems(Update, action_menu_sync_system)
+            .add_observer(on_action_menu_button_clicked);
     }
 }

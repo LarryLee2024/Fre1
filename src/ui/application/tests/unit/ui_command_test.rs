@@ -15,7 +15,9 @@ use crate::ui::navigation::ScreenType;
 
 #[test]
 fn end_turn_maps_to_game_command() {
-    let cmd = UiCommand::EndTurn;
+    let cmd = UiCommand::EndTurn {
+        unit_id: String::new(),
+    };
     let result = cmd.into_game_command();
 
     assert_eq!(
@@ -23,7 +25,7 @@ fn end_turn_maps_to_game_command() {
         Some(GameCommand::EndTurn {
             unit_id: String::new(),
         }),
-        "EndTurn must map to GameCommand::EndTurn with empty unit_id for caller to fill"
+        "EndTurn must map to GameCommand::EndTurn"
     );
 }
 

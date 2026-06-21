@@ -83,7 +83,7 @@ fn zone_layout(zone: BattleZone, theme: &Theme) -> (Node, &'static str) {
             Node {
                 position_type: PositionType::Absolute,
                 bottom: Val::Px(s.sm),
-                // Centered via left: 50% + transform. Uses Auto width.
+                left: Val::Percent(50.0),
                 width: Val::Auto,
                 height: Val::Auto,
                 ..default()

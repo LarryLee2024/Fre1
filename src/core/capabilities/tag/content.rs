@@ -9,7 +9,8 @@
 use bevy::prelude::*;
 
 use crate::content::LoadedTagDefs;
-use crate::core::capabilities::tag::mechanism::TagHierarchy;
+use crate::core::capabilities::tag::foundation::TagDefinition;
+use crate::core::capabilities::tag::mechanism::{TagHierarchy, TagRegistrationError};
 
 /// 从 LoadedTagDefs 读取标签定义并注册到 TagHierarchy。
 ///
@@ -37,30 +38,61 @@ pub(crate) fn register_tags_from_content(
     let mut success_count = 0u32;
     let mut error_count = 0u32;
 
-    for def in defs {
-        let id = def.id.clone();
-        match hierarchy.register(def, &mut commands) {
-            Ok(()) => {
-                trace!(target: "tag",
-                    event = "tag.registration.item_ok",
-                    tag_id = %id,
-                    "[Tag] 标签 '{}' 注册成功",
-                    id
-                );
-                success_count += 1;
-            }
-            Err(e) => {
-                warn!(target: "tag",
-                    event = "tag.registration.item_error",
-                    tag_id = %id,
-                    error = %e,
-                    "[Tag] 标签 '{}' 注册失败：{}",
-                    id,
-                    e
-                );
-                error_count += 1;
+    // 两阶段注册：父标签可能比子标签后加载，先注册能注册的，
+    // 将 ParentNotFound 的加入重试队列，支持任意深度依赖。
+    let mut remaining: Vec<TagDefinition> = defs;
+    let mut retry_count = 0u32;
+    let max_retries = remaining.len() as u32;
+
+    while !remaining.is_empty() && retry_count < max_retries {
+        let mut retry = Vec::new();
+        for def in remaining {
+            let id = def.id.clone();
+            // clone 确保 register 失败后 def 仍可用于重试
+            match hierarchy.register(def.clone(), &mut commands) {
+                Ok(()) => {
+                    trace!(target: "tag",
+                        event = "tag.registration.item_ok",
+                        tag_id = %id,
+                        "[Tag] 标签 '{}' 注册成功",
+                        id
+                    );
+                    success_count += 1;
+                }
+                Err(TagRegistrationError::ParentNotFound(_)) => {
+                    retry.push(def);
+                }
+                Err(e) => {
+                    warn!(target: "tag",
+                        event = "tag.registration.item_error",
+                        tag_id = %id,
+                        error = %e,
+                        "[Tag] 标签 '{}' 注册失败：{}",
+                        id,
+                        e
+                    );
+                    error_count += 1;
+                }
             }
         }
+        remaining = retry;
+        retry_count += 1;
+    }
+
+    for def in &remaining {
+        let parent = def
+            .parent_id
+            .as_ref()
+            .map(|p| p.as_str())
+            .unwrap_or("(root)");
+        warn!(target: "tag",
+            event = "tag.registration.permanent_failure",
+            tag_id = %def.id,
+            parent_id = parent,
+            "[Tag] 标签 '{}' 重试后仍无法注册（父标签 '{}' 缺失），已跳过",
+            def.id, parent,
+        );
+        error_count += 1;
     }
 
     info!(target: "tag",

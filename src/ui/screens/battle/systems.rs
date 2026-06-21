@@ -6,6 +6,7 @@
 use bevy::ecs::observer::On;
 use bevy::prelude::*;
 
+use crate::core::domains::combat::components::TurnQueue;
 use crate::ui::application::UiCommand;
 use crate::ui::primitives::button::events::ButtonClicked;
 
@@ -27,6 +28,7 @@ pub enum BattleAction {
 pub fn on_battle_button_clicked(
     on: On<ButtonClicked>,
     query: Query<&BattleAction>,
+    turn_queue: Option<Res<TurnQueue>>,
     mut commands: Commands,
 ) {
     let entity = on.event().entity;
@@ -36,7 +38,14 @@ pub fn on_battle_button_clicked(
     };
 
     let command = match action {
-        BattleAction::EndTurn => UiCommand::EndTurn,
+        BattleAction::EndTurn => {
+            let unit_id = turn_queue
+                .as_ref()
+                .and_then(|q| q.current())
+                .map(|entry| entry.entity.to_string())
+                .unwrap_or_default();
+            UiCommand::EndTurn { unit_id }
+        }
     };
 
     info!(target: "ui", "[Battle] 命令映射: {:?}", command);

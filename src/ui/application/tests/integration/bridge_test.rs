@@ -52,7 +52,9 @@ fn assert_no_command_enqueued(ui_cmd: UiCommand) {
 #[test]
 fn process_ui_commands_enqueues_end_turn() {
     assert_command_mapping(
-        UiCommand::EndTurn,
+        UiCommand::EndTurn {
+            unit_id: String::new(),
+        },
         GameCommand::EndTurn {
             unit_id: String::new(),
         },
@@ -257,7 +259,9 @@ fn process_ui_commands_skips_ui_internal_but_processes_others() {
     // Mix of internal and domain commands — internal ones should be skipped
     app.world_mut()
         .trigger(UiCommand::OpenScreen(ScreenType::Settings));
-    app.world_mut().trigger(UiCommand::EndTurn);
+    app.world_mut().trigger(UiCommand::EndTurn {
+        unit_id: String::new(),
+    });
     app.world_mut().trigger(UiCommand::CloseScreen);
 
     let commands = app.world_mut().resource_mut::<CommandQueue>().drain();

@@ -47,17 +47,7 @@ pub fn spawn_party_setup(
     theme: Res<Theme>,
     asset_server: Res<AssetServer>,
 ) {
-    // ── 0. Camera ──
-    commands.spawn((
-        Camera2d,
-        Camera::default(),
-        Transform::default(),
-        Visibility::default(),
-        PartySetupScreen,
-        Name::new("PartySetupCamera"),
-    ));
-
-    // ── 1. Root panel ──
+    // ── 0. Root panel ──
     let root = spawn_panel(&mut commands, &theme, PanelVariant::Basic);
     commands.entity(root).insert((
         Node {
