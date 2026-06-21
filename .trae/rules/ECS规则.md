@@ -120,6 +120,12 @@ description:
 - 🟥 禁止在BSN中描述业务逻辑或引用System/Observer
 - 🟥 禁止Core层直接import `bsn!`宏
 
+### 3.9 SystemSet 分组规范
+- 🟩 每个 Domain 应定义自己的 SystemSet，明确调度顺序
+- 🟩 通过 `register_domain_types!` 宏统一注册 Reflect 类型
+- 🟨 未来可考虑 `DomainSystems` trait 统一系统注册
+- 🟥 禁止不同 Domain 的 System 混入同一个 SystemSet
+
 ---
 
 ## 四、状态与调度规范

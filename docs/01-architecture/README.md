@@ -4,7 +4,7 @@ title: Architecture Overview — DDD Three-Layer + Four Cross-Cutting Layers
 status: stable
 owner: architect
 created: 2026-06-16
-updated: 2026-06-20（v5.2 + ADR-056 Agent 治理）
+updated: 2026-06-21（v5.3 + ADR-061 Typestate + ADR-062 Object Safety）
 tags:
   - architecture
   - governance
@@ -671,6 +671,12 @@ src/
 | ADR-054 | Bevy 0.19 迁移决策（Observer 优先 / Delayed Commands / BSN 范围 / Relationship） | ✅ Accepted | Foundation |
 | ADR-055 | UI 表现层架构（Projection 防火墙 / 单向数据流 / Widget Contract） | ✅ Accepted | Cross-cutting |
 | ADR-056 | 7→9 Agent 升级与三级治理体系（Content/Presentation Architect 新增、Architect 角色重定义、协作流程重构） | ✅ Accepted | Foundation |
+| ADR-057 | 关键 Trait 密封性策略 | ✅ Accepted | Cross-cutting |
+| ADR-058 | Derive 宏 + Trait 组合模式 | ✅ Accepted | Cross-cutting |
+| ADR-059 | Event History 架构 | ✅ Accepted | Cross-cutting |
+| ADR-060 | Extension Trait for Bevy Types | ✅ Accepted | Cross-cutting |
+| ADR-061 | Typestate 在 Content Pipeline 中的应用 | ✅ Accepted | Cross-cutting |
+| ADR-062 | Object Safety 分层策略（热路径泛型/冷路径 dyn） | ✅ Accepted | Cross-cutting |
 
 ---
 
@@ -746,6 +752,12 @@ src/
 | `00-foundation/ADR-054-bevy-0-19-migration.md` | ✅ accepted | architect | 2026-06-19 |
 | `40-cross-cutting/ADR-055-ui-presentation-architecture.md` | ✅ accepted | presentation-architect | 2026-06-20 |
 | `00-foundation/ADR-056-agent-governance.md` | ✅ accepted | architect | 2026-06-20 |
+| `40-cross-cutting/ADR-057-sealed-trait.md` | ✅ accepted | architect | 2026-06-21 |
+| `40-cross-cutting/ADR-058-derive-macro.md` | ✅ accepted | architect | 2026-06-21 |
+| `40-cross-cutting/ADR-059-event-history.md` | ✅ accepted | content-architect | 2026-06-21 |
+| `40-cross-cutting/ADR-060-extension-trait.md` | ✅ accepted | architect | 2026-06-21 |
+| `40-cross-cutting/ADR-061-typestate.md` | ✅ accepted | architect | 2026-06-21 |
+| `40-cross-cutting/ADR-062-object-safety.md` | ✅ accepted | architect | 2026-06-21 |
 
 ---
 

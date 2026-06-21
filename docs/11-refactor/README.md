@@ -9,7 +9,8 @@
 ├── README.md                                   # 本文件
 ├── localization-debt-2026-06-21.md             # Localization（国际化）系统技术债与激进重构计划（P0-P3）
 ├── communication-debt-2026-06-21.md            # 通信系统技术债扫描与激进重构计划（P1-P3）
-└── done/                                       # 已完成的扫描报告（共 9 份）
+└── done/                                       # 已完成的扫描报告（共 10 份）
+    ├── rust-features-debt-2026-06-21.md        # 21个Rust特性吸收激进重构（12阶段全部完成）
     ├── debt-inventory-2026-06-17.md            # 首次全量扫描（433 warnings baseline）
     ├── tech-debt-batch3-4-2026-06-18.md        # Batch 3+4 领域扫描（6 域）
     ├── tech-debt-scan-2026-06-19.md            # ErrorContext 接入审查 + 架构扫描（6 项全 Resolved）
@@ -34,3 +35,4 @@
 - 错误处理系统重构：全部 9 阶段完成（P0-P4）
 - 日志/可观测系统重构：全部 8 阶段完成（P0-P3）
 - 37条经验吸收：全部 78 项完成（P0-P3）
+- **Rust特性吸收**: 全部 12 阶段完成（P0-P3）✅ — ADR-057/058/060/061

@@ -740,6 +740,12 @@ Modding 不是独立层级，而是贯穿多层的扩展能力，按职责拆分
   - ⚠️ **重要区分**：此处的 "Tag Component"（ECS 单元结构体标记）≠ "Tag System"（语义标签系统）。两者是不同的概念：
     - **Tag Component** = ECS 模式 `struct Dead;`，用于标记实体状态，参与 Archetype 过滤
     - **Tag System** = `TagSet { bits: u128 }` + `TagHierarchy`，用于语义分类（Enemy.Boss, Ability.Fire），不参与规则计算
+  - **ZST（Zero-Sized Type）概念**：Tag Component 即零大小类型（ZST），编译期零开销；ZST不仅用于实体标记，还用于泛型分类标记（如 `struct DamageTag;` 用于 `Effect<DamageTag>`）
+- 🟩 **Interior Mutability 边界**
+  - 只有 Resource 层和 Infra 层允许使用 RefCell/Cell/Mutex
+  - Domain 层和 Capability 层禁止内部可变性
+  - 与 ECS World 的交互必须通过 Commands/Events
+  - 🟥 RefCell<T> 作为 Component 字段禁止（含运行时行为的"伪纯数据"）
     - 详见 `docs/02-domain/capabilities/tag_domain.md` §9 "Tag vs Type 决策指南"
 - 🟨 **从属关系使用官方 Relationship**
   - 实体间从属关系优先使用 Bevy 官方 `Relationship` 机制实现
@@ -864,6 +870,8 @@ Modding 不是独立层级，而是贯穿多层的扩展能力，按职责拆分
   - Buff/Debuff = 临时 Modifier + 临时 Trait + 生命周期组件
 - 🟩 **状态效果统一**：所有数值类状态效果必须走统一的 Modifier 管线
 - 🟩 **Capability 运行时查询**：应提供 `has::<CanAttack>()` 式的统一查询 API，替代 `query.get::<Component>(entity).is_ok()` 的模式。查询 API 位于 Capabilities 层，所有 Domain 通过统一入口获取实体的能力状态
+- 🟩 **Object Safety 分层策略**：热路径（战斗执行、属性计算）必须使用泛型静态分发；冷路径（编辑器、Mod系统、工具）允许使用 dyn 动态分发；设计 trait 时必须考虑 object safety，显式标注是否允许 dyn；架构规则"Registry + Trait Object"限定在冷路径
+- 🟩 **编译期能力约束**：关键能力接口（如技能执行、物品使用）应通过 trait bound 在编译期约束，而非仅运行时检查；`fn execute<T: CanCast>(...)` 优于 `if unit.can_cast()`；编译期约束是组合而非继承——每个能力是独立 Marker Trait，实体自由组合，无父子层级
 
 ### 8.2 属性系统宪法
 - 🟩 **属性分类强制分离**：基础属性(Primary Stat)与派生属性(Derived Stat)必须完全分离
@@ -1278,9 +1286,14 @@ tests/
 - 🟩 可读性优先，其次才考虑复用性
 
 ### 16.3 Trait 宪法
-- 🟩 Trait 只能用于定义对象具备的能力，🟥 绝对禁止用于表示分类
+- 🟩 Trait 用于定义能力或标记类型特征
+- 🟥 禁止用Trait模拟类型层级（如 UnitTypeTrait 定义单位子类型），这违反"组合优于继承"
+- 🟩 允许Marker Trait用于驱动自动注册系统（如 DomainEvent、ReplayEvent、AuditEvent），Marker Trait不携带行为，仅作为类型标签
 - 🟩 Trait 只能用于定义需要扩展的接口，🟥 绝对禁止用于模拟继承树
 - 🟥 绝对禁止为了"代码优雅"而创建无实际价值的 Trait
+- 🟩 框架级trait（StrongId、RuleFailure、PipelineHook、ObservableEvent）必须使用Sealed Trait模式防止外部实现破坏不变量；设计为扩展点的trait（EffectHandler、ConditionChecker、DamageFormula）允许外部实现
+- 🟩 关联类型优先原则：当trait的实现类型决定返回/错误/上下文类型时，必须使用关联类型（`type Error; type Output;`）而非泛型参数
+- 🟩 Blanket Impl自动派生：当一个能力可由另一个能力自动推导时，必须使用blanket impl（`impl<T: Observable> Replayable for T {}`），禁止手动为每个类型重复实现
 
 ### 16.4 Feature 成熟度分级
 - **Core 级**：核心战斗、角色、属性等基础系统，稳定性要求最高
@@ -1289,8 +1302,9 @@ tests/
 - 🟩 **运行时 Feature Flag**：复用现有 Semantic Tags（`sem:stable` / `sem:deprecated` / `sem:experimental`），不新增独立字段。运行时根据 Flag 过滤可用内容。
 
 ### 16.5 抽象与宏使用规范
-- 🟩 **"三次才抽象"原则**：代码重复 3 次以上再抽象，且仅当业务语义相同（非仅函数签名相同或逻辑相似）。可读性优先于复用性
+- 🟩 **"三次才抽象"原则**：代码重复 3 次以上再抽象，且仅当业务语义相同（非仅函数签名相同或逻辑相似）。可读性优先于复用性。此原则针对运行时逻辑抽象，Typestate编译期类型安全保证不受此限
 - 🟩 **宏只做重复结构**：宏只能用于消除声明式重复（如 `define_stat! { Health, Mana, Attack }`），🟥 禁止用宏生成业务逻辑
+- 🟩 **Derive宏边界**：Derive宏只生成结构性样板代码（Trait impl的机械重复），属于"宏只做重复结构"的合法范畴；必须文档说明展开内容，`cargo expand`可查看；🟥 禁止derive宏生成包含业务判断的代码
 - 🟩 **声明式宏 vs 过程宏**：声明式宏（`macro_rules!`）用于重复模式，允许；过程宏（`proc_macro`）用于代码生成，需 ADR 审批
 - 🟩 **BSN 宏边界**：BSN 仅用于描述实体结构（组件组合），🟥 禁止在 BSN 中描述业务逻辑或引用 System/Observer（已由 ECS 规则 §3.7 强制）
 

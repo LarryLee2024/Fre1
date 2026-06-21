@@ -102,3 +102,40 @@ tags:
 - `cargo nextest run` 全绿
 - `cargo clippy -- -D warnings` 零警告
 - 宪法/架构/领域/数据/测试文档全部对齐 0.19
+
+## Derive 宏自动注册
+
+### 背景
+
+项目中存在大量类型需要为同一 trait 重复实现机械性的样板代码（详见 ADR-058）。在 Bevy 0.19 中，结合 Reflect 全覆盖要求，手动注册的负担进一步增加——每个类型需要在 plugin.rs 中额外调用 `app.register_type::<T>()`。
+
+### 决策
+
+当同一 trait 需要为 **10+ 类型**手动实现且逻辑高度相似时，应创建 derive 宏自动生成，与 `#[derive(Reflect)]` 协同工作：
+
+1. **自动生成 Trait impl**：derive 宏处理 trait 的机械性实现（如 `DomainEvent` 的三个 impl + `code()` 映射 + 注册语句）
+2. **自动注册 Reflect**：宏内部协同 `#[derive(Reflect)]`，无需在 Plugin 中额外手动调用 `app.register_type::<T>()`
+3. **零手动注册**：一旦类型使用 `#[derive(XxxTrait)]`，相关注册完全由宏完成，禁止混用手动注册
+
+```rust
+// 展开后等价于：
+#[derive(Reflect)]
+struct MyEvent { ... }
+
+impl DomainEvent for MyEvent {
+    fn event_name(&self) -> &'static str { "my_event" }
+}
+
+// Reflect 注册由宏自动完成，plugin.rs 中无需额外代码
+```
+
+### 约束
+
+- 宏只生成**结构性样板代码**，禁止包含任何业务判断
+- `cargo expand` 可查看展开结果，展开内容透明可追溯
+- 通过 `#[derive(Reflect)]` + 属性参数（如 `#[event_code = "XXX"]`）组合完成
+- 禁止在 plugin.rs 或其他位置额外手动注册已被 derive 宏处理的类型
+
+### 相关文档
+
+- `ADR-058` — Derive 宏 + Trait 组合模式的完整设计（macro crate 结构、各宏展开行为、边界条件）

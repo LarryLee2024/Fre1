@@ -250,3 +250,8 @@ AbilityCooldownStarted
 - [x] 禁止事项已明确列出（4 条禁止）
 - [x] 5 状态技能状态机定义清晰（Ready/Casting/Active/Cooldown/Blocked）
 - [x] 每个操作有完整的流程定义（激活、执行、取消、冷却管理）
+
+### 编译期元数据
+- 🟩 技能的基础消耗、目标类型等固定参数通过 const trait item 在编译期确定
+- 示例：`trait AbilitySpec { const ID: AbilityId; const COST: u32; const TARGET: TargetType; }`
+- 编译器将 const 值内联，消除运行时查找开销

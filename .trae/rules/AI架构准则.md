@@ -66,3 +66,12 @@ description:
 - 允许声明式宏（`macro_rules!`）用于重复模式消除
 - 禁止随意引入过程宏（proc macro），任何过程宏的引入必须经过 ADR 评审
 - 宏应保持声明式风格，优先考虑函数抽象而非宏抽象
+
+### 关联类型优先原则
+- 🟩 Trait 实现类型决定返回/错误/上下文类型时用关联类型
+- 🟩 避免类型爆炸（DamageAbilityError/HealAbilityError/BuffAbilityError → 统一 type Error）
+
+### Object Safety 分层
+- 🟩 热路径（战斗执行、属性计算）用泛型静态分发
+- 🟩 冷路径（编辑器、Mod 系统、工具）允许 dyn 动态分发
+- 🟩 设计 trait 时必须考虑 object safety
