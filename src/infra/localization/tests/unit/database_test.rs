@@ -1,6 +1,6 @@
-//! Database tests — 3-tier fallback behavior.
+//! 数据库测试 — 三级回退行为。
 //!
-//! Validates the resolve() fallback chain: current locale -> en-US -> raw key.
+//! 验证 resolve() 回退链：当前区域设置 -> en-US -> 原始键。
 
 use crate::infra::localization::foundation::LocaleId;
 use crate::infra::localization::storage::database::LocalizationDatabase;

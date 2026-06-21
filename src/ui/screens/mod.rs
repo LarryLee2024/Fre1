@@ -1,15 +1,15 @@
-//! Module Name: Screens — Full-screen UI views (page level)
+//! 全屏 UI 视图（页面级）
 //!
-//! Each screen represents a mutually exclusive full-screen view, driven by
-//! Startup systems or scene state transitions.
-//! Screens sit at the top of the UI architecture, composing Primitives and
-//! Widgets into complete pages.
+//! 每个界面代表一个互斥的全屏视图，由启动系统
+//! 或场景状态转换驱动。
+//! 界面位于 UI 架构的顶层，将原语和 Widget
+//! 组合成完整页面。
 //!
-//! Current implementation:
-//! - MainMenuScreen: Title / main menu
-//! - BattleScreen: Battle / combat screen (MVP)
-//! - SettingsScreen: Game settings (theme, gameplay toggles)
-//! - SaveLoadScreen: Save / load game slots
+//! 当前实现：
+//! - MainMenuScreen：标题 / 主菜单
+//! - BattleScreen：战斗界面（MVP）
+//! - SettingsScreen：游戏设置（主题、玩法开关）
+//! - SaveLoadScreen：存档 / 读档槽位
 
 pub mod battle;
 pub mod inventory;

@@ -1,7 +1,7 @@
-//! LocaleId — BCP-47 language identifier enum
+//! BCP-47 语言标识符枚举
 //!
-//! Replaces the former `pub type LocaleId = String;` with a type-safe enum.
-//! Implements serde renaming for config file compatibility.
+//! 用类型安全的枚举替代之前的 `pub type LocaleId = String;`。
+//! 实现 serde 重命名以兼容配置文件。
 
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -10,16 +10,16 @@ use std::fmt;
 /// BCP-47 language identifier.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Reflect)]
 pub enum LocaleId {
-    /// American English
+    /// 美式英语
     #[serde(rename = "en-US")]
     EnUS,
-    /// Simplified Chinese
+    /// 简体中文
     #[serde(rename = "zh-CN")]
     ZhCN,
-    /// Japanese
+    /// 日语
     #[serde(rename = "ja-JP")]
     JaJP,
-    /// Fake locale for testing / QA
+    /// 用于测试/QA 的伪区域设置
     #[serde(rename = "zz-ZZ")]
     ZzZZ,
 }

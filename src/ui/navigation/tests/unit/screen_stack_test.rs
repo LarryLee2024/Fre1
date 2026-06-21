@@ -1,16 +1,16 @@
-//! ScreenStack — LIFO navigation stack unit tests
+//! LIFO 导航栈单元测试
 //!
-//! Tests verify the ScreenStack contract:
-//! - New stack is empty (zero elements)
-//! - push adds to top; duplicate top is a no-op
-//! - pop returns the top element but preserves the root (last element)
-//! - replace swaps the top element; on empty, degrades to push
-//! - contains checks screen existence
-//! - clear empties all elements
-//! - iter returns elements bottom-to-top
+//! 测试验证 ScreenStack 契约：
+//! - 新栈为空（零元素）
+//! - push 添加到顶部；重复顶部是空操作
+//! - pop 返回顶部元素但保留根（最后一个元素）
+//! - replace 交换顶部元素；空时退化为 push
+//! - contains 检查屏幕是否存在
+//! - clear 清空所有元素
+//! - iter 从底部到顶部返回元素
 //!
-//! These are pure unit tests — ScreenStack is a plain struct with no ECS
-//! dependencies.
+//! 这些是纯单元测试 — ScreenStack 是一个普通结构体，
+//! 没有 ECS 依赖。
 
 use crate::ui::navigation::{ScreenStack, ScreenType};
 

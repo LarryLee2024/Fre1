@@ -1,7 +1,7 @@
-//! foundation — Pure types, zero Bevy ECS dependencies.
+//! 基础层 — 纯类型，零 Bevy ECS 依赖。
 //!
-//! Contains LocaleId enum, LocError, and Pattern struct.
-//! These types have no ECS Resource/Component or System dependencies.
+//! 包含 LocaleId 枚举、LocError 和 Pattern 结构体。
+//! 这些类型没有 ECS Resource/Component 或 System 依赖。
 
 pub(crate) mod error;
 pub(crate) mod locale_id;

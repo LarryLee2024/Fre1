@@ -4,7 +4,7 @@ use crate::core::domains::combat::{ActionPoints, BattlePhase, CombatParticipant,
 use crate::core::domains::party::{ActiveBond, BondState, Party, PartyMember};
 use crate::core::domains::progression::{ClassLevels, Experience, SubclassChoice, TalentTree};
 
-/// Query type for progression entities — factored out to satisfy clippy::type_complexity.
+/// 进度实体的查询类型 — 抽出以满足 clippy::type_complexity。
 type ProgressionEntityQuery = (
     Entity,
     &'static Experience,

@@ -1,6 +1,6 @@
-//! Targeting Integration Module
+//! 目标选择集成模块
 //!
-//! Wraps targeting capability for combat-specific target selection.
+//! 包装目标选择能力以用于战斗特定的目标选择。
 
 mod facade;
 

@@ -11,16 +11,16 @@ use bevy::prelude::*;
 /// 用于表示当前屏幕的生命周期状态。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect)]
 pub enum ScreenType {
-    /// Main menu / title screen
+    /// 主菜单 / 标题界面
     MainMenu,
-    /// Battle / combat screen
+    /// 战斗界面
     Battle,
-    /// Inventory / equipment management screen
+    /// 背包 / 装备管理界面
     Inventory,
-    /// Shop / trading screen
+    /// 商店 / 交易界面
     Shop,
-    /// Settings / options screen
+    /// 设置 / 选项界面
     Settings,
-    /// Save / load screen
+    /// 存档 / 读档界面
     SaveLoad,
 }

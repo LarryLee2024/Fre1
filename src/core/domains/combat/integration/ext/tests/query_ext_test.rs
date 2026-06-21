@@ -1,22 +1,22 @@
-//! Tests for QueryExt stub implementation.
+//! QueryExt 桩实现的测试。
 //!
-//! These tests verify that QueryExt methods are callable from a system context.
+//! 这些测试验证 QueryExt 方法可以从系统上下文中调用。
 
 use bevy::ecs::system::RunSystemOnce;
 use bevy::prelude::*;
 
 use crate::core::domains::combat::integration::ext::QueryExt;
 
-/// Marker component for test entities.
+/// 测试实体的标记组件。
 #[derive(Component)]
 struct _Health(u32);
 
-/// System that calls alive() on a Query -- verifies the trait compiles.
+/// 在 Query 上调用 alive() 的系统 — 验证 trait 可编译。
 fn alive_system(query: Query<&_Health>) {
     let _alive: Vec<Entity> = query.alive().collect();
 }
 
-/// System that calls hostile_to() on a Query -- verifies the trait compiles.
+/// 在 Query 上调用 hostile_to() 的系统 — 验证 trait 可编译。
 fn hostile_system(query: Query<&_Health>) {
     let _hostile: Vec<Entity> = query.hostile_to("enemy").collect();
 }

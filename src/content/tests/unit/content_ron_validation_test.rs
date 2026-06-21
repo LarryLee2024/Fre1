@@ -1,12 +1,12 @@
-//! Comprehensive content RON validation tests.
+//! 全面的内容 RON 校验测试。
 //!
-//! For every content bucket that has RON files in `assets/config/`, this test
-//! verifies that each file:
-//! 1. Can be read from disk
-//! 2. Deserializes to the correct Rust type
-//! 3. Passes `DefinitionType::validate()`
+//! 对于 `assets/config/` 中有 RON 文件的每个内容桶，此测试
+//! 验证每个文件：
+//! 1. 可以从磁盘读取
+//! 2. 反序列化为正确的 Rust 类型
+//! 3. 通过 `DefinitionType::validate()`
 //!
-//! For types with IDs, also verifies that no duplicate IDs exist across files.
+//! 对于有 ID 的类型，还验证文件间不存在重复 ID。
 
 use std::collections::HashSet;
 use std::path::Path;
@@ -29,12 +29,12 @@ use crate::core::domains::summon::SummonTemplateDef;
 
 // ─── helpers ────────────────────────────────────────────────────────────
 
-/// Returns the path to a content bucket directory.
+/// 返回内容桶目录的路径。
 fn bucket_dir(name: &str) -> std::path::PathBuf {
     Path::new("assets/config").join(name)
 }
 
-/// Returns sorted `.ron` files in the given directory, or empty vec if absent.
+/// 返回给定目录中排序后的 `.ron` 文件，如果目录不存在则返回空 vec。
 fn ron_files_in(dir: &Path) -> Vec<std::path::PathBuf> {
     if !dir.exists() {
         return vec![];
@@ -49,7 +49,7 @@ fn ron_files_in(dir: &Path) -> Vec<std::path::PathBuf> {
     files
 }
 
-/// Read a file and panic with a descriptive message on failure.
+/// 读取文件，失败时使用描述性消息 panic。
 fn read_to_string(path: &Path) -> String {
     std::fs::read_to_string(path).unwrap_or_else(|e| panic!("failed to read {:?}: {}", path, e))
 }

@@ -1,1 +1,1 @@
-//! Integration tests for .ftl file loading and parsing together.
+//! .ftl 文件加载和解析的集成测试。

@@ -1,8 +1,8 @@
-//! MainMenuScreen systems — button click handling via UiCommand routing
+//! 主菜单界面系统 — 通过 UiCommand 路由处理按钮点击
 //!
-//! Replaces the old Observer-only pattern with a dual approach:
-//! 1. ButtonClicked trigger observer maps MenuAction directly to UiCommand（方案A）
-//! 2. UiAction trigger observer handles generic actions (keyboard shortcuts, etc.)
+//! 用双方法替代旧的纯 Observer 模式：
+//! 1. ButtonClicked 触发 Observer 将 MenuAction 直接映射到 UiCommand（方案A）
+//! 2. UiAction 触发 Observer 处理通用操作（键盘快捷键等）
 
 use bevy::ecs::observer::On;
 use bevy::prelude::*;

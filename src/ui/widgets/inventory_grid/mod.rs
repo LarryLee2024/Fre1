@@ -1,8 +1,8 @@
-//! Module Name: InventoryGrid Widget — Inventory item grid organism
+//! 背包物品网格有机体
 //!
-//! Composes Panel / Text / InventoryItemRow / Button into a structured
-//! inventory grid view with title, gold display, item list, and close button.
-//! Registered as a sub-plugin of WidgetsPlugin.
+//! 将 Panel / Text / InventoryItemRow / Button 组合成结构化的
+//! 背包网格视图，包含标题、金币显示、物品列表和关闭按钮。
+//! 作为 WidgetsPlugin 的子插件注册。
 
 pub mod components;
 pub mod factory;

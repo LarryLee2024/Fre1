@@ -1,14 +1,14 @@
-//! Button Widget Tests
+//! Button Widget 测试
 //!
-//! Tests verify the Button widget contract:
-//! - Factory creates correct entity structure (props, UI components)
-//! - Variant colors match theme tokens
-//! - Disabled state prevents interaction and sets correct color
-//! - ButtonInteraction tracks hover / press / click states
-//! - ButtonClicked event fires on click release
+//! 测试验证 Button Widget 契约：
+//! - 工厂创建正确的实体结构（属性、UI 组件）
+//! - 变体颜色匹配主题令牌
+//! - 禁用状态阻止交互并设置正确颜色
+//! - ButtonInteraction 跟踪悬停/按下/点击状态
+//! - ButtonClicked 事件在点击释放时触发
 //!
-//! These are behavior tests -- they verify input -> output without
-//! testing implementation details (internal fields, intermediate state).
+//! 这些是行为测试 — 它们验证输入->输出，
+//! 不测试实现细节（内部字段、中间状态）。
 
 use bevy::ecs::observer::On;
 use bevy::prelude::*;
@@ -22,7 +22,7 @@ use crate::ui::theme::{Theme, ThemePlugin};
 
 // ── Helpers ──
 
-/// Build a minimal App with Theme + Button plugins registered.
+/// 构建注册了 Theme + Button 插件的最小 App。
 fn button_app() -> App {
     let mut app = App::new();
     app.add_plugins(ThemePlugin);
@@ -30,7 +30,7 @@ fn button_app() -> App {
     app
 }
 
-/// Spawn a button and run one frame to flush deferred commands.
+/// 生成按钮并运行一帧以刷新延迟命令。
 fn spawn_button_in_app(app: &mut App, label: &str, variant: ButtonVariant) -> Entity {
     let theme = app.world().resource::<Theme>().clone();
     let entity = {
@@ -329,7 +329,7 @@ fn just_clicked_resets_after_one_frame() {
 //  Event Tests
 // ═══════════════════════════════════════════════════════════════════
 
-/// Tracks the last clicked entity for event assertions.
+/// 跟踪最后点击的实体用于事件断言。
 #[derive(Resource, Default)]
 struct ClickTracker(Option<Entity>);
 

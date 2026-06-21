@@ -1,9 +1,9 @@
-//! DefinitionType trait implementations for Core domain types.
+//! Core 领域类型的 DefinitionType trait 实现。
 //!
-//! These impls live in the Content layer (not Core) to maintain
-//! the dependency direction: Content → Core.
+//! 这些 impl 位于 Content 层（而非 Core），以维持
+//! 依赖方向：Content → Core。
 //!
-//! See ADR-047 §1
+//! 参见 ADR-047 §1
 
 use crate::content::loading::{DefinitionType, ValidationError, validate_id_format};
 use crate::core::capabilities::ability::foundation::AbilityDef;

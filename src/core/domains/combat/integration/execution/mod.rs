@@ -1,6 +1,6 @@
-//! Execution Integration Module
+//! 执行集成模块
 //!
-//! Wraps execution capability for combat damage/heal calculation.
+//! 包装执行能力以用于战斗伤害/治疗计算。
 
 mod facade;
 

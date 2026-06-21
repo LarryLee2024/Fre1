@@ -1,15 +1,15 @@
-//! Macros for the shared traits module.
+//! 共享 trait 模块的宏。
 //!
-//! Provides `impl_rule_failure!` for generating RuleFailure implementations
-//! with sealed trait support.
+//! 提供 `impl_rule_failure!` 用于生成 RuleFailure 实现，
+//! 支持 sealed trait。
 
-/// Generate a `RuleFailure` implementation with specified error codes.
+/// 生成带有指定错误码的 `RuleFailure` 实现。
 ///
-/// Each variant maps to its error code via a pattern-match arm.
-/// Also generates `impl sealed::Sealed for $ty` to satisfy the
-/// Sealed Trait constraint (see ADR-057).
+/// 每个变体通过模式匹配分支映射到其错误码。
+/// 同时生成 `impl sealed::Sealed for $ty` 以满足
+/// Sealed Trait 约束（参见 ADR-057）。
 ///
-/// # Example
+/// # 示例
 ///
 /// ```ignore
 /// impl_rule_failure!(CombatFailure,

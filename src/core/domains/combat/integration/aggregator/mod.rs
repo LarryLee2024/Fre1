@@ -1,6 +1,6 @@
-//! Aggregator Integration Module
+//! 聚合器集成模块
 //!
-//! Wraps aggregator capability for combat attribute recalculation.
+//! 包装聚合器能力以用于战斗属性重新计算。
 
 mod facade;
 

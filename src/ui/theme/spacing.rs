@@ -1,51 +1,51 @@
-//! UiSpacing — Design spacing scale tokens
+//! 设计间距比例令牌
 //!
-//! Widgets must reference semantic spacing tokens (e.g., `theme.spacing.md`)
-//! instead of raw `Val::Px(16.0)` values. This ensures consistent spacing
-//! across the entire UI and enables global spacing adjustments.
+//! Widget 必须引用语义间距令牌（如 `theme.spacing.md`）
+//! 而非原始 `Val::Px(16.0)` 值。这确保整个 UI 间距一致
+//! 并支持全局间距调整。
 //!
-//! See `docs/06-ui/02-design-system/theme-localization.md` §2.4
+//! 参见 `docs/06-ui/02-design-system/theme-localization.md` §2.4
 
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
-/// Design spacing scale for the UI theme.
+/// UI 主题的设计间距比例。
 ///
-/// All values are in logical pixels. Widgets MUST NOT hardcode
-/// `Val::Px(...)` — always reference a token from this struct.
+/// 所有值以逻辑像素为单位。Widget 不得硬编码
+/// `Val::Px(...)` — 始终引用此结构体中的令牌。
 #[derive(Debug, Clone, Reflect, Serialize, Deserialize)]
 pub struct UiSpacing {
-    // ── Spacing scale ──
-    /// Extra small spacing (4px)
+    // ── 间距比例 ──
+    /// 超小间距（4px）
     pub xs: f32,
-    /// Small spacing (8px)
+    /// 小间距（8px）
     pub sm: f32,
-    /// Medium spacing (16px)
+    /// 中间距（16px）
     pub md: f32,
-    /// Large spacing (24px)
+    /// 大间距（24px）
     pub lg: f32,
-    /// Extra large spacing (32px)
+    /// 超大间距（32px）
     pub xl: f32,
-    /// Double extra large spacing (48px)
+    /// 双超大间距（48px）
     pub xxl: f32,
 
-    // ── Specific sizes ──
-    /// Small border radius (4px)
+    // ── 特定尺寸 ──
+    /// 小圆角（4px）
     pub border_radius_sm: f32,
-    /// Medium border radius (8px)
+    /// 中圆角（8px）
     pub border_radius_md: f32,
-    /// Large border radius (12px)
+    /// 大圆角（12px）
     pub border_radius_lg: f32,
-    /// Standard icon size (32px)
+    /// 标准图标大小（32px）
     pub icon_size: f32,
-    /// Standard button height (40px)
+    /// 标准按钮高度（40px）
     pub button_height: f32,
-    /// Minimum touch target size (44px, accessibility)
+    /// 最小触摸目标大小（44px，无障碍）
     pub min_touch_target: f32,
 }
 
 impl UiSpacing {
-    /// Default spacing values (dark and light themes share the same scale).
+    /// 默认间距值（暗色和亮色主题共享相同比例）。
     pub fn default_scale() -> Self {
         Self {
             xs: 4.0,

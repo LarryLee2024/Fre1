@@ -1,13 +1,13 @@
-//! BattleProjection — Domain Event to ViewModel projection unit tests
+//! 战斗投影 — 领域事件到 ViewModel 投影单元测试
 //!
-//! Tests verify that BattleProjection pure functions correctly transform
-//! domain events (TurnStarted, EffectApplied) into UiStore updates:
+//! 测试验证 BattleProjection 纯函数正确地将
+//! 领域事件（TurnStarted、EffectApplied）转换为 UiStore 更新：
 //!
-//! - on_turn_started: increments turn_number, sets phase_key
-//! - on_effect_applied: placeholder no-op (does not panic)
+//! - on_turn_started：递增 turn_number，设置 phase_key
+//! - on_effect_applied：占位符空操作（不 panic）
 //!
-//! These are pure function tests — no ECS setup needed. The projection
-//! functions take &mut UiStore and an event reference.
+//! 这些是纯函数测试 — 不需要 ECS 设置。投影函数
+//! 接收 &mut UiStore 和事件引用。
 
 use bevy::prelude::Entity;
 

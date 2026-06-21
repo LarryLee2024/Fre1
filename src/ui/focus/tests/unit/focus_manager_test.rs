@@ -1,20 +1,20 @@
-//! FocusManager — Global focus state management unit tests
+//! FocusManager — 全局焦点状态管理单元测试
 //!
-//! Tests verify the FocusManager contract:
-//! - Initial state has no focused entity or active group
-//! - focus() sets the entity, group_id, and group index
-//! - blur() clears the focused entity and active group
-//! - is_focused() correctly identifies the focused entity
-//! - push_focus() / pop_focus() save and restore focus history
-//! - activate_group() activates a group and attempts history restoration
+//! 测试验证 FocusManager 契约：
+//! - 初始状态没有聚焦实体或活动组
+//! - focus() 设置实体、group_id 和组索引
+//! - blur() 清除聚焦实体和活动组
+//! - is_focused() 正确识别聚焦实体
+//! - push_focus() / pop_focus() 保存和恢复焦点历史
+//! - activate_group() 激活组并尝试恢复历史
 //!
-//! These are pure unit tests — FocusManager is a plain struct with no ECS
-//! dependencies beyond the Bevy Entity type.
+//! 这些是纯单元测试 — FocusManager 是一个普通结构体，
+//! 除了 Bevy Entity 类型外没有 ECS 依赖。
 
 use crate::ui::focus::FocusManager;
 use bevy::prelude::Entity;
 
-/// Helper to create a mock Entity for testing
+/// 创建用于测试的模拟 Entity 的辅助函数
 fn mock_entity(id: u64) -> Entity {
     Entity::from_bits(id)
 }

@@ -1,15 +1,15 @@
-//! Dirty<T> — ViewModel dirty-flag tracking unit tests
+//! ViewModel 脏标记跟踪单元测试
 //!
-//! Tests verify the Dirty<T> change-tracking contract:
-//! - New Dirty<T> starts dirty (is_dirty = true)
-//! - consume() returns true once and clears the flag
-//! - get_mut() automatically marks dirty
-//! - get() does NOT mark dirty (read-only access)
-//! - mark_dirty() explicitly re-sets the flag
-//! - Default creates dirty state
+//! 测试验证 Dirty<T> 变更跟踪契约：
+//! - 新的 Dirty<T> 以脏状态开始（is_dirty = true）
+//! - consume() 返回一次 true 并清除标记
+//! - get_mut() 自动标记为脏
+//! - get() 不标记为脏（只读访问）
+//! - mark_dirty() 显式重新设置标记
+//! - Default 创建脏状态
 //!
-//! These are pure unit tests with no ECS dependencies — Dirty<T> is a
-//! self-contained wrapper type.
+//! 这些是纯单元测试，没有 ECS 依赖 — Dirty<T> 是一个
+//! 自包含的包装类型。
 
 use crate::ui::binding::Dirty;
 

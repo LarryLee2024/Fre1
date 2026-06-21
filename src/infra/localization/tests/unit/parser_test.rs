@@ -1,6 +1,6 @@
-//! Unit tests for localization parsing.
+//! 本地化解析的单元测试。
 //!
-//! Tests for parse_ftl: basic parsing, empty input, comments, variables, fake locale.
+//! parse_ftl 的测试：基本解析、空输入、注释、变量、伪区域设置。
 
 use crate::infra::localization::io::parse_ftl;
 

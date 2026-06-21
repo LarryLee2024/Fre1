@@ -17,7 +17,7 @@ use crate::core::events::{BattleStarted, TurnEnded, TurnStarted};
 use crate::ui::binding::Dirty;
 use crate::ui::view_models::{UiStore, battle_hud::BattleHudVm, skill_panel::SkillPanelVm};
 
-// ─── Pure Projection Functions ───────────────────────────────────────────
+// ─── 纯投影函数 ─────────────────────────────────────────────────────────
 
 /// 战斗投影 — 战斗领域事件的无状态投影逻辑。
 ///
@@ -60,13 +60,13 @@ impl BattleProjection {
     /// 当前为占位符，仅记录事件。未来实现将匹配效果的 def_id 与已知技能
     /// 效果，并更新技能面板中的冷却状态。
     pub fn on_effect_applied(store: &mut UiStore, event: &EffectApplied) {
-        // Placeholder: log effect application
-        // TODO[P3][Projection][2026-06-21]: Implement skill cooldown update
-        //   by matching event.def_id against UiStore.skill_panel skills
-        //   and setting cooldown_remaining = max_cooldown for the matched skill.
-        //   Completion criteria: EffectApplied with a matching def_id
-        //   marks the corresponding SkillSlotVm's cooldown_remaining = max_cooldown.
-        let _ = store; // Placeholder until real logic is implemented
+        // 占位符：记录效果应用
+        // TODO[P3][Projection][2026-06-21]: 实现技能冷却更新
+        //   通过匹配 event.def_id 与 UiStore.skill_panel 中的技能
+        //   并为匹配的技能设置 cooldown_remaining = max_cooldown。
+        //   完成条件：EffectApplied 的 def_id 匹配时，
+        //   对应 SkillSlotVm 的 cooldown_remaining = max_cooldown。
+        let _ = store; // 占位符，待实现真实逻辑
         info!(
             target: "ui",
             "[BattleProjection] Effect applied: def_id={}, target={}",

@@ -1,7 +1,8 @@
 ---
 id: 06-ui.focus-binding
 title: Focus and Binding Architecture — 焦点导航与数据绑定
-status: draft
+status: code-aligned
+updated: 2026-06-21
 owner: presentation-architect
 created: 2026-06-20
 tags:
@@ -212,8 +213,7 @@ FocusSystem 从 previous_elements 恢复焦点（如果存在）
 ```
 Projection（更新 ViewModel）
     │
-    │  store.battle_hud.hp = 85;
-    │  store.battle_hud.mark_dirty();
+    │  store.battle_hud.get_mut().hp = 85;  // 自动 mark_dirty
     ▼
 UiStore（Dirty<T> 标记为 true）
     │
@@ -231,14 +231,21 @@ Widget 刷新（仅在 Dirty 为 true 时）
 
 ```rust
 /// 脏标记机制 — ViewModel 更新后设置 Dirty，Widget 只在 Dirty 时刷新
-#[derive(Component, Reflect, Default)]
-pub struct Dirty<T: Reflect + Default> {
+#[derive(Component, Debug, Clone, Reflect)]
+pub struct Dirty<T: Reflect + Default + Clone + Send + Sync + 'static> {
+    /// 内部数据
     pub inner: T,
-    pub is_dirty: bool,
+    /// 是否已被标记为脏（私有，通过 mark_dirty / get_mut 修改）
+    is_dirty: bool,
 }
 
-impl<T: Reflect + Default> Dirty<T> {
-    /// 标记为脏 — 由 Projection 在更新 ViewModel 后调用
+impl<T: Reflect + Default + Clone + Send + Sync + 'static> Dirty<T> {
+    /// 创建新的 Dirty 包装（初始状态为 dirty，触发首次刷新）
+    pub fn new(inner: T) -> Self {
+        Self { inner, is_dirty: true }
+    }
+
+    /// 手动标记为脏 — 由 Projection 在更新 ViewModel 后调用
     pub fn mark_dirty(&mut self) { self.is_dirty = true; }
 
     /// 消费脏标记：如果脏则清除并返回 true，否则返回 false
@@ -250,6 +257,16 @@ impl<T: Reflect + Default> Dirty<T> {
         } else {
             false
         }
+    }
+
+    /// 获取内部数据引用（不触发 dirty）
+    pub fn get(&self) -> &T { &self.inner }
+
+    /// 获取内部数据可变引用（自动标记 dirty）
+    /// Projection 应通过此方法更新 ViewModel 字段
+    pub fn get_mut(&mut self) -> &mut T {
+        self.is_dirty = true;
+        &mut self.inner
     }
 }
 ```
@@ -357,6 +374,8 @@ pub enum UiBinding {
     Exp,
     /// 角色名称
     Name,
+    /// 角色等级文本
+    CharacterLevel,
 
     // ── Skill Panel ──
     /// 第 N 个技能槽（0~N-1）
@@ -381,6 +400,10 @@ pub enum UiBinding {
     Modal,
     /// 通知
     Notification,
+    /// 通用文本
+    Text,
+    /// 通用图标
+    Icon,
 }
 ```
 
@@ -440,8 +463,13 @@ fn refresh_hp(
 | SkillSlot(i) | IconButton | SkillSlot |
 | ItemSlot(i) | IconButton + 数量文本 | InventorySlot |
 | Gold | LocalizedText | GoldDisplay |
+| CharacterLevel | LocalizedText | CharacterPanel |
+| Name | LocalizedText | CharacterPanel |
 | Tooltip | Panel | TooltipOverlay |
 | Modal | Panel | ModalOverlay |
+| Notification | Panel | NotificationOverlay |
+| Text | LocalizedText | 通用文本组件 |
+| Icon | Image | 通用图标组件 |
 
 ### 4.5 UiBinding 使用约束
 

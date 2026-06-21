@@ -1,16 +1,16 @@
-//! Module Name: Binding — UI data binding infrastructure
+//! UI 数据绑定基础设施
 //!
-//! Provides the Dirty<T> change-tracking mechanism and UiBinding enum
-//! that connect Projection updates (UiStore writes) to Widget refreshes.
+//! 提供 Dirty<T> 变更跟踪机制和 UiBinding 枚举，
+//! 将投影更新（UiStore 写入）连接到 Widget 刷新。
 //!
-//! Dirty<T> is a Component attached to Widget entities.  Projection updates
-//! mark it dirty; Widget systems call consume() to check and refresh only
-//! when data has changed.
+//! Dirty<T> 是挂载到 Widget 实体上的 Component。投影更新
+//! 将其标记为脏；Widget 系统调用 consume() 来检查并仅在
+//! 数据变更时刷新。
 //!
-//! UiBinding is a marker enum that identifies which ViewModel field a UI
-//! Node is bound to.  Uses anti-Marker pattern to avoid Archetype explosion.
+//! UiBinding 是标记枚举，标识 UI Node 绑定到哪个 ViewModel 字段。
+//! 使用反标记模式避免 Archetype 爆炸。
 //!
-//! See `docs/06-ui/02-design-system/focus-binding.md` §3-4
+//! 参见 `docs/06-ui/02-design-system/focus-binding.md` §3-4
 
 pub mod dirty_flag;
 pub mod ui_binding;

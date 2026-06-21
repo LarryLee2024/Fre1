@@ -1,6 +1,6 @@
-//! validation — Startup validation and runtime audit for localization.
+//! 本地化的启动验证和运行时审计。
 //!
-//! Contains the startup key-integrity validator and the periodic coverage auditor.
+//! 包含启动时的键完整性验证器和周期性覆盖率审计器。
 
 pub(crate) mod audit;
 pub(crate) mod validator;

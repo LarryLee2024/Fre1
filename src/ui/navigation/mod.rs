@@ -1,11 +1,9 @@
-//! Module Name: Navigation — Screen stack and UI navigation state
+//! 屏幕栈和 UI 导航状态
 //!
-//! Provides ScreenStack (LIFO navigation history), ScreenType (screen
-//! identifiers), UiScreenState (current screen lifecycle tracking), and
-//! ScreenLifecycle (lifecycle phase enum).
+//! 提供 ScreenStack（LIFO 导航历史）、ScreenType（屏幕标识符）、
+//! UiScreenState（当前屏幕生命周期跟踪）和 ScreenLifecycle（生命周期阶段枚举）。
 //!
-//! These types form the foundation for UI navigation across all screens
-//! in the application layer.
+//! 这些类型构成应用层中所有界面 UI 导航的基础。
 
 mod screen_state;
 mod screen_type;

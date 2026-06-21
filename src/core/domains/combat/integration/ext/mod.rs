@@ -1,15 +1,15 @@
-//! Extension traits for Bevy ECS types (EntityCommands, Query).
+//! Bevy ECS 类型的扩展 trait（EntityCommands、Query）。
 //!
-//! These traits provide method-syntax sugar on top of Bevy's ECS primitives,
-//! internally delegating to integration-layer Facade functions.
+//! 这些 trait 在 Bevy 的 ECS 原语之上提供方法语法糖，
+//! 内部委托给集成层 Facade 函数。
 //!
-//! # Design
+//! # 设计
 //!
-//! - Each trait follows the `*Ext` naming convention (matching `ContextExt`).
-//! - Methods are facades -- they call integration facade functions, not capabilities directly.
-//! - No business logic is implemented inside extension methods.
+//! - 每个 trait 遵循 `*Ext` 命名约定（与 `ContextExt` 一致）。
+//! - 方法是 Facade — 调用集成 Facade 函数，而非直接调用 Capabilities。
+//! - 扩展方法内部不实现业务逻辑。
 //!
-//! # Usage
+//! # 用法
 //!
 //! ```ignore
 //! use crate::core::domains::combat::integration::ext::EntityCommandsExt;
@@ -21,7 +21,7 @@
 //! }
 //! ```
 //!
-//! See ADR-060 for full rationale.
+//! 参见 ADR-060 了解完整理由。
 
 pub mod entity_commands_ext;
 pub mod query_ext;
