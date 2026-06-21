@@ -74,7 +74,7 @@ Fre/
 | `02-domain/` | 31 | 领域规则（`capabilities/` 15 能力机制 + `domains/` 15 业务域） |
 | `04-data/` | 1 | 数据架构（Schema、Save/Replay 兼容） |
 | `05-testing/` | 4 | 测试规范（测试宪法、测试规则） |
-| `08-knowledge/` | 9 | 知识库（通俗知识介绍：日志/错误/ID/国际化/Reflect/通信/GAS-Lite/Pipeline/UI） |
+| `08-knowledge/` | 10 | 知识库（通俗知识介绍：日志/错误/ID/国际化/Reflect/通信/GAS-Lite/Pipeline/UI/Replay） |
 | `10-reviews/` | 7 | 代码审查记录 |
 
 ### 核心文档入口

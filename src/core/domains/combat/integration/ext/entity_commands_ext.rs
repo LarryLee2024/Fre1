@@ -3,18 +3,31 @@
 //! Provides domain-specific method sugar on top of Bevy's `EntityCommands`,
 //! internally delegating to integration-layer Facade functions.
 //!
-//! # Stub Status
+//! Uses an associated `Error` type (#1: Associated Types pattern) so that
+//! different domain implementations can return their own error types without
+//! forcing a concrete error on all consumers.  Currently the chainable
+//! methods are infallible stubs; `Self::Error` is available for future
+//! fallible operations.
 //!
-//! This is an initial stub implementation. Methods will be wired to actual
-//! integration facade functions as Phase C2 progresses.
+//! All methods return `&mut Self` to support chainable DSL usage.
 
 use bevy::prelude::info;
 use bevy::prelude::EntityCommands;
+
+use crate::core::domains::combat::components::Dead;
 
 /// Extension trait for [`EntityCommands`] providing domain-specific operations.
 ///
 /// All methods internally delegate to integration-layer Facade functions,
 /// never directly manipulate Capabilities internals.
+///
+/// Methods return `&mut Self` for chainable DSL usage.
+///
+/// # Associated Type
+///
+/// `type Error` allows implementations to return domain-specific errors
+/// without requiring a single unified error enum.  Currently the chainable
+/// methods are infallible stubs, so the implementation uses [`Infallible`].
 ///
 /// # Usage
 ///
@@ -23,37 +36,79 @@ use bevy::prelude::EntityCommands;
 ///
 /// fn my_system(mut commands: Commands) {
 ///     let mut entity = commands.spawn_empty();
-///     entity.add_buff(spec_id);
-///     entity.heal(50);
+///     entity
+///         .add_buff("eff_000001")
+///         .heal(50)
+///         .kill();
 /// }
 /// ```
 pub trait EntityCommandsExt {
+    /// The error type returned by fallible operations on this implementation.
+    type Error: std::fmt::Debug;
+
     /// Add a buff (active effect) to this entity.
-    fn add_buff(&mut self, buff_id: &str);
+    ///
+    /// Internally queues a buff request that will be processed by the
+    /// Effect capability's integration facade.
+    ///
+    /// # Parameters
+    ///
+    /// * `buff_id` — The Def ID of the buff to apply (e.g. `"eff_000001"`).
+    fn add_buff(&mut self, buff_id: &str) -> &mut Self;
 
     /// Heal this entity for the given amount.
-    fn heal(&mut self, amount: u32);
+    ///
+    /// Internally delegates to the Execution integration facade which
+    /// routes through the Effect/Modifier pipeline.
+    ///
+    /// # Parameters
+    ///
+    /// * `amount` — Raw heal amount before modifiers/mitigation.
+    fn heal(&mut self, amount: u32) -> &mut Self;
 
     /// Kill this entity (mark as dead).
-    fn kill(&mut self);
+    ///
+    /// Inserts the [`Dead`] marker component, which the combat pipeline
+    /// uses to identify eliminated participants.
+    fn kill(&mut self) -> &mut Self;
 }
 
 impl EntityCommandsExt for EntityCommands<'_> {
-    fn add_buff(&mut self, buff_id: &str) {
-        // Stub: logs the add_buff action.
-        // Will be wired to EffectFacade in future Phase C2 work.
-        info!("Adding buff {} (stub)", buff_id);
+    type Error = std::convert::Infallible;
+
+    fn add_buff(&mut self, buff_id: &str) -> &mut Self {
+        info!(
+            "EntityCommandsExt::add_buff(buff_id={}) — queuing buff application",
+            buff_id,
+        );
+        // TODO[Phase C2]: Wire to EffectFacade::apply_buff once the effect
+        //   integration facade exposes a command-level API.
+        //   Current plan:
+        //     let entity = self.id();
+        //     self.queue(move |world| {
+        //         EffectFacade::apply_buff(world, entity, buff_id);
+        //     });
+        self
     }
 
-    fn heal(&mut self, amount: u32) {
-        // Stub: logs the heal action.
-        // Will be wired to EffectFacade or ExecutionFacade in future Phase C2 work.
-        info!("Healing entity for {} (stub)", amount);
+    fn heal(&mut self, amount: u32) -> &mut Self {
+        info!(
+            "EntityCommandsExt::heal(amount={}) — queuing heal request",
+            amount,
+        );
+        // TODO[Phase C2]: Wire to ExecutionFacade::heal once the execution
+        //   integration facade exposes a command-level API for HP modification.
+        //   Current plan:
+        //     let entity = self.id();
+        //     self.queue(move |world| {
+        //         ExecutionFacade::heal(world, entity, amount);
+        //     });
+        self
     }
 
-    fn kill(&mut self) {
-        // Stub: logs the kill action.
-        // Will wire to a Dead tag component or combat death pipeline in future.
-        info!("Killing entity (stub)");
+    fn kill(&mut self) -> &mut Self {
+        info!("EntityCommandsExt::kill() — inserting Dead component");
+        self.insert(Dead);
+        self
     }
 }

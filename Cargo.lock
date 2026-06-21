@@ -2776,6 +2776,7 @@ dependencies = [
  "fluent",
  "fluent-bundle",
  "fluent-syntax",
+ "fre-macros",
  "insta",
  "intl-memoizer",
  "notify",
@@ -2790,6 +2791,15 @@ dependencies = [
  "thiserror 2.0.18",
  "tracing",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "fre-macros"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]

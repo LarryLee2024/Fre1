@@ -3,7 +3,12 @@ name = "fre"
 version = "0.1.0"
 edition = "2024"
 
+[workspace]
+members = ["macros/fre-macros"]
+resolver = "2"
+
 [dependencies]
+fre-macros = { path = "macros/fre-macros" }
 bevy = { version = "0.19", features = [
     "2d", # 元 Feature，已隐式包含: bevy_state/bevy_ui/bevy_text/bevy_sprite/bevy_gizmos/bevy_log/bevy_picking/sprite_picking/ui_picking/bevy_input_focus/reflect_auto_register/png/multi_threaded
 
