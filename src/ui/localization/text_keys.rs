@@ -9,16 +9,9 @@
 //! 详见 `docs/06-ui/02-design-system/theme-localization.md` §4
 
 // 从生成的 localization keys 中重导出 UI 相关 Key
-pub use crate::infra::localization::generated::loc::ui::*;
 pub use crate::infra::localization::generated::loc::core::{
-    BACK as CORE_BACK,
-    CANCEL as CORE_CANCEL,
-    CONFIRM as CORE_CONFIRM,
-    EXIT as CORE_EXIT,
-    LOAD as CORE_LOAD,
-    NEXT as CORE_NEXT,
-    NO as CORE_NO,
-    OK as CORE_OK,
-    SAVE as CORE_SAVE,
+    BACK as CORE_BACK, CANCEL as CORE_CANCEL, CONFIRM as CORE_CONFIRM, EXIT as CORE_EXIT,
+    LOAD as CORE_LOAD, NEXT as CORE_NEXT, NO as CORE_NO, OK as CORE_OK, SAVE as CORE_SAVE,
     YES as CORE_YES,
 };
+pub use crate::infra::localization::generated::loc::ui::*;

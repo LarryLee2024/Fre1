@@ -32,7 +32,10 @@ fn consume_returns_true_only_once_per_mark() {
     assert!(dirty.consume(), "first consume() returns true");
     assert!(!dirty.consume(), "second consume() returns false");
     dirty.mark_dirty();
-    assert!(dirty.consume(), "after re-mark, consume() returns true again");
+    assert!(
+        dirty.consume(),
+        "after re-mark, consume() returns true again"
+    );
     assert!(!dirty.consume(), "consumed again, returns false");
 }
 
@@ -63,7 +66,10 @@ fn mark_dirty_sets_flag() {
 #[test]
 fn default_creates_dirty_state() {
     let mut dirty: Dirty<i32> = Dirty::default();
-    assert!(dirty.consume(), "Default must create Dirty with is_dirty = true");
+    assert!(
+        dirty.consume(),
+        "Default must create Dirty with is_dirty = true"
+    );
 }
 
 #[test]
@@ -98,5 +104,9 @@ fn inner_value_accessible_via_get() {
 fn inner_value_accessible_via_get_mut() {
     let mut dirty = Dirty::new(42);
     *dirty.get_mut() = 100;
-    assert_eq!(*dirty.get(), 100, "get_mut() must allow mutation of inner value");
+    assert_eq!(
+        *dirty.get(),
+        100,
+        "get_mut() must allow mutation of inner value"
+    );
 }

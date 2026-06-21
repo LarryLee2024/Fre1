@@ -11,8 +11,8 @@
 //! These are pure unit tests — FocusManager is a plain struct with no ECS
 //! dependencies beyond the Bevy Entity type.
 
-use bevy::prelude::Entity;
 use crate::ui::focus::FocusManager;
+use bevy::prelude::Entity;
 
 /// Helper to create a mock Entity for testing
 fn mock_entity(id: u64) -> Entity {
@@ -22,10 +22,22 @@ fn mock_entity(id: u64) -> Entity {
 #[test]
 fn initial_state_has_no_focus() {
     let fm = FocusManager::default();
-    assert!(fm.focused_entity.is_none(), "initial focused_entity must be None");
-    assert!(fm.active_group.is_none(), "initial active_group must be None");
-    assert!(fm.group_indices.is_empty(), "initial group_indices must be empty");
-    assert!(fm.focus_history.is_empty(), "initial focus_history must be empty");
+    assert!(
+        fm.focused_entity.is_none(),
+        "initial focused_entity must be None"
+    );
+    assert!(
+        fm.active_group.is_none(),
+        "initial active_group must be None"
+    );
+    assert!(
+        fm.group_indices.is_empty(),
+        "initial group_indices must be empty"
+    );
+    assert!(
+        fm.focus_history.is_empty(),
+        "initial focus_history must be empty"
+    );
 }
 
 #[test]
@@ -52,8 +64,14 @@ fn blur_clears_focus() {
     let mut fm = FocusManager::default();
     fm.focus(mock_entity(1), 0, 0);
     fm.blur();
-    assert!(fm.focused_entity.is_none(), "focused_entity must be None after blur");
-    assert!(fm.active_group.is_none(), "active_group must be None after blur");
+    assert!(
+        fm.focused_entity.is_none(),
+        "focused_entity must be None after blur"
+    );
+    assert!(
+        fm.active_group.is_none(),
+        "active_group must be None after blur"
+    );
 }
 
 #[test]
@@ -105,7 +123,10 @@ fn push_focus_saves_current_focus_to_history() {
 fn push_focus_noops_when_no_focus() {
     let mut fm = FocusManager::default();
     fm.push_focus(); // no focus set, should not panic
-    assert!(fm.focus_history.is_empty(), "push_focus with no focus must not add to history");
+    assert!(
+        fm.focus_history.is_empty(),
+        "push_focus with no focus must not add to history"
+    );
 }
 
 #[test]
@@ -116,8 +137,16 @@ fn pop_focus_restores_saved_focus() {
     fm.push_focus();
     fm.blur();
     let restored = fm.pop_focus(0);
-    assert_eq!(restored, Some(entity), "pop_focus must return the saved entity");
-    assert_eq!(fm.focused_entity, Some(entity), "focused_entity must be restored");
+    assert_eq!(
+        restored,
+        Some(entity),
+        "pop_focus must return the saved entity"
+    );
+    assert_eq!(
+        fm.focused_entity,
+        Some(entity),
+        "focused_entity must be restored"
+    );
     assert_eq!(fm.active_group, Some(0), "active_group must be restored");
 }
 
@@ -174,5 +203,8 @@ fn activate_group_sets_active_group_without_focus() {
     let mut fm = FocusManager::default();
     fm.activate_group(0, None);
     assert_eq!(fm.active_group, Some(0));
-    assert!(fm.focused_entity.is_none(), "no focus when no history and no first_entity");
+    assert!(
+        fm.focused_entity.is_none(),
+        "no focus when no history and no first_entity"
+    );
 }

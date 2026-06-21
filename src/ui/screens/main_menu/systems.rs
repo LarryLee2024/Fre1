@@ -44,9 +44,7 @@ pub fn on_main_menu_button_handler(
 /// 接收通过 Commands::trigger 发射的 UiAction 事件，处理通用的 UI 行为
 /// （如从键盘输入触发的行为）。Click 事件有专门的 ButtonClicked Observer 处理
 /// （带实体上下文），此处处理其他行为。当前为 MVP 实现，仅记录日志。
-pub fn on_main_menu_action(
-    on: On<UiAction>,
-) {
+pub fn on_main_menu_action(on: On<UiAction>) {
     match on.event() {
         // Click 由专门的 ButtonClicked Observer 处理（见 on_main_menu_button_handler）
         UiAction::Click => {

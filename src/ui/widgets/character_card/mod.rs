@@ -16,7 +16,9 @@ pub mod systems;
 
 use bevy::prelude::*;
 
-use self::components::{CharacterAction, CharacterCardLevelLabel, CharacterCardNameLabel, CharacterCardState};
+use self::components::{
+    CharacterAction, CharacterCardLevelLabel, CharacterCardNameLabel, CharacterCardState,
+};
 use self::systems::{character_card_update_system, refresh_character_card_from_vm};
 
 /// CharacterCardPlugin — 注册 CharacterCard Widget 所需的 Component/System
@@ -28,6 +30,9 @@ impl Plugin for CharacterCardPlugin {
             .register_type::<CharacterAction>()
             .register_type::<CharacterCardNameLabel>()
             .register_type::<CharacterCardLevelLabel>()
-            .add_systems(Update, (character_card_update_system, refresh_character_card_from_vm));
+            .add_systems(
+                Update,
+                (character_card_update_system, refresh_character_card_from_vm),
+            );
     }
 }

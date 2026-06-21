@@ -34,7 +34,11 @@ fn push_duplicate_top_is_noop() {
     let mut stack = ScreenStack::new();
     stack.push(ScreenType::Battle);
     stack.push(ScreenType::Battle); // duplicate of current top
-    assert_eq!(stack.len(), 1, "duplicate top push must not increase stack size");
+    assert_eq!(
+        stack.len(),
+        1,
+        "duplicate top push must not increase stack size"
+    );
     assert_eq!(stack.peek(), Some(&ScreenType::Battle));
 }
 
@@ -53,7 +57,11 @@ fn push_duplicate_non_top_is_allowed() {
     stack.push(ScreenType::MainMenu);
     stack.push(ScreenType::Battle);
     stack.push(ScreenType::MainMenu); // MainMenu is not top (Battle is), so this adds
-    assert_eq!(stack.len(), 3, "duplicate non-top push must increase stack size");
+    assert_eq!(
+        stack.len(),
+        3,
+        "duplicate non-top push must increase stack size"
+    );
 }
 
 #[test]
@@ -87,8 +95,16 @@ fn replace_swaps_top_element() {
     stack.push(ScreenType::MainMenu);
     stack.push(ScreenType::Battle);
     let old = stack.replace(ScreenType::Inventory);
-    assert_eq!(old, Some(ScreenType::Battle), "replace must return the old top");
-    assert_eq!(stack.peek(), Some(&ScreenType::Inventory), "replace must set new top");
+    assert_eq!(
+        old,
+        Some(ScreenType::Battle),
+        "replace must return the old top"
+    );
+    assert_eq!(
+        stack.peek(),
+        Some(&ScreenType::Inventory),
+        "replace must set new top"
+    );
     assert_eq!(stack.len(), 2, "replace must not change stack depth");
 }
 
@@ -97,7 +113,11 @@ fn replace_on_empty_degrads_to_push() {
     let mut stack = ScreenStack::new();
     let old = stack.replace(ScreenType::MainMenu);
     assert_eq!(old, None, "replace on empty must return None");
-    assert_eq!(stack.peek(), Some(&ScreenType::MainMenu), "replace on empty must push");
+    assert_eq!(
+        stack.peek(),
+        Some(&ScreenType::MainMenu),
+        "replace on empty must push"
+    );
     assert_eq!(stack.len(), 1);
 }
 
@@ -120,7 +140,10 @@ fn contains_returns_false_after_pop() {
     stack.push(ScreenType::MainMenu);
     stack.push(ScreenType::Battle);
     stack.pop();
-    assert!(!stack.contains(ScreenType::Battle), "popped screen must not appear in contains");
+    assert!(
+        !stack.contains(ScreenType::Battle),
+        "popped screen must not appear in contains"
+    );
 }
 
 #[test]
@@ -142,7 +165,11 @@ fn iter_returns_elements_bottom_to_top() {
     let collected: Vec<&ScreenType> = stack.iter().collect();
     assert_eq!(
         collected,
-        vec![&ScreenType::MainMenu, &ScreenType::Battle, &ScreenType::Inventory],
+        vec![
+            &ScreenType::MainMenu,
+            &ScreenType::Battle,
+            &ScreenType::Inventory
+        ],
         "iter must return elements in insertion order (bottom to top)"
     );
 }

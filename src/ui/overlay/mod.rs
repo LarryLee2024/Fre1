@@ -16,5 +16,5 @@ pub mod tooltip;
 
 pub use layers::*;
 pub use notification::NotificationService;
-pub use tooltip::TooltipService;
 pub use plugin::OverlayPlugin;
+pub use tooltip::TooltipService;

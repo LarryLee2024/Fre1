@@ -27,6 +27,9 @@ impl Plugin for SkillSlotPlugin {
         app.register_type::<SkillSlotState>()
             .register_type::<SkillSlotAction>()
             .register_type::<SkillSlotNameLabel>()
-            .add_systems(Update, (skill_slot_update_system, refresh_skill_slot_from_vm));
+            .add_systems(
+                Update,
+                (skill_slot_update_system, refresh_skill_slot_from_vm),
+            );
     }
 }

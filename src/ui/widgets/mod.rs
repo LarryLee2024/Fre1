@@ -38,6 +38,12 @@ pub struct WidgetsPlugin;
 
 impl Plugin for WidgetsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins((SkillSlotPlugin, ActionMenuPlugin, CharacterCardPlugin, InventoryGridPlugin, InventoryItemRowPlugin));
+        app.add_plugins((
+            SkillSlotPlugin,
+            ActionMenuPlugin,
+            CharacterCardPlugin,
+            InventoryGridPlugin,
+            InventoryItemRowPlugin,
+        ));
     }
 }

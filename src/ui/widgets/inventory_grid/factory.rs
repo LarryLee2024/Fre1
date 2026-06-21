@@ -8,7 +8,10 @@ use bevy::prelude::*;
 use crate::infra::localization::generated::loc;
 use crate::ui::primitives::button::{components::ButtonVariant, factory::spawn_localized_button};
 use crate::ui::primitives::panel::{components::PanelVariant, factory::spawn_panel};
-use crate::ui::primitives::text::{components::TextVariant, factory::{spawn_localized_text, spawn_text}};
+use crate::ui::primitives::text::{
+    components::TextVariant,
+    factory::{spawn_localized_text, spawn_text},
+};
 use crate::ui::theme::Theme;
 use crate::ui::widgets::inventory_item_row::factory::spawn_inventory_item_row;
 

@@ -16,7 +16,7 @@ use bevy::prelude::*;
 use crate::core::capabilities::effect::events::EffectApplied;
 use crate::core::events::TurnStarted;
 use crate::ui::binding::Dirty;
-use crate::ui::view_models::{battle_hud::BattleHudVm, skill_panel::SkillPanelVm, UiStore};
+use crate::ui::view_models::{UiStore, battle_hud::BattleHudVm, skill_panel::SkillPanelVm};
 
 // ─── Pure Projection Functions ───────────────────────────────────────────
 

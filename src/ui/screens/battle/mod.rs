@@ -103,7 +103,13 @@ pub fn spawn_battle_screen(
     commands.entity(action_menu).set_parent_in_place(root);
 
     // ── 6. End Turn button (Danger variant) ──
-    let end_turn_btn = spawn_localized_button(&mut commands, &theme, loc::ui::BATTLE_END_TURN, "End Turn", ButtonVariant::Danger);
+    let end_turn_btn = spawn_localized_button(
+        &mut commands,
+        &theme,
+        loc::ui::BATTLE_END_TURN,
+        "End Turn",
+        ButtonVariant::Danger,
+    );
     commands.entity(end_turn_btn).insert(BattleAction::EndTurn);
     commands.entity(end_turn_btn).set_parent_in_place(root);
 }

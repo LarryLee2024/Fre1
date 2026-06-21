@@ -10,19 +10,29 @@ pub struct DamageNumber {
 }
 
 /// 生成伤害数字浮字
-pub fn spawn_damage_number(commands: &mut Commands, theme: &crate::ui::Theme, value: i32) -> Entity {
-    let text = commands.spawn((
-        Text::new(format!("{}", value)),
-        TextFont {
-            font_size: FontSize::Px(24.0),
-            ..default()
-        },
-        TextColor(if value < 0 { theme.colors.feedback_negative } else { theme.colors.feedback_positive }),
-        DamageNumber {
-            value,
-            timer: Timer::from_seconds(1.5, TimerMode::Once),
-        },
-    )).id();
+pub fn spawn_damage_number(
+    commands: &mut Commands,
+    theme: &crate::ui::Theme,
+    value: i32,
+) -> Entity {
+    let text = commands
+        .spawn((
+            Text::new(format!("{}", value)),
+            TextFont {
+                font_size: FontSize::Px(24.0),
+                ..default()
+            },
+            TextColor(if value < 0 {
+                theme.colors.feedback_negative
+            } else {
+                theme.colors.feedback_positive
+            }),
+            DamageNumber {
+                value,
+                timer: Timer::from_seconds(1.5, TimerMode::Once),
+            },
+        ))
+        .id();
     text
 }
 

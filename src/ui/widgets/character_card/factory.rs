@@ -18,7 +18,9 @@ use crate::ui::primitives::text::{components::TextVariant, factory::spawn_text};
 use crate::ui::theme::Theme;
 use crate::ui::view_models::character_panel::CharacterPanelVm;
 
-use super::components::{CharacterAction, CharacterCardLevelLabel, CharacterCardNameLabel, CharacterCardState};
+use super::components::{
+    CharacterAction, CharacterCardLevelLabel, CharacterCardNameLabel, CharacterCardState,
+};
 
 /// 工厂函数：生成一个完整的角色卡片控件
 ///
@@ -110,9 +112,7 @@ pub fn spawn_character_card(
         &level_str,
         TextVariant::Caption,
     );
-    commands
-        .entity(level_text)
-        .insert(CharacterCardLevelLabel);
+    commands.entity(level_text).insert(CharacterCardLevelLabel);
     commands.entity(level_text).set_parent_in_place(container);
 
     // ── 4. HP progress bar (Hp variant, show label) ──
@@ -141,17 +141,35 @@ pub fn spawn_character_card(
 
     // ── 6. Action buttons ──
     // Attack button (Primary variant)
-    let attack_btn = spawn_localized_button(commands, theme, loc::ui::BATTLE_ATTACK, "Attack", ButtonVariant::Primary);
+    let attack_btn = spawn_localized_button(
+        commands,
+        theme,
+        loc::ui::BATTLE_ATTACK,
+        "Attack",
+        ButtonVariant::Primary,
+    );
     commands.entity(attack_btn).insert(CharacterAction::Attack);
     commands.entity(attack_btn).set_parent_in_place(container);
 
     // Defend button (Secondary variant)
-    let defend_btn = spawn_localized_button(commands, theme, loc::ui::BATTLE_DEFEND, "Defend", ButtonVariant::Secondary);
+    let defend_btn = spawn_localized_button(
+        commands,
+        theme,
+        loc::ui::BATTLE_DEFEND,
+        "Defend",
+        ButtonVariant::Secondary,
+    );
     commands.entity(defend_btn).insert(CharacterAction::Defend);
     commands.entity(defend_btn).set_parent_in_place(container);
 
     // Skill button (Primary variant)
-    let skill_btn = spawn_localized_button(commands, theme, loc::ui::BATTLE_SKILL, "Skill", ButtonVariant::Primary);
+    let skill_btn = spawn_localized_button(
+        commands,
+        theme,
+        loc::ui::BATTLE_SKILL,
+        "Skill",
+        ButtonVariant::Primary,
+    );
     commands.entity(skill_btn).insert(CharacterAction::Skill);
     commands.entity(skill_btn).set_parent_in_place(container);
 

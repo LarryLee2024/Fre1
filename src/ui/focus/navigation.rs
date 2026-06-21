@@ -11,7 +11,7 @@
 
 use bevy::prelude::*;
 
-use super::components::{FocusNavigation, FocusStyle, FocusGroup, Focusable, TabIndex};
+use super::components::{FocusGroup, FocusNavigation, FocusStyle, Focusable, TabIndex};
 use super::manager::FocusManager;
 
 /// 方向枚举
@@ -40,17 +40,11 @@ pub fn keyboard_navigation_system(
         || keyboard.just_pressed(KeyCode::KeyW)
     {
         Some(Direction::Up)
-    } else if keyboard.just_pressed(KeyCode::ArrowDown)
-        || keyboard.just_pressed(KeyCode::KeyS)
-    {
+    } else if keyboard.just_pressed(KeyCode::ArrowDown) || keyboard.just_pressed(KeyCode::KeyS) {
         Some(Direction::Down)
-    } else if keyboard.just_pressed(KeyCode::ArrowLeft)
-        || keyboard.just_pressed(KeyCode::KeyA)
-    {
+    } else if keyboard.just_pressed(KeyCode::ArrowLeft) || keyboard.just_pressed(KeyCode::KeyA) {
         Some(Direction::Left)
-    } else if keyboard.just_pressed(KeyCode::ArrowRight)
-        || keyboard.just_pressed(KeyCode::KeyD)
-    {
+    } else if keyboard.just_pressed(KeyCode::ArrowRight) || keyboard.just_pressed(KeyCode::KeyD) {
         Some(Direction::Right)
     } else {
         None
@@ -99,9 +93,7 @@ pub fn keyboard_navigation_system(
         FocusNavigation::Grid { cols } => {
             navigate_grid(current_pos, dir, cols as usize, total, wrap)
         }
-        FocusNavigation::Linear => {
-            navigate_linear(current_pos, dir, total, wrap)
-        }
+        FocusNavigation::Linear => navigate_linear(current_pos, dir, total, wrap),
         FocusNavigation::Custom => {
             // Custom 模式下不处理方向键导航
             return;
@@ -131,7 +123,11 @@ fn navigate_grid(
     match dir {
         Direction::Up => {
             if row == 0 {
-                if wrap { ((total - 1) / cols) * cols + col.min((total - 1) % cols) } else { pos }
+                if wrap {
+                    ((total - 1) / cols) * cols + col.min((total - 1) % cols)
+                } else {
+                    pos
+                }
             } else {
                 let new_row = row - 1;
                 let new_idx = new_row * cols + col;
@@ -150,7 +146,11 @@ fn navigate_grid(
         }
         Direction::Left => {
             if col == 0 {
-                if wrap { row * cols + (cols - 1).min(total - 1 - row * cols) } else { pos }
+                if wrap {
+                    row * cols + (cols - 1).min(total - 1 - row * cols)
+                } else {
+                    pos
+                }
             } else {
                 row * cols + (col - 1)
             }
@@ -167,12 +167,7 @@ fn navigate_grid(
 }
 
 /// 线性模式导航计算
-fn navigate_linear(
-    current_pos: Option<usize>,
-    dir: Direction,
-    total: usize,
-    wrap: bool,
-) -> usize {
+fn navigate_linear(current_pos: Option<usize>, dir: Direction, total: usize, wrap: bool) -> usize {
     let Some(pos) = current_pos else {
         return 0;
     };

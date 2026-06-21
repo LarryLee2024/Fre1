@@ -8,18 +8,9 @@
 use bevy::prelude::*;
 
 use crate::infra::localization::generated::loc;
-use crate::ui::primitives::button::{
-    components::ButtonVariant,
-    factory::spawn_localized_button,
-};
-use crate::ui::primitives::panel::{
-    components::PanelVariant,
-    factory::spawn_panel,
-};
-use crate::ui::primitives::text::{
-    components::TextVariant,
-    factory::spawn_text,
-};
+use crate::ui::primitives::button::{components::ButtonVariant, factory::spawn_localized_button};
+use crate::ui::primitives::panel::{components::PanelVariant, factory::spawn_panel};
+use crate::ui::primitives::text::{components::TextVariant, factory::spawn_text};
 use crate::ui::theme::Theme;
 
 use super::components::{InventoryItemAction, InventoryItemRowLabel, InventoryItemRowState};
@@ -73,10 +64,7 @@ pub fn spawn_inventory_item_row(
             flex_direction: FlexDirection::Row,
             align_items: AlignItems::Center,
             column_gap: Val::Px(theme.spacing.sm),
-            padding: UiRect::axes(
-                Val::Px(theme.spacing.sm),
-                Val::Px(theme.spacing.xs),
-            ),
+            padding: UiRect::axes(Val::Px(theme.spacing.sm), Val::Px(theme.spacing.xs)),
             ..default()
         },
         InventoryItemRowState {
@@ -87,7 +75,13 @@ pub fn spawn_inventory_item_row(
     ));
 
     // ── 2. Item name text (Caption variant, primary color) ──
-    let name_text = spawn_text(commands, asset_server, theme, &name_str, TextVariant::Caption);
+    let name_text = spawn_text(
+        commands,
+        asset_server,
+        theme,
+        &name_str,
+        TextVariant::Caption,
+    );
     commands.entity(name_text).insert((
         TextColor(theme.colors.text_primary),
         InventoryItemRowLabel::Name,
@@ -95,12 +89,21 @@ pub fn spawn_inventory_item_row(
     commands.entity(name_text).set_parent_in_place(container);
 
     // ── 3. Quantity text (Caption variant, secondary color) ──
-    let qty_text = spawn_text(commands, asset_server, theme, &qty_str, TextVariant::Caption);
-    commands.entity(qty_text).insert(InventoryItemRowLabel::Quantity);
+    let qty_text = spawn_text(
+        commands,
+        asset_server,
+        theme,
+        &qty_str,
+        TextVariant::Caption,
+    );
+    commands
+        .entity(qty_text)
+        .insert(InventoryItemRowLabel::Quantity);
     commands.entity(qty_text).set_parent_in_place(container);
 
     // ── 4. Use button (Primary variant) ──
-    let use_btn = spawn_localized_button(commands, theme, loc::ui::USE, "Use", ButtonVariant::Primary);
+    let use_btn =
+        spawn_localized_button(commands, theme, loc::ui::USE, "Use", ButtonVariant::Primary);
     commands.entity(use_btn).insert(InventoryItemAction::Use);
     commands.entity(use_btn).set_parent_in_place(container);
 

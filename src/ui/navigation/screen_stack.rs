@@ -23,9 +23,7 @@ pub struct ScreenStack {
 impl ScreenStack {
     /// Creates an empty navigation stack.
     pub fn new() -> Self {
-        Self {
-            stack: Vec::new(),
-        }
+        Self { stack: Vec::new() }
     }
 
     /// Pushes a screen onto the stack.

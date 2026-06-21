@@ -18,7 +18,9 @@ pub struct OverlayQueue<T: Clone + Send + Sync + 'static> {
 
 impl<T: Clone + Send + Sync + 'static> Default for OverlayQueue<T> {
     fn default() -> Self {
-        Self { entries: Vec::new() }
+        Self {
+            entries: Vec::new(),
+        }
     }
 }
 

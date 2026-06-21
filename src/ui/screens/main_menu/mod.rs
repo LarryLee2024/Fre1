@@ -12,8 +12,8 @@ use crate::infra::localization::generated::loc;
 use crate::ui::primitives::button::{components::ButtonVariant, factory::spawn_localized_button};
 use crate::ui::primitives::list::{components::ListVariant, factory::spawn_list};
 use crate::ui::primitives::panel::{components::PanelVariant, factory::spawn_panel};
+use crate::ui::primitives::text::components::TextVariant;
 use crate::ui::primitives::text::factory::{spawn_localized_text, spawn_text};
-use crate::ui::primitives::text::{components::TextVariant};
 use crate::ui::theme::Theme;
 
 /// 菜单按钮动作标识
@@ -114,9 +114,27 @@ pub fn spawn_main_menu(mut commands: Commands, theme: Res<Theme>, asset_server: 
     });
 
     // ── 5. Menu buttons ──
-    let new_game_btn = spawn_localized_button(&mut commands, &theme, loc::ui::NEW_GAME, "New Game", ButtonVariant::Primary);
-    let load_game_btn = spawn_localized_button(&mut commands, &theme, loc::ui::LOAD_GAME, "Load Game", ButtonVariant::Secondary);
-    let settings_btn = spawn_localized_button(&mut commands, &theme, loc::ui::SETTINGS, "Settings", ButtonVariant::Secondary);
+    let new_game_btn = spawn_localized_button(
+        &mut commands,
+        &theme,
+        loc::ui::NEW_GAME,
+        "New Game",
+        ButtonVariant::Primary,
+    );
+    let load_game_btn = spawn_localized_button(
+        &mut commands,
+        &theme,
+        loc::ui::LOAD_GAME,
+        "Load Game",
+        ButtonVariant::Secondary,
+    );
+    let settings_btn = spawn_localized_button(
+        &mut commands,
+        &theme,
+        loc::ui::SETTINGS,
+        "Settings",
+        ButtonVariant::Secondary,
+    );
 
     // Attach MenuAction for button identification
     commands.entity(new_game_btn).insert(MenuAction::NewGame);

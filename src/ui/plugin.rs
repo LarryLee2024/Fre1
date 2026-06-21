@@ -19,9 +19,11 @@ use super::overlay::OverlayPlugin;
 use super::primitives::PrimitivesPlugin;
 use super::projections::battle::{on_effect_applied_projection, on_turn_started_projection};
 use super::screens::ScreenPlugin;
-use super::settings::{load_settings, UiSettings};
+use super::settings::{UiSettings, load_settings};
 use super::theme::ThemePlugin;
-use super::view_models::{battle_hud::BattleHudVm, character_panel::CharacterPanelVm, skill_panel::SkillPanelVm, UiStore};
+use super::view_models::{
+    UiStore, battle_hud::BattleHudVm, character_panel::CharacterPanelVm, skill_panel::SkillPanelVm,
+};
 use super::widgets::WidgetsPlugin;
 
 /// UiPlugin — L3 UI 表现层入口

@@ -9,7 +9,7 @@ use bevy::prelude::*;
 use crate::ui::binding::Dirty;
 use crate::ui::primitives::button::components::ButtonState;
 use crate::ui::primitives::progress_bar::components::ProgressBarState;
-use crate::ui::view_models::{skill_panel::SkillPanelVm, UiStore};
+use crate::ui::view_models::{UiStore, skill_panel::SkillPanelVm};
 
 use super::components::{SkillSlotNameLabel, SkillSlotState};
 
@@ -52,11 +52,7 @@ pub fn skill_slot_update_system(
 /// 实体的 skill_id 字段用于精确匹配。
 pub fn refresh_skill_slot_from_vm(
     store: Res<UiStore>,
-    mut slot_query: Query<(
-        &mut Dirty<SkillPanelVm>,
-        &mut SkillSlotState,
-        &Children,
-    )>,
+    mut slot_query: Query<(&mut Dirty<SkillPanelVm>, &mut SkillSlotState, &Children)>,
     mut text_query: Query<(&mut Text, &SkillSlotNameLabel)>,
     mut progress_bar_query: Query<&mut ProgressBarState>,
     mut button_query: Query<&mut ButtonState>,
@@ -67,18 +63,14 @@ pub fn refresh_skill_slot_from_vm(
         }
 
         // Find matching SkillSlotVm from UiStore by skill_id
-        let vm = store
-            .skill_panel
-            .skills
-            .get(&state.skill_id)
-            .or_else(|| {
-                // Fallback: if skill_id is 0 (default from factory), use the first entry
-                if state.skill_id == 0 {
-                    store.skill_panel.skills.values().next()
-                } else {
-                    None
-                }
-            });
+        let vm = store.skill_panel.skills.get(&state.skill_id).or_else(|| {
+            // Fallback: if skill_id is 0 (default from factory), use the first entry
+            if state.skill_id == 0 {
+                store.skill_panel.skills.values().next()
+            } else {
+                None
+            }
+        });
 
         let Some(vm) = vm else {
             continue;

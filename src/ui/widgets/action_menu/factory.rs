@@ -77,27 +77,57 @@ pub fn spawn_action_menu(commands: &mut Commands, theme: &Theme) -> Entity {
         .insert((ActionMenuState { actions }, Name::new("ActionMenu")));
 
     // ── 2. Attack button (Primary) ──
-    let attack_btn = spawn_localized_button(commands, theme, loc::ui::BATTLE_ATTACK, "Attack", ButtonVariant::Primary);
+    let attack_btn = spawn_localized_button(
+        commands,
+        theme,
+        loc::ui::BATTLE_ATTACK,
+        "Attack",
+        ButtonVariant::Primary,
+    );
     commands.entity(attack_btn).insert(ActionType::Attack);
     commands.entity(attack_btn).set_parent_in_place(container);
 
     // ── 3. Defend button (Secondary) ──
-    let defend_btn = spawn_localized_button(commands, theme, loc::ui::BATTLE_DEFEND, "Defend", ButtonVariant::Secondary);
+    let defend_btn = spawn_localized_button(
+        commands,
+        theme,
+        loc::ui::BATTLE_DEFEND,
+        "Defend",
+        ButtonVariant::Secondary,
+    );
     commands.entity(defend_btn).insert(ActionType::Defend);
     commands.entity(defend_btn).set_parent_in_place(container);
 
     // ── 4. Skill button (Primary) ──
-    let skill_btn = spawn_localized_button(commands, theme, loc::ui::BATTLE_SKILL, "Skill", ButtonVariant::Primary);
+    let skill_btn = spawn_localized_button(
+        commands,
+        theme,
+        loc::ui::BATTLE_SKILL,
+        "Skill",
+        ButtonVariant::Primary,
+    );
     commands.entity(skill_btn).insert(ActionType::Skill);
     commands.entity(skill_btn).set_parent_in_place(container);
 
     // ── 5. Item button (Secondary) ──
-    let item_btn = spawn_localized_button(commands, theme, loc::ui::BATTLE_ITEM, "Item", ButtonVariant::Secondary);
+    let item_btn = spawn_localized_button(
+        commands,
+        theme,
+        loc::ui::BATTLE_ITEM,
+        "Item",
+        ButtonVariant::Secondary,
+    );
     commands.entity(item_btn).insert(ActionType::Item);
     commands.entity(item_btn).set_parent_in_place(container);
 
     // ── 6. Wait button (Ghost) ──
-    let wait_btn = spawn_localized_button(commands, theme, loc::ui::BATTLE_WAIT, "Wait", ButtonVariant::Ghost);
+    let wait_btn = spawn_localized_button(
+        commands,
+        theme,
+        loc::ui::BATTLE_WAIT,
+        "Wait",
+        ButtonVariant::Ghost,
+    );
     commands.entity(wait_btn).insert(ActionType::Wait);
     commands.entity(wait_btn).set_parent_in_place(container);
 

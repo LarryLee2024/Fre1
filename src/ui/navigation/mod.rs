@@ -12,9 +12,9 @@ mod screen_type;
 
 pub mod screen_stack;
 
+pub use screen_stack::ScreenStack;
 pub use screen_state::{ScreenLifecycle, UiScreenState};
 pub use screen_type::ScreenType;
-pub use screen_stack::ScreenStack;
 
 #[cfg(test)]
 mod tests;

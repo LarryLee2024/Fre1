@@ -8,7 +8,7 @@ use bevy::prelude::*;
 
 use crate::ui::binding::Dirty;
 use crate::ui::primitives::progress_bar::components::ProgressBarState;
-use crate::ui::view_models::{character_panel::CharacterPanelVm, UiStore};
+use crate::ui::view_models::{UiStore, character_panel::CharacterPanelVm};
 
 use super::components::{CharacterCardLevelLabel, CharacterCardNameLabel, CharacterCardState};
 

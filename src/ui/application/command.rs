@@ -8,8 +8,8 @@
 
 use bevy::prelude::*;
 
-use crate::ui::navigation::ScreenType;
 use crate::core::capabilities::runtime::command::foundation::GameCommand;
+use crate::ui::navigation::ScreenType;
 
 /// UI 层命令，封装用户操作意图。
 ///

@@ -43,8 +43,7 @@ fn on_turn_started_sets_phase_key() {
     BattleProjection::on_turn_started(&mut store, &event);
 
     assert_eq!(
-        store.battle_hud.phase_key,
-        "ui.battle.phase.player",
+        store.battle_hud.phase_key, "ui.battle.phase.player",
         "phase_key must be set to player phase key"
     );
 }
@@ -139,8 +138,7 @@ fn on_effect_applied_does_not_modify_battle_hud() {
         "battle_hud must not be modified by on_effect_applied"
     );
     assert_eq!(
-        store.battle_hud.phase_key,
-        "ui.battle.phase.enemy",
+        store.battle_hud.phase_key, "ui.battle.phase.enemy",
         "battle_hud phase_key must not be modified"
     );
 }
