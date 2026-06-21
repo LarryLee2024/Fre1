@@ -74,7 +74,7 @@ impl PlaybackSession {
     /// 开始回放。
     pub fn start(&mut self) {
         self.player.start_playing();
-        // 设置第一帧的种子偏移
+        // 首帧 RNG 需要用 header seed + frame offset 重新计算
         if let Some(frame) = self.player.current_frame() {
             let seeds = RngSeeds::uniform(self.initial_seed.wrapping_add(frame.rng_seed_offset));
             self.rng.set_all_seeds(seeds);
@@ -92,7 +92,7 @@ impl PlaybackSession {
             return false;
         }
 
-        // 更新 RNG 种子为当前帧的偏移
+        // 每帧推进时用 header seed + frame offset 重新计算 RNG
         if let Some(frame) = self.player.current_frame() {
             let seeds = RngSeeds::uniform(self.initial_seed.wrapping_add(frame.rng_seed_offset));
             self.rng.set_all_seeds(seeds);

@@ -4,6 +4,9 @@ use super::mechanism::systems::condition_system::{
     on_attribute_changed, on_tag_changed_by_tag_added, on_tag_changed_by_tag_removed,
 };
 
+/// Condition 能力插件——注册条件依赖变更监听。
+///
+/// 观察 Tag/Attribute 变更，自动标记依赖该状态的条件为待重新评估。
 pub struct ConditionPlugin;
 
 impl Plugin for ConditionPlugin {

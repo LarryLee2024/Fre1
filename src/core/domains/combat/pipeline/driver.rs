@@ -146,7 +146,7 @@ pub(crate) fn combat_pipeline_driver(
     let step = match stage.steps.get(driver.state.current_step_index) {
         Some(s) => s.clone(),
         None => {
-            // 当前阶段步骤耗尽 → 进入下一阶段
+            // 步骤耗尽 → 递增 stage_index，下一帧从新阶段首步开始
             driver.state.current_stage_index += 1;
             driver.state.current_step_index = 0;
             return; // 下一帧执行下一阶段

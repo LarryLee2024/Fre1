@@ -30,12 +30,10 @@ pub fn progress_bar_update_system(
         };
 
         for child in children.iter() {
-            // 更新填充条宽度
             if let Ok((mut node, _)) = fill_query.get_mut(child) {
                 node.width = Val::Percent(ratio * 100.0);
             }
 
-            // 更新标签文本
             if let Ok((mut text, _)) = label_query.get_mut(child) {
                 let prefix = match state.variant {
                     ProgressBarVariant::Hp => "HP ",

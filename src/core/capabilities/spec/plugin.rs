@@ -2,6 +2,7 @@ use bevy::prelude::*;
 
 use crate::core::capabilities::spec::mechanism::SpecRegistry;
 
+/// Spec 领域插件，注册 Spec 注册中心资源与生命周期管理。
 pub struct SpecPlugin;
 
 impl Plugin for SpecPlugin {

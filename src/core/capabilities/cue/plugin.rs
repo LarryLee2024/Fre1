@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 
+/// Cue 能力插件——注册表现信号相关的事件和 Observer。
 pub struct CuePlugin;
 
 impl Plugin for CuePlugin {

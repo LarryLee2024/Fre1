@@ -1,39 +1,31 @@
-//! Module Name: SkillPanelVm — Skill panel view model
+//! SkillPanelVm — 技能面板视图模型
 //!
-//! ViewModel for the skill panel: list of skill slots with cooldown, cost,
-//! and usability state.
-//!
-//! See `docs/06-ui/04-data-flow/projection-viewmodel.md` §3.4
+//! 详见 `docs/06-ui/04-data-flow/projection-viewmodel.md` §3
 
-use bevy::prelude::*;
 use std::collections::HashMap;
 
-/// Single skill slot in the skill panel.
-///
-/// Contains all data needed to render one skill button in the panel:
-/// identity, cooldown state, cost, and whether it can be activated.
+use bevy::prelude::*;
+
+/// 技能槽位视图模型
 #[derive(Clone, Reflect, Default)]
 pub struct SkillSlotVm {
-    /// Skill definition ID
+    /// 技能 ID
     pub skill_id: u32,
-    /// Skill name (localization key)
+    /// 技能名称（本地化 Key）
     pub name_key: &'static str,
-    /// Remaining cooldown turns (0 = ready)
+    /// 剩余冷却回合数
     pub cooldown_remaining: u32,
-    /// Maximum cooldown turns
+    /// 最大冷却回合数
     pub max_cooldown: u32,
-    /// Whether the skill can be activated
+    /// 是否可用
     pub is_usable: bool,
-    /// Action point cost
+    /// AP 消耗
     pub ap_cost: u32,
 }
 
-/// Skill panel view model -- container for all skill slot data.
-///
-/// Skills are indexed by a u32 identifier (matching SkillSlotVm.skill_id)
-/// for efficient lookup during widget refresh.
+/// 技能面板视图模型
 #[derive(Clone, Reflect, Default)]
 pub struct SkillPanelVm {
-    /// All skill slots, keyed by skill_id
+    /// 技能数据映射（skill_id → SkillSlotVm）
     pub skills: HashMap<u32, SkillSlotVm>,
 }

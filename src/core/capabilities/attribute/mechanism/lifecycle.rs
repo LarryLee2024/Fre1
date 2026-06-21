@@ -17,19 +17,25 @@ pub struct AttributeRegistry {
 /// 属性注册错误。
 #[derive(Debug)]
 pub enum AttributeRegistrationError {
+    /// AttributeId 不允许重复注册
     DuplicateId(AttributeId),
+    /// 默认 base 值超出 [min, max] 范围
     DefaultValueOutOfRange {
         id: AttributeId,
         value: f32,
         min: f32,
         max: f32,
     },
+    /// Derived 类属性依赖的属性尚未注册
     DerivedDependencyNotFound {
         attr_id: AttributeId,
         missing_dep: AttributeId,
     },
+    /// Derived 类属性存在循环依赖（A → B → A）
     DerivedCircularDependency(AttributeId),
+    /// Resource 类属性的 min_value 不允许为负数
     ResourceMinBelowZero(AttributeId),
+    /// 派生公式的目标属性未在注册表中
     FormulaTargetNotFound(AttributeId),
 }
 
@@ -168,10 +174,12 @@ impl AttributeRegistry {
         false
     }
 
+    /// 按 ID 查询属性定义，未注册则返回 None。
     pub fn get(&self, id: &AttributeId) -> Option<&AttributeDefinition> {
         self.definitions.get(id)
     }
 
+    /// 判断指定属性 ID 是否已注册。
     pub fn contains(&self, id: &AttributeId) -> bool {
         self.definitions.contains_key(id)
     }

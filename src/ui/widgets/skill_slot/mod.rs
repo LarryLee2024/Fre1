@@ -16,8 +16,8 @@ pub mod systems;
 
 use bevy::prelude::*;
 
-use self::components::{SkillSlotAction, SkillSlotState};
-use self::systems::skill_slot_update_system;
+use self::components::{SkillSlotAction, SkillSlotNameLabel, SkillSlotState};
+use self::systems::{refresh_skill_slot_from_vm, skill_slot_update_system};
 
 /// SkillSlotPlugin — 注册 SkillSlot Widget 所需的 Component/System
 pub struct SkillSlotPlugin;
@@ -26,6 +26,7 @@ impl Plugin for SkillSlotPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<SkillSlotState>()
             .register_type::<SkillSlotAction>()
-            .add_systems(Update, skill_slot_update_system);
+            .register_type::<SkillSlotNameLabel>()
+            .add_systems(Update, (skill_slot_update_system, refresh_skill_slot_from_vm));
     }
 }

@@ -8,6 +8,7 @@
 use bevy::prelude::*;
 
 use crate::infra::localization::generated::loc;
+use crate::ui::binding::Dirty;
 use crate::ui::primitives::button::{components::ButtonVariant, factory::spawn_localized_button};
 use crate::ui::primitives::panel::{components::PanelVariant, factory::spawn_panel};
 use crate::ui::primitives::progress_bar::{
@@ -15,8 +16,9 @@ use crate::ui::primitives::progress_bar::{
 };
 use crate::ui::primitives::text::{components::TextVariant, factory::spawn_text};
 use crate::ui::theme::Theme;
+use crate::ui::view_models::character_panel::CharacterPanelVm;
 
-use super::components::{CharacterAction, CharacterCardState};
+use super::components::{CharacterAction, CharacterCardLevelLabel, CharacterCardNameLabel, CharacterCardState};
 
 /// 工厂函数：生成一个完整的角色卡片控件
 ///
@@ -72,7 +74,8 @@ pub fn spawn_character_card(
     // Card variant provides a rounded, padded column layout
     let container = spawn_panel(commands, theme, PanelVariant::Card);
 
-    // Attach CharacterCardState and an identifiable Name
+    // Attach CharacterCardState, Dirty<CharacterPanelVm> for ViewModel refresh,
+    // and an identifiable Name
     commands.entity(container).insert((
         CharacterCardState {
             name: name_str.clone(),
@@ -82,6 +85,7 @@ pub fn spawn_character_card(
             mp_current,
             mp_max,
         },
+        Dirty::<CharacterPanelVm>::default(),
         Name::new(format!("CharacterCard({})", name_str)),
     ));
 
@@ -95,7 +99,7 @@ pub fn spawn_character_card(
     );
     commands
         .entity(name_text)
-        .insert(TextColor(theme.colors.text_primary));
+        .insert((TextColor(theme.colors.text_primary), CharacterCardNameLabel));
     commands.entity(name_text).set_parent_in_place(container);
 
     // ── 3. Level text (Caption variant) ──
@@ -106,6 +110,9 @@ pub fn spawn_character_card(
         &level_str,
         TextVariant::Caption,
     );
+    commands
+        .entity(level_text)
+        .insert(CharacterCardLevelLabel);
     commands.entity(level_text).set_parent_in_place(container);
 
     // ── 4. HP progress bar (Hp variant, show label) ──

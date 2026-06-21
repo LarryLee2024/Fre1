@@ -1,38 +1,34 @@
-//! Module Name: Dirty<T> — Dirty flag mechanism for ViewModel change tracking
+//! Dirty<T> — ViewModel 变更跟踪标记
 //!
-//! Dirty<T> wraps a ViewModel value and tracks whether it has been modified.
-//! Widgets check the dirty flag each frame and only refresh when it is set,
-//! avoiding per-frame full traversal of all widgets.
+//! Widget 每帧检测 Dirty<T> 标记，仅在标记为 true 时执行刷新。
+//! consume() 后标记自动清除，避免同帧重复消费。
 //!
-//! Usage:
-//!   - Projection updates ViewModel via get_mut() (auto-marks dirty)
-//!   - Widget system calls consume() to check and clear the flag
-//!   - consume() returns true only once per dirty transition
-//!
-//! See `docs/06-ui/04-data-flow/projection-viewmodel.md` §5
+//! 详见 `docs/06-ui/02-design-system/focus-binding.md` §3
 
 use bevy::prelude::*;
 
-/// Dirty flag wrapper for ViewModel change tracking.
+/// Dirty 标记包装器，用于 ViewModel 变更跟踪。
 ///
-/// Widgets detect the dirty flag each frame and refresh only when it is true.
-/// consume() clears the flag automatically, preventing duplicate consumption
-/// within the same frame.
+/// # 使用方式
+/// ```ignore
+/// // Projection 层写入后标记
+/// store.battle_hud.get_mut().hp = 80;  // 自动 mark_dirty()
 ///
-/// # Contract
-/// - `get_mut()` auto-marks dirty -- no separate `mark_dirty()` call needed
-///   when writing through `get_mut()`
-/// - Widgets **must** call `consume()` and only refresh when it returns true
-/// - `mark_dirty()` is for cases where the inner value is replaced entirely
-///   (e.g., UiStore field swap on screen restore)
+/// // Widget 系统检测并消费
+/// if dirty.consume() {
+///     // 执行 UI 刷新
+/// }
+/// ```
 #[derive(Component, Debug, Clone, Reflect)]
-pub struct Dirty<T: Reflect + Default + Clone + 'static> {
+pub struct Dirty<T: Reflect + Default + Clone + Send + Sync + 'static> {
+    /// 内部数据
     pub inner: T,
+    /// 是否已被标记为脏
     is_dirty: bool,
 }
 
-impl<T: Reflect + Default + Clone + 'static> Dirty<T> {
-    /// Creates a new Dirty<T> with the inner value and dirty flag set to true.
+impl<T: Reflect + Default + Clone + Send + Sync + 'static> Dirty<T> {
+    /// 创建新的 Dirty 包装（初始状态为 dirty，触发首次刷新）
     pub fn new(inner: T) -> Self {
         Self {
             inner,
@@ -40,19 +36,14 @@ impl<T: Reflect + Default + Clone + 'static> Dirty<T> {
         }
     }
 
-    /// Explicitly marks the value as dirty.
-    ///
-    /// Called by Projection when replacing UiStore fields entirely.
-    /// When mutating fields through `get_mut()`, dirty is set automatically.
+    /// 手动标记为脏
     pub fn mark_dirty(&mut self) {
         self.is_dirty = true;
     }
 
-    /// Consumes the dirty flag.
+    /// 消费脏标记 —— 返回 true 表示需要刷新
     ///
-    /// Returns true if the value was dirty (caller should refresh), then
-    /// clears the flag.  Returns false if already consumed this frame.
-    /// Each dirty transition triggers at most one refresh.
+    /// 消费后标记自动清除，避免同帧重复消费。
     pub fn consume(&mut self) -> bool {
         if self.is_dirty {
             self.is_dirty = false;
@@ -61,20 +52,19 @@ impl<T: Reflect + Default + Clone + 'static> Dirty<T> {
         false
     }
 
-    /// Returns an immutable reference to the inner value.
+    /// 获取内部数据引用（不触发 dirty）
     pub fn get(&self) -> &T {
         &self.inner
     }
 
-    /// Returns a mutable reference to the inner value, automatically marking
-    /// it dirty.
+    /// 获取内部数据可变引用（自动标记 dirty）
     pub fn get_mut(&mut self) -> &mut T {
         self.is_dirty = true;
         &mut self.inner
     }
 }
 
-impl<T: Reflect + Default + Clone + 'static> Default for Dirty<T> {
+impl<T: Reflect + Default + Clone + Send + Sync + 'static> Default for Dirty<T> {
     fn default() -> Self {
         Self::new(T::default())
     }

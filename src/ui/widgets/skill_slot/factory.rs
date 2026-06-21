@@ -8,6 +8,7 @@
 use bevy::prelude::*;
 
 use crate::infra::localization::generated::loc;
+use crate::ui::binding::Dirty;
 use crate::ui::primitives::button::{components::ButtonVariant, factory::spawn_localized_button};
 use crate::ui::primitives::panel::{components::PanelVariant, factory::spawn_panel};
 use crate::ui::primitives::progress_bar::{
@@ -15,8 +16,9 @@ use crate::ui::primitives::progress_bar::{
 };
 use crate::ui::primitives::text::{components::TextVariant, factory::spawn_text};
 use crate::ui::theme::Theme;
+use crate::ui::view_models::skill_panel::SkillPanelVm;
 
-use super::components::{SkillSlotAction, SkillSlotState};
+use super::components::{SkillSlotAction, SkillSlotNameLabel, SkillSlotState};
 
 /// 工厂函数：生成一个完整的技能槽控件
 ///
@@ -59,15 +61,18 @@ pub fn spawn_skill_slot(
     // Card variant provides a rounded, padded column layout
     let container = spawn_panel(commands, theme, PanelVariant::Card);
 
-    // Attach SkillSlotState and an identifiable Name
+    // Attach SkillSlotState, Dirty<SkillPanelVm> for ViewModel refresh,
+    // and an identifiable Name
     commands.entity(container).insert((
         SkillSlotState {
             name: name_str.clone(),
+            skill_id: 0,
             cooldown_max,
             // Start at max cooldown (just used)
             cooldown_current: cooldown_max,
             is_ready: cooldown_max == 0,
         },
+        Dirty::<SkillPanelVm>::default(),
         Name::new(format!("SkillSlot({})", name_str)),
     ));
 
@@ -79,6 +84,9 @@ pub fn spawn_skill_slot(
         &name_str,
         TextVariant::Caption,
     );
+    commands
+        .entity(name_text)
+        .insert(SkillSlotNameLabel);
     commands.entity(name_text).set_parent_in_place(container);
 
     // ── 3. Cooldown progress bar (Generic variant, starts full) ──

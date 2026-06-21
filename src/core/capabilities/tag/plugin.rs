@@ -5,6 +5,7 @@ use super::mechanism::TagHierarchy;
 use super::mechanism::systems::tag_system::{on_tag_added, on_tag_removed};
 use crate::content::LoadedTagDefs;
 
+/// Tag 能力插件——注册标签层级资源和增删标签的 Observer。
 pub struct TagPlugin;
 
 impl Plugin for TagPlugin {

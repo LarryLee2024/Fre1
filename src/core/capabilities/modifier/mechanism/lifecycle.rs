@@ -24,12 +24,16 @@ impl Default for ModifierIdGenerator {
 }
 
 impl ModifierIdGenerator {
+    /// 分配下一个唯一的 ModifierInstanceId。
     pub fn next_id(&self) -> ModifierInstanceId {
         ModifierInstanceId::from_runtime_id(self.allocator.lock().unwrap().alloc())
     }
 }
 
-/// 修改器校验函数。
+/// 校验 ModifierData 的合法性。
+///
+/// 检查：priority ∈ [0, 100]、source_id 非空、target_attribute 非空。
+/// 校验失败不修改任何状态，直接返回错误。
 pub fn validate_modifier_data(data: &ModifierData) -> Result<(), ModifierValidationError> {
     if (data.priority) > 100 {
         return Err(ModifierValidationError::PriorityOutOfRange(data.priority));
@@ -46,8 +50,11 @@ pub fn validate_modifier_data(data: &ModifierData) -> Result<(), ModifierValidat
 /// 修改器校验错误。
 #[derive(Debug)]
 pub enum ModifierValidationError {
+    /// priority 超出 [0, 100] 范围
     PriorityOutOfRange(ModifierPriority),
+    /// source.source_id 为空，无法追溯来源
     SourceNotTraceable,
+    /// target_attribute 为空，无法确定作用属性
     EmptyTargetAttribute,
 }
 
@@ -65,7 +72,10 @@ impl std::fmt::Display for ModifierValidationError {
 
 impl std::error::Error for ModifierValidationError {}
 
-/// 创建新修改器，执行校验并返回 ModifierData。
+/// 创建新修改器：校验 → 构建 ModifierData → 触发 ModifierApplied 事件。
+///
+/// 校验失败不触发事件，直接返回错误。
+/// 副作用：通过 commands.trigger() 发射 ModifierApplied 事件。
 pub fn create_modifier(
     id: ModifierInstanceId,
     op: ModifierOp,

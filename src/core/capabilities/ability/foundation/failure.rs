@@ -5,6 +5,9 @@
 
 use thiserror::Error;
 
+/// Ability 业务规则失败——正常的技能激活条件不满足结果，非程序错误。
+///
+/// 与 `AbilityError` 的区别：AbilityError 表示不应发生的异常，AbilityFailure 是合法的业务拒绝。
 #[derive(Debug, Clone, PartialEq, Error)]
 pub enum AbilityFailure {
     /// 条件检查不通过

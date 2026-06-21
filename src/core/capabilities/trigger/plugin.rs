@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 
+/// Trigger 能力插件——注册触发器相关的事件和 Observer。
 pub struct TriggerPlugin;
 
 impl Plugin for TriggerPlugin {

@@ -16,6 +16,8 @@ use bevy::prelude::*;
 pub struct SkillSlotState {
     /// 技能显示名称
     pub name: String,
+    /// 技能定义 ID（用于关联 SkillPanelVm.skills 中的条目）
+    pub skill_id: u32,
     /// 冷却时间最大值（帧数或秒数，由系统约定）
     pub cooldown_max: u32,
     /// 当前冷却时间（递减至 0 表示就绪）
@@ -33,3 +35,10 @@ pub enum SkillSlotAction {
     /// 使用技能
     Use,
 }
+
+/// SkillSlot 名称文本标记组件
+///
+/// 标记 SkillSlot 下用于显示技能名称的 Text 子实体，
+/// 供 refresh_skill_slot_from_vm 系统查询和更新。
+#[derive(Component, Debug, Clone, PartialEq, Eq, Reflect)]
+pub struct SkillSlotNameLabel;

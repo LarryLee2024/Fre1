@@ -8,6 +8,7 @@
 
 pub mod application;
 pub mod binding;
+pub mod focus;
 pub mod localization;
 pub mod navigation;
 pub mod plugin;

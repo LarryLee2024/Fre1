@@ -41,3 +41,17 @@ pub enum CharacterAction {
     /// 技能
     Skill,
 }
+
+/// CharacterCard 名称文本标记组件
+///
+/// 标记 CharacterCard 下用于显示角色名称的 Text 子实体，
+/// 供 refresh_character_card_from_vm 系统查询和更新。
+#[derive(Component, Debug, Clone, PartialEq, Eq, Reflect)]
+pub struct CharacterCardNameLabel;
+
+/// CharacterCard 等级文本标记组件
+///
+/// 标记 CharacterCard 下用于显示角色等级的 Text 子实体，
+/// 供 refresh_character_card_from_vm 系统查询和更新。
+#[derive(Component, Debug, Clone, PartialEq, Eq, Reflect)]
+pub struct CharacterCardLevelLabel;

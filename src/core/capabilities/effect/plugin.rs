@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 
+/// Effect 领域插件，注册效果系统的 ECS 资源与生命周期管理。
 pub struct EffectPlugin;
 
 impl Plugin for EffectPlugin {

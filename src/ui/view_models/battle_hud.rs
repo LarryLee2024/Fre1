@@ -1,29 +1,32 @@
-//! Module Name: BattleHudVm — Battle HUD view model
+//! BattleHudVm — 战斗 HUD 视图模型
 //!
-//! ViewModel for the in-combat HUD: HP/MP bars, turn counter, phase indicator.
-//! This is the exclusive data source for battle HUD widgets.
+//! Widget 的唯一数据源。通过 UiStore 注入 Widget 系统。
+//! Projection 纯函数将 Domain Event 投影为此 ViewModel。
 //!
-//! See `docs/06-ui/04-data-flow/projection-viewmodel.md` §3.4
+//! 所有字段为简单类型 —— 不包含任何 Domain 类型引用。
+//! 文本字段使用 &'static str 作为 UiTextKey。
+//!
+//! 详见 `docs/06-ui/04-data-flow/projection-viewmodel.md` §3
 
 use bevy::prelude::*;
 
-/// Battle HUD view model -- the sole data source for battle HUD widgets.
-///
-/// Fields use simple primitives (f32, u32, &'static str) and never reference
-/// domain types.  Text fields use `&'static str` as a text key for subsequent
-/// localization lookup.
+/// 战斗 HUD 视图模型
 #[derive(Clone, Reflect, Default)]
 pub struct BattleHudVm {
-    /// Current HP
+    /// 当前 HP
     pub hp: f32,
-    /// Maximum HP
+    /// 最大 HP
     pub max_hp: f32,
-    /// Current MP
+    /// 当前 MP
     pub mp: f32,
-    /// Maximum MP
+    /// 最大 MP
     pub max_mp: f32,
-    /// Current turn number
+    /// 当前 AP
+    pub ap: f32,
+    /// 最大 AP
+    pub max_ap: f32,
+    /// 当前回合数
     pub turn_number: u32,
-    /// Phase description (localization key)
+    /// 阶段描述（本地化 Key）
     pub phase_key: &'static str,
 }

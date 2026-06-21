@@ -42,6 +42,7 @@ impl From<&str> for SpecId {
 pub struct EnhancementId(pub String);
 
 impl EnhancementId {
+    /// 从任意字符串创建强化标识。
     pub fn new(id: impl Into<String>) -> Self {
         Self(id.into())
     }
@@ -53,9 +54,11 @@ impl From<&str> for EnhancementId {
     }
 }
 
-/// Spec 类型。
+/// Spec 类型——区分技能 Spec 与效果 Spec 的工厂入口。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect)]
 pub enum SpecType {
+    /// 技能 Spec——对应 AbilityDef，管理技能激活与冷却
     Ability,
+    /// 效果 Spec——对应 EffectDef，管理效果施加与持续
     Effect,
 }

@@ -5,6 +5,9 @@
 
 use thiserror::Error;
 
+/// Effect 业务规则失败——正常的效果施加条件不满足结果，非程序错误。
+///
+/// 与 `EffectError` 的区别：EffectError 表示不应发生的异常，EffectFailure 是合法的业务拒绝。
 #[derive(Debug, Clone, PartialEq, Error)]
 pub enum EffectFailure {
     /// 条件不满足

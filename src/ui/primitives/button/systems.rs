@@ -98,7 +98,6 @@ pub fn button_interaction_system(
             commands.trigger(UiAction::Click);
         }
 
-        // 更新背景色
         *bg_color = BackgroundColor(resolve_bg_color(
             state.variant,
             false,

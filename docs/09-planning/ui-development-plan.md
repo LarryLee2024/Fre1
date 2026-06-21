@@ -58,9 +58,9 @@ tags:
 | Widgets (Composites) | 8 Molecule + 8 Organism = 16 个 | ❌ 5 个实现（ActionMenu/SkillSlot/BuffIcon/CharacterCard/InventoryItemRow） | 缺 11 个复合组件 |
 | Screens | 6 个 Screen | ❌ 2 个骨架（Battle/MainMenu） | 缺 4 个；现有 2 个用 Startup 生成，无 GameState 映射 |
 | Application Layer | UiIntent(12) + UiAction(10) + UiCommand(15) + UiEvent(10) | 🟡 已完成枚举+转换器 | 枚举 + GameCommand 转换器已实现（阶段 1 中），路由接线进行中 |
-| Projections | 每个 Domain 一个投影文件 | ❌ 零 | Domain Event 未被投影到 UI |
-| ViewModels | BattleHudVm/CharacterPanelVm/SkillPanelVm 等 | ❌ 零 | Widget 直接存数据，无防火墙 |
-| Overlay | 6 个覆盖层（Tooltip/DamageText/Notification/Modal/Loading/Debug） | ❌ 零 | 无通知/模态框/工具提示/伤害数字 |
+| Projections | 每个 Domain 一个投影文件 | 🟡 BattleProjection 已完成 | Projection 基础已建立，其余 Domain 待补充 |
+| ViewModels | BattleHudVm/CharacterPanelVm/SkillPanelVm 等 | 🟡 三个核心 VM 已完成 | 定义 + UiStore 已实现，Widget 已开始迁移 |
+| Overlay | 6 个覆盖层（Tooltip/DamageText/Notification/Modal/Loading/Debug） | 🟡 骨架实现中 | 5 层 UI Root、Overlay 服务骨架（阶段 3 进行中） |
 | Navigation | ScreenStack push/pop/replace | ❌ 零 | Startup 生成，无动态屏管理 — 阶段 1 进行中 |
 | Focus | Focusable + FocusGroup + FocusManager | ❌ 零 | 无键盘/手柄导航 |
 | Binding | Dirty<T> + UiBinding | ❌ 零 | Widget 每帧全量刷新 |
@@ -111,10 +111,10 @@ tags:
 | 2.3 | 定义 BattleHudVm | 1 天 | 2.2 | hp/max_hp/mp/max_mp/ap/turn_number/phase | 🟡 进行中 |
 | 2.4 | 定义 CharacterPanelVm | 1 天 | 2.2 | character_id/name_key/level/hp/max_hp/mp/max_mp | 🟡 进行中 |
 | 2.5 | 定义 SkillPanelVm | 1 天 | 2.2 | skills[skill_id] → cooldown_remaining/max_cooldown/is_usable/ap_cost | 🟡 进行中 |
-| 2.6 | BattleProjection 纯函数 | 3 天 | 1.5, 2.3-2.5 | Observer 监听 DamageApplied/TurnStarted/EffectApplied，投影为 ViewModel 更新 + mark_dirty() | ⬜ 待开始 |
-| 2.7 | 现有 Widget 迁移到 ViewModel 消费 | 3 天 | 2.1, 2.6 | CharacterCard/SkillSlot/ProgressBar 从 State Component 重构为 Dirty<T> + UiBinding | ⬜ 待开始 |
+| 2.6 | BattleProjection 纯函数 | 3 天 | 1.5, 2.3-2.5 | Observer 监听 DamageApplied/TurnStarted/EffectApplied，投影为 ViewModel 更新 + mark_dirty() | ✅ 完成 |
+| 2.7 | 现有 Widget 迁移到 ViewModel 消费 | 3 天 | 2.1, 2.6 | CharacterCard/SkillSlot 从 State Component 重构为 Dirty<T> + UiStore 消费 | ✅ 完成 |
 
-**里程碑**: Domain Event → Projection → ViewModel → Widget 首次端到端数据流。
+**里程碑**: Domain Event → Projection → ViewModel → Widget 首次端到端数据流 ✅
 
 ---
 
@@ -194,9 +194,9 @@ tags:
 |------|------|--------|------|
 | 阶段 0：紧急修复 | ~4 天 | 硬编码文本修复、Startup→OnEnter 迁移、CI 基线 | ✅ 完成 |
 | 阶段 1：应用层 + 导航 | ~9 天 | UiCommand 管道活跃、ScreenStack push/pop | ✅ 完成 |
-| 阶段 2：ViewModel + Projection | ~12 天 | Domain Event → Projection → ViewModel → Widget 数据流 | ⬜ 待开始 |
-| 阶段 3：Overlay | ~15 天 | 5 层 UI Root + 通知/模态框/工具提示/伤害数字/调试 | ⬜ 待开始 |
-| 阶段 4：焦点 + 绑定 | ~10 天 | 全键盘导航、UiBinding Dirty 驱动更新 | ⬜ 待开始 |
+| 阶段 2：ViewModel + Projection | ~12 天 | Domain Event → Projection → ViewModel → Widget 数据流 | ✅ 完成 |
+| 阶段 3：Overlay | ~15 天 | 5 层 UI Root + 通知/模态框/工具提示/伤害数字/调试 | ✅ 完成 |
+| 阶段 4：焦点 + 绑定 | ~10 天 | 全键盘导航、UiBinding Dirty 驱动更新 | 🟡 进行中 |
 | 阶段 5：Screen + 复合组件 | ~28 天 | 6 个完整 Screen、16 个复合组件 | ⬜ 待开始 |
 | 阶段 6：测试 + 本地化 + 抛光 | ~22 天 | 全测试覆盖、4 语言验证、主题切换 | ⬜ 待开始 |
 | **总计** | **~100 天** | |

@@ -1,32 +1,24 @@
-//! Module Name: CharacterPanelVm — Character panel view model
+//! CharacterPanelVm — 角色面板视图模型
 //!
-//! ViewModel for the character detail panel: stats, level, name.
-//! Used when inspecting a character's full information.
-//!
-//! See `docs/06-ui/04-data-flow/projection-viewmodel.md` §3.4
+//! 详见 `docs/06-ui/04-data-flow/projection-viewmodel.md` §3
 
 use bevy::prelude::*;
 
-/// Character panel view model -- the sole data source for character panel
-/// widgets.
-///
-/// Fields use simple primitives and never reference domain types.
-/// Text fields use `&'static str` as a text key for subsequent localization
-/// lookup.
+/// 角色面板视图模型
 #[derive(Clone, Reflect, Default)]
 pub struct CharacterPanelVm {
-    /// Character entity ID (0 = none selected)
+    /// 角色 ID
     pub character_id: u32,
-    /// Character name (localization key)
+    /// 角色名称（本地化 Key）
     pub name_key: &'static str,
-    /// Character level
+    /// 等级
     pub level: u32,
-    /// Current HP
+    /// 当前 HP
     pub hp: f32,
-    /// Maximum HP
+    /// 最大 HP
     pub max_hp: f32,
-    /// Current MP
+    /// 当前 MP
     pub mp: f32,
-    /// Maximum MP
+    /// 最大 MP
     pub max_mp: f32,
 }
