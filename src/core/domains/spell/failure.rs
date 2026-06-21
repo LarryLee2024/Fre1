@@ -3,7 +3,6 @@
 //! 这些是正常业务结果（非程序错误），通过函数返回值传递。
 //! 详见 ADR-051
 
-use crate::shared::traits::RuleFailure;
 use thiserror::Error;
 
 use super::components::SpellDefId;
@@ -49,18 +48,14 @@ pub enum SpellFailure {
     },
 }
 
-impl RuleFailure for SpellFailure {
-    fn code(&self) -> &'static str {
-        match self {
-            Self::InsufficientSlots { .. } => "SPELL_INSUFFICIENT_SLOTS",
-            Self::NotKnown { .. } => "SPELL_NOT_KNOWN",
-            Self::NotPrepared { .. } => "SPELL_NOT_PREPARED",
-            Self::Silenced => "SPELL_SILENCED",
-            Self::Restrained => "SPELL_RESTRAINED",
-            Self::MissingMaterial { .. } => "SPELL_MISSING_MATERIAL",
-            Self::AlreadyConcentrating { .. } => "SPELL_ALREADY_CONCENTRATING",
-            Self::LevelTooLow { .. } => "SPELL_LEVEL_TOO_LOW",
-            Self::InvalidUpcast { .. } => "SPELL_INVALID_UPCAST",
-        }
-    }
-}
+crate::impl_rule_failure!(SpellFailure,
+    Self::InsufficientSlots { .. } => "SPELL_INSUFFICIENT_SLOTS",
+    Self::NotKnown { .. } => "SPELL_NOT_KNOWN",
+    Self::NotPrepared { .. } => "SPELL_NOT_PREPARED",
+    Self::Silenced => "SPELL_SILENCED",
+    Self::Restrained => "SPELL_RESTRAINED",
+    Self::MissingMaterial { .. } => "SPELL_MISSING_MATERIAL",
+    Self::AlreadyConcentrating { .. } => "SPELL_ALREADY_CONCENTRATING",
+    Self::LevelTooLow { .. } => "SPELL_LEVEL_TOO_LOW",
+    Self::InvalidUpcast { .. } => "SPELL_INVALID_UPCAST",
+);

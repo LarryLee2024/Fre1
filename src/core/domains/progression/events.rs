@@ -35,7 +35,7 @@ pub struct ExperienceGained {
 /// - Attribute：应用升级带来的属性变化（通过 Modifier Pipeline）
 /// - Progression：解锁天赋选项、检查 ASI
 /// - UI：显示升级选择界面
-#[derive(Event, Debug, Clone, PartialEq, DomainEvent)]
+#[derive(Event, Debug, Clone, PartialEq)]
 pub struct LevelUp {
     /// 升级的实体
     pub entity: Entity,
@@ -48,6 +48,8 @@ pub struct LevelUp {
     /// 是否达到 ASI 等级
     pub is_asi_level: bool,
 }
+
+crate::impl_domain_event!(LevelUp);
 
 impl ObservableEvent for LevelUp {
     const DOMAIN: Domain = Domain::Progression;

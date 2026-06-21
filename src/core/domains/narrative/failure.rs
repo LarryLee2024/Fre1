@@ -3,7 +3,6 @@
 //! 与 `NarrativeError`（程序错误）不同，这些是正常业务结果，不应通过 `Err` 返回。
 //! 详见 ADR-051
 
-use crate::shared::traits::RuleFailure;
 use thiserror::Error;
 
 /// 叙事系统业务规则失败。
@@ -23,13 +22,9 @@ pub enum NarrativeFailure {
     DialogueNotActive,
 }
 
-impl RuleFailure for NarrativeFailure {
-    fn code(&self) -> &'static str {
-        match self {
-            Self::InvalidChoice { .. } => "NARRATIVE_INVALID_CHOICE",
-            Self::CriticalDialogueCannotSkip => "NARRATIVE_CRITICAL_CANNOT_SKIP",
-            Self::StoryFlagIrreversible { .. } => "NARRATIVE_FLAG_IRREVERSIBLE",
-            Self::DialogueNotActive => "NARRATIVE_DIALOGUE_NOT_ACTIVE",
-        }
-    }
-}
+crate::impl_rule_failure!(NarrativeFailure,
+    Self::InvalidChoice { .. } => "NARRATIVE_INVALID_CHOICE",
+    Self::CriticalDialogueCannotSkip => "NARRATIVE_CRITICAL_CANNOT_SKIP",
+    Self::StoryFlagIrreversible { .. } => "NARRATIVE_FLAG_IRREVERSIBLE",
+    Self::DialogueNotActive => "NARRATIVE_DIALOGUE_NOT_ACTIVE",
+);

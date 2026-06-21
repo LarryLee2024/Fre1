@@ -3,7 +3,6 @@
 //! 与 `EconomyError`（程序错误）不同，这些是正常业务结果，不应通过 `Err` 返回。
 //! 详见 ADR-051
 
-use crate::shared::traits::RuleFailure;
 use thiserror::Error;
 
 /// 经济系统业务规则失败。
@@ -33,15 +32,11 @@ pub enum EconomyFailure {
     RestockNotReady { remaining: u32 },
 }
 
-impl RuleFailure for EconomyFailure {
-    fn code(&self) -> &'static str {
-        match self {
-            Self::InsufficientFunds { .. } => "ECONOMY_INSUFFICIENT_FUNDS",
-            Self::InsufficientStock { .. } => "ECONOMY_INSUFFICIENT_STOCK",
-            Self::InventoryFull => "ECONOMY_INVENTORY_FULL",
-            Self::MerchantRefuses { .. } => "ECONOMY_MERCHANT_REFUSES",
-            Self::InvalidTransaction { .. } => "ECONOMY_INVALID_TRANSACTION",
-            Self::RestockNotReady { .. } => "ECONOMY_RESTOCK_NOT_READY",
-        }
-    }
-}
+crate::impl_rule_failure!(EconomyFailure,
+    Self::InsufficientFunds { .. } => "ECONOMY_INSUFFICIENT_FUNDS",
+    Self::InsufficientStock { .. } => "ECONOMY_INSUFFICIENT_STOCK",
+    Self::InventoryFull => "ECONOMY_INVENTORY_FULL",
+    Self::MerchantRefuses { .. } => "ECONOMY_MERCHANT_REFUSES",
+    Self::InvalidTransaction { .. } => "ECONOMY_INVALID_TRANSACTION",
+    Self::RestockNotReady { .. } => "ECONOMY_RESTOCK_NOT_READY",
+);

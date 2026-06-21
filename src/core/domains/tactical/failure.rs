@@ -3,7 +3,6 @@
 //! 这些是正常业务结果（非程序错误），通过函数返回值传递。
 //! 详见 ADR-051
 
-use crate::shared::traits::RuleFailure;
 use thiserror::Error;
 
 /// 战术空间业务规则失败。
@@ -29,15 +28,11 @@ pub enum TacticalFailure {
     InvalidGridPosition,
 }
 
-impl RuleFailure for TacticalFailure {
-    fn code(&self) -> &'static str {
-        match self {
-            Self::OutOfBounds => "TACTICAL_OUT_OF_BOUNDS",
-            Self::TileNotPassable => "TACTICAL_TILE_NOT_PASSABLE",
-            Self::TileOccupied => "TACTICAL_TILE_OCCUPIED",
-            Self::InsufficientMovementPoints { .. } => "TACTICAL_INSUFFICIENT_MP",
-            Self::PathNotFound => "TACTICAL_PATH_NOT_FOUND",
-            Self::InvalidGridPosition => "TACTICAL_INVALID_GRID_POSITION",
-        }
-    }
-}
+crate::impl_rule_failure!(TacticalFailure,
+    Self::OutOfBounds => "TACTICAL_OUT_OF_BOUNDS",
+    Self::TileNotPassable => "TACTICAL_TILE_NOT_PASSABLE",
+    Self::TileOccupied => "TACTICAL_TILE_OCCUPIED",
+    Self::InsufficientMovementPoints { .. } => "TACTICAL_INSUFFICIENT_MP",
+    Self::PathNotFound => "TACTICAL_PATH_NOT_FOUND",
+    Self::InvalidGridPosition => "TACTICAL_INVALID_GRID_POSITION",
+);

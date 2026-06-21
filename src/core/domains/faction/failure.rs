@@ -3,7 +3,6 @@
 //! 与 `FactionError`（程序错误）不同，这些是正常业务结果，不应通过 `Err` 返回。
 //! 详见 ADR-051
 
-use crate::shared::traits::RuleFailure;
 use thiserror::Error;
 
 use super::components::FactionId;
@@ -22,12 +21,8 @@ pub enum FactionFailure {
     CriticalCharacterProtection { faction_id: FactionId },
 }
 
-impl RuleFailure for FactionFailure {
-    fn code(&self) -> &'static str {
-        match self {
-            Self::ReputationOutOfRange { .. } => "FACTION_REPUTATION_OUT_OF_RANGE",
-            Self::NotMemberOfFaction { .. } => "FACTION_NOT_MEMBER",
-            Self::CriticalCharacterProtection { .. } => "FACTION_CRITICAL_PROTECTION",
-        }
-    }
-}
+crate::impl_rule_failure!(FactionFailure,
+    Self::ReputationOutOfRange { .. } => "FACTION_REPUTATION_OUT_OF_RANGE",
+    Self::NotMemberOfFaction { .. } => "FACTION_NOT_MEMBER",
+    Self::CriticalCharacterProtection { .. } => "FACTION_CRITICAL_PROTECTION",
+);

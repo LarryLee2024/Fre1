@@ -3,7 +3,6 @@
 //! 与 `PartyError`（程序错误）不同，这些是正常业务结果，不应通过 `Err` 返回。
 //! 详见 ADR-051
 
-use crate::shared::traits::RuleFailure;
 use bevy::prelude::Entity;
 use thiserror::Error;
 
@@ -33,16 +32,12 @@ pub enum PartyFailure {
     BondAlreadyActive { bond_id: String },
 }
 
-impl RuleFailure for PartyFailure {
-    fn code(&self) -> &'static str {
-        match self {
-            Self::Full { .. } => "PARTY_FULL",
-            Self::AlreadyInParty { .. } => "PARTY_ALREADY_IN_PARTY",
-            Self::ActiveFull { .. } => "PARTY_ACTIVE_FULL",
-            Self::SwapAlreadyPerformedThisTurn => "PARTY_SWAP_ALREADY_PERFORMED",
-            Self::InsufficientActionPoints { .. } => "PARTY_INSUFFICIENT_AP",
-            Self::NotInReserve { .. } => "PARTY_NOT_IN_RESERVE",
-            Self::BondAlreadyActive { .. } => "PARTY_BOND_ALREADY_ACTIVE",
-        }
-    }
-}
+crate::impl_rule_failure!(PartyFailure,
+    Self::Full { .. } => "PARTY_FULL",
+    Self::AlreadyInParty { .. } => "PARTY_ALREADY_IN_PARTY",
+    Self::ActiveFull { .. } => "PARTY_ACTIVE_FULL",
+    Self::SwapAlreadyPerformedThisTurn => "PARTY_SWAP_ALREADY_PERFORMED",
+    Self::InsufficientActionPoints { .. } => "PARTY_INSUFFICIENT_AP",
+    Self::NotInReserve { .. } => "PARTY_NOT_IN_RESERVE",
+    Self::BondAlreadyActive { .. } => "PARTY_BOND_ALREADY_ACTIVE",
+);

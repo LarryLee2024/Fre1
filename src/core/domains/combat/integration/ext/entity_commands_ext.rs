@@ -3,12 +3,6 @@
 //! Provides domain-specific method sugar on top of Bevy's `EntityCommands`,
 //! internally delegating to integration-layer Facade functions.
 //!
-//! Uses an associated `Error` type (#1: Associated Types pattern) so that
-//! different domain implementations can return their own error types without
-//! forcing a concrete error on all consumers.  Currently the chainable
-//! methods are infallible stubs; `Self::Error` is available for future
-//! fallible operations.
-//!
 //! All methods return `&mut Self` to support chainable DSL usage.
 
 use bevy::prelude::info;
@@ -22,12 +16,6 @@ use crate::core::domains::combat::components::Dead;
 /// never directly manipulate Capabilities internals.
 ///
 /// Methods return `&mut Self` for chainable DSL usage.
-///
-/// # Associated Type
-///
-/// `type Error` allows implementations to return domain-specific errors
-/// without requiring a single unified error enum.  Currently the chainable
-/// methods are infallible stubs, so the implementation uses [`Infallible`].
 ///
 /// # Usage
 ///
@@ -43,9 +31,6 @@ use crate::core::domains::combat::components::Dead;
 /// }
 /// ```
 pub trait EntityCommandsExt {
-    /// The error type returned by fallible operations on this implementation.
-    type Error: std::fmt::Debug;
-
     /// Add a buff (active effect) to this entity.
     ///
     /// Internally queues a buff request that will be processed by the
@@ -74,7 +59,6 @@ pub trait EntityCommandsExt {
 }
 
 impl EntityCommandsExt for EntityCommands<'_> {
-    type Error = std::convert::Infallible;
 
     fn add_buff(&mut self, buff_id: &str) -> &mut Self {
         info!(

@@ -3,7 +3,6 @@
 //! 与 `EffectError`（程序错误）不同，这些是正常业务结果。
 //! 详见 ADR-051
 
-use crate::shared::traits::RuleFailure;
 use thiserror::Error;
 
 #[derive(Debug, Clone, PartialEq, Error)]
@@ -16,11 +15,7 @@ pub enum EffectFailure {
     SlotLimitReached { current: u32, max: u32 },
 }
 
-impl RuleFailure for EffectFailure {
-    fn code(&self) -> &'static str {
-        match self {
-            Self::ConditionNotMet { .. } => "EFFECT_CONDITION_NOT_MET",
-            Self::SlotLimitReached { .. } => "EFFECT_SLOT_LIMIT_REACHED",
-        }
-    }
-}
+crate::impl_rule_failure!(EffectFailure,
+    Self::ConditionNotMet { .. } => "EFFECT_CONDITION_NOT_MET",
+    Self::SlotLimitReached { .. } => "EFFECT_SLOT_LIMIT_REACHED",
+);

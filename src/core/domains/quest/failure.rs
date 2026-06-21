@@ -3,7 +3,6 @@
 //! 与 `QuestError`（程序错误）不同，这些是正常业务结果，不应通过 `Err` 返回。
 //! 详见 ADR-051
 
-use crate::shared::traits::RuleFailure;
 use thiserror::Error;
 
 use super::components::QuestDefId;
@@ -40,15 +39,11 @@ pub enum QuestFailure {
     CriticalQuestCannotAbandon { quest_id: QuestDefId },
 }
 
-impl RuleFailure for QuestFailure {
-    fn code(&self) -> &'static str {
-        match self {
-            Self::PrerequisitesNotMet { .. } => "QUEST_PREREQUISITES_NOT_MET",
-            Self::NotAvailable { .. } => "QUEST_NOT_AVAILABLE",
-            Self::AlreadyCompleted { .. } => "QUEST_ALREADY_COMPLETED",
-            Self::RewardAlreadyGranted { .. } => "QUEST_REWARD_ALREADY_GRANTED",
-            Self::ExclusiveQuestActive { .. } => "QUEST_EXCLUSIVE_ACTIVE",
-            Self::CriticalQuestCannotAbandon { .. } => "QUEST_CRITICAL_CANNOT_ABANDON",
-        }
-    }
-}
+crate::impl_rule_failure!(QuestFailure,
+    Self::PrerequisitesNotMet { .. } => "QUEST_PREREQUISITES_NOT_MET",
+    Self::NotAvailable { .. } => "QUEST_NOT_AVAILABLE",
+    Self::AlreadyCompleted { .. } => "QUEST_ALREADY_COMPLETED",
+    Self::RewardAlreadyGranted { .. } => "QUEST_REWARD_ALREADY_GRANTED",
+    Self::ExclusiveQuestActive { .. } => "QUEST_EXCLUSIVE_ACTIVE",
+    Self::CriticalQuestCannotAbandon { .. } => "QUEST_CRITICAL_CANNOT_ABANDON",
+);

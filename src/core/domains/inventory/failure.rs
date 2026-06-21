@@ -3,7 +3,6 @@
 //! 与 `InventoryError`（程序错误）不同，这些是正常业务结果，不应通过 `Err` 返回。
 //! 详见 docs/02-domain/domains/inventory_domain.md §4
 
-use crate::shared::traits::RuleFailure;
 use thiserror::Error;
 
 /// 背包/物品系统业务规则失败。
@@ -45,17 +44,13 @@ pub enum InventoryFailure {
     TwoHandedWeaponConflict { item_template_id: String },
 }
 
-impl RuleFailure for InventoryFailure {
-    fn code(&self) -> &'static str {
-        match self {
-            Self::Full { .. } => "INVENTORY_FULL",
-            Self::ExceedsWeightLimit { .. } => "INVENTORY_EXCEEDS_WEIGHT",
-            Self::EquipConditionNotMet { .. } => "INVENTORY_EQUIP_CONDITION",
-            Self::SlotOccupied { .. } => "INVENTORY_SLOT_OCCUPIED",
-            Self::InsufficientQuantity { .. } => "INVENTORY_INSUFFICIENT_QTY",
-            Self::ItemNotUsable { .. } => "INVENTORY_ITEM_NOT_USABLE",
-            Self::UniqueItemLimit { .. } => "INVENTORY_UNIQUE_LIMIT",
-            Self::TwoHandedWeaponConflict { .. } => "INVENTORY_TWO_HANDED_CONFLICT",
-        }
-    }
-}
+crate::impl_rule_failure!(InventoryFailure,
+    Self::Full { .. } => "INVENTORY_FULL",
+    Self::ExceedsWeightLimit { .. } => "INVENTORY_EXCEEDS_WEIGHT",
+    Self::EquipConditionNotMet { .. } => "INVENTORY_EQUIP_CONDITION",
+    Self::SlotOccupied { .. } => "INVENTORY_SLOT_OCCUPIED",
+    Self::InsufficientQuantity { .. } => "INVENTORY_INSUFFICIENT_QTY",
+    Self::ItemNotUsable { .. } => "INVENTORY_ITEM_NOT_USABLE",
+    Self::UniqueItemLimit { .. } => "INVENTORY_UNIQUE_LIMIT",
+    Self::TwoHandedWeaponConflict { .. } => "INVENTORY_TWO_HANDED_CONFLICT",
+);

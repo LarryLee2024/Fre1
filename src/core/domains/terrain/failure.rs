@@ -3,7 +3,6 @@
 //! 与 `TerrainError`（程序错误）不同，这些是正常业务结果，不应通过 `Err` 返回。
 //! 详见 ADR-051
 
-use crate::shared::traits::RuleFailure;
 use thiserror::Error;
 
 /// 地形系统业务规则失败。
@@ -32,16 +31,12 @@ pub enum TerrainFailure {
     SurfaceChangeRejected { reason: String },
 }
 
-impl RuleFailure for TerrainFailure {
-    fn code(&self) -> &'static str {
-        match self {
-            Self::TileNotPassable { .. } => "TERRAIN_TILE_NOT_PASSABLE",
-            Self::TileOccupied { .. } => "TERRAIN_TILE_OCCUPIED",
-            Self::SurfaceNotPassable { .. } => "TERRAIN_SURFACE_NOT_PASSABLE",
-            Self::ConflictingSurfaceType => "TERRAIN_CONFLICTING_SURFACE",
-            Self::HeightDifferenceExceeded { .. } => "TERRAIN_HEIGHT_DIFFERENCE",
-            Self::NoHazardAtTile { .. } => "TERRAIN_NO_HAZARD",
-            Self::SurfaceChangeRejected { .. } => "TERRAIN_SURFACE_CHANGE_REJECTED",
-        }
-    }
-}
+crate::impl_rule_failure!(TerrainFailure,
+    Self::TileNotPassable { .. } => "TERRAIN_TILE_NOT_PASSABLE",
+    Self::TileOccupied { .. } => "TERRAIN_TILE_OCCUPIED",
+    Self::SurfaceNotPassable { .. } => "TERRAIN_SURFACE_NOT_PASSABLE",
+    Self::ConflictingSurfaceType => "TERRAIN_CONFLICTING_SURFACE",
+    Self::HeightDifferenceExceeded { .. } => "TERRAIN_HEIGHT_DIFFERENCE",
+    Self::NoHazardAtTile { .. } => "TERRAIN_NO_HAZARD",
+    Self::SurfaceChangeRejected { .. } => "TERRAIN_SURFACE_CHANGE_REJECTED",
+);

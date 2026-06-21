@@ -3,7 +3,6 @@
 //! 与 `ReactionError`（程序错误）不同，这些是正常业务结果，不应通过 `Err` 返回。
 //! 详见 ADR-051
 
-use crate::shared::traits::RuleFailure;
 use bevy::prelude::Entity;
 use thiserror::Error;
 
@@ -27,14 +26,10 @@ pub enum ReactionFailure {
     TriggerMismatch { reaction: String, trigger: String },
 }
 
-impl RuleFailure for ReactionFailure {
-    fn code(&self) -> &'static str {
-        match self {
-            Self::NoReactionsAvailable { .. } => "REACTION_NO_REACTIONS_AVAILABLE",
-            Self::OutOfRange { .. } => "REACTION_OUT_OF_RANGE",
-            Self::InvalidTarget { .. } => "REACTION_INVALID_TARGET",
-            Self::NoCounterspellSlot { .. } => "REACTION_NO_COUNTERSPELL_SLOT",
-            Self::TriggerMismatch { .. } => "REACTION_TRIGGER_MISMATCH",
-        }
-    }
-}
+crate::impl_rule_failure!(ReactionFailure,
+    Self::NoReactionsAvailable { .. } => "REACTION_NO_REACTIONS_AVAILABLE",
+    Self::OutOfRange { .. } => "REACTION_OUT_OF_RANGE",
+    Self::InvalidTarget { .. } => "REACTION_INVALID_TARGET",
+    Self::NoCounterspellSlot { .. } => "REACTION_NO_COUNTERSPELL_SLOT",
+    Self::TriggerMismatch { .. } => "REACTION_TRIGGER_MISMATCH",
+);

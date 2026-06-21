@@ -3,7 +3,6 @@
 //! 与 `CraftingError`（程序错误）不同，这些是正常业务结果，不应通过 `Err` 返回。
 //! 详见 ADR-051
 
-use crate::shared::traits::RuleFailure;
 use thiserror::Error;
 
 /// 制作/锻造系统业务规则失败。
@@ -35,16 +34,12 @@ pub enum CraftingFailure {
     ExclusiveEnchantConflict(String),
 }
 
-impl RuleFailure for CraftingFailure {
-    fn code(&self) -> &'static str {
-        match self {
-            Self::InsufficientMaterials { .. } => "CRAFTING_INSUFFICIENT_MATERIALS",
-            Self::WrongStation { .. } => "CRAFTING_WRONG_STATION",
-            Self::InsufficientSkill { .. } => "CRAFTING_INSUFFICIENT_SKILL",
-            Self::EnchantmentSlotsFull { .. } => "CRAFTING_ENCHANTMENT_SLOTS_FULL",
-            Self::MaxUpgradeLevel { .. } => "CRAFTING_MAX_UPGRADE_LEVEL",
-            Self::RecipeNotUnlocked { .. } => "CRAFTING_RECIPE_NOT_UNLOCKED",
-            Self::ExclusiveEnchantConflict { .. } => "CRAFTING_EXCLUSIVE_ENCHANT_CONFLICT",
-        }
-    }
-}
+crate::impl_rule_failure!(CraftingFailure,
+    Self::InsufficientMaterials { .. } => "CRAFTING_INSUFFICIENT_MATERIALS",
+    Self::WrongStation { .. } => "CRAFTING_WRONG_STATION",
+    Self::InsufficientSkill { .. } => "CRAFTING_INSUFFICIENT_SKILL",
+    Self::EnchantmentSlotsFull { .. } => "CRAFTING_ENCHANTMENT_SLOTS_FULL",
+    Self::MaxUpgradeLevel { .. } => "CRAFTING_MAX_UPGRADE_LEVEL",
+    Self::RecipeNotUnlocked { .. } => "CRAFTING_RECIPE_NOT_UNLOCKED",
+    Self::ExclusiveEnchantConflict { .. } => "CRAFTING_EXCLUSIVE_ENCHANT_CONFLICT",
+);

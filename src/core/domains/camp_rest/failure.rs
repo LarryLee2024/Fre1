@@ -3,7 +3,6 @@
 //! 与 `CampRestError`（程序错误）不同，这些是正常业务结果，不应通过 `Err` 返回。
 //! 详见 ADR-051
 
-use crate::shared::traits::RuleFailure;
 use thiserror::Error;
 
 /// 营地/休息系统业务规则失败。
@@ -32,15 +31,11 @@ pub enum CampRestFailure {
     },
 }
 
-impl RuleFailure for CampRestFailure {
-    fn code(&self) -> &'static str {
-        match self {
-            Self::InCombat => "CAMPREST_IN_COMBAT",
-            Self::NotSafe => "CAMPREST_NOT_SAFE",
-            Self::AlreadyRestedWithin24h => "CAMPREST_ALREADY_RESTED_24H",
-            Self::InterruptedTimeout { .. } => "CAMPREST_INTERRUPTED_TIMEOUT",
-            Self::InsufficientHitDice { .. } => "CAMPREST_INSUFFICIENT_HIT_DICE",
-            Self::InvalidPhase { .. } => "CAMPREST_INVALID_PHASE",
-        }
-    }
-}
+crate::impl_rule_failure!(CampRestFailure,
+    Self::InCombat => "CAMPREST_IN_COMBAT",
+    Self::NotSafe => "CAMPREST_NOT_SAFE",
+    Self::AlreadyRestedWithin24h => "CAMPREST_ALREADY_RESTED_24H",
+    Self::InterruptedTimeout { .. } => "CAMPREST_INTERRUPTED_TIMEOUT",
+    Self::InsufficientHitDice { .. } => "CAMPREST_INSUFFICIENT_HIT_DICE",
+    Self::InvalidPhase { .. } => "CAMPREST_INVALID_PHASE",
+);

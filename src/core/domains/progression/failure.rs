@@ -3,7 +3,6 @@
 //! 与 `ProgressionError`（程序错误）不同，这些是正常业务结果，不应通过 `Err` 返回。
 //! 详见 ADR-051
 
-use crate::shared::traits::RuleFailure;
 use thiserror::Error;
 
 /// 成长系统业务规则失败。
@@ -35,16 +34,12 @@ pub enum ProgressionFailure {
     ASICannotBeSkipped { level: u32 },
 }
 
-impl RuleFailure for ProgressionFailure {
-    fn code(&self) -> &'static str {
-        match self {
-            Self::MaxLevelReached => "PROGRESSION_MAX_LEVEL",
-            Self::InsufficientExperience { .. } => "PROGRESSION_INSUFFICIENT_XP",
-            Self::TalentPrerequisiteNotMet { .. } => "PROGRESSION_TALENT_PREREQUISITE",
-            Self::SubclassAlreadyChosen { .. } => "PROGRESSION_SUBCLASS_CHOSEN",
-            Self::AttributeAtMax { .. } => "PROGRESSION_ATTRIBUTE_AT_MAX",
-            Self::MulticlassPrerequisiteNotMet { .. } => "PROGRESSION_MULTICLASS_PREREQUISITE",
-            Self::ASICannotBeSkipped { .. } => "PROGRESSION_ASI_CANNOT_SKIP",
-        }
-    }
-}
+crate::impl_rule_failure!(ProgressionFailure,
+    Self::MaxLevelReached => "PROGRESSION_MAX_LEVEL",
+    Self::InsufficientExperience { .. } => "PROGRESSION_INSUFFICIENT_XP",
+    Self::TalentPrerequisiteNotMet { .. } => "PROGRESSION_TALENT_PREREQUISITE",
+    Self::SubclassAlreadyChosen { .. } => "PROGRESSION_SUBCLASS_CHOSEN",
+    Self::AttributeAtMax { .. } => "PROGRESSION_ATTRIBUTE_AT_MAX",
+    Self::MulticlassPrerequisiteNotMet { .. } => "PROGRESSION_MULTICLASS_PREREQUISITE",
+    Self::ASICannotBeSkipped { .. } => "PROGRESSION_ASI_CANNOT_SKIP",
+);

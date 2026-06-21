@@ -13,7 +13,7 @@ use super::components::CampEventId;
 /// 订阅者：
 /// - Ability：重置标记为"短休恢复"的能力
 /// - UI：显示短休结果
-#[derive(Event, Debug, Clone, PartialEq, DomainEvent)]
+#[derive(Event, Debug, Clone, PartialEq)]
 pub struct ShortRestCompleted {
     /// 参与休息的角色实体列表。
     pub entities: Vec<Entity>,
@@ -25,18 +25,22 @@ pub struct ShortRestCompleted {
     pub abilities_restored: Vec<String>,
 }
 
+crate::impl_domain_event!(ShortRestCompleted);
+
 /// 长休开始时触发。
 ///
 /// 订阅者：
 /// - Narrative：准备营地事件
 /// - NPC：激活营地 NPC
-#[derive(Event, Debug, Clone, PartialEq, DomainEvent)]
+#[derive(Event, Debug, Clone, PartialEq)]
 pub struct LongRestStarted {
     /// 参与休息的角色实体列表。
     pub entities: Vec<Entity>,
     /// 营地位置描述。
     pub camp_location: String,
 }
+
+crate::impl_domain_event!(LongRestStarted);
 
 /// 长休完成时触发。
 ///
@@ -45,7 +49,7 @@ pub struct LongRestStarted {
 /// - Ability：重置所有能力
 /// - Effect：移除临时效果
 /// - UI：显示长休结果
-#[derive(Event, Debug, Clone, PartialEq, DomainEvent)]
+#[derive(Event, Debug, Clone, PartialEq)]
 pub struct LongRestCompleted {
     /// 参与休息的角色实体列表。
     pub entities: Vec<Entity>,
@@ -59,12 +63,14 @@ pub struct LongRestCompleted {
     pub events_triggered: Vec<String>,
 }
 
+crate::impl_domain_event!(LongRestCompleted);
+
 /// 长休被中断时触发。
 ///
 /// 订阅者：
 /// - Combat：如中断原因为战斗，开始战斗
 /// - UI：显示中断警告
-#[derive(Event, Debug, Clone, PartialEq, DomainEvent)]
+#[derive(Event, Debug, Clone, PartialEq)]
 pub struct LongRestInterrupted {
     /// 参与休息的角色实体列表。
     pub entities: Vec<Entity>,
@@ -74,13 +80,15 @@ pub struct LongRestInterrupted {
     pub cumulative_interrupt_time: u32,
 }
 
+crate::impl_domain_event!(LongRestInterrupted);
+
 /// 营地事件触发时触发。
 ///
 /// 订阅者：
 /// - Narrative：推动剧情
 /// - Quest：检查任务进度
 /// - UI：显示事件界面
-#[derive(Event, Debug, Clone, PartialEq, DomainEvent)]
+#[derive(Event, Debug, Clone, PartialEq)]
 pub struct CampEventTriggered {
     /// 事件 ID。
     pub event_id: CampEventId,
@@ -91,3 +99,5 @@ pub struct CampEventTriggered {
     /// 可用选项列表。
     pub choices_available: Vec<String>,
 }
+
+crate::impl_domain_event!(CampEventTriggered);

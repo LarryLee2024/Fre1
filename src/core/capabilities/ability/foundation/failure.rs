@@ -3,7 +3,6 @@
 //! 与 `AbilityError`（程序错误）不同，这些是正常业务结果。
 //! 详见 ADR-051
 
-use crate::shared::traits::RuleFailure;
 use thiserror::Error;
 
 #[derive(Debug, Clone, PartialEq, Error)]
@@ -26,12 +25,8 @@ pub enum AbilityFailure {
     },
 }
 
-impl RuleFailure for AbilityFailure {
-    fn code(&self) -> &'static str {
-        match self {
-            Self::ConditionFailed { .. } => "ABILITY_CONDITION_FAILED",
-            Self::InsufficientCost { .. } => "ABILITY_INSUFFICIENT_COST",
-            Self::OnCooldown { .. } => "ABILITY_ON_COOLDOWN",
-        }
-    }
-}
+crate::impl_rule_failure!(AbilityFailure,
+    Self::ConditionFailed { .. } => "ABILITY_CONDITION_FAILED",
+    Self::InsufficientCost { .. } => "ABILITY_INSUFFICIENT_COST",
+    Self::OnCooldown { .. } => "ABILITY_ON_COOLDOWN",
+);
