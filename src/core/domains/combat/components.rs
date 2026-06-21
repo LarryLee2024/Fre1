@@ -316,3 +316,64 @@ impl ActionPoints {
         !self.has_any_action() && self.movement <= 0.0
     }
 }
+
+// ─── 生命值 ───────────────────────────────────────────────────────────
+
+/// 运行时生命值组件 —— 战斗中跟踪单位的当前/最大 HP。
+///
+/// 与 AttributeContainer （属性修饰器管线整合）不同，HitPoints 是
+/// 纯运行时战斗状态，记录战斗中的伤害/治疗。AttributeContainer 的
+/// 属性值影响 HitPoints 的初始化最大值，但 HitPoints 本身是独立跟踪。
+///
+/// # 不变量
+/// - current <= maximum
+/// - current >= 0
+#[derive(Component, Debug, Clone, PartialEq, Reflect)]
+#[reflect(Component)]
+pub struct HitPoints {
+    /// 当前生命值
+    pub current: u32,
+    /// 最大生命值
+    pub maximum: u32,
+}
+
+impl HitPoints {
+    /// 创建满血 HitPoints。
+    pub fn full(maximum: u32) -> Self {
+        Self {
+            current: maximum,
+            maximum,
+        }
+    }
+
+    /// 受到伤害，返回实际伤害量。
+    /// 结果不会低于 0。
+    pub fn take_damage(&mut self, amount: u32) -> u32 {
+        let actual = amount.min(self.current);
+        self.current -= actual;
+        actual
+    }
+
+    /// 恢复生命值，返回实际恢复量。
+    /// 不会超过最大值。
+    pub fn heal(&mut self, amount: u32) -> u32 {
+        let missing = self.maximum.saturating_sub(self.current);
+        let actual = amount.min(missing);
+        self.current += actual;
+        actual
+    }
+
+    /// 是否存活。
+    pub fn is_alive(&self) -> bool {
+        self.current > 0
+    }
+
+    /// 生命值百分比（0.0 ~ 1.0）。
+    pub fn fraction(&self) -> f32 {
+        if self.maximum == 0 {
+            0.0
+        } else {
+            self.current as f32 / self.maximum as f32
+        }
+    }
+}

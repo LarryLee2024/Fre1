@@ -16,7 +16,7 @@ use bevy::ecs::observer::On;
 use bevy::prelude::*;
 
 use crate::core::capabilities::effect::events::EffectApplied;
-use crate::core::domains::combat::components::ActionPoints;
+use crate::core::domains::combat::{ActionPoints, DamageDealt, HitPoints, UnitDied};
 use crate::core::events::{BattleStarted, TurnEnded, TurnStarted};
 use crate::ui::binding::Dirty;
 use crate::ui::view_models::{
@@ -263,6 +263,63 @@ pub fn on_character_panel_projection(
     store.character_panel.max_hp = 100.0;
     store.character_panel.mp = 50.0;
     store.character_panel.max_mp = 50.0;
+
+    for mut dirty in dirty_query.iter_mut() {
+        dirty.mark_dirty();
+    }
+}
+
+// ─── DamageDealt / UnitDied 投影 ────────────────────────────────────────
+
+/// Observer：监听 `DamageDealt` 领域事件，更新 `BattleHudVm` 的 HP 显示。
+///
+/// 尝试找到受伤害实体的 HitPoints 并同步到 HUD。
+/// TODO[P2][UI][2026-06-21]: String→Entity 解析就绪后匹配到正确实体。
+pub fn on_damage_dealt_projection(
+    trigger: On<DamageDealt>,
+    mut store: ResMut<UiStore>,
+    hp_query: Query<&HitPoints>,
+    mut dirty_query: Query<&mut Dirty<BattleHudVm>>,
+) {
+    let event = trigger.event();
+
+    // 尝试定位受伤害实体的 HP 以更新 HUD。
+    // TODO[P2][UI][2026-06-21]: Match specific entity once String→Entity resolution exists.
+    if let Some(hp) = hp_query.iter().next() {
+        store.battle_hud.hp = hp.current as f32;
+        store.battle_hud.max_hp = hp.maximum as f32;
+    }
+
+    info!(
+        target: "ui",
+        "[BattleProjection] Damage dealt: {} {} damage to {}",
+        event.damage,
+        event.damage_type,
+        event.target_id,
+    );
+
+    for mut dirty in dirty_query.iter_mut() {
+        dirty.mark_dirty();
+    }
+}
+
+/// Observer：监听 `UnitDied` 领域事件，记录日志以备后续胜负判定。
+///
+/// TODO[P2][UI][2026-06-21]: 触发胜负判定检查、从回合队列移除单位。
+pub fn on_unit_died_projection(
+    trigger: On<UnitDied>,
+    _store: ResMut<UiStore>,
+    mut dirty_query: Query<&mut Dirty<BattleHudVm>>,
+) {
+    let event = trigger.event();
+    info!(
+        target: "ui",
+        "[BattleProjection] Unit died: {} killed by {}",
+        event.entity_id,
+        event.killer_id,
+    );
+
+    // TODO[P2][UI][2026-06-21]: Trigger defeat/victory checks, remove unit from turn queue
 
     for mut dirty in dirty_query.iter_mut() {
         dirty.mark_dirty();

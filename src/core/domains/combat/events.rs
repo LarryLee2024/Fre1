@@ -127,3 +127,33 @@ pub struct AttackRequested {
     /// 能力槽位（可选，空为普攻）
     pub ability_slot: Option<u32>,
 }
+
+// ─── 战斗动作事件 ────────────────────────────────────────────────────
+
+/// 伤害已造成 —— 由 Combat Action System 发射。
+///
+/// 订阅者：HitPoints 更新系统、UI 投影、Effect 触发。
+#[derive(Event, Debug, Clone, PartialEq)]
+pub struct DamageDealt {
+    /// 目标标识
+    pub target_id: String,
+    /// 攻击方标识
+    pub attacker_id: String,
+    /// 实际伤害量
+    pub damage: u32,
+    /// 伤害类型（"physical", "fire", 等）
+    pub damage_type: String,
+    /// 是否暴击
+    pub is_critical: bool,
+}
+
+/// 单位已死亡 —— 当 HitPoints 归零时由 Combat Action System 发射。
+///
+/// 订阅者：胜负判定系统、UI 投影、经验结算。
+#[derive(Event, Debug, Clone, PartialEq)]
+pub struct UnitDied {
+    /// 死亡单位标识
+    pub entity_id: String,
+    /// 击杀者标识
+    pub killer_id: String,
+}

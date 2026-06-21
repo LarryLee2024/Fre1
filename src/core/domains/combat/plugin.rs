@@ -10,13 +10,17 @@
 
 use bevy::prelude::*;
 
-use super::components::{ActionPoints, BattlePhase, CombatParticipant, TurnQueue};
+use super::components::{ActionPoints, BattlePhase, CombatParticipant, HitPoints, TurnQueue};
 use super::integration::event::EventBus;
 use super::integration::on_combat_command;
 use super::pipeline::definition::build_turn_pipeline;
 use super::pipeline::driver::{
     CombatPipelineDriver, combat_pipeline_driver, on_unit_action_complete,
 };
+use super::systems::action_system::{
+    on_attack_requested, on_damage_dealt, on_spell_cast_requested,
+};
+use super::systems::death_system;
 use super::systems::effect_tick_system::on_turn_end_tick_effects;
 use super::systems::input_system::{PlayerTurnState, combat_input_system};
 use super::systems::turn_systems::{
@@ -33,7 +37,7 @@ pub struct CombatPlugin;
 impl Plugin for CombatPlugin {
     fn build(&self, app: &mut App) {
         // ── 注册 Component 类型 ──
-        register_domain_types!(app, [ActionPoints, CombatParticipant,]);
+        register_domain_types!(app, [ActionPoints, CombatParticipant, HitPoints,]);
 
         // ── BattlePhase 已转为 SubState，由 GameState::Combat 自动激活 ──
         // 不再需要显式 init_state，SubStates derive 自动处理注册。
@@ -73,6 +77,20 @@ impl Plugin for CombatPlugin {
         app.add_observer(on_turn_start_evaluate_triggers);
         // GameCommand (CastSpell, Attack) → 桥接到 Combat 领域事件
         app.add_observer(on_combat_command);
+
+        // ── 战斗动作执行 Observer ──
+        // AttackRequested → 伤害计算 → DamageDealt
+        app.add_observer(on_attack_requested);
+        // SpellCastRequested → 法术效果计算 → DamageDealt
+        app.add_observer(on_spell_cast_requested);
+        // DamageDealt → 扣除 HP → UnitDied
+        app.add_observer(on_damage_dealt);
+
+        // ── Death System (safety net) ──
+        app.add_systems(
+            Update,
+            death_system::death_check_system.run_if(in_state(GameState::Combat)),
+        );
 
         // ── 注册回合管线定义到 PipelineRegistry ──
         let mut registry = app.world_mut().resource_mut::<PipelineRegistry>();
