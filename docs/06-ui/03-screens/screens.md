@@ -18,7 +18,7 @@ tags:
 
 # Screen Design — 页面详细设计
 
-> **实现状态**: BattleScreen MVP ✅ / MainMenuScreen MVP ✅ / InventoryScreen MVP ✅ / ShopScreen ❌ / SettingsScreen ❌ / SaveLoadScreen ❌
+> **实现状态**: BattleScreen MVP ✅ / MainMenuScreen MVP ✅ / InventoryScreen MVP ✅ / SettingsScreen MVP ✅ / ShopScreen ❌ / SaveLoadScreen ❌
 
 > **职责**: @presentation-architect | **上游**: ADR-055 §5.5 (Screen 组合), §9 (GameState 映射) | domain rules §2.1 (Screen 状态机) | schema §7 (Navigation) | screen-lifecycle.md §2 (Screen 架构), §4 (映射表) | widget-composites.md §3 (Organism 定义)
 
@@ -295,12 +295,13 @@ ShopScreen
 
 | 属性 | 值 |
 |------|------|
-| 对应 GameState | GameState::Settings（或在任何状态下通过 UiCommand::OpenScreen 打开） |
-| ScreenLayer 层级 | 0（全屏设置时）或 1（浮层设置时） |
-| 加载模式 | Ephemeral |
-| 过渡动画 | Fade(0.3s) |
+| 对应 GameState | GameState::Settings |
+| ScreenLayer 层级 | 0（主界面层） |
+| 加载模式 | Ephemeral（spawn/despawn 生命周期） |
+| 过渡动画 | 未实现 |
 
-(暂未实现。将在后续迭代中补充 TabPanel + Toggle + ProgressBar 等设置项 Widget。)
+(当前 MVP 实现：Toggle (ShowDamageNumbers) + Toggle (DarkTheme) + Close/Save 按钮。
+完整实现见设计规格。)
 
 ### 6.2 消费的 ViewModel
 
@@ -431,8 +432,8 @@ SaveLoadScreen
 | BattleScreen | Combat | BattleHudVm, SkillPanelVm, CharacterPanelVm（均硬编码） | CharacterCard, ActionMenu | MVP ✅ |
 | MainMenuScreen | MainMenu | 无 | 无（仅 Text + List + Button 组合） | MVP ✅ |
 | InventoryScreen | Inventory | 无（静态样本数据） | InventoryGrid | MVP ✅ |
+| SettingsScreen | Settings | 无（直接读 UiSettings） | Toggle + Button | MVP ✅ |
 | ShopScreen | — | — | — | ❌ |
-| SettingsScreen | — | — | — | ❌ |
 | SaveLoadScreen | — | — | — | ❌ |
 
 ---

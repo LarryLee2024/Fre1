@@ -14,7 +14,9 @@ pub mod list;
 pub mod modal;
 pub mod panel;
 pub mod progress_bar;
+pub mod select_list;
 pub mod text;
+pub mod toggle;
 
 use bevy::prelude::*;
 
@@ -23,7 +25,9 @@ use self::list::ListPlugin;
 use self::modal::ModalPlugin;
 use self::panel::PanelPlugin;
 use self::progress_bar::ProgressBarPlugin;
+use self::select_list::SelectListPlugin;
 use self::text::TextPlugin;
+use self::toggle::TogglePlugin;
 
 /// PrimitivesPlugin — 注册所有 UI 原语 Plugin
 ///
@@ -38,7 +42,9 @@ impl Plugin for PrimitivesPlugin {
             ModalPlugin,
             PanelPlugin,
             ProgressBarPlugin,
+            SelectListPlugin,
             TextPlugin,
+            TogglePlugin,
         ));
     }
 }

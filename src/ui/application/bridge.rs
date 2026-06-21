@@ -1,12 +1,12 @@
-//! Bridge — UiCommand to GameCommand wiring system
+//! Bridge — UiCommand 到 GameCommand 的接线系统
 //!
-//! Registers as an observer for UiCommand events, fills in runtime context,
-//! and pushes the resulting GameCommand into the CommandQueue for domain execution.
+//! 注册为 UiCommand 事件的 Observer，填充运行时上下文，
+//! 并将生成的 GameCommand 推入 CommandQueue 供领域层执行。
 //!
-//! Uses Bevy 0.19's observer pattern (On<UiCommand>) rather than the legacy
-//! EventReader pattern, consistent with the rest of the UI layer.
+//! 使用 Bevy 0.19 的 Observer 模式（On<UiCommand>）而非旧版
+//! EventReader 模式，与 UI 层其余部分保持一致。
 //!
-//! See docs/01-architecture/40-cross-cutting/ADR-043-command-input.md
+//! 参见 docs/01-architecture/40-cross-cutting/ADR-043-command-input.md
 
 use bevy::ecs::observer::On;
 use bevy::ecs::system::ResMut;
@@ -16,16 +16,15 @@ use crate::core::capabilities::runtime::command::foundation::CommandQueue;
 use crate::core::capabilities::runtime::command::foundation::GameCommand;
 use crate::ui::application::UiCommand;
 
-/// Observer: processes a single UiCommand and pushes the corresponding
-/// GameCommand into the CommandQueue.
+/// Observer：处理单个 UiCommand 并将对应的 GameCommand 推入 CommandQueue。
 ///
-/// Mapping rules:
-/// - `EndTurn` — pushed with an empty `unit_id`; the domain layer fills it in
-/// - `SaveGame` / `LoadGame` — direct mapping
-/// - `TogglePause`, `OpenScreen`, `CloseScreen`, `NewGame` — UI-internal; logged only
-/// - All other commands — logged as pending domain wiring
+/// 映射规则：
+/// - `EndTurn` — 以空 `unit_id` 推入；领域层负责填充
+/// - `SaveGame` / `LoadGame` — 直接映射
+/// - `TogglePause`, `OpenScreen`, `CloseScreen`, `NewGame` — UI 内部命令；仅记录日志
+/// - 其他所有命令 — 记录为待接入领域
 ///
-/// Each observer invocation handles exactly one UiCommand.
+/// 每次 Observer 调用仅处理一个 UiCommand。
 pub fn process_ui_commands(
     trigger: On<UiCommand>,
     mut command_queue: ResMut<CommandQueue>,
@@ -52,7 +51,7 @@ pub fn process_ui_commands(
                 info!(target: "ui::bridge", "Command enqueued: LoadGame");
             }
         }
-        // UI-internal commands — no domain mapping needed
+        // UI 内部命令 — 无需领域映射
         UiCommand::TogglePause => {
             info!(
                 target: "ui::bridge",
@@ -77,7 +76,7 @@ pub fn process_ui_commands(
                 "UI-internal command (no GameCommand mapping): NewGame",
             );
         }
-        // Commands awaiting domain integration
+        // 待接入领域的命令
         cmd => {
             info!(target: "ui::bridge", "Command pending domain wiring: {cmd:?}");
         }

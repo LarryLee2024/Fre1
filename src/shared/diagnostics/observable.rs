@@ -66,24 +66,23 @@ pub trait ObservableEvent: sealed::Sealed + fmt::Debug + Send + Sync + 'static {
 // Marker Trait 不携带行为、不创建层级，仅作为注册标签。
 // 驱动自动注册系统：事件类型只需 impl 对应 Marker Trait 即可被自动发现。
 
-/// Marker trait for domain events.
+/// 领域事件标记 trait。
 ///
-/// All domain events represent meaningful business occurrences within a domain.
-/// Implementing this marker trait enables automatic discovery, logging, replay,
-/// and audit capabilities without behavioral inheritance.
+/// 所有领域事件代表某个领域内的有意义的业务事件。
+/// 实现此标记 trait 可启用自动发现、日志、回放、审计能力，
+/// 无需行为继承。
 ///
-/// Any Bevy event that derives `Event + Debug + Clone + Send + Sync + 'static`
-/// automatically implements this trait via blanket impl — no macro or manual
-/// impl needed.
+/// 任何派生 `Event + Debug + Clone + Send + Sync + 'static` 的 Bevy 事件
+/// 都会通过 blanket impl 自动实现此 trait — 无需宏或手动 impl。
 /// 领域事件标记 trait。
 ///
 /// 存在原因：所有 DomainEvent 自动获得日志、回放、审计能力，
 /// 通过 blanket impl 零样板代码实现，替代 `impl_domain_event!()` 宏。
 pub trait DomainEvent: bevy::prelude::Event + fmt::Debug + Clone + Send + Sync + 'static {}
 
-/// Blanket impl: every Bevy event satisfying the supertrait bounds is
-/// automatically a DomainEvent. This eliminates the need for
-/// `impl_domain_event!()` or `#[derive(DomainEvent)]`.
+/// Blanket Impl：所有满足 supertrait 约束的 Bevy 事件
+/// 自动成为 DomainEvent。这消除了对
+/// `impl_domain_event!()` 或 `#[derive(DomainEvent)]` 的需求。
 impl<T> DomainEvent for T where T: bevy::prelude::Event + fmt::Debug + Clone + Send + Sync + 'static {}
 
 /// Marker trait for replay events.

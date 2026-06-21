@@ -220,7 +220,7 @@ Domain Event → Observer → Projection → ViewModel → Widget 刷新
 | `01-architecture/architecture.md` | ✅ active | presentation-architect | 2026-06-21 |
 | `01-architecture/application-layer.md` | ✅ code-aligned | presentation-architect | 2026-06-21 |
 | `01-architecture/implementation-patterns.md` | ✅ 完整 | presentation-architect | 2026-06-21 |
-| `02-design-system/widget-atoms.md` | ✅ code-aligned | presentation-architect | 2026-06-20 |
+| `02-design-system/widget-atoms.md` | ✅ code-aligned | presentation-architect | 2026-06-21 |
 | `02-design-system/widget-composites.md` | 🟡 需补全复合组件 | presentation-architect | 2026-06-20 |
 | `02-design-system/theme-localization.md` | ✅ 完整 | presentation-architect | 2026-06-20 |
 | `02-design-system/focus-binding.md` | 🟡 需补全 FocusNavigation | presentation-architect | 2026-06-20 |
