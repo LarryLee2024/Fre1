@@ -1308,7 +1308,75 @@ tests/
 - 🟩 **声明式宏 vs 过程宏**：声明式宏（`macro_rules!`）用于重复模式，允许；过程宏（`proc_macro`）用于代码生成，需 ADR 审批
 - 🟩 **BSN 宏边界**：BSN 仅用于描述实体结构（组件组合），🟥 禁止在 BSN 中描述业务逻辑或引用 System/Observer（已由 ECS 规则 §3.7 强制）
 
-### 16.6 TODO / FIXME / HACK 规范
+### 16.6 宏治理宪法
+
+#### 第一原则：抽象优先级
+宏是最后手段，而非首选。优先级如下：
+```
+1. Trait  —— 定义能力接口
+2. 泛型   —— 编译期多态
+3. 函数   —— 行为复用
+4. macro_rules! —— 声明式样板消除
+5. proc_macro   —— 大规模代码生成
+```
+🟩 只有前者无法解决时才允许升级到下一级
+🟩 优先 `register::<T>()` 而非 `register_event!(T)` 这类函数可替代的宏
+
+#### 第二原则：宏跟能力走
+- 🟥 禁止建立全局 `src/macros/` 目录或万能宏文件
+- 🟩 macro_rules! 必须归属于其服务的具体能力模块（如 infra/logging/macros.rs）
+- 🟩 任何宏文件的首选位置是它服务的 trait/能力定义旁边
+
+#### 第三原则：禁止跨层宏依赖
+- 🟥 Domain 层不得依赖 Infra 层的宏（如 emit_info! 不能在 core/domains/ 中使用）
+- 🟥 Shared 层不得依赖 Core 层或 Infra 层的宏
+- 🟩 宏依赖方向必须遵循项目分层：Shared ← Core ← Infra
+- 🟩 跨层通信应通过 Observer + 事件，而非直接宏调用
+
+#### 第四原则：Declarative vs Procedural 分离
+- 🟩 macro_rules! 声明式宏留在主 crate 的各模块中
+- 🟩 proc_macro 必须放独立 crate（fre_macros/）
+- 🟥 禁止在 proc-macro crate 中定义 macro_rules! 再 re-export
+
+#### 第五原则：Derive 必须服务于 Trait
+- 🟩 #[derive(...)] 必须生成 Trait 实现，不得生成隐藏业务行为
+- 🟥 禁止 derive 自动注册系统、自动执行逻辑、修改世界状态
+- 🟩 允许的 derive：#[derive(DomainEvent)]、#[derive(Observable)]、#[derive(Replayable)]
+- 🟥 禁止的 derive：#[derive(AutoCombat)]（展开后执行战斗逻辑）
+
+#### 第六原则：Cargo Expand 可读性原则
+- 🟩 cargo expand 后代码必须可读，接近手写 Rust
+- 🟥 禁止生成难以调试的嵌套状态机代码
+- 🟩 derive 宏的输出必须能让人直接审查正确性
+
+#### 第七原则：宏不得隐藏业务逻辑
+- 🟩 宏只能用于：注册/派生/埋点/DSL/样板代码消除
+- 🟥 禁止创建隐藏控制流的 Helper Macro（ok_or_return!、try_get!、some_or_continue!）
+- 🟥 禁止用宏封装业务逻辑（do_damage!、spawn_enemy!、apply_buff!）
+
+#### 第八原则：宏必须可被函数替代
+- 🟩 宏优先作为语法糖，核心逻辑必须位于普通函数
+- 🟥 禁止将核心实现完全隐藏于宏展开中
+- 🟩 示例：emit_info! 是好宏，因为真正实现是 telemetry::emit()；单元测试/mock/profile 走函数
+- 🟥 反例：emit_info! 内部直接一百行日志格式化逻辑（无函数后备）
+
+#### 第九原则：禁止宏嵌套宏
+- 🟥 禁止业务宏调用业务宏（宏展开深度原则上不超过 2 层）
+- 🟩 允许业务宏调用底层公共宏（如 emit_info! → tracing::info!）
+- 🟩 超过 2 层展开链时，必须重构为函数调用
+
+#### 第十原则：宏准入门槛
+- 🟩 调用点 < 5 处：用函数，禁止引入宏
+- 🟩 调用点 5~20 处：考虑泛型或函数
+- 🟩 调用点 20+ 处：考虑宏
+- 🟩 调用点 100+ 处：考虑 proc-macro derive
+- 🟩 新增 proc-macro 必须经 ADR 审批
+
+#### 第十一原则：宏文件超过 10 个宏必须拆分
+- 🟩 单文件 macro_rules! 超过 10 个时按主题拆分子文件
+- 🟩 超过 50 行宏逻辑必须抽取帮助函数
+
+### 16.7 TODO / FIXME / HACK 规范
 🟥 禁止无上下文的 TODO/FIXME。结构化注释是 AI 协作项目的核心工程资产。
 
 #### 格式定义
@@ -1362,7 +1430,7 @@ tests/
 // FIXME            ← 无任何信息
 ```
 
-### 16.7 测试命名规范
+### 16.8 测试命名规范
 - 🟩 测试函数名用英文 snake_case 描述预期行为，使用业务术语如 `damage_applies_armor_reduction`、`buff_removed_on_expiry`、`hp_never_goes_below_zero`
 - 🟩 文件名保持英文 snake_case
 

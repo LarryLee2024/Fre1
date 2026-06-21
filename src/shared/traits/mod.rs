@@ -1,5 +1,7 @@
 //! 横切能力抽象（日志 / 审计 / 事务 / 规则失败）
 
+pub(crate) mod macros;
+
 /// Sealed trait — 防止外部实现破坏框架级 trait 的不变量。
 /// 仅 crate 内部类型可实现此 trait。
 pub(crate) mod sealed {
