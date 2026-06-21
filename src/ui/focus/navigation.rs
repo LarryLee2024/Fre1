@@ -71,7 +71,7 @@ pub fn keyboard_navigation_system(
         .map(|g| g.wrap)
         .unwrap_or(true);
 
-    // 收集活跃组内所有可聚焦元素，按 TabIndex 排序
+    // TabIndex 排序决定 Tab 键导航顺序，低值优先
     let mut members: Vec<(Entity, &TabIndex)> = focusables
         .iter()
         .filter(|(_, f, _)| f.group_id == active_group)

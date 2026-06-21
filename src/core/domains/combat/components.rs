@@ -39,6 +39,11 @@ use crate::shared::game_state::GameState;
 /// ```
 /// Battle 阶段由 `pipeline::CombatPipelineDriver` 驱动回合内流程。
 ///
+/// ```text
+/// Preparation → Battle → Victory
+///                       → Defeat
+/// ```
+///
 /// 详见 ADR-050 §2: BattlePhase 转为 SubState。
 #[derive(SubStates, Clone, Eq, PartialEq, Hash, Debug, Default)]
 #[source(GameState = GameState::Combat)]
@@ -65,6 +70,11 @@ pub use crate::shared::ids::TeamId;
 // ─── 回合队列 ─────────────────────────────────────────────────────────
 
 /// 回合队列 — 管理行动顺序。
+///
+/// 不变量：
+/// - entries 按先攻值从高到低排列（不变量 4.1）
+/// - current_index 始终 < entries.len()
+/// - round_number 从 1 开始递增
 ///
 /// Resource，存储排序后的参与者列表和当前索引。
 /// `current_index` 指向当前正在行动的单位。

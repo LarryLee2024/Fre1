@@ -26,14 +26,15 @@ pub struct LoggingPlugin;
 impl Plugin for LoggingPlugin {
     fn build(&self, app: &mut App) {
         // ════════════════════════════════════════════
-        // 初始化度量收集器
+        // MetricsCollector 收集 LogCode 频率统计，供 balance_analyzer 消费
         // ════════════════════════════════════════════
         app.init_resource::<MetricsCollector>();
         app.add_systems(Update, metrics::metrics_flush_system);
 
         // ════════════════════════════════════════════
-        // 注册日志 Observer
+        // 日志 Observer 按 Domain 注册，每个 Domain 一个 logger 模块
         // ════════════════════════════════════════════
+        // 日志 Observer 数量需与启动日志中的计数保持同步
         // 注意：增删 Observer 后请同步更新下方启动日志中的计数
 
         // ── BAT: Combat（战斗）──

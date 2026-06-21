@@ -83,6 +83,10 @@ pub struct BreakdownStep {
 ///     }
 /// }
 /// ```
+/// 计算过程解释 trait。
+///
+/// 存在原因：伤害/治疗/经验等核心公式需要可追溯的计算过程，
+/// CalcBreakdown 记录输入、中间步骤、最终结果，供 UI 伤害预览和 Debug 工具消费。
 pub trait Explain: fmt::Debug {
     /// Returns a structured breakdown of how this value was calculated.
     fn explain(&self) -> CalcBreakdown;

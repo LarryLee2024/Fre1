@@ -11,10 +11,10 @@ pub(crate) mod sealed {
     pub trait Sealed {}
 }
 
-/// 所有可从 RON 文件加载的 Definition 类型必须实现此 trait。
+/// Definition 类型元信息 trait。
 ///
-/// 此 trait 定义了 Definition 的元信息（桶名、文件扩展名）
-/// 和加载后的校验逻辑。
+/// 存在原因：Content 层需要统一加载各种 Def 类型（SpellDef、EffectDef 等），
+/// 此 trait 提供桶名、文件扩展名、校验逻辑等元信息，驱动通用加载管线。
 pub trait DefinitionType: sealed::Sealed + Asset + TypePath {
     /// 在 Registry 中的桶名（如 "spells", "effects"）。
     const BUCKET_NAME: &'static str;

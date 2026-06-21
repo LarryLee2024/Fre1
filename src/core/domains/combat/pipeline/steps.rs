@@ -169,7 +169,7 @@ pub(crate) fn step_turn_end(
         return TurnEndResult::BattleOver;
     }
 
-    // 记录当前信息（在 advance 之前）
+    // advance 之前保存状态，用于判断是否切换队伍/完成一轮
     let changed_team = turn_queue.just_changed_team();
     let was_last_in_round = turn_queue.current_index() == turn_queue.len() - 1;
     let prev_team = turn_queue.current_team().cloned();
@@ -185,12 +185,12 @@ pub(crate) fn step_turn_end(
         round
     );
 
-    // 如果切换队伍 → 发射 BetweenTurns
+    // BetweenTurns 触发阵营专属效果结算（如阵营被动技能、阵营 Buff 过期）
     if changed_team && let Some(team) = prev_team {
         commands.trigger(BetweenTurns { team });
     }
 
-    // 如果所有队伍完成一轮 → 发射 OnRoundEnd
+    // OnRoundEnd 触发全局回合结束逻辑（Buff 过期、环境效果、回合数递增）
     if was_last_in_round {
         commands.trigger(OnRoundEnd { round });
     }

@@ -92,7 +92,7 @@ pub fn button_interaction_system(
         // 点击释放时设置 just_clicked（持续一帧）
         btn_interaction.just_clicked = was_pressed && !btn_interaction.pressed;
 
-        // 触发点击事件（Bevy 0.19 Commands::trigger 双通道）
+        // Bevy 0.19 双通道：ButtonClicked 供 Observer 订阅，UiAction::Click 供全局 ActionRouter
         if btn_interaction.just_clicked {
             commands.trigger(ButtonClicked { entity });
             commands.trigger(UiAction::Click);

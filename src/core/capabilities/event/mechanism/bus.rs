@@ -51,8 +51,8 @@ impl EventBus {
     /// 不变量 §3.5：不会影响当前正在分发的事件。
     /// 如果订阅者 ID 已存在，覆盖旧注册。
     pub fn subscribe(&mut self, entry: SubscriberEntry) {
-        // 移除同 ID 的旧注册
-        self.subscribers.retain(|s| s.id != entry.id);
+    // 幂等覆盖：同 ID 重复注册时保留最新，避免订阅者泄漏
+    self.subscribers.retain(|s| s.id != entry.id);
         self.subscribers.push(entry);
     }
 
@@ -193,7 +193,7 @@ impl EventBus {
                 continue;
             }
 
-            // 查找匹配的订阅者
+            // 按 EventTag 过滤匹配的订阅者，这是事件路由的核心匹配逻辑
             let matching: Vec<(EventHandler, String)> = self
                 .subscribers
                 .iter()

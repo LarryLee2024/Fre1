@@ -1,3 +1,5 @@
 - [Composite Widget Layer (Molecule/Organism)](project_composite_widget_layer.md) — docs/06-ui restructured, 16 composite widgets defined bridging Atoms to Screens
 - [UI Implementation Patterns (4+1 Bevy ECS skeleton)](project_implementation_patterns.md) — docs/06-ui/01-architecture/implementation-patterns.md bridges What docs to How-to-code for Widget/Screen/ViewModel/Overlay
 - [Primitives Isolation Layer](primitives_isolation_layer.md) — Three-layer UI (primitives/widgets/screens) with primitives as the only bridge to Bevy UI low-level types; 7 docs updated
+
+- [Code Alignment 2026-06-21](project_code_alignment_0621.md) -- 4 UI docs aligned with MVP code; key deltas: u32 types, hardcoded screens, minimal projections, 46 pure tests

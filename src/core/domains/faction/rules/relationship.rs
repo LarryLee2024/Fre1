@@ -30,7 +30,7 @@ pub fn relationship_between_entities(
     target_membership: &FactionMembership,
     relation_table: &FactionRelationTable,
 ) -> RelationshipState {
-    // 如果双方共享阵营 → 强制 Allied
+    // 共享阵营强制 Allied：同阵营单位不可能互为敌人，这是阵营关系的基本不变量
     for faction in &subject_membership.factions {
         if target_membership.is_member(faction) {
             return RelationshipState::Allied;
@@ -64,14 +64,14 @@ pub fn relationship_with_faction(
     target_faction: &FactionId,
     relation_table: &FactionRelationTable,
 ) -> RelationshipState {
-    // 如果主体就是该阵营成员 → Allied
+    // 自身阵营成员强制 Allied：实体对自己所属阵营永远是盟友
     if subject_membership.is_member(target_faction) {
         return RelationshipState::Allied;
     }
 
     let mut strongest = RelationshipState::Neutral;
 
-    // 遍历主体的所有阵营，取与目标阵营关系中最强的一个
+    // 多阵营遍历：主体可能属于多个阵营，取与目标阵营关系最极端的那个
     for subject_faction in &subject_membership.factions {
         let base = relation_table.get_relation(subject_faction, target_faction);
         let rep_level = subject_reputation.level(target_faction);
@@ -79,7 +79,7 @@ pub fn relationship_with_faction(
         strongest = stronger_relationship(strongest, state);
     }
 
-    // 如果主体无阵营归属，用其对该阵营的声望单独判定
+    // 无阵营归属的独立单位：仅凭声望值决定关系，跳过阵营表查询
     if subject_membership.factions.is_empty() {
         let rep_level = subject_reputation.level(target_faction);
         strongest = reputation_level_to_state(rep_level);

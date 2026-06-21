@@ -22,6 +22,10 @@ use std::hash::Hash;
 /// assert_eq!(grouped.get(&2).unwrap(), &vec!["bb".to_string()]);
 /// assert_eq!(grouped.get(&3).unwrap(), &vec!["ccc".to_string()]);
 /// ```
+/// 迭代器按键分组收集扩展。
+///
+/// 存在原因：战斗结算时需要按队伍/阵营分组处理单位，
+/// 标准库无内置按键分组收集到 HashMap 的方法。
 pub trait GroupByMap: Iterator {
     /// 将迭代器元素按键分组收集到 HashMap。
     ///

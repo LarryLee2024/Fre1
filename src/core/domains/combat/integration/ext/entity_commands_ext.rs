@@ -30,6 +30,10 @@ use crate::core::domains::combat::components::Dead;
 ///         .kill();
 /// }
 /// ```
+/// Combat 域 EntityCommands 扩展。
+///
+/// 存在原因：战斗中施加 Buff、治疗、击杀等操作需要链式 API，
+/// 避免每个系统重复写 `commands.trigger(XxxRequest { ... })` 样板代码。
 pub trait EntityCommandsExt {
     /// Add a buff (active effect) to this entity.
     ///

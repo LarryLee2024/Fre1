@@ -58,7 +58,7 @@ pub(crate) fn on_dialogue_start(
         return;
     };
 
-    // 获取实体的 StoryFlag
+    // StoryFlags 决定哪些分支可见 — 无 StoryFlags 的实体看到所有无条件分支
     let flags = flag_query.get(req.entity).ok();
     let choices = match flags {
         Some(f) => filter_visible_choices(entry, f),
@@ -73,12 +73,12 @@ pub(crate) fn on_dialogue_start(
             .collect(),
     };
 
-    // 记录历史
+    // DialogueHistory 记录对话路径，用于 Replay 回放时还原对话分支选择
     if let Some(ref mut h) = history {
         h.visit_node(&req.tree_id, &entry.id);
     }
 
-    // 添加 DialogueState 组件到玩家实体
+    // DialogueState 挂载到玩家实体，供 UI 查询当前对话进度
     commands.entity(req.entity).insert(DialogueState::new(
         &req.tree_id,
         &entry.id,
@@ -86,7 +86,7 @@ pub(crate) fn on_dialogue_start(
         0.0,
     ));
 
-    // 发布事件
+    // DialogueStarted 事件通知 UI 显示对话窗口、AI 响应对话开始
     commands.trigger(DialogueStarted {
         entity: req.entity,
         npc: req.npc,
@@ -126,7 +126,7 @@ pub(crate) fn on_choice_select(
         return;
     };
 
-    // 查找当前节点
+    // 节点不存在说明配置数据损坏或对话树 ID 错误
     let Some(node) = registry.get_node(&state.current_node_id) else {
         tracing::warn!(target: "narrative",
             event = "narrative.choice_select.node_not_found",
@@ -137,7 +137,7 @@ pub(crate) fn on_choice_select(
         return;
     };
 
-    // 查找选择的分支
+    // 玩家选择的分支必须存在于当前节点中，否则为非法输入
     let Some(choice) = node.choices.iter().find(|c| c.id == req.choice_id) else {
         tracing::warn!(target: "narrative",
             event = "narrative.choice_select.choice_not_found",
@@ -149,12 +149,11 @@ pub(crate) fn on_choice_select(
         return;
     };
 
-    // 记录历史
     if let Some(ref mut h) = history {
         h.record_choice(&state.tree_id, &choice.id);
     }
 
-    // 设置 StoryFlag
+    // 设置 StoryFlag — 用于驱动对话分支的条件判定
     let mut story_flags_set = Vec::new();
     if let Ok(mut flags) = flag_query.get_mut(entity) {
         for (flag_id, value) in &choice.set_flags {
@@ -170,7 +169,7 @@ pub(crate) fn on_choice_select(
         }
     }
 
-    // 跳转到下一节点或结束
+    // next_node_id 为 None 表示对话树到达叶子节点，对话结束
     match &choice.next_node_id {
         Some(next_id) => {
             let next_choices = registry
@@ -199,7 +198,6 @@ pub(crate) fn on_choice_select(
         }
         None => {
             state.end();
-            // 对话结束，移除 DialogueState
             commands.entity(entity).remove::<DialogueState>();
         }
     }

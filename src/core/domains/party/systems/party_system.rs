@@ -71,11 +71,11 @@ pub fn on_member_removed(
 ) {
     let removed_entity = _trigger.event().entity;
 
-    // 检查是否有涉及该成员的羁绊需要解除
+    // 羁绊条件检查：成员移除后可能不满足激活条件，需解除对应 Bond
     let mut to_remove = Vec::new();
     for (idx, bond) in bond_state.active_bonds.iter().enumerate() {
         if bond.participants.contains(&removed_entity) {
-            // 检查移除后是否仍满足条件
+            // 重新校验激活条件：移除成员后 Bond 可能不再满足 required_members
             let bond_def = bond_state.defs.get(&bond.bond_id);
             let still_valid =
                 bond_def.is_some_and(|def| check_bond_activation(def, &party.members).is_some());

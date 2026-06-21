@@ -13,8 +13,8 @@ use crate::core::capabilities::ability::foundation::def::AbilityDef;
 
 /// 编译期能力元数据 trait。
 ///
-/// const 值由编译器内联，零运行时开销。
-/// 每个能力相关的 Def/Config 类型可实现此 trait 以暴露其编译期元数据。
+/// 存在原因：ID 前缀、最大等级、冷却回合数等元数据在编译期已知，
+/// 通过 const trait 在编译期内联，零运行时开销，替代运行时配置查找。
 pub trait ConstAbilityMetadata {
     /// 该类型定义 ID 的前缀（如 `"abl_"` 用于 AbilityDef）。
     const ID_PREFIX: &'static str;

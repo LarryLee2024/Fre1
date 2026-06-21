@@ -116,7 +116,7 @@ pub(crate) fn combat_pipeline_driver(
         return;
     }
 
-    // 查找管线定义
+    // PipelineRegistry 查找失败说明管线未注册，属于配置错误
     let def = match pipeline_registry.get(&driver.state.pipeline_id) {
         Some(d) => d.clone(),
         None => {
@@ -133,7 +133,7 @@ pub(crate) fn combat_pipeline_driver(
         }
     };
 
-    // 获取当前阶段
+    // stage_index 越界说明管线定义阶段数不足，直接结束
     let stage = match def.stages.get(driver.state.current_stage_index) {
         Some(s) => s,
         None => {
@@ -142,7 +142,7 @@ pub(crate) fn combat_pipeline_driver(
         }
     };
 
-    // 获取当前步骤
+    // step_index 越界说明当前阶段步骤耗尽，递增到下一阶段
     let step = match stage.steps.get(driver.state.current_step_index) {
         Some(s) => s.clone(),
         None => {

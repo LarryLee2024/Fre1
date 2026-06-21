@@ -71,7 +71,7 @@ pub(crate) fn on_relationship_eval_request(
         return;
     };
 
-    // 遍历主体与目标的所有阵营组合，取关系最强（最敌对）的一个
+    // 多阵营组合取最强关系：一个单位可能属于多个阵营，与目标的关系取最敌对的那个
     let mut base_relation = FactionRelationType::default();
     for sf in &subj_membership.factions {
         for tf in &target_membership.factions {

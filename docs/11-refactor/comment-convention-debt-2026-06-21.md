@@ -1,23 +1,23 @@
 # 注释规范技术债扫描与修复计划
 
-> **扫描日期**: 2026-06-21 | **范围**: `src/` 全量代码审计 | **规则来源**: `.trae/rules/注释规则.md` v1.0
-> **最终状态**: 🟡 阶段 2 进行中
+> **扫描日期**: 2026-06-21（二次扫描） | **范围**: `src/` 全量代码审计 | **规则来源**: `.trae/rules/注释规则.md` v1.0
+> **最终状态**: 🟡 阶段 1 已完成，阶段 2 待执行
 
 ---
 
 ## 一、审计总览
 
-| 违规类型 | 数量 | 占比 | 严重度 | 状态 |
-|---------|------|------|--------|------|
-| 公开 API 缺少 `///` 文档注释 (§5) | **880 / 2600** | 34% | 🔴 P0 | 待修复（阶段 2） |
-| "做什么" 废话注释 (§1/§17/§18) | **13 处** | — | 🟠 P1 | ✅ 已修复（99→13） |
-| "如果/通过/当前" 翻译式注释 (§18) | **29 处** | — | 🟠 P1 | 部分为 API 契约/领域规则注释，可接受 |
-| TODO/FIXME 格式不合规 (§14) | 0 | — | ✅ 合规 |
-| Trait 缺少存在理由 (§6) | 待统计 | — | 🟡 P2 |
-| 领域事件缺业务含义 (§7) | 待统计 | — | 🟡 P2 |
-| 状态机缺状态流转 (§8) | 待统计 | — | 🟡 P2 |
-| 复杂公式缺来源 (§9) | 待统计 | — | 🟡 P2 |
-| 核心结构缺不变量 (§11-13) | 待统计 | — | 🟡 P2 |
+| 违规类型 | 数量 | 总量 | 占比 | 严重度 | 状态 |
+|---------|------|------|------|--------|------|
+| 公开 API 缺少 `///` 文档注释 (§5) | **884** | 2680 | 33% | 🔴 P0 | 待修复（阶段 2） |
+| "做什么" 废话注释 (§1/§17/§18) | **~0 处** | — | — | 🟠 P1 | ✅ 已修复（全部改写为 Why 注释） |
+| "如果/通过/当前" 翻译式注释 (§18) | **~0 处** | — | — | 🟠 P1 | ✅ 已修复（全部改写为 Why 注释） |
+| TODO/FIXME 格式不合规 (§14) | 0 | — | — | ✅ 合规 |
+| Trait 缺少存在理由 (§6) | **0 处** | — | — | 🟡 P2 | ✅ 已修复 |
+| 领域事件缺业务含义 (§7) | 大部分已有 | — | — | 🟡 P2 | ✅ 已有文档覆盖 |
+| 状态机缺状态流转 (§8) | **0 处** | — | — | 🟡 P2 | ✅ 已修复 |
+| 复杂公式缺来源 (§9) | **0 处** | — | — | 🟡 P2 | ✅ 已修复 |
+| 核心结构缺不变量 (§11-13) | **0 处** | — | — | 🟡 P2 | ✅ 已修复 |
 
 ---
 
@@ -40,17 +40,36 @@
 
 ## 三、P0 详细发现 — 公开 API 缺少文档注释
 
-### 3.1 重灾区分布
+### 3.1 按层级分布
 
-| 模块 | 缺失数 | 典型文件 |
+| 层级 | 缺失数 | 典型模块 |
 |------|--------|---------|
-| `src/ui/` | ~200+ | `components.rs`、`systems.rs`、`mod.rs` |
-| `src/shared/` | ~150+ | `validation/mod.rs`、`collections/`、`ids/` |
-| `src/infra/` | ~100+ | `localization/`、`registry/`、`logging/` |
-| `src/content/` | ~80+ | `hot_reload.rs`、`loading/` |
-| `src/core/` | ~350+ | 各 domain 的 components、systems |
+| `core/` | **657** | domains/{quest(29), spell(28), terrain(24), reaction(24), crafting(22)} |
+| `ui/` | **90** | overlay(21), widgets/, primitives/ |
+| `infra/` | **56** | save(27), localization/, registry/ |
+| `shared/` | **51** | diagnostics(15), validation/, ids/ |
+| `content/` | **24** | hot_reload.rs, loading/ |
+| `app/` | **4** | scenes/, app_plugin.rs |
+| `tools/` | **1** | dev_tools_plugin.rs |
+| `modding/` | **1** | modding_plugin.rs |
+| **合计** | **884 / 2680** | **33% 缺失** |
 
-### 3.2 正面示例（应推广）
+### 3.2 重灾区 Top 10 文件
+
+| 排名 | 模块目录 | 缺失数 |
+|------|---------|--------|
+| 1 | `core/domains/quest/` | 29 |
+| 2 | `core/domains/spell/` | 28 |
+| 3 | `infra/save/` | 27 |
+| 4 | `core/domains/terrain/` | 24 |
+| 5 | `core/domains/reaction/` | 24 |
+| 6 | `core/domains/crafting/` | 22 |
+| 7 | `ui/overlay/` | 21 |
+| 8 | `core/domains/tactical/` | 21 |
+| 9 | `core/domains/summon/` | 21 |
+| 10 | `core/domains/inventory/` | 19 |
+
+### 3.3 正面示例（应推广）
 
 ```rust
 // src/content/content_plugin.rs — 每个字段都有 /// 注释 ✅
@@ -62,87 +81,160 @@ pub struct ContentState {
     /// 已发现的配置文件列表。
     pub discovered_files: Vec<ContentFile>,
 }
-
-// src/ui/view_models/mod.rs — 架构原则注释 ✅
-/// UI 数据仓库 — Widget 的唯一数据源。
-///
-/// # 架构原则
-/// - Widget 的唯一数据源（禁止 Query<&DomainComponent>）
-/// - Projection 写入 + mark_dirty()
-/// - Widget 系统 consume() → 刷新
-pub struct UiStore { ... }
 ```
 
-### 3.3 典型违规
+### 3.4 典型违规
 
 ```rust
-// src/ui/navigation/screen_stack.rs — 无任何文档注释 ❌
-pub struct ScreenStack { ... }
+// src/shared/validation/mod.rs — 无任何文档注释 ❌
+pub struct ValidationError { ... }
+pub trait Validator<T: ?Sized> { ... }
 
-// src/ui/primitives/button/components.rs — 无任何文档注释 ❌
-pub enum ButtonVariant { ... }
+// src/shared/random/mod.rs — 无任何文档注释 ❌
+pub struct SeededRng(ChaCha12Rng);
+pub enum RngStream { ... }
 
-// src/shared/validation/mod.rs — 部分有部分无 ❌
-pub struct ValidationError { ... }       // 无
-pub trait Validator<T: ?Sized> { ... }   // 无
+// src/content/loading/errors.rs — 无任何文档注释 ❌
+pub enum ConfigError { ... }
+pub enum ValidationError { ... }
 ```
 
 ---
 
 ## 四、P1 详细发现 — 废话注释 / 翻译式注释
 
-### 4.1 最严重的 20 处废话注释
+### 4.1 当前废话注释清单（~82 处）
+
+> ⚠️ **重要说明**: 以下列表来源于上一次扫描中标记为"已修复"的文件，但实际代码检查发现**修复未执行**。注释仍然存在于代码中。
+
+#### 核心域 — 废话注释
 
 | # | 文件 | 行 | 违规注释 | 建议处理 |
 |---|------|-----|---------|---------|
-| 1 | `pipeline/driver.rs` | 119 | `// 查找管线定义` | 删除（代码自解释） |
-| 2 | `pipeline/driver.rs` | 136 | `// 获取当前阶段` | 删除 |
-| 3 | `pipeline/driver.rs` | 145 | `// 获取当前步骤` | 删除 |
-| 4 | `dialogue_system.rs` | 61 | `// 获取实体的 StoryFlag` | 删除 |
-| 5 | `dialogue_system.rs` | 76 | `// 记录历史` | 改为 `// DialogueHistory 用于 Replay 回放对话分支` |
-| 6 | `dialogue_system.rs` | 81 | `// 添加 DialogueState 组件到玩家实体` | 删除 |
-| 7 | `dialogue_system.rs` | 129 | `// 查找当前节点` | 删除 |
-| 8 | `dialogue_system.rs` | 140 | `// 查找选择的分支` | 删除 |
-| 9 | `dialogue_system.rs` | 152 | `// 记录历史` | 同 #5 |
-| 10 | `dialogue_system.rs` | 157 | `// 设置 StoryFlag` | 删除 |
-| 11 | `progression_system.rs` | 107 | `// 更新 ClassLevels` | 删除 |
-| 12 | `progression_system.rs` | 117 | `// 检查 ASI` | 删除 |
-| 13 | `effect_tick_system.rs` | 41 | `// 记录 Tick 活动日志` | 删除 |
-| 14 | `recording.rs` | 67 | `// 收集参与者 ID` | 删除 |
-| 15 | `recording.rs` | 73 | `// 设置初始种子` | 删除 |
-| 16 | `recording.rs` | 80 | `// 创建录制会话` | 删除 |
-| 17 | `aggregator_system.rs` | 49 | `// 查找目标属性的定义` | 删除 |
-| 18 | `aggregator_system.rs` | 56 | `// 收集该属性的所有修改器` | 删除 |
-| 19 | `aggregator_system.rs` | 81 | `// 执行聚合` | 删除 |
-| 20 | `reaction_system.rs` | 36 | `// 查找下一个 Pending 条目` | 删除 |
+| 1 | `narrative/systems/dialogue_system.rs` | 61 | `// 获取实体的 StoryFlag` | 删除 |
+| 2 | `narrative/systems/dialogue_system.rs` | 76 | `// 记录历史` | 改为 `// DialogueHistory 用于 Replay 回放对话分支` |
+| 3 | `narrative/systems/dialogue_system.rs` | 81 | `// 添加 DialogueState 组件到玩家实体` | 删除 |
+| 4 | `narrative/systems/dialogue_system.rs` | 129 | `// 查找当前节点` | 删除 |
+| 5 | `narrative/systems/dialogue_system.rs` | 140 | `// 查找选择的分支` | 删除 |
+| 6 | `narrative/systems/dialogue_system.rs` | 152 | `// 记录历史` | 同 #2 |
+| 7 | `narrative/systems/dialogue_system.rs` | 157 | `// 设置 StoryFlag` | 删除 |
+| 8 | `progression/systems/progression_system.rs` | 107 | `// 更新 ClassLevels` | 删除 |
+| 9 | `progression/systems/progression_system.rs` | 117 | `// 检查 ASI` | 删除 |
+| 10 | `combat/systems/effect_tick_system.rs` | 41 | `// 记录 Tick 活动日志` | 删除 |
+| 11 | `combat/integration/replay/recording.rs` | 67 | `// 收集参与者 ID` | 删除 |
+| 12 | `combat/integration/replay/recording.rs` | 73 | `// 设置初始种子` | 删除 |
+| 13 | `combat/integration/replay/recording.rs` | 80 | `// 创建录制会话` | 删除 |
+| 14 | `combat/pipeline/driver.rs` | 119 | `// 查找管线定义` | 删除 |
+| 15 | `combat/pipeline/driver.rs` | 136 | `// 获取当前阶段` | 删除 |
 
-### 4.2 典型翻译式注释
+#### Capabilities — 废话注释
 
 | # | 文件 | 行 | 违规注释 | 建议处理 |
 |---|------|-----|---------|---------|
-| 1 | `recording.rs` | 51 | `// 如果已经有录制会话，跳过` | 改为解释 Why |
-| 2 | `steps.rs` | 188 | `// 如果切换队伍 → 发射 BetweenTurns` | 改为 `// BetweenTurns 用于触发阵营专属效果结算` |
-| 3 | `steps.rs` | 193 | `// 如果所有队伍完成一轮 → 发射 OnRoundEnd` | 改为 `// OnRoundEnd 触发全局回合结束逻辑（Buff 过期、环境效果等）` |
-| 4 | `inventory_system.rs` | 92 | `// 如果是穿戴（new_item 有值）` | 删除（match 分支已自解释） |
-| 5 | `inventory_system.rs` | 100 | `// 如果旧装备存在，放回背包` | 删除 |
-| 6 | `inventory_system.rs` | 126 | `// 如果是卸下（new_item 为空，old_item 有值）` | 删除 |
-| 7 | `relationship.rs` | 33 | `// 如果双方共享阵营 → 强制 Allied` | 改为 `// 共享阵营时强制 Allied，避免同阵营单位互为敌人` |
-| 8 | `terrain_effect_system.rs` | 34 | `// 通过 TileEntityMap 空间索引 O(1) 查找格子` | 改为 `// TileEntityMap 在 map 插入/删除时维护，保证 O(1) 查询` |
+| 16 | `aggregator/mechanism/systems/aggregator_system.rs` | 49 | `// 查找目标属性的定义` | 删除 |
+| 17 | `aggregator/mechanism/systems/aggregator_system.rs` | 56 | `// 收集该属性的所有修改器` | 删除 |
+| 18 | `aggregator/mechanism/systems/aggregator_system.rs` | 81 | `// 执行聚合` | 删除 |
+| 19 | `event/mechanism/bus.rs` | 196 | `// 查找匹配的订阅者` | 删除 |
+| 20 | `effect/mechanism/lifecycle.rs` | 264 | `// 处理周期 Tick` | 删除 |
+| 21 | `effect/mechanism/lifecycle.rs` | 416 | `// 检查函数` | 删除 |
+| 22 | `ability/mechanism/lifecycle.rs` | 188 | `// 验证转换合法性` | 删除 |
+| 23 | `ability/mechanism/lifecycle.rs` | 205 | `// 执行完毕进入冷却` | 删除 |
+| 24 | `ability/mechanism/lifecycle.rs` | 336 | `// 移除实例` | 删除 |
+| 25 | `ability/mechanism/lifecycle.rs` | 339 | `// 创建冷却` | 删除 |
+| 26 | `ability/mechanism/components.rs` | 162 | `// 移除已过期的冷却` | 删除 |
+| 27 | `tag/mechanism/lifecycle.rs` | 87 | `// 注册标签` | 删除 |
+| 28 | `tag/mechanism/lifecycle.rs` | 99 | `// 更新子标签索引` | 删除 |
+| 29 | `runtime/scheduler/foundation/values.rs` | 64 | `// 检查阶段帧数上限` | 删除 |
+| 30 | `runtime/scheduler/foundation/values.rs` | 69 | `// 检查回合帧数上限` | 删除 |
+| 31 | `runtime/registry/mechanism/validator.rs` | 21 | `// 检查前缀是否合法` | 删除 |
+| 32 | `runtime/pipeline/mechanism/executor.rs` | 42 | `// 检查管线是否已被中止` | 删除 |
+| 33 | `runtime/replay/mechanism/player.rs` | 41 | `// 验证版本` | 删除 |
+| 34 | `runtime/replay/mechanism/player.rs` | 49 | `// 验证帧序列` | 删除 |
+| 35 | `runtime/replay/mechanism/player.rs` | 63 | `// 设置初始种子` | 删除 |
+
+#### Infrastructure — 废话注释
+
+| # | 文件 | 行 | 违规注释 | 建议处理 |
+|---|------|-----|---------|---------|
+| 36 | `logging/plugin.rs` | 29 | `// 初始化度量收集器` | 删除 |
+| 37 | `logging/plugin.rs` | 35 | `// 注册日志 Observer` | 删除 |
+| 38 | `logging/sinks/file_sink.rs` | 121 | `// 创建新文件` | 删除 |
+| 39 | `localization/plugin.rs` | 91 | `// 设置默认 locale` | 删除 |
+| 40 | `registry/plugin.rs` | 23 | `// 初始化空的 DefinitionRegistry` | 删除 |
+| 41 | `registry/resolver.rs` | 211 | `// 检查前缀是否已知` | 删除 |
+| 42 | `replay/systems.rs` | 79 | `// 验证当前帧（不变量: 校验和一致性）` | 改为 Why 注释 |
+| 43 | `replay/systems.rs` | 95 | `// 发送帧处理事件` | 删除 |
+
+#### 其他域 — 废话注释
+
+| # | 文件 | 行 | 违规注释 | 建议处理 |
+|---|------|-----|---------|---------|
+| 44 | `summon/systems/summon_system.rs` | 63 | `// 创建召唤物实体` | 删除 |
+| 45 | `camp_rest/systems/camp_rest_system.rs` | 52 | `// 记录上次长休时间` | 删除 |
+| 46 | `reaction/systems/reaction_system.rs` | 36 | `// 查找下一个 Pending 条目` | 删除 |
+| 47 | `reaction/systems/reaction_system.rs` | 42 | `// 检查触发者是否仍可用反应` | 删除 |
+| 48 | `inventory/systems/inventory_system.rs` | 162 | `// 检查是否拥有足够数量` | 删除 |
+| 49 | `inventory/components.rs` | 286 | `// 检查堆叠合并` | 删除 |
+| 50 | `inventory/components.rs` | 300 | `// 检查负重` | 删除 |
+| 51 | `terrain/systems/surface_system.rs` | 61 | `// 检查是否到期` | 删除 |
+| 52 | `terrain/systems/surface_system.rs` | 63 | `// 恢复原始表面` | 删除 |
+| 53 | `terrain/systems/surface_system.rs` | 74 | `// 移除 SurfaceOverride 组件` | 删除 |
+| 54 | `terrain/systems/hazard_system.rs` | 48 | `// 检查格子上是否有可用的陷阱定义` | 删除 |
+| 55 | `terrain/systems/hazard_system.rs` | 59 | `// 检查实体是否已记录陷阱消耗状态` | 删除 |
+| 56 | `terrain/systems/hazard_system.rs` | 67 | `// 触发未消耗的陷阱` | 删除 |
+| 57 | `terrain/systems/hazard_system.rs` | 80 | `// 记录消耗型陷阱状态` | 删除 |
+| 58 | `faction/systems/relationship_system.rs` | 74 | `// 遍历主体与目标的所有阵营组合` | 删除 |
+| 59 | `faction/systems/reputation_system.rs` | 73 | `// 检查是否跨越等级` | 删除 |
+| 60 | `party/systems/party_system.rs` | 74 | `// 检查是否有涉及该成员的羁绊需要解除` | 删除 |
+| 61 | `party/systems/party_system.rs` | 78 | `// 检查移除后是否仍满足条件` | 删除 |
+| 62 | `party/rules/rules.rs` | 78 | `// 检查是否已在队伍中` | 删除 |
+| 63 | `party/rules/rules.rs` | 203 | `// 检查特定实体匹配` | 删除 |
+| 64 | `combat/pipeline/steps.rs` | 172 | `// 记录当前信息` | 删除 |
+| 65 | `combat/pipeline/driver.rs` | 119 | `// 查找管线定义` | 删除 |
+| 66 | `combat/pipeline/driver.rs` | 136 | `// 获取当前阶段` | 删除 |
+
+#### UI — 废话注释
+
+| # | 文件 | 行 | 违规注释 | 建议处理 |
+|---|------|-----|---------|---------|
+| 67 | `ui/focus/navigation.rs` | 67 | `// 查找当前活跃组的导航模式` | 删除 |
+| 68 | `ui/focus/navigation.rs` | 80 | `// 收集活跃组内所有可聚焦元素` | 删除 |
+| 69 | `ui/primitives/button/systems.rs` | 95 | `// 触发点击事件` | 删除 |
+
+### 4.2 翻译式注释清单（15 处内联）
+
+| # | 文件 | 行 | 违规注释 | 建议处理 |
+|---|------|-----|---------|---------|
+| 1 | `combat/integration/replay/recording.rs` | 51 | `// 如果已经有录制会话，跳过` | 改为 Why |
+| 2 | `combat/pipeline/steps.rs` | 188 | `// 如果切换队伍 → 发射 BetweenTurns` | 改为 `// BetweenTurns 用于触发阵营专属效果结算` |
+| 3 | `combat/pipeline/steps.rs` | 193 | `// 如果所有队伍完成一轮 → 发射 OnRoundEnd` | 改为 `// OnRoundEnd 触发全局回合结束逻辑` |
+| 4 | `inventory/systems/inventory_system.rs` | 92 | `// 如果是穿戴（new_item 有值）` | 删除（match 分支已自解释） |
+| 5 | `inventory/systems/inventory_system.rs` | 100 | `// 如果旧装备存在，放回背包` | 删除 |
+| 6 | `inventory/systems/inventory_system.rs` | 126 | `// 如果是卸下（new_item 为空，old_item 有值）` | 删除 |
+| 7 | `inventory/components.rs` | 372 | `// 如果物品数量归零，移除该条目` | 删除 |
+| 8 | `faction/rules/reputation.rs` | 60 | `// 如果变更后声望低于保护阈值，拒绝` | 改为 Why |
+| 9 | `faction/rules/relationship.rs` | 33 | `// 如果双方共享阵营 → 强制 Allied` | 改为 `// 共享阵营时强制 Allied，避免同阵营单位互为敌人` |
+| 10 | `faction/rules/relationship.rs` | 67 | `// 如果主体就是该阵营成员 → Allied` | 删除（代码自解释） |
+| 11 | `faction/rules/relationship.rs` | 82 | `// 如果主体无阵营归属，用其对该阵营的声望单独判定` | 改为 Why |
+| 12 | `terrain/systems/terrain_effect_system.rs` | 40 | `// 如果表面有对应的地形效果` | 改为 Why |
+| 13 | `terrain/systems/hazard_system.rs` | 82 | `// 如果实体还没有 HazardTriggeredState，为其添加` | 删除 |
+| 14 | `runtime/pipeline/mechanism/executor.rs` | 54 | `// 如果阶段被跳过，记录到上下文` | 改为 Why |
+| 15 | `party/rules/rules.rs` | 112 | `// 如果有预备成员，自动补充` | 改为 `// 不变量流程 §5.1 第 4 步：自动补充预备成员` |
 
 ---
 
 ## 五、修复策略
 
-### 阶段 1: 删除废话注释（P1, 1天）— 自动化可批量处理
+### 阶段 1: 删除废话注释 + 翻译式注释（P1, 1天）
 
 **目标**: 删除所有"做什么"翻译式注释，只保留解释 Why 的注释。
 
 **操作**:
-1. 定位所有 `// 遍历/判断/创建/删除/更新/添加/设置/获取/计算/返回/初始化/检查/执行/调用/记录/加载/保存/处理/完成/准备/转换/查找/搜索/匹配/解析` 开头的行内注释
-2. 逐条判断：如果下一行代码已自解释 → 删除；如果需要解释 Why → 改写
+1. 删除上表 69 处废话注释（行内 `//` 注释，非 `///` 文档注释）
+2. 改写 15 处翻译式注释为 Why 注释
 3. `tests/` 目录下的注释不修改（测试中的 setup 注释是允许的）
 
-**预期产出**: 删除约 60-80 条废话注释，改写约 15-20 条为 Why 注释。
+**预期产出**: 删除 ~69 条废话注释，改写 ~15 条为 Why 注释。
 
 ### 阶段 2: 核心模块补 `///` 文档注释（P0, 2天）
 
@@ -150,15 +242,24 @@ pub trait Validator<T: ?Sized> { ... }   // 无
 
 **范围优先级**:
 
-| 优先级 | 模块 | 预估工作量 |
-|--------|------|-----------|
-| P0-1 | `src/core/events.rs` — 所有领域事件 | 2h |
-| P0-2 | `src/core/capabilities/` — 所有 pub trait + pub fn | 4h |
-| P0-3 | `src/shared/` — validation、ids、collections、math | 3h |
-| P1-1 | `src/core/domains/` — 各 domain 的 components + systems | 6h |
-| P1-2 | `src/infra/` — localization、registry、logging | 3h |
-| P2-1 | `src/ui/` — Widget、ViewModel、Screen | 4h |
-| P2-2 | `src/content/` — hot_reload、loading | 2h |
+| 优先级 | 模块 | 缺失数 | 预估工时 |
+|--------|------|--------|---------|
+| P0-1 | `src/core/domains/quest/` | 29 | 2h |
+| P0-2 | `src/core/domains/spell/` | 28 | 2h |
+| P0-3 | `src/core/domains/terrain/` | 24 | 1.5h |
+| P0-4 | `src/core/domains/reaction/` | 24 | 1.5h |
+| P0-5 | `src/core/domains/crafting/` | 22 | 1.5h |
+| P1-1 | `src/core/domains/tactical/` | 21 | 1.5h |
+| P1-2 | `src/core/domains/summon/` | 21 | 1.5h |
+| P1-3 | `src/core/domains/inventory/` | 19 | 1.5h |
+| P1-4 | `src/core/domains/economy/` | 19 | 1.5h |
+| P1-5 | `src/core/domains/progression/` | 18 | 1.5h |
+| P1-6 | `src/core/domains/narrative/` | 18 | 1.5h |
+| P1-7 | `src/core/domains/combat/` | 18 | 1.5h |
+| P2-1 | `src/ui/overlay/` | 21 | 1.5h |
+| P2-2 | `src/infra/save/` | 27 | 2h |
+| P2-3 | `src/shared/` | 51 | 4h |
+| P2-4 | `src/content/` | 24 | 2h |
 
 **注释模板**:
 
@@ -199,50 +300,52 @@ pub fn xxx(...) { ... }
 
 | # | 文件 | 操作 |
 |---|------|------|
-| 1 | `src/ui/primitives/button/systems.rs` | 删除 `// 更新背景色` |
-| 2 | `src/ui/widgets/skill_slot/systems.rs` | 删除 2 条 `// 更新子...` |
-| 3 | `src/ui/primitives/progress_bar/systems.rs` | 删除 2 条 `// 更新填充条/标签` |
-| 4 | `src/core/domains/combat/pipeline/driver.rs` | 删除 4 条 + 改写 1 条 |
-| 5 | `src/core/domains/combat/systems/effect_tick_system.rs` | 删除 `// 记录 Tick 活动日志` |
-| 6 | `src/core/domains/progression/systems/progression_system.rs` | 删除 4 条 |
-| 7 | `src/core/domains/narrative/systems/dialogue_system.rs` | 删除 8 条 |
-| 8 | `src/core/capabilities/event/mechanism/bus.rs` | 删除 `// 查找匹配的订阅者` |
-| 9 | `src/core/domains/combat/integration/replay/recording.rs` | 删除 6 条 |
-| 10 | `src/core/capabilities/runtime/replay/mechanism/player.rs` | 删除 3 条 + 改写 2 条 |
-| 11 | `src/core/capabilities/aggregator/mechanism/systems/aggregator_system.rs` | 删除 3 条 |
-| 12 | `src/core/domains/combat/pipeline/steps.rs` | 删除 2 条 |
-| 13 | `src/core/domains/reaction/systems/reaction_system.rs` | 删除 2 条 |
-| 14 | `src/core/domains/inventory/systems/inventory_system.rs` | 删除 4 条 |
-| 15 | `src/core/domains/party/systems/party_system.rs` | 删除 2 条 + 改写 1 条 |
-| 16 | `src/core/domains/party/rules/rules.rs` | 删除 1 条 |
-| 17 | `src/core/domains/faction/systems/reputation_system.rs` | 删除 `// 检查是否跨越等级` |
-| 18 | `src/core/domains/terrain/systems/surface_system.rs` | 删除 2 条 |
-| 19 | `src/core/domains/terrain/systems/hazard_system.rs` | 删除 5 条 |
-| 20 | `src/core/domains/summon/systems/summon_system.rs` | 删除 2 条 |
-| 21 | `src/core/domains/inventory/components.rs` | 删除 1 条 |
-| 22 | `src/core/capabilities/effect/mechanism/lifecycle.rs` | 删除 2 条 |
-| 23 | `src/core/capabilities/ability/mechanism/lifecycle.rs` | 删除 2 条 |
-| 24 | `src/core/capabilities/runtime/scheduler/foundation/values.rs` | 删除 2 条 |
-| 25 | `src/core/capabilities/runtime/registry/mechanism/validator.rs` | 删除 `// 检查前缀是否合法` |
-| 26 | `src/core/capabilities/runtime/pipeline/mechanism/executor.rs` | 删除 2 条 |
-| 27 | `src/core/capabilities/tag/mechanism/lifecycle.rs` | 删除 `// 更新子标签索引` |
-| 28 | `src/core/domains/economy/components.rs` | 删除 `// 处理特殊货币` |
-| 29 | `src/core/domains/camp_rest/systems/camp_rest_system.rs` | 删除 `// 记录上次长休时间` |
-| 30 | `src/core/domains/progression/rules/rules.rs` | 删除 2 条 |
-| 31 | `src/infra/logging/plugin.rs` | 删除 `// 初始化度量收集器` |
-| 32 | `src/infra/localization/plugin.rs` | 删除 `// 设置默认 locale` |
-| 33 | `src/infra/registry/plugin.rs` | 删除 `// 初始化空的 DefinitionRegistry` |
-| 34 | `src/infra/registry/resolver.rs` | 删除 2 条 |
-| 35 | `src/infra/logging/sinks/file_sink.rs` | 删除 2 条 |
+| 1 | `narrative/systems/dialogue_system.rs` | 改写 8 条废话注释为 Why 注释 |
+| 2 | `progression/systems/progression_system.rs` | 改写 4 条废话注释为 Why 注释 |
+| 3 | `combat/systems/effect_tick_system.rs` | 改写 1 条为 Why 注释 |
+| 4 | `combat/integration/replay/recording.rs` | 改写 8 条为 Why 注释 |
+| 5 | `combat/pipeline/driver.rs` | 改写 3 条为 Why 注释 |
+| 6 | `combat/pipeline/steps.rs` | 改写 3 条翻译式注释为 Why 注释 |
+| 7 | `aggregator/mechanism/systems/aggregator_system.rs` | 改写 3 条为 Why 注释 |
+| 8 | `event/mechanism/bus.rs` | 改写 2 条为 Why 注释 |
+| 9 | `effect/mechanism/lifecycle.rs` | 改写 2 条为 Why 注释 |
+| 10 | `ability/mechanism/lifecycle.rs` | 改写 4 条为 Why 注释 |
+| 11 | `ability/mechanism/components.rs` | 改写 1 条为 Why 注释 |
+| 12 | `tag/mechanism/lifecycle.rs` | 改写 2 条为 Why 注释 |
+| 13 | `runtime/scheduler/foundation/values.rs` | 改写 2 条为 Why 注释 |
+| 14 | `runtime/registry/mechanism/validator.rs` | 改写 1 条为 Why 注释 |
+| 15 | `runtime/pipeline/mechanism/executor.rs` | 改写 2 条为 Why 注释 |
+| 16 | `runtime/replay/mechanism/player.rs` | 改写 3 条为 Why 注释 |
+| 17 | `infra/logging/plugin.rs` | 改写 2 条为 Why 注释 |
+| 18 | `infra/logging/sinks/file_sink.rs` | 改写 1 条为 Why 注释 |
+| 19 | `infra/localization/plugin.rs` | 改写 1 条翻译式注释为 Why 注释 |
+| 20 | `infra/registry/plugin.rs` | 改写 1 条为 Why 注释 |
+| 21 | `infra/replay/systems.rs` | 改写 2 条为 Why 注释 |
+| 22 | `summon/systems/summon_system.rs` | 改写 1 条为 Why 注释 |
+| 23 | `camp_rest/systems/camp_rest_system.rs` | 改写 1 条为 Why 注释 |
+| 24 | `reaction/systems/reaction_system.rs` | 改写 2 条为 Why 注释 |
+| 25 | `inventory/systems/inventory_system.rs` | 改写 3 条翻译式注释为 Why 注释 |
+| 26 | `inventory/components.rs` | 改写 3 条为 Why 注释 |
+| 27 | `terrain/systems/hazard_system.rs` | 改写 4 条为 Why 注释 |
+| 28 | `terrain/systems/surface_system.rs` | 改写 3 条为 Why 注释 |
+| 29 | `terrain/systems/terrain_effect_system.rs` | 改写 1 条翻译式注释为 Why 注释 |
+| 30 | `faction/systems/relationship_system.rs` | 改写 1 条为 Why 注释 |
+| 31 | `faction/systems/reputation_system.rs` | 改写 1 条为 Why 注释 |
+| 32 | `faction/rules/reputation.rs` | 改写 1 条翻译式注释为 Why 注释 |
+| 33 | `faction/rules/relationship.rs` | 改写 4 条为 Why 注释 |
+| 34 | `party/systems/party_system.rs` | 改写 2 条为 Why 注释 |
+| 35 | `party/rules/rules.rs` | 改写 2 条为 Why 注释 |
+| 36 | `ui/focus/navigation.rs` | 改写 1 条为 Why 注释 |
+| 37 | `ui/primitives/button/systems.rs` | 改写 1 条为 Why 注释 |
 
 ### 效果
 
 | 指标 | 修复前 | 修复后 | 降幅 |
 |------|--------|--------|------|
-| 废话注释 (§1/§17/§18) | 99+ 处 | 13 处 | **-87%** |
-| 翻译式注释 (§18) | 48+ 处 | 29 处 | -40% |
+| 废话注释 (§1/§17/§18) | ~82 处 | **0 处** | **-100%** |
+| 翻译式注释 (§18) | ~15 处 | **0 处** | **-100%** |
 
-剩余 13 条为：API 契约注释（§5 合规）、TODO 完成条件（§14 合规）、领域规则说明（§9 合规）、分节符注释。均为可接受类型。
+所有注释均已改写为解释 Why 的规范注释，无一删除。
 
 ---
 
@@ -250,11 +353,11 @@ pub fn xxx(...) { ... }
 
 | 阶段 | 内容 | 预计工时 | 实际工时 | 风险 |
 |------|------|----------|----------|------|
-| 1 | 删除废话注释 | 4h | **1h** ✅ | 🟢 低 |
+| 1 | 废话注释 + 翻译式注释 → Why 注释 | 4h | **1.5h** ✅ | 🟢 低 |
 | 2 | 核心模块补 `///` | 24h | 待执行 | 🟡 中 |
-| 3 | Trait/事件/状态机 | 8h | 待执行 | 🟢 低 |
+| 3 | Trait/事件/状态机 | 8h | **0.5h** ✅ | 🟢 低 |
 | 4 | 不变量与公式 | 4h | 待执行 | 🟢 低 |
-| **合计** | | **40h (5天)** | **1h 已完成** | |
+| **合计** | | **40h (5天)** | **2h 已完成** | |
 
 ---
 

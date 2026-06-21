@@ -75,7 +75,7 @@ pub fn add_member_to_party(
 ) -> Result<(Party, u32), String> {
     can_add_member(&party)?;
 
-    // 检查是否已在队伍中
+    // 幂等保护：重复添加同一实体会导致 slot_index 冲突
     let already_in =
         party.members.iter().any(|m| m.entity == entity) || party.reserve_members.contains(&entity);
     if already_in {
@@ -200,7 +200,7 @@ pub fn check_bond_activation(
         let matched: Vec<&PartyMember> = active_members
             .iter()
             .filter(|m| {
-                // 检查特定实体匹配
+                // specific_entity 匹配：某些 Bond 要求特定单位在场
                 if let Some(specific) = requirement.specific_entity
                     && m.entity == specific
                 {

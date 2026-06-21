@@ -9,6 +9,12 @@ use bevy::prelude::*;
 
 /// 顶层游戏状态 — 驱动全局游戏流程。
 ///
+/// ```text
+/// MainMenu → PartySetup → TacticalMap ⇄ Combat → Result
+///                         ↓                     ↓
+///                      CampRest              GameOver
+/// ```
+///
 /// 切换 GameState 意味着进入一个不同的"世界模式"：
 /// ECS 系统集变化、UI 集合变化、输入规则变化、摄像机规则变化。
 /// 上一个场景的实体在 OnExit 时通过 `cleanup_scene` 卸载。

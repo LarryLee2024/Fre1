@@ -36,6 +36,10 @@ pub struct ReplayAction {
 /// let action = event.replay();
 /// assert!(action.record);
 /// ```
+/// 回放可记录 trait。
+///
+/// 存在原因：所有 DomainEvent 需要决定是否纳入 Replay 录制，
+/// 此 trait 提供 `replay()` 方法返回 ReplayAction（record/skip），由 blanket impl 自动派生。
 pub trait Replayable {
     /// 返回该事件的回放动作。
     fn replay(&self) -> ReplayAction;

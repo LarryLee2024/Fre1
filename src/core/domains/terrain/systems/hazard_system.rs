@@ -45,7 +45,7 @@ pub(crate) fn on_hazard_check(
         return;
     };
 
-    // 检查格子上是否有可用的陷阱定义
+    // HazardRegistry 按 zone 定义匹配当前格子的地形属性
     let matched_hazards: Vec<_> = registry
         .zones
         .iter()
@@ -56,7 +56,7 @@ pub(crate) fn on_hazard_check(
         return;
     }
 
-    // 检查实体是否已记录陷阱消耗状态
+    // HazardTriggeredState 记录已消耗的陷阱，防止同一格子的消耗型陷阱重复触发
     let mut consumed_set: HashSet<String> = HashSet::new();
     if let Ok(state) = hazard_state_query.get(entity) {
         for hazard_id in &state.consumed_hazards {
@@ -64,7 +64,7 @@ pub(crate) fn on_hazard_check(
         }
     }
 
-    // 触发未消耗的陷阱
+    // 消耗型陷阱触发后需更新状态，确保同一实体不会重复触发同一陷阱
     for hazard in matched_hazards {
         if hazard.is_consumable && consumed_set.contains(&hazard.id) {
             // 消耗型陷阱已被触发，跳过
@@ -77,9 +77,8 @@ pub(crate) fn on_hazard_check(
             hazard_id: hazard.id.clone(),
         });
 
-        // 记录消耗型陷阱状态
+        // 消耗型陷阱首次触发时插入状态组件，后续经过时走 consumed_set 跳过
         if hazard.is_consumable {
-            // 如果实体还没有 HazardTriggeredState，为其添加
             if !consumed_set.contains(&hazard.id) {
                 commands.entity(entity).insert(HazardTriggeredState {
                     consumed_hazards: {

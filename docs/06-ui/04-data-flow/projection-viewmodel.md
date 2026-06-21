@@ -1,9 +1,10 @@
 ---
 id: 06-ui.projection-viewmodel
 title: Projection and ViewModel Architecture — 投影层与视图模型架构
-status: draft
+status: code-aligned
 owner: presentation-architect
 created: 2026-06-20
+updated: 2026-06-21
 tags:
   - ui
   - projection
@@ -95,17 +96,15 @@ app.add_observer(
 
 ### 2.4 Projection 文件结构
 
-每个 Domain 对应一个 Projection 文件：
+每个 Domain 对应一个 Projection 文件。当前 MVP 仅实现了 BattleProjection：
 
 ```
 projections/
-├── mod.rs              # ProjectionPlugin
-├── battle.rs           # BattleProjection（监听 Combat Domain Events）
-├── inventory.rs        # InventoryProjection（监听 Inventory Domain Events）
-├── character.rs        # CharacterProjection（监听 Attribute/Effect Events）
-├── quest.rs            # QuestProjection（监听 Quest Domain Events）
-├── economy.rs          # EconomyProjection（监听 Economy Domain Events）
+├── mod.rs              # ProjectionPlugin + 公共导出
+├── battle.rs           # BattleProjection（监听 TurnStarted / EffectApplied Domain Events）
 ```
+
+后续迭代将补充 inventory.rs、character.rs、quest.rs、economy.rs 等文件。
 
 Projection 文件结构模板：
 ```rust
@@ -231,10 +230,10 @@ UiAction::Click
 
 | Domain | ReadFacade（Domain 侧） | Projection（UI 侧） |
 |--------|------------------------|---------------------|
-| Combat | `combat/integration/facade.rs` → `build_effect_view()` | `projections/battle.rs` |
-| Economy | `economy/integration/facade.rs` → `get_wallet()` | `projections/economy.rs` |
-| Spell | `spell/integration/query.rs` → `SpellQueryParam` | `projections/character.rs` |
-| Campaign | `party/integration/facade.rs` → query methods | `projections/party.rs`（拟新增） |
+| Combat | `combat/integration/facade.rs` → `build_effect_view()` | `projections/battle.rs` (MVP ✅) |
+| Economy | `economy/integration/facade.rs` → `get_wallet()` | ❌ 待实现 |
+| Spell | `spell/integration/query.rs` → `SpellQueryParam` | ❌ 待实现 |
+| Campaign | `party/integration/facade.rs` → query methods | ❌ 待实现 |
 
 （引用：宪法 §8.9 — 读写分离原则；`src/core/domains/*/integration/facade.rs` — ReadFacade 参考实现）
 
@@ -315,53 +314,53 @@ struct SkillSlotVm {
 
 #### BattleHudVm
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| hp | u32 | 当前 HP |
-| max_hp | u32 | 最大 HP |
-| mp | u32 | 当前 MP |
-| max_mp | u32 | 最大 MP |
-| current_turn | u32 | 当前回合数 |
-| active_character | Option\<CharacterId\> | 当前行动角色 |
-| phase | BattlePhaseVm | 战斗阶段 |
-| cooldowns | HashMap\<SkillId, f32\> | 技能冷却 |
-| action_points | u32 | 行动点 |
-| max_action_points | u32 | 最大行动点 |
+```rust
+#[derive(Clone, Reflect, Default)]
+pub struct BattleHudVm {
+    pub hp: f32,              // 当前 HP
+    pub max_hp: f32,          // 最大 HP
+    pub mp: f32,              // 当前 MP
+    pub max_mp: f32,          // 最大 MP
+    pub ap: f32,              // 当前 AP
+    pub max_ap: f32,          // 最大 AP
+    pub turn_number: u32,     // 当前回合数
+    pub phase_key: &'static str,  // 阶段描述（本地化 Key）
+}
+```
 
 #### CharacterPanelVm
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| character_id | Option\<CharacterId\> | 当前角色 |
-| name_key | UiTextKey | 角色名 |
-| level | u32 | 等级 |
-| hp / max_hp / mp / max_mp | u32 | 基本属性 |
-| exp / exp_to_next | u32 | 经验 |
-| buffs | Vec\<BuffVm\> | Buff 列表 |
-| stats | StatsVm | 属性面板 |
+```rust
+#[derive(Clone, Reflect, Default)]
+pub struct CharacterPanelVm {
+    pub character_id: u32,        // 角色 ID
+    pub name_key: &'static str,   // 角色名称（本地化 Key）
+    pub level: u32,               // 等级
+    pub hp: f32,                  // 当前 HP
+    pub max_hp: f32,              // 最大 HP
+    pub mp: f32,                  // 当前 MP
+    pub max_mp: f32,              // 最大 MP
+}
+```
 
-#### SkillPanelVm
+#### SkillPanelVm 和 SkillSlotVm
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| skills | Vec\<SkillSlotVm\> | 技能槽位列表 |
-| selected | Option\<SkillId\> | 当前选中 |
-| ap_remaining | u32 | 剩余行动点 |
-| max_ap | u32 | 最大行动点 |
+```rust
+#[derive(Clone, Reflect, Default)]
+pub struct SkillSlotVm {
+    pub skill_id: u32,                // 技能 ID
+    pub name_key: &'static str,       // 技能名称（本地化 Key）
+    pub cooldown_remaining: u32,      // 剩余冷却回合数
+    pub max_cooldown: u32,            // 最大冷却回合数
+    pub is_usable: bool,              // 是否可用
+    pub ap_cost: u32,                 // AP 消耗
+}
 
-#### InventoryVm
-
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| items | Vec\<InventorySlotVm\> | 物品列表 |
-| gold | u32 | 金币 |
-| filter | InventoryFilterVm | 当前筛选 |
-| selected | Option\<ItemId\> | 当前选中 |
-| sort_order | InventorySortOrder | 排序方式 |
-
-#### ShopVm / QuestLogVm / NotificationVm / ModalVm
-
-参见 schema §4.6-§4.9 完整定义。
+#[derive(Clone, Reflect, Default)]
+pub struct SkillPanelVm {
+    pub skills: HashMap<u32, SkillSlotVm>,  // 技能数据映射（skill_id → SkillSlotVm）
+}
+```
 
 （引用：domain rules §7 — ViewModel 定义；schema §4 — Schema Design）
 
@@ -376,182 +375,37 @@ struct SkillSlotVm {
 
 ### 4.1 Molecule 级 ViewModel
 
-Molecule 级 ViewModel 均为独立定义，作为 Organism 或 Screen ViewModel 的嵌套字段。
+当前 MVP 实现了 `SkillSlotVm` 作为独立定义的 Molecule 级 ViewModel。其余 Molecule ViewModel（CharacterPortraitVm、InventoryItemRowVm、QuestEntryVm、DialogueChoiceVm、ShopItemCardVm、BuffVm、TurnIndicatorVm）将在后续迭代中补充。
 
 #### SkillSlotVm
 
-| 属性 | 值 |
-|------|----|
-| **来源** | widget-composites.md §2.1 SkillSlot |
-| **定义方式** | 独立定义 |
-| **说明** | 技能快捷栏中单个技能槽位的数据，包含技能 ID、名称、图标、冷却、AP/MP 消耗和交互状态 |
-| **字段概要** | 参见 widget-composites.md §2.1 Props 表：skill_id, name_key, icon_key, cooldown_remaining, cooldown_total, ap_cost, mp_cost, enabled, is_selected |
-| **使用场景** | 作为 SkillPanelVm 的 skills 字段成员 |
+```rust
+#[derive(Clone, Reflect, Default)]
+pub struct SkillSlotVm {
+    pub skill_id: u32,
+    pub name_key: &'static str,
+    pub cooldown_remaining: u32,
+    pub max_cooldown: u32,
+    pub is_usable: bool,
+    pub ap_cost: u32,
+}
+```
 
-#### CharacterPortraitVm
-
-| 属性 | 值 |
-|------|----|
-| **来源** | widget-composites.md §2.2 CharacterPortrait |
-| **定义方式** | 独立定义 |
-| **说明** | 角色头像区域数据，包含角色 ID、名称、头像资源、HP 状态、状态效果图标和选中状态 |
-| **字段概要** | 参见 widget-composites.md §2.2 Props 表：character_id, name_key, portrait_key, hp_current, hp_max, status_icons, is_active_turn, is_selected |
-| **使用场景** | 作为 CharacterStatusPanelVm 的子组件，也直接用于 DialoguePanel |
-
-#### InventoryItemRowVm
-
-| 属性 | 值 |
-|------|----|
-| **来源** | widget-composites.md §2.3 InventoryItemRow |
-| **定义方式** | 独立定义 |
-| **说明** | 背包/商店中单行物品条目数据，包含物品 ID、名称、图标、数量、稀有度、操作类型和选中状态 |
-| **字段概要** | 参见 widget-composites.md §2.3 Props 表：item_id, name_key, icon_key, quantity, rarity, action_type, is_selected, price |
-| **使用场景** | 作为 InventoryVm 的 items 字段成员 |
-
-#### QuestEntryVm
-
-| 属性 | 值 |
-|------|----|
-| **来源** | widget-composites.md §2.4 QuestEntry |
-| **定义方式** | 独立定义 |
-| **说明** | 任务日志中单个任务条目数据，包含任务 ID、标题、描述、进度、奖励、状态和展开状态 |
-| **字段概要** | 参见 widget-composites.md §2.4 Props 表：quest_id, title_key, description_key, progress_current, progress_total, rewards_key, status, is_expanded |
-| **使用场景** | 作为 QuestLogVm 的 quests 字段成员 |
-
-#### DialogueChoiceVm
-
-| 属性 | 值 |
-|------|----|
-| **来源** | widget-composites.md §2.5 DialogueChoice |
-| **定义方式** | 独立定义 |
-| **说明** | 对话系统中单个选项数据，包含选项 ID、文本、选中状态、可用性和不可选原因 |
-| **字段概要** | 参见 widget-composites.md §2.5 Props 表：choice_id, text_key, text_params, is_selected, is_available, requirement_hint |
-| **使用场景** | 作为 DialoguePanelVm 的 choices 字段成员 |
-
-#### ShopItemCardVm
-
-| 属性 | 值 |
-|------|----|
-| **来源** | widget-composites.md §2.6 ShopItemCard |
-| **定义方式** | 独立定义 |
-| **说明** | 商店中单个商品卡片数据，包含商品 ID、图标、名称、价格、折扣、库存和购买能力 |
-| **字段概要** | 参见 widget-composites.md §2.6 Props 表：item_id, item_icon, item_name_key, price, original_price, stock, stock_max, player_can_afford, discount_pct |
-| **使用场景** | 作为 ShopPanelVm 的 items 字段成员 |
-
-#### BuffVm
-
-| 属性 | 值 |
-|------|----|
-| **来源** | widget-composites.md §2.7 BuffIcon |
-| **定义方式** | 独立定义 |
-| **说明** | Buff/Debuff 状态图标数据，包含效果 ID、图标、类型（增益/减益）、剩余回合、名称、描述和叠层数 |
-| **字段概要** | 参见 widget-composites.md §2.7 Props 表：buff_id, icon_key, is_debuff, remaining_turns, max_turns, name_key, description_key, stack_count |
-| **使用场景** | 作为 CharacterPanelVm / CharacterStatusPanelVm 的 buffs 字段成员 |
-
-#### TurnIndicatorVm
-
-| 属性 | 值 |
-|------|----|
-| **来源** | widget-composites.md §2.8 TurnIndicator |
-| **定义方式** | 独立定义 |
-| **说明** | 回合顺序指示器中单个角色条目数据，包含角色 ID、头像、名称、活跃状态、AP 和阵营 |
-| **字段概要** | 参见 widget-composites.md §2.8 Props 表：character_id, portrait_key, name_key, is_active, is_next, ap_remaining, ap_max, faction |
-| **使用场景** | 作为 TurnOrderBarVm 的 turn_order 字段成员 |
+- **来源**: widget-composites.md §2.1 SkillSlot
+- **定义方式**: 独立定义
+- **使用场景**: 作为 SkillPanelVm 的 skills 字段值（`HashMap<u32, SkillSlotVm>`）
 
 ### 4.2 Organism 级 ViewModel
 
-Organism 级 ViewModel 部分对已存在的基础 ViewModel（参见 §3.4），部分为新增独立定义。
+当前 MVP 实现的 Organism 级 ViewModel 均为 §3.4 中定义的基础 ViewModel（BattleHudVm、CharacterPanelVm、SkillPanelVm），UiStore 直接作为 Organism 的输入源。暂无非基础 ViewModel 的独立 Organism ViewModel。
 
-#### SkillPanelVm
-
-| 属性 | 值 |
-|------|----|
-| **来源** | widget-composites.md §3.1 SkillPanel |
-| **定义方式** | 派生自基础 VM（已在 §3.4 定义） |
-| **说明** | 技能面板数据，与 §3.4 SkillPanelVm 同一份定义。UiStore.skill_panel 同时作为数据存储和复合组件输入源 |
-| **字段概要** | 参见 §3.4 SkillPanelVm 字段表及 widget-composites.md §3.1 Props 表 |
-
-#### CharacterStatusPanelVm
-
-| 属性 | 值 |
-|------|----|
-| **来源** | widget-composites.md §3.2 CharacterStatusPanel |
-| **定义方式** | 独立定义（UiStore 新增字段） |
-| **说明** | 角色状态面板数据，集中显示角色完整状态（HP/MP/AP/Buff），包含 CharacterPortrait 和 BuffIcon 子级数据 |
-| **字段概要** | 参见 widget-composites.md §3.2 Props 表（character_id, name_key, portrait_key, hp/mp/ap 字段, buffs, status_text, is_enemy, is_active） |
-
-#### BattleHudVm
-
-| 属性 | 值 |
-|------|----|
-| **来源** | widget-composites.md §3.3 BattleHud |
-| **定义方式** | 派生自基础 VM（已在 §3.4 定义） |
-| **说明** | 战斗 HUD 数据，与 §3.4 BattleHudVm 同一份定义。UiStore.battle_hud 同时作为数据存储和复合组件输入源 |
-| **字段概要** | 参见 §3.4 BattleHudVm 字段表及 widget-composites.md §3.3 Props 表 |
-
-#### TurnOrderBarVm
-
-| 属性 | 值 |
-|------|----|
-| **来源** | widget-composites.md §3.4 TurnOrderBar |
-| **定义方式** | 独立定义（UiStore 新增字段或作为 BattleHudVm 的嵌套字段） |
-| **说明** | 回合顺序条数据，包含按行动顺序排列的角色指示器列表和当前回合信息 |
-| **字段概要** | 参见 widget-composites.md §3.4 Props 表（turn_order: Vec<TurnIndicatorVm>, is_player_turn, current_turn_index） |
-
-#### InventoryGridVm — 已合并至 InventoryVm
-
-| 属性 | 值 |
-|------|----|
-| **来源** | widget-composites.md §3.5 InventoryGrid |
-| **定义方式** | 已合并至 InventoryVm（参见 §3.4），不额外命名 |
-| **说明** | 依据"UiStore 字段名 = 复合组件输入源"策略（参见 §4.3），不额外定义 InventoryGridVm。InventoryVm（§3.4）直接作为 InventoryGrid 的数据输入源。UiStore.inventory 的 items 字段使用 InventoryItemRowVm 类型 |
-| **字段概要** | 参见 §3.4 InventoryVm 字段表及 widget-composites.md §3.5 Props 表 |
-
-#### QuestLogVm
-
-| 属性 | 值 |
-|------|----|
-| **来源** | widget-composites.md §3.6 QuestLog |
-| **定义方式** | 派生自基础 VM（已在 §3.4 定义） |
-| **说明** | 任务日志数据，与 §3.4 QuestLogVm 同一份定义。UiStore.quest_log 同时作为数据存储和复合组件输入源 |
-| **字段概要** | 参见 §3.4 QuestLogVm 字段表及 widget-composites.md §3.6 Props 表 |
-
-#### DialoguePanelVm
-
-| 属性 | 值 |
-|------|----|
-| **来源** | widget-composites.md §3.7 DialoguePanel |
-| **定义方式** | 独立定义（UiStore 新增字段） |
-| **说明** | 对话系统面板数据，包含说话者信息、对话文本、选项列表和打字动画状态 |
-| **字段概要** | 参见 widget-composites.md §3.7 Props 表（dialogue_id, speaker: CharacterPortraitVm, dialogue_text_key, choices: Vec<DialogueChoiceVm>, is_typing, typing_progress, is_skippable, auto_advance） |
-
-#### ShopPanelVm
-
-| 属性 | 值 |
-|------|----|
-| **来源** | widget-composites.md §3.8 ShopPanel |
-| **定义方式** | 独立定义（对应 UiStore.shop，即 §3.4 ShopVm） |
-| **说明** | 商店交易面板数据。ShopPanelVm 与 ShopVm（§3.4）共享同一数据源，UiStore.shop 直接作为 ShopPanel 的输入源。命名上统一为 ShopPanelVm 以反映其复合组件身份 |
-| **字段概要** | 参见 §3.4 ShopVm 字段表及 widget-composites.md §3.8 Props 表 |
-
-### 4.3 命名统一说明
-
-> **BattleHudVm 和 QuestLogVm 的双身份**
->
-> BattleHudVm 和 QuestLogVm 同时在 §3.4（基础 ViewModel 清单）和 widget-composites.md（复合组件定义）中出现。这是设计意图，不是冲突——它们"既是基础 VM，也是复合组件的 ViewModel"：
->
-> - **基础 VM 身份**：在 UiStore 中独立存储（`UiStore.battle_hud`、`UiStore.quest_log`），由 Projection 直接更新
-> - **复合组件身份**：作为 BattleHud（widget-composites.md §3.3）和 QuestLog（widget-composites.md §3.6）的唯一 ViewModel 输入源
->
-> 这意味着 BattleHudVm 和 QuestLogVm 的数据字段必须同时满足两个身份的需求。如果复合组件需要额外的展示字段，应当合并到基础 VM 中，而不是创建第二个版本。
-
-> **UiStore 字段名 = 复合组件输入源策略**
->
-> 对于 InventoryVm（§3.4），UiStore 中已有同名字段 `UiStore.inventory`，其数据形状覆盖 InventoryGrid（widget-composites.md §3.5）的需求，因此不额外创建 InventoryGridVm。InventoryVm 直接作为 InventoryGrid 的输入源。
->
-> 同理，ShopVm（§3.4）直接作为 ShopPanel（widget-composites.md §3.8）的输入源，在复合组件上下文中被称为 ShopPanelVm。
->
-> 这条策略保证了 UiStore 不膨胀——Organism 的 ViewModel 优先复用已有基础 VM，只有当 Organism 的需求超出基础 VM 形状时才新增独立字段。
+后续迭代将补充：
+- CharacterStatusPanelVm（独立定义）
+- TurnOrderBarVm（独立定义）
+- InventoryVm（等同于 InventoryGrid 输入源）
+- QuestLogVm
+- DialoguePanelVm
+- ShopPanelVm
 
 ---
 
@@ -564,32 +418,50 @@ Widget 只在数据变化时刷新，避免每帧全量遍历所有 Widget。
 ### 5.2 机制设计
 
 ```rust
-#[derive(Component, Reflect, Default)]
-pub struct Dirty<T: Reflect + Default> {
+#[derive(Component, Debug, Clone, Reflect)]
+pub struct Dirty<T: Reflect + Default + Clone + Send + Sync + 'static> {
     pub inner: T,
-    pub is_dirty: bool,
+    is_dirty: bool,
 }
 
-impl<T: Reflect + Default> Dirty<T> {
+impl<T: Reflect + Default + Clone + Send + Sync + 'static> Dirty<T> {
+    /// 创建新的 Dirty 包装（初始状态为 dirty，触发首次刷新）
+    pub fn new(inner: T) -> Self;
+
+    /// 手动标记为脏
     pub fn mark_dirty(&mut self);
+
+    /// 消费脏标记 —— 返回 true 表示需要刷新
+    /// 消费后标记自动清除，避免同帧重复消费
     pub fn consume(&mut self) -> bool;
+
+    /// 获取内部数据引用（不触发 dirty）
+    pub fn get(&self) -> &T;
+
+    /// 获取内部数据可变引用（自动标记 dirty）
+    pub fn get_mut(&mut self) -> &mut T;
 }
 ```
 
 **工作流程**：
-1. Projection 更新 ViewModel 后调用 `mark_dirty()`
+1. Projection 更新 ViewModel 后调用 `get_mut()`（自动 mark_dirty）或 `mark_dirty()`
 2. Widget 系统调用 `consume()` 检测脏标记
-3. 脏则刷新 Widget 渲染，否者跳过
+3. 脏则刷新 Widget 渲染，否则跳过
 4. `consume()` 自动清除脏标记，保证每帧最多刷新一次
+5. `get()` 只读访问，不触发脏标记
+6. `get_mut()` 可变访问时自动标记脏
 
 ### 5.3 注册要求
 
-每个 ViewModel 类型的 `Dirty<T>` 必须在 UiPlugin 中注册：
+每个 ViewModel 类型的 `Dirty<T>` 需要在 App 构建时注册类型：
 
 ```rust
+app.register_type::<BattleHudVm>();
+app.register_type::<CharacterPanelVm>();
+app.register_type::<SkillPanelVm>();
 app.register_type::<Dirty<BattleHudVm>>();
 app.register_type::<Dirty<CharacterPanelVm>>();
-// ... 每个 ViewModel 类型
+app.register_type::<Dirty<SkillPanelVm>>();
 ```
 
 ### 5.4 使用约束
@@ -612,16 +484,12 @@ UiStore 是类似 Redux Store 的统一状态容器，所有 ViewModel 集中管
 ### 6.2 结构设计
 
 ```rust
-#[derive(Resource, Reflect, Default)]
+#[derive(Resource, Clone, Reflect)]
+#[reflect(Resource)]
 pub struct UiStore {
     pub battle_hud: BattleHudVm,
     pub character_panel: CharacterPanelVm,
     pub skill_panel: SkillPanelVm,
-    pub inventory: InventoryVm,
-    pub shop: ShopVm,
-    pub quest_log: QuestLogVm,
-    pub notification_queue: Vec<NotificationVm>,
-    pub modal_stack: Vec<ModalVm>,
 }
 ```
 
@@ -630,19 +498,22 @@ pub struct UiStore {
 | 决策 | 选择 | 理由 |
 |------|------|------|
 | Store 类型 | Resource（非 Component） | 全局唯一，无需挂载到 Entity |
-| 字段组织 | 平铺（非 HashMap） | 利用 Rust 类型系统保证访问安全 |
-| 队列容器 | Vec（非专用队列） | 保持 Reflect 兼容性 |
-| 更新方式 | 直接字段赋值（非 Diff） | 简单直接，Dirty 标记额外管理 |
+| 字段组织 | 平铺结构体（非 HashMap） | 利用 Rust 类型系统保证访问安全 |
+| 更新方式 | 直接字段赋值 + Dirty<T> | 通过 get_mut() 自动标记脏 |
 
 ### 6.4 未来扩展点
 
+当前 UiStore 仅包含战斗和角色相关的三个字段。后续迭代将新增：
+
 | 扩展点 | UiStore 新增字段 |
 |--------|----------------|
-| MiniMapVm | battle_hud → minimap |
+| InventoryVm | → inventory |
+| ShopPanelVm | → shop |
+| QuestLogVm | → quest_log |
+| MiniMapVm | → minimap |
 | DialogueVm | → dialogue |
 | CraftingVm | → crafting |
-| TutorialVm | → tutorial |
-| AchievementVm | → achievement |
+| NotificationVm 队列 | → notification_queue |
 
 （引用：schema §4.1 — UiStore 统一 ViewModel 容器；schema §19 — Future Extension）
 
@@ -650,19 +521,16 @@ pub struct UiStore {
 
 ## 7. Domain Event → Projection 映射表
 
-| Domain Event | Projection | ViewModel 更新 |
-|-------------|-----------|---------------|
-| DamageApplied | BattleProjection | BattleHudVm.hp |
-| HealthChanged | CharacterProjection | CharacterPanelVm.hp/max_hp |
-| ManaChanged | CharacterProjection | CharacterPanelVm.mp/max_mp |
-| TurnStarted | BattleProjection | BattleHudVm.current_turn |
-| BuffApplied | CharacterProjection | CharacterPanelVm.buffs |
-| BuffExpired | CharacterProjection | CharacterPanelVm.buffs |
-| AbilityUsed | BattleProjection | SkillPanelVm.cooldowns |
-| ItemAcquired | InventoryProjection | InventoryVm.items |
-| QuestUpdated | QuestProjection | QuestLogVm.quests |
-| LevelUp | CharacterProjection | CharacterPanelVm.level |
-| GoldChanged | EconomyProjection | ShopVm.gold |
+| Domain Event | Projection | ViewModel 更新 | 实现状态 |
+|-------------|-----------|---------------|---------|
+| TurnStarted | BattleProjection | BattleHudVm.turn_number += 1 / phase_key 设置 | ✅ |
+| EffectApplied | BattleProjection | 当前为 no-op placeholder | 🟡 占位 |
+
+**当前实现说明**：
+- BattleProjection 是唯一已实现的 projection，包含 `on_turn_started` 和 `on_effect_applied` 两个纯函数
+- `on_turn_started`：递增 `turn_number`，设置 `phase_key` 为 `"ui.battle.phase.player"`
+- `on_effect_applied`：当前为 no-op，仅日志记录。标记了 TODO 以便后续实现技能冷却更新
+- 后续迭代将补充 DamageApplied、HealthChanged、ItemAcquired 等事件的 projection
 
 （引用：domain rules §6 — 领域事件与订阅关系）
 
@@ -731,18 +599,33 @@ struct ManaText;
 struct ExpText;
 
 // ✅ 允许：统一枚举
-#[derive(Component, Reflect, Clone, Copy, PartialEq)]
+#[derive(Component, Reflect, Clone, PartialEq, Eq, Hash)]
+#[reflect(Component)]
 pub enum UiBinding {
+    // ── Battle HUD ──
     Hp, MaxHp, Mp, MaxMp, Ap, MaxAp,
-    Turn, Phase, Level, Exp, Name,
-    SkillSlot(u8),
-    ItemSlot(u8),
+    Turn, Phase,
+
+    // ── Character Panel ──
+    Level, Exp, Name, CharacterLevel,
+
+    // ── Skill Panel ──
+    SkillSlot(u8), Cooldown,
+
+    // ── Inventory ──
+    ItemSlot(u8), Gold,
+
+    // ── Quest ──
     QuestEntry(u16),
+
+    // ── General ──
     Tooltip, Modal, Notification,
-    Cooldown, Gold,
+    Text, Icon,
 }
 ```
 
+- 当前 MVP 实现了 Battle HUD、Character Panel、Skill Panel 和 General 分类的变体
+- Inventory、Quest 分类的变体已定义预留，等待对应 Widget 实现后启用
 - 带参数变体（`SkillSlot(u8)`）支持动态数量的 UI 元素
 - 单一 Archetype 查询 `Query<&UiBinding>` 即可覆盖所有 UI 绑定
 - AI 生成代码时不会困惑于选择哪个 Marker
@@ -768,12 +651,13 @@ pub enum UiBinding {
 
 | # | 规则 | 触发时机 | 校验逻辑 |
 |---|------|----------|----------|
-| V-VM-01 | ViewModel 数值范围 | Projection 更新时 | hp ≤ max_hp, mp ≤ max_mp, exp ≤ exp_to_next |
+| V-VM-01 | ViewModel 数值范围 | Projection 更新时 | hp ≤ max_hp, mp ≤ max_mp |
 | V-VM-02 | ViewModel 不含 Domain 类型 | 代码审查 | 字段类型不引用 Domain Component |
-| V-VM-03 | UiTextKey 格式合法 | 编译期/加载期 | 匹配 `ui\.[a-z0-9_]+.[a-z0-9_]+.[a-z0-9_]+` |
-| V-VM-04 | AssetKey 非空 | Def 加载 | 字符串长度 > 0 |
-| V-PROJ-01 | Projection 不修改 Domain | 代码审查 | 参数不含 ResMut\<非 UiStore 的 Domain Resource\> |
+| V-VM-03 | 文本字段使用本地化 Key | 代码审查 | 文本字段使用 `&'static str` 而非硬编码字符串 |
+| V-PROJ-01 | Projection 不修改 Domain | 代码审查 | 参数不含 `ResMut`\<非 UiStore 的 Domain Resource\> |
 
 ---
 
 *本文档由 @presentation-architect 维护。新增 ViewModel 或 Projection 需经过架构审查。*
+
+*最后更新: 2026-06-21 — 与实际代码实现对齐 (commit 903d039)*

@@ -70,7 +70,7 @@ pub(crate) fn on_reputation_change_request(
         reason: req.reason.clone(),
     });
 
-    // 检查是否跨越等级
+    // 等级跨越检测：声望值变化可能导致阵营等级升降，触发对应事件
     if let Some((old_level, new_level)) = check_level_change(current, new_value) {
         commands.trigger(ReputationLevelUp {
             entity,

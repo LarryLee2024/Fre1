@@ -89,15 +89,14 @@ pub(crate) fn on_equip_item(
         return;
     };
 
-    // 如果是穿戴（new_item 有值）
+    // new_item_template_id 有值表示穿戴操作，先从背包取出再装备到槽位
     if let Some(ref new_template_id) = ev.new_item_template_id {
-        // 从背包查找并移除物品
         let removed_qty = inventory.remove_item(new_template_id, 1, 1.0);
         if removed_qty > 0 {
             let item = ItemInstance::new(new_template_id);
             let old = equipment.equip(ev.slot, item);
 
-            // 如果旧装备存在，放回背包
+            // 旧装备回退到背包，保证物品不丢失
             if let Some(old_item) = old {
                 let old_template = old_item.template_id.clone();
                 inventory.add_item(old_item, 1.0);
@@ -123,7 +122,7 @@ pub(crate) fn on_equip_item(
         }
     }
 
-    // 如果是卸下（new_item 为空，old_item 有值）
+    // new 为空且 old 有值表示卸下操作，将装备放回背包
     if ev.new_item_template_id.is_none()
         && let Some(ref old_template_id) = ev.old_item_template_id
     {
@@ -159,7 +158,7 @@ pub(crate) fn on_item_used(trigger: On<ItemUsed>, mut query: Query<&mut Inventor
         return;
     };
 
-    // 检查是否拥有足够数量
+    // 数量校验：消耗数量超过持有量时拒绝操作，防止负数背包
     if !inventory.has_item(&ev.item_template_id, ev.quantity_consumed) {
         if ITEM_USED_INSUFFICIENT_QUANTITY_GUARD.try_fire() {
             tracing::warn!(target: "inventory",

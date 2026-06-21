@@ -32,6 +32,10 @@ pub use interpolation::{inv_lerp, lerp, smoothstep};
 /// assert!(1.0_f64.float_eq(&1.0_f64, 1e-12));
 /// assert!(!1.0_f64.float_eq(&1.0001_f64, 1e-12));
 /// ```
+/// 浮点数近似相等比较 trait。
+///
+/// 存在原因：Rust 的 `==` 对 f32/f64 有精度问题（0.1 + 0.2 != 0.3），
+/// 属性聚合管线中大量浮点比较需要 epsilon 容差。
 pub trait FloatEq {
     /// 在指定 epsilon 容差内比较两个值是否相等。
     fn float_eq(&self, other: &Self, epsilon: f32) -> bool;

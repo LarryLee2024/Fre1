@@ -185,7 +185,7 @@ pub fn transition_to(
 
     let old_state = instance.state;
 
-    // 验证转换合法性
+    // 能力状态机只允许特定转换路径，非法转换返回 InvalidTransition 错误
     validate_transition(old_state, new_state)?;
 
     instance.state = new_state;
@@ -202,7 +202,7 @@ fn validate_transition(from: AbilityState, to: AbilityState) -> Result<(), Abili
         (AbilityState::Casting, AbilityState::Active) => true,
         // 取消/打断
         (AbilityState::Casting, AbilityState::Ready) => true,
-        // 执行完毕进入冷却
+        // Active→Cooldown 是标准执行完成路径，触发冷却计时
         (AbilityState::Active, AbilityState::Cooldown) => true,
         // 冷却到期
         (AbilityState::Cooldown, AbilityState::Ready) => true,
@@ -333,10 +333,10 @@ pub fn complete_ability(
     let spec_id = instance.spec_id.clone();
     let def_id = instance.def_id.clone();
 
-    // 移除实例
+    // 移除实例 — execute_complete 的副作用，确保单次执行语义
     container.remove_instance(instance_id);
 
-    // 创建冷却
+    // 冷却期 > 0 时创建 CooldownEntry，驱动后续回合递减
     if cooldown_turns > 0 {
         let cooldown = CooldownEntry::new(&spec_id, cooldown_turns);
         container.set_cooldown(cooldown);

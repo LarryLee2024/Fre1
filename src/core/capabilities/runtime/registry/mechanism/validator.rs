@@ -18,7 +18,7 @@ pub fn validate_id_format(def_id: &str) -> Result<(), RegistryError> {
         });
     }
 
-    // 检查前缀是否合法
+    // ID 前缀校验：未知前缀说明注册了未定义的 Def 类型
     let prefix = &def_id[..def_id.len().min(4)];
     if IdType::from_prefix(prefix).is_none() {
         return Err(RegistryError::InvalidIdFormat {

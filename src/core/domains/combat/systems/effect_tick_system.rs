@@ -38,7 +38,7 @@ pub(crate) fn on_turn_end_tick_effects(
 ) {
     let outcomes = effect_tick.tick_all(&mut commands);
 
-    // 记录 Tick 活动日志
+    // Tick 日志用于追踪效果生命周期 — 帮助调试 Buff 过期和周期效果触发时机
     for outcome in &outcomes {
         if !outcome.ticked.is_empty() {
             debug!(target: "combat",

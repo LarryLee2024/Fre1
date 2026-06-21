@@ -61,12 +61,12 @@ impl SchedulerState {
 
         let next_frame = self.current_time.frame + 1;
 
-        // 检查阶段帧数上限
+        // 阶段帧数上限防止单阶段无限循环
         if self.max_frames_per_phase > 0 && next_frame > self.max_frames_per_phase {
             return Err(SchedulerError::FrameOverflow { frame: next_frame });
         }
 
-        // 检查回合帧数上限
+        // 回合帧数上限防止回合整体超时
         if self.max_frames_per_turn > 0 && self.current_time.turn > 0 {
             let total_frames_this_turn = next_frame;
             if total_frames_this_turn > self.max_frames_per_turn {

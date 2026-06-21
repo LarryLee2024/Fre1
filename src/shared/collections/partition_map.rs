@@ -20,6 +20,10 @@
 /// assert_eq!(numbers, vec![1, 3]);
 /// assert_eq!(errors, vec!["two", "four"]);
 /// ```
+/// 迭代器分区映射扩展。
+///
+/// 存在原因：Content 层加载配置时需要将解析结果分为 Ok（有效配置）和 Err（校验失败），
+/// 单次遍历完成分区避免两次迭代。
 pub trait PartitionMap: Iterator {
     /// 单次遍历将迭代器元素分区为 Ok 值和 Err 值。
     ///

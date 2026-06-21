@@ -261,7 +261,7 @@ pub fn tick_durations(
             }
         }
 
-        // 处理周期 Tick
+        // 周期 Tick 检测：advance 内部判断 elapsed_turns 是否达到 interval
         if effect.stage == EffectStage::Active
             && let Some(ref mut tick_state) = effect.tick_state
             && tick_state.advance(turns_elapsed)
@@ -413,7 +413,7 @@ pub fn remove_effects_by_def(
 }
 
 // ============================================================================
-// 检查函数
+// 免疫与条件检查
 // ============================================================================
 
 /// 检查效果能否施加（不变量 3.2）。

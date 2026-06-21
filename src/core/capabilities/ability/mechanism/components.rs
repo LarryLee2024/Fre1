@@ -159,7 +159,7 @@ impl ActiveAbilityContainer {
                 }
             }
         }
-        // 移除已过期的冷却
+        // 批量清理已过期的冷却，避免迭代中修改集合
         for spec_id in &expired {
             self.cooldowns.remove(spec_id);
         }

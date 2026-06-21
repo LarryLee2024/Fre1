@@ -118,7 +118,7 @@ impl FileSink {
         // 限制保留文件数
         cleanup_old_files(config);
 
-        // 创建新文件
+        // 轮转后创建新文件继续写入，旧文件保留供日志分析工具消费
         let file = OpenOptions::new()
             .create(true)
             .append(true)

@@ -64,6 +64,10 @@ impl<E: Error + 'static> Error for ErrorContext<E> {
 /// |------|------|
 /// | `.domain(tag)` | 添加领域标签 |
 /// | `.with_context(tag, msg)` | 添加领域标签和上下文信息 |
+/// 错误上下文扩展 trait。
+///
+/// 存在原因：每个领域定义独立错误枚举，但错误传播时需要携带领域标签和上下文信息，
+/// 此 trait 提供 `.domain()` / `.with_context()` 链式 API 统一错误包装。
 pub trait ContextExt<T, E> {
     /// 添加领域标签，将 `Err(e)` 转换为 `Err(ErrorContext { domain: tag, source: e })`。
     fn domain(self, tag: &'static str) -> Result<T, ErrorContext<E>>;

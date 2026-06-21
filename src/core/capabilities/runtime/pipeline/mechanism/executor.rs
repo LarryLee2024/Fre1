@@ -39,7 +39,7 @@ pub fn execute_pipeline(
     executor: StepExecutor,
 ) -> Result<(), PipelineError> {
     for stage in &definition.stages {
-        // 检查管线是否已被中止
+        // 管线中止检查：aborted 由外部触发（如战斗结束），提前终止所有阶段
         if context.aborted {
             return Err(PipelineError::Aborted {
                 reason: context
@@ -51,7 +51,7 @@ pub fn execute_pipeline(
 
         let result = execute_stage(stage, context, executor)?;
 
-        // 如果阶段被跳过，记录到上下文
+        // Skipped 阶段记录到上下文日志，用于回放时还原执行路径
         if matches!(result, ExecutionStageResult::Skipped) {
             context.log(ExecutionLogEntry::new(
                 &stage.name,

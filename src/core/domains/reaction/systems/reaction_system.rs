@@ -33,13 +33,13 @@ pub fn process_reaction_queue(
     query: Query<&ReactionState>,
 ) {
     while !queue.queue.is_finished() {
-        // 查找下一个 Pending 条目
+        // next_pending 按优先级返回下一个未处理的反应条目
         let entry = match queue.queue.next_pending() {
             Some(e) => e.clone(),
             None => break,
         };
 
-        // 检查触发者是否仍可用反应
+        // 反应可能在排队后被其他效果消耗，需重新校验可用性
         if let Ok(state) = query.get(entry.reactor)
             && state.can_react()
         {

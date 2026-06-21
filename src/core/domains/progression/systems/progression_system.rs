@@ -65,10 +65,10 @@ pub(crate) fn enforce_xp_invariant(
         current_level: xp.level,
     });
 
-    // 检查是否触发升级
+    // 不变量 3.1：满级时不增加经验
     let next_threshold = balance.xp_for_level(xp.level + 1);
     if xp.can_level_up(next_threshold) {
-        // 触发升级流程 — 发布 LevelUp 事件
+        // LevelUp 事件触发升级流程：扣经验、增等级、检查 ASI
         commands.trigger(LevelUp {
             entity: ev.entity,
             old_level,
@@ -104,7 +104,6 @@ pub(crate) fn handle_level_up(
     let xp_cost = balance.xp_for_level(ev.new_level);
     xp.apply_level_up(xp_cost);
 
-    // 更新 ClassLevels
     if let Some(mut cls) = class_levels {
         cls.advance_class(ev.class_id.clone());
         commands.trigger(ClassGained {
@@ -114,7 +113,7 @@ pub(crate) fn handle_level_up(
         });
     }
 
-    // 检查 ASI
+    // 不变量 3.6：ASI 等级触发属性提升选择
     if ev.is_asi_level {
         commands.trigger(ASICompleted {
             entity: ev.entity,

@@ -136,6 +136,8 @@ pub struct DamagePolicy;
 impl DamagePolicy {
     /// 执行完整的伤害计算流程。
     ///
+    /// 来源：D&D 5e SRD §9 + ADR-023 §2
+    ///
     /// 管线步骤：
     /// 1. 暴击判定 → 基础伤害 × 暴击倍率
     /// 2. 属性加成（攻击方力量/法强等）

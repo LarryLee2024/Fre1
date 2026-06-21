@@ -97,6 +97,12 @@ pub enum FactionRelationType {
 /// 个体对阵营的综合关系状态。
 ///
 /// 由 FactionRelationType + Reputation 共同决定。
+///
+/// ```text
+/// War ←→ Hostile ←→ Neutral ←→ Allied
+/// ```
+///
+/// 关系按强度递增排列，更强的关系会覆盖更弱的。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect, Default)]
 pub enum RelationshipState {
     /// 盟友 — 不攻击，可交易/对话

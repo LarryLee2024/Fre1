@@ -49,7 +49,7 @@ pub fn handle_long_rest_complete(
             pool.recover_for_long_rest();
         }
 
-        // 记录上次长休时间，然后重置休息状态
+        // last_long_rest_frame 记录用于判断「距离上次长休是否超过 8 小时」（不变量 3.3）
         if let Ok(mut rest) = rest_query.get_mut(*entity) {
             rest.last_long_rest_frame = Some(game_time.frame());
             rest.reset();

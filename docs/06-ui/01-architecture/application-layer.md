@@ -1,9 +1,10 @@
 ---
 id: 06-ui.application-layer
 title: UI Application Layer — 输入意图、命令、事件
-status: draft
+status: code-aligned
 owner: presentation-architect
 created: 2026-06-20
+updated: 2026-06-21
 tags:
   - ui
   - application
@@ -50,7 +51,7 @@ InputAction ──→ UiIntent ──→ UiAction ──→ UiCommand ──→ 
 UiIntent 是原始输入（键盘、鼠标、手柄）到语义化意图的映射层。InputSystem 将原始事件转换为 UiIntent，UiIntent 不包含任何硬件细节。
 
 ```rust
-#[derive(Clone, Reflect)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Reflect, Event)]
 pub enum UiIntent {
     // ── 导航意图（FocusGroup 导航） ──
     /// 焦点上移
@@ -67,34 +68,26 @@ pub enum UiIntent {
     Cancel,
 
     // ── 选择意图 ──
-    /// 选择技能（手柄方向键+技能槽位映射）
-    SelectSkill(SkillId),
-    /// 选择目标（方向键选择场上角色）
-    SelectTarget(CharacterId),
-    /// 选择网格位置
-    SelectGridPos(GridPos),
-    /// 选择物品槽位
-    SelectItem(ItemId),
-    /// 选择存档槽位
-    SelectSaveSlot(SaveSlot),
+    /// 选择技能（SkillId 占位符）
+    SelectSkill(u32),
+    /// 选择目标（CharacterId 占位符）
+    SelectTarget(u32),
 
-    // ── 操作意图 ──
-    /// 打开页面
+    // ── 屏幕操作意图 ──
+    /// 打开指定页面
     OpenScreen(ScreenType),
-    /// 关闭页面
+    /// 关闭当前页面
     CloseScreen,
-    /// 切换暂停
+    /// 切换暂停状态
     TogglePause,
-    /// 打开设置
+    /// 打开设置页面
     OpenSettings,
-    /// 打开背包
+    /// 打开背包页面
     OpenInventory,
 
     // ── 系统意图 ──
-    /// 切换 Debug Overlay（仅 dev）
+    /// 切换调试叠加层（仅 dev 构建）
     ToggleDebug,
-    /// 截图
-    Screenshot,
 }
 ```
 
@@ -150,9 +143,11 @@ Application layer (intent.rs)
 UiAction 是 Widget 级别的交互输出声明。Widget 在交互时发射 UiAction，UiActionHandler 将 UiAction 转换为 UiCommand。
 
 ```rust
-#[derive(Clone, Reflect)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Reflect, Event)]
 pub enum UiAction {
     // ── 通用 ──
+    /// 点击（Button Widget 主要输出）
+    Click,
     /// 确认
     Confirm,
     /// 取消
@@ -161,36 +156,24 @@ pub enum UiAction {
     Dismiss,
 
     // ── 选择 ──
-    /// 点击（Button Widget 主要输出）
-    Click,
-    /// 选择技能
-    SelectSkill(SkillId),
-    /// 选择物品
-    SelectItem(ItemId),
-    /// 选择角色
-    SelectCharacter(CharacterId),
-    /// 选择网格位置
-    SelectGridPos(GridPos),
+    /// 选择技能（SkillId 占位符）
+    SelectSkill(u32),
+    /// 选择物品（ItemId 占位符）
+    SelectItem(u32),
+    /// 选择角色（CharacterId 占位符）
+    SelectCharacter(u32),
 
     // ── 切换/筛选 ──
     /// 切换选中状态
     Toggle(bool),
     /// 切换标签页
     ChangeTab(usize),
-    /// 切换筛选条件
-    ChangeFilter(InventoryFilterVm),
-    /// 切换排序方式
-    ChangeSort(InventorySortOrder),
 
     // ── 输入 ──
     /// 文本变更
     TextChanged(String),
     /// 文本确认
     TextConfirmed(String),
-
-    // ── 上下文 ──
-    /// 显示上下文菜单
-    ShowContextMenu(ItemId, Vec2),
 
     // ── 自定义 ──
     /// 自定义动作（携带字符串标识）
@@ -215,47 +198,43 @@ pub enum UiAction {
 UiCommand 是 UI 层向 Domain 层发送的命令枚举。所有用户操作必须通过此枚举进入 Domain，禁止 Widget 直接修改 Domain。
 
 ```rust
-#[derive(Clone, Reflect)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Reflect, Event)]
 pub enum UiCommand {
     // ── Combat（战斗） ──
-    /// 施放技能（SkillId, target: CharacterId）
-    CastSkill(SkillId, CharacterId),
+    /// 施放技能（SkillId, target CharacterId）
+    CastSkill(u32, u32),
     /// 选择目标（CharacterId）
-    SelectTarget(CharacterId),
+    SelectTarget(u32),
     /// 结束回合
     EndTurn,
-    /// 移动到网格位置
-    MoveToPosition(GridPos),
+    /// 移动到网格位置（x, y）
+    MoveToPosition(i32, i32),
 
     // ── Inventory（背包） ──
     /// 使用物品
-    UseItem(ItemId),
-    /// 装备物品
-    EquipItem(ItemId, EquipmentSlot),
+    UseItem(u32),
+    /// 装备物品（ItemId, slot index）
+    EquipItem(u32, u32),
     /// 丢弃物品
-    DropItem(ItemId),
+    DropItem(u32),
 
     // ── Quest（任务） ──
     /// 接受任务
-    AcceptQuest(QuestId),
+    AcceptQuest(u32),
     /// 放弃任务
-    AbandonQuest(QuestId),
+    AbandonQuest(u32),
 
     // ── Economy（经济） ──
     /// 购买物品（ItemId, quantity）
-    BuyItem(ItemId, u32),
+    BuyItem(u32, u32),
     /// 出售物品（ItemId, quantity）
-    SellItem(ItemId, u32),
+    SellItem(u32, u32),
 
     // ── Save（存档） ──
     /// 保存游戏
-    SaveGame(SaveSlot),
+    SaveGame(u32),
     /// 加载游戏
-    LoadGame(SaveSlot),
-
-    // ── Settings（设置） ──
-    /// 修改设置
-    ChangeSettings(UiSettings),
+    LoadGame(u32),
 
     // ── System（系统） ──
     /// 切换暂停
@@ -278,7 +257,6 @@ pub enum UiCommand {
 | 任务命令 | AcceptQuest, AbandonQuest | 是 | Domain (Quest) |
 | 经济命令 | BuyItem, SellItem | 是 | Domain (Economy) |
 | 存档命令 | SaveGame, LoadGame | 否 | Infra (Save) |
-| 设置命令 | ChangeSettings | 否 | Infra (Settings) |
 | UI 导航命令 | OpenScreen, CloseScreen | 否 | UI 内部 |
 | 系统命令 | TogglePause, NewGame | 否 | App (GameState) |
 
@@ -286,47 +264,59 @@ pub enum UiCommand {
 
 UiCommand 不是直接发向 Domain 的。UiCommand 首先经过转换器，转换为 ADR-043 定义的 GameCommand。
 
-```
-UiCommand::CastSkill(skill_id, target_id)
-    │
-    ▼
-Application layer (command.rs — 转换器)
-    │   match command {
-    │       UiCommand::CastSkill(skill_id, target_id) =>
-    │           GameCommand::Ability(CastAbility { skill_id, caster_id, target_id }),
-    │   }
-    ▼
-GameCommand（进入 ADR-043 CommandQueue）
-    │
-    ▼
-Domain 执行
+```rust
+impl UiCommand {
+    /// 将 UiCommand 转换为 GameCommand 以便 Domain 层执行。
+    ///
+    /// 返回 `None` 的场景：
+    /// - UI 内部导航命令（OpenScreen、CloseScreen）
+    /// - 需要调用方上下文信息才能填充的命令（如 CastSkill 缺少 caster_id）
+    /// - 当前 GameCommand 尚不支持的领域操作
+    pub fn into_game_command(&self) -> Option<GameCommand> {
+        match self {
+            UiCommand::EndTurn => Some(GameCommand::EndTurn {
+                unit_id: String::new(), // 调用方应在入队前填充
+            }),
+            UiCommand::SaveGame(_) => Some(GameCommand::SaveGame),
+            UiCommand::LoadGame(_) => Some(GameCommand::LoadGame),
+            // 以下命令当前无法映射到 GameCommand：
+            // CastSkill     — 需 caster_id（将在集成时从上下文获取）
+            // SelectTarget  — 无对应 GameCommand
+            // MoveToPosition — 无对应 GameCommand
+            // UseItem       — 需 user_id/item_instance_id
+            // EquipItem     — 无对应 GameCommand
+            // DropItem      — 无对应 GameCommand
+            // AcceptQuest   — 无对应 GameCommand
+            // AbandonQuest  — 无对应 GameCommand
+            // BuyItem       — 无对应 GameCommand
+            // SellItem      — 无对应 GameCommand
+            // TogglePause   — 无对应 GameCommand
+            // OpenScreen    — UI 内部导航
+            // CloseScreen   — UI 内部导航
+            // NewGame       — 无对应 GameCommand
+            _ => None,
+        }
+    }
+}
 ```
 
-**完整映射表**：
+**当前映射状态**（MVP）：
 
 | UiCommand | GameCommand | 说明 |
 |-----------|------------|------|
-| CastSkill(sid, cid) | GameCommand::Ability(CastAbility {..}) | 施放技能 |
-| EndTurn | GameCommand::Combat(EndTurn) | 结束回合 |
-| MoveToPosition(pos) | GameCommand::Tactical(MoveTo {..}) | 移动 |
-| UseItem(iid) | GameCommand::Inventory(UseItem {..}) | 使用物品 |
-| EquipItem(iid, slot) | GameCommand::Inventory(EquipItem {..}) | 装备 |
-| DropItem(iid) | GameCommand::Inventory(DropItem {..}) | 丢弃 |
-| BuyItem(iid, qty) | GameCommand::Economy(BuyItem {..}) | 购买 |
-| SellItem(iid, qty) | GameCommand::Economy(SellItem {..}) | 出售 |
-| AcceptQuest(qid) | GameCommand::Quest(AcceptQuest {..}) | 接受任务 |
-| SaveGame(slot) | GameCommand::Save(SaveGame {..}) | 保存 |
-| LoadGame(slot) | GameCommand::Save(LoadGame {..}) | 加载 |
-| ChangeSettings(settings) | 直接修改 UiSettings Resource（不走 GameCommand） | 设置 |
-| OpenScreen(type) | 直接调用 ScreenStack::push（UI 内部） | 导航 |
-| CloseScreen | 直接调用 ScreenStack::pop（UI 内部） | 导航 |
+| EndTurn | GameCommand::EndTurn { unit_id } | 结束回合（unit_id 由调用方填充） |
+| SaveGame(slot) | GameCommand::SaveGame | 保存游戏 |
+| LoadGame(slot) | GameCommand::LoadGame | 加载游戏 |
+| 所有其他命令 | None | 尚在集成中，返回 None 后由调用方自行处理 |
+
+**注意**：上述映射表是当前 MVP 实现。完整映射表将在后续集成中逐步补充。UI 导航命令（OpenScreen/CloseScreen）始终由 ScreenStack 内部处理，不经过 GameCommand。
 
 ### 4.4 UiCommand 的 Save/Replay 策略
 
 | 命令类别 | 策略 |
 |---------|------|
 | 战斗/背包/任务/经济命令 | 通过 GameCommand 进入 Replay 录制 |
-| 存档/设置命令 | 不进入 Replay，独立处理 |
+| 存档命令 | 不进入 Replay，独立处理 |
 | UI 导航命令 | 不进入 Replay，Replay 时从 Domain Event 重新投影 |
 
 ---
@@ -338,49 +328,25 @@ Domain 执行
 UiEvent 是 UI 层内部的事件广播机制，用于 UI 层内部各子系统通信（ViewModel 更新、导航变更、焦点切换等）。
 
 ```rust
-#[derive(Clone, Reflect)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Reflect, Event)]
 pub enum UiEvent {
     // ── ViewModel 事件 ──
     /// ViewModel 已更新（设置 Dirty 标记后发射）
-    ViewModelUpdated(&'static str),  // ViewModel 名称
-    /// UiStore 已更新
-    StoreUpdated,
+    ViewModelUpdated(&'static str),
 
     // ── 导航事件 ──
     /// Screen 推入完成
     ScreenPushed(ScreenType),
     /// Screen 弹出完成
     ScreenPopped(ScreenType),
-    /// Screen 被替换
-    ScreenReplaced(ScreenType, ScreenType),  // (old, new)
+    /// Screen 被替换（旧, 新）
+    ScreenReplaced(ScreenType, ScreenType),
     /// 导航错误
-    NavigationError(NavigationError),
-
-    // ── Overlay 事件 ──
-    /// Overlay 显示
-    OverlayShown(&'static str),
-    /// Overlay 关闭
-    OverlayHidden(&'static str),
-
-    // ── 焦点事件 ──
-    /// 焦点移动到新元素
-    FocusChanged(FocusId),
-    /// 焦点组切换
-    FocusGroupChanged(FocusGroupId),
+    NavigationError(String),
 
     // ── 主题事件 ──
     /// 主题切换
-    ThemeChanged(ThemeName),
-
-    // ── 本地化事件 ──
-    /// 语言切换
-    LanguageChanged(LanguageVm),
-
-    // ── 动画事件 ──
-    /// 过渡动画开始
-    TransitionStarted(ScreenType),
-    /// 过渡动画结束
-    TransitionFinished(ScreenType),
+    ThemeChanged(String),
 }
 ```
 
@@ -391,17 +357,15 @@ pub enum UiEvent {
 | ViewModelUpdated | Projection | Widget System | 触发 Widget 刷新（与 Dirty 机制的冗余保障） |
 | ScreenPushed | ScreenStack | FocusSystem | 新 Screen 激活 → FocusGroup 初始化 |
 | ScreenPopped | ScreenStack | OverlayService | Screen 退出时清理与其绑定的 Overlay |
-| OverlayShown | OverlayService | InputSystem | 阻止下层 FocusGroup 交互 |
-| FocusChanged | FocusSystem | TooltipService | 新焦点元素 → 更新 Tooltip |
 | ThemeChanged | ThemeSystem | Widget System | 触发全局 Widget 刷新 |
-| LanguageChanged | SettingsSystem | LocalizedText | 触发所有 LocalizedText 刷新 |
 
 ### 5.3 UiEvent 边界
 
-- UiEvent 是 UI 内部事件，U 不跨出 UI 层
+- UiEvent 是 UI 内部事件，不跨出 UI 层
 - Domain Event 通过 Observer 通知 UI，不经过 UiEvent
 - UiEvent 的监听者限于 UI 层内部
 - UiEvent 使用 Bevy Event 机制（`EventWriter`/`EventReader`）在 UI 层内部广播
+- Overlay 事件、焦点事件、本地化事件、动画事件当前未实现，后续版本扩展
 
 ---
 
@@ -414,63 +378,30 @@ pub enum UiEvent {
     │
     ▼
 Widget (SkillSlot)
-    │  Input: SkillSlotVm { skill_id: SkillId(42), is_usable: true, ... }
+    │  Input: SkillSlotVm { skill_id: 42, is_usable: true, ... }
     │  Interaction: MouseButton::Left
     ▼
-UiAction::SelectSkill(SkillId(42))
+UiAction::SelectSkill(42)
     │  Screen (BattleScreen) 的 UiActionHandler 处理
     ▼
-UiCommand::CastSkill(SkillId(42), CharacterId(7))
+UiCommand::CastSkill(42, 7)
     │  Application layer (command.rs) 转换
+    │  注意：当前 MVP 中 CastSkill 返回 None（需 caster_id）
+    │  调用方自行处理命令入队
     ▼
-GameCommand::Ability(CastAbility {
-    skill_id: SkillId(42),
-    caster_id: CharacterId(1),
-    target_id: CharacterId(7),
-})
-    │  ADR-043 CommandQueue
-    ▼
-Ability Domain 执行
+（视集成阶段而定：将来进入 GameCommand 或直接调用 Domain API）
     │
     ▼
-Domain Event: DamageApplied { target: CharacterId(7), value: 85 }
+Domain Event: TurnStarted / EffectApplied
     │  Observer 监听
     ▼
-BattleProjection::project_damage → BattleHudVm.hp = 85 → Dirty
+BattleProjection::on_turn_started → BattleHudVm.turn_number += 1 → Dirty
+BattleProjection::on_effect_applied → 当前为 no-op placeholder
 ```
 
-### 6.2 背包场景示例：丢弃物品
+### 6.2 背包场景示例：丢弃物品（预留）
 
-```
-用户点击"丢弃"按钮
-    │
-    ▼
-Widget (DangerButton)
-    │  Input: label_key: "ui.inventory.drop", enabled: true
-    │  Interaction: Click
-    ▼
-UiAction::Click
-    │
-    ▼
-UIAction → ModalService.push(ModalVm {
-    title_key: "ui.inventory.drop_confirm",
-    body_key: "ui.inventory.drop_confirm_body",
-    buttons: [Cancel, Confirm],
-    ...
-})
-    │  用户点击确认
-    ▼
-UiAction::Confirm
-    │
-    ▼
-UiCommand::DropItem(ItemId(15))
-    │  command.rs 转换
-    ▼
-GameCommand::Inventory(DropItem { item_id: ItemId(15) })
-    │
-    ▼
-Inventory Domain 执行
-```
+丢弃物品流程的 Modal 确认环节尚未实现。当前 MVP 中 DropItem 的确认流程由后续迭代补充。
 
 ### 6.3 导航示例：打开设置
 
@@ -504,13 +435,13 @@ InputSystem: DPAD_UP
     │
     ▼
 UiIntent::NavigateUp
-    │  Intent 路由 → FocusGroup
+    │  Intent 路由 → FocusManager
     ▼
-FocusGroup（BattleScreen.FocusGroup, FocusNavigation::Grid { cols: 4 }）
-    │  计算焦点移动：当前焦点位置 (row=1, col=0) → (row=0, col=0)
-    │  wrap = false，已达首行 → 无移动
+FocusManager（当前 FocusGroup 0）
+    │  焦点已在边界 → 无移动
+    │  返回 false，NavigateUp 意图静默忽略
     ▼
-（无 UiAction/Command 发射，焦点可能已在边界）
+（无 UiAction/Command 发射）
 ```
 
 ---
@@ -519,10 +450,9 @@ FocusGroup（BattleScreen.FocusGroup, FocusNavigation::Grid { cols: 4 }）
 
 | 路径 | 机制 | 方向 | 涉及的枚举 |
 |------|------|------|-----------|
-| Input → Intent | InputSystem 映射 | Infra/Input → UI | InputAction → UiIntent |
 | Intent → Action | FocusGroup 路由 | UI 内部 | UiIntent → UiAction |
 | Action → Command | UiActionHandler 转换 | UI 内部 | UiAction → UiCommand |
-| Command → GameCommand | command.rs 转换器 | UI → Core/Domain | UiCommand → GameCommand |
+| Command → GameCommand | into_game_command() 转换 | UI → Core/Domain | UiCommand → GameCommand |
 | Domain → ViewModel | Observer + Projection | Core → UI | Domain Event → ViewModel |
 | ViewModel → Widget | Dirty<T> consume | UI 内部 | — |
 | UI 内部广播 | UiEvent (EventWriter/Reader) | UI 内部 | UiEvent |
@@ -534,11 +464,13 @@ FocusGroup（BattleScreen.FocusGroup, FocusNavigation::Grid { cols: 4 }）
 | # | 规则 | 校验逻辑 |
 |---|------|----------|
 | APP-VAL-01 | UiIntent 不包含硬件细节 | UiIntent 变体不引用 KeyCode/GamepadButton 等硬件类型 |
-| APP-VAL-02 | UiCommand 不包含执行逻辑 | UiCommand 是纯数据枚举，匹配分支中无业务逻辑 |
-| APP-VAL-03 | 转换器是唯一出口 | UI → Domain 的调用必须经过 UiCommand → GameCommand 转换器 |
+| APP-VAL-02 | UiAction/UiCommand 是纯数据枚举 | 匹配分支中无业务执行逻辑 |
+| APP-VAL-03 | 转换器是唯一出口 | UI → Domain 的调用必须经过 UiCommand::into_game_command() 转换器 |
 | APP-VAL-04 | UiEvent 不跨 UI 层 | UiEvent 的事件订阅者仅限于 UI 层内部模块 |
 | APP-VAL-05 | Intent 无法映射时静默忽略 | 无对应映射的 Intent 不产生崩溃 |
 
 ---
 
 *本文档由 @presentation-architect 维护。新增 UiIntent/UiCommand/UiEvent 变体需经过架构审查。*
+
+*最后更新: 2026-06-21 — 与实际代码实现对齐 (commit 903d039)*

@@ -230,6 +230,12 @@ impl ItemInstance {
 
 /// 背包容器组件。
 ///
+/// 不变量：
+/// - items.len() <= max_slots
+/// - total_weight == 所有物品 weight_per_unit × quantity 之和
+/// - total_weight >= 0
+/// - 同一 template_id 的可堆叠物品最多出现一次（quantity 可累加）
+///
 /// 管理角色持有的所有物品。支持堆叠、负重和槽位限制。
 /// 详见 inventory_domain.md §5.1
 #[derive(Component, Debug, Clone, PartialEq, Reflect)]
@@ -283,7 +289,7 @@ impl Inventory {
 
     /// 检查是否有足够空间容纳指定物品。
     pub fn can_hold(&self, item: &ItemInstance, item_weight: f32) -> bool {
-        // 检查堆叠合并：如果有同类可堆叠物品且未满，则不需要新格子
+        // 堆叠合并优化：同类可堆叠物品优先填满已有槽位，节省格子空间
         let needs_new_slot = if item.is_stackable() {
             !self
                 .items
@@ -297,7 +303,7 @@ impl Inventory {
             return false;
         }
 
-        // 检查负重：item_weight 是每单位重量，需要乘以数量
+        // 负重校验：总重量不能超过 max_weight，item_weight 为单件重量
         let total_item_weight = if needs_new_slot && item.quantity > 1 {
             item_weight * item.quantity as f32
         } else {
@@ -369,7 +375,7 @@ impl Inventory {
                 item.quantity = item.quantity.saturating_sub(to_remove);
                 remaining -= to_remove;
                 self.total_weight -= weight_per_unit * to_remove as f32;
-                // 如果物品数量归零，移除该条目
+                // retain 保留 quantity > 0 的条目，归零的自动移除
                 item.quantity > 0
             } else {
                 true

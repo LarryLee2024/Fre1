@@ -84,7 +84,7 @@ impl TagHierarchy {
             }
         }
 
-        // 注册标签
+        // 标签注册核心逻辑：存储定义 + 维护父子索引
         let id = def.id.clone();
         let bit_index = def.bit_index;
 
@@ -96,7 +96,7 @@ impl TagHierarchy {
             self.abstract_tags.insert(id.clone());
         }
 
-        // 更新子标签索引
+        // children 索引用于高效查询子标签，避免每次遍历全部标签
         if let Some(ref parent_id) = def.parent_id {
             self.children
                 .entry(parent_id.clone())

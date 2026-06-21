@@ -58,9 +58,8 @@ pub(crate) fn on_turn_end_surface_recovery(
             *remaining -= 1;
         }
 
-        // 检查是否到期（剩余回合为 0 或已过期）
+        // is_expired() 检查 remaining_duration 是否归零，到期后恢复原始表面
         if override_.is_expired() {
-            // 恢复原始表面
             props.surface = override_.original;
             let pos = tile_pos.copied().unwrap_or(TilePos::new(0, 0));
 
@@ -71,7 +70,7 @@ pub(crate) fn on_turn_end_surface_recovery(
                 new_surface: override_.original,
             });
 
-            // 移除 SurfaceOverride 组件
+            // SurfaceOverride 组件已过期，移除以清理 Archetype
             commands.entity(entity).remove::<SurfaceOverride>();
         }
     }

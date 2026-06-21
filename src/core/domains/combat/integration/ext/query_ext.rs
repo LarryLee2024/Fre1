@@ -25,6 +25,10 @@ use bevy::prelude::Query;
 ///     }
 /// }
 /// ```
+/// Combat 域 Query 扩展。
+///
+/// 存在原因：战斗系统频繁需要"存活单位"和"敌对单位"筛选，
+/// 将常用过滤模式封装为方法，避免每个系统重复写 `Without<Dead>` 等过滤器。
 pub trait QueryExt<'w, 's, D: QueryData, F: QueryFilter> {
     /// Filter entities that are alive (not dead/removed).
     fn alive(&self) -> impl Iterator<Item = Entity>;

@@ -46,14 +46,14 @@ pub(crate) fn on_aggregate_dirty(
         return;
     };
 
-    // 查找目标属性的定义（取 base_value）
+    // AttributeId 从事件参数解析，对应 AttributeContainer 中已注册的属性
     let attr_id = AttributeId::new(attr_id_str.as_str());
     let Some(attr_value) = attr_container.attributes.get(&attr_id) else {
         return;
     };
     let base_value = attr_value.base_value;
 
-    // 收集该属性的所有修改器并转换到 aggregator 域
+    // ModifierContainer 存储该实体所有属性的修改器，按属性 ID 索引
     let modifiers: Vec<AggregatorModifierEntry> = mod_container
         .modifiers
         .get(attr_id_str.as_str())
@@ -78,7 +78,7 @@ pub(crate) fn on_aggregate_dirty(
         cycle_detection: true,
     };
 
-    // 执行聚合（使用宽松边界）
+    // 四阶段聚合管线：Add → Multiply → Override → Clamp，宽松边界允许中间值超限
     let result = execute_aggregation(
         attr_id_str,
         base_value,

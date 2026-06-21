@@ -76,7 +76,7 @@ pub fn playback_frame_bookend_system(
         return;
     }
 
-    // 验证当前帧（不变量: 校验和一致性）
+    // 校验和验证：帧数据损坏或非确定性执行会导致校验和不匹配
     if let Err(_e) = session.verify_current_frame() {
         let fnum = session.current_frame_number().unwrap_or(0);
         let expected = session
@@ -92,7 +92,7 @@ pub fn playback_frame_bookend_system(
         });
     }
 
-    // 发送帧处理事件
+    // ReplayFrameProcessed 事件供 UI 显示回放进度、Debug 工具追踪帧执行
     if let Some(fnum) = session.current_frame_number() {
         commands.trigger(ReplayFrameProcessed {
             frame_number: fnum,

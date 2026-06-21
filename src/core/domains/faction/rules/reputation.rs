@@ -57,7 +57,7 @@ pub fn is_reputation_change_allowed(current: i32, delta: i32, is_key_character: 
         return true;
     }
     let new_value = current + delta;
-    // 如果变更后声望低于保护阈值，拒绝
+    // 关键角色保护阈值：防止关键 NPC 声望跌破 Allied 门槛
     if new_value < KEY_CHARACTER_MIN_REPUTATION {
         return false;
     }

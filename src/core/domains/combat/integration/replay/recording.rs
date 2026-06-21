@@ -48,14 +48,14 @@ pub(crate) fn start_recording_on_battle_begin(
     mut commands: Commands,
     rng: Option<Res<DeterministicRng>>,
 ) {
-    // 如果已经有录制会话，跳过
+    // 幂等保护：同一场战斗不应重复初始化录制会话
     if let Some(session) = recording
         && session.0.is_some()
     {
         return;
     }
 
-    // 构建 EntityMapper<BattleUnitId>
+    // Entity→BattleUnitId 映射供后续录制命令时将 Entity 转换为可序列化 ID
     let mapper = build_battle_unit_registry(&participants);
 
     let unit_count = mapper.len();
@@ -64,21 +64,21 @@ pub(crate) fn start_recording_on_battle_begin(
         return;
     }
 
-    // 收集参与者 ID
+    // ReplayHeader 记录参与者列表，回放时用于校验战斗参与者一致性
     let mut header = ReplayHeader::new(1, "0.1.0", "combat_battle", 0);
     for entity_id in mapper.ids() {
         header.add_participant(entity_id.as_str().to_string());
     }
 
-    // 设置初始种子
+    // 初始种子写入 ReplayHeader，回放时用于校验 RNG 确定性
     let initial_seed = rng
         .map(|r| r.get_all_seeds())
         .map(|seeds| seeds.combat_seed)
         .unwrap_or(42);
     header.initial_seed = initial_seed;
 
-    // 创建录制会话
-    let mut core_session = CoreRecordingSession::new(60); // 每 60 帧一个检查点
+    // 每 60 帧一个检查点，用于回放时分段校验确定性
+    let mut core_session = CoreRecordingSession::new(60);
     core_session.start(header, 0);
 
     commands.insert_resource(mapper);
@@ -105,7 +105,7 @@ pub(crate) fn record_unit_action(
 
     let unit = trigger.event().unit;
 
-    // 通过 EntityMapper 将 Entity 转换为 BattleUnitId
+    // EntityMapper 映射保证 Entity→BattleUnitId 转换的一致性，Replay 回放时依赖此映射
     let unit_id = match mapper.get_id(&unit) {
         Some(id) => id.as_str().to_string(),
         None => {
@@ -114,7 +114,7 @@ pub(crate) fn record_unit_action(
         }
     };
 
-    // 记录为 SkipTurn（当前为简略版，后续可扩展）
+    // SkipTurn 为简略录制模式 — 后续扩展 UseAbility 等详细命令时在此转换
     let command = ReplayCommand::SkipTurn { unit: unit_id };
     session.record_command(command);
 }
@@ -132,7 +132,7 @@ pub(crate) fn stop_recording_on_battle_end(
         return;
     };
 
-    // 停止录制并获取日志
+    // 停止录制生成 ReplayLog，后续用于存档、回放、自动化测试
     match session.stop(0) {
         Ok(log) => {
             debug!(target: "combat",

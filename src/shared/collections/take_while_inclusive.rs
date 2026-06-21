@@ -110,6 +110,10 @@ impl<I: fmt::Debug, P> fmt::Debug for TakeWhileInclusive<I, P> {
 /// // 4 是第一个不满足 x < 4 的元素，但仍被包含
 /// assert_eq!(result, vec![1, 2, 3, 4]);
 /// ```
+/// 包含边界元素的 TakeWhile 扩展。
+///
+/// 存在原因：标准 `take_while` 在谓词首次为 false 时丢弃该元素，
+/// 但对话树/任务链等场景需要保留"触发结束的元素"（如最后一个满足条件的对话节点）。
 pub trait TakeWhileInclusiveExt: Iterator + Sized {
     /// 创建一个包含首个不满足谓词的元素的 TakeWhileInclusive 适配器。
     ///

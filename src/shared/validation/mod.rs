@@ -250,6 +250,10 @@ impl<T> FromIterator<ValidationResult<T>> for ValidationResult<Vec<T>> {
 ///     }
 /// }
 /// ```
+/// 通用校验器 trait。
+///
+/// 存在原因：Content 层校验配置数据、Core 层校验业务规则、Infra 层校验输入格式，
+/// 统一通过此 trait 抽象校验逻辑，避免每个模块重复实现 if-else 链。
 pub trait Validator<T: ?Sized> {
     /// 校验失败时的错误类型。
     type Error: fmt::Display;

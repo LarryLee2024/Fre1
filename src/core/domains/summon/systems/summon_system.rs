@@ -60,7 +60,7 @@ pub fn handle_summon_created(
     position: (i32, i32),
     duration_type: String,
 ) -> Entity {
-    // 创建召唤物实体
+    // 先 spawn 空实体再逐步附加组件，是因为 SummonBond 需要 caster Entity 引用
     let summon_entity = commands.spawn_empty().id();
 
     // 附加 SummonBond 组件

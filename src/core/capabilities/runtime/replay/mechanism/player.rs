@@ -38,7 +38,7 @@ impl PlaybackSession {
 
     /// 加载回放日志。
     pub fn load(&mut self, log: &ReplayLog) -> Result<(), ReplayError> {
-        // 验证版本
+        // Schema 版本校验：版本不匹配说明录制/回放使用了不同版本的 Replay 格式
         if log.header.schema_version > 1 {
             return Err(ReplayError::VersionMismatch {
                 expected: 1,
@@ -46,7 +46,7 @@ impl PlaybackSession {
             });
         }
 
-        // 验证帧序列
+        // 帧号连续性校验：录制时保证帧号从 0 递增，间隙说明日志损坏
         for (i, frame) in log.frames.iter().enumerate() {
             if frame.frame_number != i as u64 {
                 return Err(ReplayError::FrameNumberGap {
@@ -60,7 +60,7 @@ impl PlaybackSession {
             return Err(ReplayError::EmptyLog);
         }
 
-        // 设置初始种子
+        // RNG 种子初始化：回放必须从录制时的种子开始，确保确定性
         self.initial_seed = log.header.initial_seed;
         let seeds = RngSeeds::uniform(log.header.initial_seed);
         self.rng.set_all_seeds(seeds);

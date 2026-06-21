@@ -88,7 +88,7 @@ impl Plugin for LocalizationPlugin {
             // -- 运行时审计 -- Update --
             .add_systems(Update, audit_system);
 
-        // 设置默认 locale（如果与 en-US 不同）
+        // 默认 locale 与 en-US 不同时需要额外 apply 步骤，因为 validation 默认用 en-US
         let default_locale = self.config.default_locale.clone();
         if default_locale != LocaleId::EnUS {
             app.add_systems(Startup, apply_default_locale.after(validation_system));

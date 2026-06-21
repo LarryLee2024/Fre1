@@ -37,7 +37,7 @@ pub(crate) fn on_tile_entered(
         .and_then(|tile_entity| tile_props_query.get(tile_entity).ok())
         .and_then(|props| surface_to_effect_id(props.surface));
 
-    // 如果表面有对应的地形效果，发出 TerrainEffectApplied 事件
+    // surface_to_effect_id 将表面类型映射为效果 ID，无映射的表面不触发效果
     if let Some(effect_id) = surface_effect {
         commands.trigger(TerrainEffectApplied {
             entity,

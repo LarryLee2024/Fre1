@@ -20,7 +20,7 @@ impl Plugin for RegistryPlugin {
     fn build(&self, app: &mut App) {
         // 事件自动注册（Bevy 0.19+ observer-based，无需 add_event）
         app
-            // 初始化空的 DefinitionRegistry
+            // DefinitionRegistry 是全局单例，所有 Content Loader 向此注册 Def
             .init_resource::<DefinitionRegistry>();
     }
 }
