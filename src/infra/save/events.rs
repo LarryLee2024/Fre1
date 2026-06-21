@@ -11,7 +11,9 @@ use crate::shared::error::ErrorContext;
 /// 订阅者：save_world_system（核心序列化）、UI（显示保存进度）。
 #[derive(Event, Debug, Clone, Reflect, Default)]
 pub struct SaveRequest {
+    /// 保存目标路径，为 None 时使用当前存档路径
     pub path: Option<String>,
+    /// 存档标签（显示名称），为 None 时使用默认标签
     pub label: Option<String>,
 }
 
@@ -19,6 +21,7 @@ pub struct SaveRequest {
 /// 订阅者：load_system（核心反序列化）、UI（显示加载进度）。
 #[derive(Event, Debug, Clone, Reflect)]
 pub struct LoadRequest {
+    /// 存档文件路径
     pub path: String,
 }
 

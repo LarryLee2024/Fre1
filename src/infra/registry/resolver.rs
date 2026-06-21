@@ -250,6 +250,7 @@ pub struct ValidationError {
 }
 
 impl ValidationError {
+    /// 创建注册校验错误。
     pub fn new(
         bucket: &'static str,
         def_id: impl Into<DefinitionId>,
@@ -275,6 +276,7 @@ pub struct ValidationWarning {
 }
 
 impl ValidationWarning {
+    /// 创建注册校验警告。
     pub fn new(
         bucket: &'static str,
         def_id: impl Into<DefinitionId>,
@@ -372,6 +374,7 @@ pub struct CrossReferenceReport {
 }
 
 impl CrossReferenceReport {
+    /// 创建空的跨引用报告。
     pub fn new() -> Self {
         Self {
             total_defs: 0,

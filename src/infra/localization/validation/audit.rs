@@ -11,7 +11,7 @@ use crate::infra::localization::storage::LocalizationDatabase;
 /// 审计周期（秒）
 const AUDIT_INTERVAL_SECONDS: f64 = 300.0; // 每 5 分钟
 
-/// 运行时计时器资源
+/// 运行时计时器资源，控制审计报告的输出频率。
 #[derive(Resource, Reflect)]
 #[reflect(Resource)]
 pub struct AuditTimer {

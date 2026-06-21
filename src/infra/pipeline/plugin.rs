@@ -8,6 +8,7 @@ use bevy::prelude::*;
 
 use crate::core::capabilities::runtime::pipeline::registry::PipelineRegistry;
 
+/// Bevy Plugin：初始化 PipelineRegistry Resource，提供管线注册和查询基础设施。
 pub struct PipelinePlugin;
 
 impl Plugin for PipelinePlugin {

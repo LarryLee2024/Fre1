@@ -35,6 +35,7 @@ use super::systems::{
     rng_sync_system,
 };
 
+/// Bevy Plugin：注册回放相关的 Resource 和生命周期 System（帧管理、RNG 同步）。
 pub struct ReplayPlugin;
 
 impl Plugin for ReplayPlugin {

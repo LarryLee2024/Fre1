@@ -1,7 +1,8 @@
 ---
 id: 06-ui.architecture
 title: UI Architecture — L3 表现层架构总纲
-status: draft
+status: active
+updated: 2026-06-21
 owner: presentation-architect
 created: 2026-06-20
 tags:
@@ -580,20 +581,16 @@ fn project_bad(
 ### 8.2 UiPlugin 内部注册顺序
 
 ```
-1. ThemePlugin             — 主题与设计令牌（最优先，其他 Widget 依赖）
-2. PrimitivesPlugin        — UI 原语层注册（Button、Panel、Text 等原子控件）
-3. BindingPlugin           — 数据绑定基础设施
-4. FocusPlugin             — 焦点系统
-5. NavigationPlugin        — 导航栈
-6. UiApplicationPlugin     — 应用层（Command/Event/Intent）
-7. ProjectionPlugin        — 投影层（Domain → ViewModel）
-8. ViewModelPlugin         — ViewModel 注册
-9. OverlayPlugin           — Overlay 注册
-10. WidgetsPlugin          — 游戏业务控件注册（组合原语，骨架阶段）
-11. ScreensPlugin          — Screen 注册（最后，依赖 Widget 和 ViewModel）
+1. ThemePlugin             — 主题与设计令牌（最优先）
+2. FocusPlugin             — 焦点系统
+3. PrimitivesPlugin        — UI 原语层注册（Button、Panel、Text 等）
+4. WidgetsPlugin           — 游戏业务控件注册
+5. ScreenPlugin            — Screen 注册
+6. OverlayPlugin           — Overlay 注册
+7. Projection Observers    — Domain Event → ViewModel Observer 注册
 ```
 
-（引用：ADR-055 §10 — Plugin 注册位置）
+实际注册顺序见 `src/ui/plugin.rs`。
 
 ---
 

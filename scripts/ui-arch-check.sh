@@ -48,7 +48,8 @@ VIOLATIONS=$(grep -rn 'Query<&' "$UI_DIR" \
     --include='*.rs' \
     --exclude-dir='tests' \
     --exclude='*test*' \
-    | grep -vE 'Query<&(mut )?(Button|Menu|Battle|Action|Character|SkillSlot|Inventory|BuffIcon|Panel|List|ProgressBar|Text|Modal|Interaction|Node|ChildOf|Parent|Name)' \
+    | grep -vE 'Query<&(mut )?(Button|Menu|Battle|Action|Character|SkillSlot|Inventory|BuffIcon|Panel|List|ProgressBar|Text|Modal|Interaction|Node|ChildOf|Parent|Name|FocusGroup|Dirty|UiBinding|Focusable|FocusManager)' \
+    | grep -v '///' \
     || true)
 
 if [ -n "$VIOLATIONS" ]; then

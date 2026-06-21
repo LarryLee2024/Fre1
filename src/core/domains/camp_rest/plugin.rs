@@ -15,6 +15,10 @@ use super::systems::{
 use crate::register_domain_types;
 use crate::shared::game_state::GameState;
 
+/// 营地/休息业务领域 Plugin。
+///
+/// 注册休息组件、事件和系统。
+/// 处理短休、长休、生命骰管理、营地事件。
 pub struct CampRestPlugin;
 
 impl Plugin for CampRestPlugin {

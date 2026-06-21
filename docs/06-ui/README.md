@@ -216,17 +216,17 @@ Domain Event → Observer → Projection → ViewModel → Widget 刷新
 
 | 文件 | 状态 | 负责人 | 完成日期 |
 |------|------|--------|----------|
-| `README.md` | 🟡 in_progress | presentation-architect | 2026-06-20 |
-| `01-architecture/architecture.md` | 🟡 draft | presentation-architect | 2026-06-20 |
-| `01-architecture/application-layer.md` | 🟡 draft | presentation-architect | 2026-06-20 |
-| `01-architecture/implementation-patterns.md` | 🟡 draft | presentation-architect | 2026-06-21 |
-| `02-design-system/widget-atoms.md` | 🟡 draft | presentation-architect | 2026-06-20 |
-| `02-design-system/widget-composites.md` | 🟡 draft | presentation-architect | 2026-06-20 |
-| `02-design-system/theme-localization.md` | 🟡 draft | presentation-architect | 2026-06-20 |
-| `02-design-system/focus-binding.md` | 🟡 draft | presentation-architect | 2026-06-20 |
-| `03-screens/screen-lifecycle.md` | 🟡 draft | presentation-architect | 2026-06-20 |
-| `03-screens/screens.md` | 🟡 draft | presentation-architect | 2026-06-20 |
-| `03-screens/navigation-overlay.md` | 🟡 draft | presentation-architect | 2026-06-20 |
-| `03-screens/overlays.md` | 🟡 draft | presentation-architect | 2026-06-20 |
-| `04-data-flow/projection-viewmodel.md` | 🟡 draft | presentation-architect | 2026-06-20 |
-| `05-testing/testing.md` | 🟡 draft | presentation-architect | 2026-06-20 |
+| `README.md` | 🟡 in_progress | presentation-architect | 2026-06-21 |
+| `01-architecture/architecture.md` | 🟡 需更新目录结构 | presentation-architect | 2026-06-21 |
+| `01-architecture/application-layer.md` | 🟡 需代码对齐 | presentation-architect | 2026-06-21 |
+| `01-architecture/implementation-patterns.md` | ✅ 完整 | presentation-architect | 2026-06-21 |
+| `02-design-system/widget-atoms.md` | ✅ 完整 | presentation-architect | 2026-06-20 |
+| `02-design-system/widget-composites.md` | 🟡 需补全复合组件 | presentation-architect | 2026-06-20 |
+| `02-design-system/theme-localization.md` | ✅ 完整 | presentation-architect | 2026-06-20 |
+| `02-design-system/focus-binding.md` | 🟡 需补全 FocusNavigation | presentation-architect | 2026-06-20 |
+| `03-screens/screen-lifecycle.md` | 🟡 需更新 Screen 列表 | presentation-architect | 2026-06-20 |
+| `03-screens/screens.md` | 🟡 需补全 Inventory 等 | presentation-architect | 2026-06-20 |
+| `03-screens/navigation-overlay.md` | 🟡 需补全 ScreenStack 细节 | presentation-architect | 2026-06-20 |
+| `03-screens/overlays.md` | 🟡 需补全 Overlay 规格 | presentation-architect | 2026-06-20 |
+| `04-data-flow/projection-viewmodel.md` | 🟡 需补全 ViewModel 字段 | presentation-architect | 2026-06-20 |
+| `05-testing/testing.md` | 🟡 需补全测试规格 | presentation-architect | 2026-06-20 |

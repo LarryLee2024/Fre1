@@ -19,6 +19,7 @@ pub struct ExecutionLogHook {
 }
 
 impl ExecutionLogHook {
+    /// 创建执行日志 Hook，指定日志输出目标名称。
     pub fn new(name: impl Into<String>) -> Self {
         Self { name: name.into() }
     }
