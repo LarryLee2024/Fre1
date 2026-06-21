@@ -7,13 +7,18 @@
 
 use super::foundation::{PipelineContext, StepResult};
 
+/// Sealed trait — 防止外部实现破坏 PipelineHook 的不变量。
+pub(crate) mod sealed {
+    pub trait Sealed {}
+}
+
 /// Pipeline Hook — 前置/后置回调
 ///
 /// 所有方法都有默认空实现，实现者只需覆盖关心的方法。
 ///
 /// 🟥 禁止 Hook 修改 PipelineContext 中的业务数据。
 /// 🟥 禁止 Hook 返回 Result 阻断执行。
-pub trait PipelineHook: Send + Sync {
+pub trait PipelineHook: sealed::Sealed + Send + Sync {
     /// Hook 名称（用于日志和调试）
     fn name(&self) -> &str;
 

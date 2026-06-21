@@ -15,6 +15,11 @@ use std::fmt;
 
 use super::{Domain, LogCode};
 
+/// Sealed trait — 防止外部实现破坏 ObservableEvent 的不变量。
+pub(crate) mod sealed {
+    pub trait Sealed {}
+}
+
 /// 可观测事件——领域事件实现此 trait 后，Observability Facade
 /// 可以自动将事件分发到日志、指标、追踪等所有 sink。
 ///
@@ -32,7 +37,7 @@ use super::{Domain, LogCode};
 ///     }
 /// }
 /// ```
-pub trait ObservableEvent: fmt::Debug + Send + Sync + 'static {
+pub trait ObservableEvent: sealed::Sealed + fmt::Debug + Send + Sync + 'static {
     /// 路由域——决定 tracing target，与 LogCode 的编码职责分离。
     ///
     /// LogCode 只回答"这是什么事件"，Domain 只回答"路由到哪里"。

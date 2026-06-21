@@ -51,6 +51,8 @@ pub struct LevelUp {
 
 crate::impl_domain_event!(LevelUp);
 
+impl crate::shared::diagnostics::observable::sealed::Sealed for LevelUp {}
+
 impl ObservableEvent for LevelUp {
     const DOMAIN: Domain = Domain::Progression;
     const CODE: LogCode = LogCode::PRG002;

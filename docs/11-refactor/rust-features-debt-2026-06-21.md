@@ -2,12 +2,13 @@
 
 > **扫描日期**: 2026-06-21 | **复核**: 2026-06-21（吸收2智能体交叉验证结论）
 > **状态**: 全部完成 ✅
-> **Phase 0**: 宪法7项冲突修正 ✅ | **D1-D5**: 文档更新 ✅ | **C1-C7**: 代码改造 ✅
-> **规则文件**: 8项全部 ✅ | **领域文件**: 4项全部 ✅ | **ADR**: ADR-057/058/060/061/062 ✅
+> **Phase 0**: 宪法7项冲突修正 ✅ **D1-D5**: 文档更新 ✅ **C1-C7**: 代码改造 ✅
+> **#9 Derive宏**: 31个手动impl → macro_rules! 自动生成 ✅ **#12 Const Trait**: ConstAbilityMetadata ✅
+> **#17 QueryExt DSL**: EntityCommandsExt/QueryExt 真实实现 ✅ **#20 Compile-time Capability**: CanAttack/CanCast/CanMove ✅
+> **规则文件**: 8项全部 ✅ **领域文件**: 4项全部 ✅ **ADR**: ADR-057/058/060/061/062 ✅
 > **ADR更新**: ADR-001/013/054 已补充 ✅
 > **依据**: `docs/09-planning/21-rust-features-update-plan.md`（复核后版本）
 > **与37条经验交叉**: 已验证，避免重复
-> **最终状态**: ✅ Phase 0 + D1-D5 完成，Phase C1-C7 Deferred（代码改造范围大，建议独立迭代）
 
 ---
 

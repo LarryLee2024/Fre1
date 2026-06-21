@@ -36,6 +36,9 @@ macro_rules! impl_domain_event {
 ///
 /// Each variant maps to its error code via a pattern-match arm.
 ///
+/// Also generates `impl sealed::Sealed for TypeName` to satisfy the
+/// Sealed Trait constraint (see ADR-057).
+///
 /// # Example
 ///
 /// ```ignore
@@ -47,6 +50,7 @@ macro_rules! impl_domain_event {
 #[macro_export]
 macro_rules! impl_rule_failure {
     ($ty:ty, $( $variant:pat => $code:expr ),+ $(,)?) => {
+        impl $crate::shared::traits::sealed::Sealed for $ty {}
         impl $crate::shared::traits::RuleFailure for $ty {
             fn code(&self) -> &'static str {
                 match self {

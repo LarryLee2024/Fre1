@@ -158,6 +158,8 @@ macro_rules! define_string_id {
                 &self.0
             }
         }
+
+        impl $crate::shared::ids::foundation::strong_id::sealed::Sealed for $name {}
     };
 }
 

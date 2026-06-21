@@ -365,3 +365,20 @@ impl DefinitionType for EnchantmentDef {
         Ok(())
     }
 }
+
+// ─── Sealed trait implementations ───────────────────────────────────
+impl crate::content::loading::definition_type::sealed::Sealed for SpellDef {}
+impl crate::content::loading::definition_type::sealed::Sealed for CueDef {}
+impl crate::content::loading::definition_type::sealed::Sealed for EffectDef {}
+impl crate::content::loading::definition_type::sealed::Sealed for AbilityDef {}
+impl crate::content::loading::definition_type::sealed::Sealed for RuleDef {}
+impl crate::content::loading::definition_type::sealed::Sealed for QuestDef {}
+impl crate::content::loading::definition_type::sealed::Sealed for RecipeDef {}
+impl crate::content::loading::definition_type::sealed::Sealed for ShopDef {}
+impl crate::content::loading::definition_type::sealed::Sealed for TargetingDef {}
+impl crate::content::loading::definition_type::sealed::Sealed for TagDefinition {}
+impl crate::content::loading::definition_type::sealed::Sealed for AttributeDefinition {}
+impl crate::content::loading::definition_type::sealed::Sealed for SummonTemplateDef {}
+impl crate::content::loading::definition_type::sealed::Sealed for CampEventDef {}
+impl crate::content::loading::definition_type::sealed::Sealed for BondDef {}
+impl crate::content::loading::definition_type::sealed::Sealed for EnchantmentDef {}

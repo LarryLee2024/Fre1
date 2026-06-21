@@ -6,11 +6,16 @@ use bevy::prelude::{Asset, TypePath};
 
 use super::errors::{ConfigError, ValidationError};
 
+/// Sealed trait — 防止外部实现破坏 DefinitionType 的不变量。
+pub(crate) mod sealed {
+    pub trait Sealed {}
+}
+
 /// 所有可从 RON 文件加载的 Definition 类型必须实现此 trait。
 ///
 /// 此 trait 定义了 Definition 的元信息（桶名、文件扩展名）
 /// 和加载后的校验逻辑。
-pub trait DefinitionType: Asset + TypePath {
+pub trait DefinitionType: sealed::Sealed + Asset + TypePath {
     /// 在 Registry 中的桶名（如 "spells", "effects"）。
     const BUCKET_NAME: &'static str;
 

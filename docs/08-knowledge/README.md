@@ -27,6 +27,7 @@ tags:
 | Pipeline 管线系统 | [Pipeline 管线系统深度解析](pipeline-overview.md) | 通用 Pipeline 引擎设计、四条业务管线（Ability / Modifier / Combat / Content）、驾驶员模式、全协作时序图 |
 | UI 表现层 | [UI 表现层深度解析](ui-overview.md) | 三层渲染栈（Primitives→Widgets→Screens）、五条铁律、Theme 令牌系统、Observer 事件路由、工厂模式、完整四层数据流设计、当前实现状态一览 |
 | Replay 回放 | [Replay 回放系统深度解析](replay-overview.md) | 从场景故事到三层架构、录制/回放全流程、确定性 RNG 四流、Combat 桥接层、86 个测试、ADR 决策索引 |
+| 随机数系统 | [随机数系统深度解析](random-overview.md) | 三套 RNG 系统（SeededRng/GameRng/DeterministicRng）、四流隔离设计、MurmurHash3 算法、回放同步机制、迁移路线图 |
 
 ## 定位
 

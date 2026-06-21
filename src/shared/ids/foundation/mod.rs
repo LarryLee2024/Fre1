@@ -9,7 +9,7 @@
 
 mod errors;
 mod macros;
-mod strong_id;
+pub(crate) mod strong_id;
 
 pub use errors::*;
 pub use macros::*;

@@ -35,4 +35,4 @@
 - 错误处理系统重构：全部 9 阶段完成（P0-P4）
 - 日志/可观测系统重构：全部 8 阶段完成（P0-P3）
 - 37条经验吸收：全部 78 项完成（P0-P3）
-- **Rust特性吸收**: 全部 12 阶段完成（P0-P3）✅ — ADR-057/058/060/061
+- **Rust特性吸收**: 全部阶段完成 ✅ — 宪法修正 + 规则更新 + 代码改造（Sealed/Extension/Marker/Blanket/PhantomData/Cow/Derive宏/ConstAbility/QueryExt DSL/Compile-time） — ADR-057/058/060/061/062

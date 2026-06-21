@@ -16,11 +16,16 @@
 //! assert_eq!(StrongId::as_str(&AttributeId::new("hp")), "hp");
 //! ```
 
+/// Sealed trait — 防止外部实现破坏 StrongId 的不变量。
+pub(crate) mod sealed {
+    pub trait Sealed {}
+}
+
 /// 所有强类型 ID 必须实现的 trait。
 ///
 /// 提供统一的接口以支持 Registry 约束和跨模块泛型操作。
 pub trait StrongId:
-    std::fmt::Display + std::str::FromStr + std::ops::Deref<Target = str> + Sized
+    sealed::Sealed + std::fmt::Display + std::str::FromStr + std::ops::Deref<Target = str> + Sized
 {
     /// 返回类型前缀（如 `"attr"`、`"tag"`、`"abl"`）。
     fn prefix() -> &'static str;

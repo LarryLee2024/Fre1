@@ -3,7 +3,7 @@
 //! 定义 DefinitionType trait、RON 文件加载器、文件发现和校验逻辑。
 //! 详见 `docs/01-architecture/40-cross-cutting/ADR-047-content-loading-pipeline.md`
 
-mod definition_type;
+pub(crate) mod definition_type;
 mod discovery;
 mod errors;
 mod ron_loader;

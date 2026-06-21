@@ -45,3 +45,5 @@ impl PipelineHook for ExecutionLogHook {
         );
     }
 }
+
+impl crate::core::capabilities::runtime::pipeline::hooks::sealed::Sealed for ExecutionLogHook {}

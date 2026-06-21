@@ -2,7 +2,8 @@
 
 > 来源：`docs/ai_ignore_this_dir/15rust特性.md`
 > 日期：2026-06-21
-> 状态：✅ 全部完成 — 详见 `docs/11-refactor/rust-features-debt-2026-06-21.md`
+> 状态：✅ 全部完成 — 宪法冲突修复 + 规则文件更新 + 代码改造（Sealed/Extension/Marker/Blanket/PhantomData/Cow/Derive宏/ConstTrait/QueryExt DSL/Compile-time Capability）
+> 复核：2026-06-21（2智能体交叉验证 + 架构师审核ADR-057~062）
 
 ---
 

@@ -11,7 +11,7 @@ mod domain;
 mod explain;
 mod log_category;
 mod log_code;
-mod observable;
+pub(crate) mod observable;
 
 pub use context::DiagnosticContext;
 pub use correlation::{ActionId, BattleId, CorrelationId, TurnId};
