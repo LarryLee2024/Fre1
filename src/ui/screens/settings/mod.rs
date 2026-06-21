@@ -13,26 +13,21 @@
 //!   └── Button ("Save", Primary) — 保存设置到磁盘
 //! ```
 
-use bevy::prelude::*;
 use bevy::ecs::observer::On;
+use bevy::prelude::*;
 
 use crate::infra::localization::generated::loc;
 use crate::ui::application::UiCommand;
 use crate::ui::navigation::ScreenType;
 use crate::ui::primitives::button::{
-    components::ButtonVariant,
-    events::ButtonClicked,
-    factory::spawn_localized_button,
+    components::ButtonVariant, events::ButtonClicked, factory::spawn_localized_button,
 };
 use crate::ui::primitives::panel::{components::PanelVariant, factory::spawn_panel};
 use crate::ui::primitives::text::{components::TextVariant, factory::spawn_localized_text};
-use crate::ui::primitives::toggle::{
-    components::ToggleState,
-    factory::spawn_toggle,
-};
-use crate::ui::settings::{save_settings, UiSettings};
-use crate::ui::theme::switch::{switch_theme, ThemeVariant};
+use crate::ui::primitives::toggle::{components::ToggleState, factory::spawn_toggle};
+use crate::ui::settings::{UiSettings, save_settings};
 use crate::ui::theme::Theme;
+use crate::ui::theme::switch::{ThemeVariant, switch_theme};
 
 /// 设置屏幕标记组件
 ///

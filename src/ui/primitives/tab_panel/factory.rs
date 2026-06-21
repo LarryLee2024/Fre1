@@ -72,9 +72,7 @@ pub fn spawn_tab_panel(
         };
         let btn = spawn_button(commands, theme, *tab_label, variant);
         commands.entity(btn).insert(TabButton { index: i });
-        commands
-            .entity(btn)
-            .set_parent_in_place(tab_bar);
+        commands.entity(btn).set_parent_in_place(tab_bar);
     }
 
     // 创建标签内容区域

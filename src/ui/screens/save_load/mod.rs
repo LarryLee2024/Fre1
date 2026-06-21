@@ -20,16 +20,14 @@
 //!   │       └── Text ("Empty", Caption)
 //!   └── Button ("Close", Secondary)
 
-use bevy::prelude::*;
 use bevy::ecs::observer::On;
+use bevy::prelude::*;
 
 use crate::infra::localization::generated::loc;
 use crate::ui::application::UiCommand;
 use crate::ui::navigation::ScreenType;
 use crate::ui::primitives::button::{
-    components::ButtonVariant,
-    events::ButtonClicked,
-    factory::spawn_localized_button,
+    components::ButtonVariant, events::ButtonClicked, factory::spawn_localized_button,
 };
 use crate::ui::primitives::list::{components::ListVariant, factory::spawn_list};
 use crate::ui::primitives::panel::{components::PanelVariant, factory::spawn_panel};
@@ -78,11 +76,7 @@ pub fn on_close_save_load_screen(
 }
 
 /// 生成完整的 SaveLoad 界面 UI 层级。
-pub fn spawn_save_load_screen(
-    commands: &mut Commands,
-    theme: &Theme,
-    asset_server: &AssetServer,
-) {
+pub fn spawn_save_load_screen(commands: &mut Commands, theme: &Theme, asset_server: &AssetServer) {
     // ── 1. Root panel ──
     let root = spawn_panel(commands, theme, PanelVariant::Basic);
     commands.entity(root).insert((
@@ -127,13 +121,7 @@ pub fn spawn_save_load_screen(
         );
         commands.entity(label).set_parent_in_place(slot);
 
-        let info = spawn_text(
-            commands,
-            asset_server,
-            theme,
-            "Empty",
-            TextVariant::Caption,
-        );
+        let info = spawn_text(commands, asset_server, theme, "Empty", TextVariant::Caption);
         commands.entity(info).set_parent_in_place(slot);
 
         commands.entity(slot).set_parent_in_place(list);

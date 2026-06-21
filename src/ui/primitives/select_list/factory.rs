@@ -51,7 +51,9 @@ pub fn spawn_select_list(
         let btn = spawn_button(commands, theme, *item, ButtonVariant::Secondary);
         // Selected item gets accent_primary border
         if is_selected {
-            commands.entity(btn).insert(BorderColor::all(theme.colors.accent_primary));
+            commands
+                .entity(btn)
+                .insert(BorderColor::all(theme.colors.accent_primary));
         }
         commands.entity(btn).insert((
             SelectListItem { index: i },

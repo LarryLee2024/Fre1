@@ -1,25 +1,30 @@
-//! 游戏玩法 UI 控件
+//! Module Name: Widgets — Gameplay UI controls
 //!
-//! 将原语层组件组合成游戏概念控件。
-//! 此层是 Primitives 的唯一使用者；不允许直接操作 Node/Button。
+//! Composes primitives-layer components into game-concept controls.
+//! This layer is the sole consumer of Primitives; no direct Node/Button
+//! manipulation allowed.
 //!
-//! 当前 Widget：
-//! - SkillSlot — 技能卡控件
-//! - ActionMenu — 战斗行动菜单（攻击、防御、技能、物品、等待）
-//! - CharacterCard — 角色属性卡（名称、等级、HP/MP 条）
-//! - InventoryItemRow — 物品行 Widget（名称、数量、使用按钮）
-//! - InventoryGrid — 背包网格有机体（标题、金币、物品列表、关闭按钮）
+//! Current widgets:
+//! - SkillSlot — Skill card control
+//! - ActionMenu — Battle action menu (Attack, Defend, Skill, Item, Wait)
+//! - CharacterCard — Character stats card (name, level, HP/MP bars)
+//! - InventoryItemRow — Item row widget (name, quantity, use button)
+//! - InventoryGrid — Inventory grid organism (title, gold, item list, close button)
+//! - ShopItemCard — Shop item card widget (name, price, stock, buy button)
+//! - ShopPanel — Shop panel organism (header, tab panel, items, close button)
 //!
-//! 未来 Widget：
+//! Future widgets:
 //! - BuffIcon
 //! - BattleLog
 //!
-//! 参见 `docs/06-ui/02-design-system/widget-composites.md`
+//! See `docs/06-ui/02-design-system/widget-composites.md`
 
 pub mod action_menu;
 pub mod character_card;
 pub mod inventory_grid;
 pub mod inventory_item_row;
+pub mod shop_item_card;
+pub mod shop_panel;
 pub mod skill_slot;
 
 use bevy::prelude::*;
@@ -28,6 +33,8 @@ use self::action_menu::ActionMenuPlugin;
 use self::character_card::CharacterCardPlugin;
 use self::inventory_grid::InventoryGridPlugin;
 use self::inventory_item_row::InventoryItemRowPlugin;
+use self::shop_item_card::ShopItemCardPlugin;
+use self::shop_panel::ShopPanelPlugin;
 use self::skill_slot::SkillSlotPlugin;
 
 /// WidgetsPlugin — registers all gameplay UI controls
@@ -43,6 +50,8 @@ impl Plugin for WidgetsPlugin {
             CharacterCardPlugin,
             InventoryGridPlugin,
             InventoryItemRowPlugin,
+            ShopItemCardPlugin,
+            ShopPanelPlugin,
         ));
     }
 }

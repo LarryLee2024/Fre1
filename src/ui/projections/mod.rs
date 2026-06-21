@@ -1,14 +1,16 @@
-//! 领域事件到 ViewModel 的投影管道
+//! Module Name: Projections — Domain Event to ViewModel projection pipeline
 //!
-//! 将领域事件转换为 ViewModel 更新的纯函数。
-//! 每个投影模块处理一个领域区域（战斗、角色等）。
-//! 投影是无状态、确定性且可独立测试的。
+//! Pure functions that transform domain events into ViewModel updates.
+//! Each projection module handles one domain area (battle, character, etc.).
+//! Projections are stateless, deterministic, and independently testable.
 //!
-//! 参见 `docs/06-ui/04-data-flow/projection-viewmodel.md` §4
+//! See `docs/06-ui/04-data-flow/projection-viewmodel.md` §4
 
 pub mod battle;
+pub mod economy;
 
 pub use battle::*;
+pub use economy::*;
 
 #[cfg(test)]
 mod tests;

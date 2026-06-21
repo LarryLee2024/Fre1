@@ -25,10 +25,7 @@ use crate::ui::application::UiCommand;
 /// - 其他所有命令 — 记录为待接入领域
 ///
 /// 每次 Observer 调用仅处理一个 UiCommand。
-pub fn process_ui_commands(
-    trigger: On<UiCommand>,
-    mut command_queue: ResMut<CommandQueue>,
-) {
+pub fn process_ui_commands(trigger: On<UiCommand>, mut command_queue: ResMut<CommandQueue>) {
     let cmd = trigger.event();
     match cmd {
         UiCommand::EndTurn => {
