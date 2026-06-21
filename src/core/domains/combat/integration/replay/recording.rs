@@ -31,9 +31,10 @@ use crate::core::capabilities::runtime::replay::foundation::{ReplayCommand, Repl
 use crate::core::capabilities::runtime::replay::mechanism::RecordingSession as CoreRecordingSession;
 use crate::core::domains::combat::components::CombatParticipant;
 use crate::core::domains::combat::events::{OnBattleEnd, OnBattleStart, UnitActionComplete};
-use crate::infra::replay::resources::{DeterministicRng, RecordingSession};
+use crate::infra::replay::resources::RecordingSession;
 use crate::shared::ids::BattleUnitId;
 use crate::shared::ids::mapping::EntityMapper;
+use crate::shared::random::DeterministicRng;
 
 /// Observer: OnBattleStart → 初始化录制。
 ///
@@ -71,7 +72,7 @@ pub(crate) fn start_recording_on_battle_begin(
 
     // 设置初始种子
     let initial_seed = rng
-        .map(|r| r.0.get_all_seeds())
+        .map(|r| r.get_all_seeds())
         .map(|seeds| seeds.combat_seed)
         .unwrap_or(42);
     header.initial_seed = initial_seed;

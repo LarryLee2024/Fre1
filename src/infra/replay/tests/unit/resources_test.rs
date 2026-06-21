@@ -1,34 +1,32 @@
-use crate::core::capabilities::runtime::replay::foundation::{
-    DeterministicRng as CoreDeterministicRng, RngStream,
-};
 use crate::infra::replay::resources::{
     DeterministicRng, FrameCounter, PlaybackSession, RecordingSession, ReplayModeGuard,
 };
+use crate::shared::random::RngStream;
 
 /// DeterministicRng 的 FromWorld 默认构造使用 seed=0。
 #[test]
 fn deterministic_rng_default_creates_valid_instance() {
-    let rng = DeterministicRng(CoreDeterministicRng::with_seed(0));
-    // 默认种子为 0，各流 seed 均为 0
-    let seeds = rng.0.get_all_seeds();
+    let rng = DeterministicRng::with_seed(0);
+    // 默认种子为 0，各流使用 wrapping_add 偏移
+    let seeds = rng.get_all_seeds();
     assert_eq!(seeds.combat_seed, 0);
-    assert_eq!(seeds.drop_seed, 0);
-    assert_eq!(seeds.ai_seed, 0);
-    assert_eq!(seeds.world_seed, 0);
+    assert_eq!(seeds.drop_seed, 1);
+    assert_eq!(seeds.ai_seed, 2);
+    assert_eq!(seeds.world_seed, 3);
 }
 
 /// DeterministicRng 产生的随机数在相同种子下一致。
 #[test]
 fn deterministic_rng_same_seed_same_output() {
-    let mut rng_a = DeterministicRng(CoreDeterministicRng::with_seed(0));
-    let mut rng_b = DeterministicRng(CoreDeterministicRng::with_seed(0));
+    let mut rng_a = DeterministicRng::with_seed(0);
+    let mut rng_b = DeterministicRng::with_seed(0);
 
-    let a1 = rng_a.0.next_u64(RngStream::Combat);
-    let b1 = rng_b.0.next_u64(RngStream::Combat);
+    let a1 = rng_a.next_u64(RngStream::Combat);
+    let b1 = rng_b.next_u64(RngStream::Combat);
     assert_eq!(a1, b1, "same seed must produce same value");
 
-    let a2 = rng_a.0.next_u64(RngStream::Drop);
-    let b2 = rng_b.0.next_u64(RngStream::Drop);
+    let a2 = rng_a.next_u64(RngStream::Drop);
+    let b2 = rng_b.next_u64(RngStream::Drop);
     assert_eq!(
         a2, b2,
         "same seed must produce same value for different stream"

@@ -1,7 +1,8 @@
 use crate::core::capabilities::runtime::replay::foundation::{
-    DeterministicRng, ReplayCommand, ReplayFrame, ReplayHeader, ReplayLog, ReplayMode,
-    ReplayModeGuard, ReplayPlayer, ReplayRecorder, ReplayValidator, RngSeeds, RngStream,
+    ReplayCommand, ReplayFrame, ReplayHeader, ReplayLog, ReplayMode, ReplayModeGuard, ReplayPlayer,
+    ReplayRecorder, ReplayValidator,
 };
+use crate::shared::random::{DeterministicRng, RngSeeds, RngStream};
 
 // ── DeterministicRng ─────────────────────────────
 

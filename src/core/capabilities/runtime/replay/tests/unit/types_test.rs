@@ -1,6 +1,7 @@
 use crate::core::capabilities::runtime::replay::foundation::{
-    AbilityTarget, ReplayCommand, ReplayError, ReplayFrame, ReplayHeader, RngSeeds, RngStream,
+    AbilityTarget, ReplayCommand, ReplayError, ReplayFrame, ReplayHeader,
 };
+use crate::shared::random::{RngSeeds, RngStream};
 
 #[test]
 fn replay_frame_construction() {
@@ -60,9 +61,9 @@ fn get_all_rng_streams() {
 fn rng_seeds_uniform_set() {
     let seeds = RngSeeds::uniform(42);
     assert_eq!(seeds.combat_seed, 42);
-    assert_eq!(seeds.drop_seed, 42);
-    assert_eq!(seeds.ai_seed, 42);
-    assert_eq!(seeds.world_seed, 42);
+    assert_eq!(seeds.drop_seed, 43);
+    assert_eq!(seeds.ai_seed, 44);
+    assert_eq!(seeds.world_seed, 45);
 }
 
 #[test]

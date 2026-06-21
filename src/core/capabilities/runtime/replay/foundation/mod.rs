@@ -7,8 +7,8 @@ pub(crate) mod values;
 
 pub use error::ReplayError;
 pub use traits::{ReplayAction, Replayable};
-pub use types::{AbilityTarget, ReplayCommand, ReplayFrame, ReplayHeader, RngSeeds, RngStream};
+pub use types::{AbilityTarget, ReplayCommand, ReplayFrame, ReplayHeader};
 pub use values::{
-    DeterministicRng, ReplayLog, ReplayMismatch, ReplayMode, ReplayModeGuard, ReplayPlayer,
-    ReplayRecorder, ReplayValidator,
+    ReplayLog, ReplayMismatch, ReplayMode, ReplayModeGuard, ReplayPlayer, ReplayRecorder,
+    ReplayValidator,
 };

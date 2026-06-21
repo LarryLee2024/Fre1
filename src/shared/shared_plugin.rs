@@ -4,15 +4,13 @@
 
 use bevy::prelude::*;
 
-use super::random::GameRng;
 use super::time::GameTime;
 
 pub struct SharedPlugin;
 
 impl Plugin for SharedPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(GameRng::default())
-            .insert_resource(GameTime::default())
+        app.insert_resource(GameTime::default())
             .add_systems(PreUpdate, advance_game_time);
     }
 }

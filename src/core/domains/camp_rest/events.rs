@@ -38,7 +38,6 @@ pub struct LongRestStarted {
     pub camp_location: String,
 }
 
-
 /// 长休完成时触发。
 ///
 /// 订阅者：
@@ -60,7 +59,6 @@ pub struct LongRestCompleted {
     pub events_triggered: Vec<String>,
 }
 
-
 /// 长休被中断时触发。
 ///
 /// 订阅者：
@@ -75,7 +73,6 @@ pub struct LongRestInterrupted {
     /// 累计中断时间（分钟）。
     pub cumulative_interrupt_time: u32,
 }
-
 
 /// 营地事件触发时触发。
 ///
@@ -94,4 +91,3 @@ pub struct CampEventTriggered {
     /// 可用选项列表。
     pub choices_available: Vec<String>,
 }
-

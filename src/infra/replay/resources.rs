@@ -9,9 +9,9 @@
 
 use bevy::prelude::*;
 
-use crate::core::capabilities::runtime::replay::foundation::{
-    DeterministicRng as CoreDeterministicRng, ReplayModeGuard as CoreReplayModeGuard,
-};
+pub use crate::shared::random::DeterministicRng;
+
+use crate::core::capabilities::runtime::replay::foundation::ReplayModeGuard as CoreReplayModeGuard;
 use crate::core::capabilities::runtime::replay::mechanism::{
     PlaybackSession as CorePlaybackSession, RecordingSession as CoreRecordingSession,
 };
@@ -19,22 +19,6 @@ use crate::core::capabilities::runtime::replay::mechanism::{
 // ════════════════════════════════════════════
 // 横切共享资源
 // ════════════════════════════════════════════
-
-/// 确定性 RNG — 所有游戏系统随机操作的统一入口。
-///
-/// 录制模式下：RNG 种子由外部初始化，每帧记录种子偏移。
-/// 回放模式下：RNG 种子由回放日志驱动，通过 `rng_sync_system` 保持同步。
-///
-/// 详见 ADR-041 §3.2
-#[derive(Resource, Reflect)]
-#[reflect(Resource)]
-pub struct DeterministicRng(pub CoreDeterministicRng);
-
-impl FromWorld for DeterministicRng {
-    fn from_world(_: &mut World) -> Self {
-        Self(CoreDeterministicRng::with_seed(0))
-    }
-}
 
 /// 回放模式守卫 — 标记当前是否处于回放模式。
 ///

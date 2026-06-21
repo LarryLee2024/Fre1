@@ -6,9 +6,9 @@
 //! 详见 docs/01-architecture/40-cross-cutting/ADR-041-replay-determinism.md
 
 use crate::core::capabilities::runtime::replay::foundation::{
-    DeterministicRng, ReplayCommand, ReplayError, ReplayLog, ReplayMode, ReplayPlayer,
-    ReplayValidator, RngSeeds,
+    ReplayCommand, ReplayError, ReplayLog, ReplayMode, ReplayPlayer, ReplayValidator,
 };
+use crate::shared::random::{DeterministicRng, RngSeeds};
 
 use super::recorder::calculate_frame_checksum;
 

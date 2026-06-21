@@ -1,14 +1,12 @@
-use crate::core::capabilities::runtime::replay::foundation::{
-    DeterministicRng as CoreDeterministicRng, RngSeeds, RngStream,
-};
+use crate::shared::random::{DeterministicRng, RngSeeds, RngStream};
 
 /// 不变量：相同种子 + 相同调用次数 → 相同结果。
 #[test]
 fn rng_output_is_deterministic_across_instances() {
     let seeds = RngSeeds::new(12345, 67890, 11111, 22222);
 
-    let mut rng_a = CoreDeterministicRng::new(seeds);
-    let mut rng_b = CoreDeterministicRng::new(seeds);
+    let mut rng_a = DeterministicRng::new(seeds);
+    let mut rng_b = DeterministicRng::new(seeds);
 
     for stream in RngStream::all() {
         for _ in 0..100 {
@@ -23,7 +21,7 @@ fn rng_output_is_deterministic_across_instances() {
 #[test]
 fn rng_streams_produce_different_sequences() {
     let seeds = RngSeeds::uniform(42);
-    let mut rng = CoreDeterministicRng::new(seeds);
+    let mut rng = DeterministicRng::new(seeds);
 
     let combat_val = rng.next_u64(RngStream::Combat);
     let drop_val = rng.next_u64(RngStream::Drop);
@@ -42,7 +40,7 @@ fn rng_streams_produce_different_sequences() {
 #[test]
 fn rng_gen_range_within_bounds() {
     let seeds = RngSeeds::uniform(42);
-    let mut rng = CoreDeterministicRng::new(seeds);
+    let mut rng = DeterministicRng::new(seeds);
 
     for _ in 0..1000 {
         let val = rng.gen_range(RngStream::Combat, 5, 10);
@@ -58,8 +56,8 @@ fn rng_gen_range_within_bounds() {
 #[test]
 fn rng_gen_bool_deterministic() {
     let seeds = RngSeeds::uniform(42);
-    let mut rng_a = CoreDeterministicRng::new(seeds);
-    let mut rng_b = CoreDeterministicRng::new(seeds);
+    let mut rng_a = DeterministicRng::new(seeds);
+    let mut rng_b = DeterministicRng::new(seeds);
 
     for _ in 0..100 {
         assert_eq!(
@@ -76,8 +74,8 @@ fn rng_different_seed_different_output() {
     let seeds_a = RngSeeds::uniform(1);
     let seeds_b = RngSeeds::uniform(2);
 
-    let mut rng_a = CoreDeterministicRng::new(seeds_a);
-    let mut rng_b = CoreDeterministicRng::new(seeds_b);
+    let mut rng_a = DeterministicRng::new(seeds_a);
+    let mut rng_b = DeterministicRng::new(seeds_b);
 
     let mut any_different = false;
     for _ in 0..10 {
@@ -96,7 +94,7 @@ fn rng_different_seed_different_output() {
 #[test]
 fn rng_set_all_seeds_resets_to_initial_state() {
     let seeds = RngSeeds::uniform(42);
-    let mut rng = CoreDeterministicRng::new(seeds);
+    let mut rng = DeterministicRng::new(seeds);
 
     // 消耗一些随机数
     for _ in 0..50 {
@@ -107,7 +105,7 @@ fn rng_set_all_seeds_resets_to_initial_state() {
     rng.set_all_seeds(seeds);
 
     // 应该与新建实例的第 1 个输出一致
-    let mut fresh = CoreDeterministicRng::new(seeds);
+    let mut fresh = DeterministicRng::new(seeds);
     assert_eq!(
         rng.next_u64(RngStream::Combat),
         fresh.next_u64(RngStream::Combat),

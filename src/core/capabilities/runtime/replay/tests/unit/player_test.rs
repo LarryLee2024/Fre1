@@ -1,7 +1,8 @@
 use crate::core::capabilities::runtime::replay::foundation::{
-    ReplayCommand, ReplayError, ReplayFrame, ReplayHeader, ReplayLog, ReplayMode, RngStream,
+    ReplayCommand, ReplayError, ReplayFrame, ReplayHeader, ReplayLog, ReplayMode,
 };
 use crate::core::capabilities::runtime::replay::mechanism::player::*;
+use crate::shared::random::RngStream;
 
 fn create_test_log() -> ReplayLog {
     let header = ReplayHeader::new(1, "1.0", "test", 42);

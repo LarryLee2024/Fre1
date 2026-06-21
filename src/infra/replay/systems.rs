@@ -136,5 +136,5 @@ pub fn rng_sync_system(session: Res<PlaybackSession>, mut rng: ResMut<Determinis
     }
 
     let seeds = session.rng().get_all_seeds();
-    rng.0.set_all_seeds(seeds);
+    rng.set_all_seeds(seeds);
 }

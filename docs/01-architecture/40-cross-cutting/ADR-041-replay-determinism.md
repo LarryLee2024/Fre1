@@ -232,7 +232,8 @@ src/infra/replay/
   ├── events.rs              — ReplayEvent
   └── mod.rs                 — re-export（原 api.rs 已合并，ADR-046）
 
-// 确定性 RNG 在 replay Feature 中实现，但被所有 Feature 使用
+// 注意：DeterministicRng（4 流 ChaCha12）定义在 shared/random/ 中，
+// 供所有层使用。infra/replay/resources.rs 仅做 ECS Resource 包装。
 ```
 
 ## Communication Design

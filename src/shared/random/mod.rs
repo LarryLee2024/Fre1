@@ -5,7 +5,9 @@
 //!
 //! # 核心类型
 //! - [`SeededRng`]: 从 u64 种子初始化的确定性 PRNG，包装 `ChaCha12Rng`
-//! - [`GameRng`]: Bevy Resource，全局可访问的确定性 RNG
+//! - [`RngStream`]: RNG 流枚举——按用途拆分独立流
+//! - [`RngSeeds`]: 4 流种子集合
+//! - [`DeterministicRng`]: 4 流确定性 RNG，每流一个独立 ChaCha12 实例
 
 use bevy::prelude::*;
 use rand::SeedableRng;
@@ -40,62 +42,194 @@ impl SeededRng {
     }
 }
 
-/// 全局游戏确定性 RNG Resource。
-///
-/// 在 App 启动时初始化，所有需要随机数的系统通过 `Res<GameRng>` 访问。
-/// 种子在创建战斗/存档时设定，确保 Replay 一致性。
-///
-/// # 弃用说明
-/// **请使用 `core::capabilities::runtime::replay::foundation::DeterministicRng`（四流版本）替代。**
-/// `GameRng` 是单流 RNG，AI 和战斗随机互相扰动时回放会断裂。
-/// 新的 `DeterministicRng` 提供了 Combat/AI/Drop/World 四个独立流，互不干扰。
-///
-/// # 使用示例（旧代码，已弃用）
-/// ```rust,ignore
-/// fn damage_system(mut rng: ResMut<GameRng>) {
-///     let roll = rng.gen_range(1, 21); // d20
-/// }
-/// ```
-#[derive(Resource, Debug)]
-pub struct GameRng {
-    inner: SeededRng,
+/// RNG 流枚举——按用途拆分独立流，互不干扰。
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect)]
+pub enum RngStream {
+    /// 战斗（命中/暴击/伤害浮动）
+    Combat,
+    /// 掉落/制造随机
+    Drop,
+    /// AI 决策随机
+    AI,
+    /// 世界事件随机
+    World,
 }
 
-impl GameRng {
-    /// 从种子创建 GameRng。
-    pub fn new(seed: u64) -> Self {
-        Self {
-            inner: SeededRng::new(seed),
+impl RngStream {
+    /// 返回流名称。
+    pub fn name(&self) -> &str {
+        match self {
+            Self::Combat => "Combat",
+            Self::Drop => "Drop",
+            Self::AI => "AI",
+            Self::World => "World",
         }
     }
 
-    /// 生成 u64 范围内的随机数。
-    pub fn gen_range(&mut self, min: u64, max: u64) -> u64 {
-        use rand::RngExt;
-        self.inner.as_mut().random_range(min..max)
-    }
-
-    /// 生成 f32 范围内的随机数 [min, max)。
-    pub fn gen_range_f32(&mut self, min: f32, max: f32) -> f32 {
-        use rand::RngExt;
-        self.inner.as_mut().random_range(min..max)
-    }
-
-    /// 生成布尔值（给定概率为 true）。
-    pub fn gen_bool(&mut self, probability: f32) -> bool {
-        use rand::RngExt;
-        self.inner.as_mut().random_bool(probability as f64)
-    }
-
-    /// 重置种子（用于存档加载后恢复状态）。
-    pub fn reseed(&mut self, seed: u64) {
-        self.inner = SeededRng::new(seed);
+    /// 所有流的列表。
+    pub fn all() -> [Self; 4] {
+        [Self::Combat, Self::Drop, Self::AI, Self::World]
     }
 }
 
-impl Default for GameRng {
-    fn default() -> Self {
-        Self::new(42)
+/// RNG 种子集合——每个流独立种子。
+#[derive(Debug, Clone, Copy, PartialEq, Reflect)]
+pub struct RngSeeds {
+    /// 战斗种子
+    pub combat_seed: u64,
+    /// 掉落种子
+    pub drop_seed: u64,
+    /// AI 种子
+    pub ai_seed: u64,
+    /// 世界种子
+    pub world_seed: u64,
+}
+
+impl RngSeeds {
+    /// 创建统一的种子集合（所有流使用偏移种子确保互不干扰）。
+    pub fn uniform(seed: u64) -> Self {
+        Self {
+            combat_seed: seed,
+            drop_seed: seed.wrapping_add(1),
+            ai_seed: seed.wrapping_add(2),
+            world_seed: seed.wrapping_add(3),
+        }
+    }
+
+    /// 创建独立种子的集合。
+    pub fn new(combat: u64, drop: u64, ai: u64, world: u64) -> Self {
+        Self {
+            combat_seed: combat,
+            drop_seed: drop,
+            ai_seed: ai,
+            world_seed: world,
+        }
+    }
+
+    /// 获取指定流的种子。
+    pub fn get(&self, stream: RngStream) -> u64 {
+        match stream {
+            RngStream::Combat => self.combat_seed,
+            RngStream::Drop => self.drop_seed,
+            RngStream::AI => self.ai_seed,
+            RngStream::World => self.world_seed,
+        }
+    }
+
+    /// 设置指定流的种子。
+    pub fn set(&mut self, stream: RngStream, seed: u64) {
+        match stream {
+            RngStream::Combat => self.combat_seed = seed,
+            RngStream::Drop => self.drop_seed = seed,
+            RngStream::AI => self.ai_seed = seed,
+            RngStream::World => self.world_seed = seed,
+        }
+    }
+}
+
+/// 4 流确定性 RNG——每流一个独立 ChaCha12 实例。
+///
+/// 所有业务随机操作通过此资源进行，确保回放确定性。
+/// 使用经过验证的 ChaCha12 CSPRNG，而非自制 hash PRNG。
+///
+/// 详见 ADR-041 §3
+#[derive(Debug, Clone, Resource)]
+pub struct DeterministicRng {
+    /// 各流当前种子
+    seeds: RngSeeds,
+    /// 战斗流
+    combat: SeededRng,
+    /// 掉落流
+    drop: SeededRng,
+    /// AI 流
+    ai: SeededRng,
+    /// 世界流
+    world: SeededRng,
+}
+
+impl DeterministicRng {
+    /// 使用 RngSeeds 创建确定性 RNG。
+    pub fn new(seeds: RngSeeds) -> Self {
+        Self {
+            seeds,
+            combat: SeededRng::new(seeds.combat_seed),
+            drop: SeededRng::new(seeds.drop_seed),
+            ai: SeededRng::new(seeds.ai_seed),
+            world: SeededRng::new(seeds.world_seed),
+        }
+    }
+
+    /// 使用统一初始种子创建。
+    pub fn with_seed(seed: u64) -> Self {
+        Self::new(RngSeeds::uniform(seed))
+    }
+
+    /// 获取指定流的可变 SeededRng 引用。
+    pub fn stream(&mut self, stream: RngStream) -> &mut SeededRng {
+        match stream {
+            RngStream::Combat => &mut self.combat,
+            RngStream::Drop => &mut self.drop,
+            RngStream::AI => &mut self.ai,
+            RngStream::World => &mut self.world,
+        }
+    }
+
+    /// 获取指定流的种子。
+    pub fn get_seed(&self, stream: RngStream) -> u64 {
+        self.seeds.get(stream)
+    }
+
+    /// 设置指定流的种子并重置该流状态。
+    pub fn set_seed(&mut self, stream: RngStream, seed: u64) {
+        self.seeds.set(stream, seed);
+        *self.stream(stream) = SeededRng::new(seed);
+    }
+
+    /// 获取所有流种子。
+    pub fn get_all_seeds(&self) -> RngSeeds {
+        self.seeds
+    }
+
+    /// 同步设置所有流种子（回放模式），重置所有流状态。
+    pub fn set_all_seeds(&mut self, seeds: RngSeeds) {
+        self.seeds = seeds;
+        self.combat = SeededRng::new(seeds.combat_seed);
+        self.drop = SeededRng::new(seeds.drop_seed);
+        self.ai = SeededRng::new(seeds.ai_seed);
+        self.world = SeededRng::new(seeds.world_seed);
+    }
+
+    /// 生成指定流的下一个 u64 伪随机数。
+    pub fn next_u64(&mut self, stream: RngStream) -> u64 {
+        use rand::RngExt;
+        self.stream(stream).as_mut().random()
+    }
+
+    /// 生成指定流的 f32 伪随机数（0.0..1.0）。
+    pub fn next_f32(&mut self, stream: RngStream) -> f32 {
+        use rand::RngExt;
+        self.stream(stream).as_mut().random_range(0.0f32..1.0)
+    }
+
+    /// 生成指定流的 bool 伪随机数（给定概率）。
+    pub fn gen_bool(&mut self, stream: RngStream, probability: f32) -> bool {
+        use rand::RngExt;
+        self.stream(stream).as_mut().random_bool(probability as f64)
+    }
+
+    /// 生成指定流在 [min, max) 范围内的整数。
+    pub fn gen_range(&mut self, stream: RngStream, min: u64, max: u64) -> u64 {
+        use rand::RngExt;
+        if min >= max {
+            return min;
+        }
+        self.stream(stream).as_mut().random_range(min..max)
+    }
+}
+
+impl FromWorld for DeterministicRng {
+    fn from_world(_: &mut World) -> Self {
+        Self::with_seed(0)
     }
 }
 

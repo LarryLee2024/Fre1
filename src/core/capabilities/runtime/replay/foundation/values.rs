@@ -1,9 +1,8 @@
-//! Replay 值对象：录制器、播放器、确定性 RNG、验证器
+//! Replay 值对象：录制器、播放器、验证器
 
 use bevy::prelude::Reflect;
-use std::collections::HashMap;
 
-use super::types::{ReplayCommand, ReplayFrame, ReplayHeader, RngSeeds, RngStream};
+use super::types::{ReplayCommand, ReplayFrame, ReplayHeader};
 
 /// 完整的回放日志。
 #[derive(Debug, Clone, PartialEq, Reflect)]
@@ -62,110 +61,6 @@ impl ReplayMode {
             Self::FastForward => "FastForward",
             Self::StepByStep => "StepByStep",
         }
-    }
-}
-
-/// 确定性 RNG——每流一个独立实例。
-///
-/// 所有业务随机操作通过此资源进行，确保回放确定性。
-///
-/// 详见 ADR-041 §3
-#[derive(Debug, Clone, Reflect)]
-pub struct DeterministicRng {
-    /// 各流当前种子
-    seeds: RngSeeds,
-    /// 各流调用计数器（用于产生不同值）
-    counters: HashMap<RngStream, u64>,
-}
-
-impl DeterministicRng {
-    /// 创建确定性 RNG。
-    pub fn new(seeds: RngSeeds) -> Self {
-        let mut counters = HashMap::new();
-        for stream in &RngStream::all() {
-            counters.insert(*stream, 0);
-        }
-        Self { seeds, counters }
-    }
-
-    /// 使用统一初始种子创建。
-    pub fn with_seed(seed: u64) -> Self {
-        Self::new(RngSeeds::uniform(seed))
-    }
-
-    /// 获取指定流的种子。
-    pub fn get_seed(&self, stream: RngStream) -> u64 {
-        self.seeds.get(stream)
-    }
-
-    /// 设置指定流的种子。
-    pub fn set_seed(&mut self, stream: RngStream, seed: u64) {
-        self.seeds.set(stream, seed);
-        if let Some(counter) = self.counters.get_mut(&stream) {
-            *counter = 0;
-        }
-    }
-
-    /// 获取所有流的种子。
-    pub fn get_all_seeds(&self) -> RngSeeds {
-        self.seeds
-    }
-
-    /// 同步设置所有流种子（回放模式）。
-    pub fn set_all_seeds(&mut self, seeds: RngSeeds) {
-        self.seeds = seeds;
-        for counter in self.counters.values_mut() {
-            *counter = 0;
-        }
-    }
-
-    /// 生成指定流的下一个伪随机数（0..u64::MAX）。
-    pub fn next_u64(&mut self, stream: RngStream) -> u64 {
-        let counter = self.counters.get(&stream).copied().unwrap_or(0);
-        self.counters.insert(stream, counter + 1);
-
-        // 简单的确定性哈希：种子 + 流偏置 + 计数器
-        let stream_offset = match stream {
-            RngStream::Combat => 0x9E37_79B9_7F4A_7C15u64,
-            RngStream::Drop => 0xBF58_4766_71CE_4E5Bu64,
-            RngStream::AI => 0x3C6E_F372_FE94_7A9Bu64,
-            RngStream::World => 0x6A09_E667_F3BC_C4C9u64,
-        };
-
-        let state = self
-            .seeds
-            .get(stream)
-            .wrapping_add(stream_offset)
-            .wrapping_add(counter);
-
-        // 混合：先乘法扩散低位，再 xorshift 扩散高位
-        // 使用 MurmurHash3 风格的乘法混合器，解决 xorshift 在相邻输入下高位不扩散的问题
-        let mut x = state;
-        x = x.wrapping_mul(0x9E37_79B9_7F4A_7C15);
-        x ^= x >> 27;
-        x = x.wrapping_mul(0xBF58_4766_71CE_4E5B);
-        x ^= x >> 31;
-        x
-    }
-
-    /// 生成指定流的 f32 伪随机数（0.0..1.0）。
-    pub fn next_f32(&mut self, stream: RngStream) -> f32 {
-        let val = self.next_u64(stream);
-        (val >> 11) as f32 * (1.0 / (1u64 << 53) as f32)
-    }
-
-    /// 生成指定流的 bool 伪随机数（给定概率）。
-    pub fn gen_bool(&mut self, stream: RngStream, probability: f32) -> bool {
-        self.next_f32(stream) < probability
-    }
-
-    /// 生成指定流在 [min, max) 范围内的整数。
-    pub fn gen_range(&mut self, stream: RngStream, min: u64, max: u64) -> u64 {
-        if min >= max {
-            return min;
-        }
-        let range = max - min;
-        min + (self.next_u64(stream) % range)
     }
 }
 

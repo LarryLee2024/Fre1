@@ -45,7 +45,7 @@ fn replay_plugin_resources_have_correct_defaults() {
 
     let world = app.world();
     let rng = world.resource::<DeterministicRng>();
-    let seeds = rng.0.get_all_seeds();
+    let seeds = rng.get_all_seeds();
     assert_eq!(seeds.combat_seed, 0, "default RNG seed should be 0");
 
     let guard = world.resource::<ReplayModeGuard>();

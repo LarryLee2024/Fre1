@@ -16,12 +16,12 @@ use crate::core::domains::combat::components::{
 use crate::core::domains::combat::events::{
     BattleResult, OnBattleEnd, OnBattleStart, OnTurnEnd, OnTurnStart,
 };
-use crate::core::events::{BattleEnded, BattleStarted};
 use crate::core::domains::combat::integration::ability::CombatAbilityFacade;
 use crate::core::domains::combat::integration::ability::CombatAbilityParam;
 use crate::core::domains::combat::integration::trigger::CombatTriggerFacade;
 use crate::core::domains::combat::integration::trigger::CombatTriggerParam;
 use crate::core::domains::combat::integration::trigger::CombatTriggerType;
+use crate::core::events::{BattleEnded, BattleStarted};
 
 // ═══════════════════════════════════════════════════════════════════════
 // BattlePhase 生命周期

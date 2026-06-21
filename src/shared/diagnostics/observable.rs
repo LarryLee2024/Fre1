@@ -80,9 +80,7 @@ pub trait DomainEvent: bevy::prelude::Event + fmt::Debug + Clone + Send + Sync +
 /// Blanket impl: every Bevy event satisfying the supertrait bounds is
 /// automatically a DomainEvent. This eliminates the need for
 /// `impl_domain_event!()` or `#[derive(DomainEvent)]`.
-impl<T> DomainEvent for T where
-    T: bevy::prelude::Event + fmt::Debug + Clone + Send + Sync + 'static
-{}
+impl<T> DomainEvent for T where T: bevy::prelude::Event + fmt::Debug + Clone + Send + Sync + 'static {}
 
 /// Marker trait for replay events.
 ///

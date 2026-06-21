@@ -45,8 +45,9 @@ mod events;
 // ── 核心类型 re-export ──
 pub use crate::core::capabilities::runtime::replay::foundation::{
     AbilityTarget, ReplayCommand, ReplayError, ReplayFrame, ReplayHeader, ReplayLog,
-    ReplayMismatch, ReplayMode, RngSeeds, RngStream,
+    ReplayMismatch, ReplayMode,
 };
+pub use crate::shared::random::{RngSeeds, RngStream};
 
 // ── Infra 资源 re-export ──
 pub use resources::{
