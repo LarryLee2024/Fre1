@@ -1,7 +1,7 @@
 ---
 id: 09-planning.camera-architecture-plan
 title: Camera 架构补充规划
-status: partially_completed
+status: completed
 owner: architect
 created: 2026-06-21
 updated: 2026-06-21
@@ -79,7 +79,9 @@ pub fn spawn_camera(mut commands: Commands) {
 - 1.3 ✅ Camera 数据 Schema 已完成并写入 docs/04-data/infrastructure/camera_schema.md + docs/04-data/README.md 索引更新
 - 1.4 ✅ Camera-UI 交互规则已完成并写入 docs/06-ui/04-data-flow/camera-ui-interaction.md + docs/06-ui/README.md 索引更新
 
-### Phase 2 — 基础实现（Phase 1 后）
+### Phase 2 进展
+- 2.1 ✅ Camera 基础模块代码已实现：src/infra/camera/（23 个文件，15/15 测试通过）
+- 2.2 ✅ 宪法已更新：docs/00-governance/ai-constitution-complete.md（6 处新增 Camera 条款）
 
 | 步骤 | 负责 Agent | 产出 | 依赖 |
 |------|-----------|------|------|

@@ -72,9 +72,7 @@ pub fn process_camera_requests(
             let mut new_pose = target.0.clone();
             new_pose.position = pos;
             commands.entity(entity).insert(TargetPose(new_pose));
-            commands
-                .entity(entity)
-                .insert(CameraState::Follow(t.clone()));
+            commands.entity(entity).insert(CameraState::Follow(*t));
         }
         CameraRequest::Unfollow => {
             if matches!(*state, CameraState::Follow(_)) {

@@ -22,7 +22,8 @@ use super::systems::{bounds, input_handler, movement, shake, state_machine};
 /// CameraPlugin — 镜头基础设施 Plugin。
 ///
 /// 在 Phase 8（Input 之后）注册到 App。
-/// 不负责 Camera Entity 的 spawn——由场景系统在 OnEnter 时调用 `spawn_camera` 工厂函数。
+/// Startup 时自动生成一个默认镜头，确保 PostUpdate 管线始终有 Camera Entity 可用。
+/// 场景系统通过 `CameraRequest` 事件控制镜头位置/行为。
 pub struct CameraPlugin;
 
 impl Plugin for CameraPlugin {
@@ -42,10 +43,13 @@ impl Plugin for CameraPlugin {
         app.init_resource::<UnitPositionResolver>();
         app.init_resource::<TileSize>();
 
-        // ── 3. 注册 Observer（消费 CameraRequest） ──
+        // ── 3. Startup 生成默认镜头 ──
+        app.add_systems(Startup, spawn_default_camera);
+
+        // ── 4. 注册 Observer（消费 CameraRequest） ──
         app.add_observer(state_machine::process_camera_requests);
 
-        // ── 4. 注册 System（按调度顺序） ──
+        // ── 5. 注册 System（按调度顺序） ──
         // PreUpdate: 输入处理（在 InputState 可用之后）
         app.add_systems(PreUpdate, input_handler::handle_camera_input);
 
@@ -68,6 +72,13 @@ impl Plugin for CameraPlugin {
 
         tracing::info!(target: "camera", "[CameraPlugin] 已初始化");
     }
+}
+
+/// Startup 系统：生成一个位于 (0,0) 默认缩放的镜头。
+///
+/// 所有场景共享此镜头。场景通过 `CameraRequest::MoveTo` / `CameraRequest::SetZoom` 调整位置。
+fn spawn_default_camera(mut commands: Commands) {
+    spawn_camera(&mut commands, CameraPose::default());
 }
 
 // ─── Camera Entity 工厂函数 ─────────────────────────────────

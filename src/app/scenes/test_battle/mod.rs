@@ -13,23 +13,22 @@ pub mod spawn;
 
 use bevy::prelude::*;
 
-use crate::infra::camera::foundation::pose::CameraPose;
-use crate::infra::camera::spawn_camera;
+use crate::infra::camera::foundation::request::CameraRequest;
+use crate::infra::camera::foundation::target::CameraTarget;
 use crate::shared::game_state::GameState;
 
 use self::render::{attach_unit_visuals, spawn_grid_background};
 use self::spawn::{load_test_battle_scenario, spawn_test_battle};
 
-/// 系统：为测试战斗场景生成摄像机
+/// 系统：移动镜头到战斗场景初始位置
+///
+/// 镜头实体由 CameraPlugin 在 Startup 时自动生成，此处不再 spawn 新摄像头，
+/// 而是通过 CameraRequest::MoveTo 调整已有镜头位置。
 fn spawn_camera_for_battle(mut commands: Commands) {
-    spawn_camera(
-        &mut commands,
-        CameraPose {
-            position: bevy::math::Vec2::new(240.0, 240.0),
-            zoom: 1.0,
-            rotation: 0.0,
-        },
-    );
+    commands.trigger(CameraRequest::MoveTo {
+        target: CameraTarget::WorldPos(Vec2::new(240.0, 240.0)),
+        duration: 0.0,
+    });
 }
 
 /// 测试战斗场景 Plugin

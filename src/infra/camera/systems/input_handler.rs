@@ -47,10 +47,10 @@ pub fn handle_camera_input(
     }
 
     // 检查 CameraInputBlock Component
-    if let Some(block) = input_block {
-        if block.block_count > 0 {
-            return;
-        }
+    if let Some(block) = input_block
+        && block.block_count > 0
+    {
+        return;
     }
 
     // ── 采集方向输入 ──

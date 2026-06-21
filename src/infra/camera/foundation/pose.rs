@@ -57,27 +57,15 @@ use bevy::prelude::Component;
 ///
 /// 由状态机/input_handler 设置，描述镜头最终要到达的位姿。
 /// movement 系统读取此值并插值更新 CurrentPose。
-#[derive(Component, Debug, Clone, PartialEq, Reflect)]
+#[derive(Component, Debug, Clone, PartialEq, Default, Reflect)]
 pub struct TargetPose(pub CameraPose);
-
-impl Default for TargetPose {
-    fn default() -> Self {
-        Self(CameraPose::default())
-    }
-}
 
 /// CurrentPose — 当前姿态 Component，挂在 Camera Entity 上。
 ///
 /// 每帧由 movement 系统插值逼近 TargetPose。
 /// 写入 Transform 前会经过 CameraBounds 钳位和震屏偏移叠加。
-#[derive(Component, Debug, Clone, PartialEq, Reflect)]
+#[derive(Component, Debug, Clone, PartialEq, Default, Reflect)]
 pub struct CurrentPose(pub CameraPose);
-
-impl Default for CurrentPose {
-    fn default() -> Self {
-        Self(CameraPose::default())
-    }
-}
 
 // ─── 常量 ─────────────────────────────────────────────────────
 

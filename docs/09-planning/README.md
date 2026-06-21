@@ -22,6 +22,7 @@
 
 | 文档 | 完成日期 | 说明 |
 |------|----------|------|
+| `camera-architecture-plan.md` | 2026-06-22 | Camera 架构补充（ADR → 领域规则 → Schema → UI交互 → 代码实现 → 宪法） |
 | `ui-domain-integration-plan.md` | 2026-06-22 | UI→Domain 接线与集成（3 轮 agent 全部完成） |
 
 ### Bevy 0.19 迁移总纲

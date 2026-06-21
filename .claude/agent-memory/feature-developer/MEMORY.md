@@ -8,3 +8,5 @@
 - [Shared Validation Module](shared-validation-module.md) -- ValidationResult, Validator trait, ValidationChain, built-in validators
 - [UiAction Routing System](ui-action-routing-system.md) -- UiAction/UiCommand/UiEvent enums, ScreenType, ButtonClicked→UiCommand mapping via方案A, Bevy 0.19 trigger/observer pattern
 - [Phase 6 Completion](phase6-localization-theme-settings.md) -- Localization completion, theme switching, settings persistence
+- [Bevy 0.19 Extended API Patterns](bevy-0.19-api-patterns.md) -- single/single_mut, to_matrix, delta().as_secs_f32(), Reflect requirements, OrthographicProjection changes, entity() borrow rules
+- [Camera Module Implementation](camera-module-implementation.md) -- Complete Camera base module (Phase 2.1) at src/infra/camera/, structure and architecture patterns
