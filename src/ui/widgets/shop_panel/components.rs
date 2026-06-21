@@ -21,4 +21,18 @@ pub struct ShopPanel;
 pub enum ShopPanelAction {
     /// 关闭商店界面
     Close,
+    /// 购买物品
+    BuyItem {
+        /// 物品 ID
+        item_id: u32,
+        /// 物品价格（金币）
+        price: u64,
+    },
+    /// 出售物品
+    SellItem {
+        /// 物品 ID
+        item_id: u32,
+        /// 物品价格（金币）
+        price: u64,
+    },
 }

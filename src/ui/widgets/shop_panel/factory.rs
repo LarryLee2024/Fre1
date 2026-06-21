@@ -12,7 +12,6 @@ use crate::ui::primitives::panel::{components::PanelVariant, factory::spawn_pane
 use crate::ui::primitives::tab_panel::factory::spawn_tab_panel;
 use crate::ui::primitives::text::{components::TextVariant, factory::spawn_text};
 use crate::ui::theme::Theme;
-use crate::ui::widgets::inventory_item_row::factory::spawn_inventory_item_row;
 use crate::ui::widgets::shop_item_card::factory::spawn_shop_item_card;
 
 use super::components::{ShopPanel, ShopPanelAction};
@@ -77,7 +76,7 @@ pub fn spawn_shop_panel(
     let title = spawn_text(commands, asset_server, theme, "Shop", TextVariant::Heading);
     commands.entity(title).set_parent_in_place(header);
 
-    // 金币显示文本
+    // Gold display text
     let gold_text = spawn_text(
         commands,
         asset_server,
@@ -96,24 +95,64 @@ pub fn spawn_shop_panel(
     let tabs = spawn_tab_panel(commands, theme, &["Buy", "Sell"], 0);
     commands.entity(tabs).set_parent_in_place(container);
 
-    // ── 4. Sample buy items (ShopItemCard × 3) ──
+    // ── 4. Sample buy items (ShopItemCard × 3) with BuyItem actions ──
     let buy_items: [(&str, u32, u32); 3] = [
         ("Health Potion", 50, 10),
         ("Mana Potion", 80, 5),
         ("Antidote", 30, 3),
     ];
 
-    for (name, price, stock) in buy_items {
-        let card = spawn_shop_item_card(commands, asset_server, theme, name, price, stock);
+    for (idx, (name, price, stock)) in buy_items.iter().enumerate() {
+        let card = spawn_shop_item_card(
+            commands,
+            asset_server,
+            theme,
+            *name,
+            idx as u32 + 1, // Use 1-based item_id for sample data
+            *price,
+            *stock,
+        );
         commands.entity(card).set_parent_in_place(container);
     }
 
-    // ── 5. Sample sell items (InventoryItemRow × 2) ──
+    // ── 5. Sample sell items with Sell buttons ──
     let sell_items: [(&str, u32); 2] = [("Old Sword", 1), ("Leather Armor", 1)];
 
-    for (name, qty) in sell_items {
-        let row = spawn_inventory_item_row(commands, asset_server, theme, name, qty);
-        commands.entity(row).set_parent_in_place(container);
+    for (idx, (name, qty)) in sell_items.iter().enumerate() {
+        // Each sell item is wrapped in a horizontal row container
+        let sell_row = commands
+            .spawn(Node {
+                flex_direction: FlexDirection::Row,
+                align_items: AlignItems::Center,
+                column_gap: Val::Px(theme.spacing.sm),
+                ..default()
+            })
+            .id();
+        commands.entity(sell_row).set_parent_in_place(container);
+
+        // Display item name and quantity
+        let sell_label = spawn_text(
+            commands,
+            asset_server,
+            theme,
+            format!("{} x{}", name, qty),
+            TextVariant::Caption,
+        );
+        commands.entity(sell_label).set_parent_in_place(sell_row);
+
+        // Sell button with ShopPanelAction::SellItem
+        let sell_btn = spawn_localized_button(
+            commands,
+            theme,
+            loc::economy::SHOP_SELL_TEXT,
+            "Sell",
+            ButtonVariant::Secondary,
+        );
+        commands.entity(sell_btn).insert(ShopPanelAction::SellItem {
+            item_id: (idx + 100) as u32, // Offset by 100 to avoid collision with buy items
+            price: 0, // Sample data: sell price unknown, determined by shop logic
+        });
+        commands.entity(sell_btn).set_parent_in_place(sell_row);
     }
 
     // ── 6. Close button (Secondary variant) ──

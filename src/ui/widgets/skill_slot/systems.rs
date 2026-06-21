@@ -62,9 +62,9 @@ pub fn refresh_skill_slot_from_vm(
             continue;
         }
 
-        // Find matching SkillSlotVm from UiStore by skill_id
+        // 通过 skill_id 从 UiStore 查找匹配的 SkillSlotVm
         let vm = store.skill_panel.skills.get(&state.skill_id).or_else(|| {
-            // Fallback: if skill_id is 0 (default from factory), use the first entry
+            // 回退：如果 skill_id 为 0（工厂默认值），使用第一个条目
             if state.skill_id == 0 {
                 store.skill_panel.skills.values().next()
             } else {

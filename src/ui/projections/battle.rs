@@ -138,7 +138,7 @@ pub fn on_turn_started_projection(
 
     BattleProjection::on_turn_started(&mut store, trigger.event());
 
-    // Mark all BattleHudVm consumers dirty
+    // 标记所有 BattleHudVm 消费者为脏
     for mut dirty in dirty_query.iter_mut() {
         dirty.mark_dirty();
     }
@@ -170,7 +170,7 @@ pub fn on_effect_applied_projection(
 ) {
     BattleProjection::on_effect_applied(&mut store, trigger.event());
 
-    // Mark all SkillPanelVm consumers dirty
+    // 标记所有 SkillPanelVm 消费者为脏
     for mut dirty in dirty_query.iter_mut() {
         dirty.mark_dirty();
     }

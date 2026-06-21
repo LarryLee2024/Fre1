@@ -22,12 +22,22 @@ pub fn on_inventory_button_clicked(
 ) {
     let entity = on.event().entity;
     let Ok(action) = query.get(entity) else {
-        // 非背包按钮，忽略
+        // Not an inventory button, ignore
         return;
     };
 
     let command = match action {
         InventoryGridAction::Close => UiCommand::CloseScreen,
+        InventoryGridAction::UseItem { item_id } => UiCommand::UseItem {
+            item_instance_id: item_id.to_string(),
+            user_id: "player".to_string(),
+            target_id: None,
+        },
+        InventoryGridAction::DropItem { item_id, quantity } => UiCommand::DropItem {
+            unit_id: "player".to_string(),
+            item_instance_id: item_id.to_string(),
+            quantity: *quantity,
+        },
     };
 
     info!(target: "ui", "[Inventory] 命令映射: {:?}", command);

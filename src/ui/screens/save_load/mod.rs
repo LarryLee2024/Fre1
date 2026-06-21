@@ -11,13 +11,19 @@
 //!   ├── List (Vertical)
 //!   │   ├── Panel (Card) — 存档槽位 1
 //!   │   │   ├── Text ("Save Slot 1", Body)
-//!   │   │   └── Text ("Empty", Caption)
+//!   │   │   ├── Text ("Empty", Caption)
+//!   │   │   ├── Button ("Save", Primary) — SaveLoadAction::SaveSlot(1)
+//!   │   │   └── Button ("Load", Secondary) — SaveLoadAction::LoadSlot(1)
 //!   │   ├── Panel (Card) — 存档槽位 2
 //!   │   │   ├── Text ("Save Slot 2", Body)
-//!   │   │   └── Text ("Empty", Caption)
+//!   │   │   ├── Text ("Empty", Caption)
+//!   │   │   ├── Button ("Save", Primary) — SaveLoadAction::SaveSlot(2)
+//!   │   │   └── Button ("Load", Secondary) — SaveLoadAction::LoadSlot(2)
 //!   │   └── Panel (Card) — 存档槽位 3
 //!   │       ├── Text ("Save Slot 3", Body)
-//!   │       └── Text ("Empty", Caption)
+//!   │       ├── Text ("Empty", Caption)
+//!   │       ├── Button ("Save", Primary) — SaveLoadAction::SaveSlot(3)
+//!   │       └── Button ("Load", Secondary) — SaveLoadAction::LoadSlot(3)
 //!   └── Button ("Close", Secondary)
 
 use bevy::ecs::observer::On;
@@ -46,8 +52,12 @@ pub struct SaveLoadScreen;
 /// 来确定哪个按钮被点击。
 #[derive(Component, Debug, Clone, PartialEq, Eq, Reflect)]
 pub enum SaveLoadAction {
-    /// 关闭 SaveLoad 界面
+    /// Close the SaveLoad screen
     Close,
+    /// Save game to the specified slot
+    SaveSlot(u32),
+    /// Load game from the specified slot
+    LoadSlot(u32),
 }
 
 /// Observer：当 UiCommand::OpenScreen(SaveLoad) 触发时生成 SaveLoad 界面。
@@ -112,6 +122,10 @@ pub fn spawn_save_load_screen(commands: &mut Commands, theme: &Theme, asset_serv
 
     for i in 1..=3 {
         let slot = spawn_panel(commands, theme, PanelVariant::Card);
+        commands.entity(slot).insert(Node {
+            row_gap: Val::Px(theme.spacing.sm),
+            ..default()
+        });
         let label = spawn_text(
             commands,
             asset_server,
@@ -124,6 +138,40 @@ pub fn spawn_save_load_screen(commands: &mut Commands, theme: &Theme, asset_serv
         let info = spawn_text(commands, asset_server, theme, "Empty", TextVariant::Caption);
         commands.entity(info).set_parent_in_place(slot);
 
+        // 存档/读档按钮水平排列
+        let btn_row = commands
+            .spawn(Node {
+                flex_direction: FlexDirection::Row,
+                column_gap: Val::Px(theme.spacing.sm),
+                ..default()
+            })
+            .id();
+
+        let save_btn = spawn_localized_button(
+            commands,
+            theme,
+            loc::ui::SAVE,
+            "Save",
+            ButtonVariant::Primary,
+        );
+        commands
+            .entity(save_btn)
+            .insert(SaveLoadAction::SaveSlot(i));
+        commands.entity(save_btn).set_parent_in_place(btn_row);
+
+        let load_btn = spawn_localized_button(
+            commands,
+            theme,
+            loc::ui::LOAD,
+            "Load",
+            ButtonVariant::Secondary,
+        );
+        commands
+            .entity(load_btn)
+            .insert(SaveLoadAction::LoadSlot(i));
+        commands.entity(load_btn).set_parent_in_place(btn_row);
+
+        commands.entity(btn_row).set_parent_in_place(slot);
         commands.entity(slot).set_parent_in_place(list);
     }
 
@@ -139,7 +187,7 @@ pub fn spawn_save_load_screen(commands: &mut Commands, theme: &Theme, asset_serv
     commands.entity(close).set_parent_in_place(root);
 }
 
-/// Observer：处理 SaveLoad 界面按钮点击（关闭）。
+/// Observer：处理 SaveLoad 界面按钮点击（关闭 / 存档 / 读档）。
 pub fn on_save_load_button_clicked(
     on: On<ButtonClicked>,
     query: Query<&SaveLoadAction>,
@@ -153,6 +201,12 @@ pub fn on_save_load_button_clicked(
                 for entity in &screen_query {
                     commands.entity(entity).despawn();
                 }
+            }
+            SaveLoadAction::SaveSlot(slot) => {
+                commands.trigger(UiCommand::SaveGame(*slot));
+            }
+            SaveLoadAction::LoadSlot(slot) => {
+                commands.trigger(UiCommand::LoadGame(*slot));
             }
         }
     }

@@ -102,7 +102,7 @@ pub fn spawn_skill_slot(
     // ── 4. Use button (Primary variant, small) ──
     let use_button =
         spawn_localized_button(commands, theme, loc::ui::USE, "Use", ButtonVariant::Primary);
-    // Attach SkillSlotAction marker for event routing
+    // 挂载 SkillSlotAction 标记用于事件路由
     commands.entity(use_button).insert(SkillSlotAction::Use);
     commands.entity(use_button).set_parent_in_place(container);
 

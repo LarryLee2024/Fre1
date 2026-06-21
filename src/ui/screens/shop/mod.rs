@@ -84,6 +84,16 @@ pub fn on_shop_button_clicked(
 
     let command = match action {
         ShopPanelAction::Close => UiCommand::CloseScreen,
+        ShopPanelAction::BuyItem { item_id, .. } => UiCommand::BuyItem {
+            item_def_id: item_id.to_string(),
+            quantity: 1,
+            shop_id: "default".to_string(),
+        },
+        ShopPanelAction::SellItem { item_id, .. } => UiCommand::SellItem {
+            item_def_id: item_id.to_string(),
+            quantity: 1,
+            shop_id: "default".to_string(),
+        },
     };
 
     info!(target: "ui", "[Shop] 命令映射: {:?}", command);

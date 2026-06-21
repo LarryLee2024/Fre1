@@ -12,6 +12,7 @@ use crate::ui::primitives::button::{components::ButtonVariant, factory::spawn_lo
 use crate::ui::primitives::panel::{components::PanelVariant, factory::spawn_panel};
 use crate::ui::primitives::text::{components::TextVariant, factory::spawn_text};
 use crate::ui::theme::Theme;
+use crate::ui::widgets::shop_panel::components::ShopPanelAction;
 
 use super::components::{ShopItemAction, ShopItemCard};
 
@@ -24,7 +25,7 @@ use super::components::{ShopItemAction, ShopItemCard};
 ///   ├── Text (item name, Caption)
 ///   ├── Text ("Gold: {price}", Caption, secondary)
 ///   ├── Text ("Stock: {stock}", Caption, secondary)
-///   └── Button ("Buy", Primary) — ShopItemAction::Buy
+///   └── Button ("Buy", Primary) — ShopPanelAction::BuyItem
 /// ```
 ///
 /// # 参数
@@ -32,6 +33,7 @@ use super::components::{ShopItemAction, ShopItemCard};
 /// - `asset_server`: 资源管理器（传递给文本工厂）
 /// - `theme`: 主题 Resource（提供颜色/间距令牌）
 /// - `item_name`: 物品显示名称
+/// - `item_id`: 物品 ID
 /// - `price`: 物品价格（金币）
 /// - `stock`: 库存数量
 ///
@@ -42,6 +44,7 @@ pub fn spawn_shop_item_card(
     asset_server: &AssetServer,
     theme: &Theme,
     item_name: impl Into<String>,
+    item_id: u32,
     price: u32,
     stock: u32,
 ) -> Entity {
@@ -59,7 +62,7 @@ pub fn spawn_shop_item_card(
             ..default()
         },
         ShopItemCard {
-            item_id: 0,
+            item_id,
             price,
             stock,
         },
@@ -105,7 +108,7 @@ pub fn spawn_shop_item_card(
         .insert(TextColor(theme.colors.text_secondary));
     commands.entity(stock_text).set_parent_in_place(container);
 
-    // ── 5. Buy button (Primary variant) ──
+    // ── 5. Buy button (Primary variant) — wired to ShopPanelAction::BuyItem
     let buy_btn = spawn_localized_button(
         commands,
         theme,
@@ -113,7 +116,10 @@ pub fn spawn_shop_item_card(
         "Buy",
         ButtonVariant::Primary,
     );
-    commands.entity(buy_btn).insert(ShopItemAction::Buy);
+    commands.entity(buy_btn).insert(ShopPanelAction::BuyItem {
+        item_id,
+        price: price as u64,
+    });
     commands.entity(buy_btn).set_parent_in_place(container);
 
     container

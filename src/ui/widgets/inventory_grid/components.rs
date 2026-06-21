@@ -21,4 +21,16 @@ pub struct InventoryGrid;
 pub enum InventoryGridAction {
     /// 关闭背包界面
     Close,
+    /// 使用物品
+    UseItem {
+        /// 物品 ID
+        item_id: u32,
+    },
+    /// 丢弃物品
+    DropItem {
+        /// 物品 ID
+        item_id: u32,
+        /// 丢弃数量
+        quantity: u32,
+    },
 }
