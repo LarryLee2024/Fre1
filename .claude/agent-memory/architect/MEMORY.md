@@ -1,2 +1,2 @@
-- [ADR-063 Review Completed](adr-063-review-completed.md) -- ADR-063 Macro Governance review: fixed numbering, added missing sections, updated README index
+- [ADR-064 Camera Architecture](adr-064-camera-architecture.md) -- Camera 系统架构 ADR: Infra 层独立模块, State Machine Idle/FreeMove/Follow/Focus, CameraRequest 事件驱动, Pose 分离设计
 - [设计文档差距分析 2026-06-21](design-doc-gap-analysis-2026-06-21.md) -- 5个 Tier S Agent 输出完整性评估，包含 13 个具体差距项和优先级排序

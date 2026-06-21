@@ -4,7 +4,7 @@ title: Domain Rules — 领域规则索引
 status: stable
 owner: domain-designer
 created: 2026-06-16
-updated: 2026-06-19
+updated: 2026-06-21
 tags:
   - domain
   - index
@@ -18,7 +18,7 @@ tags:
 > **内容映射**: `docs/03-content/README.md` — 内容架构总纲（Def Schema 映射到领域规则）
 > **UI 表现映射**: `docs/06-ui/README.md` — UI/表现层架构总纲（领域规则驱动 UI 设计）
 
-本文档是 `docs/02-domain/` 下全部 31 个领域规则文件的索引和快速参考。
+本文档是 `docs/02-domain/` 下全部 32 个领域规则文件的索引和快速参考。
 
 ---
 
@@ -59,14 +59,16 @@ tags:
     ├── quest_domain.md
     ├── economy_domain.md
     ├── crafting_domain.md
-    └── summon_domain.md
+    ├── summon_domain.md
+    └── replay_domain.md
 ```
+Note: `docs/02-domain/infrastructure/` 目录包含 Infra 层模块的领域规则（如 camera_domain.md），作为单独分类维护。
 
 ---
 
 ## 2. 领域分类
 
-31 个领域分为两大类：**Capabilities**（能力系统，15 个）、**Presentation**（表现层规则，1 个）和 **Business Domains**（业务领域，15 个）。
+32 个领域分为三大类：**Capabilities**（能力系统，15 个）、**Presentation**（表现层规则，1 个）、**Infrastructure**（基础设施规则，1 个）和 **Business Domains**（业务领域，16 个）。
 
 ### 2.1 Capabilities — 能力系统（15）
 
@@ -117,7 +119,15 @@ tags:
 |---|---------|-----|---------|
 | 16 | `capabilities/ui-presentation.md` | Presentation (L3) | UI 表现层——ViewModel/Projection/Widget/Screen 的行为约束与不变量 |
 
-### 2.2 Business Domains — 业务领域（15）
+### 2.1b Infrastructure — 基础设施规则（1）
+
+> 注意：Infrastructure 层模块位于 `src/infra/`，属于 L2 技术基础设施，规则文档化在 `02-domain/infrastructure/` 目录下。
+
+| # | 文件路径 | 层 | 职责摘要 |
+|---|---------|-----|---------|
+| 17 | `infrastructure/camera_domain.md` | Infrastructure (L2) | Camera 镜头系统——四状态机、Pose 插值、边界约束、Event 驱动 |
+
+### 2.2 Business Domains — 业务领域（16）
 
 业务领域实现具体的游戏功能，分层依赖 Capabilities：
 
@@ -142,21 +152,22 @@ Economy Layer (经济系统)
 
 | # | 文件路径 | 层 | 职责摘要 |
 |---|---------|-----|---------|
-| 17 | `domains/tactical_domain.md` | Foundation | 战术空间——网格位置、移动、掩体、夹击 |
-| 18 | `domains/terrain_domain.md` | Foundation | 地形——Tile、表面类型、陷阱、通行性 |
-| 19 | `domains/faction_domain.md` | Foundation | 阵营关系——阵营定义、声望、关系判定 |
-| 20 | `domains/combat_domain.md` | Core | 战斗——回合流程、先攻、伤害结算、胜负 |
-| 21 | `domains/spell_domain.md` | Core | 法术——法术位、专注、豁免、升环 |
-| 22 | `domains/reaction_domain.md` | Core | 反应——机会攻击、法术反制、护盾、援护 |
-| 23 | `domains/progression_domain.md` | Core | 成长——经验、等级、职业、天赋、ASI |
-| 24 | `domains/inventory_domain.md` | Core | 背包——物品、装备槽位、消耗品、战利品 |
-| 25 | `domains/party_domain.md` | Core | 队伍——成员名册、羁绊、阵型、换人 |
-| 26 | `domains/camp_rest_domain.md` | Core | 营地/休息——短休、长休、生命骰、营地事件 |
-| 27 | `domains/narrative_domain.md` | Narrative | 叙事——对话树、StoryFlag、演出 |
-| 28 | `domains/quest_domain.md` | Narrative | 任务——目标追踪、奖励、前置条件 |
-| 29 | `domains/economy_domain.md` | Economy | 经济——货币、商店、价格、交易 |
-| 30 | `domains/crafting_domain.md` | Economy | 制作——配方、附魔、装备升级 |
-| 31 | `domains/summon_domain.md` | Economy | 召唤——召唤物模板、专注绑定、消失 |
+| 18 | `domains/tactical_domain.md` | Foundation | 战术空间——网格位置、移动、掩体、夹击 |
+| 19 | `domains/terrain_domain.md` | Foundation | 地形——Tile、表面类型、陷阱、通行性 |
+| 20 | `domains/faction_domain.md` | Foundation | 阵营关系——阵营定义、声望、关系判定 |
+| 21 | `domains/combat_domain.md` | Core | 战斗——回合流程、先攻、伤害结算、胜负 |
+| 22 | `domains/spell_domain.md` | Core | 法术——法术位、专注、豁免、升环 |
+| 23 | `domains/reaction_domain.md` | Core | 反应——机会攻击、法术反制、护盾、援护 |
+| 24 | `domains/progression_domain.md` | Core | 成长——经验、等级、职业、天赋、ASI |
+| 25 | `domains/inventory_domain.md` | Core | 背包——物品、装备槽位、消耗品、战利品 |
+| 26 | `domains/party_domain.md` | Core | 队伍——成员名册、羁绊、阵型、换人 |
+| 27 | `domains/camp_rest_domain.md` | Core | 营地/休息——短休、长休、生命骰、营地事件 |
+| 28 | `domains/narrative_domain.md` | Narrative | 叙事——对话树、StoryFlag、演出 |
+| 29 | `domains/quest_domain.md` | Narrative | 任务——目标追踪、奖励、前置条件 |
+| 30 | `domains/economy_domain.md` | Economy | 经济——货币、商店、价格、交易 |
+| 31 | `domains/crafting_domain.md` | Economy | 制作——配方、附魔、装备升级 |
+| 32 | `domains/summon_domain.md` | Economy | 召唤——召唤物模板、专注绑定、消失 |
+| 33 | `domains/replay_domain.md` | Infrastructure | Replay——战斗录像录制与回放 |
 
 ---
 
@@ -305,6 +316,7 @@ Event         → 所有领域（领域间通信）
 | `capabilities/stacking_domain.md` | ✅ stable | domain-designer | 2026-06-19 |
 | `capabilities/cue_domain.md` | ✅ stable | domain-designer | 2026-06-19 |
 | `capabilities/ui-presentation.md` | 🟡 draft | domain-designer | 2026-06-19 |
+| `infrastructure/camera_domain.md` | 🟡 draft | domain-designer | 2026-06-21 |
 | `domains/tactical_domain.md` | ✅ stable | domain-designer | 2026-06-19 |
 | `domains/terrain_domain.md` | ✅ stable | domain-designer | 2026-06-19 |
 | `domains/faction_domain.md` | ✅ stable | domain-designer | 2026-06-19 |

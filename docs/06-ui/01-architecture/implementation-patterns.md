@@ -1171,7 +1171,8 @@ docs/06-ui/03-screens/
 └── overlays.md                     ── Tooltip/DamageText/Notification/Modal 详细设计 ← Step 7
 
 docs/06-ui/04-data-flow/
-└── projection-viewmodel.md         ── Projection 纯函数/ViewModel 规范/Dirty<UiStore>  ← Step 2-3
+├── projection-viewmodel.md         ── Projection 纯函数/ViewModel 规范/Dirty<UiStore>  ← Step 2-3
+└── camera-ui-interaction.md        ── Camera-UI 交互规则（CameraQuery/CameraRequest/CameraInputBlock）
 
 docs/06-ui/05-testing/
 └── testing.md                      ── Widget 单元/Screen 集成/快照/Mock Projection

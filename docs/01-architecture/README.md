@@ -246,6 +246,7 @@ L0 Shared                         └─ 计算层
 | `save` | `foundation/save_architecture.md` | 存档序列化、版本迁移 |
 | `input` | — | 输入抽象、命令层 |
 | `logging` | `infrastructure/logging_schema.md` | 领域事件驱动日志、LogObserver、LogCode |
+| `camera` | — | 镜头控制、Pose 插值、State Machine、震屏、边界约束 |
 
 ### 3.5 横切四层
 
@@ -681,6 +682,7 @@ src/
 | ADR-061 | Typestate 在 Content Pipeline 中的应用 | ✅ Accepted | Cross-cutting |
 | ADR-062 | Object Safety 分层策略（热路径泛型/冷路径 dyn） | ✅ Accepted | Cross-cutting |
 | ADR-063 | 宏治理（Macro Governance）— 11条宏使用宪法原则 | ✅ Accepted | Cross-cutting |
+| ADR-064 | Camera 系统架构（Pose/State Machine/Event 接口/边界约束/Replay） | 🟡 Proposed | Cross-cutting |
 
 ---
 
@@ -757,6 +759,7 @@ src/
 | `40-cross-cutting/ADR-052-logging-architecture.md` | ✅ accepted | architect | 2026-06-19 |
 | `00-foundation/ADR-054-bevy-0-19-migration.md` | ✅ accepted | architect | 2026-06-19 |
 | `40-cross-cutting/ADR-055-ui-presentation-architecture.md` | ✅ accepted | presentation-architect | 2026-06-20 |
+| `40-cross-cutting/ADR-064-camera-architecture.md` | 🟡 proposed | architect | 2026-06-21 |
 | `00-foundation/ADR-056-agent-governance.md` | ✅ accepted | architect | 2026-06-20 |
 | `40-cross-cutting/ADR-057-sealed-trait.md` | ✅ accepted | architect | 2026-06-21 |
 | `40-cross-cutting/ADR-058-derive-macro.md` | ✅ accepted | architect | 2026-06-21 |

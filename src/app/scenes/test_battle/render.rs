@@ -110,18 +110,6 @@ pub fn attach_unit_visuals(
     }
 }
 
-// ─── 系统：摄像机 ──────────────────────────────────────────────
-
-/// 系统：生成 2D 摄像机。
-pub fn spawn_camera(mut commands: Commands) {
-    commands.spawn((
-        Camera2d,
-        Camera::default(),
-        Transform::from_xyz(240.0, 240.0, 10.0),
-        GlobalTransform::default(),
-    ));
-}
-
 // ─── 系统：网格背景 ────────────────────────────────────────────
 
 /// 系统：生成棋盘格网格背景。

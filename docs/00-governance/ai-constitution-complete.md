@@ -6,7 +6,7 @@
 > - status: Proposed
 > - owner: architect
 > - created: 2026-06-14
-> - updated: 2026-06-20（v5.3 + Agent 三级治理体系 + BSN 作用域限制 + Factory 方案 + Content 平台宪法）
+> - updated: 2026-06-21（v5.3 + Agent 三级治理体系 + BSN 作用域限制 + Factory 方案 + Content 平台宪法 + Camera ADR-064）
 > - tags: governance, constitution, architecture, bevy, srpg
 > - 效力说明：本宪法对项目所有架构设计、代码编写、AI生成内容具有最高约束力，优先级高于任何通用编程规范、语言习惯或AI默认输出。条款编号永久固定，违反条款即视为不合格输出。
 
@@ -54,6 +54,7 @@
 6. **Capabilities/Domains 双轴架构原则**：Core 层采用「纵向 Capabilities 通用机制复用 + 横向 Domains 业务内聚」双轴结构，禁止单维度无限分层
 7. **Localization First**：所有用户可见文本禁止直接进入 Rust 代码，必须通过 LocalizationKey 引用；Def 只存 name_key/desc_key 等 Key，不存任何自然语言文本；Replay/Event/BattleLog 只存 Key + 参数，不存最终翻译文本；存档禁止保存翻译结果，只存 ID/Key
 8. **五层能力架构（Type→Tag→Query→Rule→Content）**：游戏逻辑遵循五层分工——Type System 管规则（强类型参与计算）、Tag System 管语义（描述性标签不影响规则）、Query System 管筛选（统一查询入口）、Rule System 管逻辑（数据驱动规则）、Content System 管配置（RON/YAML/Mod）。参与规则计算的东西必须强类型（Type），用于筛选分类内容驱动的东西用 Tag
+9. **Camera Event 驱动（ADR-064）**：所有外部镜头操作必须通过 `commands.trigger(CameraRequest::...)` 事件驱动，禁止直接修改 Camera Entity 的 Transform/Projection。Camera 是表现层基础设施，依赖 Infra 输入层，不依赖任何业务 Domain
 
 ---
 
@@ -268,6 +269,7 @@ src/shared/
    - `mod_loader/`：Mod 文件扫描、沙箱隔离、版本校验、依赖管理
 3. **Presentation 表现层**
    - `rendering/`：渲染管线、材质、Shader
+   - `camera/`：镜头控制、姿态插值、状态机、边界约束（ADR-064）
    - `ui/`：UI 系统（view/widget/screen/navigation/hud/binding）
    - `audio/`：音频播放、音效管理
    - `animation/`：动画系统
@@ -278,6 +280,7 @@ src/shared/
 - 🟥 禁止包含任何游戏规则逻辑
 - 🟥 禁止直接修改 Core 领域的内部状态，只能通过事件/接口交互
 - 🟥 表现层模块不得被业务服务层依赖
+- 🟥 Camera 禁止依赖 `core::domains::*` 的任何类型（ADR-064），Camera 是表现层基础设施，不应感知业务领域
 
 ### 2.6 横切2：Content — 内容桥接层
 连接外部配置数据与内部规则的桥梁，是 Data Driven 的核心载体。
@@ -957,6 +960,14 @@ Modding 不是独立层级，而是贯穿多层的扩展能力，按职责拆分
 ### 8.12 系统职责分类
 - 🟨 五类系统划分：Collector（收集输入）、Validator（校验规则）、Executor（执行逻辑）、Projector（投射到表现层）、Observer（监听响应）
 - 统一系统定位，生成代码时职责清晰
+
+### 8.13 Camera 系统宪法（ADR-064）
+- 🟩 **Camera 是 Infra 层独立模块**：Camera 位于 `src/infra/camera/`，属于 L2 Infra 表现层，不是业务 Domain，不是 UI 子模块
+- 🟥 **Event 驱动，禁止直接修改 Transform**：所有外部镜头操作必须通过 `commands.trigger(CameraRequest::...)`，禁止外部系统直接 Query<&mut Transform, With<Camera>> 修改镜头——违反 Event 驱动原则，导致 Camera 状态机被绕过，不可 Replay
+- 🟥 **业务解耦**：Camera 禁止依赖 `core::domains::*` 的任何类型，CameraTarget 使用 Vec2/UnitId/i32 等非领域类型，禁止 Camera 模块中出现 Combat/Dialogue/Unit 等业务词汇
+- 🟩 **Replay 兼容**：CameraCommand 必须支持 Serialize/Deserialize，关键帧镜头操作通过 CameraCommand 录制
+- 🟩 **边界解耦**：CameraBounds 使用纯 Vec2，不包含 GridPos/TileMap 引用，边界由场景系统在 OnEnter 生命周期设置
+- 🟥 绝对禁止 Camera 系统直接读取 GridPos/TileMap/MapConfig 等地图数据——Camera 是表现层，不受业务数据污染
 
 ---
 
@@ -1743,6 +1754,8 @@ AI 生成代码前应内部对照以下要点：
 20. 🟥 禁止用 Tag 表达动态状态 — `Character.Dead`、`Character.Stunned` 应使用 ECS Component（struct Dead;），不用 Tag System（TagSet）。Tag 描述长期不变语义（Enemy.Boss, Character.Human）
 21. 🟥 禁止 Tag 命名空间随意新增 — 顶级命名空间控制在 12 个以内，新增需架构评审。否则几年后 Skill.Fire 和 Ability.Fire 同时存在，直接灾难
 22. 🟥 禁止 Tag 承载数据 — Tag 只回答"是不是"，不能回答"多少"。`Damage.100`、`Level.30`、`Cooldown.3` 均为非法 Tag
+23. 🟥 禁止直接修改 Camera Entity 的 Transform/Projection/GlobalTransform，所有镜头操作必须通过 `commands.trigger(CameraRequest::...)` 事件驱动——违反 Event 驱动原则，导致 Camera 状态机被绕过，不可 Replay（ADR-064）
+24. 🟥 Camera 模块禁止依赖 `core::domains::*` 的任何类型——Camera 是 Infra 层表现模块，不应感知 Combat/Dialogue/Unit 等业务领域（ADR-064）
 
 ---
 

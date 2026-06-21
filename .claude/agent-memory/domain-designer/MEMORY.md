@@ -1,1 +1,2 @@
 - [Replay Domain Created](replay-domain-created.md) — New replay_domain.md created referencing ADR-041/048
+- [Camera Domain Created](camera-domain-created.md) — New camera_domain.md created at infrastructure/ based on ADR-064

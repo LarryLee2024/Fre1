@@ -83,7 +83,8 @@ Screen / Widget (表现层)          ── Bevy UI 渲染
 │   ├── navigation-overlay.md           ── 导航与浮层（ScreenStack、Overlay 分层、Focus 系统）
 │   └── overlays.md                     ── Overlay 详细设计（Tooltip/DamageText/Notification/Loading/Debug）
 ├── 04-data-flow/
-│   └── projection-viewmodel.md         ── Projection 与 ViewModel（防火墙、Dirty<T>、UiStore）
+│   ├── projection-viewmodel.md         ── Projection 与 ViewModel（防火墙、Dirty<T>、UiStore）
+│   └── camera-ui-interaction.md        ── Camera-UI 交互规则（场景设计、数据流、通信全景）
 └── 05-testing/
     └── testing.md                      ── UI 测试策略（Widget 单元/Screen 集成/快照/Mock）
 ```
@@ -107,6 +108,7 @@ Screen / Widget (表现层)          ── Bevy UI 渲染
 | `03-screens/navigation-overlay.md` | §6 (UI Root 分层), §7 (状态分级) | §1 (Overlay/Focus/ScreenStack 定义), §2.1 (Screen 状态机), §5.3-§5.7 (流程) | §7 (Navigation), §8 (Focus), §17 (Save) | ScreenStack、Overlay 分层、Focus 系统 |
 | `03-screens/overlays.md` | §6 (UI Root 分层) | §5.5-§5.7 (Notification/Modal/Tooltip 流程) | §4.8-§4.9 (NotificationVm, ModalVm) | Tooltip/DamageText/Notification/Loading/Debug 详细设计 |
 | `04-data-flow/projection-viewmodel.md` | §3 (数据流), §5.1 (防火墙), §11 (UiBinding), §12 (WidgetFactory), §13 (Content 数据流) | §1 (Projection 定义), §5.1 (更新流程), §6 (事件映射), §7 (ViewModel) | §2, §4, §9 (Dirty), §11 (UiAction), §23 (UiBinding), §25-§26 | Projection 纯函数、ViewModel 规范、Dirty<T>、UiStore |
+| `04-data-flow/camera-ui-interaction.md` | ADR-064 (Camera 架构), ADR-055 §1 (UI 依赖方向), ADR-055 §5 (Query 规则) | — | — | Camera-UI 7 种交互场景、数据流、通信全景、12 条架构规则 |
 | `05-testing/testing.md` | §14 (测试) | §5.9 (三层测试流程) | §15 (验证规则) | Widget 单元/Screen 集成/快照/Mock Projection/Test Fixtures |
 
 ### 3.1 引用约定
@@ -186,6 +188,7 @@ Screen / Widget (表现层)          ── Bevy UI 渲染
 | **StyleToken** | 语义化颜色/间距/字体引用 | `02-design-system/theme-localization.md §2` |
 | **Theme** | 主题定义，聚合所有 StyleToken | `02-design-system/theme-localization.md §3` |
 | **Localization** | UiTextKey + LocalizedText 国际化 | `02-design-system/theme-localization.md §4` |
+| **Camera-UI** | Camera 与 UI 的 7 种交互场景（Tooltip定位/输入阻塞/Minimap/单位聚焦/日志跳转/状态显示/z-order） | `04-data-flow/camera-ui-interaction.md` |
 | **Testing** | Widget 单元/Screen 集成/快照/Mock Projection | `05-testing/testing.md` |
 
 ## 5. 通信机制
@@ -229,4 +232,5 @@ Domain Event → Observer → Projection → ViewModel → Widget 刷新
 | `03-screens/navigation-overlay.md` | 🟡 需补全 ScreenStack 细节 | presentation-architect | 2026-06-20 |
 | `03-screens/overlays.md` | 🟡 需补全 Overlay 规格 | presentation-architect | 2026-06-20 |
 | `04-data-flow/projection-viewmodel.md` | ✅ code-aligned | presentation-architect | 2026-06-21 |
+| `04-data-flow/camera-ui-interaction.md` | ✅ 完整 | presentation-architect | 2026-06-21 |
 | `05-testing/testing.md` | 🟡 partially-implemented | presentation-architect | 2026-06-21 |

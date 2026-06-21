@@ -13,10 +13,24 @@ pub mod spawn;
 
 use bevy::prelude::*;
 
+use crate::infra::camera::foundation::pose::CameraPose;
+use crate::infra::camera::spawn_camera;
 use crate::shared::game_state::GameState;
 
-use self::render::{attach_unit_visuals, spawn_camera, spawn_grid_background};
+use self::render::{attach_unit_visuals, spawn_grid_background};
 use self::spawn::{load_test_battle_scenario, spawn_test_battle};
+
+/// 系统：为测试战斗场景生成摄像机
+fn spawn_camera_for_battle(mut commands: Commands) {
+    spawn_camera(
+        &mut commands,
+        CameraPose {
+            position: bevy::math::Vec2::new(240.0, 240.0),
+            zoom: 1.0,
+            rotation: 0.0,
+        },
+    );
+}
 
 /// 测试战斗场景 Plugin
 ///
@@ -35,7 +49,11 @@ impl Plugin for TestBattlePlugin {
         // 进入战斗场景时生成实体
         app.add_systems(
             OnEnter(GameState::Combat),
-            (spawn_test_battle, spawn_camera, spawn_grid_background),
+            (
+                spawn_test_battle,
+                spawn_camera_for_battle,
+                spawn_grid_background,
+            ),
         );
 
         // 视觉效果在实体生成后执行（延迟一帧确保 entity 存在）

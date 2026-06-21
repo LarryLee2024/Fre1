@@ -5,6 +5,7 @@
 //!
 //! 详见 `docs/01-architecture/README.md` §3.4
 
+pub mod camera;
 pub mod input;
 pub mod localization;
 pub mod logging;
