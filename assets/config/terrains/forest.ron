@@ -1,0 +1,22 @@
+(
+    id: "ter:forest",
+    name_key: "terrain.ter_forest.name",
+    description_key: "terrain.ter_forest.desc",
+    schema_version: 1,
+
+    move_cost: 2.0,
+    fly_cost: None,
+
+    defense_bonus: 2,
+    avoid_bonus: 10,
+    concealment: Half,
+    flags: (
+        passable: true,
+        flyable: true,
+        buildable: false,
+        blocks_sight: false,
+    ),
+
+    color_hex: Some("#5A8C3A"),
+    tile_material_key: Some("tiles/terrain/forest"),
+)

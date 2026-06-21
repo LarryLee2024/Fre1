@@ -7,3 +7,4 @@
 - [Visibility Rules Pattern](visibility-rules-pattern.md) -- Phase-driven Visibility component, no spawn/despawn
 - [Action Chain Patterns](action-chain-patterns.md) -- Full click-to-domain action chain documentation
 - [Camera-UI Interaction Patterns](camera_ui_interaction_patterns.md) -- 7 interaction scenarios, CameraInputBlock, CameraStateVm, direct trigger of CameraRequest
+- [MapRenderer Architecture](map-renderer-architecture.md) -- 6-layer rendering, Material2d batch, MapOverlayData bridge, coordinate alignment with GridMap

@@ -6,7 +6,7 @@
 > - status: Proposed
 > - owner: architect
 > - created: 2026-06-14
-> - updated: 2026-06-21（v5.3 + Agent 三级治理体系 + BSN 作用域限制 + Factory 方案 + Content 平台宪法 + Camera ADR-064）
+> - updated: 2026-06-22（v5.3 + Agent 三级治理体系 + BSN 作用域限制 + Factory 方案 + Content 平台宪法 + Camera ADR-064 + Map ADR-065）
 > - tags: governance, constitution, architecture, bevy, srpg
 > - 效力说明：本宪法对项目所有架构设计、代码编写、AI生成内容具有最高约束力，优先级高于任何通用编程规范、语言习惯或AI默认输出。条款编号永久固定，违反条款即视为不合格输出。
 
@@ -55,6 +55,9 @@
 7. **Localization First**：所有用户可见文本禁止直接进入 Rust 代码，必须通过 LocalizationKey 引用；Def 只存 name_key/desc_key 等 Key，不存任何自然语言文本；Replay/Event/BattleLog 只存 Key + 参数，不存最终翻译文本；存档禁止保存翻译结果，只存 ID/Key
 8. **五层能力架构（Type→Tag→Query→Rule→Content）**：游戏逻辑遵循五层分工——Type System 管规则（强类型参与计算）、Tag System 管语义（描述性标签不影响规则）、Query System 管筛选（统一查询入口）、Rule System 管逻辑（数据驱动规则）、Content System 管配置（RON/YAML/Mod）。参与规则计算的东西必须强类型（Type），用于筛选分类内容驱动的东西用 Tag
 9. **Camera Event 驱动（ADR-064）**：所有外部镜头操作必须通过 `commands.trigger(CameraRequest::...)` 事件驱动，禁止直接修改 Camera Entity 的 Transform/Projection。Camera 是表现层基础设施，依赖 Infra 输入层，不依赖任何业务 Domain
+10. **Map 内容管线三层分离（ADR-065）**：地图内容遵循 Tiled(TMX) → Importer(构建时) → MapAsset(RON) 三层管线，TMX 是编辑格式不是运行时格式；Importer 是独立构建工具，游戏二进制禁止包含 TMX 解析代码；地图渲染自研，禁止引入 bevy_ecs_tilemap
+11. **Tile-Config 分离（ADR-065）**：TileEntry 只存 terrain_id，所有 Gameplay 数值（move_cost/defense_bonus 等）归 TerrainDef Config Registry，禁止在 Tile 中承载任何 Gameplay 数值
+12. **Object-Entity 分离（ADR-065）**：Map Object 是定义（不可变），运行时由 Domain System 决定是否/何时实例化为 ECS Entity，禁止 Object 直接映射为 Entity
 
 ---
 
@@ -256,6 +259,7 @@ src/shared/
    - `logging/`：日志系统（日志管理器/格式化器/写入器/配置，基于 tracing 结构化日志）
    - `save/`：存档读写、版本迁移
    - `localization/`：多语言框架
+   - `map/`：地图管线（MapAsset 类型定义 + MapLoader + 自研 MapRenderer，ADR-065）
    - `physics/`：物理碰撞
    - `pathfinding/`：寻路算法实现
    - `navmesh/`：导航网格
@@ -1756,6 +1760,11 @@ AI 生成代码前应内部对照以下要点：
 22. 🟥 禁止 Tag 承载数据 — Tag 只回答"是不是"，不能回答"多少"。`Damage.100`、`Level.30`、`Cooldown.3` 均为非法 Tag
 23. 🟥 禁止直接修改 Camera Entity 的 Transform/Projection/GlobalTransform，所有镜头操作必须通过 `commands.trigger(CameraRequest::...)` 事件驱动——违反 Event 驱动原则，导致 Camera 状态机被绕过，不可 Replay（ADR-064）
 24. 🟥 Camera 模块禁止依赖 `core::domains::*` 的任何类型——Camera 是 Infra 层表现模块，不应感知 Combat/Dialogue/Unit 等业务领域（ADR-064）
+25. 🟥 禁止 Tile 承载 Gameplay 数值（move_cost/defense_bonus 等），Tile 只存 terrain_id，地形数值归 TerrainDef Config Registry（ADR-065）
+26. 🟥 禁止运行时加载/解析 TMX 文件，TMX 是编辑格式仅由 Importer 处理，游戏二进制不包含 TMX 解析逻辑（ADR-065）
+27. 🟥 禁止 Map Object 直接实例化为 ECS Entity，Object 是定义（不可变），实例化策略属 Domain 职责（ADR-065）
+28. 🟥 禁止引入 bevy_ecs_tilemap，地图渲染自研（ADR-065）
+29. 🟥 禁止运行时修改 MapAsset 数据，MapAsset 是 Definition（不可变），加载后不得回写（ADR-065）
 
 ---
 

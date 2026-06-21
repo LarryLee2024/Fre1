@@ -9,6 +9,7 @@ pub mod camera;
 pub mod input;
 pub mod localization;
 pub mod logging;
+pub mod map;
 pub mod pipeline;
 pub mod registry;
 pub mod replay;

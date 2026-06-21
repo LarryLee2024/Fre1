@@ -10,6 +10,7 @@ use std::path::PathBuf;
 
 use super::hot_reload::{ContentHotReloadState, hot_reload_content_system, init_hot_reload_state};
 use super::loading::{ContentFile, DefinitionType, RonAssetLoader, discover_ron_files};
+use crate::content::terrain_def::TerrainDef;
 use crate::core::capabilities::ability::foundation::AbilityDef;
 use crate::core::capabilities::attribute::foundation::AttributeDefinition;
 use crate::core::capabilities::cue::foundation::CueDef;
@@ -187,6 +188,13 @@ pub struct LoadedEnchantmentDefs {
     pub errors: Vec<(PathBuf, String)>,
 }
 
+/// 已加载的地形定义集合 Resource。
+#[derive(Resource, Debug, Default)]
+pub struct LoadedTerrainDefs {
+    pub defs: Vec<TerrainDef>,
+    pub errors: Vec<(PathBuf, String)>,
+}
+
 /// ContentPlugin — 内容桥接层插件。
 ///
 /// 职责：
@@ -246,13 +254,17 @@ impl Plugin for ContentPlugin {
             .init_resource::<LoadedSummonTemplateDefs>()
             .init_resource::<LoadedCampEventDefs>()
             .init_resource::<LoadedBondDefs>()
-            .init_resource::<LoadedEnchantmentDefs>();
+            .init_resource::<LoadedEnchantmentDefs>()
+            .init_resource::<LoadedTerrainDefs>();
 
         // ── 热重载资源 ──
         app.init_resource::<ContentHotReloadState>();
 
         // ── 启动时加载所有配置内容 ──
         app.add_systems(Startup, load_all_content);
+
+        // ── 地形配置加载（单独系统，避免超出 Bevy 16 参数限制）──
+        app.add_systems(Startup, load_terrain_content.after(load_all_content));
 
         // ── 热重载系统（初始化 mtime 后启动定期扫描）──
         app.add_systems(Startup, init_hot_reload_state.after(load_all_content));
@@ -428,6 +440,63 @@ fn load_all_content(
             + camp_events.errors.len()
             + bonds.errors.len()
             + enchantments.errors.len(),
+    );
+}
+
+/// 启动时加载地形配置的独立系统。
+///
+/// 从 assets/config/terrains/ 目录加载 TerrainDef 配置。
+/// 独立于 load_all_content 以避免超出 Bevy 的 16 参数限制。
+fn load_terrain_content(mut terrains: ResMut<LoadedTerrainDefs>) {
+    let terrain_dir = std::path::Path::new("assets/config/terrains");
+    if !terrain_dir.exists() {
+        info!(target: "content", "[Content] 地形配置目录不存在: assets/config/terrains");
+        return;
+    }
+
+    let entries = match std::fs::read_dir(terrain_dir) {
+        Ok(e) => e,
+        Err(err) => {
+            warn!(target: "content", "[Content] 读取地形配置目录失败: {}", err);
+            return;
+        }
+    };
+
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.extension().map_or(true, |ext| ext != "ron") {
+            continue;
+        }
+
+        let content = match std::fs::read_to_string(&path) {
+            Ok(c) => c,
+            Err(e) => {
+                let msg = format!("failed to read file: {}", e);
+                terrains.errors.push((path, msg));
+                continue;
+            }
+        };
+
+        let def: TerrainDef = match ron::from_str(&content) {
+            Ok(d) => d,
+            Err(e) => {
+                let msg = format!("failed to deserialize RON: {}", e);
+                terrains.errors.push((path, msg));
+                continue;
+            }
+        };
+
+        info!(target: "content",
+            "[Content] 加载了地形 '{}'（id: {}）",
+            def.name_key, def.id
+        );
+        terrains.defs.push(def);
+    }
+
+    info!(target: "content",
+        "[Content] 地形加载完成: {} 成功, {} 失败",
+        terrains.defs.len(),
+        terrains.errors.len()
     );
 }
 

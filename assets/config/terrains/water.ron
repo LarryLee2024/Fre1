@@ -1,0 +1,22 @@
+(
+    id: "ter:water",
+    name_key: "terrain.ter_water.name",
+    description_key: "terrain.ter_water.desc",
+    schema_version: 1,
+
+    move_cost: 0.0,
+    fly_cost: Some(1.5),
+
+    defense_bonus: 0,
+    avoid_bonus: 0,
+    concealment: None,
+    flags: (
+        passable: false,
+        flyable: true,
+        buildable: false,
+        blocks_sight: false,
+    ),
+
+    color_hex: Some("#3A7BD5"),
+    tile_material_key: Some("tiles/terrain/water"),
+)

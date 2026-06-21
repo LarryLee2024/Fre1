@@ -10,3 +10,4 @@
 - [Phase 6 Completion](phase6-localization-theme-settings.md) -- Localization completion, theme switching, settings persistence
 - [Bevy 0.19 Extended API Patterns](bevy-0.19-api-patterns.md) -- single/single_mut, to_matrix, delta().as_secs_f32(), Reflect requirements, OrthographicProjection changes, entity() borrow rules
 - [Camera Module Implementation](camera-module-implementation.md) -- Complete Camera base module (Phase 2.1) at src/infra/camera/, structure and architecture patterns
+- [Map Content Pipeline](map-content-pipeline.md) -- Map module at src/infra/map/, types/asset/loader/renderer/systems, TerrainDef content integration, Bevy 0.19 API notes

@@ -1,0 +1,22 @@
+(
+    id: "ter:plain",
+    name_key: "terrain.ter_plain.name",
+    description_key: "terrain.ter_plain.desc",
+    schema_version: 1,
+
+    move_cost: 1.0,
+    fly_cost: None,
+
+    defense_bonus: 0,
+    avoid_bonus: 0,
+    concealment: None,
+    flags: (
+        passable: true,
+        flyable: true,
+        buildable: true,
+        blocks_sight: false,
+    ),
+
+    color_hex: Some("#8FBA59"),
+    tile_material_key: Some("tiles/terrain/plain"),
+)

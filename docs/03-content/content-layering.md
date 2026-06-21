@@ -4,6 +4,7 @@ title: Content Layering — 五层内容分层体系
 status: draft
 owner: content-architect
 created: 2026-06-20
+updated: 2026-06-22 (L0 TerrainDef added)
 tags:
   - content
   - layering
@@ -56,6 +57,7 @@ tags:
 | `FactionDef` | 阵营定义：玩家、敌方、中立 | `faction:player`, `faction:enemy`, `faction:neutral` |
 | `ElementDef` | 元素属性：火焰、冰冻、闪电、暗影 | `elem:fire`, `elem:ice`, `elem:lightning` |
 | `StatusCategoryDef` | 状态类别：增益、减益、控制 | `status:physical_harmful`, `status:magical_harmful`, `status:control` |
+| `TerrainDef` | 地形类型：通行属性、战术加成、遮蔽度 | `ter:plain`, `ter:forest`, `ter:mountain`, `ter:deep_water` |
 
 ### 2.4 设计约束
 

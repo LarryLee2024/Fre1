@@ -5,3 +5,6 @@
 - [BondDef RON Convention](bond-def-ron-convention.md) — BondDef uses bnd:name colon format, no strict prefix validation, HashMap level_effects
 - [Quest/Recipe/Shop Strict ID Validation](quest-recipe-shop-strict-id-validation.md) — QuestDef/RecipeDef/ShopDef require validate_id_format (prefix + digits), others check only non-empty
 - [Content Buckets ID Formats](content-buckets-id-formats.md) — Per-bucket ID format reference: colon vs underscore vs underscore+digits
+- [TerrainDef L0 Vocabulary](terrain-def-l0-vocabulary.md) — TerrainDef is L0 not L4 because multi-layer consumption; char_code removed; Concealment/TerrainFlags as inline enums
+- [MapDef/MapAsset Dual Identity](map-def-mapasset-dual-identity.md) — MapDef (design doc) = MapAsset (Bevy Asset), no DefRegistry because position-based access + scene-scoped lifecycle
+- [TerrainFlags to TileFlags Conversion](terrain-flags-to-tileflags-conversion.md) — bool-struct in content → u8 bitmask at Importer build-time, not runtime

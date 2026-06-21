@@ -1,17 +1,17 @@
 ---
 id: 03-content.definitions.README
-title: Content Definitions — L0 Vocabulary + L1 Capability + L2 Entity + L3 Gameplay Def 类型索引
+title: Content Definitions — L0 Vocabulary + L1 Capability + L2 Entity + L3 Gameplay + L4 World Def 类型索引
 status: draft
 owner: content-architect
 created: 2026-06-20
-updated: 2026-06-20 (L0 Vocabulary definitions added)
+updated: 2026-06-22 (L4 World MapDef + L0 TerrainDef added)
 ---
 
-# Content Definitions — L0 Vocabulary + L1 Capability + L2 Entity + L3 Gameplay Def 类型索引
+# Content Definitions — L0 Vocabulary + L1 Capability + L2 Entity + L3 Gameplay + L4 World Def 类型索引
 
 > **职责**: @content-architect | **依赖层**: L0 无下层依赖; L1 Capability 依赖 L0 Vocabulary; L2 Entity 依赖 L0-L1 | **被依赖**: L3 Gameplay, L4 World
 
-本文档是 L0 Vocabulary 层、L1 Capability 层、L2 Entity 层和 L3 Gameplay 层所有 Content Def 类型的索引。L1 以下 Def 定义在 `docs/02-domain/capabilities/` 中的领域规则; L2-L3 Def 定义在 `docs/02-domain/domains/` 中。
+本文档是 L0 Vocabulary 层、L1 Capability 层、L2 Entity 层、L3 Gameplay 层和 L4 World 层所有 Content Def 类型的索引。L1 以下 Def 定义在 `docs/02-domain/capabilities/` 中的领域规则; L2-L4 Def 定义在 `docs/02-domain/domains/` 中。
 
 Content Def 是 Data Schema 的 **Asset 实现层**——每个 Def 类型是一个 Bevy Asset（`#[derive(Asset, TypePath)]`），附带加载、校验、注册的全套管线。
 
@@ -27,7 +27,8 @@ L0 Vocabulary Defs                    定义文档
 ├── DamageTypeDef        vocabulary/damage-type-def.md
 ├── FactionDef           vocabulary/faction-def.md
 ├── ElementDef           vocabulary/element-def.md
-└── StatusCategoryDef    vocabulary/status-category-def.md
+├── StatusCategoryDef    vocabulary/status-category-def.md
+└── TerrainDef           vocabulary/terrain-def.md
      ↑ 无下层依赖，所有上层 Def 依赖 L0
 ```
 
@@ -167,9 +168,54 @@ L4 加载完成后，Content Pipeline 软引用解析验证所有 key 在 L4 侧
 
 ---
 
-## 6. 下游引用者（L2-L4）
+## 6. L4 World Defs
 
-### 5.1 L1 Def 被 L2-L4 引用
+L4 World 层定义**具体世界呈现**——地图、场景、对话、叙事弧。L4 是"玩家最终体验到的内容"。详细定义见 `world/` 子目录：
+
+| # | Def 类型 | 文件 | 领域规则 | 数据 Schema | ID 类型 | 引用 L0-L3 |
+|---|----------|------|----------|-------------|---------|-----------|
+| 1 | `MapDef`（MapAsset） | `world/map-def.md` | `terrain_domain.md` + `tactical_domain.md` | `map-asset-schema.md`（待创建） | `MapId` | TerrainDef, FactionDef, SpawnGroupDef, ConditionDef |
+| 2 | `RegionDef` | TBD | 待定义 | 待定义 | `RegionId` | — |
+| 3 | `SceneDef` | TBD | 待定义 | 待定义 | `SceneId` | ConditionDef |
+| 4 | `CutsceneDef` | TBD | 待定义 | 待定义 | `CutsceneId` | — |
+| 5 | `NarrativeArcDef` | TBD | 待定义 | 待定义 | `NarrativeArcId` | — |
+| 6 | `StoryFlagDef` | TBD | 待定义 | 待定义 | `StoryFlagId` | — |
+| 7 | `CompanionDef` | TBD | 待定义 | 待定义 | `CompanionId` | — |
+
+### L4 设计模式
+
+- **MapAsset 分载模式**：MapDef 不直接包含地图数据（terrain_grid、object_layers），而是通过 `MapAsset`（Importer 输出的 Bevy Asset）承载运行时数据。MapDef 是 MapAsset 的 L4 Content 定义文档，两者是同一概念的不同形式
+- **Class 映射模式**：MapObject.class 决定运行时实例化策略，不通过引用来表达——这是一个**内容约定**而非结构性引用。运行时 Domain 系统根据 class 字符串决定实例化行为
+- **Soft Reference 接收者**：L3 EncounterDef 的 `position_hint` 和 QuestDef 的 `location_key` 是 L4 侧的反向映射点。L4 MapDef 中的 `spawn_points` 和 `regions` 提供这些软引用的解析目标
+
+### L4 到 L0-L3 的引用
+
+L4 Def 可以引用所有低层 Def。关键引用模式：
+
+| L4 Def | 引用的 L0-L3 Def | 引用方式 |
+|--------|-----------------|----------|
+| MapDef | TerrainDef（L0）, FactionDef（L0） | `TerrainGrid.TileEntry.terrain_id`、`SpawnPoint.faction` |
+| MapDef | SpawnGroupDef（L3） | `SpawnPoint.spawn_group_id` |
+| MapDef | ConditionDef（L1） | `regions[].properties` 中的条件引用 |
+| SceneDef | ConditionDef（L1） | 对话分支条件 |
+| RegionDef | MapDef（同层） | 地图集合引用 |
+
+### L4 到 L3 的引用方向（重申）
+
+L4 到 L3 是合法方向（L4 → L3），L3 到 L4 是禁止方向（L3 -x→ L4）：
+
+```
+✓ 合法: MapDef.spawn_points[].spawn_group_id → SpawnGroupDef (L3)
+✓ 合法: MapDef.regions[].properties → EncounterDef (L3, 内容约定)
+✗ 禁止: EncounterDef → MapDef (L3 不可引用 L4)
+✗ 禁止: QuestDef.location_key 未在 L4 侧定义
+```
+
+---
+
+## 7. 下游引用者（L0-L4）
+
+### 7.1 L1 Def 被 L2-L4 引用
 
 | 高层层 | Def 类型 | 定义文件 | 引用哪些 L1 Def |
 |--------|----------|---------|----------------|
@@ -182,11 +228,11 @@ L4 加载完成后，Content Pipeline 软引用解析验证所有 key 在 L4 侧
 | L3 Gameplay | `EncounterDef` | TBD | AbilityDef (怪物技能组) |
 | L3 Gameplay | `RecipeDef` | TBD | ConditionDef (制造条件) |
 | L4 World | `SceneDef` | TBD | ConditionDef (对话分支条件) |
-| L4 World | `MapDef` | TBD | ConditionDef (地图解锁条件) |
+| L4 World | `MapDef` | `world/map-def.md` | TerrainDef (L0), SpawnGroupDef (L3), ConditionDef (L1) |
 
 ---
 
-## 7. L1 内部引用关系
+## 8. L1 内部引用关系
 
 L1 Def 之间的引用是**同层引用**，受内容分层规则约束（允许但不得形成循环依赖）：
 
@@ -240,7 +286,7 @@ CueDef → ConditionDef (condition, 可选)
 
 ---
 
-## 8. 内容资产目录位置
+## 9. 内容资产目录位置
 
 L0 Vocabulary Defs 的 RON 资产位于 `assets/config/00_vocabulary/`：
 
@@ -251,7 +297,8 @@ assets/config/00_vocabulary/
 ├── damage_types.ron      ← DamageTypeDef 集合
 ├── factions.ron          ← FactionDef 集合
 ├── elements.ron          ← ElementDef 集合
-└── status_categories.ron ← StatusCategoryDef 集合
+├── status_categories.ron ← StatusCategoryDef 集合
+└── terrains.ron          ← TerrainDef 集合（新增）
 ```
 
 每层目录内的文件遵循**单文件多 Def**原则（详见 `content-layering.md` 8.3 节）。当单个文件超过 2000 行或 50 个 Def 时可拆分为子目录。
@@ -300,21 +347,40 @@ assets/config/03_gameplay/
 └── difficulties.ron        ← DifficultyDef 集合
 ```
 
+L4 World Defs 的 RON 资产位于 `assets/config/04_world/`：
+
+```
+assets/config/04_world/
+├── maps/
+│   ├── map_dragon_peak.ron      ← MapDef（MapAsset），每个地图一个文件
+│   ├── map_dark_forest.ron
+│   └── map_training_grounds.ron
+├── regions.ron                   ← RegionDef（待定义）
+├── scenes.ron                    ← SceneDef（待定义）
+└── cutscenes.ron                 ← CutsceneDef（待定义）
+```
+
+**L4 目录的特殊性**：与 L0-L3 的"单文件多 Def"原则不同，MapDef 使用**单文件单地图**原则。原因是 MapAsset 包含完整的 TerrainGrid（可能数千个 TileEntry），不适合放在集合文件中。其他 L4 Def（SceneDef、CutsceneDef 等）仍遵循"单文件多 Def"原则。
+
 ---
 
-## 9. 跨文档引用
+## 10. 跨文档引用
 
 | 方向 | 文档 | 说明 |
 |------|------|------|
 | 上游 | `docs/02-domain/capabilities/` | L1 Def 的领域规则——Def 的业务语义定义 |
-| 上游 | `docs/02-domain/domains/` | L2-L3 Def 的领域规则（inventory, party, summon, combat + quest, economy, crafting, progression） |
+| 上游 | `docs/02-domain/domains/` | L2-L4 Def 的领域规则（inventory, party, summon, combat, quest, economy, crafting, progression, terrain, tactical） |
 | 上游 | `docs/04-data/capabilities/` | L1 Def 的数据 Schema |
-| 上游 | `docs/04-data/domains/` | L2-L3 Def 的数据 Schema |
+| 上游 | `docs/04-data/domains/` | L2-L3 Def 的数据 Schema（terrain_schema.md、tactical_schema.md 等） |
+| 上游 | `docs/04-data/infrastructure/` | L4 MapAsset Schema（map-asset-schema.md，待创建） |
+| 上游 | `docs/01-architecture/40-cross-cutting/ADR-065-map-content-pipeline.md` | Map 内容管线架构决策（MapDef/TerrainDef 的设计依据） |
 | 本层 | `definitions/vocabulary/README.md` | L0 Vocabulary Def 类型索引 |
 | 本层 | `definitions/vocabulary/tag-def.md` | TagDef 定义（L0） |
 | 本层 | `definitions/vocabulary/attribute-def.md` | AttributeDef 定义（L0） |
+| 本层 | `definitions/vocabulary/terrain-def.md` | TerrainDef 定义（L0） |
 | 本层 | `definitions/entities/README.md` | L2 Entity Def 类型索引 |
 | 本层 | `definitions/gameplay/README.md` | L3 Gameplay Def 类型索引 |
+| 本层 | `definitions/world/map-def.md` | MapDef（MapAsset）定义（L4 World） |
 | 本层 | `docs/03-content/content-layering.md` | 5 层分层体系 |
 | 本层 | `docs/03-content/content-platform-manifesto.md` | Content Pipeline、Registry、Validation 设计 |
 | 下游 | `src/content/` | Content Plugin 实现代码 |
@@ -322,3 +388,5 @@ assets/config/03_gameplay/
 | 下游 | `assets/config/01_capabilities/` | L1 RON 资产文件 |
 | 下游 | `assets/config/02_entities/` | L2 RON 资产文件 |
 | 下游 | `assets/config/03_gameplay/` | L3 RON 资产文件 |
+| 下游 | `assets/config/04_world/` | L4 World RON 资产文件 |
+| 下游 | `src/infra/map/` | MapPlugin + MapLoader 实现代码 |

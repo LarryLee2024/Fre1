@@ -1,0 +1,22 @@
+(
+    id: "ter:mountain",
+    name_key: "terrain.ter_mountain.name",
+    description_key: "terrain.ter_mountain.desc",
+    schema_version: 1,
+
+    move_cost: 0.0,
+    fly_cost: Some(2.0),
+
+    defense_bonus: 3,
+    avoid_bonus: 5,
+    concealment: None,
+    flags: (
+        passable: false,
+        flyable: true,
+        buildable: false,
+        blocks_sight: false,
+    ),
+
+    color_hex: Some("#8B7355"),
+    tile_material_key: Some("tiles/terrain/mountain"),
+)

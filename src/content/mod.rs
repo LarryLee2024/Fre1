@@ -9,11 +9,12 @@ mod content_plugin;
 pub mod def_impls;
 pub mod hot_reload;
 pub mod loading;
+pub mod terrain_def;
 
 pub use content_plugin::{
     ContentPlugin, ContentState, LoadedAbilityDefs, LoadedAttributeDefs, LoadedCueDefs,
     LoadedEffectDefs, LoadedQuestDefs, LoadedRecipeDefs, LoadedRuleDefs, LoadedShopDefs,
-    LoadedSpellDefs, LoadedTagDefs, LoadedTargetingDefs,
+    LoadedSpellDefs, LoadedTagDefs, LoadedTargetingDefs, LoadedTerrainDefs,
 };
 pub use hot_reload::ContentHotReloadState;
 pub use loading::{ConfigError, ContentFile, DefinitionType, ValidationError};
