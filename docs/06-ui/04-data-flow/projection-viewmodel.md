@@ -524,10 +524,19 @@ pub struct UiStore {
 | Domain Event | Projection | ViewModel 更新 | 实现状态 |
 |-------------|-----------|---------------|---------|
 | TurnStarted | BattleProjection | BattleHudVm.turn_number += 1 / phase_key 设置 | ✅ |
-| EffectApplied | BattleProjection | 当前为 no-op placeholder | 🟡 占位 |
+| TurnStarted | BattleProjection | SkillPanelVm cooldown tick（每回合冷却-1） | ✅ |
+| TurnStarted | CharacterPanelProjection | CharacterPanelVm 从活动单位填充 | ✅ |
+| TurnEnded | BattleProjection | BattleHudVm.phase_key = "enemy" | ✅ |
+| EffectApplied | BattleProjection | SkillPanelVm 冷却匹配 + cooldown_remaining 设置 | ✅ |
+| BattleStarted | BattleProjection | BattleHudVm 初始化（turn_number=1, phase_key） | ✅ |
 
 **当前实现说明**：
-- BattleProjection 是唯一已实现的 projection，包含 `on_turn_started` 和 `on_effect_applied` 两个纯函数
+- BattleProjection 是唯一已实现的 projection，包含以下纯函数：
+  - `on_battle_started` — 初始化 HUD（turn_number=1, phase_key）
+  - `on_turn_started` — 递增回合计数、设置阶段键
+  - `on_turn_ended` — 阶段键切换到敌方
+  - `on_effect_applied` — 技能冷却匹配与更新
+  - `on_turn_started_for_skills` — 每回合递减技能冷却
 - `on_turn_started`：递增 `turn_number`，设置 `phase_key` 为 `"ui.battle.phase.player"`
 - `on_effect_applied`：当前为 no-op，仅日志记录。标记了 TODO 以便后续实现技能冷却更新
 - 后续迭代将补充 DamageApplied、HealthChanged、ItemAcquired 等事件的 projection

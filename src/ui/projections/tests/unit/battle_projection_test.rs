@@ -205,7 +205,10 @@ fn on_effect_applied_with_matching_effect_sets_cooldown() {
         fireball.cooldown_remaining, 3,
         "matching effect must set cooldown_remaining to max_cooldown"
     );
-    assert!(!fireball.is_usable, "matching effect must mark skill as unusable");
+    assert!(
+        !fireball.is_usable,
+        "matching effect must mark skill as unusable"
+    );
 }
 
 #[test]
@@ -225,7 +228,10 @@ fn on_effect_applied_with_matching_effect_does_not_affect_unmatched_skills() {
 
     // Attack (id=1) should be unchanged (max_cooldown=0 → no cooldown)
     let attack = store.skill_panel.skills.get(&1).unwrap();
-    assert_eq!(attack.cooldown_remaining, 0, "attack cooldown must remain 0");
+    assert_eq!(
+        attack.cooldown_remaining, 0,
+        "attack cooldown must remain 0"
+    );
     assert!(attack.is_usable, "attack must remain usable");
 
     // Heal (id=3, max_cooldown=2) should be unchanged
@@ -235,7 +241,10 @@ fn on_effect_applied_with_matching_effect_does_not_affect_unmatched_skills() {
 
     // Fireball (id=2, max_cooldown=3) should be on cooldown
     let fireball = store.skill_panel.skills.get(&2).unwrap();
-    assert_eq!(fireball.cooldown_remaining, 3, "fireball must be on cooldown");
+    assert_eq!(
+        fireball.cooldown_remaining, 3,
+        "fireball must be on cooldown"
+    );
     assert!(!fireball.is_usable, "fireball must be unusable");
 }
 
@@ -257,8 +266,14 @@ fn on_turn_started_for_skills_ticks_down_cooldowns() {
 
     // Fireball cooldown should be 2, still not usable
     let fireball = store.skill_panel.skills.get(&2).unwrap();
-    assert_eq!(fireball.cooldown_remaining, 2, "cooldown must tick down from 3 to 2");
-    assert!(!fireball.is_usable, "skill at cooldown 2 must not be usable");
+    assert_eq!(
+        fireball.cooldown_remaining, 2,
+        "cooldown must tick down from 3 to 2"
+    );
+    assert!(
+        !fireball.is_usable,
+        "skill at cooldown 2 must not be usable"
+    );
 }
 
 #[test]
@@ -277,8 +292,14 @@ fn on_turn_started_for_skills_marks_skill_usable_when_cooldown_reaches_zero() {
     BattleProjection::on_turn_started_for_skills(&mut store, &event);
 
     let fireball = store.skill_panel.skills.get(&2).unwrap();
-    assert_eq!(fireball.cooldown_remaining, 0, "cooldown must tick down to 0");
-    assert!(fireball.is_usable, "skill must become usable when cooldown reaches 0");
+    assert_eq!(
+        fireball.cooldown_remaining, 0,
+        "cooldown must tick down to 0"
+    );
+    assert!(
+        fireball.is_usable,
+        "skill must become usable when cooldown reaches 0"
+    );
 }
 
 #[test]
@@ -293,7 +314,10 @@ fn on_turn_started_for_skills_does_not_affect_zero_cooldown_skills() {
 
     // All skills start at cooldown 0, should remain at 0
     for (_id, slot) in store.skill_panel.skills.iter() {
-        assert_eq!(slot.cooldown_remaining, 0, "zero-cooldown skill must remain 0");
+        assert_eq!(
+            slot.cooldown_remaining, 0,
+            "zero-cooldown skill must remain 0"
+        );
         assert!(slot.is_usable, "zero-cooldown skill must remain usable");
     }
 }

@@ -300,16 +300,29 @@ impl UiCommand {
 }
 ```
 
-**当前映射状态**（MVP）：
+**当前映射状态**（全部完成）：
 
 | UiCommand | GameCommand | 说明 |
 |-----------|------------|------|
-| EndTurn | GameCommand::EndTurn { unit_id } | 结束回合（unit_id 由调用方填充） |
+| EndTurn | GameCommand::EndTurn { unit_id } | 结束回合 |
 | SaveGame(slot) | GameCommand::SaveGame | 保存游戏 |
 | LoadGame(slot) | GameCommand::LoadGame | 加载游戏 |
-| 所有其他命令 | None | 尚在集成中，返回 None 后由调用方自行处理 |
+| CastSkill { skill_def_id, target_id, caster_id } | GameCommand::CastSpell { ... } | 施放技能 |
+| MoveToPosition { unit_id, x, y } | GameCommand::MoveUnit { ... } | 战术移动 |
+| UseItem { item_instance_id, user_id, target_id } | GameCommand::UseItem { ... } | 使用物品 |
+| EquipItem { unit_id, item_instance_id, slot_index } | GameCommand::EquipItem { ... } | 装备物品 |
+| DropItem { unit_id, item_instance_id, quantity } | GameCommand::DropItem { ... } | 丢弃物品 |
+| AcceptQuest { unit_id, quest_def_id } | GameCommand::AcceptQuest { ... } | 接受任务 |
+| AbandonQuest { unit_id, quest_def_id } | GameCommand::AbandonQuest { ... } | 放弃任务 |
+| BuyItem { item_def_id, quantity, shop_id } | GameCommand::BuyItem { ... } | 购买物品 |
+| SellItem { item_def_id, quantity, shop_id } | GameCommand::SellItem { ... } | 出售物品 |
+| NewGame | GameCommand::NewGame | 新游戏 |
+| TogglePause | GameCommand::OpenMenu | 切换暂停 |
+| OpenScreen(screen) | None | UI 内部导航，ScreenStack 处理 |
+| CloseScreen | None | UI 内部导航，ScreenStack 处理 |
+| SelectTarget(id) | None | 需调用方上下文，暂不映射 |
 
-**注意**：上述映射表是当前 MVP 实现。完整映射表将在后续集成中逐步补充。UI 导航命令（OpenScreen/CloseScreen）始终由 ScreenStack 内部处理，不经过 GameCommand。
+所有业务命令通过 `into_game_command()` 转换后由 `process_ui_commands` Observer 推入 `CommandQueue`。UI 导航命令（OpenScreen/CloseScreen）和 SelectTarget 始终由 UI 内部处理，不经过 GameCommand。
 
 ### 4.4 UiCommand 的 Save/Replay 策略
 

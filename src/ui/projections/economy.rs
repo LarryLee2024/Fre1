@@ -34,7 +34,12 @@ impl EconomyProjection {
     ///   - 需要 PurchaseCompleted 领域事件
     ///
     ///   Completion criteria: 购买事件到来时更新 UiStore 中的金币和库存 VM
-    pub fn on_purchase_complete(store: &mut UiStore, item_def_id: &str, quantity: u32, total_cost: u64) {
+    pub fn on_purchase_complete(
+        store: &mut UiStore,
+        item_def_id: &str,
+        quantity: u32,
+        total_cost: u64,
+    ) {
         info!(
             target: "ui",
             "[EconomyProjection] Purchase: {} x{} for {} gold",
@@ -51,7 +56,12 @@ impl EconomyProjection {
     ///   - 需要 SellCompleted 领域事件
     ///
     ///   Completion criteria: 出售事件到来时更新 UiStore 中的金币和库存 VM
-    pub fn on_sell_complete(store: &mut UiStore, item_def_id: &str, quantity: u32, total_revenue: u64) {
+    pub fn on_sell_complete(
+        store: &mut UiStore,
+        item_def_id: &str,
+        quantity: u32,
+        total_revenue: u64,
+    ) {
         info!(
             target: "ui",
             "[EconomyProjection] Sold: {} x{} for {} gold",
