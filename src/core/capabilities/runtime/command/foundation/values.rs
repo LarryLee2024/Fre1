@@ -8,7 +8,7 @@ use super::types::{CommandSource, GameCommand, RecordedCommand};
 /// 命令队列——统一命令入口。
 ///
 /// 玩家、AI、Replay 都通过此 Resource 提交命令。
-/// 在 PreUpdate 中执行 drain 并分发。
+/// 由 command_processing_system 在 PreUpdate 中 drain 并分发。
 ///
 /// 详见 docs/01-architecture/40-cross-cutting/ADR-043-command-input.md §3
 #[derive(Resource, Debug, Clone)]

@@ -18,8 +18,10 @@
 //! - `docs/01-architecture/30-progression-narrative/ADR-030-progression-inventory.md`
 //! - `docs/02-domain/domains/inventory_domain.md`
 
+pub mod command_handler;
 pub mod facade;
 pub mod query;
 
+pub use command_handler::on_inventory_command;
 pub use facade::*;
 pub use query::InventoryQueryParam;

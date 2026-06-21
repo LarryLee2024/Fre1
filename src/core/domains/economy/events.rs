@@ -4,6 +4,32 @@
 
 use bevy::prelude::*;
 
+/// 购买请求事件。由命令处理器发出，触发实体解析和交易执行。
+#[derive(Event, Debug, Clone, PartialEq)]
+pub struct PurchaseRequested {
+    /// 购买者标识（字符串 ID）
+    pub buyer_id: String,
+    /// 物品定义 ID
+    pub item_def_id: String,
+    /// 购买数量
+    pub quantity: u32,
+    /// 商店标识
+    pub shop_id: String,
+}
+
+/// 出售请求事件。由命令处理器发出，触发实体解析和交易执行。
+#[derive(Event, Debug, Clone, PartialEq)]
+pub struct SaleRequested {
+    /// 出售者标识（字符串 ID）
+    pub seller_id: String,
+    /// 物品定义 ID
+    pub item_def_id: String,
+    /// 出售数量
+    pub quantity: u32,
+    /// 商店标识
+    pub shop_id: String,
+}
+
 /// 交易完成事件。
 #[derive(Debug, Clone, Event)]
 pub struct TransactionCompleted {

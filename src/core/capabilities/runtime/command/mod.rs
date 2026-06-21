@@ -10,6 +10,8 @@ pub mod events;
 pub(crate) mod foundation;
 // [ADR-045] pub(crate) — 机制实现，crate 内共享，外部不可访问
 pub(crate) mod mechanism;
+// [ADR-045] pub(crate) — 命令处理插件，crate 内共享，外部不可访问
+pub(crate) mod plugin;
 
 #[cfg(test)]
 mod tests;

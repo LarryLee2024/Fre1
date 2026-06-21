@@ -6,6 +6,7 @@
 use bevy::prelude::*;
 
 use super::components::{ShopInstance, Wallet};
+use super::integration::on_economy_command;
 use super::resources::EconomyConfig;
 use super::systems::{on_purchase_request, on_sell_request};
 use crate::register_domain_types;
@@ -21,5 +22,6 @@ impl Plugin for EconomyPlugin {
 
         app.add_observer(on_purchase_request);
         app.add_observer(on_sell_request);
+        app.add_observer(on_economy_command);
     }
 }

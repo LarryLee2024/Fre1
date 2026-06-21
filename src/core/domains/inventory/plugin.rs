@@ -8,6 +8,7 @@
 use bevy::prelude::*;
 
 use super::components::{EquipmentSlots, Inventory, InventoryMarker, ItemInstance};
+use super::integration::on_inventory_command;
 use super::systems::inventory_system::{on_equip_item, on_item_acquired, on_item_used};
 use crate::register_domain_types;
 
@@ -26,5 +27,6 @@ impl Plugin for InventoryPlugin {
         app.add_observer(on_item_acquired);
         app.add_observer(on_equip_item);
         app.add_observer(on_item_used);
+        app.add_observer(on_inventory_command);
     }
 }

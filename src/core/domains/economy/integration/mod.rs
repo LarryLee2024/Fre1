@@ -14,8 +14,10 @@
 //!
 //! 详见 ADR-024, docs/02-domain/domains/economy_domain.md
 
+mod command_handler;
 mod facade;
 mod query;
 
+pub use command_handler::on_economy_command;
 pub use facade::{EconomyReadFacade, EconomyWriteFacade};
 pub use query::EconomyQueryParam;

@@ -8,6 +8,39 @@ use bevy::prelude::*;
 
 use super::components::{EquipSlot, RemovalReason};
 
+/// 物品使用请求事件。由命令处理器发出，触发物品效果执行。
+#[derive(Event, Debug, Clone, PartialEq)]
+pub struct ItemUseRequested {
+    /// 使用者标识（字符串 ID）
+    pub user_id: String,
+    /// 物品实例 ID
+    pub item_instance_id: String,
+    /// 目标标识（可选）
+    pub target_id: Option<String>,
+}
+
+/// 装备请求事件。由命令处理器发出，触发装备穿戴逻辑。
+#[derive(Event, Debug, Clone, PartialEq)]
+pub struct EquipRequested {
+    /// 单位标识（字符串 ID）
+    pub unit_id: String,
+    /// 物品实例 ID
+    pub item_instance_id: String,
+    /// 装备槽位索引
+    pub slot_index: u32,
+}
+
+/// 丢弃物品请求事件。由命令处理器发出，触发物品移除逻辑。
+#[derive(Event, Debug, Clone, PartialEq)]
+pub struct DropRequested {
+    /// 单位标识（字符串 ID）
+    pub unit_id: String,
+    /// 物品实例 ID
+    pub item_instance_id: String,
+    /// 丢弃数量
+    pub quantity: u32,
+}
+
 /// 物品进入背包时触发。
 ///
 /// 订阅者：
