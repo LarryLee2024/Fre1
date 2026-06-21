@@ -33,15 +33,15 @@ pub enum TagRegistrationError {
 impl std::fmt::Display for TagRegistrationError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::DuplicateId(id) => write!(f, "duplicate tag ID: {}", id),
-            Self::ParentNotFound(id) => write!(f, "parent tag not found: {}", id),
+            Self::DuplicateId(id) => write!(f, "重复的 tag ID: {}", id),
+            Self::ParentNotFound(id) => write!(f, "父 tag 未找到: {}", id),
             Self::CircularDependency(id) => {
-                write!(f, "circular dependency detected for tag: {}", id)
+                write!(f, "tag 检测到循环依赖: {}", id)
             }
             Self::NamespaceMismatch { child, parent } => {
                 write!(
                     f,
-                    "namespace mismatch: child {} has different namespace from parent {}",
+                    "命名空间不匹配: child {} 的命名空间与 parent {} 不同",
                     child, parent
                 )
             }

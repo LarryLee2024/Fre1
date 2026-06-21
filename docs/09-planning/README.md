@@ -12,7 +12,9 @@
 
 ## 活跃规划
 
-当前无活跃规划。全部规划文档已归档。
+| 文档 | 状态 | 负责人 | 创建日期 |
+|------|------|--------|----------|
+| `ui-layout-system-plan.md` | draft | presentation-architect | 2026-06-21 | Combat HUD Zone Layout, Widget Sizing, Action Chains, Visibility Rules |
 
 ---
 

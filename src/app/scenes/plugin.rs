@@ -28,7 +28,10 @@ impl Plugin for ScenePlugin {
         //
         // TODO[P2][Scene]: 各场景 OnEnter 填充具体逻辑（UI 生成、资源加载等）
         app.add_systems(OnEnter(GameState::MainMenu), setup_scene_root);
-        app.add_systems(OnEnter(GameState::PartySetup), setup_scene_root);
+        app.add_systems(
+            OnEnter(GameState::PartySetup),
+            (setup_scene_root, super::party_setup::spawn_party_setup),
+        );
         app.add_systems(OnEnter(GameState::TacticalMap), setup_scene_root);
         app.add_systems(OnEnter(GameState::Combat), setup_scene_root);
         app.add_systems(OnEnter(GameState::Result), setup_scene_root);
@@ -36,12 +39,21 @@ impl Plugin for ScenePlugin {
         app.add_systems(OnEnter(GameState::GameOver), setup_scene_root);
 
         app.add_systems(OnExit(GameState::MainMenu), cleanup_scene);
-        app.add_systems(OnExit(GameState::PartySetup), cleanup_scene);
+        app.add_systems(
+            OnExit(GameState::PartySetup),
+            (cleanup_scene, super::party_setup::despawn_party_setup),
+        );
         app.add_systems(OnExit(GameState::TacticalMap), cleanup_scene);
         app.add_systems(OnExit(GameState::Combat), cleanup_scene);
         app.add_systems(OnExit(GameState::Result), cleanup_scene);
         app.add_systems(OnExit(GameState::CampRest), cleanup_scene);
         app.add_systems(OnExit(GameState::GameOver), cleanup_scene);
+
+        // ── Game command observers ──
+        app.add_observer(super::game_setup::on_new_game_command);
+
+        // ── PartySetup button handlers ──
+        app.add_observer(super::party_setup::on_party_setup_button);
     }
 }
 

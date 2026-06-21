@@ -34,4 +34,6 @@
 -ui-equip = 装备
 -ui-drop = 丢弃
 -ui-inventory = 背包
+-ui-party-setup-title = 战前准备
+-ui-party-setup-quick-battle = 快速战斗
 

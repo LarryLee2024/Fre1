@@ -62,10 +62,10 @@ impl std::fmt::Display for ModifierValidationError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::PriorityOutOfRange(p) => {
-                write!(f, "modifier priority {} out of range [0, 100]", p)
+                write!(f, "modifier priority {} 超出范围 [0, 100]", p)
             }
-            Self::SourceNotTraceable => write!(f, "modifier source must be traceable"),
-            Self::EmptyTargetAttribute => write!(f, "modifier target attribute must not be empty"),
+            Self::SourceNotTraceable => write!(f, "modifier source 必须可追溯"),
+            Self::EmptyTargetAttribute => write!(f, "modifier target attribute 不能为空"),
         }
     }
 }

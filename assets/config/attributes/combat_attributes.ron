@@ -8,7 +8,7 @@
         default_base_value: 10.0,
         min_value: 0.0,
         max_value: 100.0,
-        derived_dependencies: ["dexterity"],
+        derived_dependencies: ["attr:dexterity"],
         hidden: false,
     ),
     (
@@ -17,7 +17,7 @@
         default_base_value: 30.0,
         min_value: 0.0,
         max_value: 100.0,
-        derived_dependencies: ["dexterity", "strength"],
+        derived_dependencies: ["attr:dexterity", "attr:strength"],
         hidden: false,
     ),
     (
@@ -26,16 +26,11 @@
         default_base_value: 5.0,
         min_value: 0.0,
         max_value: 100.0,
-        derived_dependencies: ["dexterity"],
+        derived_dependencies: ["attr:dexterity"],
         hidden: false,
     ),
     (
         id: "attr:dodge",
-        category: Secondary,
-        default_base_value: 5.0,
-        min_value: 0.0,
-        max_value: 100.0,
-        derived_dependencies: ["dexterity"],
         hidden: false,
     ),
 ]

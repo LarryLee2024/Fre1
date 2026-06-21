@@ -282,6 +282,8 @@ pub mod loc {
     pub const MAIN_MENU: &str = "ui.main.menu";
     pub const MP: &str = "ui.mp";
     pub const NEW_GAME: &str = "ui.new.game";
+    pub const PARTY_SETUP_QUICK_BATTLE: &str = "ui.party.setup.quick.battle";
+    pub const PARTY_SETUP_TITLE: &str = "ui.party.setup.title";
     pub const PAUSE: &str = "ui.pause";
     pub const RESUME: &str = "ui.resume";
     pub const RETRY: &str = "ui.retry";
@@ -512,6 +514,8 @@ pub const ALL_KEYS: &[&str] = &[
     "ui.main.menu",
     "ui.mp",
     "ui.new.game",
+    "ui.party.setup.quick.battle",
+    "ui.party.setup.title",
     "ui.pause",
     "ui.resume",
     "ui.retry",

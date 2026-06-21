@@ -1,7 +1,7 @@
 (
     id: "tag:ice",
     path: "DamageType.Elemental.Ice",
-    parent_id: Some("elemental"),
+    parent_id: Some("tag:elemental"),
     bit_index: 1,
     is_abstract: false,
     namespace: Damage,

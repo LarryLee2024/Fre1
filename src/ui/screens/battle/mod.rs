@@ -1,33 +1,37 @@
-//! 战斗主界面（MVP）
+//! 战斗主界面 — 9-zone 绝对定位布局
 //!
-//! 全屏战斗 UI，将现有 Widget 组合成功能性的战斗界面布局：
-//! 回合信息栏、战斗区域占位符、角色卡片、行动菜单和结束回合按钮。
+//! 使用 Zone 容器替代单列 Column 布局。
+//! 所有 Zone 是平级兄弟节点，通过 PositionType::Absolute 锚定到屏幕边缘。
 //!
-//! 仅使用原语层和 Widget 层工厂。不直接操作 Node/Button/Interaction。
+//! Zone 4 (Z4) 由 2D 相机处理，不在 UI 范围内。
 //!
 //! UI 树结构：
 //!
 //! ```text
-//! Panel (Basic, full screen)
-//!   ├── Text ("Turn: 3    Phase: Player Turn", Body)
-//!   ├── Panel (Basic, 战斗区域占位符)
-//!   ├── CharacterCard (Aria, Lv.5, HP/MP bars)
-//!   ├── ActionMenu (Attack, Defend, Skill, Item, Wait)
-//!   └── Button ("End Turn", Danger) -- BattleAction::EndTurn
+//! Node (full screen, position_type: Relative)
+//!   ├── Zone_Z1_TopLeft      (absolute, top-left):    TurnIndicator
+//!   ├── Zone_Z2_TopCenter    (absolute, top):         PhaseText + TurnNumber
+//!   ├── Zone_Z3_TopRight     (absolute, top-right):   UnitSummary [P2]
+//!   ├── Zone_Z5_BottomLeft   (absolute, bottom-left): CharacterCard
+//!   ├── Zone_Z6_BottomCenter (absolute, bottom):      ActionMenu
+//!   ├── Zone_Z7_BottomRight  (absolute, bottom-right): SkillPanel [P1] + EndTurnButton
+//!   └── Zone_Z8_BottomBar    (absolute, bottom bar):  TurnOrderBar [P2]
 //! ```
 
+pub mod layout;
 pub mod systems;
+pub mod visibility;
 
 use bevy::prelude::*;
 
 use crate::infra::localization::generated::loc;
 use crate::ui::primitives::button::{components::ButtonVariant, factory::spawn_localized_button};
-use crate::ui::primitives::panel::{components::PanelVariant, factory::spawn_panel};
 use crate::ui::primitives::text::{components::TextVariant, factory::spawn_text};
 use crate::ui::theme::Theme;
 use crate::ui::widgets::action_menu::factory::spawn_action_menu;
 use crate::ui::widgets::character_card::factory::spawn_character_card;
 
+use self::layout::{BattleZone, spawn_zone};
 use systems::BattleAction;
 
 /// 战斗界面标记组件
@@ -36,7 +40,7 @@ use systems::BattleAction;
 #[derive(Component, Debug, Clone, PartialEq, Eq, Reflect)]
 pub struct BattleScreen;
 
-/// 启动系统：生成战斗界面（MVP）
+/// 启动系统：生成战斗界面（9-zone 布局）
 ///
 /// 创建全屏战斗 UI 树。所有元素通过原语/Widget 工厂创建
 /// — 不直接操作 Node/Button/Interaction。
@@ -45,22 +49,23 @@ pub fn spawn_battle_screen(
     theme: Res<Theme>,
     asset_server: Res<AssetServer>,
 ) {
-    // ── 1. Root panel ──
-    let root = spawn_panel(&mut commands, &theme, PanelVariant::Basic);
-    commands.entity(root).insert((
-        Node {
-            width: Val::Percent(100.0),
-            height: Val::Percent(100.0),
-            flex_direction: FlexDirection::Column,
-            align_items: AlignItems::Stretch,
-            justify_content: JustifyContent::FlexStart,
-            padding: UiRect::all(Val::Px(theme.spacing.md)),
-            ..default()
-        },
-        BattleScreen,
-    ));
+    // ── 0. Root full-screen container ──
+    let root = commands
+        .spawn((
+            Node {
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                position_type: PositionType::Relative,
+                ..default()
+            },
+            BattleScreen,
+            Name::new("BattleScreen"),
+        ))
+        .id();
 
-    // ── 2. Turn info text bar ──
+    // ── Z1: Top-Left — Turn Indicator ──
+    let z1 = spawn_zone(&mut commands, &theme, BattleZone::Z1TopLeft);
+    commands.entity(z1).set_parent_in_place(root);
     let turn_info = spawn_text(
         &mut commands,
         &asset_server,
@@ -68,19 +73,21 @@ pub fn spawn_battle_screen(
         "Turn: 3    Phase: Player Turn",
         TextVariant::Body,
     );
-    commands.entity(turn_info).set_parent_in_place(root);
+    commands.entity(turn_info).set_parent_in_place(z1);
 
-    // ── 3. Battle area placeholder panel ──
-    let battle_area = spawn_panel(&mut commands, &theme, PanelVariant::Basic);
-    commands.entity(battle_area).insert(Node {
-        width: Val::Percent(100.0),
-        height: Val::Px(300.0),
-        margin: UiRect::vertical(Val::Px(theme.spacing.sm)),
-        ..default()
-    });
-    commands.entity(battle_area).set_parent_in_place(root);
+    // ── Z2: Top-Center — Phase Text + Turn Number ──
+    // TODO[P2][UI][2026-07-21]: Add PhaseText and TurnNumber widgets
+    let z2 = spawn_zone(&mut commands, &theme, BattleZone::Z2TopCenter);
+    commands.entity(z2).set_parent_in_place(root);
 
-    // ── 4. Character card (Aria, Lv.5, 80/100 HP, 40/50 MP) ──
+    // ── Z3: Top-Right — Unit Summary [P2] ──
+    // TODO[P2][UI][2026-07-21]: Add UnitSummary widget
+    let z3 = spawn_zone(&mut commands, &theme, BattleZone::Z3TopRight);
+    commands.entity(z3).set_parent_in_place(root);
+
+    // ── Z5: Bottom-Left — Character Card ──
+    let z5 = spawn_zone(&mut commands, &theme, BattleZone::Z5BottomLeft);
+    commands.entity(z5).set_parent_in_place(root);
     let char_card = spawn_character_card(
         &mut commands,
         &asset_server,
@@ -92,13 +99,18 @@ pub fn spawn_battle_screen(
         40.0,
         50.0,
     );
-    commands.entity(char_card).set_parent_in_place(root);
+    commands.entity(char_card).set_parent_in_place(z5);
 
-    // ── 5. Action menu (Attack, Defend, Skill, Item, Wait) ──
+    // ── Z6: Bottom-Center — Action Menu ──
+    let z6 = spawn_zone(&mut commands, &theme, BattleZone::Z6BottomCenter);
+    commands.entity(z6).set_parent_in_place(root);
     let action_menu = spawn_action_menu(&mut commands, &theme);
-    commands.entity(action_menu).set_parent_in_place(root);
+    commands.entity(action_menu).set_parent_in_place(z6);
 
-    // ── 6. End Turn button (Danger variant) ──
+    // ── Z7: Bottom-Right — End Turn Button + SkillPanel [P1] ──
+    // TODO[P1][UI][2026-07-21]: Add SkillPanel widget
+    let z7 = spawn_zone(&mut commands, &theme, BattleZone::Z7BottomRight);
+    commands.entity(z7).set_parent_in_place(root);
     let end_turn_btn = spawn_localized_button(
         &mut commands,
         &theme,
@@ -107,7 +119,12 @@ pub fn spawn_battle_screen(
         ButtonVariant::Danger,
     );
     commands.entity(end_turn_btn).insert(BattleAction::EndTurn);
-    commands.entity(end_turn_btn).set_parent_in_place(root);
+    commands.entity(end_turn_btn).set_parent_in_place(z7);
+
+    // ── Z8: Bottom Bar — Turn Order [P2] ──
+    // TODO[P2][UI][2026-07-21]: Add TurnOrderBar widget
+    let z8 = spawn_zone(&mut commands, &theme, BattleZone::Z8BottomBar);
+    commands.entity(z8).set_parent_in_place(root);
 }
 
 /// 清除系统：离开战斗时销毁所有战斗屏幕实体

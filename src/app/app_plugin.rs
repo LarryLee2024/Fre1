@@ -60,14 +60,6 @@ impl Plugin for AppPlugin {
         // ── 测试战斗场景 Plugin ──
         app.add_plugins(TestBattlePlugin);
 
-        // ── 自动启动战斗（开发用，后续由主菜单 → 战斗流程替代）──
-        app.add_systems(
-            Startup,
-            |mut next: ResMut<NextState<crate::shared::game_state::GameState>>| {
-                next.set(crate::shared::game_state::GameState::Combat);
-            },
-        );
-
         // ════════════════════════════════════════════
         // Phase 10: Cross-cutting
         // ════════════════════════════════════════════

@@ -21,7 +21,10 @@ pub mod shop;
 
 use bevy::prelude::*;
 
-use battle::{spawn_battle_screen, systems::on_battle_button_clicked};
+use battle::{
+    spawn_battle_screen, systems::on_battle_button_clicked,
+    visibility::battle_zone_visibility_system,
+};
 use inventory::{spawn_inventory_screen, systems::on_inventory_button_clicked};
 use main_menu::{
     spawn_main_menu,
@@ -33,6 +36,8 @@ use settings::{
     settings_toggle_system,
 };
 use shop::{on_shop_button_clicked, spawn_shop_screen};
+
+use crate::shared::game_state::GameState;
 
 use crate::ui::navigation::ScreenType;
 
@@ -58,6 +63,7 @@ impl Plugin for ScreenPlugin {
             .register_type::<save_load::SaveLoadAction>()
             .register_type::<shop::ShopScreen>()
             .register_type::<ScreenType>()
+            .register_type::<battle::layout::BattleZone>()
             // Startup 系统：应用启动时生成 Screen
             .add_systems(Startup, spawn_main_menu)
             .add_systems(Startup, spawn_battle_screen)
@@ -70,6 +76,8 @@ impl Plugin for ScreenPlugin {
             .add_observer(on_battle_button_clicked)
             // Observer：通用 UiAction 事件处理
             .add_observer(on_main_menu_action)
+            // MainMenu 清理：离开 MainMenu 时销毁所有 MainMenuScreen 实体
+            .add_systems(OnExit(GameState::MainMenu), main_menu::despawn_main_menu)
             // Settings 界面：生命周期 Observer
             .add_observer(on_open_settings_screen)
             .add_observer(on_close_settings_screen)
@@ -83,6 +91,11 @@ impl Plugin for ScreenPlugin {
             // SaveLoad 界面：按钮点击处理器
             .add_observer(on_save_load_button_clicked)
             // Shop 界面：按钮点击处理器
-            .add_observer(on_shop_button_clicked);
+            .add_observer(on_shop_button_clicked)
+            // BattleScreen 系统：Zone 可见性控制（Update）
+            .add_systems(
+                Update,
+                battle_zone_visibility_system.run_if(in_state(GameState::Combat)),
+            );
     }
 }

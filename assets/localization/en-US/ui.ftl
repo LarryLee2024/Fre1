@@ -33,3 +33,5 @@
 -ui-equip = Equip
 -ui-drop = Drop
 -ui-inventory = Inventory
+-ui-party-setup-title = Party Setup
+-ui-party-setup-quick-battle = Quick Battle

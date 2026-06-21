@@ -33,3 +33,5 @@
 -ui-equip = [XXXXX]
 -ui-drop = [XXXX]
 -ui-inventory = [XXXXXXXXX]
+-ui-party-setup-title = [XXXXXXXXX]
+-ui-party-setup-quick-battle = [XXXXXXXXXXXX]

@@ -3,3 +3,6 @@
 - [Primitives Isolation Layer](primitives_isolation_layer.md) — Three-layer UI (primitives/widgets/screens) with primitives as the only bridge to Bevy UI low-level types; 7 docs updated
 
 - [Code Alignment 2026-06-21](project_code_alignment_0621.md) -- 4 UI docs aligned with MVP code; key deltas: u32 types, hardcoded screens, minimal projections, 46 pure tests
+- [Combat HUD Zone Layout](combat-hud-zone-layout.md) -- 9-zone absolute-positioned layout for combat HUD
+- [Visibility Rules Pattern](visibility-rules-pattern.md) -- Phase-driven Visibility component, no spawn/despawn
+- [Action Chain Patterns](action-chain-patterns.md) -- Full click-to-domain action chain documentation

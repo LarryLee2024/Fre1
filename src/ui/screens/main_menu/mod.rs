@@ -53,6 +53,16 @@ pub struct MainMenuScreen;
 ///   └── Text ("v0.1.0", Caption)
 /// ```
 pub fn spawn_main_menu(mut commands: Commands, theme: Res<Theme>, asset_server: Res<AssetServer>) {
+    // ── 0. UI Camera ──
+    commands.spawn((
+        Camera2d,
+        Camera::default(),
+        Transform::default(),
+        Visibility::default(),
+        MainMenuScreen,
+        Name::new("MainMenuCamera"),
+    ));
+
     // ── 1. Root panel ──
     // 使用 Basic 变体工厂创建基础面板，再覆盖为全屏尺寸
     let root = spawn_panel(&mut commands, &theme, PanelVariant::Basic);

@@ -3,6 +3,8 @@
 //! 详见 ADR-050。
 
 pub mod components;
+pub mod game_setup;
+pub mod party_setup;
 pub mod plugin;
 pub mod queue;
 pub mod state;

@@ -42,7 +42,7 @@ pub enum AttributeRegistrationError {
 impl std::fmt::Display for AttributeRegistrationError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::DuplicateId(id) => write!(f, "duplicate attribute ID: {}", id),
+            Self::DuplicateId(id) => write!(f, "重复的 attribute ID: {}", id),
             Self::DefaultValueOutOfRange {
                 id,
                 value,
@@ -51,7 +51,7 @@ impl std::fmt::Display for AttributeRegistrationError {
             } => {
                 write!(
                     f,
-                    "attribute {} default value {} out of range [{}, {}]",
+                    "attribute {} 默认值 {} 超出范围 [{}, {}]",
                     id, value, min, max
                 )
             }
@@ -61,22 +61,18 @@ impl std::fmt::Display for AttributeRegistrationError {
             } => {
                 write!(
                     f,
-                    "derived attribute {} depends on missing attribute {}",
+                    "派生 attribute {} 依赖缺失的 attribute {}",
                     attr_id, missing_dep
                 )
             }
             Self::DerivedCircularDependency(id) => {
-                write!(
-                    f,
-                    "circular dependency detected for derived attribute: {}",
-                    id
-                )
+                write!(f, "派生 attribute 检测到循环依赖: {}", id)
             }
             Self::ResourceMinBelowZero(id) => {
-                write!(f, "resource attribute {} has min_value < 0", id)
+                write!(f, "resource attribute {} 的 min_value < 0", id)
             }
             Self::FormulaTargetNotFound(id) => {
-                write!(f, "formula target attribute {} not found in registry", id)
+                write!(f, "formula 目标 attribute {} 未在 registry 中找到", id)
             }
         }
     }

@@ -33,3 +33,5 @@
 -ui-equip = 装備
 -ui-drop = 捨てる
 -ui-inventory = インベントリ
+-ui-party-setup-title = パーティーセットアップ
+-ui-party-setup-quick-battle = クイックバトル
