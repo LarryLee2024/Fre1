@@ -6,10 +6,14 @@
 //! 详见 ADR-043 §3
 
 use bevy::prelude::*;
-use tracing::{info, warn, error};
+use tracing::{error, info, warn};
 
-use crate::core::capabilities::runtime::command::events::{CommandExecuted, CommandRejected, CommandSubmitted};
-use crate::core::capabilities::runtime::command::foundation::{CommandQueue, CommandSource, DispatchResult, GameCommand};
+use crate::core::capabilities::runtime::command::events::{
+    CommandExecuted, CommandRejected, CommandSubmitted,
+};
+use crate::core::capabilities::runtime::command::foundation::{
+    CommandQueue, CommandSource, DispatchResult, GameCommand,
+};
 use crate::core::capabilities::runtime::command::mechanism::dispatch::validate_command;
 
 /// 默认命令来源（UI 桥接推入的命令标记为 Player）
@@ -22,10 +26,7 @@ const DEFAULT_SOURCE: CommandSource = CommandSource::Player;
 /// 3. 使用 default_command_handler 分派有效命令
 /// 4. 发射 CommandSubmitted / CommandExecuted / CommandRejected 事件
 /// 5. 无效命令记录错误并跳过
-pub fn command_processing_system(
-    mut command_queue: ResMut<CommandQueue>,
-    mut commands: Commands,
-) {
+pub fn command_processing_system(mut command_queue: ResMut<CommandQueue>, mut commands: Commands) {
     if !command_queue.has_pending() {
         return;
     }
@@ -86,26 +87,27 @@ pub fn command_processing_system(
 /// 当前实现：
 /// - 元命令（SaveGame, LoadGame, NewGame, OpenMenu）直接返回 Dispatched
 /// - 回合命令（EndTurn, Wait）直接返回 Dispatched
-/// - 经济命令（BuyItem, SellItem）→ Dispatched（economy domain handler 监听 CommandExecuted）
-/// - 物品命令（UseItem, EquipItem, DropItem）→ Dispatched（inventory domain handler 监听 CommandExecuted）
-/// - 战斗/战术/任务命令返回 Unhandled
+/// - 经济命令（BuyItem, SellItem）→ Dispatched（economy handler）
+/// - 物品命令（UseItem, EquipItem, DropItem）→ Dispatched（inventory handler）
+/// - 任务命令（AcceptQuest, AbandonQuest）→ Dispatched（quest handler）
+/// - 战术命令（MoveUnit）→ Dispatched（tactical handler）
+/// - 战斗命令（CastSpell, Attack）→ Dispatched（combat handler）
 pub fn default_command_handler(command: &GameCommand, _source: CommandSource) -> DispatchResult {
     match command {
-        GameCommand::SaveGame | GameCommand::LoadGame | GameCommand::NewGame | GameCommand::OpenMenu => {
-            DispatchResult::Dispatched
-        }
-        GameCommand::EndTurn { .. } | GameCommand::Wait { .. } => {
-            DispatchResult::Dispatched
-        }
-        GameCommand::Attack { .. } => DispatchResult::Unhandled("待 combat domain Attack handler".into()),
-        GameCommand::CastSpell { .. } => DispatchResult::Unhandled("待 combat domain CastSpell handler".into()),
-        GameCommand::MoveUnit { .. } => DispatchResult::Unhandled("待 tactical domain MoveUnit handler".into()),
+        GameCommand::SaveGame
+        | GameCommand::LoadGame
+        | GameCommand::NewGame
+        | GameCommand::OpenMenu => DispatchResult::Dispatched,
+        GameCommand::EndTurn { .. } | GameCommand::Wait { .. } => DispatchResult::Dispatched,
+        GameCommand::Attack { .. } => DispatchResult::Dispatched,
+        GameCommand::CastSpell { .. } => DispatchResult::Dispatched,
+        GameCommand::MoveUnit { .. } => DispatchResult::Dispatched,
         GameCommand::UseItem { .. }
         | GameCommand::EquipItem { .. }
         | GameCommand::DropItem { .. } => DispatchResult::Dispatched,
-        GameCommand::BuyItem { .. }
-        | GameCommand::SellItem { .. } => DispatchResult::Dispatched,
-        GameCommand::AcceptQuest { .. } => DispatchResult::Unhandled("待 quest domain AcceptQuest handler".into()),
-        GameCommand::AbandonQuest { .. } => DispatchResult::Unhandled("待 quest domain AbandonQuest handler".into()),
+        GameCommand::BuyItem { .. } | GameCommand::SellItem { .. } => DispatchResult::Dispatched,
+        GameCommand::AcceptQuest { .. } | GameCommand::AbandonQuest { .. } => {
+            DispatchResult::Dispatched
+        }
     }
 }

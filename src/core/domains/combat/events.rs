@@ -13,6 +13,8 @@
 //! | OnRoundEnd | Trigger | 所有队伍结束一轮 |
 //! | OnBattleStart | Trigger | 战斗开始初始化 |
 //! | OnBattleEnd | Trigger | 战斗结束结算 |
+//! | SpellCastRequested | Event | 法术施放请求 |
+//! | AttackRequested | Event | 攻击请求 |
 
 use bevy::prelude::*;
 
@@ -96,4 +98,32 @@ pub enum BattleResult {
 pub struct OnBattleEnd {
     /// 战斗结果
     pub result: BattleResult,
+}
+
+// ─── 命令桥接事件 ──────────────────────────────────────────────────
+
+/// 法术施放请求（由 GameCommand handler 从 CommandExecuted 事件中桥接）。
+///
+/// 订阅者：Combat Execution 系统，触发法术效果执行。
+#[derive(Event, Debug, Clone, PartialEq)]
+pub struct SpellCastRequested {
+    /// 施法者标识
+    pub caster_id: String,
+    /// 法术定义 ID
+    pub spell_def_id: String,
+    /// 目标标识
+    pub target_id: String,
+}
+
+/// 攻击请求（由 GameCommand handler 从 CommandExecuted 事件中桥接）。
+///
+/// 订阅者：Combat Execution 系统，触发攻击效果执行。
+#[derive(Event, Debug, Clone, PartialEq)]
+pub struct AttackRequested {
+    /// 攻击者标识
+    pub attacker_id: String,
+    /// 目标标识
+    pub target_id: String,
+    /// 能力槽位（可选，空为普攻）
+    pub ability_slot: Option<u32>,
 }

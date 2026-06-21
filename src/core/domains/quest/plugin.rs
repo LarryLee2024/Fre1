@@ -8,6 +8,7 @@
 use bevy::prelude::*;
 
 use super::components::QuestLog;
+use super::integration::on_quest_command;
 use super::resources::QuestConfig;
 use super::systems::{
     on_accept_quest_request, on_advance_objective, on_quest_failed, on_turn_in_quest,
@@ -26,6 +27,7 @@ impl Plugin for QuestPlugin {
         app.init_resource::<QuestConfig>();
 
         // ── 注册 Observer System ──
+        app.add_observer(on_quest_command);
         app.add_observer(on_accept_quest_request);
         app.add_observer(on_advance_objective);
         app.add_observer(on_turn_in_quest);

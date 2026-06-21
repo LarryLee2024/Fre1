@@ -14,8 +14,10 @@
 //!
 //! 详见 ADR-024, docs/02-domain/domains/quest_domain.md
 
+mod command_handler;
 mod facade;
 mod query;
 
+pub use command_handler::on_quest_command;
 pub use facade::{QuestReadFacade, QuestWriteFacade};
 pub use query::QuestQueryParam;

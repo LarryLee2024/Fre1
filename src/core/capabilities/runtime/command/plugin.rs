@@ -15,8 +15,7 @@ pub struct CommandPlugin;
 
 impl Plugin for CommandPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .init_resource::<CommandQueue>()
+        app.init_resource::<CommandQueue>()
             .add_systems(PreUpdate, command_processing_system);
     }
 }

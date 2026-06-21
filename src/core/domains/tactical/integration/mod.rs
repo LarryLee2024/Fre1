@@ -4,6 +4,7 @@
 //! 按能力域拆分为子模块，避免 God File 膨胀：
 //!
 //! - `movement/` — 移动能力（Tag/Attribute/Modifier 查询与写入）
+//! - `command_handler` — GameCommand 路由转领域事件
 //! - 未来：`terrain/`, `targeting/`, `vision/`, `attack/`
 //!
 //! 设计原则：
@@ -14,4 +15,7 @@
 //! 详见 docs/02-domain/domains/tactical_domain.md §7
 //! 详见 docs/01-architecture/00-foundation/ADR-022
 
+mod command_handler;
 pub mod movement;
+
+pub use command_handler::on_tactical_command;

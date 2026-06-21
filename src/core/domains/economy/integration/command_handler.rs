@@ -14,10 +14,7 @@ use crate::core::domains::economy::events::{PurchaseRequested, SaleRequested};
 ///
 /// Matches `BuyItem` and `SellItem` variants from the command pipeline
 /// and emits domain-specific request events for existing economy systems.
-pub fn on_economy_command(
-    trigger: On<CommandExecuted>,
-    mut commands: Commands,
-) {
+pub fn on_economy_command(trigger: On<CommandExecuted>, mut commands: Commands) {
     match &trigger.event().command {
         GameCommand::BuyItem {
             buyer_id,

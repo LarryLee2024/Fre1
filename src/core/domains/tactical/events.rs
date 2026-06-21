@@ -23,6 +23,18 @@ pub struct PositionChanged {
     pub new_pos: GridPos,
 }
 
+/// 请求移动单位（由 GameCommand::MoveUnit 触发）。
+///
+/// CommandHandler 解析 GameCommand 后发出此事件，后续系统将 unit_id 解析为 Entity
+/// 并触发 ComputeMoveRequest 以执行实际移动。
+#[derive(Event, Debug, Clone)]
+pub struct MovementRequested {
+    /// 单位标识
+    pub unit_id: String,
+    /// 移动路径（网格坐标序列）
+    pub path: Vec<GridPos>,
+}
+
 /// 请求计算移动消耗并执行移动。
 ///
 /// Observer 将处理此事件，通过 Capabilities 管线（Tag/Attribute/Modifier）验证移动。

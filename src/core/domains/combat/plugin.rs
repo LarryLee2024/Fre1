@@ -12,6 +12,7 @@ use bevy::prelude::*;
 
 use super::components::{ActionPoints, BattlePhase, CombatParticipant, TurnQueue};
 use super::integration::event::EventBus;
+use super::integration::on_combat_command;
 use super::pipeline::definition::build_turn_pipeline;
 use super::pipeline::driver::{
     CombatPipelineDriver, combat_pipeline_driver, on_unit_action_complete,
@@ -70,6 +71,8 @@ impl Plugin for CombatPlugin {
         app.add_observer(on_turn_end_tick_ability_cooldowns);
         // OnTurnStart → 评估单位触发器
         app.add_observer(on_turn_start_evaluate_triggers);
+        // GameCommand (CastSpell, Attack) → 桥接到 Combat 领域事件
+        app.add_observer(on_combat_command);
 
         // ── 注册回合管线定义到 PipelineRegistry ──
         let mut registry = app.world_mut().resource_mut::<PipelineRegistry>();

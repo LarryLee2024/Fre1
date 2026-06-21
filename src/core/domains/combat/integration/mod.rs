@@ -33,6 +33,7 @@
 
 pub mod ability;
 pub mod aggregator;
+pub mod command_handler;
 pub mod condition;
 pub mod effect;
 pub mod event;
@@ -42,3 +43,5 @@ pub mod replay;
 pub mod targeting;
 pub mod trigger;
 pub mod turn;
+
+pub use command_handler::on_combat_command;

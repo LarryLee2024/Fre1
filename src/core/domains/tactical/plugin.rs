@@ -7,6 +7,7 @@
 use bevy::prelude::*;
 
 use super::components::{Facing, GridPos, MovementPoints};
+use super::integration::on_tactical_command;
 use super::systems::grid_system::initialize_default_grid;
 use super::systems::input_system::{TacticalCursor, tactical_input_system};
 use super::systems::movement_system::on_compute_move;
@@ -37,5 +38,9 @@ impl Plugin for TacticalPlugin {
         // 通过 integration.rs 触及 Tag → Attribute → Modifier 管线
         // 详见 movement_system::on_compute_move
         app.add_observer(on_compute_move);
+
+        // 注册战术域 GameCommand Observer — 处理 MoveUnit 等战术命令
+        // 监听 CommandExecuted 事件，将 GameCommand 转译为本域事件
+        app.add_observer(on_tactical_command);
     }
 }

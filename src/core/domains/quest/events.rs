@@ -42,6 +42,24 @@ pub struct QuestTurnedIn {
     pub rewards: QuestRewardDef,
 }
 
+/// 任务接受请求事件。由命令处理器发出，触发任务接受流程。
+#[derive(Event, Debug, Clone, PartialEq)]
+pub struct QuestAcceptRequested {
+    /// 单位标识（字符串 ID）
+    pub unit_id: String,
+    /// 任务定义 ID
+    pub quest_def_id: String,
+}
+
+/// 任务放弃事件。由命令处理器发出，触发任务放弃流程。
+#[derive(Event, Debug, Clone, PartialEq)]
+pub struct QuestAbandoned {
+    /// 单位标识（字符串 ID）
+    pub unit_id: String,
+    /// 任务定义 ID
+    pub quest_def_id: String,
+}
+
 /// 任务失败事件。
 #[derive(Event, Debug, Clone, PartialEq)]
 pub struct QuestFailed {

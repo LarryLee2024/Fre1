@@ -13,10 +13,7 @@ use crate::core::domains::inventory::events::{DropRequested, EquipRequested, Ite
 ///
 /// Matches `UseItem`, `EquipItem`, and `DropItem` variants from the command
 /// pipeline and emits domain-specific request events for existing inventory systems.
-pub fn on_inventory_command(
-    trigger: On<CommandExecuted>,
-    mut commands: Commands,
-) {
+pub fn on_inventory_command(trigger: On<CommandExecuted>, mut commands: Commands) {
     match &trigger.event().command {
         GameCommand::UseItem {
             user_id,
