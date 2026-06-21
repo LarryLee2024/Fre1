@@ -1,35 +1,23 @@
-//! UiSettings — Cross-session UI settings persistence
-//!
-//! Provides the `UiSettings` resource and load/save functions using RON
-//! serialization. Settings are persisted to `ui_settings.ron` in the
-//! working directory.
-//!
-//! Loaded at startup and saved whenever settings change (theme switch,
-//! language change, etc.).
-//!
-//! See `docs/06-ui/02-design-system/theme-localization.md` §3
+//! UiSettings — 跨会话持久化 UI 设置
 
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::ui::theme::ThemeVariant;
+use crate::ui::theme::switch::ThemeVariant;
 
-/// UI settings resource — persisted across sessions.
-///
-/// Stored as a Bevy Resource. Modified via UiCommand handlers that
-/// call `save_settings()` after applying changes.
-#[derive(Resource, Debug, Clone, Reflect, Serialize, Deserialize)]
+/// UI 设置（Level 1 — 跨会话持久化）
+#[derive(Resource, Serialize, Deserialize, Debug, Clone, Reflect)]
 #[reflect(Resource, Serialize, Deserialize)]
 pub struct UiSettings {
-    /// Active theme variant
+    /// 主题
     pub theme: ThemeVariant,
-    /// Active locale identifier (e.g., "en-US", "zh-CN", "ja-JP")
+    /// 语言
     pub language: String,
-    /// Whether to show floating damage/heal numbers
+    /// 显示伤害数字
     pub show_damage_numbers: bool,
-    /// Battle animation speed multiplier (0.5 = half speed, 2.0 = double)
+    /// 战斗速度倍率
     pub battle_speed: f32,
-    /// Delay in seconds before showing tooltips
+    /// 工具提示延迟（秒）
     pub tooltip_delay: f32,
 }
 
@@ -45,30 +33,17 @@ impl Default for UiSettings {
     }
 }
 
-/// Load settings from `ui_settings.ron`.
-///
-/// Reads the settings file from the working directory. Returns
-/// `UiSettings::default()` if the file does not exist or is malformed.
+/// 从磁盘加载设置
 pub fn load_settings() -> UiSettings {
-    let path = settings_file_path();
-    std::fs::read_to_string(&path)
+    std::fs::read_to_string("ui_settings.ron")
         .ok()
         .and_then(|data| ron::from_str(&data).ok())
         .unwrap_or_default()
 }
 
-/// Save settings to `ui_settings.ron`.
-///
-/// Writes the current settings to the working directory. Silently
-/// ignores I/O errors (settings loss is not critical).
+/// 保存设置到磁盘
 pub fn save_settings(settings: &UiSettings) {
-    let path = settings_file_path();
     if let Ok(data) = ron::to_string(settings) {
-        let _ = std::fs::write(&path, data);
+        let _ = std::fs::write("ui_settings.ron", data);
     }
-}
-
-/// Returns the path to the settings file.
-fn settings_file_path() -> std::path::PathBuf {
-    std::path::PathBuf::from("ui_settings.ron")
 }

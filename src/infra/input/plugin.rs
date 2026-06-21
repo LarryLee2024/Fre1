@@ -17,6 +17,7 @@ use super::action::InputMap;
 use super::resources::InputState;
 use super::systems::{collect_input_actions, process_meta_commands};
 
+/// Bevy Plugin：注册输入基础设施（InputMap、InputState、CommandQueue）和 PreUpdate Systems。
 pub struct InputPlugin;
 
 impl Plugin for InputPlugin {

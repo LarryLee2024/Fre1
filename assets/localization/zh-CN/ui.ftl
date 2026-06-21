@@ -33,5 +33,5 @@
 -ui-use = 使用
 -ui-equip = 装备
 -ui-drop = 丢弃
-
 -ui-inventory = 背包
+

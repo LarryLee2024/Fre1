@@ -17,14 +17,17 @@ use crate::shared::ids::StrongId;
 pub struct DefinitionId(pub String);
 
 impl DefinitionId {
+    /// 从字符串创建通用 Definition 标识符。
     pub fn new(id: impl Into<String>) -> Self {
         Self(id.into())
     }
 
+    /// 返回内部字符串切片引用。
     pub fn as_str(&self) -> &str {
         &self.0
     }
 
+    /// 消费自身，返回内部 `String`。
     pub fn into_inner(self) -> String {
         self.0
     }

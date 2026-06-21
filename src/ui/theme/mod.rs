@@ -9,11 +9,13 @@
 pub mod colors;
 pub mod resource;
 pub mod spacing;
+pub mod switch;
 pub mod typography;
 
 pub use colors::UiColors;
 pub use resource::Theme;
 pub use spacing::UiSpacing;
+pub use switch::ThemeVariant;
 pub use typography::UiTypography;
 
 use bevy::prelude::*;

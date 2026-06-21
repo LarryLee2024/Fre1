@@ -7,3 +7,4 @@
 - [Shared Collections Iterator Extensions](shared-collections-iterator-extensions.md) -- GroupByMap, TakeWhileInclusive, PartitionMap in shared/collections/
 - [Shared Validation Module](shared-validation-module.md) -- ValidationResult, Validator trait, ValidationChain, built-in validators
 - [UiAction Routing System](ui-action-routing-system.md) -- UiAction/UiCommand/UiEvent enums, ScreenType, ButtonClicked→UiCommand mapping via方案A, Bevy 0.19 trigger/observer pattern
+- [Phase 6 Completion](phase6-localization-theme-settings.md) -- Localization completion, theme switching, settings persistence

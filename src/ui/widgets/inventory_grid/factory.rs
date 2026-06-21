@@ -8,7 +8,7 @@ use bevy::prelude::*;
 use crate::infra::localization::generated::loc;
 use crate::ui::primitives::button::{components::ButtonVariant, factory::spawn_localized_button};
 use crate::ui::primitives::panel::{components::PanelVariant, factory::spawn_panel};
-use crate::ui::primitives::text::{components::TextVariant, factory::spawn_text};
+use crate::ui::primitives::text::{components::TextVariant, factory::{spawn_localized_text, spawn_text}};
 use crate::ui::theme::Theme;
 use crate::ui::widgets::inventory_item_row::factory::spawn_inventory_item_row;
 
@@ -56,10 +56,11 @@ pub fn spawn_inventory_grid(
     ));
 
     // ── 2. Title ──
-    let title = spawn_text(
+    let title = spawn_localized_text(
         commands,
         asset_server,
         theme,
+        loc::ui::INVENTORY,
         "Inventory",
         TextVariant::Heading,
     );

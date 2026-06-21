@@ -7,6 +7,9 @@ use bevy::prelude::*;
 use super::random::DeterministicRng;
 use super::time::GameTime;
 
+/// Shared 层 L0 原子层 Plugin。
+///
+/// 注册 shared 层全局 Resource（`GameTime`、`DeterministicRng`）和通用 System。
 pub struct SharedPlugin;
 
 impl Plugin for SharedPlugin {
