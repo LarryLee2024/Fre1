@@ -5,8 +5,6 @@
 //! 详见 docs/01-architecture/20-tactical-combat/ADR-021-turn-state-machine.md
 
 /// 游戏内时间（确定性时间表示，不依赖 wall-clock）。
-///
-/// 使用 turn + phase + frame 三维表示，保证 Replay 确定性。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct GameTime {
     /// 已进行的回合数
@@ -56,8 +54,6 @@ impl GameTime {
 
 /// 帧阶段——每一帧被细分为多个执行阶段。
 ///
-/// 流转顺序：PreTick → Tick → PostTick → Idle → PreTick（循环）
-///
 /// 类似 Bevy 的 Schedule 标签逻辑，但面向游戏循环的确定性控制。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum TickPhase {
@@ -72,7 +68,7 @@ pub enum TickPhase {
 }
 
 impl TickPhase {
-    /// 返回下一个阶段，Idle 之后回到 PreTick（循环）。
+    /// 返回下一个阶段。
     pub fn next(&self) -> Self {
         match self {
             Self::PreTick => Self::Tick,
@@ -82,7 +78,7 @@ impl TickPhase {
         }
     }
 
-    /// 返回阶段名称，用于日志和调试。
+    /// 返回阶段名称。
     pub fn name(&self) -> &str {
         match self {
             Self::PreTick => "PreTick",

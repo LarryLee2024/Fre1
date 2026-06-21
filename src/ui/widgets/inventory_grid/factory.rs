@@ -1,10 +1,12 @@
-//! InventoryGrid Factory — 背包物品网格的创建入口
+//! InventoryGrid Factory — InventoryGrid 复合控件的唯一创建入口
+//!
+//! 组合 Panel / Text / InventoryItemRow / Button 四个控件为一个结构化的
+//! 背包网格视图，包含标题、金币显示、物品列表和关闭按钮。
 
 use bevy::prelude::*;
 
 use crate::infra::localization::generated::loc;
 use crate::ui::primitives::button::{components::ButtonVariant, factory::spawn_localized_button};
-use crate::ui::primitives::list::{components::ListVariant, factory::spawn_list};
 use crate::ui::primitives::panel::{components::PanelVariant, factory::spawn_panel};
 use crate::ui::primitives::text::{components::TextVariant, factory::spawn_text};
 use crate::ui::theme::Theme;
@@ -12,46 +14,90 @@ use crate::ui::widgets::inventory_item_row::factory::spawn_inventory_item_row;
 
 use super::components::{InventoryGrid, InventoryGridAction};
 
-/// 生成完整背包物品网格
+/// 工厂函数：生成一个完整的 InventoryGrid 控件
+///
+/// # UI 树结构
+///
+/// ```text
+/// Panel (Basic, column layout)
+///   ├── Text ("Inventory", Heading)
+///   ├── Text ("Gold: 100", Caption)
+///   ├── InventoryItemRow ("Health Potion", x5)
+///   ├── InventoryItemRow ("Mana Potion", x3)
+///   ├── InventoryItemRow ("Antidote", x2)
+///   ├── InventoryItemRow ("Phoenix Down", x1)
+///   └── Button ("Close", Secondary) — InventoryGridAction::Close
+/// ```
+///
+/// # 参数
+/// - `commands`: ECS 命令
+/// - `asset_server`: 资源管理器
+/// - `theme`: 主题 Resource
+///
+/// # 返回
+/// 背包网格容器实体的 Entity
 pub fn spawn_inventory_grid(
     commands: &mut Commands,
     asset_server: &AssetServer,
     theme: &Theme,
 ) -> Entity {
-    let root = spawn_panel(commands, theme, PanelVariant::Basic);
-    commands.entity(root).insert((
+    // ── 1. Container panel ──
+    let container = spawn_panel(commands, theme, PanelVariant::Basic);
+    commands.entity(container).insert((
         Node {
             flex_direction: FlexDirection::Column,
-            width: Val::Percent(100.0),
-            padding: UiRect::all(Val::Px(theme.spacing.md)),
+            width: Val::Px(400.0),
+            padding: UiRect::all(Val::Px(theme.spacing.lg)),
+            row_gap: Val::Px(theme.spacing.sm),
             ..default()
         },
         InventoryGrid,
         Name::new("InventoryGrid"),
     ));
 
-    // 标题
-    let title = spawn_text(commands, asset_server, theme, "Inventory", TextVariant::Heading);
-    commands.entity(title).set_parent_in_place(root);
+    // ── 2. Title ──
+    let title = spawn_text(
+        commands,
+        asset_server,
+        theme,
+        "Inventory",
+        TextVariant::Heading,
+    );
+    commands.entity(title).set_parent_in_place(container);
 
-    // 金币显示
-    let gold = spawn_text(commands, asset_server, theme, "Gold: 100", TextVariant::Caption);
-    commands.entity(gold).set_parent_in_place(root);
+    // ── 3. Gold display ──
+    let gold = spawn_text(
+        commands,
+        asset_server,
+        theme,
+        "Gold: 100",
+        TextVariant::Caption,
+    );
+    commands.entity(gold).set_parent_in_place(container);
 
-    // 物品列表
-    let list = spawn_list(commands, theme, ListVariant::Vertical);
-    commands.entity(list).set_parent_in_place(root);
+    // ── 4. Sample inventory item rows ──
+    let items: [(&str, u32); 4] = [
+        ("Health Potion", 5),
+        ("Mana Potion", 3),
+        ("Antidote", 2),
+        ("Phoenix Down", 1),
+    ];
 
-    // 示例物品行
-    for (name, qty) in [("Health Potion", 3), ("Mana Crystal", 1), ("Iron Sword", 1)] {
+    for (name, qty) in items {
         let row = spawn_inventory_item_row(commands, asset_server, theme, name, qty);
-        commands.entity(row).set_parent_in_place(list);
+        commands.entity(row).set_parent_in_place(container);
     }
 
-    // 关闭按钮
-    let close = spawn_localized_button(commands, theme, loc::ui::CLOSE, "Close", ButtonVariant::Secondary);
+    // ── 5. Close button (Secondary variant) ──
+    let close = spawn_localized_button(
+        commands,
+        theme,
+        loc::ui::CLOSE,
+        "Close",
+        ButtonVariant::Secondary,
+    );
     commands.entity(close).insert(InventoryGridAction::Close);
-    commands.entity(close).set_parent_in_place(root);
+    commands.entity(close).set_parent_in_place(container);
 
-    root
+    container
 }

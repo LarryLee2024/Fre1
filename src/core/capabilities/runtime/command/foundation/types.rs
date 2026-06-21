@@ -5,8 +5,6 @@
 //! 详见 docs/01-architecture/40-cross-cutting/ADR-043-command-input.md
 
 /// 命令来源——标识命令是来自玩家、AI 还是回放。
-///
-/// 用于录制日志分类和回放时命令过滤。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum CommandSource {
     /// 玩家输入
@@ -20,7 +18,7 @@ pub enum CommandSource {
 }
 
 impl CommandSource {
-    /// 返回来源名称，用于日志和录制。
+    /// 返回来源名称。
     pub fn name(&self) -> &str {
         match self {
             Self::Player => "Player",
@@ -34,7 +32,6 @@ impl CommandSource {
 /// 业务命令——所有玩家/AI/Replay 操作的统一枚举。
 ///
 /// 执行系统不区分命令来源，统一处理此枚举。
-/// 命令经 CommandQueue 入队后，由 Executor 按帧分发执行。
 #[derive(Debug, Clone, PartialEq)]
 pub enum GameCommand {
     // ── Tactical ──────────────────────────────────
@@ -97,7 +94,7 @@ pub enum GameCommand {
 }
 
 impl GameCommand {
-    /// 返回命令类型名称，用于日志和 Replay 录制。
+    /// 返回命令的名称标识。
     pub fn name(&self) -> &str {
         match self {
             Self::MoveUnit { .. } => "MoveUnit",
@@ -114,8 +111,6 @@ impl GameCommand {
 }
 
 /// 录制命令——包装了 GameCommand 和来源、时间戳的录制格式。
-///
-/// 用于 Replay 日志存储，保证回放时可按帧序精确重放。
 #[derive(Debug, Clone, PartialEq)]
 pub struct RecordedCommand {
     /// 命令来源
@@ -127,7 +122,7 @@ pub struct RecordedCommand {
 }
 
 impl RecordedCommand {
-    /// 创建录制命令，source、command、frame_number 必填。
+    /// 创建录制命令。
     pub fn new(source: CommandSource, command: GameCommand, frame_number: u64) -> Self {
         Self {
             source,
