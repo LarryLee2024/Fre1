@@ -794,6 +794,7 @@ Modding 不是独立层级，而是贯穿多层的扩展能力，按职责拆分
 - 🟩 模块内部优先函数调用，🟥 绝对禁止将同一模块内的普通逻辑全部事件化
 - 🟩 领域事件是唯一业务事实源，日志、战斗回放、UI 履历、成就、任务均为事件的下游消费者
 - 🟩 领域事件白名单管理，新增事件必须先更新白名单，🟥 绝对禁止为临时副作用随意新增领域事件
+- 🟥 **Observer 深度限制**：Observer 递归深度必须限制在 `MAX_OBSERVER_DEPTH`（默认 10）以内，禁止 Observer 触发同一事件类型的递归循环无保护
 - 🟥 **系统互调禁令**：绝对禁止系统函数直接互相调用（如 `fn system_a()` 内部调用 `fn system_b()`）
   系统间通信必须通过四级通信机制（Hook→Trigger→Observer→Message）进行
   架构扫描已确认当前代码零违规，此条款为前瞻性防护
@@ -1375,6 +1376,49 @@ tests/
 #### 第十一原则：宏文件超过 10 个宏必须拆分
 - 🟩 单文件 macro_rules! 超过 10 个时按主题拆分子文件
 - 🟩 超过 50 行宏逻辑必须抽取帮助函数
+
+### 16.7 DomainEvent 演进路线图
+
+DomainEvent 的标记方式随项目规模增长分三个阶段演进，禁止跳过阶段直接升级：
+
+| 阶段 | 事件数量 | 方案 | 核心原则 |
+|------|---------|------|---------|
+| **阶段1**（当前50→关闭） | 20~50 | `impl_domain_event!()` 宏 | 显式可 grep，低级模板消除 |
+| **阶段2**（当前） | 50~150 | Blanket Impl | 零宏零重复，Event+Debug+Clone 自动派生 |
+| **阶段3**（未来） | 150+ | `#[derive(DomainEvent)]` + 元数据 | 只生成 const，不生成行为 |
+
+#### 阶段2：Blanket Impl（当前推荐）
+```rust
+pub trait DomainEvent: Event + Debug + Clone + Send + Sync + 'static {}
+impl<T> DomainEvent for T where T: Event + Debug + Clone + Send + Sync + 'static {}
+```
+任何 `#[derive(Event, Debug, Clone)]` 的 struct 自动是 DomainEvent，零样板代码。
+
+#### 阶段3：#[derive(DomainEvent)] 准入铁律
+当项目超过 150 个事件、需要 DOMAIN/CODE 等元数据时，才允许引入 derive。且必须遵守以下三条铁律：
+
+🔒 **铁律1：只生成 const**
+```rust
+#[derive(DomainEvent)]
+#[domain(Combat)]
+#[code(COM001)]
+pub struct TurnEnded;
+// 展开后只生成：
+// impl DomainEvent for TurnEnded {
+//     const DOMAIN: Domain = Domain::Combat;
+//     const CODE: EventCode = EventCode::COM001;
+// }
+```
+❌ 禁止生成函数、系统、资源、spawn 逻辑
+
+🔒 **铁律2：不允许访问 AST 语义**
+- ❌ 禁止读取 struct 字段
+- ❌ 禁止根据字段名/类型生成 impl
+- ✅ 只允许 `#[...]` attribute + ident
+
+🔒 **铁律3：必须可手写为等价代码**
+- 🟩 cargo expand 后必须是能手动写出的 Rust 代码
+- 🟩 禁止生成黑盒行为
 
 ### 16.7 TODO / FIXME / HACK 规范
 🟥 禁止无上下文的 TODO/FIXME。结构化注释是 AI 协作项目的核心工程资产。

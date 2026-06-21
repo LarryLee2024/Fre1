@@ -22,8 +22,6 @@ pub struct EventPublished {
     pub timestamp: u64,
 }
 
-crate::impl_domain_event!(EventPublished);
-
 /// 事件成功投递到订阅者时触发（调试用）。
 #[derive(Event, Debug, Clone)]
 pub struct EventDelivered {
@@ -34,8 +32,6 @@ pub struct EventDelivered {
     /// 延迟（处理时长）
     pub latency_ms: u64,
 }
-
-crate::impl_domain_event!(EventDelivered);
 
 /// 事件投递到订阅者失败时触发（用于监控告警）。
 #[derive(Event, Debug, Clone)]
@@ -48,8 +44,6 @@ pub struct EventDeliveryFailed {
     pub error_message: String,
 }
 
-crate::impl_domain_event!(EventDeliveryFailed);
-
 /// 检测到事件循环触发时触发（严重告警）。
 #[derive(Event, Debug, Clone)]
 pub struct EventCycleDetected {
@@ -60,8 +54,6 @@ pub struct EventCycleDetected {
     /// 事件链追踪
     pub chain_trace: String,
 }
-
-crate::impl_domain_event!(EventCycleDetected);
 
 // ─── Marker Trait 实现 ─────────────────────────────────────────
 

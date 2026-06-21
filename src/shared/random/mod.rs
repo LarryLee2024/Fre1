@@ -45,7 +45,12 @@ impl SeededRng {
 /// 在 App 启动时初始化，所有需要随机数的系统通过 `Res<GameRng>` 访问。
 /// 种子在创建战斗/存档时设定，确保 Replay 一致性。
 ///
-/// # 使用示例
+/// # 弃用说明
+/// **请使用 `core::capabilities::runtime::replay::foundation::DeterministicRng`（四流版本）替代。**
+/// `GameRng` 是单流 RNG，AI 和战斗随机互相扰动时回放会断裂。
+/// 新的 `DeterministicRng` 提供了 Combat/AI/Drop/World 四个独立流，互不干扰。
+///
+/// # 使用示例（旧代码，已弃用）
 /// ```rust,ignore
 /// fn damage_system(mut rng: ResMut<GameRng>) {
 ///     let roll = rng.gen_range(1, 21); // d20
@@ -93,12 +98,6 @@ impl Default for GameRng {
         Self::new(42)
     }
 }
-
-// TODO[P2][SHARED][2026-06-20]: rand 0.10 API 变更，以下代码需要 @feature-developer 适配：
-// - RngCore 已移至 rand_core，需改用 rand_core::TryRng
-// - rand::Error 已移除，try_fill_bytes 返回 Infallible
-// - CryptoRng 需要 DerefMut，SeededRng 需要实现 DerefMut
-// 临时方案：注释掉 RngCore/CryptoRng impl，保留核心功能
 
 #[cfg(test)]
 mod tests;

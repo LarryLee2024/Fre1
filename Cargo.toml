@@ -32,7 +32,6 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["registry"] }
 paste = "1"
 regex = "1"
-fre-macros = { path = "macros/fre-macros" }
 
 # 确定性 PRNG（详见 ADR-041）
 rand = "0.10"

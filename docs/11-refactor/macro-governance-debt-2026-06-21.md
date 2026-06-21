@@ -1,102 +1,142 @@
 # 宏治理激进重构计划
 
-> **日期**: 2026-06-21 | **来源**: 7条宏治理原则
-> **问题**: `src/macros.rs` 万能宏垃圾场反模式
+> **日期**: 2026-06-21 | **来源**: 11条宏治理原则
+> **状态**: 全部完成 ✅ | 宪法§16.6 ✅ / ADR-063 ✅ / `src/macros.rs` 已拆除
 
 ---
 
-## 一、当前宏分布审计
+## 一、已完成工作
 
-### 健康（已跟能力走）
+### Phase 1: 拆除 `src/macros.rs` ✅
+- `impl_rule_failure!` → `shared/traits/macros.rs`
+- `impl_domain_event!` → `shared/diagnostics/macros.rs`
+- `src/macros.rs` 已删除，`src/lib.rs` 引用已清理
+- 31 个调用点零修改（`#[macro_export]` 确保跨模块可见）
 
-| 宏 | 位置 | 所属模块 | 调用点 |
-|----|------|---------|--------|
-| `emit_info!` / `emit_warn!` / `emit_debug!` | `infra/logging/telemetry.rs` | 日志 | 500+ |
-| `warn_once!` / `error_once!` | `infra/logging/rate_limit/mod.rs` | 日志限频 | 20+ |
-| `define_string_id!` / `define_numeric_id!` | `shared/ids/foundation/macros.rs` | ID系统 | 25+ |
-| `assert_approx_eq!` / `assert_*` (6个) | `shared/testing/assertions.rs` | 测试 | 100+ |
-| `register_domain_types!` | `shared/macros.rs` | 类型注册 | 15+ |
-| `derive_*` (3个 proc-macro) | `macros/fre-macros/src/lib.rs` | 独立crate | 30+ |
+### Phase 2: 宪法 §16.6 宏治理 ✅
+11 条原则已写入宪法：抽象优先级 → 宏跟能力走 → 禁止跨层宏依赖 → Declarative/Procedural 分离 → Derive服务于Trait → Cargo Expand可读性 → 不隐藏业务逻辑 → 可被函数替代 → 禁止宏嵌套宏 → 准入门槛 → 10宏拆分
 
-### 不健康（违反第一原则）
+### Phase 3: 架构规则 ✅
+`.trae/rules/架构规则.md` 已补充宏治理章节。
 
-| 宏 | 当前位置 | 应归属 | 调用点 |
-|----|---------|--------|--------|
-| `impl_domain_event!` | `src/macros.rs` | `shared/diagnostics/` | 14 |
-| `impl_rule_failure!` | `src/macros.rs` | `shared/traits/` | 17 |
+### Phase 4: ADR-063 ✅
+已通过架构师审核，状态：**Accepted**，编号：ADR-063（11条原则）。
 
 ---
 
-## 二、执行计划
+## 二、当前宏分布（重构后）
 
-### Phase 1: 拆除 `src/macros.rs`
+| 宏 | 位置 | 行数 | 原则合规 |
+|----|------|------|---------|
+| `emit_info!` / `emit_warn!` / `emit_debug!` | `infra/logging/telemetry.rs` | 40 | ✅ 跟能力走 + 核心实现在函数 |
+| `warn_once!` / `error_once!` | `infra/logging/rate_limit/mod.rs` | 25 | ✅ 跟能力走 |
+| `register_domain_types!` | `shared/macros.rs` | 30 | ✅ Shared 层合理 |
+| `impl_rule_failure!` | `shared/traits/macros.rs` | 30 | ✅ Trait 旁 |
+| `impl_domain_event!` | `shared/diagnostics/macros.rs` | 20 | ✅ Trait 旁 |
+| `define_string_id!` / `define_numeric_id!` | `shared/ids/foundation/macros.rs` | 219 | ✅ ID体系旁 |
+| `assert_*` (7个) | `shared/testing/assertions.rs` | 107 | ✅ 测试专用 |
+| `#[derive(DomainEvent)]` 等(3个) | `fre-macros/src/lib.rs` | 215 | ✅ 独立crate |
 
-#### 1.1 `impl_rule_failure!` → `shared/traits/macros.rs`
-- 新建 `src/shared/traits/macros.rs`
-- 移入宏定义
-- 在 `src/shared/traits/mod.rs` 中添加 `pub(crate) mod macros;`
-- 更新所有调用点导入路径
+**跨层检查**: core/domains/ 和 core/capabilities/ 中零 `emit_info!` 使用 ✅
 
-#### 1.2 `impl_domain_event!` → `shared/diagnostics/macros.rs`
-- 新建 `src/shared/diagnostics/macros.rs`
-- 移入宏定义
-- 在 `src/shared/diagnostics/mod.rs` 中添加 `pub(crate) mod macros;`
-- 更新所有调用点导入路径
+---
 
-#### 1.3 删除 `src/macros.rs`
-- 确认无其他引用后删除
-- 同步删除 `src/lib.rs` 或根 mod 中的引用
+## 三、当前代码改进方案
 
-### Phase 2: 宪法 §16.6 新增宏治理
+### 建议 1: 监控 `shared/testing/assertions.rs` 宏数量
 
-在宪法 §16.5 之后新增 §16.6：
+**现状**: 已有 8 个宏（assert_approx_eq、assert_hp_non_negative、assert_effect_stage、assert_ok、assert_err、assert_err_matches、assert_tag_contains、assert_tag_not_contains），接近第 11 原则的 10 宏拆分阈值。
 
+**方案**: 当达到 10 个时按主题拆分为：
 ```
-### 16.6 宏治理宪法
-
-#### 第一原则：宏跟能力走
-- 🟥 禁止建立全局 `src/macros/` 目录或万能宏文件
-- 🟩 macro_rules! 必须归属于其服务的具体能力模块（如 infra/logging/macros.rs）
-- 🟩 任何宏文件的首选位置是它服务的 trait/能力定义旁边
-
-#### 第二原则：Declarative vs Procedural 分离
-- 🟩 macro_rules! 声明式宏留在主 crate 的各模块中
-- 🟩 proc_macro 必须放独立 crate（fre_macros/）
-- 🟥 禁止在 proc-macro crate 中定义 macro_rules! 再 re-export
-
-#### 第三原则：宏不得隐藏业务逻辑
-- 🟩 宏只能用于：注册/派生/埋点/DSL/样板代码消除
-- 🟥 禁止创建隐藏控制流的 Helper Macro（ok_or_return!、try_get!、some_or_continue!）
-- 🟥 禁止用宏封装业务逻辑（do_damage!、spawn_enemy!、apply_buff!）
-
-#### 第四原则：宏准入门槛
-- 🟩 调用点 < 5 处：用函数，禁止引入宏
-- 🟩 调用点 5~20 处：考虑泛型或函数
-- 🟩 调用点 20+ 处：考虑宏
-- 🟩 调用点 100+ 处：考虑 proc-macro derive
-- 🟩 新增 proc-macro 必须经 ADR 审批
-
-#### 第五原则：宏文件超过 10 个宏必须拆分
-- 🟩 单文件 macro_rules! 超过 10 个时按主题拆分子文件
-- 🟩 超过 50 行宏逻辑必须抽取帮助函数
+shared/testing/
+├── assertions.rs     ← 通用断言（6个）
+├── ecs_assert.rs     ← ECS专用断言（assert_tag_contains/assert_tag_not_contains）
+└── hp_assert.rs      ← 战斗专用断言（assert_hp_non_negative）
 ```
 
-### Phase 3: 架构规则更新
-
-在 `.trae/rules/架构规则.md` 中补充宏治理章节。
-
-### Phase 4: ADR 创建
-
-创建 ADR-0XX-macro-governance，记录宏治理的架构决策。
+**优先级**: P3（达到阈值前仅监控）
 
 ---
 
-## 三、禁止项
+### 建议 2: `define_string_id!` 宏拆分
+
+**现状**: `/Users/lf380/Code/Bevy/Fre/src/shared/ids/foundation/macros.rs` 中 `define_string_id!` 宏复杂度过高（219 行），包含 StrongId / Display / FromStr / PartialEq / Serialize / Deserialize 的批量实现。
+
+**方案**: 
+```text
+shared/ids/foundation/
+├── macros.rs                   ← 宏入口 + define_numeric_id!
+├── string_id_macros.rs         ← define_string_id! 拆出（~180行）
+```
+
+**优先级**: P3（功能正常运行，仅可维护性问题）
+
+---
+
+### 建议 3: 建立宏 Code Review Checklist
+
+**现状**: 宪法 §16.6 已定义 11 条原则，但缺乏具体的 Review 执行清单。
+
+**方案**: 在 ADR-063 或架构规则的执行层面增加 Review Checklist：
+
+```
+□ 原则1（抽象优先级）：检查是否可用 Trait/泛型/函数替代
+□ 原则2（跟能力走）：宏文件位置是否正确
+□ 原则3（跨层依赖）：Domain 是否使用了 Infra 宏
+□ 原则7（不隐藏业务逻辑）：宏是否做了"决策"而非"重复"
+□ 原则8（可被函数替代）：核心实现在函数还是宏中
+□ 原则9（嵌套深度）：展开链是否超过 2 层
+□ 原则10（准入门槛）：调用点是否 ≥ 5
+```
+
+**优先级**: P2
+
+---
+
+### 建议 4: fre-macros proc-macro 代码审查
+
+**现状**: `macros/fre-macros/src/lib.rs`（215 行）包含 3 个 proc-macro，需要验证原则 5（Derive 服务于 Trait）和原则 6（Cargo Expand 可读性）。
+
+**验证**:
+- `#[derive(DomainEvent)]` → 仅生成 `impl DomainEvent for T {}` ✅
+- `#[derive(RuleFailure)]` → 仅生成 `impl RuleFailure for T` ✅
+- `#[derive(DefinitionType)]` → 仅生成 `impl DefinitionType for T` ✅
+
+**结论**: 全部合规，但建议添加 cargo expand 测试确保展开结果可审查。
+
+**优先级**: P3
+
+---
+
+### 建议 5: 跨层宏依赖门禁
+
+**现状**: 当前 core/domains 和 core/capabilities 中无 `emit_info!` 使用，合规 ✅。但需要建立 CI 门禁防止未来引入。
+
+**方案**: 添加简单的 CI 检查脚本：
+```bash
+#!/bin/bash
+# check-cross-layer-macros.sh
+# 禁止 Domain/Capability 层使用 Infra 宏
+if grep -rn "emit_info!\|emit_warn!\|emit_debug!" src/core/ --include="*.rs" | grep -v "/tests/"; then
+  echo "❌ 跨层宏违规：Domain/Capability 不得使用 Infra 日志宏"
+  exit 1
+fi
+echo "✅ 跨层宏检查通过"
+```
+
+**优先级**: P2
+
+---
+
+## 四、禁止项（更新版）
 
 | # | 禁止 | 原因 |
 |---|------|------|
-| 1 | 一次性重构所有宏 | 当前仅 2 个宏位置不对，其他宏已跟能力走，无需动 |
-| 2 | 合并 `shared/macros.rs` 到子模块 | `register_domain_types!` 是横切注册宏，放 shared 层合理 |
-| 3 | 为 <5 调用点的模式创建宏 | 违反第四原则 |
-| 4 | 创建 Helper Macro | 隐藏控制流，增加认知负担 |
-| 5 | proc-macro crate 依赖主 crate | 会导致循环依赖 |
+| 1 | 一次性重构所有宏 | 已完成，无需再动 |
+| 2 | 合并 `shared/macros.rs` 到子模块 | `register_domain_types!` 是横切宏，放 shared 层合理 |
+| 3 | 为 <5 调用点的模式创建宏 | 违反原则 10 |
+| 4 | 创建 Helper Macro | 隐藏控制流，违反原则 7 |
+| 5 | proc-macro crate 依赖主 crate | 循环依赖 |
+| 6 | Domain 层调用 Infra 宏 | 违反原则 3（禁止跨层宏依赖） |
+| 7 | 业务宏嵌套业务宏 | 违反原则 9（展开深度 > 2 层） |

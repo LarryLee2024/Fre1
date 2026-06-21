@@ -4,7 +4,7 @@ title: Architecture Overview — DDD Three-Layer + Four Cross-Cutting Layers
 status: stable
 owner: architect
 created: 2026-06-16
-updated: 2026-06-21（v5.3 + ADR-061 Typestate + ADR-062 Object Safety）
+updated: 2026-06-21（v5.4 + ADR-063 Macro Governance）
 tags:
   - architecture
   - governance
@@ -677,6 +677,7 @@ src/
 | ADR-060 | Extension Trait for Bevy Types | ✅ Accepted | Cross-cutting |
 | ADR-061 | Typestate 在 Content Pipeline 中的应用 | ✅ Accepted | Cross-cutting |
 | ADR-062 | Object Safety 分层策略（热路径泛型/冷路径 dyn） | ✅ Accepted | Cross-cutting |
+| ADR-063 | 宏治理（Macro Governance）— 11条宏使用宪法原则 | ✅ Accepted | Cross-cutting |
 
 ---
 
@@ -758,6 +759,7 @@ src/
 | `40-cross-cutting/ADR-060-extension-trait.md` | ✅ accepted | architect | 2026-06-21 |
 | `40-cross-cutting/ADR-061-typestate.md` | ✅ accepted | architect | 2026-06-21 |
 | `40-cross-cutting/ADR-062-object-safety.md` | ✅ accepted | architect | 2026-06-21 |
+| `40-cross-cutting/ADR-063-macro-governance.md` | ✅ accepted | architect | 2026-06-21 |
 
 ---
 

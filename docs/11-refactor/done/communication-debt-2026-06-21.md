@@ -125,7 +125,7 @@ src/core/capabilities/
 | spec | `spec/foundation/types.rs:6` | `NEXT_SPEC_ID` |
 | gameplay_context | `gameplay_context/foundation/values.rs:11` | `NEXT_CONTEXT_ID` |
 
-这 2 处不在本次通信系统范围，建议在后续迭代中以相同方式修复。
+这 2 处不在本次通信系统范围，但建议在后续迭代中以相同方式修复。
 
 ## 五、后续计划（5 阶段，P1-P3）
 
@@ -144,7 +144,7 @@ src/core/capabilities/
 | 2.3 | 审计触发流程 | TriggerFrequency 支持 max_per_turn 频率限制，CombatTriggerFacade 封装 | ✅ 完整 |
 | 2.4 | 审计测试覆盖 | evaluator_test.rs 覆盖核心路径 | ✅ 完整 |
 
-**审计结论**: Trigger 系统实现完整，无缺失功能。evaluate_trigger() 纯函数 + emit_trigger_events() 副作用分离设计良好。
+**审计结论**: Trigger 系统实现完整，无缺失功能。
 
 ### 阶段 3: Observer 安全机制（P2, 0.5天）— ✅ 完成
 
@@ -152,30 +152,28 @@ src/core/capabilities/
 |---|------|------|------|
 | 3.1 | 定义 `MAX_OBSERVER_DEPTH` 常量 | `shared/constants/mod.rs` = 10 | ✅ 已存在 |
 | 3.2 | 审计所有 `On<T>` Observer 使用 | ~150 个 Observer 注册，无递归风险 | ✅ 安全 |
-| 3.3 | 审计日志 | EventBus 已有 EVENT_CYCLE_LIMIT=5 循环检测 + EventCycleDetected 事件 | ✅ 已有 |
-| 3.4 | 更新 ECS规则.md | §2.3 已有深度限制条款，§五速查 #10 已有递归防护 | ✅ 已有 |
-
-**审计结论**: MAX_OBSERVER_DEPTH 已定义，ECS规则已文档化。Bevy 0.19 原生 Observer 系统不暴露递归深度 API，运行时深度限制依赖 EventBus 的 EVENT_CYCLE_LIMIT 机制。
+| 3.3 | 审计日志 | EventBus 已有 EVENT_CYCLE_LIMIT=5 循环检测 | ✅ 已有 |
+| 3.4 | 更新 ECS规则.md | §2.3 已有深度限制条款 | ✅ 已有 |
 
 ### 阶段 4: 共享事件完整性（P2, 0.5天）— ✅ 完成
 
 | # | 操作 | 说明 | 状态 |
 |---|------|------|------|
-| 4.1 | 审计 `src/core/events.rs` | 验证 4 个共享事件 struct 签名 | ✅ 签名正确，与 ADR-049 定义一致 |
-| 4.2 | 桥接 TurnStarted | `steps.rs` step_turn_start 中添加 `commands.trigger(TurnStarted{unit})` | ✅ 已修复 |
-| 4.3 | 桥接 BattleStarted | `turn_systems.rs` on_enter_battle 中添加 `commands.trigger(BattleStarted)` | ✅ 已修复 |
-| 4.4 | 桥接 BattleEnded | `steps.rs` step_turn_end + `turn_systems.rs` on_enter_victory/defeat 中添加 `commands.trigger(BattleEnded{victory})` | ✅ 已修复 |
+| 4.1 | 审计 `src/core/events.rs` | 验证 4 个共享事件 struct 签名 | ✅ 正确 |
+| 4.2 | 桥接 TurnStarted | `steps.rs` step_turn_start 中添加 | ✅ 已修复 |
+| 4.3 | 桥接 BattleStarted | `turn_systems.rs` on_enter_battle 中添加 | ✅ 已修复 |
+| 4.4 | 桥接 BattleEnded | `steps.rs` + `turn_systems.rs` 中添加 | ✅ 已修复 |
 
-**审计结论**: 4/4 共享事件全部正确桥接。turn_logger 和 battle_logger 的 Observer 不再是死代码。
+**审计结论**: 4/4 共享事件全部正确桥接。
 
 ### 阶段 5: 文档对齐（P3, 0.5天）— ✅ 完成
 
 | # | 操作 | 说明 | 状态 |
 |---|------|------|------|
-| 5.1 | ADR-002 §3 示例对齐 | 白名单使用 struct（非枚举），与实际一致 | ✅ 无需修改 |
+| 5.1 | ADR-002 §3 示例对齐 | 白名单使用 struct，与实际一致 | ✅ 无需修改 |
 | 5.2 | 宪法 §6.3 更新 | 新增 Observer 深度限制条款 | ✅ 已更新 |
-| 5.3 | ECS规则.md 更新 | §2.3 已有深度限制，§五速查 #10 已有递归防护 | ✅ 已有 |
-| 5.4 | ADR-059 状态 | 已为 Accepted（设计完成，实现 Deferred） | ✅ 状态正确 |
+| 5.3 | ECS规则.md 更新 | §2.3 已有深度限制 | ✅ 已有 |
+| 5.4 | ADR-059 状态 | 已为 Accepted | ✅ 状态正确 |
 
 ---
 
@@ -194,11 +192,11 @@ src/core/capabilities/
 
 | 阶段 | 内容 | 预计工时 | 实际工时 | 风险 |
 |------|------|----------|----------|------|
-| 1 | Event History 实现 | 16h | Deferred | 🟡 中 — 新功能开发 |
-| 2 | Trigger 审查 | 4h | 0.5h（审计） | 🟢 低 — 审计为主 |
-| 3 | Observer 安全机制 | 2h | 0.5h（审计） | 🟢 低 |
-| 4 | 共享事件完整性 | 2h | 0.5h（代码修复） | 🟢 低 |
-| 5 | 文档对齐 | 2h | 0.5h（文档更新） | 🟢 低 |
+| 1 | Event History 实现 | 16h | Deferred | 🟡 中 |
+| 2 | Trigger 审查 | 4h | 0.5h | 🟢 低 |
+| 3 | Observer 安全机制 | 2h | 0.5h | 🟢 低 |
+| 4 | 共享事件完整性 | 2h | 0.5h | 🟢 低 |
+| 5 | 文档对齐 | 2h | 0.5h | 🟢 低 |
 | **合计** | | **26h** | **2h（不含 Deferred）** | |
 
 ---
@@ -210,11 +208,10 @@ src/core/capabilities/
 - ✅ 架构文档完整且一致（ADR-002 + ADR-012 + ADR-049 + 宪法 §6.3 无冲突）
 - ✅ 代码实现符合架构（EventBus 使用 trigger+Observer 模式）
 - ✅ 循环检测、优先级、订阅管理等安全机制已实现
-- ✅ 38 个 events.rs 分布合理，无乱象
 - ✅ 4/4 共享事件全部正确桥接（TurnStarted、TurnEnded、BattleStarted、BattleEnded）
-- ✅ Trigger 系统实现完整（evaluator + TriggerType + TriggerFrequency + CombatTriggerFacade）
+- ✅ Trigger 系统实现完整
 - ✅ Observer 深度限制已定义（MAX_OBSERVER_DEPTH=10）并文档化
 
-**唯一 Deferred 项**: Event History（ADR-059）是新功能开发，非技术债修复，建议排入独立 Feature 迭代。
+**唯一 Deferred 项**: Event History（ADR-059）是新功能开发，非技术债修复。
 
 **最终结论**: 通信系统技术债清零。P0 无问题，P1-P3 全部 Resolved。

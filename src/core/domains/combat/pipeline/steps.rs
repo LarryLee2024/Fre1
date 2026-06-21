@@ -9,7 +9,7 @@ use crate::core::domains::combat::components::{ActionPoints, CombatParticipant, 
 use crate::core::domains::combat::events::{
     BattleResult, BetweenTurns, OnBattleEnd, OnRoundEnd, OnTurnEnd, OnTurnStart,
 };
-use crate::core::events::TurnEnded;
+use crate::core::events::{BattleEnded, TurnEnded, TurnStarted};
 
 // ═══════════════════════════════════════════════════════════════════════
 // Step 1: TurnStart
@@ -33,6 +33,11 @@ pub(crate) fn step_turn_start(
 
     // 发射 OnTurnStart 领域事件
     commands.trigger(OnTurnStart {
+        unit: current.entity,
+    });
+
+    // 发射全局 TurnStarted 事件（供其他 Domain 订阅，避免跨域直接依赖）
+    commands.trigger(TurnStarted {
         unit: current.entity,
     });
 
@@ -196,6 +201,7 @@ pub(crate) fn step_turn_end(
         commands.trigger(OnBattleEnd {
             result: BattleResult::Victory,
         });
+        commands.trigger(BattleEnded { victory: true });
         TurnEndResult::BattleOver
     } else {
         TurnEndResult::Continue

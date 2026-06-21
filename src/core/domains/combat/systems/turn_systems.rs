@@ -16,6 +16,7 @@ use crate::core::domains::combat::components::{
 use crate::core::domains::combat::events::{
     BattleResult, OnBattleEnd, OnBattleStart, OnTurnEnd, OnTurnStart,
 };
+use crate::core::events::{BattleEnded, BattleStarted};
 use crate::core::domains::combat::integration::ability::CombatAbilityFacade;
 use crate::core::domains::combat::integration::ability::CombatAbilityParam;
 use crate::core::domains::combat::integration::trigger::CombatTriggerFacade;
@@ -30,6 +31,7 @@ use crate::core::domains::combat::integration::trigger::CombatTriggerType;
 #[tracing::instrument(skip_all, target = "combat")]
 pub(crate) fn on_enter_battle(mut commands: Commands) {
     commands.trigger(OnBattleStart);
+    commands.trigger(BattleStarted);
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -87,6 +89,7 @@ pub(crate) fn on_enter_victory(mut commands: Commands) {
     commands.trigger(OnBattleEnd {
         result: BattleResult::Victory,
     });
+    commands.trigger(BattleEnded { victory: true });
 }
 
 /// 进入 BattlePhase::Defeat 时触发 OnBattleEnd。
@@ -94,6 +97,7 @@ pub(crate) fn on_enter_defeat(mut commands: Commands) {
     commands.trigger(OnBattleEnd {
         result: BattleResult::Defeat,
     });
+    commands.trigger(BattleEnded { victory: false });
 }
 
 // ═══════════════════════════════════════════════════════════════════════

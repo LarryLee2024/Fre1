@@ -49,8 +49,6 @@ pub struct LevelUp {
     pub is_asi_level: bool,
 }
 
-crate::impl_domain_event!(LevelUp);
-
 impl crate::shared::diagnostics::observable::sealed::Sealed for LevelUp {}
 
 impl ObservableEvent for LevelUp {

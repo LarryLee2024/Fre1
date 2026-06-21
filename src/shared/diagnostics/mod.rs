@@ -11,7 +11,6 @@ mod domain;
 mod explain;
 mod log_category;
 mod log_code;
-pub(crate) mod macros;
 pub(crate) mod observable;
 
 pub use context::DiagnosticContext;

@@ -25,8 +25,6 @@ pub struct ShortRestCompleted {
     pub abilities_restored: Vec<String>,
 }
 
-crate::impl_domain_event!(ShortRestCompleted);
-
 /// 长休开始时触发。
 ///
 /// 订阅者：
@@ -40,7 +38,6 @@ pub struct LongRestStarted {
     pub camp_location: String,
 }
 
-crate::impl_domain_event!(LongRestStarted);
 
 /// 长休完成时触发。
 ///
@@ -63,7 +60,6 @@ pub struct LongRestCompleted {
     pub events_triggered: Vec<String>,
 }
 
-crate::impl_domain_event!(LongRestCompleted);
 
 /// 长休被中断时触发。
 ///
@@ -80,7 +76,6 @@ pub struct LongRestInterrupted {
     pub cumulative_interrupt_time: u32,
 }
 
-crate::impl_domain_event!(LongRestInterrupted);
 
 /// 营地事件触发时触发。
 ///
@@ -100,4 +95,3 @@ pub struct CampEventTriggered {
     pub choices_available: Vec<String>,
 }
 
-crate::impl_domain_event!(CampEventTriggered);

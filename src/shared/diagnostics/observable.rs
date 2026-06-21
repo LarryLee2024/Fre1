@@ -72,11 +72,17 @@ pub trait ObservableEvent: sealed::Sealed + fmt::Debug + Send + Sync + 'static {
 /// Implementing this marker trait enables automatic discovery, logging, replay,
 /// and audit capabilities without behavioral inheritance.
 ///
-/// # Marker Trait vs Classification Trait
-///
-/// This is a pure marker trait: it carries no behavior, creates no hierarchy,
-/// and serves only as a registration tag for auto-registration systems.
-pub trait DomainEvent {}
+/// Any Bevy event that derives `Event + Debug + Clone + Send + Sync + 'static`
+/// automatically implements this trait via blanket impl — no macro or manual
+/// impl needed.
+pub trait DomainEvent: bevy::prelude::Event + fmt::Debug + Clone + Send + Sync + 'static {}
+
+/// Blanket impl: every Bevy event satisfying the supertrait bounds is
+/// automatically a DomainEvent. This eliminates the need for
+/// `impl_domain_event!()` or `#[derive(DomainEvent)]`.
+impl<T> DomainEvent for T where
+    T: bevy::prelude::Event + fmt::Debug + Clone + Send + Sync + 'static
+{}
 
 /// Marker trait for replay events.
 ///
