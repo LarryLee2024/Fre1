@@ -1,7 +1,7 @@
 ---
 id: 11-refactor.shared-infra-gaps-2026-06-21
 title: "Shared & Infra 层差距分析与补全计划"
-status: in_progress
+status: completed
 owner: architect
 created: 2026-06-21
 tags:
@@ -177,15 +177,15 @@ impl Plugin for SharedPlugin {
 | Phase | 内容 | 优先级 | 状态 |
 |-------|------|--------|------|
 | Phase 1 | Prelude 填充 | P0 | ✅ 完成 |
-| Phase 2.1 | collections/ 实现 | P2 | 🟡 执行中 |
+| Phase 2.1 | collections/ 实现 | P2 | ✅ 完成 |
 | Phase 2.2 | hashing/ 实现 | P2 | ✅ 完成 |
 | Phase 2.3 | math/ 实现 | P2 | ✅ 完成 |
-| Phase 2.4 | validation/ 实现 | P2 | 🟡 执行中 |
+| Phase 2.4 | validation/ 实现 | P2 | ✅ 完成 |
 | Phase 2.5 | path/ 实现 | P2 | ✅ 完成 |
 | Phase 3 | SharedPlugin 补全 | P2 | ✅ 完成 |
 | Phase 4 | 文档修复 | P2 | ✅ 完成 |
 | Phase 5 | Constants 扩展 | P3 | ✅ 完成 |
-| Phase 6 | 跨 Infra 集成测试 | P3 | 🟡 执行中 |
+| Phase 6 | 跨 Infra 集成测试 | P3 | ✅ 完成 |
 
 ## 四、禁止项
 

@@ -18,10 +18,10 @@ use crate::core::capabilities::runtime::replay::foundation::{
 use crate::core::capabilities::runtime::replay::mechanism::{
     PlaybackSession as CorePlaybackSession, RecordingSession as CoreRecordingSession,
 };
-use crate::infra::replay::plugin::ReplayPlugin;
-use crate::infra::replay::resources::{DeterministicRng, PlaybackSession, RecordingSession};
+use crate::infra::replay::ReplayPlugin;
 use crate::infra::replay::RngStream;
-use crate::infra::save::plugin::SavePlugin;
+use crate::infra::replay::resources::{DeterministicRng, PlaybackSession, RecordingSession};
+use crate::infra::save::SavePlugin;
 use crate::infra::save::resources::{EntityRemapper, SaveManager};
 
 /// SavePlugin 和 ReplayPlugin 共存测试。
@@ -76,7 +76,9 @@ fn entity_remapper_works_with_replay_active() {
         .assign(entity);
 
     assert!(
-        app.world().resource::<EntityRemapper>().contains_entity(&entity),
+        app.world()
+            .resource::<EntityRemapper>()
+            .contains_entity(&entity),
         "runtime entity should be mapped"
     );
     assert!(
@@ -296,17 +298,13 @@ fn different_seed_produces_different_checksums() {
     let header_a = ReplayHeader::new(1, "0.1.0", "seed_test", 100);
     let mut rec_a = CoreRecordingSession::new(60);
     rec_a.start(header_a, 100);
-    rec_a.record_command(ReplayCommand::SkipTurn {
-        unit: "u1".into(),
-    });
+    rec_a.record_command(ReplayCommand::SkipTurn { unit: "u1".into() });
     let log_a = rec_a.stop(111).expect("stop");
 
     let header_b = ReplayHeader::new(1, "0.1.0", "seed_test", 200);
     let mut rec_b = CoreRecordingSession::new(60);
     rec_b.start(header_b, 200);
-    rec_b.record_command(ReplayCommand::SkipTurn {
-        unit: "u1".into(),
-    });
+    rec_b.record_command(ReplayCommand::SkipTurn { unit: "u1".into() });
     let log_b = rec_b.stop(111).expect("stop");
 
     // 使用各自的种子回放

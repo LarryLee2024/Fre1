@@ -10,7 +10,7 @@
 //!
 //! 详见 ADR-041 §6 和 replay_schema.md
 
-pub use crate::shared::random::DeterministicRng;
 pub use crate::core::capabilities::runtime::replay::mechanism::resources::{
     FrameCounter, PlaybackSession, RecordingSession, ReplayModeGuard,
 };
+pub use crate::shared::random::DeterministicRng;

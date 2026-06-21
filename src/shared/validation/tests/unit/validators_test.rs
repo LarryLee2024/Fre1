@@ -11,10 +11,7 @@ fn not_empty_str_valid() {
 fn not_empty_str_invalid() {
     let result = NotEmpty.validate("");
     assert!(result.is_err());
-    assert_eq!(
-        result.unwrap_err().to_string(),
-        "value must not be empty"
-    );
+    assert_eq!(result.unwrap_err().to_string(), "value must not be empty");
 }
 
 #[test]

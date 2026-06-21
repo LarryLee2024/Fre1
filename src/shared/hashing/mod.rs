@@ -28,8 +28,8 @@
 //! ```
 
 use std::collections::{HashMap, HashSet};
-use std::hash::{BuildHasher, Hasher};
 use std::hash::Hash;
+use std::hash::{BuildHasher, Hasher};
 
 /// 高速哈希器。
 ///
@@ -128,16 +128,22 @@ impl Hasher for FastHasher {
 ///     HashMap::with_hasher(FastBuildHasher::default());
 /// map.insert("key".into(), 42);
 /// ```
-#[derive(Clone, Default)]
+#[derive(Clone)]
 pub struct FastBuildHasher(ahash::RandomState);
 
 impl FastBuildHasher {
     /// 创建一个新的高速哈希构建器。
     ///
-    /// 使用 `ahash::RandomState::default()` 初始化，
-    /// 利用进程级随机密钥提供 HashDoS 保护。
+    /// 使用固定种子确保确定性输出（跨进程一致）。
+    /// 适用于游戏场景的确定性哈希需求。
     pub fn new() -> Self {
-        Self(ahash::RandomState::default())
+        Self(ahash::RandomState::with_seeds(0, 0, 0, 0))
+    }
+}
+
+impl Default for FastBuildHasher {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

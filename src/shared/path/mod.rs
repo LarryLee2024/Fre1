@@ -84,9 +84,7 @@ impl ProjectDirs {
 
         // Unix: $HOME/.config
         if let Ok(home) = std::env::var("HOME") {
-            return PathBuf::from(home)
-                .join(".config")
-                .join(&self.project_name);
+            return PathBuf::from(home).join(".config").join(&self.project_name);
         }
 
         // Windows: %APPDATA%

@@ -162,9 +162,7 @@ impl<T> ValidationResult<T> {
         match self {
             ValidationResult::Valid(val) => val,
             ValidationResult::Invalid(errs) => {
-                panic!(
-                    "called `ValidationResult::unwrap()` on an `Invalid` value: {errs:?}"
-                )
+                panic!("called `ValidationResult::unwrap()` on an `Invalid` value: {errs:?}")
             }
         }
     }
@@ -290,7 +288,7 @@ pub trait Validator<T: ?Sized> {
 /// assert!(result.is_ok());
 /// ```
 #[derive(Debug)]
-pub struct ValidationChain<T, E> {
+pub struct ValidationChain<T, E = ValidationError> {
     /// 被校验的值。
     value: T,
     /// 累积的校验错误。
@@ -391,6 +389,18 @@ impl Validator<String> for NotEmpty {
     type Error = ValidationError;
 
     fn validate(&self, value: &String) -> Result<(), Self::Error> {
+        if value.is_empty() {
+            Err(ValidationError::new("value must not be empty"))
+        } else {
+            Ok(())
+        }
+    }
+}
+
+impl Validator<&str> for NotEmpty {
+    type Error = ValidationError;
+
+    fn validate(&self, value: &&str) -> Result<(), Self::Error> {
         if value.is_empty() {
             Err(ValidationError::new("value must not be empty"))
         } else {
@@ -525,6 +535,22 @@ impl Validator<String> for MinLength {
     type Error = ValidationError;
 
     fn validate(&self, value: &String) -> Result<(), Self::Error> {
+        if value.len() < self.min {
+            Err(ValidationError::new(format!(
+                "length must be at least {}, got {}",
+                self.min,
+                value.len()
+            )))
+        } else {
+            Ok(())
+        }
+    }
+}
+
+impl Validator<&str> for MinLength {
+    type Error = ValidationError;
+
+    fn validate(&self, value: &&str) -> Result<(), Self::Error> {
         if value.len() < self.min {
             Err(ValidationError::new(format!(
                 "length must be at least {}, got {}",

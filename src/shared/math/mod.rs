@@ -9,7 +9,7 @@
 mod hex;
 mod interpolation;
 
-pub use hex::{hex_distance, HexCoord};
+pub use hex::{HexCoord, hex_distance};
 pub use interpolation::{inv_lerp, lerp, smoothstep};
 
 /// 浮点比较 trait —— 在 epsilon 容差内比较。

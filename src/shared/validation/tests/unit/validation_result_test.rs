@@ -54,7 +54,9 @@ fn from_conversion_to_std_result() {
 #[should_panic(expected = "ValidationResult::unwrap()")]
 fn unwrap_panics_on_invalid() {
     let result: ValidationResult<i32> =
-        ValidationResult::Invalid(vec![crate::shared::validation::ValidationError::new("fail")]);
+        ValidationResult::Invalid(vec![crate::shared::validation::ValidationError::new(
+            "fail",
+        )]);
     let _ = result.unwrap();
 }
 
@@ -82,9 +84,10 @@ fn map_preserves_invalid() {
 
 #[test]
 fn map_err_transforms_errors() {
-    let result: ValidationResult<i32> = ValidationResult::Invalid(vec![
-        crate::shared::validation::ValidationError::new("original"),
-    ]);
+    let result: ValidationResult<i32> =
+        ValidationResult::Invalid(vec![crate::shared::validation::ValidationError::new(
+            "original",
+        )]);
     let mapped = result.map_err(|mut errs| {
         errs.push(crate::shared::validation::ValidationError::new("extra"));
         errs

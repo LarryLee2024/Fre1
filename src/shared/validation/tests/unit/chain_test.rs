@@ -1,8 +1,8 @@
-use crate::shared::validation::{MinLength, NotEmpty, Range, ValidationChain};
+use crate::shared::validation::{MinLength, NotEmpty, Range, ValidationChain, ValidationError};
 
 #[test]
 fn chain_new_contains_value() {
-    let chain = ValidationChain::new(42);
+    let chain: ValidationChain<i32, ValidationError> = ValidationChain::new(42);
     assert_eq!(*chain.value(), 42);
     assert!(chain.errors().is_empty());
 }
@@ -37,10 +37,10 @@ fn chain_accumulates_all_errors() {
 #[test]
 fn chain_does_not_short_circuit_on_first_failure() {
     // Even though first validator fails, the chain continues and accumulates both errors.
-    let result = ValidationChain::new("")
+    let result = ValidationChain::new(String::new())
         .check(NotEmpty)
         .check(MinLength::new(3))
-        .validate::<Vec<crate::shared::validation::ValidationError>>();
+        .validate();
     // Both should fail because empty string fails both NotEmpty and MinLength
     assert!(result.is_err());
     assert_eq!(result.unwrap_err().len(), 2);
@@ -74,11 +74,11 @@ fn chain_validate_all_with_multiple_errors() {
 
 #[test]
 fn chain_with_string_validators() {
-    let result = ValidationChain::new("hello")
+    let result = ValidationChain::new("hello".to_string())
         .check(NotEmpty)
         .check(MinLength::new(2))
-        .validate::<Vec<crate::shared::validation::ValidationError>>();
-    assert_eq!(result, Ok("hello"));
+        .validate();
+    assert_eq!(result, Ok("hello".to_string()));
 }
 
 #[test]
@@ -93,8 +93,7 @@ fn chain_with_different_error_types() {
 
 #[test]
 fn chain_value_accessor_reflects_wrapped_value() {
-    let chain: ValidationChain<i32, crate::shared::validation::ValidationError> =
-        ValidationChain::new(100);
+    let chain: ValidationChain<i32, ValidationError> = ValidationChain::new(100);
     assert_eq!(*chain.value(), 100);
 }
 

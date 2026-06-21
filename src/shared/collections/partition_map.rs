@@ -50,7 +50,7 @@ pub trait PartitionMap: Iterator {
 }
 
 impl<I: Iterator> PartitionMap for I {
-    fn partition_map<A, B, F>(self, f: F) -> (Vec<A>, Vec<B>)
+    fn partition_map<A, B, F>(self, mut f: F) -> (Vec<A>, Vec<B>)
     where
         F: FnMut(Self::Item) -> Result<A, B>,
     {

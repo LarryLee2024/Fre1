@@ -3,3 +3,5 @@
 - [Button Widget Factory](button-widget-factory.md) -- Button factory pattern, variant styling, theme tokens
 - [Trigger Two-Phase Evaluation](trigger-two-phase-evaluation.md) -- Pure evaluate_trigger() + emit_trigger_events() split
 - [RNG System Refactoring](rng-system-refactoring-2026-06-21.md) -- ChaCha12 DeterministicRng moved to shared/random/, GameRng deleted, Core->Infra violation fixed
+- [Shared Collections Iterator Extensions](shared-collections-iterator-extensions.md) -- GroupByMap, TakeWhileInclusive, PartitionMap in shared/collections/
+- [Shared Validation Module](shared-validation-module.md) -- ValidationResult, Validator trait, ValidationChain, built-in validators

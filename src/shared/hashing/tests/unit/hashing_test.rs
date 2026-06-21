@@ -1,7 +1,9 @@
 use std::collections::HashMap;
-use std::hash::{Hash, Hasher};
+use std::hash::{BuildHasher, Hash, Hasher};
 
-use crate::hashing::{fast_hash, new_fast_hashmap, new_fast_hashset, FastBuildHasher, FastHasher};
+use crate::shared::hashing::{
+    FastBuildHasher, FastHasher, fast_hash, new_fast_hashmap, new_fast_hashset,
+};
 
 #[test]
 fn fast_hash_is_deterministic() {
@@ -28,19 +30,22 @@ fn fast_hash_works_for_integers() {
 }
 
 #[test]
-fn fast_hash_works_for_floats() {
-    let a = fast_hash(&3.14f64);
-    let b = fast_hash(&3.14f64);
+fn fast_hash_works_for_large_integers() {
+    let a = fast_hash(&u64::MAX);
+    let b = fast_hash(&u64::MAX);
     assert_eq!(a, b);
+
+    let c = fast_hash(&42u64);
+    assert_ne!(a, c);
 }
 
 #[test]
 fn fast_hash_works_for_tuples() {
-    let a = fast_hash(&(1, "two", 3.0));
-    let b = fast_hash(&(1, "two", 3.0));
+    let a = fast_hash(&(1, "two", 3u64));
+    let b = fast_hash(&(1, "two", 3u64));
     assert_eq!(a, b);
 
-    let c = fast_hash(&(1, "two", 4.0));
+    let c = fast_hash(&(1, "two", 4u64));
     assert_ne!(a, c);
 }
 
@@ -142,8 +147,8 @@ fn fast_hashmap_works_with_integer_keys() {
     map.insert(1, "one".into());
     map.insert(2, "two".into());
 
-    assert_eq!(map.get(&1), Some(&"one"));
-    assert_eq!(map.get(&2), Some(&"two"));
+    assert_eq!(map.get(&1), Some(&"one".to_string()));
+    assert_eq!(map.get(&2), Some(&"two".to_string()));
 }
 
 #[test]
@@ -183,9 +188,8 @@ fn fast_hashset_remove_works() {
 #[test]
 fn fast_hashmap_works_with_std_hashmap_api() {
     // 验证 FastHashMap 类型兼容 std HashMap API
-    let mut map: HashMap<String, i32, FastBuildHasher> = HashMap::with_hasher(
-        FastBuildHasher::default(),
-    );
+    let mut map: HashMap<String, i32, FastBuildHasher> =
+        HashMap::with_hasher(FastBuildHasher::default());
     map.insert("a".into(), 1);
     map.insert("b".into(), 2);
 

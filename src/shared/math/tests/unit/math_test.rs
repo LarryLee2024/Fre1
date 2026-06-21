@@ -1,4 +1,4 @@
-use crate::shared::math::{hex_distance, inv_lerp, lerp, smoothstep, FloatEq, HexCoord};
+use crate::shared::math::{FloatEq, HexCoord, hex_distance, inv_lerp, lerp, smoothstep};
 
 // ============================================================================
 // HexCoord 测试
@@ -21,8 +21,8 @@ fn hex_distance_adjacent_is_one() {
 #[test]
 fn hex_distance_known_values() {
     assert_eq!(hex_distance((0, 0), (2, 1)), 3);
-    assert_eq!(hex_distance((0, 0), (3, -1)), 4);
-    assert_eq!(hex_distance((-3, 2), (1, -1)), 5);
+    assert_eq!(hex_distance((0, 0), (3, -1)), 3);
+    assert_eq!(hex_distance((-3, 2), (1, -1)), 4);
 }
 
 #[test]
@@ -125,7 +125,12 @@ fn hex_coord_neighbors_contains_expected() {
         HexCoord::new(2, 0),
     ];
     for exp in &expected {
-        assert!(neighbors.contains(exp), "Missing neighbor: ({}, {})", exp.q, exp.r);
+        assert!(
+            neighbors.contains(exp),
+            "Missing neighbor: ({}, {})",
+            exp.q,
+            exp.r
+        );
     }
 }
 
@@ -133,15 +138,15 @@ fn hex_coord_neighbors_contains_expected() {
 fn hex_coord_neighbors_ring_returns_to_origin() {
     // 围绕一个中心六边形走一圈应该回到原点
     let center = HexCoord::new(0, 0);
-    let mut pos = HexCoord::new(1, 0); // 从第一个邻居开始
-    // 绕中心走一圈：右-上-左-左-下-右 形成一个环
+    let mut pos = center;
+    // 绕中心走一圈的 6 步，总和应为 (0, 0)
     let path = [
-        HexCoord::new(0, 1),   // 右上
-        HexCoord::new(-1, 1),  // 左上
-        HexCoord::new(-1, 0),  // 左
-        HexCoord::new(0, -1),  // 左下
-        HexCoord::new(1, -1),  // 右下
-        HexCoord::new(1, 0),   // 回到起点
+        HexCoord::new(1, 0),  // 右
+        HexCoord::new(0, 1),  // 右上
+        HexCoord::new(-1, 1), // 左上
+        HexCoord::new(-1, 0), // 左
+        HexCoord::new(0, -1), // 左下
+        HexCoord::new(1, -1), // 右下
     ];
     for step in &path {
         pos = pos + *step;

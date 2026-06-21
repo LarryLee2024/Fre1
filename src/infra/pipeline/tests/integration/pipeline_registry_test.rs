@@ -12,13 +12,13 @@
 
 use bevy::prelude::*;
 
+use crate::infra::pipeline::PipelinePlugin;
 use crate::infra::pipeline::{
-    PipelineRegistry, PipelineDefinition, PipelineStage, PipelineStep, PipelineContext, StepResult,
+    PipelineContext, PipelineDefinition, PipelineRegistry, PipelineStage, PipelineStep, StepResult,
     execute_pipeline, validate_pipeline,
 };
-use crate::infra::pipeline::PipelinePlugin;
-use crate::infra::registry::registry::{DefinitionRegistry, RegistryEntry};
 use crate::infra::registry::RegistryPlugin;
+use crate::infra::registry::registry::{DefinitionRegistry, RegistryEntry};
 use crate::shared::error::ErrorContext;
 
 /// PipelinePlugin 和 RegistryPlugin 共存测试。
@@ -67,13 +67,13 @@ fn pipeline_registry_register_and_query() {
     let def = PipelineDefinition::new("combat_pipeline")
         .stage(
             PipelineStage::new("init")
-                .step(PipelineStep::System("spawn_units"))
-                .step(PipelineStep::System("init_attributes")),
+                .step(PipelineStep::System("spawn_units".to_string()))
+                .step(PipelineStep::System("init_attributes".to_string())),
         )
         .stage(
             PipelineStage::new("resolve")
-                .step(PipelineStep::Rule("calculate_damage"))
-                .step(PipelineStep::Rule("apply_effects")),
+                .step(PipelineStep::Rule("calculate_damage".to_string()))
+                .step(PipelineStep::Rule("apply_effects".to_string())),
         );
 
     // 注册管线
@@ -115,9 +115,7 @@ fn pipeline_execution_uses_registry_data() {
     // ── 准备：向 DefinitionRegistry 注册 Def ──
     {
         let mut registry = app.world_mut().resource_mut::<DefinitionRegistry>();
-        let abilities = registry
-            .bucket_mut("abilities")
-            .expect("abilities bucket");
+        let abilities = registry.bucket_mut("abilities").expect("abilities bucket");
         let entry = RegistryEntry::new("abl_fireball")
             .with_data(serde_json::json!({"damage": 50, "aoe": true}));
         abilities.insert("abl_fireball", entry);
@@ -133,13 +131,13 @@ fn pipeline_execution_uses_registry_data() {
         let def = PipelineDefinition::new("damage_pipeline")
             .stage(
                 PipelineStage::new("calc")
-                    .step(PipelineStep::Rule("lookup_ability"))
-                    .step(PipelineStep::Rule("compute_damage")),
+                    .step(PipelineStep::Rule("lookup_ability".to_string()))
+                    .step(PipelineStep::Rule("compute_damage".to_string())),
             )
             .stage(
                 PipelineStage::new("apply")
-                    .step(PipelineStep::Rule("apply_damage"))
-                    .step(PipelineStep::System("spawn_effects")),
+                    .step(PipelineStep::Rule("apply_damage".to_string()))
+                    .step(PipelineStep::System("spawn_effects".to_string())),
             );
 
         app.world_mut()
@@ -183,7 +181,8 @@ fn pipeline_execution_uses_registry_data() {
             "apply_damage" => StepResult::Success,
             "spawn_effects" => {
                 // 读取效果定义 ID 并记录到上下文
-                let eff_id = ctx.get_stage_data("apply").unwrap_or(&"none".into());
+                let default = "none".to_string();
+                let eff_id = ctx.get_stage_data("apply").unwrap_or(&default);
                 ctx.set_stage_data("spawned", &format!("effects:{}", eff_id));
                 StepResult::Success
             }
@@ -213,7 +212,7 @@ fn pipeline_execution_uses_registry_data() {
 #[test]
 fn pipeline_validation_rejects_empty_id() {
     let def = PipelineDefinition::new("")
-        .stage(PipelineStage::new("s1").step(PipelineStep::System("step1")));
+        .stage(PipelineStage::new("s1").step(PipelineStep::System("step1".to_string())));
 
     let result = validate_pipeline(&def);
     assert!(result.is_err(), "empty pipeline ID should be rejected");
@@ -227,7 +226,7 @@ fn pipeline_validation_rejects_empty_id() {
 #[test]
 fn pipeline_validation_rejects_empty_stage_name() {
     let def = PipelineDefinition::new("test")
-        .stage(PipelineStage::new("").step(PipelineStep::System("step1")));
+        .stage(PipelineStage::new("").step(PipelineStep::System("step1".to_string())));
 
     let result = validate_pipeline(&def);
     assert!(result.is_err(), "empty stage name should be rejected");

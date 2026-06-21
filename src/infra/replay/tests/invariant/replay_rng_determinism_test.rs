@@ -115,11 +115,7 @@ fn two_sessions_same_input_same_rng_output() {
             "frame {}: RNG Drop output must match",
             frame_idx
         );
-        assert_eq!(
-            a_ai, b_ai,
-            "frame {}: RNG AI output must match",
-            frame_idx
-        );
+        assert_eq!(a_ai, b_ai, "frame {}: RNG AI output must match", frame_idx);
         assert_eq!(
             a_world, b_world,
             "frame {}: RNG World output must match",

@@ -224,9 +224,7 @@ fn config_path_default_uses_fre_config_dir() {
         path
     );
     // 默认回退路径是 config/fre/<relative>
-    assert!(
-        path.ends_with("fre/settings.ron") || path.ends_with("fre\\settings.ron")
-    );
+    assert!(path.ends_with("fre/settings.ron") || path.ends_with("fre\\settings.ron"));
 }
 
 #[test]
