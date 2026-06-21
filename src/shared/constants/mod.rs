@@ -11,3 +11,12 @@
 ///
 /// Violation at runtime triggers a WARN log but does not panic.
 pub const MAX_OBSERVER_DEPTH: u32 = 10;
+
+/// Maximum party members.
+pub const MAX_PARTY_SIZE: usize = 6;
+
+/// Maximum inventory slots per entity.
+pub const MAX_INVENTORY_SIZE: usize = 100;
+
+/// Default maximum buff stack count.
+pub const MAX_BUFF_STACK: usize = 5;

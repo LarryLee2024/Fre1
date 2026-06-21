@@ -33,6 +33,9 @@ tracing-subscriber = { version = "0.3", features = ["registry"] }
 paste = "1"
 regex = "1"
 
+# 非加密高速哈希（aHash 算法）
+ahash = "0.8"
+
 # 确定性 PRNG（详见 ADR-041）
 rand = "0.10"
 rand_chacha = "0.10"

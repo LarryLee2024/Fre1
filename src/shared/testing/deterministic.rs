@@ -8,8 +8,8 @@
 //! | 特性 | `TestRng` | `DeterministicRng`（四流版本） |
 //! |------|-----------|-------------------------------|
 //! | 用途 | 单元测试 | 生产代码 |
-//! | 底层 | `StdRng`（ChaCha12） | 自实现 MurmurHash3 风格混合器 |
-//! | 位置 | `shared/testing/` | `core/.../replay/foundation/` |
+//! | 底层 | `StdRng`（ChaCha12） | `ChaCha12Rng`（每流独立实例） |
+//! | 位置 | `shared/testing/` | `shared/random/` |
 //! | 流隔离 | 无（单流） | 四流（Combat/AI/Drop/World） |
 //! | Replay 兼容 | 否 | 是 |
 

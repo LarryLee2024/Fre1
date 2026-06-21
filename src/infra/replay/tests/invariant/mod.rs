@@ -1,1 +1,2 @@
+mod replay_rng_determinism_test;
 mod rng_determinism_test;

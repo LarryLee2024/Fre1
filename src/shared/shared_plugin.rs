@@ -4,6 +4,7 @@
 
 use bevy::prelude::*;
 
+use super::random::DeterministicRng;
 use super::time::GameTime;
 
 pub struct SharedPlugin;
@@ -11,6 +12,7 @@ pub struct SharedPlugin;
 impl Plugin for SharedPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(GameTime::default())
+            .init_resource::<DeterministicRng>()
             .add_systems(PreUpdate, advance_game_time);
     }
 }

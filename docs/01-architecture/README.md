@@ -662,12 +662,12 @@ src/
 | ADR-042 | 存档持久化策略 | ✅ Approved | Cross-cutting |
 | ADR-043 | 命令层与输入抽象 | ✅ Approved | Cross-cutting |
 | ADR-044 | Pipeline 引擎架构 | ✅ Approved | Cross-cutting |
-| ADR-045 | 模块可见性策略（可见性宪法） | 📋 Proposed | Foundation |
+| ADR-045 | 模块可见性策略（可见性宪法） | ✅ Accepted | Foundation |
 | ADR-046 | 模块接口模式统一（消除 api.rs） | ✅ Accepted | Foundation |
 | ADR-047 | Content 加载管线架构 | ✅ Approved | Cross-cutting |
 | ADR-050 | 游戏状态机与场景架构 | ✅ Accepted | Foundation |
 | ADR-051 | Error/Failure 分离架构（规则失败与程序错误严格区分） | ✅ Accepted | Cross-cutting |
-| ADR-053 | Localization 基础设施架构（Fluent + Key 代码生成 + 三级回退） | ✅ Proposed | Cross-cutting |
+| ADR-053 | Localization 基础设施架构（Fluent + Key 代码生成 + 三级回退） | ✅ Accepted | Cross-cutting |
 | ADR-054 | Bevy 0.19 迁移决策（Observer 优先 / Delayed Commands / BSN 范围 / Relationship） | ✅ Accepted | Foundation |
 | ADR-055 | UI 表现层架构（Projection 防火墙 / 单向数据流 / Widget Contract） | ✅ Accepted | Cross-cutting |
 | ADR-056 | 7→9 Agent 升级与三级治理体系（Content/Presentation Architect 新增、Architect 角色重定义、协作流程重构） | ✅ Accepted | Foundation |
