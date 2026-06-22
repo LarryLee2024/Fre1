@@ -404,13 +404,18 @@ docs/04-data/
 │   ├── event_schema.md
 │   └── cue_schema.md
 │
-├── infrastructure/                  # 基础设施 Schema (4 domains)
+├── infrastructure/                  # 基础设施 Schema (8 domains)
 │   ├── registry_schema.md
 │   ├── pipeline_schema.md
 │   ├── replay_schema.md
-│   └── input_schema.md
+│   ├── input_schema.md
+│   ├── logging_schema.md
+│   ├── localization_schema.md
+│   ├── camera_schema.md
+│   ├── map-asset-schema.md
+│   └── map-importer-schema.md
 │
-├── domains/                         # 业务领域 Schema (15 domains)
+├── domains/                         # 业务领域 Schema (16 domains)
 │   ├── tactical_schema.md
 │   ├── terrain_schema.md
 │   ├── faction_schema.md
@@ -425,12 +430,9 @@ docs/04-data/
 │   ├── quest_schema.md
 │   ├── economy_schema.md
 │   ├── crafting_schema.md
-│   └── summon_schema.md
+│   ├── summon_schema.md
+│   └── element_schema.md
 │
-├── bo3/                             # 参考：BG3 数据提取（已有）
-│   └── ...
-├── ll/                              # 参考：铃兰之剑数据提取（已有）
-│   └── ...
 └── references/                      # 外部参考与对比分析（可选）
     └── ...
 ```

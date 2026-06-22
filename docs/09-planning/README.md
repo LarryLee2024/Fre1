@@ -6,14 +6,21 @@
 
 ```
 09-planning/
-├── README.md                                     # 本文件
-└── done/                                         # 全部已归档（无活跃规划）
+├── README.md                               # 本文件
+├── 21-rust-features-update-plan.md         # 21个Rust特性吸收 — 项目文档全面更新
+├── menu-flow-plan.md                       # 游戏菜单流程 — ScreenType/GameState 路由与导航
+├── test-battle-scene-plan.md               # TestBattle 场景 — 零美术资产可运行战斗
+├── ui-layout-system-plan.md                # Combat HUD Zone Layout 布局系统
+└── done/                                   # 已完成归档
 ```
 
 ## 活跃规划
 
 | 文档 | 状态 | 负责人 | 创建日期 |
 |------|------|--------|----------|
+| `21-rust-features-update-plan.md` | ✅ complete | architect | 2026-06-21 | 21个Rust特性吸收 — 宪法冲突修复 + 规则文件更新（Phase 0+D 完成，Phase C Deferred） |
+| `menu-flow-plan.md` | draft | presentation-architect | 2026-06-22 | 游戏菜单流程规划 — ScreenType/GameState 路由与导航 |
+| `test-battle-scene-plan.md` | draft | feature-developer | 2026-06-22 | TestBattle 场景执行计划 — 零美术资产可运行战斗 |
 | `ui-layout-system-plan.md` | draft | presentation-architect | 2026-06-21 | Combat HUD Zone Layout, Widget Sizing, Action Chains, Visibility Rules |
 
 ---

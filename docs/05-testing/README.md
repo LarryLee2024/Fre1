@@ -28,6 +28,7 @@ tags:
 |------|------|
 | `test-spec.md` | 测试宪法 — 测试分层、回放测试、覆盖率策略 |
 | `testing-rules.md` | 测试金字塔、不变量测试、CI 门禁规则 |
+| `test-guardian-batch3-4-2026-06-18.md` | Test Guardian Batch 3+4 — 测试守护扫描报告 |
 
 ## 领域内聚测试结构（四层）
 

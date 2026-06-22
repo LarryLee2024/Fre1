@@ -20,6 +20,7 @@
 
 - [project-architecture](project-architecture.md) — DDD 三层+横切四层，架构不变式
 - [project-constraints](project-constraints.md) — 技术约束和禁止事项
+- [project-bevy-translations](project-bevy-translations.md) — Bevy 版本翻译进度与规范
 
 ## decision
 <!-- key architectural decisions -->

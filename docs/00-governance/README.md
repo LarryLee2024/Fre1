@@ -19,9 +19,6 @@ tags:
 |------|------|
 | `ai-constitution-complete.md` | AI 开发宪法 v5.0 完整版（21 部分），覆盖架构/ECS/代码/测试/日志/工程质量 |
 | `coding-rules.md` | 编码执行规范 v1.0，AI 编码自检清单，Effect/Modifier 管线保护 |
-| `bevy-0.19.md` | Bevy 0.19 版本迁移参考 |
-| `bevy-examples-catalog.md` | Bevy 官方示例目录与参考 |
-| `bevy-ecs-tilemap-examples-catalog.md` | Bevy ECS Tilemap 示例目录 |
-| `bevy-ecs-tiled-examples-catalog.md` | Bevy ECS Tiled 示例目录 |
+| `constitution-amendments-ui-spec-v1.md` | 宪法修正案——UI SSPEC 规格、AI 可消费的 Screen Specification |
 
 > 工具链 AI 规则另见 `.trae/rules/`（15 个规则文件，双轨并行）。
