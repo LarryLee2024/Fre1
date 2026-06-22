@@ -18,6 +18,7 @@ use crate::core::domains::combat::components::{
     CombatParticipant, HitPoints, TeamId, UnitIdComponent,
 };
 use crate::core::domains::tactical::components::GridPos;
+use crate::infra::picking::selection::Selection;
 
 use super::spawn::TestBattleScenario;
 
@@ -29,6 +30,12 @@ const PLAYER_COLOR: Color = Color::srgb(0.2, 0.5, 0.9);
 const ENEMY_COLOR: Color = Color::srgb(0.9, 0.2, 0.2);
 /// 其他单位颜色
 const NEUTRAL_COLOR: Color = Color::srgb(0.5, 0.5, 0.5);
+
+/// 悬停高亮颜色（金色）
+const HIGHLIGHT_COLOR: Color = Color::srgb(1.0, 0.9, 0.4);
+
+/// 选中高亮颜色（青色）
+const SELECTED_COLOR: Color = Color::srgb(0.2, 1.0, 1.0);
 
 /// 网格浅色（棋盘格亮格）
 const GRID_LIGHT: Color = Color::srgb(0.2, 0.2, 0.25);
@@ -53,9 +60,79 @@ fn create_white_texture(images: &mut Assets<Image>) -> Handle<Image> {
         TextureDimension::D2,
         vec![255u8, 255u8, 255u8, 255u8],
         TextureFormat::Rgba8UnormSrgb,
-        RenderAssetUsages::MAIN_WORLD,
+        RenderAssetUsages::MAIN_WORLD | RenderAssetUsages::RENDER_WORLD,
     );
     images.add(image)
+}
+
+// ─── 系统：单位点击处理器 ──────────────────────────────────────
+
+/// 单位点击事件处理器
+///
+/// 左键选择单位，右键取消选择。
+/// 每个单位实体通过 `.observe(on_unit_click)` 注册此处理器。
+fn on_unit_click(
+    ev: On<Pointer<Click>>,
+    unit_ids: Query<&UnitIdComponent>,
+    mut selection: ResMut<Selection>,
+) {
+    // 右键点击 → 取消选择
+    if ev.event().button == PointerButton::Secondary {
+        selection.selected_unit = None;
+        tracing::info!(target: "picking", "[Picking] Unit deselected (right-click)");
+        return;
+    }
+
+    let Ok(uid) = unit_ids.get(ev.event_target()) else {
+        return;
+    };
+    selection.selected_unit = Some(ev.event_target());
+    tracing::info!(
+        target: "picking",
+        "[Picking] Unit selected: {} (entity={:?})",
+        uid.id,
+        ev.event_target(),
+    );
+}
+
+/// 单位悬停高亮处理器（Phase 3）
+///
+/// 鼠标移入单位 Sprite 时切换为高亮颜色（金色）。
+fn on_unit_hover(ev: On<Pointer<Over>>, mut sprites: Query<&mut Sprite>) {
+    let Ok(mut sprite) = sprites.get_mut(ev.event_target()) else {
+        return;
+    };
+    sprite.color = HIGHLIGHT_COLOR;
+}
+
+/// 单位悬停恢复处理器
+///
+/// 鼠标移出时：如果单位被选中则恢复为选中色，否则恢复为队伍色。
+fn on_unit_unhover(
+    ev: On<Pointer<Out>>,
+    mut sprites: Query<&mut Sprite>,
+    participants: Query<&CombatParticipant>,
+    selection: Res<Selection>,
+) {
+    let target = ev.event_target();
+    let Ok(mut sprite) = sprites.get_mut(target) else {
+        return;
+    };
+
+    // 如果该单位是选中的单位，使用选中色而非队伍色
+    if selection.selected_unit == Some(target) {
+        sprite.color = SELECTED_COLOR;
+        return;
+    }
+
+    let Ok(participant) = participants.get(target) else {
+        return;
+    };
+    sprite.color = match participant.team_id.as_str() {
+        "Player" => PLAYER_COLOR,
+        "Enemy" => ENEMY_COLOR,
+        _ => NEUTRAL_COLOR,
+    };
 }
 
 // ─── 系统：附加单位视觉效果 ──────────────────────────────────────
@@ -92,16 +169,22 @@ pub fn attach_unit_visuals(
         let x = pos.x as f32 * 80.0 + 40.0;
         let y = pos.y as f32 * 80.0 + 40.0;
 
-        commands.entity(entity).insert((
-            Sprite {
-                image: white.clone(),
-                color,
-                custom_size: Some(Vec2::new(UNIT_SIZE, UNIT_SIZE)),
-                ..default()
-            },
-            Transform::from_xyz(x, y, 1.0),
-            Visibility::default(),
-        ));
+        commands
+            .entity(entity)
+            .insert((
+                Sprite {
+                    image: white.clone(),
+                    color,
+                    custom_size: Some(Vec2::new(UNIT_SIZE, UNIT_SIZE)),
+                    ..default()
+                },
+                Transform::from_xyz(x, y, 1.0),
+                Visibility::default(),
+                Pickable::default(),
+            ))
+            .observe(on_unit_click)
+            .observe(on_unit_hover)
+            .observe(on_unit_unhover);
 
         tracing::trace!(target: "app",
             "Attached visual for unit {} at ({}, {})",

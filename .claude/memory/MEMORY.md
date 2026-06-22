@@ -42,3 +42,4 @@
 
 - [reference-github](reference-github.md) — GitHub Issue/CI
 - [reference-bevy-source](reference-bevy-source.md) — Bevy 源码 crates/ + examples/ 本地路径
+- [adr-067-sprite-picking](adr-067-sprite-picking-architecture.md) — Sprite Picking 架构 ADR: 推荐 SpritePickingPlugin, Camera 帧时序兼容, UI Pickable::IGNORE 穿透, 四阶段实施计划

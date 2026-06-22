@@ -8,6 +8,7 @@
 
 pub mod battle;
 pub mod economy;
+pub mod selection;
 
 /// 库存投影 — 骨架阶段（待实现）
 ///

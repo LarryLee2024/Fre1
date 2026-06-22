@@ -45,20 +45,18 @@ impl Plugin for TestBattlePlugin {
         // 启动时加载配置文件
         app.add_systems(Startup, load_test_battle_scenario);
 
-        // 进入战斗场景时生成实体
+        // 进入战斗场景时：先生成实体，再附加视觉效果（.chain() 确保 flush）
         app.add_systems(
             OnEnter(GameState::Combat),
             (
-                spawn_test_battle,
-                spawn_camera_for_battle,
-                spawn_grid_background,
-            ),
-        );
-
-        // 视觉效果在实体生成后执行（延迟一帧确保 entity 存在）
-        app.add_systems(
-            OnEnter(GameState::Combat),
-            (attach_unit_visuals,).after(spawn_test_battle),
+                (
+                    spawn_test_battle,
+                    spawn_camera_for_battle,
+                    spawn_grid_background,
+                ),
+                attach_unit_visuals,
+            )
+                .chain(),
         );
     }
 }

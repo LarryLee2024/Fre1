@@ -9,6 +9,7 @@
 use bevy::prelude::*;
 
 use crate::content::LoadedAttributeDefs;
+use crate::core::capabilities::attribute::foundation::AttributeCategory;
 use crate::core::capabilities::attribute::mechanism::AttributeRegistry;
 
 /// 从 LoadedAttributeDefs 读取属性定义并注册到 AttributeRegistry。
@@ -19,12 +20,22 @@ pub(crate) fn register_attributes_from_content(
     mut registry: ResMut<AttributeRegistry>,
     mut loaded_attributes: ResMut<LoadedAttributeDefs>,
 ) {
-    let defs = std::mem::take(&mut loaded_attributes.defs);
+    let mut defs = std::mem::take(&mut loaded_attributes.defs);
     let _errors = std::mem::take(&mut loaded_attributes.errors);
 
     if defs.is_empty() {
         return;
     }
+
+    // ── 按依赖顺序排序 ──
+    // Primary → Resource → Derived → Secondary
+    // 确保依赖（如 Primary）在依赖方（如 Secondary）之前注册。
+    defs.sort_by_key(|d| match d.category {
+        AttributeCategory::Primary => 0u8,
+        AttributeCategory::Resource => 1,
+        AttributeCategory::Derived => 2,
+        AttributeCategory::Secondary => 3,
+    });
 
     info!(target: "attribute",
         event = "attribute.registration.start",

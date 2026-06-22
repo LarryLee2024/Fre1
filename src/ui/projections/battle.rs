@@ -252,7 +252,7 @@ pub fn on_character_panel_projection(
 
     // 尝试读取单位的名称用于显示；回退到通用 key。
     // TODO: Use LocalizationKey from a CharacterName component when available.
-    store.character_panel.name_key = "ui.character.unknown";
+    store.character_panel.name_key = "ui.character.unknown".to_string();
     if let Ok(name) = name_query.get(unit) {
         info!(
             target: "ui",

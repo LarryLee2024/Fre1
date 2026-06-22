@@ -9,8 +9,8 @@ use bevy::prelude::*;
 pub struct CharacterPanelVm {
     /// 角色 ID
     pub character_id: u32,
-    /// 角色名称（本地化 Key）
-    pub name_key: &'static str,
+    /// 角色名称（显示文本，不一定是本地化 Key）
+    pub name_key: String,
     /// 等级
     pub level: u32,
     /// 当前 HP

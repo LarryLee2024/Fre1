@@ -7,7 +7,8 @@ use crate::core::CorePlugin;
 use crate::core::domains::combat::integration::replay::CombatReplayBridgePlugin;
 use crate::infra::{
     camera::CameraPlugin, input::InputPlugin, localization, logging::LoggingPlugin, map::MapPlugin,
-    pipeline::PipelinePlugin, registry::RegistryPlugin, replay::ReplayPlugin, save::SavePlugin,
+    picking::plugin::PickingPlugin, pipeline::PipelinePlugin, registry::RegistryPlugin,
+    replay::ReplayPlugin, save::SavePlugin,
 };
 use crate::ui::UiPlugin;
 use crate::{
@@ -45,6 +46,7 @@ impl Plugin for AppPlugin {
             .add_plugins(SavePlugin)
             .add_plugins(InputPlugin)
             .add_plugins(CameraPlugin)
+            .add_plugins(PickingPlugin)
             .add_plugins(MapPlugin)
             .add_plugins(LoggingPlugin)
             .add_plugins(localization::LocalizationPlugin::new());

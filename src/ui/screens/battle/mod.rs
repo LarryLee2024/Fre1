@@ -28,7 +28,10 @@ use crate::infra::localization::generated::loc;
 use crate::ui::binding::{Dirty, UiBinding};
 use crate::ui::localization::text_keys::BATTLE_PHASE_PLAYER;
 use crate::ui::primitives::button::{components::ButtonVariant, factory::spawn_localized_button};
-use crate::ui::primitives::panel::{components::PanelVariant, factory::spawn_panel};
+// 注意: 根节点直接 spawn 而非通过 spawn_panel，因为根不需要背景色。
+// PanelVariant::Basic 使用不透明的 surface_primary 背景色，
+// 会遮挡底层的 2D 精灵（棋盘网格 + 棋子）。
+// 各 Zone 容器有各自的 Panel/背景，根只需做布局容器。
 use crate::ui::primitives::text::{
     components::TextVariant,
     factory::{spawn_localized_text, spawn_text},
@@ -61,21 +64,23 @@ pub fn spawn_battle_screen(
     asset_server: Res<AssetServer>,
     data: Res<BattleHudData>,
 ) {
-    // ── 0. 根节点全屏容器 ──
-    // 使用 spawn_panel 创建基础容器，覆盖 Node 为全屏尺寸。
-    // 子 Zone 使用 PositionType::Absolute 锚定到屏幕边缘，依赖父容器有明确尺寸。
-    let root = spawn_panel(&mut commands, &theme, PanelVariant::Basic);
-    commands.entity(root).insert((
-        Node {
-            width: Val::Percent(100.0),
-            height: Val::Percent(100.0),
-            flex_direction: FlexDirection::Column,
-            ..default()
-        },
-        BattleScreen,
-        Name::new("BattleScreen"),
-        Dirty::<BattleHudVm>::default(),
-    ));
+    // ── 0. 根节点全屏容器（无背景色，让 2D 精灵可见）──
+    // 不使用 spawn_panel(PanelVariant::Basic)，因为其 opaque 背景色会遮挡
+    // 底层的棋盘网格和棋子。
+    let root = commands
+        .spawn((
+            Node {
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                flex_direction: FlexDirection::Column,
+                ..default()
+            },
+            BattleScreen,
+            Pickable::IGNORE,
+            Name::new("BattleScreen"),
+            Dirty::<BattleHudVm>::default(),
+        ))
+        .id();
 
     // ── Z1: 左上区 — 回合指示器 ──
     let z1 = spawn_zone(&mut commands, &theme, BattleZone::Z1TopLeft);

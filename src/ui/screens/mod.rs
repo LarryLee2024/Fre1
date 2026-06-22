@@ -42,6 +42,10 @@ use crate::shared::game_state::GameState;
 
 use crate::ui::navigation::ScreenType;
 
+use crate::ui::projections::selection::{
+    camera_follow_selection, on_selection_changed, on_selection_visual,
+};
+
 use crate::ui::view_models::battle_hud::BattleHudData;
 
 /// ScreenPlugin — 注册所有 Screen 系统和 Observer
@@ -98,7 +102,13 @@ impl Plugin for ScreenPlugin {
             // BattleScreen 系统：Zone 可见性控制 + Dirty 消费（Update）
             .add_systems(
                 Update,
-                (battle_zone_visibility_system, on_dirty_battle_hud)
+                (
+                    on_selection_changed,
+                    on_selection_visual,
+                    camera_follow_selection,
+                    battle_zone_visibility_system,
+                    on_dirty_battle_hud,
+                )
                     .run_if(in_state(GameState::Combat)),
             );
     }

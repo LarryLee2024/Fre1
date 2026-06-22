@@ -7,6 +7,7 @@ pub mod game_setup;
 pub mod party_setup;
 pub mod plugin;
 pub mod queue;
+pub mod register;
 pub mod state;
 pub mod test_battle;
 

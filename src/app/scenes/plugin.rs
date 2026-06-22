@@ -1,14 +1,14 @@
 //! ScenePlugin — 场景管理 Plugin
 //!
 //! 注册 GameState、StateTransitionQueue、以及 Last 调度中的队列处理系统。
-//! 各场景的 OnEnter/OnExit 系统在本 Plugin 中集中注册。
+//! 各场景的 OnEnter/OnExit 系统通过 `SceneRegister` trait 集中注册。
 //!
 //! 详见 ADR-050 §4: 场景生命周期。
 
 use bevy::prelude::*;
 
-use super::components::SceneRoot;
-use super::queue::{StateTransitionQueue, cleanup_scene, process_transition_queue};
+use super::queue::{StateTransitionQueue, process_transition_queue};
+use super::register::{SceneRegister, empty};
 use super::state::GameState;
 use crate::core::domains::combat::components::BattlePhase;
 
@@ -22,32 +22,21 @@ impl Plugin for ScenePlugin {
             .insert_resource(StateTransitionQueue::default())
             .add_systems(Last, process_transition_queue);
 
-        // ── 场景生命周期桩系统 ──
-        // OnEnter: 创建场景根实体（带 SceneRoot 标记），后续由具体场景系统填充子实体。
-        // OnExit: cleanup_scene 统一 despawn 所有 SceneRoot 实体。
-        //
-        // TODO[P2][Scene]: 各场景 OnEnter 填充具体逻辑（UI 生成、资源加载等）
-        app.add_systems(OnEnter(GameState::MainMenu), setup_scene_root);
-        app.add_systems(
-            OnEnter(GameState::PartySetup),
-            (setup_scene_root, super::party_setup::spawn_party_setup),
+        // ── 场景生命周期注册 ──
+        // 每个场景自动获得：
+        //   OnEnter: setup_scene_root + 场景自定义系统
+        //   OnExit:  cleanup_scene + 场景自定义系统
+        app.register_scene(GameState::MainMenu, empty, empty);
+        app.register_scene(
+            GameState::PartySetup,
+            super::party_setup::spawn_party_setup,
+            super::party_setup::despawn_party_setup,
         );
-        app.add_systems(OnEnter(GameState::TacticalMap), setup_scene_root);
-        app.add_systems(OnEnter(GameState::Combat), setup_scene_root);
-        app.add_systems(OnEnter(GameState::Result), setup_scene_root);
-        app.add_systems(OnEnter(GameState::CampRest), setup_scene_root);
-        app.add_systems(OnEnter(GameState::GameOver), setup_scene_root);
-
-        app.add_systems(OnExit(GameState::MainMenu), cleanup_scene);
-        app.add_systems(
-            OnExit(GameState::PartySetup),
-            (cleanup_scene, super::party_setup::despawn_party_setup),
-        );
-        app.add_systems(OnExit(GameState::TacticalMap), cleanup_scene);
-        app.add_systems(OnExit(GameState::Combat), cleanup_scene);
-        app.add_systems(OnExit(GameState::Result), cleanup_scene);
-        app.add_systems(OnExit(GameState::CampRest), cleanup_scene);
-        app.add_systems(OnExit(GameState::GameOver), cleanup_scene);
+        app.register_scene(GameState::TacticalMap, empty, empty);
+        app.register_scene(GameState::Combat, empty, empty);
+        app.register_scene(GameState::Result, empty, empty);
+        app.register_scene(GameState::CampRest, empty, empty);
+        app.register_scene(GameState::GameOver, empty, empty);
 
         // ── Game command observers ──
         app.add_observer(super::game_setup::on_new_game_command);
@@ -55,13 +44,4 @@ impl Plugin for ScenePlugin {
         // ── PartySetup button handlers ──
         app.add_observer(super::party_setup::on_party_setup_button);
     }
-}
-
-/// 场景根实体创建桩系统。
-///
-/// 为当前场景创建一个带 `SceneRoot` 标记的根实体，
-/// 后续由具体场景系统在此实体下填充子实体（UI、摄像机等）。
-/// OnExit 时 `cleanup_scene` 通过 `SceneRoot` 标记 despawn 整个场景子树。
-fn setup_scene_root(mut commands: Commands) {
-    commands.spawn(SceneRoot);
 }

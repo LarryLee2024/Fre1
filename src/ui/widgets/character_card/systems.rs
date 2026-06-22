@@ -70,7 +70,7 @@ pub fn refresh_character_card_from_vm(
         }
 
         let vm = &store.character_panel;
-        state.name = vm.name_key.to_string();
+        state.name = vm.name_key.clone();
         state.level = vm.level;
         state.hp_current = vm.hp;
         state.hp_max = vm.max_hp;
@@ -80,7 +80,7 @@ pub fn refresh_character_card_from_vm(
         // 更新子级名称文本（标记了 CharacterCardNameLabel）
         for child in children.iter() {
             if let Ok((mut text, _)) = text_query.get_mut(child) {
-                text.0 = vm.name_key.to_string();
+                text.0 = vm.name_key.clone();
             }
             if let Ok((mut text, _)) = level_text_query.get_mut(child) {
                 text.0 = format!("Lv.{}", vm.level);
