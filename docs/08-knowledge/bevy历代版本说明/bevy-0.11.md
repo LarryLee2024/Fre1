@@ -1,0 +1,1158 @@
+# Bevy 0.11
+
+## Posted on July 9, 2023 by Bevy Contributors
+
+![An image representing the article](https://bevy.org/news/bevy-0-11/with_ssao.png)
+
+Thanks to **166** contributors, **522** pull requests, community reviewers, and our [**generous sponsors**](https://bevy.org/donate), we're happy to announce the **Bevy 0.11** release on [crates.io](https://crates.io/crates/bevy)!
+
+For those who don't know, Bevy is a refreshingly simple data-driven game engine built in Rust. You can check out our [Quick Start Guide](https://bevy.org/learn/quick-start/introduction/) to try it today. It's free and open source forever! You can grab the full [source code](https://github.com/bevyengine/bevy) on GitHub. Check out [Bevy Assets](https://bevy.org/assets) for a collection of community-developed plugins, games, and learning resources.
+
+To update an existing Bevy App or Plugin to **Bevy 0.11**, check out our [0.10 to 0.11 Migration Guide](https://bevy.org/learn/migration-guides/0.10-0.11/).
+
+Since our last release a few months ago we've added a _ton_ of new features, bug fixes, and quality of life tweaks, but here are some of the highlights:
+
+- **Screen Space Ambient Occlusion (SSAO)**: Increase scene render quality by simulating occlusion of "indirect" diffuse light
+- **Temporal Anti-Aliasing (TAA)**: A popular anti-aliasing technique that blends the current frame with past frames using motion vectors to smooth out artifacts
+- **Morph Targets**: Animate vertex positions on meshes between predefined states. Great for things like character customization!
+- **Robust Contrast Adaptive Sharpening (RCAS)**: Intelligently sharpens renders, which pairs nicely with TAA
+- **WebGPU Support**: Bevy can now render on the web faster and with more features using the modern WebGPU web API
+- **Improved Shader Imports**: Bevy shaders now support granular imports and other new features
+- **Parallax Mapping**: Materials now support an optional depth map, giving flat surfaces a feel of depth through parallaxing the material's textures
+- **Schedule-First ECS APIs**: A simpler and more ergonomic ECS system scheduling API
+- **Immediate Mode Gizmo Rendering**: Easily and efficiently render 2D and 3D shapes for debugging and editor scenarios
+- **ECS Audio APIs**: A more intuitive and idiomatic way to play back audio
+- **UI Borders**: UI nodes can now have configurable borders!
+- **Grid UI Layout**: Bevy UI now supports CSS-style grid layout
+- **UI Performance Improvements**: The UI batching algorithm was changed, yielding significant performance wins
+
+## Screen Space Ambient Occlusion [#](https://bevy.org/news/bevy-0-11/#screen-space-ambient-occlusion)
+
+authors: @JMS55, @danchia, @superdump
+
+Drag this image to compare
+
+![The Sponza scene without SSAO, it contains a lot of persian-style velvet curtains, they look awkward.](https://bevy.org/news/bevy-0-11/no_ssao.png)![The Sponza scene with SSAO, the curtains look much more realistic and sculptued. SSAO darkens the ridges between the folds, making the curtains much more interesting to look at](https://bevy.org/news/bevy-0-11/with_ssao.png)
+
+**SSAO Only** ![ssao_only](https://bevy.org/news/bevy-0-11/ssao_only.png)
+
+Bevy now supports Screen Space Ambient Occlusion (SSAO). While Bevy already supported shadows from direct lights ([`DirectionalLight`](https://docs.rs/bevy/0.11.0/bevy/pbr/struct.DirectionalLight.html), [`PointLight`](https://docs.rs/bevy/0.11.0/bevy/pbr/struct.PointLight.html), [`SpotLight`](https://docs.rs/bevy/0.11.0/bevy/pbr/struct.SpotLight.html)) via shadow mapping, Bevy now supports shadows from _indirect_ diffuse lighting such as [`AmbientLight`](https://docs.rs/bevy/0.11.0/bevy/pbr/struct.AmbientLight.html) or [`EnvironmentMapLight`](https://docs.rs/bevy/0.11.0/bevy/pbr/struct.EnvironmentMapLight.html).
+
+These shadows give scenes a more "grounded" feel, by estimating how much surrounding geometry blocks incoming light via the screen-space depth and normal prepasses. You can try it out in the new [SSAO example](https://github.com/bevyengine/bevy/blob/v0.11.0/examples/3d/ssao.rs).
+
+Note that using SSAO with the newly added Temporal Anti-Aliasing leads to a _large_ increase in quality and noise reduction.
+
+Platform support is currently limited - Only Vulkan, DirectX12, and Metal are currently supported. WebGPU support will come at a later date. WebGL likely won't be supported because it doesn't have compute shaders.
+
+Special thanks to Intel for their open source [XeGTAO](https://github.com/GameTechDev/XeGTAO) project, which was a huge help in developing this feature.
+
+## Temporal Anti-Aliasing [#](https://bevy.org/news/bevy-0-11/#temporal-anti-aliasing)
+
+authors: @JMS55, @DGriffin91
+
+Drag this image to compare
+
+![The Helmet model with MSAA, anti-aliasing. The edge between meshes are well aliased, but crenellation is noticeable on sharp shadows and specular highlights](https://bevy.org/news/bevy-0-11/msaa_helmet.png)![With TAA, little crenellation is visible, but it feels a bit 'smudgy'](https://bevy.org/news/bevy-0-11/taa_helmet.png)
+
+Alongside MSAA and FXAA, Bevy now supports Temporal Anti-aliasing (TAA) as an anti-aliasing option.
+
+TAA works by blending the newly rendered frame with past frames in order to smooth out aliasing artifacts in the image. TAA has become increasingly popular in the industry because of its ability to cover up so many rendering artifacts: it smooths out shadows (both global illumination and "casted" shadows), mesh edges, textures, and reduces specular aliasing of light on reflective surfaces. However because the "smoothing" effect is so apparent, some people prefer other methods.
+
+Here's a quick rundown of the following advantages and disadvantages of each anti-aliasing method that Bevy supports:
+
+- **Multi-Sample Antialiasing (MSAA)**
+    - Does a good job at smoothing the edges of meshes (anti geometric aliasing). Does not help with specular aliasing. Performance cost scales with triangle count, and performs very poorly on scenes with many triangles
+- **Fast Approximate Antialiasing (FXAA)**
+    - Does a decent job of dealing with both geometric and specular aliasing. Very little performance cost in all scenes. Somewhat blurry and low quality results
+- **Temporal Antialiasing (TAA)**
+    - Does a very good job at dealing with both geometric and specular aliasing. Does a good job at dealing with temporal aliasing, where high-frequency details flicker over time or as you move the camera around or as things animate. Performance cost is moderate, and scales only with screen resolution. Chance of "ghosting" where meshes or lighting effects may leave trails behind them that fade over time. Although TAA helps with reducing temporal aliasing, it may also introduce additional temporal aliasing, especially on thin geometry or texture detail rendered at a distance. Requires 2 view's worth of additional GPU memory, as well as enabling the motion vector and depth prepasses. Requires accurate motion vector and depth prepasses, which complicates custom materials
+
+TAA implementations are a series of tradeoffs and rely on heuristics that are easy to get wrong. In Bevy 0.11, TAA is marked as an experimental feature for the following reasons:
+
+- TAA does not currently work with the following Bevy features: skinning, morph targets, and parallax mapping
+- TAA currently tends to soften the image a bit, which can be worked around via post-process sharpening
+- Our TAA heuristics are not currently user-configurable (and these heuristics are likely to change and evolve)
+
+We will continue to improve quality, compatibility, and performance in future releases. Please report any bugs you encounter!
+
+You can compare all of our anti-aliasing methods in Bevy's improved [anti-aliasing example](https://github.com/bevyengine/bevy/blob/v0.11.0/examples/3d/anti_aliasing.rs).
+
+## Robust Contrast Adaptive Sharpening [#](https://bevy.org/news/bevy-0-11/#robust-contrast-adaptive-sharpening)
+
+authors: @Elabajaba
+
+Effects like TAA and FXAA can cause the final render to become blurry. Sharpening post processing effects can help counteract that. In **Bevy 0.11** we've added a port of AMD's Robust Contrast Adaptive Sharpening (RCAS).
+
+Drag this image to compare
+
+![TAA](https://bevy.org/news/bevy-0-11/rcas_off.png)![TAA+RCAS](https://bevy.org/news/bevy-0-11/rcas_on.png)
+
+Notice that the texture on the leather part of the helmet is much crisper!
+
+## Morph Targets [#](https://bevy.org/news/bevy-0-11/#morph-targets)
+
+authors: @nicopap, @cart
+
+Bevy, since the 0.7 release, supports 3D animations.
+
+But it only supported _skeletal_ animations. Leaving on the sidewalk a common animation type called _morph targets_ (aka blendshapes, aka keyshapes, and a slew of other names). This is the grandparent of all 3D character animation! [Crash Bandicoot](https://en.wikipedia.org/wiki/Crash_Bandicoot_\(video_game\)#Gameplay)'s run cycle used morph targets.
+
+Character model by [Samuel Rosario](https://www.artstation.com/zambrah) (© all rights reserved), used with permission. Modified by nicopap, using the [Snow](https://studio.blender.org/characters/snow/v2/) character texture by Demeter Dzadik for Blender Studios [(🅯 CC-BY)](https://creativecommons.org/licenses/by/4.0/).
+
+Nowadays, an animation artist will typically use a skeleton rig for wide moves and morph targets to clean up the detailed movements.
+
+When it comes to game assets, however, the complex skeleton rigs used by artists for faces and hands are too heavy. Usually, the poses are "baked" into morph poses, and facial expression transitions are handled in the engine through morph targets.
+
+Morph targets is a very simple animation method. Take a model, have a base vertex position, move the vertices around to create several poses:
+
+**Default**
+
+![A wireframe rendering of a character's face with a neutral expression](https://bevy.org/news/bevy-0-11/default-pose-bw.png)
+
+**Frown**
+
+![Wireframe rendering of a frowning character](https://bevy.org/news/bevy-0-11/frown-pose-bw.png)
+
+**Smirk**
+
+![Wireframe rendering of a smirking character](https://bevy.org/news/bevy-0-11/smirk-pose-bw.png)
+
+Store those poses as a difference between the default base mesh and the variant pose, then, at runtime, _mix_ each pose. Now that we have the difference with the base mesh, we can get the variant pose by simply adding to the base vertices positions.
+
+That's it, the morph target shader looks like this:
+
+```rust
+fn morph_vertex(vertex: Vertex) {
+    for (var i: u32 = 0u; i < pose_count(); i++) {
+        let weight = weight_for_pose(i);
+        vertex.position += weight * get_difference(vertex.index, position_offset, i);
+        vertex.normal += weight * get_difference(vertex.index, normal_offset, i);
+    }
+}
+```
+
+In Bevy, we store the weights per pose in the `MorphWeights` component.
+
+```rust
+fn set_weights_system(mut morph_weights: Query<&mut MorphWeights>) {
+    for mut entity_weights in &mut morph_weights {
+        let weights = entity_weights.weights_mut();
+
+        weights[0] = 0.5;
+        weights[1] = 0.25;
+    }
+}
+```
+
+Now assuming that we have two morph targets, (1) the frown pose, (2) the smirk pose:
+
+**[0.0, 0.0]**
+
+default pose
+
+![Neutral face expression](https://bevy.org/news/bevy-0-11/morph_target_default-0.png)
+
+**[1.0, 0.0]**
+
+frown only
+
+![Frowning](https://bevy.org/news/bevy-0-11/morph_target_frown-0.png)
+
+**[0.0, 1.0]**
+
+smirk only
+
+![Smirking](https://bevy.org/news/bevy-0-11/morph_target_smirk.png)
+
+**[0.5, 0.0]**
+
+half frown
+
+![Slightly frowning](https://bevy.org/news/bevy-0-11/morph_target_frown-half-0.png)
+
+**[1.0, 1.0]**
+
+both at max
+
+![Making faces](https://bevy.org/news/bevy-0-11/morph_target_both-0.png)
+
+**[0.5, 0.25]**
+
+bit of both
+
+![Slightly frowning/smirking](https://bevy.org/news/bevy-0-11/morph_target_smirk-quarter-frown-half-0.png)
+
+While conceptually simple, it requires communicating to the GPU a tremendous amount of data. Thousand of vertices, each 288 bits, several model variations, sometimes a hundred.
+
+We store the vertex data as pixels in a 3D texture. This allows morph targets to not only run on WebGPU, but also on the WebGL2 wgpu backend.
+
+This could be improved in a number of ways, but it is sufficient for an initial implementation.
+
+## Parallax Mapping [#](https://bevy.org/news/bevy-0-11/#parallax-mapping)
+
+author: @nicopap
+
+Bevy now supports parallax mapping and depth maps. Parallax mapping puts normal maps to shame when it comes to giving "illusion of depth" to a material. The top half of this video uses parallax mapping plus a normal map, whereas the bottom half only uses a normal map:
+
+earth view, elevation & night view by NASA (public domain)
+
+Notice how it is not merely the shading of pixels that changes, but their actual position on screen. The mountaintops hide mountain ridges behind themselves. High mountains move faster than coastal areas.
+
+Parallax mapping moves pixels according to the perspective and depth on the surface of the geometry. Adding true 3D depth to flat surfaces.
+
+All of that, without adding a single vertex to the geometry. The whole globe has exactly 648 vertices. Unlike a more primitive shader, such as displacement mapping, parallax mapping only requires an additional grayscale image, called the `depth_map`.
+
+Games often use parallax mapping for cobblestones or brick walls, so let's make a brick wall in Bevy! First, we spawn a mesh:
+
+```rust
+commands.spawn(PbrBundle {
+    mesh: meshes.add(shape::Box::new(30.0, 10.0, 1.0).into()),
+    material: materials.add(StandardMaterial {
+        base_color: Color::WHITE,
+        ..default()
+    }),
+    ..default()
+});
+```
+
+![A 3D desert scene with two flat white walls and a pebble path winding between them](https://bevy.org/news/bevy-0-11/parallax_mapping_none_mini.jpg)
+
+Of course, it's just a flat white box, we didn't add any texture. So let's add a normal map:
+
+```rust
+normal_map_texture: Some(assets.load("normal_map.png")),
+```
+
+![The same scene with normal maps](https://bevy.org/news/bevy-0-11/parallax_mapping_normals_mini.jpg)
+
+This is much better. The shading changes according to the light direction too! However, the specular highlights on the corner are overbearing, almost noisy.
+
+Let's see how a depth map can help:
+
+```rust
+depth_map: Some(assets.load("depth_map.png")),
+```
+
+![The same scene with a depth texture](https://bevy.org/news/bevy-0-11/parallax_mapping_depth_mini.jpg)
+
+We eliminated the noise! There is also that sweet 3D feel reminiscent of 90's games pre-rendered cinematic sequences.
+
+So what's going on, why does parallax mapping eliminate the ugly specular lights on the wall?
+
+This is because parallax mapping insets the ridges between bricks, so that they are occluded by the bricks themselves.
+
+![Illustration of the previous paragraph](https://bevy.org/news/bevy-0-11/ridge-light-view-1.svg)
+
+Since normal maps do not "move" the shaded areas, merely shade them differently, we get those awkward specular highlights. With parallax mapping, they are gone.
+
+Drag this image to compare
+
+![Normals Only](https://bevy.org/news/bevy-0-11/parallax_mapping_normals.jpg)![Parallax & Normal Mapping](https://bevy.org/news/bevy-0-11/parallax_mapping_depth.jpg)
+
+Parallax mapping in Bevy is still very limited. The most painful aspect is that it is not a standard glTF feature, meaning that the depth texture needs to be programmatically added to materials if they came from a GLTF file.
+
+Additionally, parallax mapping is incompatible with the temporal antialiasing shader, doesn't work well on curved surfaces, and doesn't affect object's silhouettes.
+
+However, those are not fundamental limitations of parallax mapping, and may be fixed in the future.
+
+## Skyboxes [#](https://bevy.org/news/bevy-0-11/#skyboxes)
+
+authors: @JMS55, @superdump
+
+![skybox](https://bevy.org/news/bevy-0-11/skybox.png)
+
+Bevy now has built-in support for displaying an HDRI environment as your scene background.
+
+Simply attach the new [`Skybox`](https://docs.rs/bevy/0.11.0/bevy/core_pipeline/struct.Skybox.html) component to your [`Camera`](https://docs.rs/bevy/0.11.0/bevy/render/camera/struct.Camera.html). It pairs well with the existing [`EnvironmentMapLight`](https://docs.rs/bevy/0.11.0/bevy/pbr/struct.EnvironmentMapLight.html), which will use the environment map to light the scene.
+
+We also plan to add support for built-in procedural skyboxes sometime in the future!
+
+## WebGPU Support [#](https://bevy.org/news/bevy-0-11/#webgpu-support)
+
+authors: @mockersf, many others throughout Bevy's development
+
+![webgpu](https://bevy.org/news/bevy-0-11/webgpu.svg)
+
+Bevy now supports WebGPU rendering on the web (in addition to WebGL 2). WebGPU support is still rolling out, but if you have [a supported web browser](https://caniuse.com/webgpu) you can explore our new [live WebGPU examples](https://bevy.org/examples-webgpu) page.
+
+### What is WebGPU? [#](https://bevy.org/news/bevy-0-11/#what-is-webgpu)
+
+WebGPU is an [exciting new web standard](https://github.com/gpuweb/gpuweb) for doing modern GPU graphics and compute. It takes inspiration from Vulkan, Direct3D 12, and Metal. In fact, it is generally implemented on top of these APIs under the hood. WebGPU gives us access to more GPU features than WebGL2 (such as compute shaders) and also has the potential to be much faster. It means that more of Bevy's native renderer features are now also available on the web. It also uses the new [WGSL shader language](https://www.w3.org/TR/WGSL). We're very happy with how WGSL has evolved over time and Bevy uses it internally for our shaders. We also added usability features like imports! But with Bevy you still have the option to use GLSL if you prefer.
+
+### How it Works [#](https://bevy.org/news/bevy-0-11/#how-it-works)
+
+Bevy is built on top of the [wgpu](https://github.com/gfx-rs/wgpu) library, which is a modern low-level GPU API that can target pretty much every popular API: Vulkan, Direct3D 12, Metal, OpenGL, WebGL2, and WebGPU. The best backend API is selected for a given platform. It is a "native" rendering API, but it generally follows the WebGPU terminology and API design. Unlike WebGPU, it can provide direct access to the native APIs, which means Bevy [enjoys a "best of all worlds" situation](https://bevy.org/news/bevy-webgpu/#how-it-works).
+
+### WebGPU Examples [#](https://bevy.org/news/bevy-0-11/#webgpu-examples)
+
+Click one of the images below to check out our live WebGPU examples (if your [browser supports it](https://caniuse.com/webgpu)):
+
+[![webgpu examples](https://bevy.org/news/bevy-0-11/webgpu_examples.png)](https://bevy.org/examples-webgpu)
+
+## Improved Shader Imports [#](https://bevy.org/news/bevy-0-11/#improved-shader-imports)
+
+authors: @robtfm
+
+Bevy's rendering engine has a lot of great options and features. For example, the PBR `StandardMaterial` pipeline supports desktop/webgpu and webgl, 6 optional mesh attributes, 4 optional textures, and a plethora of optional features like fog, skinning, and alpha blending modes, with more coming in every release.
+
+Many feature combos need specialized shader variants, and with over 3000 lines of shader code split over 50 files in total, the text-substitution-based shader processor was beginning to creak at the seams.
+
+This release we've switched to using [naga_oil](https://github.com/bevyengine/naga_oil), which gives us a module-based shader framework. It compiles each file individually to naga's IR and then combines them into a final shader on demand. This doesn't have much visible impact yet, but it does give a few immediate benefits:
+
+- The engine's shader code is easier to navigate and less magical. Previously there was only a single global scope, so items could be referenced even if they were only imported indirectly. This sometimes made it hard to locate the actual code behind the reference. Now items must be explicitly imported, so you can always tell where a variable or function originated just by looking at the current file:  
+    ![imported items](https://bevy.org/news/bevy-0-11/imported_items.png)
+- Shaders now have codespan reporting, an error will point you to the shader file and line number, preventing a lot of hair pulling in complex shader codebases:  
+    ![codespan](https://bevy.org/news/bevy-0-11/codespan.png)
+- naga_oil's preprocessor supports a few more conditional directives, you can use `#else if` and `#else ifndef` as well as `#else ifdef` which was previously supported
+- Functions, variables and structs are all properly scoped so a shader file doesn't need to use globally unique names to avoid conflicts
+- Shader defs can be added to modules directly. For example, any shader that imports `bevy_pbr::mesh_view_types` now has `MAX_DIRECTIONAL_LIGHTS` automatically defined, there's no longer a need to remember to add it for every new pipeline that uses the module.
+
+The future possibilities are more exciting. Using naga IR opens the door to a bunch of nice features that we hope to bring in future releases:
+
+- Automatic bind slot allocation will let plugins extend the core view bindgroup, which means self-contained plugins for features like lighting and shadow methods, common material properties, etc become viable. This will allow us to modularise the core pipelines to make growing the codebase - while keeping support for multiple targets - more sustainable
+- "Virtual" shader functions will allow user modifications to core functions (like lighting), and potentially lead to a template-style material system, where users can provide "hooks" that will be called at the right point in the pipeline
+- Language interop: mix and match glsl and wgsl, so bevy's pbr pipeline features could be accessed from your glsl material shader, or utils written for glsl could be used in wgsl code. We're hopeful that this can extend to spirv (and rust-gpu) as well
+- More cool stuff we haven't thought of yet. Being able to inspect and modify shaders at runtime is very powerful and makes a lot of things possible!
+
+## UI Node Borders [#](https://bevy.org/news/bevy-0-11/#ui-node-borders)
+
+authors: @ickshonpe
+
+UI nodes now draws borders, whose color can be configured with the new [`BorderColor`](https://docs.rs/bevy/0.11.0/bevy/ui/struct.BorderColor.html) component:
+
+![borders](https://bevy.org/news/bevy-0-11/borders.png)
+
+```rust
+commands.spawn(ButtonBundle {
+    style: Style {
+        border: UiRect::all(Val::Px(5.0)),
+        ..default()
+    },
+    border_color: BorderColor(Color::rgb(0.9, 0.9, 0.9)),
+    ..default()
+})
+```
+
+Each side of the border is configurable:
+
+![border sides](https://bevy.org/news/bevy-0-11/border-sides.png)
+
+## Grid UI Layout [#](https://bevy.org/news/bevy-0-11/#grid-ui-layout)
+
+authors: @nicoburns
+
+In Bevy UI we wired up the new `grid` feature in the layout library we use ([Taffy](https://github.com/DioxusLabs/taffy)). This enables CSS-style grid layouts:
+
+![grid](https://bevy.org/news/bevy-0-11/grid.png)
+
+This can be configured on the [`Style`](https://docs.rs/bevy/0.11.0/bevy/ui/struct.Style.html) component:
+
+```rust
+Style {
+    /// Use grid layout for this node
+    display: Display::Grid,
+    /// Make the grid have a 1:1 aspect ratio
+    /// This means the width will adjust to match the height
+    aspect_ratio: Some(1.0),
+    // Add 24px of padding around the grid
+    padding: UiRect::all(Val::Px(24.0)),
+    /// Set the grid to have 4 columns all with sizes minmax(0, 1fr)
+    /// This creates 4 exactly evenly sized columns
+    grid_template_columns: RepeatedGridTrack::flex(4, 1.0),
+    /// Set the grid to have 4 rows all with sizes minmax(0, 1fr)
+    /// This creates 4 exactly evenly sized rows
+    grid_template_rows: RepeatedGridTrack::flex(4, 1.0),
+    /// Set a 12px gap/gutter between rows and columns
+    row_gap: Val::Px(12.0),
+    column_gap: Val::Px(12.0),
+    ..default()
+},
+```
+
+## Schedule-First ECS APIs [#](https://bevy.org/news/bevy-0-11/#schedule-first-ecs-apis)
+
+authors: @cart
+
+In **Bevy 0.10** we introduced [ECS Schedule V3](https://bevy.org/news/bevy-0-10/#ecs-schedule-v3), which _vastly_ improved the capabilities of Bevy ECS system scheduling: scheduler API ergonomics, system chaining, the ability to run exclusive systems and apply deferred system operations at any point in a schedule, a single unified schedule, configurable System Sets, run conditions, and a better State system.
+
+However it pretty quickly became clear that the new system still had some areas to improve:
+
+- **Base Sets were hard to understand and error prone**: What _is_ a Base Set? When do I use them? Why do they exist? Why is my ordering implicitly invalid due to incompatible Base Set ordering? Why do some schedules have a default Base Set while others don't? [Base Sets were confusing!](https://github.com/bevyengine/bevy/pull/8079#base-set-confusion)
+- **There were too many ways to schedule a System**: We've accumulated too many scheduling APIs. As of Bevy **0.10**, we had [_SIX_ different ways to add a system to the "startup" schedule](https://github.com/bevyengine/bevy/pull/8079#unify-system-apis). Thats too many ways!
+- **Too much implicit configuration**: There were both default Schedules and default Base Sets. In some cases systems had default schedules or default base sets, but in other cases they didn't! [A system's schedule and configuration should be explicit and clear](https://github.com/bevyengine/bevy/pull/8079#schedule-should-be-clear).
+- **Adding Systems to Schedules wasn't ergonomic**: Things like `add_system(foo.in_schedule(CoreSchedule::Startup))` were not fun to type or read. We created special-case helpers, such as `add_startup_system(foo)`, but [this required more internal code, user-defined schedules didn't benefit from the special casing, and it completely hid the `CoreSchedule::Startup` symbol!](https://github.com/bevyengine/bevy/pull/8079#ergonomic-system-adding).
+
+### Unraveling the Complexity [#](https://bevy.org/news/bevy-0-11/#unraveling-the-complexity)
+
+If your eyes started to glaze over as you tried to wrap your head around this, or phrases like "implicitly added to the `CoreSet::Update` Base Set" filled you with dread ... don't worry. After [a lot of careful thought](https://github.com/bevyengine/bevy/pull/8079) we've unraveled the complexity and built something clear and simple.
+
+In **Bevy 0.11** the "scheduling mental model" is _much_ simpler thanks to **Schedule-First ECS APIs**:
+
+```rust
+app
+    .add_systems(Startup, (a, b))
+    .add_systems(Update, (c, d, e))
+    .add_systems(FixedUpdate, (f, g))
+    .add_systems(PostUpdate, h)
+    .add_systems(OnEnter(AppState::Menu), enter_menu)
+    .add_systems(OnExit(AppState::Menu), exit_menu)
+```
+
+- **There is _exactly_ one way to schedule systems**
+    - Call `add_systems`, state the schedule name, and specify one or more systems
+- **Base Sets have been entirely removed in favor of Schedules, which have friendly / short names**
+    - Ex: The `CoreSet::Update` Base Set has become `Update`
+- **There is no implicit or implied configuration**
+    - Default Schedules and default Base Sets don't exist
+- **The syntax is easy on the eyes and ergonomic**
+    - Schedules are first so they "line up" when formatted
+
+To compare, expand this to see what it used to be!
+
+```rust
+app
+    // Startup system variant 1.
+    // Has an implied default StartupSet::Startup base set
+    // Has an implied CoreSchedule::Startup schedule
+    .add_startup_systems((a, b))
+    // Startup system variant 2.
+    // Has an implied default StartupSet::Startup base set
+    // Has an implied CoreSchedule::Startup schedule
+    .add_systems((a, b).on_startup())
+    // Startup system variant 3.
+    // Has an implied default StartupSet::Startup base set
+    .add_systems((a, b).in_schedule(CoreSchedule::Startup))
+    // Update system variant 1.
+    // `CoreSet::Update` base set and `CoreSchedule::Main` are implied
+    .add_system(c)
+    // Update system variant 2 (note the add_system vs add_systems difference)
+    // `CoreSet::Update` base set and `CoreSchedule::Main` are implied
+    .add_systems((d, e))
+    // No implied default base set because CoreSchedule::FixedUpdate doesn't have one
+    .add_systems((f, g).in_schedule(CoreSchedule::FixedUpdate))
+    // `CoreSchedule::Main` is implied, in_base_set overrides the default CoreSet::Update set
+    .add_system(h.in_base_set(CoreSet::PostUpdate))
+    // This has no implied default base set
+    .add_systems(enter_menu.in_schedule(OnEnter(AppState::Menu)))
+    // This has no implied default base set
+    .add_systems(exit_menu.in_schedule(OnExit(AppState::Menu)))
+```
+
+Note that normal "system sets" still exist! You can still use sets to organize and order your systems:
+
+```rust
+app.add_systems(Update, (
+    (walk, jump).in_set(Movement),
+    collide.after(Movement),
+))
+```
+
+The `configure_set` API has also been adjusted for parity:
+
+```rust
+// Bevy 0.10
+app.configure_set(Foo.after(Bar).in_schedule(PostUpdate))
+// Bevy 0.11
+app.configure_set(PostUpdate, Foo.after(Bar))
+```
+
+## Nested System Tuples and Chaining [#](https://bevy.org/news/bevy-0-11/#nested-system-tuples-and-chaining)
+
+authors: @cart
+
+It is now possible to infinitely nest tuples of systems in a `.add_systems` call!
+
+```rust
+app.add_systems(Update, (
+    (a, (b, c, d, e), f),
+    (g, h),
+    i
+))
+```
+
+At first glance, this might not seem very useful. But in combination with per-tuple configuration, it allows you to easily and cleanly express schedules:
+
+```rust
+app.add_systems(Update, (
+    (attack, defend).in_set(Combat).before(check_health),
+    check_health,
+    (handle_death, respawn).after(check_health)
+))
+```
+
+`.chain()` has also been adapted to support arbitrary nesting! The ordering in the example above could be rephrased like this:
+
+```rust
+app.add_systems(Update,
+    (
+        (attack, defend).in_set(Combat),
+        check_health,
+        (handle_death, respawn)
+    ).chain()
+)
+```
+
+This will run `attack` and `defend` first (in parallel), then `check_health`, then `handle_death` and `respawn` (in parallel).
+
+This allows for powerful and expressive "graph-like" ordering expressions:
+
+```rust
+app.add_systems(Update,
+    (
+        (a, (b, c, d).chain()),
+        (e, f),
+    ).chain()
+)
+```
+
+This will run `a` in parallel with `b->c->d`, then after those have finished running it will run `e` and `f` in parallel.
+
+## Gizmos [#](https://bevy.org/news/bevy-0-11/#gizmos)
+
+authors: @devil-ira, @mtsr, @aevyrie, @jannik4, @lassade, @The5-1, @Toqozz, @nicopap
+
+It is often helpful to be able to draw simple shapes and lines in 2D and 3D for things like editor controls, and debug views. Game development is a very "spatial" thing and being able to quickly draw shapes is the visual equivalent of "print line debugging". It helps answer questions like "is this ray casting in the right direction?" and "is this collider big enough?"
+
+In **Bevy 0.11** we've added an "immediate mode" [`Gizmos`](https://docs.rs/bevy/0.11.0/bevy/gizmos/gizmos/struct.Gizmos.html) drawing API that makes these things easy and efficient. In 2D and 3D you can draw lines, rects, circles, arcs, spheres, cubes, line strips, and more!
+
+**2D Gizmos** ![2d gizmos](https://bevy.org/news/bevy-0-11/2d_gizmos.png) **3D Gizmos** ![3d gizmos](https://bevy.org/news/bevy-0-11/3d_gizmos.png)
+
+From any system you can spawn shapes into existence (for both 2D and 3D):
+
+```rust
+fn system(mut gizmos: Gizmos) {
+    // 2D
+    gizmos.line_2d(Vec2::new(0., 0.), Vec2::new(0., 10.), Color::RED);
+    gizmos.circle_2d(Vec2::new(0., 0.), 40., Color::BLUE);
+    // 3D
+    gizmos.circle(Vec3::ZERO, Vec3::Y, 3., Color::BLACK);
+    gizmos.ray(Vec3::new(0., 0., 0.), Vec3::new(5., 5., 5.), Color::BLUE);
+    gizmos.sphere(Vec3::ZERO, Quat::IDENTITY, 3.2, Color::BLACK)
+}
+```
+
+Because the API is "immediate mode", gizmos will only be drawn on frames where they are "queued up", which means you don't need to worry about cleaning up gizmo state!
+
+Gizmos are drawn in batches, which means they are very cheap. You can have hundreds of thousands of them!
+
+## ECS Audio APIs [#](https://bevy.org/news/bevy-0-11/#ecs-audio-apis)
+
+authors: @inodentry
+
+Bevy's audio playback APIs have been reworked to integrate more cleanly with Bevy's ECS.
+
+In previous versions of Bevy you would play back audio like this:
+
+```rust
+#[derive(Resource)]
+struct MyMusic {
+    sink: Handle<AudioSink>,
+}
+
+fn play_music(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    audio: Res<Audio>,
+    audio_sinks: Res<Assets<AudioSink>>
+) {
+    let weak_handle = audio.play(asset_server.load("my_music.ogg"));
+    let strong_handle = audio_sinks.get_handle(weak_handle);
+    commands.insert_resource(MyMusic {
+        sink: strong_handle,
+    });
+}
+```
+
+That is a lot of boilerplate just to play a sound! Then to adjust playback you would access the [`AudioSink`](https://docs.rs/bevy/0.11.0/bevy/audio/struct.AudioSink.html) like this:
+
+```rust
+
+fn pause_music(my_music: Res<MyMusic>, audio_sinks: Res<Assets<AudioSink>>) {
+    if let Some(sink) = audio_sinks.get(&my_music.sink) {
+        sink.pause();
+    }
+}
+```
+
+Treating audio playback as a resource created a number of problems and notably didn't play well with things like Bevy Scenes. In **Bevy 0.11**, audio playback is represented as an [`Entity`](https://docs.rs/bevy/0.11.0/bevy/ecs/entity/struct.Entity.html) with [`AudioBundle`](https://docs.rs/bevy/0.11.0/bevy/audio/type.AudioBundle.html) components:
+
+```rust
+#[derive(Component)]
+struct MyMusic;
+
+fn play_music(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands.spawn((
+        AudioBundle {
+            source: asset_server.load("my_music.ogg"),
+            ..default()
+        },
+        MyMusic,
+    ));
+}
+```
+
+The `mode` field in the [`PlaybackSettings`](https://docs.rs/bevy/0.11.0/bevy/audio/struct.PlaybackSettings.html) struct offers a straightforward way to manage the lifecycle of these audio entities.
+
+By passing a [`PlaybackMode`](https://docs.rs/bevy/0.11.0/bevy/audio/enum.PlaybackMode.html), you are able to choose whether it plays once or repeatedly, using `Once` and `Loop` respectively. If you anticipate that the audio might be played again, you can save resources by temporarily unloading it using `Despawn`, or free up its memory immediately if it is a one-time effect using `Remove`.
+
+```rust
+AudioBundle {
+    source: asset_server.load("hit_sound.ogg"),
+    settings: PlaybackSettings {
+        mode: PlaybackMode::Despawn,
+        ..default()
+    }
+}
+```
+
+Much simpler! To adjust playback you can query for the [`AudioSink`](https://docs.rs/bevy/0.11.0/bevy/audio/struct.AudioSink.html) component:
+
+```rust
+fn pause_music(query_music: Query<&AudioSink, With<MyMusic>>) {
+    if let Ok(sink) = query.get_single() {
+        sink.pause();
+    }
+}
+```
+
+## Global Audio Volume [#](https://bevy.org/news/bevy-0-11/#global-audio-volume)
+
+authors: @mrchantey
+
+Bevy now has a global volume level which can be configured via the [`GlobalVolume`] resource:
+
+```rust
+app.insert_resource(GlobalVolume::new(0.2));
+```
+
+## Resource Support in Scenes [#](https://bevy.org/news/bevy-0-11/#resource-support-in-scenes)
+
+authors: @Carbonhell, @Davier
+
+Bevy's scene format is a very useful tool for serializing and deserializing game state to and from scene files.
+
+Previously, the captured state was limited to only entities and their components. With **Bevy 0.11**, scenes now support serializing resources as well.
+
+This adds a new `resources` field to the scene format:
+
+```rust
+(
+    resources: {
+        "my_game::stats::TotalScore": (
+            score: 9001,
+        ),
+    },
+    entities: {
+        // Entity scene data...
+    },
+)
+```
+
+## Scene Filtering [#](https://bevy.org/news/bevy-0-11/#scene-filtering)
+
+authors: @MrGVSV
+
+When serializing data to a scene, all components and [resources](https://bevy.org/news/bevy-0-11/#resource-support-in-scenes) are serialized by default. In previous versions, you had to use the given `TypeRegistry` to act as a filter, leaving out the types you don't want included.
+
+In 0.11, there's now a dedicated `SceneFilter` type to make filtering easier, cleaner, and more intuitive. This can be used with [`DynamicSceneBuilder`](https://docs.rs/bevy/0.11.0/bevy/prelude/struct.DynamicSceneBuilder.html) to have fine-grained control over what actually gets serialized.
+
+We can `allow` a subset of types:
+
+```rust
+let mut builder = DynamicSceneBuilder::from_world(&world);
+let scene = builder
+    .allow::<ComponentA>()
+    .allow::<ComponentB>()
+    .extract_entity(entity)
+    .build();
+```
+
+Or `deny` them:
+
+```rust
+let mut builder = DynamicSceneBuilder::from_world(&world);
+let scene = builder
+    .deny::<ComponentA>()
+    .deny::<ComponentB>()
+    .extract_entity(entity)
+    .build();
+```
+
+## Default Font [#](https://bevy.org/news/bevy-0-11/#default-font)
+
+authors: @mockersf
+
+Bevy now supports a configurable default font and embeds a tiny default font (a minimal version of [Fira Mono](https://fonts.google.com/specimen/Fira+Mono)). This is useful if you use a common font throughout your project. And it makes it easier to prototype new changes with a "placeholder font" without worrying about setting it on each node.
+
+![default font](https://bevy.org/news/bevy-0-11/default_font.png)
+
+## UI Texture Atlas Support [#](https://bevy.org/news/bevy-0-11/#ui-texture-atlas-support)
+
+authors: @mwbryant
+
+Previously UI `ImageBundle` Nodes could only use handles to full images without an ergonomic way to use `TextureAtlases` in UI. In this release we add support for an `AtlasImageBundle` UI Node which brings the existing `TextureAtlas` support into UI.
+
+This was achieved by merging the existing mechanisms that allows text rendering to select which glyph to use and the mechanisms that allow for `TextureAtlasSprite`.
+
+## Gamepad Rumble API [#](https://bevy.org/news/bevy-0-11/#gamepad-rumble-api)
+
+authors: @johanhelsing, @nicopap
+
+You can now use the `EventWriter<GamepadRumbleRequest>` system parameter to trigger controllers force-feedback motors.
+
+[`gilrs`](https://crates.io/crates/gilrs), the crate Bevy uses for gamepad support, allows controlling force-feedback motors. Sadly, there were no easy way of accessing the force-feedback API in Bevy without tedious bookkeeping.
+
+Now Bevy has the `GamepadRumbleRequest` event to do just that.
+
+```rust
+fn rumble_system(
+    gamepads: Res<Gamepads>,
+    mut rumble_requests: EventWriter<GamepadRumbleRequest>,
+) {
+    for gamepad in gamepads.iter() {
+        rumble_requests.send(GamepadRumbleRequest::Add {
+            gamepad,
+            duration: Duration::from_secs(5),
+            intensity: GamepadRumbleIntensity::MAX,
+        });
+    }
+}
+```
+
+The `GamepadRumbleRequest::Add` event triggers a force-feedback motor, controlling how long the vibration should last, the motor to activate, and the vibration strength. `GamepadRumbleRequest::Stop` immediately stops all motors.
+
+## New Default Tonemapping Method [#](https://bevy.org/news/bevy-0-11/#new-default-tonemapping-method)
+
+authors: @JMS55
+
+In **Bevy 0.10** we [made tonemapping configurable with a ton of new tonemapping options](https://bevy.org/news/bevy-0-10/#more-tonemapping-choices). In **Bevy 0.11** we've switched the default tonemapping method from "Reinhard luminance" tonemapping to "TonyMcMapface":
+
+Drag this image to compare
+
+![Reinhard-luminance](https://bevy.org/news/bevy-0-11/tm_reinhard_luminance.png)![TonyMcMapface](https://bevy.org/news/bevy-0-11/tm_tonymcmapface.png)
+
+TonyMcMapface ([created by Tomasz Stachowiak](https://github.com/h3r2tic/tony-mc-mapface)) is a much more neutral display transform that tries to stay as close to the input "light" as possible. This helps retain artistic choices in the scene. Notably, brights desaturate across the entire spectrum (unlike Reinhard luminance). It also works much better with bloom when compared to Reinhard luminance.
+
+## EntityRef Queries [#](https://bevy.org/news/bevy-0-11/#entityref-queries)
+
+authors: @james7132
+
+[`EntityRef`](https://docs.rs/bevy/0.11.0/bevy/ecs/world/struct.EntityRef.html) now implements [`WorldQuery`](https://docs.rs/bevy/0.11.0/bevy/ecs/query/trait.WorldQuery.html), which makes it easier to query for arbitrary components in your ECS systems:
+
+```rust
+fn system(query: Query<EntityRef>) {
+    for entity in &query {
+        if let Some(mesh) = entity.get::<Handle<Mesh>>() {
+            let transform = entity.get::<Transform>().unwrap();
+        }
+    }
+}
+```
+
+Note that [`EntityRef`](https://docs.rs/bevy/0.11.0/bevy/ecs/world/struct.EntityRef.html) queries access every entity and every component in the entire [`World`](https://docs.rs/bevy/0.11.0/bevy/ecs/world/struct.World.html) by default. This means that they will conflict with any "mutable" query:
+
+```rust
+/// These queries will conflict, making this system invalid
+fn system(query: Query<EntityRef>, mut enemies: Query<&mut Enemy>) { }
+```
+
+To resolve conflicts (or reduce the number of entities accessed), you can add filters:
+
+```rust
+/// These queries will not conflict
+fn system(
+    players: Query<EntityRef, With<Player>>,
+    mut enemies: Query<&mut Enemy, Without<Player>>
+) {
+    // only iterates players
+    for entity in &players {
+        if let Some(mesh) = entity.get::<Handle<Mesh>>() {
+            let transform = entity.get::<Transform>().unwrap();
+        }
+    }
+}
+```
+
+Note that it will generally still be more ergonomic (and more efficient) to query for the components you want directly:
+
+```rust
+fn system(players: Query<(&Transform, &Handle<Mesh>), With<Player>>) {
+    for (transform, mesh) in &players {
+    }
+}
+```
+
+## Screenshot API [#](https://bevy.org/news/bevy-0-11/#screenshot-api)
+
+authors: @TheRawMeatball
+
+Bevy now has a simple screenshot API that can save a screenshot of a given window to the disk:
+
+```rust
+fn take_screenshot(
+    mut screenshot_manager: ResMut<ScreenshotManager>,
+    input: Res<Input<KeyCode>>,
+    primary_window: Query<Entity, With<PrimaryWindow>>,
+) {
+    if input.just_pressed(KeyCode::Space) {
+        screenshot_manager
+            .save_screenshot_to_disk(primary_window.single(), "screenshot.png")
+            .unwrap();
+    }
+}
+```
+
+## RenderTarget::TextureView [#](https://bevy.org/news/bevy-0-11/#rendertarget-textureview)
+
+authors: @mrchantey
+
+The [`Camera`](https://docs.rs/bevy/0.11.0/bevy/render/camera/struct.Camera.html) [`RenderTarget`](https://docs.rs/bevy/0.11.0/bevy/render/camera/enum.RenderTarget.html) can now be set to a wgpu [`TextureView`](https://docs.rs/bevy/0.11.0/bevy/render/render_resource/struct.TextureView.html). This allows 3rd party Bevy Plugins to manage a [`Camera`](https://docs.rs/bevy/0.11.0/bevy/render/camera/struct.Camera.html)'s texture. One particularly interesting use case that this enables is XR/VR support. A few community members have already [proven this out!](https://github.com/bevyengine/bevy/issues/115#issuecomment-1436749201)
+
+## Improved Text Wrapping [#](https://bevy.org/news/bevy-0-11/#improved-text-wrapping)
+
+authors: @ickshonpe
+
+Previous versions of Bevy didn't properly wrap text because it calculated the actual text prior to calculating layout. **Bevy 0.11** adds a "text measurement step" that calculates the text size prior to layout, then computes the actual text _after_ layout.
+
+![text wrap](https://bevy.org/news/bevy-0-11/text_wrap.png)
+
+There is also a new `NoWrap` variant on the [`BreakLineOn`](https://docs.rs/bevy/0.11.0/bevy/text/enum.BreakLineOn.html) setting, which can disable text wrapping entirely when that is desirable.
+
+## Faster UI Render Batching [#](https://bevy.org/news/bevy-0-11/#faster-ui-render-batching)
+
+authors: @ickshonpe
+
+We got a huge UI performance win for some cases by avoiding breaking up UI batches when the texture changes but the next node is untextured.
+
+Here is a profile of our "many buttons" stress test. Red is before the optimization and Yellow is after:
+
+![ui profile](https://bevy.org/news/bevy-0-11/ui_profile.png)
+
+## Better Reflect Proxies [#](https://bevy.org/news/bevy-0-11/#better-reflect-proxies)
+
+authors: @MrGVSV
+
+Bevy's reflection API has a handful of structs which are collectively known as "dynamic" types. These include [`DynamicStruct`](https://docs.rs/bevy/0.11.0/bevy/reflect/struct.DynamicStruct.html), [`DynamicTuple`](https://docs.rs/bevy/0.11.0/bevy/reflect/struct.DynamicTuple.html), and more, and they are used to dynamically construct types of any shape or form at runtime. These types are also used to create are commonly referred to as "proxies", which are dynamic types that are used to represent an actual concrete type.
+
+These proxies are what powers the [`Reflect::clone_value`](https://docs.rs/bevy/0.11.0/bevy/reflect/trait.Reflect.html#tymethod.clone_value) method, which generates these proxies under the hood in order to construct a runtime clone of the data.
+
+Unfortunately, this results in a few [subtle footguns](https://github.com/bevyengine/bevy/issues/6601) that could catch users by surprise, such as the hashes of proxies differing from the hashes of the concrete type they represent, proxies not being considered equivalent to their concrete counterparts, and more.
+
+While this release does not necessarily fix these issues, it does establish a solid foundation for fixing them in the future. The way it does this is by changing how a proxy is defined.
+
+Before 0.11, a proxy was only defined by cloning the concrete type's [`Reflect::type_name`](https://docs.rs/bevy/0.11.0/bevy/reflect/trait.Reflect.html#tymethod.type_name) string and returning it as its own `Reflect::type_name`.
+
+Now in 0.11, a proxy is defined by copying a reference to the static [`TypeInfo`](https://docs.rs/bevy/0.11.0/bevy/reflect/enum.TypeInfo.html) of the concrete type. This will allow us to access more of the concrete type's type information dynamically, without requiring the `TypeRegistry`. In a [future release](https://github.com/bevyengine/bevy/pull/8695), we will make use of this to store hashing and comparison strategies in the `TypeInfo` directly in order to mitigate the proxy issues mentioned above.
+
+## `FromReflect` Ergonomics [#](https://bevy.org/news/bevy-0-11/#fromreflect-ergonomics)
+
+authors: @MrGVSV
+
+Bevy's [reflection API](https://docs.rs/bevy_reflect/latest/bevy_reflect/index.html) commonly passes around data using type-erased `dyn Reflect` trait objects. This can usually be downcast back to its concrete type using `<dyn Reflect>::downcast_ref::<T>`; however, this doesn't work if the underlying data has been converted to a "dynamic" representation (e.g. `DynamicStruct` for struct types, `DynamicList` for list types, etc.).
+
+```rust
+let data: Vec<i32> = vec![1, 2, 3];
+
+let reflect: &dyn Reflect = &data;
+let cloned: Box<dyn Reflect> = reflect.clone_value();
+
+// `reflect` really is a `Vec<i32>`
+assert!(reflect.is::<Vec<i32>>());
+assert!(reflect.represents::<Vec<i32>>());
+
+// `cloned` is a `DynamicList`, but represents a `Vec<i32>`
+assert!(cloned.is::<DynamicList>());
+assert!(cloned.represents::<Vec<i32>>());
+
+// `cloned` is equivalent to the original `reflect`, despite not being a `Vec<i32>`
+assert!(cloned.reflect_partial_eq(reflect).unwrap_or_default());
+```
+
+To account for this, the [`FromReflect`](https://docs.rs/bevy_reflect/latest/bevy_reflect/trait.FromReflect.html) trait can be used to convert any `dyn Reflect` trait object back into its concrete type— whether it is actually that type or a dynamic representation of it. And it can even be called dynamically using the [`ReflectFromReflect`](https://docs.rs/bevy_reflect/latest/bevy_reflect/struct.ReflectFromReflect.html) type data.
+
+Before 0.11, users had to be manually derive `FromReflect` for every type that needed it, as well as manually register the `ReflectFromReflect` type data. This made it cumbersome to use and also meant that it was often forgotten about, resulting in reflection conversions difficulties for users downstream.
+
+Now in 0.11, `FromReflect` is automatically derived and `ReflectFromReflect` is automatically registered for all types that derive `Reflect`. This means most types will be `FromReflect`-capable by default, thus reducing boilerplate and empowering logic centered around `FromReflect`.
+
+Users can still opt out of this behavior by adding the [`#[reflect(from_reflect = false)]`](https://docs.rs/bevy_reflect/latest/bevy_reflect/derive.Reflect.html#reflectfrom_reflect--false) attribute to their type.
+
+```rust
+#[derive(Reflect)]
+struct Foo;
+
+#[derive(Reflect)]
+#[reflect(from_reflect = false)]
+struct Bar;
+
+fn test<T: FromReflect>(value: T) {}
+
+test(Foo); // <-- OK!
+test(Bar); // <-- ERROR! `Bar` does not implement trait `FromReflect`
+```
+
+## Deref Derive Attribute [#](https://bevy.org/news/bevy-0-11/#deref-derive-attribute)
+
+authors: @MrGVSV
+
+Bevy code tends to make heavy use of the [newtype](https://doc.rust-lang.org/rust-by-example/generics/new_types.html) pattern, which is why we have dedicated derives for [`Deref`](https://docs.rs/bevy/latest/bevy/prelude/derive.Deref.html) and [`DerefMut`](https://docs.rs/bevy/latest/bevy/prelude/derive.DerefMut.html).
+
+This previously only worked for structs with a single field:
+
+```rust
+#[derive(Resource, Deref, DerefMut)]
+struct Score(i32);
+```
+
+For 0.11, we've improved these derives by adding the `#[deref]` attribute, which allows them to be used on structs with multiple fields. This makes working with generic newtypes much easier:
+
+```rust
+#[derive(Component, Deref, DerefMut)]
+struct Health<T: Character> {
+    #[deref] // <- use the `health` field as the `Deref` and `DerefMut` target
+    health: u16,
+    _character_type: PhantomData<T>,
+}
+```
+
+## Simpler RenderGraph Construction [#](https://bevy.org/news/bevy-0-11/#simpler-rendergraph-construction)
+
+authors: @IceSentry, @cart
+
+Adding `Node`s to the `RenderGraph` requires a lot of boilerplate. In this release, we tried to reduce this for most common operations. No existing APIs have been removed, these are only helpers made to simplify working with the `RenderGraph`.
+
+We added the `RenderGraphApp` trait to the `App`. This trait contains various helper functions to reduce the boilerplate with adding nodes and edges to a graph.
+
+Another pain point of `RenderGraph` `Node`s is passing the view entity through each node and manually updating the query on that view. To fix this we added a `ViewNode` trait and `ViewNodeRunner` that will automatically take care of running the `Query` on the view entity. We also made the view entity a first-class concept of the `RenderGraph`. So you can now access the view entity the graph is currently running on from anywhere in the graph without passing it around between each `Node`.
+
+All these new APIs assume that your Node implements `FromWorld` or `Default`.
+
+Here's what it looks like in practice for the `BloomNode`:
+
+```rust
+// Adding the node to the 3d graph
+render_app
+    // To run a ViewNode you need to create a ViewNodeRunner
+    .add_render_graph_node::<ViewNodeRunner<BloomNode>>(
+        CORE_3D,
+        core_3d::graph::node::BLOOM,
+    );
+
+// Defining the node
+#[derive(Default)]
+struct BloomNode;
+// This can replace your `impl Node` block of any existing `Node` that operated on a view
+impl ViewNode for BloomNode {
+    // You need to define your view query as an associated type
+    type ViewQuery = (
+        &'static ExtractedCamera,
+        &'static ViewTarget,
+        &'static BloomSettings,
+    );
+    // You don't need Node::input() or Node::update() anymore. If you still need these they are still available but they have an empty default implementation.
+    fn run(
+        &self,
+        graph: &mut RenderGraphContext,
+        render_context: &mut RenderContext,
+        // This is the result of your query. If it is empty the run function will not be called
+        (camera, view_target, bloom_settings): QueryItem<Self::ViewQuery>,
+        world: &World,
+    ) -> Result<(), NodeRunError> {
+        // When using the ViewNode you probably won't need the view entity but here's how to get it if you do
+        let view_entity = graph.view_entity();
+
+        // Run the node
+    }
+}
+```
+
+## `#[reflect(default)]` on Enum Variant Fields [#](https://bevy.org/news/bevy-0-11/#reflect-default-on-enum-variant-fields)
+
+authors: @MrGVSV
+
+When using the `FromReflect` trait, fields marked `#[reflect(default)]` will be set to their `Default` value if they don't exist on the reflected object.
+
+Previously, this was only supported on struct fields. Now, it is also supported on all enum variant fields.
+
+```rust
+#[derive(Reflect)]
+enum MyEnum {
+    Data {
+        #[reflect(default)]
+        a: u32,
+        b: u32,
+    },
+}
+
+let mut data = DynamicStruct::default ();
+data.insert("b", 1);
+
+let dynamic_enum = DynamicEnum::new("Data", data);
+
+let my_enum = MyEnum::from_reflect( & dynamic_enum).unwrap();
+assert_eq!(u32::default(), my_enum.a);
+```
+
+## Delayed Asset Hot Reloading [#](https://bevy.org/news/bevy-0-11/#delayed-asset-hot-reloading)
+
+authors: @JMS55
+
+Bevy now waits 50 milliseconds after an "asset changed on filesystem" event before reloading an asset. Reloading without a delay resulted in reading invalid asset contents on some systems. The wait time is configurable.
+
+## Custom glTF Vertex Attributes [#](https://bevy.org/news/bevy-0-11/#custom-gltf-vertex-attributes)
+
+authors: @komadori
+
+It is now possible to load meshes with custom vertex attributes from glTF files. Custom attributes can be mapped to Bevy's [`MeshVertexAttribute`](https://docs.rs/bevy/0.11.0/bevy/render/mesh/struct.MeshVertexAttribute.html) format used by the [`Mesh`](https://docs.rs/bevy/0.11.0/bevy/render/mesh/struct.Mesh.html) type in the [`GltfPlugin`](https://docs.rs/bevy/0.11.0/bevy/gltf/struct.GltfPlugin.html) settings. These attrtibutes can then be used in Bevy shaders. For an example, check out our [new example](https://github.com/bevyengine/bevy/blob/v0.11.0/examples/2d/custom_gltf_vertex_attribute.rs).
+
+![custom vertex attribute](https://bevy.org/news/bevy-0-11/custom_vertex.png)
+
+## Stable TypePath [#](https://bevy.org/news/bevy-0-11/#stable-typepath)
+
+authors: @soqb, @tguichaoua
+
+Bevy has historically used [`std::any::type_name`](https://doc.rust-lang.org/std/any/fn.type_name.html) to identify Rust types with friendly names in a number of places: Bevy Reflect, Bevy Scenes, Bevy Assets, Bevy ECS, and others. Unfortunately, Rust makes no guarantees about the stability or format of [`type_name`](https://doc.rust-lang.org/std/any/fn.type_name.html), which makes it theoretically shakey ground to build on (although in practice it has been stable so far).
+
+There is also no built in way to retrieve "parts" of a type name. If you want the short name, the name of a generic type without its inner types, the module name, or the crate name, you must do string operations on the [`type_name`](https://doc.rust-lang.org/std/any/fn.type_name.html) (which can be error prone / nontrivial).
+
+Additionally, [`type_name`](https://doc.rust-lang.org/std/any/fn.type_name.html) cannot be customized. In some cases an author might choose to identify a type with something other than its full module path (ex: if they prefer a shorter path or want to abstract out private / internal modules).
+
+For these reasons, we've developed a new stable [`TypePath`](https://docs.rs/bevy/0.11.0/bevy/reflect/trait.TypePath.html), which is automatically implemented for any type deriving [`Reflect`](https://docs.rs/bevy/0.11.0/bevy/reflect/trait.Reflect.html). Additionally, it can be manually derived in cases where [`Reflect`](https://docs.rs/bevy/0.11.0/bevy/reflect/trait.Reflect.html) isn't derived.
+
+```rust
+mod my_mod {
+    #[derive(Reflect)]
+    struct MyType;
+}
+
+/// prints: "my_crate::my_mod::MyType"
+println!("{}", MyType::type_path());
+/// prints: "MyType"
+println!("{}", MyType::short_type_path());
+/// prints: "my_crate"
+println!("{}", MyType::crate_name().unwrap());
+/// prints: "my_crate::my_mod"
+println!("{}", MyType::module_path().unwrap());
+```
+
+This also works for generics, which can come in handy:
+
+```rust
+// prints: "Option<MyType>"
+println!("{}", Option::<MyType>::short_type_path());
+// prints: "Option"
+println!("{}", Option::<MyType>::type_ident().unwrap());
+```
+
+[`TypePath`](https://docs.rs/bevy/0.11.0/bevy/reflect/trait.TypePath.html) can be customized by type authors:
+
+```rust
+#[derive(TypePath)]
+#[type_path = "some_crate::some_module"]
+struct MyType;
+```
+
+We are in the process of porting Bevy's internal [`type_name`](https://doc.rust-lang.org/std/any/fn.type_name.html) usage over to [`TypePath`](https://docs.rs/bevy/0.11.0/bevy/reflect/trait.TypePath.html), which should land in **Bevy 0.12**.
+
+## `run_if` for Tuples of Systems [#](https://bevy.org/news/bevy-0-11/#run-if-for-tuples-of-systems)
+
+authors: @geieredgar
+
+It is now possible to add ["run conditions"](https://bevy.org/news/bevy-0-10/#run-conditions) to tuples of systems:
+
+```rust
+app.add_systems(Update, (run, jump).run_if(in_state(GameState::Playing)))
+```
+
+This will evaluate the "run condition" exactly once and use the result for each system in the tuple.
+
+This allowed us to remove the `OnUpdate` system set for states (which was previously used to run groups of systems when they are in a given state).
+
+## `Has` Queries [#](https://bevy.org/news/bevy-0-11/#has-queries)
+
+authors: @wainwrightmark
+
+You can now use `Has<Component>` in queries, which will return true if that component exists and false if it does not:
+
+```rust
+fn system(query: Query<Has<Player>>) {
+    for has_player in &query {
+        if has_player {
+            // do something
+        }
+    }
+}
+```
+
+## Derive `Event` [#](https://bevy.org/news/bevy-0-11/#derive-event)
+
+authors: @CatThingy
+
+The Bevy [`Event`](https://docs.rs/bevy/0.11.0/bevy/ecs/event/trait.Event.html) trait is now derived instead of being auto-impled for everything:
+
+```rust
+#[derive(Event)]
+struct Collision {
+    a: Entity,
+    b: Entity,
+}
+```
+
+This prevents some classes of error, makes [`Event`](https://docs.rs/bevy/0.11.0/bevy/ecs/event/trait.Event.html) types more self-documenting, and provides consistency with other Bevy ECS traits like Components and Resources. It also opens the doors to configuring the [`Event`](https://docs.rs/bevy/0.11.0/bevy/ecs/event/trait.Event.html) storage type, which we plan to do in future releases.
+
+## Cubic Curve Example [#](https://bevy.org/news/bevy-0-11/#cubic-curve-example)
+
+authors: @Kjolnyr
+
+An example that shows how to draw a 3D curve and move an object along the path:
+
+![cubic_curve](https://bevy.org/news/bevy-0-11/cubic_curve.png)
+
+## Size Constraints Example [#](https://bevy.org/news/bevy-0-11/#size-constraints-example)
+
+authors: @ickshonpe
+
+An interactive example that shows how the various [`Style`](https://docs.rs/bevy/0.11.0/bevy/ui/struct.Style.html) size constraints affect UI nodes.
+
+![size constraints](https://bevy.org/news/bevy-0-11/size_constraints.png)
+
+## Display and Visibility Example [#](https://bevy.org/news/bevy-0-11/#display-and-visibility-example)
+
+authors: @ickshonpe
+
+An example that shows how display and visibility settings affect UI nodes.
+
+![display and visibility](https://bevy.org/news/bevy-0-11/display_and_visibility.png)
+
+## No More Bors! [#](https://bevy.org/news/bevy-0-11/#no-more-bors)
+
+authors: @cart, @mockersf
+
+Bevy has historically used the Bors merge system to ensure we never merge a pull request on GitHub that breaks our CI validation. This was a critical piece of infrastructure that ensured we could collaborate safely and effectively. Fortunately GitHub has _finally_ rolled out [Merge Queues](https://github.blog/changelog/2023-02-08-pull-request-merge-queue-public-beta/), which solve the same problems as Bors, with the benefit of being more tightly integrated with GitHub.
+
+For this release cycle we migrated to Merge Queues and we're very happy with the experience!
+
+## New CI Jobs [#](https://bevy.org/news/bevy-0-11/#new-ci-jobs)
+
+authors: @mockersf
+
+We've added a number of new CI jobs that improve the Bevy development experience:
+
+- A daily job that runs Bevy's mobile examples on real Android and iOS devices! This helps protect against regressions that might not be caught by the compiler
+- Added the ability to take screenshots in CI, which can be used to validate the results of Bevy example runs
+- A job that leaves a GitHub comment on PRs that are missing a feature or example doc update
+
+## What's Next? [#](https://bevy.org/news/bevy-0-11/#what-s-next)
+
+We have plenty of work that is pretty much finished and is therefore very likely to land in **Bevy 0.12**:
+
+- **Bevy Asset V2**: A brand new asset system that adds "asset preprocessing", optional asset .meta files, recursive asset dependency tracking and events, async asset IO, better asset handles, more efficient asset storage, and a variety of usability improvements! The work here is [pretty much finished](https://github.com/bevyengine/bevy/pull/8624). It _almost_ made it in to Bevy 0.11 but it needed a bit more time to cook.
+- **PBR Material Light Transmission**: Transmission / screen space refractions allows for simulating materials like glass, plastics, liquids and gels, gemstones, wax, etc. This one is also pretty much [ready to go](https://github.com/bevyengine/bevy/pull/8015)!
+- **TAA Improvements**: We have a number of changes in the works for TAA that will improve its quality, speed, and support within the engine.
+- **GPU Picking**: Efficiently and correctly [select entities on the GPU](https://github.com/bevyengine/bevy/pull/8784) by using color ids to identify meshes in renders.
+- **PCF For Directional and Spotlight Shadows**: [Reduce aliasing on the edges of shadows](https://github.com/bevyengine/bevy/pull/8006)
+- **UI Node Border Radius and Shadows**: Add [curvature and "drop shadows"](https://github.com/bevyengine/bevy/pull/8973) to your UI nodes!
+- **Deferred Rendering**: Bevy already does "mixed mode" forward rendering by having optional separate passes for depth and normals. We are currently experimenting with supporting "fully deferred" rendering as well, which opens the doors to new effects and different performance tradeoffs.
+
+From a high level, we plan to focus on the Asset System, UI, Render Features, and Scenes during the next cycle.
+
+Check out the [**Bevy 0.12 Milestone**](https://github.com/bevyengine/bevy/milestone/14) for an up-to-date list of current work being considered for **Bevy 0.12**.
