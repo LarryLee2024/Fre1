@@ -34,30 +34,35 @@ pub struct BattleProjection;
 impl BattleProjection {
     /// 将 `BattleStarted` 事件投影到 `UiStore.battle_hud`。
     ///
-    /// 将回合计数器初始化为 1，并将阶段键设置为玩家阶段。
+    /// 将回合计数器初始化为 1，将阶段键设置为玩家阶段，
+    /// 并标记为战斗状态。
     pub fn on_battle_started(store: &mut UiStore, _event: &BattleStarted) {
         let hud = &mut store.battle_hud;
         hud.turn_number = 1;
         hud.phase_key = "ui.battle.phase.player";
+        hud.is_player_controlled = true;
+        hud.is_in_battle = true;
         info!(target: "ui", "[BattleProjection] Battle started — HUD initialized");
     }
 
     /// 将 `TurnStarted` 事件投影到 `UiStore.battle_hud`。
     ///
-    /// 递增回合计数器并将阶段键设置为玩家阶段
-    /// （当前简化模型中回合开始后的第一个阶段）。
-    pub fn on_turn_started(store: &mut UiStore, _event: &TurnStarted) {
+    /// 递增回合计数器，将阶段键设置为玩家阶段，
+    /// 记录当前单位 ID，并标记为玩家控制回合。
+    pub fn on_turn_started(store: &mut UiStore, event: &TurnStarted) {
         let hud = &mut store.battle_hud;
         hud.turn_number += 1;
         hud.phase_key = "ui.battle.phase.player";
+        hud.current_unit_id = event.unit.to_bits();
+        hud.is_player_controlled = true;
     }
 
     /// 将 `TurnEnded` 事件投影到 `UiStore.battle_hud`。
     ///
-    /// 将阶段键设置为敌方阶段，反映玩家的
-    /// 活跃回合已结束。
+    /// 将阶段键设置为敌方阶段，标记为非玩家控制回合。
     pub fn on_turn_ended(store: &mut UiStore, _event: &TurnEnded) {
         store.battle_hud.phase_key = "ui.battle.phase.enemy";
+        store.battle_hud.is_player_controlled = false;
         info!(target: "ui", "[BattleProjection] Turn ended — phase set to enemy");
     }
 

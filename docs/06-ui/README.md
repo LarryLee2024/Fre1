@@ -241,6 +241,7 @@ Domain Event → Observer → Projection → ViewModel → Widget 刷新
 | `03-screens/overlays.md` | 🟡 需补全 Overlay 规格 | presentation-architect | 2026-06-20 |
 | `04-data-flow/projection-viewmodel.md` | ✅ code-aligned | presentation-architect | 2026-06-21 |
 | `04-data-flow/camera-ui-interaction.md` | ✅ 完整 | presentation-architect | 2026-06-21 |
+| `04-data-flow/map-rendering.md` | ✅ 完整 | presentation-architect | 2026-06-21 |
 | `05-testing/testing.md` | 🟡 partially-implemented | presentation-architect | 2026-06-21 |
 | `07-specs/README.md` | ✅ active | presentation-architect | 2026-06-22 |
 | `07-specs/screen-spec-template.md` | ✅ active | presentation-architect | 2026-06-22 |
@@ -249,6 +250,7 @@ Domain Event → Observer → Projection → ViewModel → Widget 刷新
 | `07-specs/screens/inventory_screen.md` | ✅ active | presentation-architect | 2026-06-22 |
 | `07-specs/screens/battle_screen.md` | ✅ active | presentation-architect | 2026-06-22 |
 | `07-specs/screens/shop_screen.md` | ✅ active | presentation-architect | 2026-06-22 |
+| `07-specs/screens/save_load_screen.md` | ✅ active | presentation-architect | 2026-06-22 |
 | `07-specs/references/widget-id-map.md` | ✅ active | presentation-architect | 2026-06-22 |
 | `07-specs/references/z-layer-spec.md` | ✅ active | presentation-architect | 2026-06-22 |
 | `07-specs/references/layout-intent-library.md` | ✅ active | presentation-architect | 2026-06-22 |

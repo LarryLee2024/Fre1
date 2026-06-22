@@ -16,6 +16,8 @@ tags:
 
 > **职责**: @presentation-architect | **上游**: ADR-055 §4.3-§4.4 (FontSize/FontSource), §7 (状态分级) | domain rules §1 (StyleToken, Theme 定义), §INV-UI-007, §INV-UI-008 | schema §5 (StyleToken), §6 (UiSettings), §13 (ID 策略) | ADR-053 (Localization)
 
+> **SSPEC参考**: docs/06-ui/07-specs/ — AI-Consumable Screen Specification 标准。新增 Screen 必须先写 SSPEC，见 ADR-066。
+
 ---
 
 ## 1. 设计目的

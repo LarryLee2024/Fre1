@@ -19,6 +19,8 @@ tags:
 
 > **职责**: @presentation-architect | **上游**: ADR-055 §6 (UI Root 分层) | domain rules §5.5-§5.7 (流程定义), §INV-UI-006 | schema §4.8-§4.9 (NotificationVm, ModalVm) | navigation-overlay.md §4 (Overlay 独立层设计), §2 (UI Root 分层)
 
+> **SSPEC参考**: docs/06-ui/07-specs/ — AI-Consumable Screen Specification 标准。新增 Screen 必须先写 SSPEC，见 ADR-066。
+
 ---
 
 > **实现状态**: NotificationOverlay, TooltipOverlay, DamageTextOverlay, LoadingOverlay, DebugOverlay 均已实现（code-aligned）。本文档的设计与代码一致。

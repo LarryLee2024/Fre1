@@ -1,8 +1,12 @@
-//! BattleScreen Zone Visibility — controlled by BattlePhase + unit selection state
+//! BattleScreen Zone Visibility — controlled by UiStore.battle_hud.is_in_battle
+//!
+//! Data source: UiStore (ViewModel firewall), no direct domain state queries.
+//! Zone visibility is driven by the `is_in_battle` projection field set on
+//! BattleStarted and cleared on screen despawn.
 
 use bevy::prelude::*;
 
-use crate::core::domains::combat::components::BattlePhase;
+use crate::ui::view_models::UiStore;
 
 use super::layout::BattleZone;
 
@@ -17,14 +21,11 @@ use super::layout::BattleZone;
 /// - Z7 (EndTurn button + SkillPanel): Visible during BattlePhase::Battle
 /// - Z8 (TurnOrderBar): Always visible (empty until P2)
 pub fn battle_zone_visibility_system(
-    battle_phase: Option<Res<State<BattlePhase>>>,
+    store: Res<UiStore>,
     zone_query: Query<(Entity, &BattleZone)>,
     mut visibility_query: Query<&mut Visibility>,
 ) {
-    let Some(phase) = battle_phase else {
-        return;
-    };
-    let in_battle = phase.get() == &BattlePhase::Battle;
+    let in_battle = store.battle_hud.is_in_battle;
 
     for (entity, zone) in zone_query.iter() {
         let visible = match zone {

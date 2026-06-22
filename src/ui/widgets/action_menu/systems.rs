@@ -2,13 +2,17 @@
 //!
 //! 每帧同步 ActionMenuState 到子按钮的禁用状态。
 //! 由 ActionMenuPlugin 注册到 Update 调度。
+//!
+//! Data source: UiStore (ViewModel firewall), no direct domain state queries.
+//! Current unit ID is sourced from BattleHudVm.current_unit_id instead of
+//! directly querying TurnQueue from the combat domain.
 
 use bevy::prelude::*;
 
-use crate::core::domains::combat::components::TurnQueue;
 use crate::ui::application::UiCommand;
 use crate::ui::primitives::button::components::ButtonState;
 use crate::ui::primitives::button::events::ButtonClicked;
+use crate::ui::view_models::UiStore;
 
 use super::components::{ActionMenuState, ActionType};
 
@@ -38,10 +42,13 @@ pub fn action_menu_sync_system(
 ///
 /// 当 button_interaction_system 触发 ButtonClicked 事件时，
 /// 检查按钮实体是否携带 ActionType 组件，映射到对应的 UiCommand。
+///
+/// Current unit ID sourced from UiStore.battle_hud.current_unit_id,
+/// not from the combat domain TurnQueue resource.
 pub fn on_action_menu_button_clicked(
     on: On<ButtonClicked>,
     query: Query<&ActionType>,
-    turn_queue: Option<Res<TurnQueue>>,
+    store: Res<UiStore>,
     mut commands: Commands,
 ) {
     let entity = on.event().entity;
@@ -49,11 +56,11 @@ pub fn on_action_menu_button_clicked(
         return;
     };
 
-    let current_unit_id = turn_queue
-        .as_ref()
-        .and_then(|q| q.current())
-        .map(|entry| entry.entity.to_string())
-        .unwrap_or_default();
+    let current_unit_id = if store.battle_hud.current_unit_id != 0 {
+        Entity::from_bits(store.battle_hud.current_unit_id).to_string()
+    } else {
+        String::new()
+    };
 
     let command = match action_type {
         ActionType::Attack => UiCommand::Attack {

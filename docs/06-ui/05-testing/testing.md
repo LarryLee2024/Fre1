@@ -18,6 +18,8 @@ tags:
 
 > **职责**: @presentation-architect | **上游**: ADR-055 §14 (测试) | domain rules §5.9 (UI 三层测试流程), §INV-UI-001 (UI 不直接读取 Domain 组件) | schema §15 (验证规则) | architecture.md §6 (宪法级规则)
 
+> **SSPEC参考**: docs/06-ui/07-specs/ — AI-Consumable Screen Specification 标准。新增 Screen 必须先写 SSPEC，见 ADR-066。
+
 ---
 
 ## 1. 设计目的

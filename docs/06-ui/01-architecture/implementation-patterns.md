@@ -24,6 +24,8 @@ tags:
 >
 > **前置阅读**: 读本文前请先阅读以上上游文档——本文不重复"建什么"，只说明"怎么做"。
 
+> **SSPEC参考**: docs/06-ui/07-specs/ — AI-Consumable Screen Specification 标准。新增 Screen 必须先写 SSPEC，见 ADR-066。
+
 ---
 
 ## 0. 本文定位

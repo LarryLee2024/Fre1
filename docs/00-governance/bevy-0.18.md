@@ -6,39 +6,39 @@
 
 [Toroban: an infinitely wrapping puzzle game built in Bevy. Out now!](https://store.steampowered.com/app/1961850/Toroban/)
 
-Thanks to **174** contributors, **659** pull requests, community reviewers, and our [**generous donors**](https://bevy.org/donate), we're happy to announce the **Bevy 0.18** release on [crates.io](https://crates.io/crates/bevy)!
+感谢 **174** 位贡献者、**659** 个 pull request、社区审阅者以及我们[**慷慨的捐赠者**](https://bevy.org/donate)，我们很高兴地宣布 **Bevy 0.18** 已在 [crates.io](https://crates.io/crates/bevy) 上发布！
 
-For those who don't know, Bevy is a refreshingly simple data-driven game engine built in Rust. You can check out our [Quick Start Guide](https://bevy.org/learn/quick-start) to try it today. It's free and open source forever! You can grab the full [source code](https://github.com/bevyengine/bevy) on GitHub. Check out [Bevy Assets](https://bevy.org/assets) for a collection of community-developed plugins, games, and learning resources.
+如果你还不了解，Bevy 是一个基于 Rust 构建的、令人耳目一新的简洁数据驱动游戏引擎。你可以查看我们的[快速入门指南](https://bevy.org/learn/quick-start)来立即试用。它是免费且永远开源的！你可以在 GitHub 上获取完整的[源代码](https://github.com/bevyengine/bevy)。查看 [Bevy Assets](https://bevy.org/assets) 获取社区开发的插件、游戏和学习资源合集。
 
-To update an existing Bevy App or Plugin to **Bevy 0.18**, check out our [0.17 to 0.18 Migration Guide](https://bevy.org/learn/migration-guides/0-17-to-0-18/).
+要将现有的 Bevy App 或 Plugin 更新到 **Bevy 0.18**，请查看我们的 [0.17 到 0.18 迁移指南](https://bevy.org/learn/migration-guides/0-17-to-0-18/)。
 
-Since our last release a few months ago we've added a _ton_ of new features, bug fixes, and quality of life tweaks, but here are some of the highlights:
+自上次发布以来的几个月里，我们添加了_大量_新功能、Bug 修复和易用性改进，以下是一些亮点：
 
-- **Atmosphere Occlusion and PBR Shading**: The procedural atmosphere now affects how light reaches objects in scenes!
-- **Generalized Atmospheric Scattering Media**: The procedural atmosphere can now be customized, enabling arbitrary atmosphere types: desert skies, foggy coastlines, non-earth-like planets, etc.
-- **Solari Improvements**: Bevy's experimental real-time raytraced renderer has received a _ton_ of new features and improvements.
-- **PBR Shading Fixes**: Some long-standing issues in Bevy's PBR material have been fixed, providing noticeable quality improvements.
-- **Font Variations**: Bevy now supports variable weight fonts, text strikethroughs, underlines, and OpenType font features.
-- **Automatic Directional Navigation**: Bevy UI elements can now opt in to automatic directional navigation, making it easy to navigate UIs with gamepads and keyboards.
-- **Fullscreen Materials**: A new high level material type that makes it easy to define fullscreen post-processing shaders.
-- **Cargo Feature Collections**: Bevy now has high-level scenario-driven Cargo features for things like 2D, 3D, and UI, making it easy to only compile the pieces of the engine your app needs.
-- **First Party Camera Controllers**: Bevy now has built-in basic "fly" cameras and "pan" cameras.
+- **大气遮挡与 PBR 着色**：程序化大气现在会影响光线到达场景中物体的方式！
+- **广义大气散射介质**：程序化大气现在可以自定义，支持任意大气类型：沙漠天空、雾蒙蒙的海岸线、非地球类行星等。
+- **Solari 改进**：Bevy 的实验性实时光线追踪渲染器获得了_大量_新功能和改进。
+- **PBR 着色修复**：Bevy PBR 材质中一些长期存在的问题已得到修复，带来了明显的质量提升。
+- **字体变体**：Bevy 现在支持可变字重字体、文字删除线、下划线和 OpenType 字体特性。
+- **自动方向导航**：Bevy UI 元素现在可以选择自动方向导航，使得使用游戏手柄和键盘导航 UI 变得更加容易。
+- **全屏材质**：一种新的高级材质类型，可以轻松定义全屏后处理着色器。
+- **Cargo Feature 集合**：Bevy 现在具有面向场景的高级 Cargo feature，如 2D、3D 和 UI，可以轻松只编译应用所需的引擎部分。
+- **第一方相机控制器**：Bevy 现在内置了基础的"飞行"相机和"平移"相机。
 
-## Atmosphere Occlusion and PBR Shading [#](https://bevy.org/news/bevy-0-18/#atmosphere-occlusion-and-pbr-shading)
+## 大气遮挡与 PBR 着色 [#](https://bevy.org/news/bevy-0-18/#atmosphere-occlusion-and-pbr-shading)
 
 Authors:[@mate-h](https://github.com/mate-h)
 
 PRs:[#21383](https://github.com/bevyengine/bevy/pull/21383)
 
-The procedural atmosphere now affects how light reaches objects in your scene! Sunlight automatically picks up the right colors as it travels through the atmosphere, appearing orange or red when the sun is closer to the horizon.
+程序化大气现在会影响光线到达场景中物体的方式！阳光在穿过大气时会自动获取正确的颜色，当日落或日出时阳光更接近地平线时会呈现橙色或红色。
 
-This works seamlessly with volumetric fog and all rendering modes, so your scenes will have more cohesive and realistic lighting right out of the box.
+这与体积雾和所有渲染模式无缝协作，因此你的场景将开箱即用地获得更加协调和逼真的光照效果。
 
-Check out the updated [`atmosphere` example](https://github.com/bevyengine/bevy/blob/latest/examples/3d/atmosphere.rs) to see it in action!
+查看更新后的 [`atmosphere` 示例](https://github.com/bevyengine/bevy/blob/latest/examples/3d/atmosphere.rs) 来查看实际效果！
 
 ![atmosphere shading](https://bevy.org/news/bevy-0-18/atmosphere_shading.jpg)
 
-## Generalized Atmospheric Scattering Media [#](https://bevy.org/news/bevy-0-18/#generalized-atmospheric-scattering-media)
+## 广义大气散射介质 [#](https://bevy.org/news/bevy-0-18/#generalized-atmospheric-scattering-media)
 
 Authors:[@ecoskey](https://github.com/ecoskey)
 
@@ -46,11 +46,11 @@ PRs:[#20838](https://github.com/bevyengine/bevy/pull/20838)
 
 ![generalized atmosphere](https://bevy.org/news/bevy-0-18/generalized_atmosphere.jpg)
 
-A Mars-like atmosphere rendered in Bevy 0.18
+在 Bevy 0.18 中渲染的类火星大气
 
-Until now, Bevy's atmospheric scattering system has been fast and beautiful, but not very customizable. There's only a limited number of ways to customize the existing parameters, which constrain the system to mostly earth-like scenes.
+到目前为止，Bevy 的大气散射系统一直快速且美观，但定制性有限。只有有限的方式可以自定义现有参数，这将系统限制在主要模拟地球类场景。
 
-**Bevy 0.18** introduces a new [`ScatteringMedium`](https://docs.rs/bevy/0.18.0/bevy/pbr/struct.ScatteringMedium.html) asset for designing atmospheric scattering media of all kinds: clear desert skies, foggy coastlines, and even atmospheres of other planets! We've used Bevy's asset system to the fullest--alongside some custom optimizations--to make sure rendering stays fast even for complicated scattering media.
+**Bevy 0.18** 引入了新的 [`ScatteringMedium`](https://docs.rs/bevy/0.18.0/bevy/pbr/struct.ScatteringMedium.html) 资产，用于设计各种大气散射介质：清澈的沙漠天空、雾蒙蒙的海岸线，甚至其他行星的大气！我们充分利用了 Bevy 的资产系统——辅以一些自定义优化——以确保即使对于复杂的散射介质，渲染也能保持快速。
 
 ```rust
 fn setup_camera(
@@ -92,56 +92,56 @@ fn setup_camera(
 }
 ```
 
-## Solari Improvements [#](https://bevy.org/news/bevy-0-18/#solari-improvements)
+## Solari 改进 [#](https://bevy.org/news/bevy-0-18/#solari-improvements)
 
-Authors:[@JMS55](https://github.com/JMS55), [@SparkyPotato](https://github.com/SparkyPotato)
+Authors:[@JMS55](https://github.com/JMS55), [@SparkyPotato](https://github.com/SparkyPotato)
 
-PRs:[#21391](https://github.com/bevyengine/bevy/pull/21391), [#21355](https://github.com/bevyengine/bevy/pull/21355), [#21810](https://github.com/bevyengine/bevy/pull/21810)
+PRs:[#21391](https://github.com/bevyengine/bevy/pull/21391), [#21355](https://github.com/bevyengine/bevy/pull/21355), [#21810](https://github.com/bevyengine/bevy/pull/21810)
 
 ![solari specular](https://bevy.org/news/bevy-0-18/solari_specular.jpg)
 
-Solari - Bevy's forward-looking realtime raytraced renderer - has seen many improvements in this release. Notably:
+Solari——Bevy 面向未来的实时光线追踪渲染器——在本次发布中获得了许多改进。主要包括：
 
-- Support for specular materials and reflections
-- Faster-reacting lighting
-- A large amount of quality/accuracy improvements
-- Physically-based soft shadows for directional lights
-- Improved performance on larger scenes
+- 支持镜面材质和反射
+- 更快的光照响应
+- 大量质量/精度改进
+- 方向光的基于物理的软阴影
+- 在更大场景上提升了性能
 
 ![solari pica pica](https://bevy.org/news/bevy-0-18/solari_pica_pica.jpg)
 
-For the full list of details, check out the author's [full blog post](https://jms55.github.io/posts/2025-12-27-solari-bevy-0-18).
+完整详情请查看作者的[完整博客文章](https://jms55.github.io/posts/2025-12-27-solari-bevy-0-18)。
 
-## PBR Shading Fixes [#](https://bevy.org/news/bevy-0-18/#pbr-shading-fixes)
+## PBR 着色修复 [#](https://bevy.org/news/bevy-0-18/#pbr-shading-fixes)
 
 Authors:[@aevyrie](https://github.com/aevyrie)
 
-PRs:[#22372](https://github.com/bevyengine/bevy/pull/22372), [#22454](https://github.com/bevyengine/bevy/pull/22454)
+PRs:[#22372](https://github.com/bevyengine/bevy/pull/22372), [#22454](https://github.com/bevyengine/bevy/pull/22454)
 
-Bevy's PBR material aims to provide a standardized and predictable physical shading model. We landed our initial PBR shader about _four years_ ago. It has generally served us well, and it has improved substantially over time, but it had a couple of quirks that definitely felt ... off at times.
+Bevy 的 PBR 材质旨在提供标准化且可预测的物理着色模型。我们的初始 PBR 着色器大约在_四年前_完成。它总体上表现良好，并且随时间推移有了显著改进，但它确实存在一些明显感觉...不太对的问题。
 
-Bevy's materials have sometimes been described as "overly glossy" or "overly bright", and people who knew a bit more about shaders often blamed someone named Fresnel. Fortunately, we've _finally_ isolated the core problems and fixed them. The results should hopefully speak for themselves!
+Bevy 的材质有时被描述为"过于光亮"或"过于明亮"，而那些更了解着色器的人经常将问题归咎于一个叫 Fresnel 的东西。幸运的是，我们_终于_隔离了核心问题并修复了它们。希望结果不言自明！
 
-Drag this image to compare
+拖动此图像进行对比
 
 ![Before Fixes](https://bevy.org/news/bevy-0-18/render_before.jpg)![After Fixes](https://bevy.org/news/bevy-0-18/render_after.jpg)
 
-There were two core issues:
+有两个核心问题：
 
-1. Point/area lights had an overly bright specular component.
-2. Our "environment map light" shader was doing "roughness dependent fresnel", as [defined here](https://bruop.github.io/ibl/). This generally did not behave the way we wanted it to, so we switched to the more direct approach ... using the "typical" fresnel term directly.
+1. 点光/面光的镜面分量过亮。
+2. 我们的"环境贴图光照"着色器使用了"粗糙度相关 Fresnel"，如[此处定义](https://bruop.github.io/ibl/)。这通常无法按预期工作，因此我们切换为更直接的方法...直接使用"典型"Fresnel 项。
 
-For more comparison images, see the two linked PRs above. We can all rest easy now. Fresnel cannot hurt us anymore.
+更多对比图片请参见上方链接的两个 PR。现在我们可以放心了。Fresnel 不会再伤害我们了。
 
-## Fullscreen Material [#](https://bevy.org/news/bevy-0-18/#fullscreen-material)
+## 全屏材质 [#](https://bevy.org/news/bevy-0-18/#fullscreen-material)
 
 Authors:[@IceSentry](https://github.com/IceSentry)
 
 PRs:[#20414](https://github.com/bevyengine/bevy/pull/20414)
 
-In previous versions of Bevy, the only way to define custom fullscreen effects was to define a new low-level render feature. This approach is maximally flexible, but it also sets the complexity bar overly high for common use cases.
+在 Bevy 的早期版本中，定义自定义全屏效果的唯一方式是定义新的底层渲染特性。这种方法灵活性最高，但对于常见用例来说复杂度过高。
 
-To resolve this, we introduced a new high level [`FullscreenMaterial`](https://docs.rs/bevy/0.18.0/bevy/core_pipeline/fullscreen_material/trait.FullscreenMaterial.html) trait and [`FullscreenMaterialPlugin`](https://docs.rs/bevy/0.18.0/bevy/core_pipeline/fullscreen_material/struct.FullscreenMaterialPlugin.html) that let you easily run a fullscreen shader and specify the order it will run relative to other render passes in the engine.
+为了解决这个问题，我们引入了新的高级 [`FullscreenMaterial`](https://docs.rs/bevy/0.18.0/bevy/core_pipeline/fullscreen_material/trait.FullscreenMaterial.html) trait 和 [`FullscreenMaterialPlugin`](https://docs.rs/bevy/0.18.0/bevy/core_pipeline/fullscreen_material/struct.FullscreenMaterialPlugin.html)，让你可以轻松运行全屏着色器并指定它相对于引擎中其他渲染通道的运行顺序。
 
 ```rust
 impl FullscreenMaterial for ChromaticAberration {
@@ -149,118 +149,118 @@ impl FullscreenMaterial for ChromaticAberration {
         "chromatic_aberration.wgsl".into()
     }
 
-    // The Render Graph edges that determine when the material will run
+    // 确定材质何时运行的 Render Graph 边
     fn node_edges() -> Vec<InternedRenderLabel> {
         vec![
-            // This material run after 3D tonemapping
+            // 此材质在 3D 色调映射之后运行
             Node3d::Tonemapping.intern(),
-            // This is the FullscreenMaterial's label
+            // 这是 FullscreenMaterial 的标签
             Self::node_label().intern(),
-            // This material will run before the end of the main 3D post processing pass
+            // 此材质将在主 3D 后处理通道结束之前运行
             Node3d::EndMainPassPostProcessing.intern(),
         ]
     }
 }
 ```
 
-Check out our new [`fullscreen_material`](https://github.com/bevyengine/bevy/blob/release-0.18.0/examples/shader_advanced/fullscreen_material.rs) example for a complete illustration of a "chromatic aberration" fullscreen material:
+查看我们新的 [`fullscreen_material`](https://github.com/bevyengine/bevy/blob/release-0.18.0/examples/shader_advanced/fullscreen_material.rs) 示例，了解"色差"全屏材质的完整演示：
 
 ![fullscreen material](https://bevy.org/news/bevy-0-18/fullscreen_material.jpg)
 
-## More Standard Widgets [#](https://bevy.org/news/bevy-0-18/#more-standard-widgets)
+## 更多标准 Widget [#](https://bevy.org/news/bevy-0-18/#more-standard-widgets)
 
-Authors:[@viridia](https://github.com/viridia), [@PPakalns](https://github.com/PPakalns)
+Authors:[@viridia](https://github.com/viridia), [@PPakalns](https://github.com/PPakalns)
 
-PRs:[#21636](https://github.com/bevyengine/bevy/pull/21636), [#21743](https://github.com/bevyengine/bevy/pull/21743), [#21294](https://github.com/bevyengine/bevy/pull/21294)
+PRs:[#21636](https://github.com/bevyengine/bevy/pull/21636), [#21743](https://github.com/bevyengine/bevy/pull/21743), [#21294](https://github.com/bevyengine/bevy/pull/21294)
 
-We are continuing to flesh out the collection of standard widgets first introduced in **Bevy 0.17**. Note that Bevy's standard widgets are "logical widgets". They are "unthemed".
+我们正在继续完善在 **Bevy 0.17** 中首次引入的标准 widget 集合。请注意，Bevy 的标准 widget 是"逻辑 widget"，它们是"无主题的"。
 
-### Popover [#](https://bevy.org/news/bevy-0-18/#popover)
+### Popover [#](https://bevy.org/news/bevy-0-18/#popover)
 
-The [`Popover`](https://docs.rs/bevy/0.18.0/bevy/ui_widgets/popover/struct.Popover.html) component can be placed on an absolutely-positioned UI node to provide automatic popup positioning. This is inspired by the popular [`floating-ui`](https://www.npmjs.com/package/@floating-ui/core) npm package.
+[`Popover`](https://docs.rs/bevy/0.18.0/bevy/ui_widgets/popover/struct.Popover.html) 组件可以放置在绝对定位的 UI 节点上，提供自动弹出定位功能。这受到了流行的 [`floating-ui`](https://www.npmjs.com/package/@floating-ui/core) npm 包的启发。
 
-Popovers will be placed relative to an anchor element, and positioned so that they don't get cut off by the window edge. You can specify a list of preferred "placements": top, bottom, left or right, along with alignment options for each. If the popup is so large that it's impossible to position it without it getting cut off, it will choose the placement that results in the most visibility (as determined by the area cut off). (A future version might also have an option to constrain the popup to be no larger than the window size, but this will be more useful once we have better support for scrolling.)
+Popover 将相对于锚点元素放置，并定位以确保不被窗口边缘裁剪。你可以指定一组首选"放置位置"：上、下、左或右，以及每个位置的对齐选项。如果弹出窗口太大以至于无法在不被裁剪的情况下放置，它将选择可见性最高的放置方式（由被裁剪的面积决定）。（未来版本可能还会提供将弹出窗口限制为不超过窗口大小的选项，但这在我们有更好的滚动支持时会更有用。）
 
-This automatic positioning is dynamic, which means that if the anchor element moves around, is inside a scrolling container, or the window is resized, the popover may "flip" sides in order to remain fully visible.
+这种自动定位是动态的，这意味着如果锚点元素移动、位于滚动容器内或窗口被调整大小，popover 可能会"翻转"到另一侧以保持完全可见。
 
-Popovers can be used for dropdown menus, but they can also be used for tooltips.
+Popover 可以用于下拉菜单，也可以用于工具提示。
 
-### Menu [#](https://bevy.org/news/bevy-0-18/#menu)
+### 菜单 [#](https://bevy.org/news/bevy-0-18/#menu)
 
-The [`MenuPopup`](https://docs.rs/bevy/0.18.0/bevy/ui_widgets/struct.MenuPopup.html) component uses [`Popover`](https://docs.rs/bevy/0.18.0/bevy/ui_widgets/popover/struct.Popover.html) to provide a dropdown menu widget. This adds events for opening and closing the menu, along with keyboard navigation and activation using the focus system.
+[`MenuPopup`](https://docs.rs/bevy/0.18.0/bevy/ui_widgets/struct.MenuPopup.html) 组件使用 [`Popover`](https://docs.rs/bevy/0.18.0/bevy/ui_widgets/popover/struct.Popover.html) 来提供下拉菜单 widget。这增加了打开和关闭菜单的事件，以及使用焦点系统的键盘导航和激活。
 
-### Improvements to `RadioButton` and `RadioGroup` [#](https://bevy.org/news/bevy-0-18/#improvements-to-radiobutton-and-radiogroup)
+### `RadioButton` 和 `RadioGroup` 的改进 [#](https://bevy.org/news/bevy-0-18/#improvements-to-radiobutton-and-radiogroup)
 
-Following user testing, we've improved the details of our existing [`RadioButton`](https://docs.rs/bevy/0.18.0/bevy/ui_widgets/struct.RadioButton.html) and [`RadioGroup`](https://docs.rs/bevy/0.18.0/bevy/ui_widgets/struct.RadioGroup.html) widgets, in a fully backward compatible way:
+在用户测试之后，我们以完全向后兼容的方式改进了现有 [`RadioButton`](https://docs.rs/bevy/0.18.0/bevy/ui_widgets/struct.RadioButton.html) 和 [`RadioGroup`](https://docs.rs/bevy/0.18.0/bevy/ui_widgets/struct.RadioGroup.html) widget 的细节：
 
-- Event propagation from user interactions will now be canceled even if widgets are disabled. Previously, some relevant event propagation was not properly canceled.
-- [`RadioButton`](https://docs.rs/bevy/0.18.0/bevy/ui_widgets/struct.RadioButton.html) now emits a `ValueChange<bool>` entity event when checked, even when checked via a [`RadioGroup`](https://docs.rs/bevy/0.18.0/bevy/ui_widgets/struct.RadioGroup.html). Consistent with other `Checkable` widgets. As a [`RadioButton`](https://docs.rs/bevy/0.18.0/bevy/ui_widgets/struct.RadioButton.html) cannot be unchecked through direct user interaction with this widget, a [`ValueChange`](https://docs.rs/bevy/0.18.0/bevy/ui_widgets/struct.ValueChange.html) event with value `false` can not be triggered for [`RadioButton`](https://docs.rs/bevy/0.18.0/bevy/ui_widgets/struct.RadioButton.html).
-- If a [`RadioButton`](https://docs.rs/bevy/0.18.0/bevy/ui_widgets/struct.RadioButton.html) is focusable, a value change event can be triggered using the **Space** or **Enter** keys when focused.
-- [`RadioGroup`](https://docs.rs/bevy/0.18.0/bevy/ui_widgets/struct.RadioGroup.html) is now optional and can be replaced with a custom implementation.
+- 用户交互的事件传播现在即使在 widget 被禁用时也会被取消。之前，一些相关的事件传播没有被正确取消。
+- [`RadioButton`](https://docs.rs/bevy/0.18.0/bevy/ui_widgets/struct.RadioButton.html) 现在在被选中时会发出 `ValueChange<bool>` 实体事件，即使通过 [`RadioGroup`](https://docs.rs/bevy/0.18.0/bevy/ui_widgets/struct.RadioGroup.html) 选中也是如此。与其他 `Checkable` widget 保持一致。由于 [`RadioButton`](https://docs.rs/bevy/0.18.0/bevy/ui_widgets/struct.RadioButton.html) 无法通过直接用户交互取消选中，因此无法为 [`RadioButton`](https://docs.rs/bevy/0.18.0/bevy/ui_widgets/struct.RadioButton.html) 触发值为 `false` 的 [`ValueChange`](https://docs.rs/bevy/0.18.0/bevy/ui_widgets/struct.ValueChange.html) 事件。
+- 如果 [`RadioButton`](https://docs.rs/bevy/0.18.0/bevy/ui_widgets/struct.RadioButton.html) 可聚焦，则可以在聚焦时使用 **Space** 或 **Enter** 键触发值变更事件。
+- [`RadioGroup`](https://docs.rs/bevy/0.18.0/bevy/ui_widgets/struct.RadioGroup.html) 现在是可选的，可以用自定义实现替换。
 
-## Bevy Feathers Widget: Color Plane [#](https://bevy.org/news/bevy-0-18/#bevy-feathers-widget-color-plane)
+## Bevy Feathers Widget：Color Plane [#](https://bevy.org/news/bevy-0-18/#bevy-feathers-widget-color-plane)
 
 Authors:[@viridia](https://github.com/viridia)
 
 PRs:[#21743](https://github.com/bevyengine/bevy/pull/21743)
 
-In our last release we introduced [Bevy Feathers](https://bevy.org/news/bevy-0-17/#bevy-feathers-widgets-for-tooling-experimental), an experimental new widget library for building tooling (such as the upcoming Bevy Editor).
+在上次发布中，我们引入了 [Bevy Feathers](https://bevy.org/news/bevy-0-17/#bevy-feathers-widgets-for-tooling-experimental)，一个用于构建工具（如即将推出的 Bevy Editor）的实验性新 widget 库。
 
-In **Bevy 0.18** we've added the [`ColorPlane`](https://docs.rs/bevy/0.18.0/bevy/feathers/controls/enum.ColorPlane.html) widget: a two-dimensional color picker that allows selecting two different channels within a color space, one along the horizontal axis and one along the vertical. It can be configured to display a variety of different color spaces: hue vs. lightness, hue vs. saturation, red vs. blue, and so on.
+在 **Bevy 0.18** 中，我们添加了 [`ColorPlane`](https://docs.rs/bevy/0.18.0/bevy/feathers/controls/enum.ColorPlane.html) widget：一个二维颜色选择器，允许在颜色空间中选择两个不同的通道，一个沿水平轴，一个沿垂直轴。它可以配置为显示多种不同的颜色空间：色相与亮度、色相与饱和度、红色与蓝色等。
 
 ![color plane widget](https://bevy.org/news/bevy-0-18/color_plane.jpg)
 
-## First-Party Camera Controllers [#](https://bevy.org/news/bevy-0-18/#first-party-camera-controllers)
+## 第一方相机控制器 [#](https://bevy.org/news/bevy-0-18/#first-party-camera-controllers)
 
-Authors:[@alice-i-cecile](https://github.com/alice-i-cecile), [@syszery](https://github.com/syszery)
+Authors:[@alice-i-cecile](https://github.com/alice-i-cecile), [@syszery](https://github.com/syszery)
 
-PRs:[#20215](https://github.com/bevyengine/bevy/pull/20215), [#21450](https://github.com/bevyengine/bevy/pull/21450), [#21520](https://github.com/bevyengine/bevy/pull/21520)
+PRs:[#20215](https://github.com/bevyengine/bevy/pull/20215), [#21450](https://github.com/bevyengine/bevy/pull/21450), [#21520](https://github.com/bevyengine/bevy/pull/21520)
 
-To understand and interact with a scene, you must look at it through the lens of a camera. But there are many ways to control a camera!
+要理解并与场景交互，你必须通过相机的镜头来观察它。但控制相机有很多方式！
 
-Getting camera controllers feeling _right_ is both tricky and essential: they have a serious impact on both the feeling of your game and the usability of your software.
+让相机控制器感觉_恰到好处_既困难又至关重要：它们对游戏体验和软件可用性都有重大影响。
 
-Historically, Bevy has left this entirely up to individual game developers: camera controllers require deep customization and endless twiddling. However, Bevy as a game engine needs its _own_ camera controllers: allowing users to quickly and easily explore scenes during development (rather than gameplay).
+历史上，Bevy 完全将其交给个别游戏开发者：相机控制器需要深度定制和无尽的微调。然而，Bevy 作为游戏引擎需要_自己的_相机控制器：允许用户在开发期间（而非游戏过程中）快速轻松地探索场景。
 
-To that end, we've created [`bevy_camera_controller`](https://docs.rs/bevy/0.18.0/bevy/camera_controller/index.html): giving us a place to store, share, and refine the camera controllers that we need for easy development, and yes, an eventual Bevy Editor. We're kicking it off with a couple of camera controllers, detailed below. These are unlikely to be useful for _normal_ game logic, but they are great for debugging and building tooling. Their code can also be copied and used as a baseline for game-specific camera logic!
+为此，我们创建了 [`bevy_camera_controller`](https://docs.rs/bevy/0.18.0/bevy/camera_controller/index.html)：为我们提供了一个存储、共享和完善相机控制器的地方，以便于开发和最终的 Bevy Editor。我们以几个相机控制器作为起点，详见下文。这些对于_正常_游戏逻辑可能不太有用，但它们非常适合调试和构建工具。它们的代码也可以被复制并用作游戏特定相机逻辑的基础！
 
-### `FreeCamera` [#](https://bevy.org/news/bevy-0-18/#freecamera)
+### `FreeCamera` [#](https://bevy.org/news/bevy-0-18/#freecamera)
 
-The first camera controller that we've introduced is a "free camera", designed for quickly moving around a scene, completely ignoring both physics and geometry. You may have heard of a "fly camera" controller before, which is a specialization of a "free camera" controller designed for fast and fluid movement for covering large amounts of terrain.
+我们引入的第一个相机控制器是"自由相机"，设计用于在场景中快速移动，完全忽略物理和几何体。你可能听说过"飞行相机"控制器，它是"自由相机"控制器的一个特化版本，专为快速流畅地覆盖大面积地形而设计。
 
-Many Bevy examples now use [`FreeCamera`](https://docs.rs/bevy/0.18.0/bevy/camera_controller/free_camera/struct.FreeCamera.html), including the `solari` example (which demos Bevy's experimental raytraced renderer):
+许多 Bevy 示例现在使用 [`FreeCamera`](https://docs.rs/bevy/0.18.0/bevy/camera_controller/free_camera/struct.FreeCamera.html)，包括 `solari` 示例（演示 Bevy 的实验性光线追踪渲染器）。
 
-To add a free camera controller to your project (typically under a `dev_mode` feature flag), add the [`FreeCameraPlugin`](https://docs.rs/bevy/0.18.0/bevy/camera_controller/free_camera/struct.FreeCameraPlugin.html) and the [`FreeCamera`](https://docs.rs/bevy/0.18.0/bevy/camera_controller/free_camera/struct.FreeCamera.html) component to your camera entity.
+要将自由相机控制器添加到你的项目中（通常在 `dev_mode` feature flag 下），请将 [`FreeCameraPlugin`](https://docs.rs/bevy/0.18.0/bevy/camera_controller/free_camera/struct.FreeCameraPlugin.html) 和 [`FreeCamera`](https://docs.rs/bevy/0.18.0/bevy/camera_controller/free_camera/struct.FreeCamera.html) 组件添加到你的相机实体。
 
-To configure the settings (speed, behavior, keybindings) or enable / disable the controller modify the [`FreeCamera`](https://docs.rs/bevy/0.18.0/bevy/camera_controller/free_camera/struct.FreeCamera.html) component. We've done our best to select good defaults, but the details of your scene (especially the scale!) will make a big difference to what feels right.
+要配置设置（速度、行为、按键绑定）或启用/禁用控制器，请修改 [`FreeCamera`](https://docs.rs/bevy/0.18.0/bevy/camera_controller/free_camera/struct.FreeCamera.html) 组件。我们已尽力选择好的默认值，但你的场景细节（尤其是缩放！）会对感觉产生很大影响。
 
-### `PanCamera` [#](https://bevy.org/news/bevy-0-18/#pancamera)
+### `PanCamera` [#](https://bevy.org/news/bevy-0-18/#pancamera)
 
-The [`PanCamera`](https://docs.rs/bevy/0.18.0/bevy/camera_controller/pan_camera/struct.PanCamera.html) controller is a simple and effective tool designed for 2D games or any project where you need to pan the camera and zoom in/out with ease. It allows you to move the camera using the WASD keys and zoom in and out with the mouse wheel or +/- keys.
+[`PanCamera`](https://docs.rs/bevy/0.18.0/bevy/camera_controller/pan_camera/struct.PanCamera.html) 控制器是一个简单有效的工具，专为 2D 游戏或任何需要轻松平移相机和缩放的项目而设计。它允许你使用 WASD 键移动相机，并使用鼠标滚轮或 +/- 键缩放。
 
-By adding the [`PanCameraPlugin`](https://docs.rs/bevy/0.18.0/bevy/camera_controller/pan_camera/struct.PanCameraPlugin.html) and attaching the [`PanCamera`](https://docs.rs/bevy/0.18.0/bevy/camera_controller/pan_camera/struct.PanCamera.html) component to your camera entity, you can quickly add this controller to your project.
+通过添加 [`PanCameraPlugin`](https://docs.rs/bevy/0.18.0/bevy/camera_controller/pan_camera/struct.PanCameraPlugin.html) 并将 [`PanCamera`](https://docs.rs/bevy/0.18.0/bevy/camera_controller/pan_camera/struct.PanCamera.html) 组件附加到你的相机实体，你可以快速将此控制器添加到项目中。
 
-To configure the camera's zoom levels, speed, or keybindings, simply modify the [`PanCamera`](https://docs.rs/bevy/0.18.0/bevy/camera_controller/pan_camera/struct.PanCamera.html) component. The default settings should work well for most use cases, but you can adjust them based on your specific needs, especially for large-scale or high-resolution 2D scenes.
+要配置相机的缩放级别、速度或按键绑定，只需修改 [`PanCamera`](https://docs.rs/bevy/0.18.0/bevy/camera_controller/pan_camera/struct.PanCamera.html) 组件。默认设置应该适用于大多数用例，但你可以根据特定需求进行调整，特别是对于大规模或高分辨率 2D 场景。
 
-## Automatic Directional Navigation [#](https://bevy.org/news/bevy-0-18/#automatic-directional-navigation)
+## 自动方向导航 [#](https://bevy.org/news/bevy-0-18/#automatic-directional-navigation)
 
 Authors:[@jbuehler23](https://github.com/jbuehler23)
 
-PRs:[#21668](https://github.com/bevyengine/bevy/pull/21668), [#22340](https://github.com/bevyengine/bevy/pull/22340)
+PRs:[#21668](https://github.com/bevyengine/bevy/pull/21668), [#22340](https://github.com/bevyengine/bevy/pull/22340)
 
-Bevy now supports **automatic directional navigation** for UI elements! With a bit of global setup, all of your UI elements can now be navigated between using gamepads or arrow keys. No more tedious manual wiring of navigation connections for your menus and UI screens.
+Bevy 现在支持 UI 元素的**自动方向导航**！通过一些全局设置，你所有的 UI 元素现在都可以使用游戏手柄或方向键进行导航。不再需要为菜单和 UI 屏幕繁琐地手动连接导航线路。
 
-Previously, creating directional navigation for UI required manually defining every connection between focusable elements using [`DirectionalNavigationMap`](https://docs.rs/bevy/0.18.0/bevy/input_focus/directional_navigation/struct.DirectionalNavigationMap.html). For dynamic UIs or complex layouts, this was time-consuming and error-prone.
+以前，为 UI 创建方向导航需要使用 [`DirectionalNavigationMap`](https://docs.rs/bevy/0.18.0/bevy/input_focus/directional_navigation/struct.DirectionalNavigationMap.html) 手动定义可聚焦元素之间的每个连接。对于动态 UI 或复杂布局，这既耗时又容易出错。
 
-Now, you can simply add the [`AutoDirectionalNavigation`](https://docs.rs/bevy/0.18.0/bevy/ui/auto_directional_navigation/struct.AutoDirectionalNavigation.html) component to your UI entities, and Bevy will automatically compute navigation connections based on spatial positioning. The system parameter intelligently finds the nearest neighbor in each of the 8 compass directions (North, Northeast, East, etc.), considering:
+现在，你只需将 [`AutoDirectionalNavigation`](https://docs.rs/bevy/0.18.0/bevy/ui/auto_directional_navigation/struct.AutoDirectionalNavigation.html) 组件添加到 UI 实体，Bevy 就会根据空间位置自动计算导航连接。系统参数会智能地在 8 个罗盘方向（北、东北、东等）中查找最近的邻居，考虑：
 
-- **Distance**: Closer elements are preferred
-- **Alignment**: Elements that are more directly in line with the navigation direction are favored
-- **Overlap**: For cardinal directions (N/S/E/W), the system ensures sufficient perpendicular overlap
+- **距离**：更近的元素优先
+- **对齐**：更直接与导航方向对齐的元素更受青睐
+- **重叠**：对于基本方向（北/南/东/西），系统确保足够的垂直重叠
 
-### How to Use It [#](https://bevy.org/news/bevy-0-18/#how-to-use-it)
+### 使用方法 [#](https://bevy.org/news/bevy-0-18/#how-to-use-it)
 
-Simply add the [`AutoDirectionalNavigation`](https://docs.rs/bevy/0.18.0/bevy/ui/auto_directional_navigation/struct.AutoDirectionalNavigation.html) component to the UI entities you want users to be able to navigate between:
+只需将 [`AutoDirectionalNavigation`](https://docs.rs/bevy/0.18.0/bevy/ui/auto_directional_navigation/struct.AutoDirectionalNavigation.html) 组件添加到你希望用户能够在之间导航的 UI 实体：
 
 ```rust
 commands.spawn((
@@ -271,7 +271,7 @@ commands.spawn((
 ));
 ```
 
-To leverage automatic navigation, use the [`AutoDirectionalNavigator`](https://docs.rs/bevy/0.18.0/bevy/ui/auto_directional_navigation/struct.AutoDirectionalNavigator.html) system parameter instead of the [`DirectionalNavigation`](https://docs.rs/bevy/0.18.0/bevy/input_focus/directional_navigation/struct.DirectionalNavigation.html) system parameter:
+要使用自动导航功能，请使用 [`AutoDirectionalNavigator`](https://docs.rs/bevy/0.18.0/bevy/ui/auto_directional_navigation/struct.AutoDirectionalNavigator.html) 系统参数替代 [`DirectionalNavigation`](https://docs.rs/bevy/0.18.0/bevy/input_focus/directional_navigation/struct.DirectionalNavigation.html) 系统参数：
 
 ```rust
 fn my_navigation_system(mut auto_directional_navigator: AutoDirectionalNavigator) {
@@ -281,49 +281,49 @@ fn my_navigation_system(mut auto_directional_navigator: AutoDirectionalNavigator
 }
 ```
 
-### Configuration [#](https://bevy.org/news/bevy-0-18/#configuration)
+### 配置 [#](https://bevy.org/news/bevy-0-18/#configuration)
 
-You can tune the behavior using the [`AutoNavigationConfig`](https://docs.rs/bevy/0.18.0/bevy/input_focus/directional_navigation/struct.AutoNavigationConfig.html) resource:
+你可以使用 [`AutoNavigationConfig`](https://docs.rs/bevy/0.18.0/bevy/input_focus/directional_navigation/struct.AutoNavigationConfig.html) 资源来调整行为：
 
 ```rust
 app.insert_resource(AutoNavigationConfig {
-    // Minimum overlap required (0.0 = any overlap, 1.0 = perfect alignment)
+    // 所需的最小重叠（0.0 = 任意重叠，1.0 = 完美对齐）
     min_alignment_factor: 0.0,
-    // Optional maximum distance for connections
+    // 可选的最大连接距离
     max_search_distance: Some(500.0),
-    // Whether to strongly prefer well-aligned nodes
+    // 是否强烈偏好对齐良好的节点
     prefer_aligned: true,
 });
 ```
 
-### Manual Override [#](https://bevy.org/news/bevy-0-18/#manual-override)
+### 手动覆盖 [#](https://bevy.org/news/bevy-0-18/#manual-override)
 
-Automatic navigation respects manually-defined edges. If you want to override specific connections (e.g. screen-edge looping), you can still use `DirectionalNavigationMap::add_edge()` or `add_symmetrical_edge()`, and those connections will take precedence over the auto-generated ones. You may also call `auto_generate_navigation_edges()` directly, if you have multiple UI layers (though may not be widely used)
+自动导航会尊重手动定义的边。如果你想覆盖特定连接（例如屏幕边缘循环），你仍然可以使用 `DirectionalNavigationMap::add_edge()` 或 `add_symmetrical_edge()`，这些连接将优先于自动生成的连接。你也可以直接调用 `auto_generate_navigation_edges()`，如果你有多个 UI 层的话（虽然可能不常用）
 
-## Cargo Feature Collections [#](https://bevy.org/news/bevy-0-18/#cargo-feature-collections)
+## Cargo Feature 集合 [#](https://bevy.org/news/bevy-0-18/#cargo-feature-collections)
 
 Authors:[@cart](https://github.com/cart)
 
 PRs:[#21472](https://github.com/bevyengine/bevy/pull/21472)
 
-Historically, Bevy developers have lived one of two lifestyles:
+历史上，Bevy 开发者一直过着两种生活之一：
 
-1. Use all of Bevy's default features, potentially compiling many unwanted or unneeded features.
-2. Disable Bevy's default features and manually define the complete list of features.
+1. 使用 Bevy 的所有默认 feature，可能会编译许多不需要或不需要的 feature。
+2. 禁用 Bevy 的默认 feature 并手动定义完整的 feature 列表。
 
-Living in the world of (2) was an exercise in frustration, as the list of bevy features is _massive_ and the features required to accomplish a given task changes regularly across releases. This was an _expert level_ task that required intimate knowledge of engine internals to get right.
+生活在第 (2) 种世界中是一种令人沮丧的体验，因为 bevy 的 feature 列表_极其庞大_，而且完成特定任务所需的 feature 在不同版本之间经常变化。这是一项_专家级_任务，需要深入了解引擎内部才能正确完成。
 
-**Bevy 0.18** introduces high-level "cargo feature collections" to the `bevy` crate: `2d`, `3d`, and `ui`. This enables developers to easily select the kind of app they want to build, and only compile the pieces of Bevy needed for that app.
+**Bevy 0.18** 向 `bevy` crate 引入了高级"cargo feature 集合"：`2d`、`3d` 和 `ui`。这使开发者可以轻松选择他们想要构建的应用类型，只编译该应用所需的 Bevy 部分。
 
-This means scenarios like using Bevy as a UI framework, without pulling in the rest of the engine, are now as easy as:
+这意味着像将 Bevy 作为 UI 框架使用而不引入引擎其余部分这样的场景，现在变得如此简单：
 
 ```toml
 bevy = { version = "0.18", default-features = false, features = ["ui"] }
 ```
 
-We've also added mid-level feature collections like `2d_api`, which is Bevy's 2D API _without the default Bevy renderer_. This makes it much easier to swap out the default Bevy renderer for a custom one.
+我们还添加了中级 feature 集合如 `2d_api`，即 Bevy 的 2D API _不包含默认 Bevy 渲染器_。这使得替换默认 Bevy 渲染器为自定义渲染器变得更加容易。
 
-For example, the `2d` profile looks like this:
+例如，`2d` profile 如下所示：
 
 ```toml
 2d = [
@@ -338,35 +338,35 @@ For example, the `2d` profile looks like this:
 ]
 ```
 
-Someone building a custom 2D renderer now just needs to remove `2d_bevy_render` and provide their own.
+构建自定义 2D 渲染器的人现在只需移除 `2d_bevy_render` 并提供自己的渲染器。
 
-Developers can now define their own high-level cargo feature profiles from these mid-level pieces, making it _much_ easier to define the subset of Bevy you want to build into your app.
+开发者现在可以从这些中级部分定义自己的高级 cargo feature profile，使得定义你想要构建到应用中的 Bevy 子集变得_更加容易_。
 
-## Font Variations [#](https://bevy.org/news/bevy-0-18/#font-variations)
+## 字体变体 [#](https://bevy.org/news/bevy-0-18/#font-variations)
 
-Authors:[@ickshonpe](https://github.com/ickshonpe), [@hansler](https://github.com/hansler)
+Authors:[@ickshonpe](https://github.com/ickshonpe), [@hansler](https://github.com/hansler)
 
-PRs:[#19020](https://github.com/bevyengine/bevy/pull/19020), [#21555](https://github.com/bevyengine/bevy/pull/21555), [#21559](https://github.com/bevyengine/bevy/pull/21559), [#22038](https://github.com/bevyengine/bevy/pull/22038)
+PRs:[#19020](https://github.com/bevyengine/bevy/pull/19020), [#21555](https://github.com/bevyengine/bevy/pull/21555), [#21559](https://github.com/bevyengine/bevy/pull/21559), [#22038](https://github.com/bevyengine/bevy/pull/22038)
 
-**Bevy 0.18** brings more control over how your fonts are expressed!
+**Bevy 0.18** 带来了更多对字体表达方式的控制！
 
-### Text Strikethroughs and Underlines [#](https://bevy.org/news/bevy-0-18/#text-strikethroughs-and-underlines)
+### 文字删除线和下划线 [#](https://bevy.org/news/bevy-0-18/#text-strikethroughs-and-underlines)
 
-`bevy_text` now supports strikethrough and underline. To display text with strikethrough or underline, just add the [`Strikethrough`](https://docs.rs/bevy/0.18.0/bevy/prelude/struct.Strikethrough.html) or [`Underline`](https://docs.rs/bevy/0.18.0/bevy/prelude/struct.Underline.html) components to any [`Text`](https://docs.rs/bevy/0.18.0/bevy/prelude/struct.Text.html), [`Text2d`](https://docs.rs/bevy/0.18.0/bevy/prelude/struct.Text2d.html), or [`TextSpan`](https://docs.rs/bevy/0.18.0/bevy/prelude/struct.TextSpan.html) entity. You can set colors for strikethrough and underline using the [`StrikethroughColor`](https://docs.rs/bevy/0.18.0/bevy/prelude/struct.StrikethroughColor.html) and [`UnderlineColor`](https://docs.rs/bevy/0.18.0/bevy/prelude/struct.UnderlineColor.html) components, respectively.
+`bevy_text` 现在支持删除线和下划线。要显示带删除线或下划线的文字，只需将 [`Strikethrough`](https://docs.rs/bevy/0.18.0/bevy/prelude/struct.Strikethrough.html) 或 [`Underline`](https://docs.rs/bevy/0.18.0/bevy/prelude/struct.Underline.html) 组件添加到任何 [`Text`](https://docs.rs/bevy/0.18.0/bevy/prelude/struct.Text.html)、[`Text2d`](https://docs.rs/bevy/0.18.0/bevy/prelude/struct.Text2d.html) 或 [`TextSpan`](https://docs.rs/bevy/0.18.0/bevy/prelude/struct.TextSpan.html) 实体。你可以使用 [`StrikethroughColor`](https://docs.rs/bevy/0.18.0/bevy/prelude/struct.StrikethroughColor.html) 和 [`UnderlineColor`](https://docs.rs/bevy/0.18.0/bevy/prelude/struct.UnderlineColor.html) 组件分别设置删除线和下划线的颜色。
 
-### Font Weights [#](https://bevy.org/news/bevy-0-18/#font-weights)
+### 字重 [#](https://bevy.org/news/bevy-0-18/#font-weights)
 
-Bevy now supports font weights, allowing you to take advantage of [variable weight fonts](https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Fonts/Variable_fonts) which embed smooth variations of a font into a single file! [`TextFont`](https://docs.rs/bevy/0.18.0/bevy/prelude/struct.TextFont.html) now has a `weight: FontWeight` field. [`FontWeight`](https://docs.rs/bevy/0.18.0/bevy/prelude/struct.FontWeight.html) newtypes a `u16` (clamped to a range of 1-1000), with lower values representing thin typefaces and large values representing bold typefaces.
+Bevy 现在支持字重，允许你利用[可变字重字体](https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Fonts/Variable_fonts)，它们将字体的平滑变化嵌入到单个文件中！[`TextFont`](https://docs.rs/bevy/0.18.0/bevy/prelude/struct.TextFont.html) 现在有一个 `weight: FontWeight` 字段。[`FontWeight`](https://docs.rs/bevy/0.18.0/bevy/prelude/struct.FontWeight.html) 是 `u16` 的 newtype（限制在 1-1000 范围内），较低的值表示细体字形，较高的值表示粗体字形。
 
 ![font weights](https://bevy.org/news/bevy-0-18/font_weights.jpg)
 
-### OpenType Font Features [#](https://bevy.org/news/bevy-0-18/#opentype-font-features)
+### OpenType 字体特性 [#](https://bevy.org/news/bevy-0-18/#opentype-font-features)
 
-[OpenType font features](https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Fonts/OpenType_fonts) allow fine-grained control over how text is displayed, including [ligatures](https://en.wikipedia.org/wiki/Ligature_\(writing\)), [small caps](https://en.wikipedia.org/wiki/Small_caps), and [many more](https://learn.microsoft.com/en-us/typography/opentype/spec/featurelist).
+[OpenType 字体特性](https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Fonts/OpenType_fonts)允许对文字显示方式进行细粒度控制，包括[连字](https://en.wikipedia.org/wiki/Ligature_\(writing\))、[小型大写字母](https://en.wikipedia.org/wiki/Small_caps)以及[更多](https://learn.microsoft.com/en-us/typography/opentype/spec/featurelist)。
 
-These features can now be used in Bevy, allowing users to add typographic polish (like discretionary ligatures and oldstyle numerals) to their UI. It also allows complex scripts like Arabic or Devanagari to render more correctly with their intended ligatures.
+这些特性现在可以在 Bevy 中使用，允许用户为其 UI 添加排版润色（如可选连字和旧式数字）。它还允许阿拉伯语或天城文等复杂文字使用其预期的连字进行更正确的渲染。
 
-Example usage:
+使用示例：
 
 ```rust
 commands.spawn((
@@ -382,7 +382,7 @@ commands.spawn((
 ));
 ```
 
-[`FontFeatures`](https://docs.rs/bevy/0.18.0/bevy/text/struct.FontFeatures.html) can also be constructed from a list:
+[`FontFeatures`](https://docs.rs/bevy/0.18.0/bevy/text/struct.FontFeatures.html) 也可以从列表构造：
 
 ```rust
 TextFont {
@@ -396,25 +396,25 @@ TextFont {
 }
 ```
 
-Note that OpenType font features are only available for `.otf` fonts that support them, and different fonts may support different subsets of OpenType features.
+请注意，OpenType 字体特性仅适用于支持它们的 `.otf` 字体，不同字体可能支持 OpenType 特性的不同子集。
 
-## Pick-able Text Sections [#](https://bevy.org/news/bevy-0-18/#pick-able-text-sections)
+## 可选取的文本段落 [#](https://bevy.org/news/bevy-0-18/#pick-able-text-sections)
 
 Authors:[@ickshonpe](https://github.com/ickshonpe)
 
 PRs:[#22047](https://github.com/bevyengine/bevy/pull/22047)
 
-Individual text sections belonging to UI text nodes are now pickable, allowing them to be selected, and can be given observers to respond to user interaction.
+属于 UI 文本节点的单个文本段落现在是可选取的，允许它们被选中，并且可以添加观察者来响应用户交互。
 
-This functionality is useful when creating hyperlink-like behavior, and allows users to create mouse-over tooltips for specific keywords in their games.
+此功能在创建类似超链接的行为时非常有用，允许用户在游戏中为特定关键词创建鼠标悬停工具提示。
 
-## Safe Mutable Access To Multiple Arbitrary Components [#](https://bevy.org/news/bevy-0-18/#safe-mutable-access-to-multiple-arbitrary-components)
+## 安全的多任意组件可变访问 [#](https://bevy.org/news/bevy-0-18/#safe-mutable-access-to-multiple-arbitrary-components)
 
 Authors:[@hymm](https://github.com/hymm)
 
 PRs:[#21780](https://github.com/bevyengine/bevy/pull/21780)
 
-When working with an ECS, the most efficient way to access data is to query the same components across multiple entities in a batch:
+在使用 ECS 时，访问数据最高效的方式是批量查询多个实体上的相同组件：
 
 ```rust
 for (mut a, mut b) in &mut query {
@@ -422,74 +422,74 @@ for (mut a, mut b) in &mut query {
 }
 ```
 
-But in some scenarios, users want to access multiple _arbitrary_ components for _specific_ entities:
+但在某些场景中，用户想要为_特定_实体访问多个_任意_组件：
 
 ```rust
 let (mut a, mut b) = entity.get_components_mut::<(&mut A, &mut B)>()?;
 ```
 
-This approach is similar to the traditional "game object" model that users may be familiar with in other game engines, and can be particularly useful when implementing complex, non-performance-critical logic. It also tends to mesh better with other languages and external tools, making it a tempting design for scripting, modding and integration work.
+这种方法类似于用户可能在其他游戏引擎中熟悉的传统"游戏对象"模型，在实现复杂的、非性能关键逻辑时特别有用。它也往往更容易与其他语言和外部工具结合使用，使其成为脚本、模组和集成工作的诱人设计。
 
-In theory, this style of access is fairly straightforward: access the components and ensure we don't break Rust's mutable aliasing rules. [Initial attempts at implementing this](https://github.com/bevyengine/bevy/pull/13375) ran into some difficulty though, with subtle soundness problems detected during code review. As a result, we previously introduced unsafe methods for this: `get_components_mut_unchecked`. These methods are relatively fast due to the skipped aliasing checks, but unsafe is frightening and cumbersome to work with, particularly for an API that's designed for convenience and often most attractive to newcomers.
+理论上，这种访问方式相当直接：访问组件并确保我们不会违反 Rust 的可变别名规则。但[实现此功能的初步尝试](https://github.com/bevyengine/bevy/pull/13375)遇到了一些困难，在代码审查中检测到微妙的健全性问题。因此，我们之前为此引入了 unsafe 方法：`get_components_mut_unchecked`。由于跳过了别名检查，这些方法相对较快，但 unsafe 令人恐惧且使用繁琐，尤其对于旨在方便使用且通常对新手最有吸引力的 API。
 
-In **Bevy 0.18**, we're finally introducing safe equivalents, in the form of [`EntityMut::get_components_mut`](https://docs.rs/bevy/latest/bevy/prelude/struct.EntityMut.html#method.get_components_mut) and [`EntityWorldMut::get_components_mut`](https://docs.rs/bevy/latest/bevy/prelude/struct.EntityWorldMut.html#method.get_components_mut):
+在 **Bevy 0.18** 中，我们终于引入了安全的等效方法，形式为 [`EntityMut::get_components_mut`](https://docs.rs/bevy/latest/bevy/prelude/struct.EntityMut.html#method.get_components_mut) 和 [`EntityWorldMut::get_components_mut`](https://docs.rs/bevy/latest/bevy/prelude/struct.EntityWorldMut.html#method.get_components_mut)：
 
 ```rust
 let (mut a, mut b) = entity.get_components_mut::<(&mut A, &mut B)>()?;
 ```
 
-These methods allow you to access multiple mutable or imutable references to the components on a single entity. To ensure that we don't hand out multiple mutable references to the same data, these APIs use quadratic time complexity (over the number of components accessed) runtime checks, safely erroring if illegal access was requested.
+这些方法允许你访问单个实体上多个组件的可变或不可变引用。为了确保我们不会向相同数据发出多个可变引用，这些 API 使用二次时间复杂度（基于访问的组件数量）的运行时检查，在请求非法访问时安全地报错。
 
-Quadratic time complexity is bad news, but in many cases, the list of components requested is very small: two, three or even ten distinct components are not terrible to check outside of a hot loop. However, some applications (such as scripting interfaces) may still be best suited to using the unsafe API, relying on other methods to ensure soundness with a lower performance cost.
+二次时间复杂度是个坏消息，但在许多情况下，请求的组件列表非常小：两个、三个甚至十个不同的组件在热循环之外检查并不糟糕。然而，某些应用程序（如脚本接口）可能仍然最适合使用 unsafe API，依赖其他方法以更低的性能成本确保健全性。
 
-## glTF Extensions [#](https://bevy.org/news/bevy-0-18/#gltf-extensions)
+## glTF 扩展 [#](https://bevy.org/news/bevy-0-18/#gltf-extensions)
 
 Authors:[@christopherbiscardi](https://github.com/christopherbiscardi)
 
 PRs:[#22106](https://github.com/bevyengine/bevy/pull/22106)
 
-[glTF](https://en.wikipedia.org/wiki/GlTF) is a popular open format for 3D models and scenes, and serves as Bevy's primary 3D format. When making games however, simply relying on the built-in data fields for your objects is not enough. Additional information like physics colliders or special rendering properties are typically best kept directly with the models.
+[glTF](https://en.wikipedia.org/wiki/GlTF) 是一种流行的 3D 模型和场景开放格式，作为 Bevy 的主要 3D 格式。然而在制作游戏时，仅依赖对象的内置数据字段是不够的。附加信息如物理碰撞体或特殊渲染属性通常最好直接保存在模型中。
 
-glTF has two mechanisms for extending glTF files with additional user data: extras and extensions.
+glTF 有两种机制来扩展 glTF 文件中的附加用户数据：extras 和 extensions。
 
-**Extras** are meant to be arbitrary application-specific data, often authored by users directly in tools like Blender's custom properties. Extras are historically well supported by Bevy; if you add a custom property in Blender that data will end up in one of the [`GltfExtras`](https://docs.rs/bevy/0.18.0/bevy/gltf/struct.GltfExtras.html) components on the relevant entity.
+**Extras** 旨在存放任意的应用程序特定数据，通常由用户直接在 Blender 的自定义属性等工具中创建。Bevy 对 extras 有良好的历史支持；如果你在 Blender 中添加自定义属性，该数据将最终出现在相关实体的 [`GltfExtras`](https://docs.rs/bevy/0.18.0/bevy/gltf/struct.GltfExtras.html) 组件之一中。
 
-**Extensions** are meant for data that can be shared across applications. They are more flexible, allowing for new data in more places inside a glTF file, and more powerful as a result. Extensions can add new object types, such as `lights` from the `KHR_lights_punctual` extension, as well as arbitrary buffers, data that is at the root of the glTF file, and more.
+**Extensions** 旨在存放可跨应用程序共享的数据。它们更加灵活，允许在 glTF 文件内部更多位置添加新数据，因此也更强大。Extensions 可以添加新的对象类型，如来自 `KHR_lights_punctual` 扩展的 `lights`，以及任意缓冲区、glTF 文件根目录的数据等。
 
-Prior to 0.18, the code to handle extensions like [`KHR_lights_punctual`](https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_lights_punctual/README.md) was hardcoded into Bevy's glTF loader. Now, users may implement the [`GltfExtensionHandler`](https://docs.rs/bevy/0.18.0/bevy/gltf/extensions/trait.GltfExtensionHandler.html) trait to do stateful processing of glTF data as it loads.
+在 0.18 之前，处理像 [`KHR_lights_punctual`](https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KH_lights_punctual/README.md) 这样扩展的代码是硬编码在 Bevy 的 glTF 加载器中的。现在，用户可以实现 [`GltfExtensionHandler`](https://docs.rs/bevy/0.18.0/bevy/gltf/extensions/trait.GltfExtensionHandler.html) trait 来对 glTF 数据进行有状态的处理。
 
-Processing _extension_ data is only half the story here because to process extension data you also have to be able to process the non-extension data like meshes, materials, animations, and more.
+处理_扩展_数据只是故事的一半，因为要处理扩展数据，你还必须能够处理非扩展数据，如网格、材质、动画等。
 
-Extension handlers can be written for wide variety of use cases, including:
+扩展处理器可以为各种用例编写，包括：
 
-- Insert Bevy Component data on entities
-- Convert all [`Mesh3d`](https://docs.rs/bevy/0.18.0/bevy/mesh/struct.Mesh3d.html) components to [`Mesh2d`](https://docs.rs/bevy/0.18.0/bevy/mesh/struct.Mesh2d.html)
-- Build [`AnimationGraph`](https://docs.rs/bevy/0.18.0/bevy/animation/graph/struct.AnimationGraph.html)s and insert them on animation roots
-- Replace [`StandardMaterial`](https://docs.rs/bevy/0.18.0/bevy/pbr/struct.StandardMaterial.html) with custom materials
-- Insert lightmaps
+- 在实体上插入 Bevy Component 数据
+- 将所有 [`Mesh3d`](https://docs.rs/bevy/0.18.0/bevy/mesh/struct.Mesh3d.html) 组件转换为 [`Mesh2d`](https://docs.rs/bevy/0.18.0/bevy/mesh/struct.Mesh2d.html)
+- 构建 [`AnimationGraph`](https://docs.rs/bevy/0.18.0/bevy/animation/graph/struct.AnimationGraph.html) 并将其插入到动画根节点
+- 用自定义材质替换 [`StandardMaterial`](https://docs.rs/bevy/0.18.0/bevy/pbr/struct.StandardMaterial.html)
+- 插入光照贴图
 
-We've added two new examples to show off common use cases:
+我们添加了两个新示例来展示常见用例：
 
-- [`gltf_extension_animation_graph`](https://github.com/bevyengine/bevy/blob/latest/examples/gltf/gltf_extension_animation_graph.rs) builds an [`AnimationGraph`](https://docs.rs/bevy/0.18.0/bevy/animation/graph/struct.AnimationGraph.html) and inserts it onto the animation root in a Scene, which means it is now accessible to play animations using the [`AnimationPlayer`](https://docs.rs/bevy/0.18.0-rc.2/bevy/animation/struct.AnimationPlayer.html) on the same entity later when that scene is spawned.
-- [`gltf_extension_mesh_2d`](https://github.com/bevyengine/bevy/blob/latest/examples/gltf/gltf_extension_mesh_2d.rs) uses a [`GltfExtensionHandler`](https://docs.rs/bevy/0.18.0/bevy/gltf/extensions/trait.GltfExtensionHandler.html) to switch the 3d mesh and material components for their 2d counterparts. This is useful if you're using software like Blender to build 2d worlds.
+- [`gltf_extension_animation_graph`](https://github.com/bevyengine/bevy/blob/latest/examples/gltf/gltf_extension_animation_graph.rs) 构建 [`AnimationGraph`](https://docs.rs/bevy/0.18.0/bevy/animation/graph/struct.AnimationGraph.html) 并将其插入到 Scene 中的动画根节点，这意味着当该 Scene 后来被生成时，可以使用同一实体上的 [`AnimationPlayer`](https://docs.rs/bevy/0.18.0-rc.2/bevy/animation/struct.AnimationPlayer.html) 来播放动画。
+- [`gltf_extension_mesh_2d`](https://github.com/bevyengine/bevy/blob/latest/examples/gltf/gltf_extension_mesh_2d.rs) 使用 [`GltfExtensionHandler`](https://docs.rs/bevy/0.18.0/bevy/gltf/extensions/trait.GltfExtensionHandler.html) 将 3D 网格和材质组件替换为它们的 2D 对应物。如果你使用 Blender 等软件构建 2D 世界，这非常有用。
 
-### Integration with external authoring tools [#](https://bevy.org/news/bevy-0-18/#integration-with-external-authoring-tools)
+### 与外部创作工具的集成 [#](https://bevy.org/news/bevy-0-18/#integration-with-external-authoring-tools)
 
-Extensions typically require an application that is _producing_ the data as well as _consuming_ the data.
+扩展通常需要一个既_生成_数据又_使用_数据的应用程序。
 
-For example, [Skein](https://github.com/rust-adventure/skein) defines a glTF extension that allows adding Bevy Components to glTF objects. This is most commonly produced by Blender and consumed by Skein's [`GltfExtensionHandler`](https://docs.rs/bevy/0.18.0/bevy/gltf/extensions/trait.GltfExtensionHandler.html) in Bevy. These components are then inserted on entities in a scene at the same time built-in components like [`Transform`](https://docs.rs/bevy/0.18.0/bevy/prelude/struct.Transform.html) and [`Mesh3d`](https://docs.rs/bevy/0.18.0/bevy/mesh/struct.Mesh3d.html) are.
+例如，[Skein](https://github.com/rust-adventure/skein) 定义了一个 glTF 扩展，允许向 glTF 对象添加 Bevy Components。这通常由 Blender 生成，并由 Skein 的 [`GltfExtensionHandler`](https://docs.rs/bevy/0.18.0/bevy/gltf/extensions/trait.GltfExtensionHandler.html) 在 Bevy 中消费。这些组件然后在生成 [`Scene`](https://docs.rs/bevy/0.18.0/bevy/prelude/struct.Scene.html) 时与 [`Transform`](https://docs.rs/bevy/0.18.0/bevy/prelude/struct.Transform.html) 和 [`Mesh3d`](https://docs.rs/bevy/0.18.0/bevy/mesh/struct.Mesh3d.html) 等内置组件一起插入到场景中的实体上。
 
-Using glTF Extensions for this data means that other level editors like Trenchbroom can also write the same format to glTF files. Any third party software that writes component data into a glTF file can use Skein's [`GltfExtensionHandler`](https://docs.rs/bevy/0.18.0/bevy/gltf/extensions/trait.GltfExtensionHandler.html), resulting in components being "ready-to-go" when spawning [`Scene`](https://docs.rs/bevy/0.18.0/bevy/prelude/struct.Scene.html)s.
+使用 glTF Extensions 来存放这些数据意味着其他关卡编辑器如 Trenchbroom 也可以将相同格式写入 glTF 文件。任何将组件数据写入 glTF 文件的第三方软件都可以使用 Skein 的 [`GltfExtensionHandler`](https://docs.rs/bevy/0.18.0/bevy/gltf/extensions/trait.GltfExtensionHandler.html)，使得组件在生成 [`Scene`](https://docs.rs/bevy/0.18.0/bevy/prelude/struct.Scene.html) 时"开箱即用"。
 
-## Short-Type-Path Asset Processors [#](https://bevy.org/news/bevy-0-18/#short-type-path-asset-processors)
+## 短类型路径资产处理器 [#](https://bevy.org/news/bevy-0-18/#short-type-path-asset-processors)
 
 Authors:[@andriyDev](https://github.com/andriyDev)
 
 PRs:[#21339](https://github.com/bevyengine/bevy/pull/21339)
 
-Asset processors allow manipulating assets at "publish-time" to convert them into a more optimal form when loading the data at runtime. This can either be done using a default processor, which processes all assets with a particular file extension, or by specifying the processor in the asset's meta file.
+资产处理器允许在"发布时"操作资产，将其转换为在运行时加载数据时更优化的形式。这可以使用默认处理器（处理所有具有特定文件扩展名的资产）来完成，也可以在资产的 meta 文件中指定处理器。
 
-In previous versions of Bevy, the processor had to be **fully** specified in the asset's meta file. For example:
+在 Bevy 的早期版本中，处理器必须在资产的 meta 文件中**完整**指定。例如：
 
 ```ron
 (
@@ -505,7 +505,7 @@ In previous versions of Bevy, the processor had to be **fully** specified in t
 )
 ```
 
-As you can see, processor types can be very verbose! In order to make these meta files easier to manipulate, we now also support using the "short type path" of the asset. This would look like:
+如你所见，处理器类型可能非常冗长！为了使这些 meta 文件更容易操作，我们现在也支持使用资产的"短类型路径"。这将如下所示：
 
 ```ron
 (
@@ -521,81 +521,81 @@ As you can see, processor types can be very verbose! In order to make these meta
 )
 ```
 
-## Easy Screenshot and Video Recording [#](https://bevy.org/news/bevy-0-18/#easy-screenshot-and-video-recording)
+## 轻松截图和录屏 [#](https://bevy.org/news/bevy-0-18/#easy-screenshot-and-video-recording)
 
 Authors:[@mockersf](https://github.com/mockersf)
 
-PRs:[#21235](https://github.com/bevyengine/bevy/pull/21235), [#21237](https://github.com/bevyengine/bevy/pull/21237)
+PRs:[#21235](https://github.com/bevyengine/bevy/pull/21235), [#21237](https://github.com/bevyengine/bevy/pull/21237)
 
-Making an awesome, beautiful game is only half the battle: you need to be able to show it to people too!
+制作出色的美丽游戏只是成功的一半：你还需要能够向人们展示它！
 
-Bevy has been able to take a screenshot of what's rendered since 0.11. Despite how useful this functionality is for quickly creating marketing material, setting it up was relatively involved.
+Bevy 自 0.11 起就能够截取渲染内容的屏幕截图。尽管此功能对于快速创建营销材料非常有用，但设置过程相对复杂。
 
-This process has been streamlined, with the new [`EasyScreenshotPlugin`](https://docs.rs/bevy/0.18.0/bevy/dev_tools/struct.EasyScreenshotPlugin.html) allowing you to take a screenshot with consistent formatting with a single button press. With its default settings, once you add this plugin to your application, a PNG screenshot will be taken when you press the `PrintScreen` key. You can change the trigger key, or the screenshot format between PNG, JPEG or BMP.
+这个过程已经被简化，新的 [`EasyScreenshotPlugin`](https://docs.rs/bevy/0.18.0/bevy/dev_tools/struct.EasyScreenshotPlugin.html) 允许你按下一个按钮即可截取格式一致的屏幕截图。使用其默认设置，一旦你将此插件添加到应用程序，按下 `PrintScreen` 键时就会截取 PNG 屏幕截图。你可以更改触发键，或在 PNG、JPEG 和 BMP 之间更改屏幕截图格式。
 
-We've taken this one step further, allowing you to record video directly from Bevy, with the new [`EasyScreenRecordPlugin`](https://dev-docs.bevy.org/bevy/dev_tools/struct.EasyScreenRecordPlugin.html). This plugins add a toggle key, space bar by default, that will toggle screen recording. Recording can also be started and stopped programmatically with the [`RecordScreen`](https://dev-docs.bevy.org/bevy/dev_tools/enum.RecordScreen.html) messages.
+我们更进一步，允许你直接从 Bevy 录制视频，通过新的 [`EasyScreenRecordPlugin`](https://dev-docs.bevy.org/bevy/dev_tools/struct.EasyScreenRecordPlugin.html)。此插件添加了一个切换键（默认为空格键），用于切换屏幕录制。录制也可以通过 [`RecordScreen`](https://dev-docs.bevy.org/bevy/dev_tools/enum.RecordScreen.html) 消息以编程方式启动和停止。
 
-Screen recording is currently not supported on Windows due to challenges with video codecs. While all dev-tools features are off-by default, screen recording is a bit trickier to activate due to this limitation. To enable it, toggle the `screenrecording` feature in the `bevy_dev_tools` crate.
+由于视频编解码器方面的挑战，Windows 上目前不支持屏幕录制。虽然所有 dev-tools 功能默认关闭，但由于此限制，屏幕录制的激活稍微复杂一些。要启用它，请在 `bevy_dev_tools` crate 中切换 `screenrecording` feature。
 
-## Remove Systems from Schedules [#](https://bevy.org/news/bevy-0-18/#remove-systems-from-schedules)
+## 从 Schedule 中移除系统 [#](https://bevy.org/news/bevy-0-18/#remove-systems-from-schedules)
 
 Authors:[@hymm](https://github.com/hymm)
 
 PRs:[#20298](https://github.com/bevyengine/bevy/pull/20298)
 
-Previously, the only way to prevent a scheduled system from running was to use [run conditions](https://docs.rs/bevy/0.18.0/bevy/prelude/trait.SystemCondition.html). This works well for dynamically toggling whether or not a system runs, but comes with a tiny overhead each time the schedule is run.
+以前，阻止调度系统运行的唯一方式是使用[运行条件](https://docs.rs/bevy/0.18.0/bevy/prelude/trait.SystemCondition.html)。这对于动态切换系统是否运行很有效，但每次运行调度时都会带来少量开销。
 
-Now, you can completely remove systems from a schedule using [`remove_systems_in_set`](https://docs.rs/bevy/0.18.0/bevy/prelude/struct.App.html#method.remove_systems_in_set) forcing an expensive schedule rebuild but removing that overhead completely and removing the systems from any debug tools.
+现在，你可以使用 [`remove_systems_in_set`](https://docs.rs/bevy/0.18.0/bevy/prelude/struct.App.html#method.remove_systems_in_set) 完全从调度中移除系统，这会强制进行昂贵的调度重建，但完全移除了该开销并将系统从任何调试工具中移除。
 
-Run conditions (and dedicated schedules run on demand) remain a better tool for most cases, but completely removing systems may be an attractive option when opting-out of undesired plugin behavior, modding or changing game settings.
+运行条件（以及按需运行的专用调度）仍然是大多数情况下的更好工具，但完全移除系统在选择退出不需要的插件行为、模组或更改游戏设置时可能是一个有吸引力的选项。
 
 ```rust
 app.add_systems((system_a, (system_b, system_c).in_set(MySet)));
 
-// remove a system
+// 移除一个系统
 schedule.remove_systems_in_set(my_system, ScheduleCleanupPolicy::RemoveSystemsOnly);
 
-// remove systems in a set
+// 移除集合中的系统
 app.remove_systems_in_set(MySet, ScheduleCleanupPolicy::RemoveSetAndSystems);
 ```
 
-## UI Nodes Can Ignore Parent Scroll Position [#](https://bevy.org/news/bevy-0-18/#ui-nodes-can-ignore-parent-scroll-position)
+## UI 节点可以忽略父级滚动位置 [#](https://bevy.org/news/bevy-0-18/#ui-nodes-can-ignore-parent-scroll-position)
 
 Authors:[@PPakalns](https://github.com/PPakalns)
 
 PRs:[#21648](https://github.com/bevyengine/bevy/pull/21648)
 
-We've added the [`IgnoreScroll`](https://docs.rs/bevy/0.18.0/bevy/prelude/struct.IgnoreScroll.html) component, which controls whether a UI element ignores its parent’s `ScrollPosition` along specific axes.
+我们添加了 [`IgnoreScroll`](https://docs.rs/bevy/0.18.0/bevy/prelude/struct.IgnoreScroll.html) 组件，用于控制 UI 元素是否沿特定轴忽略其父级的 `ScrollPosition`。
 
-This can be used to achieve basic sticky row and column headers in scrollable UI layouts. See the [`scroll` example](https://github.com/bevyengine/bevy/blob/latest/examples/ui/scroll.rs) for a demonstration!
+这可用于在可滚动 UI 布局中实现基本的粘性行和列标题。查看 [`scroll` 示例](https://github.com/bevyengine/bevy/blob/latest/examples/ui/scroll.rs) 进行演示！
 
-## Interpolation for Colors and Layout [#](https://bevy.org/news/bevy-0-18/#interpolation-for-colors-and-layout)
+## 颜色和布局的插值 [#](https://bevy.org/news/bevy-0-18/#interpolation-for-colors-and-layout)
 
 Authors:[@viridia](https://github.com/viridia)
 
 PRs:[#21633](https://github.com/bevyengine/bevy/pull/21633)
 
-Bevy's [`StableInterpolate`](https://docs.rs/bevy/0.18.0/bevy/math/trait.StableInterpolate.html) trait is a lovely foundation for animation, but sadly there's one important type that it doesn't work with: the [`Val`](https://docs.rs/bevy/0.18.0/bevy/prelude/enum.Val.html) type from `bevy_ui`, used to control the layout of UI elements. [`Val`](https://docs.rs/bevy/0.18.0/bevy/prelude/enum.Val.html) is an enum, representing different length units such as pixels and percentages, and it's not generally possible or even meaningful to try and interpolate between different units.
+Bevy 的 [`StableInterpolate`](https://docs.rs/bevy/0.18.0/bevy/math/trait.StableInterpolate.html) trait 是动画的绝佳基础，但遗憾的是有一个重要的类型它无法处理：来自 `bevy_ui` 的 [`Val`](https://docs.rs/bevy/0.18.0/bevy/prelude/enum.Val.html) 类型，用于控制 UI 元素的布局。[`Val`](https://docs.rs/bevy/0.18.0/bevy/prelude/enum.Val.html) 是一个枚举，表示不同的长度单位如像素和百分比，通常不可能或没有意义尝试在不同单位之间进行插值。
 
-However, it's common to want to animate [`Val`](https://docs.rs/bevy/0.18.0/bevy/prelude/enum.Val.html) in a way that doesn't require mixing units: often we just want to slide or stretch the length of a widget such as a toggle switch. We can do this so long as we check at runtime that both interpolation control points are in the same units.
+然而，通常需要以不需要混合单位的方式动画 [`Val`](https://docs.rs/bevy/0.18.0/bevy/prelude/enum.Val.html)：通常我们只想滑动或拉伸 widget 如开关的长度。只要我们在运行时检查两个插值控制点是否在同一单位中，我们就可以这样做。
 
-The new [`TryStableInterpolate`](https://docs.rs/bevy/0.18.0/bevy/math/trait.TryStableInterpolate.html) trait introduces the idea of interpolation that can fail, by returning a `Result`. Note that "failure" in this case is not necessarily bad: it just means that the animation player will need to modify the parameter in some other way, such as "snapping" or "jumping" to the new keyframe without smoothly interpolating. This lets us create complex animations that incorporate both kinds of parameters: ones that interpolate, and ones that don't.
+新的 [`TryStableInterpolate`](https://docs.rs/bevy/0.18.0/bevy/math/trait.TryStableInterpolate.html) trait 引入了可能失败的插值概念，通过返回 `Result`。请注意，这里的"失败"不一定是坏事：它只是意味着动画播放器需要以其他方式修改参数，例如"跳转"到新关键帧而不进行平滑插值。这使我们能够创建包含两种参数的复杂动画：一种进行插值，一种不进行插值。
 
-We've added a blanket implementation of [`TryStableInterpolate`](https://docs.rs/bevy/0.18.0/bevy/math/trait.TryStableInterpolate.html) for all types that impl [`StableInterpolate`](https://docs.rs/bevy/0.18.0/bevy/math/trait.StableInterpolate.html), and these can never fail. There are additional impls for [`Color`](https://docs.rs/bevy/0.18.0/bevy/color/enum.Color.html) and [`Val`](https://docs.rs/bevy/0.18.0/bevy/prelude/enum.Val.html), which can fail if the control points are not in the same units / color space.
+我们为所有实现了 [`StableInterpolate`](https://docs.rs/bevy/0.18.0/bevy/math/trait.StableInterpolate.html) 的类型添加了 [`TryStableInterpolate`](https://docs.rs/bevy/0.18.0/bevy/math/trait.TryStableInterpolate.html) 的 blanket 实现，这些永远不会失败。还有针对 [`Color`](https://docs.rs/bevy/0.18.0/bevy/color/enum.Color.html) 和 [`Val`](https://docs.rs/bevy/0.18.0/bevy/prelude/enum.Val.html) 的额外实现，如果控制点不在同一单位/颜色空间中则可能失败。
 
-## Seekable Asset Readers [#](https://bevy.org/news/bevy-0-18/#seekable-asset-readers)
+## 可寻址资产读取器 [#](https://bevy.org/news/bevy-0-18/#seekable-asset-readers)
 
-Authors:[@andriyDev](https://github.com/andriyDev), [@cart](https://github.com/cart)
+Authors:[@andriyDev](https://github.com/andriyDev), [@cart](https://github.com/cart)
 
 PRs:[#22182](https://github.com/bevyengine/bevy/pull/22182)
 
-In **Bevy 0.15**, we replaced the `AsyncSeek` super trait on `Reader` with `AsyncSeekForward`. This allowed our `Reader` trait to apply to more cases (e.g., it could allow cases like an HTTP request, which may not support seeking backwards). However, it also meant that we could no longer use seeking fully where it was available.
+在 **Bevy 0.15** 中，我们将 `Reader` 上的 `AsyncSeek` 超级 trait 替换为 `AsyncSeekForward`。这允许我们的 `Reader` trait 适用于更多场景（例如，它可能允许像 HTTP 请求这样不支持向后寻址的情况）。但这也意味着当寻址功能可用时，我们无法再完全使用它。
 
-In **Bevy 0.18**, we've made our `Reader` trait upgrade-able to `SeekableReader`, in cases where the asset source supports it.
+在 **Bevy 0.18** 中，当资产源支持时，我们可以将 `Reader` trait 升级为 `SeekableReader`。
 
 ```rust
 let seekable_reader = reader.seekable()?;
 seekable_reader.seek(SeekFrom::Start(10)).await?;
 ```
 
-This enables an `AssetLoader` that needs seeking to either fail, or select a suitable fallback behavior for its use case (such as reading into a `Vec`, which is seekable).
+这使得需要寻址的 `AssetLoader` 可以失败，或者为其用例选择合适的回退行为（例如读取到 `Vec`，它是可寻址的）。

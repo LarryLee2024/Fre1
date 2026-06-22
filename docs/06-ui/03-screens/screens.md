@@ -43,6 +43,8 @@ Screen 设计遵循以下原则：
 
 ## 2. BattleScreen
 
+> **SSPEC**: `docs/06-ui/07-specs/screens/battle_screen.md` — ASCII Wireframe / Flexbox Layout / 完整 17 字段 Spec (active)
+
 ### 2.1 基本信息
 
 | 属性 | 值 |
@@ -110,6 +112,8 @@ BattleScreen
 
 ## 3. MainMenuScreen
 
+> **SSPEC**: `docs/06-ui/07-specs/screens/main_menu_screen.md` — ASCII Wireframe / Flexbox Layout / 完整 Spec (active)
+
 ### 3.1 基本信息
 
 | 属性 | 值 |
@@ -160,6 +164,8 @@ MainMenuScreen
 ---
 
 ## 4. InventoryScreen
+
+> **SSPEC**: `docs/06-ui/07-specs/screens/inventory_screen.md` — ASCII Wireframe / Flexbox Layout / Per-Region State / 完整 Spec (active)
 
 ### 4.1 基本信息
 
@@ -222,6 +228,8 @@ InventoryScreen
 ---
 
 ## 5. ShopScreen
+
+> **SSPEC**: `docs/06-ui/07-specs/screens/shop_screen.md` — ASCII Wireframe / Flexbox Layout / 完整 Spec (active, Spec先于代码)
 
 ### 5.1 基本信息
 
@@ -290,6 +298,8 @@ ShopScreen
 ---
 
 ## 6. SettingsScreen
+
+> **SSPEC**: `docs/06-ui/07-specs/screens/settings_screen.md` — ASCII Wireframe / Flexbox Layout / 完整 Spec (active)
 
 ### 6.1 基本信息
 
@@ -360,6 +370,8 @@ SettingsScreen
 ---
 
 ## 7. SaveLoadScreen
+
+> **SSPEC**: `docs/06-ui/07-specs/screens/save_load_screen.md` — ASCII Wireframe / Flexbox Layout / 完整 Spec (active, Spec先于代码)
 
 ### 7.1 基本信息
 

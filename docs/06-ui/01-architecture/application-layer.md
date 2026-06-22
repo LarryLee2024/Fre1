@@ -18,6 +18,8 @@ tags:
 
 > **职责**: @presentation-architect | **上游**: ADR-055 §3 (数据流), §Communication Design (通信表) | domain rules §1 (UiIntent/UiCommand/UiAction 定义), §5.3 (用户输入处理流程) | schema §10 (UiCommand Schema), §11 (UiAction Schema)
 
+> **SSPEC参考**: docs/06-ui/07-specs/ — AI-Consumable Screen Specification 标准。新增 Screen 必须先写 SSPEC，见 ADR-066。
+
 ---
 
 ## 1. 设计目的

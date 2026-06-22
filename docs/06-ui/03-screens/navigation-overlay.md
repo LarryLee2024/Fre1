@@ -17,6 +17,8 @@ tags:
 
 > **职责**: @presentation-architect | **上游**: ADR-055 §6 (UI Root 分层), §7 (状态分级) | domain rules §1 (术语), §2 (状态机), §5.4-§5.7 (流程定义), §INV-UI-006 | schema §7 (Navigation), §8 (Focus), §17 (Save)
 
+> **SSPEC参考**: docs/06-ui/07-specs/ — AI-Consumable Screen Specification 标准。新增 Screen 必须先写 SSPEC，见 ADR-066。
+
 ---
 
 > **实现状态**: ScreenStack, ScreenType, UiScreenState, ScreenLifecycle, 5 层 UI Root 和 Overlay 服务队列均已实现（code-aligned）。本节介绍的设计与代码一致。

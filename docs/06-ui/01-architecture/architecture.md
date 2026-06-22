@@ -20,6 +20,8 @@ tags:
 > **职责**: @presentation-architect | **上游**: ADR-055 (§1-§14), ADR-050, ADR-043, ADR-053, ADR-012, ADR-054
 > **核心约束**: L3 是纯消费层，Domain/Core/Infra 禁止依赖 UI 层
 
+> **SSPEC参考**: docs/06-ui/07-specs/ — AI-Consumable Screen Specification 标准。新增 Screen 必须先写 SSPEC，见 ADR-066。
+
 ---
 
 ## 1. 设计目的

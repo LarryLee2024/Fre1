@@ -6,64 +6,64 @@
 
 [A factory from Exofactory, an in-development factory builder made with Bevy](https://store.steampowered.com/app/3615720/Exofactory/)
 
-Thanks to **278** contributors, **1311** pull requests, community reviewers, and our [**generous donors**](https://bevy.org/donate), we're happy to announce the **Bevy 0.17** release on [crates.io](https://crates.io/crates/bevy)!
+感谢 **278** 位贡献者、**1311** 个 pull request、社区审阅者以及我们[**慷慨的捐赠者**](https://bevy.org/donate)，我们很高兴地宣布 **Bevy 0.17** 已在 [crates.io](https://crates.io/crates/bevy) 上发布！
 
-For those who don't know, Bevy is a refreshingly simple data-driven game engine built in Rust. You can check out our [Quick Start Guide](https://bevy.org/learn/quick-start) to try it today. It's free and open source forever! You can grab the full [source code](https://github.com/bevyengine/bevy) on GitHub. Check out [Bevy Assets](https://bevy.org/assets) for a collection of community-developed plugins, games, and learning resources.
+如果你还不了解，Bevy 是一个基于 Rust 构建的、令人耳目一新的简洁数据驱动游戏引擎。你可以查看我们的[快速入门指南](https://bevy.org/learn/quick-start)来立即试用。它是免费且永远开源的！你可以在 GitHub 上获取完整的[源代码](https://github.com/bevyengine/bevy)。查看 [Bevy Assets](https://bevy.org/assets) 获取社区开发的插件、游戏和学习资源合集。
 
-To update an existing Bevy App or Plugin to **Bevy 0.17**, check out our [0.16 to 0.17 Migration Guide](https://bevy.org/learn/migration-guides/0-16-to-0-17/).
+要将现有的 Bevy App 或 Plugin 更新到 **Bevy 0.17**，请查看我们的 [0.16 到 0.17 迁移指南](https://bevy.org/learn/migration-guides/0-16-to-0-17/)。
 
-Since our last release a few months ago we've added a _ton_ of new features, bug fixes, and quality of life tweaks, but here are some of the highlights:
+自上次发布以来的几个月里，我们添加了_大量_新功能、Bug 修复和易用性改进，以下是一些亮点：
 
-- **Bevy Solari - Raytraced Lighting (Experimental):** Bevy now has work-in-progress support for stunning, physically realistic real-time lighting. Many limitations apply, but boy is it pretty.
-- **Improved Observers / Events:** Observers have been wildly popular, offering users a flexible way to respond to events with very little boilerplate. We've cleaned up the Observer and Event APIs, made them even more flexible, and improved their documentation!
-- **Headless Bevy UI Widgets (Experimental)**: A new work-in-progress headless UI widget library, providing baseline widget functionality to build on top of.
-- **Bevy Feathers - Widgets for Tooling (Experimental):** An opinionated set of tooling-focused widgets built on top of our headless widgets. We're still building this out, but you can play with it right now!
-- **Rust Hotpatching:** Tired of waiting for Rust to recompile while prototyping? Bevy now has an initial integration of `subsecond` by Dioxus, allowing you to opt into hotreloaded Rust code without restarting your program. This is currently limited to Bevy ECS systems, and has some limitations.
-- **Light Textures**: You can now use textures to artistically modulate the intensity of light.
-- **DLSS**: On Nvidia RTX GPUs, Bevy now supports Deep Learning Super Sampling (DLSS) for anti-aliasing and upscaling.
-- **Tilemap Chunk Rendering**: A new performant way to render tilemaps in chunks ... this is our first step in building out Bevy's built-in tilemap system.
-- **Web Assets**: Bevy's asset system now supports loading assets from `http` and `https` URLs.
-- **Reflect Auto-Registration**: When reflecting types, you no longer need to manually register them in your apps.
-- **Frame Time Graphs**: A new built-in widget to debug frame times in running Bevy apps.
-- **UI Gradients**: Bevy UI now supports background and border gradients.
-- **Raymarched Atmosphere**: Bevy's procedural atmosphere now has a raymarching mode for more accurate lighting.
-- **Virtual Geometry BVH Culling**: Bevy's virtual geometry system is now much faster thanks to BVH culling.
+- **Bevy Solari - 光线追踪光照（实验性）：** Bevy 现在有正在开发中的支持，可实现出色的、物理上逼真的实时光照。虽然存在许多限制，但效果确实令人惊叹。
+- **改进的观察者/事件系统：** 观察者（Observers）一直非常受欢迎，为用户提供了以极少的样板代码响应事件的灵活方式。我们已经清理了 Observer 和 Event API，使它们更加灵活，并改进了文档！
+- **无头 Bevy UI Widget（实验性）：** 一个全新的正在开发中的无头 UI widget 库，提供构建在上面的基础 widget 功能。
+- **Bevy Feathers - 工具 Widget（实验性）：** 一套基于我们的无头 widget 构建的、面向工具的专用 widget 集合。我们仍在构建中，但你现在就可以试用了！
+- **Rust 热补丁：** 厌倦了原型设计时等待 Rust 重新编译？Bevy 现在集成了 Dioxus 的 `subsecond`，允许你选择热重载 Rust 代码而无需重启程序。目前仅限于 Bevy ECS 系统，且有一些限制。
+- **光照纹理：** 你现在可以使用纹理来艺术性地调制光照强度。
+- **DLSS：** 在 Nvidia RTX GPU 上，Bevy 现在支持深度学习超级采样（DLSS）进行抗锯齿和上采样。
+- **瓦片地图分块渲染：** 一种新的高性能瓦片地图分块渲染方式...这是构建 Bevy 内置瓦片地图系统的第一步。
+- **Web 资产：** Bevy 的资产系统现在支持从 `http` 和 `https` URL 加载资产。
+- **Reflect 自动注册：** 在反射类型时，你不再需要在应用中手动注册它们。
+- **帧时间图表：** 一个新的内置 widget，用于在运行中的 Bevy 应用中调试帧时间。
+- **UI 渐变：** Bevy UI 现在支持背景和边框渐变。
+- **光线行进大气：** Bevy 的程序化大气现在有一个光线行进模式，提供更准确的光照。
+- **虚拟几何 BVH 剔除：** Bevy 的虚拟几何系统由于 BVH 剔除而变得更加快速。
 
-## Bevy Solari: Raytraced Lighting (Experimental) [#](https://bevy.org/news/bevy-0-17/#bevy-solari-raytraced-lighting-experimental)
+## Bevy Solari：光线追踪光照（实验性）[#](https://bevy.org/news/bevy-0-17/#bevy-solari-raytraced-lighting-experimental)
 
-Authors:[@JMS55](https://github.com/JMS55), [@SparkyPotato](https://github.com/SparkyPotato)
+Authors:[@JMS55](https://github.com/JMS55), [@SparkyPotato](https://github.com/SparkyPotato)
 
-PRs:[#19058](https://github.com/bevyengine/bevy/pull/19058), [#19620](https://github.com/bevyengine/bevy/pull/19620), [#19790](https://github.com/bevyengine/bevy/pull/19790), [#20020](https://github.com/bevyengine/bevy/pull/20020), [#20113](https://github.com/bevyengine/bevy/pull/20113), [#20156](https://github.com/bevyengine/bevy/pull/20156), [#20213](https://github.com/bevyengine/bevy/pull/20213), [#20242](https://github.com/bevyengine/bevy/pull/20242), [#20259](https://github.com/bevyengine/bevy/pull/20259), [#20406](https://github.com/bevyengine/bevy/pull/20406), [#20457](https://github.com/bevyengine/bevy/pull/20457), [#20580](https://github.com/bevyengine/bevy/pull/20580), [#20596](https://github.com/bevyengine/bevy/pull/20596), [#20622](https://github.com/bevyengine/bevy/pull/20622), [#20658](https://github.com/bevyengine/bevy/pull/20658), [#20659](https://github.com/bevyengine/bevy/pull/20659), [#20980](https://github.com/bevyengine/bevy/pull/20980)
+PRs:[#19058](https://github.com/bevyengine/bevy/pull/19058), [#19620](https://github.com/bevyengine/bevy/pull/19620), [#19790](https://github.com/bevyengine/bevy/pull/19790), [#20020](https://github.com/bevyengine/bevy/pull/20020), [#20113](https://github.com/bevyengine/bevy/pull/20113), [#20156](https://github.com/bevyengine/bevy/pull/20156), [#20213](https://github.com/bevyengine/bevy/pull/20213), [#20242](https://github.com/bevyengine/bevy/pull/20242), [#20259](https://github.com/bevyengine/bevy/pull/20259), [#20406](https://github.com/bevyengine/bevy/pull/20406), [#20457](https://github.com/bevyengine/bevy/pull/20457), [#20580](https://github.com/bevyengine/bevy/pull/20580), [#20596](https://github.com/bevyengine/bevy/pull/20596), [#20622](https://github.com/bevyengine/bevy/pull/20622), [#20658](https://github.com/bevyengine/bevy/pull/20658), [#20659](https://github.com/bevyengine/bevy/pull/20659), [#20980](https://github.com/bevyengine/bevy/pull/20980)
 
-With the new `bevy_solari` crate, we're making our first steps towards realtime raytraced lighting.
+通过新的 `bevy_solari` crate，我们正在迈出实现实时光线追踪光照的第一步。
 
-For some background, lighting in video games can be split into two parts: direct and indirect lighting.
+作为背景知识，视频游戏中的光照可以分为两部分：直接光照和间接光照。
 
-Direct lighting is light that is emitted from a light source, bounces off of one surface, and then reaches the camera. Indirect lighting by contrast is light that bounces off of different surfaces many times before reaching the camera. Indirect lighting is also often called global illumination.
+直接光照是从光源发出、从一个表面反弹后到达相机的光。间接光照则是从不同表面多次反弹后才到达相机的光。间接光照通常也被称为全局光照。
 
-In Bevy, direct lighting comes from analytical light components (`DirectionalLight`, `PointLight`, `SpotLight`) and shadow maps. Indirect lighting comes from a hardcoded `AmbientLight`, baked lighting components (`EnvironmentMapLight`, `IrradianceVolume`, `Lightmap`), and screen-space calculations (`ScreenSpaceAmbientOcclusion`, `ScreenSpaceReflections`, `specular_transmission`, `diffuse_transmission`).
+在 Bevy 中，直接光照来自解析光源组件（`DirectionalLight`、`PointLight`、`SpotLight`）和阴影贴图。间接光照来自硬编码的 `AmbientLight`、烘焙光照组件（`EnvironmentMapLight`、`IrradianceVolume`、`Lightmap`）和屏幕空间计算（`ScreenSpaceAmbientOcclusion`、`ScreenSpaceReflections`、`specular_transmission`、`diffuse_transmission`）。
 
-The problem with these methods is that they all have large downsides:
+这些方法的问题在于它们都有很大的缺点：
 
-- Emissive meshes do not cast light onto other objects, either direct or indirect.
-- Shadow maps are very expensive to render and consume a lot of memory, so you're limited to using only a few shadow casting lights. Good shadow quality can be difficult to obtain in large scenes.
-- Baked lighting does not update in realtime as objects and lights move around and requires time to bake, slowing down game production.
-- Screen-space methods have low quality and do not capture off-screen geometry and light.
+- 发光网格不会向其他物体投射光线，无论是直接还是间接。
+- 阴影贴图渲染非常昂贵且消耗大量内存，因此你只能使用少量投射阴影的光源。在大型场景中获得良好的阴影质量可能很困难。
+- 烘焙光照不会在物体和光源移动时实时更新，且需要烘焙时间，减慢游戏制作速度。
+- 屏幕空间方法质量较低，且无法捕获屏幕外的几何体和光线。
 
-Bevy Solari is intended as a completely alternate, high-end lighting solution for Bevy that uses GPU-accelerated raytracing to fix all of the above problems. Emissive meshes properly cast light and shadows, you can have hundreds of shadow casting lights, quality is much better, it requires no baking time, and it supports _fully_ dynamic scenes!
+Bevy Solari 旨在成为 Bevy 的完全替代高端光照解决方案，使用 GPU 加速光线追踪来解决上述所有问题。发光网格会正确投射光和阴影，你可以拥有数百个投射阴影的光源，质量更好，不需要烘焙时间，并且支持_完全_动态的场景！
 
-### Try it out [#](https://bevy.org/news/bevy-0-17/#try-it-out)
+### 试用 [#](https://bevy.org/news/bevy-0-17/#try-it-out)
 
-While Bevy 0.17 adds the bevy_solari crate, it is not yet production ready.
+虽然 Bevy 0.17 添加了 bevy_solari crate，但它尚未达到生产可用状态。
 
-However, feel free to run the solari example to check out the progress we've made. There are two different modes you can try out:
+但是，请随意运行 solari 示例来查看我们取得的进展。你可以尝试两种不同的模式：
 
-1. A non-realtime "reference" mode that uses pathtracing: `cargo run --release --example solari --features bevy_solari -- --pathtracer`.
-2. A realtime mode that uses a combination of techniques, and currently supports only diffuse materials: `cargo run --release --example solari --features bevy_solari`.
+1. 使用路径追踪的非实时"参考"模式：`cargo run --release --example solari --features bevy_solari -- --pathtracer`。
+2. 使用多种技术组合的实时模式，目前仅支持漫反射材质：`cargo run --release --example solari --features bevy_solari`。
 
-Additionally, if you have a NVIDIA GPU, you can enable DLSS Ray Reconstruction with the realtime mode for a combination of denoising (Bevy Solari does not currently come with any alternate denoisers), lower rendering times, and anti-aliasing: `cargo run --release --example solari --features bevy_solari,dlss`.
+此外，如果你有 NVIDIA GPU，你可以在实时模式下启用 DLSS 光线重建以获得降噪（Bevy Solari 目前不附带替代降噪器）、更低的渲染时间和抗锯齿的组合：`cargo run --release --example solari --features bevy_solari,dlss`。
 
-### How it works [#](https://bevy.org/news/bevy-0-17/#how-it-works)
+### 工作原理 [#](https://bevy.org/news/bevy-0-17/#how-it-works)
 
 ![noisy direct illumination](https://bevy.org/news/bevy-0-17/noisy_di.jpg)
 
@@ -71,31 +71,31 @@ Additionally, if you have a NVIDIA GPU, you can enable DLSS Ray Reconstruction w
 
 ![composited / denoised / anti-aliased](https://bevy.org/news/bevy-0-17/denoised_full.jpg)
 
-Our current implementation uses raytraced direct and indirect lighting (also known as global illuminance), which are sampled via ReSTIR DI/GI and uses a world-space irradiance cache to improve GI quality. Like all raytracing techniques, this produces results that are too noisy for realtime applications. To resolve this, you need to add a denoising step, which is currently handled via DLSS Ray Reconstruction, although we'd be happy to add support for alternate methods as well in the future.
+我们当前的实现使用光线追踪的直接和间接光照（也称为全局照明），通过 ReSTIR DI/GI 采样，并使用世界空间辐照度缓存来提高 GI 质量。像所有光线追踪技术一样，这会产生对实时应用来说过于嘈杂的结果。为了解决这个问题，你需要添加降噪步骤，目前通过 DLSS 光线重建处理，尽管我们将来也乐意添加对其他方法的支持。
 
-If you're interested in the crunchy technical details of how this all works: please read [@JMS55's blog post](https://jms55.github.io/posts/2025-09-20-solari-bevy-0-17) for a frame breakdown!
+如果你对所有这些如何工作的技术细节感兴趣：请阅读 [@JMS55 的博客文章](https://jms55.github.io/posts/2025-09-20-solari-bevy-0-17)了解帧分解！
 
-Look forward to more work on Bevy Solari in future releases!
+期待 Bevy Solari 在未来版本中的更多工作！
 
-Special thanks to `@Vecvec` for adding raytracing support to wgpu.
+特别感谢 `@Vecvec` 为 wgpu 添加光线追踪支持。
 
-## Event / Observer Overhaul [#](https://bevy.org/news/bevy-0-17/#event-observer-overhaul)
+## 事件/观察者重构 [#](https://bevy.org/news/bevy-0-17/#event-observer-overhaul)
 
-Authors:[@cart](https://github.com/cart), [@Jondolf](https://github.com/Jondolf), [@alice-i-cecile](https://github.com/alice-i-cecile), [@hukasu](https://github.com/hukasu), [@oscar-benderstone](https://github.com/oscar-benderstone), [@Zeophlite](https://github.com/Zeophlite), [@gwafotapa](https://github.com/gwafotapa)
+Authors:[@cart](https://github.com/cart), [@Jondolf](https://github.com/Jondolf), [@alice-i-cecile](https://github.com/alice-i-cecile), [@hukasu](https://github.com/hukasu), [@oscar-benderstone](https://github.com/oscar-benderstone), [@Zeophlite](https://github.com/Zeophlite), [@gwafotapa](https://github.com/gwafotapa)
 
-PRs:[#20731](https://github.com/bevyengine/bevy/pull/20731), [#19596](https://github.com/bevyengine/bevy/pull/19596), [#19663](https://github.com/bevyengine/bevy/pull/19663), [#19611](https://github.com/bevyengine/bevy/pull/19611), [#19935](https://github.com/bevyengine/bevy/pull/19935), [#20274](https://github.com/bevyengine/bevy/pull/20274)
+PRs:[#20731](https://github.com/bevyengine/bevy/pull/20731), [#19596](https://github.com/bevyengine/bevy/pull/19596), [#19663](https://github.com/bevyengine/bevy/pull/19663), [#19611](https://github.com/bevyengine/bevy/pull/19611), [#19935](https://github.com/bevyengine/bevy/pull/19935), [#20274](https://github.com/bevyengine/bevy/pull/20274)
 
-Bevy's Observer API landed a few releases ago, and it has quickly become one of our most popular features. In **Bevy 0.17** we rearchitected and refined the Event and Observer APIs to be clearer, easier to use, and more performant. We plan on rolling out Bevy's [next generation Scene / UI system](https://github.com/bevyengine/bevy/pull/20158/) in the near future, and observers are a key piece! We wanted to ensure they were in a better place for the next phase of Bevy development. The old API had some problems:
+Bevy 的 Observer API 在几个版本前落地，迅速成为我们最受欢迎的功能之一。在 **Bevy 0.17** 中，我们重新架构并优化了 Event 和 Observer API，使其更清晰、更易用、性能更好。我们计划在不久的将来推出 Bevy 的[下一代 Scene / UI 系统](https://github.com/bevyengine/bevy/pull/20158/)，而观察者是关键部分！我们希望确保它们在 Bevy 下一阶段的开发中处于更好的状态。旧 API 存在一些问题：
 
-1. **Concept names were confusing and ambiguous**: Events could be "observed" by observers, "buffered" in `Events` collections, or both. Knowing how to produce or consume a given [`Event`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Event.html) required too much implied context, and was error prone.
-2. **The API was not "static" enough**: Because a given [`Event`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Event.html) type could be used by and produced for _any context_, we had to provide access to _every possible API_ for _every event type_. This made the APIs easy to misuse. It should not be possible to trigger an "entity event" without an entity!
-3. **The API did too much work**: Because events could be produced and used in any context, this meant that they all branched through code for every possible context. This incurred unnecessary overhead. It also resulted in lots of unnecessary codegen!
+1. **概念名称令人困惑且模糊**：事件可以被观察者"观察"，在 `Events` 集合中"缓冲"，或者两者兼有。了解如何产生或消费给定的 [`Event`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Event.html) 需要太多隐含的上下文，而且容易出错。
+2. **API 不够"静态"**：因为给定的 [`Event`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Event.html) 类型可以被_任何上下文_使用和产生，我们必须为_每个事件类型_提供对_每个可能 API_ 的访问。这使得 API 容易被误用。不应该能够在没有实体的情况下触发"实体事件"！
+3. **API 做了太多工作**：因为事件可以在任何上下文中产生和使用，这意味着它们都经过了每个可能上下文的代码分支。这带来了不必要的开销。还导致了大量不必要的代码生成！
 
-In **Bevy 0.17** we have sorted out these issues without fundamentally changing the shape of the API. Migrations should generally be very straightforward.
+在 **Bevy 0.17** 中，我们在没有根本改变 API 形态的情况下解决了这些问题。迁移通常应该非常直接。
 
-### The Rearchitecture [#](https://bevy.org/news/bevy-0-17/#the-rearchitecture)
+### 重新架构 [#](https://bevy.org/news/bevy-0-17/#the-rearchitecture)
 
-The `Event` trait has been reframed / refocused to increase flexibility, make the API more static, and remove specialized cruft:
+`Event` trait 已经被重新定位/重新聚焦，以增加灵活性，使 API 更静态，并移除专门化的冗余：
 
 ```rust
 // Old: Bevy 0.16
@@ -113,13 +113,13 @@ trait Event {
 }
 ```
 
-Every [`Event`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Event.html) now has an associated [`Trigger`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Trigger.html) implementation. The [`Trigger`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Trigger.html) trait defines the behavior of `world.trigger()` for that event. [`Trigger`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Trigger.html) defines which observers will run, the order they will run in, and the data that is passed to them.
+每个 [`Event`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Event.html) 现在都有一个关联的 [`Trigger`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Trigger.html) 实现。[`Trigger`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Trigger.html) trait 定义了该事件的 `world.trigger()` 行为。[`Trigger`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Trigger.html) 定义了哪些观察者将运行、它们的运行顺序以及传递给它们的数据。
 
-By representing this in the type system, we can constrain behaviors and data to _specific_ types of events statically, making it impossible to "misuse" an [`Event`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Event.html). All of Bevy's existing "flavors" of events have been ported to the new [`Event`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Event.html) / [`Trigger`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Trigger.html) system.
+通过在类型系统中表示这一点，我们可以静态地将行为和数据约束到_特定_类型的事件，使得不可能"误用" [`Event`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Event.html)。Bevy 所有现有的"风味"事件都已移植到新的 [`Event`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Event.html) / [`Trigger`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Trigger.html) 系统。
 
-### The `Event` trait [#](https://bevy.org/news/bevy-0-17/#the-event-trait)
+### `Event` trait [#](https://bevy.org/news/bevy-0-17/#the-event-trait)
 
-At a glance, the default [`Event`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Event.html) derive and usage hasn't changed much. Just some shorter / clearer naming. The old API looked like this:
+乍一看，默认的 [`Event`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Event.html) derive 和用法没有太多变化。只是一些更短/更清晰的命名。旧 API 看起来像这样：
 
 ```rust
 #[derive(Event)]
@@ -134,7 +134,7 @@ world.add_observer(|trigger: Trigger<GameOver>| {
 world.trigger(GameOver { score: 100 });
 ```
 
-In **Bevy 0.17**, defining observers has only changed slightly:
+在 **Bevy 0.17** 中，定义观察者只有轻微变化：
 
 ```rust
 world.add_observer(|game_over: On<GameOver>| {
@@ -142,13 +142,13 @@ world.add_observer(|game_over: On<GameOver>| {
 });
 ```
 
-`Trigger` is now `On`. `On` encourages developers to think of this parameter _as the event itself_. This is also reflected in the new naming convention, where we name the variable after the `Event` (ex: `game_over`) rather than the `Trigger` (ex: `trigger`).
+`Trigger` 现在是 `On`。`On` 鼓励开发者将此参数_视为事件本身_。这也反映在新的命名约定中，我们按 `Event` 命名变量（例如 `game_over`）而不是按 `Trigger`（例如 `trigger`）。
 
-Internally things are a bit different though! The [`Event`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Event.html) derive defaults to being "untargeted" / "global", by setting the `Event::Trigger` to [`GlobalTrigger`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/struct.GlobalTrigger.html). When it is triggered, only "untargeted" top-level observers will run, and there is _no way_ to trigger it in a different context (ex: events with a [`GlobalTrigger`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/struct.GlobalTrigger.html) cannot target entities!).
+但在内部有些不同！[`Event`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Event.html) derive 默认为"无目标"/"全局"，通过将 `Event::Trigger` 设置为 [`GlobalTrigger`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/struct.GlobalTrigger.html)。当它被触发时，只有"无目标"的顶级观察者会运行，并且_没有其他方式_在不同上下文中触发它（例如，具有 [`GlobalTrigger`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/struct.GlobalTrigger.html) 的事件无法定位实体！）。
 
-### The `EntityEvent` trait [#](https://bevy.org/news/bevy-0-17/#the-entityevent-trait)
+### `EntityEvent` trait [#](https://bevy.org/news/bevy-0-17/#the-entityevent-trait)
 
-In previous versions of Bevy, _any_ event could optionally be triggered for an entity. It looked like this:
+在 Bevy 的早期版本中，_任何_事件都可以选择性地针对实体触发。看起来像这样：
 
 ```rust
 #[derive(Event)]
@@ -157,7 +157,7 @@ struct Click;
 world.trigger_targets(Click, entity);
 ```
 
-In **Bevy 0.17**, if you want an [`Event`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Event.html) to target an [`Entity`](https://docs.rs/bevy/0.17.1/bevy/ecs/entity/struct.Entity.html) (and thus trigger any observers watching for that specific entity), you derive [`EntityEvent`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.EntityEvent.html):
+在 **Bevy 0.17** 中，如果你希望 [`Event`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Event.html) 针对 [`Entity`](https://docs.rs/bevy/0.17.1/bevy/ecs/entity/struct.Entity.html)（从而触发任何监视该特定实体的观察者），你需要 derive [`EntityEvent`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.EntityEvent.html)：
 
 ```rust
 #[derive(EntityEvent)]
@@ -168,7 +168,7 @@ struct Click {
 world.trigger(Click { entity });
 ```
 
-Notice that `Click` now has the target entity as a field _on_ the [`Event`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Event.html), and it now uses the same `world.trigger()` API that other events use. `world.trigger_targets` is no more ... every event is triggered using the same API!
+注意 `Click` 现在将目标实体作为 [`Event`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Event.html) 上的一个_字段_，并且它现在使用与其他事件相同的 `world.trigger()` API。`world.trigger_targets` 不复存在...每个事件都使用相同的 API 触发！
 
 ```rust
 // This observer will run for _all_ Click events targeting any entity
@@ -178,23 +178,23 @@ world.add_observer(|mut click: On<Click>| {});
 world.entity_mut(some_entity).observe(|mut click: On<Click>| {});
 ```
 
-An [`EntityEvent`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.EntityEvent.html) is an [`Event`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Event.html) with an [`EntityTrigger`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/struct.EntityTrigger.html), which will trigger entity-specific observers in addition to any global observers.
+[`EntityEvent`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.EntityEvent.html) 是一个具有 [`EntityTrigger`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/struct.EntityTrigger.html) 的 [`Event`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Event.html)，除了任何全局观察者外，还会触发实体特定的观察者。
 
-Deriving [`EntityEvent`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.EntityEvent.html) will set `EntityEvent::event_target` to a field named `entity` by default. In some cases (such as events that have multiple entity fields), it might make sense to use a more descriptive name. You can set the target using the `#[event_target]` field attribute:
+Derive [`EntityEvent`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.EntityEvent.html) 默认会将 `EntityEvent::event_target` 设置为名为 `entity` 的字段。在某些情况下（例如具有多个实体字段的事件），使用更具描述性的名称可能更合理。你可以使用 `#[event_target]` 字段属性设置目标：
 
 ```rust
 #[derive(EntityEvent)]
 struct Attack {
-    // This will trigger `attacker` observers 
+    // 这将触发 `attacker` 观察者
     #[event_target]
     attacker: Entity,
     attack_target: Entity,
 }
 ```
 
-### EntityEvent Propagation [#](https://bevy.org/news/bevy-0-17/#entityevent-propagation)
+### EntityEvent 传播 [#](https://bevy.org/news/bevy-0-17/#entityevent-propagation)
 
-An [`EntityEvent`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.EntityEvent.html) does not "propagate" by default (and by default they now _statically_ have no access to APIs that control propagation). Propagation can be enabled using the `propagate` attribute (which defaults to using the [`ChildOf`](https://docs.rs/bevy/0.17.1/bevy/ecs/hierarchy/struct.ChildOf.html) relationship to "bubble events up the hierarchy"):
+[`EntityEvent`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.EntityEvent.html) 默认不"传播"（并且默认_静态地_无法访问控制传播的 API）。可以使用 `propagate` 属性启用传播（默认使用 [`ChildOf`](https://docs.rs/bevy/0.17.1/bevy/ecs/hierarchy/struct.ChildOf.html) 关系来"将事件向上冒泡到层级结构"）：
 
 ```rust
 #[derive(EntityEvent)]
@@ -204,24 +204,24 @@ struct Click {
 }
 ```
 
-This will set the [`Event`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Event.html)'s [`Trigger`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Trigger.html) to [`PropagateEntityTrigger`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/struct.PropagateEntityTrigger.html).
+这将把 [`Event`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Event.html) 的 [`Trigger`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Trigger.html) 设置为 [`PropagateEntityTrigger`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/struct.PropagateEntityTrigger.html)。
 
-This enables access to "propagation" functionality like this:
+这启用了对"传播"功能的访问，如下所示：
 
 ```rust
 world.add_observer(|mut click: On<Click>| {
     if SOME_CONDITION {
-        // stop the event from "bubbling up"
+        // 阻止事件"向上冒泡"
         click.propagate(false);
     }
 });
 ```
 
-Bevy's `Pointer` events have always tracked the "original target" that an "entity event" was targeting. This was handy! We've enabled this functionality for every [`EntityEvent`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.EntityEvent.html) with [`PropagateEntityTrigger`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/struct.PropagateEntityTrigger.html): simply call `On::original_event_target`.
+Bevy 的 `Pointer` 事件一直跟踪"实体事件"的"原始目标"。这很方便！我们已为每个具有 [`PropagateEntityTrigger`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/struct.PropagateEntityTrigger.html) 的 [`EntityEvent`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.EntityEvent.html) 启用了此功能：只需调用 `On::original_event_target`。
 
-### Component Lifecycle Events [#](https://bevy.org/news/bevy-0-17/#component-lifecycle-events)
+### 组件生命周期事件 [#](https://bevy.org/news/bevy-0-17/#component-lifecycle-events)
 
-In past releases, the observer API for lifecycle events looked like this:
+在过去的版本中，生命周期事件的观察者 API 看起来像这样：
 
 ```rust
 app.add_observer(|trigger: Trigger<OnAdd, Player>| {
@@ -229,7 +229,7 @@ app.add_observer(|trigger: Trigger<OnAdd, Player>| {
 });
 ```
 
-We've ported these over to the new system, and renamed them to match our new naming scheme (ex: `OnAdd` is now [`Add`](https://docs.rs/bevy/0.17.1/bevy/ecs/lifecycle/struct.Add.html)). They look like this now:
+我们将这些移植到了新系统，并重命名以匹配我们的新命名方案（例如 `OnAdd` 现在是 [`Add`](https://docs.rs/bevy/0.17.1/bevy/ecs/lifecycle/struct.Add.html)）。它们现在看起来像这样：
 
 ```rust
 app.add_observer(|add: On<Add, Player>| {
@@ -237,13 +237,13 @@ app.add_observer(|add: On<Add, Player>| {
 });
 ```
 
-Component lifecycle events are an [`EntityEvent`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.EntityEvent.html) (and thus store the target entity as a field). They use the [`EntityComponentsTrigger`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/struct.EntityComponentsTrigger.html), which allows them to be triggered for specific components on an entity. Thanks to the new [`Trigger`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Trigger.html) system, this is also more efficient, as we can pass large / allocated context in instead of cloning it for each execution!
+组件生命周期事件是 [`EntityEvent`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.EntityEvent.html)（因此将目标实体存储为字段）。它们使用 [`EntityComponentsTrigger`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/struct.EntityComponentsTrigger.html)，允许它们针对实体上的特定组件触发。得益于新的 [`Trigger`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Trigger.html) 系统，这也更加高效，因为我们可以在每次执行时传递大型/分配的上下文，而不是克隆它！
 
-### Custom Event Triggers [#](https://bevy.org/news/bevy-0-17/#custom-event-triggers)
+### 自定义事件触发器 [#](https://bevy.org/news/bevy-0-17/#custom-event-triggers)
 
-The new [`Trigger`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Trigger.html) trait also enables developers to implement their _own_ specialized [`Event`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Event.html) [`Trigger`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Trigger.html) logic.
+新的 [`Trigger`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Trigger.html) trait 还使开发者能够实现_自己的_专用 [`Event`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Event.html) [`Trigger`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Trigger.html) 逻辑。
 
-The [`Event`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Event.html) derive can specify a custom [`Trigger`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Trigger.html) like this:
+[`Event`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Event.html) derive 可以像这样指定自定义 [`Trigger`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Trigger.html)：
 
 ```rust
 #[derive(Event)]
@@ -251,113 +251,113 @@ The [`Event`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Event.html) der
 struct Jump;
 ```
 
-This is generally unnecessary though ... Bevy's built-in default triggers are almost always what you want.
+但通常这没有必要...Bevy 内置的默认触发器几乎总是你想要的。
 
-### Events vs Messages [#](https://bevy.org/news/bevy-0-17/#events-vs-messages)
+### 事件 vs 消息 [#](https://bevy.org/news/bevy-0-17/#events-vs-messages)
 
-In previous versions of Bevy, the [`Event`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Event.html) trait was used for both "observable events" (handled with `Observer`) and "buffered events" (handled with `EventReader`). This made _some_ sense, as both concepts could be considered "events" in their own right. But they are also fundamentally _very_ different things functionally (see [this PR description](https://github.com/bevyengine/bevy/pull/20731) for full rationale).
+在 Bevy 的早期版本中，[`Event`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Event.html) trait 同时用于"可观察事件"（通过 `Observer` 处理）和"缓冲事件"（通过 `EventReader` 处理）。这在某种程度上是有道理的，因为两个概念都可以被视为"事件"。但它们在功能上也是根本_非常_不同的东西（完整原因请参见 [此 PR 描述](https://github.com/bevyengine/bevy/pull/20731)）。
 
-In **Bevy 0.17**, [`Event`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Event.html) is now _exclusively_ the name/trait for the concept of something that is "triggered" and "observed". [`Message`](https://docs.rs/bevy/0.17.1/bevy/ecs/message/trait.Message.html) is the name / trait for something that is "buffered": it is "written" via a [`MessageWriter`](https://docs.rs/bevy/0.17.1/bevy/ecs/message/struct.MessageWriter.html) and "read" via a [`MessageReader`](https://docs.rs/bevy/0.17.1/bevy/ecs/message/struct.MessageReader.html).
+在 **Bevy 0.17** 中，[`Event`](https://docs.rs/bevy/0.17.1/bevy/ecs/event/trait.Event.html) 现在_专门_是"被触发"和"被观察"概念的名称/trait。[`Message`](https://docs.rs/bevy/0.17.1/bevy/ecs/message/trait.Message.html) 是"被缓冲"的东西的名称/trait：它通过 [`MessageWriter`](https://docs.rs/bevy/0.17.1/bevy/ecs/message/struct.MessageWriter.html)"写入"，通过 [`MessageReader`](https://docs.rs/bevy/0.17.1/bevy/ecs/message/struct.MessageReader.html)"读取"。
 
-It is still possible to support both contexts by implementing _both traits_, but we expect that to be significantly less common than just choosing one.
+仍然可以通过实现_两个 trait_ 来支持两种上下文，但我们预计这将比只选择一种少得多。
 
-## Bevy Feathers: Widgets for Tooling (Experimental) [#](https://bevy.org/news/bevy-0-17/#bevy-feathers-widgets-for-tooling-experimental)
+## Bevy Feathers：工具 Widget（实验性）[#](https://bevy.org/news/bevy-0-17/#bevy-feathers-widgets-for-tooling-experimental)
 
-Authors:[@viridia](https://github.com/viridia), [@Atlas16A](https://github.com/Atlas16A), [@ickshonpe](https://github.com/ickshonpe), [@amedoeyes](https://github.com/amedoeyes)
+Authors:[@viridia](https://github.com/viridia), [@Atlas16A](https://github.com/Atlas16A), [@ickshonpe](https://github.com/ickshonpe), [@amedoeyes](https://github.com/amedoeyes)
 
-PRs:[#19730](https://github.com/bevyengine/bevy/pull/19730), [#19900](https://github.com/bevyengine/bevy/pull/19900), [#19928](https://github.com/bevyengine/bevy/pull/19928), [#20237](https://github.com/bevyengine/bevy/pull/20237), [#20169](https://github.com/bevyengine/bevy/pull/20169), [#20422](https://github.com/bevyengine/bevy/pull/20422), [#20350](https://github.com/bevyengine/bevy/pull/20350), [#20548](https://github.com/bevyengine/bevy/pull/20548), [#20969](https://github.com/bevyengine/bevy/pull/20969), [#21247](https://github.com/bevyengine/bevy/pull/21247)
+PRs:[#19730](https://github.com/bevyengine/bevy/pull/19730), [#19900](https://github.com/bevyengine/bevy/pull/19900), [#19928](https://github.com/bevyengine/bevy/pull/19928), [#20237](https://github.com/bevyengine/bevy/pull/20237), [#20169](https://github.com/bevyengine/bevy/pull/20169), [#20422](https://github.com/bevyengine/bevy/pull/20422), [#20350](https://github.com/bevyengine/bevy/pull/20350), [#20548](https://github.com/bevyengine/bevy/pull/20548), [#20969](https://github.com/bevyengine/bevy/pull/20969), [#21247](https://github.com/bevyengine/bevy/pull/21247)
 
 ![feathers widgets](https://bevy.org/news/bevy-0-17/feathers.jpg)
 
-To make it easier for Bevy engine developers and third-party tool creators to make comfortable, visually cohesive tooling, we're pleased to introduce "Feathers" - a comprehensive Bevy UI widget set. Feathers is meant to be Bevy's "developer tools" widget set, and it will be used to build the upcoming [Bevy Editor](https://bevy.org/news/bevys-fifth-birthday/#bevy-editor-design). It has a utilitarian look and feel, with an opinionated feature-set tailored for editors and graphical utilities. It builds on top of Bevy's new general-purpose "headless" widget set: `bevy_ui_widgets` (covered below). Feathers _can_ be used in games, but that is not its motivating use case.
+为了让 Bevy 引擎开发者和第三方工具创作者更容易制作舒适的、视觉上协调的工具，我们很高兴地推出"Feathers"——一套全面的 Bevy UI widget 集合。Feathers 旨在成为 Bevy 的"开发者工具"widget 集合，它将用于构建即将推出的 [Bevy Editor](https://bevy.org/news/bevys-fifth-birthday/#bevy-editor-design)。它具有实用的外观和感觉，以及为编辑器和图形工具定制的功能集。它构建在 Bevy 新的通用"无头"widget 集合 `bevy_ui_widgets`（如下所述）之上。Feathers_可以_在游戏使用，但这不是它的主要用例。
 
-Feathers currently offers:
+Feathers 目前提供：
 
-- Standard widgets designed to match the look and feel of the planned Bevy Editor.
-- Components that can be leveraged to build custom editors, inspectors, and utility interfaces that feel consistent with other Bevy tooling.
-- Essential UI elements including buttons, sliders, checkboxes, menu buttons, and more.
-- Layout containers for organizing and structuring UI elements.
-- Initial (simple / primitive) theme support to ensure consistent, configurable visual styling across applications. This is not the "final" Bevy UI theme system, but it provides some baseline functionality.
-- Accessibility features with built-in screen reader and assistive technology support.
-- Interactive cursor behavior that changes appropriately when hovering over widgets.
-- A virtual keyboard suitable for touchscreen text input.
+- 设计为匹配计划中的 Bevy Editor 外观和感觉的标准 widget。
+- 可用于构建自定义编辑器、检查器和实用程序界面的组件，使其感觉与其他 Bevy 工具一致。
+- 基本 UI 元素，包括按钮、滑块、复选框、菜单按钮等。
+- 用于组织和构建 UI 元素的布局容器。
+- 初始（简单/基础）主题支持，确保应用程序之间一致且可配置的视觉样式。这不是"最终的" Bevy UI 主题系统，但它提供了一些基础功能。
+- 具有内置屏幕阅读器和辅助技术支持的无障碍功能。
+- 在悬停在 widget 上时适当改变的交互式光标行为。
+- 适用于触摸屏文本输入的虚拟键盘。
 
-Feathers is still early in development. It is currently hidden behind the `experimental_bevy_feathers` feature flag. Feathers is still incomplete and likely to change in a variety of ways:
+Feathers 仍处于早期开发阶段。它目前隐藏在 `experimental_bevy_feathers` feature flag 后面。Feathers 仍然不完整，可能会以各种方式变化：
 
-- We will port Feathers to BSN (Bevy's [Next-Generation Scene/UI System](https://github.com/bevyengine/bevy/pull/20158/)) when that lands (targeted for **Bevy 0.18**).
-- The `observe` API is temporary: we hope to replace these with a general-purpose, [relations-backed solution](https://github.com/bevyengine/bevy/issues/17607).
-- We are still working on polishing up some UX issues.
-- There are missing widgets and features. Notably the "text input" widget is [still being developed](https://github.com/bevyengine/bevy/issues/20885).
+- 我们将在 BSN（Bevy 的[下一代 Scene/UI 系统](https://github.com/bevyengine/bevy/pull/20158/)）落地时将 Feathers 移植到 BSN（目标版本为 **Bevy 0.18**）。
+- `observe` API 是临时的：我们希望用通用的、[基于关系的解决方案](https://github.com/bevyengine/bevy/issues/17607)来替换它们。
+- 我们仍在努力完善一些 UX 问题。
+- 缺少一些 widget 和功能。特别是"文本输入"widget [仍在开发中](https://github.com/bevyengine/bevy/issues/20885)。
 
-If you're looking to experiment with building tooling for Bevy, enable it and take `feathers` for a test flight! Let us know what problems you run into, and feel free to contribute missing widgets and bugs upstream. Some folks have already started building tooling on it, such as the [Rerecast Editor](https://github.com/janhohenheim/rerecast) (a navmesh editor):
+如果你想尝试为 Bevy 构建工具，请启用它并对 `feathers` 进行试飞！让我们知道你遇到的问题，并欢迎贡献缺失的 widget 和修复 bug。一些人已经开始在上面构建工具，例如 [Rerecast Editor](https://github.com/janhohenheim/rerecast)（一个导航网格编辑器）：
 
 ![rerecast editor](https://bevy.org/news/bevy-0-17/rerecast.jpg)
 
-If you can't wait to get your hands on `bevy_ui` widgets for your game, we recommend copying the Feathers code into your project and start hacking away at it! Feathers can serve as a helpful base to understand how to build and theme widgets in Bevy UI. It also illustrates how to use our new "headless" widget set: `bevy_ui_widgets`.
+如果你迫不及待地想在你的游戏中使用 `bevy_ui` widget，我们建议将 Feathers 代码复制到你的项目中并开始修改！Feathers 可以作为理解如何在 Bevy UI 中构建和设置 widget 主题的有用基础。它还说明了如何使用我们新的"无头"widget 集合 `bevy_ui_widgets`。
 
-## Realtime-Filtered Environment Maps [#](https://bevy.org/news/bevy-0-17/#realtime-filtered-environment-maps)
+## 实时过滤环境贴图 [#](https://bevy.org/news/bevy-0-17/#realtime-filtered-environment-maps)
 
 Authors:[@mate-h](https://github.com/mate-h)
 
-PRs:[#19076](https://github.com/bevyengine/bevy/pull/19076), [#20529](https://github.com/bevyengine/bevy/pull/20529)
+PRs:[#19076](https://github.com/bevyengine/bevy/pull/19076), [#20529](https://github.com/bevyengine/bevy/pull/20529)
 
 ![atmosphere reflections](https://bevy.org/news/bevy-0-17/atmosphere_reflections.jpg)
 
-An environment map needs to be processed to be able to support uses beyond a simple skybox, such as reflections at different roughness levels, and ambient light contribution. This process is called filtering, and can either be done ahead of time (prefiltering), or in realtime, although at a reduced quality.
+环境贴图需要经过处理才能支持超出简单天空盒的用途，例如不同粗糙度级别的反射和环境光贡献。这个过程称为过滤，可以提前完成（预过滤），也可以实时完成，但质量会降低。
 
-Bevy already supported prefiltering, but its not always possible to prefilter: sometimes, your environment map is not available until runtime. Typically this is from realtime reflection probes, but you might also, for example, be using a procedural skybox.
+Bevy 已经支持预过滤，但并非总是可以预过滤：有时你的环境贴图在运行时才可用。通常来自实时反射探针，但你也可能使用程序化天空盒。
 
-Now, Bevy supports both modes of filtering! Adding a `GeneratedEnvironmentMapLight` to a `Camera` entity lets you use any environment map with Bevy's renderer, and enjoy all the benefits of prefiltering with none of the asset processing.
+现在，Bevy 同时支持两种过滤模式！将 `GeneratedEnvironmentMapLight` 添加到 `Camera` 实体，让你可以将任何环境贴图与 Bevy 的渲染器一起使用，并享受预过滤的所有好处而无需资产处理。
 
-We've made sure it works with our built-in atmosphere shader too. To enable this, add the new component `AtmosphereEnvironmentMapLight` to the camera entity.
+我们确保它能与我们内置的大气着色器配合使用。为此，请将新组件 `AtmosphereEnvironmentMapLight` 添加到相机实体。
 
-This is a fully dynamic per-view effect: no pre-baked environment maps are needed. However, please be aware that light probes are not yet supported.
+这是一个完全动态的每视图效果：不需要预烘焙的环境贴图。但请注意，目前还不支持光探针。
 
-## Headless Bevy UI Widgets (Experimental) [#](https://bevy.org/news/bevy-0-17/#headless-bevy-ui-widgets-experimental)
+## 无头 Bevy UI Widget（实验性）[#](https://bevy.org/news/bevy-0-17/#headless-bevy-ui-widgets-experimental)
 
-Authors:[@viridia](https://github.com/viridia), [@ickshonpe](https://github.com/ickshonpe), [@alice-i-cecile](https://github.com/alice-i-cecile)
+Authors:[@viridia](https://github.com/viridia), [@ickshonpe](https://github.com/ickshonpe), [@alice-i-cecile](https://github.com/alice-i-cecile)
 
-PRs:[#19366](https://github.com/bevyengine/bevy/pull/19366), [#19584](https://github.com/bevyengine/bevy/pull/19584), [#19665](https://github.com/bevyengine/bevy/pull/19665), [#19778](https://github.com/bevyengine/bevy/pull/19778), [#19803](https://github.com/bevyengine/bevy/pull/19803), [#20032](https://github.com/bevyengine/bevy/pull/20032), [#20036](https://github.com/bevyengine/bevy/pull/20036), [#20086](https://github.com/bevyengine/bevy/pull/20086), [#20944](https://github.com/bevyengine/bevy/pull/20944)
+PRs:[#19366](https://github.com/bevyengine/bevy/pull/19366), [#19584](https://github.com/bevyengine/bevy/pull/19584), [#19665](https://github.com/bevyengine/bevy/pull/19665), [#19778](https://github.com/bevyengine/bevy/pull/19778), [#19803](https://github.com/bevyengine/bevy/pull/19803), [#20032](https://github.com/bevyengine/bevy/pull/20032), [#20036](https://github.com/bevyengine/bevy/pull/20036), [#20086](https://github.com/bevyengine/bevy/pull/20086), [#20944](https://github.com/bevyengine/bevy/pull/20944)
 
-Bevy's `Button` and `Interaction` components have been around for a long time. Unfortunately these components have a number of shortcomings, such as the fact that they don't use the new `bevy_picking` framework, or the fact that they are really only useful for creating buttons and not other kinds of widgets like sliders.
+Bevy 的 `Button` 和 `Interaction` 组件已经存在很长时间了。不幸的是这些组件有一些缺点，例如它们不使用新的 `bevy_picking` 框架，或者它们实际上只对创建按钮有用，而不适用于其他类型的 widget 如滑块。
 
-In the web development world, "headless" widget libraries, such as [headlessui](https://headlessui.com/) and [reakit](https://reakit.io/) have become popular. These provide unstyled standardized widgets that implement all of the correct interactions and behavioral logic: events, state management, accessibility, etc. The headless widgets provide the core behaviors, and it's the responsibility of the game developer to provide the visual style and animation for the widgets, which can fit the overall style of their game.
+在 Web 开发领域，"无头"widget 库如 [headlessui](https://headlessui.com/) 和 [reakit](https://reakit.io/) 已经流行起来。这些提供无样式的标准化 widget，实现所有正确的交互和行为逻辑：事件、状态管理、无障碍性等。无头 widget 提供核心行为，而游戏开发者负责提供 widget 的视觉样式和动画，使其符合游戏的整体风格。
 
-**Bevy 0.17**, introduces a collection of headless widgets. These are components which can be added to any UI Node to get widget-like behavior. The standard widget set includes:
+**Bevy 0.17** 引入了一组无头 widget。这些是可以添加到任何 UI 节点以获得类似 widget 行为的组件。标准 widget 集合包括：
 
-- `Button`: Emits an activation event when clicked.
-- `Slider`: Lets you edit an `f32` value in a given range.
-- `Scrollbar`: Lets you scroll through the contents of a UI node.
-- `Checkbox`: Provides toggle-able state.
-- `RadioButton` and `RadioGroup`: Select an item from a set of items.
+- `Button`：在点击时发出激活事件。
+- `Slider`：让你在给定范围内编辑 `f32` 值。
+- `Scrollbar`：让你滚动 UI 节点的内容。
+- `Checkbox`：提供可切换的状态。
+- `RadioButton` 和 `RadioGroup`：从一组项目中选择一个项目。
 
-Here's a heavily styled example showing what is possible with them:
+以下是一个重度样式的示例，展示它们可以实现的效果：
 
-While these widgets are usable today for games and apps, they are still **experimental**. We are still polishing up some aspects of the developer experience and filling in gaps. Expect breaking changes as we continue to iterate and improve on them!
+虽然这些 widget 现在可以在游戏和应用中使用，但它们仍然是**实验性的**。我们仍在完善一些方面的开发者体验并填补空白。随着我们继续迭代和改进，预计会有破坏性更改！
 
-We're as excited as you are for first-party widgets. We've decided to ship these now so people can try them out: your feedback is vital!
+我们和你一样期待第一方 widget。我们决定现在发布它们以便人们可以试用：你的反馈至关重要！
 
-If you would like to try out our experimental headless widgets, enable the `experimental_bevy_ui_widgets` feature.
+如果你想尝试我们实验性的无头 widget，请启用 `experimental_bevy_ui_widgets` feature。
 
-### Widget Interaction Components [#](https://bevy.org/news/bevy-0-17/#widget-interaction-components)
+### Widget 交互组件 [#](https://bevy.org/news/bevy-0-17/#widget-interaction-components)
 
-The standard widgets use additional components to drive behaviors:
+标准 widget 使用额外的组件来驱动行为：
 
-- `InteractionDisabled`: A boolean component used to indicate that a component should be "grayed out" and non-interactive.
-- `Hovered`: A simple boolean component that allows detection of whether the widget is being hovered.
-- `Checked`: A boolean component that stores the checked state of a checkbox or radio button.
-- `Pressed`: A boolean component used by button-like widgets. Will be true while the button is held down.
+- `InteractionDisabled`：一个布尔组件，用于指示组件应被"灰显"且不可交互。
+- `Hovered`：一个简单的布尔组件，允许检测 widget 是否被悬停。
+- `Checked`：一个布尔组件，存储复选框或单选按钮的选中状态。
+- `Pressed`：一个布尔组件，由类按钮 widget 使用。在按钮被按住时为 true。
 
-These "boolean components" can be tracked using Bevy's built-in component change detection.
+这些"布尔组件"可以使用 Bevy 内置的组件变更检测来跟踪。
 
-### Widget Events [#](https://bevy.org/news/bevy-0-17/#widget-events)
+### Widget 事件 [#](https://bevy.org/news/bevy-0-17/#widget-events)
 
-The headless widgets use Bevy's event / observer system, just like any other components!
+无头 widget 使用 Bevy 的事件/观察者系统，就像任何其他组件一样！
 
-- `Activate`: an event triggered whenever a widget is activated (ex: button pressed, radio button selected, etc).
-- `ValueChange`: an event triggered whenever a value is changed (ex: slider changed, checkbox checked, etc)
+- `Activate`：在 widget 被激活时触发的事件（例如按钮被按下、单选按钮被选中等）。
+- `ValueChange`：在值被更改时触发的事件（例如滑块被更改、复选框被勾选等）。
 
-These events can be handled using observers:
+这些事件可以使用观察者来处理：
 
 ```rust
 commands.spawn((
@@ -368,71 +368,71 @@ commands.spawn((
 ));
 ```
 
-## Light Textures [#](https://bevy.org/news/bevy-0-17/#light-textures)
+## 光照纹理 [#](https://bevy.org/news/bevy-0-17/#light-textures)
 
 Authors:[@robtfm](https://github.com/robtfm)
 
 PRs:[#18031](https://github.com/bevyengine/bevy/pull/18031)
 
-The new components `PointLightTexture`, `SpotLightTexture`, and `DirectionalLightTexture` allow specifying light textures for lights, also commonly known as "light cookies". These modulate the intensity of light cast upon surfaces for various artistic effects. See the [`light_textures`](https://github.com/bevyengine/bevy/blob/release-0.17.0/examples/3d/light_textures.rs) example for usage.
+新组件 `PointLightTexture`、`SpotLightTexture` 和 `DirectionalLightTexture` 允许为灯光指定光照纹理，也通常称为"光照饼干"。它们可以调制投射到表面上的光的强度以实现各种艺术效果。请参见 [`light_textures`](https://github.com/bevyengine/bevy/blob/release-0.17.0/examples/3d/light_textures.rs) 示例了解用法。
 
-## Hot Patching Systems in a Running App [#](https://bevy.org/news/bevy-0-17/#hot-patching-systems-in-a-running-app)
+## 在运行中的应用中热补丁系统 [#](https://bevy.org/news/bevy-0-17/#hot-patching-systems-in-a-running-app)
 
-Authors:[@mockersf](https://github.com/mockersf), [@janhohenheim](https://github.com/janhohenheim)
+Authors:[@mockersf](https://github.com/mockersf), [@janhohenheim](https://github.com/janhohenheim)
 
 PRs:[#19309](https://github.com/bevyengine/bevy/pull/19309)
 
-Bevy now supports hot patching systems via [subsecond](https://crates.io/crates/subsecond) and the [`dx`](https://crates.io/crates/dioxus-cli) command line tool from the Dioxus project.
+Bevy 现在通过 [subsecond](https://crates.io/crates/subsecond) 和 Dioxus 项目的 [`dx`](https://crates.io/crates/dioxus-cli) 命令行工具支持系统热补丁。
 
-When the cargo feature `hotpatching` is enabled, every system can now be modified during execution, and the changes are immediately visible in your game.
+当启用 cargo feature `hotpatching` 时，每个系统现在都可以在执行期间被修改，更改会立即在你的游戏中可见。
 
-`dx` is the Dioxus CLI. To install it run `cargo install dioxus-cli@0.7.0-rc.0 --locked`
+`dx` 是 Dioxus CLI。要安装它，请运行 `cargo install dioxus-cli@0.7.0-rc.0 --locked`
 
-Then run `BEVY_ASSET_ROOT="." dx serve --hot-patch --features "bevy/hotpatching"` to test it in your project. You can also try it out using Bevy's [`hotpatching_systems.rs`](https://github.com/bevyengine/bevy/blob/release-0.17.0/examples/ecs/hotpatching_systems.rs) example.
+然后运行 `BEVY_ASSET_ROOT="." dx serve --hot-patch --features "bevy/hotpatching"` 在你的项目中测试它。你也可以使用 Bevy 的 [`hotpatching_systems.rs`](https://github.com/bevyengine/bevy/blob/release-0.17.0/examples/ecs/hotpatching_systems.rs) 示例来尝试。
 
-This is just the first step. There are known limitations:
+这只是第一步。已知限制：
 
-- Only works on the binary crate. Dioxus has plans to expand support here.
-- Not supported in Wasm. Dioxus supports this, but the Bevy side needs some work.
-- If the system's parameters change, it will not be hot reloaded. This is something we need to work out on the Bevy side.
-- It may be sensitive to rust/linker configuration. Dioxus is already pretty good about this though!
+- 仅适用于二进制 crate。Dioxus 计划扩展这方面的支持。
+- 不支持 Wasm。Dioxus 支持这个，但 Bevy 端需要一些工作。
+- 如果系统参数更改，它不会被热重载。这是我们需要在 Bevy 端解决的问题。
+- 它可能对 rust/linker 配置敏感。不过 Dioxus 在这方面已经做得很好了！
 
-We have plans to further expand support, including making the upcoming [`bsn!` macro](https://github.com/bevyengine/bevy/pull/20158/) hot-reloadable (check out [this video](https://bevy.org/news/bevys-fifth-birthday/#bevy-hot-reloading) of it in action!).
+我们计划进一步扩展支持，包括使即将推出的 [`bsn!` 宏](https://github.com/bevyengine/bevy/pull/20158/)可热重载（查看[此视频](https://bevy.org/news/bevys-fifth-birthday/#bevy-hot-reloading)了解实际效果！）。
 
-## Deep Learning Super Sampling (DLSS) [#](https://bevy.org/news/bevy-0-17/#deep-learning-super-sampling-dlss)
+## 深度学习超级采样 (DLSS) [#](https://bevy.org/news/bevy-0-17/#deep-learning-super-sampling-dlss)
 
-Authors:[@JMS55](https://github.com/JMS55), [@cart](https://github.com/cart)
+Authors:[@JMS55](https://github.com/JMS55), [@cart](https://github.com/cart)
 
-PRs:[#19864](https://github.com/bevyengine/bevy/pull/19864), [#19817](https://github.com/bevyengine/bevy/pull/19817), [#20565](https://github.com/bevyengine/bevy/pull/20565)
+PRs:[#19864](https://github.com/bevyengine/bevy/pull/19864), [#19817](https://github.com/bevyengine/bevy/pull/19817), [#20565](https://github.com/bevyengine/bevy/pull/20565)
 
-Drag this image to compare
+拖动此图像进行对比
 
 ![No AA](https://bevy.org/news/bevy-0-17/no_aa.jpg)![DLSS](https://bevy.org/news/bevy-0-17/dlss.jpg)
 
-For users with NVIDIA RTX GPUs, Bevy now offers yet another form of anti-aliasing: DLSS.
+对于拥有 NVIDIA RTX GPU 的用户，Bevy 现在提供另一种抗锯齿形式：DLSS。
 
-Try it out by running Bevy's anti_aliasing example: `cargo run --example anti_aliasing --features dlss --release` (after performing setup from [https://github.com/bevyengine/dlss_wgpu](https://github.com/bevyengine/dlss_wgpu)).
+通过运行 Bevy 的 anti_aliasing 示例来试用：`cargo run --example anti_aliasing --features dlss --release`（在 [https://github.com/bevyengine/dlss_wgpu](https://github.com/bevyengine/dlss_wgpu) 完成设置后）。
 
-Additionally, we've open sourced [https://github.com/bevyengine/dlss_wgpu](https://github.com/bevyengine/dlss_wgpu) as a standalone crate to help other wgpu-based renderers integrate DLSS.
+此外，我们将 [https://github.com/bevyengine/dlss_wgpu](https://github.com/bevyengine/dlss_wgpu) 开源为独立 crate，以帮助其他基于 wgpu 的渲染器集成 DLSS。
 
-Compared to Bevy's built-in TAA, DLSS:
+与 Bevy 内置的 TAA 相比，DLSS：
 
-- Produces higher quality and more stable images
-- Supports upscaling in addition to anti-aliasing, leading to much cheaper render times, particularly when used with GPU-heavy features like Bevy Solari
-- Requires a NVIDIA RTX GPU
-- Currently requires running via the Vulkan backend on Windows/Linux (no DirectX, macOS, web, or mobile support)
+- 产生更高质量和更稳定的图像
+- 除了抗锯齿外还支持上采样，导致更便宜的渲染时间，特别是与 GPU 密集型功能如 Bevy Solari 一起使用时
+- 需要 NVIDIA RTX GPU
+- 目前需要通过 Windows/Linux 上的 Vulkan 后端运行（不支持 DirectX、macOS、Web 或移动端）
 
-Note that DLSS integration is expected to have some bugs in this release related to certain rendering effects not respecting upscaling settings, and possible issues with transparencies or camera exposure. Please report any bugs encountered.
+请注意，DLSS 集成在本版本中预计存在一些与某些渲染效果不遵循上采样设置以及透明度或相机曝光可能存在问题相关的 bug。请报告遇到的任何 bug。
 
-Other temporal upscalers like AMD's FidelityFX™ Super Resolution (FSR), Intel's Xe Super Sampling XeSS (XeSS), and Apple's MTLFXTemporalScaler are not integrated in this release. However they all use similar APIs, and would not be a challenge to integrate in future releases.
+其他时间上采样器如 AMD 的 FidelityFX™ Super Resolution (FSR)、Intel 的 Xe Super Sampling XeSS (XeSS) 和 Apple 的 MTLFXTemporalScaler 在本版本中未集成。但它们都使用类似的 API，在未来版本中集成不会是挑战。
 
-Support for other swapchain-related features like frame interpolation/extrapolation, latency reduction, or dynamic resolution scaling is not currently planned.
+目前没有计划支持其他交换链相关功能，如帧插值/外推、延迟减少或动态分辨率缩放。
 
-Special thanks to @cwfitzgerald for helping with the [`wgpu`](https://github.com/gfx-rs/wgpu) backend interop APIs.
+特别感谢 @cwfitzgerald 帮助处理 [`wgpu`](https://github.com/gfx-rs/wgpu) 后端互操作 API。
 
-## Tilemap Chunk Rendering [#](https://bevy.org/news/bevy-0-17/#tilemap-chunk-rendering)
+## 瓦片地图分块渲染 [#](https://bevy.org/news/bevy-0-17/#tilemap-chunk-rendering)
 
-Authors:[@ConnerPetzold](https://github.com/ConnerPetzold), [@grind086](https://github.com/grind086), [@IceSentry](https://github.com/IceSentry)
+Authors:[@ConnerPetzold](https://github.com/ConnerPetzold), [@grind086](https://github.com/grind086), [@IceSentry](https://github.com/IceSentry)
 
 PRs:[#18866](https://github.com/bevyengine/bevy/pull/18866)
 
@@ -440,7 +440,7 @@ PRs:[#18866](https://github.com/bevyengine/bevy/pull/18866)
 
 [Tilemap Credit: Cup Nooble's Sprout Lands](https://cupnooble.itch.io/sprout-lands-asset-pack)
 
-A performant way to render tilemap chunks has been added as the first building block for Bevy's tilemap support (more to come in future releases!). You can render a chunk by supplying a tileset texture to the `TilemapChunk` component and tile data to `TilemapChunkTileData`. For each tile, `TileData` allows you to specify the index into the tileset, the visibility, and the color tint.
+已添加一种高性能的瓦片地图分块渲染方式作为 Bevy 瓦片地图支持的第一个构建块（未来版本将有更多！）。你可以通过向 `TilemapChunk` 组件提供瓦片集纹理并向 `TilemapChunkTileData` 提供瓦片数据来渲染分块。对于每个瓦片，`TileData` 允许你指定瓦片集中的索引、可见性和颜色着色。
 
 ```rust
 let chunk_size = UVec2::new(16, 16);
@@ -460,41 +460,41 @@ commands.spawn((
 ));
 ```
 
-## `ViewportNode` [#](https://bevy.org/news/bevy-0-17/#viewportnode)
+## `ViewportNode` [#](https://bevy.org/news/bevy-0-17/#viewportnode)
 
-Authors:[@chompaa](https://github.com/chompaa), [@ickshonpe](https://github.com/ickshonpe)
+Authors:[@chompaa](https://github.com/chompaa), [@ickshonpe](https://github.com/ickshonpe)
 
 PRs:[#17253](https://github.com/bevyengine/bevy/pull/17253)
 
-Bevy UI now has a `ViewportNode` component, which lets you render camera output directly to a UI node:
+Bevy UI 现在有一个 `ViewportNode` 组件，让你可以将相机输出直接渲染到 UI 节点：
 
 ```rust
 commands.spawn(ViewportNode::new(camera));
 ```
 
-The referenced `camera` here does require its target to be a `RenderTarget::Image`. See the new [`viewport_node`](https://github.com/bevyengine/bevy/blob/release-0.17.0/examples/ui/viewport_node.rs) example for more usage details.
+这里引用的 `camera` 需要其目标为 `RenderTarget::Image`。更多用法详情请参见新的 [`viewport_node`](https://github.com/bevyengine/bevy/blob/release-0.17.0/examples/ui/viewport_node.rs) 示例。
 
-Furthermore, if the `bevy_ui_picking_backend` feature is enabled, you can "pick" using the rendered target. That is, you can use **any** picking backend through the viewport node.
+此外，如果启用了 `bevy_ui_picking_backend` feature，你可以使用渲染目标进行"选取"。也就是说，你可以通过 viewport node 使用**任何**选取后端。
 
-## Raymarched Atmosphere / Space Views [#](https://bevy.org/news/bevy-0-17/#raymarched-atmosphere-space-views)
+## 光线行进大气/太空视角 [#](https://bevy.org/news/bevy-0-17/#raymarched-atmosphere-space-views)
 
 Authors:[@mate-h](https://github.com/mate-h)
 
 PRs:[#20766](https://github.com/bevyengine/bevy/pull/20766)
 
-Bevy's procedural atmosphere now supports a raymarched rendering path that unlocks accurate views from above the atmosphere. This means **Bevy 0.17** now has two atmosphere rendering modes to choose from:
+Bevy 的程序化大气现在支持光线行进渲染路径，解锁了从大气上方观看的准确视角。这意味着 **Bevy 0.17** 现在有两种大气渲染模式可供选择：
 
 - [`AtmosphereMode::Raymarched`](https://docs.rs/bevy/0.17.1/bevy/pbr/enum.AtmosphereMode.html#variant.Raymarched)
-    - Ideal for cinematic shots, planets seen from space, and "flight simulator" type scenes
-    - More accurate lighting, but slower
-    - Sharper shadows through the atmosphere
+    - 适合电影镜头、从太空看到的行星和"飞行模拟器"类场景
+    - 更准确的光照，但更慢
+    - 通过大气更锐利的阴影
 - [`AtmosphereMode::LookupTexture`](https://docs.rs/bevy/0.17.1/bevy/pbr/enum.AtmosphereMode.html#variant.LookupTexture)
-    - This is the default
-    - Great for ground level and broad outdoor scenes
-    - Less accurate lighting at long distances, but faster
-    - Softer shadows through the atmosphere
+    - 这是默认模式
+    - 非常适合地面级别和广阔的户外场景
+    - 在远距离光照不太准确，但更快
+    - 通过大气更柔和的阴影
 
-To use it, add an [`Atmosphere`](https://docs.rs/bevy/0.17.1/bevy/pbr/struct.Atmosphere.html) component to your [`Camera`](https://docs.rs/bevy/0.17.1/bevy/camera/struct.Camera.html) and set the rendering method on the camera’s [`AtmosphereSettings`](https://docs.rs/bevy/0.17.1/bevy/pbr/struct.AtmosphereSettings.html):
+要使用它，将 [`Atmosphere`](https://docs.rs/bevy/0.17.1/bevy/pbr/struct.Atmosphere.html) 组件添加到你的 [`Camera`](https://docs.rs/bevy/0.17.1/bevy/camera/struct.Camera.html) 并在相机的 [`AtmosphereSettings`](https://docs.rs/bevy/0.17.1/bevy/pbr/struct.AtmosphereSettings.html) 上设置渲染方法：
 
 ```rust
 commands.spawn((
@@ -507,48 +507,48 @@ commands.spawn((
 ));
 ```
 
-You can also adjust the `AtmosphereSettings::sky_max_samples` to configure the maximum number of steps to take when raymarching the atmosphere. Lower numbers are faster and less accurate. Higher numbers are slower and more accurate.
+你还可以调整 `AtmosphereSettings::sky_max_samples` 来配置光线行进大气时的最大步数。较低的数字更快但不太准确。较高的数字更慢但更准确。
 
-See the updated [`atmosphere` example](https://github.com/bevyengine/bevy/blob/release-0.17.0/examples/3d/atmosphere.rs) for a working reference.
+请参见更新后的 [`atmosphere` 示例](https://github.com/bevyengine/bevy/blob/release-0.17.0/examples/3d/atmosphere.rs)获取可工作的参考。
 
-## Procedural Sun Disk [#](https://bevy.org/news/bevy-0-17/#procedural-sun-disk)
+## 程序化太阳盘 [#](https://bevy.org/news/bevy-0-17/#procedural-sun-disk)
 
 Authors:[@defuz](https://github.com/defuz)
 
 PRs:[#20434](https://github.com/bevyengine/bevy/pull/20434)
 
-Any good [procedural atmosphere](https://bevy.org/news/bevy-0-16/#procedural-atmospheric-scattering) deserves a procedural sun to light it. To enable this, add the [`SunDisk`](https://docs.rs/bevy/0.17.1/bevy/light/struct.SunDisk.html) component to your [`DirectionalLight`](https://docs.rs/bevy/0.17.1/bevy/light/struct.DirectionalLight.html) entity. The sun will move with your light, playing nicely with any positioning or movement logic you've implemented.
+任何优秀的[程序化大气](https://bevy.org/news/bevy-0-16/#procedural-atmospheric-scattering)都值得一个程序化太阳来照亮它。为此，请将 [`SunDisk`](https://docs.rs/bevy/0.17.1/bevy/light/struct.SunDisk.html) 组件添加到你的 [`DirectionalLight`](https://docs.rs/bevy/0.17.1/bevy/light/struct.DirectionalLight.html) 实体。太阳将随你的光源移动，与你实现的任何定位或移动逻辑良好配合。
 
-You can set both the `angular_size` and `intensity` of the sun disk, changing the size and brightness of the sun. We've included a convenient `SunDisk::EARTH` constant, to spare you the tricky experimental trigonometry.
+你可以设置太阳盘的 `angular_size` 和 `intensity`，改变太阳的大小和亮度。我们包含了一个方便的 `SunDisk::EARTH` 常量，省去你进行棘手的实验性三角学计算。
 
-If you've ever stared directly at the sun in real life (not recommended), you'll also be familiar with a spreading glow that bleeds out into the nearby sky. This is an effect known as "bloom", which is enabled by adding the [`Bloom`](https://docs.rs/bevy/0.17.1/bevy/post_process/bloom/struct.Bloom.html) component to your camera entity.
+如果你曾经在现实生活中直视太阳（不推荐），你也会熟悉一种扩散的光晕效果，蔓延到附近的天空。这种效果被称为"泛光"（bloom），通过将 [`Bloom`](https://docs.rs/bevy/0.17.1/bevy/post_process/bloom/struct.Bloom.html) 组件添加到你的相机实体来启用。
 
-## Web Assets [#](https://bevy.org/news/bevy-0-17/#web-assets)
+## Web 资产 [#](https://bevy.org/news/bevy-0-17/#web-assets)
 
-Authors:[@johanhelsing](https://github.com/johanhelsing), [@mrchantey](https://github.com/mrchantey), [@jf908](https://github.com/jf908), [@atlv24](https://github.com/atlv24)
+Authors:[@johanhelsing](https://github.com/johanhelsing), [@mrchantey](https://github.com/mrchantey), [@jf908](https://github.com/jf908), [@atlv24](https://github.com/atlv24)
 
 PRs:[#20628](https://github.com/bevyengine/bevy/pull/20628)
 
-Bevy now supports downloading assets from the web over http and https. Use the new `http` and `https` features to enable `http://` and `https://` URLs as asset paths. This functionality is powered by the [`ureq`](https://github.com/algesten/ureq) crate on native platforms and the fetch API on wasm.
+Bevy 现在支持通过 http 和 https 从网络下载资产。使用新的 `http` 和 `https` feature 来启用 `http://` 和 `https://` URL 作为资产路径。此功能在原生平台上由 [`ureq`](https://github.com/algesten/ureq) crate 驱动，在 wasm 上由 fetch API 驱动。
 
 ```rust
 let image = asset_server.load("https://example.com/image.png");
 commands.spawn(Sprite::from_image(image));
 ```
 
-Security note: if using web assets, be careful about where your URLs are coming from! If you allow arbitrary URLs to enter the asset server, it can potentially be exploited by an attacker to trigger vulnerabilities in our asset loaders, or DOS by downloading enormous files. We are not aware of any such vulnerabilities at the moment, just be careful!
+安全提示：如果使用 web 资产，请注意 URL 的来源！如果你允许任意 URL 进入资产服务器，攻击者可能利用它来触发资产加载器中的漏洞，或者通过下载巨大的文件进行 DoS 攻击。我们目前没有发现此类漏洞，但请小心！
 
-By default these assets aren’t saved anywhere but you can enable the `web_asset_cache` feature to cache assets on your file system.
+默认情况下这些资产不会保存在任何地方，但你可以启用 `web_asset_cache` feature 来在文件系统上缓存资产。
 
-The implementation has changed quite a bit but this feature originally started out as an upstreaming of the [`bevy_web_asset`](https://github.com/johanhelsing/bevy_web_asset) crate. Special thanks to @johanhelsing and bevy_web_asset's contributors!
+实现已经发生了很大变化，但此功能最初源于 [`bevy_web_asset`](https://github.com/johanhelsing/bevy_web_asset) crate 的上游化。特别感谢 @johanhelsing 和 bevy_web_asset 的贡献者！
 
-## Reflect Auto Registration [#](https://bevy.org/news/bevy-0-17/#reflect-auto-registration)
+## Reflect 自动注册 [#](https://bevy.org/news/bevy-0-17/#reflect-auto-registration)
 
 Authors:[@eugineerd](https://github.com/eugineerd)
 
 PRs:[#15030](https://github.com/bevyengine/bevy/pull/15030)
 
-Deriving [`Reflect`](https://docs.rs/bevy/0.17.1/bevy/prelude/trait.Reflect.html) on types opts into **Bevy's** runtime reflection infrastructure, which is used to power systems like runtime component inspection and serialization:
+Derive [`Reflect`](https://docs.rs/bevy/0.17.1/bevy/prelude/trait.Reflect.html) 会将类型加入 **Bevy** 的运行时反射基础设施，用于驱动运行时组件检查和序列化等系统：
 
 ```rust
 #[derive(Reflect)]
@@ -557,60 +557,60 @@ pub struct Foo {
 }
 ```
 
-In previous Bevy versions, any top-level types that derived [`Reflect`](https://docs.rs/bevy/0.17.1/bevy/prelude/trait.Reflect.html) had to be manually registered using [`register_type`](https://docs.rs/bevy/0.17.1/bevy/prelude/struct.App.html#method.register_type):
+在以前的 Bevy 版本中，任何派生了 [`Reflect`](https://docs.rs/bevy/0.17.1/bevy/prelude/trait.Reflect.html) 的顶层类型都必须使用 [`register_type`](https://docs.rs/bevy/0.17.1/bevy/prelude/struct.App.html#method.register_type) 手动注册：
 
 ```rust
-// This would make Foo visible to Bevy
+// 这将使 Foo 对 Bevy 可见
 app.register_type::<Foo>()
 ```
 
-In **Bevy 0.17**, all types that `#[derive(Reflect)]` are now automatically registered! This significantly reduces the boilerplate required to use Bevy's reflection features, which will be increasingly important as we build out Bevy's new scene system, entity inspector, and visual editor.
+在 **Bevy 0.17** 中，所有 `#[derive(Reflect)]` 的类型现在会自动注册！这大大减少了使用 Bevy 反射功能所需的样板代码，随着我们构建 Bevy 的新场景系统、实体检查器和可视化编辑器，这将变得越来越重要。
 
-Note that generic types still require manual registration, as these types don't (yet) exist when [`Reflect`](https://docs.rs/bevy/0.17.1/bevy/prelude/trait.Reflect.html) is derived:
+请注意，泛型类型仍需要手动注册，因为这些类型在 [`Reflect`](https://docs.rs/bevy/0.17.1/bevy/prelude/trait.Reflect.html) 被 derive 时（还）不存在：
 
 ```rust
 app.register_type::<Container<Item>>()
 ```
 
-In cases where automatic registration is undesirable, it can be opted-out of by adding the `#[reflect(no_auto_register)]` attribute to the type.
+在不需要自动注册的情况下，可以通过向类型添加 `#[reflect(no_auto_register)]` 属性来选择退出。
 
-### Supporting Unsupported Platforms [#](https://bevy.org/news/bevy-0-17/#supporting-unsupported-platforms)
+### 支持不支持的平台 [#](https://bevy.org/news/bevy-0-17/#supporting-unsupported-platforms)
 
-This feature relies on the [`inventory`](https://github.com/dtolnay/inventory) crate to collect all type registrations at compile-time. This is supported on Bevy's most popular platforms: Windows, macOS, Linux, iOS, Android, and WebAssembly. However, some niche platforms are not supported by [`inventory`](https://github.com/dtolnay/inventory), and while it would be best for any unsupported platforms to be supported upstream, sometimes it might not be possible. For this reason, there is a [different implementation](https://github.com/bevyengine/bevy/tree/release-0.17.0/examples/reflection/auto_register_static) of this feature that works on all platforms.
+此功能依赖 [`inventory`](https://github.com/dtolnay/inventory) crate 在编译时收集所有类型注册。这在 Bevy 最流行的平台上得到支持：Windows、macOS、Linux、iOS、Android 和 WebAssembly。然而，一些小众平台不被 [`inventory`](https://github.com/dtolnay/inventory) 支持，虽然最好能在上游支持任何不支持的平台，但有时可能无法做到。因此，有[不同的实现](https://github.com/bevyengine/bevy/tree/release-0.17.0/examples/reflection/auto_register_static)可以在所有平台上使用。
 
-## Virtual Geometry BVH culling [#](https://bevy.org/news/bevy-0-17/#virtual-geometry-bvh-culling)
+## 虚拟几何 BVH 剔除 [#](https://bevy.org/news/bevy-0-17/#virtual-geometry-bvh-culling)
 
-Authors:[@SparkyPotato](https://github.com/SparkyPotato), [@atlv24](https://github.com/atlv24)
+Authors:[@SparkyPotato](https://github.com/SparkyPotato), [@atlv24](https://github.com/atlv24)
 
 PRs:[#19318](https://github.com/bevyengine/bevy/pull/19318)
 
 ![lots of dragons being rendered](https://bevy.org/news/bevy-0-17/mesh_bvh.jpg)
 
-Bevy's [virtual geometry](https://bevy.org/news/bevy-0-14/#virtual-geometry-experimental) has been greatly optimized with BVH-based culling, making the cost of rendering nearly independent of scene geometry.
+Bevy 的[虚拟几何](https://bevy.org/news/bevy-0-14/#virtual-geometry-experimental)已经通过基于 BVH 的剔除得到了大幅优化，使渲染成本几乎与场景几何体无关。
 
-These changes have also lifted the previous cluster limit that limited the world to 2^24 clusters (about 4 billion triangles). There are now _no_ hardcoded limits to scene size. In practice you will only be limited by asset VRAM usage (as asset streaming is not yet implemented), and total instance count (again, due to temporary limitations we're working on improving).
+这些更改还取消了之前限制世界为 2^24 个簇（约 40 亿三角形）的集群限制。现在对场景大小_没有_硬编码限制。实际上你将仅受资产 VRAM 使用量（因为资产流式加载尚未实现）和总实例数量（同样由于我们正在改进的临时限制）的限制。
 
-The screenshot above has 130,000 dragons in the scene, each with about 870,000 triangles, leading to over _115 billion_ total triangles in the scene.
+上方截图中有 130,000 条龙在场景中，每条约 870,000 个三角形，导致场景中总计超过 _1150 亿_个三角形。
 
-Speaking of concrete GPU cost, the scene above renders in about 3.5 ms on the 4070, with ~3.1 ms being spent on the geometry render and ~0.4 ms on the material evaluation. After increasing the instance count to over 1 million (almost _900 billion triangles_!), the total increases to about 4.5 ms, with ~4.1 ms on geometry render and material evaluation remaining constant at ~0.4 ms. This is a 30% increase in GPU time for an almost 8x increase in scene complexity.
+具体到 GPU 成本，上述场景在 4070 上约 3.5 ms 渲染，其中约 3.1 ms 花在几何渲染上，约 0.4 ms 花在材质评估上。当实例数量增加到超过 100 万（几乎 _9000 亿个三角形_！）时，总计增加到约 4.5 ms，其中约 4.1 ms 在几何渲染上，材质评估保持在约 0.4 ms 不变。这是 GPU 时间增加 30%，而场景复杂度几乎增加了 8 倍。
 
-Comparing GPU times to **Bevy 0.16** on a much smaller scene with 1,300 instances, previously the full render took 2.2 ms, whereas now in **Bevy 0.17** it takes 1.3 ms.
+与 **Bevy 0.16** 在一个只有 1,300 个实例的更小场景上的 GPU 时间相比，之前完整的渲染需要 2.2 ms，而现在在 **Bevy 0.17** 中只需 1.3 ms。
 
-## Frame Time Graph [#](https://bevy.org/news/bevy-0-17/#frame-time-graph)
+## 帧时间图表 [#](https://bevy.org/news/bevy-0-17/#frame-time-graph)
 
-Authors:[@IceSentry](https://github.com/IceSentry), [@Zeophlite](https://github.com/Zeophlite)
+Authors:[@IceSentry](https://github.com/IceSentry), [@Zeophlite](https://github.com/Zeophlite)
 
-PRs:[#12561](https://github.com/bevyengine/bevy/pull/12561), [#19277](https://github.com/bevyengine/bevy/pull/19277)
+PRs:[#12561](https://github.com/bevyengine/bevy/pull/12561), [#19277](https://github.com/bevyengine/bevy/pull/19277)
 
-When measuring a game's performance, just seeing a number is often not enough. Seeing a graph that shows the history makes it easier to reason about performance. **Bevy 0.17** introduces a new visual "frame time graph" to solve this problem!
+在衡量游戏性能时，仅看到一个数字通常不够。看到显示历史记录的图表更容易理解性能。**Bevy 0.17** 引入了新的可视化"帧时间图表"来解决这个问题！
 
-To display the frame time graph, enable the `bevy_dev_tools` cargo feature and add in `FpsOverlayPlugin`:
+要显示帧时间图表，启用 `bevy_dev_tools` cargo feature 并添加 `FpsOverlayPlugin`：
 
-This displays "frame time" not "frames per second", so a longer frame time results in a bigger and wider bar. The color also scales with that frame time. Red is at or bellow the minimum target fps and green is at or above the target maximum frame rate. Anything between those 2 values will be interpolated between green and red based on the frame time.
+这显示的是"帧时间"而非"每秒帧数"，因此更长的帧时间会导致更大更宽的条形。颜色也随帧时间变化。红色在或低于最小目标 fps，绿色在或高于目标最大帧率。介于这两个值之间的任何内容将根据帧时间在绿色和红色之间插值。
 
-The algorithm is highly inspired by [Adam Sawicki's article on visualizing frame times](https://asawicki.info/news_1758_an_idea_for_visualization_of_frame_times).
+该算法深受 [Adam Sawicki 关于帧时间可视化的文章](https://asawicki.info/news_1758_an_idea_for_visualization_of_frame_times) 启发。
 
-## `Text2d` Drop Shadows [#](https://bevy.org/news/bevy-0-17/#text2d-drop-shadows)
+## `Text2d` 阴影 [#](https://bevy.org/news/bevy-0-17/#text2d-drop-shadows)
 
 Authors:[@ickshonpe](https://github.com/ickshonpe)
 
@@ -618,35 +618,35 @@ PRs:[#20463](https://github.com/bevyengine/bevy/pull/20463)
 
 ![text2d shadow](https://bevy.org/news/bevy-0-17/text2d_shadow.jpg)
 
-`Text2d` is a simple worldspace text API: great for damage numbers and simple labels. Unlike `Text`, its UI sibling, it didn't support drop shadows, so in **Bevy 0.17** we've added dropshadow support to `Text2d`. Add the `Text2dShadow` component to a `Text2d` entity to draw a shadow effect beneath its text.
+`Text2d` 是一个简单的世界空间文本 API：非常适合伤害数字和简单标签。与它的 UI 兄弟 `Text` 不同，它不支持阴影，所以在 **Bevy 0.17** 中我们为 `Text2d` 添加了阴影支持。将 `Text2dShadow` 组件添加到 `Text2d` 实体即可在其文本下方绘制阴影效果。
 
-## Text Background Colors [#](https://bevy.org/news/bevy-0-17/#text-background-colors)
+## 文本背景颜色 [#](https://bevy.org/news/bevy-0-17/#text-background-colors)
 
 Authors:[@ickshonpe](https://github.com/ickshonpe)
 
-PRs:[#18892](https://github.com/bevyengine/bevy/pull/18892), [#20464](https://github.com/bevyengine/bevy/pull/20464)
+PRs:[#18892](https://github.com/bevyengine/bevy/pull/18892), [#20464](https://github.com/bevyengine/bevy/pull/20464)
 
 ![text2d background](https://bevy.org/news/bevy-0-17/text2d_background.jpg)
 
-Text in Bevy now supports background colors. Insert the `TextBackgroundColor` component on a UI `Text` or `TextSpan` entity to set a background color for its text section. `TextBackgroundColor` provides the ability to set the color of _each_ "text span", whereas the standard `BackgroundColor` applies to _all_ spans in a `Text` node, and also includes space taken up by padding.
+Bevy 中的文本现在支持背景颜色。在 UI `Text` 或 `TextSpan` 实体上插入 `TextBackgroundColor` 组件即可为其文本段落设置背景颜色。`TextBackgroundColor` 提供了设置_每个_"文本段"颜色的能力，而标准的 `BackgroundColor` 应用于 `Text` 节点中的_所有_段，还包括填充所占的空间。
 
-`TextBackgroundColor` also works with `Text2d`: perfect for worldspace tooltips!
+`TextBackgroundColor` 也适用于 `Text2d`：非常适合世界空间工具提示！
 
-## UI Gradients [#](https://bevy.org/news/bevy-0-17/#ui-gradients)
+## UI 渐变 [#](https://bevy.org/news/bevy-0-17/#ui-gradients)
 
 Authors:[@Ickshonpe](https://github.com/Ickshonpe)
 
-PRs:[#18139](https://github.com/bevyengine/bevy/pull/18139), [#19330](https://github.com/bevyengine/bevy/pull/19330), [#19992](https://github.com/bevyengine/bevy/pull/19992)
+PRs:[#18139](https://github.com/bevyengine/bevy/pull/18139), [#19330](https://github.com/bevyengine/bevy/pull/19330), [#19992](https://github.com/bevyengine/bevy/pull/19992)
 
 ![ui gradients](https://bevy.org/news/bevy-0-17/ui_gradients.jpg)
 
-Bevy now supports UI nodes that display a gradient that transitions smoothly between two or more colors.
+Bevy 现在支持显示在两种或多种颜色之间平滑过渡的渐变的 UI 节点。
 
-You can now add the `BackgroundGradient` component to a `Node` to set its background to a gradient. If you also set a `BackgroundColor`, the background color is drawn first and the gradient(s) are drawn on top. You can also use the `BorderGradient` component to make the border use a gradient.
+你现在可以将 `BackgroundGradient` 组件添加到 `Node` 以将其背景设置为渐变。如果你还设置了 `BackgroundColor`，则先绘制背景颜色，然后在其上绘制渐变。你还可以使用 `BorderGradient` 组件使边框使用渐变。
 
-Both of these components wrap the `Gradient` enum type, which has three variants:`Linear`, `Conic` and `Radial`.
+这两个组件都包装了 `Gradient` 枚举类型，它有三个变体：`Linear`、`Conic` 和 `Radial`。
 
-Each gradient type consists of the geometric properties for that gradient, a list of color stops, and the color space used for interpolation (Bevy defaults to using `InterpolationColorSpace::Oklab`).
+每种渐变类型由该渐变的几何属性、颜色停止列表和用于插值的颜色空间组成（Bevy 默认使用 `InterpolationColorSpace::Oklab`）。
 
 ```rust
 commands.spawn((
@@ -662,7 +662,7 @@ commands.spawn((
 ))
 ```
 
-## Per-side UI Border Colors [#](https://bevy.org/news/bevy-0-17/#per-side-ui-border-colors)
+## 每边 UI 边框颜色 [#](https://bevy.org/news/bevy-0-17/#per-side-ui-border-colors)
 
 Authors:[@robtfm](https://github.com/robtfm)
 
@@ -670,47 +670,47 @@ PRs:[#18682](https://github.com/bevyengine/bevy/pull/18682)
 
 ![ui border colors](https://bevy.org/news/bevy-0-17/ui_border_colors.jpg)
 
-`bevy_ui` now supports distinct border colors on each side of your UI nodes, controlled with the [`BorderColor`](https://docs.rs/bevy/0.17.1/bevy/prelude/struct.BorderColor.html) component. This feature was borrowed from CSS, where it is commonly used to fake buttons with depth, but we're looking forward to seeing your creative designs.
+`bevy_ui` 现在支持 UI 节点每边使用不同的边框颜色，通过 [`BorderColor`](https://docs.rs/bevy/0.17.1/bevy/prelude/struct.BorderColor.html) 组件控制。此功能借鉴自 CSS，通常用于模拟具有深度的按钮，但我们期待看到你的创意设计。
 
-## Specialized UI Transform [#](https://bevy.org/news/bevy-0-17/#specialized-ui-transform)
+## 专用 UI Transform [#](https://bevy.org/news/bevy-0-17/#specialized-ui-transform)
 
 Authors:[@Ickshonpe](https://github.com/Ickshonpe)
 
 PRs:[#16615](https://github.com/bevyengine/bevy/pull/16615)
 
-In Bevy UI, [`Transform`](https://docs.rs/bevy/0.17.1/bevy/prelude/struct.Transform.html) and `GlobalTransform` have been replaced by [`UiTransform`](https://docs.rs/bevy/0.17.1/bevy/ui/ui_transform/struct.UiTransform.html) and `UiGlobalTransform`. [`UiTransform`](https://docs.rs/bevy/0.17.1/bevy/ui/ui_transform/struct.UiTransform.html) is a specialized 2D UI transform, which more effectively maps to the UI space, improves our internals substantially, and cuts out redundant, unnecessary, often expensive work (such as doing full hierarchical [`Transform`](https://docs.rs/bevy/0.17.1/bevy/prelude/struct.Transform.html) propagation _in addition_ to the Bevy UI layout algorithm).
+在 Bevy UI 中，[`Transform`](https://docs.rs/bevy/0.17.1/bevy/prelude/struct.Transform.html) 和 `GlobalTransform` 已被 [`UiTransform`](https://docs.rs/bevy/0.17.1/bevy/ui/ui_transform/struct.UiTransform.html) 和 `UiGlobalTransform` 替换。[`UiTransform`](https://docs.rs/bevy/0.17.1/bevy/ui/ui_transform/struct.UiTransform.html) 是一个专门化的 2D UI transform，更有效地映射到 UI 空间，大幅改进了我们的内部实现，并消除了冗余的、不必要的、通常昂贵的工作（例如在 Bevy UI 布局算法_之外_还进行完整的层级 [`Transform`](https://docs.rs/bevy/0.17.1/bevy/prelude/struct.Transform.html) 传播）。
 
-## Data-Driven Materials [#](https://bevy.org/news/bevy-0-17/#data-driven-materials)
+## 数据驱动材质 [#](https://bevy.org/news/bevy-0-17/#data-driven-materials)
 
 Authors:[@tychedelia](https://github.com/tychedelia)
 
 PRs:[#19667](https://github.com/bevyengine/bevy/pull/19667)
 
-Bevy's material system has historically relied on the `Material` and `AsBindGroup` traits in order to provide a type-safe way to define data that is passed to the shader that renders your material. While this approach has many advantages, recent improvements to the renderer, like GPU-driven rendering in Bevy `0.16`, have made the 3D renderer more siloed and less modular than we would like. Additionally, the type-level split between `Material` and `Material2d` has meant that every feature implemented for 3D needs a mostly copy-pasted version for 2D, which has caused the 2D renderer to lag behind in terms of features.
+Bevy 的材质系统历史上依赖 `Material` 和 `AsBindGroup` trait 来提供一种类型安全的方式来定义传递给渲染材质的着色器的数据。虽然这种方法有许多优势，但渲染器的近期改进，如 Bevy `0.16` 中的 GPU 驱动渲染，使得 3D 渲染器更加孤立和不够模块化。此外，`Material` 和 `Material2d` 之间的类型级分离意味着为 3D 实现的每个功能都需要一个大部分复制粘贴的 2D 版本，导致 2D 渲染器在功能方面落后。
 
-In Bevy `0.17`, we've started the process of refactoring the renderer's mid and low-level APIs to be _data driven_. More specifically, we've removed the `M: Material` bound from every rendering system in the render world. Rather than being described statically by a type, the renderer now understands materials in terms of plain data that can be modified at runtime. Consequently, it is now possible to implement a custom material that doesn't rely on the `Material` trait at all, for example in the new [manual material example](https://github.com/bevyengine/bevy/blob/8b36cca28c4ea00425e1414fd88c8b82297e2b96/examples/3d/manual_material.rs). While this API isn't exactly ergonomic yet, it represents a first step in decoupling the renderer from a specific high-level material API.
+在 Bevy `0.17` 中，我们已开始将渲染器的中层和底层 API 重构为_数据驱动_的。更具体地说，我们从渲染世界中的每个渲染系统中移除了 `M: Material` 约束。渲染器现在不再通过类型静态描述材质，而是理解可以运行时修改的纯数据形式的材质。因此，现在可以实现不依赖 `Material` trait 的自定义材质，例如在新的[手动材质示例](https://github.com/bevyengine/bevy/blob/8b36cca28c4ea00425e1414fd88c8b82297e2b96/examples/3d/manual_material.rs)中。虽然这个 API 还不完全符合人体工程学，但它代表了将渲染器从特定的高级材质 API 解耦的第一步。
 
-Importantly, for users of the `Material` trait, nothing changes. Our `AsBindGroup` driven API is now just one possible consumer of the renderer. But adopting a more dynamic, data-first approach creates many opportunities for the renderer we are hoping to explore in `0.18` and beyond, including:
+重要的是，对于使用 `Material` trait 的用户，没有任何变化。我们的 `AsBindGroup` 驱动的 API 现在只是渲染器的一种可能消费者。但采用更动态的、数据优先的方法为渲染器创造了我们希望在 `0.18` 及以后探索的许多机会，包括：
 
-- Unifying the 2D and 3D rendering implementations. While we'll continue to present an opinionated 2D API that benefits users building 2D games, we want every new rendering improvement to the 3D renderer to be at least potentially available to 2D users.
-- Exploring new material representations for a future material editor. While type-safety is great for writing code, it poses real problems for being able to dynamically edit a material in a UI like a shader graph or load a material at runtime from a serialized format.
-- Modularizing more of the mid-level rendering APIs to allow user's writing advanced rendering code access to complicated pieces of rendering infrastructure like mesh and bind group allocation, GPU pre-processing, retained rendering caches, and custom draw functions.
+- 统一 2D 和 3D 渲染实现。虽然我们将继续提供有利于构建 2D 游戏用户的有主见的 2D API，但我们希望 3D 渲染器的每个新渲染改进都至少可能对 2D 用户可用。
+- 为未来的材质编辑器探索新的材质表示。虽然类型安全对于编写代码很棒，但它为能够在 UI 中动态编辑材质（如着色器图）或从序列化格式在运行时加载材质带来了真正的问题。
+- 将更多中层渲染 API 模块化，允许编写高级渲染代码的用户访问渲染基础设施的复杂部分，如网格和绑定组分配、GPU 预处理、保留渲染缓存和自定义绘制函数。
 
-With this foundation in place, we're actively evolving the renderer to embrace the flexibility and composability that defines Bevy's ECS. If you'd like to help us explore the possibilities of ECS-driven rendering, please join us on [Discord](https://discord.gg/bevy) or [GitHub Discussions](https://github.com/bevyengine/bevy/discussions)!
+有了这个基础，我们正在积极发展渲染器以拥抱定义 Bevy ECS 的灵活性和可组合性。如果你想帮助我们探索 ECS 驱动渲染的可能性，请加入我们的 [Discord](https://discord.gg/bevy) 或 [GitHub Discussions](https://github.com/bevyengine/bevy/discussions)！
 
-## Entity Spawn Ticks [#](https://bevy.org/news/bevy-0-17/#entity-spawn-ticks)
+## 实体生成 Tick [#](https://bevy.org/news/bevy-0-17/#entity-spawn-ticks)
 
-Authors:[@urben1680](https://github.com/urben1680), [@specificprotagonist](https://github.com/specificprotagonist)
+Authors:[@urben1680](https://github.com/urben1680), [@specificprotagonist](https://github.com/specificprotagonist)
 
-PRs:[#19047](https://github.com/bevyengine/bevy/pull/19047), [#19350](https://github.com/bevyengine/bevy/pull/19350)
+PRs:[#19047](https://github.com/bevyengine/bevy/pull/19047), [#19350](https://github.com/bevyengine/bevy/pull/19350)
 
-In previous versions of Bevy, keeping track of which entities have been spawned since the last time a system ran could only be done indirectly by writing your own logic.
+在 Bevy 的早期版本中，跟踪哪些实体自上次系统运行以来被生成只能通过编写自己的逻辑间接完成。
 
-The new `SpawnDetails` query data and `Spawned` query filter enable you to find recently spawned entities without any marker components.
+新的 `SpawnDetails` 查询数据和 `Spawned` 查询过滤器使你无需任何标记组件即可找到最近生成的实体。
 
-### `SpawnDetails` [#](https://bevy.org/news/bevy-0-17/#spawndetails)
+### `SpawnDetails` [#](https://bevy.org/news/bevy-0-17/#spawndetails)
 
-Use this in your query when you want to get information about the entity's spawn:
+当你想要获取实体的生成信息时在查询中使用：
 
 ```rs
 fn print_spawn_details(query: Query<(Entity, SpawnDetails)>) {
@@ -732,9 +732,9 @@ fn print_spawn_details(query: Query<(Entity, SpawnDetails)>) {
 }
 ```
 
-### `Spawned` [#](https://bevy.org/news/bevy-0-17/#spawned)
+### `Spawned` [#](https://bevy.org/news/bevy-0-17/#spawned)
 
-Use this filter in your query if you are only interested in entities that were spawned after the last time your system ran:
+如果你只对在上次系统运行后生成的实体感兴趣，请在查询中使用此过滤器：
 
 ```rust
 fn system(query: Query<Entity, Spawned>) {
@@ -742,7 +742,7 @@ fn system(query: Query<Entity, Spawned>) {
 }
 ```
 
-Note that, much like `Added` and `Changed` filters, this is a "non archetypal filter", meaning it requires scanning every entity matching the query, including those that weren't spawned since the last run. Because of this, the system above performs roughly the same as this one:
+请注意，与 `Added` 和 `Changed` 过滤器一样，这是一个"非原型过滤器"，意味着它需要扫描每个匹配查询的实体，包括那些自上次运行以来未被生成的实体。因此，上述系统的性能大致与此系统相同：
 
 ```rust
 fn system(query: Query<(Entity, SpawnDetails)>) {
@@ -752,31 +752,31 @@ fn system(query: Query<(Entity, SpawnDetails)>) {
 }
 ```
 
-### Getter methods [#](https://bevy.org/news/bevy-0-17/#getter-methods)
+### Getter 方法 [#](https://bevy.org/news/bevy-0-17/#getter-methods)
 
-You can also use helper methods on `EntityWorldMut` and `EntityCommands`:
+你还可以在 `EntityWorldMut` 和 `EntityCommands` 上使用辅助方法：
 
 ```rust
 world.entity(entity).spawn_tick()
 ```
 
-## ButtonInput for Key [#](https://bevy.org/news/bevy-0-17/#buttoninput-for-key)
+## Key 的 ButtonInput [#](https://bevy.org/news/bevy-0-17/#buttoninput-for-key)
 
 Authors:[@kristoff3r](https://github.com/kristoff3r)
 
 PRs:[#19684](https://github.com/bevyengine/bevy/pull/19684)
 
-Bevy now has a `ButtonInput<Key>` resource, similarly to the existing `ButtonInput<KeyCode>` resource.
+Bevy 现在有一个 `ButtonInput<Key>` 资源，类似于现有的 `ButtonInput<KeyCode>` 资源。
 
-The difference between `KeyCode` and `Key` is that the former refers to the button location on a US keyboard independent of the actual layout in use, while `Key` gives you the actual letter or symbol that was entered. In most cases you still want to use `KeyCode`, but in some cases it makes more sense to use `Key`, for example when using '+'/'-' to zoom.
+`KeyCode` 和 `Key` 之间的区别在于前者指的是 US 键盘上按键的位置，与实际使用的布局无关，而 `Key` 给出你输入的实际字母或符号。在大多数情况下你仍然想要使用 `KeyCode`，但在某些情况下使用 `Key` 更合理，例如使用 '+'/'-' 进行缩放时。
 
-## `Val` helper functions [#](https://bevy.org/news/bevy-0-17/#val-helper-functions)
+## `Val` 辅助函数 [#](https://bevy.org/news/bevy-0-17/#val-helper-functions)
 
-Authors:[@Ickshonpe](https://github.com/Ickshonpe), [@TheBlckbird](https://github.com/TheBlckbird)
+Authors:[@Ickshonpe](https://github.com/Ickshonpe), [@TheBlckbird](https://github.com/TheBlckbird)
 
-PRs:[#20518](https://github.com/bevyengine/bevy/pull/20518), [#20551](https://github.com/bevyengine/bevy/pull/20551), [#20937](https://github.com/bevyengine/bevy/pull/20937)
+PRs:[#20518](https://github.com/bevyengine/bevy/pull/20518), [#20551](https://github.com/bevyengine/bevy/pull/20551), [#20937](https://github.com/bevyengine/bevy/pull/20937)
 
-To make `Val`s easier to construct the following helper functions have been added: `px`, `percent`, `vw`, `vh`, `vmin` and `vmax`:
+为了使 `Val` 更容易构造，添加了以下辅助函数：`px`、`percent`、`vw`、`vh`、`vmin` 和 `vmax`：
 
 ```rust
 // Using Val::Px directly:
@@ -791,9 +791,9 @@ Node {
 }
 ```
 
-Each function takes any integer type and returns the value wrapped by its corresponding `Val` variant. There is also an `auto` helper function that maps to `Val::Auto`.
+每个函数接受任何整数类型并返回由其对应 `Val` 变体包装的值。还有一个 `auto` 辅助函数映射到 `Val::Auto`。
 
-Also included with this release is a fluent interface for constructing `UiRect`s from `Val`s:
+此版本还包括一个用于从 `Val` 构造 `UiRect` 的流畅接口：
 
 ```rust
 Node {
@@ -804,41 +804,41 @@ Node {
 }
 ```
 
-The available functions are `left`, `right`, `top`, `bottom`, `all`, `horizontal` and `vertical`. Each function calls the corresponding `UiRect` constructor on `self`, i.e. `fn left(self) -> UiRect { UiRect::left(self) }`.
+可用函数有 `left`、`right`、`top`、`bottom`、`all`、`horizontal` 和 `vertical`。每个函数在 `self` 上调用相应的 `UiRect` 构造函数，即 `fn left(self) -> UiRect { UiRect::left(self) }`。
 
-## glTF Forward Semantics Configuration [#](https://bevy.org/news/bevy-0-17/#gltf-forward-semantics-configuration)
+## glTF Forward 语义配置 [#](https://bevy.org/news/bevy-0-17/#gltf-forward-semantics-configuration)
 
 Authors:[@janhohenheim](https://github.com/janhohenheim)
 
-PRs:[#19633](https://github.com/bevyengine/bevy/pull/19633), [#19685](https://github.com/bevyengine/bevy/pull/19685), [#19816](https://github.com/bevyengine/bevy/pull/19816), [#20131](https://github.com/bevyengine/bevy/pull/20131), [#20122](https://github.com/bevyengine/bevy/pull/20122)
+PRs:[#19633](https://github.com/bevyengine/bevy/pull/19633), [#19685](https://github.com/bevyengine/bevy/pull/19685), [#19816](https://github.com/bevyengine/bevy/pull/19816), [#20131](https://github.com/bevyengine/bevy/pull/20131), [#20122](https://github.com/bevyengine/bevy/pull/20122)
 
-_CAUTION: This is an experimental feature with [known issues](https://github.com/bevyengine/bevy/issues/20621). Behavior may change in future versions._
+_注意：这是一个具有[已知问题](https://github.com/bevyengine/bevy/issues/20621)的实验性功能。行为可能在未来的版本中发生变化。_
 
-Bevy uses the following coordinate system for all worldspace entities that have a `Transform`:
+Bevy 对所有具有 `Transform` 的世界空间实体使用以下坐标系：
 
 - forward: -Z
 - up: Y
 - right: X
 
-But glTF is a bit more complicated. Models in glTF scenes use the following coordinate system:
+但 glTF 更复杂一些。glTF 场景中的模型使用以下坐标系：
 
 - forward: Z
 - up: Y
 - right: -X
 
-but cameras and lights in glTF scenes use the following coordinate system:
+但 glTF 场景中的相机和灯光使用以下坐标系：
 
 - forward: -Z
 - up: Y
 - right: X
 
-As you can see, this clashes with Bevy assumption that everything in the world uses the same coordinate system. In the past, we only imported glTFs using the camera / light coordinate system for everything, as that is already aligned with Bevy. In other words, the glTF importer simply assumed that glTF models used -Z as their forward direction, even though they use +Z.
+如你所见，这与 Bevy 假设世界中所有事物使用相同坐标系相冲突。过去，我们只使用相机/灯光坐标系导入所有 glTF，因为它已经与 Bevy 对齐。换句话说，glTF 导入器简单地假设 glTF 模型使用 -Z 作为其 forward 方向，即使它们使用的是 +Z。
 
-But that meant that on the Bevy side, a glTF model's `Transform::forward()` would actually point backwards from the point of view of the model, which is counterintuitive and very annoying when working across different art pipelines.
+但那意味着在 Bevy 端，glTF 模型的 `Transform::forward()` 实际上从模型的角度来看是指向后面的，这违反直觉且在跨不同美术管道工作时非常烦人。
 
-To remedy this, users can now change the import behavior to instead favor correct `Transform::forward()` semantics for models. The downside is that glTF cameras and lights that have a global identity transform in glTF will now look to +Z instead of -Z in Bevy. This should not be a problem in many cases, as the whole scene is rotated so that the end result on your screen will be rendered the exact same way.
+为了解决这个问题，用户现在可以更改导入行为以优先考虑模型的正确 `Transform::forward()` 语义。缺点是在 glTF 中具有全局身份变换的 glTF 相机和灯光现在在 Bevy 中将看向 +Z 而不是 -Z。这在许多情况下应该不是问题，因为整个场景被旋转，所以屏幕上的最终结果将以完全相同的方式渲染。
 
-To globally opt into the behavior that favors glTF models over glTF cameras, you can set `GltfPlugin::use_model_forward_direction`:
+要全局选择有利于 glTF 模型而非 glTF 相机的行为，你可以设置 `GltfPlugin::use_model_forward_direction`：
 
 ```rust
 App::new()
@@ -849,7 +849,7 @@ App::new()
     .run();
 ```
 
-You can also control this on a per-asset-level:
+你也可以在每个资产级别控制此设置：
 
 ```rust
 let handle = asset_server.load_with_settings(
@@ -860,19 +860,19 @@ let handle = asset_server.load_with_settings(
 );
 ```
 
-Setting the above to `None` will fall back to the global setting taken from `GltfPlugin::use_model_forward_direction`.
+将以上设置为 `None` 将回退到从 `GltfPlugin::use_model_forward_direction` 获取的全局设置。
 
-## `RenderStartup` Schedule [#](https://bevy.org/news/bevy-0-17/#renderstartup-schedule)
+## `RenderStartup` 调度 [#](https://bevy.org/news/bevy-0-17/#renderstartup-schedule)
 
-Authors:[@IceSentry](https://github.com/IceSentry), [@andriyDev](https://github.com/andriyDev)
+Authors:[@IceSentry](https://github.com/IceSentry), [@andriyDev](https://github.com/andriyDev)
 
-PRs:[#19841](https://github.com/bevyengine/bevy/pull/19841), [#19885](https://github.com/bevyengine/bevy/pull/19885), [#19886](https://github.com/bevyengine/bevy/pull/19886), [#19897](https://github.com/bevyengine/bevy/pull/19897), [#19898](https://github.com/bevyengine/bevy/pull/19898), [#19901](https://github.com/bevyengine/bevy/pull/19901), [#19912](https://github.com/bevyengine/bevy/pull/19912), [#19926](https://github.com/bevyengine/bevy/pull/19926), [#19999](https://github.com/bevyengine/bevy/pull/19999), [#20002](https://github.com/bevyengine/bevy/pull/20002), [#20024](https://github.com/bevyengine/bevy/pull/20024), [#20124](https://github.com/bevyengine/bevy/pull/20124), [#20147](https://github.com/bevyengine/bevy/pull/20147), [#20184](https://github.com/bevyengine/bevy/pull/20184), [#20194](https://github.com/bevyengine/bevy/pull/20194), [#20195](https://github.com/bevyengine/bevy/pull/20195), [#20208](https://github.com/bevyengine/bevy/pull/20208), [#20209](https://github.com/bevyengine/bevy/pull/20209), [#20210](https://github.com/bevyengine/bevy/pull/20210)
+PRs:[#19841](https://github.com/bevyengine/bevy/pull/19841), [#19885](https://github.com/bevyengine/bevy/pull/19885), [#19886](https://github.com/bevyengine/bevy/pull/19886), [#19897](https://github.com/bevyengine/bevy/pull/19897), [#19898](https://github.com/bevyengine/bevy/pull/19898), [#19901](https://github.com/bevyengine/bevy/pull/19901), [#19912](https://github.com/bevyengine/bevy/pull/19912), [#19926](https://github.com/bevyengine/bevy/pull/19926), [#19999](https://github.com/bevyengine/bevy/pull/19999), [#20002](https://github.com/bevyengine/bevy/pull/20002), [#20024](https://github.com/bevyengine/bevy/pull/20024), [#20124](https://github.com/bevyengine/bevy/pull/20124), [#20147](https://github.com/bevyengine/bevy/pull/20147), [#20184](https://github.com/bevyengine/bevy/pull/20184), [#20194](https://github.com/bevyengine/bevy/pull/20194), [#20195](https://github.com/bevyengine/bevy/pull/20195), [#20208](https://github.com/bevyengine/bevy/pull/20208), [#20209](https://github.com/bevyengine/bevy/pull/20209), [#20210](https://github.com/bevyengine/bevy/pull/20210)
 
-In previous versions of Bevy, render `Plugin` code had to look different than other `Plugin` code, due to how the renderer was initialized. In general, renderer resources and systems had to be added in `Plugin::finish`, separate from the typical spot: `Plugin::build`. The fact that `Plugin::finish` resulted in the correct order was a bit arbitrary / incidental.
+在 Bevy 的早期版本中，渲染 `Plugin` 代码必须与其他 `Plugin` 代码有所不同，因为渲染器的初始化方式。通常渲染器资源和系统必须在 `Plugin::finish` 中添加，与典型位置 `Plugin::build` 分开。`Plugin::finish` 产生正确顺序的事实有些任意/偶然。
 
-As a step towards solving this, **Bevy 0.17** introduces the `RenderStartup` schedule and ports many renderer resources to be initialized in `RenderStartup` with systems. This makes renderer initialization more structured and allows renderer plugin initialization to be defined "normally" in `Plugin::build`. It also allows renderer init code to benefit from the Bevy ECS scheduler, including automatic parallelization and system ordering.
+作为解决此问题的一步，**Bevy 0.17** 引入了 `RenderStartup` 调度并将许多渲染器资源移植到在 `RenderStartup` 中使用系统初始化。这使渲染器初始化更加结构化，允许渲染器插件初始化"正常地"在 `Plugin::build` 中定义。它还允许渲染器初始化代码受益于 Bevy ECS 调度器，包括自动并行化和系统排序。
 
-In previous versions, initializing a renderer resource looked like this:
+在以前的版本中，初始化渲染器资源看起来像这样：
 
 ```rust
 impl Plugin for MyRenderingPlugin {
@@ -900,7 +900,7 @@ impl FromWorld for MyRenderResource {
 }
 ```
 
-In **Bevy 0.17**, it can now be written like this:
+在 **Bevy 0.17** 中，现在可以这样写：
 
 ```rust
 impl Plugin for MyRenderingPlugin {
@@ -921,85 +921,85 @@ fn init_my_resource(mut commands: Commands, render_device: Res<RenderDevice>) {
 }
 ```
 
-We highly encourage renderer developers to port their own rendering resources to this new approach!
+我们强烈鼓励渲染器开发者将自己的渲染资源移植到这种新方式！
 
-## Component Propagation [#](https://bevy.org/news/bevy-0-17/#component-propagation)
+## 组件传播 [#](https://bevy.org/news/bevy-0-17/#component-propagation)
 
 Authors:[@robtfm](https://github.com/robtfm)
 
 PRs:[#17575](https://github.com/bevyengine/bevy/pull/17575)
 
-When working with large hierarchies of game objects, coordinating the state of the entire tree can be frustrating. Bevy uses this pattern when working with transforms and visibility internally, but users have had to reinvent the wheel every time they wanted to use similar patterns.
+在处理大型游戏对象层级结构时，协调整个树的状态可能令人沮丧。Bevy 在内部处理变换和可见性时使用这种模式，但用户每次想要使用类似模式时都不得不重新发明轮子。
 
-While this pain was most acute when working with [`RenderLayers`](https://docs.rs/bevy/0.17.1/bevy/camera/visibility/struct.RenderLayers.html), this pattern is more broadly useful, and has been exposed to end users in the form of the [`HierarchyPropagatePlugin`](https://docs.rs/bevy/0.17.1/bevy/app/struct.HierarchyPropagatePlugin.html). Some example use cases:
+虽然这种痛苦在处理 [`RenderLayers`](https://docs.rs/bevy/0.17.1/bevy/camera/visibility/struct.RenderLayers.html) 时最为严重，但这种模式更广泛地有用，并且已经以 [`HierarchyPropagatePlugin`](https://docs.rs/bevy/0.17.1/bevy/app/struct.HierarchyPropagatePlugin.html) 的形式暴露给最终用户。一些示例用例：
 
-- Synchronizing color and alpha values for "ghost" versions of previewed buildings
-- Ensuring that all of the parts of a model are on the same render layer
-- Propagating font styles
+- 同步预览建筑"幽灵"版本的颜色和 alpha 值
+- 确保模型的所有部分都在相同的渲染层上
+- 传播字体样式
 
-This plugin has three generics:
+此插件有三个泛型：
 
-- `C: Component`: the type of component that should be propagated
-- `F: QueryFilter=()`: if set, only entities which match this filter will be affected by propagation
-- `R: Relationship = ChildOf`: the type of tree-like relationship to propagate down
+- `C: Component`：应传播的组件类型
+- `F: QueryFilter = ()`：如果设置，只有匹配此过滤器的实体会受到传播影响
+- `R: Relationship = ChildOf`：要向下传播的树状关系类型
 
-Each copy of this plugin will propagate components of type `C` down the hierarchy, along all entities which match the query filter of type `F`. With this plugin enabled for `C`, you can add a [`Propagate<C>`](https://docs.rs/bevy/0.17.1/bevy/app/struct.Propagate.html) component to add new components to all children, add a [`PropagateStop<C>`](https://docs.rs/bevy/0.17.1/bevy/app/struct.PropagateStop.html) component to stop propagation, or even use [`PropagateOver<C>`](https://docs.rs/bevy/0.17.1/bevy/app/struct.PropagateOver.html) to skip this entity during propagation.
+此插件的每个副本将沿所有匹配类型 `F` 的查询过滤器的实体向下传播类型 `C` 的组件。通过为此插件启用 `C`，你可以添加 [`Propagate<C>`](https://docs.rs/bevy/0.17.1/bevy/app/struct.Propagate.html) 组件来向所有子级添加新组件，添加 [`PropagateStop<C>`](https://docs.rs/bevy/0.17.1/bevy/app/struct.PropagateStop.html) 组件来停止传播，或甚至使用 [`PropagateOver<C>`](https://docs.rs/bevy/0.17.1/bevy/app/struct.PropagateOver.html) 在传播期间跳过此实体。
 
-This is a very general tool: please let us know what you're using it for and we can continue to add examples to the docs!
+这是一个非常通用的工具：请让我们知道你用它做什么，我们可以继续在文档中添加示例！
 
-## Infinite Children [#](https://bevy.org/news/bevy-0-17/#infinite-children)
+## 无限子级 [#](https://bevy.org/news/bevy-0-17/#infinite-children)
 
 Authors:[@CorvusPrudens](https://github.com/CorvusPrudens)
 
 PRs:[#18865](https://github.com/bevyengine/bevy/pull/18865)
 
-The `children!` macro is a convenient way to spawn children alongside their parents in Bevy code. When it was introduced in **Bevy 0.16** this was limited to 12 children, due to arbitrary limitations (Rust: please [support variadic generics!](https://blog.rust-lang.org/inside-rust/2025/09/11/program-management-update-2025-08/#variadic-generics)), and not implementing the requisite workarounds. When working with large UI hierarchies, this could be a real nuisance, forcing users to resort to ugly workarounds.
+`children!` 宏是在 Bevy 代码中与父级一起生成子级的便捷方式。在 **Bevy 0.16** 中引入时，由于任意限制（Rust：请[支持可变泛型！](https://blog.rust-lang.org/inside-rust/2025/09/11/program-management-update-2025-08/#variadic-generics)），且未实现必要的变通方法，这限制为 12 个子级。在处理大型 UI 层级结构时，这可能是一个真正的麻烦，迫使用户诉诸于丑陋的变通方法。
 
-We've rewritten the macro and lifted this unjust restriction. You are now only limited by Rust's recursion limit: around 1400 children at once. Rejoice! If you are manually spawning more than 1400 children in a single macro call, you should reconsider your strategy (such as using `SpawnIter` or `SpawnWith`).
+我们重写了宏并取消了这个不公正的限制。你现在只受 Rust 递归限制的约束：一次约 1400 个子级。欢呼吧！如果你正在手动在一个宏调用中生成超过 1400 个子级，你应该重新考虑你的策略（例如使用 `SpawnIter` 或 `SpawnWith`）。
 
-We've made the same change to the `related!` macro, allowing you to spawn huge numbers of related entities in a single call.
+我们对 `related!` 宏进行了相同的更改，允许你在一次调用中生成大量关联实体。
 
-## Decoupling Bevy's Public API from Bevy Render [#](https://bevy.org/news/bevy-0-17/#decoupling-bevy-s-public-api-from-bevy-render)
+## 将 Bevy 的公共 API 与 Bevy Render 解耦 [#](https://bevy.org/news/bevy-0-17/#decoupling-bevy-s-public-api-from-bevy-render)
 
-Authors:[@atlv24](https://github.com/atlv24), [@Ickshonpe](https://github.com/Ickshonpe), [@zeophlite](https://github.com/zeophlite)
+Authors:[@atlv24](https://github.com/atlv24), [@Ickshonpe](https://github.com/Ickshonpe), [@zeophlite](https://github.com/zeophlite)
 
-PRs:[#20485](https://github.com/bevyengine/bevy/pull/20485), [#20330](https://github.com/bevyengine/bevy/pull/20330), [#18703](https://github.com/bevyengine/bevy/pull/18703), [#20587](https://github.com/bevyengine/bevy/pull/20587), [#20502](https://github.com/bevyengine/bevy/pull/20502), [#19997](https://github.com/bevyengine/bevy/pull/19997), [#19991](https://github.com/bevyengine/bevy/pull/19991), [#20000](https://github.com/bevyengine/bevy/pull/20000), [#19949](https://github.com/bevyengine/bevy/pull/19949), [#19943](https://github.com/bevyengine/bevy/pull/19943), [#19953](https://github.com/bevyengine/bevy/pull/19953), [#20498](https://github.com/bevyengine/bevy/pull/20498), [#20496](https://github.com/bevyengine/bevy/pull/20496), [#20493](https://github.com/bevyengine/bevy/pull/20493), [#20492](https://github.com/bevyengine/bevy/pull/20492), [#20491](https://github.com/bevyengine/bevy/pull/20491), [#20488](https://github.com/bevyengine/bevy/pull/20488), [#20487](https://github.com/bevyengine/bevy/pull/20487), [#20486](https://github.com/bevyengine/bevy/pull/20486), [#20483](https://github.com/bevyengine/bevy/pull/20483), [#20480](https://github.com/bevyengine/bevy/pull/20480), [#20479](https://github.com/bevyengine/bevy/pull/20479), [#20478](https://github.com/bevyengine/bevy/pull/20478), [#20477](https://github.com/bevyengine/bevy/pull/20477), [#20473](https://github.com/bevyengine/bevy/pull/20473), [#20472](https://github.com/bevyengine/bevy/pull/20472), [#20471](https://github.com/bevyengine/bevy/pull/20471), [#20470](https://github.com/bevyengine/bevy/pull/20470), [#20392](https://github.com/bevyengine/bevy/pull/20392), [#20390](https://github.com/bevyengine/bevy/pull/20390), [#20388](https://github.com/bevyengine/bevy/pull/20388), [#20345](https://github.com/bevyengine/bevy/pull/20345), [#20344](https://github.com/bevyengine/bevy/pull/20344), [#20051](https://github.com/bevyengine/bevy/pull/20051), [#19985](https://github.com/bevyengine/bevy/pull/19985), [#19973](https://github.com/bevyengine/bevy/pull/19973), [#19965](https://github.com/bevyengine/bevy/pull/19965), [#19963](https://github.com/bevyengine/bevy/pull/19963), [#19962](https://github.com/bevyengine/bevy/pull/19962), [#19960](https://github.com/bevyengine/bevy/pull/19960), [#19959](https://github.com/bevyengine/bevy/pull/19959), [#19958](https://github.com/bevyengine/bevy/pull/19958), [#19957](https://github.com/bevyengine/bevy/pull/19957), [#19956](https://github.com/bevyengine/bevy/pull/19956), [#19955](https://github.com/bevyengine/bevy/pull/19955), [#19954](https://github.com/bevyengine/bevy/pull/19954), [#16620](https://github.com/bevyengine/bevy/pull/16620), [#16619](https://github.com/bevyengine/bevy/pull/16619), [#15700](https://github.com/bevyengine/bevy/pull/15700), [#15666](https://github.com/bevyengine/bevy/pull/15666), [#15650](https://github.com/bevyengine/bevy/pull/15650)
+PRs:[#20485](https://github.com/bevyengine/bevy/pull/20485), [#20330](https://github.com/bevyengine/bevy/pull/20330), [#18703](https://github.com/bevyengine/bevy/pull/18703), [#20587](https://github.com/bevyengine/bevy/pull/20587), [#20502](https://github.com/bevyengine/bevy/pull/20502), [#19997](https://github.com/bevyengine/bevy/pull/19997), [#19991](https://github.com/bevyengine/bevy/pull/19991), [#20000](https://github.com/bevyengine/bevy/pull/20000), [#19949](https://github.com/bevyengine/bevy/pull/19949), [#19943](https://github.com/bevyengine/bevy/pull/19943), [#19953](https://github.com/bevyengine/bevy/pull/19953), [#20498](https://github.com/bevyengine/bevy/pull/20498), [#20496](https://github.com/bevyengine/bevy/pull/20496), [#20493](https://github.com/bevyengine/bevy/pull/20493), [#20492](https://github.com/bevyengine/bevy/pull/20492), [#20491](https://github.com/bevyengine/bevy/pull/20491), [#20488](https://github.com/bevyengine/bevy/pull/20488), [#20487](https://github.com/bevyengine/bevy/pull/20487), [#20486](https://github.com/bevyengine/bevy/pull/20486), [#20483](https://github.com/bevyengine/bevy/pull/20483), [#20480](https://github.com/bevyengine/bevy/pull/20480), [#20479](https://github.com/bevyengine/bevy/pull/20479), [#20478](https://github.com/bevyengine/bevy/pull/20478), [#20477](https://github.com/bevyengine/bevy/pull/20477), [#20473](https://github.com/bevyengine/bevy/pull/20473), [#20472](https://github.com/bevyengine/bevy/pull/20472), [#20471](https://github.com/bevyengine/bevy/pull/20471), [#20470](https://github.com/bevyengine/bevy/pull/20470), [#20392](https://github.com/bevyengine/bevy/pull/20392), [#20390](https://github.com/bevyengine/bevy/pull/20390), [#20388](https://github.com/bevyengine/bevy/pull/20388), [#20345](https://github.com/bevyengine/bevy/pull/20345), [#20344](https://github.com/bevyengine/bevy/pull/20344), [#20051](https://github.com/bevyengine/bevy/pull/20051), [#19985](https://github.com/bevyengine/bevy/pull/19985), [... (line truncated to 2000 chars)
 
-In **Bevy 0.17** we have decoupled most of the user-facing renderer API from `bevy_render` (Bevy's default built-in renderer, which uses [`wgpu`](https://github.com/gfx-rs/wgpu)). It is now possible to use cameras, lights, shaders, images, meshes, sprites, text, ui, picking, animation, and scenes without depending on `bevy_render`.
+在 **Bevy 0.17** 中，我们已将大部分面向用户的渲染器 API 从 `bevy_render`（Bevy 的默认内置渲染器，使用 [`wgpu`](https://github.com/gfx-rs/wgpu)）解耦。现在可以使用相机、灯光、着色器、图像、网格、精灵、文本、UI、选取、动画和场景而不依赖 `bevy_render`。
 
-With these changes, it is now possible for 3rd party custom renderers to act as drop-in replacements for rendering Bevy scenes, without the need to pull in `bevy_render`.
+有了这些更改，第三方自定义渲染器现在可以作为渲染 Bevy 场景的直接替换，而无需引入 `bevy_render`。
 
-This is also incredibly important for reducing compile time, especially for 3rd party crates: crate authors can now depend more granularly on the specific crates they need. If they don't need access to renderer internals, they don't need to wait for them to start compiling! This increases the potential for parallel compilation.
+这对于减少编译时间也非常重要，特别是对于第三方 crate：crate 作者现在可以更细粒度地依赖他们需要的特定 crate。如果他们不需要访问渲染器内部，他们就不需要等待它们开始编译！这增加了并行编译的潜力。
 
-Additionally, "shader library only" crates with minimal dependencies are now possible thanks to the new separate `bevy_shader` crate.
+此外，具有最小依赖的"仅着色器库"crate 现在由于新的独立 `bevy_shader` crate 而成为可能。
 
-## Consistent Naming Conventions for System Sets [#](https://bevy.org/news/bevy-0-17/#consistent-naming-conventions-for-system-sets)
+## System Set 的一致命名约定 [#](https://bevy.org/news/bevy-0-17/#consistent-naming-conventions-for-system-sets)
 
 Authors:[@Jondolf](https://github.com/Jondolf)
 
 PRs:[#18900](https://github.com/bevyengine/bevy/pull/18900)
 
-Names of `SystemSet` types within Bevy and its ecosystem have historically been very inconsistent. Examples of system set names include `AccessibilitySystem`, `PickSet`, `StateTransitionSteps`, and `Animation`.
+Bevy 及其生态系统内 `SystemSet` 类型的名称历史上一直非常不一致。System set 名称的示例包括 `AccessibilitySystem`、`PickSet`、`StateTransitionSteps` 和 `Animation`。
 
-Naming conventions being so wildly inconsistent can make it harder for users to pick names for their own types, to search for system sets on docs.rs, or to even discern which types _are_ system sets.
+命名约定如此不一致可能使用户更难为自己的类型选择名称、在 docs.rs 上搜索 system set，甚至辨别哪些类型_是_ system set。
 
-To reign in the inconsistency and help unify the ecosystem, **Bevy 0.17** has renamed most of its own system sets to follow a consistent `*Systems` naming convention. As you can see by this very incomplete list of renames, our naming was all over the place:
+为了控制不一致性并帮助统一生态系统，**Bevy 0.17** 已将其大多数 system set 重命名为遵循一致的 `*Systems` 命名约定。正如你通过这个非常不完整的重命名列表所看到的，我们的命名到处都是：
 
-- `GizmoRenderSystem` → `GizmoRenderSystems`
-- `PickSet` → `PickingSystems`
-- `Animation` → `AnimationSystems`
-- `Update2dText` → `Text2dUpdateSystems`
+- `GizmoRenderSystem` → `GizmoRenderSystems`
+- `PickSet` → `PickingSystems`
+- `Animation` → `AnimationSystems`
+- `Update2dText` → `Text2dUpdateSystems`
 
-The `Systems` suffix was chosen over the other popular suffix `Set`, because `Systems` more clearly communicates that it is specifically a collection of systems, and it has a lower risk of naming conflicts with other set types.
+选择 `Systems` 后缀而不是另一个流行的后缀 `Set`，是因为 `Systems` 更清楚地传达它是一个系统的集合，并且与其他 set 类型命名冲突的风险更低。
 
-For consistency, we recommend that ecosystem crates and users follow suit and also adopt the `*Systems` naming convention for their system sets where applicable.
+为了保持一致，我们建议生态系统 crate 和用户在适用时也采用 `*Systems` 命名约定用于他们的 system set。
 
-## What's Next? [#](https://bevy.org/news/bevy-0-17/#what-s-next)
+## 下一步是什么？[#](https://bevy.org/news/bevy-0-17/#what-s-next)
 
-The features above may be great, but what else does Bevy have in flight? Peering deep into the mists of time (predictions are _extra_ hard when your team is almost all volunteers!), we can see some exciting work taking shape:
+上述功能可能很棒，但 Bevy 还有什么正在进行中？深入时间的迷雾中（当你的团队几乎全是志愿者时，预测_格外_困难！），我们可以看到一些令人兴奋的工作正在成型：
 
-- **BSN: Bevy's Next Generation Scene / UI System:** We currently have a [working prototype](https://github.com/bevyengine/bevy/pull/20158) for a much-improved unified Scene / UI system. We plan to land the new `bsn!` macro and the `.bsn` asset format in **Bevy 0.18**.
-- **Fully-Fledged UI Framework:** `feathers` is a great start, but it's just barely hatched. We're looking forward to improving ergonomics by porting it to BSN, [adding more widgets](https://github.com/bevyengine/bevy/issues/19236), solidifying features like theming and screen reader support, and making it easier for you to build per-project design systems that allow you to create consistently styled, low-boilerplate UI.
-- **First-Party Entity Inspector:** [Entity inspectors](https://github.com/bevyengine/bevy/pull/20189) are an incredibly valuable debugging tool, both as an ad-hoc dev tool and as a key element of an editor. This will be built with `feathers`, allowing us to refine both its aesthetic and functionality in preparation for more extensive developer tooling.
-- **`firewheel` Audio:** The [`firewheel`](https://github.com/BillyDM/firewheel) team has been hard at work, creating a production-grade audio solution for Rust. We're encouraged by the draft integration via [`bevy_seedling`](https://github.com/corvusprudens/bevy_seedling), and keen to improve Bevy's first-party audio quality.
-- **Improved Examples:** We're looking to expand our Bevy usage examples to ensure more real-world scenarios are covered, and finally add production-grade assets to our examples to show off how Bevy looks when showcasing the work of talented artists.
+- **BSN：Bevy 的下一代 Scene / UI 系统：** 我们目前有一个[工作原型](https://github.com/bevyengine/bevy/pull/20158)，用于大幅改进的统一 Scene / UI 系统。我们计划在 **Bevy 0.18** 中发布新的 `bsn!` 宏和 `.bsn` 资产格式。
+- **成熟的 UI 框架：** `feathers` 是一个很好的开始，但它才刚刚孵化。我们期待通过将其移植到 BSN、[添加更多 widget](https://github.com/bevyengine/bevy/issues/19236)、巩固主题和屏幕阅读器支持等功能，以及使你更容易构建项目特定的设计系统来改进人体工程学，使你能够创建一致样式、低样板的 UI。
+- **第一方实体检查器：** [实体检查器](https://github.com/bevyengine/bevy/pull/20189)是一个极其有价值的调试工具，既作为临时开发工具也作为编辑器的关键元素。这将使用 `feathers` 构建，使我们能够完善其美学和功能，为更广泛的开发者工具做准备。
+- **`firewheel` 音频：** [`firewheel`](https://github.com/BillyDM/firewheel) 团队一直在努力工作，为 Rust 创建生产级音频解决方案。我们对通过 [`bevy_seedling`](https://github.com/corvusprudens/bevy_seedling) 的草案集成感到鼓舞，并热衷于改进 Bevy 的第一方音频质量。
+- **改进的示例：** 我们正在寻找扩展我们的 Bevy 使用示例，以确保涵盖更多真实世界场景，并最终为我们的示例添加生产级资产，以展示 Bevy 在展示才华横溢的艺术家作品时的表现。

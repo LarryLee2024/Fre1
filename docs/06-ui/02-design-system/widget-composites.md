@@ -22,6 +22,8 @@ tags:
 > 禁止直接 import Bevy UI 类型（Node、Button、Interaction、BackgroundColor 等）。
 > 违反此规则会导致 UI 重构时波及范围失控。
 
+> **SSPEC参考**: docs/06-ui/07-specs/ — AI-Consumable Screen Specification 标准。新增 Screen 必须先写 SSPEC，见 ADR-066。
+
 ---
 
 > **实现状态**: 12/16 复合组件已实现（MVP）。详见各章节。未实现组件：QuestEntry (§2.4)、DialogueChoice (§2.5)、QuestLog (§3.6)、DialoguePanel (§3.7)。

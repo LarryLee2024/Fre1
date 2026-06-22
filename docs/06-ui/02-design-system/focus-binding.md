@@ -18,6 +18,8 @@ tags:
 
 > **职责**: @presentation-architect | **上游**: ADR-055 §4.2 (Dirty<T>), §11 (UiBinding 反 Marker 模式) | domain rules §1 (Focusable/FocusGroup/Dirty/UiBinding 定义), §5.3 (用户输入处理流程), §PROHIBIT-UI-011 | schema §8 (Focus Schema), §9 (Dirty Flag Schema), §23 (UiBinding Schema)
 
+> **SSPEC参考**: docs/06-ui/07-specs/ — AI-Consumable Screen Specification 标准。新增 Screen 必须先写 SSPEC，见 ADR-066。
+
 ---
 
 ## 1. 设计目的

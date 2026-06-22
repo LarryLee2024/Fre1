@@ -297,13 +297,13 @@ pub enum UiBinding {
 | `UiBinding::CharacterLevel` | `battle_char_level` |
 | `UiBinding::SkillSlot(n)` | *预留* |
 | `UiBinding::Cooldown` | *预留* |
-| `UiBinding::ItemSlot(n)` | `inventory_item_cell_0..5` |
+| `UiBinding::ItemSlot(n)` | *预留* |
 | `UiBinding::Gold` | `shop_player_gold` |
 | `UiBinding::QuestEntry(n)` | *预留* |
 | `UiBinding::Tooltip` | *预留* |
 | `UiBinding::Modal` | *预留* |
 | `UiBinding::Notification` | *预留* |
-| `UiBinding::Text` | `inventory_title_text`, `main_menu_title_text`, `shop_item_name`, `shop_item_price`, `save_load_slot_name`, `save_load_slot_timestamp`, `settings_title_text` |
+| `UiBinding::Text` | `main_menu_title_text`, `shop_item_name`, `shop_item_price`, `save_load_slot_name`, `save_load_slot_timestamp`, `settings_title_text` |
 | `UiBinding::Icon` | *预留* |
 
 > `*预留*` 状态: UiBinding 变体已定义，但尚无 widget_id 关联。预留表示该变体预期被未来 Screen 使用，当前不产生编译错误。
@@ -311,7 +311,7 @@ pub enum UiBinding {
 > **Deprecated InventoryScreen entries in Section 5**: 以下旧版 InventoryScreen widget_id 已从关联映射中移除（完整废弃列表见 §4.3 Deprecated IDs）：
 > - `UiBinding::Level` — 移除 `inventory_char_level`
 > - `UiBinding::Name` — 移除 `inventory_char_name`
-> - `UiBinding::ItemSlot(n)` — 移除 `inventory_item_slot_0..5`, `inventory_weapon_slot`, `inventory_armor_slot`, `inventory_accessory_slot`
+> - `UiBinding::ItemSlot(n)` — 移除 `inventory_item_slot_0..5`, `inventory_weapon_slot`, `inventory_armor_slot`, `inventory_accessory_slot`（第一轮）；移除 `inventory_item_cell_0..5`（第二轮）
 > - `UiBinding::Gold` — 移除 `inventory_gold_display`
 
 ---

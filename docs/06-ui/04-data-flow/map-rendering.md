@@ -21,6 +21,8 @@ tags:
 > **层**: Infra (L2) — 基础设施渲染组件，非 UI 层
 > **关键约束**: MapRenderer 是纯表现组件——不包含业务逻辑、不查 Domain 组件
 
+> **SSPEC参考**: docs/06-ui/07-specs/ — AI-Consumable Screen Specification 标准。新增 Screen 必须先写 SSPEC，见 ADR-066。
+
 ---
 
 ## 1. 定位与边界

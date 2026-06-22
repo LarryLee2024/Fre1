@@ -20,6 +20,8 @@ tags:
 > **依赖方向**: UI → Infra/Camera (允许), Infra/Camera → UI (禁止)
 > **通信机制**: CameraQuery (只读), CameraRequest (Event trigger), CameraInputBlock (共享 Resource)
 
+> **SSPEC参考**: docs/06-ui/07-specs/ — AI-Consumable Screen Specification 标准。新增 Screen 必须先写 SSPEC，见 ADR-066。
+
 ---
 
 ## 1. 背景与定位

@@ -16,6 +16,8 @@ tags:
 
 > **职责**: @presentation-architect | **上游**: domain rules §1-§2, §8, §INV-UI-005, §INV-UI-009 | ADR-055 §5.4-§5.5, §8, §9, §12
 
+> **SSPEC参考**: docs/06-ui/07-specs/ — AI-Consumable Screen Specification 标准。新增 Screen 必须先写 SSPEC，见 ADR-066。
+
 ---
 
 ## 1. 设计目的

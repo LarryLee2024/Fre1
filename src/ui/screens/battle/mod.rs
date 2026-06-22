@@ -26,7 +26,8 @@ use bevy::prelude::*;
 
 use crate::infra::localization::generated::loc;
 use crate::ui::primitives::button::{components::ButtonVariant, factory::spawn_localized_button};
-use crate::ui::primitives::text::{components::TextVariant, factory::spawn_text};
+use crate::ui::primitives::panel::{components::PanelVariant, factory::spawn_panel};
+use crate::ui::primitives::text::{components::TextVariant, factory::spawn_localized_text};
 use crate::ui::theme::Theme;
 use crate::ui::widgets::action_menu::factory::spawn_action_menu;
 use crate::ui::widgets::character_card::factory::spawn_character_card;
@@ -50,27 +51,25 @@ pub fn spawn_battle_screen(
     asset_server: Res<AssetServer>,
 ) {
     // ── 0. Root full-screen container ──
-    let root = commands
-        .spawn((
-            Node {
-                width: Val::Percent(100.0),
-                height: Val::Percent(100.0),
-                position_type: PositionType::Relative,
-                ..default()
-            },
-            BattleScreen,
-            Name::new("BattleScreen"),
-        ))
-        .id();
+    // TODO[P0][BATTLE][2026-07-21]: spawn_panel should accept sizing config so full-screen
+    // width/height does not need to be set externally (see factory.rs). Currently the factory's
+    // Node is used as-is; if absolute-positioned children need explicit parent bounds, add a
+    // PanelVariant::FullScreen or sizing props to the factory instead of overriding Node here.
+    let root = spawn_panel(&mut commands, &theme, PanelVariant::Basic);
+    commands.entity(root).insert((
+        BattleScreen,
+        Name::new("BattleScreen"),
+    ));
 
     // ── Z1: Top-Left — Turn Indicator ──
     let z1 = spawn_zone(&mut commands, &theme, BattleZone::Z1TopLeft);
     commands.entity(z1).set_parent_in_place(root);
-    let turn_info = spawn_text(
+    let turn_info = spawn_localized_text(
         &mut commands,
         &asset_server,
         &theme,
-        "Turn: 3    Phase: Player Turn",
+        "ui.battle.turn_bar",
+        "-- / ----",
         TextVariant::Body,
     );
     commands.entity(turn_info).set_parent_in_place(z1);
