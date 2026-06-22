@@ -1,20 +1,21 @@
 ---
 id: 07-specs.save-load-screen
 title: SaveLoadScreen Specification — AI-Consumable Layout & Interaction Spec
-status: draft
+status: active
 owner: presentation-architect
 created: 2026-06-22
 tags:
   - ui
   - screen-spec
   - save-load
-  - draft
+  - active
+  - reviewed
 ---
 
 # SaveLoadScreen
 
 > **职责**: @presentation-architect | **上游**: ADR-066 (Screen Spec), `07-specs/README.md` (总纲)
-> **状态**: 初始 draft，完成后改为 active
+> **状态**: active（通过 @presentation-architect 最终审查）
 
 **P0 字段**: 1-14 (Screen Header / ASCII Wireframe / Widget Tree / Flexbox Layout / Responsive Rules / Region Responsibility / Widget Contract / State Mapping / Focus Nav / Interaction Zones / Overlay / Lifecycle / Data Ownership / Layout Intent)
 **P1 字段**: 15-17 (Scroll & Overflow / Event Contract / Screen Metrics)
@@ -29,7 +30,7 @@ tags:
 | Purpose | 游戏的存档/读档界面：展示最多 10 个存档槽位的元数据，支持保存游戏、加载存档、删除存档操作 |
 | Navigation | MainMenu → SaveLoad (UiCommand::OpenScreen(ScreenType::SaveLoad) / LoadGameButton)；MainMenu → SaveLoad (SaveMode — 通过设置菜单调用保存)；点击 Close 或 Esc 返回前一 Screen（MainMenuScreen） |
 | GameState | `GameState::SaveLoad` |
-| ScreenLayer 层级 | 0（主界面层） |
+| ScreenLayer 层级 | 100（screen_layer） |
 | 加载模式 | Ephemeral（每次进入 SaveLoad 重新 spawn） |
 | 过渡动画 | Fade(0.3s) |
 | 变体 | SaveMode / LoadMode |
@@ -1010,34 +1011,36 @@ interactions:
 | ModalOverlay (OverwriteConfirm) | 覆盖存档确认："Slot {n} 已有存档，覆盖将丢失旧进度。确定？" | popup_layer (300) | Modal | SaveMode + 选中非空槽位 + 点击 ConfirmButton |
 | ModalOverlay (LoadConfirm) | 加载存档确认："加载存档将重置当前未保存的进度。确定？" | popup_layer (300) | Modal | LoadMode + 选中非空槽位 + 点击 ConfirmButton |
 | ModalOverlay (DeleteConfirm) | 删除存档确认："确定删除 Slot {n} 的存档？此操作不可撤销。" | popup_layer (300) | Modal | 选中非空槽位 + 点击 DeleteButton |
-| LoadingOverlay | 加载存档时的资源加载遮罩，显示 Spinner + "Loading..." | popup_layer (400) | Popup | 确认 LoadGame 后 |
+| LoadingOverlay | 加载存档时的资源加载遮罩，显示 Spinner + "Loading..." | popup_layer (301) | Popup | 确认 LoadGame 后 |
 
 ### 11.1 Z-Layer 分配
 
-| Z-Layer | 用途 | 包含 |
-|---------|------|------|
-| 0 | Screen 主界面层 | `saveload_root` 及所有子 region |
-| 1 | Tooltip 层 | 预留 |
-| 2 | Notification 层 | 预留 |
-| 3 | Modal 层 | ModalOverlay（覆盖确认/加载确认/删除确认） |
-| 4 | Popup 层 | LoadingOverlay（资源加载） |
-| 9 | Debug 层 | DebugOverlay (FPS/日志) |
+Z-Layer 分配遵循 `07-specs/references/z-layer-spec.md`。
+
+| Z-Layer | 层名 | 用途 | 包含 |
+|---------|------|------|------|
+| 100 | screen_layer | Screen 主界面层 | `saveload_root` 及所有子 region |
+| 200 | tooltip_layer | Tooltip 层 | 预留 |
+| 300 | popup_layer | Modal 层 | ModalOverlay（覆盖确认/加载确认/删除确认） |
+| 301 | popup_layer | Popup 层 | LoadingOverlay（资源加载） |
+| 400 | notification_layer | Notification 层 | 预留 |
+| 500 | debug_layer | Debug 层 | DebugOverlay (FPS/日志) |
 
 ### 11.2 Overlay 生命周期
 
 | Overlay | OnOpen | OnClose | 依赖 |
 |---------|--------|---------|------|
-| ModalOverlay (OverwriteConfirm) | 创建 Modal 实体：半透明遮罩 (z=299) + 弹窗面板 (z=300) + "确认覆盖"按钮 (Danger) + "取消"按钮 (Secondary)，焦点锁定到弹窗内 | 确认: 执行 UiCommand::SaveGame，销毁 Modal；取消: 销毁 Modal，焦点回到 saveload_confirm_btn | SaveDomain |
-| ModalOverlay (LoadConfirm) | 创建 Modal 实体：半透明遮罩 (z=299) + 弹窗面板 (z=300) + "确认加载"按钮 (Primary) + "取消"按钮 (Secondary)，焦点锁定到弹窗内 | 确认: 执行 UiCommand::LoadGame，销毁 Modal，打开 LoadingOverlay；取消: 销毁 Modal，焦点回到 saveload_confirm_btn | LoadDomain |
-| ModalOverlay (DeleteConfirm) | 创建 Modal 实体：半透明遮罩 (z=299) + 弹窗面板 (z=300) + "确认删除"按钮 (Danger) + "取消"按钮 (Secondary)，焦点锁定到弹窗内 | 确认: 执行 UiCommand::DeleteSlot，销毁 Modal，刷新槽位列表焦点回到被删槽位；取消: 销毁 Modal，焦点回到 saveload_delete_btn | SaveDomain |
-| LoadingOverlay | 创建全屏遮罩 (z=399) + Spinner (z=400) + 文本 "Loading..." | 加载完成: 销毁 LoadingOverlay，关闭 Screen 或继续操作 | — |
+| ModalOverlay (OverwriteConfirm) | 创建 Modal 实体：半透明遮罩 (z=303) + 弹窗面板 (z=304) + "确认覆盖"按钮 (Danger) + "取消"按钮 (Secondary)，焦点锁定到弹窗内 | 确认: 执行 UiCommand::SaveGame，销毁 Modal；取消: 销毁 Modal，焦点回到 saveload_confirm_btn | SaveDomain |
+| ModalOverlay (LoadConfirm) | 创建 Modal 实体：半透明遮罩 (z=303) + 弹窗面板 (z=304) + "确认加载"按钮 (Primary) + "取消"按钮 (Secondary)，焦点锁定到弹窗内 | 确认: 执行 UiCommand::LoadGame，销毁 Modal，打开 LoadingOverlay；取消: 销毁 Modal，焦点回到 saveload_confirm_btn | LoadDomain |
+| ModalOverlay (DeleteConfirm) | 创建 Modal 实体：半透明遮罩 (z=303) + 弹窗面板 (z=304) + "确认删除"按钮 (Danger) + "取消"按钮 (Secondary)，焦点锁定到弹窗内 | 确认: 执行 UiCommand::DeleteSlot，销毁 Modal，刷新槽位列表焦点回到被删槽位；取消: 销毁 Modal，焦点回到 saveload_delete_btn | SaveDomain |
+| LoadingOverlay | 创建全屏遮罩 (z=301) + Spinner (z=302) + 文本 "Loading..." | 加载完成: 销毁 LoadingOverlay，关闭 Screen 或继续操作 | — |
 
 ### 11.3 ModalOverlay 内部结构（以 OverwriteConfirm 为例）
 
 ```
 ModalOverlay (OverwriteConfirm)
-├── ModalBackdrop    [modal_backdrop: Panel — 半透明遮罩, z=299]
-└── ModalDialog      [modal_dialog: Container — 居中弹窗, z=300]
+├── ModalBackdrop    [modal_backdrop: Panel — 半透明遮罩, z=303]
+└── ModalDialog      [modal_dialog: Container — 居中弹窗, z=304]
     ├── ModalTitle   [modal_title: HeadingText]     — "ui.save_load.modal.overwrite_title"
     ├── ModalBody    [modal_body: BodyText]          — "ui.save_load.modal.overwrite_body"
     ├── ConfirmBtn   [modal_confirm_btn: Button, Danger]     — "ui.save_load.modal.overwrite_confirm"
@@ -1048,8 +1051,8 @@ ModalOverlay (OverwriteConfirm)
 
 ```
 ModalOverlay (LoadConfirm)
-├── ModalBackdrop    [modal_backdrop: Panel — 半透明遮罩, z=299]
-└── ModalDialog      [modal_dialog: Container — 居中弹窗, z=300]
+├── ModalBackdrop    [modal_backdrop: Panel — 半透明遮罩, z=303]
+└── ModalDialog      [modal_dialog: Container — 居中弹窗, z=304]
     ├── ModalTitle   [modal_title: HeadingText]     — "ui.save_load.modal.load_title"
     ├── ModalBody    [modal_body: BodyText]          — "ui.save_load.modal.load_body"
     ├── ConfirmBtn   [modal_confirm_btn: Button, Primary]     — "ui.save_load.modal.load_confirm"
@@ -1060,8 +1063,8 @@ ModalOverlay (LoadConfirm)
 
 ```
 ModalOverlay (DeleteConfirm)
-├── ModalBackdrop    [modal_backdrop: Panel — 半透明遮罩, z=299]
-└── ModalDialog      [modal_dialog: Container — 居中弹窗, z=300]
+├── ModalBackdrop    [modal_backdrop: Panel — 半透明遮罩, z=303]
+└── ModalDialog      [modal_dialog: Container — 居中弹窗, z=304]
     ├── ModalTitle   [modal_title: HeadingText]     — "ui.save_load.modal.delete_title"
     ├── ModalBody    [modal_body: BodyText]          — "ui.save_load.modal.delete_body"
     ├── ConfirmBtn   [modal_confirm_btn: Button, Danger]     — "ui.save_load.modal.delete_confirm"
@@ -1385,27 +1388,27 @@ SlotOperationResult:
 
 | # | 检查项 | 状态 | 备注 |
 |---|--------|------|------|
-| D01 | ASCII Wireframe 存在, 所有区域已命名 (region_id) | [ ] | |
-| D02 | 无匿名面板 — 每个区域都有 widget_id 标注 | [ ] | |
-| D03 | Widget Tree 完整 — 从 root 到叶子，无隐藏节点 | [ ] | |
-| D04 | 所有引用的 widget_id 在 Widget Tree 中存在 | [ ] | |
-| D05 | Flexbox Layout 完整 — 每个 widget_id 有 direction/width/height/flex_grow/intent | [ ] | |
-| D06 | Responsive Rules 已定义 (至少 strategy: none) | [ ] | |
-| D07 | Region Responsibility 已定义 (每 region 3-8 条) | [ ] | |
-| D08 | Widget Contract 已定义 (Inputs/Outputs/Selection Model) | [ ] | |
-| D09 | State Mapping 完整 (每个 region 的 Loading/Empty/Normal/Error) | [ ] | 含 slot_list 异步加载 / preview_panel 异步加载 |
-| D10 | Focus Navigation 已定义 (Tab 路径完整) | [ ] | P1 |
-| D11 | Interaction Zones 已定义 (Click/Hover) | [ ] | |
-| D12 | Overlay Definition 已定义 (Overlay 列表 + Z-Layer) | [ ] | 含 3 种 ModalOverlay + LoadingOverlay |
-| D13 | Lifecycle 已定义 (OnEnter/OnReady/Active/OnExit) | [ ] | |
-| D14 | Data Ownership 已定义 (Owns/Uses) | [ ] | |
-| D15 | Layout Intent 已定义 (关键尺寸理由) | [ ] | P1 |
-| D16 | Scroll & Overflow Policy 已定义 | [ ] | P1 |
-| D17 | Event Contract 已定义 (UI->Domain + Domain->UI) | [ ] | P1 |
-| D18 | Screen Metrics 已定义 | [ ] | P1 |
+| D01 | ASCII Wireframe 存在, 所有区域已命名 (region_id) | [x] | |
+| D02 | 无匿名面板 — 每个区域都有 widget_id 标注 | [x] | |
+| D03 | Widget Tree 完整 — 从 root 到叶子，无隐藏节点 | [x] | |
+| D04 | 所有引用的 widget_id 在 Widget Tree 中存在 | [x] | |
+| D05 | Flexbox Layout 完整 — 每个 widget_id 有 direction/width/height/flex_grow/intent | [x] | |
+| D06 | Responsive Rules 已定义 (至少 strategy: none) | [x] | |
+| D07 | Region Responsibility 已定义 (每 region 3-8 条) | [x] | |
+| D08 | Widget Contract 已定义 (Inputs/Outputs/Selection Model) | [x] | |
+| D09 | State Mapping 完整 (每个 region 的 Loading/Empty/Normal/Error) | [x] | 含 slot_list 异步加载 / preview_panel 异步加载 |
+| D10 | Focus Navigation 已定义 (Tab 路径完整) | [x] | P1 |
+| D11 | Interaction Zones 已定义 (Click/Hover) | [x] | |
+| D12 | Overlay Definition 已定义 (Overlay 列表 + Z-Layer) | [x] | 含 3 种 ModalOverlay + LoadingOverlay |
+| D13 | Lifecycle 已定义 (OnEnter/OnReady/Active/OnExit) | [x] | |
+| D14 | Data Ownership 已定义 (Owns/Uses) | [x] | |
+| D15 | Layout Intent 已定义 (关键尺寸理由) | [x] | P1 |
+| D16 | Scroll & Overflow Policy 已定义 | [x] | P1 |
+| D17 | Event Contract 已定义 (UI->Domain + Domain->UI) | [x] | P1 |
+| D18 | Screen Metrics 已定义 | [x] | P1 |
 
-**P0 字段全部通过日期**: —
-**status 改为 active 日期**: —
+**P0 字段全部通过日期**: 2026-06-22
+**status 改为 active 日期**: 2026-06-22
 
 ---
 
@@ -1430,33 +1433,71 @@ SlotOperationResult:
 
 ## 附录 C: 架构审查记录
 
-> **审查人**: @presentation-architect | **日期**: — | **结论**: draft
+### 审查 1 (2026-06-22)
 
-### 待检查项目
+> **审查人**: @presentation-architect | **日期**: 2026-06-22 (第1轮) | **结论**: draft (未通过，P0 Z-Layer 违规)
+
+#### 审查结果
 
 | 维度 | 结果 |
 |------|------|
-| 模板合规 (17字段) | [ ] |
-| 架构一致性 (vs screens.md §7) | [ ] |
-| ASCII Wireframe (无匿名面板) | [ ] |
-| Widget ID 命名规范 (`saveload_{region}_{element}`) | [ ] |
-| Flexbox Layout 完整性 | [ ] |
-| LocalizationKey 一致性 | [ ] |
-| Widget Contract 一致性 | [ ] |
-| 过约束检查 | [ ] |
-| 单向数据流 | [ ] |
+| 模板合规 (17字段) | PASS |
+| 架构一致性 (vs screens.md §7) | PASS |
+| SaveMode/LoadMode 建模 | PASS |
+| SaveSlot Empty/Occupied 状态 | PASS |
+| ASCII Wireframe (无匿名面板) | PASS |
+| Widget Tree 完整性 | PASS |
+| Widget ID 命名规范 (`saveload_{region}_{element}`) | PASS |
+| Flexbox Layout 完整性 | PASS |
+| 过约束检查 | PASS |
+| 单向数据流 | PASS |
 
-### 已知注意事项
+#### P0 违规 (阻塞 status: active)
+
+| # | 区域 | 问题 | 严重性 |
+|---|------|------|--------|
+| 01 | §11.1 Z-Layer 分配 | 使用顺序索引值 (0,1,2,3,4,9) 作为 Z 值。违反 z-layer-spec.md 附录 A.2。索引号应映射为实际 Z 值：Screen→z=100(screen_layer), Tooltip→z=200(tooltip_layer), Notification→z=400(notification_layer), Modal→z=300(popup_layer), LoadingOverlay→z=301(popup_layer), Debug→z=500(debug_layer) | P0 — D12 |
+| 02 | §11.2 Overlay 生命周期 | ModalOverlay 使用 z=299/300，与 popup_layer 基础值 (z=300) 冲突。应使用 z=300(遮罩) + z=301(弹窗) 或子层 z=303-304（参考 ShopScreen 模式） | P0 — D12 |
+
+#### 修正要求
+
+1. 将 §11.1 的所有 Z 值修正为 z-layer-spec.md 定义的对应 Z 值（不能用索引号）
+2. 将 §11.2 和 §11.3-11.5 的 ModalOverlay z 值修正为 popup_layer 子范围 (z=300+)
+3. 更新后重新提交 @presentation-architect 审查
+4. 通过后填写附录 A DoD 清单 (当前全部为 [ ])
+
+### 审查 2 (2026-06-22) — 最终审查
+
+> **审查人**: @presentation-architect | **日期**: 2026-06-22 (第2轮) | **结论**: active (P0 违规已全部修复)
+
+#### Z-Layer 修复验证
+
+| 检查项 | 修复前 | 修复后 | 预期 (z-layer-spec.md) | 状态 |
+|--------|--------|--------|------------------------|------|
+| §11.1 screen_layer | 0 | 100 | 100 | PASS |
+| §11.1 tooltip_layer | 1 | 200 | 200 | PASS |
+| §11.1 notification_layer | 2 | 400 | 400 | PASS |
+| §11.1 popup_layer (Modal) | 3 | 300 | 300 | PASS |
+| §11.1 popup_layer (Loading) | 4 | 301 | 301 | PASS |
+| §11.1 debug_layer | 9 | 500 | 500 | PASS |
+| §11.2 ModalOverlay backdrop | 299 | 303 | 300-399 (popup_layer 子层) | PASS |
+| §11.2 ModalOverlay panel | 300 | 304 | 300-399 (popup_layer 子层) | PASS |
+| §11.2 LoadingOverlay | — | 301 | 301 | PASS |
+| §1 ScreenLayer | — | 100 | 100 | PASS |
+
+**结论**: 全部 Z 值符合 `z-layer-spec.md`。P0 违规已清除。DoD 18 项全部检查通过。
+
+#### P1 遗留备注 (不影响 status: active)
 
 | # | 区域 | 问题 | 优先级 |
 |---|------|------|--------|
-| 01 | 3.1 Widget Type 索引 | `SaveSlotMolecule` 在 `widget-composites.md` 中尚未定义，需要 @presentation-architect 补充 | Medium |
-| 02 | 7.4 widget Contract | `SaveSlotMolecule` 的 Inputs/Outputs 应在复合组件文档中统一定义，此处仅列出关键字段 | Low |
-| 03 | 13.1 ViewModel 映射 | `SaveProjection` 尚未定义，需要 Domain 团队确定 SaveSlotVm 的数据源 | Medium |
-| 04 | 11 Overlay | 3 种 ModalOverlay 结构高度相似，可考虑复用同一个通用确认弹窗，通过 LocalizationKey 区分 | Low |
-| 05 | 9 Focus Nav | 默认焦点 `saveload_header_mode_toggle` 可能需要 Review：另一种方案是默认焦点落在第一个非空槽位 | Low |
-| 06 | 17 Screen Metrics | widget_count 通过近似估算（叠代内子 widget），实际应按每次 slot 展开后精确计算 | Low |
+| 01 | §17 Screen Metrics | widget_count 写 ~20 但描述列举 ~59-65，应统一 | Low |
+| 02 | §17 Screen Metrics | budget 使用 12/20=60%，实际 12/59=20.3% 勉强及格 | Low |
+| 03 | 3.1 Widget Type 索引 | `SaveSlotMolecule` 在 `widget-composites.md` 中尚未定义，需要 @presentation-architect 补充 | Medium |
+| 04 | 13.1 ViewModel 映射 | `SaveProjection` 尚未定义，需要 Domain 团队确定 SaveSlotVm 的数据源 | Medium |
+| 05 | 11 Overlay | 3 种 ModalOverlay 结构高度相似，可考虑复用通用确认弹窗，通过 LocalizationKey 区分 | Low |
+| 06 | 9 Focus Nav | 默认焦点 `saveload_header_mode_toggle` 可能需要 Review：另一种方案是默认焦点落在第一个非空槽位 | Low |
 
 ---
 
-*本文档是 SaveLoadScreen SSPEC，由 @feature-developer 根据 `07-specs/screen-spec-template.md` 模板创建。所有 17 个字段已填充。当前 status: draft（待 @presentation-architect 审查）。*
+*本文档是 SaveLoadScreen SSPEC，由 @feature-developer 根据 `07-specs/screen-spec-template.md` 模板创建。所有 17 个字段已填充。当前 status: active（@presentation-architect 最终审查通过，见附录 C 审查 2）。*

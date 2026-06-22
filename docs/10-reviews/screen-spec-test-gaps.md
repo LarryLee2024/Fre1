@@ -1,6 +1,6 @@
 ---
 id: 10-reviews.screen-spec-test-gaps
-title: Screen Spec Test Gaps Analysis
+title: Screen Spec 测试差距分析
 status: draft
 owner: test-guardian
 created: 2026-06-22

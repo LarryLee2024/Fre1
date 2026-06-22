@@ -13,149 +13,149 @@ tags:
   - registry
 ---
 
-# Content Architecture Compatibility Report for Screen Spec
+# Content 架构与 Screen Spec 兼容性报告
 
-## Executive Summary
+## 执行摘要
 
-The UI Screen Specification refactoring (07-specs/) is **substantially compatible** with the existing Content Platform architecture. Three dimensions require specific attention before P0 delivery: a Widget-ID-to-Def mapping document, missing LocalizationKeys for BattleScreen text, and a minor annotation to the Projection pattern. No architectural changes to 03-content/ are needed.
+UI Screen Specification 重构（07-specs/）与现有的 Content Platform 架构**基本兼容**。在 P0 交付前需要关注三个维度：Widget-ID-to-Def 映射文档、BattleScreen 文本缺失的 LocalizationKeys，以及 Projection 模式的小备注。不需要对 03-content/ 进行架构变更。
 
 ---
 
-## 1. Def Registry Mapping Review
+## 1. Def Registry 映射审查
 
-### 1.1 Classification: Three Categories of Widget IDs
+### 1.1 分类：三类 Widget ID
 
-Widget IDs from the plan (`07-specs/references/widget-id-map.md`) fall into three categories relative to the Def Registry:
+计划中的 Widget ID（`07-specs/references/widget-id-map.md`）相对于 Def Registry 分为三类：
 
-**Category A: Widget IDs that display Def-derived data (indirectly via Projection)**
+**类别 A：显示 Def 派生数据的 Widget ID（通过 Projection 间接）**
 
-These widget IDs correspond to fields in a ViewModel (`UiStore` field), which in turn is populated by a Projection that queries `DefRegistry<T>`. The widget itself never reads the Def Registry directly -- only the Projection does.
+这些 Widget ID 对应 ViewModel 中的字段（`UiStore` 字段），而这些字段由查询 `DefRegistry<T>` 的 Projection 填充。Widget 本身从不直接读取 Def Registry——只有 Projection 这样做。
 
-| Widget ID | ViewModel Field | Def Registry | Projection |
+| Widget ID | ViewModel 字段 | Def Registry | Projection |
 |-----------|----------------|-------------|------------|
-| `battle_hp_bar` | `BattleHudVm.hp / max_hp` | N/A (runtime instance data) | BattleProjection |
-| `battle_mp_bar` | `BattleHudVm.mp / max_mp` | N/A (runtime instance data) | BattleProjection |
-| `battle_buff_icons_0` | `BattleHudVm.buffs[0]` | `DefRegistry<BuffDef>` (via `BuffVm`) | BattleProjection |
-| `battle_skill_slot_0` | `SkillPanelVm.skills[0]` | `DefRegistry<SpellDef>` (via `SkillSlotVm`) | BattleProjection |
+| `battle_hp_bar` | `BattleHudVm.hp / max_hp` | 不适用（运行时实例数据） | BattleProjection |
+| `battle_mp_bar` | `BattleHudVm.mp / max_mp` | 不适用（运行时实例数据） | BattleProjection |
+| `battle_buff_icons_0` | `BattleHudVm.buffs[0]` | `DefRegistry<BuffDef>`（通过 `BuffVm`） | BattleProjection |
+| `battle_skill_slot_0` | `SkillPanelVm.skills[0]` | `DefRegistry<SpellDef>`（通过 `SkillSlotVm`） | BattleProjection |
 | `battle_character_name` | `CharacterPanelVm.name_key` | `DefRegistry<CharacterDef>` | CharacterPanelProjection |
 | `inventory_item_grid` | `InventoryVm.items` | `DefRegistry<ItemDef>` | InventoryProjection |
 | `quest_entry_title` | `QuestLogVm.entries[0]` | `DefRegistry<QuestDef>` | QuestProjection |
 
-**Compatibility verdict**: Fully compatible. The existing pipeline (`projection-viewmodel.md` 8.1) already defines `DefRegistry → Projection → ViewModel` as the standard flow. Widget IDs that display Def data map to ViewModel fields, not directly to Def IDs.
+**兼容性裁定**：完全兼容。现有管线（`projection-viewmodel.md` 8.1）已定义了 `DefRegistry → Projection → ViewModel` 作为标准流程。显示 Def 数据的 Widget ID 映射到 ViewModel 字段，而非直接映射到 Def ID。
 
-**Recommendation**: The `widget-id-map.md` should add a `def_type` column for Category A widget IDs, documenting which Def Registry they ultimately consume data from. This aids impact analysis ("which widgets break when I change SpellDef?").
+**建议**：`widget-id-map.md` 应为类别 A 的 Widget ID 添加 `def_type` 列，记录它们最终从哪个 Def Registry 消费数据。这有助于影响分析（"我修改 SpellDef 时哪些 widget 会受影响？"）。
 
-Example addition to the proposed YAML in the plan:
+计划中 YAML 的示例补充：
 
 ```yaml
 # Widget ID → Def Type reference (Category A only)
 def_dependencies:
-  battle_hp_bar:             ~                 # Runtime HP, no Def
-  battle_buff_icons_0:       BuffDef           # Via BuffVm → Projection → DefRegistry<BuffDef>
-  battle_skill_slot_0:       SpellDef          # Via SkillSlotVm → Projection → DefRegistry<SpellDef>
-  battle_character_name:     CharacterDef      # Via CharacterPanelVm → Projection → DefRegistry<CharacterDef>
-  inventory_item_grid:       ItemDef           # Via InventoryVm → Projection → DefRegistry<ItemDef>
+  battle_hp_bar:             ~                 # 运行时 HP，无 Def
+  battle_buff_icons_0:       BuffDef           # 通过 BuffVm → Projection → DefRegistry<BuffDef>
+  battle_skill_slot_0:       SpellDef          # 通过 SkillSlotVm → Projection → DefRegistry<SpellDef>
+  battle_character_name:     CharacterDef      # 通过 CharacterPanelVm → Projection → DefRegistry<CharacterDef>
+  inventory_item_grid:       ItemDef           # 通过 InventoryVm → Projection → DefRegistry<ItemDef>
 ```
 
 ---
 
-**Category B: Widget IDs that emit Def-referencing Commands**
+**类别 B：发出 Def 引用命令的 Widget ID**
 
-These widget IDs emit `UiCommand` events that carry typed IDs (`SkillId`, `ItemId`, etc.). The widget itself does not resolve the Def -- it only triggers the command. The Def resolution happens downstream in the Domain.
+这些 Widget ID 发出携带类型 ID（`SkillId`、`ItemId` 等）的 `UiCommand` 事件。Widget 本身不解析 Def——它只触发命令。Def 解析在 Domain 下游进行。
 
-| Widget ID | Emitted Command | ID Type | Def Registry |
-|-----------|----------------|---------|-------------|
-| `battle_attack_btn` | `UiCommand::CastSkill(skill_id, target_id)` | `SkillId` | `DefRegistry<SpellDef>` (resolved by Domain) |
+| Widget ID | 发出的命令 | ID 类型 | Def Registry |
+|-----------|-----------|---------|-------------|
+| `battle_attack_btn` | `UiCommand::CastSkill(skill_id, target_id)` | `SkillId` | `DefRegistry<SpellDef>`（由 Domain 解析） |
 | `battle_skill_btn` | `UiCommand::CastSkill(skill_id, target_id)` | `SkillId` | `DefRegistry<SpellDef>` |
 | `battle_item_btn` | `UiCommand::UseItem(item_id, target_id)` | `ItemId` | `DefRegistry<ItemDef>` |
 | `inventory_item_slot_0` | `UiCommand::UseItem(item_id)` | `ItemId` | `DefRegistry<ItemDef>` |
 | `shop_buy_btn` | `UiCommand::BuyItem(item_id, quantity)` | `ItemId` | `DefRegistry<ItemDef>` |
 
-**Compatibility verdict**: Fully compatible. The command emission pattern exists in `screens.md` 2.4 and 4.4. No Content Platform change needed.
+**兼容性裁定**：完全兼容。命令发出模式已存在于 `screens.md` 2.4 和 4.4 中。不需要修改 Content Platform。
 
 ---
 
-**Category C: Pure UI containers with no Def mapping**
+**类别 C：无 Def 映射的纯 UI 容器**
 
-These widget IDs have zero dependency on any Def type. They are structural containers or state indicators.
+这些 Widget ID 对任何 Def 类型都零依赖。它们是结构性容器或状态指示器。
 
-| Widget ID | UiBinding | Def Dependency |
-|-----------|-----------|---------------|
-| `battle_root` | `UiBinding::None` | None |
-| `battle_top_bar` | `UiBinding::None` | None |
-| `battle_turn_indicator` | `UiBinding::Turn` | None (reads BattleHudVm.turn_number) |
-| `battle_phase_label` | `UiBinding::Phase` | None (reads BattleHudVm.phase_key) |
-| `battle_end_turn_btn` | `UiBinding::None` | None |
-| `battle_area` | `UiBinding::None` | None |
-| `battle_action_menu` | `UiBinding::None` | None |
-| `battle_defend_btn` | `UiBinding::None` | None |
-| `battle_wait_btn` | `UiBinding::None` | None |
-| `main_menu_root` | `UiBinding::None` | None |
-| `main_menu_title_text` | `UiBinding::Text` | None |
-| `main_menu_version_text` | `UiBinding::None` | None |
+| Widget ID | UiBinding | Def 依赖 |
+|-----------|-----------|---------|
+| `battle_root` | `UiBinding::None` | 无 |
+| `battle_top_bar` | `UiBinding::None` | 无 |
+| `battle_turn_indicator` | `UiBinding::Turn` | 无（读取 BattleHudVm.turn_number） |
+| `battle_phase_label` | `UiBinding::Phase` | 无（读取 BattleHudVm.phase_key） |
+| `battle_end_turn_btn` | `UiBinding::None` | 无 |
+| `battle_area` | `UiBinding::None` | 无 |
+| `battle_action_menu` | `UiBinding::None` | 无 |
+| `battle_defend_btn` | `UiBinding::None` | 无 |
+| `battle_wait_btn` | `UiBinding::None` | 无 |
+| `main_menu_root` | `UiBinding::None` | 无 |
+| `main_menu_title_text` | `UiBinding::Text` | 无 |
+| `main_menu_version_text` | `UiBinding::None` | 无 |
 
-**Compatibility verdict**: Fully compatible. No Content Platform involvement.
+**兼容性裁定**：完全兼容。不涉及 Content Platform。
 
-### 1.2 Existing UiBinding Coverage for New Widget IDs
+### 1.2 现有 UiBinding 对新 Widget ID 的覆盖
 
-The existing `UiBinding` enum (`focus-binding.md` 4.2) defines 17 variants. Mapping against the plan's widget IDs:
+现有的 `UiBinding` 枚举（`focus-binding.md` 4.2）定义了 17 个变体。与计划的 Widget ID 映射：
 
-| UiBinding Variant | Mapped Widget IDs | Status |
-|------------------|-------------------|--------|
-| `Hp` | `battle_hp_bar`, `battle_hp_text` | Exists |
-| `Mp` | `battle_mp_bar`, `battle_mp_text` | Exists |
-| `Ap` | `battle_ap_bar` | Exists |
-| `Turn` | `battle_turn_indicator` | Exists |
-| `Phase` | `battle_phase_label` | Exists |
-| `Level` | `battle_character_level` | Exists |
-| `SkillSlot(u8)` | `battle_skill_slot_0`, `battle_skill_slot_1`, etc. | Exists |
-| `ItemSlot(u8)` | `inventory_item_slot_0`, etc. | Exists |
-| `Gold` | `shop_gold_display`, `inventory_gold` | Exists |
-| `QuestEntry(u16)` | `quest_entry_title` | Exists |
-| `Text` | `main_menu_title_text`, generic text widgets | Exists |
+| UiBinding 变体 | 映射的 Widget ID | 状态 |
+|----------------|-----------------|------|
+| `Hp` | `battle_hp_bar`、`battle_hp_text` | 已存在 |
+| `Mp` | `battle_mp_bar`、`battle_mp_text` | 已存在 |
+| `Ap` | `battle_ap_bar` | 已存在 |
+| `Turn` | `battle_turn_indicator` | 已存在 |
+| `Phase` | `battle_phase_label` | 已存在 |
+| `Level` | `battle_character_level` | 已存在 |
+| `SkillSlot(u8)` | `battle_skill_slot_0`、`battle_skill_slot_1` 等 | 已存在 |
+| `ItemSlot(u8)` | `inventory_item_slot_0` 等 | 已存在 |
+| `Gold` | `shop_gold_display`、`inventory_gold` | 已存在 |
+| `QuestEntry(u16)` | `quest_entry_title` | 已存在 |
+| `Text` | `main_menu_title_text`、通用文本 widget | 已存在 |
 
-**Gap identified**: Widgets like `end_turn_btn`, `battle_attack_btn`, `battle_defend_btn`, `battle_wait_btn` use `UiBinding::None` in the plan's example. This is correct because these are interactive buttons that do not display bound data. However, if they need to be targeted by query (e.g., enable/disable all action buttons), adding dedicated UiBinding variants (`ActionAttack`, `ActionDefend`, `ActionWait`) would be more performant than scanning for `UiBinding::None` + a secondary component marker. This is a @presentation-architect decision, not a content architecture concern.
+**发现缺口**：像 `end_turn_btn`、`battle_attack_btn`、`battle_defend_btn`、`battle_wait_btn` 这样的 Widget 在计划示例中使用了 `UiBinding::None`。这是正确的，因为它们是不显示绑定数据的交互式按钮。但是，如果它们需要通过查询来定位（例如启用/禁用所有操作按钮），添加专用的 UiBinding 变体（`ActionAttack`、`ActionDefend`、`ActionWait`）将比扫描 `UiBinding::None` + 辅助组件标记更高效。这是 @presentation-architect 的决定，不是 content 架构关注的事项。
 
 ---
 
-## 2. LocalizationKey Coverage Review
+## 2. LocalizationKey 覆盖审查
 
-### 2.1 Existing LocalizationKey Coverage
+### 2.1 现有 LocalizationKey 覆盖
 
-The existing schema (`localization_schema.md` 3.1 and `theme-localization.md` 4.2) defines the format as:
+现有 schema（`localization_schema.md` 3.1 和 `theme-localization.md` 4.2）定义的格式为：
 
 ```
 ui.<scope>.<id>.<suffix>
 ```
 
-Example keys mentioned in existing docs:
+现有文档中提到的示例 key：
 
-| Key | File | Status |
-|-----|------|--------|
-| `ui.battle.end_turn` | theme-localization.md 4.2 | Defined |
-| `ui.battle.victory` | theme-localization.md 4.2 | Defined |
-| `ui.battle.phase.player` | projection-viewmodel.md 7 | Defined |
-| `ui.battle.attack` | localization_schema.md 3.6 (generated keys example) | Defined |
-| `ui.battle.defend` | localization_schema.md 3.6 (generated keys example) | Defined |
-| `ui.battle.damage_dealt.text` | localization_schema.md 3.6 (generated keys example) | Defined |
-| `ui.battle.heal_received.text` | localization_schema.md 3.6 (generated keys example) | Defined |
-| `ui.battle.unit_died.text` | localization_schema.md 3.6 (generated keys example) | Defined |
-| `ui.menu.settings` | localization_schema.md 3.6 | Defined |
-| `ui.menu.quit` | localization_schema.md 3.6 | Defined |
-| `ui.inventory.empty_slot` | theme-localization.md 4.2 | Defined |
-| `ui.shop.buy_confirm` | theme-localization.md 4.2 | Defined |
-| `ui.quest.abandon_confirm` | theme-localization.md 4.2 | Defined |
-| `ui.settings.show_grid` | theme-localization.md 4.2 | Defined |
-| `ui.notification.item_acquired` | theme-localization.md 4.2 | Defined |
+| Key | 文件 | 状态 |
+|-----|------|------|
+| `ui.battle.end_turn` | theme-localization.md 4.2 | 已定义 |
+| `ui.battle.victory` | theme-localization.md 4.2 | 已定义 |
+| `ui.battle.phase.player` | projection-viewmodel.md 7 | 已定义 |
+| `ui.battle.attack` | localization_schema.md 3.6（生成的 key 示例） | 已定义 |
+| `ui.battle.defend` | localization_schema.md 3.6（生成的 key 示例） | 已定义 |
+| `ui.battle.damage_dealt.text` | localization_schema.md 3.6（生成的 key 示例） | 已定义 |
+| `ui.battle.heal_received.text` | localization_schema.md 3.6（生成的 key 示例） | 已定义 |
+| `ui.battle.unit_died.text` | localization_schema.md 3.6（生成的 key 示例） | 已定义 |
+| `ui.menu.settings` | localization_schema.md 3.6 | 已定义 |
+| `ui.menu.quit` | localization_schema.md 3.6 | 已定义 |
+| `ui.inventory.empty_slot` | theme-localization.md 4.2 | 已定义 |
+| `ui.shop.buy_confirm` | theme-localization.md 4.2 | 已定义 |
+| `ui.quest.abandon_confirm` | theme-localization.md 4.2 | 已定义 |
+| `ui.settings.show_grid` | theme-localization.md 4.2 | 已定义 |
+| `ui.notification.item_acquired` | theme-localization.md 4.2 | 已定义 |
 
-### 2.2 Gap: BattleScreen Text (Critical for P0)
+### 2.2 缺口：BattleScreen 文本（P0 关键）
 
-`screens.md` 2.3 documents BattleScreen with hardcoded text strings. The following text lacks LocalizationKeys and must be defined before the Screen Spec can be finalized:
+`screens.md` 2.3 记录了 BattleScreen 中的硬编码文本字符串。以下文本缺少 LocalizationKey，必须在 Screen Spec 定稿前定义：
 
-| Current Hardcoded Text | Screen Region | Proposed LocalizationKey | Priority |
-|----------------------|---------------|-------------------------|----------|
+| 当前硬编码文本 | Screen 区域 | 建议的 LocalizationKey | 优先级 |
+|----------------|-------------|------------------------|--------|
 | "Turn: {n}" | TurnInfoBar | `ui.battle.turn_indicator.text` | P0 |
-| "Phase: Player Turn" | TurnInfoBar | `ui.battle.phase.player` (exists) | P0 |
+| "Phase: Player Turn" | TurnInfoBar | `ui.battle.phase.player`（已存在） | P0 |
 | "Phase: Enemy Turn" | TurnInfoBar | `ui.battle.phase.enemy` | P0 |
 | "Phase: Victory" | TurnInfoBar | `ui.battle.phase.victory` | P0 |
 | "Phase: Defeat" | TurnInfoBar | `ui.battle.phase.defeat` | P0 |
@@ -164,43 +164,43 @@ Example keys mentioned in existing docs:
 | "Skill" | ActionMenu | `ui.battle.action.skill` | P0 |
 | "Item" | ActionMenu | `ui.battle.action.item` | P0 |
 | "Wait" | ActionMenu | `ui.battle.action.wait` | P0 |
-| "HP" label | CharacterCard | `ui.battle.hp_label` | P0 |
-| "MP" label | CharacterCard | `ui.battle.mp_label` | P0 |
-| "AP" label | CharacterCard | `ui.battle.ap_label` | P0 |
-| "Lv." prefix | CharacterCard | `ui.battle.level_prefix` | P0 |
+| "HP" 标签 | CharacterCard | `ui.battle.hp_label` | P0 |
+| "MP" 标签 | CharacterCard | `ui.battle.mp_label` | P0 |
+| "AP" 标签 | CharacterCard | `ui.battle.ap_label` | P0 |
+| "Lv." 前缀 | CharacterCard | `ui.battle.level_prefix` | P0 |
 
-Note: `phase_key` is already documented as `"ui.battle.phase.player"` in `projection-viewmodel.md` 7, but the existing BattleHudVm uses `&'static str` typed as `"ui.battle.phase.player"` directly, not a named constant from `generated/keys.rs`. This will need alignment when the key generation system is implemented.
+注意：`phase_key` 在 `projection-viewmodel.md` 7 中已被记录为 `"ui.battle.phase.player"`，但现有的 BattleHudVm 直接使用 `&'static str` 类型写为 `"ui.battle.phase.player"`，而不是使用 `generated/keys.rs` 中的命名常量。这在 key 生成系统实现时需要进行对齐。
 
-### 2.3 Gap: MainMenuScreen Text (P0)
+### 2.3 缺口：MainMenuScreen 文本（P0）
 
-`screens.md` 3.3 lists hardcoded text:
+`screens.md` 3.3 列出了硬编码文本：
 
-| Current Text | Proposed LocalizationKey | Priority |
-|-------------|-------------------------|----------|
-| "Fre" (title) | `ui.main_menu.title` | P0 |
-| "A Bevy SRPG" (subtitle) | `ui.main_menu.subtitle` | P0 |
+| 当前文本 | 建议的 LocalizationKey | 优先级 |
+|---------|------------------------|--------|
+| "Fre"（标题） | `ui.main_menu.title` | P0 |
+| "A Bevy SRPG"（副标题） | `ui.main_menu.subtitle` | P0 |
 | "New Game" | `ui.main_menu.new_game` | P0 |
 | "Load Game" | `ui.main_menu.load_game` | P0 |
 | "Settings" | `ui.main_menu.settings` | P0 |
-| "v0.1.0" (version) | `ui.main_menu.version` | P0 |
+| "v0.1.0"（版本） | `ui.main_menu.version` | P0 |
 
-Note: `ui.menu.settings` and `ui.menu.quit` already exist in `localization_schema.md` 3.6. The proposed `ui.main_menu.*` namespace is consistent with the existing convention.
+注意：`ui.menu.settings` 和 `ui.menu.quit` 已经存在于 `localization_schema.md` 3.6 中。建议的 `ui.main_menu.*` 命名空间与现有约定一致。
 
-### 2.4 Gap: InventoryScreen Text (P1)
+### 2.4 缺口：InventoryScreen 文本（P1）
 
-| Current Text | Proposed LocalizationKey | Priority |
-|-------------|-------------------------|----------|
+| 当前文本 | 建议的 LocalizationKey | 优先级 |
+|---------|------------------------|--------|
 | "Inventory" | `ui.inventory.title` | P1 |
 | "Gold: {n}" | `ui.inventory.gold_display` | P1 |
 | "Close" | `ui.inventory.close` | P1 |
 
-### 2.5 Gap: SettingsScreen Text (P1)
+### 2.5 缺口：SettingsScreen 文本（P1）
 
-| Current Text | Proposed LocalizationKey | Priority |
-|-------------|-------------------------|----------|
+| 当前文本 | 建议的 LocalizationKey | 优先级 |
+|---------|------------------------|--------|
 | "Show Damage Numbers" | `ui.settings.show_damage_numbers` | P1 |
 | "Show Minimap" | `ui.settings.show_minimap` | P1 |
-| "Show Grid" | `ui.settings.show_grid` (exists) | P1 |
+| "Show Grid" | `ui.settings.show_grid`（已存在） | P1 |
 | "Auto Battle" | `ui.settings.auto_battle` | P1 |
 | "Theme" | `ui.settings.theme_label` | P1 |
 | "Language" | `ui.settings.language_label` | P1 |
@@ -211,72 +211,72 @@ Note: `ui.menu.settings` and `ui.menu.quit` already exist in `localization_schem
 | "Tooltip Delay" | `ui.settings.tooltip_delay` | P1 |
 | "Reset to Defaults" | `ui.settings.reset_defaults` | P1 |
 
-### 2.6 Gap: ShopScreen Text (P1)
+### 2.6 缺口：ShopScreen 文本（P1）
 
-| Current Text | Proposed LocalizationKey | Priority |
-|-------------|-------------------------|----------|
-| Shop name | `ui.shop.greeting` (wider scope) | P1 |
-| "Buy" tab | `ui.shop.tab_buy` | P1 |
-| "Sell" tab | `ui.shop.tab_sell` | P1 |
+| 当前文本 | 建议的 LocalizationKey | 优先级 |
+|---------|------------------------|--------|
+| 商店名称 | `ui.shop.greeting`（更广范围） | P1 |
+| "Buy" 选项卡 | `ui.shop.tab_buy` | P1 |
+| "Sell" 选项卡 | `ui.shop.tab_sell` | P1 |
 | "Cart: {count} items, {total}" | `ui.shop.cart_summary` | P1 |
-| "Buy" button | `ui.shop.buy` | P1 |
+| "Buy" 按钮 | `ui.shop.buy` | P1 |
 | "Cancel" | `ui.shop.cancel` | P1 |
 | "Confirm" | `ui.shop.confirm` | P1 |
 
-### 2.7 Naming Convention Consistency
+### 2.7 命名约定一致性
 
-The existing convention (`theme-localization.md` 4.2) uses `ui.<scope>.<id>` where scope is a functional domain name (battle, inventory, shop, etc.). The plan proposes a more granular `ui.battle.{screen}.{widget}.{field}` pattern.
+现有约定（`theme-localization.md` 4.2）使用 `ui.<scope>.<id>`，其中 scope 是功能域名（battle、inventory、shop 等）。计划提出更细粒度的 `ui.battle.{screen}.{widget}.{field}` 模式。
 
-**Conflict**: The plan uses `battle_phase_label` for a widget_id that displays a value resolved from `"ui.battle.phase.player"`. The screen-level naming (`battle_<element>`) is for widget IDs, while the LocalizationKey follows the existing `ui.<scope>.<id>` pattern.
+**冲突**：计划使用 `battle_phase_label` 作为 widget_id，它显示从 `"ui.battle.phase.player"` 解析的值。Screen 级别命名（`battle_<element>`）用于 Widget ID，而 LocalizationKey 遵循现有的 `ui.<scope>.<id>` 模式。
 
-**Recommendation**: Keep the existing `ui.<scope>.<id>` pattern for LocalizationKeys (unchanged). Widget IDs use `{screen}_{region}_{element}` snake_case. These are two independent naming systems:
-- LocalizationKey (`ui.battle.end_turn`) = text lookup key in .ftl files
-- widget_id (`battle_end_turn_btn`) = permanent widget instance identifier
+**建议**：对 LocalizationKey 保持现有的 `ui.<scope>.<id>` 模式（不变）。Widget ID 使用 `{screen}_{region}_{element}` snake_case。这是两个独立的命名系统：
+- LocalizationKey（`ui.battle.end_turn`）= .ftl 文件中的文本查找 key
+- widget_id（`battle_end_turn_btn`）= 永久的 widget 实例标识符
 
-No change to the existing LocalizationKey convention is required.
+不需要修改现有的 LocalizationKey 约定。
 
 ---
 
-## 3. Data Flow Path Review
+## 3. 数据流路径审查
 
-### 3.1 Existing Path
+### 3.1 现有路径
 
-The path defined in `projection-viewmodel.md` 8.1 is:
+`projection-viewmodel.md` 8.1 中定义的路径为：
 
 ```
-Content (assets/config/*.ron)
-    ↓ AssetServer loading
-DefRegistry (Resource)
-    ↓ Projection query
-ViewModel (UiStore)
-    ↓ Dirty<T> flag
+Content（assets/config/*.ron）
+    ↓ AssetServer 加载
+DefRegistry（Resource）
+    ↓ Projection 查询
+ViewModel（UiStore）
+    ↓ Dirty<T> 标记
 Widget
 ```
 
-This is the correct and current architecture. No modifications are needed to accommodate Screen Specs.
+这是正确且当前的架构。无需修改即可适应 Screen Specs。
 
-### 3.2 How widget_id fits into the existing flow
+### 3.2 widget_id 如何融入现有流程
 
 ```
-07-specs/references/widget-id-map.md (documentation only)
-    │  Maps: widget_id → UiBinding variant
-    │        widget_id → DefRegistry type (Category A)
-    │        widget_id → ViewModel field
+07-specs/references/widget-id-map.md（仅文档）
+    │  映射：widget_id → UiBinding 变体
+    │        widget_id → DefRegistry 类型（类别 A）
+    │        widget_id → ViewModel 字段
     ▼
-Widget spawn code (src/ui/screens/*.rs)
-    │  Uses widget_id as the UiBinding + entity naming convention
+Widget 生成代码（src/ui/screens/*.rs）
+    │  使用 widget_id 作为 UiBinding + 实体命名约定
     ▼
-Dirty<T> + UiBinding → Widget refresh at runtime
+Dirty<T> + UiBinding → 运行时 Widget 刷新
 ```
 
-The widget_id is a documentation-layer concept. It does NOT introduce a new runtime component, a new system, or a new data structure. It maps to:
-- A `UiBinding` variant (existing, defined in `focus-binding.md` 4.2)
-- A ViewModel field (existing, defined in `projection-viewmodel.md` 3.4)
-- Optionally, a `DefRegistry<T>` type (existing, defined in `03-content/README.md` 5)
+widget_id 是一个文档层概念。它**不**引入新的运行时组件、新系统或新数据结构。它映射到：
+- 一个 `UiBinding` 变体（已存在，在 `focus-binding.md` 4.2 中定义）
+- 一个 ViewModel 字段（已存在，在 `projection-viewmodel.md` 3.4 中定义）
+- 可选地，一个 `DefRegistry<T>` 类型（已存在，在 `03-content/README.md` 5 中定义）
 
-### 3.3 Projection Adjustment for Screen Spec
+### 3.3 Screen Spec 的 Projection 调整
 
-The plan's Event Contract section (3.8) introduces structured `Projection` annotations in the Screen Spec. This is documentation, not a runtime change:
+计划的事件契约部分（3.8）在 Screen Spec 中引入了结构化的 `Projection` 注解。这是文档，不是运行时变更：
 
 ```yaml
 TurnStarted:
@@ -287,31 +287,31 @@ TurnStarted:
   side_effect: mark_dirty::<BattleHudVm>()
 ```
 
-**Compatibility verdict**: Fully compatible. The existing `projection-viewmodel.md` 7 already documents Projection mappings in tabular form. The Screen Spec YAML format is a different representation of the same information.
+**兼容性裁定**：完全兼容。现有的 `projection-viewmodel.md` 7 已经以表格形式记录了 Projection 映射。Screen Spec 的 YAML 格式是同一信息的不同表示形式。
 
-### 3.4 Regional State Mapping Impact
+### 3.4 区域状态映射影响
 
-The plan introduces per-region state mapping (Loading/Empty/Error states, see plan 1.1 table). This is entirely a @presentation-architect concern -- the Content Platform is not involved because:
+计划引入了按区域的状态映射（Loading/Empty/Error 状态，见计划 1.1 表）。这完全是 @presentation-architect 关注的事项——Content Platform 不涉及，因为：
 
-- Loading state is determined by data availability (not Def loading)
-- Empty state depends on filtered ViewModel content (not Def existence)
-- Error state is for network/validation errors (not schema errors)
+- Loading 状态由数据可用性决定（不是 Def 加载）
+- Empty 状态取决于过滤后的 ViewModel 内容（不是 Def 存在与否）
+- Error 状态用于网络/验证错误（不是 schema 错误）
 
-The Content Platform already has its own error handling in the validation pipeline (8 validation rules, `content-platform-manifesto.md`). Screen-level error states are orthogonal.
+Content Platform 已经在验证管道中有自己的错误处理（8 条验证规则，`content-platform-manifesto.md`）。Screen 级别的错误状态是正交的。
 
-### 3.5 Def ↔ UiBinding ↔ ViewModel Field Mapping Table
+### 3.5 Def ↔ UiBinding ↔ ViewModel 字段映射表
 
-For completeness of the Screen Spec, the following cross-reference should be included in `widget-id-map.md`:
+为完善 Screen Spec，应在 `widget-id-map.md` 中包含以下交叉引用：
 
 ```yaml
 # Widget ID → UiBinding → ViewModel Field → Def Registry
-# This table bridges widget documentation with the Content Platform
+# 此表连接 widget 文档与 Content Platform
 
 BattleScreen:
   battle_hp_bar:
     uibinding: UiBinding::Hp
     vm_field: BattleHudVm.hp / max_hp
-    def_registry: ~ (runtime instance data)
+    def_registry: ~（运行时实例数据）
   battle_mp_bar:
     uibinding: UiBinding::Mp
     vm_field: BattleHudVm.mp / max_mp
@@ -330,116 +330,116 @@ BattleScreen:
     def_registry: DefRegistry<CharacterDef>
 ```
 
-This table serves as the formal mapping between the Content Platform (Def types), the UI Binding system (UiBinding enum), and the Screen Spec (widget IDs).
+此表作为 Content Platform（Def 类型）、UI Binding 系统（UiBinding 枚举）和 Screen Spec（widget ID）之间的正式映射。
 
 ---
 
-## 4. Widget ID Naming Convention Recommendations
+## 4. Widget ID 命名约定建议
 
-### 4.1 Format
+### 4.1 格式
 
-The plan already proposes `snake_case` which is consistent with Rust variable naming. This is confirmed as the correct choice.
+计划已提出 `snake_case`，这与 Rust 变量命名一致。这被确认为正确选择。
 
-**Recommendation**: Adopt `{screen}_{region}_{element}` as the base format with the following refinements:
+**建议**：采用 `{screen}_{region}_{element}` 作为基本格式，并进行以下细化：
 
 ```
-Format: {screen}_{region}_{element}_{variant}
+格式：{screen}_{region}_{element}_{variant}
 
-screen    = Functional screen name (battle, main_menu, inventory, shop, settings, save_load)
-region    = Horizontal/vertical region or functional section (top_bar, action_menu, char_panel)
-element   = Specific widget function (hp_bar, end_turn_btn, title_text, item_grid)
-variant   = Optional suffix for numbered instances (_0, _1, _2) or sub-variants (_icon, _label)
+screen    = 功能 Screen 名称（battle、main_menu、inventory、shop、settings、save_load）
+region    = 水平/垂直区域或功能部分（top_bar、action_menu、char_panel）
+element   = 特定 widget 功能（hp_bar、end_turn_btn、title_text、item_grid）
+variant   = 编号实例的可选后缀（_0、_1、_2）或子变体（_icon、_label）
 
-Examples:
-battle_top_bar_turn_indicator    # Turn number display in top bar
-battle_action_menu_skill_btn_0   # First skill button in action menu
-inventory_main_grid_item_slot_3  # Fourth item slot in inventory grid
-settings_graphics_theme_selector # Theme dropdown in graphics tab settings
-save_load_list_slot_0            # First save slot in save/load list
+示例：
+battle_top_bar_turn_indicator    # 顶栏中的回合数显示
+battle_action_menu_skill_btn_0   # 操作菜单中的第一个技能按钮
+inventory_main_grid_item_slot_3  # 物品栏网格中的第四个物品位
+settings_graphics_theme_selector # 图形选项卡设置中的主题下拉框
+save_load_list_slot_0            # 存档/读档列表中的第一个存档位
 ```
 
-### 4.2 Max Length Guideline
+### 4.2 最大长度指南
 
-With 5+ years and 10,000+ assets in mind, widget IDs should not exceed 60 characters. This ensures they fit in typical tooling displays and debug overlays.
+考虑到 5 年以上和 10,000 以上的资源量，widget ID 不应超过 60 个字符。这确保它们适合典型的工具显示和调试覆盖层。
 
-Avoid overly deep nesting: `battle_screen_char_panel_buff_section_buff_icon_0` (56 chars, borderline) should be shortened to `battle_buff_icon_0` (19 chars).
+避免过度深层嵌套：`battle_screen_char_panel_buff_section_buff_icon_0`（56 字符，临界值）应缩短为 `battle_buff_icon_0`（19 字符）。
 
-### 4.3 Stability Contract
+### 4.3 稳定性契约
 
-The plan's constitution amendment (Widget ID stable, P0) correctly states: widget_id is permanent. Once assigned, it cannot be renamed, only deprecated.
+计划的宪法修正案（Widget ID 稳定，P0）正确地指出：widget_id 是永久的。一旦分配，就不能重命名，只能弃用。
 
-**Content Architecture implication**: If a widget_id maps to a Def Registry type (Category A), and that Def type is renamed or deprecated, the `widget-id-map.md` must record the deprecation chain:
+**Content 架构影响**：如果 widget_id 映射到 Def Registry 类型（类别 A），并且该 Def 类型被重命名或弃用，则 `widget-id-map.md` 必须记录弃用链：
 
 ```yaml
-# Deprecated widget IDs (never reassigned)
+# 已弃用的 widget ID（永不重新分配）
 battle_old_spell_icon:
   status: deprecated
   replaced_by: battle_skill_slot_0
-  deprecation_reason: "Spell → Skill terminology alignment, ADR-0XX"
+  deprecation_reason: "Spell → Skill 术语对齐，ADR-0XX"
 
 battle_old_mp_bar:
   status: deprecated
   replaced_by: battle_mp_bar
-  deprecation_reason: "Renamed for consistency with hp_bar"
+  deprecation_reason: "为与 hp_bar 一致而重命名"
 ```
 
-This deprecation tracking is essential for mod compatibility: a mod referencing `battle_old_spell_icon` should still compile (with a deprecation warning), not break silently.
+这种弃用跟踪对于 mod 兼容性至关重要：引用 `battle_old_spell_icon` 的 mod 应仍能编译（带有弃用警告），而不是静默失败。
 
-### 4.4 Existing UiBinding Naming Alignment
+### 4.4 现有 UiBinding 命名对齐
 
-The existing `UiBinding` enum uses PascalCase (`Hp`, `Mp`, `SkillSlot(u8)`). Widget IDs use snake_case (`battle_hp_bar`, `battle_skill_slot_0`). This is correct -- they serve different purposes:
+现有的 `UiBinding` 枚举使用 PascalCase（`Hp`、`Mp`、`SkillSlot(u8)`）。Widget ID 使用 snake_case（`battle_hp_bar`、`battle_skill_slot_0`）。这是正确的——它们用于不同目的：
 
-- `UiBinding::Hp` = ECS component identifier, PascalCase per Rust convention
-- `battle_hp_bar` = design documentation identifier, snake_case per UI spec convention
-- Mapping: `battle_hp_bar` ↔ `UiBinding::Hp` in `widget-id-map.md`
+- `UiBinding::Hp` = ECS 组件标识符，按 Rust 约定使用 PascalCase
+- `battle_hp_bar` = 设计文档标识符，按 UI 规范约定使用 snake_case
+- 映射：`battle_hp_bar` ↔ `UiBinding::Hp` 在 `widget-id-map.md` 中
 
-No naming conflict exists.
+不存在命名冲突。
 
 ---
 
-## 5. Compatibility Verdict
+## 5. 兼容性裁定
 
-### 5.1 Fully Compatible (No Change Needed)
+### 5.1 完全兼容（无需修改）
 
-| Dimension | Reason |
-|-----------|--------|
-| Def → Projection → ViewModel data flow | Existing flow (`projection-viewmodel.md` 8.1) directly supports all Screen Spec needs |
-| Widget ID ↔ UiBinding mapping | UiBinding enum already covers all BattleScreen and MainMenuScreen widget types |
-| Category B & C widget IDs | Pure UI containers and command-emitting IDs have no Def dependency |
-| Per-region state mapping | Orthogonal to Content Platform (pure ViewModel concern) |
-| Event Contract documentation | YAML format in Screen Spec is documentation only, matches existing Projection mappings |
-| LocalizationKey format | Existing `ui.<scope>.<id>` pattern is maintained; widget IDs are independent naming space |
+| 维度 | 原因 |
+|------|------|
+| Def → Projection → ViewModel 数据流 | 现有流程（`projection-viewmodel.md` 8.1）直接支持所有 Screen Spec 需求 |
+| Widget ID ↔ UiBinding 映射 | UiBinding 枚举已覆盖所有 BattleScreen 和 MainMenuScreen widget 类型 |
+| 类别 B 和 C 的 Widget ID | 纯 UI 容器和发出命令的 ID 没有 Def 依赖 |
+| 按区域状态映射 | 与 Content Platform 正交（纯 ViewModel 关注事项） |
+| 事件契约文档 | Screen Spec 中的 YAML 格式仅为文档，与现有 Projection 映射一致 |
+| LocalizationKey 格式 | 保持现有的 `ui.<scope>.<id>` 模式；widget ID 是独立的命名空间 |
 
-### 5.2 Needs Supplement (Documentation Only)
+### 5.2 需要补充（仅文档）
 
-| Item | What to Add | Where | Priority |
-|------|------------|-------|----------|
-| Def Registry column in widget-id-map | For Category A widget IDs, add `def_registry` field | `07-specs/references/widget-id-map.md` | P0 |
-| UiBinding ↔ ViewModel field mapping | Cross-reference table showing pipeline path | `07-specs/references/widget-id-map.md` | P1 |
-| Def dependency table for Screen Specs | When a Screen Spec mentions a widget that displays Def data, annotate the Def type | Each Screen Spec's Event Contract section | P1 |
-| Deprecation tracking for widget IDs | Format for recording deprecated/replaced widget IDs | `07-specs/references/widget-id-map.md` | P2 |
+| 项目 | 要添加的内容 | 位置 | 优先级 |
+|------|------------|------|--------|
+| widget-id-map 中的 Def Registry 列 | 对类别 A 的 Widget ID，添加 `def_registry` 字段 | `07-specs/references/widget-id-map.md` | P0 |
+| UiBinding ↔ ViewModel 字段映射 | 显示管道路径的交叉引用表 | `07-specs/references/widget-id-map.md` | P1 |
+| Screen Spec 的 Def 依赖表 | 当 Screen Spec 提到显示 Def 数据的 widget 时，标注 Def 类型 | 每个 Screen Spec 的事件契约部分 | P1 |
+| Widget ID 的弃用跟踪 | 记录已弃用/替换的 widget ID 的格式 | `07-specs/references/widget-id-map.md` | P2 |
 
-### 5.3 Needs Creation (Content Platform Effort)
+### 5.3 需要创建（Content Platform 工作）
 
-| Item | What | Where | Priority |
-|------|------|-------|----------|
-| Missing LocalizationKeys | 15+ keys for BattleScreen text, 5+ for MainMenuScreen | `assets/localization/en-US/ui.ftl` (or equivalent) | **P0** |
-| UiTextKey enum alignment | Ensure generated keys module (`generated/keys.rs`) covers all UI text keys | `src/infra/localization/generated/keys.rs` | P0 (alongside localization implementation) |
+| 项目 | 内容 | 位置 | 优先级 |
+|------|------|------|--------|
+| 缺失的 LocalizationKeys | BattleScreen 文本 15+ 个 key，MainMenuScreen 5+ 个 key | `assets/localization/en-US/ui.ftl`（或等效文件） | **P0** |
+| UiTextKey 枚举对齐 | 确保生成的 keys 模块（`generated/keys.rs`）覆盖所有 UI 文本 key | `src/infra/localization/generated/keys.rs` | P0（与 localization 实现同步） |
 
-### 5.4 Summary
+### 5.4 总结
 
 ```
-Content Platform Architecture for Screen Spec:  ████████████████████████ 95% compatible
-                                                 ████                   5% needs documentation supplement
-                                                 ▏                      1% needs new LocalizationKeys
+Screen Spec 的 Content Platform 架构：████████████████████████ 95% 兼容
+                                                  ████                   5% 需要文档补充
+                                                  ▏                      1% 需要新的 LocalizationKeys
 ```
 
-The Content Platform requires **no architectural changes, no Schema changes, no Registry changes, no Pipeline changes** to support the Screen Spec refactoring. The work items identified above are:
-- Documentation additions to `widget-id-map.md` (mapping Category A widget IDs to Def types)
-- LocalizationKey definitions for text that is currently hardcoded in screen implementations
+Content Platform 支持 Screen Spec 重构**不需要架构变更、Schema 变更、Registry 变更或管道变更**。上述识别的工作项是：
+- 向 `widget-id-map.md` 添加文档（将类别 A 的 Widget ID 映射到 Def 类型）
+- 为当前在 Screen 实现中硬编码的文本定义 LocalizationKey
 
-These are both forward-looking supplements to align existing documentation with the new Screen Spec format, not remediation of existing architecture flaws.
+这些都是前瞻性的补充，用于使现有文档与新的 Screen Spec 格式对齐，而非对现有架构缺陷的修复。
 
 ---
 
-*Report by @content-architect. Generated for Phase 1 of the UI Screen Specification refactoring (see `docs/11-refactor/ui-screen-spec-execution-plan.md`).*
+*报告由 @content-architect 编写。为 UI Screen Specification 重构第一阶段生成（参见 `docs/11-refactor/ui-screen-spec-execution-plan.md`）。*

@@ -7,30 +7,27 @@ scope: src/ui/
 standard: SSPEC (Screen Specification)
 ---
 
-# SSPEC (Screen Specification) Code Gap Analysis
+# SSPEC（Screen Specification）代码差距分析
 
-## Purpose
+## 目的
 
-Evaluate `src/ui/` against the Screen Specification (SSPEC) standard. SSPEC
-requires:
-1. Factory-constructed Screens -- no direct `commands.spawn` of Node/Button/Text
-2. No direct Domain queries -- ViewModel (UiStore) is the sole data source for Widgets
-3. `LocalizationKey` for all user-visible text -- no hardcoded strings
-4. `StyleToken` (Theme) for all colors/fonts/spacing -- no hardcoded pixels or rgba
-5. Deterministic despawn on lifecycle exit
-6. Composable Screen + Overlay hierarchy
+评估 `src/ui/` 与 Screen Specification（SSPEC）标准的差距。SSPEC 要求：
+1. 工厂构造 Screen —— 禁止直接 `commands.spawn` Node/Button/Text
+2. 禁止直接查询 Domain —— ViewModel（UiStore）是 Widget 的唯一数据源
+3. 所有用户可见文本使用 `LocalizationKey` —— 禁止硬编码字符串
+4. 所有颜色/字体/间距使用 `StyleToken`（Theme）—— 禁止硬编码像素或 rgba
+5. 生命周期退出时确定性销毁
+6. 可组合的 Screen + Overlay 层级
 
-Severity: P0 = must fix (architecture violation), P1 = should fix (code quality/technical debt), P2 = observable (minor, track for later)
+严重级别：P0 = 必须修复（架构违规），P1 = 应该修复（代码质量/技术债），P2 = 可观察（次要，后续跟踪）
 
 ---
 
-## 1. Screen Construction -- Factory Pattern Compliance
+## 1. Screen 构造 —— 工厂模式合规性
 
-### 1.1 Primitives Factory Coverage (Good Foundation)
+### 1.1 Primitives 工厂覆盖（良好基础）
 
-The primitives layer provides well-formed factory functions covering all basic
-UI atoms. All use `spawn_*` naming, accept `Theme` via parameter, and return
-`Entity`. Covered atoms:
+Primitives 层提供了定义良好的工厂函数，覆盖所有基本 UI 原子。全部使用 `spawn_*` 命名，通过参数接受 `Theme`，返回 `Entity`。覆盖的原子：
 
 | Factory | Type | Localized Variant |
 |---------|------|-------------------|
@@ -45,304 +42,298 @@ UI atoms. All use `spawn_*` naming, accept `Theme` via parameter, and return
 | `spawn_scroll_panel` | `ScrollPanel` | -- |
 | `spawn_select_list` | `SelectList` | -- |
 
-### 1.2 Screen Factory Analysis
+### 1.2 Screen 工厂分析
 
-| Screen | Factory Function | Violations | Severity |
-|--------|-----------------|-----------|----------|
-| MainMenu | `spawn_main_menu` | Overrides factory Node after `spawn_panel` call | P2 |
-| Battle | `spawn_battle_screen` | **Raw `commands.spawn((Node{...}, BattleScreen))` at line 53** | **P0** |
-| Settings | `spawn_settings_screen` | Overrides factory Node after `spawn_panel` call | P2 |
-| SaveLoad | inner factory | Uses `spawn_panel` then raw Node override; hardcoded slots | P2 |
-| Shop | `spawn_shop_panel` | Overrides factory Node at line 48 with raw layout | P2 |
-| Inventory | `spawn_inventory_screen` | Uses `spawn_panel` then raw Node override | P2 |
+| Screen | 工厂函数 | 违规情况 | 严重级别 |
+|--------|---------|----------|----------|
+| MainMenu | `spawn_main_menu` | 调用 `spawn_panel` 后覆盖了工厂 Node | P2 |
+| Battle | `spawn_battle_screen` | **第 53 行直接使用 `commands.spawn((Node{...}, BattleScreen))`** | **P0** |
+| Settings | `spawn_settings_screen` | 调用 `spawn_panel` 后覆盖了工厂 Node | P2 |
+| SaveLoad | 内部工厂 | 使用 `spawn_panel` 后用原始 Node 覆盖；硬编码 slots | P2 |
+| Shop | `spawn_shop_panel` | 第 48 行用原始布局覆盖工厂 Node | P2 |
+| Inventory | `spawn_inventory_screen` | 使用 `spawn_panel` 后用原始 Node 覆盖 | P2 |
 
-**Details:**
+**详情：**
 
-- **P0 -- `src/ui/screens/battle/mod.rs:53-63`**: The BattleScreen root is spawned via
-  raw `commands.spawn((Node{...}, BattleScreen, Name {...}))` instead of calling
-  `spawn_panel`. This is the only screen that completely bypasses the primitives
-  factory for its root container.
+- **P0 -- `src/ui/screens/battle/mod.rs:53-63`**：BattleScreen 根节点通过原始
+  `commands.spawn((Node{...}, BattleScreen, Name {...}))` 创建，而非调用
+  `spawn_panel`。这是唯一完全绕过 primitives 工厂根容器的 Screen。
 
-- **P2 -- All screens**: Every screen factory calls `spawn_panel` then immediately
-  overrides the returned entity's Node component:
+- **P2 -- 所有 Screen**：每个 Screen 工厂都先调用 `spawn_panel`，然后立即
+  覆盖返回实体的 Node 组件：
   ```rust
   let root = spawn_panel(commands, theme, PanelVariant::Basic);
   commands.entity(root).insert((Node { width: 100%, ... }));
   ```
-  This pattern is a code smell -- the factory return value is discarded. A future
-  SSPEC refinement should provide `spawn_fullscreen_panel` or similar.
+  这种模式是代码异味——工厂返回值被丢弃。未来的 SSPEC 改进应提供
+  `spawn_fullscreen_panel` 或类似函数。
 
-### 1.3 Widget Factory Analysis
+### 1.3 Widget 工厂分析
 
-| Widget | Factory | ViewModel Binding | Severity |
-|--------|---------|-------------------|----------|
-| CharacterCard | `spawn_character_card` | `Dirty<CharacterPanelVm>` (wired) | OK |
-| SkillSlot | `spawn_skill_slot` | `Dirty<SkillPanelVm>` (wired) | OK |
-| ActionMenu | `spawn_action_menu` | NO Dirty binding | **P1** |
-| ShopPanel | `spawn_shop_panel` | NO Dirty binding | **P1** |
-| InventoryGrid | `spawn_inventory_grid` | NO Dirty binding | **P1** |
-| ShopItemCard | `spawn_shop_item_card` | NO Dirty binding | P2 (child of ShopPanel) |
-| InventoryItemRow | `spawn_inventory_item_row` | NO Dirty binding | P2 (child of InventoryGrid) |
+| Widget | 工厂函数 | ViewModel 绑定 | 严重级别 |
+|--------|---------|----------------|----------|
+| CharacterCard | `spawn_character_card` | `Dirty<CharacterPanelVm>`（已连线） | OK |
+| SkillSlot | `spawn_skill_slot` | `Dirty<SkillPanelVm>`（已连线） | OK |
+| ActionMenu | `spawn_action_menu` | 无 Dirty 绑定 | **P1** |
+| ShopPanel | `spawn_shop_panel` | 无 Dirty 绑定 | **P1** |
+| InventoryGrid | `spawn_inventory_grid` | 无 Dirty 绑定 | **P1** |
+| ShopItemCard | `spawn_shop_item_card` | 无 Dirty 绑定 | P2（ShopPanel 的子级） |
+| InventoryItemRow | `spawn_inventory_item_row` | 无 Dirty 绑定 | P2（InventoryGrid 的子级） |
 
-**P1 -- `src/ui/widgets/action_menu/factory.rs`**: ActionMenu does not carry
-`Dirty<ActionMenuVm>` (which does not exist). It relies on static construction
-with hardcoded strings. No ViewModel drives its state.
+**P1 -- `src/ui/widgets/action_menu/factory.rs`**：ActionMenu 未携带
+`Dirty<ActionMenuVm>`（该类型不存在）。它依赖静态构造和硬编码字符串。没有 ViewModel 驱动其状态。
 
 ---
 
-## 2. ViewModel Usage Violations
+## 2. ViewModel 使用违规
 
-### 2.1 Architecture Violations (P0)
+### 2.1 架构违规（P0）
 
-Direct Domain queries in UI code -- these break the ViewModel fire wall:
+UI 代码中的直接 Domain 查询——这些破坏了 ViewModel 防火墙：
 
-1. **P0 -- `src/ui/screens/battle/systems.rs:30`**:
+1. **P0 -- `src/ui/screens/battle/systems.rs:30`**：
    ```rust
    turn_queue: Option<Res<TurnQueue>>,
    ```
-   `TurnQueue` is a `core::domains::combat` type. The UI observer directly imports
-   and queries a domain component. Rule violated: `docs/06-ui/04-data-flow/`
-   mandates UiStore as sole data source.
+   `TurnQueue` 是 `core::domains::combat` 类型的领域组件。UI observer 直接导入
+   并查询领域组件。违反的规则：`docs/06-ui/04-data-flow/`
+   规定 UiStore 是唯一数据源。
 
-   Impact: On `BattleAction::EndTurn`, the unit_id is extracted from
-   `turn_queue.current()` at lines 42-46, which makes replay-dependent UI state
-   non-deterministic from UI perspective.
+   影响：在 `BattleAction::EndTurn` 时，unit_id 从
+   `turn_queue.current()`（第 42-46 行）提取，这使得依赖回放的 UI 状态
+   从 UI 角度来看变得非确定性。
 
-2. **P0 -- `src/ui/screens/battle/visibility.rs:20`**:
+2. **P0 -- `src/ui/screens/battle/visibility.rs:20`**：
    ```rust
    fn battle_zone_visibility_system(
        battle_phase: Res<State<BattlePhase>>,
    ```
-   `BattlePhase` is a domain state. Zone visibility should be driven by
-   `BattleHudVm.phase_key` or a dedicated visibility ViewModel.
+   `BattlePhase` 是领域状态。区域可见性应由
+   `BattleHudVm.phase_key` 或专用的可见性 ViewModel 驱动。
 
-3. **P1 -- `src/ui/screens/battle/visibility.rs`**: Uses `Changed<BattleZone>` and
-   `State<BattlePhase>` directly. No ViewModel projection exists for zone
-   visibility.
+3. **P1 -- `src/ui/screens/battle/visibility.rs`**：直接使用 `Changed<BattleZone>` 和
+   `State<BattlePhase>`。不存在可见性的 ViewModel 投影。
 
-4. **P1 -- `src/ui/screens/battle/systems.rs:47`**:
+4. **P1 -- `src/ui/screens/battle/systems.rs:47`**：
    ```rust
    .unwrap_or_default()
    ```
-   In business code. This masks logic errors as empty strings.
+   在业务代码中使用。这将逻辑错误掩盖为空字符串。
 
-### 2.2 ViewModel Definition Gaps
+### 2.2 ViewModel 定义缺口
 
-| ViewModel | Defined | Consumed | Projection Wired |
-|-----------|---------|----------|-----------------|
-| `BattleHudVm` | Yes (7 fields) | NO | Partially (direct Query in projections) |
-| `CharacterPanelVm` | Yes | CharacterCard via Dirty | Hardcoded default values |
-| `SkillPanelVm` | Yes | SkillSlot via Dirty | Projection exists (hardcoded data) |
+| ViewModel | 已定义 | 已消费 | 投影已连线 |
+|-----------|--------|--------|-----------|
+| `BattleHudVm` | 是（7 字段） | 否 | 部分（投影中的直接 Query） |
+| `CharacterPanelVm` | 是 | 通过 Dirty 的 CharacterCard | 硬编码默认值 |
+| `SkillPanelVm` | 是 | 通过 Dirty 的 SkillSlot | 投影存在（硬编码数据） |
 
-**P1 -- BattleHudVm is defined but no Widget consumes it**. The struct has
-`hp`, `max_hp`, `mp`, `max_mp`, `turn_number`, `phase_key` but no widget
-system reads `Dirty<BattleHudVm>`. The turn indicator text at
-`battle/mod.rs:73` is a hardcoded string, not bound to any VM.
+**P1 -- BattleHudVm 已定义但没有 Widget 消费它**。该结构体包含
+`hp`、`max_hp`、`mp`、`max_mp`、`turn_number`、`phase_key`，但没有任何 widget
+系统读取 `Dirty<BattleHudVm>`。位于 `battle/mod.rs:73` 的回合指示文本
+是硬编码字符串，未绑定到任何 VM。
 
-### 2.3 Projection Layer Issues
+### 2.3 投影层问题
 
-**P1 -- `src/ui/projections/battle.rs:141`**:
+**P1 -- `src/ui/projections/battle.rs:141`**：
 ```rust
 fn on_turn_started_projection(... query: Query<&ActionPoints>)
 ```
-Projections are supposed to be pure functions that translate domain events to
-ViewModel updates. Queries for `ActionPoints` inside a projection blur the
-boundary. Comment notes "intentional bridge" but this undermines the
-ViewModel isolation principle.
+投影应该是将领域事件转换为 ViewModel 更新的纯函数。在投影内部查询
+`ActionPoints` 模糊了边界。注释写着 "intentional bridge"，
+但这削弱了 ViewModel 隔离原则。
 
-**P1 -- `src/ui/projections/battle.rs:231-270`**:
+**P1 -- `src/ui/projections/battle.rs:231-270`**：
 ```rust
 fn on_character_panel_projection(... query: Query<&Name>)
 ```
-Similarly queries domain component `Name` directly in projection.
+类似地，在投影中直接查询领域组件 `Name`。
 
 ---
 
 ## 3. Hardcoded Text
 
-### 3.1 P0 -- User-Visible Hardcoded Strings
+### 3.1 P0 -- 用户可见的硬编码字符串
 
-These are user-visible text that must use `LocalizationKey`:
+以下为用户可见文本，必须使用 `LocalizationKey`：
 
-| Location | String | Context |
-|----------|--------|---------|
-| `screens/main_menu/mod.rs:78` | `"Fre"` | Game title |
-| `screens/main_menu/mod.rs:102` | `"A Bevy SRPG"` | Subtitle |
-| `screens/main_menu/mod.rs:151` | `"v0.1.0"` | Version text |
-| `screens/main_menu/mod.rs:122` | `"New Game"` | Button fallback (key exists: loc::ui::NEW_GAME) |
-| `screens/main_menu/mod.rs:129` | `"Load Game"` | Button fallback (key exists: loc::ui::LOAD_GAME) |
-| `screens/main_menu/mod.rs:136` | `"Settings"` | Button fallback (key exists: loc::ui::SETTINGS) |
-| `screens/battle/mod.rs:73` | `"Turn: 3    Phase: Player Turn"` | Turn indicator -- completely hardcoded debug text |
-| `screens/battle/mod.rs:95` | `"Aria"` | Character name |
-| `screens/battle/mod.rs:118` | `"End Turn"` | Button fallback (key exists: loc::ui::BATTLE_END_TURN) |
-| `screens/save_load/mod.rs:111` | `"Save/Load"` | Screen title |
-| `screens/save_load/mod.rs:134` | `"Save Slot {}"` | Slot format |
-| `screens/save_load/mod.rs:138` | `"Empty"` | Empty slot label |
-| `screens/save_load/mod.rs:153,165` | `"Save"` / `"Load"` | Button fallbacks |
-| `screens/settings/mod.rs:129` | `"Show Damage Numbers"` | Toggle label |
-| `screens/settings/mod.rs:147` | `"Dark Theme"` | Toggle label |
-| `screens/settings/mod.rs:163` | `"Close"` | Button fallback |
-| `screens/settings/mod.rs:180` | `"Save"` | Button fallback |
-| `screens/inventory/systems.rs:33,39` | `"player"` | Hardcoded user ID |
+| 位置 | 字符串 | 上下文 |
+|------|--------|--------|
+| `screens/main_menu/mod.rs:78` | `"Fre"` | 游戏标题 |
+| `screens/main_menu/mod.rs:102` | `"A Bevy SRPG"` | 副标题 |
+| `screens/main_menu/mod.rs:151` | `"v0.1.0"` | 版本文本 |
+| `screens/main_menu/mod.rs:122` | `"New Game"` | 按钮回退（key 存在：loc::ui::NEW_GAME） |
+| `screens/main_menu/mod.rs:129` | `"Load Game"` | 按钮回退（key 存在：loc::ui::LOAD_GAME） |
+| `screens/main_menu/mod.rs:136` | `"Settings"` | 按钮回退（key 存在：loc::ui::SETTINGS） |
+| `screens/battle/mod.rs:73` | `"Turn: 3    Phase: Player Turn"` | 回合指示器——完全硬编码的调试文本 |
+| `screens/battle/mod.rs:95` | `"Aria"` | 角色名称 |
+| `screens/battle/mod.rs:118` | `"End Turn"` | 按钮回退（key 存在：loc::ui::BATTLE_END_TURN） |
+| `screens/save_load/mod.rs:111` | `"Save/Load"` | Screen 标题 |
+| `screens/save_load/mod.rs:134` | `"Save Slot {}"` | 存档位格式 |
+| `screens/save_load/mod.rs:138` | `"Empty"` | 空存档位标签 |
+| `screens/save_load/mod.rs:153,165` | `"Save"` / `"Load"` | 按钮回退文本 |
+| `screens/settings/mod.rs:129` | `"Show Damage Numbers"` | 开关标签 |
+| `screens/settings/mod.rs:147` | `"Dark Theme"` | 开关标签 |
+| `screens/settings/mod.rs:163` | `"Close"` | 按钮回退 |
+| `screens/settings/mod.rs:180` | `"Save"` | 按钮回退 |
+| `screens/inventory/systems.rs:33,39` | `"player"` | 硬编码用户 ID |
 
-### 3.2 P1 -- Widget-Level Hardcoded Strings
+### 3.2 P1 -- Widget 级别硬编码字符串
 
-| Location | String | Context |
-|----------|--------|---------|
-| `widgets/action_menu/factory.rs:47-71` | `"Attack"`, `"Defend"`, `"Skill"`, `"Item"`, `"Wait"` | Action labels (keys exist) |
-| `widgets/character_card/factory.rs:73` | `format!("Lv.{}", level)` | Level format |
-| `widgets/shop_panel/factory.rs:76` | `"Shop"` | Shop title |
-| `widgets/shop_panel/factory.rs:84` | `"Gold: 999"` | Gold display |
-| `widgets/shop_panel/factory.rs:95` | `"Buy"`, `"Sell"` | Tab labels |
-| `widgets/shop_panel/factory.rs:100-102` | `"Health Potion"`, `"Mana Potion"`, `"Antidote"` | Item names |
-| `widgets/shop_panel/factory.rs:119` | `"Old Sword"`, `"Leather Armor"` | Sell item names |
-| `widgets/shop_item_card/factory.rs:52` | `format!("Gold: {}", price)` | Price format |
-| `widgets/shop_item_card/factory.rs:53` | `format!("Stock: {}", stock)` | Stock format |
-| `widgets/inventory_item_row/factory.rs` | `format!("x{}", qty)` | Quantity format |
-| `widgets/inventory_grid/factory.rs` | `"Inventory"`, `"Gold: 100"`, item names | Full inventory text |
-| `primitives/progress_bar/factory.rs:63-67` | `"HP "`, `"MP "`, `"XP "` | Progress bar prefixes |
+| 位置 | 字符串 | 上下文 |
+|------|--------|--------|
+| `widgets/action_menu/factory.rs:47-71` | `"Attack"`、`"Defend"`、`"Skill"`、`"Item"`、`"Wait"` | 行动标签（key 已存在） |
+| `widgets/character_card/factory.rs:73` | `format!("Lv.{}", level)` | 等级格式 |
+| `widgets/shop_panel/factory.rs:76` | `"Shop"` | 商店标题 |
+| `widgets/shop_panel/factory.rs:84` | `"Gold: 999"` | 金币显示 |
+| `widgets/shop_panel/factory.rs:95` | `"Buy"`、`"Sell"` | 选项卡标签 |
+| `widgets/shop_panel/factory.rs:100-102` | `"Health Potion"`、`"Mana Potion"`、`"Antidote"` | 物品名称 |
+| `widgets/shop_panel/factory.rs:119` | `"Old Sword"`、`"Leather Armor"` | 出售物品名称 |
+| `widgets/shop_item_card/factory.rs:52` | `format!("Gold: {}", price)` | 价格格式 |
+| `widgets/shop_item_card/factory.rs:53` | `format!("Stock: {}", stock)` | 库存格式 |
+| `widgets/inventory_item_row/factory.rs` | `format!("x{}", qty)` | 数量格式 |
+| `widgets/inventory_grid/factory.rs` | `"Inventory"`、`"Gold: 100"`、物品名称 | 完整库存文本 |
+| `primitives/progress_bar/factory.rs:63-67` | `"HP "`、`"MP "`、`"XP "` | 进度条前缀 |
 
-### 3.3 P2 -- Non-User-Facing Hardcoded Strings
+### 3.3 P2 -- 非面向用户的硬编码字符串
 
-| Location | String | Context |
-|----------|--------|---------|
-| `widgets/shop_panel/factory.rs:149` | `"Sell"` | Button fallback (key exists: loc::economy::SHOP_SELL_TEXT) |
-| `widgets/shop_item_card/factory.rs:116` | `"Buy"` | Button fallback (key exists: loc::economy::SHOP_BUY_TEXT) |
+| 位置 | 字符串 | 上下文 |
+|------|--------|--------|
+| `widgets/shop_panel/factory.rs:149` | `"Sell"` | 按钮回退（key 存在：loc::economy::SHOP_SELL_TEXT） |
+| `widgets/shop_item_card/factory.rs:116` | `"Buy"` | 按钮回退（key 存在：loc::economy::SHOP_BUY_TEXT） |
 
-Note: These are downgraded to P2 because the `spawn_localized_button` calls
-DO pass the correct localization key -- the hardcoded string is only the
-fallback. This is the correct pattern per SSPEC.
+注意：这些降级为 P2 是因为 `spawn_localized_button` 调用
+确实传入了正确的 localization key——硬编码字符串只是
+回退值。这是符合 SSPEC 的正确模式。
 
 ---
 
-## 4. Color/Font Violations -- Hardcoded vs StyleToken
+## 4. 颜色/字体违规 —— 硬编码 vs StyleToken
 
-### 4.1 Good: Theme Token Usage
+### 4.1 良好实践：Theme Token 使用
 
-The theme system (`src/ui/theme/`) is well designed:
+主题系统（`src/ui/theme/`）设计良好：
 
-- `UiColors` with `dark()`/`light()` constructors covering ~20 semantic tokens
-- `UiSpacing` with named tokens (xs=4, sm=8, md=16, lg=24, xl=32, xxl=48, border_radius_sm/lg, button_height)
-- `UiTypography` with font paths and size/weight tokens
+- `UiColors` 包含 `dark()`/`light()` 构造器，覆盖约 20 个语义 token
+- `UiSpacing` 包含命名 token（xs=4、sm=8、md=16、lg=24、xl=32、xxl=48、border_radius_sm/lg、button_height）
+- `UiTypography` 包含字体路径和大小/粗细 token
 
-All primitives factories correctly consume Theme:
-- `button/factory.rs`: `theme.colors.accent_*`, `theme.colors.surface_*`, `theme.colors.text_*`
-- `panel/factory.rs`: `theme.colors.surface_*`, `theme.colors.border_*`
-- `text/factory.rs`: `theme.colors.text_*`, `theme.typography.*`
-- `progress_bar/factory.rs`: `theme.colors.feedback_*`, `theme.colors.accent_*`
-- `toggle/factory.rs`: `theme.colors.accent_*`, `theme.colors.surface_*`
+所有 primitives 工厂正确地消费 Theme：
+- `button/factory.rs`：`theme.colors.accent_*`、`theme.colors.surface_*`、`theme.colors.text_*`
+- `panel/factory.rs`：`theme.colors.surface_*`、`theme.colors.border_*`
+- `text/factory.rs`：`theme.colors.text_*`、`theme.typography.*`
+- `progress_bar/factory.rs`：`theme.colors.feedback_*`、`theme.colors.accent_*`
+- `toggle/factory.rs`：`theme.colors.accent_*`、`theme.colors.surface_*`
 
-### 4.2 P1 Violations
+### 4.2 P1 违规
 
-1. **P1 -- `src/ui/screens/main_menu/mod.rs:87`**:
+1. **P1 -- `src/ui/screens/main_menu/mod.rs:87`**：
    ```rust
    font_size: FontSize::Px(48.0),
    ```
-   Hardcoded font size for game title. The theme defines `size_display: 36.0`
-   and `size_title: 24.0` but neither is used. The title uses `TextVariant::Title`
-   (which gives default 24px via `font_size_for_variant`) then overrides with
-   hardcoded `48.0`. Either a new `TextVariant::Display` is needed or the theme
-   should expose `size_display`.
+   游戏标题的字体大小被硬编码。主题定义了 `size_display： 36.0`
+   和 `size_title： 24.0`，但两者都未使用。标题使用了 `TextVariant::Title`
+   （通过 `font_size_for_variant` 默认提供 24px），然后被硬编码的
+   `48.0` 覆盖。需要新增 `TextVariant::Display`，或者主题
+   应暴露 `size_display`。
 
-2. **P1 -- `src/ui/primitives/modal/factory.rs:61`**:
+2. **P1 -- `src/ui/primitives/modal/factory.rs:61`**：
    ```rust
    let overlay_color = Color::srgba(0.0, 0.0, 0.0, 0.6);
    ```
-   Modal overlay alpha is hardcoded. Should be `theme.colors.overlay` or similar.
+   Modal 遮罩透明度被硬编码。应为 `theme.colors.overlay` 或类似。
 
-### 4.3 P2 Observations
+### 4.3 P2 观察
 
-- `Color::NONE` is used in several places for BorderColor. This is acceptable
-  but a future Theme token for `border_none` would be consistent.
-- `button/factory.rs:83-86`: The Secondary variant uses `Color::NONE` border if
-  not Secondary. This pattern is acceptable but slightly opaque.
+- `Color::NONE` 在多个地方用于 BorderColor。这可以接受，
+   但未来添加 `border_none` 的 Theme token 会更一致。
+- `button/factory.rs:83-86`：非 Secondary 变体使用 `Color::NONE` 边框。
+   此模式可以接受但略显晦涩。
 
 ---
 
-## 5. Screen Composition & Layout
+## 5. Screen 组合与布局
 
-### 5.1 BattleScreen 9-Zone Layout
+### 5.1 BattleScreen 9 区域布局
 
-**Good**: The zone layout (`battle/layout.rs`) uses absolute positioning with
-`spawn_zone` factory and `BattleZone` enum (9 zones). The zone factory
-correctly reads `theme.spacing` tokens for padding/margins.
+**良好实践**：区域布局（`battle/layout.rs`）使用绝对定位，
+配合 `spawn_zone` 工厂和 `BattleZone` 枚举（9 个区域）。区域工厂
+正确地读取 `theme.spacing` token 来设置 padding/margin。
 
-**Issues**:
+**问题**：
 
-- **P1 -- `battle/layout.rs:53-54`**: Z2 TopCenter has a TODO for missing
-  horizontal centering:
+- **P1 -- `battle/layout.rs:53-54`**：Z2 TopCenter 存在一个 TODO 关于缺少
+  水平居中：
   ```rust
   // TODO[P2] missing: center horizontally
   ```
 
-- **P2 -- `battle/mod.rs:79,85,126`**: Z2, Z3, Z8 are empty (TODO comments).
-  These are deliberate P2-scoped placeholders.
+- **P2 -- `battle/mod.rs:79,85,126`**：Z2、Z3、Z8 为空（TODO 注释）。
+  这些是有意为之的 P2 范围占位符。
 
-### 5.2 Lifecycle Management
+### 5.2 生命周期管理
 
-| Screen | Creation | Despawn | Score |
-|--------|----------|---------|-------|
-| MainMenu | `Startup` | `OnExit(GameState::MainMenu)` | OK for initial |
+| Screen | 创建 | 销毁 | 评分 |
+|--------|------|------|------|
+| MainMenu | `Startup` | `OnExit(GameState::MainMenu)` | 初始阶段可接受 |
 | Battle | `OnEnter(GameState::Combat)` | `OnExit(GameState::Combat)` | OK |
-| Settings | Observer on `UiCommand::OpenScreen` | Observer on `UiCommand::CloseScreen` | Fragile |
-| SaveLoad | Observer on `UiCommand::OpenScreen` | Observer on `UiCommand::CloseScreen` | Fragile |
-| Shop | Observer on `UiCommand::OpenScreen` | Observer on `UiCommand::CloseScreen` | Fragile |
+| Settings | 基于 `UiCommand::OpenScreen` 的 Observer | 基于 `UiCommand::CloseScreen` 的 Observer | 脆弱 |
+| SaveLoad | 基于 `UiCommand::OpenScreen` 的 Observer | 基于 `UiCommand::CloseScreen` 的 Observer | 脆弱 |
+| Shop | 基于 `UiCommand::OpenScreen` 的 Observer | 基于 `UiCommand::CloseScreen` 的 Observer | 脆弱 |
 
-**P1 -- Inconsistent lifecycle pattern**. The comment at `screens/mod.rs:48`
-acknowledges:
+**P1 -- 生命周期模式不一致**。`screens/mod.rs:48` 的注释
+确认了这一点：
 ```rust
 // 未来将迁移到 OnEnter(GameState::...) + OnExit(...)
 ```
-Overlay screens use Observer-based creation/despawn which does not integrate
-with the ScreenStack navigation system. When `UiScreenState` is wired, these
-would need to be migrated.
+Overlay Screen 使用基于 Observer 的创建/销毁，这与 ScreenStack
+导航系统不整合。当 `UiScreenState` 接入后，这些需要迁移。
 
-**P2 -- `src/ui/navigation/screen_state.rs`**: `UiScreenState` is defined with
-`ScreenLifecycle` enum but is never inserted as a Resource. The ScreenStack
-is also never pushed/popped.
+**P2 -- `src/ui/navigation/screen_state.rs`**：`UiScreenState` 定义了
+`ScreenLifecycle` 枚举，但从未作为 Resource 插入。ScreenStack
+也从未执行 push/pop。
 
-### 5.3 Screen Composition Summary
+### 5.3 Screen 组合总结
 
 ```
-Current:
+当前状态：
   Screen
-    ├── Panel (overridden)
-    ├── Primitive texts (hardcoded or localized-fallback)
-    ├── Widgets (some with Dirty binding, some without)
-    └── Buttons (localized via spawn_localized_button)
+    ├── Panel（被覆盖）
+    ├── 原始文本（硬编码或带 localization 回退）
+    ├── Widget（部分有 Dirty 绑定，部分没有）
+    └── 按钮（通过 spawn_localized_button 实现本地化）
 
-Expected (SSPEC):
-  Screen (Factory)
-    ├── Panel (spawn_panel, no override)
-    ├── Texts (ALL via spawn_localized_text with loc::ui::* keys)
-    ├── Widgets (ALL with Dirty<ViewModel> binding)
-    ├── Buttons (ALL via spawn_localized_button with loc::* keys)
-    └── ViewModel projection wired to Domain Event
+预期状态（SSPEC）：
+  Screen（工厂）
+    ├── Panel（spawn_panel，无覆盖）
+    ├── 文本（全部通过 spawn_localized_text 使用 loc::ui::* key）
+    ├── Widget（全部带有 Dirty<ViewModel> 绑定）
+    ├── 按钮（全部通过 spawn_localized_button 使用 loc::* key）
+    └── ViewModel 投影连接到领域事件
 ```
 
 ---
 
-## 6. Localization Key Format Inconsistency
+## 6. Localization Key 格式不一致
 
-**P1 -- Key format mismatch**. The codebase uses two incompatible key formats:
+**P1 -- Key 格式不匹配**。代码库使用两种不兼容的 key 格式：
 
-| Format | Example | Location |
-|--------|---------|----------|
-| Generated constants (snake_case) | `loc::ui::BATTLE_END_TURN`, `loc::ui::CLOSE` | Most screens |
-| Raw dot-notation strings | `"ui.settings.show_damage"`, `"ui.settings.dark_theme"` | Settings toggle spawns |
+| 格式 | 示例 | 位置 |
+|------|------|------|
+| 生成的常量（snake_case） | `loc::ui::BATTLE_END_TURN`、`loc::ui::CLOSE` | 大多数 Screen |
+| 原始点号字符串 | `"ui.settings.show_damage"`、`"ui.settings.dark_theme"` | Settings 开关创建 |
 
-The settings toggle at `screens/settings/mod.rs:128` passes a raw key string:
+Settings 开关在 `screens/settings/mod.rs:128` 传入了原始 key 字符串：
 ```rust
 spawn_toggle(commands, theme, "ui.settings.show_damage", "Show Damage Numbers", ...)
 ```
 
-This bypasses the generated `loc::*` constants. Either `spawn_toggle` should
-accept a `&'static str` key (which it does -- the API is correct) and have
-callers use `loc::ui::SETTINGS_SHOW_DAMAGE`, or the generated keys module
-needs an entry for these.
+这绕过了生成的 `loc::*` 常量。要么让 `spawn_toggle`
+接受 `&'static str` key（它确实接受——API 是正确的），并让调用方
+使用 `loc::ui::SETTINGS_SHOW_DAMAGE`，要么生成的 keys 模块
+需要为这些添加条目。
 
-**P2 -- `spawn_tab_panel` doesn't support keys**. Tab panel at
-`widgets/shop_panel/factory.rs:95` notes this explicitly:
+**P2 -- `spawn_tab_panel` 不支持 key**。位于 `widgets/shop_panel/factory.rs:95` 的 Tab panel 明确说明了：
 ```rust
 // MVP: uses plain English labels since spawn_tab_panel does not support
 // localization keys yet.
@@ -350,115 +341,115 @@ needs an entry for these.
 
 ---
 
-## 7. Additional Findings
+## 7. 其他发现
 
-### 7.1 P1 -- unimplemented! / TODO with crash risk
+### 7.1 P1 -- `unimplemented!()` / TODO 存在崩溃风险
 
-Check `src/ui/` for `unimplemented!()` or `panic!()` calls.
+检查 `src/ui/` 中是否存在 `unimplemented!()` 或 `panic!()` 调用。
 
-### 7.2 P1 -- Bridge Module Missing
+### 7.2 P1 -- Bridge 模块缺失
 
-`src/ui/bridge/` does not exist (was referenced in architectural planning).
-Currently there is no formal bridge between UI layer and Domain layer; the
-`application/command.rs` UiCommand -> GameCommand conversion is the closest
-approximation but is incomplete.
+`src/ui/bridge/` 目录不存在（在架构规划中被引用过）。
+当前 UI 层和 Domain 层之间没有正式的桥接层；
+`application/command.rs` 中的 UiCommand -> GameCommand 转换是最接近的实现，
+但不完整。
 
-### 7.3 P2 -- UiStore Default Values
+### 7.3 P2 -- UiStore 默认值
 
-`src/ui/view_models/mod.rs:41-49`: BattleHudVm defaults use placeholder values:
-- `phase_key: ""` -- empty string default means a phase_key-less battle HUD
-  would display nothing rather than an informative placeholder.
-- `turn_number: 0` -- intentional per comment, but should eventually use
-  `Option<u32>` to distinguish "not yet loaded" from "turn 0".
+`src/ui/view_models/mod.rs:41-49`：BattleHudVm 默认值使用了占位值：
+- `phase_key: ""` —— 空字符串默认值意味着没有 phase_key 的战斗 HUD
+  将显示空白而不是有信息量的占位符。
+- `turn_number: 0` —— 根据注释是有意为之，但最终应使用
+  `Option<u32>` 来区分"尚未加载"和"第 0 回合"。
 
-### 7.4 P2 -- Settings Persistence
+### 7.4 P2 -- 设置持久化
 
-`src/ui/settings.rs:41`: `unwrap_or_default()` in UiSettings::load -- this
-silently swallows read errors by returning default settings. A corrupt file
-would be invisible to the player.
-
----
-
-## 8. Summary Table
-
-| Category | P0 | P1 | P2 | Total |
-|----------|----|----|----|-------|
-| Factory compliance | 1 | 0 | 4 | 5 |
-| ViewModel violations | 2 | 4 | 2 | 8 |
-| Hardcoded text | 1 primary + 12 screen strings | 15+ widget strings | 2 | ~30 |
-| Color/font violations | 0 | 2 | 2 | 4 |
-| Lifecycle/composition | 0 | 2 | 3 | 5 |
-| Localization format | 0 | 1 | 1 | 2 |
-| **Total** | **4** | **11** | **14** | **~29** |
+`src/ui/settings.rs:41`：UiSettings::load 中的 `unwrap_or_default()` —— 这
+通过返回默认设置来静默吞掉读取错误。损坏的文件
+对玩家来说将是不可见的。
 
 ---
 
-## 9. Severity Distribution
+## 8. 汇总表
+
+| 类别 | P0 | P1 | P2 | 总计 |
+|------|----|----|----|------|
+| 工厂合规 | 1 | 0 | 4 | 5 |
+| ViewModel 违规 | 2 | 4 | 2 | 8 |
+| 硬编码文本 | 1 主要 + 12 Screen 字符串 | 15+ Widget 字符串 | 2 | ~30 |
+| 颜色/字体违规 | 0 | 2 | 2 | 4 |
+| 生命周期/组合 | 0 | 2 | 3 | 5 |
+| Localization 格式 | 0 | 1 | 1 | 2 |
+| **总计** | **4** | **11** | **14** | **~29** |
+
+---
+
+## 9. 严重程度分布
 
 ```
-P0 (must fix):  4  ████████████████████
-P1 (should fix): 11 ████████████████████████████████████████████████████████
-P2 (observe):   14  ██████████████████████████████████████████████████████████████████
+P0（必须修复）：  4  ████████████████████
+P1（应该修复）： 11  ████████████████████████████████████████████████████████
+P2（观察）：   14   ██████████████████████████████████████████████████████████████████
 ```
 
 ---
 
-## 10. Recommendations by Priority
+## 10. 按优先级排列的建议
 
-### P0 -- Immediate Fixes (Architecture Violations)
+### P0 —— 立即修复（架构违规）
 
-1. **BattleScreen root factory**: Replace raw `commands.spawn(Node{...})` at
-   `battle/mod.rs:53-63` with `spawn_panel` call, then insert `BattleScreen` and
-   `Name` as extra components on the factory entity.
+1. **BattleScreen 根工厂**：将 `battle/mod.rs:53-63` 处的原始
+   `commands.spawn(Node{...})` 替换为 `spawn_panel` 调用，
+   然后将 `BattleScreen` 和 `Name` 作为额外组件插入到工厂实体上。
 
-2. **TurnQueue domain query**: Remove `Option<Res<TurnQueue>>` from
-   `battle/systems.rs:30`. EndTurn should derive `unit_id` from a ViewModel,
-   not query the domain directly. Add `current_unit_id` to `BattleHudVm`.
+2. **TurnQueue 领域查询**：从 `battle/systems.rs:30` 移除
+   `Option<Res<TurnQueue>>`。EndTurn 应从 ViewModel
+   推导 `unit_id`，而不是直接查询领域。向 `BattleHudVm` 添加 `current_unit_id`。
 
-3. **BattlePhase domain query**: Remove `Res<State<BattlePhase>>` from
-   `battle/visibility.rs:20`. Zone visibility should be driven by a ViewModel
-   field (e.g., `visible_zones: Vec<BattleZone>`) updated by projection.
+3. **BattlePhase 领域查询**：从 `battle/visibility.rs:20` 移除
+   `Res<State<BattlePhase>>`。区域可见性应由 ViewModel
+   字段（例如 `visible_zones： Vec<BattleZone>`）驱动，通过投影更新。
 
-4. **Battle turn indicator text**: Replace hardcoded `"Turn: 3    Phase: Player Turn"`
-   with `spawn_localized_text` bound to `BattleHudVm` fields.
+4. **Battle 回合指示文本**：将硬编码的 `"Turn： 3    Phase: Player Turn"`
+   替换为绑定到 `BattleHudVm` 字段的 `spawn_localized_text`。
 
-### P1 -- Should Fix (Code Quality / Technical Debt)
+### P1 —— 应该修复（代码质量/技术债）
 
-1. Wire `BattleHudVm` to a widget refresh system with `Dirty<BattleHudVm>`.
-2. Add `Dirty<ActionMenuVm>` or equivalent to ActionMenu widget.
-3. Add `Dirty<CharacterPanelVm>` refresh system for CharacterCard (exists but verify).
-4. Migrate all widget hardcoded strings to localization keys and fallbacks.
-5. Add `TextVariant::Display` or `theme.typography.size_display` for the title.
-6. Add `theme.colors.overlay` token for modal backdrop alpha.
-7. Fix localization key format: `"ui.settings.show_damage"` -> `loc::ui::*` constant.
-8. Add projection wiring for zone visibility.
-9. Add navigation bridge: wire `ScreenStack` push/pop, connect `UiScreenState`.
+1. 将 `BattleHudVm` 通过 `Dirty<BattleHudVm>` 连接到 widget 刷新系统。
+2. 向 ActionMenu widget 添加 `Dirty<ActionMenuVm>` 或等效绑定。
+3. 为 CharacterCard 添加 `Dirty<CharacterPanelVm>` 刷新系统（已存在但需验证）。
+4. 将所有 widget 硬编码字符串迁移为 localization key 和回退值。
+5. 为标题添加 `TextVariant::Display` 或 `theme.typography.size_display`。
+6. 为模态框遮罩透明度添加 `theme.colors.overlay` token。
+7. 修复 localization key 格式：`"ui.settings.show_damage"` -> `loc::ui::*` 常量。
+8. 为区域可见性添加投影连线。
+9. 添加导航桥接层：接通 `ScreenStack` push/pop，连接 `UiScreenState`。
 
-### P2 -- Observe (Track for Later)
+### P2 —— 观察（后续跟踪）
 
-1. Monitor that `spawn_panel` override pattern affects all screens (non-urgent).
-2. Monitor empty zones Z2, Z3, Z8 for when they get widgets.
-3. TabPanel localization key support.
-4. UiStore default values vs Option semantics.
-5. Settings file error handling.
-6. Add Spawn/Despawn lifecycle hook points for overlay screens.
+1. 监控 `spawn_panel` 覆盖模式影响所有 Screen 的情况（非紧急）。
+2. 监控空区域 Z2、Z3、Z8 何时获得 widget。
+3. TabPanel localization key 支持。
+4. UiStore 默认值与 Option 语义。
+5. 设置文件错误处理。
+6. 为 Overlay Screen 添加 Spawn/Despawn 生命周期钩子点。
 
 ---
 
-## 11. Conclusion
+## 11. 结论
 
-**Assessment: FAIL (4 P0 issues)**
+**评估结果：未通过（4 个 P0 问题）**
 
-The codebase has a strong architectural foundation -- Primitives factories,
-Theme token system, Dirty<T> binding, and ViewModel definitions are correctly
-structured. The gap is in **consistent application**:
+代码库具有坚实的架构基础——Primitives 工厂、
+Theme token 系统、Dirty<T> 绑定和 ViewModel 定义都正确地
+构建了。差距在于**一致性应用**：
 
-- The BattleScreen is the most problematic area with 3 of 4 P0 violations.
-- Widget-level text hardcoding is widespread (~30 locations) but the migration
-  path is well-supported by existing `spawn_localized_*` factories.
-- The ViewModel pipeline is partially wired (SkillPanelVm -> SkillSlot works)
-  but BattleHudVm has no consumer and ActionMenu has no binding.
+- BattleScreen 是问题最多的区域，4 个 P0 违规中有 3 个在此。
+- Widget 级别的文本硬编码广泛存在（约 30 处），但迁移
+  路径由现有的 `spawn_localized_*` 工厂很好地支持。
+- ViewModel 管线部分接通（SkillPanelVm -> SkillSlot 正常），
+  但 BattleHudVm 没有消费者，ActionMenu 没有绑定。
 
-The 4 P0 items must be resolved before closing this review. After that,
-P1 items can be addressed incrementally. Recommend re-invoking `@code-reviewer`
-after P0 fixes are applied.
+4 个 P0 项目必须在此审查关闭前解决。之后，
+P1 项目可以增量处理。建议在 P0 修复应用后
+重新调用 `@code-reviewer`。

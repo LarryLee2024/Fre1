@@ -684,6 +684,7 @@ src/
 | ADR-063 | 宏治理（Macro Governance）— 11条宏使用宪法原则 | ✅ Accepted | Cross-cutting |
 | ADR-064 | Camera 系统架构（Pose/State Machine/Event 接口/边界约束/Replay） | 🟡 Proposed | Cross-cutting |
 | ADR-065 | Map 内容管线架构（Tiled→Importer→MapAsset/Tile-Config分离/Object Layer/MapRenderer） | 🟡 Proposed | Cross-cutting |
+| ADR-066 | UI Screen Specification（SSPEC）标准 — ASCII Wireframe + Flexbox + AI-Consumable | ✅ Accepted | Cross-cutting |
 
 ---
 

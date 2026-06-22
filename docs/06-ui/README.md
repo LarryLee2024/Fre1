@@ -86,8 +86,13 @@ Screen / Widget (表现层)          ── Bevy UI 渲染
 │   ├── projection-viewmodel.md         ── Projection 与 ViewModel（防火墙、Dirty<T>、UiStore）
 │   ├── camera-ui-interaction.md        ── Camera-UI 交互规则（场景设计、数据流、通信全景）
 │   └── map-rendering.md                ── MapRenderer 架构设计（六层渲染体系、Material2d 批处理）
-└── 05-testing/
-    └── testing.md                      ── UI 测试策略（Widget 单元/Screen 集成/快照/Mock）
+├── 05-testing/
+│   └── testing.md                      ── UI 测试策略（Widget 单元/Screen 集成/快照/Mock）
+└── 07-specs/                           ← NEW — AI-Consumable Screen Specification
+    ├── README.md                       ── SSPEC 总纲（AI 14 条规则 + DoD 18 项清单）
+    ├── screen-spec-template.md         ── Screen Spec 模板（17 个字段）
+    ├── screens/                        ── 每个 Screen 一个 Spec 文件
+    └── references/                     ── 跨 Screen 参考（widget-id-map / Z-Layer / Layout Intent / Screen Metrics）
 ```
 
 ---
@@ -237,3 +242,14 @@ Domain Event → Observer → Projection → ViewModel → Widget 刷新
 | `04-data-flow/projection-viewmodel.md` | ✅ code-aligned | presentation-architect | 2026-06-21 |
 | `04-data-flow/camera-ui-interaction.md` | ✅ 完整 | presentation-architect | 2026-06-21 |
 | `05-testing/testing.md` | 🟡 partially-implemented | presentation-architect | 2026-06-21 |
+| `07-specs/README.md` | ✅ active | presentation-architect | 2026-06-22 |
+| `07-specs/screen-spec-template.md` | ✅ active | presentation-architect | 2026-06-22 |
+| `07-specs/screens/main_menu_screen.md` | ✅ active | presentation-architect | 2026-06-22 |
+| `07-specs/screens/settings_screen.md` | ✅ active | presentation-architect | 2026-06-22 |
+| `07-specs/screens/inventory_screen.md` | ✅ active | presentation-architect | 2026-06-22 |
+| `07-specs/screens/battle_screen.md` | ✅ active | presentation-architect | 2026-06-22 |
+| `07-specs/screens/shop_screen.md` | ✅ active | presentation-architect | 2026-06-22 |
+| `07-specs/references/widget-id-map.md` | ✅ active | presentation-architect | 2026-06-22 |
+| `07-specs/references/z-layer-spec.md` | ✅ active | presentation-architect | 2026-06-22 |
+| `07-specs/references/layout-intent-library.md` | ✅ active | presentation-architect | 2026-06-22 |
+| `07-specs/references/screen-metrics-baseline.md` | ✅ active | presentation-architect | 2026-06-22 |
