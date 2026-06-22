@@ -43,6 +43,8 @@ pub enum UiBinding {
     Turn,
     /// 战斗阶段
     Phase,
+    /// 第 N 个增益/减益图标槽（0~N-1）
+    BuffSlot(u8),
 
     // ── Character Panel ──
     /// 等级

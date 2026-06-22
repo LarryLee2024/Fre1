@@ -1,6 +1,6 @@
 ---
-id: 11-refactor.ui-screen-spec-execution
-title: UI Screen Specification 重构执行计划 v2.0（完整版）
+id: 11-refactor.ui-screen-spec-execution-v3
+title: UI Screen Specification 重构执行计划 v3.0（终结版）
 status: proposed
 owner: architect
 created: 2026-06-22
@@ -10,26 +10,45 @@ tags:
   - refactoring
   - ai-consumable
   - agent-orchestration
+  - figma-replacement
+  - completeness
 ---
 
-# UI Screen Specification 重构执行计划 v2.0
+# UI Screen Specification 重构执行计划 v3.0
 
 > **宪法依据**: 第九编（UI 系统宪法）、第十八编（工程质量）、第二十一编（红线禁止事项）
 > **上游架构**: ADR-055（UI 表现层架构）、ADR-054（Bevy 0.19 迁移）、ADR-050（游戏状态机）
 > **现有文档**: `docs/06-ui/`（16 个文件）
 > **输入源**: `docs/99-history/ai_ignore_this_dir/18ui草稿.md`
+> **设计原则**: 不改架构，追加规范；AI-Consumable 优先；零 Figma，纯文本工具链
 
 ---
 
-## 0. 核心结论
+## 0. 总纲
 
-### 0.1 三句话总结
+### 0.1 核心原则（不妥协）
 
-1. **现有 `docs/06-ui/` 运行时架构零改动** — Projection/ViewModel/Screen 生命周期/Widget Contract/Dirty<T> 全部保留
-2. **新增 `docs/06-ui/07-specs/` 目录** — AI 可消费的 Screen Specification 标准，与架构层物理隔离
-3. **`18ui草稿` 中的遗漏概念补全** — 首次分析遗漏 7 个概念，全部在此版本追加
+```
+▌不改架构，追加规范
+  现有 06-ui/ 运行时架构（Projection/ViewModel/Screen 生命周期/Widget Contract/Dirty<T>）
+  全部保留不动。07-specs/ 是物理隔离的规范层，不修改现有 14 个文件的 status/owner。
 
-### 0.2 与现有架构的边界
+▌AI-Consumable 优先
+  规范的目标读者是 AI（Claude/ChatGPT/Gemini），不是人。
+  ASCII Wireframe + Flexbox + YAML 结构，AI 读完 100% 知道怎么生成 UI。
+
+▌零 Figma，纯文本工具链
+  Figma 彻底移除出工作流。替代方案：ASCII Wireframe（布局）+ Excalidraw（草图）
+  + Markdown+YAML（结构化规范）。所有工具不需要 GUI、不需要设计稿、不需要 Figma 账号。
+```
+
+### 0.2 三句话总结
+
+1. **现有运行时架构零改动** — 06-ui/ 全部保留
+2. **新增 07-specs/ 目录** — AI-Consumable Screen Specification 标准
+3. **18ui草稿 的所有概念全部吸收** — 首次分析遗漏 7 项，v1 响应遗漏 9 项，本次全部补全
+
+### 0.3 物理隔离示意
 
 ```
 现有 06-ui/（运行时架构层）            07-specs/（规范描述层）
@@ -37,212 +56,356 @@ tags:
 架构师维护 → AI 读                    架构师维护 → AI 读
 定义运行时行为                         定义布局与约束
 Projection, ViewModel, Widget...      ASCII Wireframe, Flexbox...
-生命周期 states                        交互区域, 状态映射
-禁止修改                               允许根据 spec 生成 screen
-```
+生命周期 states, Dirty<T>...          交互区域, 状态映射, Scroll Policy
+                                      允许根据 spec 生成 screen
 
-**物理隔离**: 新增 `07-specs/` 目录，不改动现有 14 个文件的 status/owner 行。两套文档共存，通过 README.md 关联引用。
+06-ui/ 修改范围（仅 3 处微调）:
+  ├── screen-lifecycle.md §2.2 → 状态机增加 OnReady 弧
+  ├── screens.md → 每 Screen 加一行 "See also: 07-specs/screens/{name}.md"
+  └── README.md → 加一行 07-specs/ 索引
+```
 
 ---
 
-## 1. 遗漏概念补全集（首次分析遗漏 7 项）
+## 1. 兼容性分析表（v1 补回）
 
-### 1.1 🆕 Responsive Rules（18ui草稿 §6）
+18ui草稿 全部概念与现有架构的逐项对比，明确哪些要改、哪些不动：
 
-**原文核心**: 如果项目固定分辨率，必须显式写 `Responsive: None`。否则定义断点：
+### 1.1 核心规范（18ui草稿 §1-§16）
+
+| 18ui草稿 概念 | 现有架构等价物 | 变动 | 行动 |
+|--------------|---------------|------|------|
+| ASCII Wireframe | ❌ 不存在 | 🆕 **新增** | 07-specs/ 必含 |
+| Widget Tree | ✅ `screens.md` 有描述 | 🔄 **ID 标注版** | 07-specs/ 中加 widget_id 标注 |
+| Flexbox Layout | ❌ 不存在（尺寸散落在代码中） | 🆕 **新增** | 07-specs/ 必含 width/height/flex_grow |
+| Design System | ✅ `widget-atoms.md` + `widget-composites.md` | ✅ **不动** | 现有完整 |
+| Screen→Widget→Primitive | ✅ `architecture.md` §4.4 三层渲染层 | ✅ **不动** | 现有完整 |
+| Figma 核心页面 | ❌ 项目不用 Figma | 🔄 **替换** | 见 §2 Figma 替代方案 |
+| ADR-UI-001（7条规则） | ❌ 不存在 | 🆕 **新增** | ADR-066 吸收 |
+| AI-Consumable 理念 | ❌ 不存在 | 🆕 **新增** | 07-specs/README.md 总纲 |
+| Screen Header | 🟡 `screens.md` 有散落属性 | 🔄 **结构化** | 07-specs/模板格式 |
+| ASCII Wireframe（要求） | ❌ 不存在 | 🆕 **新增** | 强制区域命名，禁匿名面板 |
+| Widget Tree（要求） | 🟡 文本描述无 ID | 🔄 **ID 标注** | 07-specs/强制格式 |
+| Flexbox Layout（要求） | ❌ 不存在 | 🆕 **新增** | 每 widget 必须 width/height/flex_grow |
+| Responsive Rules | ❌ 不存在 | 🆕 **新增** | 至少写 "strategy: none" |
+| Region Responsibility | 🟡 文本描述 | 🔄 **结构化** | YAML 列表格式 |
+| Widget Contract | ✅ `widget-atoms.md` 完整 | ✅ **不动** | 现有完整 |
+| State Mapping | 🟡 `screen-lifecycle.md` 有 | 🔄 **Per-Region** | 每个 region 独立状态 |
+| Focus Navigation | ✅ `focus-binding.md` 完整 | ✅ **不动** | 现有完整 |
+| Interaction Zones | 🟡 Widget 级别有 | 🆕 **Screen 级补** | 07-specs/中 region 级标注 |
+| Overlay Definition | ✅ `overlays.md` 完整 | ✅ **不动** | 现有完整 |
+| Screen Lifecycle | ✅ `screen-lifecycle.md` 完整 | 🔄 **微调** | 状态机增加 OnReady |
+| Data Ownership | ✅ `projection-viewmodel.md` 有 | ✅ **不动** | 现有完整 |
+| AI Generation Rules (10条) | ❌ 不存在 | 🆕 **新增** | 07-specs/README.md |
+| Definition of Done (12项) | ❌ 不存在 | 🆕 **新增（14项）** | 07-specs/README.md |
+
+### 1.2 扩展规范（18ui草稿 §17-§34）
+
+| 18ui草稿 概念 | 现有架构等价物 | 变动 | 行动 |
+|--------------|---------------|------|------|
+| Widget ID | 🟡 `UiBinding` 有参数化变体 | 🆕 **文档映射层** | 07-specs/references/widget-id-map.md |
+| Layout Intent | ❌ 不存在 | 🆕 **新增** | 07-specs 中每个 Screen 标注 |
+| Layout Priority | ❌ 不存在 | 🆕 **新增** | shrink: none/low/high |
+| Scroll Policy | ❌ 不存在（代码里隐含） | 🆕 **新增** | 07-specs 中每个 region 标注 |
+| Overflow Policy | ❌ 不存在 | 🆕 **新增** | clip/ellipsis/scroll |
+| Empty State（per-region） | ❌ 不存在 | 🆕 **新增** | 07-specs 中 per-region 标注 |
+| Error State（per-region） | ❌ 不存在 | 🆕 **新增** | 同上 |
+| Loading State（per-region） | ❌ 不存在 | 🆕 **新增** | 同上 |
+| Selection Model | ❌ 不存在 | 🆕 **新增** | single/multi/none |
+| Ownership Boundary | ✅ 宪法有 | ✅ **不动** | 现有完整 |
+| Event Contract | 🟡 散落在各处 | 🆕 **集中化** | 07-specs 中 per-Screen |
+| Widget Reuse Policy | ❌ 不存在 | 🆕 **新增** | 07-specs 可选字段 |
+| Forbidden Rules | ✅ 宪法 21 编有 | ✅ **不动** | 宪法完整 |
+| Accessibility | 🟡 焦点系统有 | ✅ **预留** | 宪法已有条款 |
+| Z-Layer | ❌ 不存在 | 🆕 **新增** | 07-specs/references/z-layer-spec.md |
+| Animation Ownership | ❌ 不存在 | 🆕 **新增** | 07-specs + 宪法 |
+| Widget Budget | ❌ 不存在 | 🆕 **新增** | max_depth / max_children |
+| Screen Metrics | ❌ 不存在 | 🆕 **新增** | widget_count / container_count / 等 |
+
+**统计**: 新增约 45% / 修改约 10% / 保留不动约 45%
+
+---
+
+## 2. Figma 彻底替代方案（用户明确要求：零 Figma）
+
+### 2.1 核心理念
+
+```
+Figma 是"给人看"的 → 不适合 AI 消费
+ASCII Wireframe 是"给 AI 看"的 → 机器可解析，人也能读
+Excalidraw 是"给人画草图"的 → 偶尔需要视觉确认时使用
+```
+
+Fre 项目**零 Figma**。所有 Figma 规划的职能全部用已有的纯文本工具替代：
+
+### 2.2 替代映射表
+
+| Figma 原本职能 | 替代工具 | 存在性 | 输出格式 | 何时使用 |
+|---------------|---------|--------|---------|---------|
+| 页面布局设计 | **ASCII Wireframe** | 🆕 07-specs/ 强制 | Markdown 代码块 | 每个 Screen Spec 必有 |
+| 组件视觉样式 | **Theme Token**（StyleToken / UiColors / UiSpacing） | ✅ 已有 `theme-localization.md` | Rust Enum | Widget 开发时引用 |
+| 交互流程设计 | **Widget Contract**（Inputs/Outputs/Events） | ✅ 已有 `widget-atoms.md` | YAML Schema | 每个 Widget 定义时 |
+| 页面间导航 | **ScreenStack + Excalidraw** | ✅ 已有 `navigation-overlay.md` | Markdown + 可选 Excalidraw | Screen 关系复杂时 |
+| 高保真视觉稿 | **无需**（SRPG 不需要高保真原型） | — | — | 确定不做 |
+| 设计评审 | **Spec diff review**（文档 diff 替代视觉 diff） | 🆕 流程创新 | Git diff | Spec 变更时 |
+| 设计验收 | **DoD Checklist**（14 项自动检查） | 🆕 07-specs/README.md | Markdown checklist | 每个 Screen Spec 完成时 |
+| 低保真草图 | **ASCII Wireframe**（主） + **Excalidraw**（辅，可选） | 🆕 07-specs/ | ASCII 图 / SVG | Screen 复杂布局时 |
+| 标注文档 | **YAML Frontmatter + Flexbox 参数** | 🆕 07-specs/模板 | YAML | 每个 Widget 区域 |
+
+### 2.3 工具链依赖声明
+
+```
+本项目的 UI 设计工具链（零 Figma）:
+
+必须（每个 Screen Spec）:
+├── ASCII Wireframe      ── 纯文本，Markdown 代码块，机器可读
+├── YAML Layout Spec     ── 结构化尺寸/约束/意图
+└── DoD Checklist        ── 14 项验证，确保完整性
+
+可选（布局探索阶段）:
+├── Excalidraw           ── 免费在线，无需账号，可导出 SVG
+├── draw.io              ── 开源离线，VS Code 插件可用
+└── Miro                 ── 团队协作白板，备选
+
+绝对不使用:
+❌ Figma                 ── 当前无人会用，且项目不需要视觉设计还原
+❌ Adobe XD              ── 同上
+❌ Sketch                ── 同上
+❌ Photoshop / GIMP      ── 位图不适合 UI 布局定义
+```
+
+### 2.4 决策理由
+
+```
+为什么零 Figma 对 Fre 项目是更好的选择:
+
+1. 50 万行 SRPG 的 UI 复杂度在「组合逻辑」不在「视觉保真」
+   ── 战斗 HUD 不需要像素级还原，需要 Data Flow + Layout Constraint
+
+2. Figma 的设计稿不能被 AI 直接消费
+   ── Figma to code 工具链对 Bevy UI 无效
+   ── ASCII Wireframe 是「AI 原生」的规范格式
+
+3. 项目没有设计师
+   ── 全程序员团队，纯文本工作流比 Figma 效率高 10 倍
+
+4. 收益/投入比
+   ── Figma 学习成本: 40h+（对程序员）
+   ── ASCII Wireframe 学习成本: 5min
+   ── 同样产出 Screen 布局规范，后者在一个大型项目中 ROI 高 100 倍
+```
+
+---
+
+## 3. 遗漏概念补全集（v2 的 7 项 + v1 补充的 3 项 = 10 项）
+
+### 3.1-3.7 v2 已覆盖的 7 项
+
+| 编号 | 概念 | 18ui草稿 位置 | 文件已有 |
+|------|------|--------------|---------|
+| 3.1 | Responsive Rules | §6 | ✅ 已含 |
+| 3.2 | OnReady 生命周期 | §13 | ✅ 已含 |
+| 3.3 | Definition of Done | §16 | ✅ 已含 |
+| 3.4 | Widget Reuse Policy | §28 | ✅ 已含 |
+| 3.5 | Animation Ownership | §32 | ✅ 已含 |
+| 3.6 | Widget Budget | §33 | ✅ 已含 |
+| 3.7 | Per-Region State Mapping | §22-24 | ✅ 已含 |
+
+### 3.8 🆕 Event Contract 的完整格式（v1 补回）
+
+18ui草稿 §27 强调：不要写"点击物品"，要写结构化 Event Contract。
+
+**项目适配**: 每个 Screen Spec 新增 §Event Contract 节，列出所有 UI ↔ Domain 事件：
 
 ```yaml
-<1280:
-  character_panel:
-    width: 240
->=1280:
-  character_panel:
+## Event Contract
+
+### UI → Domain（通过 UiCommand 传递）
+
+CastSkill:
+  trigger_widget: action_menu → skill_btn → click
+  data: { skill_id: SkillId, target_id: UnitId }
+  conditions:
+    - selected_skill != None
+    - selected_target != None
+    - ap_remaining >= skill_cost
+  emits: UiCommand::CastSkill(SkillId, UnitId)
+  domain_event: SkillExecuted | EffectApplied
+
+EndTurn:
+  trigger_widget: top_bar → end_turn_btn → click
+  data: {}
+  conditions: is_player_turn
+  emits: UiCommand::EndTurn
+  domain_event: TurnEnded
+
+### Domain → UI（通过 Projection 消费）
+
+DamageApplied:
+  source: Domain Event (Combat Domain)
+  projection: BattleProjection.project_damage()
+  vm_update: BattleHudVm.hp ← damage_value
+  side_effect: mark_dirty::<BattleHudVm>()
+
+TurnStarted:
+  source: Domain Event (Combat Domain)
+  projection: BattleProjection.project_turn()
+  vm_update: BattleHudVm.turn_number += 1
+  vm_update: BattleHudVm.phase_key = "ui.battle.phase.player"
+  side_effect: mark_dirty::<BattleHudVm>()
+```
+
+**Why 补回**: Event Contract 是 18ui草稿 §27 强调的"最高价值 7 规则"之一。v2 文件中只在 Widget Contract 的 outputs 字段提了一嘴，没有形成独立的、完整的 Event Contract 节。
+
+### 3.9 🆕 Widget ID → UiBinding 映射表具体格式（v1 补回）
+
+**项目适配**: `07-specs/references/widget-id-map.md` 的完整格式：
+
+```yaml
+# Widget ID → UiBinding 映射总表
+# widget_id 一旦分配，永久有效。重构时标记 deprecated，不重新分配。
+
+BattleScreen:
+  root:                UiBinding::None        # Screen Root 容器
+  top_bar:             UiBinding::None        # 顶栏容器
+  turn_indicator:      UiBinding::Turn        # 回合数文本
+  phase_label:         UiBinding::Phase       # 阶段标签
+  end_turn_btn:        UiBinding::None        # 结束回合按钮（无 binding，由 Screen 管理交互）
+  battle_area:         UiBinding::None        # 战斗场地容器
+  char_panel:          UiBinding::None        # 角色面板容器
+  hp_bar:              UiBinding::Hp          # HP 进度条
+  mp_bar:              UiBinding::Mp          # MP 进度条
+  buff_icons_0:        UiBinding::BuffSlot(0) # Buff 图标槽位 0
+  buff_icons_1:        UiBinding::BuffSlot(1) # Buff 图标槽位 1
+  action_menu:         UiBinding::None
+  attack_btn:          UiBinding::None
+  skill_btn:           UiBinding::None
+  defend_btn:          UiBinding::None
+  wait_btn:            UiBinding::None
+
+MainMenuScreen:
+  root:                UiBinding::None
+  title_text:          UiBinding::Text        # 游戏标题
+  new_game_btn:        UiBinding::None
+  load_game_btn:       UiBinding::None
+  settings_btn:        UiBinding::None
+  version_text:        UiBinding::None
+
+# ... 其他 Screen 同理
+# 每当 UiBinding 枚举新增变体时，必须在此表追加一行
+```
+
+### 3.10 🆕 Layout Intent 跨 Screen 统一参考库（v1 补回）
+
+**项目适配**: `07-specs/references/layout-intent-library.md`：
+
+```yaml
+# Layout Intent 统一参考库
+# 跨 Screen 共享的尺寸约束意图
+
+## 固定宽度 320px
+regions:
+  - widget_id: char_panel (battle_screen)
     width: 320
+    intent: "角色头像+状态栏需要最小宽度，<320px 会导致文字折行、图标挤压"
+    shrink: none
+  - widget_id: character_list (inventory_screen)
+    width: 320
+    intent: "与战斗屏保持一致的角色列表宽度"
+    shrink: none
+
+## 固定高度 64px（顶栏）
+regions:
+  - widget_id: top_bar (battle_screen)
+    height: 64
+    intent: "标准顶栏高度，容纳回合信息 + 结束回合按钮"
+    shrink: none
+
+## 固定高度 120px（底栏）
+regions:
+  - widget_id: action_menu (battle_screen)
+    height: 120
+    intent: "底部行动菜单，120px 容纳 4 个按钮行 + 边距"
+    shrink: none
+
+## FlexGrow 优先占满
+regions:
+  - widget_id: battle_area (battle_screen)
+    flex_grow: 1
+    intent: "战斗场地优先占满剩余空间，地图越大越好"
+  - widget_id: inventory_grid (inventory_screen)
+    flex_grow: 1
+    intent: "物品网格占满剩余空间，物品展示越多越好"
+
+## 通用约束
+global:
+  min_interactive_height: 40px   # 可交互元素最小高度
+  min_interactive_width: 40px    # 可交互元素最小宽度
+  standard_padding: 8px          # 标准内边距
+  standard_gap: 4px              # 标准间距
 ```
-
-**项目适配**: Fre 项目当前是固定分辨率设计。每个 Screen Spec 必须含：
-
-```yaml
-responsive:
-  strategy: "none"  # 固定分辨率，不响应
-  # 若未来引入响应式，在此追加断点
-```
-
-**Why missed**: 首次分析只关注了 Flexbox 的 width/height，漏掉了"不响应也要显式声明"这个约束。
-
-### 1.2 🆕 OnReady 生命周期阶段（18ui草稿 §13）
-
-**原文核心**: OnEnter 和 OnReady 是分开的：
-
-```
-OnEnter — LoadInventory（加载数据）
-OnReady — SelectCurrentCharacter（初始化 UI 状态）
-```
-
-**项目适配**: 现有 `screen-lifecycle.md` 只有 OnEnter → Loading → Active，没有 OnReady。需要在 Screen Spec 中增加 OnReady 描述：
-
-```yaml
-lifecycle:
-  on_enter:
-    - register_projection_observers()
-    - load_initial_viewmodel()
-  on_ready:
-    - select_default_character()
-    - set_initial_focus()
-  on_exit:
-    - unregister_observers()
-    - cleanup_selection()
-```
-
-**现有架构修改**: `docs/06-ui/03-screens/screen-lifecycle.md` §2.2 的状态机需要增加 OnReady 弧：`Loading → OnReady → Active`
-
-### 1.3 🆕 Definition of Done 检查清单（18ui草稿 §16）
-
-**原文核心**: 12 项 checklist，缺一不可。这是最被低估的强制约束机制。
-
-**项目适配**: 在 `07-specs/README.md` 中固定 14 项 DoD（从 12 项扩展）：
-
-```markdown
-## Definition of Done Checklist
-
-每个 Screen Spec 完成时必须全部满足：
-
-- [ ] Header（Screen Name, Purpose, Navigation, GameState）
-- [ ] ASCII Wireframe（所有区域命名，无匿名面板）
-- [ ] Widget Tree（标注 widget_id，无隐藏节点）
-- [ ] Flexbox Layout（width/height/flex_grow 全部标注）
-- [ ] Responsive Rules（至少写 "strategy: none"）
-- [ ] Region Responsibility（每区域 3-8 条具体职责）
-- [ ] Widget Contract（Inputs/Outputs/Selection Model）
-- [ ] State Mapping（Loading/Empty/Normal/Error 每个状态）
-- [ ] Focus Navigation（键盘/手柄导航路径）
-- [ ] Interaction Zones（每个区域交互类型标注）
-- [ ] Overlay Definition（需要哪些 Overlay + Z-Layer）
-- [ ] Lifecycle（OnEnter/OnReady/OnExit）
-- [ ] Data Ownership（Owns/Uses 分离）
-- [ ] Layout Intent（关键尺寸的理由说明）
-- [ ] Scroll & Overflow Policy（每个滚动区域）
-- [ ] Screen Metrics（widget_count/container_count/interactive_count/overlay_count/max_depth）
-
-附加（P1 级别，非强制但有更好）：
-- [ ] Widget Reuse Policy（是否强制现有 Widget 库）
-- [ ] Animation Ownership（widget级/screen级动画归属）
-- [ ] Widget Budget（max_widget_depth/max_children）
-- [ ] Empty / Error / Loading 各区域的独立状态 Widget
-```
-
-### 1.4 🆕 Widget Reuse Policy（18ui草稿 §28）
-
-**原文核心**: `reuse_only: true` — 禁止创建新 Widget，AI 必须使用现有组件库。
-
-**项目适配**: 在 Screen Spec 中可选的 strict 声明：
-
-```yaml
-widget_reuse_policy:
-  reuse_only: true
-  allowed_widgets:
-    - PanelWidget
-    - ListWidget
-    - GridWidget
-    - TooltipWidget
-  # 如果 false，允许创建 Screen-specfic 的专属 widget
-```
-
-这个政策在大型项目中防止 Widget 组件库爆炸。
-
-### 1.5 🆕 Animation Ownership（18ui草稿 §32）
-
-**原文核心**: 动画归 widget 管还是归 screen 管？不定义后期全乱。
-
-**项目适配**: 在 Screen Spec 中声明：
-
-```yaml
-animation:
-  ownership: screen      # screen 级别编排（进入/退出过渡）
-  # 或 ownership: widget  # widget 自身管理（Tooltip 弹出/ProgressBar 过渡）
-
-  transitions:
-    enter: Fade(0.3s)
-    exit: Fade(0.2s)
-```
-
-**现有架构影响**: `implementation-patterns.md` §4 Overlay 触发模式已涉及动画，但缺少 ownership 的明确声明。需在宪法第九编（UI 系统宪法）补充动画所有权规则。
-
-### 1.6 🆕 Widget Budget（18ui草稿 §33）
-
-**原文核心**: 限制复杂度，防止 AI 生成过度嵌套的节点树。
-
-```yaml
-budget:
-  max_widget_depth: 6           # 容器嵌套不超过 6 层
-  max_children_per_container: 20  # 单个容器不超过 20 个子节点
-```
-
-**项目适配**: 与 Screen Metrics 配套，在宪法中和 Screen Spec 中同时声明。
-
-### 1.7 🆕 Per-Region State Mapping（18ui草稿 §22-24 的深层含义）
-
-**原文核心**: Empty State、Error State、Loading State 不是 Screen 级别的概念——**每个区域都需要自己的状态处理**。
-
-```yaml
-inventory_screen:
-  # Screen 级状态
-  states:
-    loading: LoadingSpinner
-    error: ErrorBanner
-
-  # 每个区域独立的状态
-  regions:
-    inventory_grid:
-      loading_state: InventorySkeletonGrid
-      empty_state: EmptyInventoryWidget    # ← 原文强调
-      error_state: ErrorRetryWidget
-
-    character_panel:
-      loading_state: CharacterSkeletonCard
-      empty_state: NoCharacterWidget       # ← 原文强调
-
-    description_panel:
-      empty_state: NoDescriptionWidget
-```
-
-**Why missed**: 首次分析把 State Mapping 简单归到 Screen 级别，忽略了"每个 region 各自处理状态"这一更细粒度的要求。
 
 ---
 
-## 2. Agent 调度方案
+## 4. 可保留技术债清单（v1 补回）
 
-遵循项目 AGENTS.md 定义的 Tier S → Tier A → Tier B 协作流程：
+以下内容**故意不修**，在当前阶段收益有限：
+
+| 不修的债 | 理由 | 何时修 |
+|---------|------|--------|
+| `screens.md` 现有的纯文本描述 | Human 可读补充，不与 Spec 冲突 | Spec 全部完成后归档 |
+| Screen Metrics 手动维护 | 初期数据量小，不值得自动化 | CI 门禁 Phase |
+| ViewModel 未覆盖的字段 | 现有 BattleHudVm 够用，其他逐步补 | 各 Projection 实现时 |
+| 现有代码中硬编码的 layout 尺寸 | 在重写对应 Screen 时自然消除 | 逐步替换 |
+| MVP 阶段的静态样本数据 | BattleScreen/InventoryScreen 的硬编码数据 | ViewModel 集成迭代 |
+| Scroll/Overflow 在已有 Widget 中缺失 | 按需补，不全局一次性改 | 各自维护迭代 |
+
+---
+
+## 5. 收益量化（v1 补回）
+
+| 收益指标 | 当前基线 | 实施后预期 | 来源 |
+|---------|---------|-----------|------|
+| AI 生成 Screen 代码首次正确率 | ~40%（全靠猜布局） | **~80%** | 18ui草稿 §2 + §4 |
+| 新 Screen 开发周期 | 3-5 天（反复调布局） | **1-2 天** | 综合评估 |
+| Screen 布局相关 Bug | 高频（宽度溢出/高度不够/区域错位） | **减少 ~70%** | 18ui草稿 §18-21 |
+| AI 猜测布局方向的无效代码 | ~60% 生成的代码需要手动修改 | **减少 ~90%** | 18ui草稿 §15 |
+| Screen 复杂度失控预警 | 无任何预警 | **Widget Budget 拦截** | 18ui草稿 §33-34 |
+| 多语言 UI 溢出问题 | 遇到才修 | **Overflow Policy 提前预防** | 18ui草稿 §21 |
+| 焦点导航遗漏 | 经常遗漏键盘/手柄支持 | **Focus Navigation 强制定义** | 18ui草稿 §10 |
+
+---
+
+## 6. Agent 调度方案（v2 保留 + v3 细化）
+
+遵循 AGENTS.md 的 Tier S → Tier A → Tier B 三级分治：
 
 ```
-Tier S: 架构委员会（定义规则与边界）
-Tier A: 工程委员会（确保合规与质量）
-Tier B: 执行层（按规则交付）
+Tier S: 架构委员会 — 定义规则
+Tier A: 工程委员会 — 确保合规
+Tier B: 执行层 — 按规则交付
 ```
 
 ### Phase 1: Tier S 架构委员会并行启动
 
 ```
-Day 1-2: 四个架构师并行工作
+Day 1: presentation-architect 开始设计 Spec 格式
+Day 1: data-architect 开始审查 Schema 映射
+Day 1: content-architect 开始审查 Content 一致性
+Day 2: architect 收到全部输入，开始写 ADR-066 和宪法修订
 ```
 
-| Agent | 职责 | 输入 | 输出 | 调用理由 |
-|-------|------|------|------|---------|
-| **@presentation-architect** | 设计 Screen Spec 格式、模板、07-specs/ 目录结构 | 18ui草稿 + 现有 06-ui/ | `07-specs/screen-spec-template.md` + 各 Screen Spec 草案 | **专长领域**: UI 架构设计，Tier S 中直接负责 Presentation 层 |
-| **@data-architect** | 审查 Spec 中的 ViewModel 映射与现有 Schema 一致性 | `docs/04-data/` + Spec 模板草案 | 数据映射约束报告 | **双角色**: Tier S 设计 + Tier A 审查，确保 Replay/Save 兼容 |
-| **@content-architect** | 审查 Spec 中的 Widget ID ↔ Def Registry 映射一致性 | `docs/03-content/` + Spec 草案 | Content 兼容性报告 | **专长**: Def 落地与 Registry 管理 |
-| **@architect**（首席） | 撰写 ADR-066、宪法修订、系统集成 | 上述三者输出 + 现有架构 | `ADR-066-ui-screen-spec.md` + 宪法第九编/第十八编修订 | **首席职责**: 系统集成、ADR、模块边界 |
+| Agent | 职责 | 输入 | 输出 |
+|-------|------|------|------|
+| **@presentation-architect** | 设计 Screen Spec 格式、模板、07-specs/ 目录结构 | 18ui草稿 + 现有 06-ui/ + 本计划 v3.0 | `07-specs/screen-spec-template.md` + Widget ID 映射表草案 + Z-Layer 规范草案 |
+| @data-architect | 审查 Spec 中的 ViewModel 映射与已有 Schema 一致性 | `docs/04-data/` + Spec 模板草案 | 数据映射约束报告（确保 UiBinding ↔ ViewModel 字段一致） |
+| @content-architect | 审查 Widget ID ↔ Def Registry ↔ LocalizationKey 映射一致性 | `docs/03-content/` + Spec 草案 | Content 兼容性报告（确保 Def 引用正确、Localization Key 不遗漏） |
+| **@architect**（首席） | 撰写 ADR-066、宪法修订、系统集成 | 上述三者输出 + 现有架构 | `ADR-066-ui-screen-spec.md` + 宪法第九编/第十八编修订 |
 
-**协作原则**: 四者并行，但 architect 需要等前三者的输出才做集成。所以时间线：
-
-```
-Day 1:   presentation-architect 开始设计 Spec 格式
-Day 1:   data-architect 开始审查 Schema 映射
-Day 1:   content-architect 开始审查 Content 一致性
-Day 2:   architect 收到全部输入，开始写 ADR-066
-     ↓
-Day 3:   ADR-066 完成 + 宪法修订
-```
+**Tier S 协作规则**：
+- presentation-architect 输出模板 → data-architect + content-architect 基于模板做审查
+- architect 等三者全部输出后才开始集成
+- data-architect 和 content-architect 可以并行审查
 
 ### Phase 2: Tier A 工程委员会审查
 
@@ -253,116 +416,87 @@ Day 3-4: 两个审查角色并行
 | Agent | 职责 | 输入 | 输出 |
 |-------|------|------|------|
 | **@code-reviewer** | 审查现有 src/ui/ 代码，标注不符合新规范的模式 | `src/ui/` 代码 | `docs/10-reviews/screen-spec-code-gaps.md` |
-| **@test-guardian** | 确保 Screen Spec 中的 State Mapping 有对应的测试模式 | `docs/05-testing/` | 测试扩展方案 |
+| **@test-guardian** | 确保 Screen Spec 中的 State Mapping 有对应的测试模式 | `docs/05-testing/` + Spec 模板 | 测试扩展方案（Skeleton Widget / EmptyState Widget 的测试覆盖） |
 
 **调用理由**:
-- `@code-reviewer` → 做代码审查（专长领域：检查合规性）
-- `@test-guardian` → 做测试评估（专长领域：以领域规则优先的测试设计）
+- `@code-reviewer` → 只分析不修改（专长：代码质量审查）
+- `@test-guardian` → 以领域规则优先设计测试（专长：不变量 + 边界条件）
 
-### Phase 3: Tier B 执行层输出
+### Phase 3: Tier B 执行层 + 快速迭代
 
 ```
-Day 4-6: 两个执行角色
+Day 4-8: feature-developer 逐个产出，presentation-architect 做快速审查
+
+顺序（按复杂度从低到高）:
+1. MainMenuScreen    ← 最简单，验证模板可用性
+2. SettingsScreen    ← 中等复杂，验证 TabPanel + Toggle 规范
+3. InventoryScreen   ← 中等，需处理 Grid + List + Empty State
+4. BattleScreen      ← 最复杂，最核心，需要最多迭代
+5. ShopScreen        ← 未实现，Spec 先于代码
+6. SaveLoadScreen    ← 未实现，Spec 先于代码
 ```
 
 | Agent | 职责 | 输入 | 输出 |
 |-------|------|------|------|
-| **@feature-developer** | 实现 BattleScreen 的完整 Spec 文件作为参考实现 | ADR-066 + Screen Spec 模板 | `07-specs/screens/battle_screen.md` |
+| **@feature-developer** | 实现 6 个 Screen Spec 文件 | ADR-066 + Spec 模板 + 各 Screen 现有文档 | `07-specs/screens/*.md` |
 | **@refactor-guardian** | 扫描 `docs/06-ui/` 现有文档，标注缺失的 spec 类目 | `docs/06-ui/` | `docs/11-refactor/ui-doc-gaps.md` |
+| **@presentation-architect**（副角色） | 每个 Screen Spec 的快速审查 | feature-developer 输出 | 审查意见 + spec 最终版本 |
 
-**调用理由**:
-- `@feature-developer` → 按架构编码（专长：消费架构文档产出实现）
-- `@refactor-guardian` → 扫描技术债（专长：六大维度债务扫描）
+**变更理由（相对于 v2）**: v2 把 BattleScreen 放在第一个，但更好的方式是**从简单到复杂**——先拿 MainMenuScreen 验证模板的完备性，再处理重头戏 BattleScreen。
 
-### Phase 4: 剩余 5 个 Screen Spec 批量执行
+### Phase 4: 宪法修订 + 文档归档
 
 ```
-Day 6-10: feature-developer 逐个产出
+Day 9-10: architect 收尾
 ```
 
-顺序（按复杂度从低到高）：
-1. MainMenuScreen（最简单，3 个 Widget）
-2. SettingsScreen（TabPanel + Toggle，中等）
-3. InventoryScreen（Grid + List，现有 MVP 需验证）
-4. ShopScreen（未实现，Spec 先于代码）
-5. SaveLoadScreen（未实现，Spec 先于代码）
-
-每个 Screen Spec 产出后，经过 `@presentation-architect` 快速审查。
+| Agent | 职责 | 输出 |
+|-------|------|------|
+| **@architect** | 宪法最终修订 + 文档生命周期管理 + 状态更新 | 宪法修订 + 归档 |
 
 ---
 
-## 3. 完整执行步骤（含遗漏概念补全）
+## 7. P0/P1/P2 优先级框架
 
-### Step 1: 创建 `07-specs/` 目录结构
+| 等级 | 含义 | 不可退让 | 对应执行内容 |
+|------|------|---------|------------|
+| **P0** | 不完成则整个计划失败 | 🟥 绝对 | ADR-066 审批、宪法修订、Screen Spec 模板、BattleScreen + MainMenuScreen Spec、Widget ID 映射表 |
+| **P1** | 重要，可稍后，但必须做 | 🟡 高优先级 | 剩余 4 个 Screen Spec、Z-Layer 规范、Scroll/Overflow 补全、Selection Model、Event Contract 集中化 |
+| **P2** | 完善项，长期维护 | 🟢 有时间再做 | Layout Intent 库、Screen Metrics CI 门禁、Animation Ownership 代码层实现、Accessibility 增强 |
+
+执行时必须**优先保证 P0 完成**，P0 不完成不进 P1。
+
+---
+
+## 8. 完整执行步骤（v2 + v3 合并）
+
+### Step 1: 创建 07-specs/ 目录结构
 
 ```
 docs/06-ui/
-├── 07-specs/                    # NEW — AI-Consumable Screen Specification
-│   ├── README.md                # 总纲：为何需要 Spec + AI 生成规则 14 条 + DoD 清单
-│   ├── screen-spec-template.md  # Screen Spec 模板（含全部 17 个字段）
-│   ├── screens/                 # 每个 Screen 一个文件
-│   │   ├── battle_screen.md
-│   │   ├── main_menu_screen.md
-│   │   ├── inventory_screen.md
-│   │   ├── settings_screen.md
-│   │   ├── shop_screen.md
-│   │   └── save_load_screen.md
-│   └── references/              # 跨 Screen 参考
-│       ├── widget-id-map.md     # Widget ID → UiBinding 映射总表
-│       ├── z-layer-spec.md      # Z-Layer 统一规范
-│       └── screen-metrics.md    # 所有 Screen 的 metrics 基准线
+├── 07-specs/                         # NEW — AI-Consumable Screen Specification
+│   ├── README.md                     # 总纲 + AI 14 条规则 + DoD 14 项清单
+│   ├── screen-spec-template.md       # 完整模板（17 个字段）
+│   ├── screens/                      # 每个 Screen 一个文件
+│   │   ├── main_menu_screen.md       # P0-01: 最简单，先验证模板
+│   │   ├── battle_screen.md          # P0-02: 最核心，最大工作量
+│   │   ├── inventory_screen.md       # P1-01
+│   │   ├── settings_screen.md        # P1-02
+│   │   ├── shop_screen.md            # P1-03（Spec 先于代码）
+│   │   └── save_load_screen.md       # P1-04（Spec 先于代码）
+│   └── references/                   # 跨 Screen 统一参考
+│       ├── widget-id-map.md          # Widget ID → UiBinding 映射总表
+│       ├── z-layer-spec.md           # Z-Layer 统一规范
+│       ├── layout-intent-library.md  # Layout Intent 跨 Screen 参考库
+│       └── screen-metrics-baseline.md# 所有 Screen 的 metrics 基线
 ```
 
-### Step 2: `07-specs/README.md` 核心内容
-
-```markdown
-# AI-Consumable Screen Specification (SSPEC)
-
-## 目标
-
-本规范用于描述 Screen 的结构，目标：
-
-* AI 能直接生成 Bevy UI 代码
-* 人类能快速阅读
-* Layout 与 Widget 解耦
-* Layout 可长期维护，可独立演进
-
-## 两位一体约束
-
-Screen = Layout（布局结构）
-Widget = Implementation（渲染实现）
-
-Screen Spec 只描述：信息架构、Widget 结构、Flexbox 布局、交互区域
-Screen Spec 禁止描述：视觉样式、颜色、字体（这些归 Design System）
-
-## AI 生成规则（14 条）
-
-1. 严格按照 Widget Tree 生成，禁止新增区域
-2. 严格按照 Flexbox Layout 生成尺寸
-3. 禁止删除 Spec 中定义的任何区域
-4. 禁止修改 Widget 名称和 widget_id
-5. 禁止推测业务逻辑（让 Projection 负责）
-6. 禁止推测视觉设计（让 Theme 负责）
-7. 只负责布局实现，不负责业务数据获取
-8. Widget 内部逻辑由 Widget 自身 Contract 负责
-9. 若 Spec 与代码冲突：以 Spec 为准
-10. 禁止跳过 Layout Intent 中标注的约束
-11. Scroll Policy 必须按 Spec 实现，不能遗漏
-12. 所有交互区域必须按 Interaction Zones 定义实现
-13. 状态映射（Loading/Empty/Error）必须全部实现
-14. 必须遵守 Widget Reuse Policy（若指定 reuse_only）
-
-## Definition of Done（14 项，缺一不可）
-
-[完整 14 项 checklist，见上文 §1.3]
-```
-
-### Step 3: ADR-066 核心内容
+### Step 2: ADR-066 核心内容
 
 ```markdown
 # ADR-066: UI Screen Specification 标准
 
-状态: Proposed
+状态: Proposed → Approved
 负责人: architect
 
 ## 决策
@@ -371,273 +505,41 @@ Screen Spec 禁止描述：视觉样式、颜色、字体（这些归 Design Sys
 
 ## 核心规定
 
-1. 每个 Screen 必须有对应的 Screen Spec 文档
-2. Screen Spec 必须包含：ASCII Wireframe + Widget Tree + Flexbox Layout
-3. Screen Spec 必须定义：widget_id、State Mapping、Scroll Policy
-4. AI 生成 UI 代码前必须读取对应 Screen Spec
-5. 新增 Screen 必须先写 Spec，再写代码
+1. 每个 Screen 必须有对应的 Screen Spec 文档（P0）
+2. Screen Spec 必须包含三位一体：ASCII Wireframe + Widget Tree + Flexbox Layout（P0）
+3. Screen Spec 必须定义 widget_id、State Mapping、Scroll Policy（P0）
+4. AI 生成 UI 代码前必须读取对应 Screen Spec（P0）
+5. 新增 Screen 必须先写 Spec，再写代码（P0）
+6. Screen Spec 必须通过 DoD 14 项检查才视为完成（P0）
+
+## Figma 替代决策
+
+Figma 从项目设计工具链中彻底移除。
+替代方案：
+  - ASCII Wireframe（布局规范，必选）
+  - Excalidraw 或 draw.io（可选草图）
+  - Markdown + YAML（结构化规范）
+详见 `docs/06-ui/07-specs/README.md`。
 
 ## 宪法修订
 
-- 第九编（UI 系统宪法）：新增 Screen Spec 强制条款
-- 第十八编（工程质量）：新增 Screen Metrics + Widget Budget 条款
+- 第九编（UI 系统宪法）：Screen Spec 强制 + Widget ID 稳定 + 动画所有权 + Widget Budget
+- 第十八编（工程质量）：Screen Metrics 基线追踪
 
 ## 不涉及变更
 
-- 不修改现有运行时架构
-- 不修改 Projection/ViewModel/Dirty<T>/UiBinding
-- 不修改 Screen 生命周期状态机（仅增加 OnReady 弧）
-- 不修改 Widget Contract 模式
+✅ 不修改现有运行时架构
+✅ 不修改 Projection / ViewModel / Dirty<T> / UiBinding
+✅ 不修改 Widget Contract 模式
+✅ 不修改 Overlay 体系
 ```
 
-### Step 4: BattleScreen Spec 完整示例（Scaled-down）
+### Step 3: 宪法修订清单
 
-`07-specs/screens/battle_screen.md` 的完整结构（约 200 行）：
-
-```
----
-id: 07-specs.battle-screen
-title: BattleScreen Specification — AI-Consumable
-status: draft
----
-
-# BattleScreen
-
-## 1. Screen Header
-
-Screen: BattleScreen
-Purpose: 战斗主界面，展示 HUD、角色状态、技能面板、行动菜单
-Navigation: MainMenu → PartySetup → Combat
-GameState: GameState::Combat
-
-## 2. ASCII Wireframe
-
-+----------------------------------------------------------+
-| TopBar (top_bar)                              h:64        |
-+----------------------------------------------------------+
-| BattleArea (battle_area)  | CharacterPanel (char_panel)   |
-| flex_grow:1              | w:320                         |
-|                           |                               |
-+----------------------------------------------------------+
-| ActionMenu (action_menu)                    h:120         |
-+----------------------------------------------------------+
-
-## 3. Widget Tree
-
-Root [battle_screen_root]
-├── TopBar [top_bar: TurnBar]
-│   ├── TurnIndicator [turn_indicator: LocalizedText]
-│   ├── PhaseLabel [phase_label: LocalizedText]
-│   └── EndTurnBtn [end_turn_btn: PrimaryButton]
-├── BattleArea [battle_area: Panel]
-│   └── (由 Tactical Domain 填充，UI 层为占位容器)
-├── CharacterPanel [char_panel: CharacterCard]
-│   ├── Portrait [portrait: Image]
-│   ├── NameLabel [name_label: LocalizedText]
-│   ├── HpBar [hp_bar: ProgressBar]
-│   ├── MpBar [mp_bar: ProgressBar]
-│   └── BuffIcons [buff_icons: StatusIcon × N]
-└── ActionMenu [action_menu: Panel]
-    ├── AttackBtn [attack_btn: PrimaryButton]
-    ├── SkillBtn [skill_btn: SecondaryButton]
-    ├── DefendBtn [defend_btn: SecondaryButton]
-    └── WaitBtn [wait_btn: DangerButton]
-
-## 4. Flexbox Layout
-
-battle_screen_root:
-  direction: Column
-  intent: "全屏根容器，纵向排列"
-
-top_bar:
-  height: 64
-  direction: Row
-  intent: "固定高度条，显示回合信息和结束回合按钮"
-
-battle_area:
-  flex_grow: 1
-  intent: "战斗场地，占满剩余空间，由 Tactical Domain 管理"
-
-char_panel:
-  width: 320
-  intent: "固定宽度角色面板，最小 320px 保证可读性。禁止压缩"
-
-action_menu:
-  height: 120
-  direction: Row
-  intent: "固定高度底部菜单栏"
-
-## 5. Responsive Rules
-
-responsive:
-  strategy: "none"   # 固定分辨率项目
-  # 若后续支持窗口缩放，在此追加断点
-
-## 6. Region Responsibility
-
-top_bar:
-  - 显示当前回合数
-  - 显示当前阶段（己方/敌方）
-  - 结束回合按钮
-
-battle_area:
-  - 战斗网格渲染（由 Tactical Domain 负责）
-  - 单位选中高亮
-  - 技能范围预览
-
-char_panel:
-  - 当前选中角色头像
-  - 当前选中角色 HP/MP 条
-  - 当前选中角色 Buff 图标
-
-action_menu:
-  - 可用行动按钮列表
-  - 技能子菜单（展开时）
-
-## 7. Widget Contract
-
-top_bar:
-  widget: TurnBar
-  inputs: BattleHudVm
-  outputs: UiAction::EndTurn
-  selection: none
-
-char_panel:
-  widget: CharacterCard
-  inputs: CharacterPanelVm
-  outputs: UiAction::SelectCharacter
-  selection: single
-
-action_menu:
-  widget: Panel (组合 PrimaryButton × N)
-  inputs: BattleHudVm (ap_remaining 决定可用按钮)
-  outputs: UiAction::Click (Attack/Skill/Defend/Wait)
-  selection: none
-
-## 8. State Mapping (Per-Region)
-
-top_bar:
-  loading: SkeletonBar
-  normal: TurnBar
-  error: ErrorText ("无法加载回合信息")
-
-char_panel:
-  loading: SkeletonCard
-  empty_state: NoCharacterWidget
-  normal: CharacterCard
-  error: ErrorText ("角色数据异常")
-
-battle_area:
-  loading: LoadingSpinner
-  normal: BattleGrid
-  error: ErrorText ("战斗场地初始化失败")
-
-action_menu:
-  loading: SkeletonButtons × 4
-  empty_state: NoActionsWidget
-  normal: ActionMenu (按钮根据 AP 启用/禁用)
-  error: ErrorText ("行动数据异常")
-
-## 9. Focus Navigation
-
-top_bar → (下) → battle_area → (右) → char_panel → (下) → action_menu
-
-键盘导航路径：
-  Tab: top_bar → battle_area → char_panel → action_menu
-  Shift+Tab: 反向
-
-## 10. Interaction Zones
-
-top_bar:
-  supports: [Click]  # EndTurnButton
-
-battle_area:
-  supports: [Click, Hover]  # 选中单位、悬停预览
-
-char_panel:
-  supports: [Click]  # 选择角色
-
-action_menu:
-  supports: [Click]  # 各按钮
-
-## 11. Overlay Definition
-
-overlays:
-  - DamageTextOverlay     # 伤害数字浮层
-  - TooltipOverlay        # 技能/物品提示
-  - NotificationOverlay   # 升级/获得物品通知
-  - ModalOverlay          # 暂停菜单/退出确认
-
-z_layers:
-  background: 0
-  content: 100
-  tooltip: 200
-  modal: 300
-  notification: 400
-
-## 12. Lifecycle
-
-on_enter:
-  - register_battle_observers()
-  - init_battle_hud_vm()
-on_ready:
-  - select_active_character()
-  - set_focus_to_action_menu()
-on_exit:
-  - unregister_observers()
-  - cleanup_selection_state()
-
-## 13. Data Ownership
-
-owns:
-  - selected_skill: Option<SkillId>    # UI 内部选择状态
-  - selected_target: Option<UnitId>    # UI 内部目标状态
-  - battle_mode: BattleMode            # UI 内部模式
-
-uses:
-  - BattleHudVm                        # 从 Domain Projection 获取
-  - CharacterPanelVm                   # 从 Domain Projection 获取
-  - SkillPanelVm                       # 从 Domain Projection 获取
-
-## 14. Widget Reuse Policy
-
-widget_reuse_policy:
-  reuse_only: true                     # 禁止创建新 Widget 类型
-  comment: "BattleScreen 是平台屏，所有 Widget 必须来自现有组件库"
-
-## 15. Animation Ownership
-
-animation:
-  ownership: screen                    # Screen 级别编排
-  transitions:
-    enter: Fade(0.3s)
-    exit: Fade(0.2s)
-  comment: "战斗进场/退场的过渡动画由 Screen 管理"
-
-## 16. Widget Budget
-
-budget:
-  max_widget_depth: 4                  # Root → Panel → Widget → Child
-  max_children_per_container: 8        # 不超过 8 个子节点
-
-## 17. Screen Metrics
-
-metrics:
-  widget_count: 15                     # 主要 UI 元素数
-  container_count: 5                   # 容器数
-  interactive_count: 6                 # 交互元素数（按钮等）
-  overlay_count: 4                     # Overlay 依赖数
-  max_depth: 4                         # 最大嵌套深度
-```
-
-### Step 5: 宪法修订清单
-
-#### 5.1 第九编（UI 系统宪法）新增 2 条
+#### 3.1 第九编（UI 系统宪法）新增 3 条
 
 ```yaml
 第 X 条：Screen Specification 强制（P0）
-  | 标记 | 规则 |
-  |------|------|
   | 🟩 | 每个 Screen 必须有对应的 Screen Spec 文档 |
   | 🟩 | Screen Spec 必须包含 ASCII Wireframe + Widget Tree + Flexbox Layout |
   | 🟩 | AI 生成 UI 代码前必须读取对应 Screen Spec |
@@ -651,6 +553,12 @@ metrics:
   | 🟩 | Widget ID → UiBinding 映射必须记录在 widget-id-map.md |
   | 🟥 | 禁止在重构时修改 widget_id（只能标记 deprecated，永不复用） |
 
+第 X 条：UI 设计工具链（P0）
+  | 🟩 | 项目使用纯文本工具链进行 UI 设计：ASCII Wireframe + Markdown + YAML |
+  | 🟩 | Excalidraw / draw.io 可选用于复杂布局的快速草图 |
+  | 🟥 | 禁止引入 Figma / Adobe XD / Sketch 等 GUI 设计工具 |
+  | 🟥 | 禁止将视觉设计稿作为 Screen 实现的输入（Spec 才是权威） |
+
 第 X 条：动画所有权（P1）
   | 🟩 | 动画必须明确声明 ownership（screen 级 vs widget 级） |
   | 🟥 | 禁止无动画归属声明的 UI 元素产生动画行为 |
@@ -662,103 +570,157 @@ metrics:
   | ⚠️ | Widget 嵌套深度超过 6 层 → 强制重构 |
 ```
 
-#### 5.2 第十八编（工程质量）新增
+#### 3.2 第十八编（工程质量）新增
 
 ```yaml
-第 X 条：Screen 复杂度治理
+第 X 条：Screen 复杂度治理（P1）
   🟩 Screen Metrics 基线追踪：每个 Screen 必须记录 widget_count / container_count
   🟩 Widget Budget：max_widget_depth ≤ 6，max_children_per_container ≤ 20
   ⚠️ 超过阈值时必须重构，不得累积复杂度债务
+
+第 X 条：Figma 替代工具链治理（P0）
+  🟩 新增 Screen 的 UI 设计流程：写 Spec → DoD 检查 → 实现代码
+  🟩 Spec 是 UI 设计的唯一真相源（SSOT），不依赖任何 GUI 设计工具
+  🟥 禁止将 Figma/PSD/Sketch 文件作为 UI 需求附件
 ```
 
-### Step 6: 现有架构文档微调
+### Step 4: Screen Spec 模板关键字段（17 个）
+
+| # | 字段 | P0/P1 | 对应 18ui草稿 位置 | 说明 |
+|---|------|-------|-------------------|------|
+| 1 | Screen Header | P0 | §2 | Screen Name, Purpose, Navigation, GameState |
+| 2 | ASCII Wireframe | P0 | §3 | 纯文本线框图，所有区域命名 |
+| 3 | Widget Tree | P0 | §4 | 标注 widget_id 的完整树 |
+| 4 | Flexbox Layout | P0 | §5 | width/height/flex_grow + intent |
+| 5 | Responsive Rules | P0 | §6 | 至少 strategy: none |
+| 6 | Region Responsibility | P0 | §7 | 每区域 3-8 条职责 |
+| 7 | Widget Contract | P0 | §8 | Inputs/Outputs/Selection Model |
+| 8 | State Mapping | P0 | §9 + §22-24 | Per-Region Loading/Empty/Normal/Error |
+| 9 | Focus Navigation | P0 | §10 | Tab 导航路径 |
+| 10 | Interaction Zones | P0 | §11 | Click/Hover/Drag/Drop |
+| 11 | Overlay Definition | P0 | §12 | Overlay 列表 + Z-Layer |
+| 12 | Lifecycle | P0 | §13 | OnEnter/OnReady/OnExit |
+| 13 | Data Ownership | P0 | §14 | Owns/Uses 分离 |
+| 14 | Layout Intent | P0 | §18 | 关键尺寸的理由 |
+| 15 | Scroll & Overflow Policy | P1 | §20-21 | 每个滚动区域 |
+| 16 | Event Contract | P1 | §27 | UI↔Domain 事件完整契约 |
+| 17 | Screen Metrics | P1 | §34 | widget_count / container_count 等 |
+
+### Step 5: 现有架构文档微调（3 处）
 
 | 文件 | 修改内容 | 影响范围 |
 |------|---------|---------|
-| `06-ui/README.md` | 新增 `07-specs/` 索引行 | 仅追加一行 |
-| `06-ui/03-screens/screen-lifecycle.md` §2.2 | 状态机新增 `OnReady` 弧（Loading → OnReady → Active） | 生命周期语义升级 |
-| `06-ui/03-screens/screens.md` | 每个 Screen 增加引用：`See also: 07-specs/screens/{name}.md` | 仅追加引用行 |
-| `06-ui/01-architecture/implementation-patterns.md` | 新增 ScrollPanel 完整实现模式、动画 ownership 规范 | 新增内容 |
-| `docs/01-architecture/README.md` | ADR 索引表新增 ADR-066 | 仅追加一行 |
+| `06-ui/03-screens/screen-lifecycle.md` §2.2 | 状态机新增 `OnReady` 弧：`Loading → OnReady → Active` | 生命周期语义升级 |
+| `06-ui/03-screens/screens.md` | 每个 Screen 增加一行引用：`See also: 07-specs/screens/{name}.md` | 仅追加引用行 |
+| `06-ui/README.md` | 索引表新增 `07-specs/` 条目 | 仅追加一行 |
 
 ---
 
-## 4. 时间线总览
+## 9. 时间线总览
 
 ```
-Week 1 (激进起步 — 不可退让)        Agent
-─────────────────────────         ─────────────
-Day 1: ADR-066 撰写                @architect
-Day 1: Screen Spec 模板创建         @presentation-architect
-Day 1: 数据/内容兼容审查             @data-architect + @content-architect
-Day 2: 宪法修订                     @architect
-Day 2: 现有代码差距扫描              @refactor-guardian
-Day 2: 测试模式评估                  @test-guardian
-Day 3: BattleScreen Spec 完成       @feature-developer
-Day 3: ADR-066 归档 + 状态更新       @architect
+Week 1: P0 激进起步
+────────────────────────────────────────────────────────────────────
+Day 1:
+  │ @presentation-architect → 设计 Spec 模板 + 07-specs/ 目录结构
+  │ @data-architect → Schema 兼容性审查（并行）
+  │ @content-architect → Content 一致性审查（并行）
+  │
+Day 2:
+  │ @architect → 撰写 ADR-066（收到前三者输入后）
+  │ @presentation-architect → 完成模板终稿
+  │
+Day 3:
+  │ @architect → ADR-066 归档 + 宪法第九编/第十八编修订
+  │ @code-reviewer → 现有代码差距扫描
+  │ @test-guardian → 测试模式评估
+  │ @refactor-guardian → 现有文档债务扫描
+  │
+Day 4-5: 第一个 Screen Spec
+  │ @feature-developer → MainMenuScreen Spec（验证模板可用性）
+  │ @presentation-architect → 快速审查（验证模板完备性）
+  │
+Day 6-7: 最核心的 Spec
+  │ @feature-developer → BattleScreen Spec（最大工作量）
+  │ @presentation-architect → 审查
+  │
 
-Week 2 (覆盖推进)
-Day 4-5: 剩余 5 个 Screen Spec     @feature-developer × 5
-Day 5-6: 每个 Spec 的架构审查       @presentation-architect
-Day 5: Widget ID 映射表             @feature-developer
-Day 6: Z-Layer 统一规范             @presentation-architect
-Day 6: 文档更新与 README 同步        @architect
+Week 2: P0 覆盖 + P1 推进
+────────────────────────────────────────────────────────────────────
+Day 8-9:
+  │ @feature-developer → InventoryScreen + SettingsScreen Spec
+  │ @presentation-architect → 批量审查
 
-Week 3 (收尾)
-Day 7-8: 宪法最终修订                @architect
-Day 7-8: 文档归档与 done/ 移动       @architect
-Day 9: 整体审查                      @code-reviewer
-Day 10: 验证 + 关闭                  @architect
+Day 10-11:
+  │ @feature-developer → ShopScreen + SaveLoadScreen Spec
+  │ @feature-developer → Widget ID 映射表
+  │ @presentation-architect → Z-Layer 规范
+
+Day 12:
+  │ @architect → Widget ID 映射表终审 + Z-Layer 规范终审
+  │ @architect → 更新 06-ui/README.md + screens.md 引用
+
+Week 3: P1 完善 + 收尾
+────────────────────────────────────────────────────────────────────
+Day 13-14:
+  │ @architect → Layout Intent 库 + Screen Metrics 基线
+  │ @architect → 宪法最终修订
+
+Day 15:
+  │ @code-reviewer → 全面审查
+  │ @architect → 文档归档 + 状态更新 + done/ 移动
 ```
 
 ---
 
-## 5. 收尾流程
+## 10. 收尾流程
 
-按照 `docs/00-governance/ai-constitution-complete.md` 中的文档生命周期管理要求：
+### 10.1 状态更新
 
-1. **更新状态标记**
-   - ADR-066 → 完成后设置 status: approved
-   - 各 Screen Spec → status: active
-   - 11-refactor/ui-screen-spec-execution-plan.md → status: completed（全部完成后）
+| 文档 | 最终状态 |
+|------|---------|
+| `ADR-066-ui-screen-spec.md` | `status: approved` |
+| `07-specs/README.md` | `status: active` |
+| `07-specs/screen-spec-template.md` | `status: active` |
+| `07-specs/screens/*.md`（6 个） | `status: active` |
+| `07-specs/references/*.md`（4 个） | `status: active` |
+| `docs/11-refactor/ui-screen-spec-execution-plan.md` | ✅ moved to `docs/11-refactor/done/` |
+| `docs/06-ui/README.md` | 追加 07-specs/ 索引行 |
+| `docs/01-architecture/README.md` | ADR 索引表追加 ADR-066 |
 
-2. **归档完成项**
-   - 当所有 Screen Spec 完成后，`07-specs/screens/` 下文件全部 active
-   - 本执行计划完成后移入 `docs/11-refactor/done/`
+### 10.2 最终验收标准
 
-3. **更新 README.md**
-   - `docs/06-ui/README.md` — 添加 07-specs/ 索引
-   - `docs/11-refactor/README.md` — 更新状态
+- [ ] ADR-066 已批准并归档
+- [ ] 宪法第九编已增加 Screen Spec / Widget ID / Figma替代 / 动画所有权 / Widget Budget 条款
+- [ ] 宪法第十八编已增加 Screen Metrics + Figma 替代工具链治理条款
+- [ ] `docs/06-ui/07-specs/` 目录已创建
+- [ ] 07-specs/README.md 包含：总纲 + AI 14 条规则 + DoD 14 项清单
+- [ ] screen-spec-template.md 包含全部 17 个字段
+- [ ] 6 个 Screen Spec 全部完成（14 项 DoD 检查通过）
+- [ ] widget-id-map.md 建立完整 Widget ID → UiBinding 映射
+- [ ] z-layer-spec.md 建立 Z-Layer 统一规范
+- [ ] layout-intent-library.md 建立跨 Screen 参考库
+- [ ] screen-metrics-baseline.md 建立 metrics 基线
+- [ ] `screen-lifecycle.md` §2.2 已增加 OnReady 弧
+- [ ] `screens.md` 已追加 07-specs/ 引用行
+- [ ] `06-ui/README.md` 已追加 07-specs/ 索引
+- [ ] ADR 索引表已追加 ADR-066
+- [ ] Figma 已从项目工具链中彻底移除（宪法明确规定）
 
 ---
 
-## 6. 风险与缓解
+## 11. 风险与缓解
 
 | 风险 | 概率 | 影响 | 缓解 |
 |------|------|------|------|
-| Screen Spec 过于冗长导致 AI 过载 | 中 | 中 | 模板控制在 200 行内，核心字段 17 个，不赘述 |
-| 现有架构文档需小量修改 | 低 | 低 | 仅改 screen-lifecycle.md 的 state machine + 增加 OnReady |
-| Widget ID 维护成本 | 中 | 低 | 初期只是文档层映射，不涉及代码改动 |
-| 团队不接受新的文档格式 | 低 | 高 | 通过 ADR 评审确保共识 |
-| 与 Figma 或其他设计工具冲突 | 低 | 低 | Figma 作为可选补充，Spec 是主要规范 |
+| Screen Spec 过于冗长导致 AI 过载 | 中 | 中 | 模板 17 个字段控制在 200 行内 |
+| 无 Figma 导致视觉风格不一致 | 低 | 低 | Theme Token（StyleToken/Color/Spacing）统一管理视觉 |
+| Widget ID 维护成本（仅文档层） | 中 | 低 | 初期只是文档映射，不涉及代码改动 |
+| 团队不习惯 ASCII Wireframe | 中 | 中 | 学习成本 5min，收益立竿见影 |
+| 现有代码中硬编码的 layout 与新 Spec 冲突 | 高 | 中 | 逐步替换，不一次性改 |
+| 遗漏 18ui草稿 中的潜在概念 | 低 | 中 | 本文件已经覆盖全部 34 节 |
+| Event Contract 导致文档膨胀 | 低 | 低 | 仅 Screen 级事件，不细化到每个 Widget 内部事件 |
 
 ---
 
-## 7. 最终验收标准
-
-所有 Phase 完成后检查：
-
-- [ ] ADR-066 已批准并归档
-- [ ] `docs/06-ui/07-specs/` 目录已创建，包含 README.md + template + 6 个 Screen Spec
-- [ ] 宪法第九编已增加 Screen Spec 条款
-- [ ] 宪法第十八编已增加 Screen Metrics 条款
-- [ ] `screen-lifecycle.md` §2.2 已增加 OnReady 弧
-- [ ] Widget ID → UiBinding 映射表已建立
-- [ ] Z-Layer 统一规范已写入
-- [ ] `docs/06-ui/README.md` 已追加 07-specs/ 索引
-- [ ] ADR 索引表已追加 ADR-066
-- [ ] Screen Spec 模板已包含 17 个完整字段（含遗漏补全的 7 项）
-- [ ] 所有 Screen 的 Definition of Done 检查已完成（14 项）
-
-
-*本文档由 @architect 维护。所有 Agent 执行时严格遵循 Tier S → Tier A → Tier B 协作顺序。*
+*本文档由 @architect 维护。本计划 v3.0 吸收 18ui草稿 全部 34 节内容，上承 v1（架构分析）+ v2（遗漏概念补全 + Agent 编排），新增 Figma 替代方案 + v1 遗漏的 9 项内容。执行时严格遵循 AGENTS.md 的 Tier S → Tier A → Tier B 协作顺序。*

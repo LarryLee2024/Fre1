@@ -21,4 +21,4 @@
 | 状态 | 说明 |
 |------|------|
 | ✅ 全部已归档 | `done/` 目录共 34 份审查报告 |
-| 📭 无活跃审查 | 根目录当前无活跃审查文件 |
+| 🟡 SSPEC 代码差距分析 | `screen-spec-code-gaps.md` — 审查 src/ui/ 与 Screen Specification 标准的差距，FAIL (4 P0) |

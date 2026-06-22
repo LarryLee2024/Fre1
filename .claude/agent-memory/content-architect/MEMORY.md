@@ -8,3 +8,4 @@
 - [TerrainDef L0 Vocabulary](terrain-def-l0-vocabulary.md) — TerrainDef is L0 not L4 because multi-layer consumption; char_code removed; Concealment/TerrainFlags as inline enums
 - [MapDef/MapAsset Dual Identity](map-def-mapasset-dual-identity.md) — MapDef (design doc) = MapAsset (Bevy Asset), no DefRegistry because position-based access + scene-scoped lifecycle
 - [TerrainFlags to TileFlags Conversion](terrain-flags-to-tileflags-conversion.md) — bool-struct in content → u8 bitmask at Importer build-time, not runtime
+- [UI Screen LocalizationKeys Defined](ui-screen-localization-keys.md) — BattleScreen + MainMenuScreen keys: 19 design keys (9 existing code-adopt + 10 new FTL), YAML format, hierarchical naming

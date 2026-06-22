@@ -8,3 +8,5 @@
 - [Action Chain Patterns](action-chain-patterns.md) -- Full click-to-domain action chain documentation
 - [Camera-UI Interaction Patterns](camera_ui_interaction_patterns.md) -- 7 interaction scenarios, CameraInputBlock, CameraStateVm, direct trigger of CameraRequest
 - [MapRenderer Architecture](map-renderer-architecture.md) -- 6-layer rendering, Material2d batch, MapOverlayData bridge, coordinate alignment with GridMap
+- [Screen Spec 07-specs/ Created](project_screen_spec_07_specs.md) -- docs/06-ui/07-specs/ dir with README.md (14 AI rules, 18 DoD items) and 17-field SSPEC template; subsequent phase will create screens/*.md and references/*.md
+- [Widget ID Map Staleness Check](project_widget_id_map_staleness_check.md) -- SettingsScreen SSPEC review revealed stale widget-id-map.md; cross-check map before approving any SSPEC
