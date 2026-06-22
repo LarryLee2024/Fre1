@@ -2,6 +2,24 @@
 //!
 //! 从 assets/config/ 加载配置 → 校验 → 注册到 Registry。
 //! 详见 ADR-047 和 `docs/01-architecture/README.md` §3.5
+//!
+//! # 日志模式说明（按项目日志规则 .trae/rules/日志规则.md）
+//!
+//! 本项目有两种日志模式：
+//!
+//! ## 模式 A — 领域事件 Observer（给业务事件用）
+//! 文件在 `src/infra/logging/observers/`，通过 `On<T>` 监听领域事件。
+//! 使用 `#[tracing::instrument]` + `emit_info!`/`emit_warn!` 宏。
+//! 例如 `content_logger.rs` 监听 `OnDefinitionReloaded` 输出 CNT001 事件。
+//!
+//! ## 模式 B — 基础设施层直接日志（给加载/初始化用）
+//! 本文件（content_plugin.rs）属于此类。规则：
+//! - 直接调用 `info!`/`warn!`，不写 `#[instrument]`
+//! - `target: "content"` 指定路由
+//! - 消息带 `[Content]` 前缀方便过滤
+//! - 可恢复的加载失败用 `warn!`，正常状态用 `info!`
+//! - 不涉及 `LogCode` 和 `emit_info!`（那些是 Observer 的职责）
+//! - 对标 `infra/localization/io/loader.rs` 的 `[Localization]` 模式
 
 use bevy::asset::AssetApp;
 use bevy::prelude::*;

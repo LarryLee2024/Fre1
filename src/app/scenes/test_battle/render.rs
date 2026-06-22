@@ -18,7 +18,7 @@ use crate::core::domains::combat::components::{
     CombatParticipant, HitPoints, TeamId, UnitIdComponent,
 };
 use crate::core::domains::tactical::components::GridPos;
-use crate::infra::picking::selection::Selection;
+use crate::ui::selection::state::Selection;
 
 use super::spawn::TestBattleScenario;
 

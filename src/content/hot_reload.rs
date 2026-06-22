@@ -1,4 +1,13 @@
 //! 内容热重载 — 定期扫描 RON 文件变更并增量更新 LoadedDefs Resource
+//!
+//! # 日志模式
+//!
+//! 本文件属于**基础设施层直接日志（Pattern B）**，规则见 `content_plugin.rs` 模块说明：
+//! - 直接调用 `info!`/`warn!`，不写 `#[instrument]`
+//! - `target: "content"` 指定路由，消息带 `[Content]` 前缀
+//! - 可恢复的加载失败用 `warn!`，正常状态用 `info!`
+//! - 不涉及 `LogCode` 和 `emit_info!`（那些是 Observer 的职责）
+//! - 对标 `infra/localization/io/loader.rs` 的 `[Localization]` 模式
 
 use bevy::prelude::*;
 use std::collections::HashMap;

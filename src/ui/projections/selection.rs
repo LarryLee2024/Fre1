@@ -12,8 +12,8 @@ use bevy::prelude::*;
 use crate::core::domains::combat::components::{CombatParticipant, HitPoints, UnitIdComponent};
 use crate::core::domains::tactical::components::GridPos;
 use crate::infra::camera::foundation::pose::{CameraPose, TargetPose};
-use crate::infra::picking::selection::Selection;
 use crate::ui::binding::Dirty;
+use crate::ui::selection::state::Selection;
 use crate::ui::view_models::{
     UiStore,
     battle_hud::BattleHudVm,

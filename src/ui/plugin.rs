@@ -4,10 +4,12 @@
 //! 1. ThemePlugin       — 主题与设计令牌
 //! 2. FocusPlugin       — 键盘/手柄焦点导航系统
 //! 3. PrimitivesPlugin  — UI 原语（Button/Panel/Text/List/etc.）
-//! 4. WidgetsPlugin     — 游戏业务控件（当前为骨架）
-//! 5. ScreenPlugin      — 全屏页面（主菜单等）
-//! 6. OverlayPlugin     — UI 浮层系统（通知/工具提示/伤害数字）
-//! 7. Projections       — Domain Event 到 ViewModel 的 Observer 转换
+//! 4. PickingUiPlugin   — Picking 命中检测 + PickIntent 生产
+//! 5. SelectionPlugin   — SelectionState + PickContext + 桥接
+//! 6. WidgetsPlugin     — 游戏业务控件（当前为骨架）
+//! 7. ScreenPlugin      — 全屏页面（主菜单等）
+//! 8. OverlayPlugin     — UI 浮层系统（通知/工具提示/伤害数字）
+//! 9. Projections       — Domain Event 到 ViewModel 的 Observer 转换
 //!
 //! 详见 `docs/06-ui/01-architecture/architecture.md` §8
 
@@ -17,6 +19,7 @@ use super::application::bridge::process_ui_commands;
 use super::binding::Dirty;
 use super::focus::FocusPlugin;
 use super::overlay::OverlayPlugin;
+use super::picking::PickingUiPlugin;
 use super::primitives::PrimitivesPlugin;
 use super::projections::battle::{
     on_battle_started_projection, on_character_panel_projection, on_damage_dealt_projection,
@@ -25,6 +28,7 @@ use super::projections::battle::{
 };
 use super::projections::economy::on_currency_changed_projection;
 use super::screens::ScreenPlugin;
+use super::selection::SelectionPlugin;
 use super::settings::{UiSettings, load_settings};
 use super::theme::ThemePlugin;
 use super::view_models::{
@@ -35,7 +39,7 @@ use super::widgets::WidgetsPlugin;
 
 /// UiPlugin — L3 UI 表现层入口
 ///
-/// 注册顺序不可变：Theme → Focus → Primitives → Widgets → Screens → Overlay → Projections。
+/// 注册顺序不可变：Theme → Focus → Primitives → Picking → Selection → Widgets → Screens → Overlay → Projections。
 pub struct UiPlugin;
 
 impl Plugin for UiPlugin {
@@ -67,14 +71,18 @@ impl Plugin for UiPlugin {
         app.add_plugins(FocusPlugin);
         // 3. Primitives — 基础 UI 原语
         app.add_plugins(PrimitivesPlugin);
-        // 4. Widgets — 游戏业务控件（骨架阶段）
+        // 4. PickingUiPlugin — Picking 命中检测 + PickIntent 生产
+        app.add_plugins(PickingUiPlugin);
+        // 5. SelectionPlugin — SelectionState + PickContext + 桥接
+        app.add_plugins(SelectionPlugin);
+        // 6. Widgets — 游戏业务控件（骨架阶段）
         app.add_plugins(WidgetsPlugin);
-        // 5. Screens — 全屏页面（主菜单等）
+        // 7. Screens — 全屏页面（主菜单等）
         app.add_plugins(ScreenPlugin);
-        // 6. Overlay — UI 浮层系统
+        // 8. Overlay — UI 浮层系统
         app.add_plugins(OverlayPlugin);
 
-        // 7. Projections — 领域事件到 ViewModel 的 Observer 转换
+        // 9. Projections — 领域事件到 ViewModel 的 Observer 转换
         app.add_observer(on_battle_started_projection);
         app.add_observer(on_turn_started_projection);
         app.add_observer(on_turn_ended_projection);
@@ -87,7 +95,7 @@ impl Plugin for UiPlugin {
         // Economy — 金币变更投影
         app.add_observer(on_currency_changed_projection);
 
-        // 8. Bridge — UiCommand 到 GameCommand 的桥接（Observer 模式）
+        // 10. Bridge — UiCommand 到 GameCommand 的桥接（Observer 模式）
         app.add_observer(process_ui_commands);
     }
 }

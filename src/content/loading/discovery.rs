@@ -1,4 +1,9 @@
 //! RON 文件发现 — 扫描 assets/config/ 目录结构
+//!
+//! # 日志模式
+//!
+//! 本文件属于**基础设施层直接日志（Pattern B）**，规则见 `content_plugin.rs` 模块说明。
+//! 日志统一使用 `warn!(target: "content", "[Content] ...")` 格式。
 
 use std::path::{Path, PathBuf};
 use tracing::warn;
