@@ -35,3 +35,4 @@
 <!-- pointers to external resources: URLs, dashboards, tickets, log paths -->
 
 - [reference-github](reference-github.md) — GitHub Issue/CI
+- [reference-bevy-source](reference-bevy-source.md) — Bevy 源码 crates/ + examples/ 本地路径

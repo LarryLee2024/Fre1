@@ -2,7 +2,7 @@
 id: 06-ui.architecture
 title: UI Architecture — L3 表现层架构总纲
 status: active
-updated: 2026-06-21
+updated: 2026-06-22
 owner: presentation-architect
 created: 2026-06-20
 tags:
@@ -76,10 +76,10 @@ ADR-050 定义的 `GameState`/`OverlayState` 管理场景生命周期，`src/app
 
 | 约束 | 范围 | 理由 |
 |------|------|------|
-| BSN 仅限声明式静态场景 | `src/app/scenes/`、Editor Prototype、Debug UI | BSN API 可能变动，声明式适合一次性装配（ADR-054 DR-003） |
-| BSN 禁止带状态/逻辑/业务语义 | 所有使用 BSN 的地方 | 防止 BSN 树退化为不可维护的大型 DSL 块 |
-| Screen 禁止使用 BSN | `src/ui/screens/` | Screen 生命周期复杂，需要 Factory 管理 spawn/despawn |
-| Widget 禁止使用 BSN | `src/ui/widgets/` | Widget 需要测试、复用、审查、AI 独立生成 |
+| BSN 仅限声明式静态场景 | `src/app/scenes/`、Editor Prototype、Debug UI | BSN API 可能变动，声明式适合一次性装配（ADR-054 DR-003）；实证分析见下文 §2.5.1 |
+| BSN 禁止带状态/逻辑/业务语义 | 所有使用 BSN 的地方 | 防止 BSN 树退化为不可维护的大型 DSL 块；BSN 无 if/match/循环语法，无法表达条件逻辑 |
+| Screen 禁止使用 BSN | `src/ui/screens/` | Screen 生命周期复杂，需要 Factory 管理 spawn/despawn；实证分析见下文 §2.5.1 |
+| Widget 禁止使用 BSN | `src/ui/widgets/` | Widget 需要测试、复用、审查、AI 独立生成；实证分析见下文 §2.5.1 |
 | `Reflect` 全覆盖 | 所有 Component/Event/Resource | 编辑器支持、序列化、Scene 兼容（ADR-054 DR-005） |
 | `trigger()` + Observer 优先 | 全项目 | 禁止 `EventWriter/EventReader`（ADR-054 DR-001） |
 | `ButtonInput<T>` 替代 `Input<T>` | 输入系统 | 旧 API 在 0.19 废弃（ADR-054 §背景） |
@@ -95,6 +95,33 @@ BSN 允许范围：
   ├── src/ui/screens/        🟥 禁止 — Screen 有复杂生命周期
   └── src/ui/widgets/        🟥 禁止 — Widget 需要 Factory 契约
 ```
+
+### 2.5.1 BSN 适用性实证分析（2026-06-22）
+
+本条目记录 presentation-architect 对 BSN 在本项目 UI 代码中的适用性所做的全面分析结论（见 `docs/10-reviews/ui-design-code-drift-review.md`）。
+
+**核心结论**：BSN 能为本项目带来**有限**的增量收益（主要是 `Children[]` 嵌套语法使 UI 树结构更直观），但不足以推翻现有架构决策。BSN 与当前 Factory + ViewModel + Theme 注入 + LocalizedText 的 UI 架构存在系统性范式冲突。
+
+**实证对比（取自实际代码）**：
+
+| 维度 | 当前模式 | BSN 模式 | 收益 |
+|------|---------|---------|------|
+| Screen 层样板代码 | `spawn_zone() + set_parent_in_place + insert()` 链式调用 | `Children[]` 隐式嵌套 | **省 35-40% 行数** |
+| Widget 层复杂度 | 工厂函数封装条件逻辑 + Theme 注入 | 需 `FromTemplate` + `Res<Theme>` 运行时解析 | **0-25% 行数**，核心逻辑不变 |
+| Primitives 层核心工作 | match variant 决定 Node/layout | BSN 无 if/match 语法 | **0-5%**，无法替代 |
+| UI 树可读性 | 线性代码 + ASCII 文档注释 | `Children[]` 嵌套声明 | **++** 但增量而非突破 |
+| Theme 注入 | `&Theme` 显式参数传递 | `Res<Theme>` 隐式 World 访问 | 风格冲突，增加隐式依赖 |
+| LocalizedText | `spawn_localized_text` 工厂处理 FTL key | 无现成集成，需自定义 `FromTemplate` | 无收益 |
+| ViewModel/Dirty 刷新 | Projection → ViewModel → Dirty<T> 运行时链 | BSN 只影响 spawn 阶段 | **无关** |
+| 条件逻辑 (variant) | match 分支选择不同布局 | BSN 不支持 if/match | **无法替代** |
+
+**关键发现**：对 `src/app/scenes/` 中三类代码（循环驱动 spawn、后期附加组件、UI 工厂链）的实际 BSN 改写试验也确认无收益 — 当前 scenes 代码全是**运行时动态数据驱动**模式，BSN 的"静态声明式场景定义"优势不适用。
+
+**推荐策略**：
+1. 保持现有 §2.5 的 BSN 边界不变
+2. 在 `src/app/scenes/` 中可用于新增的**纯静态场景**（如初始关卡布局），不对现有动态 spawn 做翻新
+3. 在 Editor Prototype / Debug UI 等一次性工具代码中灵活使用
+4. 待 Bevy 0.20+ 稳定（BSN 支持条件语法、FromTemplate/Localization 集成有最佳实践）后重新评估
 
 **Factory 替代方案**：
 ```

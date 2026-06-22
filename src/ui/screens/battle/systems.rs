@@ -66,19 +66,38 @@ pub fn on_battle_button_clicked(
 /// Dirty<BattleHudVm> 消费系统
 ///
 /// 当 Projection 更新 UiStore.battle_hud 后标记 Dirty<BattleHudVm>，
-/// 此系统消费脏标记并将最新 ViewModel 数据同步到 BattleHudData。
+/// 此系统消费脏标记并将最新 ViewModel 数据同步到 BattleHudData（临时数据桥接）。
 ///
-/// 当前为骨架实现：消费脏标记但不执行实际同步，
-/// 等待完整 UiBinding + Projection 管线就绪。
+/// # 数据映射
+/// - store.battle_hud.hp       -> data.hp_current
+/// - store.battle_hud.max_hp   -> data.hp_max
+/// - store.battle_hud.mp       -> data.mp_current
+/// - store.battle_hud.max_mp   -> data.mp_max
+///
+/// character_name 和 level 暂由 UiStore 投影的默认值填充，
+/// 待 Projection 提供角色数据后扩展。
 pub fn on_dirty_battle_hud(
     mut dirty_query: Query<&mut Dirty<BattleHudVm>>,
-    _data: ResMut<BattleHudData>,
+    store: Res<UiStore>,
+    mut data: ResMut<BattleHudData>,
 ) {
     for mut dirty in &mut dirty_query {
         if dirty.consume() {
-            // TODO[P2][UI][2026-07-21]: 从 UiStore.battle_hud 同步数据到 BattleHudData
-            // 等 Projection 系统接入后实现：data.hp_current = store.battle_hud.hp; 等
-            info!(target: "ui", "[BattleHud] Dirty 标记已消费，等待 Projection 系统接入");
+            // 从 UiStore.battle_hud 同步到 BattleHudData
+            data.hp_current = store.battle_hud.hp;
+            data.hp_max = store.battle_hud.max_hp;
+            data.mp_current = store.battle_hud.mp;
+            data.mp_max = store.battle_hud.max_mp;
+            // character_name 和 level 保持现有默认值
+
+            info!(
+                target: "ui",
+                "[BattleHud] Dirty 标记已消费，同步 HP={}/{} MP={}/{}",
+                data.hp_current,
+                data.hp_max,
+                data.mp_current,
+                data.mp_max,
+            );
         }
     }
 }

@@ -228,7 +228,7 @@ Domain Event → Observer → Projection → ViewModel → Widget 刷新
 | 文件 | 状态 | 负责人 | 完成日期 |
 |------|------|--------|----------|
 | `README.md` | ✅ code-aligned | presentation-architect | 2026-06-22 |
-| `01-architecture/architecture.md` | ✅ active | presentation-architect | 2026-06-21 |
+| `01-architecture/architecture.md` | ✅ active | presentation-architect | 2026-06-22 |
 | `01-architecture/application-layer.md` | ✅ code-aligned | presentation-architect | 2026-06-21 |
 | `01-architecture/implementation-patterns.md` | ✅ 完整 | presentation-architect | 2026-06-21 |
 | `02-design-system/widget-atoms.md` | ✅ code-aligned | presentation-architect | 2026-06-21 |

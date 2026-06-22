@@ -25,7 +25,7 @@ pub mod visibility;
 use bevy::prelude::*;
 
 use crate::infra::localization::generated::loc;
-use crate::ui::binding::UiBinding;
+use crate::ui::binding::{Dirty, UiBinding};
 use crate::ui::localization::text_keys::BATTLE_PHASE_PLAYER;
 use crate::ui::primitives::button::{components::ButtonVariant, factory::spawn_localized_button};
 use crate::ui::primitives::panel::{components::PanelVariant, factory::spawn_panel};
@@ -39,7 +39,7 @@ use crate::ui::widgets::character_card::factory::spawn_character_card;
 use crate::ui::widgets::skill_panel::factory::spawn_skill_panel;
 use crate::ui::widgets::turn_order_bar::factory::spawn_turn_order_bar;
 
-use crate::ui::view_models::battle_hud::BattleHudData;
+use crate::ui::view_models::battle_hud::{BattleHudData, BattleHudVm};
 
 use self::layout::{BattleZone, spawn_zone};
 use systems::BattleAction;
@@ -73,6 +73,7 @@ pub fn spawn_battle_screen(
         },
         BattleScreen,
         Name::new("BattleScreen"),
+        Dirty::<BattleHudVm>::default(),
     ));
 
     // ── Z1: 左上区 — 回合指示器 ──
