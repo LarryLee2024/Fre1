@@ -53,7 +53,7 @@ fn tick_phase_name_correct() {
 fn scheduler_error_display_correct() {
     let err = SchedulerError::NotInitialized;
     let msg = format!("{}", err);
-    assert!(msg.contains("not initialized"));
+    assert!(msg.contains("未初始化"));
 }
 
 #[test]

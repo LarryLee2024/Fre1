@@ -9,6 +9,8 @@ pub use plugin::*;
 
 // [ADR-045] pub(crate) — 业务组件，crate 内可用
 pub(crate) mod components;
+// [ADR-045] public re-export — 对集成测试开放，模式同 combat 域
+pub use components::*;
 // [ADR-045] private — 业务规则失败，仅当前模块可见
 // [ADR-051] TacticalError 已移除 — 所有变体均为规则失败，已迁移至 TacticalFailure
 mod failure;
@@ -18,6 +20,8 @@ pub mod events;
 pub(crate) mod integration;
 // [ADR-045] pub(crate) — 资源，crate 内共享，外部不可访问
 pub(crate) mod resources;
+// [ADR-045] public re-export — 对集成测试开放，模式同 combat 域
+pub use resources::*;
 // [ADR-045] pub(crate) — 业务规则，crate 内共享，外部不可访问
 pub(crate) mod rules;
 // [ADR-045] pub(crate) — ECS 系统，crate 内共享

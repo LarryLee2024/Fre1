@@ -14,6 +14,7 @@ use crate::core::domains::combat::components::{
     UnitIdComponent,
 };
 use crate::core::domains::tactical::components::GridPos;
+use crate::core::domains::tactical::resources::{GridLayout, GridMap};
 
 use super::def::TestBattleDef;
 
@@ -113,6 +114,21 @@ pub fn spawn_test_battle(
     // 初始化回合队列
     let turn_queue = TurnQueue::new(turn_entries);
     commands.insert_resource(turn_queue);
+
+    // ── GridMap ──
+    // 创建全通行网格，供 tactical 域系统（移动/寻路/范围计算）使用。
+    // 所有格子初始化 TileData::new(0, 0, TileFlags::PASSABLE)：
+    //   - terrain_def_id=0（默认/未知地形，相当于"平地"）
+    //   - height=0
+    //   - flags=PASSABLE（全部落可通行）
+    //
+    // 使用 Square（方形）网格布局。GridMap::new() 的文档见 tactical/resources.rs.
+    //
+    // 未来 Tiled 接入后，此 GridMap 将被 infra/map 的 convert_to_gridmap() 替代，
+    // 替换后所有下游系统（GridMap::get_tile, tiles_in_range, grid_to_world 等）
+    // 无需任何改动——GridMap 是抽象边界。
+    let grid_map = GridMap::new(def.grid.width, def.grid.height, GridLayout::Square);
+    commands.insert_resource(grid_map);
 
     // 切换到战斗阶段
     if let Some(mut bp) = battle_phase {

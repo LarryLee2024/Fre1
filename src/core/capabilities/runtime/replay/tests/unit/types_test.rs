@@ -116,7 +116,7 @@ fn replay_error_display() {
     assert!(msg.contains("v1"));
 
     let err = ReplayError::NotRecording;
-    assert_eq!(format!("{}", err), "not in recording mode");
+    assert_eq!(format!("{}", err), "未处于 recording 模式");
 }
 
 #[test]

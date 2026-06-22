@@ -13,6 +13,11 @@
 <!-- how the agent should behave (procedural). Each file carries Why: / How to apply: -->
 
 - [feedback-codegraph-first](feedback-codegraph-first.md) — 查代码优先 CodeGraph
+
+## project
+<!-- ongoing work, initiatives, releases, incidents -->
+
+- [cross-domain-smoke-test](test-guardian/cross-domain-smoke-test.md) — First cross-domain smoke test (tests/scene_smoke.rs); added tactical pub re-exports
 - [feedback-agent-delegation](feedback-agent-delegation.md) — 复杂多步任务派发 agent 并行处理
 - [feedback-terse-response](feedback-terse-response.md) — 回复简洁直接
 

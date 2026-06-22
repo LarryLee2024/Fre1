@@ -109,7 +109,7 @@ fn stacking_error_display_correct() {
         reason: "max_stacks < 2 for Aggregate".into(),
     };
     let msg = format!("{}", err);
-    assert!(msg.contains("invalid stacking config"));
+    assert!(msg.contains("无效的 stacking 配置"));
 }
 
 #[test]
