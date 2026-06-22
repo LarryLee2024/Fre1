@@ -1,74 +1,74 @@
 # Bevy 0.10
 
-## Posted on March 6, 2023 by Bevy Contributors
+## 发布于 2023 年 3 月 6 日，作者：Bevy 贡献者
 
-![Ruins scene illustrating Bevy's new material blend modes and fog. Based on original scene by Casey Hardy (CC Attribution)](https://bevy.org/news/bevy-0-10/ruins.png)
+![展示 Bevy 新材质混合模式与雾效的废墟场景。基于 Casey Hardy 的原创场景（CC Attribution）](https://bevy.org/news/bevy-0-10/ruins.png)
 
-[Ruins scene illustrating Bevy's new material blend modes and fog. Based on original scene by Casey Hardy (CC Attribution)](https://github.com/coreh/bevy-demo-ruins)
+[展示 Bevy 新材质混合模式与雾效的废墟场景。基于 Casey Hardy 的原创场景（CC Attribution）](https://github.com/coreh/bevy-demo-ruins)
 
-Thanks to **173** contributors, **689** pull requests, community reviewers, and our [**generous sponsors**](https://bevy.org/donate), we're happy to announce the **Bevy 0.10** release on [crates.io](https://crates.io/crates/bevy)!
+感谢 **173** 位贡献者、**689** 个 pull request、社区审阅者以及我们的[**慷慨赞助商**](https://bevy.org/donate)，我们很高兴在 [crates.io](https://crates.io/crates/bevy) 上发布 **Bevy 0.10**！
 
-For those who don't know, Bevy is a refreshingly simple data-driven game engine built in Rust. You can check out our [Quick Start Guide](https://bevy.org/learn/quick-start/introduction) to try it today. It's free and open source forever! You can grab the full [source code](https://github.com/bevyengine/bevy) on GitHub. Check out [Bevy Assets](https://bevy.org/assets) for a collection of community-developed plugins, games, and learning resources.
+对于那些还不了解的人，Bevy 是一个用 Rust 构建的、令人耳目一新的简单数据驱动游戏引擎。你可以查看我们的[快速入门指南](https://bevy.org/learn/quick-start/introduction)来立即尝试。它永久免费且开源！你可以在 GitHub 上获取完整的[源代码](https://github.com/bevyengine/bevy)。查看 [Bevy Assets](https://bevy.org/assets) 获取社区开发的插件、游戏和学习资源合集。
 
-To update an existing Bevy App or Plugin to **Bevy 0.10**, check out our [0.9 to 0.10 Migration Guide](https://bevy.org/learn/migration-guides/0.9-0.10/).
+要将现有的 Bevy App 或 Plugin 更新到 **Bevy 0.10**，请查看我们的 [0.9 到 0.10 迁移指南](https://bevy.org/learn/migration-guides/0.9-0.10/)。
 
-Since our last release a few months ago we've added a _ton_ of new features, bug fixes, and quality of life tweaks, but here are some of the highlights:
+自几个月前的上次发布以来，我们添加了大量新功能、Bug 修复和生活质量改进，以下是一些亮点：
 
-- **ECS Schedule v3**: Bevy now has much simpler, more flexible scheduling. Systems are now stored in a unified schedule, commands can be applied explicitly via `apply_system_buffers`, and a whole lot of quality of life and bug fixes.
-- **Cascaded Shadow Maps**: Higher quality shadow maps that cover larger distances, where the quality follows the camera.
-- **Environment Map Lighting**: 360 degree ambient image based lighting that can cheaply and drastically improve the visual quality of a scene.
-- **Depth and Normal Prepass**: Render depth and normal textures for a scene prior to the main pass, enabling new effects and (in some cases) improved performance. Shadow mapping uses the prepass shaders, which enables transparent textures to cast shadows.
-- **Smooth Skeletal Animation Transitions**: Smoothly transition between two skeletal animations playing at the same time!
-- **Improved Android Support**: Bevy now works out of the box on more Android devices (with a couple of caveats)
-- **Revamped Bloom**: Bloom now looks better, is easier to control, and has fewer visual artifacts.
-- **Distance and Atmospheric Fog**: Add depth and ambiance to your scene with 3D distance and atmospheric fog effects!
-- **StandardMaterial Blend Modes**: Achieve a variety of interesting effects with more PBR material blend modes.
-- **More Tonemapping Choices**: Choose one of 7 popular tonemapping algorithms for your HDR scenes to achieve the visual style you are looking for.
-- **Color Grading**: Control per-camera exposure, gamma, "pre-tonemapping saturation", and "post-tonemapping saturation".
-- **Parallel Pipelined Rendering**: App logic and render logic now run in parallel automatically, yielding significant performance wins.
-- **Windows as Entities**: Windows are now represented as entities instead of resources, improving the user experience and unlocking new scenarios.
-- **Renderer Optimizations**: We spent a _ton_ of effort optimizing the renderer this cycle. Bevy's renderer is snappier than ever!
-- **ECS Optimizations**: Likewise, we've turbocharged many common ECS operations. Bevy apps get a nice speed boost!
+- **ECS Schedule v3**：Bevy 现在拥有更简单、更灵活的调度。系统现在存储在统一的调度中，命令可以通过 `apply_system_buffers` 显式应用，还有大量的生活质量改进和 Bug 修复。
+- **级联阴影映射**：覆盖更远距离的更高品质阴影映射，质量随相机位置变化。
+- **环境映射光照**：基于 360 度环境图像的照明，可以廉价且大幅提升场景的视觉质量。
+- **深度和法线预处理**：在主通道之前渲染场景的深度和法线纹理，从而启用新效果（在某些情况下）并提高性能。阴影映射使用预处理着色器，这使得透明纹理可以投射阴影。
+- **平滑的骨骼动画过渡**：在两个同时播放的骨骼动画之间平滑过渡！
+- **改进的 Android 支持**：Bevy 现已在更多 Android 设备上开箱即用（有一些注意事项）
+- **改造的 Bloom**：Bloom 现在看起来更好、更易控制，而且视觉伪影更少。
+- **距离雾与大气雾**：使用 3D 距离雾和大气雾效为场景增添深度和氛围！
+- **StandardMaterial 混合模式**：通过更多 PBR 材质混合模式实现各种有趣的效果。
+- **更多色调映射选择**：从 7 种流行的色调映射算法中选择一种用于你的 HDR 场景，以实现你想要的视觉风格。
+- **色彩分级**：控制每个相机的曝光、伽马值、"色调映射前饱和度"和"色调映射后饱和度"。
+- **并行管线化渲染**：应用逻辑和渲染逻辑现在自动并行运行，带来显著的性能提升。
+- **窗口作为实体**：窗口现在表示为实体而非资源，改善了用户体验并解锁了新的场景。
+- **渲染器优化**：这个周期我们在优化渲染器上投入了大量精力。Bevy 的渲染器比以往更敏捷！
+- **ECS 优化**：同样，我们大幅提升了许多常见 ECS 操作的性能。Bevy 应用获得了可观的加速！
 
-## ECS Schedule v3 [#](https://bevy.org/news/bevy-0-10/#ecs-schedule-v3)
+## ECS Schedule v3 [#](https://bevy.org/news/bevy-0-10/#ecs-schedule-v3)
 
-authors: @alice-i-cecile, @maniwani, @WrongShoe, @cart, @jakobhellermann, @JoJoJet, @geieredgar and a whole lot more
+作者：@alice-i-cecile, @maniwani, @WrongShoe, @cart, @jakobhellermann, @JoJoJet, @geieredgar 以及更多贡献者
 
-Thanks to the fantastic work of our ECS team, the hotly awaited ["stageless" scheduling RFC](https://github.com/bevyengine/rfcs/blob/main/rfcs/45-stageless.md) has been implemented!
+感谢我们 ECS 团队的出色工作，备受期待的["无阶段"调度 RFC](https://github.com/bevyengine/rfcs/blob/main/rfcs/45-stageless.md) 已经实现！
 
-**Schedule v3** is the culmination of significant design and implementation work. Scheduling APIs are a central and defining part of the Bevy developer experience, so we had to be very thoughtful and meticulous about this next evolution of the API. In addition to the [RFC PR](https://github.com/bevyengine/rfcs/pull/45), the [initial implementation PR](https://github.com/bevyengine/bevy/pull/6587) by `@maniwani` and the [Bevy Engine internals port PR](https://github.com/bevyengine/bevy/pull/7267) by `@alice-i-cecile` are great places to start if you would like a view into our process and rationale. As we all know, plans and implementations are two different things. Our final implementation is a bit different from the initial RFC (in a good way).
+**Schedule v3** 是大量设计和实现工作的结晶。调度 API 是 Bevy 开发体验的核心和定义性部分，因此我们必须对这个 API 的下一次演进非常深思熟虑和细致。除了 [RFC PR](https://github.com/bevyengine/rfcs/pull/45)，由 `@maniwani` 提交的[初始实现 PR](https://github.com/bevyengine/bevy/pull/6587) 和由 `@alice-i-cecile` 提交的 [Bevy 引擎内部移植 PR](https://github.com/bevyengine/bevy/pull/7267) 是了解我们流程和设计理由的好起点。众所周知，计划与实施是两回事。我们最终的实现与最初的 RFC 有所不同（是个好的方面）。
 
-There are a ton of changes, but we've put a lot of care into ensuring the [migration path](https://bevy.org/learn/migration-guides/0.9-0.10/#migrate-engine-to-schedule-v3-stageless) for existing applications is relatively straightforward. Don't sweat it!
+这里有大量的变化，但我们非常注意确保现有应用的[迁移路径](https://bevy.org/learn/migration-guides/0.9-0.10/#migrate-engine-to-schedule-v3-stageless)相对简单。别担心！
 
-Let's take a look at what shipped in 0.10!
+让我们看看 0.10 带来了什么！
 
-### A Single Unified Schedule [#](https://bevy.org/news/bevy-0-10/#a-single-unified-schedule)
+### 统一的调度 [#](https://bevy.org/news/bevy-0-10/#a-single-unified-schedule)
 
-Have you ever wanted to specify that `system_a` runs before `system_b`, only to be met with confusing warnings that `system_b` isn't found because it's in a different stage?
+你是否曾经想指定 `system_a` 在 `system_b` 之前运行，却收到了令人困惑的警告，说 `system_b` 因为处于不同的阶段而无法找到？
 
-No more! All systems within a single [`Schedule`](https://docs.rs/bevy/0.10.0/bevy/ecs/schedule/struct.Schedule.html) are now stored in a single data structure with a global awareness of what's going on.
+现在没有了！单个 [`Schedule`](https://docs.rs/bevy/0.10.0/bevy/ecs/schedule/struct.Schedule.html) 中的所有系统现在都存储在一个单一的数据结构中，全局感知正在发生的事情。
 
-This simplifies our internal logic, makes your code more robust to refactoring, and allows plugin authors to specify high-level invariants (e.g. "movement must occur before collision checking") without locking themselves into an exact schedule location.
+这简化了我们的内部逻辑，使你的代码对重构更加健壮，并允许插件作者指定高级不变量（例如"移动必须在碰撞检测之前发生"），而无需将自己锁定在确切的调度位置。
 
 [![main_schedule_diagram](https://bevy.org/news/bevy-0-10/main_schedule_diagram.svg)](https://bevy.org/news/bevy-0-10/main_schedule_diagram.svg)
 
-This diagram made with [@jakobhellermann's `bevy_mod_debugdump` crate](https://github.com/jakobhellermann/bevy_mod_debugdump) shows a simplified version of Bevy's default schedule.
+这张使用 [@jakobhellermann 的 `bevy_mod_debugdump` crate](https://github.com/jakobhellermann/bevy_mod_debugdump) 制作的图表展示了 Bevy 默认调度的简化版本。
 
-### Adding Systems [#](https://bevy.org/news/bevy-0-10/#adding-systems)
+### 添加系统 [#](https://bevy.org/news/bevy-0-10/#adding-systems)
 
-[`Systems`](https://docs.rs/bevy/0.10.0/bevy/ecs/system/trait.System.html) (which are just [normal Rust functions!](https://github.com/bevyengine/bevy/tree/v0.10.0/crates/bevy_ecs#systems)) are how you define game logic in Bevy ECS. With **Schedule v3**, you can add systems to your [`App`](https://docs.rs/bevy/0.10.0/bevy/app/struct.App.html) just like you did in previous versions:
+[`System`](https://docs.rs/bevy/0.10.0/bevy/ecs/system/trait.System.html)（它们只是[普通的 Rust 函数！](https://github.com/bevyengine/bevy/tree/v0.10.0/crates/bevy_ecs#systems)）是在 Bevy ECS 中定义游戏逻辑的方式。使用 **Schedule v3**，你可以像以前版本一样将系统添加到你的 [`App`](https://docs.rs/bevy/0.10.0/bevy/app/struct.App.html) 中：
 
 ```rust
 app.add_system(gravity)
 ```
 
-However **Schedule v3** has some new tricks up its sleeve! You can now add multiple systems at once:
+然而 **Schedule v3** 还有一些新花样！你现在可以一次添加多个系统：
 
 ```rust
 app.add_systems((apply_acceleration, apply_velocity))
 ```
 
-By default, Bevy runs systems in parallel to each other. In previous versions of Bevy, you ordered systems like this:
+默认情况下，Bevy 并行运行系统。在以前的 Bevy 版本中，你这样排序系统：
 
 ```rust
 app
@@ -77,10 +77,10 @@ app
     .add_system(collide.after(jump))
 ```
 
-You can still do that! But you can now compress this using `add_systems`:
+你仍然可以这样做！但现在你可以使用 `add_systems` 来压缩代码：
 
 ```rust
-// much cleaner!
+// 整洁多了！
 app.add_systems((
     walk.before(jump),
     jump,
@@ -88,26 +88,26 @@ app.add_systems((
 ))
 ```
 
-`before()` and `after()` are definitely useful tools! However, thanks to the new `chain()` function, it is now _much easier_ to run systems in a specific order:
+`before()` 和 `after()` 绝对是有用的工具！不过，得益于新的 `chain()` 函数，现在以特定顺序运行系统变得_容易得多_：
 
 ```rust
-// This is equivalent to the previous example
+// 这等价于前面的示例
 app.add_systems((walk, jump, collide).chain())
 ```
 
-`chain()` will run the systems in the order they were defined. Chaining also pairs with per-system configuration:
+`chain()` 将按照系统定义的顺序运行它们。链式调用也与按系统配置配合使用：
 
 ```rust
 app.add_systems((walk.after(input), jump, collide).chain())
 ```
 
-### Configurable System Sets [#](https://bevy.org/news/bevy-0-10/#configurable-system-sets)
+### 可配置的 System Set [#](https://bevy.org/news/bevy-0-10/#configurable-system-sets)
 
-In **Schedule v3**, the idea of the "system set" has been redefined to support more natural and flexible control over how systems are run and scheduled. The old "system label" concept has been combined with the "set" concept, resulting in one straightforward but powerful abstraction.
+在 **Schedule v3** 中，"system set"的概念已被重新定义，以支持对系统的运行和调度方式更自然、更灵活的控制。旧的"system label"概念与"set"概念合并，产生了一个直截了当但功能强大的抽象。
 
-[`SystemSets`](https://docs.rs/bevy/0.10.0/bevy/ecs/schedule/trait.SystemSet.html) are named collections of systems that share system configuration across all of their members. Ordering systems relative to a [`SystemSet`](https://docs.rs/bevy/0.10.0/bevy/ecs/schedule/trait.SystemSet.html) applies that ordering to _all_ systems in that set, in addition to any configuration on each individual system.
+[`SystemSet`](https://docs.rs/bevy/0.10.0/bevy/ecs/schedule/trait.SystemSet.html) 是命名过的系统集合，为其所有成员共享系统配置。相对于 [`SystemSet`](https://docs.rs/bevy/0.10.0/bevy/ecs/schedule/trait.SystemSet.html) 对系统排序，会将该排序应用于该集合中的_所有_系统，同时保留每个系统的独立配置。
 
-Let's jump right into what this would look like. You define [`SystemSets`](https://docs.rs/bevy/0.10.0/bevy/ecs/schedule/trait.SystemSet.html) like this:
+让我们直接看看这是什么样子。你这样定义 [`SystemSet`](https://docs.rs/bevy/0.10.0/bevy/ecs/schedule/trait.SystemSet.html)：
 
 ```rust
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
@@ -117,13 +117,13 @@ enum PhysicsSet {
 }
 ```
 
-You can add systems to sets by calling the [`in_set`](https://docs.rs/bevy/0.10.0/bevy/ecs/schedule/trait.IntoSystemConfig.html#method.in_set) method:
+你可以通过调用 [`in_set`](https://docs.rs/bevy/0.10.0/bevy/ecs/schedule/trait.IntoSystemConfig.html#method.in_set) 方法将系统添加到集合中：
 
 ```rust
 app.add_system(gravity.in_set(PhysicsSet::Movement))
 ```
 
-You can combine this with the new system features mentioned above:
+你可以将其与上述新的系统功能结合使用：
 
 ```rust
 app.add_systems(
@@ -133,7 +133,7 @@ app.add_systems(
 )
 ```
 
-Systems can belong to any number of sets:
+系统可以属于任意数量的集合：
 
 ```rust
 app.add_system(
@@ -143,123 +143,122 @@ app.add_system(
 )
 ```
 
-Configuration is added to sets like this:
+对集合的配置像这样添加：
 
 ```rust
 app.configure_set(
-    // Run systems in the Movement set before systems in the CollisionDetection set
+    // 在 CollisionDetection 集合中的系统之前运行 Movement 集合中的系统
     PhysicsSet::Movement.before(PhysicsSet::CollisionDetection)
 )
 ```
 
-Sets can be nested inside other sets, which will cause them to inherit the configuration of their parent set:
+集合可以嵌套在其他集合内部，这样它们会继承父集合的配置：
 
 ```rust
 app.configure_set(MoveSet::Enemy.in_set(PhysicsSet::Movement))
 ```
 
-Sets can be configured multiple times:
+集合可以被多次配置：
 
 ```rust
-// In PlayerPlugin:
+// 在 PlayerPlugin 中：
 app.configure_set(MoveSet::Player.before(MoveSet::Enemy))
 
-// In PlayerTeleportPlugin
+// 在 PlayerTeleportPlugin 中
 app.configure_set(MoveSet::Player.after(PortalSet::Teleport))
 ```
 
-Crucially system configuration is strictly additive: you cannot _remove_ rules added elsewhere. This is both an "anti-spaghetti" and "plugin privacy" consideration. When this rule is combined with Rust's robust type privacy rules, plugin authors can make careful decisions about which exact invariants need to be upheld, and reorganize code and systems internally without breaking consumers.
+关键在于，系统配置是严格累加的：你不能_移除_其他地方添加的规则。这既是"反意大利面条式代码"的考虑，也是"插件隐私"的考虑。当这个规则与 Rust 强大的类型隐私规则结合时，插件作者可以仔细决定需要维护哪些确切的不变量，并在内部重组代码和系统而不破坏使用者。
 
-Configuration rules _must be compatible with each other_: any paradoxes (like a system set inside of itself, a system that must run both before and after a set, order cycles, etc) will result in a runtime panic with a helpful error message.
+配置规则_必须彼此兼容_：任何悖论（如系统集合包含自身、一个系统必须同时在集合之前和之后运行、排序循环等）都会导致运行时 panic，并附带有用的错误信息。
 
-### Directly Schedule Exclusive Systems [#](https://bevy.org/news/bevy-0-10/#directly-schedule-exclusive-systems)
+### 直接调度排他系统 [#](https://bevy.org/news/bevy-0-10/#directly-schedule-exclusive-systems)
 
-"Exclusive systems" are [`Systems`](https://docs.rs/bevy/0.10.0/bevy/ecs/system/trait.System.html) that have mutable direct access to the entire ECS [`World`](https://docs.rs/bevy/0.10.0/bevy/ecs/world/struct.World.html). For this reason, they cannot be run in parallel with other [`Systems`](https://docs.rs/bevy/0.10.0/bevy/ecs/system/trait.System.html).
+"排他系统"是对整个 ECS [`World`](https://docs.rs/bevy/0.10.0/bevy/ecs/world/struct.World.html) 具有可变直接访问权限的 [`System`](https://docs.rs/bevy/0.10.0/bevy/ecs/system/trait.System.html)。因此，它们不能与其他 [`System`](https://docs.rs/bevy/0.10.0/bevy/ecs/system/trait.System.html) 并行运行。
 
-Since Bevy's inception, Bevy devs have wanted to schedule exclusive systems (and flush commands) relative to normal systems.
+自从 Bevy 诞生以来，Bevy 开发者就希望能够相对于普通系统来调度排他系统（以及刷新命令）。
 
-Now you can! Exclusive systems can now be scheduled and ordered like any other system.
+现在你可以了！排他系统现在可以像任何其他系统一样被调度和排序。
 
 ```rust
 app
     .add_system(ordinary_system)
-    // This works!
+    // 这可以工作！
     .add_system(exclusive_system.after(ordinary_system))
 ```
 
-This is particularly powerful, as **command flushes** (which apply queued-up [`Commands`](https://docs.rs/bevy/0.10.0/bevy/ecs/system/struct.Commands.html) added in systems to do things like spawn and despawn entities) are now simply performed in the `apply_system_buffers` exclusive system.
+这特别强大，因为**命令刷新**（应用系统中排队等待的 [`Commands`](https://docs.rs/bevy/0.10.0/bevy/ecs/system/struct.Commands.html)，用于执行生成和销毁实体等操作）现在只需在 `apply_system_buffers` 排他系统中执行即可。
 
 ```rust
 app.add_systems(
     (
-        // This system produces some commands
+        // 这个系统产生一些命令
         system_a,
-        // This will apply the queued commands from system_a
+        // 这将应用来自 system_a 的排队命令
         apply_system_buffers,
-        // This system will have access to the results of
-        // system_a's commands
+        // 这个系统将可以访问 system_a 命令的结果
         system_b,
-    // This chain ensures the systems above run in the order
-    // they are defined
+    // 这个链式调用确保上述系统按照
+    // 定义的顺序运行
     ).chain()
 )
 ```
 
-Do be careful with this pattern though: it's easy to quickly end up with many poorly ordered exclusive systems, creating bottlenecks and chaos.
+不过要小心使用这种模式：很容易最终得到许多顺序不佳的排他系统，造成瓶颈和混乱。
 
-What will you do with this much power? We're keen to find out!
+你会用这么强大的能力做什么？我们很想知道！
 
-### Managing Complex Control Flow with Schedules [#](https://bevy.org/news/bevy-0-10/#managing-complex-control-flow-with-schedules)
+### 使用 Schedule 管理复杂控制流 [#](https://bevy.org/news/bevy-0-10/#managing-complex-control-flow-with-schedules)
 
-But what if you want to do something _weird_ with your [`Schedule`](https://docs.rs/bevy/0.10.0/bevy/ecs/schedule/struct.Schedule.html)? Something non-linear, branching, or looping. What should you reach for?
+但如果你想对你的 [`Schedule`](https://docs.rs/bevy/0.10.0/bevy/ecs/schedule/struct.Schedule.html) 做一些_奇怪_的事情呢？一些非线性、分支或循环的事情。你应该用什么？
 
-It turns out, Bevy already _had_ a great tool for this: schedules that run inside of an exclusive system. The idea is pretty simple:
+事实证明，Bevy_已经_有一个很好的工具来做这个：在排他系统内部运行的 schedule。这个想法很简单：
 
-1. Construct a schedule, that stores whatever complex logic you want to run.
-2. Store that schedule inside of a resource.
-3. In an exclusive system, perform any arbitrary Rust logic you want to decide if and how your schedule runs.
-4. Temporarily take the schedule out of the [`World`](https://docs.rs/bevy/0.10.0/bevy/ecs/world/struct.World.html), run it on the rest of the world to mutate both the schedule and the world, and then put it back in.
+1. 构建一个 schedule，存储你想要运行的任何复杂逻辑。
+2. 将该 schedule 存储在一个资源中。
+3. 在一个排他系统中，执行任何任意的 Rust 逻辑来决定你的 schedule 是否以及如何运行。
+4. 临时将 schedule 从 [`World`](https://docs.rs/bevy/0.10.0/bevy/ecs/world/struct.World.html) 中取出，在世界其余部分上运行它以同时修改 schedule 和 world，然后再放回去。
 
-With the addition of the new [`Schedules`](https://docs.rs/bevy/0.10.0/bevy/ecs/schedule/struct.Schedules.html) resource and the `world.run_schedule()` API it's more ✨ ergonomic ✨ than ever.
+随着新的 [`Schedules`](https://docs.rs/bevy/0.10.0/bevy/ecs/schedule/struct.Schedules.html) 资源和 `world.run_schedule()` API 的加入，它比以往任何时候都更 ✨ 符合人体工程学 ✨。
 
 ```rust
-// A Schedule!
+// 一个 Schedule！
 let mut my_schedule = Schedule::new();
 schedule.add_system(my_system);
 
-// A label for our new Schedule!
+// 我们新 Schedule 的标签！
 #[derive(ScheduleLabel, Debug, Hash, PartialEq, Eq, Clone)]
 struct MySchedule;
 
-// An exclusive system to run this schedule
+// 一个用于运行此 schedule 的排他系统
 fn run_my_schedule(world: &mut World) {
     while very_complex_logic() {
         world.run_schedule(MySchedule);
     }
 }
 
-// Behold the ergonomics!
+// 见证人体工程学！
 app
     .add_schedule(MySchedule, my_schedule)
     .add_system(run_my_schedule);
 ```
 
-Bevy uses this pattern for five rather different things in **Bevy 0.10**:
+Bevy 在 **Bevy 0.10** 中对五个相当不同的场景使用了这种模式：
 
-1. **Startup systems:** these now live in their own schedule, which is run once at the start of the app.
-2. **Fixed timestep systems:** another schedule?! The exclusive system that runs this schedule accumulates time, running a while loop that repeatedly runs `CoreSchedule::FixedUpdate` until all of the accumulated time has been spent.
-3. **Entering and exiting states:** a bonanza of schedules. Each collection of systems that runs logic to enter and exit a state variant is stored in its own schedule, which is called based on the change in state in the `apply_state_transitions::<S>` exclusive system.
-4. **Rendering:** all rendering logic is stored in its own schedule to allow it to run asynchronously relative to gameplay logic.
-5. **Controlling the outermost loop:** in order to handle the "startup schedule first, then main schedule" logic, we wrap it all up in a minimal overhead `CoreSchedule::Outer` and then run our schedules as the sole exclusive system there.
+1. **启动系统**：这些现在存在于它们自己的 schedule 中，在应用启动时运行一次。
+2. **固定时间步长系统**：又是另一个 schedule？！运行此 schedule 的排他系统累积时间，运行一个 while 循环，重复运行 `CoreSchedule::FixedUpdate`，直到所有累积的时间都被消耗完。
+3. **进入和退出状态**：大量的 schedule。每个运行进入和退出状态变体逻辑的系统集合都存储在自己的 schedule 中，根据 `apply_state_transitions::<S>` 排他系统中的状态变化来调用。
+4. **渲染**：所有渲染逻辑都存储在自己的 schedule 中，以便能够相对于游戏逻辑异步运行。
+5. **控制最外层循环**：为了处理"先启动 schedule，再主 schedule"的逻辑，我们将其全部包装在一个最小开销的 `CoreSchedule::Outer` 中，然后在此处将我们的 schedule 作为唯一的排他系统运行。
 
-Follow the breadcrumbs starting at [`CoreSchedule`](https://docs.rs/bevy/0.10.0/bevy/app/enum.CoreSchedule.html) for more info.
+从 [`CoreSchedule`](https://docs.rs/bevy/0.10.0/bevy/app/enum.CoreSchedule.html) 开始跟踪线索，获取更多信息。
 
-### Run Conditions [#](https://bevy.org/news/bevy-0-10/#run-conditions)
+### 运行条件 [#](https://bevy.org/news/bevy-0-10/#run-conditions)
 
-[`Systems`](https://docs.rs/bevy/0.10.0/bevy/ecs/system/trait.System.html) can have any number of **run conditions**, which are "just" systems that return a `bool`. If the `bool`s returned by _all_ of a system's **run conditions** are `true`, the system will run. Otherwise the system will be skipped for the current run of the schedule:
+[`System`](https://docs.rs/bevy/0.10.0/bevy/ecs/system/trait.System.html) 可以有任意数量的**运行条件**，它们"只是"返回 `bool` 的系统。如果一个系统的_所有_**运行条件**返回的 `bool` 都是 `true`，系统将运行。否则，系统将在当前 schedule 运行时被跳过：
 
 ```rust
-// Let's make our own run condition
+// 让我们创建自己的运行条件
 fn game_win_condition(query: Query<&Player>, score: Res<Score>) -> bool {
     let player = query.single();
     player.is_alive() && score.0 > 9000
@@ -268,31 +267,31 @@ fn game_win_condition(query: Query<&Player>, score: Res<Score>) -> bool {
 app.add_system(win_game.run_if(game_win_condition));
 ```
 
-**Run conditions** also have a number of "combinator" operations, thanks to [@JoJoJet](https://github.com/bevyengine/bevy/pull/7547) and [@Shatur](https://github.com/bevyengine/bevy/pull/7559):
+**运行条件**还有一些"组合器"操作，感谢 [@JoJoJet](https://github.com/bevyengine/bevy/pull/7547) 和 [@Shatur](https://github.com/bevyengine/bevy/pull/7559)：
 
-They can be negated with `not()`:
+它们可以用 `not()` 取反：
 
 ```rust
 app.add_system(continue_game.run_if(not(game_win_condition)))
 ```
 
-They can also be combined with `and_then` and `or_else`:
+它们还可以用 `and_then` 和 `or_else` 组合：
 
 ```rust
 app.add_system(move_player.run_if(is_alive.or_else(is_zombie)))
 ```
 
-Bevy 0.10 is shipping with a lovely collection of built-in [common run conditions](https://docs.rs/bevy/0.10.0/bevy/ecs/schedule/common_conditions/index.html). You can easily run systems if there are events to process, timers that elapsed, resources that changed, input state changes, states that changed, and more (thanks to [`@maniwani`](https://github.com/bevyengine/bevy/pull/6587), [`@inodentry`](https://github.com/bevyengine/bevy/pull/7579), [`@jakobhellermann`](https://github.com/bevyengine/bevy/pull/7806), and [`@jabuwu`](https://github.com/bevyengine/bevy/pull/7866)).
+Bevy 0.10 附带了一组可爱的内置[常用运行条件](https://docs.rs/bevy/0.10.0/bevy/ecs/schedule/common_conditions/index.html)。你可以轻松地在有待处理事件、定时器到期、资源变化、输入状态变化、状态变化等情况下运行系统（感谢 [`@maniwani`](https://github.com/bevyengine/bevy/pull/6587)、[`@inodentry`](https://github.com/bevyengine/bevy/pull/7579)、[`@jakobhellermann`](https://github.com/bevyengine/bevy/pull/7806) 和 [`@jabuwu`](https://github.com/bevyengine/bevy/pull/7866)）。
 
-**Run conditions** can also serve as a lightweight optimization tool. Run conditions are evaluated on the main thread, and each run criteria is evaluated exactly once each schedule update, at the time of the first system in the set that relies on it. Systems disabled by run conditions don't spawn a task, which can add up across many systems. Like always though: benchmark!
+**运行条件**也可以作为一个轻量级的优化工具。运行条件在主线程上评估，每个运行条件在每次 schedule 更新时只评估一次，在集合中依赖它的第一个系统运行时。被运行条件禁用的系统不会生成任务，这可以在多个系统上累积效果。不过，像往常一样：要进行基准测试！
 
-**Run conditions** have replaced the "run criteria" in previous versions of Bevy. We can finally get rid of the dreaded "looping run criteria"! [`ShouldRun::YesAndCheckAgain`](https://docs.rs/bevy/0.9.1/bevy/ecs/schedule/enum.ShouldRun.html) was not exactly straightforward to reason about, either for engine devs or users. It's always a bad sign when your bool-like enums have four possible values. If you crave more complex control flow: use the "schedules in exclusive systems" pattern in the [section above](https://bevy.org/news/bevy-0-10/#directly-schedule-exclusive-systems). For the other 99% of use cases, enjoy the simpler `bool`-based run conditions!
+**运行条件**已经取代了以前 Bevy 版本中的"运行标准"。我们终于可以摆脱那可怕的"循环运行标准"了！[`ShouldRun::YesAndCheckAgain`](https://docs.rs/bevy/0.9.1/bevy/ecs/schedule/enum.ShouldRun.html) 对于引擎开发者和用户来说都不太容易理解。当你的类布尔枚举有四个可能值时，这总是一个不好的信号。如果你渴望更复杂的控制流：使用[上一节](https://bevy.org/news/bevy-0-10/#directly-schedule-exclusive-systems)中的"排他系统中的 schedule"模式。对于其他 99% 的用例，享受基于 `bool` 的更简单的运行条件吧！
 
-### Simpler States [#](https://bevy.org/news/bevy-0-10/#simpler-states)
+### 更简单的状态 [#](https://bevy.org/news/bevy-0-10/#simpler-states)
 
-**Schedule v3** adds a new, much simpler "state system". [`States`](https://docs.rs/bevy/0.10.0/bevy/ecs/schedule/trait.States.html) allow you to easily configure different [`App`](https://docs.rs/bevy/0.10.0/bevy/app/struct.App.html) logic to run based on the current "state" of the [`App`](https://docs.rs/bevy/0.10.0/bevy/app/struct.App.html).
+**Schedule v3** 添加了一个新的、更简单的"状态系统"。[`State`](https://docs.rs/bevy/0.10.0/bevy/ecs/schedule/trait.States.html) 允许你轻松配置不同的 [`App`](https://docs.rs/bevy/0.10.0/bevy/app/struct.App.html) 逻辑，使其根据 [`App`](https://docs.rs/bevy/0.10.0/bevy/app/struct.App.html) 的当前"状态"运行。
 
-You define [`States`](https://docs.rs/bevy/0.10.0/bevy/ecs/schedule/trait.States.html) like this:
+你这样定义 [`State`](https://docs.rs/bevy/0.10.0/bevy/ecs/schedule/trait.States.html)：
 
 ```rust
 #[derive(States, PartialEq, Eq, Debug, Clone, Hash, Default)]
@@ -303,23 +302,23 @@ enum AppState {
 }
 ```
 
-Each variant of the enum corresponds to a different state the [`App`](https://docs.rs/bevy/0.10.0/bevy/app/struct.App.html) can be in.
+枚举的每个变体对应 [`App`](https://docs.rs/bevy/0.10.0/bevy/app/struct.App.html) 可以处于的不同状态。
 
-You add [`States`](https://docs.rs/bevy/0.10.0/bevy/ecs/schedule/trait.States.html) to your [`App`](https://docs.rs/bevy/0.10.0/bevy/app/struct.App.html) like this:
+你这样将 [`State`](https://docs.rs/bevy/0.10.0/bevy/ecs/schedule/trait.States.html) 添加到你的 [`App`](https://docs.rs/bevy/0.10.0/bevy/app/struct.App.html) 中：
 
 ```rust
 app.add_state::<AppState>()
 ```
 
-This will setup your [`App`](https://docs.rs/bevy/0.10.0/bevy/app/struct.App.html) to use the given state. It adds the [`State`](https://docs.rs/bevy/0.10.0/bevy/ecs/schedule/struct.State.html) resource, which can be used to find the current state the [`App`](https://docs.rs/bevy/0.10.0/bevy/app/struct.App.html) is in:
+这将设置你的 [`App`](https://docs.rs/bevy/0.10.0/bevy/app/struct.App.html) 使用给定的状态。它会添加 [`State`](https://docs.rs/bevy/0.10.0/bevy/ecs/schedule/struct.State.html) 资源，可以用来查找 [`App`](https://docs.rs/bevy/0.10.0/bevy/app/struct.App.html) 当前所处的状态：
 
 ```rust
 fn check_state(state: Res<State<AppState>>) {
-    info!("We are in the {} state", state.0);
+    info!("我们处于 {} 状态", state.0);
 }
 ```
 
-Additionally, `add_state` will create an `OnUpdate` set for each possible value, which you can then add your systems to. These sets run as part of the normal app update, but only when the app is in a given state:
+此外，`add_state` 会为每个可能的值创建一个 `OnUpdate` 集合，然后你可以将系统添加到其中。这些集合作为正常应用更新的一部分运行，但仅在应用处于给定状态时运行：
 
 ```rust
 app
@@ -330,7 +329,7 @@ app
     .add_system(fun_gameplay.in_set(OnUpdate(AppState::InGame)));
 ```
 
-It will also create `OnEnter` and `OnExit` schedules for each state, which will only run when transitioning from one state to another:
+它还会为每个状态创建 `OnEnter` 和 `OnExit` schedule，这些 schedule 只在从一种状态转换到另一种状态时运行：
 
 ```rust
 app
@@ -338,7 +337,7 @@ app
     .add_system(cleanup_main_menu.in_schedule(OnExit(AppState::MainMenu)))
 ```
 
-`add_state` also adds the [`NextState`](https://docs.rs/bevy/0.10.0/bevy/ecs/schedule/struct.NextState.html) resource, which can be used to queue a state change:
+`add_state` 还添加了 [`NextState`](https://docs.rs/bevy/0.10.0/bevy/ecs/schedule/struct.NextState.html) 资源，可以用来排队状态更改：
 
 ```rust
 fn start_game(
@@ -351,36 +350,35 @@ fn start_game(
 }
 ```
 
-This replaces Bevy's previous state system, which was very hard to deal with. It had state stacks, elaborate queued transitions, and error handling (that most people just unwrapped). The state stack was very complex to learn, very prone to exasperating bugs, and mostly ignored.
+这取代了 Bevy 以前的状态系统，那个系统非常难以处理。它有状态栈、复杂的排队转换和错误处理（大多数人直接 unwrap）。状态栈学习起来非常复杂，极易导致令人沮丧的 Bug，而且大多数情况下被忽略了。
 
-As a result, in **Bevy 0.10** states are now "stackless": only one queued state of each type at a time. After lots of alpha testing, we're reasonably confident that this shouldn't be too bad to migrate away from. If you were relying on the state stack, you have plenty of options:
+因此，在 **Bevy 0.10** 中，状态现在是"无栈的"：每种类型一次只有一个排队状态。经过大量的 alpha 测试，我们有相当的信心，迁移应该不会太难。如果你依赖于状态栈，你有很多选择：
 
-- Build the "stack" logic on top of the core state system
-- Split your state into multiple states, which capture orthogonal elements of your app's status
-- Build your own state stack abstraction using the same patterns as Bevy's first-party version. None of the new state logic is hard coded! If you build something, [let the rest of the community know](https://bevy.org/assets) so you can collaborate!
+- 在核心状态系统之上构建"栈"逻辑
+- 将你的状态拆分为多个状态，捕获应用状态的正交元素
+- 使用与 Bevy 第一方版本相同的模式构建你自己的状态栈抽象。没有任何新的状态逻辑是硬编码的！如果你构建了什么，[让社区的其他成员知道](https://bevy.org/assets)，这样你们可以合作！
 
-### Base Sets: Getting Default Behavior Right [#](https://bevy.org/news/bevy-0-10/#base-sets-getting-default-behavior-right)
+### Base Set：让默认行为正确 [#](https://bevy.org/news/bevy-0-10/#base-sets-getting-default-behavior-right)
 
-An astute reader may point out that:
+细心的读者可能会指出：
 
-1. Bevy automatically runs its systems in parallel.
-2. [The order of systems is nondeterministic unless there is an explicit ordering relationship between them](https://github.com/bevyengine/bevy/blob/latest/examples/ecs/nondeterministic_system_order.rs)
-3. All of the systems are now stored in a single `Schedule` object with no barriers between them
-4. Systems can belong to any number of system sets, each of which can add their own behavior
-5. Bevy is a powerful engine with many internal systems.
+1. Bevy 自动并行运行其系统。
+2. [系统的顺序是非确定性的，除非它们之间有显式的排序关系](https://github.com/bevyengine/bevy/blob/latest/examples/ecs/nondeterministic_system_order.rs)
+3. 所有系统现在都存储在一个单一的 `Schedule` 对象中，它们之间没有任何屏障
+4. 系统可以属于任意数量的 system set，每个 set 都可以添加自己的行为
+5. Bevy 是一个强大的引擎，拥有许多内部系统。
 
-Won't this lead to utter chaos and tedious spaghetti-flavored work to resolve every last ordering ambiguity? Many users _liked_ stages, they were helpful for understanding the structure of an [`App`](https://docs.rs/bevy/0.10.0/bevy/app/struct.App.html)!
+这难道不会导致彻底的混乱和乏味的意大利面条式工作来解决每一个排序歧义吗？许多用户_喜欢_阶段的，它们有助于理解 [`App`](https://docs.rs/bevy/0.10.0/bevy/app/struct.App.html) 的结构！
 
-Well, we're glad you asked, rhetorical skeptic. To reduce this chaos (and ease migration), **Bevy 0.10** comes with a brand new collection of system sets provided by [`DefaultPlugins`](https://docs.rs/bevy/0.10.0/bevy/struct.DefaultPlugins.html): [`CoreSet`](https://docs.rs/bevy/0.10.0/bevy/app/enum.CoreSet.html), [`StartupSet`](https://docs.rs/bevy/0.10.0/bevy/app/enum.StartupSet.html), and [`RenderSet`](https://docs.rs/bevy/0.10.0/bevy/render/enum.RenderSet.html). The similarity of their names to the old [`CoreStage`](https://docs.rs/bevy/0.9.1/bevy/app/enum.CoreStage.html), [`StartupStage`](https://docs.rs/bevy/0.9.1/bevy/app/enum.StartupStage.html), and [`RenderStage`](https://docs.rs/bevy/0.9.1/bevy/render/enum.RenderStage.html) is not a coincidence. Much like stages, there are command flush points between each set, and existing systems have been migrated directly.
+好吧，我们很高兴你问了，修辞性的怀疑者。为了减少这种混乱（并简化迁移），**Bevy 0.10** 附带了一组全新的由 [`DefaultPlugins`](https://docs.rs/bevy/0.10.0/bevy/struct.DefaultPlugins.html) 提供的 system set：[`CoreSet`](https://docs.rs/bevy/0.10.0/bevy/app/enum.CoreSet.html)、[`StartupSet`](https://docs.rs/bevy/0.10.0/bevy/app/enum.StartupSet.html) 和 [`RenderSet`](https://docs.rs/bevy/0.10.0/bevy/render/enum.RenderSet.html)。它们的名称与旧的 [`CoreStage`](https://docs.rs/bevy/0.9.1/bevy/app/enum.CoreStage.html)、[`StartupStage`](https://docs.rs/bevy/0.9.1/bevy/app/enum.StartupStage.html) 和 [`RenderStage`](https://docs.rs/bevy/0.9.1/bevy/render/enum.RenderStage.html) 的相似性并非巧合。就像阶段一样，每个集合之间有命令刷新点，现有系统已经被直接迁移。
 
-Some parts of the stage-centric architecture were appealing: a clear high-level structure, coordination on flush points (to reduce excessive bottlenecks), and good default behavior. To keep those bits (while excising the frustrating ones), we've introduced the concept of **Base Sets** ([added by @cart](https://github.com/bevyengine/bevy/pull/7466)). **Base Sets** are just normal [`SystemSets`](https://docs.rs/bevy/0.10.0/bevy/ecs/schedule/trait.SystemSet.html), except:
+阶段中心架构的某些部分是吸引人的：清晰的高层结构、在刷新点上的协调（以减少过度瓶颈）以及良好的默认行为。为了保留这些部分（同时切除那些令人沮丧的部分），我们引入了 **Base Set** 的概念（[由 @cart 添加](https://github.com/bevyengine/bevy/pull/7466)）。**Base Set** 只是普通的 [`SystemSet`](https://docs.rs/bevy/0.10.0/bevy/ecs/schedule/trait.SystemSet.html)，除了：
 
-1. Every system can belong to at most one base set.
-2. Systems that do not specify a base set will be added to the default base set for the schedule (if the schedule has one).
+1. 每个系统最多可以属于一个 base set。
+2. 没有指定 base set 的系统将被添加到调度的默认 base set 中（如果调度有一个的话）。
 
 ```rust
-// You define base sets exactly like normal sets, with the
-// addition of the system_set(base) attribute
+// 你像定义普通 set 一样定义 base set，加上 system_set(base) 属性
 #[derive(Debug, Hash, PartialEq, Eq, Clone, SystemSet)]
 #[system_set(base)]
 enum MyBaseSet {
@@ -389,117 +387,117 @@ enum MyBaseSet {
 }
 
 app
-    // This ends up in CoreSet::Update by default
+    // 默认情况下，这最终会进入 CoreSet::Update
     .add_system(no_explicit_base_set)
-    // You must use .in_base_set rather than .in_set for explicitness
-    // This is a high-impact decision!
+    // 必须使用 .in_base_set 而不是 .in_set 以示明确
+    // 这是一个高影响的决定！
     .add_system(post_update.in_base_set(CoreSet::PostUpdate))
-    // Look, it works!
+    // 看，这有效！
     .add_system(custom_base_set.in_base_set(MyBaseSet::Early))
-    // Ordering your base sets relative to CoreSet is probably wise
+    // 将你的 base set 相对于 CoreSet 排序是明智的
     .configure_set(MyBaseSet::Early.before(CoreSet::Update))
     .configure_set(MyBaseSet::Late.after(CoreSet::Update));
 ```
 
-Let me tell you a story, set in a world without **Base Sets**:
+让我给你讲一个故事，背景是一个没有 **Base Set** 的世界：
 
-1. A new user adds the `make_player_run` system to their app.
-2. Sometimes this system runs before input handling, leading to randomly dropped inputs. Sometimes it runs after rendering, leading to strange flickers.
-3. After much frustration, the user discovers that these are due to "system execution order ambiguities".
-4. The user runs a specialized detection tool, digs into the source code of the engine, figures out what order their system should run in relative to the engine's system sets, and then continues on their merry way, doing this for each new system.
-5. Bevy (or one of their third-party plugins) updates, breaking all of our poor users system ordering once again.
+1. 一个新用户将 `make_player_run` 系统添加到他们的应用中。
+2. 有时这个系统在输入处理之前运行，导致随机丢失输入。有时它在渲染之后运行，导致奇怪的闪烁。
+3. 经过大量的挫折，用户发现这是由于"系统执行顺序歧义"。
+4. 用户运行一个专门的检测工具，深入引擎的源代码，找出他们的系统相对于引擎的 system set 应该以什么顺序运行，然后继续他们的快乐之路，为每个新系统都这样做一遍。
+5. Bevy（或第三方插件之一）更新，再次打破了我们可怜的用户的系统排序。
 
-The clear problem this illustrates is that _most_ gameplay systems should not need to know or care about "internal systems".
+这清楚地说明的问题是，_大多数_游戏系统不需要知道或关心"内部系统"。
 
-We've found that in practice, there are three broad classes of systems: gameplay logic (the majority of all end user systems), stuff that needs to happen before gameplay logic (like event cleanup and input handling), and stuff that needs to happen after gameplay logic (like rendering and audio).
+我们在实践中发现，有三类系统：游戏逻辑（绝大多数终端用户系统）、需要在游戏逻辑之前发生的事情（如事件清理和输入处理）以及需要在游戏逻辑之后发生的事情（如渲染和音频）。
 
-By broadly ordering the schedule via **Base Sets**, Bevy apps can have good default behavior and clear high-level structure without compromising on the scheduling flexibility and explicitness that advanced users crave. Let us know how it works out for you!
+通过 **Base Set** 对调度进行广泛的排序，Bevy 应用可以有良好的默认行为和清晰的高层结构，而不会影响高级用户所渴望的调度灵活性和明确性。让我们知道这对你来说效果如何！
 
-### Improved System Ambiguity Detection [#](https://bevy.org/news/bevy-0-10/#improved-system-ambiguity-detection)
+### 改进的系统歧义检测 [#](https://bevy.org/news/bevy-0-10/#improved-system-ambiguity-detection)
 
-When multiple systems interact with an ECS resource in conflicting ways, but don't have an ordering constraint between them, we call this an "ambiguity". If your [`App`](https://docs.rs/bevy/0.10.0/bevy/app/struct.App.html) has ambiguities, this can cause bugs. We've significantly improved our ambiguity reporting, which can be configured in the new [`ScheduleBuildSettings`](https://docs.rs/bevy/0.10.0/bevy/ecs/schedule/struct.ScheduleBuildSettings.html). Check out the docs for more info. If you haven't tried this out on your app yet: you should take a look!
+当多个系统以冲突的方式访问 ECS 资源，但它们之间没有排序约束时，我们称之为"歧义"。如果你的 [`App`](https://docs.rs/bevy/0.10.0/bevy/app/struct.App.html) 存在歧义，这可能导致 Bug。我们显著改进了歧义报告，可以在新的 [`ScheduleBuildSettings`](https://docs.rs/bevy/0.10.0/bevy/ecs/schedule/struct.ScheduleBuildSettings.html) 中进行配置。查看文档了解更多信息。如果你还没有在你的应用上试过这个：你应该看看！
 
-### Single Threaded Execution [#](https://bevy.org/news/bevy-0-10/#single-threaded-execution)
+### 单线程执行 [#](https://bevy.org/news/bevy-0-10/#single-threaded-execution)
 
-You can now easily switch a [`Schedule`](https://docs.rs/bevy/0.10.0/bevy/ecs/schedule/struct.Schedule.html) to single-threaded evaluation via the [`SingleThreadedExecutor`](https://docs.rs/bevy/0.10.0/bevy/ecs/schedule/struct.SingleThreadedExecutor.html) for users who don't want or need parallelism.
+现在你可以通过 [`SingleThreadedExecutor`](https://docs.rs/bevy/0.10.0/bevy/ecs/schedule/struct.SingleThreadedExecutor.html) 轻松地将 [`Schedule`](https://docs.rs/bevy/0.10.0/bevy/ecs/schedule/struct.Schedule.html) 切换为单线程评估，适用于不需要或不需要并行性的用户。
 
 ```rust
 schedule.set_executor_kind(ExecutorKind::SingleThreaded);
 ```
 
-## Cascaded Shadow Maps [#](https://bevy.org/news/bevy-0-10/#cascaded-shadow-maps)
+## 级联阴影映射 [#](https://bevy.org/news/bevy-0-10/#cascaded-shadow-maps)
 
-authors: @danchia, Rob Swain (@superdump)
+作者：@danchia, Rob Swain (@superdump)
 
-Bevy uses "shadow maps" to cast shadows for lights / objects. Previous versions of Bevy used a simple but limited shadow map implementation for directional light sources. For a given light, you would define the resolution of the shadow map _and_ a manual "view projection" that would determine how the shadow is cast. This had a number of downsides:
+Bevy 使用"阴影映射"来为光源/物体投射阴影。以前的 Bevy 版本对方向光源使用了一种简单但有限的阴影映射实现。对于一个给定的光源，你需要定义阴影映射的分辨率_以及_一个手动的"视图投影"，来确定阴影的投射方式。这有许多缺点：
 
-- The resolution of the shadow map was fixed. You had to choose something between "cover a large area, but have a lower resolution" and "cover a smaller area, but have a higher resolution".
-- The resolution didn't adapt to camera positioning. Shadows might look great in one position, but terrible in another position.
-- The "shadow projection" had to be manually defined. This made it hard and unapproachable to configure shadows to match a given scene.
+- 阴影映射的分辨率是固定的。你必须在"覆盖大范围，但分辨率较低"和"覆盖较小范围，但分辨率较高"之间做出选择。
+- 分辨率不适应相机位置。阴影在一个位置可能看起来很棒，但在另一个位置却很糟糕。
+- "阴影投影"必须手动定义。这使得配置阴影以适应给定场景变得困难且不易上手。
 
-**Bevy 0.10** adds "cascaded shadow maps", which breaks up the camera's view frustum into a series of configurable "cascades", which each have their own shadow map. This enables shadows in the cascade "close to the camera" to be highly detailed, while allowing shadows "far from the camera" to cover a wider area with less detail. Because it uses the camera's view frustum to define the shadow projections, the shadow quality remains consistent as the camera moves through the scene. This also means that users don't need to manually configure shadow projections anymore. They are automatically calculated!
+**Bevy 0.10** 添加了"级联阴影映射"，它将相机的视锥体分解为一系列可配置的"级联"，每个级联都有自己的阴影映射。这使得靠近相机的级联中的阴影高度精细，同时允许远离相机的阴影覆盖更广的区域但细节较少。由于它使用相机的视锥体来定义阴影投影，阴影质量随着相机在场景中的移动而保持一致。这也意味着用户不再需要手动配置阴影投影了。它们是自动计算的！
 
-Notice how the nearby shadows are highly detailed whereas the shadows in the distance become less detailed as they get farther away (which doesn't matter as much because they are far away).
+注意附近的阴影是如何高度精细的，而远处的阴影随着距离变远而变得不太精细（这不太重要，因为它们很远）。
 
-While shadow cascades solve important problems, they also introduce new ones. How many cascades should you use? What is the minimum and maximum distance from the camera where shadows should appear? How much overlap should there be between cascades? Be sure to dial in these parameters to fit your scenes.
+虽然阴影级联解决了重要问题，但也引入了新的问题。你应该使用多少个级联？阴影应该出现的最小和最大距离是多少？级联之间应该有多少重叠？一定要仔细调整这些参数以适应你的场景。
 
-## Environment Map Lighting [#](https://bevy.org/news/bevy-0-10/#environment-map-lighting)
+## 环境映射光照 [#](https://bevy.org/news/bevy-0-10/#environment-map-lighting)
 
-authors: @JMS55
+作者：@JMS55
 
-Environment maps are a popular and computationally cheap way to significantly improve the quality of a scene's lighting. It uses a cube map texture to provide 360 degree lighting "from all directions". This is especially apparent for reflective surfaces, but it applies to all lit materials.
+环境映射是一种流行且计算廉价的方式，可以显著提升场景照明的质量。它使用立方体贴图纹理来提供 360 度的"来自所有方向"的照明。这对于反射表面尤其明显，但它适用于所有被照明的材质。
 
-This is what the PBR material looks like without environment map lighting:
+这是没有环境映射光照时 PBR 材质的样子：
 
-![env map before](https://bevy.org/news/bevy-0-10/env_map_before.png)
+![环境映射之前](https://bevy.org/news/bevy-0-10/env_map_before.png)
 
-And this is what the PBR material looks like with environment map lighting:
+这是有环境映射光照时 PBR 材质的样子：
 
-![env map after](https://bevy.org/news/bevy-0-10/env_map_after.png)
+![环境映射之后](https://bevy.org/news/bevy-0-10/env_map_after.png)
 
-For scenes that need constant lighting (especially outdoor scenes), environment maps are a great solution. And because environment maps are arbitrary images, artists have a lot of control over the character of the scene's lighting.
+对于需要恒定照明的场景（尤其是室外场景），环境映射是一个很好的解决方案。而且由于环境映射是任意图像，艺术家对场景照明的特性有很大的控制权。
 
-## Depth and Normal Prepass [#](https://bevy.org/news/bevy-0-10/#depth-and-normal-prepass)
+## 深度和法线预处理 [#](https://bevy.org/news/bevy-0-10/#depth-and-normal-prepass)
 
-authors: @icesentry, Rob Swain (@superdump), @robtfm, @JMS55
+作者：@icesentry, Rob Swain (@superdump), @robtfm, @JMS55
 
-This effect uses the depth from the prepass to find the intersection between the ground and the force field
+这个效果使用预处理的深度来找到地面和力场之间的交叉点
 
-Bevy now has the ability to run a depth and/or normal prepass. This means the depth and normal textures will be generated in a render pass that runs before the main pass and can therefore be used during the main pass. This enables various special effects like Screen Space Ambient Occlusion, Temporal Anti Aliasing, and many more. These are currently being worked on and should be [available in the next release of Bevy](https://bevy.org/news/bevy-0-10/#what-s-next).
+Bevy 现在能够运行深度和/或法线预处理。这意味着深度和法线纹理将在主通道之前运行的渲染通道中生成，因此可以在主通道期间使用。这启用了各种特殊效果，如屏幕空间环境光遮蔽、时间抗锯齿等。这些目前正在开发中，应该会在[Bevy 的下一个版本中可用](https://bevy.org/news/bevy-0-10/#what-s-next)。
 
-![Edge detection](https://bevy.org/news/bevy-0-10/edge_detection.png)
+![边缘检测](https://bevy.org/news/bevy-0-10/edge_detection.png)
 
-In the image on the right, green lines are edges detected in the normal texture and blue lines are edges detected in the depth texture
+在右边的图像中，绿线是在法线纹理中检测到的边缘，蓝线是在深度纹理中检测到的边缘
 
-![Edge detection prepass](https://bevy.org/news/bevy-0-10/edge_detection_prepass.png)
+![边缘检测预处理](https://bevy.org/news/bevy-0-10/edge_detection_prepass.png)
 
-The depth and normal textures generated by the prepass
+预处理生成的深度和法线纹理
 
-Using the prepass essentially means rendering everything twice. The prepass itself is much faster since it does a lot less work than the main pass. The result of the prepass can be used to reduce overdraw in the main pass, but if your scene didn't already suffer from overdraw then enabling the prepass will negatively affect performance. There are many things that can be done to improve this and we will keep working towards this goal. Like with anything performance related, make sure to measure it for your use case and see if it helps or not.
+使用预处理本质上意味着将所有内容渲染两次。预处理本身要快得多，因为它比主通道做的工作少得多。预处理的结果可以用来减少主通道中的过度绘制，但如果你的场景没有过度绘制的问题，启用预处理会对性能产生负面影响。有很多方法可以改善这一点，我们将继续朝着这个目标努力。与任何与性能相关的事情一样，确保为你的用例测量一下，看看它是否有帮助。
 
-The prepass is still very useful when working on special effects that require a depth or normal texture, so if you want to use it you can simply add the `DepthPrepass` or `NormalPrepass` components to your camera.
+当处理需要深度或法线纹理的特殊效果时，预处理仍然非常有用，所以如果你想使用它，只需在你的相机上添加 `DepthPrepass` 或 `NormalPrepass` 组件。
 
-## Shadow Mapping using Prepass Shaders [#](https://bevy.org/news/bevy-0-10/#shadow-mapping-using-prepass-shaders)
+## 使用预处理着色器的阴影映射 [#](https://bevy.org/news/bevy-0-10/#shadow-mapping-using-prepass-shaders)
 
-authors: @geieredgar
+作者：@geieredgar
 
-Previously, the shader used for shadow mapping was hard-coded and had no knowledge of the material, only meshes. Now in **Bevy 0.10**, a `Material`'s depth prepass shaders are used for shadow mapping. This means that the shaders used to do the shadow mapping for a `Material` are customizable!
+以前，用于阴影映射的着色器是硬编码的，不了解材质，只知道网格。现在在 **Bevy 0.10** 中，`Material` 的深度预处理着色器被用于阴影映射。这意味着用于 `Material` 的阴影映射的着色器现在是可自定义的！
 
-As a bonus, the availability of `Material` information during shadow mapping means that we could instantly enable alpha mask shadows allowing foliage to cast shadows according to the alpha values in their texture rather than only based on their geometry.
+作为额外的好处，在阴影映射期间 `Material` 信息的可用性意味着我们可以立即启用阿尔法遮罩阴影，使植被能够根据其纹理中的阿尔法值投射阴影，而不仅仅是基于几何体。
 
-![Alpha mask shadows](https://bevy.org/news/bevy-0-10/alpha_mask_shadows.png)
+![阿尔法遮罩阴影](https://bevy.org/news/bevy-0-10/alpha_mask_shadows.png)
 
-[NVIDIA ORCA Emerald Square scene](https://developer.nvidia.com/orca/nvidia-emerald-square) ([CC BY-NC-SA 3.0](https://creativecommons.org/licenses/by-nc-sa/3.0/)) with alpha mask shadow support
+[NVIDIA ORCA Emerald Square 场景](https://developer.nvidia.com/orca/nvidia-emerald-square)（[CC BY-NC-SA 3.0](https://creativecommons.org/licenses/by-nc-sa/3.0/)）启用了阿尔法遮罩阴影支持
 
-## Smooth Skeletal Animation Transitions [#](https://bevy.org/news/bevy-0-10/#smooth-skeletal-animation-transitions)
+## 平滑的骨骼动画过渡 [#](https://bevy.org/news/bevy-0-10/#smooth-skeletal-animation-transitions)
 
-authors: @smessmer
+作者：@smessmer
 
-You can now smoothly transition between two (or more) skeletal animations!
+你现在可以在两个（或更多）骨骼动画之间平滑过渡了！
 
-Character model and animations are royalty free assets from Mixamo.
+角色模型和动画是来自 Mixamo 的免版税资产。
 
-With the new [`play_with_transition`](https://docs.rs/bevy/0.10/bevy/animation/struct.AnimationPlayer.html#method.play_with_transition) method on the [`AnimationPlayer`](https://docs.rs/bevy/0.10.0/bevy/animation/struct.AnimationPlayer.html) component, you can now specify a transition duration during which the new animation will be linearly blended with the currently playing animation, whose weight will decrease during that duration until it reaches `0.0`.
+通过在 [`AnimationPlayer`](https://docs.rs/bevy/0.10.0/bevy/animation/struct.AnimationPlayer.html) 组件上新增的 [`play_with_transition`](https://docs.rs/bevy/0.10/bevy/animation/struct.AnimationPlayer.html#method.play_with_transition) 方法，你现在可以指定一个过渡持续时间，在此期间新动画将与当前播放的动画线性混合，当前动画的权重将在该持续时间内逐渐减少，直到达到 `0.0`。
 
 ```rust
 #[derive(Component, Default)]
@@ -518,20 +516,20 @@ fn run_or_attack(
     time: Res<Time>,
 ) {
     for (mut animation_player, mut timer, animations) in query.iter_mut() {
-        // Trigger the attack animation when pressing <space>
+        // 按下空格键时触发攻击动画
         if keyboard_input.just_pressed(KeyCode::Space) {
             let clip = animation_clips.get(&animations.attack).unwrap();
-            // Set a timer for when to restart the run animation
+            // 设置一个定时器，用于何时重新开始跑步动画
             timer.0 = Timer::new(
                 Duration::from_secs_f32(clip.duration() - 0.5),
                 TimerMode::Once,
             );
-            // Will transition over half a second to the attack animation
+            // 将在半秒内过渡到攻击动画
             animation_player
                 .play_with_transition(animations.attack.clone(), Duration::from_secs_f32(0.5));
         }
         if timer.0.tick(time.delta()).just_finished() {
-            // Once the attack animation is finished, restart the run animation
+            // 攻击动画结束后，重新开始跑步动画
             animation_player
                 .play_with_transition(animations.run.clone(), Duration::from_secs_f32(0.5))
                 .repeat();
@@ -540,36 +538,36 @@ fn run_or_attack(
 }
 ```
 
-## Improved Android Support [#](https://bevy.org/news/bevy-0-10/#improved-android-support)
+## 改进的 Android 支持 [#](https://bevy.org/news/bevy-0-10/#improved-android-support)
 
-authors: @mockersf, @slyedoc
+作者：@mockersf, @slyedoc
 
-![Android emulator running Bevy](https://bevy.org/news/bevy-0-10/android%20emulator.png)
+![运行 Bevy 的 Android 模拟器](https://bevy.org/news/bevy-0-10/android%20emulator.png)
 
-Bevy now runs out of the box on Android on more devices. This was unlocked by waiting for the [`Resumed`](https://docs.rs/winit/0.28/winit/event/enum.Event.html#variant.Resumed) event to create the window instead of doing it on startup, matching the [`onResume()`](https://developer.android.com/guide/components/activities/activity-lifecycle#onresume) callback on Android.
+Bevy 现在在更多设备上的 Android 上可以开箱即用。这是通过等待 [`Resumed`](https://docs.rs/winit/0.28/winit/event/enum.Event.html#variant.Resumed) 事件来创建窗口，而不是在启动时创建，以匹配 Android 上的 [`onResume()`](https://developer.android.com/guide/components/activities/activity-lifecycle#onresume) 回调。
 
-To follow the recommendations on the [`Suspended`](https://docs.rs/winit/0.28/winit/event/enum.Event.html#variant.Suspended) event, Bevy will now exit on receiving that event. This is a temporary solution until Bevy is able to recreate rendering resources when being resumed.
+为了遵循关于 [`Suspended`](https://docs.rs/winit/0.28/winit/event/enum.Event.html#variant.Suspended) 事件的建议，Bevy 现在将在收到该事件时退出。这是一个临时解决方案，直到 Bevy 能够在恢复时重新创建渲染资源。
 
-Please test on your devices and report successes or issues you may encounter! There is a known issue around touch position on some devices with software buttons, as winit doesn't expose ([yet](https://github.com/rust-windowing/winit/issues/2308)) the inset size, only the inner size.
+请在你的设备上测试，并报告成功情况或你遇到的问题！在某些带有软件按钮的设备上，触摸位置存在已知问题，因为 winit 没有暴露（[尚未](https://github.com/rust-windowing/winit/issues/2308)）嵌入区域大小，只有内部大小。
 
-As this brings Bevy closer to full support of Android, there isn't a need anymore for separate examples for Android and iOS. They have been regrouped in one ["mobile" example](https://github.com/bevyengine/bevy/tree/v0.10.0/examples/mobile), and the instructions updated ([for Android](https://github.com/bevyengine/bevy/tree/v0.10.0/examples#android) and [for iOS](https://github.com/bevyengine/bevy/tree/v0.10.0/examples#ios)).
+由于这使 Bevy 更接近完全支持 Android，不再需要为 Android 和 iOS 分别提供示例。它们已被重新组合为一个["mobile" 示例](https://github.com/bevyengine/bevy/tree/v0.10.0/examples/mobile)，并且说明已更新（[针对 Android](https://github.com/bevyengine/bevy/tree/v0.10.0/examples#android) 和[针对 iOS](https://github.com/bevyengine/bevy/tree/v0.10.0/examples#ios)）。
 
-Here is the same example running on iOS!
+这是在 iOS 上运行相同示例的样子！
 
-![iOS emulator running Bevy](https://bevy.org/news/bevy-0-10/ios%20emulator.png)
+![运行 Bevy 的 iOS 模拟器](https://bevy.org/news/bevy-0-10/ios%20emulator.png)
 
-## Revamped Bloom [#](https://bevy.org/news/bevy-0-10/#revamped-bloom)
+## 改造的 Bloom [#](https://bevy.org/news/bevy-0-10/#revamped-bloom)
 
-authors: @StarLederer, @JMS55
+作者：@StarLederer, @JMS55
 
-Bloom has undergone some major changes and now looks better, is easier to control, and has fewer visual artifacts. In combination with the new tonemapping options, bloom has been much improved since the previous release!
+Bloom 经历了一些重大变化，现在看起来更好、更易控制，而且视觉伪影更少。结合新的色调映射选项，自上一版本以来，bloom 得到了很大改进！
 
-1. In Bevy 0.9, bloom looked like this.
-2. Switching the tonemapper to something like `AcesFitted` is already a big improvement.
-3. In Bevy 0.10, bloom now looks like this. It's much more controlled and less overbearing.
-4. To make the bloom stronger, rather than raise the `BloomSettings` intensity, let's double the `emissive` value of each cube.
-5. Finally, if you want more extreme bloom similar to the old algorithm, you can change `BloomSettings::composite_mode` from `BloomCompositeMode::EnergyConserving` to `BloomCompositeMode::Additive`.
-6. Explore the new bloom settings in an interactive playground using the new `bloom_3d` (and `bloom_2d`) examples.
+1. 在 Bevy 0.9 中，bloom 看起来是这样的。
+2. 将色调映射器切换到像 `AcesFitted` 这样的选项已经是一个很大的改进。
+3. 在 Bevy 0.10 中，bloom 现在看起来是这样的。它更加可控，不那么突兀。
+4. 要使 bloom 更强，与其提高 `BloomSettings` 的强度，不如将每个立方体的 `emissive` 值加倍。
+5. 最后，如果你想要类似于旧算法的更极端的 bloom，你可以将 `BloomSettings::composite_mode` 从 `BloomCompositeMode::EnergyConserving` 改为 `BloomCompositeMode::Additive`。
+6. 使用新的 `bloom_3d`（和 `bloom_2d`）示例，在交互式游乐场中探索新的 bloom 设置。
 
 1
 
@@ -595,15 +593,15 @@ Bloom has undergone some major changes and now looks better, is easier to contro
 
 ![](https://bevy.org/news/bevy-0-10/bloom_example.png)
 
-## Distance and Atmospheric Fog [#](https://bevy.org/news/bevy-0-10/#distance-and-atmospheric-fog)
+## 距离雾与大气雾 [#](https://bevy.org/news/bevy-0-10/#distance-and-atmospheric-fog)
 
-author: Marco Buono (@coreh)
+作者：Marco Buono (@coreh)
 
-Bevy can now render distance and atmospheric fog effects, bringing a heightened sense of _depth_ and _ambiance_ to your scenes by making objects appear dimmer the further away they are from view.
+Bevy 现在可以渲染距离雾和大气雾效果，通过使物体距离视点越远显得越暗，为你的场景带来更强的_深度感_和_氛围感_。
 
-![The new fog example showcases different fog modes and parameters.](https://bevy.org/news/bevy-0-10/fog.png)
+![新的雾效示例展示了不同的雾效模式和参数。](https://bevy.org/news/bevy-0-10/fog.png)
 
-Fog is controllable per camera via the new [`FogSettings`](https://docs.rs/bevy/0.10.0/bevy/pbr/struct.FogSettings.html) component. Special care has been put into exposing several knobs to give you full artistic control over the look of your fog, including the ability to fade the fog in and out by controlling the alpha channel of the fog color.
+雾效可以通过新的 [`FogSettings`](https://docs.rs/bevy/0.10.0/bevy/pbr/struct.FogSettings.html) 组件对每个相机进行控制。我们特别花了很多精力暴露了几个可调节的参数，让你对雾的外观有完全的艺术控制，包括通过控制雾颜色的阿尔法通道来淡入和淡出雾的能力。
 
 ```rust
 commands.spawn((
@@ -615,172 +613,172 @@ commands.spawn((
 ));
 ```
 
-_Exactly how_ fog behaves with regard to distance is controlled via the [`FogFalloff`](https://docs.rs/bevy/0.10.0/bevy/pbr/enum.FogFalloff.html) enum. All of the “traditional” fog falloff modes from the fixed-function OpenGL 1.x / DirectX 7 days are supported:
+雾_具体如何_随距离变化的表现在通过 [`FogFalloff`](https://docs.rs/bevy/0.10.0/bevy/pbr/enum.FogFalloff.html) 枚举控制。从固定功能 OpenGL 1.x / DirectX 7 时代以来所有"传统"雾衰减模式都受到支持：
 
-`FogFalloff::Linear` increases in intensity linearly from 0 to 1 between `start` and `end` parameters. (This example uses values of 0.8 and 2.2, respectively.)
+`FogFalloff::Linear` 在 `start` 和 `end` 参数之间以线性方式从 0 增加到 1。（此示例分别使用 0.8 和 2.2 的值。）
 
 11023distancefog intensitystartend
 
-`FogFalloff::Exponential` increases according to an (inverse) exponential formula, controlled by a `density` parameter.
+`FogFalloff::Exponential` 根据（反）指数公式增长，由 `density` 参数控制。
 
 11023density = 2density = 1density = 0.5distancefog intensity
 
-`FogFalloff::ExponentialSquared` grows according to a slightly modified (inverse) exponential square formula, also controlled by a `density` parameter.
+`FogFalloff::ExponentialSquared` 根据略微修改的（反）指数平方公式增长，也由 `density` 参数控制。
 
 11023density = 2density = 1density = 0.5distancefog intensity
 
-Additionally, a more sophisticated `FogFalloff::Atmospheric` mode is available which provides _more physically accurate_ results by taking light `extinction` and `inscattering` into account separately.
+此外，还提供更复杂的 `FogFalloff::Atmospheric` 模式，通过分别考虑光的 `extinction`（消光）和 `inscattering`（内散射）来提供_更物理精确_的结果。
 
-[`DirectionalLight`](https://docs.rs/bevy/0.10.0/bevy/pbr/struct.DirectionalLight.html) influence is also supported for all fog modes via the `directional_light_color` and `directional_light_exponent` parameters, mimicking the light dispersion effect seen in sunny outdoor environments.
+所有雾模式都通过 `directional_light_color` 和 `directional_light_exponent` 参数支持 [`DirectionalLight`](https://docs.rs/bevy/0.10.0/bevy/pbr/struct.DirectionalLight.html) 的影响，模拟在阳光明媚的室外环境中看到的光线散射效果。
 
-![The new atmospheric_fog example showcases a terrain with atmospheric fog and directional light influence.](https://bevy.org/news/bevy-0-10/atmospheric-fog.png)
+![新的 atmospheric_fog 示例展示了带有大气雾和方向光影响的地形。](https://bevy.org/news/bevy-0-10/atmospheric-fog.png)
 
-Since directly controlling the non-linear fog falloff parameters “by hand” can be tricky to get right, a number of helper functions based on [meteorological visibility](https://en.wikipedia.org/wiki/Visibility) are available, such as [`FogFalloff::from_visibility()`](https://docs.rs/bevy/0.10.0/bevy/pbr/enum.FogFalloff.html#method.from_visibility):
+由于直接"手动"控制非线性雾衰减参数可能难以正确调优，一些基于[气象能见度](https://en.wikipedia.org/wiki/Visibility)的辅助函数可用，例如 [`FogFalloff::from_visibility()`](https://docs.rs/bevy/0.10.0/bevy/pbr/enum.FogFalloff.html#method.from_visibility)：
 
 ```rust
 FogSettings {
-    // objects retain visibility (>= 5% contrast) for up to 15 units
+    // 物体在最多 15 个单位内保持可见（>= 5% 对比度）
     falloff: FogFalloff::from_visibility(15.0),
     ..default()
 }
 ```
 
-Fog is applied “forward rendering-style” on the PBR fragment shader, instead of as a post-processing effect, which allows it to properly handle semi-transparent meshes.
+雾效是在 PBR 片段着色器上以"前向渲染风格"应用的，而不是作为后处理效果，这使其能够正确处理半透明网格。
 
-The atmospheric fog implementation is largely based on [this great article](https://iquilezles.org/articles/fog/) by Inigo Quilez, Shadertoy co-creator, and computer graphics legend. _Thanks for the great write up and inspiration!_
+大气雾的实现主要基于 Inigo Quilez（Shadertoy 联合创始人、计算机图形学传奇人物）的[这篇精彩文章](https://iquilezles.org/articles/fog/)。_感谢这篇精彩的撰写和灵感！_
 
-## StandardMaterial Blend Modes [#](https://bevy.org/news/bevy-0-10/#standardmaterial-blend-modes)
+## StandardMaterial 混合模式 [#](https://bevy.org/news/bevy-0-10/#standardmaterial-blend-modes)
 
-author: Marco Buono (@coreh)
+作者：Marco Buono (@coreh)
 
-The [`AlphaMode`](https://docs.rs/bevy/0.10.0/bevy/pbr/enum.AlphaMode.html) enum has been extended in **Bevy 0.10**, bringing support for _additive and multiplicative blending_ to the [`StandardMaterial`](https://docs.rs/bevy/0.10.0/bevy/pbr/struct.StandardMaterial.html). These two blend modes are staples of the “classic” (non physically-based) computer graphics toolbelt, and are commonly used to achieve a variety of effects.
+[`AlphaMode`](https://docs.rs/bevy/0.10.0/bevy/pbr/enum.AlphaMode.html) 枚举在 **Bevy 0.10** 中得到了扩展，为 [`StandardMaterial`](https://docs.rs/bevy/0.10.0/bevy/pbr/struct.StandardMaterial.html) 带来了_加法混合和乘法混合_的支持。这两种混合模式是"经典"（非基于物理的）计算机图形学工具箱中的基本工具，通常用于实现各种效果。
 
-_Demo showcasing the use of blend modes to create stained glass and fire effects._ ([Source Code](https://github.com/coreh/bevy-demo-ruins))
+_展示使用混合模式创建彩色玻璃和火焰效果的演示。_（[源代码](https://github.com/coreh/bevy-demo-ruins)）
 
-Additionally, support for semi-transparent textures with [premultiplied alpha](https://en.wikipedia.org/wiki/Alpha_compositing#Straight_versus_premultiplied) has been added, via a dedicated alpha mode.
+此外，通过专用的阿尔法模式，增加了对具有[预乘阿尔法](https://en.wikipedia.org/wiki/Alpha_compositing#Straight_versus_premultiplied)的半透明纹理的支持。
 
-Here's a high-level overview of the new modes:
+以下是新模式的高层概述：
 
-- [`AlphaMode::Add`](https://docs.rs/bevy/0.10.0/bevy/pbr/enum.AlphaMode.html#variant.Add) — Combines the colors of the fragments with the colors behind them in an additive process, (i.e. like light) producing **brighter** results. Useful for effects like fire, holograms, ghosts, lasers and other energy beams. Also known as _Linear Dodge_ in graphics software.
-- [`AlphaMode::Multiply`](https://docs.rs/bevy/0.10.0/bevy/pbr/enum.AlphaMode.html#variant.Multiply) — Combines the colors of the fragments with the colors behind them in a multiplicative process, (i.e. like pigments) producing **darker** results. Useful for effects approximating partial light transmission like stained glass, window tint film and some colored liquids.
-- [`AlphaMode::Premultiplied`](https://docs.rs/bevy/0.10.0/bevy/pbr/enum.AlphaMode.html#variant.Premultiplied) — Behaves very similarly to [`AlphaMode::Blend`](https://docs.rs/bevy/0.10.0/bevy/pbr/enum.AlphaMode.html#variant.Blend), but assumes the color channels have **premultiplied alpha**. Can be used to avoid discolored “outline” artifacts that can occur when using plain alpha-blended textures, or to cleverly create materials that combine additive and regular alpha blending in a single texture, thanks to the fact that for otherwise constant RGB values, `Premultiplied` behaves more like `Blend` for alpha values closer to 1.0, and more like `Add` for alpha values closer to 0.0.
+- [`AlphaMode::Add`](https://docs.rs/bevy/0.10.0/bevy/pbr/enum.AlphaMode.html#variant.Add) — 以加法方式将片段的颜色与它们后面的颜色结合起来（即像光一样），产生**更亮**的结果。适用于火、全息图、鬼魂、激光和其他能量束等效果。在图形软件中也称为_Linear Dodge_。
+- [`AlphaMode::Multiply`](https://docs.rs/bevy/0.10.0/bevy/pbr/enum.AlphaMode.html#variant.Multiply) — 以乘法方式将片段的颜色与它们后面的颜色结合起来（即像颜料一样），产生**更暗**的结果。适用于近似部分光透射的效果，如彩色玻璃、窗膜和某些有色液体。
+- [`AlphaMode::Premultiplied`](https://docs.rs/bevy/0.10.0/bevy/pbr/enum.AlphaMode.html#variant.Premultiplied) — 行为与 [`AlphaMode::Blend`](https://docs.rs/bevy/0.10.0/bevy/pbr/enum.AlphaMode.html#variant.Blend) 非常相似，但假定颜色通道具有**预乘阿尔法**。可用于避免使用普通阿尔法混合纹理时可能出现的变色"轮廓"伪影，或者利用以下事实巧妙地创建在单个纹理中结合了加法和常规阿尔法混合的材质：对于其他恒定的 RGB 值，`Premultiplied` 在阿尔法值接近 1.0 时更类似 `Blend`，在阿尔法值接近 0.0 时更类似 `Add`。
 
-![The new blend_modes example.](https://bevy.org/news/bevy-0-10/blend-modes.png)
+![新的 blend_modes 示例。](https://bevy.org/news/bevy-0-10/blend-modes.png)
 
-**Note:** Meshes using the new blend modes are drawn on the existing `Transparent3d` render phase, and therefore the same _z-sorting considerations/limitations_ from `AlphaMode::Blend` apply.
+**注意：** 使用新混合模式的网格在现有的 `Transparent3d` 渲染阶段绘制，因此来自 `AlphaMode::Blend` 的_相同 z 排序考虑因素/限制_适用。
 
-## More Tonemapping Choices [#](https://bevy.org/news/bevy-0-10/#more-tonemapping-choices)
+## 更多色调映射选择 [#](https://bevy.org/news/bevy-0-10/#more-tonemapping-choices)
 
-authors: @DGriffin91, @JMS55
+作者：@DGriffin91, @JMS55
 
-Tonemapping is the process of transforming raw High Dynamic Range (HDR) information into actual "screen colors" using a "display rendering transform" (DRT). In previous versions of Bevy you had exactly two tonemapping options: Reinhard Luminance or none at all. In **Bevy 0.10** we've added a ton of choices!
+色调映射是使用"显示渲染变换"（DRT）将原始高动态范围（HDR）信息转换为实际"屏幕颜色"的过程。在以前的 Bevy 版本中，你只有两个色调映射选项：Reinhard Luminance 或者没有。在 **Bevy 0.10** 中，我们添加了大量的选择！
 
-### No Tonemapping [#](https://bevy.org/news/bevy-0-10/#no-tonemapping)
+### 无色调映射 [#](https://bevy.org/news/bevy-0-10/#no-tonemapping)
 
-This is generally not recommended as HDR lighting is not intended to be used as color.
+通常不推荐这样做，因为 HDR 光照不适合直接用作颜色。
 
-![no tonemapping](https://bevy.org/news/bevy-0-10/tm_none.png)
+![无色调映射](https://bevy.org/news/bevy-0-10/tm_none.png)
 
-### Reinhard [#](https://bevy.org/news/bevy-0-10/#reinhard)
+### Reinhard [#](https://bevy.org/news/bevy-0-10/#reinhard)
 
-A simple method that adapts to the color in a scene: `r = color / (1.0 + color)`. Lots of hue shifting, brights don't desaturate naturally. Bright primaries and secondaries don't desaturate at all.
+一种简单的方法，适应场景中的颜色：`r = color / (1.0 + color)`。大量的色相偏移，亮色不会自然地降低饱和度。原色和间色完全不降低饱和度。
 
 ![reinhard](https://bevy.org/news/bevy-0-10/tm_reinhard.png)
 
-### Reinhard Luminance [#](https://bevy.org/news/bevy-0-10/#reinhard-luminance)
+### Reinhard Luminance [#](https://bevy.org/news/bevy-0-10/#reinhard-luminance)
 
-A popular method similar to normal Reinhard that incorporates luminance. It adapts to the amount of light in a scene. This is what we had in previous versions of Bevy. It is still our default algorithm, but this will likely change in the future. Hues shift. Brights don't desaturate much at all across the spectrum.
+一种流行的类似于普通 Reinhard 的方法，结合了亮度。它适应场景中的光量。这就是我们在以前的 Bevy 版本中使用的。它仍然是我们默认的算法，但这将来可能会改变。色相会发生偏移。亮色在整个光谱上几乎不降低饱和度。
 
 ![reinhard luminance](https://bevy.org/news/bevy-0-10/tm_reinhard_luminance.png)
 
-### ACES Fitted [#](https://bevy.org/news/bevy-0-10/#aces-fitted)
+### ACES Fitted [#](https://bevy.org/news/bevy-0-10/#aces-fitted)
 
-An extremely popular algorithm used in film and industry (ex: ACES is the default Unreal tonemapping algorithm). When people say "filmic", this is often what they mean.
+一种在电影和行业中极其流行的算法（例如：ACES 是 Unreal 的默认色调映射算法）。当人们说"电影感"时，这通常就是他们的意思。
 
-Not neutral, has a very specific aesthetic, intentional and dramatic hue shifting. Bright greens and reds turn orange. Bright blues turn magenta. Significantly increased contrast. Brights desaturate across the spectrum.
+不是中性的，有一种非常特定的审美，有意且戏剧性的色相偏移。亮绿色和红色变成橙色。亮蓝色变成品红色。对比度显著增加。亮色在整个光谱上降低饱和度。
 
 ![aces](https://bevy.org/news/bevy-0-10/tm_aces.png)
 
-### AgX [#](https://bevy.org/news/bevy-0-10/#agx)
+### AgX [#](https://bevy.org/news/bevy-0-10/#agx)
 
-Very neutral. Image is somewhat desaturated when compared to other transforms. Little to no hue shifting. Subtle [Abney shifting](https://en.wikipedia.org/wiki/Abney_effect). [Created by Troy Sobotka](https://github.com/sobotka/AgX)
+非常中性。与其他变换相比，图像有些去饱和。几乎没有色相偏移。微妙的[Abney 偏移](https://en.wikipedia.org/wiki/Abney_effect)。[由 Troy Sobotka 创建](https://github.com/sobotka/AgX)
 
 ![agx](https://bevy.org/news/bevy-0-10/tm_agx.png)
 
-### Somewhat Boring Display Transform [#](https://bevy.org/news/bevy-0-10/#somewhat-boring-display-transform)
+### Somewhat Boring Display Transform [#](https://bevy.org/news/bevy-0-10/#somewhat-boring-display-transform)
 
-Has little hue shifting in the darks and mids, but lots in the brights. Brights desaturate across the spectrum. Is sort of between Reinhard and Reinhard Luminance. Conceptually similar to reinhard-jodie. Designed as a compromise if you want e.g. decent skin tones in low light, but can't afford to re-do your VFX to look good without hue shifting. Created by Tomasz Stachowiak.
+在暗部和中间调中色相偏移很小，但亮部偏移很大。亮色在整个光谱上降低饱和度。介于 Reinhard 和 Reinhard Luminance 之间。概念上类似于 reinhard-jodie。设计为一个折衷方案，如果你想要例如在低光下较好的肤色，但又不能承受重新制作 VFX 以在没有色相偏移的情况下看起来不错。由 Tomasz Stachowiak 创建。
 
 ![SomewhatBoringDisplayTransform](https://bevy.org/news/bevy-0-10/tm_sbdt.png)
 
-### TonyMcMapface [#](https://bevy.org/news/bevy-0-10/#tonymcmapface)
+### TonyMcMapface [#](https://bevy.org/news/bevy-0-10/#tonymcmapface)
 
-Very neutral. Subtle but intentional hue shifting. Brights desaturate across the spectrum.
+非常中性。微妙但有意为之的色相偏移。亮色在整个光谱上降低饱和度。
 
-From the author: Tony is a display transform intended for real-time applications such as games. It is intentionally boring, does not increase contrast or saturation, and stays close to the input stimulus where compression isn't necessary. Brightness-equivalent luminance of the input stimulus is compressed. The non-linearity resembles Reinhard. Color hues are preserved during compression, except for a deliberate [Bezold–Brücke shift](https://en.wikipedia.org/wiki/Bezold%E2%80%93Br%C3%BCcke_shift). To avoid posterization, selective desaturation is employed, with care to avoid the [Abney effect](https://en.wikipedia.org/wiki/Abney_effect). [Created by Tomasz Stachowiak](https://github.com/h3r2tic/tony-mc-mapface)
+作者的原话：Tony 是一种为实时应用（如游戏）设计的显示变换。它故意做得平淡，不增加对比度或饱和度，尽可能保持接近输入刺激（在不需要压缩的地方）。输入刺激的亮度等效值被压缩。非线性类似于 Reinhard。颜色色相在压缩过程中被保留，除了有意的 [Bezold–Brücke 偏移](https://en.wikipedia.org/wiki/Bezold%E2%80%93Br%C3%BCcke_shift)。为了避免条带化，采用了选择性去饱和，并注意避免 [Abney 效应](https://en.wikipedia.org/wiki/Abney_effect)。[由 Tomasz Stachowiak 创建](https://github.com/h3r2tic/tony-mc-mapface)
 
 ![TonyMcMapface](https://bevy.org/news/bevy-0-10/tm_tonymcmapface.png)
 
-### Blender Filmic [#](https://bevy.org/news/bevy-0-10/#blender-filmic)
+### Blender Filmic [#](https://bevy.org/news/bevy-0-10/#blender-filmic)
 
-Default Filmic Display Transform from Blender. Somewhat neutral. Hues shift. Brights desaturate across the spectrum.
+Blender 默认的 Filmic 显示变换。有些中性。色相偏移。亮色在整个光谱上降低饱和度。
 
 ![Blender Filmic](https://bevy.org/news/bevy-0-10/tm_blender_filmic.png)
 
-## Color Grading Control [#](https://bevy.org/news/bevy-0-10/#color-grading-control)
+## 色彩分级控制 [#](https://bevy.org/news/bevy-0-10/#color-grading-control)
 
-authors: @DGriffin91
+作者：@DGriffin91
 
-We've added some basic control over color grading parameters such as exposure, gamma, "pre-tonemapping saturation", and "post-tonemapping saturation". These can be configured per camera using the new [`ColorGrading`](https://docs.rs/bevy/0.10.0/bevy/render/view/struct.ColorGrading.html) component.
+我们增加了一些对色彩分级参数的基本控制，如曝光、伽马值、"色调映射前饱和度"和"色调映射后饱和度"。这些可以通过新的 [`ColorGrading`](https://docs.rs/bevy/0.10.0/bevy/render/view/struct.ColorGrading.html) 组件对每个相机进行配置。
 
-### 0.5 Exposure [#](https://bevy.org/news/bevy-0-10/#0-5-exposure)
+### 0.5 曝光 [#](https://bevy.org/news/bevy-0-10/#0-5-exposure)
 
-![0.5 exposure](https://bevy.org/news/bevy-0-10/exposure_005.png)
+![0.5 曝光](https://bevy.org/news/bevy-0-10/exposure_005.png)
 
-### 2.25 Exposure [#](https://bevy.org/news/bevy-0-10/#2-25-exposure)
+### 2.25 曝光 [#](https://bevy.org/news/bevy-0-10/#2-25-exposure)
 
-![2.25 exposure](https://bevy.org/news/bevy-0-10/exposure_225.png)
+![2.25 曝光](https://bevy.org/news/bevy-0-10/exposure_225.png)
 
-## Parallel Pipelined Rendering [#](https://bevy.org/news/bevy-0-10/#parallel-pipelined-rendering)
+## 并行管线化渲染 [#](https://bevy.org/news/bevy-0-10/#parallel-pipelined-rendering)
 
-authors: @hymm, @james7132
+作者：@hymm, @james7132
 
-![Trace with Pipelined Rendering](https://bevy.org/news/bevy-0-10/pipelined-rendering-trace.png)
+![管线化渲染跟踪](https://bevy.org/news/bevy-0-10/pipelined-rendering-trace.png)
 
-On multithreaded platforms, **Bevy 0.10** will now run significantly faster by running simulation and rendering in parallel. The renderer was rearchitected in [Bevy 0.6](https://bevy.org/news/bevy-0-6/#pipelined-rendering-extract-prepare-queue-render) to enable this, but the final step of actually running them in parallel was not done until now. There was a bit of tricky work to figure out. The render world has a system that has to run on the main thread, but the task pool only had the ability to run on the world's thread. So, when we send the render world to another thread we need to accommodate still running render systems on the main thread. To accomplish this, we added the ability to spawn tasks onto the main thread in addition to the world's thread.
+在多线程平台上，**Bevy 0.10** 现在通过并行运行模拟和渲染而显著加快。渲染器在 [Bevy 0.6](https://bevy.org/news/bevy-0-6/#pipelined-rendering-extract-prepare-queue-render) 中已经重新架构以启用此功能，但实际并行运行的最后步骤直到现在才完成。这有一些棘手的工作需要解决。渲染世界有一个必须在主线程上运行的系统，但任务池只能在该世界的线程上运行。因此，当我们将渲染世界发送到另一个线程时，我们需要仍然容纳在主线程上运行的渲染系统。为了实现这一点，我们增加了在世界线程之外还将任务生成到主线程的能力。
 
-![Histogram of Many Foxes Frame Time](https://bevy.org/news/bevy-0-10/pipelined-rendering-histogram.png)
+![Many Foxes 帧时间直方图](https://bevy.org/news/bevy-0-10/pipelined-rendering-histogram.png)
 
-In testing different Bevy examples, the gains were typically in the 10% to 30% range. As seen in the above histogram, the mean frame time of the "many foxes" stress test is 1.8ms faster than before.
+在测试不同的 Bevy 示例时，性能提升通常在 10% 到 30% 的范围内。从上方的直方图可以看出，"many foxes"压力测试的平均帧时间比以前快了 1.8ms。
 
-To use pipelined rendering, you just need to add the [`PipelinedRenderingPlugin`](https://docs.rs/bevy/0.10.0/bevy/render/pipelined_rendering/struct.PipelinedRenderingPlugin.html). If you're using [`DefaultPlugins`](https://docs.rs/bevy/0.10.0/bevy/struct.DefaultPlugins.html) then it will automatically be added for you on all platforms except wasm. Bevy does not currently support multithreading on wasm which is needed for this feature to work. If you are not using [`DefaultPlugins`](https://docs.rs/bevy/0.10.0/bevy/struct.DefaultPlugins.html) you can add the plugin manually.
+要使用管线化渲染，你只需要添加 [`PipelinedRenderingPlugin`](https://docs.rs/bevy/0.10.0/bevy/render/pipelined_rendering/struct.PipelinedRenderingPlugin.html)。如果你正在使用 [`DefaultPlugins`](https://docs.rs/bevy/0.10.0/bevy/struct.DefaultPlugins.html)，那么除了 wasm 之外的所有平台上都会自动为你添加。Bevy 目前不支持 wasm 上的多线程，而此功能需要多线程才能工作。如果你没有使用 [`DefaultPlugins`](https://docs.rs/bevy/0.10.0/bevy/struct.DefaultPlugins.html)，你可以手动添加插件。
 
-## Windows as Entities [#](https://bevy.org/news/bevy-0-10/#windows-as-entities)
+## 窗口作为实体 [#](https://bevy.org/news/bevy-0-10/#windows-as-entities)
 
-authors: @aceeri, @Weibye, @cart
+作者：@aceeri, @Weibye, @cart
 
-In previous versions of Bevy, [`Window`](https://docs.rs/bevy/0.10.0/bevy/window/struct.Window.html) was represented as an ECS resource (contained in the `Windows` resource). In **Bevy 0.10** [`Window`](https://docs.rs/bevy/0.10.0/bevy/window/struct.Window.html) is now a component (and therefore windows are represented as entities).
+在以前的 Bevy 版本中，[`Window`](https://docs.rs/bevy/0.10.0/bevy/window/struct.Window.html) 被表示为 ECS 资源（包含在 `Windows` 资源中）。在 **Bevy 0.10** 中，[`Window`](https://docs.rs/bevy/0.10.0/bevy/window/struct.Window.html) 现在是一个组件（因此窗口被表示为实体）。
 
-This accomplishes a number of goals:
+这实现了几个目标：
 
-- It opens the doors to representing Windows in Bevy's scene system
-- It exposes `Windows` to Bevy's powerful ECS queries
-- It provides granular per-window change detection
-- Improves the readability/discoverability of creating, using, and closing windows
-- Changing the properties of a window is the same for both initializing and modifying. No more `WindowDescriptor` fuss!
-- It allows Bevy developers and users to easily attach new component data to windows
+- 打开了在 Bevy 的场景系统中表示 Window 的大门
+- 将 `Window` 暴露给 Bevy 强大的 ECS 查询
+- 提供了细粒度的每窗口变更检测
+- 提高了创建、使用和关闭窗口的可读性/可发现性
+- 更改窗口属性的方式在初始化和修改时相同。不再有 `WindowDescriptor` 的麻烦！
+- 允许 Bevy 开发者和用户轻松地将新的组件数据附加到窗口
 
 ```rust
 fn create_window(mut commands: Commands) {
     commands.spawn(Window {
-        title: "My window :D".to_string(),
+        title: "我的窗口 :D".to_string(),
         ..default()
     });
 }
 
 fn modify_windows(mut windows: Query<&mut Window>) {
     for window in &mut windows {
-        window.title = "My changed window! :D".to_string();
+        window.title = "我更改过的窗口！ :D".to_string();
     }
 }
 
@@ -791,174 +789,174 @@ fn close_windows(mut commands: Commands, windows: Query<Entity, With<Window>>) {
 }
 ```
 
-## Renderer Optimizations [#](https://bevy.org/news/bevy-0-10/#renderer-optimizations)
+## 渲染器优化 [#](https://bevy.org/news/bevy-0-10/#renderer-optimizations)
 
-authors: @danchia, Rob Swain (@superdump), james7132, @kurtkuehnert, @robfm
+作者：@danchia, Rob Swain (@superdump), james7132, @kurtkuehnert, @robfm
 
-Bevy's renderer was ripe for optimization. So we optimized it!
+Bevy 的渲染器已经到了优化的成熟时机。所以我们优化了它！
 
-The biggest bottleneck when rendering anything in Bevy is the final render stage, where we collect all of the data in the render world to issue draw calls to the GPU. The core loops here are extremely hot and any extra overhead is noticeable. In **Bevy 0.10**, we've thrown the kitchen sink at this problem and have attacked it from every angle. Overall, these following optimizations should make the render stage **2-3 times faster** than it was in 0.9:
+在 Bevy 中渲染任何东西时最大的瓶颈是最终的渲染阶段，在这个阶段我们收集渲染世界中的所有数据以向 GPU 发出绘制调用。这里的核心循环非常热，任何额外的开销都是明显的。在 **Bevy 0.10** 中，我们对这个问题投入了大量的精力，从各个角度进行了攻击。总的来说，以下优化应该使渲染阶段比 0.9 中**快 2-3 倍**：
 
-- In [#7639](https://github.com/bevyengine/bevy/pull/7639) by @danchia, we found that even disabled logging has a strong impact on hot loops, netting us 20-50% speedups in the stage.
-- In [#6944](https://github.com/bevyengine/bevy/pull/6944) by @james7132, we shrank the core data structures involved in the stage, reducing memory fetches and netting us 9% speedups.
-- In [#6885](https://github.com/bevyengine/bevy/pull/6885) by @james7132, we rearchitected our `PhaseItem` and `RenderCommand` infrastructure to combine common operations when fetching component data from the `World`, netting us a 7% speedup.
-- In [#7053](https://github.com/bevyengine/bevy/pull/7053) by @james7132, we changed `TrackedRenderPass`'s allocation patterns to minimize branching within these loops, netting a 6% speedup.
-- In [#7084](https://github.com/bevyengine/bevy/pull/7084) by @james7132, we altered how we're fetching resources from the World to minimize the use of atomics in the stage, netting a 2% speedup.
-- In [#6988](https://github.com/bevyengine/bevy/pull/6988) by @kurtkuehnert, we changed our internal resource IDs to use atomically incremented counters instead of UUIDs, reducing the comparison cost of some of the branches in the stage.
+- 在 [@danchia 的 #7639](https://github.com/bevyengine/bevy/pull/7639) 中，我们发现即使是禁用的日志记录也会对热循环产生很大影响，为我们带来了 20-50% 的阶段加速。
+- 在 [@james7132 的 #6944](https://github.com/bevyengine/bevy/pull/6944) 中，我们缩小了该阶段涉及的核心数据结构，减少了内存访问，为我们带来了 9% 的加速。
+- 在 [@james7132 的 #6885](https://github.com/bevyengine/bevy/pull/6885) 中，我们重新架构了 `PhaseItem` 和 `RenderCommand` 基础设施，以在从 `World` 获取组件数据时合并常见操作，为我们带来了 7% 的加速。
+- 在 [@james7132 的 #7053](https://github.com/bevyengine/bevy/pull/7053) 中，我们改变了 `TrackedRenderPass` 的分配模式，以最小化这些循环中的分支，带来了 6% 的加速。
+- 在 [@james7132 的 #7084](https://github.com/bevyengine/bevy/pull/7084) 中，我们改变了从 World 获取资源的方式，以最小化该阶段中原子操作的使用，带来了 2% 的加速。
+- 在 [@kurtkuehnert 的 #6988](https://github.com/bevyengine/bevy/pull/6988) 中，我们将内部资源 ID 改为使用原子递增计数器而不是 UUID，降低了该阶段中某些分支的比较成本。
 
-One other ongoing development is enabling the render stage to properly parallelize command encoding across multiple threads. Following [#7248](https://github.com/bevyengine/bevy/pull/7248) by @james7132, we now support ingesting externally created `CommandBuffer`s into the render graph, which should allow users to encode GPU commands in parallel and import them into the render graph. This is currently blocked by wgpu, which locks the GPU device when encoding render passes, but we should be able to support parallel command encoding as soon as that's addressed.
+另一项正在进行的开发是使渲染阶段能够在多个线程上正确并行化命令编码。继 [@james7132 的 #7248](https://github.com/bevyengine/bevy/pull/7248) 之后，我们现在支持将外部创建的 `CommandBuffer` 导入到渲染图中，这应该允许用户并行编码 GPU 命令并将其导入渲染图。这目前被 wgpu 阻塞，因为 wgpu 在编码渲染通道时会锁定 GPU 设备，但一旦这个问题被解决，我们就应该能够支持并行命令编码。
 
-On a similar note, we've made steps to enable higher parallelism in other stages of the rendering pipeline. `PipelineCache` has been a resource that almost every Queue stage system needed to access mutably, but also only rarely needed to be written to. In [#7205](https://github.com/bevyengine/bevy/pull/7205), @danchia changed this to use internal mutability to allow for these systems to parallelize. This doesn't fully allow every system in this stage to parallelize just yet, as there still remain a few common blockers, but it should allow non-conflicting render phases to queue commands at the same time.
+类似地，我们已经在渲染管线的其他阶段为实现更高的并行性迈出了步伐。`PipelineCache` 是一个几乎所有 Queue 阶段系统都需要可变访问的资源，但也很少需要写入。在 [#7205](https://github.com/bevyengine/bevy/pull/7205) 中，@danchia 将其改为使用内部可变性，以允许这些系统并行化。这还不能完全让该阶段中的每个系统并行化，因为仍然存在一些常见的阻塞因素，但它应该允许不冲突的渲染阶段同时排队命令。
 
-Optimization isn't all about CPU time! We've also improved memory usage, compile times, and GPU performance as well!
+优化不仅仅是关于 CPU 时间！我们还改进了内存使用、编译时间和 GPU 性能。
 
-- We've also reduced the memory usage of `ComputedVisibility` by 50% thanks to @james7132. This was done by replacing the internal storage with a set of bitflags instead of multiple booleans.
-- @robfm also used type erasure as a work-around a [rustc performance regression](https://github.com/rust-lang/rust/issues/99188) to ensure that rendering related crates have better compile times, with some of the crates compiling **up to 60% faster**! Full details can be seen in [#5950](https://github.com/bevyengine/bevy/pull/5950).
-- In [#7069](https://github.com/bevyengine/bevy/pull/7069), Rob Swain (@superdump) reduced the number of active registers used on the GPU to prevent register spilling, significantly improving GPU-side performance.
+- 我们还通过 @james7132 将 `ComputedVisibility` 的内存使用减少了 50%。这是通过将内部存储替换为一组位标志而不是多个布尔值来实现的。
+- @robfm 还使用了类型擦除作为 [rustc 性能回归](https://github.com/rust-lang/rust/issues/99188) 的变通方法，以确保渲染相关的 crate 具有更好的编译时间，其中一些 crate 的编译**速度提高了 60%**！详细信息见 [#5950](https://github.com/bevyengine/bevy/pull/5950)。
+- 在 [#7069](https://github.com/bevyengine/bevy/pull/7069) 中，Rob Swain (@superdump) 减少了 GPU 上使用的活动寄存器数量，以防止寄存器溢出，显著提高了 GPU 端的性能。
 
-Finally, we have made some improvements on specific usage scenarios:
+最后，我们在特定使用场景上做了一些改进：
 
-- In [#6833](https://github.com/bevyengine/bevy/pull/6833), @james7132 improved the extraction of bones for mesh skinning by 40-50% by omitting an unnecessary buffer copy.
-- In [#7311](https://github.com/bevyengine/bevy/pull/7311), @james7132 improved UI extraction by 33% by lifting a common computation out of a hot loop.
+- 在 [#6833](https://github.com/bevyengine/bevy/pull/6833) 中，@james7132 通过省略不必要的缓冲区复制，将网格蒙皮的骨骼提取速度提高了 40-50%。
+- 在 [#7311](https://github.com/bevyengine/bevy/pull/7311) 中，@james7132 通过将公共计算从热循环中提取出来，将 UI 提取速度提高了 33%。
 
-## Parallelized Transform Propagation and Animation Kinematics [#](https://bevy.org/news/bevy-0-10/#parallelized-transform-propagation-and-animation-kinematics)
+## 并行化的变换传播和动画运动学 [#](https://bevy.org/news/bevy-0-10/#parallelized-transform-propagation-and-animation-kinematics)
 
-authors: @james7132
+作者：@james7132
 
-Transform propagation is one of the core systems of any game engine. If you move a parent entity, you expect its children to move in worldspace. Bevy's transform propagation system happens to be one of the largest bottlenecks for multiple systems: rendering, UI, physics, animation, etc. cannot run until it's complete. It's imperative that transform propagation is fast to avoid blocking all of these systems. In **Bevy 0.9** and before, transform propagation has always been single-threaded and always requires a full hierarchy traversal. As worlds got larger, so did the time spent in this key bottleneck. In **Bevy 0.10**, transform propagation leverages the structure of a well-formed hierarchy to fully run over multiple threads. The full performance benefits entirely depend on how the hierarchy is structured and how many CPU cores are available. In our testing, this has made transform propagation in our `many_foxes` benchmark **4 times faster** on our testing hardware.
+变换传播是任何游戏引擎的核心系统之一。如果你移动一个父实体，你期望它的子节点在世界空间中随之移动。Bevy 的变换传播系统恰好是多个系统最大的瓶颈之一：渲染、UI、物理、动画等都必须等到它完成。变换传播必须快速以避免阻塞所有这些系统。在 **Bevy 0.9** 及之前，变换传播一直是单线程的，并且始终需要完整的层级遍历。随着世界变得越来越大，在这个关键瓶颈上花费的时间也越来越多。在 **Bevy 0.10** 中，变换传播利用良好形成的层级的结构来完全在多线程上运行。完整的性能提升完全取决于层级的结构方式和可用的 CPU 核心数量。在我们的测试中，这使我们在 `many_foxes` 基准测试中的变换传播速度**提高了 4 倍**。
 
-If transform propagation can be parallelized, so can forward kinematics for animation. We leveraged the same guaranteed structure of well formed hierarchies to fully parallelize playing skeletal animations. We also enabled a basic entity-path cache lookup to reduce the extra lookups the system was doing. Altogether, we were able to make the animation player system on the same `many_foxes` benchmark **10 times faster**.
+如果变换传播可以并行化，那么动画的前向运动学也可以。我们利用相同的有保证的良好形成层级结构来完全并行化播放骨骼动画。我们还启用了一个基本的实体路径缓存查找，以减少系统正在进行的额外查找。总的来说，我们能够在相同的 `many_foxes` 基准测试中使动画播放器系统**快 10 倍**。
 
-Combined with all of the other optimizations seen in this release, our tests on the `many_foxes` benchmark has sped up from ~10ms per frame (~100 FPS) to ~2.3ms per frame (~434 FPS), a near 5x speedup!
+结合此版本中的所有其他优化，我们在 `many_foxes` 基准测试中的测试从约 10ms 每帧（约 100 FPS）加速到约 2.3ms 每帧（约 434 FPS），接近 5 倍的加速！
 
-## ECS Optimizations [#](https://bevy.org/news/bevy-0-10/#ecs-optimizations)
+## ECS 优化 [#](https://bevy.org/news/bevy-0-10/#ecs-optimizations)
 
-authors: @james7132, @JoJoJet
+作者：@james7132, @JoJoJet
 
-ECS underlies the entire engine, so eliminating overhead in the ECS results in engine-wide speedups. In **Bevy 0.10**, we've found quite a few areas where we were able to massively reduce the overhead and improve CPU utilization for the entire engine.
+ECS 是整个引擎的基础，因此消除 ECS 中的开销会带来引擎级的加速。在 **Bevy 0.10** 中，我们发现了相当多的领域，能够大幅减少开销并提高整个引擎的 CPU 利用率。
 
-In [#6547](https://github.com/bevyengine/bevy/pull/6547), we enabled [autovectorization](https://en.wikipedia.org/wiki/Automatic_vectorization) when using `Query::for_each`, and its parallel variants. Depending on the target architecture the engine is being compiled for, this can result in a 50-87.5% speed up in query iteration time. In 0.11, we may be extending this optimization to all iterator combinators based on `Iterator::fold`, such as `Iterator::count`. See [this PR](https://github.com/bevyengine/bevy/pull/6773) for more details.
+在 [#6547](https://github.com/bevyengine/bevy/pull/6547) 中，我们在使用 `Query::for_each` 及其并行变体时启用了[自动向量化](https://en.wikipedia.org/wiki/Automatic_vectorization)。根据引擎编译的目标架构，这可以使查询迭代时间加快 50-87.5%。在 0.11 中，我们可能会将此优化扩展到所有基于 `Iterator::fold` 的迭代器组合器，例如 `Iterator::count`。更多细节请参见[此 PR](https://github.com/bevyengine/bevy/pull/6773)。
 
-In [#6681](https://github.com/bevyengine/bevy/pull/6681), by tightly packing entity location metadata and avoiding extra memory lookups, we've significantly reduced the overhead when making random query lookups via `Query::get`, seeing up to a 43% reduction in the overhead spent in `Query::get` and `World::get`.
+在 [#6681](https://github.com/bevyengine/bevy/pull/6681) 中，通过紧密打包实体位置元数据并避免额外的内存查找，我们显著减少了通过 `Query::get` 进行随机查询查找时的开销，在 `Query::get` 和 `World::get` 的开销中减少了高达 43%。
 
-In [#6800](https://github.com/bevyengine/bevy/pull/6800) and [#6902](https://github.com/bevyengine/bevy/pull/6902), we've found that rustc can optimize out compile-time constant branches across function boundaries, moving the branch from runtime to compile time, has resulted in up to a 50% reduction in overhead when using `EntityRef::get`, `EntityMut::insert`, `EntityMut::remove`, and their variants.
+在 [#6800](https://github.com/bevyengine/bevy/pull/6800) 和 [#6902](https://github.com/bevyengine/bevy/pull/6902) 中，我们发现 rustc 可以优化掉跨函数边界的编译时常量分支，将分支从运行时移到编译时，这导致使用 `EntityRef::get`、`EntityMut::insert`、`EntityMut::remove` 及其变体时的开销减少了高达 50%。
 
-In [#6391](https://github.com/bevyengine/bevy/pull/6391), we've reworked `CommandQueue`'s internals to be more CPU-cache friendly, which has shown up to a 37% speedup when encoding and applying commands.
+在 [#6391](https://github.com/bevyengine/bevy/pull/6391) 中，我们重新设计了 `CommandQueue` 的内部结构以使其对 CPU 缓存更友好，这在编码和应用命令时显示了高达 37% 的加速。
 
-## `SystemParam` Improvements [#](https://bevy.org/news/bevy-0-10/#systemparam-improvements)
+## `SystemParam` 改进 [#](https://bevy.org/news/bevy-0-10/#systemparam-improvements)
 
-authors: @JoJoJet
+作者：@JoJoJet
 
-Central to Bevy's ECS are `SystemParam`s: these types, such as `Query` and `Res`, dictate what a system can and can't do. Previously, manually creating one required implementing a family of four inseparable traits. In **Bevy 0.10**, we've [used generic associated types](https://github.com/bevyengine/bevy/pull/6865) to [reduce this to just two traits](https://github.com/bevyengine/bevy/pull/6919): `SystemParam` and `ReadOnlySystemParam`.
+Bevy ECS 的核心是 `SystemParam`：这些类型，如 `Query` 和 `Res`，决定了系统能做什么和不能做什么。以前，手动创建一个需要实现一组四个不可分离的 trait。在 **Bevy 0.10** 中，我们[使用泛型关联类型](https://github.com/bevyengine/bevy/pull/6865)[将其减少为只有两个 trait](https://github.com/bevyengine/bevy/pull/6919)：`SystemParam` 和 `ReadOnlySystemParam`。
 
-Additionally, the `#[derive(SystemParam)]` macro has received a host of miscellaneous usability improvements:
+此外，`#[derive(SystemParam)]` 宏也获得了一系列可用的改进：
 
-- **More Flexible**: you are no longer forced to declare lifetimes you don't use. Tuple structs are now allowed, and const generics don't break things.
-- **Encapsulated**: a long-standing bug has been fixed that leaked the types of private fields. Now, `SystemParam`s can properly encapsulate private world data.
-- **Limitless**: the 16-field limit has been lifted, so you can make your params as ridiculously complex as you want. This is most useful for generated code.
+- **更灵活**：你不再被迫声明你不需要的生命周期。现在允许元组结构体，且 const 泛型不会破坏东西。
+- **可封装**：一个长期存在的 Bug 已经被修复，该 Bug 泄露了私有字段的类型。现在，`SystemParam` 可以正确地封装私有的世界数据。
+- **无限制**：16 字段的限制已被解除，所以你可以让你的参数像你想要的那样复杂。这对生成的代码最有用。
 
-## Deferred World Mutations [#](https://bevy.org/news/bevy-0-10/#deferred-world-mutations)
+## 延迟的世界突变 [#](https://bevy.org/news/bevy-0-10/#deferred-world-mutations)
 
-authors: @JoJoJet
+作者：@JoJoJet
 
-You probably know that when you send a `Command`, it doesn't mutate the world right away. The command gets stored in the system and applied later on in the schedule. Deferring mutations in this way has a few benefits:
+你可能知道，当你发送 `Command` 时，它不会立即改变世界。命令存储在系统中，稍后在调度中应用。以这种方式延迟突变有几个好处：
 
-- Minimizing world accesses: unlike mutable queries (and resources), deferred mutations are free from data access conflicts, which affords greater parallelizability to systems using this pattern.
-- Order independence: when performing idempotent operations (like setting a global flag), deferred mutations allow you to not worry about system execution order.
-- Structural mutations: deferred mutations are able to change the structure of the world in ways that `Query` and `ResMut` cannot, such as adding components or spawning and despawning entities.
+- **最小化世界访问**：与可变查询（和资源）不同，延迟突变没有数据访问冲突，这为使用此模式的系统提供了更好的可并行化性。
+- **顺序无关性**：在执行幂等操作（如设置全局标志）时，延迟突变允许你不用担心系统执行顺序。
+- **结构性突变**：延迟突变能够以 `Query` 和 `ResMut` 不能的方式改变世界的结构，例如添加组件或生成和销毁实体。
 
-**Bevy 0.10** adds first-class support for this pattern via the `Deferred` system parameter, which accepts a [`SystemBuffer`](https://docs.rs/bevy/0.10.0/bevy/ecs/system/trait.SystemBuffer.html) trait impl. This lets you create systems with custom deferred mutation behavior while skipping the overhead associated with `Commands`!
+**Bevy 0.10** 通过 `Deferred` 系统参数为此模式添加了一等支持，它接受 [`SystemBuffer`](https://docs.rs/bevy/0.10.0/bevy/ecs/system/trait.SystemBuffer.html) trait 实现。这让你可以创建具有自定义延迟突变行为的系统，同时跳过与 `Commands` 相关的开销！
 
 ```rust
-/// Sends events with a delay, but can run in parallel with other event writers.
+/// 延迟发送事件，但可以与其他事件写入者并行运行。
 pub struct EventBuffer<E>(Vec<E>);
 
-// The `SystemBuffer` trait controls how deferred mutations get applied to the world.
+// `SystemBuffer` trait 控制延迟突变如何应用于世界。
 impl<E> SystemBuffer for EventBuffer<E> { ... }
 
 fn my_system(mut events: Deferred<EventBuffer<MyEvent>>) {
-    // Queue up an event to get sent when commands are applied.
+    // 排队一个事件，在命令应用时发送。
     events.0.push(MyEvent);
 }
 ```
 
-Note that this feature should be used with care -- despite the potential performance benefits, inappropriate usage can actually _worsen_ performance. Any time you perform an optimization, make sure you check that it actually speeds things up!
+请注意，此功能应谨慎使用——尽管有潜在的性能优势，不当使用实际上会_降低_性能。每当你进行优化时，确保检查它是否真的加快了速度！
 
-## Ref<T> Queries [#](https://bevy.org/news/bevy-0-10/#ref-t-queries)
+## Ref<T> 查询 [#](https://bevy.org/news/bevy-0-10/#ref-t-queries)
 
-authors: @Guvante, @JoJoJet
+作者：@Guvante, @JoJoJet
 
-Since Bevy 0.1, `Mut<T>` has been used to enable change detection (along with related types like `ResMut<T>`). It's a simple wrapper type that provides mutable access to a component alongside its change tick metadata, automatically marking a change when the value is mutated.
+自 Bevy 0.1 以来，`Mut<T>` 一直被用于启用变更检测（以及相关类型，如 `ResMut<T>`）。它是一个简单的包装类型，提供对组件的可变访问以及其变更 tick 元数据，在值被修改时自动标记变更。
 
-In **Bevy 0.10**, the change detection family has grown with `Ref<T>`, the immutable variant of `Mut<T>`. Like its mutable sibling, it allows you to react to changes made outside of the current system.
+在 **Bevy 0.10** 中，变更检测家族新增了 `Ref<T>`，即 `Mut<T>` 的不可变变体。像它的可变兄弟一样，它允许你对当前系统外部的变更做出反应。
 
 ```rust
 use bevy::prelude::*;
 
 fn inspect_changes_system<T: Component + Debug>(q: Query<Ref<T>>) {
-    // Iterate over each component of type `T` and log its changed status.
+    // 遍历类型 `T` 的每个组件并记录其变更状态。
     for val in &q {
         if val.is_changed() {
-            println!("Value `{val:?}` was last changed at tick {}.", val.last_changed());
+            println!("值 `{val:?}` 最后在 tick {} 发生变更。", val.last_changed());
         } else {
-            println!("Value `{val:?}` is unchanged.");
+            println!("值 `{val:?}` 未变更。");
         }
     }
 }
 ```
 
-We are also deprecating `ChangeTrackers<T>`, which is the old way of inspecting a component's change ticks. This type will be removed in the next version of Bevy.
+我们也在逐步弃用 `ChangeTrackers<T>`，这是检查组件变更 tick 的旧方法。此类型将在 Bevy 的下一个版本中移除。
 
-## Cubic Curves [#](https://bevy.org/news/bevy-0-10/#cubic-curves)
+## 三次曲线 [#](https://bevy.org/news/bevy-0-10/#cubic-curves)
 
-authors: @aevyrie
+作者：@aevyrie
 
-This video shows four kinds of cubic curves being smoothly animated with bezier easing. The curve itself is white, green is velocity, red is acceleration, and blue are the control points that determine the shape of the curve.
+本视频展示了四种三次曲线使用贝塞尔缓动进行平滑动画。曲线本身是白色的，绿色是速度，红色是加速度，蓝色是确定曲线形状的控制点。
 
-In preparation for UI animation and hand-tweaked animation curves, cubic curves have been added to `bevy_math`. The implementation provides multiple curves out of the box, useful in various applications:
+为准备 UI 动画和手动调整的动画曲线，三次曲线已添加到 `bevy_math` 中。该实现直接提供了多种曲线，在各种应用中很有用：
 
-- `Bezier`: user-drawn splines, and cubic-bezier animation easing for UI - helper methods are provided for cubic animation easing as demonstrated in the above video.
-- `Hermite`: smooth interpolation between two points in time where you know both the position and velocity, such as network prediction.
-- `Cardinal`: easy interpolation between any number of control points, automatically computing tangents; Catmull-Rom is a type of Cardinal spline.
-- `B-Spline`: acceleration-continuous motion, particularly useful for camera paths where a smooth change in velocity (acceleration) is important to prevent harsh jerking motion.
+- `Bezier`：用户绘制的样条曲线，以及用于 UI 的三次贝塞尔动画缓动——提供了辅助方法，用于如上述视频所示的三次动画缓动。
+- `Hermite`：在知道位置和速度的两个时间点之间的平滑插值，如网络预测。
+- `Cardinal`：在任意数量的控制点之间轻松插值，自动计算切线；Catmull-Rom 是 Cardinal 样条的一种类型。
+- `B-Spline`：加速度连续的运动，特别适用于相机路径，其中速度的平滑变化（加速度）对于防止剧烈抖动很重要。
 
-The `CubicGenerator` trait is public, allowing you to define your own custom splines that generate `CubicCurve`s!
+`CubicGenerator` trait 是公开的，允许你定义自己的自定义样条来生成 `CubicCurve`！
 
-### Performance [#](https://bevy.org/news/bevy-0-10/#performance)
+### 性能 [#](https://bevy.org/news/bevy-0-10/#performance)
 
-The position, velocity, and acceleration of a `CubicCurve` can be evaluated at any point. These evaluations all have the same performance cost, regardless of the type of cubic curve being used. On a modern CPU, these evaluations take 1-2 ns, and animation easing - which is an iterative process - takes 15-20 ns.
+`CubicCurve` 的位置、速度和加速度可以在任何点求值。无论使用哪种三次曲线，这些求值的性能开销都相同。在现代 CPU 上，这些求值需要 1-2 ns，而动画缓动——这是一个迭代过程——需要 15-20 ns。
 
-## AccessKit integration into `bevy_ui` [#](https://bevy.org/news/bevy-0-10/#accesskit-integration-into-bevy-ui)
+## AccessKit 集成到 `bevy_ui` [#](https://bevy.org/news/bevy-0-10/#accesskit-integration-into-bevy-ui)
 
-authors: @ndarilek
+作者：@ndarilek
 
-Games are for everyone: and the way they're built should reflect that. Accessible games are rare, and proper support is often an afterthought, both at an engine and a game level. By building our UI solution with accessibility in mind, we hope to fix that.
+游戏是给每个人玩的：它们构建的方式应该反映这一点。无障碍游戏很少见，适当的支持通常是事后的想法，无论是在引擎层面还是在游戏层面。通过在构建 UI 解决方案时考虑到无障碍性，我们希望解决这个问题。
 
-Bevy has [joined `egui`](https://github.com/emilk/egui/pull/2294) in making the first steps towards cross-platform accessibility-by-default, with the help of the outstanding [AccessKit](https://github.com/AccessKit/accesskit) crate. To our knowledge, this makes Bevy the first general purpose game engine with first-party accessibility support.
+Bevy 已经[加入了 `egui`](https://github.com/emilk/egui/pull/2294)，借助出色的 [AccessKit](https://github.com/AccessKit/accesskit) crate，迈出了跨平台默认无障碍的第一步。据我们所知，这使得 Bevy 成为第一个拥有第一方无障碍支持的通用游戏引擎。
 
-We've exposed Bevy's UI hierarchy and text elements to screen readers and other assistive devices, managed by the new on-by-default `bevy_a11y` crate. This is ultimately powered by the new [`AccessibilityNode`](https://docs.rs/bevy/0.10.0/bevy/a11y/struct.AccessibilityNode.html) component, which combines with the existing hierarchy to expose this information directly to AccessKit and the [`Focus`](https://docs.rs/bevy/0.10.0/bevy/a11y/struct.Focus.html) resource, which stores the entity that has keyboard focus.
+我们已经将 Bevy 的 UI 层级和文本元素暴露给屏幕阅读器和其他辅助设备，由默认启用的新 `bevy_a11y` crate 管理。这最终由新的 [`AccessibilityNode`](https://docs.rs/bevy/0.10.0/bevy/a11y/struct.AccessibilityNode.html) 组件驱动，它与现有的层级结构结合，直接将此信息暴露给 AccessKit，以及 [`Focus`](https://docs.rs/bevy/0.10.0/bevy/a11y/struct.Focus.html) 资源，后者存储拥有键盘焦点的实体。
 
-There's still a lot more to be done here: integrating the focus system with a [gamepad-driven UI controls](https://github.com/bevyengine/rfcs/pull/41) solution, cleaning up the data model to [make sure "accessible by default" is a reality](https://github.com/bevyengine/bevy/issues/7862)), and adding support for remaining features in AccessKit.
+这里还有很多工作要做：将焦点系统与[手柄驱动的 UI 控件](https://github.com/bevyengine/rfcs/pull/41)解决方案集成，清理数据模型以[确保"默认无障碍"成为现实](https://github.com/bevyengine/bevy/issues/7862)，以及添加对 AccessKit 中剩余功能的支持。
 
-Special thanks to `@mwcampbell`, the lead author of AccessKit, for reviewing our integration and working with us to reduce the number of dependencies upstream, [substantially improving both compile times and final executable size](https://github.com/bevyengine/bevy/pull/6874#issuecomment-1440978453). This is [still a serious challenge on Linux](https://github.com/bevyengine/bevy/pull/6874#issuecomment-1432144117), and so the `accesskit_unix` feature flag is [disabled by default for now](https://github.com/bevyengine/bevy/pull/6874#issuecomment-1433896811).
+特别感谢 AccessKit 的主要作者 `@mwcampbell` 审阅我们的集成工作，并与我们合作减少了上游的依赖数量，[显著改善了编译时间和最终可执行文件大小](https://github.com/bevyengine/bevy/pull/6874#issuecomment-1440978453)。这在 Linux 上[仍然是一个严峻的挑战](https://github.com/bevyengine/bevy/pull/6874#issuecomment-1432144117)，因此 `accesskit_unix` 功能标志目前[默认禁用](https://github.com/bevyengine/bevy/pull/6874#issuecomment-1433896811)。
 
-## Spatial Audio [#](https://bevy.org/news/bevy-0-10/#spatial-audio)
+## 空间音频 [#](https://bevy.org/news/bevy-0-10/#spatial-audio)
 
-authors: @mockersf, @DGriffin91, @harudagondi, @alice-i-cecile
+作者：@mockersf, @DGriffin91, @harudagondi, @alice-i-cecile
 
-The library Bevy uses for audio, [`rodio`](https://crates.io/crates/rodio), contains support for spatial audio. Bevy 0.10 exposes basic spatial audio. There are still a few caveats, like no HRTF and no first class support for `Emitter` and `Listener` components.
+Bevy 用于音频的库 [`rodio`](https://crates.io/crates/rodio) 包含对空间音频的支持。Bevy 0.10 暴露了基本的空间音频。仍然有一些注意事项，比如没有 HRTF，也没有对 `Emitter` 和 `Listener` 组件的一等支持。
 
-Interestingly, during the development of this specific feature, `@harudagondi` found a [bug](https://github.com/RustAudio/rodio/issues/444) where the audio channels reverse when running the app in either debug or release mode. This turns out to be a `rodio` issue, and this also affects previous versions of Bevy. Thanks to `@dis-da-moe`, the bug has been [fixed upstream](https://github.com/RustAudio/rodio/pull/455). See the linked PR for interesting details about audio programming quirks and performance issues.
+有趣的是，在此特定功能的开发过程中，`@harudagondi` 发现了一个 [Bug](https://github.com/RustAudio/rodio/issues/444)，即在调试或发布模式下运行应用时音频通道会反转。这原来是 `rodio` 的问题，也影响了以前版本的 Bevy。感谢 `@dis-da-moe`，该 Bug 已在[上游修复](https://github.com/RustAudio/rodio/pull/455)。有关音频编程古怪之处和性能问题的有趣细节，请参见链接的 PR。
 
-You can now have spatial audio in your game! Clone the `bevy` repository and invoke `cargo run --example spatial_audio_3d --release` in the command line for a showcase of 3D spatial audio in Bevy.
+你的游戏现在可以拥有空间音频了！克隆 `bevy` 仓库并在命令行中运行 `cargo run --example spatial_audio_3d --release` 以查看 Bevy 中 3D 空间音频的展示。
 
-## Custom Audio Sources [#](https://bevy.org/news/bevy-0-10/#custom-audio-sources)
+## 自定义音频源 [#](https://bevy.org/news/bevy-0-10/#custom-audio-sources)
 
-authors: @dis-da-moe
+作者：@dis-da-moe
 
-Bevy supports custom audio sources through the [`Decodable`](https://docs.rs/bevy_audio/latest/bevy_audio/trait.Decodable.html) trait, but the way to register to the bevy app is very boilerplatey and sparsely documented. In **Bevy 0.10**, a new extension trait for `App` is added and the documentation for [`Decodable`](https://docs.rs/bevy_audio/latest/bevy_audio/trait.Decodable.html) has vastly improved.
+Bevy 通过 [`Decodable`](https://docs.rs/bevy_audio/latest/bevy_audio/trait.Decodable.html) trait 支持自定义音频源，但注册到 Bevy app 的方式非常样板化且文档稀少。在 **Bevy 0.10** 中，为 `App` 添加了一个新的扩展 trait，并且 [`Decodable`](https://docs.rs/bevy_audio/latest/bevy_audio/trait.Decodable.html) 的文档得到了极大改善。
 
-As such, instead of doing this:
+因此，不再需要这样做：
 
 ```rust
 struct MyCustomAudioSource { /* ... */ }
@@ -969,19 +967,19 @@ app.add_asset::<MyCustomAudioSource>()
     .add_system(play_queued_audio_system::<MyCustomAudioSource>.in_base_set(CoreSet::PostUpdate))
 ```
 
-You only have to do this:
+你只需要这样做：
 
 ```rust
 app.add_audio_source::<MyCustomAudioSource>()
 ```
 
-Much cleaner!
+整洁多了！
 
-## ShaderDef Values [#](https://bevy.org/news/bevy-0-10/#shaderdef-values)
+## ShaderDef 值 [#](https://bevy.org/news/bevy-0-10/#shaderdef-values)
 
-authors: @mockersf
+作者：@mockersf
 
-Bevy's shader processor now supports ShaderDefs with values, using the new [`ShaderDefVal`](https://docs.rs/bevy/0.10.0/bevy/render/render_resource/enum.ShaderDefVal.html). This allows developers to pass constant values into their shaders:
+Bevy 的着色器处理器现在支持带值的 ShaderDef，使用新的 [`ShaderDefVal`](https://docs.rs/bevy/0.10.0/bevy/render/render_resource/enum.ShaderDefVal.html)。这允许开发者将常数值传递到他们的着色器中：
 
 ```rust
 let shader_defs = vec![
@@ -989,7 +987,7 @@ let shader_defs = vec![
 ];
 ```
 
-These can be used in `#if` statements to selectively enable shader code based on the value:
+这些可以在 `#if` 语句中使用，根据值选择性地启用着色器代码：
 
 ```rust
 #if MAX_DIRECTIONAL_LIGHTS >= 10
@@ -999,46 +997,46 @@ let color = vec4<f32>(0.0, 1.0, 0.0, 1.0);
 #endif
 ```
 
-ShaderDef values can be inlined into shaders:
+ShaderDef 值可以被内联到着色器中：
 
 ```rust
 for (var i: u32 = 0u; i < #{MAX_DIRECTIONAL_LIGHTS}; i = i + 1u) {
 }
 ```
 
-They can also be defined inline in shaders:
+它们也可以在着色器中内联定义：
 
 ```rust
 #define MAX_DIRECTIONAL_LIGHTS 10
 ```
 
-ShaderDefs defined in shaders override values passed in from Bevy.
+在着色器中定义的 ShaderDef 会覆盖从 Bevy 传入的值。
 
-## `#else ifdef` Chains in Shaders [#](https://bevy.org/news/bevy-0-10/#else-ifdef-chains-in-shaders)
+## 着色器中的 `#else ifdef` 链 [#](https://bevy.org/news/bevy-0-10/#else-ifdef-chains-in-shaders)
 
-authors: @torsteingrindvik
+作者：@torsteingrindvik
 
-Bevy's shader processor now also supports `#else ifdef` chains like this:
+Bevy 的着色器处理器现在也支持像这样的 `#else ifdef` 链：
 
 ```rust
 #ifdef FOO
-// foo code
+// foo 代码
 #else ifdef BAR
-// bar code
+// bar 代码
 #else ifdef BAZ
-// baz code
+// baz 代码
 #else
-// fallback code
+// 回退代码
 #endif
 ```
 
-## New Shader Imports: Global and View [#](https://bevy.org/news/bevy-0-10/#new-shader-imports-global-and-view)
+## 新的着色器导入：Global 和 View [#](https://bevy.org/news/bevy-0-10/#new-shader-imports-global-and-view)
 
-authors: @torsteingrindvik
+作者：@torsteingrindvik
 
-The `Global` and `View` structs are now importable in shaders using `#import bevy_render::globals` and `#import bevy_render::view`. Bevy's internal shaders now use these imports (saving a lot of redundancy). Previously you either needed to re-define in each shader or import the larger `bevy_pbr::mesh_view_types` (which wasn't always what was needed).
+`Global` 和 `View` 结构体现在可以在着色器中使用 `#import bevy_render::globals` 和 `#import bevy_render::view` 导入。Bevy 的内部着色器现在使用这些导入（省去了大量冗余）。以前，你要么需要在每个着色器中重新定义，要么导入更大的 `bevy_pbr::mesh_view_types`（这并不总是需要的）。
 
-Previously this was needed:
+以前需要这样：
 
 ```rust
 struct View {
@@ -1054,17 +1052,17 @@ struct View {
 };
 ```
 
-Now you can just do this!
+现在你只需这样做！
 
 ```rust
 #import bevy_render::view
 ```
 
-## Adaptive Batching for Parallel Query Iteration [#](https://bevy.org/news/bevy-0-10/#adaptive-batching-for-parallel-query-iteration)
+## 并行查询迭代的自适应批处理 [#](https://bevy.org/news/bevy-0-10/#adaptive-batching-for-parallel-query-iteration)
 
-authors: @james7132
+作者：@james7132
 
-`Query::par_for_each` has been the tool everyone reaches for when their queries get too big to run single-threaded. Got 100,000 entities running around on your screen? No problem, `Query::par_for_each` chunks it up into smaller batches and distributes the workload over multiple threads. However, in **Bevy 0.9** and before, `Query::par_for_each` required callers to provide a batch size to help tune these batches for maximum performance. This rather opaque knob often resulted in users just randomly picking a value and rolling with it, or fine tuning the value based on their development machines. Unfortunately, the most effective value is dependent on the runtime environment (i.e. how many logical cores does a player's computer have) and the state of the ECS World (i.e. how many entities are matched?). Ultimately most users of the API just chose a flat number and lived with the results, good or bad.
+`Query::par_for_each` 一直是每个人在查询变得太大而无法单线程运行时使用的工具。屏幕上跑着 100,000 个实体？没问题，`Query::par_for_each` 将其分成更小的批次，并将工作负载分配到多个线程上。然而，在 **Bevy 0.9** 及之前，`Query::par_for_each` 要求调用者提供一个批次大小，以帮助调整这些批次以获得最佳性能。这个相当不透明的调节旋钮往往导致用户随意选择一个值然后用下去，或者根据他们的开发机器微调这个值。不幸的是，最有效的值取决于运行时环境（即玩家的计算机有多少个逻辑核心）和 ECS World 的状态（即匹配了多少个实体？）。最终，大多数 API 用户只是选择一个固定值并接受结果，无论好坏。
 
 ```rust
 // 0.9
@@ -1075,7 +1073,7 @@ query.par_for_each(QUERY_BATCH_SIZE, |mut component| {
 });
 ```
 
-In 0.10, you no longer need to provide a batch size! If you use [`Query::par_iter`](https://docs.rs/bevy/0.10.0/bevy/ecs/system/struct.Query.html#method.par_iter), Bevy will automatically evaluate the state of the World and task pools and select a batch size [using a heuristic](https://github.com/bevyengine/bevy/blob/43ea6f239deefd7a497da6ef581a05a63a278605/crates/bevy_ecs/src/query/par_iter.rs#L24) to ensure sufficient parallelism, without incurring too much overhead. This makes parallel queries as easy to use as normal single-threaded queries! While great for most typical use cases, these heuristics may not be suitable for every workload, so we've provided an escape hatch for those who need finer control over the workload distribution. In the future, we may further tune the backing heuristics to try to get the default to be closer to optimal in these workloads.
+在 0.10 中，你不再需要提供批次大小了！如果你使用 [`Query::par_iter`](https://docs.rs/bevy/0.10.0/bevy/ecs/system/struct.Query.html#method.par_iter)，Bevy 将自动评估 World 和任务池的状态，并[使用启发式算法](https://github.com/bevyengine/bevy/blob/43ea6f239deefd7a497da6ef581a05a63a278605/crates/bevy_ecs/src/query/par_iter.rs#L24)选择一个批次大小，以确保足够的并行性，而不会产生太多开销。这使得并行查询像普通的单线程查询一样易于使用！虽然这对大多数典型用例很好，但这些启发式算法可能不适用于每个工作负载，因此我们为那些需要更精细控制工作负载分布的人提供了一个逃生舱口。在未来，我们可能会进一步调整底层的启发式算法，以试图让默认值在这些工作负载中更接近最优。
 
 ```rust
 // 0.10
@@ -1083,98 +1081,97 @@ query.par_iter().for_each(|component| {
    // ...
 });
 
-// Fairly easy to convert from a single-threaded for_each. Just change iter to par_iter!
+// 从单线程 for_each 转换非常容易。只需将 iter 改为 par_iter 即可！
 query.iter().for_each(|component| {
    // ...
 });
 ```
 
-You can also use [`BatchingStrategy`](https://docs.rs/bevy/0.10.0/bevy/ecs/query/struct.BatchingStrategy.html) for more control over batching:
+你也可以使用 [`BatchingStrategy`](https://docs.rs/bevy/0.10.0/bevy/ecs/query/struct.BatchingStrategy.html) 来更精细地控制批处理：
 
 ```rust
 query
     .par_iter_mut()
-    // run with batches of 100
+    // 以 100 为一批运行
     .batching_strategy(BatchingStrategy::fixed(100))
     .for_each(|mut component| { /* ... */ });
 ```
 
-See the [`BatchingStrategy`](https://docs.rs/bevy/0.10.0/bevy/ecs/query/struct.BatchingStrategy.html) docs for more info.
+更多信息请参见 [`BatchingStrategy`](https://docs.rs/bevy/0.10.0/bevy/ecs/query/struct.BatchingStrategy.html) 文档。
 
-## `UnsafeWorldCell` and `UnsafeEntityCell` [#](https://bevy.org/news/bevy-0-10/#unsafeworldcell-and-unsafeentitycell)
+## `UnsafeWorldCell` 和 `UnsafeEntityCell` [#](https://bevy.org/news/bevy-0-10/#unsafeworldcell-and-unsafeentitycell)
 
-authors: @jakobhellermann, @BoxyUwU and @JoJoJet
+作者：@jakobhellermann, @BoxyUwU 和 @JoJoJet
 
-`UnsafeWorldCell` and `UnsafeEntityCell` allow shared mutable access to parts of the world via unsafe code. It serves a similar purpose as `UnsafeCell`, allowing people to build interior mutability abstractions such as `Cell` `Mutex` `Channel` etc. In bevy `UnsafeWorldCell` will be used to support the scheduler and system param implementations as these are interior mutability abstractions for `World`, it also currently is used to implement `WorldCell`. We're planning to use `UnsafeEntityCell` to implement versions of `EntityRef`/`EntityMut` that only have access to the components on the entity rather than the entire world.
+`UnsafeWorldCell` 和 `UnsafeEntityCell` 允许通过 unsafe 代码对世界部分进行共享可变访问。它的目的类似于 `UnsafeCell`，允许人们构建内部可变性抽象，如 `Cell`、`Mutex`、`Channel` 等。在 Bevy 中，`UnsafeWorldCell` 将用于支持调度器和系统参数实现，因为它们是 `World` 的内部可变性抽象，它目前也用于实现 `WorldCell`。我们计划使用 `UnsafeEntityCell` 来实现 `EntityRef`/`EntityMut` 的版本，这些版本只访问实体上的组件，而不是整个世界。
 
-These abstractions were introduced in [#6404](https://github.com/bevyengine/bevy/pull/6404), [#7381](https://github.com/bevyengine/bevy/pull/7381) and [#7568](https://github.com/bevyengine/bevy/pull/7568).
+这些抽象是在 [#6404](https://github.com/bevyengine/bevy/pull/6404)、[#7381](https://github.com/bevyengine/bevy/pull/7381) 和 [#7568](https://github.com/bevyengine/bevy/pull/7568) 中引入的。
 
-## Cylinder Shape [#](https://bevy.org/news/bevy-0-10/#cylinder-shape)
+## 圆柱体形状 [#](https://bevy.org/news/bevy-0-10/#cylinder-shape)
 
-authors: @JayPavlina, @rparrett, @davidhof
+作者：@JayPavlina, @rparrett, @davidhof
 
-The cylinder shape primitive has joined our zoo of built-in shapes!
+圆柱体形状原语已加入我们内置形状的动物园！
 
-![primitive shapes](https://bevy.org/news/bevy-0-10/primitive_shapes.png)
+![基本形状](https://bevy.org/news/bevy-0-10/primitive_shapes.png)
 
-## Subdividable Plane Shape [#](https://bevy.org/news/bevy-0-10/#subdividable-plane-shape)
+## 可细分的平面形状 [#](https://bevy.org/news/bevy-0-10/#subdividable-plane-shape)
 
-authors: @woodroww
+作者：@woodroww
 
-Bevy's [`Plane`](https://docs.rs/bevy/0.10.0/bevy/prelude/shape/struct.Plane.html) shape can now be subdivided any number of times.
+Bevy 的 [`Plane`](https://docs.rs/bevy/0.10.0/bevy/prelude/shape/struct.Plane.html) 形状现在可以被任意次细分。
 
-![plane](https://bevy.org/news/bevy-0-10/plane.png)
+![平面](https://bevy.org/news/bevy-0-10/plane.png)
 
-## Camera Output Modes [#](https://bevy.org/news/bevy-0-10/#camera-output-modes)
+## 相机输出模式 [#](https://bevy.org/news/bevy-0-10/#camera-output-modes)
 
-authors: @cart, @robtfm
+作者：@cart, @robtfm
 
-The [camera-driven](https://bevy.org/news/bevy-0-8/#camera-driven-rendering) post-processing features [added in Bevy 0.9](https://bevy.org/news/bevy-0-9/#hdr-post-processing-tonemapping-and-bloom) add intuitive control over post-processing across multiple cameras in a scene, but there [were a few corner cases](https://github.com/bevyengine/bevy/pull/7490) that didn't _quite_ fit into the hard-coded camera output model. And there were some bugs and limitations related to double-buffered target texture sources of truth being incorrect across cameras and MSAA's sampled texture not containing what it should under some circumstances.
+[Bevy 0.9 中新增的](https://bevy.org/news/bevy-0-9/#hdr-post-processing-tonemapping-and-bloom)[相机驱动的](https://bevy.org/news/bevy-0-8/#camera-driven-rendering)后处理功能提供了对场景中多个相机的后处理的直观控制，但[有一些边缘情况](https://github.com/bevyengine/bevy/pull/7490)并不_完全_适合硬编码的相机输出模型。而且存在一些 Bug 和限制，与双缓冲目标纹理源真理在相机间不一致，以及 MSAA 的采样纹理在某些情况下不包含应有的内容有关。
 
-**Bevy 0.10** adds a [`CameraOutputMode`](https://docs.rs/bevy/0.10.0/bevy/render/camera/enum.CameraOutputMode.html) field to [`Camera`](https://docs.rs/bevy/0.10.0/bevy/render/camera/struct.Camera.html), which gives Bevy app developers the ability to manually configure exactly how (and if) a [`Camera`](https://docs.rs/bevy/0.10.0/bevy/render/camera/struct.Camera.html)'s render results should be written to the final output texture:
+**Bevy 0.10** 向 [`Camera`](https://docs.rs/bevy/0.10.0/bevy/render/camera/struct.Camera.html) 添加了一个 [`CameraOutputMode`](https://docs.rs/bevy/0.10.0/bevy/render/camera/enum.CameraOutputMode.html) 字段，使 Bevy 应用开发者能够手动配置 [`Camera`](https://docs.rs/bevy/0.10.0/bevy/render/camera/struct.Camera.html) 的渲染结果应该（以及是否）写入最终输出纹理：
 
 ```rust
-// Configure the camera to write to the final output texture
+// 配置相机写入最终输出纹理
 camera.output_mode = CameraOutputMode::Write {
-    // Do not blend with the current state of the output texture
+    // 不与输出纹理的当前状态混合
     blend_state: None,
-    // Clear the output texture
+    // 清除输出纹理
     color_attachment_load_op: LoadOp::Clear(Default::default()),
 };
 
-// Configure the camera to skip writing to the final output texture
-// This can save a pass when there are multiple cameras, and can be useful for
-// some post-processing situations
+// 配置相机跳过写入最终输出纹理
+// 当有多个相机时，这可以节省一个通道，并且对一些后处理场景也很有用
 camera.output_mode = CameraOutputMode::Skip;
 ```
 
-_Most_ single-camera and multi-camera setups will not need to touch this setting at all. But if you need it, it will be waiting for you!
+_大多数_单相机和多相机设置完全不需要触碰这个设置。但如果你需要它，它等着你！
 
-MSAA requires an extra intermediate "multisampled" texture, which gets resolved to the "actual" unsampled texture. In some corner case multi-camera setups that render to the same texture, this can create weird / inconsistent results based on whether or not MSAA is enabled or disabled. We've added a new `Camera::msaa_writeback` `bool` field which (when enabled) will write the current state of the unsampled texture to the intermediate MSAA texture (if a previous camera has already rendered to the target on a given frame). This ensures that the state is consistent regardless of MSAA configuration. This defaults to true, so you only need to think about this if you have a multi-camera setup and you _don't_ want MSAA writeback.
+MSAA 需要一个额外的中间"多重采样"纹理，它会解析为"实际"的非采样纹理。在某些渲染到同一纹理的多相机设置边缘情况下，基于 MSAA 是启用还是禁用，这可能会产生奇怪/不一致的结果。我们添加了一个新的 `Camera::msaa_writeback` `bool` 字段，当启用时（如果之前的相机在某一帧已经渲染到目标），它会将非采样纹理的当前状态写入中间 MSAA 纹理。这确保了无论 MSAA 配置如何，状态都是一致的。默认为 true，所以你只需要在多相机设置且你_不_想要 MSAA 回写时才需要考虑这个。
 
-## Configurable Visibility Component [#](https://bevy.org/news/bevy-0-10/#configurable-visibility-component)
+## 可配置的可见性组件 [#](https://bevy.org/news/bevy-0-10/#configurable-visibility-component)
 
-authors: @ickk
+作者：@ickk
 
-The [`Visibility`](https://docs.rs/bevy/0.10.0/bevy/render/view/enum.Visibility.html) component controls whether or not an [`Entity`](https://docs.rs/bevy/0.10.0/bevy/ecs/entity/index.html) should be rendered. **Bevy 0.10** reworked the type definition: rather than having a single `is_visible: bool` field, we now use an enum with an additional mode:
+[`Visibility`](https://docs.rs/bevy/0.10.0/bevy/render/view/enum.Visibility.html) 组件控制 [`Entity`](https://docs.rs/bevy/0.10.0/bevy/ecs/entity/index.html) 是否应该被渲染。**Bevy 0.10** 重新设计了类型定义：不再是单一的 `is_visible: bool` 字段，我们现在使用一个枚举，包含额外的模式：
 
 ```rust
 pub enum Visibility {
-  Hidden,    // unconditionally hidden
-  Visible,   // unconditionally visible
-  Inherited, // inherit visibility from parent
+  Hidden,    // 无条件隐藏
+  Visible,   // 无条件可见
+  Inherited, // 从父级继承可见性
 }
 ```
 
-Much easier to understand! In previous Bevy versions, "inherited visibility" and "hidden" were essentially the only two options. Now entities can opt to be visible, even if their parent is hidden!
+更容易理解了！在以前的 Bevy 版本中，"继承可见性"和"隐藏"基本上是仅有的两个选项。现在实体可以选择可见，即使其父级是隐藏的！
 
-## `AsBindGroup` Storage Buffers [#](https://bevy.org/news/bevy-0-10/#asbindgroup-storage-buffers)
+## `AsBindGroup` 存储缓冲区 [#](https://bevy.org/news/bevy-0-10/#asbindgroup-storage-buffers)
 
-authors: @IceSentry, @AndrewB330
+作者：@IceSentry, @AndrewB330
 
-[`AsBindGroup`](https://docs.rs/bevy/0.10.0/bevy/render/render_resource/trait.AsBindGroup.html) is a useful Bevy trait that [makes it very easy to pass data into shaders](https://bevy.org/news/bevy-0-8/#new-material-system).
+[`AsBindGroup`](https://docs.rs/bevy/0.10.0/bevy/render/render_resource/trait.AsBindGroup.html) 是一个有用的 Bevy trait，它[使得将数据传递到着色器变得非常容易](https://bevy.org/news/bevy-0-8/#new-material-system)。
 
-**Bevy 0.10** expands this with support for "storage buffer bindings", which are very useful when passing in large / unbounded chunks of data:
+**Bevy 0.10** 扩展了这一点，增加了对"存储缓冲区绑定"的支持，这在传入大量/无界数据块时非常有用：
 
 ```rust
 #[derive(AsBindGroup)]
@@ -1191,11 +1188,11 @@ struct CoolMaterial {
 }
 ```
 
-## `ExtractComponent` Derive [#](https://bevy.org/news/bevy-0-10/#extractcomponent-derive)
+## `ExtractComponent` 派生 [#](https://bevy.org/news/bevy-0-10/#extractcomponent-derive)
 
-authors: @torsteingrindvik
+作者：@torsteingrindvik
 
-To pass component data from the "main app" to the "render app" for [pipelined rendering](https://bevy.org/news/bevy-0-10/#parallel-pipelined-rendering), we run an "extract step". The [`ExtractComponent`](https://docs.rs/bevy/0.10.0/bevy/render/extract_component/trait.ExtractComponent.html) trait is used to copy data over. In previous versions of Bevy, you had to implement it manually, but now you can derive it!
+为了将组件数据从"主应用"传递到"渲染应用"以进行[管线化渲染](https://bevy.org/news/bevy-0-10/#parallel-pipelined-rendering)，我们运行一个"提取步骤"。[`ExtractComponent`](https://docs.rs/bevy/0.10.0/bevy/render/extract_component/trait.ExtractComponent.html) trait 用于复制数据。在以前的 Bevy 版本中，你必须手动实现它，但现在你可以派生它了！
 
 ```rust
 #[derive(Component, Clone, ExtractComponent)]
@@ -1204,7 +1201,7 @@ pub struct Car {
 }
 ```
 
-This expands to this:
+这会展开为：
 
 ```rust
 impl ExtractComponent for Car
@@ -1218,7 +1215,7 @@ impl ExtractComponent for Car
 }
 ```
 
-It also supports filters!
+它也支持过滤器！
 
 ```rust
 #[derive(Component, Clone, ExtractComponent)]
@@ -1228,35 +1225,35 @@ pub struct Car {
 }
 ```
 
-## Upgraded wgpu to 0.15 [#](https://bevy.org/news/bevy-0-10/#upgraded-wgpu-to-0-15)
+## 升级 wgpu 到 0.15 [#](https://bevy.org/news/bevy-0-10/#upgraded-wgpu-to-0-15)
 
-authors: @Elabajaba
+作者：@Elabajaba
 
-**Bevy 0.10** now uses the latest and greatest [`wgpu`](https://github.com/gfx-rs/wgpu) (our choice of low level graphics layer). In addition to [a number of nice API improvements and bug fixes](https://github.com/gfx-rs/wgpu/releases/tag/v0.15.0), `wgpu` now uses the DXC shader compiler for DX12, which is faster, less buggy, and allows for new features.
+**Bevy 0.10** 现在使用了最新最好的 [`wgpu`](https://github.com/gfx-rs/wgpu)（我们选择的底层图形层）。除了[许多不错的 API 改进和 Bug 修复](https://github.com/gfx-rs/wgpu/releases/tag/v0.15.0)之外，`wgpu` 现在还对 DX12 使用 DXC 着色器编译器，这更快、更少 Bug，并允许新功能。
 
-## Enabled OpenGL Backend by Default [#](https://bevy.org/news/bevy-0-10/#enabled-opengl-backend-by-default)
+## 默认启用 OpenGL 后端 [#](https://bevy.org/news/bevy-0-10/#enabled-opengl-backend-by-default)
 
-authors: @wangling12
+作者：@wangling12
 
-Bevy has supported `wgpu`'s OpenGL backend for a while now, but it was opt-in. This caused Bevy to fail to start up on some machines that don't support modern apis like Vulkan. In **Bevy 0.10** the OpenGL backend is enabled by default, which means machines will automatically fall back to OpenGL if no other API is available.
+Bevy 已经支持了 `wgpu` 的 OpenGL 后端一段时间了，但它是可选加入的。这导致 Bevy 在一些不支持现代 API（如 Vulkan）的机器上无法启动。在 **Bevy 0.10** 中，OpenGL 后端默认启用，这意味着如果没有其他 API 可用，机器将自动回退到 OpenGL。
 
-## Exposed Non-Uniform Indexing Support (Bindless) [#](https://bevy.org/news/bevy-0-10/#exposed-non-uniform-indexing-support-bindless)
+## 暴露的非均匀索引支持（无绑定） [#](https://bevy.org/news/bevy-0-10/#exposed-non-uniform-indexing-support-bindless)
 
-authors: @cryscan
+作者：@cryscan
 
-**Bevy 0.10** wired up initial support for non-uniform indexing of textures and storage buffers. This is an important step toward modern ["bindless / gpu-driven rendering"](https://vkguide.dev/docs/gpudriven/gpu_driven_engines/), which can unlock significant performance on platforms that support it. Note that this is just making the feature available to render plugin developers. Bevy's core rendering features do not (yet) use the bindless approach.
+**Bevy 0.10** 连接了对纹理和存储缓冲区的非均匀索引的初始支持。这是迈向现代["无绑定/GPU 驱动渲染"](https://vkguide.dev/docs/gpudriven/gpu_driven_engines/)的重要一步，可以在支持的平台上解锁显著的性能提升。请注意，这只是使该功能对渲染插件开发者可用。Bevy 的核心渲染功能并未（尚未）使用无绑定方法。
 
-We've added [a new example](https://github.com/bevyengine/bevy/blob/v0.10.0/examples/shader/texture_binding_array.rs) illustrating how to use this feature:
+我们添加了一个[新示例](https://github.com/bevyengine/bevy/blob/v0.10.0/examples/shader/texture_binding_array.rs)来说明如何使用此功能：
 
-![texture binding array](https://bevy.org/news/bevy-0-10/texture_binding_array.png)
+![纹理绑定数组](https://bevy.org/news/bevy-0-10/texture_binding_array.png)
 
-## Gamepad API Improvements [#](https://bevy.org/news/bevy-0-10/#gamepad-api-improvements)
+## 手柄 API 改进 [#](https://bevy.org/news/bevy-0-10/#gamepad-api-improvements)
 
-authors: @DevinLeamy
+作者：@DevinLeamy
 
-The [`GamepadEventRaw`](https://docs.rs/bevy/0.9.0/bevy/input/gamepad/struct.GamepadEventRaw.html) type has been removed in favor of separate [`GamepadConnectionEvent`](https://docs.rs/bevy/0.10.0/bevy/input/gamepad/struct.GamepadConnectionEvent.html), [`GamepadAxisChangedEvent`](https://docs.rs/bevy/0.10.0/bevy/input/gamepad/struct.GamepadAxisChangedEvent.html), and [`GamepadButtonChangedEvent`](https://docs.rs/bevy/0.10.0/bevy/input/gamepad/struct.GamepadButtonChangedEvent.html), and the internals have been reworked to accommodate this.
+[`GamepadEventRaw`](https://docs.rs/bevy/0.9.0/bevy/input/gamepad/struct.GamepadEventRaw.html) 类型已被移除，取而代之的是独立的 [`GamepadConnectionEvent`](https://docs.rs/bevy/0.10.0/bevy/input/gamepad/struct.GamepadConnectionEvent.html)、[`GamepadAxisChangedEvent`](https://docs.rs/bevy/0.10.0/bevy/input/gamepad/struct.GamepadAxisChangedEvent.html) 和 [`GamepadButtonChangedEvent`](https://docs.rs/bevy/0.10.0/bevy/input/gamepad/struct.GamepadButtonChangedEvent.html)，并且内部实现已经重新设计以适应这一点。
 
-This allows for simpler, more granular event access without filtering down the general [`GamepadEvent`](https://docs.rs/bevy/0.10.0/bevy/input/gamepad/enum.GamepadEvent.html) type. Nice!
+这允许更简单、更细粒度的事件访问，而无需过滤通用的 [`GamepadEvent`](https://docs.rs/bevy/0.10.0/bevy/input/gamepad/enum.GamepadEvent.html) 类型。很好！
 
 ```rust
 fn system(mut events: EventReader<GamepadConnectionEvent>)
@@ -1265,17 +1262,17 @@ fn system(mut events: EventReader<GamepadConnectionEvent>)
 }
 ```
 
-## Input Method Editor (IME) Support [#](https://bevy.org/news/bevy-0-10/#input-method-editor-ime-support)
+## 输入法编辑器（IME）支持 [#](https://bevy.org/news/bevy-0-10/#input-method-editor-ime-support)
 
-authors: @mockersf
+作者：@mockersf
 
-[`Window`](https://docs.rs/bevy/0.10.0/bevy/window/struct.Window.html) can now configure IME support using `ime_enabled` and `ime_position`, which enables the use of "dead keys", which add support for French, Pinyin, etc:
+[`Window`](https://docs.rs/bevy/0.10.0/bevy/window/struct.Window.html) 现在可以使用 `ime_enabled` 和 `ime_position` 配置 IME 支持，这启用了"死键"的使用，增加了对法语、拼音等的支持：
 
-## Reflection Paths: Enums and Tuples [#](https://bevy.org/news/bevy-0-10/#reflection-paths-enums-and-tuples)
+## 反射路径：枚举和元组 [#](https://bevy.org/news/bevy-0-10/#reflection-paths-enums-and-tuples)
 
-authors: @MrGVSV
+作者：@MrGVSV
 
-Bevy's "reflection paths" enable navigating Rust values using a simple (and dynamic) string syntax. **Bevy 0.10** expands this system by adding support for tuples and enums in reflect paths:
+Bevy 的"反射路径"允许使用简单（且动态）的字符串语法来导航 Rust 值。**Bevy 0.10** 通过为反射路径中的元组和枚举添加支持来扩展该系统：
 
 ```rust
 #[derive(Reflect)]
@@ -1299,77 +1296,77 @@ assert_eq!(*x.path::<u32>("data.1").unwrap(), 123);
 assert_eq!(*x.path::<u32>("some_tuple.0").unwrap(), 10);
 ```
 
-## Pre-Parsed Reflection Paths [#](https://bevy.org/news/bevy-0-10/#pre-parsed-reflection-paths)
+## 预解析的反射路径 [#](https://bevy.org/news/bevy-0-10/#pre-parsed-reflection-paths)
 
-authors: @MrGVSV, @james7132
+作者：@MrGVSV, @james7132
 
-Reflection paths enable a lot of interesting and dynamic editor scenarios, but they do have a downside: calling `path()` requires parsing strings every time. To solve this problem we added [`ParsedPath`](https://docs.rs/bevy/0.10.0/bevy/reflect/struct.ParsedPath.html), which enables pre-parsing paths and then reusing those results on each access:
+反射路径启用了许多有趣的动态编辑器场景，但它们确实有一个缺点：调用 `path()` 每次都需要解析字符串。为了解决这个问题，我们添加了 [`ParsedPath`](https://docs.rs/bevy/0.10.0/bevy/reflect/struct.ParsedPath.html)，它可以预先解析路径，然后在每次访问时重用这些结果：
 
 ```rust
 let parsed_path = ParsedPath::parse("foo.bar[0]").unwrap();
 let element = parsed_path.element::<usize>(&some_value);
 ```
 
-Much more suitable for repeated access, such as doing the same lookup every frame!
+更适合重复访问，例如每帧进行相同的查找！
 
-## `ReflectFromReflect` [#](https://bevy.org/news/bevy-0-10/#reflectfromreflect)
+## `ReflectFromReflect` [#](https://bevy.org/news/bevy-0-10/#reflectfromreflect)
 
-authors: @MrGVSV
+作者：@MrGVSV
 
-When using Bevy's Rust reflection system, we sometimes end up in a scenario where we have a "dynamic reflect value" representing a certain type `MyType` (even though under the hood, it isn't really that type). Such scenarios happen when we call `Reflect::clone_value`, use the reflection deserializers, or create the dynamic value ourselves. Unfortunately, we can't just call `MyType::from_reflect` as we do not have knowledge of the concrete `MyType` at runtime.
+当使用 Bevy 的 Rust 反射系统时，我们有时会遇到这样的情况：我们有一个表示某种类型 `MyType` 的"动态反射值"（尽管在底层，它不完全是那个类型）。当我们调用 `Reflect::clone_value`、使用反射反序列化器或自己创建动态值时，就会出现这样的情况。不幸的是，我们不能直接调用 `MyType::from_reflect`，因为我们在运行时不知道具体的 `MyType`。
 
-[`ReflectFromReflect`](https://docs.rs/bevy/0.10.0/bevy/reflect/struct.ReflectFromReflect.html) is a new "type data" struct in the [`TypeRegistry`](https://docs.rs/bevy/0.10.0/bevy/reflect/struct.TypeRegistry.html) that enables `FromReflect` trait operations without any concrete references to a given type. Very cool!
+[`ReflectFromReflect`](https://docs.rs/bevy/0.10.0/bevy/reflect/struct.ReflectFromReflect.html) 是 [`TypeRegistry`](https://docs.rs/bevy/0.10.0/bevy/reflect/struct.TypeRegistry.html) 中一个新的"类型数据"结构体，它允许在没有任何对给定类型的具体引用的情况下进行 `FromReflect` trait 操作。非常酷！
 
 ```rust
 #[derive(Reflect, FromReflect)]
-#[reflect(FromReflect)] // <- Register `ReflectFromReflect`
+#[reflect(FromReflect)] // <- 注册 `ReflectFromReflect`
 struct MyStruct(String);
 
 let type_id = TypeId::of::<MyStruct>();
 
-// Register our type
+// 注册我们的类型
 let mut registry = TypeRegistry::default();
 registry.register::<MyStruct>();
 
-// Create a concrete instance
+// 创建一个具体的实例
 let my_struct = MyStruct("Hello world".to_string());
 
-// `Reflect::clone_value` will generate a `DynamicTupleStruct` for tuple struct types
-// Note that this is _not_ a MyStruct instance
+// `Reflect::clone_value` 将为元组结构体类型生成一个 `DynamicTupleStruct`
+// 注意，这_不是_一个 MyStruct 实例
 let dynamic_value: Box<dyn Reflect> = my_struct.clone_value();
 
-// Get the `ReflectFromReflect` type data from the registry
+// 从 registry 获取 `ReflectFromReflect` 类型数据
 let rfr: &ReflectFromReflect = registry
   .get_type_data::<ReflectFromReflect>(type_id)
   .unwrap();
 
-// Call `FromReflect::from_reflect` on our Dynamic value
+// 在我们的动态值上调用 `FromReflect::from_reflect`
 let concrete_value: Box<dyn Reflect> = rfr.from_reflect(&dynamic_value);
 assert!(concrete_value.is::<MyStruct>());
 ```
 
-## Other Reflection Improvements [#](https://bevy.org/news/bevy-0-10/#other-reflection-improvements)
+## 其他反射改进 [#](https://bevy.org/news/bevy-0-10/#other-reflection-improvements)
 
-authors: @james7132, @soqb, @cBournhonesque, @SkiFire13
+作者：@james7132, @soqb, @cBournhonesque, @SkiFire13
 
-- [`Reflect`](https://docs.rs/bevy/0.10.0/bevy/reflect/trait.Reflect.html) is now implemented for [`std::collections::VecDeque`](https://doc.rust-lang.org/std/collections/vec_deque/struct.VecDeque.html)
-- Reflected [`List`](https://docs.rs/bevy/0.10.0/bevy/reflect/trait.List.html) types now have `insert` and `remove` operations
-- Reflected [`Map`](https://docs.rs/bevy/0.10.0/bevy/reflect/trait.Map.html) types now have the `remove` operation
-- Reflected generic types now automatically implement [`Reflect`](https://docs.rs/bevy/0.10.0/bevy/reflect/trait.Reflect.html) if the generics also implement Reflect. No need to add manual `T: Reflect` bounds!
-- Component Reflection now uses [`EntityRef`](https://docs.rs/bevy/0.10.0/bevy/ecs/world/struct.EntityRef.html) / [`EntityMut`](https://docs.rs/bevy/0.10.0/bevy/ecs/world/struct.EntityMut.html) instead of both [`World`](https://docs.rs/bevy/0.10.0/bevy/ecs/world/struct.World.html) and [`Entity`](https://docs.rs/bevy/0.10.0/bevy/ecs/entity/index.html), which allows it to be used in more scenarios
-- The Reflection deserializer now avoids unnecessarily cloning strings in some scenarios!
+- [`Reflect`](https://docs.rs/bevy/0.10.0/bevy/reflect/trait.Reflect.html) 现在已为 [`std::collections::VecDeque`](https://doc.rust-lang.org/std/collections/vec_deque/struct.VecDeque.html) 实现
+- 反射后的 [`List`](https://docs.rs/bevy/0.10.0/bevy/reflect/trait.List.html) 类型现在有 `insert` 和 `remove` 操作
+- 反射后的 [`Map`](https://docs.rs/bevy/0.10.0/bevy/reflect/trait.Map.html) 类型现在有 `remove` 操作
+- 反射后的泛型类型现在如果泛型也实现了 Reflect，则会自动实现 [`Reflect`](https://docs.rs/bevy/0.10.0/bevy/reflect/trait.Reflect.html)。不再需要手动添加 `T: Reflect` 约束！
+- 组件反射现在使用 [`EntityRef`](https://docs.rs/bevy/0.10.0/bevy/ecs/world/struct.EntityRef.html) / [`EntityMut`](https://docs.rs/bevy/0.10.0/bevy/ecs/world/struct.EntityMut.html) 而不是同时使用 [`World`](https://docs.rs/bevy/0.10.0/bevy/ecs/world/struct.World.html) 和 [`Entity`](https://docs.rs/bevy/0.10.0/bevy/ecs/entity/index.html)，这使其可以在更多场景中使用
+- 反射反序列化器现在在某些场景中避免不必要的克隆字符串！
 
-## Upgraded Taffy To 0.3 [#](https://bevy.org/news/bevy-0-10/#upgraded-taffy-to-0-3)
+## 升级 Taffy 到 0.3 [#](https://bevy.org/news/bevy-0-10/#upgraded-taffy-to-0-3)
 
-authors: @ickshonpe, @rparret
+作者：@ickshonpe, @rparret
 
-[Taffy](https://crates.io/crates/taffy) is the library we use to compute layouts for `bevy_ui`. Taffy 0.2 significantly improves the performance of nested UIs (our `many_buttons` example is now 8% faster and more deeply nested UIs should see even bigger gains!). It also brings support for the [gap](https://developer.mozilla.org/en-US/docs/Web/CSS/gap) property which makes it easier to creates UI with evenly spaced items. Taffy 0.3 adds some nice API tweaks (and also a grid layout feature, which we have disabled for now as it still needs some integration work).
+[Taffy](https://crates.io/crates/taffy) 是我们用来计算 `bevy_ui` 布局的库。Taffy 0.2 显著提升了嵌套 UI 的性能（我们的 `many_buttons` 示例现在快了 8%，更深嵌套的 UI 应该能看到更大的提升！）。它还带来了对 [gap](https://developer.mozilla.org/en-US/docs/Web/CSS/gap) 属性的支持，这使得创建具有均匀间隔项目的 UI 更加容易。Taffy 0.3 添加了一些不错的 API 调整（还有一个网格布局功能，我们目前禁用了它，因为它仍然需要一些集成工作）。
 
-## Relative Cursor Position [#](https://bevy.org/news/bevy-0-10/#relative-cursor-position)
+## 相对鼠标位置 [#](https://bevy.org/news/bevy-0-10/#relative-cursor-position)
 
-authors: @Pietrek14
+作者：@Pietrek14
 
-We've added a new [`RelativeCursorPosition`](https://docs.rs/bevy/0.10.0/bevy/ui/struct.RelativeCursorPosition.html) UI component, which when added to a UI entity tracks the cursor position relative to the node. `Some((0, 0))` represents the top-left corner of the node, `Some((1,1))` represents the bottom-right corner of the node, and `None` represents the cursor being "outside of the node".
+我们添加了一个新的 [`RelativeCursorPosition`](https://docs.rs/bevy/0.10.0/bevy/ui/struct.RelativeCursorPosition.html) UI 组件，当添加到 UI 实体时，它会跟踪鼠标相对于节点的位置。`Some((0, 0))` 表示节点的左上角，`Some((1,1))` 表示节点的右下角，`None` 表示鼠标"在节点外部"。
 
 ```rust
 commands.spawn((
@@ -1378,11 +1375,11 @@ commands.spawn((
 ));
 ```
 
-## Const Bevy UI Defaults [#](https://bevy.org/news/bevy-0-10/#const-bevy-ui-defaults)
+## Const Bevy UI 默认值 [#](https://bevy.org/news/bevy-0-10/#const-bevy-ui-defaults)
 
-authors: @james-j-obrien
+作者：@james-j-obrien
 
-Bevy uses the [`Default`](https://doc.rust-lang.org/std/default/trait.Default.html) trait a lot to make it easy to construct types. Bevy UI types generally implement [`Default`](https://doc.rust-lang.org/std/default/trait.Default.html). However, it has one downside (which is fundamental to Rust): [`Default`](https://doc.rust-lang.org/std/default/trait.Default.html) cannot be used in `const` contexts ([yet!](https://blog.rust-lang.org/inside-rust/2022/07/27/keyword-generics.html)). To enable UI layout config to be defined as constants, we've added `DEFAULT` associated constants to most of the Bevy UI types. For example, you can use `Style::DEFAULT` to define a const style:
+Bevy 大量使用 [`Default`](https://doc.rust-lang.org/std/default/trait.Default.html) trait 来简化类型的构造。Bevy UI 类型通常实现 [`Default`](https://doc.rust-lang.org/std/default/trait.Default.html)。然而，它有一个缺点（这对 Rust 来说是根本性的）：[`Default`](https://doc.rust-lang.org/std/default/trait.Default.html) 不能在 `const` 上下文中使用（[目前还不能！](https://blog.rust-lang.org/inside-rust/2022/07/27/keyword-generics.html)）。为了允许 UI 布局配置被定义为常量，我们为大多数 Bevy UI 类型添加了 `DEFAULT` 关联常量。例如，你可以使用 `Style::DEFAULT` 来定义一个 const 样式：
 
 ```rust
 const COOL_STYLE: Style = Style {
@@ -1392,11 +1389,11 @@ const COOL_STYLE: Style = Style {
 };
 ```
 
-## Iterating through a World's Entities [#](https://bevy.org/news/bevy-0-10/#iterating-through-a-world-s-entities)
+## 迭代世界的实体 [#](https://bevy.org/news/bevy-0-10/#iterating-through-a-world-s-entities)
 
-authors: @james7132
+作者：@james7132
 
-In **Bevy 0.9**, `World::iter_entities` allows users to get an iterator over all of the entities in the `World` in `Entity` form. In **Bevy 0.10**, this has been changed to be an iterator over `EntityRef`, which gives full read-only access to all of the entity's components instead of just getting its ID. Its new implementation should also be significantly faster than fetching the `EntityRef` by hand (though note that a `Query` will still be faster if you know the exact components you're looking for). This gives users free rein to arbitrarily read any entity data from the World, and may see use in scripting language integrations and reflection-heavy workflows.
+在 **Bevy 0.9** 中，`World::iter_entities` 允许用户以 `Entity` 的形式获得一个迭代器，遍历 `World` 中的所有实体。在 **Bevy 0.10** 中，这已被更改为 `EntityRef` 的迭代器，它提供对所有实体组件的完全只读访问，而不仅仅是获取其 ID。它的新实现也应该比手动获取 `EntityRef` 快得多（但请注意，如果你知道要查找的确切组件，`Query` 仍然会更快）。这使用户可以自由地从 World 中任意读取任何实体数据，并可能在脚本语言集成和反射密集型工作流中看到用途。
 
 ```rust
 // Bevy 0.9
@@ -1416,13 +1413,13 @@ for entity_ref in world.iter_entities() {
 }
 ```
 
-In the future, we may have a `World::iter_entities_mut` that exposes this functionality, but gives arbitrary mutable access to all entities in the `World`. We avoided implementing this for now due to the potential safety concerns of returning an iterator of `EntityMut`. For more details, see this [GitHub issue](https://github.com/bevyengine/bevy/issues/5504).
+在未来，我们可能会有 `World::iter_entities_mut` 来暴露此功能，但提供对 `World` 中所有实体的任意可变访问。由于返回 `EntityMut` 的迭代器存在潜在的安全问题，我们暂时避免实现这一点。更多细节请参见此 [GitHub issue](https://github.com/bevyengine/bevy/issues/5504)。
 
-## LCH Color Space [#](https://bevy.org/news/bevy-0-10/#lch-color-space)
+## LCH 色彩空间 [#](https://bevy.org/news/bevy-0-10/#lch-color-space)
 
-authors: @ldubos
+作者：@ldubos
 
-Bevy's [`Color`](https://docs.rs/bevy/0.10.0/bevy/render/color/enum.Color.html) type now supports the LCH color space (Lightness, Chroma, Hue). LCH has a lot of arguments for it, including that it provides access to about 50% more colors over sRGB. Check out [this article](https://lea.verou.me/2020/04/lch-colors-in-css-what-why-and-how/) for more information.
+Bevy 的 [`Color`](https://docs.rs/bevy/0.10.0/bevy/render/color/enum.Color.html) 类型现在支持 LCH 色彩空间（Lightness 亮度、Chroma 彩度、Hue 色相）。LCH 有很多支持理由，包括它比 sRGB 能访问大约多 50% 的颜色。查看[这篇文章](https://lea.verou.me/2020/04/lch-colors-in-css-what-why-and-how/)了解更多信息。
 
 ```rust
 Color::Lcha {
@@ -1433,30 +1430,30 @@ Color::Lcha {
 }
 ```
 
-## Optimized `Color::hex` Performance [#](https://bevy.org/news/bevy-0-10/#optimized-color-hex-performance)
+## 优化的 `Color::hex` 性能 [#](https://bevy.org/news/bevy-0-10/#optimized-color-hex-performance)
 
-authors: @wyhaya
+作者：@wyhaya
 
-[`Color::hex`](https://docs.rs/bevy/0.10.0/bevy/render/color/enum.Color.html#method.hex) is now a `const` function, which brought the runtime of `hex` from ~14ns to ~4ns!
+[`Color::hex`](https://docs.rs/bevy/0.10.0/bevy/render/color/enum.Color.html#method.hex) 现在是一个 `const` 函数，将 `hex` 的运行时间从约 14ns 降低到约 4ns！
 
-## Split Up `CorePlugin` [#](https://bevy.org/news/bevy-0-10/#split-up-coreplugin)
+## 拆分的 `CorePlugin` [#](https://bevy.org/news/bevy-0-10/#split-up-coreplugin)
 
-authors: @targrub
+作者：@targrub
 
-`CorePlugin` has historically been a bit of a "kitchen sink plugin". "Core" things that didn't fit anywhere else ended up there. This isn't a great organizational strategy, so we broke it up into individual pieces: [`TaskPoolPlugin`](https://docs.rs/bevy/0.10.0/bevy/core/struct.TaskPoolPlugin.html), [`TypeRegistrationPlugin`](https://docs.rs/bevy/0.10.0/bevy/core/struct.TypeRegistrationPlugin.html), and [`FrameCountPlugin`](https://docs.rs/bevy/0.10.0/bevy/core/struct.FrameCountPlugin.html).
+`CorePlugin` 历史上一直有点像一个"厨房水槽插件"。"核心"的东西无处可去就最终到了这里。这不是一个好的组织策略，所以我们将其拆分为独立的模块：[`TaskPoolPlugin`](https://docs.rs/bevy/0.10.0/bevy/core/struct.TaskPoolPlugin.html)、[`TypeRegistrationPlugin`](https://docs.rs/bevy/0.10.0/bevy/core/struct.TypeRegistrationPlugin.html) 和 [`FrameCountPlugin`](https://docs.rs/bevy/0.10.0/bevy/core/struct.FrameCountPlugin.html)。
 
-## `EntityCommand`s [#](https://bevy.org/news/bevy-0-10/#entitycommands)
+## `EntityCommand` [#](https://bevy.org/news/bevy-0-10/#entitycommands)
 
-authors: @JoJoJet
+作者：@JoJoJet
 
-[`Commands`](https://docs.rs/bevy/0.10.0/bevy/ecs/system/struct.Commands.html) are "deferred ECS" operations. They enable developers to define custom ECS operations that are applied after a parallel system has finished running. Many [`Commands`](https://docs.rs/bevy/0.10.0/bevy/ecs/system/struct.Commands.html) ran on individual entities, but this pattern was a bit cumbersome:
+[`Commands`](https://docs.rs/bevy/0.10.0/bevy/ecs/system/struct.Commands.html) 是"延迟的 ECS"操作。它们使开发者能够定义在并行系统运行完成后应用的自定义 ECS 操作。许多 [`Commands`](https://docs.rs/bevy/0.10.0/bevy/ecs/system/struct.Commands.html) 作用于单个实体，但这种模式有些笨拙：
 
 ```rust
 struct MyCustomCommand(Entity);
 
 impl Command for MyCustomCommand {
     fn write(self, world: &mut World) {
-        // do something with the entity at self.0
+        // 对 self.0 的实体进行操作
     }
 }
 
@@ -1464,62 +1461,62 @@ let id = commands.spawn(SpriteBundle::default()).id();
 commands.add(MyCustomCommand(id));
 ```
 
-To solve this, in **Bevy 0.10** we added the [`EntityCommand`](https://docs.rs/bevy/0.10.0/bevy/ecs/system/trait.EntityCommand.html) trait. This allows the command to be ergonomically applied to spawned entities:
+为了解决这个问题，在 **Bevy 0.10** 中，我们添加了 [`EntityCommand`](https://docs.rs/bevy/0.10.0/bevy/ecs/system/trait.EntityCommand.html) trait。这使得命令可以符合人体工程学地应用于生成的实体：
 
 ```rust
 struct MyCustomCommand;
 
 impl EntityCommand for MyCustomCommand {
     fn write(self, id: Entity, world: &mut World) {
-        // do something with the given entity id
+        // 对给定的实体 ID 进行操作
     }
 }
 
 commands.spawn(SpriteBundle::default()).add(MyCustomCommand);
 ```
 
-## Pixel Perfect Example [#](https://bevy.org/news/bevy-0-10/#pixel-perfect-example)
+## 像素完美示例 [#](https://bevy.org/news/bevy-0-10/#pixel-perfect-example)
 
-authors: @Ian-Yy
+作者：@Ian-Yy
 
-We now have a new ["pixel perfect" example](https://github.com/bevyengine/bevy/blob/v0.10.0/examples/2d/pixel_perfect.rs) that illustrates how to set up pixel-perfect sprites. It uses a cute new Bevy logo sprite!
+我们现在有一个新的["像素完美"示例](https://github.com/bevyengine/bevy/blob/v0.10.0/examples/2d/pixel_perfect.rs)，演示了如何设置像素完美的精灵。它使用了一个可爱的新的 Bevy 标志精灵！
 
-![pixel perfect](https://bevy.org/news/bevy-0-10/pixel_perfect.png)
+![像素完美](https://bevy.org/news/bevy-0-10/pixel_perfect.png)
 
-## UI Text Layout Example [#](https://bevy.org/news/bevy-0-10/#ui-text-layout-example)
+## UI 文本布局示例 [#](https://bevy.org/news/bevy-0-10/#ui-text-layout-example)
 
-authors: @ickshonpe
+作者：@ickshonpe
 
-We've added a nice ["text layout" example](https://github.com/bevyengine/bevy/blob/v0.10.0/examples/ui/text_layout.rs) that illustrates the various Bevy UI text layout settings:
+我们添加了一个漂亮的["文本布局"示例](https://github.com/bevyengine/bevy/blob/v0.10.0/examples/ui/text_layout.rs)，演示了各种 Bevy UI 文本布局设置：
 
-![text layout](https://bevy.org/news/bevy-0-10/text_layout.png)
+![文本布局](https://bevy.org/news/bevy-0-10/text_layout.png)
 
-## CI Improvements [#](https://bevy.org/news/bevy-0-10/#ci-improvements)
+## CI 改进 [#](https://bevy.org/news/bevy-0-10/#ci-improvements)
 
-authors: @mockersf
+作者：@mockersf
 
-We take CI pretty seriously in Bevy land and we're always on the lookout for new ways to make our lives better. We made a number of nice improvements this cycle:
+在 Bevy 领域，我们非常重视 CI，并且我们一直在寻找让我们的生活更美好的新方法。这个周期我们做了许多不错的改进：
 
-- We now set an MSRV (minimum supported Rust version) for the `bevy` crate and we have a CI job that checks the MSRV
-- CI gives new contributors a friendly welcome message!
-- CI now asks for a migration guide when a PR is labeled as a breaking change and no migration guide is present
+- 我们现在为 `bevy` crate 设置了 MSRV（最低支持的 Rust 版本），并且有一个 CI 任务来检查 MSRV
+- CI 现在会向新贡献者发送友好的欢迎信息！
+- 当一个 PR 被标记为破坏性变更但没有迁移指南时，CI 现在会要求提供一个迁移指南
 
-## The First Subject Matter Expert Release [#](https://bevy.org/news/bevy-0-10/#the-first-subject-matter-expert-release)
+## 第一个领域专家发布 [#](https://bevy.org/news/bevy-0-10/#the-first-subject-matter-expert-release)
 
-This was our first release using our new [Subject Matter Expert (SME) system](https://bevy.org/news/scaling-bevy-development/). We merged an absolutely massive amount of changes, and this was _despite_ our Project Lead `@cart` being away for about a month for Christmas and snowboarding vacations. We maintained a high quality bar and built amazing things. Suffice it to say the future is looking bright (and sustainable)! Stay tuned for more SME appointments in more areas.
+这是我们的第一次使用新的[领域专家（SME）系统](https://bevy.org/news/scaling-bevy-development/)的发布。我们合并了大量变化，这_还是_在我们的项目负责人 `@cart` 离开大约一个月去过圣诞节和滑雪假期的情况下完成的。我们保持了高质量标准，并构建了令人惊叹的东西。可以说，未来是光明的（且可持续的）！敬请期待在更多领域任命更多的 SME。
 
-## What's Next? [#](https://bevy.org/news/bevy-0-10/#what-s-next)
+## 下一步是什么？ [#](https://bevy.org/news/bevy-0-10/#what-s-next)
 
-- **Asset System Evolution**: We've made good progress on the [next iteration of the Bevy Asset System](https://github.com/bevyengine/bevy/discussions/3972), which will add the ability to preprocess assets and improve the flexibility and usability of the asset system.
-- **Kicking off the Bevy Editor Effort**: We are ready to start shifting our focus to building out the Bevy Editor! We've started [gathering requirements](https://github.com/bevyengine/bevy/discussions/7100) and would like to start the initial design phase in the **Bevy 0.11** cycle.
-- **Temporal Anti-Aliasing (TAA)**: We've largely implemented TAA, which uses motion vectors and time to produce a very popular screen space anti-aliasing effect.
-- **Screen Space Ambient Occlusion (SSAO)**: This is a popular, relatively cheap illumination technique that can make scenes look much more natural. It builds on the Depth Prepass work.
-- **Automated Render Batching and Instancing**: Automatically cut down draw calls by combining geometry or using instancing. This will enable Bevy to render hundreds of thousands of objects without grinding to a halt. We technically already support this, but it must be implemented manually outside of our standard pipeline. This will bring batching and instancing wins "for free" in our built-in render pipeline.
-- **One-shot systems:** Run arbitrary systems in a [push-based fashion via commands](https://github.com/bevyengine/bevy/issues/2192), and store them as callback components for ultra-flexible behavior customization.
-- **Better plugins:** Clearer and more standardized tools for [adapting third-party plugins to your app's unique architecture](https://github.com/bevyengine/bevy/issues/2160), eliminating [order-dependence in their initialization](https://github.com/bevyengine/bevy/issues/1255) and defining [dependencies](https://github.com/bevyengine/bevy/issues/69) between them.
-- **Pull `!Send` data out of the `World`:** storing non thread-safe data in a structure designed to be sent across threads has caused us no end of headaches. We plan on pulling these out into the `App`, resolving a major blocker for a first-class [multiple worlds](https://github.com/bevyengine/rfcs/pull/43) design.
-- **Timestamp window and input events:** As discussed in [#5984](https://github.com/bevyengine/bevy/issues/5984), tracking the exact timing of input events is essential to ensuring that event ordering and timing can be precisely reconstructed.
-- **Opt-out change detection:** improve performance for tiny components by [turning off change detection at compile or run-time](https://github.com/bevyengine/bevy/issues/4882).
-- **Comprehensive Animation Composition:** Supporting non-transitional animation composition (i.e. arbitrary weighted blending of animations). For more complete information, see the [RFC](https://github.com/bevyengine/rfcs/pull/51).
+- **资源系统演进**：我们在[Bevy 资源系统的下一个迭代](https://github.com/bevyengine/bevy/discussions/3972)上取得了良好进展，这将增加预处理资源的能力，并提高资源系统的灵活性和可用性。
+- **启动 Bevy 编辑器的努力**：我们准备开始将重心转向构建 Bevy 编辑器！我们已经开始[收集需求](https://github.com/bevyengine/bevy/discussions/7100)，并希望在 **Bevy 0.11** 周期内启动初始设计阶段。
+- **时间抗锯齿（TAA）**：我们已经基本实现了 TAA，它使用运动向量和时间来产生一种非常流行的屏幕空间抗锯齿效果。
+- **屏幕空间环境光遮蔽（SSAO）**：这是一种流行、相对廉价的照明技术，可以使场景看起来更自然。它建立在深度预处理工作的基础上。
+- **自动化渲染批处理和实例化**：通过组合几何体或使用实例化来自动减少绘制调用。这将使 Bevy 能够渲染数十万个对象而不会崩溃。我们技术上已经支持这个，但必须在我们的标准管线之外手动实现。这将在我们的内置渲染管线中"免费"带来批处理和实例化的好处。
+- **一次性系统**：通过命令以[推送方式运行任意系统](https://github.com/bevyengine/bevy/issues/2192)，并将其存储为回调组件，实现超灵活的行为定制。
+- **更好的插件**：用于[使第三方插件适应你的应用独特架构](https://github.com/bevyengine/bevy/issues/2160)、消除[初始化中的顺序依赖性](https://github.com/bevyengine/bevy/issues/1255)以及定义它们之间的[依赖关系](https://github.com/bevyengine/bevy/issues/69)的更清晰、更标准化的工具。
+- **将 `!Send` 数据从 `World` 中拉出**：将非线程安全的数据存储在旨在跨线程发送的结构中，给我们带来了无尽的头痛。我们计划将这些数据拉入 `App` 中，解决一等公民[多世界](https://github.com/bevyengine/rfcs/pull/43)设计的一个主要障碍。
+- **时间戳窗口和输入事件**：正如 [#5984](https://github.com/bevyengine/bevy/issues/5984) 中所讨论的，跟踪输入事件的确切时序对于确保事件排序和时序可以被精确重建至关重要。
+- **可选择退出的变更检测**：通过[在编译或运行时关闭变更检测](https://github.com/bevyengine/bevy/issues/4882)来提高小组件的性能。
+- **全面的动画组合**：支持非过渡性动画组合（即动画的任意加权混合）。更完整的信息请参见 [RFC](https://github.com/bevyengine/rfcs/pull/51)。
 
-Check out the [**Bevy 0.11 Milestone**](https://github.com/bevyengine/bevy/milestone/11) for an up-to-date list of current work being considered for **Bevy 0.11**.
+查看 [**Bevy 0.11 Milestone**](https://github.com/bevyengine/bevy/milestone/11) 获取正在考虑用于 **Bevy 0.11** 的最新工作列表。

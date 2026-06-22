@@ -1,0 +1,56 @@
+{
+    "mcpServers": {
+        "codegraph": {
+            "command": "codegraph",
+            "args": [
+                "serve",
+                "--mcp"
+            ],
+            "env": {}
+        },
+        "repomix": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "repomix",
+                "--mcp"
+            ]
+        },
+        "Git": {
+            "command": "uvx",
+            "args": [
+                "mcp-server-git",
+                "--repository",
+                "/Users/lf380/Code/Bevy/Fre"
+            ],
+            "env": {}
+        },
+        "Filesystem": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@modelcontextprotocol/server-filesystem",
+                "/Users/lf380"
+            ],
+            "env": {}
+        },
+        "context7": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@upstash/context7-mcp@latest"
+            ],
+            "env": {
+                "DEFAULT_MINIMUM_TOKENS": "10000"
+            }
+        },
+        "Sequential Thinking": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@modelcontextprotocol/server-sequential-thinking"
+            ],
+            "env": {}
+        }
+    }
+}
