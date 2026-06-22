@@ -24,7 +24,7 @@ use bevy::prelude::*;
 use battle::{
     BattleScreen, despawn_battle_screen, spawn_battle_screen,
     systems::{BattleAction, on_battle_button_clicked, on_dirty_battle_hud},
-    visibility::battle_zone_visibility_system,
+    visibility::{battle_zone_visibility_system, mark_battle_ui_passthrough},
 };
 use inventory::systems::on_inventory_button_clicked;
 use main_menu::{
@@ -103,6 +103,7 @@ impl Plugin for ScreenPlugin {
             .add_systems(
                 Update,
                 (
+                    mark_battle_ui_passthrough,
                     on_selection_changed,
                     on_selection_visual,
                     camera_follow_selection,

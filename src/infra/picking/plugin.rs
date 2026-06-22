@@ -10,6 +10,29 @@ use bevy::sprite::{SpritePickingMode, SpritePickingSettings};
 
 use super::selection::Selection;
 
+/// Debug: 全局 Pointer<Click> 观察者
+fn debug_click_handler(ev: On<Pointer<Click>>) {
+    let hit_pos = ev
+        .event()
+        .hit
+        .position
+        .map(|p| format!("({:.0},{:.0})", p.x, p.y));
+    println!(
+        "[DEBUG] Global click: target={:?} button={:?} pos={:?}",
+        ev.event_target(),
+        ev.event().button,
+        hit_pos.unwrap_or_default(),
+    );
+}
+
+/// Debug: 全局 Pointer<Over> 观察者
+fn debug_hover_handler(ev: On<Pointer<Over>>) {
+    println!(
+        "[DEBUG] Global over observer: target={:?}",
+        ev.event_target(),
+    );
+}
+
 /// Picking 基础设施插件
 ///
 /// - 设置 SpritePickingMode::BoundingBox（纯色方块不需要 Alpha 检测）
@@ -27,11 +50,9 @@ impl Plugin for PickingPlugin {
             // 不需要标记摄像头，所有 Camera2d 参与 picking
             require_markers: false,
         })
-        .insert_resource(PickingSettings {
-            // 禁用窗口级 picking，减少 UI 树干扰
-            is_window_picking_enabled: false,
-            ..default()
-        })
-        .init_resource::<Selection>();
+        .insert_resource(PickingSettings { ..default() })
+        .init_resource::<Selection>()
+        .add_observer(debug_click_handler)
+        .add_observer(debug_hover_handler);
     }
 }

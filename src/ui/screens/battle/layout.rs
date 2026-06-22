@@ -27,9 +27,12 @@ pub enum BattleZone {
 
 /// Spawn a zone container anchored to a specific screen position.
 /// Zone containers are siblings with PositionType::Absolute.
+/// All zones use Pickable::IGNORE to let sprite picking pass through.
 pub fn spawn_zone(commands: &mut Commands, theme: &Theme, zone: BattleZone) -> Entity {
     let (node, name) = zone_layout(zone, theme);
-    commands.spawn((node, Name::new(name), zone)).id()
+    commands
+        .spawn((node, Name::new(name), zone, Pickable::IGNORE))
+        .id()
 }
 
 fn zone_layout(zone: BattleZone, theme: &Theme) -> (Node, &'static str) {

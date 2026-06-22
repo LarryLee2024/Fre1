@@ -76,22 +76,28 @@ fn on_unit_click(
     unit_ids: Query<&UnitIdComponent>,
     mut selection: ResMut<Selection>,
 ) {
+    println!(
+        "[DEBUG] on_unit_click fired! button={:?} entity={:?}",
+        ev.event().button,
+        ev.event_target()
+    );
+
     // 右键点击 → 取消选择
     if ev.event().button == PointerButton::Secondary {
         selection.selected_unit = None;
-        tracing::info!(target: "picking", "[Picking] Unit deselected (right-click)");
+        println!("[DEBUG] Right-click deselected");
         return;
     }
 
     let Ok(uid) = unit_ids.get(ev.event_target()) else {
+        println!("[DEBUG] Clicked entity has no UnitIdComponent");
         return;
     };
     selection.selected_unit = Some(ev.event_target());
-    tracing::info!(
-        target: "picking",
+    println!(
         "[Picking] Unit selected: {} (entity={:?})",
         uid.id,
-        ev.event_target(),
+        ev.event_target()
     );
 }
 
@@ -187,9 +193,10 @@ pub fn attach_unit_visuals(
             .observe(on_unit_unhover);
 
         tracing::trace!(target: "app",
-            "Attached visual for unit {} at ({}, {})",
-            uid.id, pos.x, pos.y,
+            "Attached visual for unit {} at ({}, {}) — entity={:?}",
+            uid.id, pos.x, pos.y, entity,
         );
+        println!("[DEBUG] Unit entity: {:?} id={}", entity, uid.id);
     }
 }
 
