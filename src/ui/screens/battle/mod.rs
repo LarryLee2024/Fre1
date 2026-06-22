@@ -38,6 +38,7 @@ use crate::ui::widgets::action_menu::factory::spawn_action_menu;
 use crate::ui::widgets::character_card::factory::spawn_character_card;
 use crate::ui::widgets::skill_panel::factory::spawn_skill_panel;
 use crate::ui::widgets::turn_order_bar::factory::spawn_turn_order_bar;
+use crate::ui::widgets::unit_summary::factory::spawn_unit_summary;
 
 use crate::ui::view_models::battle_hud::{BattleHudData, BattleHudVm};
 
@@ -112,10 +113,19 @@ pub fn spawn_battle_screen(
     );
     commands.entity(turn_text).set_parent_in_place(z2);
 
-    // ── Z3: 右上区 — 单位摘要 [P2] ──
-    // TODO[P2][UI][2026-07-21]: 添加 UnitSummary Widget
+    // ── Z3: 右上区 — 单位摘要 ──
     let z3 = spawn_zone(&mut commands, &theme, BattleZone::Z3TopRight);
     commands.entity(z3).set_parent_in_place(root);
+    let unit_summary = spawn_unit_summary(
+        &mut commands,
+        &asset_server,
+        &theme,
+        &data.character_name,
+        data.level,
+        data.hp_current,
+        data.hp_max,
+    );
+    commands.entity(unit_summary).set_parent_in_place(z3);
 
     // ── Z5: 左下区 — 角色卡 ──
     let z5 = spawn_zone(&mut commands, &theme, BattleZone::Z5BottomLeft);

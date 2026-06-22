@@ -412,7 +412,7 @@ status: active
 
 > 根据 2026-06-22 评审结果安排 3 轮 8 个 agent 修复。更新人: @Claude Code
 
-### 已修复 (14/15 项) — 2026-06-22 更新
+### 已修复 (16/16 项) — 2026-06-22 最终更新
 
 | # | 问题 | 文件 | 修复内容 | 状态 |
 |---|------|------|---------|------|
@@ -424,20 +424,32 @@ status: active
 | P1-6 | SettingsScreen 过于简化 | screens/settings/ | 从 2 Toggle 扩展到 5 Toggle | ✅ 已修复 |
 | P1-7 | Z2 PhaseText + TurnNumber 缺失 | screens/battle/, localization/ | 阶段文本+回合数，三语言 FTL | ✅ 已修复 |
 | P1-8 | 本地化 Text::new 审计 | screens/ 全扫描 | 无违规——所有 Screen 已正确使用工厂模式 | ✅ 已确认无违规 |
+| P2-4a | Z3 UnitSummary 缺失 | widgets/unit_summary/, screens/battle/ | 新建 unit_summary widget，Z3 区域填充 | ✅ 已修复 |
+| P2-4b | CharacterStatusPanel 未注册 | widgets/character_status_panel/ | 新实现 Organism（components/factory/plugin） | ✅ 已修复 |
+| P2-4c | buff_icon 未注册 | widgets/buff_icon/ | 代码已存在，补全注册到 WidgetsPlugin | ✅ 已修复 |
 | P2-6 | TurnOrderBar (Z8) | widgets/turn_order_bar/ | 新建 turn_order_bar widget | ✅ 已修复 |
 | P2-7 | Z2TopCenter 未水平居中 | screens/battle/layout.rs | justify_content/align_items 居中 | ✅ 已修复 |
 | P2-8 | UiStore 字段不足 | view_models/ | 新增 InventoryVm/ShopPanelVm/EconomyVm | ✅ 已修复 |
 | P2-9 | EconomyProjection 激活 | projections/economy.rs | on_currency_changed 投影激活 | ✅ 已修复 |
-| — | 文档修正 x3 | architecture.md, theme-localization.md, widget-composites.md | 豁免条款/目录结构调整 | ✅ 已修复 |
-| — | BSN 适用性分析归档 | architecture.md §2.5.1 | 实证分析结论写入架构文档 | ✅ 已修复 |
+| — | 文档修正 x3 + BSN 论证 | architecture.md, theme-localization.md, widget-composites.md | 豁免条款/目录结构调整/BSN 实证分析 | ✅ 已修复 |
 
-### 待修复 (3 项) — 2026-06-22 更新
+### 修复汇总
 
-| # | 问题 | 依赖 | 优先级 |
-|---|------|------|--------|
-| P2-1/2 | ScreenStack 导航激活 | 架构决策：是否从 OnEnter/OnExit 迁移到 ScreenStack push/pop | P2 |
-| P2-4 | 剩余复合组件 | 按优先级: BattleHud > CharacterStatusPanel > 其他 (部分已完成) | P2 |
-| P3-1~3 | Theme RON/变体/SettingsGroup | 长期规划 | P3 |
+- **总问题数**: 16 项（含文档修正）
+- **已修复**: 16/16 ✅
+- **剩余**: 0 项
+
+### 待办清单（长期/架构决策）
+
+以下不在本次评审修复范围内，列为后续规划参考：
+
+| 项目 | 类型 | 说明 |
+|------|------|------|
+| ScreenStack 导航激活 (P2-1/2) | 架构决策 | 从 OnEnter/OnExit 迁移到 ScreenStack push/pop |
+| Theme RON 配置 (P3-1) | 长期规划 | Theme 定义从 Rust 代码迁移到 RON 文件 |
+| SettingsGroup 集成 (P3-2) | 长期规划 | UiSettings 迁移到 Bevy 0.19 SettingsGroup trait |
+| Theme 变体 (P3-3) | 长期规划 | Pixel/HD2D 主题变体 |
+| Quest/Dialogue 组件 (P2-4 低优先级) | 后续迭代 | QuestEntry/QuestLog/DialogueChoice/DialoguePanel |
 
 ---
 

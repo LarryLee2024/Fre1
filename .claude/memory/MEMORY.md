@@ -24,6 +24,7 @@
 - [project-bevy-translations](project-bevy-translations.md) — Bevy 版本翻译进度与规范
 - [battle-hud-data-flow](battle-hud-data-flow-2026-06-22.md) — BattleHudData Resource + UiBinding + Dirty消费链
 - [skill-panel-widget](skill-panel-widget-implementation.md) — SkillPanel Organism: spawn_skill_slot wrapper, skill_id override, Z7 integration, SkillPanelPlugin
+- [character-status-panel-widget](character-status-panel-widget.md) — CharacterStatusPanel Organism: factory, components, plugin, UI tree structure
 - [project-ui-review-2026-06-22](project-ui-review-2026-06-22.md) — UI 设计-代码偏移评审及 11 agent 批量修复
 
 ## decision

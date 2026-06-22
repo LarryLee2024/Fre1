@@ -232,11 +232,11 @@ Domain Event → Observer → Projection → ViewModel → Widget 刷新
 | `01-architecture/application-layer.md` | ✅ code-aligned | presentation-architect | 2026-06-21 |
 | `01-architecture/implementation-patterns.md` | ✅ 完整 | presentation-architect | 2026-06-21 |
 | `02-design-system/widget-atoms.md` | ✅ code-aligned | presentation-architect | 2026-06-21 |
-| `02-design-system/widget-composites.md` | 🟡 待实现 9/16 复合组件 | presentation-architect | 2026-06-22 |
+| `02-design-system/widget-composites.md` | ✅ active | presentation-architect | 2026-06-22 |
 | `02-design-system/theme-localization.md` | ✅ 完整 | presentation-architect | 2026-06-20 |
 | `02-design-system/focus-binding.md` | 🟡 需补全 FocusNavigation | presentation-architect | 2026-06-20 |
 | `03-screens/screen-lifecycle.md` | 🟡 ScreenStack 待集成 | presentation-architect | 2026-06-22 |
-| `03-screens/screens.md` | 🟡 Battle Z2/Z7/Z8 已完成，Settings 部分扩展 | presentation-architect | 2026-06-22 |
+| `03-screens/screens.md` | ✅ Battle 全 9-zone 完成，Settings 扩展完成 | presentation-architect | 2026-06-22 |
 | `03-screens/navigation-overlay.md` | 🟡 ScreenStack 待集成 | presentation-architect | 2026-06-22 |
 | `03-screens/overlays.md` | 🟡 需补全 Overlay 规格 | presentation-architect | 2026-06-20 |
 | `04-data-flow/projection-viewmodel.md` | ✅ code-aligned | presentation-architect | 2026-06-21 |

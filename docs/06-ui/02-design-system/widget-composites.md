@@ -2,7 +2,7 @@
 id: 06-ui.widget-composites
 title: Widget Composites — 复合组件（Molecules / Organisms）
 status: code-aligned
-updated: 2026-06-21
+updated: 2026-06-22
 owner: presentation-architect
 created: 2026-06-20
 tags:
@@ -26,7 +26,7 @@ tags:
 
 ---
 
-> **实现状态**: 12/16 复合组件已实现（MVP）。详见各章节。未实现组件：QuestEntry (§2.4)、DialogueChoice (§2.5)、QuestLog (§3.6)、DialoguePanel (§3.7)。
+> **实现状态**: 14/16 复合组件已实现（MVP，2026-06-22 更新）。详见各章节。未实现组件：QuestEntry (§2.4)、DialogueChoice (§2.5)、QuestLog (§3.6)、DialoguePanel (§3.7)。
 
 ## 1. 设计目的
 

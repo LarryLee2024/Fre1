@@ -26,11 +26,7 @@ pub enum BuffType {
 /// `false` → `Buff`, `true` → `Debuff`
 impl From<bool> for BuffType {
     fn from(is_debuff: bool) -> Self {
-        if is_debuff {
-            Self::Debuff
-        } else {
-            Self::Buff
-        }
+        if is_debuff { Self::Debuff } else { Self::Buff }
     }
 }
 

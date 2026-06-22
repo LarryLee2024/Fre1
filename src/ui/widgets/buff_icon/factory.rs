@@ -7,18 +7,11 @@
 
 use bevy::prelude::*;
 
-use crate::ui::primitives::panel::{
-    components::PanelVariant,
-    factory::spawn_panel,
-};
+use crate::ui::primitives::panel::{components::PanelVariant, factory::spawn_panel};
 use crate::ui::primitives::progress_bar::{
-    components::ProgressBarVariant,
-    factory::spawn_progress_bar,
+    components::ProgressBarVariant, factory::spawn_progress_bar,
 };
-use crate::ui::primitives::text::{
-    components::TextVariant,
-    factory::spawn_text,
-};
+use crate::ui::primitives::text::{components::TextVariant, factory::spawn_text};
 use crate::ui::theme::Theme;
 
 use super::components::{BuffIconState, BuffType};
@@ -99,19 +92,39 @@ pub fn spawn_buff_icon(
 
     // ── 2. Remaining turns text (centered, emphasis) ──
     let turns_str = remaining_turns.to_string();
-    let turns_text = spawn_text(commands, asset_server, theme, &turns_str, TextVariant::Caption);
+    let turns_text = spawn_text(
+        commands,
+        asset_server,
+        theme,
+        &turns_str,
+        TextVariant::Caption,
+    );
     // 覆盖为主色调以提高可见性
-    commands.entity(turns_text).insert(TextColor(theme.colors.text_primary));
+    commands
+        .entity(turns_text)
+        .insert(TextColor(theme.colors.text_primary));
     commands.entity(turns_text).set_parent_in_place(container);
 
     // ── 3. Buff name text (secondary color, small) ──
-    let name_text = spawn_text(commands, asset_server, theme, &name_str, TextVariant::Caption);
+    let name_text = spawn_text(
+        commands,
+        asset_server,
+        theme,
+        &name_str,
+        TextVariant::Caption,
+    );
     commands.entity(name_text).set_parent_in_place(container);
 
     // ── 4. Stacks badge (top-right corner, only if stacks > 0) ──
     if stacks > 0 {
         let stacks_str = stacks.to_string();
-        let stacks_text = spawn_text(commands, asset_server, theme, &stacks_str, TextVariant::Caption);
+        let stacks_text = spawn_text(
+            commands,
+            asset_server,
+            theme,
+            &stacks_str,
+            TextVariant::Caption,
+        );
         commands.entity(stacks_text).insert((
             TextColor(theme.colors.text_accent),
             Node {
