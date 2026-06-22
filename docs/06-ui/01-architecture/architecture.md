@@ -443,6 +443,8 @@ Screen 只做组合，不直接拼 Node。布局细节属于 Widget 内部。
 4. **颜色字体间距统一 Token 化** — 禁止 `Color::srgb()` 直接写在 Widget 中
 5. **Primitives 隔离** — Widgets 和 Screens 禁止直接 import Bevy UI 原语（Node、Button、Interaction、BackgroundColor 等），必须通过 Primitives 层
 
+   > **豁免**: UI Root 层节点（Screen 根容器的直接子节点，如 Overlay 层级、占位符容器）允许直接 `commands.spawn` 原始 Node/BackgroundColor。此豁免仅适用于**没有对应 Primitives 工厂的特殊场景**，常规 UI 元素仍需通过工厂创建。
+
 违反任何一条，50 万行后 UI 必然成为最大技术债。
 
 （引用：ADR-055 §5 — UI 宪法级规则；§14 — 四条铁律；domain rules §INV-UI-009 — 四条铁律精简版）

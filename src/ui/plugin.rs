@@ -23,6 +23,7 @@ use super::projections::battle::{
     on_effect_applied_projection, on_turn_ended_projection, on_turn_started_projection,
     on_turn_started_skill_projection, on_unit_died_projection,
 };
+use super::projections::economy::on_currency_changed_projection;
 use super::screens::ScreenPlugin;
 use super::settings::{UiSettings, load_settings};
 use super::theme::ThemePlugin;
@@ -82,6 +83,9 @@ impl Plugin for UiPlugin {
         app.add_observer(on_turn_started_skill_projection);
         app.add_observer(on_damage_dealt_projection);
         app.add_observer(on_unit_died_projection);
+
+        // Economy — 金币变更投影
+        app.add_observer(on_currency_changed_projection);
 
         // 8. Bridge — UiCommand 到 GameCommand 的桥接（Observer 模式）
         app.add_observer(process_ui_commands);

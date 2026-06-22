@@ -14,6 +14,62 @@
 
 ---
 
+## Bevy 0.19 — 下一代场景与文本输入革命
+
+| 大类 | 项目 | 详细描述 | SRPG项目应用建议 |
+| --- | --- | --- | --- |
+| **场景系统** | ⭐️⭐️⭐️ 下一代场景（BSN） | ✅ **Next Generation Scenes (BSN)**：<br>**定义/概念**：全新场景系统，bsn!宏定义场景<br>**解决问题**：0.18 Bundle繁琐/依赖手动传递<br>**核心能力**：<br>- `bsn!`宏：符合人体工学的场景语法<br>- 可选字段：无需Default::default<br>- 关系支持：Children/自定义关系<br>- 场景函数：`fn player() -> impl Scene`<br>- 可组合补丁：层层叠加<br>- 资源依赖：`:"player.bsn"`缓存语法<br>- 模板系统：Template/FromTemplate<br>- 实体引用：`#Root`语法<br>- 隐式Into：`px(2)`替代`Val::Px(2.)`<br>- SceneComponent：组件关联场景<br>- 场景列表：`bsn_list!`<br>**版本对比**：✅ 0.18→0.19 新增，0.18无BSN | **战棋场景**：<br>- 单位：声明式定义<br>- UI：大幅简化<br>- 补丁：场景叠加<br>- 模板：自动加载资源<br>- 复用：函数返回场景<br>- 编辑器：基础 |
+| **渲染系统** | ⭐️⭐️⭐️ 更快渲染大场景 | ⚠️ **Render Big Scenes Faster**：<br>**定义/概念**：GPU驱动渲染大幅优化<br>**性能提升**：<br>- many_cubes：49ms→18ms（2.7倍）<br>- bevy_city：19ms→11ms（静态）<br>**核心优化**：<br>- GPU解包多可绘制批次集（-1.5ms）<br>- 批量深度预渲染<br>- 稀疏网格uniform缓冲上传<br>- 灯光/光照探针/贴花GPU聚类（20倍）<br>- 增加系统并行度<br>- 可见性范围GPU检查<br>- 批量变形目标（2倍）<br>- NoCpuCulling优化<br>- 并行网格收集（-4ms）<br>**版本对比**：⚠️ 0.18→0.19 优化，0.18较慢 | **战棋渲染**：<br>- 大场景：2.7倍加速<br>- 大量单位：GPU聚类<br>- 变形目标：批量渲染<br>- 静态对象：显著优化<br>- 多光源：20倍聚类 |
+| **渲染系统** | ⭐️⭐️ 接触阴影 | ✅ **Contact Shadows**：<br>**定义/概念**：屏幕空间短距离光线投射阴影<br>**解决问题**：0.18阴影贴图近距离质量差<br>**核心组件**：<br>`ContactShadows`添加到相机<br>`contact_shadows_enabled: true`在灯光<br>**效果**：<br>- 阴影正确贴合表面<br>- 强调微妙曲线<br>- 支持方向光/点光源/聚光灯<br>**成本**：与像素数×光源数成正比<br>**版本对比**：✅ 0.18→0.19 新增，0.18无接触阴影 | **战棋渲染**：<br>- 角色：细节阴影<br>- 物体：正确附着<br>- 近距离：高质量<br>- 成本：可接受 |
+| **渲染系统** | ⭐️⭐️ 基于物理的SSR | ⚠️ **Physically Based SSR**：<br>**定义/概念**：屏幕空间反射使用基于物理算法<br>**效果**：大幅反射质量提升<br>**版本对比**：⚠️ 0.18→0.19 变更，0.18 SSR质量低 | **战棋渲染**：<br>- 反射：更真实<br>- 材质：PBR正确<br>- 质量：显著提升 |
+| **渲染系统** | ⭐️⭐️ 矩形区域光 | ✅ **Rectangular Area Lights**：<br>**定义/概念**：矩形区域光源<br>**核心技术**：线性变换余弦（LTC）<br>**限制**：不投射阴影，不支持各向异性<br>**配置**：`area_light_luts` cargo feature<br>**版本对比**：✅ 0.18→0.19 新增，0.18无区域光 | **战棋渲染**：<br>- 窗户：矩形光源<br>- 屏幕：面光源<br>- 室内：真实照明<br>- 需启用feature |
+| **渲染系统** | ⭐️⭐️ 视差校正立方体贴图 | ✅ **Parallax Corrected Cubemaps**：<br>**定义/概念**：反射探针视差校正<br>**解决问题**：0.18室内反射不真实<br>**核心能力**：<br>- 探针包围盒作为校正体积<br>- 默认启用<br>`ParallaxCorrection::None`禁用<br>**效果**：室内反射匹配几何体<br>**版本对比**：✅ 0.18→0.19 新增，0.18无视差校正 | **战棋渲染**：<br>- 室内：反射正确<br>- 房间：匹配几何<br>- 默认：自动启用<br>- 兼容：Blender方法 |
+| **渲染系统** | ⭐️⭐️ 部分无绑定 | ⚠️ **Partial Bindless**：<br>**定义/概念**：按材质实际需求选择无绑定<br>**解决问题**：0.18要求纹理+缓冲都支持才启用<br>**核心改进**：<br>- Metal支持纹理数组无绑定<br>- 修复采样器限制检查<br>- 跳过未使用资源类型<br>**性能**：NVIDIA +46%，Apple +15%<br>**版本对比**：⚠️ 0.18→0.19 变更，0.18排除Metal | **战棋渲染**：<br>- Mac：终于支持无绑定<br>- 性能：显著提升<br>- 内存：减少<br>- StandardMaterial：快速路径 |
+| **渲染系统** | ⭐️⭐️ 渲染恢复 | ✅ **Render Recovery**：<br>**定义/概念**：GPU错误类型化恢复<br>**解决问题**：0.18 GPU错误导致崩溃/挂起<br>**核心API**：<br>`RenderErrorHandler`资源<br>`RenderErrorPolicy::Recover/StopRendering/Ignore`<br>**错误类型**：DeviceLost/OutOfMemory/Validation/Internal<br>**版本对比**：✅ 0.18→0.19 新增，0.18无恢复 | **战棋运行**：<br>- 驱动崩溃：恢复<br>- VR头显：优雅处理<br>- 内存不足：停止渲染<br>- 可配置：按类型处理 |
+| **渲染系统** | ⭐️⭐️ 渲染图作为System | ⚠️ **Render Graph as Systems**：<br>**定义/概念**：渲染图被ECS Schedule替代<br>**解决问题**：0.18 Node/RenderLabel样板多<br>**核心变更**：<br>- 渲染通道=普通System<br>`render_app.add_systems(Core3d, my_system.after(Core3dSystems::MainPass))`<br>- 无需Node/RenderLabel<br>**版本对比**：⚠️ 0.18→0.19 变更，0.18为RenderGraph | **战棋渲染**：<br>- 自定义：更简单<br>- 系统：普通System<br>- 并行：ECS调度<br>- 样板：大幅减少 |
+| **渲染优化** | ⭐️ 改进蒙皮网格剔除 | ✅ **Improved Skinned Mesh Culling**：<br>**定义/概念**：蒙皮网格从关节位置计算包围体<br>**解决问题**：0.18动画角色消失<br>**核心改进**：每帧从实际关节位置计算<br>`mesh.generate_skinned_mesh_bounds()`<br>`DynamicSkinnedMeshBounds`组件<br>**版本对比**：✅ 0.18→0.19 新增，0.18用静止姿势 | **战棋动画**：<br>- 角色：不再消失<br>- 动画：正确剔除<br>- glTF：自动处理<br>- 手工：需手动添加 |
+| **UI系统** | ⭐️⭐️⭐️ 文本输入 | ✅ **Text Input (EditableText)**：<br>**定义/概念**：上游文本输入支持<br>**核心组件**：<br>`EditableText`组件<br>**核心能力**：<br>- 打字/光标导航/选择<br>- 多点点击（双击词/三击行）<br>- 退格和删除（字符/词）<br>- 剪贴板：系统/应用内<br>- Unicode感知/双向文本<br>- IME支持（中日韩）<br>- 多行/水平滚动<br>`EditableTextFilter`输入过滤<br>`SelectAllOnFocus`聚焦全选<br>`max_characters`最大字符<br>**版本对比**：✅ 0.18→0.19 新增，0.18无文本输入 | **战棋UI**：<br>- 输入框：玩家名<br>- 聊天：消息输入<br>- 控制台：调试输入<br>- 搜索：过滤功能<br>- 缺少：撤销重做 |
+| **字体系统** | ⭐️⭐️ 更丰富的文本 | ✅ **Richer Text**：<br>**定义/概念**：字体选择/可变属性/响应式大小<br>**核心改进**：<br>- `FontSource`：Handle/Family/Monospace/Serif等<br>- `FontCx`：配置通用字体默认值<br>- `TextFont.weight/width/style`：可变字体属性<br>- `FontSize`：Px/Vw/Vh/VMin/VMax/Rem<br>- `LetterSpacing`：字母间距<br>- 迁移到`parley`（替代cosmic-text）<br>**版本对比**：✅ 0.18→0.19 新增，0.18文本功能稀疏 | **战棋UI**：<br>- 字体族：语义选择<br>- 可变字体：粗细/宽度<br>- 响应式：Vh/Rem缩放<br>- 字母间距：排版调整<br>- 系统字体：编辑器 |
+| **资源系统** | ⭐️⭐️ 应用设置 | ✅ **App Settings**：<br>**定义/概念**：通用应用设置框架<br>**核心API**：<br>`SettingsPlugin::new("com.example.mygame")`<br>`#[derive(Resource, SettingsGroup, Reflect)]`<br>`SaveSettingsDeferred`/`SaveSettingsSync`<br>**用例**：图形/音量/窗口/工具偏好<br>**版本对比**：✅ 0.18→0.19 新增，0.18无设置框架 | **战棋设置**：<br>- 图形：质量选项<br>- 音量：音乐/音效<br>- 窗口：位置/大小<br>- 持久化：自动保存<br>- 编辑器：布局偏好 |
+| **渲染系统** | ⭐️⭐️ 后处理效果 | ✅ **Vignette + Lens Distortion**：<br>**Vignette（暗角）**：<br>`Vignette { intensity, radius, smoothness, color }`<br>**Lens Distortion（镜头畸变）**：<br>`LensDistortion { intensity, scale, multiplier }`<br>正intensity：桶形畸变<br>负intensity：枕形畸变<br>**版本对比**：✅ 0.18→0.19 新增，0.18无暗角/畸变 | **战棋视觉**：<br>- 暗角：聚焦中心<br>- 畸变：电影效果<br>- 桶形：广角效果<br>- 枕形：鱼眼效果 |
+| **ECS核心** | ⭐️⭐️ 资源作为组件 | ⚠️ **Resources as Components**：<br>**定义/概念**：资源存储在单例实体上<br>**解决问题**：0.18资源/组件分离导致工具不通用<br>**核心能力**：<br>- Query资源<br>- 资源关系<br>- 资源观察者/Hook<br>- 资源不可变<br>**版本对比**：⚠️ 0.18→0.19 变更，0.18资源/组件分离 | **战棋架构**：<br>- 统一：资源/组件一体<br>- Query：灵活查询<br>- 关系：资源链接<br>- 工具：统一处理 |
+| **ECS核心** | ⭐️ 连续Query访问 | ✅ **Contiguous Query Access**：<br>**定义/概念**：SIMD友好的连续内存查询<br>**核心API**：<br>`query.contiguous_iter_mut().unwrap()`<br>`bypass_change_detection()`跳过检测<br>**性能**：AVX2下1.87µs（vs 5.51µs）<br>**限制**：仅table存储，无Changed/Added过滤<br>**版本对比**：✅ 0.18→0.19 新增，0.18无连续访问 | **战棋性能**：<br>- 物理：批量更新<br>- SIMD：自动向量化<br>- 变更检测：可选跳过<br>- 热循环：性能关键 |
+| **ECS核心** | ⭐️ 延迟命令 | ✅ **Delayed Commands**：<br>**定义/概念**：延迟任意命令稍后执行<br>**核心API**：<br>`commands.delayed().secs(1.0).spawn(DummyComponent)`<br>`commands.delayed().secs(0.5).entity(e).insert(C)`<br>**限制**：无内置取消机制<br>**版本对比**：✅ 0.18→0.19 新增，0.18无延迟命令 | **战棋系统**：<br>- 延迟：定时效果<br>- VFX：延迟生成<br>- 音频：延迟播放<br>- 模式：嵌入Entity取消 |
+| **调试系统** | ⭐️ 诊断覆盖层 | ✅ **Diagnostics Overlay**：<br>**定义/概念**：内置诊断信息覆盖层<br>**核心API**：<br>`DiagnosticsOverlay::fps()`<br>`DiagnosticsOverlay::mesh_and_standard_material()`<br>`DiagnosticsOverlay::new("Title", vec![...])`<br>**版本对比**：✅ 0.18→0.19 新增，0.18无内置覆盖层 | **战棋调试**：<br>- FPS：实时显示<br>- 内存：资源监控<br>- 自定义：任意诊断<br>- 预设：常用组合 |
+| **调试系统** | ⭐️ 文本Gizmo | ✅ **Text Gizmos**：<br>**定义/概念**：世界空间调试文本<br>**核心API**：<br>`gizmos.text_2d(isometry, "Hello", 40.0, anchor, color)`<br>**限制**：仅ASCII，固定字体，仅调试<br>**版本对比**：✅ 0.18→0.19 新增，0.18无文本Gizmo | **战棋调试**：<br>- 标签：调试显示<br>- 位置：世界空间<br>- 快速：零设置<br>- 仅ASCII |
+| **平台支持** | ⭐️ 可取消Web任务 | ✅ **Cancellable Web Tasks**：<br>**定义/概念**：Web平台Task支持取消<br>**解决问题**：0.18 WASM Task无法取消<br>**核心实现**：web-task crate协作式取消<br>**效果**：drop语义跨平台一致<br>**版本对比**：✅ 0.18→0.19 新增，0.18 Web任务泄漏 | **战棋Web**：<br>- 任务：正确取消<br>- 一致性：跨平台<br>- 内存：不再泄漏 |
+| **资源系统** | ⭐️ 资源保存 | ✅ **Asset Saving**：<br>**定义/概念**：运行时保存资源到磁盘<br>**核心API**：<br>`SavedAsset::from_asset(&asset)`<br>`SavedAssetBuilder`（子资源）<br>`save_using_saver(saver, path, asset, settings).await`<br>**用途**：程序化网格/光照贴图/编辑器输出<br>**版本对比**：✅ 0.18→0.19 新增，0.18仅处理管道内保存 | **战棋资源**：<br>- 保存：运行时持久化<br>- 网格：程序化生成<br>- 编辑器：工作流输出<br>- 异步：IoTaskPool |
+| **ECS核心** | ⭐️ 远程实体预留 | ✅ **Remote Entity Reservation**：<br>**定义/概念**：无需World引用预留实体ID<br>**解决问题**：0.18并行初始化需阻塞World<br>**核心能力**：任意线程预留实体ID<br>**版本对比**：✅ 0.18→0.19 新增，0.18需World引用 | **战棋系统**：<br>- 并行：后台准备<br>- 资产：异步初始化<br>- 性能：无阻塞 |
+| **ECS核心** | ⭐️ 自引用关系 | ✅ **Self-Referential Relationships**：<br>**定义/概念**：允许关系指向自身<br>**核心API**：<br>`#[relationship(relationship_target = PeopleILike, allow_self_referential)]`<br>**用例**：Likes(self)/EmployedBy(self)等<br>**版本对比**：✅ 0.18→0.19 新增，0.18拒绝自引用 | **战棋系统**：<br>- 语义关系：自引用<br>- 状态：实体自身<br>- 需显式启用 |
+| **ECS核心** | ⭐️ Observer运行条件 | ✅ **Observer Run Conditions**：<br>**定义/概念**：观察者支持运行条件<br>**核心API**：<br>`app.add_observer(on_damage.run_if(\|paused: Res<GamePaused>\| !paused.0))`<br>`.run_if(resource_exists::<Player>)`<br>**版本对比**：✅ 0.18→0.19 新增，0.18观察者无运行条件 | **战棋系统**：<br>- 条件：观察者跳过<br>- 暂停：游戏暂停<br>- 组合：多条件链<br>- 灵活：复用模式 |
+| **调试系统** | ⭐️ 交互式Transform Gizmo | ✅ **Interactive Transform Gizmo**：<br>**定义/概念**：内置3D视口平移/旋转/缩放手柄<br>**核心API**：<br>`TransformGizmoPlugin`<br>`TransformGizmoCamera`标记相机<br>`TransformGizmoFocus`标记实体<br>`TransformGizmoSettings`配置<br>`TransformGizmoMode`资源<br>**版本对比**：✅ 0.18→0.19 新增，0.18无内置Gizmo | **战棋工具**：<br>- 编辑器：3D操作<br>- 关卡：放置物体<br>- 灵敏度：可配置<br>- 吸附：网格对齐 |
+| **调试系统** | ⭐️ 无限网格 | ✅ **Infinite Grid**：<br>**定义/概念**：全屏着色器渲染透明地面网格<br>**核心API**：<br>`InfiniteGridPlugin`<br>`InfiniteGrid`组件<br>`InfiniteGridSettings`配置<br>**效果**：标记主轴/定向/比例<br>**版本对比**：✅ 0.18→0.19 新增，0.18无无限网格 | **战棋工具**：<br>- 编辑器：地面参考<br>- 方向：主轴标记<br>- 比例：清晰可辨<br>- 淡出：消除锯齿 |
+| **渲染系统** | ⭐️ 白炉测试通过 | ⚠️ **White Furnace Test Passed**：<br>**定义/概念**：PBR着色器通过能量守恒测试<br>**修复**：<br>- GeneratedEnvironmentMapLight接缝<br>- 部分金属材质吸收能量<br>**效果**：基于图像照明更正确<br>**版本对比**：⚠️ 0.18→0.19 修复，0.18未通过 | **战棋渲染**：<br>- 材质：正确能量<br>- IBL：更准确<br>- 金属：不再过暗<br>- 物理：能量守恒 |
+| **反射系统** | ⭐️ Handle序列化 | ✅ **Serializing Asset Handles**：<br>**定义/概念**：资源句柄序列化/反序列化往返<br>**核心实现**：存储资源路径，反序列化时重新加载<br>**处理器**：HandleSerializeProcessor/HandleDeserializeProcessor<br>**要求**：`#[derive(Asset, Reflect)] #[reflect(Asset)]`<br>**版本对比**：✅ 0.18→0.19 新增，0.18 Handle不可序列化 | **战棋资源**：<br>- 保存：Handle持久化<br>- 加载：路径重新加载<br>- 场景：世界资源<br>- 反射：正确实现 |
+| **渲染系统** | ⭐️ 无障碍标签组件 | ✅ **Accessible Label Component**：<br>**定义/概念**：AccessibleLabel独立组件<br>**解决问题**：0.18 label嵌入AccessibilityNode不灵活<br>**效果**：BSN模板中作为mixin<br>**版本对比**：✅ 0.18→0.19 新增，0.18 label耦合 | **战棋UI**：<br>- 无障碍：标签分离<br>- BSN：组合复用<br>- 屏幕阅读器：支持 |
+
+## Bevy 0.18 — 大气PBR着色与全屏材质革命
+
+| 大类 | 项目 | 详细描述 | SRPG项目应用建议 |
+| --- | --- | --- | --- |
+| **渲染系统** | ⭐️⭐️⭐️ 大气遮挡与PBR着色 | ✅ **Atmosphere Occlusion and PBR Shading**：<br>**定义/概念**：程序化大气影响光线到达物体的方式<br>**解决问题**：0.17大气不影响表面光照<br>**核心改进**：<br>- 阳光穿过大气自动获取颜色<br>- 日出日落：橙色/红色光<br>- 与体积雾/所有渲染模式无缝协作<br>**版本对比**：✅ 0.17→0.18 新增，0.17大气不影响PBR | **战棋渲染**：<br>- 昼夜：光照颜色正确<br>- 日出日落：橙色光效果<br>- 雾：与大气协调<br>- 开箱即用：无需配置 |
+| **渲染系统** | ⭐️⭐️ 广义大气散射介质 | ✅ **Generalized Atmospheric Scattering Media**：<br>**定义/概念**：自定义大气散射介质资产<br>**解决问题**：0.17仅模拟地球类场景<br>**核心API**：<br>`ScatteringMedium::new(resolution, resolution, [ScatteringTerm { ... }])`<br>`Atmosphere::earthlike(medium)`<br>**散射项**：`absorption`/`scattering`/`falloff`/`phase`<br>**相位函数**：Rayleigh/Mie/Isotropic<br>**衰减**：Exponential/Tent<br>**效果**：沙漠/海岸线/非地球行星<br>**版本对比**：✅ 0.17→0.18 新增，0.17无自定义介质 | **战棋场景**：<br>- 沙漠：清澈天空<br>- 火星：红色大气<br>- 雾蒙蒙：海岸线<br>- 自定义：任意大气<br>- 性能：资产系统优化 |
+| **渲染系统** | ⭐️⭐️ Solari改进 | ⚠️ **Solari Improvements**：<br>**定义/概念**：实时光线追踪渲染器重大改进<br>**核心改进**：<br>- 镜面材质和反射支持<br>- 更快光照响应<br>- 质量/精度改进<br>- 方向光物理软阴影<br>- 大场景性能提升<br>**版本对比**：⚠️ 0.17→0.18 改进，0.17仅漫反射 | **战棋渲染**：<br>- 反射：镜面材质<br>- 阴影：物理软阴影<br>- 性能：大场景提升<br>- 质量：精度改进<br>- 实验性：持续演进 |
+| **渲染系统** | ⭐️⭐️⭐️ PBR着色修复 | ⚠️ **PBR Shading Fixes**：<br>**定义/概念**：修复PBR材质长期Fresnel问题<br>**解决问题**：0.17材质"过于光亮/明亮"<br>**核心修复**：<br>- 点光/面光镜面分量过亮<br>- 环境贴图光照使用"粗糙度相关Fresnel"→切换为标准Fresnel<br>**效果**：显著质量提升<br>**版本对比**：⚠️ 0.17→0.18 修复，0.17有Fresnel问题 | **战棋渲染**：<br>- 材质：更准确<br>- 光照：不再过亮<br>- 环境光：正确Fresnel<br>- 质量：明显提升 |
+| **渲染系统** | ⭐️⭐️ 全屏材质 | ✅ **FullscreenMaterial**：<br>**定义/概念**：高级trait简化全屏后处理着色器<br>**解决问题**：0.17自定义全屏效果复杂<br>**核心API**：<br>`impl FullscreenMaterial for MyEffect`<br>`fn fragment_shader() -> ShaderRef`<br>`fn node_edges() -> Vec<InternedRenderLabel>`<br>`FullscreenMaterialPlugin`<br>**效果**：简单定义全屏效果<br>**版本对比**：✅ 0.17→0.18 新增，0.17全屏效果复杂 | **战棋渲染**：<br>- 后处理：简化定义<br>- 色差：示例实现<br>- 渲染图：指定顺序<br>- 高级：灵活控制 |
+| **UI系统** | ⭐️⭐️ 更多标准Widget | ✅ **More Standard Widgets**：<br>**定义/概念**：扩展无头widget集合<br>**新增Widget**：<br>`Popover`：自动弹出定位<br>`MenuPopup`：下拉菜单<br>`RadioButton`/`RadioGroup`改进<br>**Popover能力**：<br>- 相对锚点定位<br>- 首选放置位置：上下左右<br>- 自动翻转避免裁剪<br>- 动态：锚点移动时重新定位<br>**版本对比**：✅ 0.17→0.18 新增，0.17无Popover/Menu | **战棋UI**：<br>- 下拉菜单：Popover定位<br>- 工具提示：自动定位<br>- 选择：RadioButton改进<br>- 动态：自适应布局 |
+| **UI系统** | ⭐️⭐️ 自动方向导航 | ✅ **Auto Directional Navigation**：<br>**定义/概念**：UI元素自动计算方向导航<br>**解决问题**：0.17手动定义导航连接繁琐<br>**核心API**：<br>`AutoDirectionalNavigation`组件<br>`AutoDirectionalNavigator`系统参数<br>**智能算法**：<br>- 距离：更近优先<br>- 对齐：方向对齐优先<br>- 重叠：基本方向确保重叠<br>**配置**：<br>`AutoNavigationConfig { min_alignment_factor, max_search_distance, prefer_aligned }`<br>**版本对比**：✅ 0.17→0.18 新增，0.17为手动导航 | **战棋UI**：<br>- 手柄：自动导航<br>- 键盘：方向键<br>- 菜单：无需手动连接<br>- 动态：自动计算<br>- 可配置：对齐/距离 |
+| **平台支持** | ⭐️⭐️⭐️ Cargo Feature集合 | ✅ **Cargo Feature Collections**：<br>**定义/概念**：高级cargo feature简化依赖选择<br>**核心feature**：<br>`2d`：2D游戏完整profile<br>`3d`：3D游戏完整profile<br>`ui`：UI框架独立profile<br>**中级feature**：<br>`2d_api`：2D API无渲染器<br>`2d_bevy_render`：2D渲染器<br>**效果**：仅编译需要的部分<br>**API示例**：<br>`bevy = { version = "0.18", default-features = false, features = ["ui"] }`<br>**版本对比**：✅ 0.17→0.18 新增，0.17 feature庞大 | **战棋项目**：<br>- 编译：只编译需要的<br>- UI框架：独立使用<br>- 自定义渲染器：移除默认<br>- 简化：无需手动列举<br>- 专家级：不再需要 |
+| **字体系统** | ⭐️⭐️ 字体变体 | ✅ **Font Variations**：<br>**定义/概念**：字体变体支持<br>**新增能力**：<br>- 删除线：`Strikethrough`组件<br>- 下划线：`Underline`组件<br>- 颜色：`StrikethroughColor`/`UnderlineColor`<br>- 字重：`TextFont.weight: FontWeight`<br>- OpenType特性：`FontFeatures`<br>**API示例**：<br>`FontFeatures::builder().enable(FontFeatureTag::STANDARD_LIGATURES).build()`<br>**版本对比**：✅ 0.17→0.18 新增，0.17无字体变体 | **战棋UI**：<br>- 删除线：价格折扣<br>- 下划线：链接提示<br>- 字重：标题/正文<br>- 连字：复杂文字<br>- 特性：排版润色 |
+| **ECS核心** | ⭐️⭐️ 安全多任意组件可变访问 | ✅ **Safe Mutable Access to Multiple Components**：<br>**定义/概念**：安全的实体多组件可变访问<br>**解决问题**：0.17 get_components_mut_unchecked不安全<br>**核心API**：<br>`entity.get_components_mut::<(&mut A, &mut B)>()?`<br>**实现**：二次时间复杂度运行时检查<br>**效果**：安全访问，可变别名检查<br>**版本对比**：✅ 0.17→0.18 新增，0.17为unsafe | **战棋系统**：<br>- 脚本：安全接口<br>- 模组：安全访问<br>- 非热循环：方便使用<br>- 游戏对象模型：熟悉模式 |
+| **资源系统** | ⭐️⭐️ glTF扩展 | ✅ **glTF Extensions**：<br>**定义/概念**：用户可实现GltfExtensionHandler处理glTF扩展<br>**解决问题**：0.17扩展处理硬编码<br>**核心API**：<br>`impl GltfExtensionHandler for MyHandler`<br>**用例**：<br>- 插入Bevy Component数据<br>- 3D→2D网格转换<br>- 构建AnimationGraph<br>- 替换StandardMaterial<br>- 插入光照贴图<br>**外部集成**：Blender/Skein/Trenchbroom<br>**版本对比**：✅ 0.17→0.18 新增，0.17扩展硬编码 | **战棋资源**：<br>- Blender：自定义属性<br>- 物理：碰撞体数据<br>- 材质：自定义替换<br>- 动画：AnimationGraph<br>- 工具：关卡编辑器 |
+| **调试系统** | ⭐️ 轻松截图和录屏 | ✅ **Easy Screenshot and Video Recording**：<br>**定义/概念**：简化截图/录屏API<br>**核心插件**：<br>`EasyScreenshotPlugin`：PrintScreen截图<br>`EasyScreenRecordPlugin`：空格键切换录制<br>**格式**：PNG/JPEG/BMP<br>**限制**：Windows不支持录屏<br>**版本对比**：✅ 0.17→0.18 新增，0.17截图复杂 | **战棋调试**：<br>- 截图：一键截取<br>- 录屏：游戏演示<br>- 格式：多种选择<br>- 简化：无需手动 |
+| **ECS核心** | ⭐️ 从Schedule移除系统 | ✅ **Remove Systems from Schedules**：<br>**定义/概念**：完全从调度中移除系统<br>**核心API**：<br>`schedule.remove_systems_in_set(my_system, ScheduleCleanupPolicy::RemoveSystemsOnly)`<br>`app.remove_systems_in_set(MySet, ScheduleCleanupPolicy::RemoveSetAndSystems)`<br>**效果**：完全移除开销/调试工具<br>**版本对比**：✅ 0.17→0.18 新增，0.17仅运行条件 | **战棋系统**：<br>- 插件：禁用不需要的<br>- 模组：移除行为<br>- 调试：完全移除<br>- 性能：零开销 |
+| **UI系统** | ⭐️ UI节点忽略父级滚动 | ✅ **IgnoreScroll**：<br>**定义/概念**：UI元素忽略父级滚动位置<br>**核心组件**：<br>`IgnoreScroll`组件<br>**效果**：粘性行/列标题<br>**版本对比**：✅ 0.17→0.18 新增，0.17无IgnoreScroll | **战棋UI**：<br>- 标题：粘性表头<br>- 列表：固定标题<br>- 滚动：部分固定 |
+| **数学系统** | ⭐️ 颜色和布局插值 | ✅ **TryStableInterpolate for Val/Color**：<br>**定义/概念**：可能失败的插值trait<br>**核心API**：<br>`TryStableInterpolate` trait<br>`Val`：单位不同时失败<br>`Color`：颜色空间不同时失败<br>**效果**：动画Val/Color<br>**版本对比**：✅ 0.17→0.18 新增，0.17无TryStableInterpolate | **战棋动画**：<br>- UI：滑动widget<br>- 颜色：渐变动画<br>- Val：长度插值<br>- 失败：跳转关键帧 |
+| **资源系统** | ⭐️ 可寻址资产读取器 | ✅ **SeekableAssetReaders**：<br>**定义/概念**：资产读取器支持可寻址升级<br>**核心API**：<br>`reader.seekable()?`<br>`seekable_reader.seek(SeekFrom::Start(10)).await?`<br>**效果**：AssetLoader可选择回退<br>**版本对比**：✅ 0.17→0.18 新增，0.17无SeekableReader | **战棋资源**：<br>- 加载：选择性寻址<br>- 回退：读取到Vec<br>- 灵活：按需升级 |
+| **渲染系统** | ⭐️ Feathers Color Plane | ✅ **Color Plane Widget**：<br>**定义/概念**：二维颜色选择器widget<br>**核心组件**：<br>`ColorPlane`枚举<br>**能力**：水平/垂直轴选择两个通道<br>**颜色空间**：色相/亮度/饱和度/红蓝等<br>**版本对比**：✅ 0.17→0.18 新增，0.17无颜色选择器 | **战棋工具**：<br>- 编辑器：颜色选择<br>- 自定义：工具widget<br>- 颜色空间：多种选择 |
+
 ## Bevy 0.17 — 光线追踪光照与事件重构革命
 
 | 大类 | 项目 | 详细描述 | SRPG项目应用建议 |
@@ -164,6 +220,8 @@
 | **数学系统** | ⭐️ Rot2类型 | ✅ **Rot2**：<br>**定义/概念**：2D旋转便捷类型<br>**解决问题**：0.13 2D旋转需四元数或f32<br>**核心API**：大量辅助方法<br>**版本对比**：✅ 0.13→0.14 新增，0.13无Rot2 | **战棋2D**：<br>- 2D旋转：更方便<br>- 辅助方法：丰富<br>- 替代：自定义类型 |
 | **平台支持** | ⭐️ Release Candidate流程 | ✅ **RC Process**：<br>**定义/概念**：首次使用发布候选流程<br>**解决问题**：0.13发布质量不可控<br>**核心改进**：<br>- crates.io发布RC<br>- 插件作者测试<br>- 完善迁移指南<br>**版本对比**：✅ 0.13→0.14 新增，0.13无RC | **战棋开发**：<br>- 升级信心：RC测试<br>- 生态：插件兼容<br>- 迁移：指南完善 |
 
+## Bevy 0.13 — 烘焙光照与基本形状革命
+
 | 大类 | 项目 | 详细描述 | SRPG项目应用建议 |
 | --- | --- | --- | --- |
 | **渲染系统** | ⭐️⭐️⭐️ 光照贴图 | ✅ **Lightmaps**：<br>**定义/概念**：预计算全局光照结果的纹理<br>**解决问题**：0.12实时GI昂贵<br>**设计理念**：外部程序烘焙，静态几何体使用，实时渲染采样<br>**核心组件**：<br>- `Lightmap`：光照贴图组件<br>- 加载烘焙纹理后插入网格<br>**版本对比**：✅ 0.12→0.13 新增，0.12无光照贴图 | **战棋场景**：<br>- 室内：预计算光照<br>- 地形：静态GI<br>- 性能：零运行时开销<br>- 质量：真实间接光 |
@@ -202,6 +260,8 @@
 | **渲染系统** | ⭐️ glTF扩展 | ✅ **glTF Extensions**：<br>**定义/概念**：配置加载器存储glTF原始副本<br>**解决问题**：0.12无法访问glTF扩展数据<br>**核心能力**：解析glTF扩展（各向异性/实例化等）<br>**版本对比**：✅ 0.12→0.13 新增，0.12无glTF扩展访问 | **战棋模型**：<br>- 扩展数据：材质信息<br>- Blender：扩展导出<br>- 自定义：解析使用 |
 | **平台支持** | ⭐️ winit 0.29升级 | ⚠️ **winit升级**：<br>**定义/概念**：升级到winit 0.29<br>**核心变更**：<br>- KeyCode变为物理位置（非逻辑）<br>- WASD游戏受益<br>- 需要逻辑键用ReceivedCharacter<br>**版本对比**：⚠️ 0.12→0.13 变更，0.12 KeyCode为逻辑 | **战棋输入**：<br>- 物理按键：WASD不受布局影响<br>- 国际键盘：更一致<br>- 文本输入：ReceivedCharacter |
 | **开发工具** | ⭐️ 系统步进示例 | ✅ **Stepping Examples**：<br>**改进内容**：<br>- 基于文本的步进示例<br>- 非交互式Bevy UI步进插件<br>- 交互式egui步进插件<br>**版本对比**：✅ 0.12→0.13 新增 | **战棋开发**：<br>- 调试工具：参考实现<br>- UI集成：egui/Bevy UI |
+
+## Bevy 0.12 — 延迟渲染与Asset V2革命
 
 | 大类 | 项目 | 详细描述 | SRPG项目应用建议 |
 | --- | --- | --- | --- |
@@ -246,6 +306,8 @@
 | **性能优化** | ⭐️ 减少Tracing开销 | ✅ **Reduced Tracing Overhead**：<br>**定义/概念**：缓存span字符串减少开销<br>**解决问题**：0.11 tracing span分配开销大<br>**优化效果**：<br>- many_foxes：5.35ms→4.54ms<br>- many_cubes：8.89ms→6.8ms<br>**版本对比**：⚠️ 0.11→0.12 优化，0.11 tracing开销大 | **战棋性能**：<br>- tracing：更少开销<br>- 性能分析：更准确<br>- 发布：可禁用 |
 | **开发工具** | ⭐️⭐️ CI改进 | ✅ **CI增强**：<br>**改进内容**：<br>- 示例使用bevy而非bevy_internal<br>- 更多iOS/Android设备<br>- 示例执行+截图<br>- WebGL2/WebGPU构建<br>**版本对比**：✅ 0.11→0.12 新增，0.11 CI有限 | **战棋开发**：<br>- 跨平台：更多设备<br>- 示例：自动验证<br>- 截图：回归检测 |
 
+## Bevy 0.11 — SSAO/TAA与调度优先API革命
+
 | 大类 | 项目 | 详细描述 | SRPG项目应用建议 |
 | --- | --- | --- | --- |
 | **渲染系统** | ⭐️⭐️⭐️ 屏幕空间环境光遮蔽 | ✅ **SSAO**：<br>**定义/概念**：通过模拟间接漫反射光遮蔽提升渲染质量<br>**解决问题**：0.10无间接光照遮蔽，场景缺乏深度感<br>**设计理念**：基于深度和法线预计算估算几何体阻挡入射光，赋予场景"落地"感<br>**核心能力**：<br>- 间接光照遮蔽<br>- 屏幕空间计算<br>- 与TAA配合大幅提升质量<br>**平台支持**：Vulkan/DX12/Metal，WebGPU后续添加<br>**版本对比**：✅ 0.10→0.11 新增，0.10无SSAO | **战棋场景**：<br>- 室内场景：角落遮蔽<br>- 物体接触：落地感<br>- 视觉质量：大幅提升<br>- 与TAA配合：噪点减少 |
@@ -286,6 +348,8 @@
 | **ECS核心** | ⭐️ 更简单的RenderGraph构建 | ✅ **ViewNode/RenderGraphApp**：<br>**定义/概念**：简化RenderGraph构建的辅助API<br>**解决问题**：0.10 RenderGraph添加节点样板多<br>**核心API**：<br>- `RenderGraphApp`：App扩展trait<br>- `ViewNode`/`ViewNodeRunner`：自动视图查询<br>- 视图实体：一等概念<br>**版本对比**：✅ 0.10→0.11 新增，0.10 RenderGraph构建复杂 | **战棋渲染**：<br>- 后处理：简化实现<br>- 自定义节点：更少样板<br>- 视图查询：自动处理 |
 | **开发工具** | ⭐️ CI改进 | ✅ **CI增强**：<br>**改进内容**：<br>- 每日Android/iOS真实设备运行<br>- CI截图验证<br>- 缺失功能/文档PR评论<br>**版本对比**：✅ 0.10→0.11 新增，0.10无此CI | **战棋开发**：<br>- 移动端：真实设备测试<br>- 截图验证：示例正确<br>- 贡献引导：缺失检查 |
 | **组织变更** | ⭐️ Merge Queues | ✅ **GitHub Merge Queues**：<br>**定义/概念**：从Bors迁移到GitHub Merge Queues<br>**解决问题**：Bors为外部系统<br>**核心改进**：<br>- GitHub原生集成<br>- 更好体验<br>**版本对比**：⚠️ 0.10→0.11 变更，0.10用Bors | **社区**：<br>- 更好集成：GitHub原生<br>- 更快合并：优化流程 |
+
+## Bevy 0.10 — ECS Schedule v3与级联阴影革命
 
 | 大类 | 项目 | 详细描述 | SRPG项目应用建议 |
 | --- | --- | --- | --- |
@@ -344,6 +408,8 @@
 | **颜色系统** | ⭐️ Color::hex优化 | ✅ **const hex()**：<br>**定义/概念**：Color::hex变为const函数<br>**解决问题**：0.9 hex()运行时解析<br>**性能提升**：14ns→4ns<br>**版本对比**：⚠️ 0.9→0.10 优化，0.9 hex()慢 | **战棋颜色**：<br>- 性能：编译期解析<br>- 常量颜色：const定义 |
 | **架构** | ⭐️ 拆分CorePlugin | ✅ **CorePlugin拆分**：<br>**定义/概念**：CorePlugin拆分为独立插件<br>**解决问题**：0.9 CorePlugin为"厨房水槽"<br>**设计理念**：更好的组织策略<br>**核心插件**：<br>- `TaskPoolPlugin`<br>- `TypeRegistrationPlugin`<br>- `FrameCountPlugin`<br>**版本对比**：⚠️ 0.9→0.10 变更，0.9为单一CorePlugin | **战棋架构**：<br>- 模块化：更清晰的插件<br>- 按需加载：只用需要的<br>- 组织性：更好的结构 |
 | **开发工具** | ⭐️ CI改进 | ✅ **CI增强**：<br>**改进内容**：<br>- MSRV检查<br>- 新贡献者欢迎信息<br>- 破坏性变更迁移指南检查<br>**版本对比**：✅ 0.9→0.10 新增，0.9无此CI | **战棋开发**：<br>- MSRV：版本兼容<br>- 贡献者：友好引导<br>- 迁移：破坏性变更检查 |
+
+## Bevy 0.9 — HDR后处理与场景格式革命
 
 | 大类 | 项目 | 详细描述 | SRPG项目应用建议 |
 | --- | --- | --- | --- |

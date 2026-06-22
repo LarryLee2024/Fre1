@@ -13,6 +13,7 @@
 <!-- how the agent should behave (procedural). Each file carries Why: / How to apply: -->
 
 - [feedback-codegraph-first](feedback-codegraph-first.md) — 查代码优先 CodeGraph
+- [feedback-agent-delegation](feedback-agent-delegation.md) — 复杂多步任务派发 agent 并行处理
 - [feedback-terse-response](feedback-terse-response.md) — 回复简洁直接
 
 ## project
@@ -23,6 +24,7 @@
 - [project-bevy-translations](project-bevy-translations.md) — Bevy 版本翻译进度与规范
 - [battle-hud-data-flow](battle-hud-data-flow-2026-06-22.md) — BattleHudData Resource + UiBinding + Dirty消费链
 - [skill-panel-widget](skill-panel-widget-implementation.md) — SkillPanel Organism: spawn_skill_slot wrapper, skill_id override, Z7 integration, SkillPanelPlugin
+- [project-ui-review-2026-06-22](project-ui-review-2026-06-22.md) — UI 设计-代码偏移评审及 11 agent 批量修复
 
 ## decision
 <!-- key architectural decisions -->

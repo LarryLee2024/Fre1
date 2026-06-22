@@ -281,6 +281,8 @@ LocalizedText
 - 系统每帧检测语言变化 → 重新获取翻译 → 更新 Text 内容
 - Widget 代码不需要手动调用翻译函数
 
+**Primitives 层豁免**: `spawn_text` 等 Primitives 工厂函数使用 `Text::new` 是允许的，因为 Primitives 层不感知本地化。本地化责任在调用方（Widget/Screen 层）。Widget/Screen 层应使用 `spawn_localized_text` 或 `spawn_localized_button`。
+
 (引用：ADR-055 — LocalizedText Component 对接 ADR-053)
 
 ### 4.5 硬编码禁止

@@ -130,9 +130,7 @@ pub fn spawn_battle_screen(
         data.mp_current,
         data.mp_max,
     );
-    commands
-        .entity(char_card)
-        .insert((UiBinding::Hp, UiBinding::Mp));
+    commands.entity(char_card).insert(UiBinding::Hp);
     commands.entity(char_card).set_parent_in_place(z5);
 
     // ── Z6: 中下区 — 行动菜单 ──
