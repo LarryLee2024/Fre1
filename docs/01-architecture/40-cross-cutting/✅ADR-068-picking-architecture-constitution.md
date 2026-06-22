@@ -1,7 +1,7 @@
 ---
 id: 01-architecture.ADR-068
 title: "ADR-068: Picking 架构总纲（宪法级）"
-status: Proposed
+status: Approved
 owner: architect
 created: 2026-06-23
 updated: 2026-06-23

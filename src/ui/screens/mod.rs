@@ -43,7 +43,8 @@ use crate::shared::game_state::GameState;
 use crate::ui::navigation::ScreenType;
 
 use crate::ui::projections::selection::{
-    camera_follow_selection, on_selection_changed, on_selection_visual,
+    on_selection_cleared_highlight, on_selection_cleared_projection, on_unit_clicked_projection,
+    on_unit_selected_follow, on_unit_selected_highlight,
 };
 
 use crate::ui::view_models::battle_hud::BattleHudData;
@@ -99,14 +100,17 @@ impl Plugin for ScreenPlugin {
             .add_plugins(SaveLoadPlugin)
             // Shop 界面：按钮点击处理器
             .add_observer(on_shop_button_clicked)
+            // Selection 事件投影：事件驱动的 ViewModel / Camera / 高亮更新
+            .add_observer(on_unit_clicked_projection) // 单位点击投影
+            .add_observer(on_selection_cleared_projection) // 选择清除投影
+            .add_observer(on_unit_selected_follow) // 单位选中跟随
+            .add_observer(on_unit_selected_highlight) // 单位选中高亮
+            .add_observer(on_selection_cleared_highlight) // 选择清除高亮
             // BattleScreen 系统：Zone 可见性控制 + Dirty 消费（Update）
             .add_systems(
                 Update,
                 (
                     mark_battle_ui_passthrough,
-                    on_selection_changed,
-                    on_selection_visual,
-                    camera_follow_selection,
                     battle_zone_visibility_system,
                     on_dirty_battle_hud,
                 )

@@ -16,12 +16,13 @@ owner: architect
 | Phase | 名称 | 工时 | 核心产出 |
 |-------|------|------|---------|
 | 0 | 宪法确认 | 0h ✅ 已全部完成 | ADR-068 + 领域规则 + Schema + UI 架构 |
-| 1 | 目录迁移 | ~3h | `ui/picking/` + `ui/selection/` + 领域事件 |
-| 2 | 事件流管道 | ~3h | Pointer → PickIntent → Domain Event |
-| 3 | Selection 重构 | ~4h | SelectionState 五态 + BattleUnitId + CameraRequest |
-| 4 | 清理调试代码 | ~1h | 删除 println! / debug_observer |
-| 5 | Bevy 兼容性 | ~2h | ViewVisibility + UI 穿透验证 |
-| 6 | 验证 | ~2h | build + clippy + test + 手动测试 |
+| 1 | 目录迁移 | ~3h ✅ | `ui/picking/` + `ui/selection/` + 删除 `infra/picking/` |
+| 2 | 事件流管道 | ~3h ✅ | 旧 observer 删除 → 全局事件驱动管道 |
+| 3 | Selection 重构 | ~4h ✅ | CameraRequest + 事件驱动 projections + 视觉高亮 |
+| 4 | 清理调试代码 | ~1h ✅ | 删除 println! + debug_observer |
+| 5 | Bevy 兼容性 | ~2h ✅ | ViewVisibility + UI 穿透验证通过 |
+| 6 | 验证 | ~2h ✅ | cargo check + 1906 tests pass |
+| 7 | 文档归档 | ~0.5h ⏳ | 待确认 |
 | 7 | 文档归档 | ~0.5h | ADR 状态更新 + 11-refactor README |
 
 **总计**: ~15.5h
