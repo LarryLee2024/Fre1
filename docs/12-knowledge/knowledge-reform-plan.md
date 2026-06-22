@@ -1,6 +1,6 @@
 ---
 id: 12-knowledge.README
-title: Knowledge Management System — Repomix 驱动的四层知识架构
+title: Knowledge Management System — v3 Final
 status: proposal
 owner: claude
 created: 2026-06-22
@@ -9,338 +9,567 @@ tags:
   - knowledge-management
   - repomix
   - memory-system
-  - restructuring
+  - fitness-functions
+  - final
 ---
 
-# Knowledge Management System — Repomix 驱动的知识架构改造方案
+# Knowledge Management System — v3（终版）
 
-> **核心理念**: Code = Source of Truth。文档是用来记录"为什么"，不是用来描述"是什么"。
-> **核心工具**: Repomix（Skill 生成 + 代码包搜索）+ CodeGraph（符号索引）+ Auto Memory（个人化记忆）
-
----
-
-## 0. 现状诊断
-
-### 0.1 数量
-
-| 指标 | 值 |
-|------|----|
-| 活跃文档数 | ~224 文件 |
-| 总行数 | ~140,000 行（活跃）+ ~193,000 行（已归档） |
-| 平均每文档 | ~525 行 |
-| 重复内容 | 08-knowledge/ 与 01~06 重叠约 60% |
-| Auto Memory | 完全未使用 |
-
-### 0.2 核心问题
-
-```
-问题树：
-  docs/ 膨胀（637 文件 / 334k 行）
-  ├── 50+ ADR 已全部实现但仍占活跃区
-  ├── 08-knowledge 概览文档是 01~06 的重复
-  ├── 3 份 bevy 示例目录在 00-governance + 08-knowledge 都有
-  ├── 18 个 bevy 版本说明，对当前项目有效仅 0.19
-  └── 已完成计划/审查/重构共 91 个文件未归档
-  │
-  后果：
-  ├── 每次会话 AI 需要扫描海量文件定位有效信息
-  ├── 没有利用 Repomix Skill 预加载机制
-  ├── Auto Memory 空置导致跨会话记忆丢失
-  └── CodeGraph 已索引代码但文档仍保留大量"代码长什么样"的重复描述
-```
+> **靶心**: Claude Code + Repomix + CodeGraph + Auto Memory + 50 万行 Bevy SRPG + 3 年代码生命周期
+> **核心矛盾**: 知识无限增长 vs 注意力有限。解决方式不是"记更多"，而是"记对的 + 自动执行"。
 
 ---
 
-## 1. Repomix 在知识架构中的角色
-
-Repomix 提供两种互补能力，分别取代不同的传统文档功能：
-
-| Repomix 能力 | 取代什么 | 优势 |
-|-------------|---------|------|
-| **`generate_skill`** | 你手动维护的"架构概览文档" | 从代码自动生成，永远不会过时 |
-| **`pack_codebase` + `grep_repomix_output`** | 手动翻目录找文件 | 一次 pack 后任意搜索，不必知道文件在哪 |
-
-两者组合后，`docs/` 的职责大幅收窄：
-
-| 传统用法 | 新用法 |
-|---------|--------|
-| "读 docs/01-architecture/README.md 了解架构" | `/skill fre-architecture` 加载 Skill |
-| "翻 docs/02-domain/xxx_domain.md 找规则" | `grep_repomix_output` 在 skill 中搜索 |
-| "docs/03-content/definitions/xxx-def.md 看 Def 结构" | CodeGraph 直接查 Rust struct 定义 |
-| "docs/08-knowledge/xxx-overview.md 了解概览" | **不存在了** — skill 里有代码和注释 |
-| "看 plan doc 追踪进度" | Auto Memory `project` 类型自动记录 |
-
----
-
-## 2. 四层知识架构（Repomix 驱动版）
+## 全景图（八层知识治理架构）
 
 ```
-┌──────────────────────────────────────────────────────────────────┐
-│  L3: Skills（工作台）—— 按需加载，从代码生成                       │
-│                                                                  │
-│  使用 repomix `generate_skill` 从代码 + 关键文档生成预打包上下文：   │
-│  ┌─────────────────────────────────────────────────────────┐     │
-│  │  Skill 名称           │ 来源（从代码而非文档生成）        │     │
-│  ├─────────────────────────────────────────────────────────┤     │
-│  │  fre-architecture     │ src/core/capabilities/ +         │     │
-│  │                       │ src/core/domains/ 目录结构       │     │
-│  ├─────────────────────────────────────────────────────────┤     │
-│  │  fre-domain-rules     │ src/core/domains/*/rules/       │     │
-│  ├─────────────────────────────────────────────────────────┤     │
-│  │  fre-capabilities     │ src/core/capabilities/*/        │     │
-│  ├─────────────────────────────────────────────────────────┤     │
-│  │  fre-testing          │ docs/05-testing/（规则性文档保留） │     │
-│  ├─────────────────────────────────────────────────────────┤     │
-│  │  fre-ui               │ src/ui/ + docs/06-ui/           │     │
-│  └─────────────────────────────────────────────────────────┘     │
-│  位置: .claude/skills/<name>/                                    │
-│  更新: 每次代码大的结构变更后重新生成                               │
-│  使用: /skill fre-architecture                                   │
-├──────────────────────────────────────────────────────────────────┤
-│  L2: Auto Memory（自动记忆）—— 每次会话自动加载                     │
-│                                                                  │
-│  跨会话持久化，记录不可从代码推导的信息：                             │
-│  ┌─────────────────────────────────────────────────────────┐     │
-│  │  user/     — 你的技术背景、偏好、角色（独游开发者）       │     │
-│  │  feedback/ — 什么做法好/不好 + Why + How to apply        │     │
-│  │  project/  — 当前目标、进度、blocker、sprint 状态         │     │
-│  │  reference/— 外部资源（Grafana、Linear、Slack 等）        │     │
-│  └─────────────────────────────────────────────────────────┘     │
-│  位置: .claude/projects/.../memory/ + MEMORY.md                  │
-│  更新: 每次对话自动读写，不需要手动维护                            │
-├──────────────────────────────────────────────────────────────────┤
-│  L1: Reference Docs（参考文档）—— 精简后仅保留"为什么"              │
-│                                                                  │
-│  删除所有"描述了代码长什么样"的文档，只保留：                       │
-│  ┌─────────────────────────────────────────────────────────┐     │
-│  │  00-governance/   宪法 + 编码规则（行为规范，非代码描述）  │     │
-│  │  01-architecture/ 仅未实现的 ADR（>90% 已实现→归档）      │     │
-│  │  02-domain/       领域规则（不可从代码推导的业务约束）      │     │
-│  │  （其他按需保留，整体目标减少 60% 文件）                   │     │
-│  └─────────────────────────────────────────────────────────┘     │
-│  位置: docs/                                                    │
-│  原则: 只记录"为什么这样做"，不记录"做了什么"                       │
-├──────────────────────────────────────────────────────────────────┤
-│  L0: Code（源码）—— 最高的知识密度                                 │
-│                                                                  │
-│  CodeGraph 索引 + Repomix pack 覆盖所有场景：                      │
-│  ┌─────────────────────────────────────────────────────────┐     │
-│  │  找符号定义    → codegraph_node(symbol=xxx)              │     │
-│  │  理解流程      → codegraph_explore(query="how X works")  │     │
-│  │  找调用者      → codegraph_callers(symbol=xxx)           │     │
-│  │  全局搜索      → repomix pack + grep_repomix_output      │     │
-│  │  读文件内容    → codegraph_node(file=xxx)                 │     │
-│  └─────────────────────────────────────────────────────────┘     │
-│  位置: src/                                                     │
-└──────────────────────────────────────────────────────────────────┘
-```
-
-### 2.1 搜索路径（按顺序）
-
-```
-日常编码:
-  1. CodeGraph（找定义/调用者/理解流程） — <1s
-  2. Auto Memory（你之前的偏好/项目状态） — 自动加载
-  3. Skill（领域规则/架构约束）           — /skill xxx
-  4. Repomix pack（跨文件搜索）          — 一次 pack 后任意搜
-  5. Raw docs（仅上述无法满足时）         — 手动打开
-
-查阅外部:
-  1. Context7（库/框架文档）
-  2. WebSearch（社区/博客/Issue）
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                      Fre Knowledge Governance System                              │
+│  ┌──────────────────────────────────────────────────────────────────────────┐    │
+│  │  L7  Architecture Recovery  ◀── 每季度运行一次                           │    │
+│  │  CodeGraph 导出当前依赖图 vs ADR 预期依赖图对比 → 发现漂移 → 报警/修正    │    │
+│  └──────────────────────────┬───────────────────────────────────────────────┘    │
+│                             │ 触发修正                                            │
+│                             ▼                                                    │
+│  ┌──────────────────────────────────────────────────────────────────────────┐    │
+│  │  L6  MEMORY  ── 跨会话自动加载（≤ 43 文件，超过需清理）                    │    │
+│  │                                                                          │    │
+│  │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────────┐   │    │
+│  │  │  user/   │ │feedback/ │ │ project/ │ │decision/ │ │ reference/   │   │    │
+│  │  │  ≤5 文件 │ │ ≤10 文件 │ │  ≤3 文件 │ │ ≤20 文件 │ │  ≤5 文件     │   │    │
+│  │  │  个人背景│ │ 偏好/反馈 │ │ 长期约束 │ │ 小型决策 │ │ 外部资源     │   │    │
+│  │  └──────────┘ └──────────┘ └──────────┘ └─────┬────┘ └──────────────┘   │    │
+│  │                                               │ 被引用>3次 或            │    │
+│  │                                               │ 影响 3+ Domain           │    │
+│  │                                               ▼                          │    │
+│  │                                         ┌──────────┐                    │    │
+│  │                                         │   ADR   │  ◀── 升迁           │    │
+│  │                                         └──────────┘                    │    │
+│  └──────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                  │
+│  ┌──────────────────────────────────────────────────────────────────────────┐    │
+│  │  L5  SKILLS  ── 按需加载，从 代码+ADR+规则 生成                          │    │
+│  │                                                                          │    │
+│  │  约束: 单 Skill ≤ 15k token，超过按任务场景拆分                            │    │
+│  │  更新: cargo xtask update-skills / 过期检测: cargo xtask check-skills    │    │
+│  │  工具: repomix generate_skill                                             │    │
+│  │                                                                          │    │
+│  │  ┌──────────────────┐ ┌──────────────┐ ┌──────────────┐ ┌────────────┐  │    │
+│  │  │ fre-architecture │ │fre-domain-   │ │fre-capabil-  │ │  fre-ui    │  │    │
+│  │  │                  │ │rules         │ │ities         │ │            │  │    │
+│  │  │ src/core/ + ADR  │ │domains/rules │ │capabilities/ │ │ src/ui/ +  │  │    │
+│  │  │ + 宪法 + 规则    │ │ + 02-domain/ │ │ + 对应 ADR   │ │ ADR-055    │  │    │
+│  │  └──────────────────┘ └──────────────┘ └──────────────┘ └────────────┘  │    │
+│  └──────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                  │
+│  ┌──────────────────────────────────────────────────────────────────────────┐    │
+│  │  L4  MENTAL MODELS  ── 系统连接图（≤ 10 张硬上限）                        │    │
+│  │                                                                          │    │
+│  │  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌────────────────┐  │    │
+│  │  │ battle-flow  │ │content-pipe- │ │ ui-navigation│ │ save-replay    │  │    │
+│  │  │  战斗生命周期 │ │  line 配置   │ │  导航/浮层   │ │  -flow 存档/  │  │    │
+│  │  │              │ │  管线        │ │              │ │  回放          │  │    │
+│  │  └──────────────┘ └──────────────┘ └──────────────┘ └────────────────┘  │    │
+│  │  ┌──────────────┐                              配额: 5/10 已用         │    │
+│  │  │effect-modi-  │                              每篇 ≤ 3 页             │    │
+│  │  │fier Effect   │                              本质: 跨 20+ 文件       │    │
+│  │  │/Modifier     │                              的流程连接图            │    │
+│  │  │管线          │                                                     │    │
+│  │  └──────────────┘                                                     │    │
+│  └──────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                  │
+│  ┌──────────────────────────────────────────────────────────────────────────┐    │
+│  │  L3  ADR  ── 决策日志，永不删除                                           │    │
+│  │                                                                          │    │
+│  │  ┌────────────────────────────┐  ┌────────────────────────────────┐      │    │
+│  │  │  active/ 未实现/演进中      │  │  historical/ 已实现保留原因      │      │    │
+│  │  │────────────────────────────│  │────────────────────────────────│      │    │
+│  │  │ ADR-050 Game State Machine│  │ ADR-000~063  约 50 个           │      │    │
+│  │  │ ADR-064 Camera System    │  │ 价值: 告诉未来 AI "为什么        │      │    │
+│  │  │ ADR-065 Map Pipeline     │  │ 长这样，替代方案为什么失败"      │      │    │
+│  │  │ ADR-066 SSPEC Standard   │  │                                │      │    │
+│  │  └────────────────────────────┘  └────────────────────────────────┘      │    │
+│  └──────────────────┬───────────────────────────────────────────────────────┘    │
+│                     │ ADR 规则输入 Fitness Functions                             │
+│                     ▼                                                            │
+│  ┌──────────────────────────────────────────────────────────────────────────┐    │
+│  │  L2  FITNESS FUNCTIONS  ── 自动化架构执行（CI 门禁）                       │    │
+│  │                                                                          │    │
+│  │  ┌─────────────────────────────────────────────────────────────────┐     │    │
+│  │  │  通用规则（现成工具）                 │ 项目特定（cargo xtask）  │     │    │
+│  │  ├─────────────────────────────────────────────────────────────────┤     │    │
+│  │  │  cargo-deny    → 依赖许可证检查       │ check-forbidden-imports │     │    │
+│  │  │  cargo-udeps   → 未使用依赖检测       │ check-layer-violation   │     │    │
+│  │  │  cargo-geiger  → Unsafe 使用审计      │ check-effect-pipeline   │     │    │
+│  │  │  clippy        → 代码质量检查         │ check-skills            │     │    │
+│  │  └─────────────────────────────────────────────────────────────────┘     │    │
+│  │                                                                          │    │
+│  │  铁律: 失败 = CI ❌，除非附 ADR 豁免 ID                                   │    │
+│  └──────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                  │
+│  ┌──────────────────────────────────────────────────────────────────────────┐    │
+│  │  L1  RULES  ── 精简参考文档（为什么，不是做了什么）                        │    │
+│  │                                                                          │    │
+│  │  00-governance/  │ 宪法 + 编码规则                                       │    │
+│  │  02-domain/      │ 业务规则（不可代码化的领域约束）                        │    │
+│  │  03-content/     │ Content 架构 + Def 设计规则                            │    │
+│  │  04-data/        │ Schema 治理 + Data Laws                               │    │
+│  │  05-testing/     │ 测试规范 + 策略                                       │    │
+│  │  09-planning/    │ 仅活跃计划（已完成 → done/）                           │    │
+│  └──────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                  │
+│  ┌──────────────────────────────────────────────────────────────────────────┐    │
+│  │  L0  CODE  ── 源码 = 最高知识密度                                         │    │
+│  │                                                                          │    │
+│  │  访问路径:                                                                │    │
+│  │  codegraph_node(symbol=xxx)      → 符号定义                              │    │
+│  │  codegraph_explore(query)        → 流程理解                              │    │
+│  │  codegraph_callers(symbol=xxx)   → 调用链                                │    │
+│  │  repomix pack + grep_repomix     → 全局搜索                              │    │
+│  └──────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                  │
+│  ┌──────────────────────────────────────────────────────────────────────────┐    │
+│  │                        CI 执行闭环                                       │    │
+│  │                                                                          │    │
+│  │  每次 git push:     Fitness Functions → ❌ 或 ✅                          │    │
+│  │  每季度:            Architecture Recovery → 漂移检测报告                   │    │
+│  │  Skill 过期检测:    cargo xtask check-skills → CI ❌                      │    │
+│  │  ADR 决策升迁:      升迁后更新对应的 Fitness Function                      │    │
+│  │                                                                          │    │
+│  └──────────────────────────────────────────────────────────────────────────┘    │
+└──────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 3. 分阶段实施计划
+## 0. 设计哲学
 
-### Phase 1: 代码 → Skill（用 repomix 生成知识层）
+```
+Code           → 做了什么（唯一事实源）
+ADR            → 为什么这样（决策理由，永不过期）
+Rule           → 不能做什么（架构约束，可自动检查）
+Memory         → 上下文是什么（个人 + 项目 + 决策）
+Mental Model   → 系统怎么连接（跨 20 个文件的流程，≤10 张）
+Skill          → 此刻需要什么（按需打包的上下文）
+Fitness Check  → 规则还在执行吗（自动化验证闭环）
+```
 
-**目标**: 先建能力，再删文档。先用 repomix 生成 Skills，确保知识不丢失。
+### 0.1 三个闭环
 
-#### 1.1 生成 5 个核心 Skill
+```
+知识记录闭环:
+  Decision → ADR → Historical ADR → 永远可搜索
 
-使用 `repomix generate_skill` 从代码生成：
+知识执行闭环:
+  ADR Rule → Fitness Function → CI → 拒绝违规
 
-| Skill 名称 | 包含内容 | 来源 |
-|-----------|---------|------|
-| `fre-architecture` | 核心 capabilities + domains 目录结构、Plugin 组合、主要类型 | `src/core/` |
-| `fre-domain-rules` | 15 个 domain 的 rules/ 纯函数代码 | `src/core/domains/*/rules/` |
-| `fre-capabilities` | 15 个 capability 的机制代码 | `src/core/capabilities/*/mechanism/` |
-| `fre-testing` | 测试规范 + 测试模板 | `docs/05-testing/` |
-| `fre-ui` | UI 架构 + Screen/Widget 定义 | `docs/06-ui/` + 相关代码 |
-
-#### 1.2 验证 Skill 可用性
-
-测试每个 Skill 能被正确加载且包含足够上下文来回答常见问题。
-
----
-
-### Phase 2: 文档大清理（依赖 Phase 1 完成）
-
-**目标**: 删除/归档所有"代码已表达清晰"的文档。
-
-#### 2.1 08-knowledge 整目录处理
-
-全部删除，概览文档是 01~06 的重复，Skill 和 CodeGraph 覆盖一切：
-
-| 文件 | 替代方案 |
-|------|---------|
-| `capabilities-overview.md` | Skill `fre-capabilities` + CodeGraph |
-| `communication-overview.md` | `codegraph_explore("communication flow")` |
-| `domain-overview.md` | Skill `fre-domain-rules` |
-| `error-handling-overview.md` | 代码中 thiserror 模式清晰 |
-| `ids-overview.md` | `src/shared/ids/types.rs` 完整定义 |
-| `localization-overview.md` | ADR-053 已实现，代码已验证 |
-| `logging-overview.md` | `codegraph_explore("logging observer")` |
-| `pipeline-overview.md` | `codegraph_explore("pipeline execution")` |
-| `random-overview.md` | `codegraph_node(file=random)` |
-| `reflect-overview.md` | Bevy 标准模式 |
-| `registry-overview.md` | `codegraph_node(symbol=DefRegistry)` |
-| `replay-overview.md` | `codegraph_explore("replay recording")` |
-| `ui-overview.md` | Skill `fre-ui` |
-| `bevy-0.1.md` ~ `0.18.md` | 项目只用 0.19 |
-| `bevy-examples.md` + tilemap/tiled | 官方文档更快更准 |
-
-#### 2.2 架构 ADR 归档
-
-50+ ADR 已全部实现，代码已体现这些决策。
-
-**保留的例外**（尚未实现的架构变更）：
-- `ADR-064` — Camera 系统（🟡 Proposed）
-- `ADR-065` — Map 内容管线（🟡 Proposed）
-- `ADR-066` — SSPEC 标准（新近 Accepted）
-- `ADR-050` — 游戏状态机（🟡 涉及场景管理，仍在演进）
-
-其余全部移入 `docs/01-architecture/done/`。
-
-#### 2.3 计划/审查/重构归档
-
-全部已完成项目从活跃区移出：
-- `docs/09-planning/` — 3 活跃 + 39 归档
-- `docs/10-reviews/` — 2 活跃 + 34 归档
-- `docs/11-refactor/` — 4 活跃 + 18 归档
-
-#### 2.4 00-governance 清理
-
-删除 `bevy-examples-catalog.md`、`bevy-ecs-tilemap-examples-catalog.md`、`bevy-ecs-tiled-examples-catalog.md`（重复且官方文档更优）。
+知识访问闭环:
+  Memory → Skill → Mental Model → CodeGraph → 找到答案
+```
 
 ---
 
-### Phase 3: 记忆系统初始化
+## 1. 六层知识架构
 
-**目标**: 启用 Auto Memory，让跨会话记忆生效。
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│  L6: MEMORY —— 跨会话自动记忆，每次加载                                 │
+│                                                                        │
+│  记录不可从代码推导的稳定事实：                                           │
+│  ┌───────────────────────────────────────────────────────────────┐     │
+│  │  user/      → "独立游戏开发者"，"Rust 优先，避免过度设计"        │     │
+│  │  feedback/  → "查代码先 CodeGraph"，"回复简洁不用 emoji"        │     │
+│  │  project/   → ONLY 长期事实："DDD 三层+横切四层"，"不用 anyhow" │     │
+│  │              ⚠️ 不记录 Sprint 状态（那是 09-planning/ 的职责）  │     │
+│  │  decision/  → 小型设计决策，不够写 ADR 但丢了会重踩              │     │
+│  │              → 被引用 >3 次 / 影响多域 → 升迁为 ADR            │     │
+│  │  reference/ → 外部资源位置                                      │     │
+│  └───────────────────────────────────────────────────────────────┘     │
+│  写入: 会话中自动，无需手动操作                                          │
+│  读取: 每次会话自动加载                                                  │
+│  位置: .claude/projects/.../memory/                                     │
+├────────────────────────────────────────────────────────────────────────┤
+│  L5: SKILLS —— 工作技能包，按需加载                                      │
+│                                                                        │
+│  从 代码 + ADR + 宪法 + 设计规则 生成：                                 │
+│                                                                        │
+│  fre-architecture   │ src/core/ + active ADR + 宪法 + .trae/rules/     │
+│  fre-domain-rules   │ src/core/domains/*/rules/ + 02-domain/           │
+│  fre-capabilities   │ src/core/capabilities/ + 对应 ADR                │
+│  fre-testing        │ docs/05-testing/（测试规范不可代码化）              │
+│  fre-ui             │ src/ui/ + docs/06-ui/ + ADR-055                  │
+│                                                                        │
+│  位置: .claude/skills/<name>/  (repomix generate_skill 生成)            │
+│  更新: cargo xtask update-skills（显式命令）                             │
+│  过期检测: cargo xtask check-skills（CI 门禁）                           │
+├────────────────────────────────────────────────────────────────────────┤
+│  L4: MENTAL MODELS —— 系统连接图，≤10 张                                │
+│                                                                        │
+│  ⚠️ 硬上限 10 个，超过必须合并或删除。                                   │
+│  ⚠️ 这不是"概览文档"，是"跨 20+ 个文件的流程连接图"                     │
+│                                                                        │
+│  docs/mental-models/（当前 5 个，配额剩余 5 个）：                      │
+│  ├── battle-flow.md           │ 战斗生命周期：Input→Pipeline→Replay    │
+│  ├── content-pipeline.md      │ 配置：RON→Deserialize→Register→Freeze  │
+│  ├── ui-navigation.md         │ 导航：ScreenStack→Overlay→Focus        │
+│  ├── save-replay-flow.md      │ 持久化：Command→Frame→Recorder/Player  │
+│  └── effect-modifier.md       │ 管线：Ability→Effect→Aggregator→Stat   │
+│                                                                        │
+│  约束: 每篇 ≤ 3 页，只画流程不列 API，不解释"是什么"（那是 CodeGraph 的事）│
+├────────────────────────────────────────────────────────────────────────┤
+│  L3: ADR —— 决策日志，永不过期                                          │
+│                                                                        │
+│  ADR 不是"待办事项"，是"为什么长这样"。已实现的 ADR 价值更大——            │
+│  它告诉一年后的 AI："以前试过方案 X，失败了，原因是 Y，不要再踩。"        │
+│                                                                        │
+│  docs/01-architecture/：                                                │
+│  ├── active/       ← 未实现 / 仍在演进（当前 4 个）                     │
+│  └── historical/   ← 已实现，保留决策原因（~50 个，永不删除）            │
+│                                                                        │
+│  decision/ → ADR 升迁规则：                                             │
+│  ┌──────────────────────────────────────────────────────────────┐      │
+│  │  触发升迁的条件（任一）：                                       │      │
+│  │  1. 同一决策被引用 > 3 次                                     │      │
+│  │  2. 影响 3+ Domain / Capability                               │      │
+│  │  3. 有人提出替代方案需要正式评估                                │      │
+│  │                                                              │      │
+│  │  升迁流程：                                                    │      │
+│  │  decision/xxx.md → docs/01-architecture/active/ADR-NNN-xxx.md │      │
+│  │  → historical/ 中记录 superseded_by: ADR-NNN                 │      │
+│  └──────────────────────────────────────────────────────────────┘      │
+├────────────────────────────────────────────────────────────────────────┤
+│  L2: FITNESS FUNCTIONS —— 自动架构合规检查                              │
+│                                                                        │
+│  ⚠️ 这是 v3 新增层。没有自动化执行的知识，只是空文。                      │
+│                                                                        │
+│  当前可实现的检查：                                                     │
+│  ┌──────────────────────────────────────────────────────────────┐      │
+│  │  cargo xtask check-forbidden-imports                         │      │
+│  │    → Domain → Domain 直接引用         违反 P0 红线的第 6 条   │      │
+│  │    → Core → Infra 反向依赖            违反架构原则             │      │
+│  │                                                              │      │
+│  │  cargo xtask check-layer-violation                           │      │
+│  │    → Capability 引用另一个 Capability 的内部模块              │      │
+│  │    → Domain 绕过 integration/ 直接访问 Capability 字段        │      │
+│  │                                                              │      │
+│  │  cargo xtask check-inline-tests                              │      │
+│  │    → 检测 #[cfg(test)] mod tests                             │      │
+│  │                                                              │      │
+│  │  cargo xtask check-effect-pipeline                           │      │
+│  │    → 检测是否有绕过 Effect 直接修改战斗数值的代码              │      │
+│  │                                                              │      │
+│  │  cargo xtask check-skills                                    │      │
+│  │    → Skill 生成时间 vs src/core/ 最后修改时间                 │      │
+│  │    → 过期则 CI 红                                            │      │
+│  └──────────────────────────────────────────────────────────────┘      │
+│                                                                        │
+│  运作方式：                                                             │
+│  ├── 每个 check 是独立的 Rust 二进制（xtask/ 下）                      │
+│  ├── cargo xtask check-all → 全部运行                                  │
+│  ├── CI 必跑 check-all，失败 → ❌                                      │
+│  └── 允许 #[allow(fitness_violation)] 但必须附 ADR 豁免 ID              │
+├────────────────────────────────────────────────────────────────────────┤
+│  L1: REFERENCE —— 精简后的参考文档                                       │
+│                                                                        │
+│  只保留不可从代码推导的规范：                                             │
+│  ├── 00-governance/  宪法 + 编码规则（行为规范）                        │
+│  ├── 02-domain/      业务规则（不可代码化的领域约束）                    │
+│  ├── 03-content/     Content 架构（Def 设计规则）                       │
+│  ├── 04-data/        Schema 治理（Data Laws）                          │
+│  └── 05-testing/     测试规范（测试策略）                               │
+│                                                                        │
+│  已删除: 08-knowledge/ 的纯代码重复内容                                  │
+│  已归档: 09-planning/done/, 10-reviews/done/, 11-refactor/done/        │
+├────────────────────────────────────────────────────────────────────────┤
+│  L0: CODE —— 最高知识密度                                               │
+│                                                                        │
+│  CodeGraph 索引 + Repomix pack 覆盖所有代码查询场景：                    │
+│  ├── 找符号定义 → codegraph_node(symbol=xxx)                           │
+│  ├── 理解流程 → codegraph_explore(query="how X works")                 │
+│  ├── 找调用者 → codegraph_callers(symbol=xxx)                          │
+│  └── 全局搜索 → repomix pack + grep_repomix_output                     │
+└────────────────────────────────────────────────────────────────────────┘
+```
 
-#### 3.1 写入初始记忆
+---
 
-在 `.claude/projects/.../memory/` 创建：
+## 2. 决策升迁路径（防止 Decision/ADR 分裂）
+
+```
+日常对话诞生决策
+       │
+       ▼
+  [decision/ 记忆]
+  记录：日期、决策、原因、替代方案被否决
+       │
+       │ 任一条件触发：
+       │  • 被引用 > 3 次
+       │  • 影响 3+ Domain
+       │  • 有人提出替代方案
+       │  • 时间 > 6 个月仍活跃
+       ▼
+  [ADR 升迁]
+  decision/xxx.md → docs/01-architecture/active/ADR-NNN-xxx.md
+       │
+       ▼
+  [historical/ 记录 superseded_by]
+  原 decision 标记 ELEVATED，指向新 ADR
+       │
+       ▼
+  [Fitness Function 更新]
+  如果该决策可自动化检查 → 新增 check
+```
+
+---
+
+## 3. 各层容量上限
+
+```
+Memory/
+  ├── user/       ≤ 5 文件（越多越记不住你是谁）
+  ├── feedback/   ≤ 10 文件（越多越自相矛盾）
+  ├── project/    ≤ 3 文件（超过说明你把 Sprint 塞进来了）
+  ├── decision/   ≤ 20 文件（超过说明该升迁了）
+  └── reference/  ≤ 5 文件（超过说明你在堆链接）
+
+Mental Models/  ≤ 10 文件（硬上限）
+
+ADR/
+  ├── active/    ≤ 10 文件（超过说明架构还没稳定）
+  └── historical/ 无上限（越多越好）
+
+Fitness Checks/  ≤ 20 个 check（超过说明规则太琐碎）
+```
+
+---
+
+## 4. 分阶段实施计划
+
+### Phase 1: Skill 生成（~30min）
+
+```bash
+# 从代码 + ADR + 规则 生成 5 个 Skill
+repomix generate_skill --directory src/core/ \
+  --include "docs/01-architecture/active/**,docs/00-governance/ai-constitution-complete.md,.trae/rules/*.md" \
+  --skillName "fre-architecture"
+
+repomix generate_skill --directory src/core/domains/ --skillName "fre-domain-rules"
+
+repomix generate_skill --directory src/core/capabilities/ \
+  --include "docs/01-architecture/historical/ADR-01*-**,docs/02-domain/capabilities/**" \
+  --skillName "fre-capabilities"
+
+repomix generate_skill --directory docs/05-testing/ --skillName "fre-testing"
+
+repomix generate_skill --directory src/ui/ \
+  --include "docs/06-ui/**,docs/01-architecture/historical/ADR-055-*" \
+  --skillName "fre-ui"
+```
+
+### Phase 2: ADR 重构（~30min）
+
+```
+当前: docs/01-architecture/00-foundation/ADR-xxx.md 等
+改为:
+docs/01-architecture/
+├── active/        ← 未实现（ADR-050, 064, 065, 066）
+└── historical/    ← 已实现（50+ ADR，保留决策原因）
+```
+
+### Phase 3: Mental Model 创建（~2h）
+
+在 `docs/mental-models/` 创建 5 个核心流程模型，每篇 ≤ 3 页。
+硬上限 10，当前用 5，剩余 5 个配额用于未来。
+
+### Phase 4: 文档清理（~1h）
+
+- 删除 `08-knowledge/` 中纯代码重复的概览文档
+- 归档旧版 bevy 文档（0.1~0.18）
+- 删除 `00-governance/` 中的 bevy 示例目录（官方文档更优）
+- 确认 `09-planning/` 等已完成文件在 `done/` 中
+
+### Phase 5: Memory 初始化（~30min）
 
 ```markdown
-user/role.md
-  → "独立游戏开发者，维护 Fre SRPG 项目"
-
-feedback/codegraph-first.md
-  → "查代码先走 CodeGraph，不够再用 Read/文件搜索"
-  → Why: CodeGraph 一次调用返回源码 + 调用链，比 grep+read 循环快 10 倍
-
-feedback/terse-response.md
-  → "回复要简洁，直接给结论，不用 emoji"
-  → How: 用短句，不要总结性段落
-
-project/current-sprint.md
-  → "文档系统改造：四层知识架构，目标 70% 瘦身"
-  → Status: Phase 1（Skill 生成）进行中
-
-reference/external-services.md
-  → "bugs/issues → GitHub；参考游戏设计 → BG3/铃兰之剑数据在 docs/04-data/bo3/ 和 ll/"
+memory/
+├── MEMORY.md                   索引
+├── user-role.md                "独立游戏开发者，Fre SRPG"
+├── feedback-codegraph-first.md "查代码优先 CodeGraph"
+├── feedback-terse-response.md  "回复简洁，不用 emoji"
+├── project-architecture.md     "DDD 三层+横切四层，能力系统三层"
+├── project-constraints.md      "不用 anyhow，不用 Service 模式"
+├── decision-capability-not-service.md  "→ 待观察是否升迁 ADR"
+├── decision-no-anyhow.md              "→ 已升迁 ADR-051"
+└── reference-github-issues.md  "Bug/Issue 在 GitHub"
 ```
 
-#### 3.2 建立 Agent Memory 同步机制
+### Phase 6: Fitness Functions 搭建（~3h）
 
-将 agent 记忆中与"你个人"相关的信息（偏好、反馈）同步到 Auto Memory，agent 记忆保留纯技术细节。
+创建 `cargo xtask check-*` 命令：
+
+| 命令 | 实现方式 | 优先级 |
+|------|---------|--------|
+| `check-forbidden-imports` | 解析 AST 检测跨域 import | P0 — 架构破坏最高风险 |
+| `check-layer-violation` | 检测模块路径违反依赖方向 | P0 |
+| `check-inline-tests` | grep `#[cfg(test)] mod tests` | P0 — 宪法禁止 |
+| `check-effect-pipeline` | 检测 HP/MP 直接修改 | P1 — 需领域知识 |
+| `check-skills` | 比较 Skill 生成时间 vs 源码修改时间 | P1 |
+
+CI 集成：
+```yaml
+# .github/workflows/architecture.yml
+check-architecture:
+  steps:
+    - run: cargo xtask check-all
+```
+
+### Phase 7: CLAUDE.md 精简（~20min）
+
+保留约 60 行核心：Build/Test 命令、P0 红线和规则、六层架构一句话索引。
 
 ---
 
-### Phase 4: CLAUDE.md 精简
+## 5. 维护规则（全文最短但最重要的章节）
 
-**目标**: 由当前 ~150 行精简至 ~60 行，只保留不可从代码推导的规则。
-
-**删除/移入 Skill**:
-- `docs/` 完整快速参考表（占用 ~40 行）→ `/skill fre-architecture` 替代
-- 完整 Agent 分工说明（占用 ~30 行）→ `AGENTS.md` 保留，CLAUDE.md 只留 1 行链接
-- 全部 `01-architecture/README.md` 的目录结构镜像（~50 行）
-
-**保留**:
-- Build & Test 快捷键
-- P0 Red Lines（最高优先级规则）
-- Tool Priority 排序
-- Agent 使用一句话指导
-- Testing Rules 核心
+```
+1. decision/ 升迁条件：被引用 > 3 次 OR 影响 3+ Domain → 必须升 ADR
+2. Mental Models 上限 10，超过强制合并/删除
+3. Skill 不自动更新，但 CI 会检查过期
+4. Fitness Function 失败 = CI 红，除非附 ADR 豁免
+5. project/ 只记长期事实，不记 Sprint 状态
+6. ADR 永不删除，永不 done/
+```
 
 ---
 
-## 4. 预期效果
+## 6. 与 v2 的差异
 
-| 指标 | 改造前 | 改造后 | 降幅 |
-|------|-------|-------|------|
-| 活跃文档数 | ~224 | ~80 | **-64%** |
-| 总行数 | ~140,000 | ~40,000 | **-71%** |
-| 每次会话 AI 搜索范围 | 637 文件 / 334k 行 | MEMORY.md ~150 行 + 按需 Skill | **-99%** |
-| 找架构定义耗时 | 5-15 次 Read 调用 | 1 次 `/skill fre-architecture` | **-90%** |
-| 跨会话记忆 | 无 | Auto Memory 持续积累 | — |
-| 知识过时风险 | 文档与代码不同步 | Skill 从代码生成，天然同步 | — |
+| 维度 | v2 | v3 |
+|------|----|----|
+| 层数 | 5 | **6**（+Fitness Functions） |
+| decision ↔ ADR | 无升迁机制 | **3 条件升迁 + superseded_by 追踪** |
+| Mental Model 上限 | 无 | **≤ 10 硬上限** |
+| Skill 更新 | pre-push hook | **cargo xtask + CI 门禁** |
+| project/ 范围 | sprint + 长期混用 | **仅长期稳定事实** |
+| 执行闭环 | 无 | **Fitness Function → CI → ❌** |
+| 各层容量上限 | 无 | **每层明确上限** |
 
 ---
 
-## 5. 长期维护
+## 7. Evolution Path（5 年演进路线）
 
-### 5.1 文档创建规则
+以下内容不在当前 Phase 1-7 实施范围内，是项目增长到 50 万行 → 100 万行 / 3 年 → 5 年 时才会触发的进化方向。
 
-```
-什么时候写文档？
-  ✅ 记录"为什么这样设计"（决策原因、权衡、替代方案）
-  ❌ 记录"代码长什么样"（CodeGraph 和 Repomix 已覆盖）
-  ✅ 记录"不可从代码推导的约束"（业务规则、不变量、依赖顺序）
-  ❌ 记录"如何使用某个函数"（签名 + 文档注释足够）
-```
+### 7.1 Skill 分层治理（触发条件：单 Skill > 15k token）
 
-### 5.2 Skill 更新策略
-
-| 触发条件 | 操作 |
-|---------|------|
-| 新 Capability/Domain 添加 | 重新生成对应 Skill |
-| 架构重构导致目录结构变化 | 重新生成 `fre-architecture` |
-| 每两周 | 检查 Skill 是否与代码同步 |
-
-### 5.3 文档生命周期
+当 Skill 文件超过 15k token，按**任务场景**而非**模块目录**拆分：
 
 ```
-文档通过此方式自然消亡：
-  1. 代码实现了文档描述的决策
-  2. Repomix/CodeGraph 可覆盖文档的查询场景
-  3. Auto Memory 积累了足够的使用偏好
-  → 文档可归档或删除
+当前（按模块分）:
+  fre-capabilities → 15 个能力领域全部打包
+
+未来（按任务分，示例）:
+  fre-combat-system       → combat/spell/reaction + 相关 ADR
+  fre-progression-system  → progression/inventory/party + 相关 ADR
+  fre-content-authoring   → content 层配置 + 校验规则
+  fre-ui-implementation   → UI 骨架 + Screen 实现模式
 ```
 
-### 5.4 使用习惯
+拆分规则：
+- 一个 Skill = 一个**常见开发任务**的完整上下文
+- 不以目录边界为 Skill 边界
+- 每个 Skill 的 `includePatterns` 显式声明包含范围
+- 每次拆分后清理旧 Skill，避免 N 个版本同时存在
 
-| 场景 | 做法 |
+### 7.2 Fitness Function 工具化（触发条件：xtask check-* 超过 5 个自定义检查）
+
+```
+当前（全部自研）:
+  5 个 cargo xtask check-*
+
+未来（现成工具 + xtask 补充）:
+  cargo-deny         → 依赖许可 + 禁止特定 crate
+  cargo-udeps        → 未使用依赖检测
+  cargo-geiger       → Unsafe 使用审计
+  clippy             → 代码质量（已有）
+
+  cargo xtask check-forbidden-imports   ← 现成工具无法覆盖
+  cargo xtask check-effect-pipeline     ← 项目特定
+  cargo xtask check-skills              ← Repomix 特定
+```
+
+原则：**通用检查用现成工具，项目特定检查用 xtask。** 不重复造轮子。
+
+### 7.3 Architecture Recovery（触发条件：项目 > 2 年 或 代码 > 30 万行）
+
+#### 问题
+所有知识系统都假设"知识是对的"，但代码会随时间漂移。ADR 说 A→B，实际代码已经是 A→C→B。没有 Recovery，整个系统逐渐变成 fiction。
+
+#### 方案
+
+```
+CodeGraph → 导出当前真实依赖图
+         ↓
+   对比
+         ↓
+ADR / 配置文件定义的预期依赖图
+         ↓
+   发现差异
+    ├── 代码漂了     → 修复代码
+    └── ADR 过期了  → 更新 ADR
+         ↓
+   输出 Current Architecture Report（Repomix 生成）
+   供人工 Review
+```
+
+#### 实现
+
+```bash
+cargo xtask recovery-check
+  --extract-graph     # CodeGraph 导出当前依赖图
+  --compare-rules     # 对比 .architecture/expected-deps.toml
+  --report-drift      # 输出差异报告
+  --auto-suggest      # （可选）建议更新方向
+```
+
+预期依赖规则定义在 `.architecture/expected-deps.toml`：
+
+```toml
+[layer.core]
+allowed_imports = ["shared"]
+forbidden_imports = ["infra", "app"]
+
+[layer.domain]
+allowed_imports = ["core", "shared"]
+forbidden_imports = ["infra", "app"]
+
+[communication]
+domain_to_domain = "event_only"
+capability_to_capability = "facade_only"
+```
+
+#### 节奏
+
+| 频率 | 动作 |
 |------|------|
-| 开始新工作 | `/skill fre-architecture` 快速加载架构上下文 |
-| 查函数/类型 | 直接问 "X 在哪定义/怎么用" → CodeGraph |
-| 全局搜索 | 代码 → `grep_repomix_output`；文档 → `grep -r` |
-| 学到的偏好 | 我自动写入 Auto Memory，无需你操作 |
-| 需要外部库帮助 | `Context7` 查最新文档 |
-| 回顾工作 | `git log` 比计划文档准确 |
+| 每次 CI | Fitness Functions（检查未来违规） |
+| 每季度 | Architecture Recovery（检测已经发生的漂移） |
+| 每年 | 全量 ADR Review + Mental Model 更新 |
 
 ---
 
-## 6. 实施时间线
+## 8. 八层全景（最终演化目标）
 
-| Phase | 内容 | 预估 | 执行顺序 | 依赖 |
-|-------|------|------|---------|------|
-| P1 | repomix 生成 5 个 Skill | ~30min | 1 | 无 |
-| P2 | 文档大清理 | ~2h | 2 | 需 P1 完成后确保知识不丢 |
-| P3 | Auto Memory 初始化 | ~30min | 3 | 无 |
-| P4 | CLAUDE.md 精简 | ~20min | 4 | 无 |
-| **合计** | | **~3h 20min** | **P1→P2→P3→P4** | |
+```
+L7  Architecture Recovery  ← 季度漂移检测
+L6  Memory                 ← 个人 + 项目长期事实 + 决策
+L5  Skills                 ← 按任务场景拆分，≤15k token/个
+L4  Mental Models          ← ≤10 张系统连接图
+L3  ADR                    ← active + historical，永不删除
+L2  Fitness Functions      ← 现成工具 + xtask 补充
+L1  Rules                  ← 不可代码化的规范
+L0  Code                   ← 源码（CodeGraph + Repomix 索引）
+```
+
+当前实施（Phase 1-7）覆盖 L0-L6，L7 Architecture Recovery 作为 2 年后的进化路径预留。
+
