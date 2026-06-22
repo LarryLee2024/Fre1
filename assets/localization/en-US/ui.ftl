@@ -35,3 +35,26 @@
 -ui-inventory = Inventory
 -ui-party-setup-title = Party Setup
 -ui-party-setup-quick-battle = Quick Battle
+
+### SaveLoadScreen — en-US
+-ui-save_load-title-save = Save Game
+-ui-save_load-title-load = Load Game
+-ui-save_load-toggle_to_load = Switch to Load
+-ui-save_load-toggle_to_save = Switch to Save
+-ui-save_load-action-save = Save
+-ui-save_load-action-load = Load
+-ui-save_load-action-delete = Delete
+-ui-save_load-empty = Empty
+-ui-save_load-select_hint = Select a save slot
+-ui-save_load-modal-overwrite_title = Overwrite Save?
+-ui-save_load-modal-overwrite_body = This will overwrite the existing save data.
+-ui-save_load-modal-load_title = Load Game?
+-ui-save_load-modal-load_body = Loading will reset unsaved progress.
+-ui-save_load-modal-delete_title = Delete Save?
+-ui-save_load-modal-delete_body = This action cannot be undone.
+-ui-save_load-modal-overwrite_confirm = Overwrite
+-ui-save_load-modal-overwrite_cancel = Cancel
+-ui-save_load-modal-load_confirm = Load
+-ui-save_load-modal-load_cancel = Cancel
+-ui-save_load-modal-delete_confirm = Delete
+-ui-save_load-modal-delete_cancel = Cancel

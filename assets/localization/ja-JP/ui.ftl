@@ -35,3 +35,26 @@
 -ui-inventory = インベントリ
 -ui-party-setup-title = パーティーセットアップ
 -ui-party-setup-quick-battle = クイックバトル
+
+### SaveLoadScreen — ja-JP
+-ui-save_load-title-save = セーブ
+-ui-save_load-title-load = ロード
+-ui-save_load-toggle_to_load = ロードに切替
+-ui-save_load-toggle_to_save = セーブに切替
+-ui-save_load-action-save = セーブ
+-ui-save_load-action-load = ロード
+-ui-save_load-action-delete = 削除
+-ui-save_load-empty = 空
+-ui-save_load-select_hint = セーブスロットを選択
+-ui-save_load-modal-overwrite_title = 上書きしますか？
+-ui-save_load-modal-overwrite_body = 既存のセーブデータを上書きします。
+-ui-save_load-modal-load_title = ロードしますか？
+-ui-save_load-modal-load_body = ロードすると未保存の進行状況が失われます。
+-ui-save_load-modal-delete_title = 削除しますか？
+-ui-save_load-modal-delete_body = この操作は取り消せません。
+-ui-save_load-modal-overwrite_confirm = 上書き
+-ui-save_load-modal-overwrite_cancel = キャンセル
+-ui-save_load-modal-load_confirm = ロード
+-ui-save_load-modal-load_cancel = キャンセル
+-ui-save_load-modal-delete_confirm = 削除
+-ui-save_load-modal-delete_cancel = キャンセル

@@ -20,6 +20,7 @@
 use bevy::prelude::*;
 
 use crate::ui::application::UiCommand;
+use crate::ui::navigation::ScreenType;
 use crate::ui::primitives::button::events::ButtonClicked;
 use crate::ui::primitives::panel::{components::PanelVariant, factory::spawn_panel};
 use crate::ui::theme::Theme;
@@ -98,4 +99,41 @@ pub fn on_shop_button_clicked(
 
     info!(target: "ui", "[Shop] 命令映射: {:?}", command);
     commands.trigger(command);
+}
+
+/// ShopPlugin — 注册 ShopScreen 的组件类型和 Observer。
+pub struct ShopPlugin;
+
+impl Plugin for ShopPlugin {
+    fn build(&self, app: &mut App) {
+        app.register_type::<ShopScreen>()
+            .add_observer(on_open_shop_screen)
+            .add_observer(on_close_shop_screen)
+            .add_observer(on_shop_button_clicked);
+    }
+}
+
+/// Observer：处理 UiCommand::OpenScreen(Shop) — 生成商店界面。
+pub fn on_open_shop_screen(
+    on: On<UiCommand>,
+    mut commands: Commands,
+    theme: Res<Theme>,
+    asset_server: Res<AssetServer>,
+) {
+    if let UiCommand::OpenScreen(ScreenType::Shop) = on.event() {
+        spawn_shop_screen(commands, theme, asset_server);
+    }
+}
+
+/// Observer：处理 UiCommand::CloseScreen — 销毁商店界面。
+pub fn on_close_shop_screen(
+    on: On<UiCommand>,
+    mut commands: Commands,
+    query: Query<Entity, With<ShopScreen>>,
+) {
+    if let UiCommand::CloseScreen = on.event() {
+        for entity in &query {
+            commands.entity(entity).despawn_recursive();
+        }
+    }
 }

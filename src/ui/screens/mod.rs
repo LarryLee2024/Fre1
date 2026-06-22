@@ -31,7 +31,7 @@ use main_menu::{
     spawn_main_menu,
     systems::{on_main_menu_action, on_main_menu_button_handler},
 };
-use save_load::{on_close_save_load_screen, on_open_save_load_screen, on_save_load_button_clicked};
+use save_load::SaveLoadPlugin;
 use settings::{
     on_close_settings_screen, on_open_settings_screen, on_settings_button_clicked,
     settings_toggle_system,
@@ -60,8 +60,6 @@ impl Plugin for ScreenPlugin {
             .register_type::<settings::SettingsScreen>()
             .register_type::<settings::SettingsAction>()
             .register_type::<settings::SettingsToggle>()
-            .register_type::<save_load::SaveLoadScreen>()
-            .register_type::<save_load::SaveLoadAction>()
             .register_type::<shop::ShopScreen>()
             .register_type::<ScreenType>()
             .register_type::<battle::layout::BattleZone>()
@@ -88,11 +86,8 @@ impl Plugin for ScreenPlugin {
             .add_observer(on_settings_button_clicked)
             // Settings 界面：开关状态变更处理器（Update）
             .add_systems(Update, settings_toggle_system)
-            // SaveLoad 界面：生命周期 Observer
-            .add_observer(on_open_save_load_screen)
-            .add_observer(on_close_save_load_screen)
-            // SaveLoad 界面：按钮点击处理器
-            .add_observer(on_save_load_button_clicked)
+            // SaveLoad 界面：通过插件注册
+            .add_plugins(SaveLoadPlugin)
             // Shop 界面：按钮点击处理器
             .add_observer(on_shop_button_clicked)
             // BattleScreen 系统：Zone 可见性控制（Update）

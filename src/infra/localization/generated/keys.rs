@@ -288,6 +288,27 @@ pub mod loc {
     pub const RESUME: &str = "ui.resume";
     pub const RETRY: &str = "ui.retry";
     pub const SAVE: &str = "ui.save";
+    pub const SAVE_LOAD_ACTION_DELETE: &str = "ui.save_load.action.delete";
+    pub const SAVE_LOAD_ACTION_LOAD: &str = "ui.save_load.action.load";
+    pub const SAVE_LOAD_ACTION_SAVE: &str = "ui.save_load.action.save";
+    pub const SAVE_LOAD_EMPTY: &str = "ui.save_load.empty";
+    pub const SAVE_LOAD_MODAL_DELETE_BODY: &str = "ui.save_load.modal.delete_body";
+    pub const SAVE_LOAD_MODAL_DELETE_CANCEL: &str = "ui.save_load.modal.delete_cancel";
+    pub const SAVE_LOAD_MODAL_DELETE_CONFIRM: &str = "ui.save_load.modal.delete_confirm";
+    pub const SAVE_LOAD_MODAL_DELETE_TITLE: &str = "ui.save_load.modal.delete_title";
+    pub const SAVE_LOAD_MODAL_LOAD_BODY: &str = "ui.save_load.modal.load_body";
+    pub const SAVE_LOAD_MODAL_LOAD_CANCEL: &str = "ui.save_load.modal.load_cancel";
+    pub const SAVE_LOAD_MODAL_LOAD_CONFIRM: &str = "ui.save_load.modal.load_confirm";
+    pub const SAVE_LOAD_MODAL_LOAD_TITLE: &str = "ui.save_load.modal.load_title";
+    pub const SAVE_LOAD_MODAL_OVERWRITE_BODY: &str = "ui.save_load.modal.overwrite_body";
+    pub const SAVE_LOAD_MODAL_OVERWRITE_CANCEL: &str = "ui.save_load.modal.overwrite_cancel";
+    pub const SAVE_LOAD_MODAL_OVERWRITE_CONFIRM: &str = "ui.save_load.modal.overwrite_confirm";
+    pub const SAVE_LOAD_MODAL_OVERWRITE_TITLE: &str = "ui.save_load.modal.overwrite_title";
+    pub const SAVE_LOAD_SELECT_HINT: &str = "ui.save_load.select_hint";
+    pub const SAVE_LOAD_TITLE_LOAD: &str = "ui.save_load.title.load";
+    pub const SAVE_LOAD_TITLE_SAVE: &str = "ui.save_load.title.save";
+    pub const SAVE_LOAD_TOGGLE_TO_LOAD: &str = "ui.save_load.toggle_to_load";
+    pub const SAVE_LOAD_TOGGLE_TO_SAVE: &str = "ui.save_load.toggle_to_save";
     pub const SETTINGS: &str = "ui.settings";
     pub const TUTORIAL_HINT: &str = "ui.tutorial.hint";
     pub const USE: &str = "ui.use";
@@ -520,6 +541,27 @@ pub const ALL_KEYS: &[&str] = &[
     "ui.resume",
     "ui.retry",
     "ui.save",
+    "ui.save_load.action.delete",
+    "ui.save_load.action.load",
+    "ui.save_load.action.save",
+    "ui.save_load.empty",
+    "ui.save_load.modal.delete_body",
+    "ui.save_load.modal.delete_cancel",
+    "ui.save_load.modal.delete_confirm",
+    "ui.save_load.modal.delete_title",
+    "ui.save_load.modal.load_body",
+    "ui.save_load.modal.load_cancel",
+    "ui.save_load.modal.load_confirm",
+    "ui.save_load.modal.load_title",
+    "ui.save_load.modal.overwrite_body",
+    "ui.save_load.modal.overwrite_cancel",
+    "ui.save_load.modal.overwrite_confirm",
+    "ui.save_load.modal.overwrite_title",
+    "ui.save_load.select_hint",
+    "ui.save_load.title.load",
+    "ui.save_load.title.save",
+    "ui.save_load.toggle_to_load",
+    "ui.save_load.toggle_to_save",
     "ui.settings",
     "ui.tutorial.hint",
     "ui.use",

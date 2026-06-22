@@ -56,10 +56,9 @@ pub fn spawn_battle_screen(
     // Node is used as-is; if absolute-positioned children need explicit parent bounds, add a
     // PanelVariant::FullScreen or sizing props to the factory instead of overriding Node here.
     let root = spawn_panel(&mut commands, &theme, PanelVariant::Basic);
-    commands.entity(root).insert((
-        BattleScreen,
-        Name::new("BattleScreen"),
-    ));
+    commands
+        .entity(root)
+        .insert((BattleScreen, Name::new("BattleScreen")));
 
     // ── Z1: Top-Left — Turn Indicator ──
     let z1 = spawn_zone(&mut commands, &theme, BattleZone::Z1TopLeft);

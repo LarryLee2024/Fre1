@@ -37,3 +37,26 @@
 -ui-party-setup-title = 战前准备
 -ui-party-setup-quick-battle = 快速战斗
 
+### SaveLoadScreen — 简体中文
+-ui-save_load-title-save = 保存游戏
+-ui-save_load-title-load = 读取存档
+-ui-save_load-toggle_to_load = 切换到读档
+-ui-save_load-toggle_to_save = 切换到存档
+-ui-save_load-action-save = 保存
+-ui-save_load-action-load = 读档
+-ui-save_load-action-delete = 删除
+-ui-save_load-empty = 空
+-ui-save_load-select_hint = 请选择一个存档槽位
+-ui-save_load-modal-overwrite_title = 覆盖存档？
+-ui-save_load-modal-overwrite_body = 将覆盖现有存档数据。
+-ui-save_load-modal-load_title = 读取存档？
+-ui-save_load-modal-load_body = 读取存档将重置未保存的进度。
+-ui-save_load-modal-delete_title = 删除存档？
+-ui-save_load-modal-delete_body = 此操作不可撤销。
+-ui-save_load-modal-overwrite_confirm = 覆盖
+-ui-save_load-modal-overwrite_cancel = 取消
+-ui-save_load-modal-load_confirm = 读档
+-ui-save_load-modal-load_cancel = 取消
+-ui-save_load-modal-delete_confirm = 删除
+-ui-save_load-modal-delete_cancel = 取消
+
