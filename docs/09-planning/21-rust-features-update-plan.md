@@ -2,8 +2,9 @@
 
 > 来源：`docs/ai_ignore_this_dir/15rust特性.md`
 > 日期：2026-06-21
-> 状态：✅ 全部完成 — 宪法冲突修复 + 规则文件更新 + 代码改造（Sealed/Extension/Marker/Blanket/PhantomData/Cow/Derive宏/ConstTrait/QueryExt DSL/Compile-time Capability）
+> 状态：✅ Phase 0+D 完成（宪法冲突修复 + 规则文件更新），Phase C 部分完成，详见 11-refactor 执行报告
 > 复核：2026-06-21（2智能体交叉验证 + 架构师审核ADR-057~062）
+> 注：Phase C（代码改造）中 Sealed Trait / Extension Trait / Cow / Typestate 4 项 Deferred，后续推进
 
 ---
 

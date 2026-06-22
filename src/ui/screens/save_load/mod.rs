@@ -267,17 +267,16 @@ pub fn spawn_save_load_screen(commands: &mut Commands, asset_server: &AssetServe
     commands.entity(preview).set_parent_in_place(main_content);
 
     // 头像占位（96x96 灰色方块）
-    let avatar = commands
-        .spawn((
-            Node {
-                width: Val::Px(96.0),
-                height: Val::Px(96.0),
-                ..default()
-            },
-            BackgroundColor(Color::srgba(0.3, 0.3, 0.3, 1.0)),
-            Name::new("AvatarPlaceholder"),
-        ))
-        .id();
+    let avatar = spawn_panel(
+        commands,
+        theme,
+        PanelVariant::Placeholder {
+            width: Val::Px(96.0),
+            height: Val::Px(96.0),
+            color: Color::srgba(0.3, 0.3, 0.3, 1.0),
+        },
+    );
+    commands.entity(avatar).insert(Name::new("AvatarPlaceholder"));
     commands.entity(avatar).set_parent_in_place(preview);
 
     // 角色名占位
@@ -318,17 +317,18 @@ pub fn spawn_save_load_screen(commands: &mut Commands, asset_server: &AssetServe
     commands.entity(ts_txt).set_parent_in_place(preview);
 
     // 截图占位（256x144 灰色矩形）
-    let screenshot = commands
-        .spawn((
-            Node {
-                width: Val::Px(256.0),
-                height: Val::Px(144.0),
-                ..default()
-            },
-            BackgroundColor(Color::srgba(0.2, 0.2, 0.2, 1.0)),
-            Name::new("ScreenshotPlaceholder"),
-        ))
-        .id();
+    let screenshot = spawn_panel(
+        commands,
+        theme,
+        PanelVariant::Placeholder {
+            width: Val::Px(256.0),
+            height: Val::Px(144.0),
+            color: Color::srgba(0.2, 0.2, 0.2, 1.0),
+        },
+    );
+    commands
+        .entity(screenshot)
+        .insert(Name::new("ScreenshotPlaceholder"));
     commands.entity(screenshot).set_parent_in_place(preview);
 
     // 选择提示文本（已本地化）

@@ -1,16 +1,23 @@
 //! SettingsScreen — 游戏设置屏幕
 //!
-//! 提供游戏设置界面，包含主题切换、伤害数字显示开关等功能。
-//! 设置变更即时生效（主题切换立即应用），持久化通过"保存"按钮触发。
+//! 提供游戏设置界面，包含 Gameplay / Display 分组面板，支持主题切换、伤害数字显示、网格、
+//! 小地图、自动战斗等开关。设置变更即时生效（主题切换立即应用），持久化通过"保存"按钮触发。
 //!
 //! # UI 树结构
 //! ```text
 //! Panel (Basic, full screen)
 //!   ├── Text ("Settings", Heading) — localized
-//!   ├── Toggle ("Show Damage Numbers", checked)
-//!   ├── Toggle ("Dark Theme", checked) — 绑定 ThemeVariant
-//!   ├── Button ("Close", Secondary) — 关闭不保存
-//!   └── Button ("Save", Primary) — 保存设置到磁盘
+//!   ├── Panel (Group, "Gameplay")
+//!   │   ├── Text ("Gameplay", Label) — section header
+//!   │   ├── Toggle ("Show Damage Numbers", checked)
+//!   │   ├── Toggle ("Show Minimap", checked)
+//!   │   ├── Toggle ("Show Grid", checked)
+//!   │   └── Toggle ("Auto Battle", unchecked)
+//!   ├── Panel (Group, "Display")
+//!   │   ├── Text ("Display", Label) — section header
+//!   │   └── Toggle ("Dark Theme", checked) — 绑定 ThemeVariant
+//!   ├── Button ("Save", Primary) — 保存设置到磁盘
+//!   └── Button ("Close", Secondary) — 关闭不保存
 //! ```
 
 use bevy::ecs::observer::On;
@@ -28,6 +35,19 @@ use crate::ui::primitives::toggle::{components::ToggleState, factory::spawn_togg
 use crate::ui::settings::{UiSettings, save_settings};
 use crate::ui::theme::Theme;
 use crate::ui::theme::switch::{ThemeVariant, switch_theme};
+
+// ── 本地化 Key（暂无 FTL 条目时的兜底文本） ──
+
+/// 设置屏幕 Gameplay 分节标题 Key
+const KEY_SECTION_GAMEPLAY: &str = "ui.settings.section.gameplay";
+/// 设置屏幕 Display 分节标题 Key
+const KEY_SECTION_DISPLAY: &str = "ui.settings.section.display";
+/// 小地图开关 Key
+const KEY_SHOW_MINIMAP: &str = "ui.settings.show_minimap";
+/// 网格开关 Key
+const KEY_SHOW_GRID: &str = "ui.settings.show_grid";
+/// 自动战斗开关 Key
+const KEY_AUTO_BATTLE: &str = "ui.settings.auto_battle";
 
 /// 设置屏幕标记组件
 ///
@@ -53,6 +73,12 @@ pub enum SettingsAction {
 pub enum SettingsToggle {
     /// 显示伤害数字
     ShowDamageNumbers,
+    /// 显示小地图
+    ShowMinimap,
+    /// 显示网格
+    ShowGrid,
+    /// 自动战斗
+    AutoBattle,
     /// 深色主题
     DarkTheme,
 }
@@ -121,7 +147,34 @@ pub fn spawn_settings_screen(
         ..default()
     });
 
-    // ── 3. 开关：显示伤害数字 ──
+    // ══════════════════════════════════════════════
+    //  3. Gameplay 分组面板
+    // ══════════════════════════════════════════════
+    let gameplay_panel = spawn_panel(commands, theme, PanelVariant::Group);
+    commands.entity(gameplay_panel).insert((
+        Node {
+            width: Val::Px(320.0),
+            margin: UiRect::bottom(Val::Px(theme.spacing.md)),
+            ..default()
+        },
+        Name::new("SettingsGameplayPanel"),
+    ));
+
+    // 3a. Section header
+    let gameplay_header = spawn_localized_text(
+        commands,
+        asset_server,
+        theme,
+        KEY_SECTION_GAMEPLAY,
+        "Gameplay",
+        TextVariant::Label,
+    );
+    commands.entity(gameplay_header).insert(Node {
+        margin: UiRect::bottom(Val::Px(theme.spacing.sm)),
+        ..default()
+    });
+
+    // 3b. 开关：显示伤害数字
     let damage_toggle = spawn_toggle(
         commands,
         theme,
@@ -138,7 +191,85 @@ pub fn spawn_settings_screen(
         },
     ));
 
-    // ── 4. 开关：深色主题 ──
+    // 3c. 开关：显示小地图
+    let minimap_toggle = spawn_toggle(
+        commands,
+        theme,
+        KEY_SHOW_MINIMAP,
+        "Show Minimap",
+        settings.show_minimap,
+    );
+    commands.entity(minimap_toggle).insert((
+        SettingsToggle::ShowMinimap,
+        Node {
+            width: Val::Px(280.0),
+            margin: UiRect::bottom(Val::Px(theme.spacing.sm)),
+            ..default()
+        },
+    ));
+
+    // 3d. 开关：显示网格
+    let grid_toggle = spawn_toggle(
+        commands,
+        theme,
+        KEY_SHOW_GRID,
+        "Show Grid",
+        settings.show_grid,
+    );
+    commands.entity(grid_toggle).insert((
+        SettingsToggle::ShowGrid,
+        Node {
+            width: Val::Px(280.0),
+            margin: UiRect::bottom(Val::Px(theme.spacing.sm)),
+            ..default()
+        },
+    ));
+
+    // 3e. 开关：自动战斗
+    let auto_battle_toggle = spawn_toggle(
+        commands,
+        theme,
+        KEY_AUTO_BATTLE,
+        "Auto Battle",
+        settings.auto_battle,
+    );
+    commands.entity(auto_battle_toggle).insert((
+        SettingsToggle::AutoBattle,
+        Node {
+            width: Val::Px(280.0),
+            // 组内最后一个 Toggle：不添加底部边距，由 Group Panel 的 padding 提供间距
+            ..default()
+        },
+    ));
+
+    // ══════════════════════════════════════════════
+    //  4. Display 分组面板（主题）
+    // ══════════════════════════════════════════════
+    let display_panel = spawn_panel(commands, theme, PanelVariant::Group);
+    commands.entity(display_panel).insert((
+        Node {
+            width: Val::Px(320.0),
+            margin: UiRect::bottom(Val::Px(theme.spacing.lg)),
+            ..default()
+        },
+        Name::new("SettingsDisplayPanel"),
+    ));
+
+    // 4a. Section header
+    let display_header = spawn_localized_text(
+        commands,
+        asset_server,
+        theme,
+        KEY_SECTION_DISPLAY,
+        "Display",
+        TextVariant::Label,
+    );
+    commands.entity(display_header).insert(Node {
+        margin: UiRect::bottom(Val::Px(theme.spacing.sm)),
+        ..default()
+    });
+
+    // 4b. 开关：深色主题
     let is_dark = settings.theme == ThemeVariant::Dark;
     let theme_toggle = spawn_toggle(
         commands,
@@ -151,28 +282,14 @@ pub fn spawn_settings_screen(
         SettingsToggle::DarkTheme,
         Node {
             width: Val::Px(280.0),
-            margin: UiRect::bottom(Val::Px(theme.spacing.lg)),
+            // Display 组内唯一 Toggle，无需底部边距
             ..default()
         },
     ));
 
-    // ── 5. 操作按钮 ──
-    let close_btn = spawn_localized_button(
-        commands,
-        theme,
-        loc::ui::CLOSE,
-        "Close",
-        ButtonVariant::Secondary,
-    );
-    commands.entity(close_btn).insert((
-        SettingsAction::Close,
-        Node {
-            width: Val::Px(200.0),
-            margin: UiRect::bottom(Val::Px(theme.spacing.sm)),
-            ..default()
-        },
-    ));
-
+    // ══════════════════════════════════════════════
+    //  5. 操作按钮
+    // ══════════════════════════════════════════════
     let save_btn = spawn_localized_button(
         commands,
         theme,
@@ -184,16 +301,58 @@ pub fn spawn_settings_screen(
         SettingsAction::Save,
         Node {
             width: Val::Px(200.0),
+            margin: UiRect::bottom(Val::Px(theme.spacing.sm)),
             ..default()
         },
     ));
 
-    // ── 6. 通过 set_parent_in_place 构建层级 ──
+    let close_btn = spawn_localized_button(
+        commands,
+        theme,
+        loc::ui::CLOSE,
+        "Close",
+        ButtonVariant::Secondary,
+    );
+    commands.entity(close_btn).insert((
+        SettingsAction::Close,
+        Node {
+            width: Val::Px(200.0),
+            ..default()
+        },
+    ));
+
+    // ══════════════════════════════════════════════
+    //  6. 通过 set_parent_in_place 构建层级
+    // ══════════════════════════════════════════════
     commands.entity(title).set_parent_in_place(root);
-    commands.entity(damage_toggle).set_parent_in_place(root);
-    commands.entity(theme_toggle).set_parent_in_place(root);
-    commands.entity(close_btn).set_parent_in_place(root);
+    // Gameplay 分组
+    commands.entity(gameplay_panel).set_parent_in_place(root);
+    commands
+        .entity(gameplay_header)
+        .set_parent_in_place(gameplay_panel);
+    commands
+        .entity(damage_toggle)
+        .set_parent_in_place(gameplay_panel);
+    commands
+        .entity(minimap_toggle)
+        .set_parent_in_place(gameplay_panel);
+    commands
+        .entity(grid_toggle)
+        .set_parent_in_place(gameplay_panel);
+    commands
+        .entity(auto_battle_toggle)
+        .set_parent_in_place(gameplay_panel);
+    // Display 分组
+    commands.entity(display_panel).set_parent_in_place(root);
+    commands
+        .entity(display_header)
+        .set_parent_in_place(display_panel);
+    commands
+        .entity(theme_toggle)
+        .set_parent_in_place(display_panel);
+    // 按钮
     commands.entity(save_btn).set_parent_in_place(root);
+    commands.entity(close_btn).set_parent_in_place(root);
 }
 
 /// Observer: 处理设置按钮点击（Close / Save）
@@ -235,6 +394,15 @@ pub fn settings_toggle_system(
         match toggle_type {
             SettingsToggle::ShowDamageNumbers => {
                 ui_settings.show_damage_numbers = state.checked;
+            }
+            SettingsToggle::ShowMinimap => {
+                ui_settings.show_minimap = state.checked;
+            }
+            SettingsToggle::ShowGrid => {
+                ui_settings.show_grid = state.checked;
+            }
+            SettingsToggle::AutoBattle => {
+                ui_settings.auto_battle = state.checked;
             }
             SettingsToggle::DarkTheme => {
                 let new_variant = if state.checked {

@@ -5,6 +5,11 @@ use serde::{Deserialize, Serialize};
 
 use crate::ui::theme::switch::ThemeVariant;
 
+/// Serde helper: default true for backward-compatible deserialization.
+const fn default_true() -> bool {
+    true
+}
+
 /// UI 设置（Level 1 — 跨会话持久化）
 #[derive(Resource, Serialize, Deserialize, Debug, Clone, Reflect)]
 #[reflect(Resource, Serialize, Deserialize)]
@@ -15,6 +20,15 @@ pub struct UiSettings {
     pub language: String,
     /// 显示伤害数字
     pub show_damage_numbers: bool,
+    /// 显示小地图
+    #[serde(default = "default_true")]
+    pub show_minimap: bool,
+    /// 显示网格
+    #[serde(default = "default_true")]
+    pub show_grid: bool,
+    /// 自动战斗
+    #[serde(default)]
+    pub auto_battle: bool,
     /// 战斗速度倍率
     pub battle_speed: f32,
     /// 工具提示延迟（秒）
@@ -27,6 +41,9 @@ impl Default for UiSettings {
             theme: ThemeVariant::Dark,
             language: "en-US".into(),
             show_damage_numbers: true,
+            show_minimap: true,
+            show_grid: true,
+            auto_battle: false,
             battle_speed: 1.0,
             tooltip_delay: 0.3,
         }

@@ -24,6 +24,7 @@ pub mod inventory_grid;
 pub mod inventory_item_row;
 pub mod shop_item_card;
 pub mod shop_panel;
+pub mod skill_panel;
 pub mod skill_slot;
 
 use bevy::prelude::*;
@@ -34,6 +35,7 @@ use self::inventory_grid::InventoryGridPlugin;
 use self::inventory_item_row::InventoryItemRowPlugin;
 use self::shop_item_card::ShopItemCardPlugin;
 use self::shop_panel::ShopPanelPlugin;
+use self::skill_panel::SkillPanelPlugin;
 use self::skill_slot::SkillSlotPlugin;
 
 /// WidgetsPlugin — 注册所有游戏 UI 控件
@@ -44,6 +46,7 @@ pub struct WidgetsPlugin;
 impl Plugin for WidgetsPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
+            SkillPanelPlugin,
             SkillSlotPlugin,
             ActionMenuPlugin,
             CharacterCardPlugin,

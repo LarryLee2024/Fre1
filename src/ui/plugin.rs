@@ -27,6 +27,7 @@ use super::screens::ScreenPlugin;
 use super::settings::{UiSettings, load_settings};
 use super::theme::ThemePlugin;
 use super::view_models::{
+    economy::EconomyVm, inventory::InventoryVm, shop::ShopPanelVm,
     UiStore, battle_hud::BattleHudVm, character_panel::CharacterPanelVm, skill_panel::SkillPanelVm,
 };
 use super::widgets::WidgetsPlugin;
@@ -44,9 +45,18 @@ impl Plugin for UiPlugin {
         app.register_type::<BattleHudVm>();
         app.register_type::<CharacterPanelVm>();
         app.register_type::<SkillPanelVm>();
+        app.register_type::<InventoryVm>();
+        app.register_type::<ShopPanelVm>();
+        app.register_type::<EconomyVm>();
         app.register_type::<Dirty<BattleHudVm>>();
         app.register_type::<Dirty<CharacterPanelVm>>();
         app.register_type::<Dirty<SkillPanelVm>>();
+        app.register_type::<Dirty<InventoryVm>>();
+        app.register_type::<Dirty<ShopPanelVm>>();
+        app.register_type::<Dirty<EconomyVm>>();
+        app.init_resource::<InventoryVm>();
+        app.init_resource::<ShopPanelVm>();
+        app.init_resource::<EconomyVm>();
         app.insert_resource(load_settings());
         app.register_type::<UiSettings>();
 

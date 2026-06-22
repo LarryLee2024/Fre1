@@ -9,6 +9,16 @@
 pub mod battle;
 pub mod economy;
 
+/// 库存投影 — 骨架阶段（待实现）
+///
+/// 当 InventoryVm 和领域事件定义完成后将其拆分为独立文件。
+pub mod inventory {}
+
+/// 商店投影 — 骨架阶段（待实现）
+///
+/// 当 ShopPanelVm 和领域事件定义完成后将其拆分为独立文件。
+pub mod shop {}
+
 pub use battle::*;
 pub use economy::*;
 

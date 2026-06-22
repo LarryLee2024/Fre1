@@ -9,10 +9,16 @@ use bevy::prelude::*;
 
 use self::battle_hud::BattleHudVm;
 use self::character_panel::CharacterPanelVm;
+use self::economy::EconomyVm;
+use self::inventory::InventoryVm;
+use self::shop::ShopPanelVm;
 use self::skill_panel::SkillPanelVm;
 
 pub mod battle_hud;
 pub mod character_panel;
+pub mod economy;
+pub mod inventory;
+pub mod shop;
 pub mod skill_panel;
 
 /// UiStore —— 统一 ViewModel 容器
@@ -30,6 +36,12 @@ pub struct UiStore {
     pub character_panel: CharacterPanelVm,
     /// 技能面板数据
     pub skill_panel: SkillPanelVm,
+    /// 库存数据
+    pub inventory: InventoryVm,
+    /// 商店面板数据
+    pub shop: ShopPanelVm,
+    /// 经济数据
+    pub economy: EconomyVm,
 }
 
 impl Default for UiStore {
@@ -53,6 +65,9 @@ impl Default for UiStore {
             },
             character_panel: CharacterPanelVm::default(),
             skill_panel: SkillPanelVm::default(),
+            inventory: InventoryVm::default(),
+            shop: ShopPanelVm::default(),
+            economy: EconomyVm::default(),
         }
     }
 }

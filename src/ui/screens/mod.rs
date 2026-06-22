@@ -23,7 +23,7 @@ use bevy::prelude::*;
 
 use battle::{
     BattleScreen, despawn_battle_screen, spawn_battle_screen,
-    systems::{BattleAction, on_battle_button_clicked},
+    systems::{BattleAction, on_battle_button_clicked, on_dirty_battle_hud},
     visibility::battle_zone_visibility_system,
 };
 use inventory::systems::on_inventory_button_clicked;
@@ -42,6 +42,8 @@ use crate::shared::game_state::GameState;
 
 use crate::ui::navigation::ScreenType;
 
+use crate::ui::view_models::battle_hud::BattleHudData;
+
 /// ScreenPlugin — 注册所有 Screen 系统和 Observer
 ///
 /// 在 WidgetsPlugin 之后注册。当前使用 Startup 系统生成 Screen；
@@ -51,6 +53,9 @@ pub struct ScreenPlugin;
 impl Plugin for ScreenPlugin {
     fn build(&self, app: &mut App) {
         app
+            // 0. 临时数据 Resource
+            .init_resource::<BattleHudData>()
+            .register_type::<BattleHudData>()
             // 注册反射类型
             .register_type::<main_menu::MenuAction>()
             .register_type::<main_menu::MainMenuScreen>()
@@ -90,10 +95,14 @@ impl Plugin for ScreenPlugin {
             .add_plugins(SaveLoadPlugin)
             // Shop 界面：按钮点击处理器
             .add_observer(on_shop_button_clicked)
-            // BattleScreen 系统：Zone 可见性控制（Update）
+            // BattleScreen 系统：Zone 可见性控制 + Dirty 消费（Update）
             .add_systems(
                 Update,
-                battle_zone_visibility_system.run_if(in_state(GameState::Combat)),
+                (
+                    battle_zone_visibility_system,
+                    on_dirty_battle_hud,
+                )
+                    .run_if(in_state(GameState::Combat)),
             );
     }
 }

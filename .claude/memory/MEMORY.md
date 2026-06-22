@@ -21,6 +21,7 @@
 - [project-architecture](project-architecture.md) — DDD 三层+横切四层，架构不变式
 - [project-constraints](project-constraints.md) — 技术约束和禁止事项
 - [project-bevy-translations](project-bevy-translations.md) — Bevy 版本翻译进度与规范
+- [battle-hud-data-flow](battle-hud-data-flow-2026-06-22.md) — BattleHudData Resource + UiBinding + Dirty消费链
 
 ## decision
 <!-- key architectural decisions -->

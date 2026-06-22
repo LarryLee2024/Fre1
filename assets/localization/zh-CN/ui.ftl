@@ -18,6 +18,9 @@
 -ui-battle-item = 道具
 -ui-battle-skill = 技能
 -ui-battle-move = 移动
+-ui-battle-phase-player = 玩家回合
+-ui-battle-phase-enemy = 敌方回合
+-ui-battle-turn-number = 第 {$number} 回合
 -ui-hp = 生命
 -ui-mp = 魔力
 -ui-ap = 行动

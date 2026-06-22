@@ -7,7 +7,7 @@
 use bevy::prelude::*;
 
 /// Panel 样式变体
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Reflect)]
+#[derive(Debug, Clone, Copy, Reflect)]
 pub enum PanelVariant {
     /// 基础容器，带背景和边框
     Basic,
@@ -21,6 +21,15 @@ pub enum PanelVariant {
     List,
     /// 可折叠分组面板
     Group,
+    /// 占位符矩形（颜色/尺寸由外部控制）
+    Placeholder {
+        /// 宽度
+        width: Val,
+        /// 高度
+        height: Val,
+        /// 填充颜色
+        color: Color,
+    },
 }
 
 /// Panel 本地状态（Widget Contract Local State）

@@ -9,7 +9,6 @@
 ├── README.md                               # 本文件
 ├── 21-rust-features-update-plan.md         # 21个Rust特性吸收 — 项目文档全面更新
 ├── menu-flow-plan.md                       # 游戏菜单流程 — ScreenType/GameState 路由与导航
-├── test-battle-scene-plan.md               # TestBattle 场景 — 零美术资产可运行战斗
 ├── ui-layout-system-plan.md                # Combat HUD Zone Layout 布局系统
 └── done/                                   # 已完成归档
 ```
@@ -20,8 +19,7 @@
 |------|------|--------|----------|
 | `21-rust-features-update-plan.md` | ✅ complete | architect | 2026-06-21 | 21个Rust特性吸收 — 宪法冲突修复 + 规则文件更新（Phase 0+D 完成，Phase C Deferred） |
 | `menu-flow-plan.md` | draft | presentation-architect | 2026-06-22 | 游戏菜单流程规划 — ScreenType/GameState 路由与导航 |
-| `test-battle-scene-plan.md` | draft | feature-developer | 2026-06-22 | TestBattle 场景执行计划 — 零美术资产可运行战斗 |
-| `ui-layout-system-plan.md` | draft | presentation-architect | 2026-06-21 | Combat HUD Zone Layout, Widget Sizing, Action Chains, Visibility Rules |
+| `ui-layout-system-plan.md` | partial | presentation-architect | 2026-06-21 | Combat HUD Zone Layout — Zone 重构 ✓ / Widget 移植 ✓ / EndTurn 动作链 ✓ / UiSizing 资源 ❌ / Visibility 矩阵 ⚠️ 骨架 |
 
 ---
 
@@ -32,6 +30,7 @@
 | `map-content-pipeline-plan.md` | 2026-06-22 | Map 内容管线架构（Tiled/MapAsset/Importer/Renderer — ADR→内容定义→Schema→UI→代码→宪法） |
 | `camera-architecture-plan.md` | 2026-06-22 | Camera 架构补充（ADR → 领域规则 → Schema → UI交互 → 代码实现 → 宪法） |
 | `ui-domain-integration-plan.md` | 2026-06-22 | UI→Domain 接线与集成（3 轮 agent 全部完成） |
+| `test-battle-scene-plan.md` | 2026-06-22 | TestBattle 场景 — 零美术资产可运行战斗（全部实现） |
 
 ### Bevy 0.19 迁移总纲
 

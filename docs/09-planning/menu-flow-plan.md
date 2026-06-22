@@ -4,7 +4,8 @@ title: 游戏菜单流程规划 — ScreenType/GameState 路由与导航
 status: draft
 owner: presentation-architect
 created: 2026-06-21
-updated: 2026-06-21
+updated: 2026-06-22
+review: P0 3/4 完成（ESC→Settings 未实现），P1/P2 场景为桩，继续活跃开发
 tags:
   - ui
   - navigation

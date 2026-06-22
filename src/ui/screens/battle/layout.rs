@@ -50,9 +50,11 @@ fn zone_layout(zone: BattleZone, theme: &Theme) -> (Node, &'static str) {
             Node {
                 position_type: PositionType::Absolute,
                 top: Val::Px(s.sm),
-                // TODO[P2][UI][2026-07-21]: Center horizontally via flex parent or transform
-                width: Val::Auto,
+                left: Val::Px(0.0),
+                right: Val::Px(0.0),
                 height: Val::Px(56.0),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
                 ..default()
             },
             "Zone_Z2_TopCenter",

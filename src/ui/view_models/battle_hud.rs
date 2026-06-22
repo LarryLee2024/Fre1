@@ -7,6 +7,10 @@
 //! 文本字段使用 &'static str 作为 UiTextKey。
 //!
 //! 详见 `docs/06-ui/04-data-flow/projection-viewmodel.md` §3
+//!
+//! BattleHudData — 临时过渡 Resource
+//! 在 Projection 系统完全就绪前，作为 UI 层的数据源桥接。
+//! 详见 `docs/06-ui/04-data-flow/projection-viewmodel.md` §5
 
 use bevy::prelude::*;
 
@@ -37,4 +41,30 @@ pub struct BattleHudVm {
     /// 是否处于战斗阶段 (BattlePhase::Battle)
     /// 用于控制战斗区域可见性
     pub is_in_battle: bool,
+}
+
+/// 战斗 HUD 临时数据源
+///
+/// 在 Projection 系统完全就绪前，作为 UI 层的数据源桥接。
+/// spawn_battle_screen 从此 Resource 读取数据传入 Widget 工厂，
+/// 避免硬编码。
+///
+/// # 架构
+/// 短期过渡方案。当完整的 UiBinding + Projection 管线激活后，
+/// 此 Resource 将由 Projection 驱动更新或直接废弃。
+#[derive(Resource, Clone, Reflect, Default)]
+#[reflect(Resource)]
+pub struct BattleHudData {
+    /// 角色名称
+    pub character_name: String,
+    /// 等级
+    pub level: u32,
+    /// 当前 HP
+    pub hp_current: f32,
+    /// 最大 HP
+    pub hp_max: f32,
+    /// 当前 MP
+    pub mp_current: f32,
+    /// 最大 MP
+    pub mp_max: f32,
 }

@@ -262,7 +262,10 @@ pub mod loc {
     pub const BATTLE_END_TURN: &str = "ui.battle.end.turn";
     pub const BATTLE_ITEM: &str = "ui.battle.item";
     pub const BATTLE_MOVE: &str = "ui.battle.move";
+    pub const BATTLE_PHASE_ENEMY: &str = "ui.battle.phase.enemy";
+    pub const BATTLE_PHASE_PLAYER: &str = "ui.battle.phase.player";
     pub const BATTLE_SKILL: &str = "ui.battle.skill";
+    pub const BATTLE_TURN_NUMBER: &str = "ui.battle.turn.number";
     pub const BATTLE_WAIT: &str = "ui.battle.wait";
     pub const CLOSE: &str = "ui.close";
     pub const CONFIRM: &str = "ui.confirm";
@@ -515,7 +518,10 @@ pub const ALL_KEYS: &[&str] = &[
     "ui.battle.end.turn",
     "ui.battle.item",
     "ui.battle.move",
+    "ui.battle.phase.enemy",
+    "ui.battle.phase.player",
     "ui.battle.skill",
+    "ui.battle.turn.number",
     "ui.battle.wait",
     "ui.close",
     "ui.confirm",

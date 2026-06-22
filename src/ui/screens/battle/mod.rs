@@ -25,12 +25,20 @@ pub mod visibility;
 use bevy::prelude::*;
 
 use crate::infra::localization::generated::loc;
+use crate::ui::binding::UiBinding;
+use crate::ui::localization::text_keys::BATTLE_PHASE_PLAYER;
 use crate::ui::primitives::button::{components::ButtonVariant, factory::spawn_localized_button};
 use crate::ui::primitives::panel::{components::PanelVariant, factory::spawn_panel};
-use crate::ui::primitives::text::{components::TextVariant, factory::spawn_localized_text};
+use crate::ui::primitives::text::{
+    components::TextVariant,
+    factory::{spawn_localized_text, spawn_text},
+};
 use crate::ui::theme::Theme;
 use crate::ui::widgets::action_menu::factory::spawn_action_menu;
 use crate::ui::widgets::character_card::factory::spawn_character_card;
+use crate::ui::widgets::skill_panel::factory::spawn_skill_panel;
+
+use crate::ui::view_models::battle_hud::BattleHudData;
 
 use self::layout::{BattleZone, spawn_zone};
 use systems::BattleAction;
@@ -49,6 +57,7 @@ pub fn spawn_battle_screen(
     mut commands: Commands,
     theme: Res<Theme>,
     asset_server: Res<AssetServer>,
+    data: Res<BattleHudData>,
 ) {
     // ── 0. 根节点全屏容器 ──
     // 使用 spawn_panel 创建基础容器，覆盖 Node 为全屏尺寸。
@@ -79,9 +88,27 @@ pub fn spawn_battle_screen(
     commands.entity(turn_info).set_parent_in_place(z1);
 
     // ── Z2: 中上区 — 阶段文本 + 回合数 ──
-    // TODO[P2][UI][2026-07-21]: 添加 PhaseText 和 TurnNumber Widget
     let z2 = spawn_zone(&mut commands, &theme, BattleZone::Z2TopCenter);
     commands.entity(z2).set_parent_in_place(root);
+
+    let phase_text = spawn_localized_text(
+        &mut commands,
+        &asset_server,
+        &theme,
+        BATTLE_PHASE_PLAYER,
+        "Player Phase",
+        TextVariant::Body,
+    );
+    commands.entity(phase_text).set_parent_in_place(z2);
+
+    let turn_text = spawn_text(
+        &mut commands,
+        &asset_server,
+        &theme,
+        "Turn 1",
+        TextVariant::Body,
+    );
+    commands.entity(turn_text).set_parent_in_place(z2);
 
     // ── Z3: 右上区 — 单位摘要 [P2] ──
     // TODO[P2][UI][2026-07-21]: 添加 UnitSummary Widget
@@ -95,13 +122,17 @@ pub fn spawn_battle_screen(
         &mut commands,
         &asset_server,
         &theme,
-        "Aria",
-        5,
-        80.0,
-        100.0,
-        40.0,
-        50.0,
+        &data.character_name,
+        data.level,
+        data.hp_current,
+        data.hp_max,
+        data.mp_current,
+        data.mp_max,
     );
+    commands.entity(char_card).insert((
+        UiBinding::Hp,
+        UiBinding::Mp,
+    ));
     commands.entity(char_card).set_parent_in_place(z5);
 
     // ── Z6: 中下区 — 行动菜单 ──
@@ -110,10 +141,15 @@ pub fn spawn_battle_screen(
     let action_menu = spawn_action_menu(&mut commands, &theme);
     commands.entity(action_menu).set_parent_in_place(z6);
 
-    // ── Z7: 右下区 — 结束回合按钮 + SkillPanel [P1] ──
-    // TODO[P1][UI][2026-07-21]: 添加 SkillPanel Widget
+    // ── Z7: 右下区 — 技能面板 + 结束回合按钮 ──
     let z7 = spawn_zone(&mut commands, &theme, BattleZone::Z7BottomRight);
     commands.entity(z7).set_parent_in_place(root);
+
+    // 技能面板（包含攻击、火球术、治疗三个技能槽位）
+    let skill_panel = spawn_skill_panel(&mut commands, &asset_server, &theme);
+    commands.entity(skill_panel).set_parent_in_place(z7);
+
+    // 结束回合按钮
     let end_turn_btn = spawn_localized_button(
         &mut commands,
         &theme,

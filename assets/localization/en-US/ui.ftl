@@ -17,6 +17,9 @@
 -ui-battle-item = Item
 -ui-battle-skill = Skill
 -ui-battle-move = Move
+-ui-battle-phase-player = Player Phase
+-ui-battle-phase-enemy = Enemy Phase
+-ui-battle-turn-number = Turn {$number}
 -ui-hp = HP
 -ui-mp = MP
 -ui-ap = AP

@@ -15,3 +15,12 @@ pub use crate::infra::localization::generated::loc::core::{
     YES as CORE_YES,
 };
 pub use crate::infra::localization::generated::loc::ui::*;
+
+/// "Player Phase" — BattleScreen Z2 phase display (player's turn)
+pub const BATTLE_PHASE_PLAYER: &str = "ui.battle.phase_player";
+
+/// "Enemy Phase" — BattleScreen Z2 phase display (enemy's turn)
+pub const BATTLE_PHASE_ENEMY: &str = "ui.battle.phase_enemy";
+
+/// "Turn {number}" — BattleScreen Z2 turn number display (format: "Turn 1")
+pub const BATTLE_TURN_NUMBER: &str = "ui.battle.turn_number";

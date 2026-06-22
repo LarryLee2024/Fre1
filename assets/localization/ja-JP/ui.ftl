@@ -17,6 +17,9 @@
 -ui-battle-item = アイテム
 -ui-battle-skill = スキル
 -ui-battle-move = 移動
+-ui-battle-phase-player = プレイヤーフェイズ
+-ui-battle-phase-enemy = エネミーフェイズ
+-ui-battle-turn-number = {$number} ターン
 -ui-hp = HP
 -ui-mp = MP
 -ui-ap = AP

@@ -19,6 +19,7 @@ fn panel_background_color(variant: PanelVariant, theme: &Theme) -> Color {
         PanelVariant::Modal => Color::srgba(0.0, 0.0, 0.0, 0.6),
         PanelVariant::Tooltip => theme.colors.surface_secondary,
         PanelVariant::List => Color::NONE,
+        PanelVariant::Placeholder { color, .. } => color,
     }
 }
 
@@ -103,6 +104,14 @@ pub fn spawn_panel(commands: &mut Commands, theme: &Theme, variant: PanelVariant
             },
             Color::NONE,
         ),
+        PanelVariant::Placeholder { width, height, .. } => (
+            Node {
+                width,
+                height,
+                ..default()
+            },
+            Color::NONE,
+        ),
     };
 
     let variant_name = match variant {
@@ -112,6 +121,7 @@ pub fn spawn_panel(commands: &mut Commands, theme: &Theme, variant: PanelVariant
         PanelVariant::Tooltip => "Tooltip",
         PanelVariant::List => "List",
         PanelVariant::Group => "Group",
+        PanelVariant::Placeholder { .. } => "Placeholder",
     };
 
     commands
