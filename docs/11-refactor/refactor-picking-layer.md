@@ -1,12 +1,12 @@
 # 重构计划：Picking 分层迁移（infra/picking/ → ui/picking/）
 
-> 关联 ADR: ADR-PICK-000 | 当前 ADR-067 将被标记为 Superseded
+> 关联 ADR: ADR-068 | 当前 ADR-067 将被标记为 Superseded
 
 ## 目标状态 (Target)
 
 - `src/infra/picking/` 被彻底删除
 - `src/ui/picking/` 作为 Presentation Layer 的独立输入适配子层
-- `src/ui/picking/` 目录结构遵循 ADR-PICK-000 的 Module Design
+- `src/ui/picking/` 目录结构遵循 ADR-068 的 Module Design
 - `src/app/app_plugin.rs` 中 PickingPlugin 的注册从 Phase 8 迁移到 Phase 11（与 UiPlugin 一起）
 - `PickingSettings` / `SpritePickingSettings` 配置归一化到 `ui/picking/backend/sprite_backend.rs`
 - `Pickable::IGNORE` 策略从 `render.rs` 中移出到独立的 `ui_passthrough.rs`

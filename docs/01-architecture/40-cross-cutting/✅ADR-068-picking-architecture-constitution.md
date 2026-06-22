@@ -1,4 +1,14 @@
-# ADR-PICK-000: Picking 架构总纲（宪法级）
+---
+id: 01-architecture.ADR-068
+title: "ADR-068: Picking 架构总纲（宪法级）"
+status: Proposed
+owner: architect
+created: 2026-06-23
+updated: 2026-06-23
+supersedes: ADR-067
+---
+
+# ADR-068: Picking 架构总纲（宪法级）
 
 ## 状态
 
@@ -42,7 +52,8 @@ Picking 从 `src/infra/picking/` 迁移到 `src/ui/picking/`，作为 Presentati
   ui/picking/             ← L3 Presentation（输入适配层）
     ↓ backend/             ← Bevy Picking 后端封装
     ↓ intent/              ← PickIntent 转换
-    ↓ domain_bridge/       ← 领域事件桥接
+  ui/selection/           ← L3 Presentation（选择状态管理）
+    ↓ bridge.rs            ← 领域事件桥接
 ```
 
 依赖方向变化:
@@ -136,57 +147,31 @@ Picking 不知道 Selection 的存在。Picking 只产生 PickIntent，不读取
 ### 目标目录结构
 
 ```
-src/ui/picking/                      # Presentation Layer 输入适配子层
-├── mod.rs                           # 模块声明 + pub re-export
-├── plugin.rs                        # PickingUiPlugin（注册 backends + observers + resources）
-├── README.md                        # 模块使用指南（内联文档）
+src/ui/
+├── picking/                      # Presentation Layer 输入适配子层（只做命中检测 + PickIntent 生产）
+│   ├── mod.rs                    # 模块声明 + pub re-export
+│   ├── plugin.rs                 # PickingUiPlugin（注册 backends + observers + resources）
+│   ├── pick_target.rs            # PickTarget 枚举
+│   ├── pick_intent.rs            # PickIntent + InteractionPhase
+│   │
+│   ├── backend/                  # Picking 后端封装层
+│   │   ├── mod.rs
+│   │   ├── sprite.rs             # SpritePickingPlugin 配置 + BoundingBox 模式
+│   │   ├── grid.rs               # 网格后端（Tiled 集成后启用：world_pos → tile_pos）
+│   │   └── passthrough.rs        # UI 穿透策略（Pickable::IGNORE 自动标记）
+│   │
+│   └── intent/                   # Pointer 事件 → PickIntent 转换
+│       ├── mod.rs
+│       ├── click.rs              # Pointer<Click> → PickIntent::Commit
+│       └── hover.rs              # Pointer<Over>/<Out> → PickIntent::Preview
 │
-├── backend/                         # Picking 后端封装层
+├── selection/                    # 选择状态管理（与 picking 平级，职责分离）
 │   ├── mod.rs
-│   ├── sprite_backend.rs            # SpritePickingPlugin 配置 + 兼容性处理
-│   ├── grid_backend.rs              # 网格后端（Tiled 集成后启用）
-│   └── ui_passthrough.rs            # UI 穿透配置（Pickable::IGNORE 策略）
+│   ├── state.rs                  # SelectionState 五态状态机（Hovered/Focused/Selected/Targeted/Activated）
+│   ├── pick_context.rs           # PickContext Resource（Normal/AttackTargeting/SkillTargeting/Inspect）
+│   └── bridge.rs                 # PickIntent → Domain Event 桥接（UnitClicked, TileClicked, TargetConfirmed）
 │
-├── foundation/                      # 核心类型定义
-│   ├── mod.rs
-│   ├── pick_target.rs               # PickTarget 枚举
-│   ├── pick_intent.rs               # PickIntent + InteractionPhase
-│   ├── pick_context.rs              # PickContext 枚举
-│   ├── selection_state.rs           # SelectionState 状态机类型
-│   └── hover_state.rs               # HoverState / FocusState 类型
-│
-├── intent/                          # Pointer 事件 → PickIntent 转换
-│   ├── mod.rs
-│   ├── click_intent.rs              # Pointer<Click> → PickIntent::Commit
-│   ├── hover_intent.rs              # Pointer<Over>/<Out> → PickIntent::Preview
-│   └── intent_router.rs             # 根据 PickContext 路由 Intent
-│
-├── selection/                       # Selection 状态管理
-│   ├── mod.rs
-│   ├── selection_manager.rs         # Selection 状态机（消费 PickIntent/领域事件）
-│   ├── focus_manager.rs             # Focus 状态管理
-│   └── highlight_system.rs          # 视觉高亮（读取状态，不修改业务数据）
-│
-├── domain_bridge/                   # PickIntent → Domain Event 桥接
-│   ├── mod.rs
-│   ├── unit_bridge.rs               # PickTarget::Unit → UnitClicked 事件
-│   ├── tile_bridge.rs               # PickTarget::Tile → TileClicked 事件
-│   └── ui_bridge.rs                 # PickTarget::UI → UIInteraction 事件
-│
-├── context/                         # PickContext 管理
-│   ├── mod.rs
-│   ├── context_provider.rs          # 当前上下文提供者（读游戏状态）
-│   └── context_stack.rs             # 上下文栈（支持 push/pop）
-│
-├── battle/                          # 战斗场景 Picking 特化
-│   ├── mod.rs
-│   ├── click_handler.rs             # 战斗场景点击处理
-│   └── hover_handler.rs             # 战斗场景悬停处理
-│
-└── world/                           # 世界地图 Picking 特化
-    ├── mod.rs
-    ├── click_handler.rs
-    └── hover_handler.rs
+└── projections/selection.rs      # SelectionProjection — SelectionState → ViewModel 投影
 ```
 
 ### 外部依赖
@@ -194,12 +179,13 @@ src/ui/picking/                      # Presentation Layer 输入适配子层
 ```
 ui/picking/       → bevy::picking (bevy_picking backend traits)
                   → bevy::sprite (SpritePickingPlugin)
-                  → ui/foundation/ (PickTarget 等基础类型)
+                  → ui/selection/ (PickIntent → Domain Event)
                   → ui/application/ (UiCommand 通道)
                   → core/domains/combat (BattleUnitId)
                   → core/domains/tactical (GridPos)
 
-ui/picking/       → infra/camera/ (CameraRequest 👈 通过事件解耦)
+ui/selection/     → core/domains/ (Domain Event: UnitClicked, TileClicked, TargetConfirmed)
+                  → infra/camera/ (CameraRequest 👈 通过事件解耦)
                   → infra/picking/ ❌ 删除，迁移完成即可移除
 ```
 
@@ -220,12 +206,12 @@ PreUpdate: ui/picking/backend/ (配置项，非系统)
   │  Pickable::IGNORE / BoundingBox 模式
   │
   ▼
-Observer: ui/picking/intent/click_intent.rs
+Observer: ui/picking/intent/click.rs
   │  On<Pointer<Click>> → 读取 PickContext → 创建 PickIntent
   │  输出: PickIntent { target, context, phase: Commit }
   │
   ▼
-Observer: ui/picking/domain_bridge/unit_bridge.rs
+Observer: ui/selection/bridge.rs
   │  消费 PickIntent → 如果是 PickTarget::Unit → trigger UnitClicked
   │  如果是 PickTarget::Tile → trigger TileClicked
   │
@@ -284,8 +270,8 @@ pub struct PickIntentReceived(pub PickIntent);  // 内部 trigger
 - `ui/picking/` 读取 `bevy_picking` 类型用于事件转换
 - `ui/picking/` 读取 `core/domains/` 的 ID 类型（BattleUnitId, SkillId, ItemId）
 - `ui/picking/` 通过 `trigger(CameraRequest)` 与 Camera 交互
-- `ui/picking/selection/` 持有 `SelectionState` Resource（Presentation 层状态）
-- `ui/picking/domain_bridge/` 触发领域事件（UnitClicked, TileClicked）
+- `ui/selection/` 持有 `SelectionState` Resource（Presentation 层状态）
+- `ui/selection/bridge.rs` 触发领域事件（UnitClicked, TileClicked）
 - `ui/picking/backend/` 配置 `SpritePickingMode::BoundingBox` 和 `Pickable`
 - Screen/Widget 通过 `Projection` 读取 SelectionState 而非直接访问
 - 分领域 picking 模块（battle/, world/）各自处理场景特化逻辑

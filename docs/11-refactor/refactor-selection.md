@@ -1,6 +1,6 @@
 # 重构计划：Selection 状态管理重构（Entity → PickTarget，分离 Focus/Selection）
 
-> 关联 ADR: ADR-PICK-000 §Forbidden (F2, F6, F10) | docs/06-ui/01-architecture/architecture.md §7 UI 状态分级
+> 关联 ADR: ADR-068 §Forbidden (F2, F6, F10) | docs/06-ui/01-architecture/architecture.md §7 UI 状态分级
 
 ## 目标状态 (Target)
 

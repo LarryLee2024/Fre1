@@ -693,7 +693,8 @@ src/
   ✅ADR-063  宏治理
   🔄ADR-064  Camera 系统
   🔄ADR-065  Map 内容管线
-  🔄ADR-067  Sprite Picking 架构
+  🔒ADR-067  Sprite Picking 架构 (已由 ADR-068 取代)
+  ✅ADR-068  Picking 架构总纲（宪法级）— 取代 ADR-067
   🔄ADR-066  UI SSPEC
 ```
 

@@ -1,6 +1,6 @@
 # 重构计划：Picking 事件流重构（直接 Observer → PickIntent → Domain Event）
 
-> 关联 ADR: ADR-PICK-000 §Communication Design | 当前状态: 参看 docs/01-architecture/ADR-067
+> 关联 ADR: ADR-068 §Communication Design | 当前状态: 参看 docs/01-architecture/ADR-067
 
 ## 目标状态 (Target)
 

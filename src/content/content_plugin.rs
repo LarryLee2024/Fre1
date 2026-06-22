@@ -193,11 +193,6 @@ impl Plugin for ContentPlugin {
     }
 }
 
-/// 启动时加载所有配置内容的系统。
-///
-/// 扫描 assets/config/ 目录，发现所有 .ron 文件，
-/// 按桶分类并记录到 ContentState。
-/// 对已知 Definition 类型执行同步加载、反序列化和校验。
 fn load_all_content(
     mut state: ResMut<ContentState>,
     mut summary: ResMut<ContentLoadSummary>,
@@ -231,7 +226,8 @@ fn load_all_content(
 
     // 3. 同步加载已知 Definition 类型
     for file in &state.discovered_files {
-        match file.bucket_name.as_str() {
+        let bucket = file.bucket_name.as_str();
+        match bucket {
             "spells" => load_single_def::<SpellDef>(&mut spells, file),
             "cues" => load_single_def::<CueDef>(&mut cues, file),
             "effects" => load_single_def::<EffectDef>(&mut effects, file),
@@ -252,11 +248,10 @@ fn load_all_content(
         }
     }
 
-    // 4. 日志输出
+    // 4. 计算加载摘要
     let total = state.discovered_files.len();
     let buckets: Vec<_> = state.loaded_counts.iter().collect();
 
-    // 5. 计算加载摘要
     let total_loaded = spells.defs.len()
         + cues.defs.len()
         + effects.defs.len()
@@ -299,16 +294,19 @@ fn load_all_content(
     all_errors.extend(bonds.errors.iter().cloned());
     all_errors.extend(enchantments.errors.iter().cloned());
 
-    let mut bucket_stats: HashMap<String, BucketLoadStats> = HashMap::new();
-    for (bucket, count) in &buckets {
-        bucket_stats.insert(
-            bucket.to_string(),
-            BucketLoadStats {
-                loaded: **count,
-                errors: 0,
-            },
-        );
-    }
+    let bucket_stats: HashMap<String, BucketLoadStats> = state
+        .loaded_counts
+        .iter()
+        .map(|(bucket, count)| {
+            (
+                bucket.clone(),
+                BucketLoadStats {
+                    loaded: *count,
+                    errors: 0,
+                },
+            )
+        })
+        .collect();
 
     *summary = ContentLoadSummary {
         total_discovered: total,
@@ -330,47 +328,27 @@ fn load_all_content(
             info!(target: "content", "[Content]   {}：{} 个文件", bucket, count);
         }
     }
-    info!(target: "content",
-        "[Content] 加载了 {} 个技能、{} 个线索、{} 个效果、{} 个任务、{} 个配方、{} 个商店、{} 个目标定义、{} 个标签、{} 个属性、{} 个召唤模板、{} 个营地事件、{} 个羁绊、{} 个附魔、{} 个错误",
-        spells.defs.len(),
-        cues.defs.len(),
-        effects.defs.len(),
-        quests.defs.len(),
-        recipes.defs.len(),
-        shops.defs.len(),
-        targeting.defs.len(),
-        tags.defs.len(),
-        attributes.defs.len(),
-        summon_templates.defs.len(),
-        camp_events.defs.len(),
-        bonds.defs.len(),
-        enchantments.defs.len(),
-        spells.errors.len()
-            + cues.errors.len()
-            + effects.errors.len()
-            + quests.errors.len()
-            + recipes.errors.len()
-            + shops.errors.len()
-            + targeting.errors.len()
-            + tags.errors.len()
-            + attributes.errors.len()
-            + summon_templates.errors.len()
-            + camp_events.errors.len()
-            + bonds.errors.len()
-            + enchantments.errors.len(),
-    );
+    if total_errors > 0 {
+        warn!(target: "content",
+            "[Content] 加载完成: {} 个定义, {} 个错误",
+            total_loaded,
+            total_errors,
+        );
+    } else {
+        info!(target: "content",
+            "[Content] 加载完成: {} 个定义", total_loaded,
+        );
+    }
 }
 
-/// 从 RON 文件同步加载单个 Definition（通用版本）。
-///
-/// 处理单条格式和数组格式（通过 `supports_multi_def()` 开关）。
-/// 数组格式用于 Tag 和 Attribute 定义。
 fn load_single_def<T: DefinitionType>(loaded: &mut LoadedDefs<T>, file: &ContentFile) {
+    let path_str = file.path.display().to_string();
     let content = match std::fs::read_to_string(&file.path) {
         Ok(c) => c,
         Err(e) => {
             let msg = format!("failed to read file: {}", e);
             loaded.errors.push((file.path.clone(), msg));
+            warn!(target: "content", "[Content] 读取配置文件失败: {} — {}", path_str, e);
             return;
         }
     };
@@ -378,22 +356,22 @@ fn load_single_def<T: DefinitionType>(loaded: &mut LoadedDefs<T>, file: &Content
     let defs: Vec<T> = if T::supports_multi_def() {
         let trimmed = content.trim();
         if trimmed.starts_with('[') {
-            // 数组格式: [item1, item2, ...]
             match ron::from_str(trimmed) {
                 Ok(d) => d,
                 Err(e) => {
                     let msg = format!("failed to deserialize RON array: {}", e);
                     loaded.errors.push((file.path.clone(), msg));
+                    warn!(target: "content", "[Content] 反序列化 RON 数组失败: {} — {}", path_str, e);
                     return;
                 }
             }
         } else {
-            // 单条格式 -> 包装成 Vec
             match ron::from_str::<T>(trimmed) {
                 Ok(d) => vec![d],
                 Err(e) => {
                     let msg = format!("failed to deserialize RON: {}", e);
                     loaded.errors.push((file.path.clone(), msg));
+                    warn!(target: "content", "[Content] 反序列化 RON 失败: {} — {}", path_str, e);
                     return;
                 }
             }
@@ -404,21 +382,25 @@ fn load_single_def<T: DefinitionType>(loaded: &mut LoadedDefs<T>, file: &Content
             Err(e) => {
                 let msg = format!("failed to deserialize RON: {}", e);
                 loaded.errors.push((file.path.clone(), msg));
+                warn!(target: "content", "[Content] 反序列化 RON 失败: {} — {}", path_str, e);
                 return;
             }
         }
     };
 
-    // 校验所有定义
     for def in &defs {
         if let Err(e) = def.validate() {
-            let suffix = if defs.len() > 1 {
-                format!(" for '{}'", def.def_unique_id().unwrap_or("(unknown)"))
+            let uid = def.def_unique_id().unwrap_or("(unknown)");
+            let msg = if defs.len() > 1 {
+                format!("validation failed for '{}': {}", uid, e)
             } else {
-                String::new()
+                format!("validation failed: {}", e)
             };
-            let msg = format!("validation failed{}: {}", suffix, e);
             loaded.errors.push((file.path.clone(), msg));
+            warn!(target: "content",
+                "[Content] Definition 校验失败: {} (id: {}) — {}",
+                path_str, uid, e,
+            );
             return;
         }
     }
@@ -432,15 +414,11 @@ fn load_single_def<T: DefinitionType>(loaded: &mut LoadedDefs<T>, file: &Content
         info!(target: "content",
             "[Content] 从 {} 加载了 {} 个定义",
             file.path.display(),
-            count
+            count,
         );
     }
 }
 
-/// 启动时加载地形配置的独立系统。
-///
-/// 从 assets/config/terrains/ 目录加载 TerrainDef 配置。
-/// 独立于 load_all_content 以避免超出 Bevy 的 16 参数限制。
 fn load_terrain_content(mut terrains: ResMut<LoadedTerrainDefs>) {
     let terrain_dir = std::path::Path::new("assets/config/terrains");
     if !terrain_dir.exists() {
@@ -462,11 +440,13 @@ fn load_terrain_content(mut terrains: ResMut<LoadedTerrainDefs>) {
             continue;
         }
 
+        let path_str = path.display().to_string();
         let content = match std::fs::read_to_string(&path) {
             Ok(c) => c,
             Err(e) => {
                 let msg = format!("failed to read file: {}", e);
                 terrains.errors.push((path, msg));
+                warn!(target: "content", "[Content] 读取地形配置文件失败: {} — {}", path_str, e);
                 continue;
             }
         };
@@ -476,13 +456,15 @@ fn load_terrain_content(mut terrains: ResMut<LoadedTerrainDefs>) {
             Err(e) => {
                 let msg = format!("failed to deserialize RON: {}", e);
                 terrains.errors.push((path, msg));
+                warn!(target: "content", "[Content] 反序列化地形配置 RON 失败: {} — {}", path_str, e);
                 continue;
             }
         };
 
         info!(target: "content",
-            "[Content] 加载了地形 '{}'（id: {}）",
-            def.name_key, def.id
+            "[Content] 加载了地形 '{}' (id: {})",
+            def.name_key,
+            def.id,
         );
         terrains.defs.push(def);
     }
@@ -490,16 +472,16 @@ fn load_terrain_content(mut terrains: ResMut<LoadedTerrainDefs>) {
     info!(target: "content",
         "[Content] 地形加载完成: {} 成功, {} 失败",
         terrains.defs.len(),
-        terrains.errors.len()
+        terrains.errors.len(),
     );
 }
 
-/// 从 RON 文件同步加载 SpellConfig。
 fn load_spell_config(config: &mut ResMut<SpellConfig>, file: &ContentFile) {
+    let path_str = file.path.display().to_string();
     let content = match std::fs::read_to_string(&file.path) {
         Ok(c) => c,
         Err(e) => {
-            warn!(target: "content", "[Content] 读取法术配置文件失败：{}", e);
+            warn!(target: "content", "[Content] 读取法术配置文件失败: {} — {}", path_str, e);
             return;
         }
     };
@@ -507,14 +489,15 @@ fn load_spell_config(config: &mut ResMut<SpellConfig>, file: &ContentFile) {
     let cfg: SpellConfig = match ron::from_str(&content) {
         Ok(c) => c,
         Err(e) => {
-            warn!(target: "content", "[Content] 反序列化法术配置 RON 失败：{}", e);
+            warn!(target: "content", "[Content] 反序列化法术配置 RON 失败: {} — {}", path_str, e);
             return;
         }
     };
 
     **config = cfg;
     info!(target: "content",
-        "[Content] 加载了法术配置（专注基础 DC: {}, 最大专注数: {}）",
-        config.concentration_base_dc, config.max_concentration
+        "[Content] 加载了法术配置 (专注基础 DC: {}, 最大专注数: {})",
+        config.concentration_base_dc,
+        config.max_concentration,
     );
 }

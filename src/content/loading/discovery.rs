@@ -1,6 +1,7 @@
 //! RON 文件发现 — 扫描 assets/config/ 目录结构
 
 use std::path::{Path, PathBuf};
+use tracing::warn;
 
 /// 发现的配置文件信息。
 #[derive(Debug, Clone)]
@@ -40,9 +41,13 @@ pub fn discover_ron_files(config_root: &Path) -> Vec<ContentFile> {
 
 /// 递归扫描目录。
 fn discover_recursive(base: &Path, current: &Path, files: &mut Vec<ContentFile>) {
+    let dir_str = current.display().to_string();
     let entries = match std::fs::read_dir(current) {
         Ok(entries) => entries,
-        Err(_) => return,
+        Err(e) => {
+            warn!(target: "content", "[Content] 扫描配置目录失败: {} — {}", dir_str, e);
+            return;
+        }
     };
 
     for entry in entries.flatten() {

@@ -44,7 +44,7 @@
 - **总扫描次数**: 24 次（19 份已完成 + 5 份活跃扫描）
 - **已完成**（`done/`）: 19 份扫描报告归档
 - **活跃扫描**（根目录）:
-  - `ADR-PICK-000-picking-architecture-constitution.md` — proposed — Picking 架构总纲宪法级 ADR（替代 ADR-067 的模块定位部分）
+  - `ADR-068-picking-architecture-constitution.md` — proposed — Picking 架构总纲宪法级 ADR（替代 ADR-067 的模块定位部分）
   - `refactor-picking-layer.md` — proposed — Picking 分层迁移方案（infra/picking/ → ui/picking/）
   - `refactor-event-flow.md` — proposed — Picking 事件流重构（直接 observer → PickIntent → Domain Event）
   - `refactor-selection.md` — proposed — Selection 状态管理重构（Entity → BattleUnitId, Hover/Focus/Selection 分离）

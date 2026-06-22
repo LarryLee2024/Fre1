@@ -1,6 +1,6 @@
 # 重构计划：清理 Picking 相关调试代码
 
-> 关联 ADR: ADR-PICK-000 §Forbidden | 宪法 §1.5(3) Replay First
+> 关联 ADR: ADR-068 §Forbidden | 宪法 §1.5(3) Replay First
 
 ## 目标状态 (Target)
 

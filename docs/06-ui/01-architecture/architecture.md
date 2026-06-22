@@ -249,7 +249,7 @@ src/ui/
 
 **与现有目录结构的关系**：
 - `src/ui/` 是新增顶层目录，与 `src/core/`、`src/infra/` 平级
-- `picking/` 和 `selection/` 从 `src/infra/picking/` 迁移而来（详见 ADR-PICK-000）
+- `picking/` 和 `selection/` 从 `src/infra/picking/` 迁移而来（详见 ADR-068）
 - 不修改现有 `src/` 下其他目录
 - UiPlugin 注册在 Phase 11（在 Infra Phase 8 和 ScenePlugin Phase 9 之后）
 

@@ -46,10 +46,6 @@ impl Default for ContentHotReloadState {
     }
 }
 
-/// 内容热重载系统。
-///
-/// 每隔 2 秒重新扫描 assets/config/ 目录，检测文件修改时间变化，
-/// 对变更的文件重新解析并更新对应的 LoadedDefs Resource。
 pub fn hot_reload_content_system(
     time: Res<Time>,
     mut hr_state: ResMut<ContentHotReloadState>,
@@ -105,10 +101,7 @@ pub fn hot_reload_content_system(
         return;
     }
 
-    info!(target: "content",
-        "[HotReload] 检测到 {} 个变更文件，正在重载...",
-        changed.len()
-    );
+    info!(target: "content", "[Content] 检测到 {} 个变更文件，正在重载...", changed.len());
 
     let mut reload_count = 0usize;
 
@@ -197,11 +190,10 @@ pub fn hot_reload_content_system(
     hr_state.last_reload_count = reload_count;
 
     if reload_count > 0 {
-        info!(target: "content", "[HotReload] 成功重载了 {} 个文件", reload_count);
+        info!(target: "content", "[Content] 成功重载了 {} 个文件", reload_count);
     }
 }
 
-/// 初始化热重载状态（填充初始 mtime）。
 pub fn init_hot_reload_state(mut hr_state: ResMut<ContentHotReloadState>) {
     let config_root = std::path::Path::new("assets/config");
     let files = discover_ron_files(config_root);
@@ -214,23 +206,17 @@ pub fn init_hot_reload_state(mut hr_state: ResMut<ContentHotReloadState>) {
         }
     }
 
-    info!(target: "content",
-        "[HotReload] 已初始化，跟踪 {} 个文件",
-        hr_state.file_mtimes.len()
-    );
+    info!(target: "content", "[Content] 热重载已初始化，跟踪 {} 个文件", hr_state.file_mtimes.len());
 }
 
 // ── 单文件重载辅助函数 ──
 
-/// 从 RON 文件重载单个 Definition（通用版本）。
-///
-/// 处理单条和数组格式（通过 `supports_multi_def()` 开关）。
-/// 通过 `def_unique_id()` 去重：移除同 ID 的旧定义后再插入新定义。
 fn reload_single_def<T: DefinitionType>(loaded: &mut LoadedDefs<T>, file: &ContentFile) -> bool {
+    let path_str = file.path.display().to_string();
     let content = match std::fs::read_to_string(&file.path) {
         Ok(c) => c,
         Err(e) => {
-            warn!(target: "content", "[HotReload] 读取失败 {}: {}", file.path.display(), e);
+            warn!(target: "content", "[Content] 热重载读取文件失败: {} — {}", path_str, e);
             return false;
         }
     };
@@ -241,11 +227,7 @@ fn reload_single_def<T: DefinitionType>(loaded: &mut LoadedDefs<T>, file: &Conte
             match ron::from_str(trimmed) {
                 Ok(d) => d,
                 Err(e) => {
-                    warn!(target: "content",
-                        "[HotReload] 解析数组失败 {}: {}",
-                        file.path.display(),
-                        e
-                    );
+                    warn!(target: "content", "[Content] 热重载反序列化 RON 数组失败: {} — {}", path_str, e);
                     return false;
                 }
             }
@@ -253,11 +235,7 @@ fn reload_single_def<T: DefinitionType>(loaded: &mut LoadedDefs<T>, file: &Conte
             match ron::from_str::<T>(trimmed) {
                 Ok(d) => vec![d],
                 Err(e) => {
-                    warn!(target: "content",
-                        "[HotReload] 解析失败 {}: {}",
-                        file.path.display(),
-                        e
-                    );
+                    warn!(target: "content", "[Content] 热重载反序列化 RON 失败: {} — {}", path_str, e);
                     return false;
                 }
             }
@@ -266,29 +244,22 @@ fn reload_single_def<T: DefinitionType>(loaded: &mut LoadedDefs<T>, file: &Conte
         match ron::from_str::<T>(&content) {
             Ok(d) => vec![d],
             Err(e) => {
-                warn!(target: "content",
-                    "[HotReload] 解析失败 {}: {}",
-                    file.path.display(),
-                    e
-                );
+                warn!(target: "content", "[Content] 热重载反序列化 RON 失败: {} — {}", path_str, e);
                 return false;
             }
         }
     };
 
-    // 校验所有定义
     for def in &defs {
         if let Err(e) = def.validate() {
             warn!(target: "content",
-                "[HotReload] 验证失败 {}: {}",
-                file.path.display(),
-                e
+                "[Content] 热重载 Definition 校验失败: {} — {}",
+                path_str, e,
             );
             return false;
         }
     }
 
-    // 去重：对每个新定义，移除旧版本（若有唯一 ID）
     for def in &defs {
         if let Some(uid) = def.def_unique_id() {
             loaded.defs.retain(|d| d.def_unique_id() != Some(uid));
@@ -301,40 +272,38 @@ fn reload_single_def<T: DefinitionType>(loaded: &mut LoadedDefs<T>, file: &Conte
     }
 
     if count == 1 {
-        info!(target: "content",
-            "[HotReload] 重载了定义（{}）",
-            file.path.display()
-        );
+        info!(target: "content", "[Content] 热重载了定义: {}", file.path.display());
     } else {
         info!(target: "content",
-            "[HotReload] 从 {} 重载了 {} 个定义",
+            "[Content] 从 {} 热重载了 {} 个定义",
             file.path.display(),
-            count
+            count,
         );
     }
     true
 }
 
-/// 从 RON 文件重载 SpellConfig。
 fn reload_single_spell_config(config: &mut ResMut<SpellConfig>, file: &ContentFile) -> bool {
+    let path_str = file.path.display().to_string();
     let content = match std::fs::read_to_string(&file.path) {
         Ok(c) => c,
         Err(e) => {
-            warn!(target: "content", "[HotReload] 读取失败 {}: {}", file.path.display(), e);
+            warn!(target: "content", "[Content] 热重载读取法术配置文件失败: {} — {}", path_str, e);
             return false;
         }
     };
     let cfg: SpellConfig = match ron::from_str(&content) {
         Ok(c) => c,
         Err(e) => {
-            warn!(target: "content", "[HotReload] 解析失败 {}: {}", file.path.display(), e);
+            warn!(target: "content", "[Content] 热重载反序列化法术配置 RON 失败: {} — {}", path_str, e);
             return false;
         }
     };
     **config = cfg;
     info!(target: "content",
-        "[HotReload] 重载了法术配置（专注基础 DC: {}, 最大专注数: {}）",
-        config.concentration_base_dc, config.max_concentration
+        "[Content] 热重载了法术配置 (专注基础 DC: {}, 最大专注数: {})",
+        config.concentration_base_dc,
+        config.max_concentration,
     );
     true
 }
