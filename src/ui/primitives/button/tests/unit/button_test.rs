@@ -20,7 +20,7 @@ use crate::ui::primitives::button::events::ButtonClicked;
 use crate::ui::primitives::button::factory::spawn_button;
 use crate::ui::theme::{Theme, ThemePlugin};
 
-// ── Helpers ──
+// ── 辅助函数 ──
 
 /// 构建注册了 Theme + Button 插件的最小 App。
 fn button_app() -> App {
@@ -42,7 +42,7 @@ fn spawn_button_in_app(app: &mut App, label: &str, variant: ButtonVariant) -> En
 }
 
 // ═══════════════════════════════════════════════════════════════════
-//  Factory Tests
+//  工厂测试
 // ═══════════════════════════════════════════════════════════════════
 
 #[test]
@@ -94,7 +94,7 @@ fn factory_spawns_button_with_ui_components() {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-//  Variant Color Tests
+//  变体颜色测试
 // ═══════════════════════════════════════════════════════════════════
 
 #[test]
@@ -150,7 +150,7 @@ fn ghost_variant_uses_transparent_color() {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-//  Disabled State Tests
+//  禁用态测试
 // ═══════════════════════════════════════════════════════════════════
 
 #[test]
@@ -213,7 +213,7 @@ fn disabled_button_uses_disabled_surface_color() {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-//  Interaction State Tests
+//  交互状态测试
 // ═══════════════════════════════════════════════════════════════════
 
 #[test]
@@ -326,7 +326,7 @@ fn just_clicked_resets_after_one_frame() {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-//  Event Tests
+//  事件测试
 // ═══════════════════════════════════════════════════════════════════
 
 /// 跟踪最后点击的实体用于事件断言。

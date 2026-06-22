@@ -256,7 +256,7 @@ fn process_ui_commands_accumulates_multiple_commands() {
 fn process_ui_commands_skips_ui_internal_but_processes_others() {
     let mut app = bridge_app();
 
-    // Mix of internal and domain commands — internal ones should be skipped
+    // 混合内部命令和领域命令 — 内部命令应被跳过
     app.world_mut()
         .trigger(UiCommand::OpenScreen(ScreenType::Settings));
     app.world_mut().trigger(UiCommand::EndTurn {

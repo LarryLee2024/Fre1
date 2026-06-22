@@ -1,12 +1,12 @@
-//! Module Name: SkillSlot Widget — 技能槽复合控件
+//! 模块名: SkillSlot Widget — 技能槽复合控件
 //!
 //! 组合 Panel / Text / ProgressBar / Button 四个原子组件为一个技能槽卡片。
 //! 每个技能槽显示一个技能的名称、冷却进度和使用按钮。
 //!
-//! Contract:
-//!   Props (input):    name, cooldown_max（通过 SkillSlotState）
-//!   Events (output):  SkillSlotAction::Use 标记在按钮实体上供 Observer 路由
-//!   Local State:      SkillSlotState（name, cooldown_current, cooldown_max, is_ready）
+//! 契约:
+//!   输入属性:    name, cooldown_max（通过 SkillSlotState）
+//!   输出事件:  SkillSlotAction::Use 标记在按钮实体上供 Observer 路由
+//!   本地状态:      SkillSlotState（name, cooldown_current, cooldown_max, is_ready）
 //!
 //! 详见 `docs/06-ui/02-design-system/widget-composites.md`
 

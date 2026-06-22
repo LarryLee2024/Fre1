@@ -42,7 +42,7 @@ pub fn spawn_shop_screen(
     theme: Res<Theme>,
     asset_server: Res<AssetServer>,
 ) {
-    // ── 1. Root panel (full screen, centered) ──
+    // ── 1. 根面板（全屏居中） ──
     let root = spawn_panel(&mut commands, &theme, PanelVariant::Basic);
     commands.entity(root).insert((
         Node {
@@ -55,7 +55,7 @@ pub fn spawn_shop_screen(
         ShopScreen,
     ));
 
-    // ── 2. Shop panel ──
+    // ── 2. 商店面板 ──
     let panel = spawn_shop_panel(&mut commands, &asset_server, &theme);
     commands.entity(panel).set_parent_in_place(root);
 }
@@ -116,7 +116,7 @@ impl Plugin for ShopPlugin {
 /// Observer：处理 UiCommand::OpenScreen(Shop) — 生成商店界面。
 pub fn on_open_shop_screen(
     on: On<UiCommand>,
-    mut commands: Commands,
+    commands: Commands,
     theme: Res<Theme>,
     asset_server: Res<AssetServer>,
 ) {
@@ -133,7 +133,7 @@ pub fn on_close_shop_screen(
 ) {
     if let UiCommand::CloseScreen = on.event() {
         for entity in &query {
-            commands.entity(entity).despawn_recursive();
+            commands.entity(entity).despawn();
         }
     }
 }

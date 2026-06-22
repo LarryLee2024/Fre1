@@ -339,8 +339,7 @@ fn close_screen_returns_none() {
 
 #[test]
 fn ui_internal_commands_are_distinct_from_no_mapping() {
-    // Both OpenScreen/CloseScreen and SelectTarget return None,
-    // but for different reasons. Verify the type system distinguishes them.
+    // OpenScreen/CloseScreen 和 SelectTarget 都返回 None，但原因不同。验证类型系统能区分它们。
     let open = UiCommand::OpenScreen(ScreenType::Settings);
     let close = UiCommand::CloseScreen;
     let select = UiCommand::SelectTarget(99);

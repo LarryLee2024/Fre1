@@ -1,4 +1,4 @@
-//! Theme switching — 运行时主题切换
+//! 主题切换 — 运行时主题切换
 
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};

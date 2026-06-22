@@ -1,4 +1,4 @@
-//! Module Name: MainMenuScreen — 主菜单屏幕
+//! MainMenuScreen — 主菜单屏幕
 //!
 //! 全屏主菜单，包含游戏标题、副标题和三组菜单按钮。
 //! 使用 Primitives 层工厂函数 (`spawn_panel`, `spawn_text`, `spawn_button`) 创建 UI 元素。
@@ -35,7 +35,7 @@ pub enum MenuAction {
 #[derive(Component, Debug, Clone, PartialEq, Eq, Reflect)]
 pub struct MainMenuScreen;
 
-/// Startup System: 生成主菜单屏幕
+/// Startup 系统：生成主菜单屏幕
 ///
 /// 创建全屏主菜单 UI 树。所有元素通过 Primitives 工厂函数创建，
 /// 不使用直接 Node/Button/Interaction 操作。
@@ -53,7 +53,7 @@ pub struct MainMenuScreen;
 ///   └── Text ("v0.1.0", Caption)
 /// ```
 pub fn spawn_main_menu(mut commands: Commands, theme: Res<Theme>, asset_server: Res<AssetServer>) {
-    // ── 1. Root panel ──
+    // ── 1. 根面板 ──
     // 镜头由 CameraPlugin Startup 自动生成，无需在此处再 spawn。
     // 使用 Basic 变体工厂创建基础面板，再覆盖为全屏尺寸
     let root = spawn_panel(&mut commands, &theme, PanelVariant::Basic);
@@ -70,7 +70,7 @@ pub fn spawn_main_menu(mut commands: Commands, theme: Res<Theme>, asset_server: 
         MainMenuScreen,
     ));
 
-    // ── 2. Title "Fre" ──
+    // ── 2. 标题 "Fre" ──
     let title = spawn_text(
         &mut commands,
         &asset_server,
@@ -93,7 +93,7 @@ pub fn spawn_main_menu(mut commands: Commands, theme: Res<Theme>, asset_server: 
         },
     ));
 
-    // ── 3. Subtitle ──
+    // ── 3. 副标题 ──
     let subtitle = spawn_text(
         &mut commands,
         &asset_server,
@@ -106,7 +106,7 @@ pub fn spawn_main_menu(mut commands: Commands, theme: Res<Theme>, asset_server: 
         ..default()
     });
 
-    // ── 4. Menu list (vertical) ──
+    // ── 4. 菜单列表（垂直） ──
     let list = spawn_list(&mut commands, &theme, ListVariant::Vertical);
     commands.entity(list).insert(Node {
         align_items: AlignItems::Center,
@@ -114,7 +114,7 @@ pub fn spawn_main_menu(mut commands: Commands, theme: Res<Theme>, asset_server: 
         ..default()
     });
 
-    // ── 5. Menu buttons ──
+    // ── 5. 菜单按钮 ──
     let new_game_btn = spawn_localized_button(
         &mut commands,
         &theme,
@@ -142,7 +142,7 @@ pub fn spawn_main_menu(mut commands: Commands, theme: Res<Theme>, asset_server: 
     commands.entity(load_game_btn).insert(MenuAction::LoadGame);
     commands.entity(settings_btn).insert(MenuAction::Settings);
 
-    // ── 6. Version text ──
+    // ── 6. 版本号文本 ──
     let version = spawn_text(
         &mut commands,
         &asset_server,
@@ -151,14 +151,14 @@ pub fn spawn_main_menu(mut commands: Commands, theme: Res<Theme>, asset_server: 
         TextVariant::Caption,
     );
 
-    // ── 7. Build hierarchy via set_parent_in_place ──
-    // Root → children
+    // ── 7. 通过 set_parent_in_place 构建层级 ──
+    // 根节点 → 子节点
     commands.entity(title).set_parent_in_place(root);
     commands.entity(subtitle).set_parent_in_place(root);
     commands.entity(list).set_parent_in_place(root);
     commands.entity(version).set_parent_in_place(root);
 
-    // List → buttons
+    // 列表 → 按钮
     commands.entity(new_game_btn).set_parent_in_place(list);
     commands.entity(load_game_btn).set_parent_in_place(list);
     commands.entity(settings_btn).set_parent_in_place(list);

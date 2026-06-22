@@ -1,4 +1,4 @@
-//! Module Name: SettingsScreen — 游戏设置屏幕
+//! SettingsScreen — 游戏设置屏幕
 //!
 //! 提供游戏设置界面，包含主题切换、伤害数字显示开关等功能。
 //! 设置变更即时生效（主题切换立即应用），持久化通过"保存"按钮触发。
@@ -92,7 +92,7 @@ pub fn spawn_settings_screen(
     asset_server: &AssetServer,
     settings: &UiSettings,
 ) {
-    // ── 1. Root panel ──
+    // ── 1. 根面板 ──
     let root = spawn_panel(commands, theme, PanelVariant::Basic);
     commands.entity(root).insert((
         Node {
@@ -107,7 +107,7 @@ pub fn spawn_settings_screen(
         SettingsScreen,
     ));
 
-    // ── 2. Title "Settings" — localized ──
+    // ── 2. 标题 "Settings" — 已本地化 ──
     let title = spawn_localized_text(
         commands,
         asset_server,
@@ -121,7 +121,7 @@ pub fn spawn_settings_screen(
         ..default()
     });
 
-    // ── 3. Toggle: Show Damage Numbers ──
+    // ── 3. 开关：显示伤害数字 ──
     let damage_toggle = spawn_toggle(
         commands,
         theme,
@@ -138,7 +138,7 @@ pub fn spawn_settings_screen(
         },
     ));
 
-    // ── 4. Toggle: Dark Theme ──
+    // ── 4. 开关：深色主题 ──
     let is_dark = settings.theme == ThemeVariant::Dark;
     let theme_toggle = spawn_toggle(
         commands,
@@ -156,7 +156,7 @@ pub fn spawn_settings_screen(
         },
     ));
 
-    // ── 5. Action buttons ──
+    // ── 5. 操作按钮 ──
     let close_btn = spawn_localized_button(
         commands,
         theme,
@@ -188,7 +188,7 @@ pub fn spawn_settings_screen(
         },
     ));
 
-    // ── 6. Build hierarchy via set_parent_in_place ──
+    // ── 6. 通过 set_parent_in_place 构建层级 ──
     commands.entity(title).set_parent_in_place(root);
     commands.entity(damage_toggle).set_parent_in_place(root);
     commands.entity(theme_toggle).set_parent_in_place(root);

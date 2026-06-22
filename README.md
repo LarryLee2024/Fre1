@@ -69,13 +69,17 @@ Fre/
 
 | 目录 | 文件数 | 说明 |
 |------|--------|------|
-| `00-governance/` | 8 | 治理规则（宪法、编码规范、架构设计） |
-| `01-architecture/` | 19 | 架构设计文档（总纲 + 18 个 ADR 决策记录） |
-| `02-domain/` | 31 | 领域规则（`capabilities/` 15 能力机制 + `domains/` 15 业务域） |
-| `04-data/` | 1 | 数据架构（Schema、Save/Replay 兼容） |
-| `05-testing/` | 4 | 测试规范（测试宪法、测试规则） |
-| `08-knowledge/` | 10 | 知识库（通俗知识介绍：日志/错误/ID/国际化/Reflect/通信/GAS-Lite/Pipeline/UI/Replay） |
-| `10-reviews/` | 7 | 代码审查记录 |
+| `00-governance/` | 4 | 治理规则（宪法、编码规范、架构设计、UI 规格修正案） |
+| `01-architecture/` | 45 | 架构设计文档（总纲 + ADR 决策记录，5 个专题子目录） |
+| `02-domain/` | 36 | 领域规则（15 Capabilities + 15 Domains + Presentation + 状态/元素等） |
+| `03-content/` | 41 | 内容架构（Def Schema / Registry / Validation / Localization） |
+| `04-data/` | 50 | 数据架构（Schema、Foundation、Capabilities、Domains、Infrastructure） |
+| `05-testing/` | 4 | 测试规范（测试宪法、测试规则、守护扫描） |
+| `06-ui/` | 28 | UI 架构（Projection / ViewModel / Screen / Widget，7 子目录） |
+| `08-knowledge/` | 38 | 知识库（含已完成归档文章） |
+| `09-planning/` | 45 | 功能/迭代实施计划（含已归档） |
+| `10-reviews/` | 37 | 代码/架构审查报告（含已归档） |
+| `11-refactor/` | 24 | 技术债扫描和重构计划（含已归档） |
 
 ### 核心文档入口
 

@@ -30,12 +30,12 @@ pub fn process_ui_commands(trigger: On<UiCommand>, mut command_queue: ResMut<Com
         UiCommand::OpenScreen(screen) => {
             info!(
                 target: "ui::bridge",
-                "UI-internal command: OpenScreen({screen:?})",
+                "UI 内部命令：OpenScreen({screen:?})",
             );
             return;
         }
         UiCommand::CloseScreen => {
-            info!(target: "ui::bridge", "UI-internal command: CloseScreen");
+            info!(target: "ui::bridge", "UI 内部命令：CloseScreen");
             return;
         }
         _ => {}
@@ -44,7 +44,7 @@ pub fn process_ui_commands(trigger: On<UiCommand>, mut command_queue: ResMut<Com
     // 其余命令通过 into_game_command() 转换后入队
     if let Some(game_cmd) = cmd.into_game_command() {
         if command_queue.push(game_cmd).is_ok() {
-            info!(target: "ui::bridge", "Command enqueued: {cmd:?}");
+            info!(target: "ui::bridge", "命令已入队：{cmd:?}");
         }
     }
 }

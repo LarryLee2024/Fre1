@@ -1,4 +1,4 @@
-//! Module Name: SaveLoadScreen — 存档/读档界面
+//! SaveLoadScreen — 存档/读档界面
 //!
 //! 提供存档/读档游戏界面。包含 SaveLoadPlugin 用于注册组件和 Observer，
 //! spawn_save_load_screen 工厂函数用于构建完整 UI 层级。
@@ -110,7 +110,7 @@ pub fn on_close_save_load_screen(
 ) {
     if let UiCommand::CloseScreen = on.event() {
         for entity in &query {
-            commands.entity(entity).despawn_recursive();
+            commands.entity(entity).despawn();
         }
     }
 }
@@ -124,7 +124,7 @@ pub fn on_close_save_load_screen(
 /// 创建包含 10 个存档槽位、预览面板和操作按钮的完整界面。
 /// 所有槽位当前显示为"Empty"状态，等待真实存档数据接入。
 pub fn spawn_save_load_screen(commands: &mut Commands, asset_server: &AssetServer, theme: &Theme) {
-    // ── 1. Root panel ──
+    // ── 1. 根面板 ──
     let root = spawn_panel(commands, theme, PanelVariant::Basic);
     commands.entity(root).insert((
         Node {
@@ -139,7 +139,7 @@ pub fn spawn_save_load_screen(commands: &mut Commands, asset_server: &AssetServe
         Name::new("SaveLoadScreen"),
     ));
 
-    // ── 2. Header panel ──
+    // ── 2. 头部面板 ──
     let header = spawn_panel(commands, theme, PanelVariant::Group);
     commands.entity(header).insert(Node {
         flex_direction: FlexDirection::Row,
@@ -151,7 +151,7 @@ pub fn spawn_save_load_screen(commands: &mut Commands, asset_server: &AssetServe
     });
     commands.entity(header).set_parent_in_place(root);
 
-    // Title
+    // 标题
     let title = spawn_localized_text(
         commands,
         asset_server,
@@ -163,7 +163,7 @@ pub fn spawn_save_load_screen(commands: &mut Commands, asset_server: &AssetServe
     commands.entity(title).insert(Name::new("SaveLoadTitle"));
     commands.entity(title).set_parent_in_place(header);
 
-    // Toggle mode button
+    // 模式切换按钮
     let toggle_btn = spawn_localized_button(
         commands,
         theme,
@@ -176,7 +176,7 @@ pub fn spawn_save_load_screen(commands: &mut Commands, asset_server: &AssetServe
         .insert((SaveLoadAction::ToggleMode, Name::new("ToggleModeBtn")));
     commands.entity(toggle_btn).set_parent_in_place(header);
 
-    // Close button
+    // 关闭按钮
     let close_btn = spawn_localized_button(
         commands,
         theme,
@@ -189,7 +189,7 @@ pub fn spawn_save_load_screen(commands: &mut Commands, asset_server: &AssetServe
         .insert((SaveLoadAction::Close, Name::new("CloseBtn")));
     commands.entity(close_btn).set_parent_in_place(header);
 
-    // ── 3. Main content area (horizontal: slots + preview) ──
+    // ── 3. 主内容区（水平布局：槽位 + 预览） ──
     let main_content = spawn_panel(commands, theme, PanelVariant::List);
     commands.entity(main_content).insert(Node {
         flex_direction: FlexDirection::Row,
@@ -200,7 +200,7 @@ pub fn spawn_save_load_screen(commands: &mut Commands, asset_server: &AssetServe
     });
     commands.entity(main_content).set_parent_in_place(root);
 
-    // ── 4. Save slot list (10 个槽位) ──
+    // ── 4. 存档槽位列表（10 个槽位） ──
     let slot_list = spawn_panel(commands, theme, PanelVariant::List);
     commands.entity(slot_list).insert(Node {
         flex_direction: FlexDirection::Column,
@@ -226,7 +226,7 @@ pub fn spawn_save_load_screen(commands: &mut Commands, asset_server: &AssetServe
             .insert(Name::new(format!("SaveSlotCard({})", i + 1)));
         commands.entity(slot).set_parent_in_place(slot_list);
 
-        // Slot select button
+        // 槽位选择按钮
         let slot_btn = spawn_button(
             commands,
             theme,
@@ -239,7 +239,7 @@ pub fn spawn_save_load_screen(commands: &mut Commands, asset_server: &AssetServe
         ));
         commands.entity(slot_btn).set_parent_in_place(slot);
 
-        // Status text (localized "Empty" for all slots in MVP)
+        // 状态文本（MVP 阶段所有槽位显示"Empty"，已本地化）
         let status = spawn_localized_text(
             commands,
             asset_server,
@@ -254,7 +254,7 @@ pub fn spawn_save_load_screen(commands: &mut Commands, asset_server: &AssetServe
         commands.entity(status).set_parent_in_place(slot);
     }
 
-    // ── 5. Preview panel ──
+    // ── 5. 预览面板 ──
     let preview = spawn_panel(commands, theme, PanelVariant::Card);
     commands.entity(preview).insert(Node {
         flex_direction: FlexDirection::Column,
@@ -266,7 +266,7 @@ pub fn spawn_save_load_screen(commands: &mut Commands, asset_server: &AssetServe
     commands.entity(preview).insert(Name::new("PreviewPanel"));
     commands.entity(preview).set_parent_in_place(main_content);
 
-    // Avatar placeholder (96x96 gray square)
+    // 头像占位（96x96 灰色方块）
     let avatar = commands
         .spawn((
             Node {
@@ -280,12 +280,12 @@ pub fn spawn_save_load_screen(commands: &mut Commands, asset_server: &AssetServe
         .id();
     commands.entity(avatar).set_parent_in_place(preview);
 
-    // Character name placeholder
+    // 角色名占位
     let name_txt = spawn_text(commands, asset_server, theme, "--", TextVariant::Body);
     commands.entity(name_txt).insert(Name::new("PreviewName"));
     commands.entity(name_txt).set_parent_in_place(preview);
 
-    // Level placeholder
+    // 等级占位
     let level_txt = spawn_text(
         commands,
         asset_server,
@@ -296,28 +296,28 @@ pub fn spawn_save_load_screen(commands: &mut Commands, asset_server: &AssetServe
     commands.entity(level_txt).insert(Name::new("PreviewLevel"));
     commands.entity(level_txt).set_parent_in_place(preview);
 
-    // Location placeholder
+    // 地点占位
     let loc_txt = spawn_text(commands, asset_server, theme, "--", TextVariant::Caption);
     commands
         .entity(loc_txt)
         .insert(Name::new("PreviewLocation"));
     commands.entity(loc_txt).set_parent_in_place(preview);
 
-    // Play time placeholder
+    // 游戏时长占位
     let time_txt = spawn_text(commands, asset_server, theme, "--", TextVariant::Caption);
     commands
         .entity(time_txt)
         .insert(Name::new("PreviewPlayTime"));
     commands.entity(time_txt).set_parent_in_place(preview);
 
-    // Timestamp placeholder
+    // 时间戳占位
     let ts_txt = spawn_text(commands, asset_server, theme, "--", TextVariant::Caption);
     commands
         .entity(ts_txt)
         .insert(Name::new("PreviewTimestamp"));
     commands.entity(ts_txt).set_parent_in_place(preview);
 
-    // Screenshot placeholder (256x144 gray rectangle)
+    // 截图占位（256x144 灰色矩形）
     let screenshot = commands
         .spawn((
             Node {
@@ -331,7 +331,7 @@ pub fn spawn_save_load_screen(commands: &mut Commands, asset_server: &AssetServe
         .id();
     commands.entity(screenshot).set_parent_in_place(preview);
 
-    // Select hint text (localized)
+    // 选择提示文本（已本地化）
     let hint = spawn_localized_text(
         commands,
         asset_server,
@@ -343,7 +343,7 @@ pub fn spawn_save_load_screen(commands: &mut Commands, asset_server: &AssetServe
     commands.entity(hint).insert(Name::new("SelectHint"));
     commands.entity(hint).set_parent_in_place(preview);
 
-    // ── 6. Action panel ──
+    // ── 6. 操作面板 ──
     let action_bar = spawn_panel(commands, theme, PanelVariant::Group);
     commands.entity(action_bar).insert(Node {
         flex_direction: FlexDirection::Row,
@@ -356,7 +356,7 @@ pub fn spawn_save_load_screen(commands: &mut Commands, asset_server: &AssetServe
     commands.entity(action_bar).insert(Name::new("ActionBar"));
     commands.entity(action_bar).set_parent_in_place(root);
 
-    // Confirm button (160x40)
+    // 确认按钮（160x40）
     let confirm_btn = spawn_localized_button(
         commands,
         theme,
@@ -375,7 +375,7 @@ pub fn spawn_save_load_screen(commands: &mut Commands, asset_server: &AssetServe
     ));
     commands.entity(confirm_btn).set_parent_in_place(action_bar);
 
-    // Delete button (120x40, Danger variant)
+    // 删除按钮（120x40，Danger 变体）
     let delete_btn = spawn_localized_button(
         commands,
         theme,

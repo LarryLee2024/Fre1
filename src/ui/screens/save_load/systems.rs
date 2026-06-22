@@ -38,7 +38,7 @@ pub fn on_save_load_button_clicked(
     match action {
         SaveLoadAction::Close => {
             for entity in &root_query {
-                commands.entity(entity).despawn_recursive();
+                commands.entity(entity).despawn();
             }
         }
         SaveLoadAction::ToggleMode => {

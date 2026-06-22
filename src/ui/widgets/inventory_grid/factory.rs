@@ -70,12 +70,12 @@ pub fn spawn_inventory_grid(
     commands.entity(title).set_parent_in_place(container);
 
     // ── 3. Gold display ──
-    // TODO[P3][Projection][2026-06-21]: Replace hardcoded "Gold: 100" with ViewModel binding
-    //   - Create EconomyVm (gold: u32) in view_models/
-    //   - Add EconomyVm to UiStore
-    //   - Wire EconomyProjection to update gold on purchase/sell events
-    //   - Create GoldDisplay widget that reads from UiStore via Dirty<EconomyVm>
-    //   Completion criteria: gold display reflects actual player gold from economy domain
+    // TODO[P3][Projection][2026-06-21]: 将硬编码的 "Gold: 100" 替换为 ViewModel 绑定
+    //   - 在 view_models/ 中创建 EconomyVm (gold: u32)
+    //   - 将 EconomyVm 添加到 UiStore
+    //   - 装配 EconomyProjection 以在购买/出售事件时更新金币
+    //   - 创建 GoldDisplay Widget，通过 Dirty<EconomyVm> 从 UiStore 读取数据
+    //   完成标准: 金币显示反映来自经济领域的实际玩家金币
     let gold = spawn_text(
         commands,
         asset_server,

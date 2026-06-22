@@ -1,4 +1,4 @@
-//! Module Name: ShopPanel Widget — 商店面板有机体
+//! 模块名: ShopPanel Widget — 商店面板有机体
 //!
 //! 组合 Panel / Text / TabPanel / ShopItemCard / InventoryItemRow / Button
 //! 为一个结构化的商店面板视图，包含标题、金币显示、商品卡片列表和关闭按钮。

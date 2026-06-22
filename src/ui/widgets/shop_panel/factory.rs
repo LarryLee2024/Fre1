@@ -90,8 +90,7 @@ pub fn spawn_shop_panel(
     commands.entity(gold_text).set_parent_in_place(header);
 
     // ── 3. TabPanel (Buy / Sell) ──
-    // MVP: uses plain English labels since spawn_tab_panel does not support
-    // localization keys yet. Labels are "Buy" and "Sell".
+    // MVP: spawn_tab_panel 暂不支持本地化键，因此使用纯英文标签 "Buy" 和 "Sell"。
     let tabs = spawn_tab_panel(commands, theme, &["Buy", "Sell"], 0);
     commands.entity(tabs).set_parent_in_place(container);
 
@@ -108,7 +107,7 @@ pub fn spawn_shop_panel(
             asset_server,
             theme,
             *name,
-            idx as u32 + 1, // Use 1-based item_id for sample data
+            idx as u32 + 1, // 样本数据使用从 1 开始的 item_id
             *price,
             *stock,
         );
@@ -149,8 +148,8 @@ pub fn spawn_shop_panel(
             ButtonVariant::Secondary,
         );
         commands.entity(sell_btn).insert(ShopPanelAction::SellItem {
-            item_id: (idx + 100) as u32, // Offset by 100 to avoid collision with buy items
-            price: 0, // Sample data: sell price unknown, determined by shop logic
+            item_id: (idx + 100) as u32, // 偏移 100 以避免与购买物品 ID 冲突
+            price: 0,                    // 样本数据：出售价格未知，由商店逻辑决定
         });
         commands.entity(sell_btn).set_parent_in_place(sell_row);
     }

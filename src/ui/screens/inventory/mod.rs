@@ -37,7 +37,7 @@ pub fn spawn_inventory_screen(
     theme: Res<Theme>,
     asset_server: Res<AssetServer>,
 ) {
-    // ── 1. Root panel (full screen, centered) ──
+    // ── 1. 根面板（全屏居中） ──
     let root = spawn_panel(&mut commands, &theme, PanelVariant::Basic);
     commands.entity(root).insert((
         Node {
@@ -50,7 +50,7 @@ pub fn spawn_inventory_screen(
         InventoryScreen,
     ));
 
-    // ── 2. Inventory grid ──
+    // ── 2. 背包网格 ──
     let grid = spawn_inventory_grid(&mut commands, &asset_server, &theme);
     commands.entity(grid).set_parent_in_place(root);
 }

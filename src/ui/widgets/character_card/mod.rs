@@ -1,12 +1,12 @@
-//! Module Name: CharacterCard Widget — 角色卡片复合控件
+//! 模块名: CharacterCard Widget — 角色卡片复合控件
 //!
 //! 组合 Panel / Text / ProgressBar / Button 四个原子组件为一个角色卡片。
 //! 每个 CharacterCard 显示角色的名称、等级、HP/MP 进度条和动作按钮。
 //!
-//! Contract:
-//!   Props (input):    name, level, hp_current, hp_max, mp_current, mp_max（通过 CharacterCardState）
-//!   Events (output):  CharacterAction::Attack/Defend/Skill 标记在按钮实体上供 Observer 路由
-//!   Local State:      CharacterCardState（name, level, hp/mp current/max）
+//! 契约:
+//!   输入属性:    name, level, hp_current, hp_max, mp_current, mp_max（通过 CharacterCardState）
+//!   输出事件:  CharacterAction::Attack/Defend/Skill 标记在按钮实体上供 Observer 路由
+//!   本地状态:      CharacterCardState（name, level, hp/mp current/max）
 //!
 //! 详见 `docs/06-ui/02-design-system/widget-composites.md`
 

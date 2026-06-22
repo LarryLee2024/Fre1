@@ -7,9 +7,7 @@
 
 use bevy::prelude::*;
 
-use crate::infra::localization::generated::loc;
 use crate::ui::binding::Dirty;
-use crate::ui::primitives::button::{components::ButtonVariant, factory::spawn_localized_button};
 use crate::ui::primitives::panel::{components::PanelVariant, factory::spawn_panel};
 use crate::ui::primitives::progress_bar::{
     components::ProgressBarVariant, factory::spawn_progress_bar,
@@ -18,9 +16,7 @@ use crate::ui::primitives::text::{components::TextVariant, factory::spawn_text};
 use crate::ui::theme::Theme;
 use crate::ui::view_models::character_panel::CharacterPanelVm;
 
-use super::components::{
-    CharacterAction, CharacterCardLevelLabel, CharacterCardNameLabel, CharacterCardState,
-};
+use super::components::{CharacterCardLevelLabel, CharacterCardNameLabel, CharacterCardState};
 
 /// 工厂函数：生成一个完整的角色卡片控件
 ///
@@ -31,10 +27,7 @@ use super::components::{
 ///   ├── Text (name, Caption, primary color)
 ///   ├── Text (level, Caption)
 ///   ├── ProgressBar (Hp, show_label)
-///   ├── ProgressBar (Mp, show_label)
-///   ├── Button ("Attack", Primary) — CharacterAction::Attack
-///   ├── Button ("Defend", Secondary) — CharacterAction::Defend
-///   └── Button ("Skill", Primary) — CharacterAction::Skill
+///   └── ProgressBar (Mp, show_label)
 /// ```
 ///
 /// # 参数
@@ -138,40 +131,6 @@ pub fn spawn_character_card(
         Val::Px(theme.spacing.sm),
     );
     commands.entity(mp_bar).set_parent_in_place(container);
-
-    // ── 6. Action buttons ──
-    // 攻击按钮（Primary 变体）
-    let attack_btn = spawn_localized_button(
-        commands,
-        theme,
-        loc::ui::BATTLE_ATTACK,
-        "Attack",
-        ButtonVariant::Primary,
-    );
-    commands.entity(attack_btn).insert(CharacterAction::Attack);
-    commands.entity(attack_btn).set_parent_in_place(container);
-
-    // 防御按钮（Secondary 变体）
-    let defend_btn = spawn_localized_button(
-        commands,
-        theme,
-        loc::ui::BATTLE_DEFEND,
-        "Defend",
-        ButtonVariant::Secondary,
-    );
-    commands.entity(defend_btn).insert(CharacterAction::Defend);
-    commands.entity(defend_btn).set_parent_in_place(container);
-
-    // 技能按钮（Primary 变体）
-    let skill_btn = spawn_localized_button(
-        commands,
-        theme,
-        loc::ui::BATTLE_SKILL,
-        "Skill",
-        ButtonVariant::Primary,
-    );
-    commands.entity(skill_btn).insert(CharacterAction::Skill);
-    commands.entity(skill_btn).set_parent_in_place(container);
 
     container
 }

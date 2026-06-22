@@ -38,7 +38,7 @@ pub struct UiPlugin;
 
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
-        // 0. Binding + ViewModel + Settings infrastructure
+        // 0. Binding + ViewModel + Settings 基础设施
         app.init_resource::<UiStore>();
         app.register_type::<UiStore>();
         app.register_type::<BattleHudVm>();
@@ -63,7 +63,7 @@ impl Plugin for UiPlugin {
         // 6. Overlay — UI 浮层系统
         app.add_plugins(OverlayPlugin);
 
-        // 7. Projections — domain event to ViewModel observers
+        // 7. Projections — 领域事件到 ViewModel 的 Observer 转换
         app.add_observer(on_battle_started_projection);
         app.add_observer(on_turn_started_projection);
         app.add_observer(on_turn_ended_projection);
@@ -73,7 +73,7 @@ impl Plugin for UiPlugin {
         app.add_observer(on_damage_dealt_projection);
         app.add_observer(on_unit_died_projection);
 
-        // 8. Bridge — UiCommand to GameCommand wiring (observer pattern)
+        // 8. Bridge — UiCommand 到 GameCommand 的桥接（Observer 模式）
         app.add_observer(process_ui_commands);
     }
 }

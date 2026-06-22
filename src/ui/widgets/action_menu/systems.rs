@@ -3,9 +3,9 @@
 //! 每帧同步 ActionMenuState 到子按钮的禁用状态。
 //! 由 ActionMenuPlugin 注册到 Update 调度。
 //!
-//! Data source: UiStore (ViewModel firewall), no direct domain state queries.
-//! Current unit ID is sourced from BattleHudVm.current_unit_id instead of
-//! directly querying TurnQueue from the combat domain.
+//! 数据来源: UiStore（ViewModel 防火墙），不直接查询领域状态。
+//! 当前单位 ID 从 BattleHudVm.current_unit_id 获取，
+//! 而非直接查询战斗领域的 TurnQueue。
 
 use bevy::prelude::*;
 
@@ -43,8 +43,8 @@ pub fn action_menu_sync_system(
 /// 当 button_interaction_system 触发 ButtonClicked 事件时，
 /// 检查按钮实体是否携带 ActionType 组件，映射到对应的 UiCommand。
 ///
-/// Current unit ID sourced from UiStore.battle_hud.current_unit_id,
-/// not from the combat domain TurnQueue resource.
+/// 当前单位 ID 从 UiStore.battle_hud.current_unit_id 获取，
+/// 而非从战斗领域 TurnQueue Resource 获取。
 pub fn on_action_menu_button_clicked(
     on: On<ButtonClicked>,
     query: Query<&ActionType>,

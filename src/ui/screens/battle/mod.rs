@@ -50,17 +50,22 @@ pub fn spawn_battle_screen(
     theme: Res<Theme>,
     asset_server: Res<AssetServer>,
 ) {
-    // ── 0. Root full-screen container ──
-    // TODO[P0][BATTLE][2026-07-21]: spawn_panel should accept sizing config so full-screen
-    // width/height does not need to be set externally (see factory.rs). Currently the factory's
-    // Node is used as-is; if absolute-positioned children need explicit parent bounds, add a
-    // PanelVariant::FullScreen or sizing props to the factory instead of overriding Node here.
+    // ── 0. 根节点全屏容器 ──
+    // 使用 spawn_panel 创建基础容器，覆盖 Node 为全屏尺寸。
+    // 子 Zone 使用 PositionType::Absolute 锚定到屏幕边缘，依赖父容器有明确尺寸。
     let root = spawn_panel(&mut commands, &theme, PanelVariant::Basic);
-    commands
-        .entity(root)
-        .insert((BattleScreen, Name::new("BattleScreen")));
+    commands.entity(root).insert((
+        Node {
+            width: Val::Percent(100.0),
+            height: Val::Percent(100.0),
+            flex_direction: FlexDirection::Column,
+            ..default()
+        },
+        BattleScreen,
+        Name::new("BattleScreen"),
+    ));
 
-    // ── Z1: Top-Left — Turn Indicator ──
+    // ── Z1: 左上区 — 回合指示器 ──
     let z1 = spawn_zone(&mut commands, &theme, BattleZone::Z1TopLeft);
     commands.entity(z1).set_parent_in_place(root);
     let turn_info = spawn_localized_text(
@@ -73,17 +78,17 @@ pub fn spawn_battle_screen(
     );
     commands.entity(turn_info).set_parent_in_place(z1);
 
-    // ── Z2: Top-Center — Phase Text + Turn Number ──
-    // TODO[P2][UI][2026-07-21]: Add PhaseText and TurnNumber widgets
+    // ── Z2: 中上区 — 阶段文本 + 回合数 ──
+    // TODO[P2][UI][2026-07-21]: 添加 PhaseText 和 TurnNumber Widget
     let z2 = spawn_zone(&mut commands, &theme, BattleZone::Z2TopCenter);
     commands.entity(z2).set_parent_in_place(root);
 
-    // ── Z3: Top-Right — Unit Summary [P2] ──
-    // TODO[P2][UI][2026-07-21]: Add UnitSummary widget
+    // ── Z3: 右上区 — 单位摘要 [P2] ──
+    // TODO[P2][UI][2026-07-21]: 添加 UnitSummary Widget
     let z3 = spawn_zone(&mut commands, &theme, BattleZone::Z3TopRight);
     commands.entity(z3).set_parent_in_place(root);
 
-    // ── Z5: Bottom-Left — Character Card ──
+    // ── Z5: 左下区 — 角色卡 ──
     let z5 = spawn_zone(&mut commands, &theme, BattleZone::Z5BottomLeft);
     commands.entity(z5).set_parent_in_place(root);
     let char_card = spawn_character_card(
@@ -99,14 +104,14 @@ pub fn spawn_battle_screen(
     );
     commands.entity(char_card).set_parent_in_place(z5);
 
-    // ── Z6: Bottom-Center — Action Menu ──
+    // ── Z6: 中下区 — 行动菜单 ──
     let z6 = spawn_zone(&mut commands, &theme, BattleZone::Z6BottomCenter);
     commands.entity(z6).set_parent_in_place(root);
     let action_menu = spawn_action_menu(&mut commands, &theme);
     commands.entity(action_menu).set_parent_in_place(z6);
 
-    // ── Z7: Bottom-Right — End Turn Button + SkillPanel [P1] ──
-    // TODO[P1][UI][2026-07-21]: Add SkillPanel widget
+    // ── Z7: 右下区 — 结束回合按钮 + SkillPanel [P1] ──
+    // TODO[P1][UI][2026-07-21]: 添加 SkillPanel Widget
     let z7 = spawn_zone(&mut commands, &theme, BattleZone::Z7BottomRight);
     commands.entity(z7).set_parent_in_place(root);
     let end_turn_btn = spawn_localized_button(
@@ -119,8 +124,8 @@ pub fn spawn_battle_screen(
     commands.entity(end_turn_btn).insert(BattleAction::EndTurn);
     commands.entity(end_turn_btn).set_parent_in_place(z7);
 
-    // ── Z8: Bottom Bar — Turn Order [P2] ──
-    // TODO[P2][UI][2026-07-21]: Add TurnOrderBar widget
+    // ── Z8: 底部栏 — 行动顺序 [P2] ──
+    // TODO[P2][UI][2026-07-21]: 添加 TurnOrderBar Widget
     let z8 = spawn_zone(&mut commands, &theme, BattleZone::Z8BottomBar);
     commands.entity(z8).set_parent_in_place(root);
 }
