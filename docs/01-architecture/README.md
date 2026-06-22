@@ -639,52 +639,62 @@ src/
 ## 9. 架构决策索引
 
 所有 Architecture Decision Record (ADR) 保存在 `docs/01-architecture/` 的子目录中。
+文件名前缀表示实现状态：✅ = 已实现 | 🔄 = 进行中/Proposed。
 
-| 编号 | 标题 | 状态 | 所属领域 |
-|------|------|------|---------|
-| ADR-000 | Feature 模块划分总图 | ✅ Approved | Foundation |
-| ADR-001 | Plugin 组合与注册顺序 | ✅ Approved | Foundation |
-| ADR-002 | ECS 四级通信机制选型 | ✅ Approved | Foundation |
-| ADR-010 | Ability → Effect 管线架构 | ✅ Approved | Capability |
-| ADR-011 | Modifier → Attribute 管线架构 | ✅ Approved | Capability |
-| ADR-012 | Stacking / Trigger / Cue 分离 | ✅ Approved | Capability |
-| ADR-013 | Registry 与热重载架构 | ✅ Approved | Capability |
-| ADR-020 | CombatIntent Pipeline 设计 | ✅ Approved | Combat |
-| ADR-021 | 回合状态机设计 | ✅ Approved (部分被 ADR-050 取代) | Combat |
-| ADR-022 | 网格 / 地形 / 阵营系统设计 | ✅ Approved | Combat |
-| ADR-023 | 法术与反应机制设计 | ✅ Approved | Combat |
-| ADR-024 | Combat 域 integration/ 模块设计 | ✅ Approved | Combat |
-| ADR-030 | 成长 / 物品系统设计 | ✅ Approved | Progression |
-| ADR-031 | 队伍与休整系统设计 | ✅ Approved | Progression |
-| ADR-032 | 经济与制造系统设计 | ✅ Approved | Progression |
-| ADR-033 | 叙事 / 任务 / 召唤设计 | ✅ Approved | Progression |
-| ADR-040 | 数据流与所属权策略 | ✅ Approved | Cross-cutting |
-| ADR-041 | 回放确定性与架构 | ✅ Approved | Cross-cutting |
-| ADR-042 | 存档持久化策略 | ✅ Approved | Cross-cutting |
-| ADR-043 | 命令层与输入抽象 | ✅ Approved | Cross-cutting |
-| ADR-044 | Pipeline 引擎架构 | ✅ Approved | Cross-cutting |
-| ADR-045 | 模块可见性策略（可见性宪法） | ✅ Accepted | Foundation |
-| ADR-046 | 模块接口模式统一（消除 api.rs） | ✅ Accepted | Foundation |
-| ADR-047 | Content 加载管线架构 | ✅ Approved | Cross-cutting |
-| ADR-048 | Replay→Combat 桥接层设计 | ✅ Accepted | Cross-cutting |
-| ADR-049 | 跨域共享事件模式 | ✅ Accepted | Cross-cutting |
-| ADR-050 | 游戏状态机与场景架构 | ✅ Accepted | Foundation |
-| ADR-051 | Error/Failure 分离架构（规则失败与程序错误严格区分） | ✅ Accepted | Cross-cutting |
-| ADR-052 | 日志架构（领域事件驱动 + LogCode + 结构化日志） | ✅ Accepted | Cross-cutting |
-| ADR-053 | Localization 基础设施架构（Fluent + Key 代码生成 + 三级回退） | ✅ Accepted | Cross-cutting |
-| ADR-054 | Bevy 0.19 迁移决策（Observer 优先 / Delayed Commands / BSN 范围 / Relationship） | ✅ Accepted | Foundation |
-| ADR-055 | UI 表现层架构（Projection 防火墙 / 单向数据流 / Widget Contract） | ✅ Accepted | Cross-cutting |
-| ADR-056 | 7→9 Agent 升级与三级治理体系（Content/Presentation Architect 新增、Architect 角色重定义、协作流程重构） | ✅ Accepted | Foundation |
-| ADR-057 | 关键 Trait 密封性策略 | ✅ Accepted | Cross-cutting |
-| ADR-058 | Derive 宏 + Trait 组合模式 | ✅ Accepted | Cross-cutting |
-| ADR-059 | Event History 架构 | ✅ Accepted | Cross-cutting |
-| ADR-060 | Extension Trait for Bevy Types | ✅ Accepted | Cross-cutting |
-| ADR-061 | Typestate 在 Content Pipeline 中的应用 | ✅ Accepted | Cross-cutting |
-| ADR-062 | Object Safety 分层策略（热路径泛型/冷路径 dyn） | ✅ Accepted | Cross-cutting |
-| ADR-063 | 宏治理（Macro Governance）— 11条宏使用宪法原则 | ✅ Accepted | Cross-cutting |
-| ADR-064 | Camera 系统架构（Pose/State Machine/Event 接口/边界约束/Replay） | 🟡 Proposed | Cross-cutting |
-| ADR-065 | Map 内容管线架构（Tiled→Importer→MapAsset/Tile-Config分离/Object Layer/MapRenderer） | 🟡 Proposed | Cross-cutting |
-| ADR-066 | UI Screen Specification（SSPEC）标准 — ASCII Wireframe + Flexbox + AI-Consumable | ✅ Accepted | Cross-cutting |
+```
+00-foundation/         核心基础
+  ✅ADR-000  Feature 模块划分总图
+  ✅ADR-001  Plugin 组合与注册顺序
+  ✅ADR-002  ECS 四级通信机制
+  ✅ADR-045  模块可见性策略
+  ✅ADR-046  模块接口模式统一
+  🔄ADR-050  游戏状态机与场景架构
+  ✅ADR-054  Bevy 0.19 迁移
+  ✅ADR-056  7→9 Agent 三级治理
+
+10-capability-system/  能力系统
+  ✅ADR-010  Ability → Effect 管线
+  ✅ADR-011  Modifier → Attribute 管线
+  ✅ADR-012  Stacking / Trigger / Cue
+  ✅ADR-013  Registry 与热重载
+
+20-tactical-combat/    战术战斗
+  ✅ADR-020  CombatIntent Pipeline
+  ✅ADR-021  回合状态机
+  ✅ADR-022  网格 / 地形 / 阵营
+  ✅ADR-023  法术与反应
+  ✅ADR-024  Combat integration/
+
+30-progression-narrative/  成长叙事
+  ✅ADR-030  成长 / 物品
+  ✅ADR-031  队伍 / 休整
+  ✅ADR-032  经济 / 制造
+  ✅ADR-033  叙事 / 任务 / 召唤
+
+40-cross-cutting/      横切关注点
+  ✅ADR-040  数据流与所属权
+  ✅ADR-041  回放确定性
+  ✅ADR-042  存档持久化
+  ✅ADR-043  命令层与输入
+  ✅ADR-044  Pipeline 引擎
+  ✅ADR-047  Content 加载管线
+  ✅ADR-048  Replay→Combat 桥接
+  ✅ADR-049  跨域共享事件
+  ✅ADR-051  Error/Failure 分离
+  ✅ADR-052  日志架构
+  ✅ADR-053  Localization
+  ✅ADR-055  UI 表现层
+  ✅ADR-057  关键 Trait 密封
+  ✅ADR-058  Derive 宏 + Trait
+  ✅ADR-059  Event History
+  ✅ADR-060  Extension Trait
+  ✅ADR-061  Typestate
+  ✅ADR-062  Object Safety
+  ✅ADR-063  宏治理
+  🔄ADR-064  Camera 系统
+  🔄ADR-065  Map 内容管线
+  🔄ADR-066  UI SSPEC
+```
 
 ---
 
@@ -725,52 +735,10 @@ src/
 | 编码规则 | `.trae/rules/编码规则.md` | AI 行为规范、自检清单 |
 | 本地化设计 | `docs/09-planning/localization-implementation-plan.md` | Localization 组件架构、数据流、资产目录 |
 
-## 附录 B：文件状态追踪
+## 附录 B：文件状态
 
-| 文件 | 状态 | 负责人 | 完成日期 |
-|------|------|--------|----------|
-| `README.md` | ✅ stable | architect | 2026-06-16 |
-| `00-foundation/ADR-000-feature-module-map.md` | ✅ stable | architect | 2026-06-16 |
-| `00-foundation/ADR-001-plugin-composition.md` | ✅ stable | architect | 2026-06-16 |
-| `00-foundation/ADR-002-ecs-communication.md` | ✅ stable | architect | 2026-06-16 |
-| `10-capability-system/ADR-010-ability-pipeline.md` | ✅ stable | architect | 2026-06-16 |
-| `10-capability-system/ADR-011-modifier-pipeline.md` | ✅ stable | architect | 2026-06-16 |
-| `10-capability-system/ADR-012-stacking-trigger-cue.md` | ✅ stable | architect | 2026-06-16 |
-| `10-capability-system/ADR-013-registry-hotreload.md` | ✅ stable | architect | 2026-06-16 |
-| `20-tactical-combat/ADR-020-combat-pipeline.md` | ✅ stable | architect | 2026-06-16 |
-| `20-tactical-combat/ADR-021-turn-state-machine.md` | ✅ stable | architect | 2026-06-18 |
-| `20-tactical-combat/ADR-022-grid-terrain-faction.md` | ✅ stable | architect | 2026-06-16 |
-| `20-tactical-combat/ADR-023-spell-reaction.md` | ✅ stable | architect | 2026-06-16 |
-| `20-tactical-combat/ADR-024-combat-integration-layer.md` | ✅ stable | architect | 2026-06-18 |
-| `30-progression-narrative/ADR-030-progression-inventory.md` | ✅ stable | architect | 2026-06-16 |
-| `30-progression-narrative/ADR-031-party-camp-rest.md` | ✅ stable | architect | 2026-06-16 |
-| `30-progression-narrative/ADR-032-economy-crafting.md` | ✅ stable | architect | 2026-06-16 |
-| `30-progression-narrative/ADR-033-narrative-quest-summon.md` | ✅ stable | architect | 2026-06-16 |
-| `40-cross-cutting/ADR-040-data-flow-ownership.md` | ✅ stable | architect | 2026-06-16 |
-| `40-cross-cutting/ADR-041-replay-determinism.md` | ✅ stable | architect | 2026-06-16 |
-| `40-cross-cutting/ADR-042-save-persistence.md` | ✅ stable | architect | 2026-06-16 |
-| `40-cross-cutting/ADR-043-command-input.md` | ✅ stable | architect | 2026-06-16 |
-| `40-cross-cutting/ADR-044-pipeline-engine.md` | ✅ stable | architect | 2026-06-17 |
-| `00-foundation/ADR-045-module-visibility-strategy.md` | ✅  stable | architect | 2026-06-17 |
-| `00-foundation/ADR-046-module-interface-pattern.md` | ✅ stable | architect | 2026-06-18 |
-| `40-cross-cutting/ADR-047-content-loading-pipeline.md` | ✅ stable | architect | 2026-06-18 |
-| `40-cross-cutting/ADR-048-replay-combat-bridge.md` | ✅ stable | architect | 2026-06-19 |
-| `40-cross-cutting/ADR-049-shared-cross-domain-events.md` | ✅ stable | architect | 2026-06-19 |
-| `00-foundation/ADR-050-game-state-machine.md` | ✅ accepted | architect | 2026-06-19 |
-| `40-cross-cutting/ADR-051-error-failure-separation.md` | ✅ accepted | architect | 2026-06-19 |
-| `40-cross-cutting/ADR-052-logging-architecture.md` | ✅ accepted | architect | 2026-06-19 |
-| `00-foundation/ADR-054-bevy-0-19-migration.md` | ✅ accepted | architect | 2026-06-19 |
-| `40-cross-cutting/ADR-055-ui-presentation-architecture.md` | ✅ accepted | presentation-architect | 2026-06-20 |
-| `40-cross-cutting/ADR-065-map-content-pipeline.md` | 🟡 proposed | architect | 2026-06-22 |
-| `00-foundation/ADR-056-agent-governance.md` | ✅ accepted | architect | 2026-06-20 |
-| `40-cross-cutting/ADR-057-sealed-trait.md` | ✅ accepted | architect | 2026-06-21 |
-| `40-cross-cutting/ADR-058-derive-macro.md` | ✅ accepted | architect | 2026-06-21 |
-| `40-cross-cutting/ADR-059-event-history.md` | ✅ accepted | content-architect | 2026-06-21 |
-| `40-cross-cutting/ADR-060-extension-trait.md` | ✅ accepted | architect | 2026-06-21 |
-| `40-cross-cutting/ADR-061-typestate.md` | ✅ accepted | architect | 2026-06-21 |
-| `40-cross-cutting/ADR-062-object-safety.md` | ✅ accepted | architect | 2026-06-21 |
-| `40-cross-cutting/ADR-063-macro-governance.md` | ✅ accepted | architect | 2026-06-21 |
+ADR 状态已编码在文件名前缀中：
+- `✅` = 已实现，保留决策原因
+- `🔄` = 进行中 / Proposed
 
----
-
-*本文档是 Fre 项目架构的最高准则，所有 Feature 开发、数据设计、代码审查以此为最终依据。修改本文档需经过 @architect 审核。*
+本文档为项目架构最高准则，由 @architect 维护。
