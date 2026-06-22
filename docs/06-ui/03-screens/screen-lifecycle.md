@@ -50,6 +50,9 @@ Defined（已定义——在 Theme/Content 中配置）
 Loading（加载中——初始化 ViewModel、加载资源）
    │  [资源就绪 + ViewModel 初始化完成]
    ▼
+OnReady（就绪中——初始化 UI 交互状态）
+   │  [初始化完成：选中默认项、设置焦点]
+   ▼
 Active（活跃——可见可交互）
    │  [ScreenStack::push(新 Screen)]
    ▼
@@ -65,12 +68,15 @@ Unloading（卸载中——清理资源、注销 Observer）
 Destroyed（已销毁）
 ```
 
+> **OnReady 阶段说明**：OnEnter（原 Loading）负责加载数据、注册 Observer、填充 ViewModel。OnReady 负责 UI 交互状态的初始化：选中默认角色、设置初始焦点、显示默认 Tab 等。两者分离确保「加载职责」与「初始化职责」不混淆。Screen Spec 的 Lifecycle 节中 OnEnter 与 OnReady 分开声明。
+
 ### 2.3 状态转换规则
 
 | 转换 | 触发条件 | 动作 |
 |------|---------|------|
 | Defined → Loading | ScreenStack::push | 初始化 ViewModel，注册 Observer，加载资源 |
-| Loading → Active | 资源就绪 + ViewModel 初始化完成 | 显示 Screen，激活 FocusGroup |
+| Loading → OnReady | 资源就绪 + ViewModel 初始化完成 | 选中默认项、设置初始焦点、初始化 UI 状态 |
+| OnReady → Active | 初始化完成 | 显示 Screen，激活 FocusGroup |
 | Active → Background | 新 Screen push 到栈顶 | 暂停交互，保留 ViewModel |
 | Background → Active | 上层 Screen pop | 恢复交互，刷新 ViewModel（如 Dirty） |
 | Active → Unloading | ScreenStack::pop/replace | 注销 Observer，清理定时器 |

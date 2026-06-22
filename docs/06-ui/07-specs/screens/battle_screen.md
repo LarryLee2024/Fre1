@@ -1325,19 +1325,24 @@ on_exit:
 | `BattleHudVm` | `turn_number: u32` | Owns — BattleScreen 独享 | 事件触发 (TurnStarted) | `BattleProjection::on_turn_started()` |
 | `BattleHudVm` | `phase_key: &'static str` | Owns | 事件触发 (TurnStarted/TurnEnded) | `BattleProjection::on_turn_started()` / `on_turn_ended()` |
 | `BattleHudVm` | `is_player_turn: bool` | Owns | 事件触发 (TurnStarted/TurnEnded) | `BattleProjection::on_turn_started()` / `on_turn_ended()` |
-| `BattleHudVm` | `current_unit_id: Entity` | Owns | 事件触发 (TurnStarted) | `BattleProjection::on_turn_started()` |
+| // ═══════════════════ Character Panel 组 ═══════════════════ | | | | |
+| `BattleHudVm` | `current_unit_id: CharacterId` | Owns | 事件触发 (TurnStarted) | `BattleProjection::on_turn_started()` |
 | `BattleHudVm` | `unit_name: &'static str` | Owns | 事件触发 (TurnStarted) | `BattleProjection::on_turn_started()` |
 | `BattleHudVm` | `unit_level: u32` | Owns | 事件触发 (TurnStarted) | `BattleProjection::on_turn_started()` |
 | `BattleHudVm` | `hp: f32` | Owns | 事件触发 (DamageApplied/HealApplied) | `BattleProjection::on_damage_applied()` |
 | `BattleHudVm` | `max_hp: f32` | Owns | 事件触发 (StatChanged) | `BattleProjection::on_stat_changed()` |
 | `BattleHudVm` | `mp: f32` | Owns | 事件触发 (MpChanged) | `BattleProjection::on_mp_changed()` |
 | `BattleHudVm` | `max_mp: f32` | Owns | 事件触发 (StatChanged) | `BattleProjection::on_stat_changed()` |
+| // ═══════════════════ Skill Panel 组 ═══════════════════ | | | | |
 | `BattleHudVm` | `ap: f32` | Owns | 事件触发 (ApChanged) | `BattleProjection::on_ap_changed()` |
 | `BattleHudVm` | `max_ap: f32` | Owns | 事件触发 (StatChanged) | `BattleProjection::on_stat_changed()` |
 | `BattleHudVm` | `buff_icons: [TextureKey; 4]` | Owns | 事件触发 (EffectApplied/EffectExpired) | `BattleProjection::on_effect_applied()` |
 | `BattleHudVm` | `buff_tooltips: [&str; 4]` | Owns | 事件触发 (EffectApplied/EffectExpired) | `BattleProjection::on_effect_applied()` |
 | `BattleHudVm` | `available_actions: Vec<ActionType>` | Owns | 事件触发 (TurnStarted/ActionExecuted) | `BattleProjection::on_turn_started()` |
+// ═══════════════════ 基础设施组 ═══════════════════ | | | | |
 | `BattleHudVm` | `visible_zones: Vec<String>` | Owns | 事件触发 (PhaseChanged) — 替代直接查询 Res<State<BattlePhase>> | `ZoneVisibilityProjection` |
+
+> **分离触发条件**（基于 ADR-066 和宪法第九编第 X 条）：(1) 当 BattleScreen 支持多单位显示时，必须将 Character Panel 组字段从 BattleHudVm 拆分为独立 CharacterPanelVm；(2) 当 Skill Overlay 实现时，必须将 Skill Panel 组字段拆分为独立 SkillPanelVm。禁止在分离条件满足前向 BattleHudVm 无限制添加新字段。
 
 ### 13.2 数据流
 
@@ -1721,10 +1726,10 @@ BattleEnded:
 |-------------------|-----------|--------|---------|
 | GameState::Combat | §1 Screen Header | ✅ | 一致 |
 | ScreenLayer 0 | §1 Screen Header | ✅ | 一致 |
-| Persistent 加载 | §1 Screen Header | ⚠️ | screens.md 标记 Persistent，SSPEC 标记 Ephemeral。理由: 战斗完整生命周期 spawn → despawn 属于标准 Ephemeral 模式，"Persistent" 描述易误解为不释放。实际行为相同（Combat 生命周期内持续存在） |
+| Persistent 加载 | §1 Screen Header | ⚠️ | screens.md 标记 Persistent，SSPEC 标记 Ephemeral。Ephemeral（spawn/despawn）与 Persistent（Visibility 切换）在 Entity 生命周期上有本质差异：Ephemeral 每次 OnEnter 新建实体树、OnExit 完整回收，避免残留状态；Persistent 保留实体树仅切换可见性。选择 Ephemeral 的理由：(1) 战斗生命周期边界清晰，spawn/despawn 比 Visibility 管理更简洁；(2) 无残留状态风险（Observer 随 Screen 销毁时注销）；(3) 符合 Bevy 标准 lifecycle 模式。 |
 | Fade(0.3s) | §1 Screen Header | ✅ | 一致 |
 | BattleHudVm | §13 Data Ownership | ✅ | 完整字段映射（含 screens.md 未列出的 current_unit_id, available_actions, visible_zones） |
-| SkillPanelVm | §13 Data Ownership | ⚠️ | screens.md 提及 SkillPanelVm, CharacterPanelVm，但 SSPEC 将其合并至 BattleHudVm（当前 current_unit 的 skill_panel 和 character_panel 数据由 BattleHudVm 承载，减少 ViewModel 数量）。分离方案在后续迭代中处理 |
+| SkillPanelVm | §13 Data Ownership | ⚠️ | screens.md 提及 SkillPanelVm, CharacterPanelVm，但 SSPEC 将其合并至 BattleHudVm。SS13.1 已用注释标注逻辑分组边界（`// -- Character Panel 组 --`, `// -- Skill Panel 组 --`）。分离触发条件：(1) 当 BattleScreen 支持多单位显示时，必须将 Character 相关字段拆分出独立 CharacterPanelVm；(2) 当 Skill Overlay 实现时，必须将 Skill 相关字段拆分出独立 SkillPanelVm。禁止在拆分条件满足前向 BattleHudVm 无限制添加字段。 |
 | 5 组件组合 | §2 Wireframe / §3 Widget Tree | ✅ | 5 组件都已包含（TopBar + BattleArea + CharacterCard + ActionMenu + EndTurnBtn），且增加了 Item/Move 两个按钮 |
 | 3 个 UiCommand | §16 Event Contract | ✅ | CastSkill, SelectTarget, EndTurn 全部保留，增加 Defend/Wait/EnterMoveMode/OpenOverlay |
 

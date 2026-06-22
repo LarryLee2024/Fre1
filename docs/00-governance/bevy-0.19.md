@@ -55,9 +55,9 @@ bsn! {
 
 **点击这里查看 BSN 提供的一切！**
 
-### Optional Fields [#](https://bevy.org/news/bevy-0-19/#optional-fields)
+### 可选字段（Optional Fields）[#](https://bevy.org/news/bevy-0-19/#optional-fields)
 
-In BSN, you don't need to specify every field, or use `..Default::default()`. You only need to set the fields you care about, and the rest will have their default values:
+在 BSN 中，你不需要指定每个字段，也不需要写 `..Default::default()`。你只需要设置你关心的字段，其余的将使用其默认值：
 
 ```rust
 #[derive(Component, Default, Clone)]
@@ -73,7 +73,7 @@ bsn! {
 }
 ```
 
-You can also just specify the type name if you want all the fields to take on their default values:
+如果你希望所有字段都使用默认值，也可以只指定类型名称：
 
 ```rust
 bsn! {
@@ -81,7 +81,7 @@ bsn! {
 }
 ```
 
-Field values can be arbitrary Rust expressions via `{}` syntax:
+字段值可以通过 `{}` 语法使用任意 Rust 表达式：
 
 ```rust
 bsn! {
@@ -89,9 +89,9 @@ bsn! {
 }
 ```
 
-### BSN Relationships [#](https://bevy.org/news/bevy-0-19/#bsn-relationships)
+### BSN 关系（BSN Relationships）[#](https://bevy.org/news/bevy-0-19/#bsn-relationships)
 
-BSN has first-class support for ECS Relationships. You can spawn related entities (such as children) inline:
+BSN 对 ECS 关系有一流支持。你可以内联生成相关实体（如子实体）：
 
 ```rust
 bsn! {
@@ -103,7 +103,7 @@ bsn! {
 }
 ```
 
-This also works for custom relationships:
+这也适用于自定义关系：
 
 ```rust
 bsn! {
@@ -115,9 +115,9 @@ bsn! {
 }
 ```
 
-### Scene Functions [#](https://bevy.org/news/bevy-0-19/#scene-functions)
+### 场景函数（Scene Functions）[#](https://bevy.org/news/bevy-0-19/#scene-functions)
 
-[`bsn!`](https://docs.rs/bevy_scene/0.19.0-rc.3/bevy_scene/macro.bsn.html) returns a type that implements the [`Scene`](https://docs.rs/bevy/0.19.0-rc.3/bevy/prelude/trait.Scene.html) trait, meaning you can define reusable BSN functions like this:
+[`bsn!`](https://docs.rs/bevy_scene/0.19.0-rc.3/bevy_scene/macro.bsn.html) 返回一个实现了 [`Scene`](https://docs.rs/bevy/0.19.0-rc.3/bevy/prelude/trait.Scene.html) trait 的类型，这意味着你可以像这样定义可复用的 BSN 函数：
 
 ```rust
 fn player() -> impl Scene {
@@ -128,7 +128,7 @@ fn player() -> impl Scene {
 }
 ```
 
-These can accept and use parameters:
+这些函数可以接受并使用参数：
 
 ```rust
 fn player(name: &str) -> impl Scene {
@@ -139,9 +139,9 @@ fn player(name: &str) -> impl Scene {
 }
 ```
 
-### Scenes are Composable Patches [#](https://bevy.org/news/bevy-0-19/#scenes-are-composable-patches)
+### 场景是可组合的补丁（Scenes are Composable Patches）[#](https://bevy.org/news/bevy-0-19/#scenes-are-composable-patches)
 
-A BSN expression is a "patch"; it does not write a "full" instance of every type it defines. This means you can layer scenes on top of each other:
+BSN 表达式是一个"补丁"；它不会写入其定义的每个类型的"完整"实例。这意味着你可以将场景层层叠加：
 
 ```rust
 fn button() -> impl Scene {
@@ -159,11 +159,11 @@ fn my_button() -> impl Scene {
 }
 ```
 
-`my_button` will spawn with a `Node { width: px(100), height: px(100) }` component. Components in scenes are initialized to their defaults, and each additional scene layer writes its fields on top of those defaults.
+`my_button` 将生成一个带有 `Node { width: px(100), height: px(100) }` 组件的实体。场景中的组件会被初始化为其默认值，每多一层场景都会在其之上写入字段值。
 
-### Scene Assets and Caching [#](https://bevy.org/news/bevy-0-19/#scene-assets-and-caching)
+### 场景资源与缓存（Scene Assets and Caching）[#](https://bevy.org/news/bevy-0-19/#scene-assets-and-caching)
 
-While **Bevy 0.19** doesn't ship with an official `.bsn` asset loader, it _does_ already functionally support scene asset dependencies. We just don't yet include any built-in loaders for them:
+虽然 **Bevy 0.19** 没有附带官方的 `.bsn` 资源加载器，但它在功能上**已经**支持场景资源依赖。我们只是还没有包含任何内置加载器：
 
 ```rust
 commands.queue_spawn_scene(bsn! {
@@ -174,15 +174,15 @@ commands.queue_spawn_scene(bsn! {
 })
 ```
 
-This (if there was a `.bsn` asset loader) would spawn a scene that includes the `"player.bsn"` scene asset and patches the "x position" to be `10`. BSN is dependency-aware: if you use `queue_spawn_scene` instead of `spawn_scene`, it will wait to spawn the scene until all dependencies have loaded. `spawn_scene` will always try to spawn the scene immediately ... if it has scene dependencies that aren't loaded yet it will fail.
+这样（如果有 `.bsn` 资源加载器的话）将生成一个包含 `"player.bsn"` 场景资源的场景，并将"x 位置"修补为 `10`。BSN 是感知依赖的：如果你使用 `queue_spawn_scene` 而不是 `spawn_scene`，它会等待所有依赖加载完成后才生成场景。`spawn_scene` 会始终尝试立即生成场景……如果它的场景依赖尚未加载，则会失败。
 
-Also note the `:`, which is "caching" syntax. When first loaded, this will resolve the `"player.bsn"` scene and cache the results for reuse. This makes spawning multiple instances of the scene much cheaper, as it only needs to resolve whatever is layered "on top" of the cached scene.
+另外请注意 `:`，这是"缓存"语法。首次加载时，它将解析 `"player.bsn"` 场景并缓存结果以供复用。这使得生成多个场景实例更加高效，因为它只需要解析缓存在场景"之上"叠加的内容。
 
-We're [working](https://github.com/bevyengine/bevy/pull/23576) on an official `.bsn` asset loader, and we also plan on porting Bevy's glTF loader to the new scene system (so you can depend on `"my_scene.gltf"` just like you would a `my_scene.bsn` file). The `bsn!` macro and spawning system already supports scene assets, so if you're feeling adventurous you can try implementing your own Bevy scene asset format while you wait for ours!
+我们正在[开发](https://github.com/bevyengine/bevy/pull/23576)官方的 `.bsn` 资源加载器，同时计划将 Bevy 的 glTF 加载器移植到新的场景系统（这样你就可以依赖 `"my_scene.gltf"`，就像使用 `my_scene.bsn` 文件一样）。`bsn!` 宏和生成系统已经支持场景资源，所以如果你喜欢冒险，可以在等待我们的官方加载器时尝试实现自己的 Bevy 场景资源格式！
 
-### Scene Lists [#](https://bevy.org/news/bevy-0-19/#scene-lists)
+### 场景列表（Scene Lists）[#](https://bevy.org/news/bevy-0-19/#scene-lists)
 
-[`bsn!`](https://docs.rs/bevy_scene/0.19.0-rc.3/bevy_scene/macro.bsn.html) / [`Scene`](https://docs.rs/bevy/0.19.0-rc.3/bevy/prelude/trait.Scene.html) corresponds to a single entity. [`bsn_list!`](https://docs.rs/bevy/0.19.0-rc.3/bevy/prelude/macro.bsn_list.html) / [`SceneList`](https://docs.rs/bevy/0.19.0-rc.3/bevy/prelude/trait.SceneList.html) is the same idea, but applied to lists of entities:
+[`bsn!`](https://docs.rs/bevy_scene/0.19.0-rc.3/bevy_scene/macro.bsn.html) / [`Scene`](https://docs.rs/bevy/0.19.0-rc.3/bevy/prelude/trait.Scene.html) 对应单个实体。[`bsn_list!`](https://docs.rs/bevy/0.19.0-rc.3/bevy/prelude/macro.bsn_list.html) / [`SceneList`](https://docs.rs/bevy/0.19.0-rc.3/bevy/prelude/trait.SceneList.html) 是相同的概念，但应用于实体列表：
 
 ```rust
 fn players() -> impl SceneList {
@@ -193,7 +193,7 @@ fn players() -> impl SceneList {
 }
 ```
 
-Entities in a [`bsn_list!`](https://docs.rs/bevy/0.19.0-rc.3/bevy/prelude/macro.bsn_list.html) are comma separated, and the parentheses to visually indicate entity boundaries are optional:
+[`bsn_list!`](https://docs.rs/bevy/0.19.0-rc.3/bevy/prelude/macro.bsn_list.html) 中的实体以逗号分隔，用来视觉上标识实体边界的括号是可选的：
 
 ```rust
 fn players() -> impl SceneList {
@@ -204,7 +204,7 @@ fn players() -> impl SceneList {
 }
 ```
 
-The "BSN relationship syntax" seen above (ex: `Children []`) uses [`SceneList`](https://docs.rs/bevy/0.19.0-rc.3/bevy/prelude/trait.SceneList.html). This means you can pass scene lists as arguments to your scenes:
+上面看到的"BSN 关系语法"（例如：`Children []`）使用了 [`SceneList`](https://docs.rs/bevy/0.19.0-rc.3/bevy/prelude/trait.SceneList.html)。这意味着你可以将场景列表作为参数传递给场景：
 
 ```rust
 fn widget(children: impl SceneList) -> impl Scene {
@@ -215,9 +215,9 @@ fn widget(children: impl SceneList) -> impl Scene {
 }
 ```
 
-### Observing Events [#](https://bevy.org/news/bevy-0-19/#observing-events)
+### 观察事件（Observing Events）[#](https://bevy.org/news/bevy-0-19/#observing-events)
 
-[`bsn!`](https://docs.rs/bevy_scene/0.19.0-rc.3/bevy_scene/macro.bsn.html) entities can easily observe events, making it easy to embed "callback-style" behaviors in your scenes:
+[`bsn!`](https://docs.rs/bevy_scene/0.19.0-rc.3/bevy_scene/macro.bsn.html) 实体可以轻松观察事件，使得在场景中嵌入"回调风格"的行为变得简单：
 
 ```rust
 fn button() -> impl Scene {
@@ -230,11 +230,11 @@ fn button() -> impl Scene {
 }
 ```
 
-### Templates [#](https://bevy.org/news/bevy-0-19/#templates)
+### 模板（Templates）[#](https://bevy.org/news/bevy-0-19/#templates)
 
-A BSN expression actually defines "templates" for components rather than the actual components themselves. A [`Template`](https://docs.rs/bevy/0.19.0-rc.3/bevy/ecs/prelude/trait.Template.html) is essentially a fancy constructor for a type, which produces an output type (such as a Component). Critically, [`Template`](https://docs.rs/bevy/0.19.0-rc.3/bevy/ecs/prelude/trait.Template.html) has access to the [`World`](https://docs.rs/bevy/0.19.0-rc.3/bevy/ecs/prelude/struct.World.html), the current entity, and the "scene spawn context". This enables powerful behaviors, such as loading assets from a given asset path and producing asset handles (ex: `Handle<Image>`).
+BSN 表达式实际上为组件定义的是"模板"而非实际的组件本身。[`Template`](https://docs.rs/bevy/0.19.0-rc.3/bevy/ecs/prelude/trait.Template.html) 本质上是一个类型的精巧构造器，它产生一个输出类型（如 Component）。关键是，[`Template`](https://docs.rs/bevy/0.19.0-rc.3/bevy/ecs/prelude/trait.Template.html) 可以访问 [`World`](https://docs.rs/bevy/0.19.0-rc.3/bevy/ecs/prelude/struct.World.html)、当前实体和"场景生成上下文"。这使得强大的行为成为可能，例如从给定资源路径加载资源并生成资源句柄（如 `Handle<Image>`）。
 
-The "old" approach to spawning via bundles required passing in every ECS dependency into a bundle function and manually using that dependency to produce the final value:
+通过 Bundle 生成的"旧"方法需要将每个 ECS 依赖都传入 Bundle 函数，并手动使用该依赖来产生最终值：
 
 ```rust
 fn player(asset_server: &AssetServer) -> impl Bundle {
@@ -257,9 +257,9 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 }
 ```
 
-This gets _quite_ nasty when spawning complex deeply nested scenes with many dependencies.
+在生成具有许多依赖的复杂深层嵌套场景时，这变得**非常**糟糕。
 
-BSN makes this all much easier:
+BSN 让这一切变得容易得多：
 
 ```rust
 fn player() -> impl Scene {
@@ -276,13 +276,13 @@ fn setup(mut commands: Commands) {
 }
 ```
 
-Spawning a scene no longer requires knowing every little dependency it requires internally, and common actions like loading and assigning assets via their paths is simple!
+生成场景不再需要知道它内部需要的每一个小依赖，诸如通过路径加载和分配资源等常见操作也变得简单！
 
-This does mean that BSN requires types to have a [`Template`](https://docs.rs/bevy/0.19.0-rc.3/bevy/ecs/prelude/trait.Template.html). This is accomplished via the [`FromTemplate`](https://docs.rs/bevy/0.19.0-rc.3/bevy/ecs/prelude/trait.FromTemplate.html) trait, which tells BSN what [`Template`](https://docs.rs/bevy/0.19.0-rc.3/bevy/ecs/prelude/trait.Template.html) type it should use for a given [`Component`](https://docs.rs/bevy/0.19.0-rc.3/bevy/ecs/component/trait.Component.html). [`FromTemplate`](https://docs.rs/bevy/0.19.0-rc.3/bevy/ecs/prelude/trait.FromTemplate.html) can be derived, which will also generate a [`Template`](https://docs.rs/bevy/0.19.0-rc.3/bevy/ecs/prelude/trait.Template.html) type for your type. Fortunately, most types _do not_ need to derive or implement [`FromTemplate`](https://docs.rs/bevy/0.19.0-rc.3/bevy/ecs/prelude/trait.FromTemplate.html) manually. This is because [`FromTemplate`](https://docs.rs/bevy/0.19.0-rc.3/bevy/ecs/prelude/trait.FromTemplate.html) and [`Template`](https://docs.rs/bevy/0.19.0-rc.3/bevy/ecs/prelude/trait.Template.html) is automatically implemented for every type that implements `Default` and `Clone`. These types are "templates of themselves" and are just "passed through". You only need to derive [`FromTemplate`](https://docs.rs/bevy/0.19.0-rc.3/bevy/ecs/prelude/trait.FromTemplate.html) if you need template features (such as the [`Sprite`](https://docs.rs/bevy/0.19.0-rc.3/bevy/prelude/struct.Sprite.html) use case above, which uses a `Handle<Image>` template to accept `"player.png"`).
+这确实意味着 BSN 要求类型拥有 [`Template`](https://docs.rs/bevy/0.19.0-rc.3/bevy/ecs/prelude/trait.Template.html)。这是通过 [`FromTemplate`](https://docs.rs/bevy/0.19.0-rc.3/bevy/ecs/prelude/trait.FromTemplate.html) trait 实现的，它告诉 BSN 对于给定的 [`Component`](https://docs.rs/bevy/0.19.0-rc.3/bevy/ecs/component/trait.Component.html) 应该使用什么 [`Template`](https://docs.rs/bevy/0.19.0-rc.3/bevy/ecs/prelude/trait.Template.html) 类型。[`FromTemplate`](https://docs.rs/bevy/0.19.0-rc.3/bevy/ecs/prelude/trait.FromTemplate.html) 可以派生，这也会为你的类型生成一个 [`Template`](https://docs.rs/bevy/0.19.0-rc.3/bevy/ecs/prelude/trait.Template.html) 类型。幸运的是，大多数类型**不需要**手动派生或实现 [`FromTemplate`](https://docs.rs/bevy/0.19.0-rc.3/bevy/ecs/prelude/trait.FromTemplate.html)。这是因为 [`FromTemplate`](https://docs.rs/bevy/0.19.0-rc.3/bevy/ecs/prelude/trait.FromTemplate.html) 和 [`Template`](https://docs.rs/bevy/0.19.0-rc.3/bevy/ecs/prelude/trait.Template.html) 会自动为每个实现了 `Default` 和 `Clone` 的类型实现。这些类型是"自己的模板"，只是被"透传"。只有当你需要模板功能时（例如上面的 [`Sprite`](https://docs.rs/bevy/0.19.0-rc.3/bevy/prelude/struct.Sprite.html) 用例，它使用 `Handle<Image>` 模板来接受 `"player.png"`），才需要派生 [`FromTemplate`](https://docs.rs/bevy/0.19.0-rc.3/bevy/ecs/prelude/trait.FromTemplate.html)。
 
-### Inline Asset Templates [#](https://bevy.org/news/bevy-0-19/#inline-asset-templates)
+### 内联资源模板（Inline Asset Templates）[#](https://bevy.org/news/bevy-0-19/#inline-asset-templates)
 
-BSN ships with support for "inline assets" via the `asset_value` template:
+BSN 通过 `asset_value` 模板内置了对"内联资源"的支持：
 
 ```rust
 fn cube() -> impl Scene {
@@ -292,7 +292,7 @@ fn cube() -> impl Scene {
 }
 ```
 
-Compare that to what was necessary before!
+对比一下以前需要做的事情！
 
 ```rust
 fn setup(meshes: Res<Assets<Mesh>>) -> impl Bundle {
@@ -301,9 +301,9 @@ fn setup(meshes: Res<Assets<Mesh>>) -> impl Bundle {
 }
 ```
 
-### Entity Reference Syntax [#](https://bevy.org/news/bevy-0-19/#entity-reference-syntax)
+### 实体引用语法（Entity Reference Syntax）[#](https://bevy.org/news/bevy-0-19/#entity-reference-syntax)
 
-BSN has special "entity reference syntax" to define an Entity's [`Name`](https://docs.rs/bevy/0.19.0-rc.3/bevy/ecs/name/struct.Name.html) component:
+BSN 有特殊的"实体引用语法"来定义实体的 [`Name`](https://docs.rs/bevy/0.19.0-rc.3/bevy/ecs/name/struct.Name.html) 组件：
 
 ```rust
 bsn! {
@@ -312,7 +312,7 @@ bsn! {
 }
 ```
 
-This is essentially the same as:
+这基本上等同于：
 
 ```rust
 bsn! {
@@ -321,7 +321,7 @@ bsn! {
 }
 ```
 
-However "entity reference syntax" also enables referencing that entity elsewhere in the scene:
+然而"实体引用语法"还允许在场景中的其他地方引用该实体：
 
 ```rust
 #[derive(Component, FromTemplate)]
@@ -335,7 +335,7 @@ bsn! {
 }
 ```
 
-You can access _any_ entity reference defined in a given `bsn! {}` scope anywhere else in that scope:
+你可以访问给定 `bsn! {}` 作用域中定义的**任何**实体引用，在该作用域的任何位置：
 
 ```rust
 bsn! {
@@ -351,7 +351,7 @@ bsn! {
 }
 ```
 
-In the context of [`bsn_list!`](https://docs.rs/bevy/0.19.0-rc.3/bevy/prelude/macro.bsn_list.html), this enables defining graph structures:
+在 [`bsn_list!`](https://docs.rs/bevy/0.19.0-rc.3/bevy/prelude/macro.bsn_list.html) 的上下文中，这使得定义图结构成为可能：
 
 ```rust
 bsn_list! [
@@ -360,9 +360,9 @@ bsn_list! [
 ]
 ```
 
-### Implicit Into [#](https://bevy.org/news/bevy-0-19/#implicit-into)
+### 隐式 Into（Implicit Into）[#](https://bevy.org/news/bevy-0-19/#implicit-into)
 
-Most values in "field position" support "implicit `.into()`". This means types that can convert into other types can generally skip manual conversion:
+"字段位置"上的大多数值支持"隐式 `.into()`"。这意味着可以转换为其他类型的类型通常可以跳过手动转换：
 
 ```rust
 #[derive(Component, Default, Clone)]
@@ -373,10 +373,10 @@ bsn! {
 }
 ```
 
-This works because `"hello"` is a `&str`, which has an `Into<String>` implementation. This is especially nice in the context of defining Bevy UI values:
+这是因为 `"hello"` 是一个 `&str`，它实现了 `Into<String>`。这在定义 Bevy UI 值时尤其方便：
 
 ```rust
-// Raw Rust
+// 原始 Rust
 Node {
     border: UiRect::all(Val::Px(2.0)),
     ..Default::default()
@@ -386,13 +386,13 @@ Node {
 Node { border: px(2) }
 ```
 
-`px(2)` is just a function that produces a `Val::Px(2.0)`, and `UiRect` has an `Into` impl for `Val`, which produces `UiRect::all` (writes the value to all four border "sides"). The ergonomics here are competitive with things like CSS, but it is fully statically typed and derived from normal Rust trait conversions (these aren't special cased / hard-coded). This means you can build your own!
+`px(2)` 只是一个生成 `Val::Px(2.0)` 的函数，而 `UiRect` 有一个针对 `Val` 的 `Into` 实现，会生成 `UiRect::all`（将值写入所有四个边框"侧"）。这里的人体工学可与 CSS 等媲美，但它是完全静态类型的，并且源于普通的 Rust trait 转换（这些不是特例/硬编码的）。这意味着你可以构建自己的转换！
 
-### Scene Components [#](https://bevy.org/news/bevy-0-19/#scene-components)
+### 场景组件（Scene Components）[#](https://bevy.org/news/bevy-0-19/#scene-components)
 
-It has almost been a Bevy developer rite of passage to define something like a `Player` component, which has complex behaviors that rely on some larger "scene", and then ask questions like "how do I spawn this all together?" and "how do I write code that can safely assume the whole scene is present?". Bevy developers have solved these problems in a variety of creative ways, but there has never been an easy recommended / idiomatic upstream solution.
+定义一个像 `Player` 这样的组件——具有依赖于某个更大"场景"的复杂行为——然后问出诸如"我如何一起生成这些东西？"和"我如何编写可以安全地假设整个场景存在的代码？"这类问题，几乎已经成为 Bevy 开发者的成人礼。Bevy 开发者也通过各种创意方式解决了这些问题，但从未有一个简单的推荐/惯用上游解决方案。
 
-BSN solves this problem by making it possible to associate a [`Scene`](https://docs.rs/bevy/0.19.0-rc.3/bevy/prelude/trait.Scene.html) with a [`Component`](https://docs.rs/bevy/0.19.0-rc.3/bevy/ecs/component/trait.Component.html) via the [`SceneComponent`](https://docs.rs/bevy/0.19.0-rc.3/bevy/prelude/trait.SceneComponent.html) derive:
+BSN 通过 [`SceneComponent`](https://docs.rs/bevy/0.19.0-rc.3/bevy/prelude/trait.SceneComponent.html) 派生宏，使得将 [`Scene`](https://docs.rs/bevy/0.19.0-rc.3/bevy/prelude/trait.Scene.html) 与 [`Component`](https://docs.rs/bevy/0.19.0-rc.3/bevy/ecs/component/trait.Component.html) 关联起来成为可能，从而解决了这个问题：
 
 ```rust
 #[derive(SceneComponent, Default, Clone)]
@@ -413,7 +413,7 @@ impl Player {
 }
 ```
 
-Scene components can then be spawned like this:
+场景组件可以这样生成：
 
 ```rust
 world.spawn_scene(bsn! {
@@ -421,9 +421,9 @@ world.spawn_scene(bsn! {
 })
 ```
 
-Scene Components must be spawned this way (as a "scene component"), and will log errors if they are spawned directly (ex: via `world.spawn(Player::default())`). Critically, this provides the guarantee that if the `Player` component is present, the full scene will also be present at spawn time. As a developer this means you can write code that queries for `Player` and assume that it will have both a `LeftHand` and a `RightHand` child (provided they haven't been removed since being spawned). This was a major missing piece in the Bevy data model!
+场景组件必须这样生成（作为"场景组件"），如果直接通过 `world.spawn(Player::default())` 等方式生成，则会记录错误日志。关键是，这提供了保证：如果 `Player` 组件存在，那么在生成时完整场景也一定存在。作为开发者，这意味着你可以编写查询 `Player` 的代码，并假设它同时拥有 `LeftHand` 和 `RightHand` 子实体（前提是它们生成后没有被移除）。这是 Bevy 数据模型中一个长期缺失的重要拼图！
 
-Scene Components can also define "props" which are passed into the scene function and can inform BSN outputs:
+场景组件还可以定义"属性（props）"，这些属性会传入场景函数并可影响 BSN 输出：
 
 ```rust
 #[derive(SceneComponent, Default, Clone)]
@@ -461,9 +461,9 @@ bsn! {
 }
 ```
 
-"Props" are evaluated first (before component field patches). Logically, they are evaluated immediately / in-place and the SceneComponent's scene is immediately applied to the current scene. This means the scene they produce can be patched. This _also_ means that you cannot patch "props", as they do not exist later in the scene.
+"Props" 首先被求值（在组件字段补丁之前）。逻辑上，它们是立即/就地求值的，并且 SceneComponent 的场景会立即应用到当前场景。这意味着它们产生的场景可以被修补。这**也**意味着你不能修补"props"，因为它们在后续的场景中不存在。
 
-The [`SceneComponent`](https://docs.rs/bevy/0.19.0-rc.3/bevy/prelude/trait.SceneComponent.html) derive also supports shorthand for scene assets:
+[`SceneComponent`](https://docs.rs/bevy/0.19.0-rc.3/bevy/prelude/trait.SceneComponent.html) 派生宏还支持场景资源的简写形式：
 
 ```rust
 #[derive(SceneComponent, Default, Clone)]

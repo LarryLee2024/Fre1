@@ -1,9 +1,8 @@
 ---
 id: 00-governance.constitution-amendments-ui-spec-v1
 title: 宪法修订草案 v1 — 第九编 / 第十八编 新增条款（基于 ADR-066）
-status: draft
-owner: architect
-created: 2026-06-22
+status: completed
+note: Incorporated into ai-constitution-complete.md on 2026-06-22. Ninth Edition +5 articles, Eighteenth Edition +2 articles.
 tags:
   - governance
   - constitution

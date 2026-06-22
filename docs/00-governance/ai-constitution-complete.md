@@ -1680,6 +1680,23 @@ refactor-guardian 必须覆盖以下六个扫描维度（来源：50万行级项
 - 所有 Debt 条目必须包含：状态（Open / Accepted / In Progress / Resolved / WontFix）、发现日期、负责人、关联 ADR
 - ID 命名：`Debt-` / `Drift-ADR-` / `Leak-` / `Maintain-` / `TestDebt-` / `Content-`
 
+### 第 X 条：Screen 复杂度治理（P1）
+
+| 标记 | 规则 |
+|------|------|
+| 🟩 | Screen Metrics 基线追踪：每个 Screen 必须记录 `widget_count` / `container_count` / `interactive_count` / `max_depth` |
+| 🟩 | Widget Budget：`max_widget_depth ≤ 6`，`max_children_per_container ≤ 20` |
+| ⚠️ | 超过阈值时必须重构，不得累积复杂度债务 |
+
+### 第 X 条：Figma 替代工具链治理（P0）
+
+| 标记 | 规则 |
+|------|------|
+| 🟩 | 新增 Screen 的 UI 设计流程为：写 SSPEC → DoD 检查 → 实现代码 |
+| 🟩 | SSPEC 是 UI 设计的唯一真相源（SSOT），不依赖任何 GUI 设计工具 |
+| 🟥 | 禁止将 Figma / PSD / Sketch 文件作为 UI 需求附件 |
+| 🟥 | 禁止在 SSPEC 中引用 GUI 设计工具的输出作为布局依据 |
+
 ---
 
 ## 第十九编 架构治理与演进

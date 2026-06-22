@@ -1,9 +1,11 @@
 ---
 id: 11-refactor.ui-screen-spec-execution-v3
 title: UI Screen Specification 重构执行计划 v3.0（终结版）
-status: proposed
+status: completed
 owner: architect
 created: 2026-06-22
+archived: 2026-06-22
+reason: All 4 phases executed. ADR-066 accepted, 6/6 Screen Specs active, 4 reference files created, constitution amended, READMEs updated.
 tags:
   - ui
   - screen-spec
