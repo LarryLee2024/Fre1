@@ -42,4 +42,6 @@
 
 - [reference-github](reference-github.md) — GitHub Issue/CI
 - [reference-bevy-source](reference-bevy-source.md) — Bevy 源码 crates/ + examples/ 本地路径
-- [adr-067-sprite-picking](adr-067-sprite-picking-architecture.md) — Sprite Picking 架构 ADR: 推荐 SpritePickingPlugin, Camera 帧时序兼容, UI Pickable::IGNORE 穿透, 四阶段实施计划
+- [adr-067-sprite-picking](adr-067-sprite-picking-architecture.md) — Sprite Picking 架构 ADR: 推荐 SpritePickingPlugin, Camera 帧时序兼容, UI Pickable::IGNORE 穿透, 四阶段实施计划 (⚠️ 被 ADR-PICK-000 部分取代)
+- [picking-arch-refactor-jun-2026](picking-architecture-refactor-june-2026.md) — Picking 架构评审重构: infra→ui 迁层, Entity→BattleUnitId, 事件流4层管道, 5份 refactor 文档在 docs/11-refactor/
+- [review-picking-arch-0623](presentation-architect/review-picking-arch-0623.md) — ADR-PICK-000 目录结构审查: 5 violations, 已更新 architecture.md

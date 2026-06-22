@@ -2,8 +2,6 @@
 //!
 //! 详见 ADR-047 §1
 
-use bevy::prelude::{Asset, TypePath};
-
 use super::errors::{ConfigError, ValidationError};
 
 /// Sealed trait — 防止外部实现破坏 DefinitionType 的不变量。
@@ -15,7 +13,10 @@ pub(crate) mod sealed {
 ///
 /// 存在原因：Content 层需要统一加载各种 Def 类型（SpellDef、EffectDef 等），
 /// 此 trait 提供桶名、文件扩展名、校验逻辑等元信息，驱动通用加载管线。
-pub trait DefinitionType: sealed::Sealed + Asset + TypePath {
+///
+/// 注意：此 trait 不绑定 `Asset + TypePath`，因为 TerrainDef 通过
+/// 同步 I/O 加载（而非 Bevy Asset 系统），不实现 Asset 类型。
+pub trait DefinitionType: sealed::Sealed + serde::de::DeserializeOwned {
     /// 在 Registry 中的桶名（如 "spells", "effects"）。
     const BUCKET_NAME: &'static str;
 
@@ -39,6 +40,22 @@ pub trait DefinitionType: sealed::Sealed + Asset + TypePath {
     /// - 必填字段完整性
     /// - 数值范围合理性
     fn validate(&self) -> Result<(), ValidationError>;
+
+    /// 此 Definition 类型是否支持单个文件中包含多条定义（数组格式）。
+    ///
+    /// 例如 Tag 和 Attribute 的 RON 文件可以是 `[{...}, {...}]` 数组格式。
+    /// 默认返回 false。
+    fn supports_multi_def() -> bool {
+        false
+    }
+
+    /// 返回此 Definition 的唯一标识符，用于热重载去重。
+    ///
+    /// 返回 None 表示此类型没有有意义的唯一 ID（如 TargetingDef），
+    /// 热重载时不做去重操作。
+    fn def_unique_id(&self) -> Option<&str> {
+        None
+    }
 
     /// 返回此 Definition 类型对应的文件路径前缀。
     ///

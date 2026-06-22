@@ -41,14 +41,14 @@
 
 ## 当前状态
 
-- **总扫描次数**: 23 次（19 份已完成 + 4 份活跃扫描）
+- **总扫描次数**: 24 次（19 份已完成 + 5 份活跃扫描）
 - **已完成**（`done/`）: 19 份扫描报告归档
 - **活跃扫描**（根目录）:
-  - `content-compatibility-report.md` — active — Content 架构与 Screen Spec 兼容性分析（95% 兼容，P0 widget-id-map def_registry 列待补充）
-  - `overlap-review-report.md` — Shared/Infra vs Core 模块重复评审
-  - `schema-compatibility-report.md` — partial — Data Schema 与 Screen Spec 兼容性分析（P0 BuffSlot 已修复，schema 文档协调待完成）
-  - `overlap-review-report.md` — active — Shared/Infra vs Core 重复评审（0 处重复，3 处越界，P1 业务常量待迁移）
-  - `ui-doc-gaps.md` — active — UI 文档债务扫描（21 项，4 P0 中 3 已修复，DoD 勾选待完善）
+  - `ADR-PICK-000-picking-architecture-constitution.md` — proposed — Picking 架构总纲宪法级 ADR（替代 ADR-067 的模块定位部分）
+  - `refactor-picking-layer.md` — proposed — Picking 分层迁移方案（infra/picking/ → ui/picking/）
+  - `refactor-event-flow.md` — proposed — Picking 事件流重构（直接 observer → PickIntent → Domain Event）
+  - `refactor-selection.md` — proposed — Selection 状态管理重构（Entity → BattleUnitId, Hover/Focus/Selection 分离）
+  - `refactor-remove-debug.md` — proposed — Picking 调试代码清理计划
 
 ### 关键完成项
 

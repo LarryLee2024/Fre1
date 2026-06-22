@@ -12,11 +12,9 @@ use std::collections::HashSet;
 use std::path::Path;
 
 use crate::content::loading::DefinitionType;
-use crate::core::capabilities::ability::foundation::AbilityDef;
 use crate::core::capabilities::attribute::foundation::*;
 use crate::core::capabilities::cue::foundation::*;
 use crate::core::capabilities::effect::foundation::*;
-use crate::core::capabilities::rule::foundation::RuleDef;
 use crate::core::capabilities::tag::foundation::*;
 use crate::core::capabilities::targeting::foundation::*;
 use crate::core::domains::camp_rest::CampEventDef;
@@ -372,67 +370,4 @@ fn all_enchantment_ron_files_deserialize_and_validate() {
             path
         );
     });
-}
-
-// ─── AbilityDef (bucket exists but may have no files yet) ───────────────
-
-#[test]
-fn all_ability_ron_files_deserialize_and_validate() {
-    let dir = bucket_dir("abilities");
-    let files = ron_files_in(&dir);
-    if files.is_empty() {
-        eprintln!("  [SKIP] assets/config/abilities has no .ron files yet");
-        return;
-    }
-
-    let mut ids = HashSet::new();
-    let mut count = 0;
-    for path in &files {
-        let content = read_to_string(path);
-        let def: AbilityDef = ron::from_str(&content)
-            .unwrap_or_else(|e| panic!("Deserialization of {:?} failed: {}", path, e));
-        def.validate()
-            .unwrap_or_else(|e| panic!("Validation of {:?} failed: {}", path, e));
-        assert!(
-            ids.insert(def.id.clone()),
-            "Duplicate AbilityDef ID '{}' in {:?}",
-            def.id,
-            path
-        );
-        count += 1;
-    }
-    eprintln!(
-        "  [OK] {} files validated in assets/config/abilities",
-        count
-    );
-}
-
-// ─── RuleDef (bucket exists but may have no files yet) ──────────────────
-
-#[test]
-fn all_rule_ron_files_deserialize_and_validate() {
-    let dir = bucket_dir("rules");
-    let files = ron_files_in(&dir);
-    if files.is_empty() {
-        eprintln!("  [SKIP] assets/config/rules has no .ron files yet");
-        return;
-    }
-
-    let mut ids = HashSet::new();
-    let mut count = 0;
-    for path in &files {
-        let content = read_to_string(path);
-        let def: RuleDef = ron::from_str(&content)
-            .unwrap_or_else(|e| panic!("Deserialization of {:?} failed: {}", path, e));
-        def.validate()
-            .unwrap_or_else(|e| panic!("Validation of {:?} failed: {}", path, e));
-        assert!(
-            ids.insert(def.id.clone()),
-            "Duplicate RuleDef ID '{}' in {:?}",
-            def.id,
-            path
-        );
-        count += 1;
-    }
-    eprintln!("  [OK] {} files validated in assets/config/rules", count);
 }

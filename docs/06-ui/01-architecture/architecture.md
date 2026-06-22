@@ -159,6 +159,7 @@ src/ui/
 │   ├── character.rs      # CharacterProjection
 │   ├── quest.rs          # QuestProjection
 │   ├── economy.rs        # EconomyProjection
+│   ├── selection.rs      # SelectionProjection（消费 SelectionChanged）
 │   └── mod.rs
 ├── view_models/          # ViewModel 定义
 │   ├── battle_hud.rs     # BattleHudVm
@@ -168,6 +169,7 @@ src/ui/
 │   ├── shop.rs           # ShopVm
 │   ├── quest_log.rs      # QuestLogVm
 │   ├── notification.rs   # NotificationVm
+│   ├── selection.rs      # SelectionVm（选中/高亮状态）
 │   └── mod.rs
 ├── primitives/           # L3-P: UI 原语层（唯一依赖底层 UI 实现的地方）
 │   ├── button/           # PrimaryButton, SecondaryButton, DangerButton
@@ -208,6 +210,25 @@ src/ui/
 ├── localization/         # UI 文本国际化
 │   ├── text_keys.rs      # UiTextKey 枚举
 │   └── mod.rs
+├── picking/              # L3-I: 输入适配子层（命中检测 → PickIntent）
+│   ├── mod.rs
+│   ├── plugin.rs         # PickingUiPlugin（配置 backend + observer）
+│   ├── pick_target.rs    # PickTarget 枚举
+│   ├── pick_intent.rs    # PickIntent + InteractionPhase
+│   ├── backend/          # 命中检测后端封装
+│   │   ├── mod.rs
+│   │   ├── sprite.rs     # SpritePickingPlugin 配置 + BoundingBox 模式
+│   │   ├── grid.rs       # 网格后端（future）
+│   │   └── passthrough.rs# UI 穿透（Pickable::IGNORE 策略）
+│   └── intent/           # Pointer 事件 → PickIntent 转换
+│       ├── mod.rs
+│       ├── click.rs      # On<Pointer<Click>> → PickIntent::Commit
+│       └── hover.rs      # On<Pointer<Over|Out>> → PickIntent::Preview
+├── selection/            # 选择状态管理（消费 PickIntent，供给 Projection）
+│   ├── mod.rs
+│   ├── state.rs          # SelectionState 状态机（Option<BattleUnitId>）
+│   ├── pick_context.rs   # PickContext Resource（Screen 写入，Picking 读取）
+│   └── bridge.rs         # PickIntent → Domain Event 桥接
 ├── focus/                # 焦点系统
 │   ├── focusable.rs      # Focusable Component
 │   ├── focus_group.rs    # FocusGroup
@@ -228,7 +249,8 @@ src/ui/
 
 **与现有目录结构的关系**：
 - `src/ui/` 是新增顶层目录，与 `src/core/`、`src/infra/` 平级
-- 不修改现有 `src/` 下任何目录
+- `picking/` 和 `selection/` 从 `src/infra/picking/` 迁移而来（详见 ADR-PICK-000）
+- 不修改现有 `src/` 下其他目录
 - UiPlugin 注册在 Phase 11（在 Infra Phase 8 和 ScenePlugin Phase 9 之后）
 
 ### 3.6 三层依赖规则（Primitives / Widgets / Screens）
@@ -248,6 +270,48 @@ src/ui/
 - Screens   → 直接操作 Primitives 组件（允许 — 组合层）
 
 核心原则：**Primitives 是 UI 层与底层实现的唯一桥梁**。Widgets 和 Screens 只能通过 Primitives 的工厂函数和组件访问底层 UI 能力。
+
+### 3.7 Picking/Selection 子层架构（L3-I）
+
+`picking/` 和 `selection/` 是 UI 层的**输入适配子层**，职责是从 Bevy Picking 管线的原始命中检测到业务语义 PickIntent 再到领域事件的完整输入管线。
+
+**设计原则**：
+
+1. **Picking 只产生 PickIntent** — `picking/` 模块只做命中检测后端封装和 Pointer 事件到 PickIntent 的转换。不包含任何业务规则、Selection 状态管理、或领域事件触发。
+2. **Picking 和 Selection 分离** — `selection/` 是 `picking/` 的消费者，不是子模块。Picking 不读取也不修改任何选择状态。
+3. **Screen 决定 PickContext** — PickContext（当前交互模式：Normal/Attack/Skill/Move）由 Screen 根据游戏模式设置。Screen 写入 `PickContext` Resource（在 `ui/selection/pick_context.rs` 中定义），Picking 读取后附加到 PickIntent。
+4. **Domain Bridge 在 selection/** — PickIntent → Domain Event（UnitClicked/TileClicked）转换在 `ui/selection/bridge.rs` 中实现。这是 UI → Domain 唯一出口。
+5. **SelectionState 通过 Projection 流向 Widget** — SelectionState 不直接驱动 UI 表现，而是通过 `SelectionProjection` → `SelectionVm` → Dirty<T> 路径。
+
+**数据流**：
+
+```
+Bevy Picking Pipeline (PreUpdate)
+    ↓ Pointer<Click>/<Over>/<Out>
+picking/intent/click.rs  (Observer)
+    ↓ PickIntent { target, phase, context }
+selection/bridge.rs  (Observer)
+    ↓ trigger(UnitClicked) / trigger(TileClicked)
+Domain (消费领域事件)
+    ↓ SelectionChanged 事件
+projections/selection.rs  (Observer)
+    ↓ SelectionVm in UiStore
+    ↓ Dirty<SelectionVm>
+Widget/Overlay (消费 ViewModel)
+```
+
+**与三层渲染层的关系**：
+- Picking 和 Selection 不操作 Node/Button/Interaction —— 它们通过 Observer 和 Resource 交互
+- SelectionVm 的消费者可能是一个 Widget（如 TargetCursorWidget）或 Overlay（如 SelectionHighlight）
+- Screen（如 BattleScreen）负责设置 PickContext 和注册领域事件的屏幕级响应
+
+**Plugin 注册顺序**（详见 §8.2）：
+```
+6. OverlayPlugin
+6.5 PickingUiPlugin       ← picking/plugin.rs（backend + observer）
+6.6 SelectionPlugin       ← selection/（bridge + state machine）
+7. Projection Observers   ← 包括 SelectionProjection
+```
 
 ---
 
@@ -301,6 +365,7 @@ Domain（执行业务逻辑，产生新的 Domain Event）
 1. UiIntent 是 UI 层的输入意图抽象，比 InputAction 更高层（InputAction 是硬件语义，UiIntent 是业务语义）
 2. UiCommand 通过 `UiCommand → GameCommand` 转换器进入 ADR-043 定义的 CommandQueue，是 UI 层与 Command 层的唯一桥梁
 3. 禁止 Widget 内直接使用 `EventWriter`/`EventReader` —— 使用 Observer 优先原则
+4. **Picking 是 UiIntent 的补充而非替代**： Picking 输出 PickIntent（空间命中语义），不经过 UiIntent/UiAction 管线。PickIntent 通过 `selection/bridge.rs` 转换为 Domain Event 进入 CommandQueue。两条输入路径的关系： (a) 键盘/手柄 → InputSystem → UiIntent → UiAction → UiCommand (b) 鼠标/触摸 → bevy_picking → PickIntent → Domain Event → Selection → (可选) UiCommand
 
 （引用：ADR-055 §3 — 反向流；ADR-055 §Communication Design — 通信表；domain rules §5.3 — 用户输入处理流程）
 
@@ -370,6 +435,10 @@ Bevy UI 渲染
 | User Input → UiIntent | InputAction 映射 | Infra/Input → UI | 硬件输入转为业务意图 |
 | UiIntent → UiCommand | Intent 解析 | UI 内部 | 业务意图转为 UI 命令 |
 | UiCommand → GameCommand | 转换器 | UI → Core | UI 命令转为业务命令（唯一出口） |
+| Pointer Event → PickIntent | Observer | UI 内部 | On<Pointer<Click\|Over\|Out>> → PickIntent |
+| PickIntent → Domain Event | Observer | UI → Core | On<PickIntent> → trigger(UnitClicked) |
+| Domain Event → Selection | Observer | Core → UI | On<UnitClicked> → SelectionState 状态机 |
+| Selection → ViewModel | Observer | UI 内部 | On<SelectionChanged> → SelectionProjection |
 | CueTriggered → Overlay | Observer | Core → UI | Cue 信号驱动 UI 表现 |
 | GameState → Screen | OnEnter/OnExit | App → UI | 场景生命周期驱动 Screen spawn/despawn |
 | OverlayState → Popup | PushOverlay/PopOverlay | App → UI | 覆盖层生命周期驱动 Popup spawn/despawn |
@@ -618,8 +687,16 @@ fn project_bad(
 4. WidgetsPlugin           — 游戏业务控件注册
 5. ScreenPlugin            — Screen 注册
 6. OverlayPlugin           — Overlay 注册
-7. Projection Observers    — Domain Event → ViewModel Observer 注册
+7. PickingUiPlugin         — Picking 输入适配（backend + observer）（需在 Screen 之后，因为 Screen 设置 PickContext）
+8. SelectionPlugin         — 选择状态管理 + Domain Bridge（需在 Picking 之后，消费 PickIntent）
+9. Projection Observers    — Domain Event → ViewModel Observer 注册（包括 SelectionProjection）
 ```
+
+**Picking/Selection 注册时序说明**：
+- PickingUiPlugin 在 ScreenPlugin 之后：因为 Screen 负责设置 PickContext Resource
+- SelectionPlugin 在 PickingUiPlugin 之后：因为 Selection Bridge 消费 PickIntent
+- Projection Observers 在 SelectionPlugin 之后：因为 SelectionProjection 消费 SelectionState
+- 此顺序确保 Observer 的触发顺序：Pointer → PickIntent → DomainEvent → SelectionState → Projection → ViewModel
 
 实际注册顺序见 `src/ui/plugin.rs`。
 

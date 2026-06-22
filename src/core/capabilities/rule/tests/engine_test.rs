@@ -197,11 +197,4 @@ mod tests {
         let result = evaluate_single_rule(&rule, &context, entity, &mut commands);
         assert!(result.is_passed());
     }
-
-    #[test]
-    fn rule_def_definition_type_constants() {
-        use crate::content::loading::DefinitionType;
-        assert_eq!(<RuleDef as DefinitionType>::BUCKET_NAME, "rules");
-        assert_eq!(<RuleDef as DefinitionType>::EXTENSION, "ron");
-    }
 }

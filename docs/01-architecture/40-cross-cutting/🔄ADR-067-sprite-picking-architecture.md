@@ -1,7 +1,8 @@
 ---
 id: 01-architecture.ADR-067
 title: "ADR-067: Bevy Sprite Picking 架构"
-status: Proposed
+status: Superseded
+superseded_by: ADR-PICK-000
 owner: architect
 created: 2026-06-23
 tags:

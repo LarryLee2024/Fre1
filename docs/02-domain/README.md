@@ -152,7 +152,7 @@ Economy Layer (经济系统)
 
 | # | 文件路径 | 层 | 职责摘要 |
 |---|---------|-----|---------|
-| 18 | `domains/tactical_domain.md` | Foundation | 战术空间——网格位置、移动、掩体、夹击 |
+| 18 | `domains/tactical_domain.md` | Foundation | 战术空间——网格位置、移动、掩体、夹击、单位选择 |
 | 19 | `domains/terrain_domain.md` | Foundation | 地形——Tile、表面类型、陷阱、通行性 |
 | 20 | `domains/faction_domain.md` | Foundation | 阵营关系——阵营定义、声望、关系判定 |
 | 21 | `domains/combat_domain.md` | Core | 战斗——回合流程、先攻、伤害结算、胜负 |

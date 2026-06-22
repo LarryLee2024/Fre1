@@ -1,4 +1,4 @@
-//! 内容热重载 — 定期扫描 RON 文件变更并增量更新 Loaded*Defs Resource
+//! 内容热重载 — 定期扫描 RON 文件变更并增量更新 LoadedDefs Resource
 
 use bevy::prelude::*;
 use std::collections::HashMap;
@@ -7,7 +7,6 @@ use std::time::SystemTime;
 
 use super::content_plugin::*;
 use super::loading::{ContentFile, DefinitionType, discover_ron_files};
-use crate::core::capabilities::ability::foundation::AbilityDef;
 use crate::core::capabilities::attribute::foundation::AttributeDefinition;
 use crate::core::capabilities::cue::foundation::CueDef;
 use crate::core::capabilities::effect::foundation::EffectDef;
@@ -50,7 +49,7 @@ impl Default for ContentHotReloadState {
 /// 内容热重载系统。
 ///
 /// 每隔 2 秒重新扫描 assets/config/ 目录，检测文件修改时间变化，
-/// 对变更的文件重新解析并更新对应的 Loaded*Defs Resource。
+/// 对变更的文件重新解析并更新对应的 LoadedDefs Resource。
 pub fn hot_reload_content_system(
     time: Res<Time>,
     mut hr_state: ResMut<ContentHotReloadState>,
@@ -119,67 +118,67 @@ pub fn hot_reload_content_system(
 
         match bucket {
             "spells" => {
-                if reload_single_spell(&mut spells, file) {
+                if reload_single_def::<SpellDef>(&mut spells, file) {
                     reloaded = true;
                 }
             }
             "cues" => {
-                if reload_single_cue(&mut cues, file) {
+                if reload_single_def::<CueDef>(&mut cues, file) {
                     reloaded = true;
                 }
             }
             "effects" => {
-                if reload_single_effect(&mut effects, file) {
+                if reload_single_def::<EffectDef>(&mut effects, file) {
                     reloaded = true;
                 }
             }
             "quests" => {
-                if reload_single_quest(&mut quests, file) {
+                if reload_single_def::<QuestDef>(&mut quests, file) {
                     reloaded = true;
                 }
             }
             "recipes" => {
-                if reload_single_recipe(&mut recipes, file) {
+                if reload_single_def::<RecipeDef>(&mut recipes, file) {
                     reloaded = true;
                 }
             }
             "shops" => {
-                if reload_single_shop(&mut shops, file) {
+                if reload_single_def::<ShopDef>(&mut shops, file) {
                     reloaded = true;
                 }
             }
             "targeting" => {
-                if reload_single_targeting(&mut targeting, file) {
+                if reload_single_def::<TargetingDef>(&mut targeting, file) {
                     reloaded = true;
                 }
             }
             "tags" => {
-                if reload_single_tag(&mut tags, file) {
+                if reload_single_def::<TagDefinition>(&mut tags, file) {
                     reloaded = true;
                 }
             }
             "attributes" => {
-                if reload_single_attribute(&mut attributes, file) {
+                if reload_single_def::<AttributeDefinition>(&mut attributes, file) {
                     reloaded = true;
                 }
             }
             "summon_templates" => {
-                if reload_single_summon_template(&mut summon_templates, file) {
+                if reload_single_def::<SummonTemplateDef>(&mut summon_templates, file) {
                     reloaded = true;
                 }
             }
             "camp_events" => {
-                if reload_single_camp_event(&mut camp_events, file) {
+                if reload_single_def::<CampEventDef>(&mut camp_events, file) {
                     reloaded = true;
                 }
             }
             "bonds" => {
-                if reload_single_bond(&mut bonds, file) {
+                if reload_single_def::<BondDef>(&mut bonds, file) {
                     reloaded = true;
                 }
             }
             "enchantments" => {
-                if reload_single_enchantment(&mut enchantments, file) {
+                if reload_single_def::<EnchantmentDef>(&mut enchantments, file) {
                     reloaded = true;
                 }
             }
@@ -223,264 +222,11 @@ pub fn init_hot_reload_state(mut hr_state: ResMut<ContentHotReloadState>) {
 
 // ── 单文件重载辅助函数 ──
 
-fn reload_single_spell(spells: &mut ResMut<LoadedSpellDefs>, file: &ContentFile) -> bool {
-    let content = match std::fs::read_to_string(&file.path) {
-        Ok(c) => c,
-        Err(e) => {
-            warn!(target: "content", "[HotReload] 读取失败 {}: {}", file.path.display(), e);
-            return false;
-        }
-    };
-    let def: SpellDef = match ron::from_str(&content) {
-        Ok(d) => d,
-        Err(e) => {
-            warn!(target: "content", "[HotReload] 解析失败 {}: {}", file.path.display(), e);
-            return false;
-        }
-    };
-    if let Err(e) = def.validate() {
-        warn!(target: "content",
-            "[HotReload] 验证失败 {}: {}",
-            file.path.display(),
-            e
-        );
-        return false;
-    }
-    // retain + insert 保证同一 ID 只保留最新版本（热重载幂等性）
-    spells.defs.retain(|d| d.id != def.id);
-    info!(target: "content",
-        "[HotReload] 重载了技能 '{}'（id: {}）",
-        def.name_key, def.id
-    );
-    spells.defs.push(def);
-    true
-}
-
-fn reload_single_cue(cues: &mut ResMut<LoadedCueDefs>, file: &ContentFile) -> bool {
-    let content = match std::fs::read_to_string(&file.path) {
-        Ok(c) => c,
-        Err(e) => {
-            warn!(target: "content", "[HotReload] 读取失败 {}: {}", file.path.display(), e);
-            return false;
-        }
-    };
-    let def: CueDef = match ron::from_str(&content) {
-        Ok(d) => d,
-        Err(e) => {
-            warn!(target: "content", "[HotReload] 解析失败 {}: {}", file.path.display(), e);
-            return false;
-        }
-    };
-    if let Err(e) = def.validate() {
-        warn!(target: "content",
-            "[HotReload] 验证失败 {}: {}",
-            file.path.display(),
-            e
-        );
-        return false;
-    }
-    cues.defs.retain(|d| d.id != def.id);
-    info!(target: "content", "[HotReload] 重载了线索 '{}'", def.id);
-    cues.defs.push(def);
-    true
-}
-
-fn reload_single_effect(effects: &mut ResMut<LoadedEffectDefs>, file: &ContentFile) -> bool {
-    let content = match std::fs::read_to_string(&file.path) {
-        Ok(c) => c,
-        Err(e) => {
-            warn!(target: "content", "[HotReload] 读取失败 {}: {}", file.path.display(), e);
-            return false;
-        }
-    };
-    let def: EffectDef = match ron::from_str(&content) {
-        Ok(d) => d,
-        Err(e) => {
-            warn!(target: "content", "[HotReload] 解析失败 {}: {}", file.path.display(), e);
-            return false;
-        }
-    };
-    if let Err(e) = def.validate() {
-        warn!(target: "content",
-            "[HotReload] 验证失败 {}: {}",
-            file.path.display(),
-            e
-        );
-        return false;
-    }
-    effects.defs.retain(|d| d.id != def.id);
-    info!(target: "content",
-        "[HotReload] 重载了效果 '{}'（id: {}）",
-        def.name_key, def.id
-    );
-    effects.defs.push(def);
-    true
-}
-
-fn reload_single_ability(abilities: &mut ResMut<LoadedAbilityDefs>, file: &ContentFile) -> bool {
-    let content = match std::fs::read_to_string(&file.path) {
-        Ok(c) => c,
-        Err(e) => {
-            warn!(target: "content", "[HotReload] 读取失败 {}: {}", file.path.display(), e);
-            return false;
-        }
-    };
-    let def: AbilityDef = match ron::from_str(&content) {
-        Ok(d) => d,
-        Err(e) => {
-            warn!(target: "content", "[HotReload] 解析失败 {}: {}", file.path.display(), e);
-            return false;
-        }
-    };
-    if let Err(e) = def.validate() {
-        warn!(target: "content",
-            "[HotReload] 验证失败 {}: {}",
-            file.path.display(),
-            e
-        );
-        return false;
-    }
-    abilities.defs.retain(|d| d.id != def.id);
-    info!(target: "content",
-        "[HotReload] 重载了能力 '{}'（id: {}）",
-        def.name_key, def.id
-    );
-    abilities.defs.push(def);
-    true
-}
-
-fn reload_single_quest(quests: &mut ResMut<LoadedQuestDefs>, file: &ContentFile) -> bool {
-    let content = match std::fs::read_to_string(&file.path) {
-        Ok(c) => c,
-        Err(e) => {
-            warn!(target: "content", "[HotReload] 读取失败 {}: {}", file.path.display(), e);
-            return false;
-        }
-    };
-    let def: QuestDef = match ron::from_str(&content) {
-        Ok(d) => d,
-        Err(e) => {
-            warn!(target: "content", "[HotReload] 解析失败 {}: {}", file.path.display(), e);
-            return false;
-        }
-    };
-    if let Err(e) = def.validate() {
-        warn!(target: "content",
-            "[HotReload] 验证失败 {}: {}",
-            file.path.display(),
-            e
-        );
-        return false;
-    }
-    quests.defs.retain(|d| d.id != def.id);
-    info!(target: "content",
-        "[HotReload] 重载了任务 '{}'（id: {}）",
-        def.name_key, def.id
-    );
-    quests.defs.push(def);
-    true
-}
-
-fn reload_single_recipe(recipes: &mut ResMut<LoadedRecipeDefs>, file: &ContentFile) -> bool {
-    let content = match std::fs::read_to_string(&file.path) {
-        Ok(c) => c,
-        Err(e) => {
-            warn!(target: "content", "[HotReload] 读取失败 {}: {}", file.path.display(), e);
-            return false;
-        }
-    };
-    let def: RecipeDef = match ron::from_str(&content) {
-        Ok(d) => d,
-        Err(e) => {
-            warn!(target: "content", "[HotReload] 解析失败 {}: {}", file.path.display(), e);
-            return false;
-        }
-    };
-    if let Err(e) = def.validate() {
-        warn!(target: "content",
-            "[HotReload] 验证失败 {}: {}",
-            file.path.display(),
-            e
-        );
-        return false;
-    }
-    recipes.defs.retain(|d| d.id != def.id);
-    info!(target: "content",
-        "[HotReload] 重载了配方 '{}'（id: {}）",
-        def.name_key, def.id
-    );
-    recipes.defs.push(def);
-    true
-}
-
-fn reload_single_shop(shops: &mut ResMut<LoadedShopDefs>, file: &ContentFile) -> bool {
-    let content = match std::fs::read_to_string(&file.path) {
-        Ok(c) => c,
-        Err(e) => {
-            warn!(target: "content", "[HotReload] 读取失败 {}: {}", file.path.display(), e);
-            return false;
-        }
-    };
-    let def: ShopDef = match ron::from_str(&content) {
-        Ok(d) => d,
-        Err(e) => {
-            warn!(target: "content", "[HotReload] 解析失败 {}: {}", file.path.display(), e);
-            return false;
-        }
-    };
-    if let Err(e) = def.validate() {
-        warn!(target: "content",
-            "[HotReload] 验证失败 {}: {}",
-            file.path.display(),
-            e
-        );
-        return false;
-    }
-    shops.defs.retain(|d| d.id != def.id);
-    info!(target: "content",
-        "[HotReload] 重载了商店 '{}'（id: {}）",
-        def.name_key, def.id
-    );
-    shops.defs.push(def);
-    true
-}
-
-fn reload_single_targeting(
-    targeting: &mut ResMut<LoadedTargetingDefs>,
-    file: &ContentFile,
-) -> bool {
-    let content = match std::fs::read_to_string(&file.path) {
-        Ok(c) => c,
-        Err(e) => {
-            warn!(target: "content", "[HotReload] 读取失败 {}: {}", file.path.display(), e);
-            return false;
-        }
-    };
-    let def: TargetingDef = match ron::from_str(&content) {
-        Ok(d) => d,
-        Err(e) => {
-            warn!(target: "content", "[HotReload] 解析失败 {}: {}", file.path.display(), e);
-            return false;
-        }
-    };
-    if let Err(e) = def.validate() {
-        warn!(target: "content",
-            "[HotReload] 验证失败 {}: {}",
-            file.path.display(),
-            e
-        );
-        return false;
-    }
-    info!(target: "content",
-        "[HotReload] 重载了目标定义（类型: {}, 形状: {}）",
-        def.target_type.name(),
-        def.shape.name()
-    );
-    targeting.defs.push(def);
-    true
-}
-
-fn reload_single_tag(tags: &mut ResMut<LoadedTagDefs>, file: &ContentFile) -> bool {
+/// 从 RON 文件重载单个 Definition（通用版本）。
+///
+/// 处理单条和数组格式（通过 `supports_multi_def()` 开关）。
+/// 通过 `def_unique_id()` 去重：移除同 ID 的旧定义后再插入新定义。
+fn reload_single_def<T: DefinitionType>(loaded: &mut LoadedDefs<T>, file: &ContentFile) -> bool {
     let content = match std::fs::read_to_string(&file.path) {
         Ok(c) => c,
         Err(e) => {
@@ -489,29 +235,48 @@ fn reload_single_tag(tags: &mut ResMut<LoadedTagDefs>, file: &ContentFile) -> bo
         }
     };
 
-    let trimmed = content.trim();
-    let defs: Vec<TagDefinition> = if trimmed.starts_with('[') {
-        match ron::from_str(trimmed) {
-            Ok(d) => d,
+    let defs: Vec<T> = if T::supports_multi_def() {
+        let trimmed = content.trim();
+        if trimmed.starts_with('[') {
+            match ron::from_str(trimmed) {
+                Ok(d) => d,
+                Err(e) => {
+                    warn!(target: "content",
+                        "[HotReload] 解析数组失败 {}: {}",
+                        file.path.display(),
+                        e
+                    );
+                    return false;
+                }
+            }
+        } else {
+            match ron::from_str::<T>(trimmed) {
+                Ok(d) => vec![d],
+                Err(e) => {
+                    warn!(target: "content",
+                        "[HotReload] 解析失败 {}: {}",
+                        file.path.display(),
+                        e
+                    );
+                    return false;
+                }
+            }
+        }
+    } else {
+        match ron::from_str::<T>(&content) {
+            Ok(d) => vec![d],
             Err(e) => {
                 warn!(target: "content",
-                    "[HotReload] 解析数组失败 {}: {}",
+                    "[HotReload] 解析失败 {}: {}",
                     file.path.display(),
                     e
                 );
                 return false;
             }
         }
-    } else {
-        match ron::from_str::<TagDefinition>(trimmed) {
-            Ok(d) => vec![d],
-            Err(e) => {
-                warn!(target: "content", "[HotReload] 解析失败 {}: {}", file.path.display(), e);
-                return false;
-            }
-        }
     };
 
+    // 校验所有定义
     for def in &defs {
         if let Err(e) = def.validate() {
             warn!(target: "content",
@@ -523,216 +288,34 @@ fn reload_single_tag(tags: &mut ResMut<LoadedTagDefs>, file: &ContentFile) -> bo
         }
     }
 
+    // 去重：对每个新定义，移除旧版本（若有唯一 ID）
     for def in &defs {
-        tags.defs.retain(|d| d.id != def.id);
+        if let Some(uid) = def.def_unique_id() {
+            loaded.defs.retain(|d| d.def_unique_id() != Some(uid));
+        }
     }
 
+    let count = defs.len();
     for def in defs {
-        info!(target: "content",
-            "[HotReload] 重载了标签 '{}'（路径: {}）",
-            def.id.as_str(),
-            def.path
-        );
-        tags.defs.push(def);
+        loaded.defs.push(def);
     }
-    true
-}
 
-fn reload_single_attribute(
-    attributes: &mut ResMut<LoadedAttributeDefs>,
-    file: &ContentFile,
-) -> bool {
-    let content = match std::fs::read_to_string(&file.path) {
-        Ok(c) => c,
-        Err(e) => {
-            warn!(target: "content", "[HotReload] 读取失败 {}: {}", file.path.display(), e);
-            return false;
-        }
-    };
-
-    let trimmed = content.trim();
-    let defs: Vec<AttributeDefinition> = if trimmed.starts_with('[') {
-        match ron::from_str(trimmed) {
-            Ok(d) => d,
-            Err(e) => {
-                warn!(target: "content",
-                    "[HotReload] 解析数组失败 {}: {}",
-                    file.path.display(),
-                    e
-                );
-                return false;
-            }
-        }
+    if count == 1 {
+        info!(target: "content",
+            "[HotReload] 重载了定义（{}）",
+            file.path.display()
+        );
     } else {
-        match ron::from_str::<AttributeDefinition>(trimmed) {
-            Ok(d) => vec![d],
-            Err(e) => {
-                warn!(target: "content", "[HotReload] 解析失败 {}: {}", file.path.display(), e);
-                return false;
-            }
-        }
-    };
-
-    for def in &defs {
-        if let Err(e) = def.validate() {
-            warn!(target: "content",
-                "[HotReload] 验证失败 {}: {}",
-                file.path.display(),
-                e
-            );
-            return false;
-        }
-    }
-
-    for def in &defs {
-        attributes.defs.retain(|d| d.id != def.id);
-    }
-
-    for def in defs {
         info!(target: "content",
-            "[HotReload] 重载了属性 '{}'（类别: {:?}）",
-            def.id.as_str(),
-            def.category
-        );
-        attributes.defs.push(def);
-    }
-    true
-}
-
-fn reload_single_summon_template(
-    templates: &mut ResMut<LoadedSummonTemplateDefs>,
-    file: &ContentFile,
-) -> bool {
-    let content = match std::fs::read_to_string(&file.path) {
-        Ok(c) => c,
-        Err(e) => {
-            warn!(target: "content", "[HotReload] 读取失败 {}: {}", file.path.display(), e);
-            return false;
-        }
-    };
-    let def: SummonTemplateDef = match ron::from_str(&content) {
-        Ok(d) => d,
-        Err(e) => {
-            warn!(target: "content", "[HotReload] 解析失败 {}: {}", file.path.display(), e);
-            return false;
-        }
-    };
-    if let Err(e) = def.validate() {
-        warn!(target: "content",
-            "[HotReload] 验证失败 {}: {}",
+            "[HotReload] 从 {} 重载了 {} 个定义",
             file.path.display(),
-            e
+            count
         );
-        return false;
     }
-    templates.defs.retain(|d| d.id != def.id);
-    info!(target: "content",
-        "[HotReload] 重载了召唤模板 '{}'（id: {}）",
-        def.name_key, def.id
-    );
-    templates.defs.push(def);
     true
 }
 
-fn reload_single_camp_event(events: &mut ResMut<LoadedCampEventDefs>, file: &ContentFile) -> bool {
-    let content = match std::fs::read_to_string(&file.path) {
-        Ok(c) => c,
-        Err(e) => {
-            warn!(target: "content", "[HotReload] 读取失败 {}: {}", file.path.display(), e);
-            return false;
-        }
-    };
-    let def: CampEventDef = match ron::from_str(&content) {
-        Ok(d) => d,
-        Err(e) => {
-            warn!(target: "content", "[HotReload] 解析失败 {}: {}", file.path.display(), e);
-            return false;
-        }
-    };
-    if let Err(e) = def.validate() {
-        warn!(target: "content",
-            "[HotReload] 验证失败 {}: {}",
-            file.path.display(),
-            e
-        );
-        return false;
-    }
-    events.defs.retain(|d| d.id != def.id);
-    info!(target: "content",
-        "[HotReload] 重载了营地事件 '{}'（id: {}）",
-        def.title_key, def.id
-    );
-    events.defs.push(def);
-    true
-}
-
-fn reload_single_bond(bonds: &mut ResMut<LoadedBondDefs>, file: &ContentFile) -> bool {
-    let content = match std::fs::read_to_string(&file.path) {
-        Ok(c) => c,
-        Err(e) => {
-            warn!(target: "content", "[HotReload] 读取失败 {}: {}", file.path.display(), e);
-            return false;
-        }
-    };
-    let def: BondDef = match ron::from_str(&content) {
-        Ok(d) => d,
-        Err(e) => {
-            warn!(target: "content", "[HotReload] 解析失败 {}: {}", file.path.display(), e);
-            return false;
-        }
-    };
-    if let Err(e) = def.validate() {
-        warn!(target: "content",
-            "[HotReload] 验证失败 {}: {}",
-            file.path.display(),
-            e
-        );
-        return false;
-    }
-    bonds.defs.retain(|d| d.id != def.id);
-    info!(target: "content",
-        "[HotReload] 重载了羁绊 '{}'（id: {}）",
-        def.name_key, def.id
-    );
-    bonds.defs.push(def);
-    true
-}
-
-fn reload_single_enchantment(
-    enchantments: &mut ResMut<LoadedEnchantmentDefs>,
-    file: &ContentFile,
-) -> bool {
-    let content = match std::fs::read_to_string(&file.path) {
-        Ok(c) => c,
-        Err(e) => {
-            warn!(target: "content", "[HotReload] 读取失败 {}: {}", file.path.display(), e);
-            return false;
-        }
-    };
-    let def: EnchantmentDef = match ron::from_str(&content) {
-        Ok(d) => d,
-        Err(e) => {
-            warn!(target: "content", "[HotReload] 解析失败 {}: {}", file.path.display(), e);
-            return false;
-        }
-    };
-    if let Err(e) = def.validate() {
-        warn!(target: "content",
-            "[HotReload] 验证失败 {}: {}",
-            file.path.display(),
-            e
-        );
-        return false;
-    }
-    enchantments.defs.retain(|d| d.id != def.id);
-    info!(target: "content",
-        "[HotReload] 重载了附魔 '{}'（id: {}）",
-        def.name_key, def.id
-    );
-    enchantments.defs.push(def);
-    true
-}
-
+/// 从 RON 文件重载 SpellConfig。
 fn reload_single_spell_config(config: &mut ResMut<SpellConfig>, file: &ContentFile) -> bool {
     let content = match std::fs::read_to_string(&file.path) {
         Ok(c) => c,

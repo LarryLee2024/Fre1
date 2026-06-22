@@ -6,11 +6,10 @@
 //! 参见 ADR-047 §1
 
 use crate::content::loading::{DefinitionType, ValidationError, validate_id_format};
-use crate::core::capabilities::ability::foundation::AbilityDef;
+use crate::content::terrain_def::TerrainDef;
 use crate::core::capabilities::attribute::foundation::AttributeDefinition;
 use crate::core::capabilities::cue::foundation::CueDef;
 use crate::core::capabilities::effect::foundation::EffectDef;
-use crate::core::capabilities::rule::foundation::RuleDef;
 use crate::core::capabilities::tag::foundation::TagDefinition;
 use crate::core::capabilities::targeting::foundation::TargetingDef;
 use crate::core::domains::camp_rest::CampEventDef;
@@ -44,6 +43,10 @@ impl DefinitionType for SpellDef {
 
         Ok(())
     }
+
+    fn def_unique_id(&self) -> Option<&str> {
+        Some(&self.id.0)
+    }
 }
 
 impl DefinitionType for CueDef {
@@ -61,6 +64,10 @@ impl DefinitionType for CueDef {
             });
         }
         Ok(())
+    }
+
+    fn def_unique_id(&self) -> Option<&str> {
+        Some(&self.id)
     }
 }
 
@@ -84,49 +91,9 @@ impl DefinitionType for EffectDef {
 
         Ok(())
     }
-}
 
-impl DefinitionType for AbilityDef {
-    const BUCKET_NAME: &'static str = "abilities";
-    const EXTENSION: &'static str = "ron";
-
-    fn validate(&self) -> Result<(), ValidationError> {
-        validate_id_format(&self.id, "abl_")?;
-
-        if self.name_key.is_empty() {
-            return Err(ValidationError::MissingField {
-                field: "name_key".to_string(),
-            });
-        }
-        if self.desc_key.is_empty() {
-            return Err(ValidationError::MissingField {
-                field: "desc_key".to_string(),
-            });
-        }
-
-        Ok(())
-    }
-}
-
-impl DefinitionType for RuleDef {
-    const BUCKET_NAME: &'static str = "rules";
-    const EXTENSION: &'static str = "ron";
-
-    fn validate(&self) -> Result<(), ValidationError> {
-        validate_id_format(&self.id, "rule_")?;
-
-        if self.name_key.is_empty() {
-            return Err(ValidationError::MissingField {
-                field: "name_key".to_string(),
-            });
-        }
-        if self.desc_key.is_empty() {
-            return Err(ValidationError::MissingField {
-                field: "desc_key".to_string(),
-            });
-        }
-
-        Ok(())
+    fn def_unique_id(&self) -> Option<&str> {
+        Some(&self.id)
     }
 }
 
@@ -155,6 +122,10 @@ impl DefinitionType for QuestDef {
 
         Ok(())
     }
+
+    fn def_unique_id(&self) -> Option<&str> {
+        Some(self.id.as_str())
+    }
 }
 
 impl DefinitionType for RecipeDef {
@@ -181,6 +152,10 @@ impl DefinitionType for RecipeDef {
         }
 
         Ok(())
+    }
+
+    fn def_unique_id(&self) -> Option<&str> {
+        Some(&self.id)
     }
 }
 
@@ -209,6 +184,10 @@ impl DefinitionType for ShopDef {
 
         Ok(())
     }
+
+    fn def_unique_id(&self) -> Option<&str> {
+        Some(&self.id)
+    }
 }
 
 impl DefinitionType for TargetingDef {
@@ -223,11 +202,18 @@ impl DefinitionType for TargetingDef {
         }
         Ok(())
     }
+
+    // TargetingDef has no id field; def_unique_id returns None (default).
+    // Hot-reload dedup is skipped for this type.
 }
 
 impl DefinitionType for TagDefinition {
     const BUCKET_NAME: &'static str = "tags";
     const EXTENSION: &'static str = "ron";
+
+    fn supports_multi_def() -> bool {
+        true
+    }
 
     fn validate(&self) -> Result<(), ValidationError> {
         if self.id.as_str().is_empty() {
@@ -249,11 +235,19 @@ impl DefinitionType for TagDefinition {
         }
         Ok(())
     }
+
+    fn def_unique_id(&self) -> Option<&str> {
+        Some(self.id.as_str())
+    }
 }
 
 impl DefinitionType for AttributeDefinition {
     const BUCKET_NAME: &'static str = "attributes";
     const EXTENSION: &'static str = "ron";
+
+    fn supports_multi_def() -> bool {
+        true
+    }
 
     fn validate(&self) -> Result<(), ValidationError> {
         if self.id.as_str().is_empty() {
@@ -265,6 +259,10 @@ impl DefinitionType for AttributeDefinition {
             });
         }
         Ok(())
+    }
+
+    fn def_unique_id(&self) -> Option<&str> {
+        Some(self.id.as_str())
     }
 }
 
@@ -288,6 +286,10 @@ impl DefinitionType for SummonTemplateDef {
         }
         Ok(())
     }
+
+    fn def_unique_id(&self) -> Option<&str> {
+        Some(&self.id)
+    }
 }
 
 impl DefinitionType for CampEventDef {
@@ -309,6 +311,10 @@ impl DefinitionType for CampEventDef {
             });
         }
         Ok(())
+    }
+
+    fn def_unique_id(&self) -> Option<&str> {
+        Some(self.id.as_str())
     }
 }
 
@@ -342,6 +348,10 @@ impl DefinitionType for BondDef {
         }
         Ok(())
     }
+
+    fn def_unique_id(&self) -> Option<&str> {
+        Some(self.id.as_str())
+    }
 }
 
 impl DefinitionType for EnchantmentDef {
@@ -364,14 +374,48 @@ impl DefinitionType for EnchantmentDef {
         }
         Ok(())
     }
+
+    fn def_unique_id(&self) -> Option<&str> {
+        Some(&self.id)
+    }
+}
+
+impl DefinitionType for TerrainDef {
+    const BUCKET_NAME: &'static str = "terrains";
+    const EXTENSION: &'static str = "ron";
+
+    fn validate(&self) -> Result<(), ValidationError> {
+        if self.id.is_empty() {
+            return Err(ValidationError::EmptyId);
+        }
+        if !self.id.starts_with("ter:") {
+            return Err(ValidationError::InvalidIdPrefix {
+                id: self.id.clone(),
+                expected_prefix: "ter:".to_string(),
+            });
+        }
+        if self.name_key.is_empty() {
+            return Err(ValidationError::MissingField {
+                field: "name_key".to_string(),
+            });
+        }
+        if self.move_cost <= 0.0 {
+            return Err(ValidationError::MissingField {
+                field: "move_cost".to_string(),
+            });
+        }
+        Ok(())
+    }
+
+    fn def_unique_id(&self) -> Option<&str> {
+        Some(&self.id)
+    }
 }
 
 // ─── Sealed trait implementations ───────────────────────────────────
 impl crate::content::loading::definition_type::sealed::Sealed for SpellDef {}
 impl crate::content::loading::definition_type::sealed::Sealed for CueDef {}
 impl crate::content::loading::definition_type::sealed::Sealed for EffectDef {}
-impl crate::content::loading::definition_type::sealed::Sealed for AbilityDef {}
-impl crate::content::loading::definition_type::sealed::Sealed for RuleDef {}
 impl crate::content::loading::definition_type::sealed::Sealed for QuestDef {}
 impl crate::content::loading::definition_type::sealed::Sealed for RecipeDef {}
 impl crate::content::loading::definition_type::sealed::Sealed for ShopDef {}
@@ -382,3 +426,4 @@ impl crate::content::loading::definition_type::sealed::Sealed for SummonTemplate
 impl crate::content::loading::definition_type::sealed::Sealed for CampEventDef {}
 impl crate::content::loading::definition_type::sealed::Sealed for BondDef {}
 impl crate::content::loading::definition_type::sealed::Sealed for EnchantmentDef {}
+impl crate::content::loading::definition_type::sealed::Sealed for TerrainDef {}

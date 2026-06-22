@@ -12,9 +12,10 @@ pub mod loading;
 pub mod terrain_def;
 
 pub use content_plugin::{
-    ContentPlugin, ContentState, LoadedAbilityDefs, LoadedAttributeDefs, LoadedCueDefs,
-    LoadedEffectDefs, LoadedQuestDefs, LoadedRecipeDefs, LoadedRuleDefs, LoadedShopDefs,
-    LoadedSpellDefs, LoadedTagDefs, LoadedTargetingDefs, LoadedTerrainDefs,
+    BucketLoadStats, ContentLoadSummary, ContentPlugin, ContentState, LoadedAttributeDefs,
+    LoadedBondDefs, LoadedCampEventDefs, LoadedCueDefs, LoadedDefs, LoadedEffectDefs,
+    LoadedEnchantmentDefs, LoadedQuestDefs, LoadedRecipeDefs, LoadedShopDefs, LoadedSpellDefs,
+    LoadedSummonTemplateDefs, LoadedTagDefs, LoadedTargetingDefs, LoadedTerrainDefs,
 };
 pub use hot_reload::ContentHotReloadState;
 pub use loading::{ConfigError, ContentFile, DefinitionType, ValidationError};
