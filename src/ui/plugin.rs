@@ -27,8 +27,8 @@ use super::screens::ScreenPlugin;
 use super::settings::{UiSettings, load_settings};
 use super::theme::ThemePlugin;
 use super::view_models::{
-    economy::EconomyVm, inventory::InventoryVm, shop::ShopPanelVm,
-    UiStore, battle_hud::BattleHudVm, character_panel::CharacterPanelVm, skill_panel::SkillPanelVm,
+    UiStore, battle_hud::BattleHudVm, character_panel::CharacterPanelVm, economy::EconomyVm,
+    inventory::InventoryVm, shop::ShopPanelVm, skill_panel::SkillPanelVm,
 };
 use super::widgets::WidgetsPlugin;
 

@@ -2,7 +2,7 @@
 title: UI 设计与代码偏移评审报告
 reviewer: presentation-architect
 date: 2026-06-22
-status: draft
+status: active
 ---
 
 # UI 设计与代码偏移评审报告
@@ -408,4 +408,45 @@ status: draft
 
 ---
 
-*本报告由 @presentation-architect 生成。所有违规判断基于 `docs/06-ui/` 设计文档与 `src/ui/` 代码的逐项比对。*
+## 7. 修复状态跟踪
+
+> 根据 2026-06-22 评审结果安排 3 轮 8 个 agent 修复。更新人: @Claude Code
+
+### 已修复 (8/15 项)
+
+| # | 问题 | 文件 | 修复内容 | 状态 |
+|---|------|------|---------|------|
+| P0-1 | SaveLoadScreen 直接 commands.spawn | `primitives/panel/`, `screens/save_load/` | 新增 `PanelVariant::Placeholder` 变体，两处占位改用工厂 | ✅ 已修复 |
+| P0-2 | SaveLoadScreen 硬编码 Color::srgba | `screens/save_load/mod.rs` | 同上，颜色改由 Placeholder 变体携带 | ✅ 已修复 |
+| P0-3 | UiBinding 未使用 | `screens/battle/mod.rs` | CharacterCard 实体携带 UiBinding::Hp/Mp | ✅ 部分修复 |
+| P0-4 | BattleScreen 硬编码角色数据 | `screens/battle/`, `view_models/` | 创建 BattleHudData Resource 替代硬编码 | ✅ 已修复 |
+| P1-5 | SkillPanel 缺失 (Z7) | `widgets/skill_panel/`, `screens/battle/` | 新建 skill_panel widget，集成 skill_slot 到 Z7 | ✅ 已修复 |
+| P1-6 | SettingsScreen 过于简化 | `screens/settings/`, `ui/settings.rs` | 从 2 Toggle 扩展到 5 Toggle，分 Gameplay/Display 组 | ✅ 部分修复 |
+| P1-7 | Z2 PhaseText + TurnNumber 缺失 | `screens/battle/`, `localization/`, FTL 文件 | 添加阶段文本和回合数，水平居中，三语言 FTL | ✅ 已修复 |
+| P2-7 | Z2TopCenter 未水平居中 | `screens/battle/layout.rs` | 添加 justify_content/align_items 居中 | ✅ 已修复 |
+| P2-8 | UiStore 字段不足 | `view_models/`, `plugin.rs` | 新增 InventoryVm/ShopPanelVm/EconomyVm | ✅ 已修复 |
+| P2-9 | EconomyProjection 骨架 | `projections/mod.rs` | 添加 inline skeleton module | ✅ 部分修复 |
+
+### 待修复 (7 项)
+
+| # | 问题 | 计划安排 | 优先级 |
+|---|------|---------|--------|
+| P0-3 | Dirty<T> 消费链完整接入 | 需 Projection 系统就绪后激活 on_dirty_battle_hud | P0 |
+| P1-1~4 | 本地化 Text::new 审计 | Primitives 层可接受，需更新架构文档明确豁免 | P1 |
+| P2-1/2 | ScreenStack/ScreenLifecycle 未激活 | 架构决策：是否迁移到 ScreenStack 管理 | P2 |
+| P2-4 | 9 个缺失复合组件 | 按优先级实现 BattleHud/TurnOrderBar/CharacterStatusPanel | P2 |
+| P2-6 | TurnOrderBar (Z8) | 已安排 agent 实现 | P2 |
+| P2-9 | EconomyProjection 领域事件 | 等待 Economy 领域事件定义 | P2 |
+| P3-1~3 | Theme RON/变体/SettingsGroup | 长期规划 | P3 |
+
+### 文档修正状态
+
+| 文件 | 问题 | 状态 |
+|------|------|------|
+| `architecture.md` §6.5 铁律 5 | 需添加豁免条款 | ⏳ 待处理 |
+| `theme-localization.md` §4.4 | 明确 Primitives Text::new 豁免 | ⏳ 待处理 |
+| `widget-composites.md` §7 | 目录结构对齐 | ⏳ 待处理 |
+
+---
+
+*本报告由 @presentation-architect 生成。修复状态由 @Claude Code 跟踪更新。*

@@ -276,7 +276,9 @@ pub fn spawn_save_load_screen(commands: &mut Commands, asset_server: &AssetServe
             color: Color::srgba(0.3, 0.3, 0.3, 1.0),
         },
     );
-    commands.entity(avatar).insert(Name::new("AvatarPlaceholder"));
+    commands
+        .entity(avatar)
+        .insert(Name::new("AvatarPlaceholder"));
     commands.entity(avatar).set_parent_in_place(preview);
 
     // 角色名占位

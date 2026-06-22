@@ -21,16 +21,26 @@ use crate::ui::primitives::text::{
 };
 use crate::ui::theme::Theme;
 
-use super::components::BuffIconState;
+use super::components::{BuffIconState, BuffType};
+
+/// 根据 BuffType 返回对应的语义边框颜色
+fn border_color_for_buff_type(buff_type: BuffType, theme: &Theme) -> Color {
+    match buff_type {
+        BuffType::Buff => theme.colors.feedback_positive,
+        BuffType::Debuff => theme.colors.feedback_negative,
+        BuffType::Neutral => theme.colors.feedback_warning,
+    }
+}
 
 /// 工厂函数：生成一个完整的 Buff/Debuff 图标控件
 ///
 /// # UI 树结构
 ///
 /// ```text
-/// Panel (Card, colored border)
+/// Panel (Card, colored border based on buff_type)
 ///   ├── Text (remaining turns, Caption, centered)
 ///   ├── Text (buff name, Caption)
+///   ├── Text (stacks badge, Caption, top-right) — 仅 stacks > 0 时
 ///   └── ProgressBar (duration, Generic, thin)
 /// ```
 ///
@@ -39,9 +49,11 @@ use super::components::BuffIconState;
 /// - `asset_server`: 资源管理器（传递给文本工厂）
 /// - `theme`: 主题 Resource（提供颜色/间距令牌）
 /// - `name`: Buff 显示名称
+/// - `buff_type`: Buff 类型（增益/减益/中性）
 /// - `remaining_turns`: 剩余持续回合数
 /// - `max_turns`: 最大持续回合数
-/// - `is_debuff`: 是否为减益效果
+/// - `stacks`: 叠加层数（0 = 不显示徽章）
+/// - `tooltip_key`: 悬浮提示的本地化 key（MVP 阶段可空）
 ///
 /// # 返回
 /// BuffIcon 容器实体的 Entity
@@ -50,7 +62,7 @@ use super::components::BuffIconState;
 /// ```ignore
 /// let icon = spawn_buff_icon(
 ///     &mut commands, &asset_server, &theme,
-///     "Poison", 3, 5, true,
+///     "Poison", BuffType::Debuff, 3, 5, 2, "",
 /// );
 /// ```
 pub fn spawn_buff_icon(
@@ -58,28 +70,29 @@ pub fn spawn_buff_icon(
     asset_server: &AssetServer,
     theme: &Theme,
     name: impl Into<String>,
+    buff_type: BuffType,
     remaining_turns: u32,
     max_turns: u32,
-    is_debuff: bool,
+    stacks: u32,
+    tooltip_key: impl Into<String>,
 ) -> Entity {
     let name_str: String = name.into();
-    let border_color = if is_debuff {
-        theme.colors.feedback_negative
-    } else {
-        theme.colors.feedback_positive
-    };
+    let tooltip_key_str: String = tooltip_key.into();
+    let border_color = border_color_for_buff_type(buff_type, theme);
 
     // ── 1. Container panel (Card variant, compact square) ──
     let container = spawn_panel(commands, theme, PanelVariant::Card);
 
-    // 用增益/减益颜色覆盖边框并挂载 BuffIconState
+    // 根据 Buff 类型设置边框颜色并挂载 BuffIconState
     commands.entity(container).insert((
         BorderColor::all(border_color),
         BuffIconState {
             name: name_str.clone(),
+            buff_type,
             remaining_turns,
             max_turns,
-            is_debuff,
+            stacks,
+            tooltip_key: tooltip_key_str,
         },
         Name::new(format!("BuffIcon({})", name_str)),
     ));
@@ -95,7 +108,23 @@ pub fn spawn_buff_icon(
     let name_text = spawn_text(commands, asset_server, theme, &name_str, TextVariant::Caption);
     commands.entity(name_text).set_parent_in_place(container);
 
-    // ── 4. Duration progress bar (Generic, thin, hidden label) ──
+    // ── 4. Stacks badge (top-right corner, only if stacks > 0) ──
+    if stacks > 0 {
+        let stacks_str = stacks.to_string();
+        let stacks_text = spawn_text(commands, asset_server, theme, &stacks_str, TextVariant::Caption);
+        commands.entity(stacks_text).insert((
+            TextColor(theme.colors.text_accent),
+            Node {
+                position_type: PositionType::Absolute,
+                right: Val::Px(2.0),
+                top: Val::Px(2.0),
+                ..default()
+            },
+        ));
+        commands.entity(stacks_text).set_parent_in_place(container);
+    }
+
+    // ── 5. Duration progress bar (Generic, thin, hidden label) ──
     let duration_bar = spawn_progress_bar(
         commands,
         theme,

@@ -37,6 +37,7 @@ use crate::ui::theme::Theme;
 use crate::ui::widgets::action_menu::factory::spawn_action_menu;
 use crate::ui::widgets::character_card::factory::spawn_character_card;
 use crate::ui::widgets::skill_panel::factory::spawn_skill_panel;
+use crate::ui::widgets::turn_order_bar::factory::spawn_turn_order_bar;
 
 use crate::ui::view_models::battle_hud::BattleHudData;
 
@@ -129,10 +130,9 @@ pub fn spawn_battle_screen(
         data.mp_current,
         data.mp_max,
     );
-    commands.entity(char_card).insert((
-        UiBinding::Hp,
-        UiBinding::Mp,
-    ));
+    commands
+        .entity(char_card)
+        .insert((UiBinding::Hp, UiBinding::Mp));
     commands.entity(char_card).set_parent_in_place(z5);
 
     // ── Z6: 中下区 — 行动菜单 ──
@@ -160,10 +160,11 @@ pub fn spawn_battle_screen(
     commands.entity(end_turn_btn).insert(BattleAction::EndTurn);
     commands.entity(end_turn_btn).set_parent_in_place(z7);
 
-    // ── Z8: 底部栏 — 行动顺序 [P2] ──
-    // TODO[P2][UI][2026-07-21]: 添加 TurnOrderBar Widget
+    // ── Z8: 底部栏 — 行动顺序 ──
     let z8 = spawn_zone(&mut commands, &theme, BattleZone::Z8BottomBar);
     commands.entity(z8).set_parent_in_place(root);
+    let turn_order_bar = spawn_turn_order_bar(&mut commands, &asset_server, &theme);
+    commands.entity(turn_order_bar).set_parent_in_place(z8);
 }
 
 /// 清除系统：离开战斗时销毁所有战斗屏幕实体

@@ -54,10 +54,9 @@ pub fn spawn_skill_panel(
     // ── 1. Container panel (Group variant) ──
     // Group 提供分组容器样式，适合包裹多个子卡片
     let container = spawn_panel(commands, theme, PanelVariant::Group);
-    commands.entity(container).insert((
-        SkillPanel,
-        Name::new("SkillPanel"),
-    ));
+    commands
+        .entity(container)
+        .insert((SkillPanel, Name::new("SkillPanel")));
 
     // ── 2. Skill slots — matching SkillPanelVm::default() ──
     // skill_id=1: "ui.skill.attack"   cooldown_max=0 (no cooldown)
@@ -83,7 +82,9 @@ pub fn spawn_skill_panel(
             cooldown_current: cooldown_max,
             is_ready: cooldown_max == 0,
         });
-        commands.entity(slot).insert(SkillSlotIndex(skill_id as usize));
+        commands
+            .entity(slot)
+            .insert(SkillSlotIndex(skill_id as usize));
         commands.entity(slot).set_parent_in_place(container);
     }
 

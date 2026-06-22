@@ -1,7 +1,7 @@
 ---
 id: 11-refactor.schema-compatibility-report
 title: Data Schema Compatibility Report for Screen Spec
-status: draft
+status: partial
 created: 2026-06-22
 owner: data-architect
 tags:

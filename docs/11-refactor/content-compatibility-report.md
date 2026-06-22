@@ -1,7 +1,7 @@
 ---
 id: 11-refactor.content-compatibility-report
 title: Content Architecture Compatibility Report for Screen Spec
-status: draft
+status: active
 owner: content-architect
 created: 2026-06-22
 tags:

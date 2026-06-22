@@ -44,10 +44,11 @@
 - **总扫描次数**: 23 次（19 份已完成 + 4 份活跃扫描）
 - **已完成**（`done/`）: 19 份扫描报告归档
 - **活跃扫描**（根目录）:
-  - `content-compatibility-report.md` — Content 架构与 Screen Spec 兼容性分析
+  - `content-compatibility-report.md` — active — Content 架构与 Screen Spec 兼容性分析（95% 兼容，P0 widget-id-map def_registry 列待补充）
   - `overlap-review-report.md` — Shared/Infra vs Core 模块重复评审
-  - `schema-compatibility-report.md` — Data Schema 与 Screen Spec 兼容性分析
-  - `ui-doc-gaps.md` — UI 文档债务扫描与缺口分析
+  - `schema-compatibility-report.md` — partial — Data Schema 与 Screen Spec 兼容性分析（P0 BuffSlot 已修复，schema 文档协调待完成）
+  - `overlap-review-report.md` — active — Shared/Infra vs Core 重复评审（0 处重复，3 处越界，P1 业务常量待迁移）
+  - `ui-doc-gaps.md` — active — UI 文档债务扫描（21 项，4 P0 中 3 已修复，DoD 勾选待完善）
 
 ### 关键完成项
 

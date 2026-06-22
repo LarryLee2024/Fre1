@@ -11,6 +11,7 @@
 //! - InventoryGrid — 背包网格有机体（标题、金币、物品列表、关闭按钮）
 //! - ShopItemCard — 商店物品卡片 Widget（名称、价格、库存、购买按钮）
 //! - ShopPanel — 商店面板有机体（标题栏、标签面板、物品列表、关闭按钮）
+//! - TurnOrderBar — 战斗底部行动顺序栏（MVP 静态占位数据）
 //!
 //! 未来 Widget：
 //! - BuffIcon
@@ -26,6 +27,7 @@ pub mod shop_item_card;
 pub mod shop_panel;
 pub mod skill_panel;
 pub mod skill_slot;
+pub mod turn_order_bar;
 
 use bevy::prelude::*;
 
@@ -37,6 +39,7 @@ use self::shop_item_card::ShopItemCardPlugin;
 use self::shop_panel::ShopPanelPlugin;
 use self::skill_panel::SkillPanelPlugin;
 use self::skill_slot::SkillSlotPlugin;
+use self::turn_order_bar::TurnOrderBarPlugin;
 
 /// WidgetsPlugin — 注册所有游戏 UI 控件
 ///
@@ -54,6 +57,7 @@ impl Plugin for WidgetsPlugin {
             InventoryItemRowPlugin,
             ShopItemCardPlugin,
             ShopPanelPlugin,
+            TurnOrderBarPlugin,
         ));
     }
 }

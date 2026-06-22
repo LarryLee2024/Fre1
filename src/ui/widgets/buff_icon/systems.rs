@@ -1,13 +1,16 @@
 //! BuffIcon 更新系统
 //!
 //! 每帧同步 BuffIconState 到子控件（ProgressBar）的状态。
+//! Buff 图标呼吸动画系统为 Debuff 添加微弱的边框脉冲效果。
 //! 由 BuffIconPlugin 注册到 Update 调度。
 
+use bevy::color::Srgba;
 use bevy::prelude::*;
 
 use crate::ui::primitives::progress_bar::components::ProgressBarState;
+use crate::ui::theme::Theme;
 
-use super::components::BuffIconState;
+use super::components::{BuffIconState, BuffType};
 
 /// BuffIcon 更新系统
 ///
@@ -27,6 +30,39 @@ pub fn buff_icon_update_system(
                 pb_state.current = state.remaining_turns as f32;
                 pb_state.maximum = state.max_turns as f32;
             }
+        }
+    }
+}
+
+/// Buff 图标呼吸动画系统
+///
+/// 对 Debuff 图标添加微弱的边框颜色脉冲效果（alpha 呼吸），
+/// 增强视觉反馈。Buff 和 Neutral 图标不应用动画。
+///
+/// 使用 theme 颜色确保与当前主题一致。
+pub fn buff_icon_breathing_system(
+    time: Res<Time>,
+    theme: Res<Theme>,
+    query: Query<(Entity, &BuffIconState)>,
+    mut border_query: Query<&mut BorderColor>,
+) {
+    // 呼吸因子：0.7 ~ 1.0，周期约 2 秒
+    let breath = (time.elapsed_secs() * 3.0).sin() * 0.15 + 0.85;
+
+    for (entity, state) in query.iter() {
+        if state.buff_type != BuffType::Debuff {
+            continue;
+        }
+
+        let base_color = theme.colors.feedback_negative;
+        if let Ok(mut border) = border_query.get_mut(entity) {
+            let srgba: Srgba = base_color.into();
+            *border = BorderColor::all(Color::from(Srgba {
+                red: srgba.red,
+                green: srgba.green,
+                blue: srgba.blue,
+                alpha: breath,
+            }));
         }
     }
 }

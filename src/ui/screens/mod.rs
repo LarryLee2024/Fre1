@@ -98,10 +98,7 @@ impl Plugin for ScreenPlugin {
             // BattleScreen 系统：Zone 可见性控制 + Dirty 消费（Update）
             .add_systems(
                 Update,
-                (
-                    battle_zone_visibility_system,
-                    on_dirty_battle_hud,
-                )
+                (battle_zone_visibility_system, on_dirty_battle_hud)
                     .run_if(in_state(GameState::Combat)),
             );
     }
