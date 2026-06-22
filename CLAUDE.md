@@ -122,6 +122,17 @@ CodeGraph → Repomix → Context7 → Git → Filesystem
 - 根 `tests/` 只放跨域/E2E 测试
 - Bug 修复流程：先写失败测试 → 修复 → 验证
 
+## Memory (Engramory — curated file-based long-term memory)
+
+记忆目录：`.claude/memory/`（索引：`MEMORY.md`），随代码版本控制。
+
+- **任务开始**，读 `MEMORY.md`（一行一条），只打开 hook 相关的详情文件。把回忆到的内容当作可能过时的背景——执行前先验证文件/标志/版本。
+- **学到持久性内容**值得未来会话记住时：确认不在仓库/git/`CLAUDE.md` 里（别重复已有信息），也不是密钥值；搜索索引，**更新已有笔记**而非重复；否则写一个原子 markdown 文件（一个事实）带 frontmatter：`name` / `description`（精炼的 one-line hook）/ `type`（`user | feedback | project | reference`）/ `created` + `updated`（`YYYY-MM-DD`）。`feedback` 或 `project` 笔记必须带 **`Why:`** 和 **`How to apply:`** 行。在 `MEMORY.md` 加一行指针。**发现错的就删除**。
+- **绝不**把凭据/密钥/令牌/cookie/恢复码写进记忆——只记录 *在哪里* 存着。
+- 保持 `MEMORY.md` 小（宿主编译只加载前 200 行 / 25 KB）。超了就要压缩：指针化过长的行、合并重复、归档冷笔记。
+
+完整协议 & 理由：`.claude/skills/engramory/SKILL.md`。
+
 ## Key Documents Quick-Reference
 
 | File | Why |

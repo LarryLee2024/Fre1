@@ -30,3 +30,4 @@ repomix-output.xml
 
 **/*.fresave
 **/node_modules/**
+**/__pycache__/**
