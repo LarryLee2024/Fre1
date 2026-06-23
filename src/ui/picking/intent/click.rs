@@ -39,6 +39,16 @@ pub fn on_pointer_click(
     }
 
     let target_entity = ev.event_target();
+
+    // 诊断日志：打印目标实体的所有组件
+    info!(
+        target: "ui::picking",
+        "[Picking] Click entity={:?} — UnitId={:?} GridPos={:?}",
+        target_entity,
+        unit_ids.get(target_entity).ok(),
+        grid_positions.get(target_entity).ok(),
+    );
+
     let target = resolve_pick_target(target_entity, &unit_ids, &grid_positions);
 
     info!(

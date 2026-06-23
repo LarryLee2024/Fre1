@@ -33,7 +33,7 @@ description:
 > 生成代码前必须对照检查，违反任意一条必须立即重写
 1. ❌ 把Entity当面向对象实例，模拟`player.attack(enemy)`
 2. ❌ 把Resource当全局变量仓库
-3. ❌ 创建全局顶层的`systems.rs/components.rs/events.rs`巨文件（Domain 内部按需拆分，详见 `ai-constitution-complete.md` §3.4）
+3. ❌ 创建全局顶层的`systems.rs/components.rs/events.rs`巨文件（Domain 内部按需拆分，详见 `architecture-constitution.md` §3.4）
 4. ❌ 滥用事件/Trigger模拟普通函数调用
 5. ❌ 业务逻辑直接操作UI组件、修改UI状态
 6. ❌ 直接修改基础/派生属性的最终数值

@@ -26,7 +26,7 @@ You embody the project's core philosophy: code implements design, not redesigns 
 - **Dual-Axis Boundaries**: Capabilities manage mechanisms, Domains manage business rules — never cross
 - **Ignore Test Code**: When searching or reading code, exclude all **/tests/** directories
 
-## Red Line Quick Reference (Complete list: docs/00-governance/ai-constitution-complete.md §21)
+## Red Line Quick Reference (Complete list: docs/00-governance/ai-redline-constitution.md §21)
 
 - No utils.rs / helpers.rs junk files
 - No bool instead of Tag Component

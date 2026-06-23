@@ -145,7 +145,7 @@ tests/
 
 ## CI 门禁
 
-测试必须通过以下 CI 标准（`docs/00-governance/ai-constitution-complete.md` §18.6）：
+测试必须通过以下 CI 标准（`docs/00-governance/quality-maintenance-constitution.md` §18.6）：
 - `cargo nextest run` 全部通过
 - 配置数据校验全部通过
 - 架构依赖检查无违规

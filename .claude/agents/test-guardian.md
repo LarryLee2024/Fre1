@@ -141,7 +141,7 @@ All tests MUST be deterministic:
 
 ## CI Standards
 
-Tests must pass these CI gates (docs/00-governance/ai-constitution-complete.md §18.6):
+Tests must pass these CI gates (docs/00-governance/quality-maintenance-constitution.md §18.6):
 - `cargo nextest run` — all pass
 - Configuration data validation — all pass
 - Architecture dependency check — no violations

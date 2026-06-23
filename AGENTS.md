@@ -350,7 +350,7 @@ Implementation second.
 <!-- THINKING_END -->
 
 ## Core References
-1. `docs/00-governance/ai-constitution-complete.md` — 项目总宪法 v5.0
+1. `docs/00-governance/ai-constitution-complete.md` — 项目总宪法 v5.3（总纲，22编拆分版）
 2. `docs/01-architecture/README.md` — 架构总纲 + ADR 索引
 3. `docs/02-domain/README.md` — 领域规则索引
 4. `docs/03-content/README.md` — 内容架构索引（Def Schema / Registry / Validation）

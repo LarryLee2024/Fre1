@@ -130,7 +130,7 @@ Proposed / Accepted / Rejected / Superseded
 - 🟥 Domain 间直接依赖（写走 Event，读走 Query API）
 - 🟥 Domain 绕过 integration/ 直接调用 Capabilities 内部
 - 🟥 硬编码数值、全局 AppError、非确定性随机源
-- 🟥 红线清单详见 docs/00-governance/ai-constitution-complete.md §21
+- 🟥 红线清单详见 docs/00-governance/ai-redline-constitution.md §21
 
 ## Definition / Instance Design
 - Definition（不可变配置）：[列出 Def 类型]

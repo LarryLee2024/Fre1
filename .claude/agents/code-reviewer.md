@@ -148,7 +148,7 @@ If FAIL:
 
 ## Red Lines to Watch (Reference)
 
-Full red lines in docs/00-governance/ai-constitution-complete.md §21. Key focus:
+Full red lines in docs/00-governance/ai-redline-constitution.md §21. Key focus:
 - No bool instead of Tag
 - No Entity OOP
 - No non-deterministic randomness

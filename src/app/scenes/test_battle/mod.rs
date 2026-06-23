@@ -19,6 +19,12 @@ use crate::shared::game_state::GameState;
 
 use self::render::{attach_unit_visuals, spawn_grid_background};
 use self::spawn::{load_test_battle_scenario, spawn_test_battle};
+use crate::core::domains::combat::pipeline::driver::CombatPipelineDriver;
+
+/// 系统：诊断 OnEnter(GameState::Combat) 是否触发
+fn debug_on_enter_combat() {
+    tracing::warn!(target: "app", "[DEBUG] OnEnter(GameState::Combat) executed!");
+}
 
 /// 系统：移动镜头到战斗场景初始位置
 ///
@@ -29,6 +35,14 @@ fn spawn_camera_for_battle(mut commands: Commands) {
         target: CameraTarget::WorldPos(Vec2::new(240.0, 240.0)),
         duration: 0.0,
     });
+}
+
+/// 系统：启动战斗管线 Driver
+///
+/// 在 spawn_test_battle 初始化 Driver 后调用 start_turn() 解除暂停状态，
+/// 使 combat_pipeline_driver 系统能够执行 turn_start 步骤，触发 OnTurnStart 事件。
+fn start_combat_pipeline(mut driver: ResMut<CombatPipelineDriver>) {
+    driver.start_turn();
 }
 
 /// 测试战斗场景 Plugin
@@ -45,12 +59,14 @@ impl Plugin for TestBattlePlugin {
         // 启动时加载配置文件
         app.add_systems(Startup, load_test_battle_scenario);
 
-        // 进入战斗场景时：先生成实体，再附加视觉效果（.chain() 确保 flush）
+        // 进入战斗场景时：先生成实体，再启动管线，最后附加视觉效果（.chain() 确保 flush）
         app.add_systems(
             OnEnter(GameState::Combat),
             (
+                debug_on_enter_combat,
                 (
                     spawn_test_battle,
+                    start_combat_pipeline,
                     spawn_camera_for_battle,
                     spawn_grid_background,
                 ),

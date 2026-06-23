@@ -648,7 +648,7 @@ AbilityDef (
 | Identity Invariant 13 条铁律 | ✅ 完整 | 定义在 id-taxonomy.md §10 |
 | 五类 ID 分类（Template/Runtime/Save/Entity/Network） | ✅ 完整 | id-taxonomy.md §2-§7 |
 | 验证清单（18 项） | ✅ 完整 | id-taxonomy.md §11 |
-| 宪法 Domain 层 Entity 限制 | ✅ 落地 | ai-constitution-complete.md §6.1 + §19.1 |
+| 宪法 Domain 层 Entity 限制 | ✅ 落地 | ecs-constitution.md §6.1 + architecture-governance.md §19 |
 | 编码规则 Domain 层 Entity 限制 | ✅ 落地 | coding-rules.md §3 |
 | ECS 规则 Domain 层 Entity 限制 | ✅ 落地 | .trae/rules/ECS规则.md §1.1 + 速查第 2 条 |
 | 编码规则 .trae Domain 层 Entity 限制 | ✅ 落地 | .trae/rules/编码规则.md |

@@ -224,17 +224,16 @@ pub fn on_unit_selected_follow(
 pub fn on_unit_selected_highlight(
     trigger: On<UnitClicked>,
     mut sprites: Query<&mut Sprite>,
-    unit_ids: Query<(Entity, &UnitIdComponent)>,
-    participants: Query<&CombatParticipant>,
+    unit_ids: Query<(Entity, &UnitIdComponent, &CombatParticipant)>,
 ) {
     let unit_id = &trigger.event().unit_id;
 
-    for (entity, uid) in &unit_ids {
+    for (entity, uid, participant) in &unit_ids {
         if let Ok(mut sprite) = sprites.get_mut(entity) {
             if uid.id == *unit_id {
                 // 选中单位 → 青色高亮
                 sprite.color = SELECTED_COLOR;
-            } else if let Ok(participant) = participants.get(entity) {
+            } else {
                 // 其他单位 → 恢复队伍色
                 sprite.color = match participant.team_id.as_str() {
                     "Player" => PLAYER_COLOR,
@@ -250,18 +249,15 @@ pub fn on_unit_selected_highlight(
 pub fn on_selection_cleared_highlight(
     _trigger: On<SelectionCleared>,
     mut sprites: Query<&mut Sprite>,
-    unit_ids: Query<(Entity, &UnitIdComponent)>,
-    participants: Query<&CombatParticipant>,
+    unit_ids: Query<(Entity, &UnitIdComponent, &CombatParticipant)>,
 ) {
-    for (entity, _) in &unit_ids {
+    for (entity, _, participant) in &unit_ids {
         if let Ok(mut sprite) = sprites.get_mut(entity) {
-            if let Ok(participant) = participants.get(entity) {
-                sprite.color = match participant.team_id.as_str() {
-                    "Player" => PLAYER_COLOR,
-                    "Enemy" => ENEMY_COLOR,
-                    _ => NEUTRAL_COLOR,
-                };
-            }
+            sprite.color = match participant.team_id.as_str() {
+                "Player" => PLAYER_COLOR,
+                "Enemy" => ENEMY_COLOR,
+                _ => NEUTRAL_COLOR,
+            };
         }
     }
 }

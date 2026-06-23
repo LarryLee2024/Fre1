@@ -24,7 +24,8 @@ bevy = { version = "0.19", features = [
     # 相机
     "bevy_camera_controller", # 官方相机控制器
 ] }
-serde = { version = "1.0", features = ["derive"] }
+bevy-inspector-egui = "0.37.0"
+serde = { version = "1.0.220", features = ["derive"] }
 ron = "0.12.1"
 thiserror = "2"
 serde_json = "1"

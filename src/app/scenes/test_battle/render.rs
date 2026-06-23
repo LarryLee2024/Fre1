@@ -78,6 +78,11 @@ pub fn attach_unit_visuals(
     >,
     mut images: ResMut<Assets<Image>>,
 ) {
+    tracing::warn!(target: "app",
+        "[AttachVisuals] Running — query count={}",
+        unit_query.iter().count(),
+    );
+
     let white = create_white_texture(&mut images);
 
     for (entity, pos, participant, _hp, uid) in unit_query.iter() {
@@ -105,9 +110,9 @@ pub fn attach_unit_visuals(
             Pickable::default(),
         ));
 
-        tracing::trace!(target: "app",
-            "Attached visual for unit {} at ({}, {}) — entity={:?}",
-            uid.id, pos.x, pos.y, entity,
+        tracing::warn!(target: "app",
+            "[UnitVisual] Spawned unit '{}' — entity={:?} color={:?} at grid=({},{}) world=({:.1},{:.1})",
+            uid.id, entity, color, pos.x, pos.y, x, y,
         );
     }
 }

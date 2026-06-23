@@ -144,7 +144,7 @@ tools:
 不了解架构边界就无法判断"双轴边界突破"等技术债。扫描前必须阅读：
 - `docs/01-architecture/` — 了解架构边界和双轴规则
 - `docs/02-domain/` — 了解领域规则和不变量
-- `docs/00-governance/ai-constitution-complete.md` §21 — 红线清单
+- `docs/00-governance/ai-redline-constitution.md` §21 — 红线清单
 
 **项目阶段感知**：当前项目处于早期（Capabilities 已建、Domain 刚启动），Dead Code 警告中大部分是"预留"性质（Capabilities 为未来 Domain 准备的类型），不构成技术债。只有明确无引用且无预留价值的代码才标记为 Medium。避免将架构演进路径上的正常状态误报为技术债。
 
@@ -226,7 +226,7 @@ grep -rn "^use crate::" src/ | sort
 - **Medium**：应当改进（如 1000-1500 行文件、小规模重复、过大 Plugin、Observer 无测试、Content Debt）
 - **Low**：可选优化（如命名不一致、注释缺失、mod.rs 缺注释）
 
-> 完整红线见 `docs/00-governance/ai-constitution-complete.md` §21
+> 完整红线见 `docs/00-governance/ai-redline-constitution.md` §21
 
 ### 4. 提供优先级建议
 

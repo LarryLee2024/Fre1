@@ -46,7 +46,14 @@ app/ | content/ | tools/ | modding/  # 横切层，可依赖纵向层
 ## Key References
 | 文档 | 作用 | 什么时候读 |
 |------|------|-----------|
-| `docs/00-governance/ai-constitution-complete.md` | 总宪法 21 编，最高约束力 | 全局规则确认 |
+| `docs/00-governance/ai-constitution-complete.md` | 总宪法总纲 v5.3（22编拆分版），最高约束力 | 全局规则确认、P0铁则 |
+| `docs/01-architecture/architecture-constitution.md` | 架构体系 + 双轴架构 + Plugin 边界 | 架构决策、模块边界划分 |
+| `docs/02-domain/ecs-constitution.md` | ECS 宪法（通信/执行模型） | ECS 规则、通信机制 |
+| `docs/02-domain/srpg-systems-constitution.md` | SRPG 核心系统专项宪法 | 战斗/属性/技能/Buff/Camera |
+| `docs/06-ui/ui-constitution.md` | UI 系统宪法 | UI/Screen/Widget/Factory |
+| `docs/00-governance/ai-redline-constitution.md` | AI 执行规范 + 红线 + L10n | AI 生成前必读、禁止事项 |
+| `docs/00-governance/coding-constitution.md` | 代码组织与编写规范 | 编码规则、Trait、宏、TODO |
+| `docs/00-governance/observability-constitution.md` | 可观测性宪法 | 日志、错误、调试 |
 | `docs/01-architecture/README.md` | 架构总纲 + ADR 索引 | 架构决策、模块边界划分 |
 | `docs/02-domain/README.md` | Capabilities 15 + Domains 15 领域规则索引 | 领域建模、业务规则 |
 | `docs/03-content/README.md` | 内容架构（Def Schema / Registry / Validation） | Def Schema、配置定义 |

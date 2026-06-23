@@ -209,9 +209,9 @@ tags:
 
 | 规则 | 阈值 | 来源 |
 |------|------|------|
-| max_depth <= 6 | 6 | ai-constitution-complete.md §18.2 |
-| max_children <= 20 | 20 | ai-constitution-complete.md §18.3 |
-| interactive_count / widget_count >= 0.2 | 20% | ai-constitution-complete.md §18.4 |
+| max_depth <= 6 | 6 | quality-maintenance-constitution.md §18.2 |
+| max_children <= 20 | 20 | quality-maintenance-constitution.md §18.3 |
+| interactive_count / widget_count >= 0.2 | 20% | quality-maintenance-constitution.md §18.4 |
 
 ### 4.2 当前基线状态
 
@@ -258,7 +258,7 @@ budget_headroom:
 
 ## 附录 A: 与宪法第十八编的关系
 
-宪法第十八编 `ai-constitution-complete.md §18 (UI Complexity Budget)` 定义了以下规则：
+宪法第十八编 `quality-maintenance-constitution.md §18 (UI Complexity Budget)` 定义了以下规则：
 
 | 条款 | 内容 | 本基线跟踪 |
 |------|------|-----------|

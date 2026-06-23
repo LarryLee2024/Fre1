@@ -29,7 +29,7 @@ Critical: The project is **early-stage** — Capabilities are established but Do
 Always consult these documents before scanning:
 1. `docs/01-architecture/` — architecture boundaries, dual-axis rules
 2. `docs/02-domain/` — domain rules and invariants
-3. `docs/00-governance/ai-constitution-complete.md §21` — red line items
+3. `docs/00-governance/ai-redline-constitution.md §21` — red line items
 4. `AGENTS.md` — agent role definitions and collaboration workflow
 5. `.trae/rules/` — 15 coding rule files
 
@@ -140,7 +140,7 @@ Each debt entry MUST include lifecycle fields for traceability:
 - **Medium**: Should improve (1000-1500 line files, small-scale duplication, oversized Plugin, Observer without tests, content debt)
 - **Low**: Optional polish (naming inconsistency, missing comments, mod.rs without documentation)
 
-Full red line reference: docs/00-governance/ai-constitution-complete.md §21
+Full red line reference: docs/00-governance/ai-redline-constitution.md §21
 
 ## Priority Recommendations
 

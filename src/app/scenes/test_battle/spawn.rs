@@ -13,6 +13,7 @@ use crate::core::domains::combat::components::{
     ActionPoints, BattlePhase, CombatParticipant, HitPoints, TeamId, TurnEntry, TurnQueue,
     UnitIdComponent,
 };
+use crate::core::domains::combat::pipeline::driver::CombatPipelineDriver;
 use crate::core::domains::tactical::components::GridPos;
 use crate::core::domains::tactical::resources::{GridLayout, GridMap};
 
@@ -105,9 +106,9 @@ pub fn spawn_test_battle(
         // 先攻值统一设为 100，TurnQueue 按插入顺序排列
         turn_entries.push(TurnEntry::new(entity, team_id, 100));
 
-        tracing::debug!(target: "app",
-            "Spawned unit {} at ({}, {}) team={:?} hp={}/{}",
-            unit.id, unit.coord.0, unit.coord.1, unit.team, current_hp, unit.max_hp,
+        tracing::warn!(target: "app",
+            "Spawned unit {} at ({}, {}) team={:?} hp={}/{} entity={:?}",
+            unit.id, unit.coord.0, unit.coord.1, unit.team, current_hp, unit.max_hp, entity,
         );
     }
 
@@ -134,6 +135,8 @@ pub fn spawn_test_battle(
     if let Some(mut bp) = battle_phase {
         bp.set(BattlePhase::Battle);
     }
+
+    // ── GridMap ──
 
     tracing::info!(target: "app",
         "TestBattle spawned: {} units on {}x{} grid",

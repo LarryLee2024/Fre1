@@ -17,7 +17,7 @@ tools: Read, Grep, Glob, Write
 - **双轴架构**：Core 层由 Capabilities（15个通用机制）和 Domains（15个业务域）组成
 - **数据流**：Domain 通过 `integration/` 模块统一调用 Capabilities（Facade + SystemParam），数据 Schema 应与此数据流对齐
 - **双轨通信**：Domain 间写操作走 Event，读操作走 Query API — Schema 设计需考虑此模式对数据流的影响
-- **红线速查**：禁止硬编码数值、禁止非确定性随机源、禁止全局 AppError（详见 `docs/00-governance/ai-constitution-complete.md` §21）
+- **红线速查**：禁止硬编码数值、禁止非确定性随机源、禁止全局 AppError（详见 `docs/00-governance/ai-redline-constitution.md` §21）
 
 ## 核心职责
 

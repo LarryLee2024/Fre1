@@ -26,7 +26,7 @@ tools:
 
 ## 红线速查
 
-完整红线见 `docs/00-governance/ai-constitution-complete.md` §21，重点：
+完整红线见 `docs/00-governance/ai-redline-constitution.md` §21，重点：
 - 禁止 utils.rs/helpers.rs 垃圾桶文件
 - 禁止 bool 代替 Tag Component
 - 禁止 Entity 上调方法（OOP 模式）

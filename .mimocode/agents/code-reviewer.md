@@ -149,7 +149,7 @@ PASS / FAIL（有 Critical 问题必须 FAIL）
 
 ## 参考红线
 
-完整红线见 `docs/00-governance/ai-constitution-complete.md` §21，审查时重点检查：
+完整红线见 `docs/00-governance/ai-redline-constitution.md` §21，审查时重点检查：
 - 禁止 bool 代替 Tag、禁止 Entity OOP、禁止非确定性随机
 - 禁止 UI 持有真相、禁止直接改属性值、禁止全局 AppError
 - 禁止 unwrap/panic、禁止硬编码数值、禁止 Domain 间直接依赖
