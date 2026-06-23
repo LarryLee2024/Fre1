@@ -8,14 +8,12 @@
 09-planning/
 ├── README.md                               # 本文件
 ├── playable-combat-loop.md                 # 可玩的战斗循环（活跃规划）
-└── done/                                   # 已完成归档（共 44 份）
+└── done/                                   # 已完成归档（共 45 份）
 ```
 
 ## 活跃规划
 
-| 文档 | 状态 | 负责人 | 创建日期 |
-|------|------|--------|----------|
-| `playable-combat-loop.md` | draft | architect | 2026-06-23 | 闭合战斗循环：简单敌方 AI + Result/GameOver 屏幕 + 游戏状态转换 + 集成测试 |
+当前无活跃规划。所有文档已完成归档（共 45 份）。
 
 ---
 
@@ -23,6 +21,7 @@
 
 | 文档 | 完成日期 | 说明 |
 |------|----------|------|
+| `playable-combat-loop.md` | 2026-06-23 | Playable Combat Loop — 简单敌方 AI (driver.rs) / Result/GameOver 屏幕 / BattleEnded→状态转换 / 3 个集成测试全绿 — 含 damage_policy 减免计算 bug 修复 |
 | `ui-layout-system-plan.md` | 2026-06-23 | Combat HUD Zone Layout — 全 7 区 Absolute 定位 / UiSizing Resource / Visibility 矩阵 / TurnIndicator / SkillPanel 切换 / 目标选择模式 — P0+P1 共 10 项全部实现，P2 响应式/动画已 Defer |
 | `map-content-pipeline-plan.md` | 2026-06-22 | Map 内容管线架构（Tiled/MapAsset/Importer/Renderer — ADR→内容定义→Schema→UI→代码→宪法） |
 | `camera-architecture-plan.md` | 2026-06-22 | Camera 架构补充（ADR → 领域规则 → Schema → UI交互 → 代码实现 → 宪法） |

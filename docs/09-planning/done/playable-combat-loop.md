@@ -1,7 +1,8 @@
 ---
 id: 09-planning.playable-combat-loop
 title: Playable Combat Loop — 可玩的战斗循环
-status: actived
+status: completed
+completed: 2026-06-23
 owner: architect
 created: 2026-06-23
 tags:

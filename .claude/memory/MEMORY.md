@@ -34,6 +34,7 @@
 - [planning-docs-fully-archived](project-planning-docs-fully-archived.md) — docs/09-planning/ 全部 44 份文档已归档（含 ui-layout-system-plan P0+P1 完成）
 - [targeting-mode-impl](project-targeting-mode-impl.md) — 目标选择模式子状态机（PickContext + BattleHudVm.targeting_mode）
 - [open-menu-esc-bridge](project-open-menu-esc-bridge.md) — ESC→Settings 桥接（GameCommand::OpenMenu → UiCommand::OpenScreen）
+- [playable-combat-loop](project-playable-combat-loop.md) — 可玩战斗循环完成：敌方AI + 胜负转换 + 3集成测试全绿 + damage_policy bug修复
 
 ## decision
 <!-- key architectural decisions -->
