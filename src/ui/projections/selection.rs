@@ -79,6 +79,10 @@ pub fn on_unit_clicked_projection(
     store.battle_hud.ap = 1.0;
     store.battle_hud.max_ap = 1.0;
 
+    // ── 自动打开 SkillPanel ──
+    // 选中单位时显示其技能面板，方便玩家查看和使用技能。
+    store.battle_hud.skill_panel_open = true;
+
     // ── 更新 SkillPanelVm──
     // 为选中单位填充默认技能。后续由 domain SkillSlots 组件驱动。
     let mut skills = std::collections::HashMap::new();
@@ -143,13 +147,25 @@ pub fn on_unit_clicked_projection(
     );
 }
 
-/// Observer：监听 `SelectionCleared` 事件，重置行动菜单状态。
+/// Observer：监听 `SelectionCleared` 事件，重置行动菜单状态，
+/// 并清除当前单位 ID 以隐藏 CharacterCard（Z5）。
 pub fn on_selection_cleared_projection(
     _trigger: On<SelectionCleared>,
+    mut store: ResMut<UiStore>,
     mut action_menu_query: Query<&mut ActionMenuState>,
+    mut dirty_query: Query<&mut Dirty<BattleHudVm>>,
 ) {
+    // 清除当前单位 ID → Z5 CharacterCard 隐藏
+    store.battle_hud.current_unit_id = 0;
+    // 清除选中 → Z7 SkillPanel 隐藏
+    store.battle_hud.skill_panel_open = false;
+
     for mut menu in action_menu_query.iter_mut() {
         menu.actions.iter_mut().for_each(|a| a.enabled = true);
+    }
+
+    for mut dirty in dirty_query.iter_mut() {
+        dirty.mark_dirty();
     }
 }
 

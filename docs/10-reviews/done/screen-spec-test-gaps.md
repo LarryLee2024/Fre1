@@ -1,9 +1,10 @@
 ---
 id: 10-reviews.screen-spec-test-gaps
 title: Screen Spec 测试差距分析
-status: draft
+status: approved
 owner: test-guardian
 created: 2026-06-22
+updated: 2026-06-23
 tags:
   - testing
   - ui

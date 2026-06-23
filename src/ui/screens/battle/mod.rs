@@ -24,18 +24,16 @@ pub mod visibility;
 
 use bevy::prelude::*;
 
+use crate::infra::localization::LocalizedText;
 use crate::infra::localization::generated::loc;
 use crate::ui::binding::{Dirty, UiBinding};
-use crate::ui::localization::text_keys::BATTLE_PHASE_PLAYER;
+use crate::ui::localization::text_keys::{BATTLE_PHASE_PLAYER, BATTLE_TURN_NUMBER};
 use crate::ui::primitives::button::{components::ButtonVariant, factory::spawn_localized_button};
 // 注意: 根节点直接 spawn 而非通过 spawn_panel，因为根不需要背景色。
 // PanelVariant::Basic 使用不透明的 surface_primary 背景色，
 // 会遮挡底层的 2D 精灵（棋盘网格 + 棋子）。
 // 各 Zone 容器有各自的 Panel/背景，根只需做布局容器。
-use crate::ui::primitives::text::{
-    components::TextVariant,
-    factory::{spawn_localized_text, spawn_text},
-};
+use crate::ui::primitives::text::{components::TextVariant, factory::spawn_localized_text};
 use crate::ui::theme::Theme;
 use crate::ui::widgets::action_menu::factory::spawn_action_menu;
 use crate::ui::widgets::character_card::factory::spawn_character_card;
@@ -53,6 +51,29 @@ use systems::BattleAction;
 /// 用于场景管理清理（离开战斗界面时销毁所有携带此组件的实体）。
 #[derive(Component, Debug, Clone, PartialEq, Eq, Reflect)]
 pub struct BattleScreen;
+
+/// PhaseTextLabel — Z2 阶段文本标识组件
+///
+/// 用于 `on_battle_ended_projection` 在战斗结束时动态更新其
+/// LocalizedText key 以显示胜利/失败结果文本。
+#[derive(Component, Debug, Clone, PartialEq, Eq, Reflect)]
+pub struct PhaseTextLabel;
+
+/// TurnNumberLabel — Z1 回合数文本标识组件
+///
+/// 用于 `on_turn_started_projection` 在回合切换时更新
+/// LocalizedText 参数（{$number}）以显示当前回合数。
+#[derive(Component, Debug, Clone, PartialEq, Eq, Reflect)]
+pub struct TurnNumberLabel;
+
+/// SkillPanelToggle — Z7 技能面板可见性切换标识组件
+///
+/// 用于 `skill_panel_visibility_system` 在运行时根据
+/// BattleHudVm.skill_panel_open 切换技能面板的可见性。
+/// 技能面板独立于 Z7 容器可见性控制，允许在 Z7 可见（玩家回合）
+/// 时单独隐藏/显示技能面板。
+#[derive(Component, Debug, Clone, PartialEq, Eq, Reflect)]
+pub struct SkillPanelToggle;
 
 /// 启动系统：生成战斗界面（9-zone 布局）
 ///
@@ -82,17 +103,22 @@ pub fn spawn_battle_screen(
         ))
         .id();
 
-    // ── Z1: 左上区 — 回合指示器 ──
+    // ── Z1: 左上区 — 回合指示器（TurnNumberLabel）──
     let z1 = spawn_zone(&mut commands, &theme, BattleZone::Z1TopLeft);
     commands.entity(z1).set_parent_in_place(root);
     let turn_info = spawn_localized_text(
         &mut commands,
         &asset_server,
         &theme,
-        "ui.battle.turn_bar",
-        "-- / ----",
+        BATTLE_TURN_NUMBER,
+        "Turn 1",
         TextVariant::Body,
     );
+    commands.entity(turn_info).insert((
+        LocalizedText::with_params(BATTLE_TURN_NUMBER, vec![("number", "1".to_string())]),
+        TurnNumberLabel,
+        Name::new("TurnIndicator"),
+    ));
     commands.entity(turn_info).set_parent_in_place(z1);
 
     // ── Z2: 中上区 — 阶段文本 + 回合数 ──
@@ -107,16 +133,8 @@ pub fn spawn_battle_screen(
         "Player Phase",
         TextVariant::Body,
     );
+    commands.entity(phase_text).insert(PhaseTextLabel);
     commands.entity(phase_text).set_parent_in_place(z2);
-
-    let turn_text = spawn_text(
-        &mut commands,
-        &asset_server,
-        &theme,
-        "Turn 1",
-        TextVariant::Body,
-    );
-    commands.entity(turn_text).set_parent_in_place(z2);
 
     // ── Z3: 右上区 — 单位摘要 ──
     let z3 = spawn_zone(&mut commands, &theme, BattleZone::Z3TopRight);
@@ -161,6 +179,7 @@ pub fn spawn_battle_screen(
 
     // 技能面板（包含攻击、火球术、治疗三个技能槽位）
     let skill_panel = spawn_skill_panel(&mut commands, &asset_server, &theme);
+    commands.entity(skill_panel).insert(SkillPanelToggle);
     commands.entity(skill_panel).set_parent_in_place(z7);
 
     // 结束回合按钮

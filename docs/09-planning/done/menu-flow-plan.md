@@ -1,11 +1,11 @@
 ---
 id: 09-planning.menu-flow
 title: 游戏菜单流程规划 — ScreenType/GameState 路由与导航
-status: draft
+status: approved
 owner: presentation-architect
 created: 2026-06-21
-updated: 2026-06-22
-review: P0 3/4 完成（ESC→Settings 未实现），P1/P2 场景为桩，继续活跃开发
+updated: 2026-06-23
+review: P0 4/4 完成（ESC→Settings 已实现 2026-06-23），P1/P2 场景为桩，规划已批准
 tags:
   - ui
   - navigation

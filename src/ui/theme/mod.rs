@@ -8,12 +8,14 @@
 
 pub mod colors;
 pub mod resource;
+pub mod sizing;
 pub mod spacing;
 pub mod switch;
 pub mod typography;
 
 pub use colors::UiColors;
 pub use resource::Theme;
+pub use sizing::UiSizing;
 pub use spacing::UiSpacing;
 pub use switch::ThemeVariant;
 pub use typography::UiTypography;
@@ -30,6 +32,7 @@ impl Plugin for ThemePlugin {
 
         // 注册所有主题类型以支持反射
         app.register_type::<UiColors>();
+        app.register_type::<UiSizing>();
         app.register_type::<UiSpacing>();
         app.register_type::<UiTypography>();
     }

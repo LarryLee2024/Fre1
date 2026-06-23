@@ -19,6 +19,8 @@
 -ui-battle-move = Move
 -ui-battle-phase-player = Player Phase
 -ui-battle-phase-enemy = Enemy Phase
+-ui-battle-phase-victory = Victory!
+-ui-battle-phase-defeat = Defeat
 -ui-battle-turn-number = Turn {$number}
 -ui-hp = HP
 -ui-mp = MP

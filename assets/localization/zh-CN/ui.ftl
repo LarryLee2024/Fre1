@@ -20,6 +20,8 @@
 -ui-battle-move = 移动
 -ui-battle-phase-player = 玩家回合
 -ui-battle-phase-enemy = 敌方回合
+-ui-battle-phase-victory = 胜利！
+-ui-battle-phase-defeat = 失败
 -ui-battle-turn-number = 第 {$number} 回合
 -ui-hp = 生命
 -ui-mp = 魔力

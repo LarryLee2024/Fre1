@@ -7,19 +7,15 @@
 ```
 09-planning/
 ├── README.md                               # 本文件
-├── 21-rust-features-update-plan.md         # 21个Rust特性吸收 — 项目文档全面更新
-├── menu-flow-plan.md                       # 游戏菜单流程 — ScreenType/GameState 路由与导航
 ├── ui-layout-system-plan.md                # Combat HUD Zone Layout 布局系统
-└── done/                                   # 已完成归档
+└── done/                                   # 已完成归档（共 43 份）
 ```
 
 ## 活跃规划
 
 | 文档 | 状态 | 负责人 | 创建日期 |
 |------|------|--------|----------|
-| `21-rust-features-update-plan.md` | ✅ complete | architect | 2026-06-21 | 21个Rust特性吸收 — 宪法冲突修复 + 规则文件更新（Phase 0+D 完成，Phase C Deferred） |
-| `menu-flow-plan.md` | draft | presentation-architect | 2026-06-22 | 游戏菜单流程规划 — ScreenType/GameState 路由与导航 |
-| `ui-layout-system-plan.md` | partial | presentation-architect | 2026-06-21 | Combat HUD Zone Layout — Zone 重构 ✓ / Widget 移植 ✓ / EndTurn 动作链 ✓ / UiSizing 资源 ❌ / Visibility 矩阵 ⚠️ 骨架 |
+| `ui-layout-system-plan.md` | partial | presentation-architect | 2026-06-21 | Combat HUD Zone Layout — Zone 重构 ✓ / Widget 移植 ✓ / EndTurn 动作链 ✓ / UiSizing 资源 ✅ / Visibility 矩阵 ✅ (含 Victory/Defeat) / Z5 选中守卫 ✅ / TurnIndicator Widget ✅ / SkillPanel 切换 ✅ / 目标选择模式 ✅ (Attack→目标→确认) — 剩余 P2 项已 Deferred (响应式布局、动画等) |
 
 ---
 
@@ -68,6 +64,8 @@
 
 | 文档 | 完成日期 | 说明 |
 |------|----------|------|
+| `menu-flow-plan.md` | 2026-06-23 | 游戏菜单流程规划 — P0 4/4 完成（ESC→Settings 实现），规划已批准 |
+| `21-rust-features-update-plan.md` | 2026-06-23 | 21个Rust特性吸收 — Phase 0+D ✓，Phase C 4项 Deferred |
 | `localization-implementation-plan.md` | 2026-06-19 | Localization 基础设施实施 |
 | `phase-e-game-flow-execution.md` | 2026-06-25 | Phase E 游戏流程集成 |
 | `logging-architecture-plan.md` | 2026-06-26 | 日志架构实施 |

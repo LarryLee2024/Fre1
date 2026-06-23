@@ -14,6 +14,19 @@
 
 use bevy::prelude::*;
 
+/// 目标选择模式
+///
+/// 定义玩家当前处于何种目标选择状态。
+/// None 为非选择模式，Attack 为攻击目标选择模式。
+#[derive(Clone, Copy, PartialEq, Reflect, Default)]
+pub enum TargetingMode {
+    /// 非目标选择模式
+    #[default]
+    None,
+    /// 攻击目标选择模式
+    Attack,
+}
+
 /// 战斗 HUD 视图模型
 #[derive(Clone, Reflect, Default)]
 pub struct BattleHudVm {
@@ -41,6 +54,22 @@ pub struct BattleHudVm {
     /// 是否处于战斗阶段 (BattlePhase::Battle)
     /// 用于控制战斗区域可见性
     pub is_in_battle: bool,
+    /// 战斗是否已结束（胜负判定完成）
+    /// 为 true 时，仅 Z2 显示结果文本，其余区域隐藏
+    pub is_game_over: bool,
+    /// 战斗结果文本（本地化 Key）
+    /// 仅在 is_game_over 为 true 时有效
+    pub result_key: &'static str,
+    /// 技能面板是否打开
+    ///
+    /// 控制 Z7 内 SkillPanel 的可见性。当选中一个单位时自动为 true，
+    /// 清除选择时自动为 false。未来由 ActionMenu.Skill 按钮精确控制。
+    pub skill_panel_open: bool,
+    /// 当前目标选择模式
+    ///
+    /// None 为非选择模式，Attack 为攻击目标选择模式。
+    /// 由 ActionMenu Attack 按钮控制进入，确认或取消时退出。
+    pub targeting_mode: TargetingMode,
 }
 
 /// 战斗 HUD 临时数据源

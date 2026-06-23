@@ -19,6 +19,8 @@
 -ui-battle-move = [XXXXX]
 -ui-battle-phase-player = [XXXXXXXXXXXX]
 -ui-battle-phase-enemy = [XXXXXXXXXXX]
+-ui-battle-phase-victory = [XXXXXXX]
+-ui-battle-phase-defeat = [XXXXXX]
 -ui-battle-turn-number = [XXXXXXXXXXXX]
 -ui-hp = [XXXXX]
 -ui-mp = [XXXXX]

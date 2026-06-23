@@ -22,15 +22,16 @@ use super::overlay::OverlayPlugin;
 use super::picking::PickingUiPlugin;
 use super::primitives::PrimitivesPlugin;
 use super::projections::battle::{
-    on_battle_started_projection, on_character_panel_projection, on_damage_dealt_projection,
-    on_effect_applied_projection, on_turn_ended_projection, on_turn_started_projection,
-    on_turn_started_skill_projection, on_unit_died_projection,
+    on_battle_ended_projection, on_battle_started_projection, on_character_panel_projection,
+    on_damage_dealt_projection, on_effect_applied_projection, on_turn_ended_projection,
+    on_turn_started_projection, on_turn_started_skill_projection, on_unit_died_projection,
 };
 use super::projections::economy::on_currency_changed_projection;
 use super::screens::ScreenPlugin;
 use super::selection::SelectionPlugin;
 use super::settings::{UiSettings, load_settings};
 use super::theme::ThemePlugin;
+use super::theme::sizing::UiSizing;
 use super::view_models::{
     UiStore, battle_hud::BattleHudVm, character_panel::CharacterPanelVm, economy::EconomyVm,
     inventory::InventoryVm, shop::ShopPanelVm, skill_panel::SkillPanelVm,
@@ -67,6 +68,7 @@ impl Plugin for UiPlugin {
 
         // 1. Theme — 必须在所有 UI 组件之前注册
         app.add_plugins(ThemePlugin);
+        app.init_resource::<UiSizing>();
         // 2. Focus — 键盘/手柄焦点导航系统
         app.add_plugins(FocusPlugin);
         // 3. Primitives — 基础 UI 原语
@@ -91,6 +93,9 @@ impl Plugin for UiPlugin {
         app.add_observer(on_turn_started_skill_projection);
         app.add_observer(on_damage_dealt_projection);
         app.add_observer(on_unit_died_projection);
+
+        // BattleEnd — 战斗结束投影（隐藏 UI 区域，显示胜负文本）
+        app.add_observer(on_battle_ended_projection);
 
         // Economy — 金币变更投影
         app.add_observer(on_currency_changed_projection);

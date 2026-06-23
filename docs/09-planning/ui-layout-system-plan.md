@@ -4,7 +4,7 @@ title: UI Layout Architecture Plan -- Combat HUD Zones, Widget Sizing, Action Ch
 status: partial
 owner: presentation-architect
 created: 2026-06-21
-updated: 2026-06-21
+updated: 2026-06-23
 tags:
   - ui
   - layout

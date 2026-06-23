@@ -19,6 +19,8 @@
 -ui-battle-move = 移動
 -ui-battle-phase-player = プレイヤーフェイズ
 -ui-battle-phase-enemy = エネミーフェイズ
+-ui-battle-phase-victory = 勝利！
+-ui-battle-phase-defeat = 敗北
 -ui-battle-turn-number = {$number} ターン
 -ui-hp = HP
 -ui-mp = MP

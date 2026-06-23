@@ -16,12 +16,18 @@ use bevy::ecs::observer::On;
 use bevy::prelude::*;
 
 use crate::core::capabilities::effect::events::EffectApplied;
-use crate::core::domains::combat::{ActionPoints, DamageDealt, HitPoints, UnitDied};
+use crate::core::domains::combat::{
+    ActionPoints, BattleResult, DamageDealt, HitPoints, OnBattleEnd, UnitDied,
+};
 use crate::core::events::{BattleStarted, TurnEnded, TurnStarted};
 use crate::ui::binding::Dirty;
+use crate::ui::localization::text_keys::{BATTLE_PHASE_DEFEAT, BATTLE_PHASE_VICTORY};
+use crate::ui::screens::battle::{PhaseTextLabel, TurnNumberLabel};
 use crate::ui::view_models::{
     UiStore, battle_hud::BattleHudVm, character_panel::CharacterPanelVm, skill_panel::SkillPanelVm,
 };
+
+use crate::infra::localization::LocalizedText;
 
 // ─── 纯投影函数 ─────────────────────────────────────────────────────────
 
@@ -115,6 +121,30 @@ impl BattleProjection {
             }
         }
     }
+
+    /// 将 `OnBattleEnd` 事件投影到 `UiStore.battle_hud`。
+    ///
+    /// 设置 is_game_over = true，根据胜负设置 phase_key 和 result_key。
+    pub fn on_battle_ended(store: &mut UiStore, event: &OnBattleEnd) {
+        let hud = &mut store.battle_hud;
+        hud.is_game_over = true;
+        match event.result {
+            BattleResult::Victory => {
+                hud.phase_key = BATTLE_PHASE_VICTORY;
+                hud.result_key = BATTLE_PHASE_VICTORY;
+            }
+            BattleResult::Defeat => {
+                hud.phase_key = BATTLE_PHASE_DEFEAT;
+                hud.result_key = BATTLE_PHASE_DEFEAT;
+            }
+        }
+        info!(
+            target: "ui",
+            "[BattleProjection] Battle ended — result: {:?}, key: {}",
+            event.result,
+            hud.phase_key,
+        );
+    }
 }
 
 // ─── Observer Systems (ECS bridge) ───────────────────────────────────────
@@ -144,6 +174,7 @@ pub fn on_turn_started_projection(
     mut store: ResMut<UiStore>,
     mut dirty_query: Query<&mut Dirty<BattleHudVm>>,
     ap_query: Query<&ActionPoints>,
+    mut turn_number_query: Query<&mut LocalizedText, With<TurnNumberLabel>>,
 ) {
     let unit = trigger.event().unit;
 
@@ -172,6 +203,11 @@ pub fn on_turn_started_projection(
     }
 
     BattleProjection::on_turn_started(&mut store, trigger.event());
+
+    // 更新 Z1 TurnIndicator 的 LocalizedText 参数以显示当前回合数
+    for mut localized in turn_number_query.iter_mut() {
+        localized.params = vec![("number", store.battle_hud.turn_number.to_string())];
+    }
 
     // 标记所有 BattleHudVm 消费者为脏
     for mut dirty in dirty_query.iter_mut() {
@@ -302,6 +338,28 @@ pub fn on_damage_dealt_projection(
         event.damage_type,
         event.target_id,
     );
+
+    for mut dirty in dirty_query.iter_mut() {
+        dirty.mark_dirty();
+    }
+}
+
+/// Observer：监听 `OnBattleEnd` 领域事件并投影到 `UiStore.battle_hud`。
+///
+/// 设置 is_game_over = true 并更新 phase_key 为胜利/失败文本。
+/// 同时更新 Z2 阶段文本实体的 LocalizedText key，使其立即显示结果文本。
+pub fn on_battle_ended_projection(
+    trigger: On<OnBattleEnd>,
+    mut store: ResMut<UiStore>,
+    mut dirty_query: Query<&mut Dirty<BattleHudVm>>,
+    mut phase_text_query: Query<&mut LocalizedText, With<PhaseTextLabel>>,
+) {
+    BattleProjection::on_battle_ended(&mut store, trigger.event());
+
+    // 更新 Z2 阶段文本的 LocalizedText key 以显示胜利/失败文本
+    for mut localized in phase_text_query.iter_mut() {
+        localized.key = store.battle_hud.phase_key;
+    }
 
     for mut dirty in dirty_query.iter_mut() {
         dirty.mark_dirty();

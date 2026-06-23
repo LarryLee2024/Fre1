@@ -7,7 +7,7 @@
 
 use bevy::prelude::*;
 
-use self::battle_hud::BattleHudVm;
+use self::battle_hud::{BattleHudVm, TargetingMode};
 use self::character_panel::CharacterPanelVm;
 use self::economy::EconomyVm;
 use self::inventory::InventoryVm;
@@ -62,6 +62,10 @@ impl Default for UiStore {
                 current_unit_id: 0,
                 is_player_controlled: false,
                 is_in_battle: false,
+                is_game_over: false,
+                result_key: "",
+                skill_panel_open: false,
+                targeting_mode: TargetingMode::None,
             },
             character_panel: CharacterPanelVm::default(),
             skill_panel: SkillPanelVm::default(),

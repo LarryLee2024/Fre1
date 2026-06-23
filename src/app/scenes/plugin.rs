@@ -40,6 +40,7 @@ impl Plugin for ScenePlugin {
 
         // ── Game command observers ──
         app.add_observer(super::game_setup::on_new_game_command);
+        app.add_observer(super::open_menu::on_open_menu_command);
 
         // ── PartySetup button handlers ──
         app.add_observer(super::party_setup::on_party_setup_button);

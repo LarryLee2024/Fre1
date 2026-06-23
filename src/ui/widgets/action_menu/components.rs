@@ -13,6 +13,8 @@ use bevy::prelude::*;
 pub enum ActionType {
     /// 攻击
     Attack,
+    /// 取消（退出目标选择模式）
+    Cancel,
     /// 防御
     Defend,
     /// 技能

@@ -4,6 +4,7 @@
 
 pub mod components;
 pub mod game_setup;
+pub mod open_menu;
 pub mod party_setup;
 pub mod plugin;
 pub mod queue;

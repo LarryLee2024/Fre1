@@ -9,10 +9,15 @@
 
 use bevy::prelude::*;
 
+use crate::infra::localization::LocalizedText;
+use crate::infra::localization::generated::loc;
 use crate::ui::application::UiCommand;
 use crate::ui::primitives::button::components::ButtonState;
 use crate::ui::primitives::button::events::ButtonClicked;
+use crate::ui::selection::pick_context::PickContext;
+use crate::ui::selection::state::SelectionState;
 use crate::ui::view_models::UiStore;
+use crate::ui::view_models::battle_hud::TargetingMode;
 
 use super::components::{ActionMenuState, ActionType};
 
@@ -45,14 +50,20 @@ pub fn action_menu_sync_system(
 ///
 /// 当前单位 ID 从 UiStore.battle_hud.current_unit_id 获取，
 /// 而非从战斗领域 TurnQueue Resource 获取。
+///
+/// 当 targeting_mode 为 Attack 时，Attack 按钮进入 Cancel 模式，
+/// 点击退出目标选择而非发起攻击。
 pub fn on_action_menu_button_clicked(
     on: On<ButtonClicked>,
-    query: Query<&ActionType>,
-    store: Res<UiStore>,
+    action_type_query: Query<&ActionType>,
+    mut button_query: Query<(&mut ButtonState, &Children)>,
+    mut text_query: Query<(&mut Text, &mut LocalizedText)>,
+    mut store: ResMut<UiStore>,
+    mut selection_state: ResMut<SelectionState>,
     mut commands: Commands,
 ) {
     let entity = on.event().entity;
-    let Ok(action_type) = query.get(entity) else {
+    let Ok(action_type) = action_type_query.get(entity) else {
         return;
     };
 
@@ -62,14 +73,50 @@ pub fn on_action_menu_button_clicked(
         String::new()
     };
 
-    let command = match action_type {
-        ActionType::Attack => UiCommand::Attack {
-            attacker_id: current_unit_id,
-            target_id: String::new(),
-        },
-        ActionType::Wait => UiCommand::Wait {
-            unit_id: current_unit_id,
-        },
+    match action_type {
+        ActionType::Attack => {
+            if store.battle_hud.targeting_mode == TargetingMode::Attack {
+                // Already in targeting mode — cancel targeting
+                exit_targeting_mode(&mut store, &mut selection_state);
+                set_button_label(
+                    entity,
+                    &mut button_query,
+                    &mut text_query,
+                    "Attack",
+                    loc::ui::BATTLE_ATTACK,
+                );
+            } else {
+                // Enter attack targeting mode
+                selection_state.context = PickContext::AttackTargeting;
+                store.battle_hud.targeting_mode = TargetingMode::Attack;
+                set_button_label(
+                    entity,
+                    &mut button_query,
+                    &mut text_query,
+                    "Cancel",
+                    loc::core::CANCEL,
+                );
+            }
+            return;
+        }
+        ActionType::Cancel => {
+            exit_targeting_mode(&mut store, &mut selection_state);
+            set_button_label(
+                entity,
+                &mut button_query,
+                &mut text_query,
+                "Attack",
+                loc::ui::BATTLE_ATTACK,
+            );
+            return;
+        }
+        ActionType::Wait => {
+            let command = UiCommand::Wait {
+                unit_id: current_unit_id,
+            };
+            info!(target: "ui", "[ActionMenu] 命令映射: {:?}", command);
+            commands.trigger(command);
+        }
         // Skill/Item 暂不映射，由后续 PR 实现
         ActionType::Skill | ActionType::Item => {
             info!(target: "ui", "[ActionMenu] {:?} 命令暂未实现", action_type);
@@ -79,8 +126,34 @@ pub fn on_action_menu_button_clicked(
             info!(target: "ui", "[ActionMenu] Defend 命令暂未实现");
             return;
         }
-    };
+    }
+}
 
-    info!(target: "ui", "[ActionMenu] 命令映射: {:?}", command);
-    commands.trigger(command);
+/// 退出目标选择模式，重置上下文和 targeting_mode
+fn exit_targeting_mode(store: &mut UiStore, selection_state: &mut SelectionState) {
+    selection_state.context = PickContext::Normal;
+    store.battle_hud.targeting_mode = TargetingMode::None;
+}
+
+/// 更新按钮的显示文本和本地化 Key
+///
+/// 同时更新 ButtonState.label、Text.0 和 LocalizedText.key，
+/// 确保按钮文本在当帧即可见且支持后续本地化切换。
+fn set_button_label(
+    entity: Entity,
+    button_query: &mut Query<(&mut ButtonState, &Children)>,
+    text_query: &mut Query<(&mut Text, &mut LocalizedText)>,
+    label: &str,
+    loc_key: &'static str,
+) {
+    if let Ok((mut btn_state, children)) = button_query.get_mut(entity) {
+        btn_state.label = label.to_string();
+        for child in children.iter() {
+            if let Ok((mut text, mut loc_text)) = text_query.get_mut(child) {
+                text.0 = label.to_string();
+                loc_text.key = loc_key;
+                break;
+            }
+        }
+    }
 }

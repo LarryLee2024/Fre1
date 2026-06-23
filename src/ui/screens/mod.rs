@@ -24,7 +24,9 @@ use bevy::prelude::*;
 use battle::{
     BattleScreen, despawn_battle_screen, spawn_battle_screen,
     systems::{BattleAction, on_battle_button_clicked, on_dirty_battle_hud},
-    visibility::{battle_zone_visibility_system, mark_battle_ui_passthrough},
+    visibility::{
+        battle_zone_visibility_system, mark_battle_ui_passthrough, skill_panel_visibility_system,
+    },
 };
 use inventory::systems::on_inventory_button_clicked;
 use main_menu::{
@@ -66,6 +68,8 @@ impl Plugin for ScreenPlugin {
             .register_type::<main_menu::MainMenuScreen>()
             .register_type::<battle::systems::BattleAction>()
             .register_type::<battle::BattleScreen>()
+            .register_type::<battle::TurnNumberLabel>()
+            .register_type::<battle::SkillPanelToggle>()
             .register_type::<inventory::InventoryScreen>()
             .register_type::<settings::SettingsScreen>()
             .register_type::<settings::SettingsAction>()
@@ -112,6 +116,7 @@ impl Plugin for ScreenPlugin {
                 (
                     mark_battle_ui_passthrough,
                     battle_zone_visibility_system,
+                    skill_panel_visibility_system,
                     on_dirty_battle_hud,
                 )
                     .run_if(in_state(GameState::Combat)),
