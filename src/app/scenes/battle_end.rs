@@ -17,10 +17,7 @@ use super::queue::StateTransitionQueue;
 /// 当 BattleEnded 事件触发时，检查 victory 标志：
 /// - victory: true  → 切换到 GameState::Result
 /// - victory: false → 切换到 GameState::GameOver
-pub(crate) fn on_battle_ended(
-    trigger: On<BattleEnded>,
-    mut queue: ResMut<StateTransitionQueue>,
-) {
+pub(crate) fn on_battle_ended(trigger: On<BattleEnded>, mut queue: ResMut<StateTransitionQueue>) {
     if trigger.event().victory {
         info!(target: "app", "Battle ended in victory — transitioning to Result");
         queue.push(TransitionRequest::Change(GameState::Result));

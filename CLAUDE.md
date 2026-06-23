@@ -40,6 +40,7 @@ app/ | content/ | tools/ | modding/  # 横切层，可依赖纵向层
 5. **Definition/Instance 分离** — 配置全局不可变，运行时状态独立不写回
 6. **分领域错误枚举** — 每个模块自有 Error，用 `thiserror` 派生，禁止全局 AppError
 7. **四级通信** — 通信优先级：Hook > Trigger > Observer > Message（按耦合度从低到高）
+8. 要务必优先使用 `CodeGraph` 和 `Repomix` 进行代码分析和文档分析
 
 <!-- KEY_REFERENCES_START -->
 ## Key References

@@ -86,10 +86,7 @@ pub fn spawn_result_screen(
 }
 
 /// OnExit System: 离开 ResultScreen 时销毁所有 ResultScreen 实体
-pub fn despawn_result_screen(
-    mut commands: Commands,
-    query: Query<Entity, With<ResultScreen>>,
-) {
+pub fn despawn_result_screen(mut commands: Commands, query: Query<Entity, With<ResultScreen>>) {
     for entity in &query {
         commands.entity(entity).despawn();
     }

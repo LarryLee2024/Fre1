@@ -174,18 +174,15 @@ impl DamagePolicy {
         }
 
         // ── Step 3: 减免计算 ──
-        let mitigation = Self::calc_mitigation(after_bonus, &ctx.target_stats, ctx.damage_type);
-        let mitigated_amount = after_bonus.saturating_sub(mitigation);
-        if mitigated_amount < after_bonus {
+        let mitigation_amount =
+            Self::calc_mitigation_amount(after_bonus, &ctx.target_stats, ctx.damage_type);
+        let final_damage = after_bonus.saturating_sub(mitigation_amount);
+        if mitigation_amount > 0 {
             breakdown.push(format!(
                 "减免: {} → {} (抵消 {})",
-                after_bonus,
-                mitigated_amount,
-                after_bonus - mitigated_amount,
+                after_bonus, final_damage, mitigation_amount,
             ));
         }
-
-        let final_damage = mitigated_amount;
 
         breakdown.push(format!("最终伤害: {}", final_damage));
 
@@ -193,7 +190,7 @@ impl DamagePolicy {
             base_damage: ctx.base_damage,
             is_critical,
             critical_multiplier: ctx.critical_multiplier,
-            mitigated_amount: after_bonus.saturating_sub(final_damage),
+            mitigated_amount: mitigation_amount,
             final_damage,
             breakdown,
         }
@@ -226,21 +223,20 @@ impl DamagePolicy {
         }
     }
 
-    /// 计算目标减免后的伤害值。
+    /// 计算目标防御的减免量（减免量 = base_damage - after_defense_damage）。
     ///
-    /// - 真实伤害：无视减免
-    /// - 物理伤害：使用 `phys_def`
-    /// - 魔法伤害：使用 `magic_def`
-    fn calc_mitigation(
+    /// 公式：减免量 = floor(def / (def + 100) * incoming_damage)
+    /// 即防御越高减免比率越大，但永远无法达到 100%。
+    fn calc_mitigation_amount(
         incoming_damage: u32,
         target_stats: &HashMap<String, f32>,
         damage_type: DamageType,
     ) -> u32 {
         match damage_type {
-            DamageType::True => incoming_damage,
+            DamageType::True => 0,
             DamageType::Physical => {
                 let def = target_stats.get("phys_def").copied().unwrap_or(0.0);
-                incoming_damage.saturating_sub(Self::def_to_mitigation(def))
+                Self::def_to_mitigation(def)
             }
             DamageType::Fire
             | DamageType::Ice
@@ -250,7 +246,7 @@ impl DamagePolicy {
             | DamageType::Poison
             | DamageType::Psychic => {
                 let def = target_stats.get("magic_def").copied().unwrap_or(0.0);
-                incoming_damage.saturating_sub(Self::def_to_mitigation(def))
+                Self::def_to_mitigation(def)
             }
         }
     }
