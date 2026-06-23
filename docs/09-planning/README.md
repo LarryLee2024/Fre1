@@ -7,15 +7,15 @@
 ```
 09-planning/
 ├── README.md                               # 本文件
-├── ui-layout-system-plan.md                # Combat HUD Zone Layout 布局系统
-└── done/                                   # 已完成归档（共 43 份）
+├── playable-combat-loop.md                 # 可玩的战斗循环（活跃规划）
+└── done/                                   # 已完成归档（共 44 份）
 ```
 
 ## 活跃规划
 
 | 文档 | 状态 | 负责人 | 创建日期 |
 |------|------|--------|----------|
-| `ui-layout-system-plan.md` | partial | presentation-architect | 2026-06-21 | Combat HUD Zone Layout — Zone 重构 ✓ / Widget 移植 ✓ / EndTurn 动作链 ✓ / UiSizing 资源 ✅ / Visibility 矩阵 ✅ (含 Victory/Defeat) / Z5 选中守卫 ✅ / TurnIndicator Widget ✅ / SkillPanel 切换 ✅ / 目标选择模式 ✅ (Attack→目标→确认) — 剩余 P2 项已 Deferred (响应式布局、动画等) |
+| `playable-combat-loop.md` | draft | architect | 2026-06-23 | 闭合战斗循环：简单敌方 AI + Result/GameOver 屏幕 + 游戏状态转换 + 集成测试 |
 
 ---
 
@@ -23,6 +23,7 @@
 
 | 文档 | 完成日期 | 说明 |
 |------|----------|------|
+| `ui-layout-system-plan.md` | 2026-06-23 | Combat HUD Zone Layout — 全 7 区 Absolute 定位 / UiSizing Resource / Visibility 矩阵 / TurnIndicator / SkillPanel 切换 / 目标选择模式 — P0+P1 共 10 项全部实现，P2 响应式/动画已 Defer |
 | `map-content-pipeline-plan.md` | 2026-06-22 | Map 内容管线架构（Tiled/MapAsset/Importer/Renderer — ADR→内容定义→Schema→UI→代码→宪法） |
 | `camera-architecture-plan.md` | 2026-06-22 | Camera 架构补充（ADR → 领域规则 → Schema → UI交互 → 代码实现 → 宪法） |
 | `ui-domain-integration-plan.md` | 2026-06-22 | UI→Domain 接线与集成（3 轮 agent 全部完成） |

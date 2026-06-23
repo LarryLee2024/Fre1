@@ -1,10 +1,11 @@
 ---
 id: 09-planning.ui-layout-system
 title: UI Layout Architecture Plan -- Combat HUD Zones, Widget Sizing, Action Chains
-status: partial
+status: completed
 owner: presentation-architect
 created: 2026-06-21
 updated: 2026-06-23
+completed: 2026-06-23
 tags:
   - ui
   - layout

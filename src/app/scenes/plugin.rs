@@ -7,8 +7,10 @@
 
 use bevy::prelude::*;
 
+use super::game_over::{GameOverScreen, GameOverScreenAction};
 use super::queue::{StateTransitionQueue, process_transition_queue};
 use super::register::{SceneRegister, empty};
+use super::result::{ResultScreen, ResultScreenAction};
 use super::state::GameState;
 use crate::core::domains::combat::components::BattlePhase;
 
@@ -34,9 +36,23 @@ impl Plugin for ScenePlugin {
         );
         app.register_scene(GameState::TacticalMap, empty, empty);
         app.register_scene(GameState::Combat, empty, empty);
-        app.register_scene(GameState::Result, empty, empty);
+        app.register_scene(
+            GameState::Result,
+            super::result::spawn_result_screen,
+            super::result::despawn_result_screen,
+        );
         app.register_scene(GameState::CampRest, empty, empty);
-        app.register_scene(GameState::GameOver, empty, empty);
+        app.register_scene(
+            GameState::GameOver,
+            super::game_over::spawn_game_over_screen,
+            super::game_over::despawn_game_over_screen,
+        );
+
+        // ── Reflect types ──
+        app.register_type::<ResultScreen>();
+        app.register_type::<ResultScreenAction>();
+        app.register_type::<GameOverScreen>();
+        app.register_type::<GameOverScreenAction>();
 
         // ── Game command observers ──
         app.add_observer(super::game_setup::on_new_game_command);
@@ -44,5 +60,12 @@ impl Plugin for ScenePlugin {
 
         // ── PartySetup button handlers ──
         app.add_observer(super::party_setup::on_party_setup_button);
+
+        // ── Battle lifecycle observers ──
+        app.add_observer(super::battle_end::on_battle_ended);
+
+        // ── Result / GameOver button handlers ──
+        app.add_observer(super::result::on_result_screen_button);
+        app.add_observer(super::game_over::on_game_over_screen_button);
     }
 }

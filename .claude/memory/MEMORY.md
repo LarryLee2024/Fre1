@@ -31,6 +31,9 @@
 - [skill-panel-widget](skill-panel-widget-implementation.md) — SkillPanel Organism: spawn_skill_slot wrapper, skill_id override, Z7 integration, SkillPanelPlugin
 - [character-status-panel-widget](character-status-panel-widget.md) — CharacterStatusPanel Organism: factory, components, plugin, UI tree structure
 - [project-ui-review-2026-06-22](project-ui-review-2026-06-22.md) — UI 设计-代码偏移评审及 11 agent 批量修复
+- [planning-docs-fully-archived](project-planning-docs-fully-archived.md) — docs/09-planning/ 全部 44 份文档已归档（含 ui-layout-system-plan P0+P1 完成）
+- [targeting-mode-impl](project-targeting-mode-impl.md) — 目标选择模式子状态机（PickContext + BattleHudVm.targeting_mode）
+- [open-menu-esc-bridge](project-open-menu-esc-bridge.md) — ESC→Settings 桥接（GameCommand::OpenMenu → UiCommand::OpenScreen）
 
 ## decision
 <!-- key architectural decisions -->

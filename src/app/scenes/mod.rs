@@ -2,13 +2,16 @@
 //!
 //! 详见 ADR-050。
 
+pub mod battle_end;
 pub mod components;
+pub mod game_over;
 pub mod game_setup;
 pub mod open_menu;
 pub mod party_setup;
 pub mod plugin;
 pub mod queue;
 pub mod register;
+pub mod result;
 pub mod state;
 pub mod test_battle;
 

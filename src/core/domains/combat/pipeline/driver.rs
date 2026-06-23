@@ -164,13 +164,28 @@ pub(crate) fn combat_pipeline_driver(
             let result = step_phase_check(&turn_queue, &ap_query);
             match result {
                 PhaseCheckResult::HasActions => {
-                    // 跳转到 UnitAction 阶段
-                    if let Some(idx) = find_stage_index(&def, "unit_action") {
-                        driver.state.current_stage_index = idx;
-                        driver.state.current_step_index = 0;
-                        driver.paused = true; // 暂停等待输入
-                    } else {
-                        advance_step_or_stage(&mut driver, &def);
+                    // 根据队伍类型决定暂停等待输入或自动完成
+                    if let Some(entry) = turn_queue.current() {
+                        if entry.team_id.as_str() == "Player" {
+                            // 玩家队伍 — 暂停等待输入
+                            if let Some(idx) = find_stage_index(&def, "unit_action") {
+                                driver.state.current_stage_index = idx;
+                                driver.state.current_step_index = 0;
+                                driver.paused = true;
+                            } else {
+                                advance_step_or_stage(&mut driver, &def);
+                            }
+                        } else {
+                            // 敌方队伍 — 自动完成行动，不暂停
+                            step_unit_action(&mut commands, &turn_queue);
+                            commands.trigger(UnitActionComplete { unit: entry.entity });
+                            if let Some(idx) = find_stage_index(&def, "turn_settlement") {
+                                driver.state.current_stage_index = idx;
+                                driver.state.current_step_index = 0;
+                            } else {
+                                advance_step_or_stage(&mut driver, &def);
+                            }
+                        }
                     }
                 }
                 PhaseCheckResult::Idle => {
@@ -187,8 +202,13 @@ pub(crate) fn combat_pipeline_driver(
 
         "unit_action" => {
             step_unit_action(&mut commands, &turn_queue);
-            // 不应自动推进 — PhaseCheck 已设置暂停状态
-            // 如意外到达此处（无暂停），设置暂停
+            // 防御性 fallback：如果此处到达但未暂停（异常路径），
+            // 敌方队伍自动完成，玩家队伍暂停
+            if let Some(entry) = turn_queue.current() {
+                if entry.team_id.as_str() != "Player" {
+                    commands.trigger(UnitActionComplete { unit: entry.entity });
+                }
+            }
             driver.paused = true;
         }
 
